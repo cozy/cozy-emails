@@ -1,0 +1,31 @@
+{
+  "name": "cozy-emails",
+  "version": "0.1.0",
+  "engines": [
+    "node = 0.8.x"
+  ],
+  "description": "Emails client for Cozycloud",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/cozy/cozy-emails.git"
+  },
+  "main": "server.coffee",
+  "dependencies": {
+    "americano": "0.3.7",
+    "americano-cozy": "0.2.6"
+  },
+  "devDependencies": {
+    "should": "4.0.4",
+    "mocha": "1.20.1",
+    "request-json": "0.4.11",
+    "cozy-fixtures": "1.1.1",
+    "coffeelint": "1.5.2"
+  },
+  "scripts": {
+    "test": "cake tests",
+    "start": "node build/server.js"
+  },
+  "cozy-permissions": {},
+  "cozy-displayName": "Emails"
+}

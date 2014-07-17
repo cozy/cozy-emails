@@ -1,0 +1,58 @@
+/*
+    _id should be auto-generated but cozy-fixtures doesn't handle
+    connections between documents.
+*/
+[
+    {
+        "_id": "gmail-ID",
+        "docType": "Mailbox",
+        "name": "Gmail",
+        "config": 0,
+        "newMessages": 0,
+        "createdAt": "2014-07-11T08:38:23.000Z",
+        "login": "randomlogin",
+        "password": "randompassword",
+        "smtpServer": "smtp.gmail.com",
+        "smtpSendAs": "",
+        "smtpSsl": true,
+        "smtpPort": 465,
+        "imapServer": "imap.gmail.com",
+        "imapPort": 993,
+        "imapSecure": true,
+        "imapLastSync": 0,
+        "imapLastFetchedDate": 0,
+        "imapLastFetchedId": 0,
+        "checked": true,
+        "color": "#0099FF",
+        "statusMsg": "Waiting for import",
+        "activated": false,
+        "status": "freezed",
+        "mailsToImport": 0
+    },
+    {
+        "_id": "orange-ID",
+        "docType": "Mailbox",
+        "name": "Orange",
+        "config": 0,
+        "newMessages": 0,
+        "createdAt": "2014-07-10T10:00:00.000Z",
+        "login": "randomlogin",
+        "password": "randompassword",
+        "smtpServer": "smtp.orange.fr",
+        "smtpSendAs": "",
+        "smtpSsl": true,
+        "smtpPort": 465,
+        "imapServer": "imap.orange.fr",
+        "imapPort": 993,
+        "imapSecure": true,
+        "imapLastSync": 0,
+        "imapLastFetchedDate": 0,
+        "imapLastFetchedId": 0,
+        "checked": true,
+        "color": "#9900FF",
+        "statusMsg": "Waiting for import",
+        "activated": false,
+        "status": "freezed",
+        "mailsToImport": 0
+    }
+]

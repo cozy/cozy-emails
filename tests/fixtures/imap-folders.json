@@ -1,0 +1,46 @@
+/*
+    _id should be auto-generated but cozy-fixtures doesn't handle
+    connections between documents.
+*/
+[
+    {
+        "_id": "gmail-ID-folder1",
+        "docType": "ImapFolder",
+        "name": "Inbox",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "gmail-ID"
+    },
+    {
+        "_id": "gmail-ID-folder2",
+        "docType": "ImapFolder",
+        "name": "Random folder",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "gmail-ID"
+    },
+    {
+        "_id": "orange-ID-folder1",
+        "docType": "ImapFolder",
+        "name": "Inbox",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "orange-ID"
+    },
+    {
+        "_id": "orange-ID-folder2",
+        "docType": "ImapFolder",
+        "name": "Random folder",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "orange-ID"
+    }
+]
