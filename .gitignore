@@ -11,7 +11,8 @@ lib-cov
 pids
 logs
 results
-build
+client/public
+client/bower_components
 
 node_modules
 npm-debug.log

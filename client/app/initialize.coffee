@@ -1,7 +1,16 @@
-app = require 'application'
 
-# The function called from index.html
+# Waits for the DOM to be ready
 $ ->
-    require 'lib/app_helpers'
+    # Routing management
+    Router = require 'router'
+    RouterInterface = require './lib/router-interface'
 
-    app.initialize()
+    # Binds the Backbone Router to the React application
+    @router = new Router()
+    React.renderComponent  RouterInterface(router: @router), document.body
+
+    # Starts the application by initializing the router
+    Backbone.history.start()
+
+    # Makes this object immuable.
+    Object.freeze this if typeof Object.freeze is 'function'
