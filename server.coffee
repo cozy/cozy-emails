@@ -7,7 +7,7 @@ application = module.exports = (callback) ->
         port: process.env.PORT || 9125
         host: process.env.HOST || '127.0.0.1'
 
-        americano.start options
+    americano.start options
 
 if not module.parent
     application()
