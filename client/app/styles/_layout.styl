@@ -1,0 +1,65 @@
+/*
+  LAYOUT
+
+  Positions the boxes that compose the layout.
+    -- No styling (colors, ...), just positionning
+
+  The overall positionning is handled by Bootstrap Grid.
+
+    - left sidebar is the mailbox menu (nav#menu)
+    - the left space is filled with the (#page-content)
+      - top bar for quick actions (#quick-actions)
+      - left panel (section#left-panel)
+      - right panel (section#right-panel)
+
+  Left and right panel can hold several type of content.
+*/
+
+// Makes the #menu div and the application main row be at screen height.
+.container-fluid, .container-fluid > .row
+  height 100%
+
+/*
+  MENU
+
+  Menu positionning is completely handled by Bootstrap grid.
+*/
+
+
+/*
+  PAGE CONTENT
+*/
+#page-content
+
+  // We use a flexbox display so the #panels take all the height left
+  display flex
+  flex-direction column
+
+  position relative
+  height 100%
+  overflow hidden
+
+  /*
+    Quick actions bar
+  */
+  #quick-actions
+    margin 15px 0
+
+  // We want the panel to be scrollable independantly but not their parent
+  #panels
+    flex 1
+    overflow-y hidden
+    height 100%
+
+    .panel
+      overflow-y auto
+      height 80%
+
+      // visual separation between panels
+      &:first-of-type
+        border-right 1px solid #e4e4e4
+
+      &.hidden
+        display none
+
+

@@ -1,0 +1,73 @@
+/*
+  Email list
+
+  -- Email list bar internal layout and styles
+*/
+
+#email-list
+  padding 0
+
+  &.disable
+    display none
+
+  // must be reworked
+  &.col-md-6
+  &.col-md-12
+    transition width 0.2s ease-out
+
+  .email
+    padding 5px 15px
+    border-bottom 1px solid #e4e4e4
+    cursor pointer
+
+
+    a
+      display block
+
+      // We use a flexbox display so the email preview takes all the width left
+      display flex
+      justify-content flex-start
+      align-items center
+
+      text-decoration none
+
+      span
+      .email-preview
+        font-size 13px
+        margin 0 5px
+
+      .email-preview
+        flex 1
+        margin 0 10px 0 auto
+        overflow hidden
+        white-space nowrap
+        text-overflow ellipsis
+        color mediumcolor // for ellipsis + p
+
+        .email-title
+          color darkcolor
+        p
+          margin 0
+          display inline
+
+      .email-participants
+        width 200px
+        color darkcolor
+
+      .email-title
+        min-width 200px
+        &:after
+          content ' - '
+
+      .email-hour
+        margin-left auto
+        color darkcolor
+
+      // placeholder until we have images
+      .fa-user
+        color #aaa
+        font-size 30px
+        border 1px solid #aaa
+
+    &:hover
+      background #f4f4f4

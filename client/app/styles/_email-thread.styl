@@ -1,0 +1,94 @@
+/*
+  Email thread
+
+  -- List of collapsable emails content
+*/
+
+#email-thread
+  //display none
+
+  &.enable
+    display block
+
+  h3
+    color #444
+    margin-top 0
+    padding-bottom 10px
+    color basecolor
+
+    small
+      float right
+      cursor pointer
+
+  /*
+    Email thread
+    -- List of collapsable emails content
+  */
+  .email-thread
+    padding 0
+    border-top 1px solid #f4f4f4
+
+    .email
+      padding 5px 15px
+      border-bottom 1px solid #e4e4e4
+      cursor pointer
+
+      font-size 13px
+
+      background #f4f4f4
+
+      &.active
+      &:last-of-type
+        background #fff
+        .email-preview
+          display none
+        .email-content
+          display block
+
+      span
+      .email-preview
+      .email-content
+        margin 0 5px
+
+      .email-header
+        display flex
+        justify-content flex-start
+        align-items center
+
+      .email-participants
+        span
+          display block
+
+          &.receivers
+            color mediumcolor
+
+      .email-content
+        margin-top 15px
+        display none
+      .email-preview
+        margin-top 15px
+        overflow hidden
+        white-space nowrap
+        text-overflow ellipsis
+        color mediumcolor // for ellipsis + p
+
+        p
+          margin 0
+          display inline
+
+      .email-participants
+        width 200px
+        color darkcolor
+
+      .email-hour
+        margin-left auto
+        color darkcolor
+
+      // placeholder until we have images
+      .fa-user
+        color #aaa
+        font-size 30px
+        border 1px solid #aaa
+
+      &:hover:not(.active):not(:last-of-type)
+        background #f4f4f4

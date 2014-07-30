@@ -1,0 +1,101 @@
+/*
+  MENU
+
+  -- Menu internal layout and styles
+*/
+
+#menu
+  // We use a flexbox display so the #mailbox-list takes all the height left
+  display flex
+  flex-direction column
+
+  height 100%
+  padding 0
+
+  background homeheadercolor
+
+  /*
+    Menu layout
+  */
+  #mailbox-list
+    flex 1 // Takes all height left
+    overflow auto
+    margin 0
+
+  .new-mailbox-action
+    // Sets position at the bottom of the menu
+    margin-top auto
+
+  /*
+    Styles
+  */
+
+  // Clickable menu elements
+  .menu-item
+    display inline-block // used for non flexed elements (within .mailbox-list)
+    position relative // for badge positionning
+    width 100%
+    padding 10px 5px
+    margin 0
+    font-size 14px
+    font-family styled
+    color mediumcolor
+    text-align center
+    vertical-align middle
+    text-decoration none
+
+    i
+    .mailbox-label
+    .badge
+      vertical-align middle
+
+    // icon
+    i
+      font-size 25px
+
+    .mailbox-label
+      display block
+      overflow hidden
+      text-overflow ellipsis
+      white-space nowrap
+
+    .badge
+      position absolute
+      top 10px // equal to parent's padding-top
+      right 5px // equal to parent's padding-right
+      background basecolor
+      font-size 9px
+      margin-left 5px
+      font-family Geneva // Cozy's fonts are not readable
+
+    &:hover
+    &.active
+      background #363a46 + 10%
+      color #fff
+
+  // Mailbox list
+  #mailbox-list
+    li
+      .submenu
+        display none
+
+        // submenu icons
+        .menu-item i
+          font-size 20px
+
+      &.active
+        border-left 5px solid mediumcolor-contrast - 30%
+
+        .menu-item
+          color #fff
+
+        .submenu
+          display block
+
+  // New mailbox action button
+  .new-mailbox-action
+    font-size 15px
+    opacity 0.5
+
+    &:hover
+      opacity 1

@@ -1,328 +1,28 @@
-// nib is a powerful lib for stylus that provides cross-browser css3 mixins.
+// Stylus mixins
 @import 'nib'
 
+// Cozy default stuff
 @import '_colors'
 @import '_base'
 @import '_cozy'
 
-// makes the mailbox div be at max height
-.container-fluid
-  position relative
-  height 100%
+// UI skeleton positionning
+@import '_layout'
 
-  &> .row
-    height 100%
-
-#header
-  margin 15px 0
-
-  .fa-bars
-    font-size 35px
-    color #333
-
-  .btn span
-    margin-left 5px
-
-  form
-    padding-left 0
-
+// Components styles and inter
+@import '_menu'
+@import '_quick-actions-bar'
+@import '_email-list'
+@import '_email-thread'
 
 /*
-  MENU
-*/
-#menu
-  position absolute
-  top 0
-  left 0
-  background #363a46
-  height 100%
-  z-index 100
-  padding 0
-
-  display flex
-  flex-direction column
-
-  // clickable elements
-  .menu-item
-    display inline-block // used for non flexed elements
-    width 100%
-    text-align center
-    vertical-align middle
-    font-size 14px
-    padding 10px 5px
-    margin 0
-    position relative
-    font-family styled
-    color mediumcolor
-    text-decoration none
-
-    // icon
-    i
-      vertical-align middle
-      font-size 25px
-
-    .mailbox-label
-    .badge
-      vertical-align middle
-
-    .mailbox-label
-      display block
-      overflow hidden
-      text-overflow ellipsis
-      white-space nowrap
-
-    .badge
-      position absolute
-      top 10px // equal to parent's padding-top
-      right 5px // equal to parent's padding-right
-      background basecolor
-      font-size 9px
-      margin-left 5px
-
-    &:hover
-    &.active
-      background #363a46 + 10%
-      color #fff
-
-  // list of mailboxes
-  ul.mailboxes
-    overflow auto
-    flex 1
-    margin 0
-
-    li
-      .submenu
-        display none
-        i
-          font-size 20px
-
-      &.active
-        border-left 5px solid mediumcolor-contrast - 30%
-        .menu-item
-          color #fff
-        .submenu
-          display block
-
-
-  .new-mailbox-action
-    margin-top auto
-    font-size 15px
-    opacity 0.5
-
-    &:hover
-      opacity 1
-
-#content
-  display flex
-  flex-direction column
-  flex-wrap nowrap
-
-  #brah
-    flex 1 1
-
-/*
-  LIST OF EMAILS
-*/
-#email-list
-  border-right 1px solid #e4e4e4
-  height inherit
-  overflow auto
-  padding 0
-
-  &.disable
-    display none
-
-  &.col-md-6
-  &.col-md-12
-    transition width 0.2s ease-out
-
-  li.email
-    padding 5px 15px
-    max-height 125px
-    border-bottom 1px solid #e4e4e4
-    cursor pointer
-
-    display flex
-    justify-content flex-start
-    align-items center
-
-    span
-    .email-preview
-      font-size 13px
-      margin 0 5px
-
-    .email-preview
-      flex 1
-      margin 0 auto
-      overflow hidden
-      white-space nowrap
-      text-overflow ellipsis
-      color mediumcolor // for ellipsis + p
-
-      .email-title
-        color darkcolor
-      p
-        margin 0
-        display inline
-
-    .email-participants
-      width 200px
-      color darkcolor
-
-    .email-title
-      min-width 200px
-      &:after
-        content ' - '
-
-    .email-hour
-      margin-left auto
-      color darkcolor
-
-    .fa-user
-      color #aaa
-      font-size 30px
-      border 1px solid #aaa
-
-    &:hover
-      background #f4f4f4
-
-/*
-  RIGHT PANEL
-  -- email content
-  -- compose a new email
+  Put styles here for scaffolding and testing out new features/stuff
+  "Production-ready" components styles should live in a dedicated file
 */
 
-#email-content
-
-  .email-tabs
-    display flex
-    flex-wrap nowrap
-    width 100%
-
-    overflow auto
-    list-style-type none
-    padding 0
-    margin 0
-
-    li
-      position relative
-
-      a
-        width 100%
-        padding 10px 15px
-        text-decoration none
-        display block
-        overflow hidden
-        white-space nowrap
-        text-overflow ellipsis
-
-      .close
-        float none
-        position absolute
-        top 0
-        right 0
-
-      &:not(.active)
-        flex 1
-        a
-          color mediumcolor
-          max-width 100px
-
-      border-bottom 1px solid basecolor
-
-      &:hover
-        background #f4f4f4
-        border-bottom 4px solid basecolor
 
 
-
-  .email-nav
-    width 100%
-    margin-bottom 0
-    margin-top 0
-    padding-left 0
-    list-style-type none
-    display table
-    content " "
-
-    overflow auto
-    border-bottom 0
-
-  .email-nav > li
-    display table-cell
-    //width 1%
-    border-bottom 1px solid basecolor
-    padding 10px 15px
-    float none
-    margin-bottom -1px
-
-  .email-nav > li > .wrapper
-    display block
-    overflow hidden
-    white-space nowrap
-    text-overflow ellipsis
-
-  .email-nav > li > .wrapper > a
-    text-decoration none
-    display inline-block
-
-
-    color darkcolor
-
-  .email-nav > li > .wrapper > .close
-    margin-left 10px
-    display inline-block
-    float none !important // override bootstrap
-
-
-  .email-nav > li.active
-  .email-nav > li:hover
-    border-radius 0
-    border-bottom 4px solid basecolor
-
-  .email-nav > li:not(.active) > .wrapper > a
-    max-width 50px
-
-  .email-nav > li:not(.active) > .wrapper > a
-    color mediumcolor
-
-  .email-nav > li:hover
-    background mediumcolor
-
-  .email-nav > li:hover > .wrapper > a
-    color mediumcolor-contrast
-
-  .nav
-  //.email-nav
-    overflow auto
-
-    li
-
-      &:not(.active)
-        max-width 150px
-        a
-          color mediumcolor
-      a
-        overflow hidden
-        white-space nowrap
-        text-overflow ellipsis
-
-        border none
-        border-bottom 1px solid basecolor
-        margin 0
-
-        &:hover
-          color mediumcolor-contrast
-
-      &.active a
-      a:hover
-        border-radius 0
-        border none
-        border-bottom 4px solid basecolor
-
-//#email-content
 #email-compose
-  display none
 
   &.enable
     display block
@@ -333,10 +33,17 @@
 
   h3
     color #444
+    margin-top 0
 
-    small
+    a
+      color basecolor
+
+    a.close-email
       float right
-      cursor pointer
+
+    a.expand
+      font-size 25px
+      margin-right 10px
 
 #email-compose
   textarea
@@ -345,5 +52,43 @@
     width 100%
     text-align left
 
-#content
-  height 100%
+/*
+  Open email tabs
+
+  -- disabled because of the ugly scrollbar on most of the computers
+*/
+#email-thread .nav
+  display none
+  margin-bottom 30px
+
+  overflow auto
+
+  li
+    position relative
+
+    &:not(.active)
+      max-width 150px
+      a
+        color mediumcolor
+    a
+      overflow hidden
+      white-space nowrap
+      text-overflow ellipsis
+
+      border none
+      border-bottom 1px solid basecolor
+      margin 0
+
+      &:hover
+        color mediumcolor-contrast
+
+    .close
+      position absolute
+      top 0
+      right 0
+
+    &.active a
+    a:hover
+      border-radius 0
+      border none
+      border-bottom 4px solid basecolor
