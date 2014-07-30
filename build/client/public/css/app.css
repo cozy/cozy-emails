@@ -1727,37 +1727,11 @@ textarea:active {
   background-color: #fe8800;
   border-color: #fe8800;
 }
-.container-fluid {
-  position: relative;
+.container-fluid,
+.container-fluid > .row {
   height: 100%;
 }
-.container-fluid> .row {
-  height: 100%;
-}
-#header {
-  margin: 15px 0;
-}
-#header .fa-bars {
-  font-size: 35px;
-  color: #333;
-}
-#header .btn span {
-  margin-left: 5px;
-}
-#header form {
-  padding-left: 0;
-}
-/*
-  MENU
-*/
-#menu {
-  position: absolute;
-  top: 0;
-  left: 0;
-  background: #363a46;
-  height: 100%;
-  z-index: 100;
-  padding: 0;
+#page-content {
   display: -webkit-box;
   display: -moz-box;
   display: -webkit-flex;
@@ -1770,27 +1744,94 @@ textarea:active {
   -webkit-flex-direction: column;
   -ms-flex-direction: column;
   flex-direction: column;
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+/*
+    Quick actions bar
+  */
+}
+#page-content #quick-actions {
+  margin: 15px 0;
+}
+#page-content #panels {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  overflow-y: hidden;
+  height: 100%;
+}
+#page-content #panels .panel {
+  overflow-y: auto;
+  height: 80%;
+}
+#page-content #panels .panel:first-of-type {
+  border-right: 1px solid #e4e4e4;
+}
+#page-content #panels .panel.hidden {
+  display: none;
+}
+#menu {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -moz-box-orient: vertical;
+  -o-box-orient: vertical;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  height: 100%;
+  padding: 0;
+  background: #363a46;
+/*
+    Menu layout
+  */
+/*
+    Styles
+  */
+}
+#menu #mailbox-list {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  overflow: auto;
+  margin: 0;
+}
+#menu .new-mailbox-action {
+  margin-top: auto;
 }
 #menu .menu-item {
   display: inline-block;
+  position: relative;
   width: 100%;
-  text-align: center;
-  vertical-align: middle;
-  font-size: 14px;
   padding: 10px 5px;
   margin: 0;
-  position: relative;
+  font-size: 14px;
   font-family: styled;
   color: #bdbdbd;
+  text-align: center;
+  vertical-align: middle;
   text-decoration: none;
 }
-#menu .menu-item i {
-  vertical-align: middle;
-  font-size: 25px;
-}
+#menu .menu-item i,
 #menu .menu-item .mailbox-label,
 #menu .menu-item .badge {
   vertical-align: middle;
+}
+#menu .menu-item i {
+  font-size: 25px;
 }
 #menu .menu-item .mailbox-label {
   display: block;
@@ -1806,40 +1847,29 @@ textarea:active {
   background: #34a6ff;
   font-size: 9px;
   margin-left: 5px;
+  font-family: Geneva;
 }
 #menu .menu-item:hover,
 #menu .menu-item.active {
   background: #474c5c;
   color: #fff;
 }
-#menu ul.mailboxes {
-  overflow: auto;
-  -webkit-box-flex: 1;
-  -moz-box-flex: 1;
-  -o-box-flex: 1;
-  box-flex: 1;
-  -webkit-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
-  margin: 0;
-}
-#menu ul.mailboxes li .submenu {
+#menu #mailbox-list li .submenu {
   display: none;
 }
-#menu ul.mailboxes li .submenu i {
+#menu #mailbox-list li .submenu .menu-item i {
   font-size: 20px;
 }
-#menu ul.mailboxes li.active {
+#menu #mailbox-list li.active {
   border-left: 5px solid #296293;
 }
-#menu ul.mailboxes li.active .menu-item {
+#menu #mailbox-list li.active .menu-item {
   color: #fff;
 }
-#menu ul.mailboxes li.active .submenu {
+#menu #mailbox-list li.active .submenu {
   display: block;
 }
 #menu .new-mailbox-action {
-  margin-top: auto;
   font-size: 15px;
   opacity: 0.5;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
@@ -1850,42 +1880,14 @@ textarea:active {
   -ms-filter: none;
   filter: none;
 }
-#content {
-  display: -webkit-box;
-  display: -moz-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: box;
-  display: flex;
-  -webkit-box-orient: vertical;
-  -moz-box-orient: vertical;
-  -o-box-orient: vertical;
-  -webkit-flex-direction: column;
-  -ms-flex-direction: column;
-  flex-direction: column;
-  -webkit-box-lines: single;
-  -moz-box-lines: single;
-  -o-box-lines: single;
-  -webkit-flex-wrap: nowrap;
-  -ms-flex-wrap: nowrap;
-  flex-wrap: nowrap;
+#quick-actions .fa-bars {
+  font-size: 35px;
+  color: #333;
 }
-#content #brah {
-  -webkit-box-flex: 1;
-  -moz-box-flex: 1;
-  -o-box-flex: 1;
-  box-flex: 1;
-  -webkit-flex: 1 1;
-  -ms-flex: 1 1;
-  flex: 1 1;
+#quick-actions form {
+  padding-left: 0;
 }
-/*
-  LIST OF EMAILS
-*/
 #email-list {
-  border-right: 1px solid #e4e4e4;
-  height: inherit;
-  overflow: auto;
   padding: 0;
 }
 #email-list.disable {
@@ -1899,11 +1901,124 @@ textarea:active {
   -ms-transition: width 0.2s ease-out;
   transition: width 0.2s ease-out;
 }
-#email-list li.email {
+#email-list .email {
   padding: 5px 15px;
-  max-height: 125px;
   border-bottom: 1px solid #e4e4e4;
   cursor: pointer;
+}
+#email-list .email a {
+  display: block;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  -webkit-box-pack: start;
+  -moz-box-pack: start;
+  -o-box-pack: start;
+  -ms-flex-pack: start;
+  -webkit-justify-content: flex-start;
+  justify-content: flex-start;
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -o-box-align: center;
+  -ms-flex-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+  text-decoration: none;
+}
+#email-list .email a span,
+#email-list .email a .email-preview {
+  font-size: 13px;
+  margin: 0 5px;
+}
+#email-list .email a .email-preview {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  margin: 0 10px 0 auto;
+  overflow: hidden;
+  white-space: nowrap;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  color: #bdbdbd;
+}
+#email-list .email a .email-preview .email-title {
+  color: #444;
+}
+#email-list .email a .email-preview p {
+  margin: 0;
+  display: inline;
+}
+#email-list .email a .email-participants {
+  width: 200px;
+  color: #444;
+}
+#email-list .email a .email-title {
+  min-width: 200px;
+}
+#email-list .email a .email-title:after {
+  content: ' - ';
+}
+#email-list .email a .email-hour {
+  margin-left: auto;
+  color: #444;
+}
+#email-list .email a .fa-user {
+  color: #aaa;
+  font-size: 30px;
+  border: 1px solid #aaa;
+}
+#email-list .email:hover {
+  background: #f4f4f4;
+}
+#email-thread.enable {
+  display: block;
+}
+#email-thread h3 {
+  color: #444;
+  margin-top: 0;
+  padding-bottom: 10px;
+  color: #34a6ff;
+}
+#email-thread h3 small {
+  float: right;
+  cursor: pointer;
+}
+#email-thread .email-thread {
+  padding: 0;
+  border-top: 1px solid #f4f4f4;
+}
+#email-thread .email-thread .email {
+  padding: 5px 15px;
+  border-bottom: 1px solid #e4e4e4;
+  cursor: pointer;
+  font-size: 13px;
+  background: #f4f4f4;
+}
+#email-thread .email-thread .email.active,
+#email-thread .email-thread .email:last-of-type {
+  background: #fff;
+}
+#email-thread .email-thread .email.active .email-preview,
+#email-thread .email-thread .email:last-of-type .email-preview {
+  display: none;
+}
+#email-thread .email-thread .email.active .email-content,
+#email-thread .email-thread .email:last-of-type .email-content {
+  display: block;
+}
+#email-thread .email-thread .email span,
+#email-thread .email-thread .email .email-preview,
+#email-thread .email-thread .email .email-content {
+  margin: 0 5px;
+}
+#email-thread .email-thread .email .email-header {
   display: -webkit-box;
   display: -moz-box;
   display: -webkit-flex;
@@ -1923,200 +2038,48 @@ textarea:active {
   -webkit-align-items: center;
   align-items: center;
 }
-#email-list li.email span,
-#email-list li.email .email-preview {
-  font-size: 13px;
-  margin: 0 5px;
+#email-thread .email-thread .email .email-participants span {
+  display: block;
 }
-#email-list li.email .email-preview {
-  -webkit-box-flex: 1;
-  -moz-box-flex: 1;
-  -o-box-flex: 1;
-  box-flex: 1;
-  -webkit-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
-  margin: 0 auto;
+#email-thread .email-thread .email .email-participants span.receivers {
+  color: #bdbdbd;
+}
+#email-thread .email-thread .email .email-content {
+  margin-top: 15px;
+  display: none;
+}
+#email-thread .email-thread .email .email-preview {
+  margin-top: 15px;
   overflow: hidden;
   white-space: nowrap;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
   color: #bdbdbd;
 }
-#email-list li.email .email-preview .email-title {
-  color: #444;
-}
-#email-list li.email .email-preview p {
+#email-thread .email-thread .email .email-preview p {
   margin: 0;
   display: inline;
 }
-#email-list li.email .email-participants {
+#email-thread .email-thread .email .email-participants {
   width: 200px;
   color: #444;
 }
-#email-list li.email .email-title {
-  min-width: 200px;
-}
-#email-list li.email .email-title:after {
-  content: ' - ';
-}
-#email-list li.email .email-hour {
+#email-thread .email-thread .email .email-hour {
   margin-left: auto;
   color: #444;
 }
-#email-list li.email .fa-user {
+#email-thread .email-thread .email .fa-user {
   color: #aaa;
   font-size: 30px;
   border: 1px solid #aaa;
 }
-#email-list li.email:hover {
+#email-thread .email-thread .email:hover:not(.active):not(:last-of-type) {
   background: #f4f4f4;
 }
 /*
-  RIGHT PANEL
-  -- email content
-  -- compose a new email
+  Put styles here for scaffolding and testing out new features/stuff
+  "Production-ready" components styles should live in a dedicated file
 */
-#email-content .email-tabs {
-  display: -webkit-box;
-  display: -moz-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: box;
-  display: flex;
-  -webkit-box-lines: single;
-  -moz-box-lines: single;
-  -o-box-lines: single;
-  -webkit-flex-wrap: nowrap;
-  -ms-flex-wrap: nowrap;
-  flex-wrap: nowrap;
-  width: 100%;
-  overflow: auto;
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-}
-#email-content .email-tabs li {
-  position: relative;
-  border-bottom: 1px solid #34a6ff;
-}
-#email-content .email-tabs li a {
-  width: 100%;
-  padding: 10px 15px;
-  text-decoration: none;
-  display: block;
-  overflow: hidden;
-  white-space: nowrap;
-  -o-text-overflow: ellipsis;
-  text-overflow: ellipsis;
-}
-#email-content .email-tabs li .close {
-  float: none;
-  position: absolute;
-  top: 0;
-  right: 0;
-}
-#email-content .email-tabs li:not(.active) {
-  -webkit-box-flex: 1;
-  -moz-box-flex: 1;
-  -o-box-flex: 1;
-  box-flex: 1;
-  -webkit-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
-}
-#email-content .email-tabs li:not(.active) a {
-  color: #bdbdbd;
-  max-width: 100px;
-}
-#email-content .email-tabs li:hover {
-  background: #f4f4f4;
-  border-bottom: 4px solid #34a6ff;
-}
-#email-content .email-nav {
-  width: 100%;
-  margin-bottom: 0;
-  margin-top: 0;
-  padding-left: 0;
-  list-style-type: none;
-  display: table;
-  content: " ";
-  overflow: auto;
-  border-bottom: 0;
-}
-#email-content .email-nav > li {
-  display: table-cell;
-  border-bottom: 1px solid #34a6ff;
-  padding: 10px 15px;
-  float: none;
-  margin-bottom: -1px;
-}
-#email-content .email-nav > li > .wrapper {
-  display: block;
-  overflow: hidden;
-  white-space: nowrap;
-  -o-text-overflow: ellipsis;
-  text-overflow: ellipsis;
-}
-#email-content .email-nav > li > .wrapper > a {
-  text-decoration: none;
-  display: inline-block;
-  color: #444;
-}
-#email-content .email-nav > li > .wrapper > .close {
-  margin-left: 10px;
-  display: inline-block;
-  float: none !important;
-}
-#email-content .email-nav > li.active,
-#email-content .email-nav > li:hover {
-  -webkit-border-radius: 0;
-  border-radius: 0;
-  border-bottom: 4px solid #34a6ff;
-}
-#email-content .email-nav > li:not(.active) > .wrapper > a {
-  max-width: 50px;
-}
-#email-content .email-nav > li:not(.active) > .wrapper > a {
-  color: #bdbdbd;
-}
-#email-content .email-nav > li:hover {
-  background: #bdbdbd;
-}
-#email-content .email-nav > li:hover > .wrapper > a {
-  color: #428bca;
-}
-#email-content .nav {
-  overflow: auto;
-}
-#email-content .nav li:not(.active) {
-  max-width: 150px;
-}
-#email-content .nav li:not(.active) a {
-  color: #bdbdbd;
-}
-#email-content .nav li a {
-  overflow: hidden;
-  white-space: nowrap;
-  -o-text-overflow: ellipsis;
-  text-overflow: ellipsis;
-  border: none;
-  border-bottom: 1px solid #34a6ff;
-  margin: 0;
-}
-#email-content .nav li a:hover {
-  color: #428bca;
-}
-#email-content .nav li.active a,
-#email-content .nav li a:hover {
-  -webkit-border-radius: 0;
-  border-radius: 0;
-  border: none;
-  border-bottom: 4px solid #34a6ff;
-}
-#email-compose {
-  display: none;
-}
 #email-compose.enable {
   display: block;
 }
@@ -2130,10 +2093,17 @@ textarea:active {
 }
 #email-compose h3 {
   color: #444;
+  margin-top: 0;
 }
-#email-compose h3 small {
+#email-compose h3 a {
+  color: #34a6ff;
+}
+#email-compose h3 a.close-email {
   float: right;
-  cursor: pointer;
+}
+#email-compose h3 a.expand {
+  font-size: 25px;
+  margin-right: 10px;
 }
 #email-compose textarea {
   border: 1px solid #444;
@@ -2141,8 +2111,48 @@ textarea:active {
   width: 100%;
   text-align: left;
 }
-#content {
-  height: 100%;
+/*
+  Open email tabs
+
+  -- disabled because of the ugly scrollbar on most of the computers
+*/
+#email-thread .nav {
+  display: none;
+  margin-bottom: 30px;
+  overflow: auto;
+}
+#email-thread .nav li {
+  position: relative;
+}
+#email-thread .nav li:not(.active) {
+  max-width: 150px;
+}
+#email-thread .nav li:not(.active) a {
+  color: #bdbdbd;
+}
+#email-thread .nav li a {
+  overflow: hidden;
+  white-space: nowrap;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  border: none;
+  border-bottom: 1px solid #34a6ff;
+  margin: 0;
+}
+#email-thread .nav li a:hover {
+  color: #428bca;
+}
+#email-thread .nav li .close {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+#email-thread .nav li.active a,
+#email-thread .nav li a:hover {
+  -webkit-border-radius: 0;
+  border-radius: 0;
+  border: none;
+  border-bottom: 4px solid #34a6ff;
 }
 
 
