@@ -1,6 +1,18 @@
+request = superagent
+
 module.exports = MailboxStore = Fluxxor.createStore
+
+    actions:
+        'ADD_MAILBOX': 'onCreate'
+        'REMOVE_MAILBOX': 'onRemove'
+        'EDIT_MAILBOX': 'onEdit'
+        'SELECT_MAILBOX': 'onSelectMailbox'
+        'NEW_MAILBOX_WAITING': 'onNewMailboxWaiting'
+        'NEW_MAILBOX_ERROR': 'onNewMailboxError'
+
+
     initialize: ->
-        @mailboxes = [
+        fixtures = [
 
             {
                 id: 1
@@ -12,9 +24,52 @@ module.exports = MailboxStore = Fluxxor.createStore
                 label: 'joseph.silvestre@cozycloud.cc'
                 unreadCount: 369
             }
-
         ]
 
-    getAll: -> return @mailboxes
+        @mailboxes = window.mailboxes or fixtures
+        @selectedMailbox = null
+        @newMailboxWaiting = false
+        @newMailboxError = null
 
-    getDefault: -> return @mailboxes[0]
+
+    onCreate: (mailbox) ->
+        @mailboxes.push mailbox
+        @emit 'change'
+
+    onSelectMailbox: (mailboxID) ->
+        @selectedMailbox = _.findWhere @mailboxes, id: mailboxID
+        @emit 'change'
+
+    onNewMailboxWaiting: (payload) ->
+        @newMailboxWaiting = payload
+        @emit 'change'
+
+    onNewMailboxError: (error) ->
+        @newMailboxError = error
+        @emit 'change'
+
+    onEdit: (mailbox) ->
+        index = _.pluck(@mailboxes, 'id').indexOf mailbox.id
+        @mailboxes[index] = mailbox
+        @selectedMailbox = @mailboxes[index]
+        @emit 'change'
+
+    onRemove: (mailboxID) ->
+        index = _.pluck(@mailboxes, 'id').indexOf mailboxID
+        mailbox = @mailboxes[index]
+        console.log @mailboxes.length
+        @mailboxes.splice index, 1
+        console.log @mailboxes.length
+        mailbox = null
+        @selectedMailbox = @getDefault()
+        @emit 'change'
+
+    getAll: ->
+        @mailboxes = _.sortBy @mailboxes, (mailbox) ->
+            return mailbox.label
+
+        return @mailboxes
+    getDefault: -> return @mailboxes[0] or null
+    getSelectedMailbox: -> return @selectedMailbox or @getDefault()
+    getError: -> return @newMailboxError
+    isWaiting: -> return @newMailboxWaiting

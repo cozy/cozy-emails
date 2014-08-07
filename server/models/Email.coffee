@@ -1,6 +1,19 @@
-#americano = require 'americano-cozy'
+americano = require 'americano-cozy'
+module.exports = Email = americano.getModel 'Email',
+    mailbox: String
+    subject: String
+    from: String
+    to: String
+    text: String
+    date: Date
+    inReplyTo: String
 
-#module.exports = Email = americano.getModel 'Email',
+Email.getByMailbox = (mailboxID, callback) ->
+    Email.request 'byMailbox', key: mailboxID, callback
+
+Email.destroyByMailbox = (mailboxID, callback) ->
+    Email.requestDestroy 'byMailbox', key: mailboxID, callback
+
 attributes =
     mailbox: String
     folder: String

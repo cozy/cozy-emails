@@ -1,7 +1,8 @@
 module.exports = LayoutStore = Fluxxor.createStore
 
     actions:
-        'SHOW_ROUTE': 'onRoute'
+        'SHOW_PANEL': '_showPanel'
+        'HIDE_PANEL': '_hidePanel'
 
     initialize: ->
         @layout =
@@ -10,15 +11,24 @@ module.exports = LayoutStore = Fluxxor.createStore
                 parameter: null
             rightPanel: null
 
-    onRoute: (args) ->
+    _showPanel: (payload) ->
+        {panelInfo, direction} = payload
 
-        {name, leftPanelInfo, rightPanelInfo} = args
+        if direction is 'left'
+            @layout.leftPanel = panelInfo
+        else
+            @layout.rightPanel = panelInfo
 
-        @layout =
-            leftPanel:
-                action: name
-                parameter: leftPanelInfo # holds the parameter value
-            rightPanel: rightPanelInfo
+        @emit 'change'
+
+    _hidePanel: (direction) ->
+
+        # closing the left panel equals expanding the right panel
+        if direction is 'left'
+            @layout.leftPanel = @layout.rightPanel
+            @layout.rightPanel = null
+        else
+            @layout.rightPanel = null
 
         @emit 'change'
 

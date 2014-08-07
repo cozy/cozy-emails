@@ -3,6 +3,13 @@
 americano = require 'americano'
 
 module.exports =
+    mailbox:
+        all: americano.defaultRequests.all
+
+    email:
+        all: americano.defaultRequests.all
+        byMailbox: (doc) -> emit doc.mailbox, doc
+
     template:
         # shortcut for emit doc._id, doc
         all: americano.defaultRequests.all

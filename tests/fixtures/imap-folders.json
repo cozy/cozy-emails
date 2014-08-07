@@ -1,7 +1,3 @@
-/*
-    _id should be auto-generated but cozy-fixtures doesn't handle
-    connections between documents.
-*/
 [
     {
         "_id": "gmail-ID-folder1",

@@ -9,19 +9,16 @@ module.exports = Menu = React.createClass
 
     mixins: [RouterMixin]
 
-
-    getInitialState: ->
-        # which mailbox is currently browsed
-        return activeMailbox: null
-
-
     render: ->
-
         composeUrl = @buildUrl
             direction: 'right'
             action: 'compose'
             parameter: null
             fullWidth: false
+
+        newMailboxUrl = @buildUrl
+            direction: 'left'
+            action: 'mailbox.new'
 
         div id: 'menu', className: 'col-xs-12 col-md-1 hidden-xs hidden-sm',
             a href: composeUrl, className: 'menu-item compose-action',
@@ -32,17 +29,17 @@ module.exports = Menu = React.createClass
                 for mailbox, key in @props.mailboxes
                     @getMailboxRender mailbox, key
 
-            a href: '#', className: 'menu-item new-mailbox-action',
+            a href: newMailboxUrl, className: 'menu-item new-mailbox-action',
                 i className: 'fa fa-inbox'
                 span className: 'mailbox-label', 'New mailbox'
 
 
     # renders a single mailbox and its submenu
     getMailboxRender: (mailbox, key) ->
-        isActive = (not @state.activeMailbox and key is 0) \
-                    or @state.activeMailbox is mailbox.id
+        isSelected = (not @props.selectedMailbox and key is 0) \
+                    or @props.selectedMailbox.id is mailbox.id
 
-        mailboxClasses = classer active: isActive
+        mailboxClasses = classer active: isSelected
         url = @buildUrl
             direction: 'left'
             action: 'mailbox.emails'

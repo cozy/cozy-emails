@@ -21,7 +21,106 @@
 */
 
 
+* > .fa-compress
+  transform rotate(45deg)
 
+/*
+  Panels animations
+*/
+@keyframes moveToRight {
+  from { transform: translateX(-100%); }
+  to { transform: translateX(0%); }
+}
+
+@keyframes moveToLeft {
+  from {
+    left 100%
+
+  }
+  to {
+    left 50%
+  }
+}
+
+@keyframes moveToRight {
+  from {
+    left 0%
+
+  }
+  to {
+    left 50%
+  }
+}
+
+@keyframes moveFromLeft {
+  from {
+    left -100%
+  }
+
+  to {
+  }
+}
+
+@keyframes expandFromRight {
+  from {
+    left 50%
+    width 50%
+  }
+  to {
+    left 0
+    //width 50%
+    //background red
+  }
+}
+
+
+animationDuration = .3s
+
+.panel:first-of-type
+  left 0
+  position absolute
+  z-index 100
+
+.panel:nth-of-type(2)
+  left 50%
+  top 0
+  position absolute
+  z-index 50
+
+.panel:first-of-type.col-md-6
+  transition width animationDuration ease
+  position absolute
+  z-index 100
+
+.panel:first-of-type.col-md-12
+  transition width animationDuration ease
+
+.panel:first-of-type.expandFromRight
+  animation expandFromRight animationDuration ease
+
+.panel:first-of-type.moveFromLeft
+  animation moveFromLeft animationDuration ease
+
+.panel:nth-of-type(2).slide-in-from-right
+  animation moveToLeft animationDuration ease
+
+.panel:nth-of-type(2).slide-in-from-left
+  animation moveToRight animationDuration ease-out
+
+/*
+  mailbox config window
+*/
+#mailbox-new
+  h3
+    color #444
+    margin-top 0
+    padding-bottom 10px
+    border-bottom 1px solid #f4f4f4
+
+
+/*
+  new email window
+*/
 #email-compose
 
   &.enable
@@ -39,11 +138,11 @@
       color basecolor
 
     a.close-email
-      float right
+      margin-right 15px
 
     a.expand
+      float right
       font-size 25px
-      margin-right 10px
 
 #email-compose
   textarea
@@ -58,7 +157,7 @@
   -- disabled because of the ugly scrollbar on most of the computers
 */
 #email-thread .nav
-  display none
+  display block
   margin-bottom 30px
 
   overflow auto

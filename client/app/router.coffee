@@ -25,22 +25,25 @@ module.exports = class Router extends Backbone.Router
     patterns:
         'mailbox.config':
             pattern: 'mailbox/:id/config'
-            callback: 'mailbox.config'
+            fluxAction: 'showConfigMailbox'
         'mailbox.new':
             pattern: 'mailbox/new'
-            callback: 'mailbox.new'
+            fluxAction: 'showCreateMailbox'
         'mailbox.emails':
             pattern: 'mailbox/:id'
-            callback: 'mailbox.emails'
+            fluxAction: 'showEmailList'
         'email':
             pattern: 'email/:id'
-            callback: 'email'
+            fluxAction: 'showEmailThread'
         'compose':
             pattern: 'compose'
-            callback: 'compose'
+            fluxAction: 'showComposeNewEmail'
 
     # default route
     routes: '': 'mailbox.emails'
+
+    previous: null
+    current: null
 
     # we store a regexified version of each patterns
     cachedPatterns: []
@@ -56,27 +59,58 @@ module.exports = class Router extends Backbone.Router
                 pattern: @_routeToRegExp route.pattern
 
             # each pattern has two routes: full-width or with a right panel
-            @routes[route.pattern] = route.callback
-            @routes["#{route.pattern}/*rightPanel"] = route.callback
+            @routes[route.pattern] = key
+            @routes["#{route.pattern}/*rightPanel"] = key
 
         # Backbone's magic
         @_bindRoutes()
 
         # Updates the LayoutStore for each matched request
         @flux = options.flux
+        @flux.router = @
         @on 'route', (name, args) =>
-            [leftPanelInfo, rightPanelInfo] = @_processSubRouting args
-            @flux.actions.layout.showRoute name, leftPanelInfo, rightPanelInfo
+            [leftPanelInfo, rightPanelInfo] = @_processSubRouting name, args
+
+            leftAction = @fluxActionFactory leftPanelInfo
+            rightAction = @fluxActionFactory rightPanelInfo
+
+            @previous = @current
+            @current = leftPanel: leftPanelInfo, rightPanel: rightPanelInfo
+
+            if leftAction?
+                leftAction leftPanelInfo, 'left'
+
+            if rightAction?
+                rightAction rightPanelInfo, 'right'
+            @trigger 'fluxRoute', @current
+
+
+    ###
+        Gets the Flux action to execute given a panel info.
+    ###
+    fluxActionFactory: (panelInfo) ->
+
+        fluxAction = null
+        pattern = @patterns[panelInfo?.action]
+
+        if pattern?
+            fluxAction = @flux.actions.layout[pattern.fluxAction]
+
+            if not fluxAction?
+                console.warn "`#{pattern.fluxAction}` method not found in layout actions."
+
+            return fluxAction
 
 
     ###
         Extracts and matches the second part of the URl if it exists.
     ###
-    _processSubRouting: (args) ->
+    _processSubRouting: (name, args) ->
         [leftPanelInfo, rightPanelInfo] = args
 
         # if the first panel route doesn't have a parameter or if it,
-        # the rightPanelInfo is its first parameter
+        # the rightPanelInfo is its first parameter.
+        # Otherwise, leftPanelInfo is the parameter value.
         isNumber = /[0-9]+/.test leftPanelInfo
         if not rightPanelInfo? and leftPanelInfo? and \
            leftPanelInfo.indexOf(':') is -1
@@ -93,6 +127,9 @@ module.exports = class Router extends Backbone.Router
         else
             rightPanelInfo = null
 
+        # normalize the leftPanelInfo
+        leftPanelInfo = action: name, parameter: leftPanelInfo
+
         return [leftPanelInfo, rightPanelInfo]
 
 
@@ -105,8 +142,6 @@ module.exports = class Router extends Backbone.Router
               that can be `left` or `right`. It's the short version.
     ###
     buildUrl: (options) ->
-
-        @current = @flux.store('LayoutStore').getState()
 
         # Loads the panel from the options or the current router status to keep
         # track of current URLs
@@ -173,7 +208,11 @@ module.exports = class Router extends Backbone.Router
             pattern = @patterns[panel.action].pattern
 
             if panel.action is 'mailbox.emails' and not panel.parameter?
-                panel.parameter = @flux.store('MailboxStore').getDefault().id
+                defaultMailbox = @flux.store('MailboxStore').getDefault()
+                if defaultMailbox?
+                    panel.parameter = defaultMailbox.id
+                else
+                    panel.parameter = null
 
             partURL = pattern.replace ':id', panel.parameter
 

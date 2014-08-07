@@ -4,6 +4,9 @@ Menu = require './menu'
 EmailList = require './email-list'
 EmailThread = require './email-thread'
 Compose = require './compose'
+MailboxConfig = require './mailbox-config'
+
+ReactCSSTransitionGroup = React.addons.CSSTransitionGroup
 
 # Fluxxor requirements
 FluxMixin = Fluxxor.FluxMixin React
@@ -27,6 +30,8 @@ StoreWatchMixin = Fluxxor.StoreWatchMixin
 module.exports = Application = React.createClass
     displayName: 'Application'
 
+    brah: 0
+
     mixins: [
         FluxMixin
         StoreWatchMixin("MailboxStore", "EmailStore", "LayoutStore")
@@ -34,22 +39,29 @@ module.exports = Application = React.createClass
 
     render: ->
         # Shortcut
-        layout = @state.layout
+        #layout = @state.layout
+        layout = @props.router.current
+
+        if not layout?
+            return div null, "Loading..."
 
         # is the layout a full-width panel or two panels sharing the width
-        isFullWidth = @state.isLayoutFullWidth
+        isFullWidth = not layout.rightPanel?
 
         leftPanelLayoutMode = if isFullWidth then 'full' else 'left'
 
         # css classes are a bit long so we use a subfunction to get them
         panelClasses = @getPanelClasses isFullWidth
+
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
 
                 # Menu is self-managed because this part of the layout
                 # is always the same.
-                Menu mailboxes: @state.mailboxes
+                Menu
+                    mailboxes: @state.mailboxes
+                    selectedMailbox: @state.selectedMailbox
 
                 div id: 'page-content', className: 'col-xs-12 col-md-11',
 
@@ -66,21 +78,56 @@ module.exports = Application = React.createClass
 
                     # Two layout modes: one full-width panel or two panels
                     div id: 'panels', className: 'row',
-                        div className: panelClasses.leftPanel,
+                        div className: panelClasses.leftPanel, key: 'left-panel-' + layout.leftPanel.parameter,
                             @getPanelComponent layout.leftPanel, leftPanelLayoutMode
-                        if not isFullWidth
-                            div className: panelClasses.rightPanel,
+                        if not isFullWidth and layout.rightPanel?
+                            div className: panelClasses.rightPanel, key: 'right-panel-' + layout.rightPanel.action + '-' + layout.rightPanel.parameter,
                                 @getPanelComponent layout.rightPanel, 'right'
 
 
     # Panels CSS classes are a bit long so we get them from a this subfunction
     getPanelClasses: (isFullWidth) ->
+        previous = @props.router.previous
+        layout = @props.router.current
+        left = layout.leftPanel
+        right = layout.rightPanel
+
         if isFullWidth
             classes = leftPanel: 'panel col-xs-12 col-md-12'
+
+            # when full-width panel is shown after a two-panels structure
+            if previous? and previous.rightPanel
+
+                # if the full-width panel was on right right before, it expands
+                if previous.rightPanel.action is layout.leftPanel.action and
+                   previous.rightPanel.parameter is layout.leftPanel.parameter
+                    classes.leftPanel += ' expandFromRight'
+
+            # when full-width panel is shown after a full-width panel
+            else if previous?
+                classes.leftPanel += ' moveFromLeft'
         else
             classes =
                 leftPanel: 'panel col-xs-12 col-md-6'
                 rightPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm'
+
+            if previous?
+                wasFullWidth = not previous.rightPanel?
+
+                if wasFullWidth and not isFullWidth
+
+                    # expanded right panel collapses
+                    if previous.leftPanel.action is right.action and
+                       previous.leftPanel.parameter is right.parameter
+                        classes.leftPanel += ' moveFromLeft'
+                        classes.rightPanel += ' slide-in-from-left'
+
+                    # default
+                    else
+                        classes.rightPanel += ' slide-in-from-right'
+
+                else if not isFullWidth or previous.rightPanel.action is 'email'
+                    classes.rightPanel += ' slide-in-from-left'
 
         return classes
 
@@ -88,24 +135,28 @@ module.exports = Application = React.createClass
     # Factory of React components for panels
     getPanelComponent: (panelInfo, layout) ->
 
+        flux = @getFlux()
+
         # -- Generates a list of emails for a given mailbox
         if panelInfo.action is 'mailbox.emails'
-            firstMailbox = @getFlux().store('MailboxStore').getDefault()
+            firstMailbox = flux.store('MailboxStore').getDefault()
 
             # display emails of the selected mailbox
             if panelInfo.parameter?
-                emailStore = @getFlux().store 'EmailStore'
-                mailboxID = parseInt panelInfo.parameter
+                emailStore = flux.store 'EmailStore'
+                mailboxID = panelInfo.parameter
                 return EmailList
                     emails: emailStore.getEmailsByMailbox mailboxID
+                    mailboxID: mailboxID
                     layout: layout
 
             # default: display emails of the first mailbox
             else if not panelInfo.parameter? and firstMailbox?
-                emailStore = @getFlux().store 'EmailStore'
+                emailStore = flux.store 'EmailStore'
                 mailboxID = firstMailbox.id
                 return EmailList
                     emails: emailStore.getEmailsByMailbox mailboxID
+                    mailboxID: mailboxID
                     layout: layout
 
             # there is no mailbox and mailbox not found case
@@ -115,18 +166,28 @@ module.exports = Application = React.createClass
         # -- Generates a configuration window for a given mailbox
         # or the mailbox creation form.
         else if panelInfo.action is 'mailbox.config'
-            return div null, 'Mailbox configuration/creation'
+            initialMailboxConfig = @state.selectedMailbox
+            error = flux.store('MailboxStore').getError()
+            isWaiting = flux.store('MailboxStore').isWaiting()
+            return MailboxConfig {layout, error, isWaiting, initialMailboxConfig}
+
+        # -- Generates a configuration window to create a new mailbox
+        else if panelInfo.action is 'mailbox.new'
+            error = flux.store('MailboxStore').getError()
+            isWaiting = flux.store('MailboxStore').isWaiting()
+            return MailboxConfig {layout, error, isWaiting}
 
         # -- Generates an email thread
         else if panelInfo.action is 'email'
-            email = @getFlux().store('EmailStore').getByID panelInfo.parameter
-            return EmailThread
-                email: email
-                layout: layout
+            email = flux.store('EmailStore').getByID panelInfo.parameter
+            thread = flux.store('EmailStore').getEmailsByThread panelInfo.parameter
+            selectedMailbox = flux.store('MailboxStore').getSelectedMailbox()
+            return EmailThread {email, thread, selectedMailbox, layout}
 
         # -- Generates the new email composition form
         else if panelInfo.action is 'compose'
-            return Compose {layout}
+            selectedMailbox = flux.store('MailboxStore').getSelectedMailbox()
+            return Compose {selectedMailbox, layout}
 
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else return div null, 'Unknown component'
@@ -137,8 +198,9 @@ module.exports = Application = React.createClass
         flux = @getFlux()
         return {
             mailboxes: flux.store('MailboxStore').getAll()
+            selectedMailbox: flux.store('MailboxStore').getSelectedMailbox()
             emails: flux.store('EmailStore').getAll()
-            layout: flux.store('LayoutStore').getState()
+            #layout: flux.store('LayoutStore').getState()
             isLayoutFullWidth: flux.store('LayoutStore').isFullWidth()
         }
 
@@ -147,12 +209,13 @@ module.exports = Application = React.createClass
     componentWillMount: ->
         # Uses `forceUpdate` with the proper scope because React doesn't allow
         # to rebind its scope on the fly
-        @onRoute = (route, params) =>
-            #@forceUpdate()
+        @onRoute = (params) =>
+            {leftPanelInfo, rightPanelInfo} = params
+            @forceUpdate()
 
-        @props.router.on 'route', @onRoute
+        @props.router.on 'fluxRoute', @onRoute
 
 
     # Stops listening to router changes
     componentWillUnmount: ->
-        @props.router.off 'route', @onRoute
+        @props.router.off 'fluxRoute', @onRoute

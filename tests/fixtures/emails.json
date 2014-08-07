@@ -71,7 +71,7 @@
         "_id": "email-ID-1",
         "docType": "Email",
         "createdAt": "2014-07-11T08:38:23.000Z",
-        "subject": "Another email",
+        "subject": "First email of thread",
         "from": "alice@provider.com",
         "to": "bob@provider.com",
         "cc": "",
@@ -88,7 +88,7 @@
     {
         "docType": "Email",
         "createdAt": "2014-07-11T08:38:23.000Z",
-        "subject": "Another email",
+        "subject": "Email in reply to",
         "from": "bob@provider.com",
         "to": "alice@provider.com",
         "cc": "",

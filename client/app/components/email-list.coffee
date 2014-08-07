@@ -2,17 +2,19 @@
 classer = React.addons.classSet
 
 RouterMixin = require '../mixins/router'
+FluxChildMixin = Fluxxor.FluxChildMixin React
 
 module.exports = EmailList = React.createClass
     displayName: 'EmailList'
 
-    mixins: [RouterMixin]
+    mixins: [RouterMixin, FluxChildMixin]
 
     render: ->
         div id: 'email-list',
             ul className: 'list-unstyled',
                 for email, key in @props.emails
-                    @getEmailRender email, key
+                    if email.inReplyTo.length is 0
+                        @getEmailRender email, key
 
     getEmailRender: (email, key) ->
 
@@ -28,12 +30,13 @@ module.exports = EmailList = React.createClass
                 i className: 'fa fa-user'
                 span className: 'email-participants', @getParticipants email
                 div className: 'email-preview',
-                    span className: 'email-title', email.title
-                    p null, email.content
-                span className: 'email-hour', email.date
+                    span className: 'email-title', email.subject
+                    p null, email.text
+                span className: 'email-hour', '23:20'
 
 
 
     getParticipants: (email) ->
-        list = [email.sender].concat email.receivers
-        return list.join ', '
+        #list = [email.sender].concat email.receivers
+        #return list.join ', '
+        return email.from + ', ' + email.to

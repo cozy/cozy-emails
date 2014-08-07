@@ -1,7 +1,17 @@
-#americano = require 'americano-cozy'
-#module.exports = Mailbox = americano.getModel 'Mailbox',
+americano = require 'americano-cozy'
+module.exports = Mailbox = americano.getModel 'Mailbox',
+    label: String
+    name: String
+    password: String
+    smtpServer: String
+    smtpPort: Number
+    imapServer: String
+    imapPort: Number
+
+Mailbox.getAll = (callback) -> Mailbox.request 'all', callback
 
 attributes =
+
     # identification
     name: String
     config: type: Number, default: 0
