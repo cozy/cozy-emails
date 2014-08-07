@@ -65,9 +65,8 @@ module.exports = React.createClass
                         input id: 'mailbox-imap-port', valueLink: @linkState('imapPort'), type: 'text', className: 'form-control'
 
                 div className: 'form-group',
-                    div className: 'col-sm-offset-5 col-sm-1',
+                    div className: 'col-sm-offset-3 col-sm-6 text-right',
                         button className: 'btn btn-cozy', onClick: @onRemove, 'Remove'
-                    div className: 'col-sm-2',
                         button className: 'btn btn-cozy', onClick: @onSubmit, buttonLabel
     onSubmit: (event) ->
         # prevents the page from reloading

@@ -9,7 +9,7 @@
 // UI skeleton positionning
 @import '_layout'
 
-// Components styles and inter
+// Components styles
 @import '_menu'
 @import '_quick-actions-bar'
 @import '_email-list'
@@ -20,6 +20,8 @@
   "Production-ready" components styles should live in a dedicated file
 */
 
+animationDuration = .3s
+
 
 * > .fa-compress
   transform rotate(45deg)
@@ -27,85 +29,63 @@
 /*
   Panels animations
 */
-@keyframes moveToRight {
-  from { transform: translateX(-100%); }
-  to { transform: translateX(0%); }
-}
-
-@keyframes moveToLeft {
-  from {
-    left 100%
-
-  }
-  to {
-    left 50%
-  }
-}
-
-@keyframes moveToRight {
-  from {
-    left 0%
-
-  }
-  to {
-    left 50%
-  }
-}
 
 @keyframes moveFromLeft {
   from {
-    left -100%
+    transform translate(-100%)
   }
-
   to {
+    transform translate(0)
+  }
+}
+
+@keyframes moveFromRight {
+  from {
+    transform translate(100%)
+  }
+  to {
+    transform translate(0)
   }
 }
 
 @keyframes expandFromRight {
   from {
-    left 50%
-    width 50%
+    transform translate(50%)
   }
   to {
-    left 0
-    //width 50%
-    //background red
+    transform translate(0)
   }
 }
 
-
-animationDuration = .3s
-
 .panel:first-of-type
-  left 0
-  position absolute
   z-index 100
 
 .panel:nth-of-type(2)
-  left 50%
-  top 0
-  position absolute
   z-index 50
 
+// left panel collapse animation
 .panel:first-of-type.col-md-6
   transition width animationDuration ease
-  position absolute
-  z-index 100
 
+// left panel expand animation
 .panel:first-of-type.col-md-12
   transition width animationDuration ease
 
-.panel:first-of-type.expandFromRight
-  animation expandFromRight animationDuration ease
-
+// left panel 'enter' animation
 .panel:first-of-type.moveFromLeft
   animation moveFromLeft animationDuration ease
 
-.panel:nth-of-type(2).slide-in-from-right
-  animation moveToLeft animationDuration ease
+// right panel expands animation
+.panel:first-of-type.expandFromRight
+  animation expandFromRight animationDuration ease
 
+// rightPanel 'enter' animation from right
+.panel:nth-of-type(2).slide-in-from-right
+  animation moveFromRight animationDuration ease
+
+// rightPanel 'enter' animation from left
 .panel:nth-of-type(2).slide-in-from-left
-  animation moveToRight animationDuration ease-out
+  animation moveFromLeft animationDuration ease-out
 
 /*
   mailbox config window
@@ -116,6 +96,10 @@ animationDuration = .3s
     margin-top 0
     padding-bottom 10px
     border-bottom 1px solid #f4f4f4
+
+  button
+    margin-left 5px
+
 
 
 /*
