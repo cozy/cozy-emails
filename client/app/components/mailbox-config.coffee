@@ -12,12 +12,6 @@ module.exports = React.createClass
     ]
 
     render: ->
-        # width depends on layout: one panel or full width
-        inputClass = if @props.layout is 'full' then 'col-sm-3' else 'col-sm-6'
-        portClass = if @props.layout is 'full' then 'col-sm-1' else 'col-sm-2'
-        labelClass = if @props.layout is 'full' then 'col-sm-2 col-sm-offset-2' else 'col-sm-3'
-        labelClass = "#{labelClass} control-label"
-
         titleLabel = if @props.initialMailboxConfig? then 'Edit mailbox' else 'New mailbox'
 
         if @props.isWaiting then buttonLabel = 'Saving...'
@@ -32,41 +26,42 @@ module.exports = React.createClass
 
             form className: 'form-horizontal',
                 div className: 'form-group',
-                    label htmlFor: 'mailbox-label', className: labelClass, 'Label'
-                    div className: inputClass,
+                    label htmlFor: 'mailbox-label', className: 'col-sm-2 col-sm-offset-2 control-label', 'Label'
+                    div className: 'col-sm-3',
                         input id: 'mailbox-label', valueLink: @linkState('label'), type: 'text', className: 'form-control', placeholder: 'A short mailbox name'
                 div className: 'form-group',
-                    label htmlFor: 'mailbox-name', className: labelClass, 'Your name'
-                    div className: inputClass,
+                    label htmlFor: 'mailbox-name', className: 'col-sm-2 col-sm-offset-2 control-label', 'Your name'
+                    div className: 'col-sm-3',
                         input id: 'mailbox-name', valueLink: @linkState('name'), type: 'text', className: 'form-control', placeholder: 'Your name, as it will be displayed'
                 div className: 'form-group',
-                    label htmlFor: 'mailbox-email-address', className: labelClass, 'Email address'
-                    div className: inputClass,
+                    label htmlFor: 'mailbox-email-address', className: 'col-sm-2 col-sm-offset-2 control-label', 'Email address'
+                    div className: 'col-sm-3',
                         input id: 'mailbox-email-address', valueLink: @linkState('email'), type: 'email', className: 'form-control', placeholder: 'Your email address'
                 div className: 'form-group',
-                    label htmlFor: 'mailbox-password', className: labelClass, 'Password'
-                    div className: inputClass,
+                    label htmlFor: 'mailbox-password', className: 'col-sm-2 col-sm-offset-2 control-label', 'Password'
+                    div className: 'col-sm-3',
                         input id: 'mailbox-password', valueLink: @linkState('password'), type: 'password', className: 'form-control'
 
                 div className: 'form-group',
-                    label htmlFor: 'mailbox-smtp-server', className: labelClass, 'Sending server'
-                    div className: inputClass,
+                    label htmlFor: 'mailbox-smtp-server', className: 'col-sm-2 col-sm-offset-2 control-label', 'Sending server'
+                    div className: 'col-sm-3',
                         input id: 'mailbox-smtp-server', valueLink: @linkState('smtpServer'), type: 'text', className: 'form-control', placeholder: 'smtp.provider.tld'
                     label htmlFor: 'mailbox-smtp-port', className: 'col-sm-1 control-label', 'Port'
-                        div className: portClass,
+                        div className: 'col-sm-1',
                             input id: 'mailbox-smtp-port', valueLink: @linkState('smtpPort'), type: 'text', className: 'form-control'
 
                 div className: 'form-group',
-                    label htmlFor: 'mailbox-imap-server', className: labelClass, 'Receiving server'
-                    div className: inputClass,
+                    label htmlFor: 'mailbox-imap-server', className: 'col-sm-2 col-sm-offset-2 control-label', 'Receiving server'
+                    div className: 'col-sm-3',
                         input id: 'mailbox-imap-server', valueLink: @linkState('imapServer'), type: 'text', className: 'form-control', placeholder: 'imap.provider.tld'
                     label htmlFor: 'mailbox-imap-port', className: 'col-sm-1 control-label', 'Port'
-                    div className: portClass,
+                    div className: 'col-sm-1',
                         input id: 'mailbox-imap-port', valueLink: @linkState('imapPort'), type: 'text', className: 'form-control'
 
                 div className: 'form-group',
-                    div className: 'col-sm-offset-3 col-sm-6 text-right',
-                        button className: 'btn btn-cozy', onClick: @onRemove, 'Remove'
+                    div className: 'col-sm-offset-2 col-sm-5 text-right',
+                        if @props.initialMailboxConfig?
+                            button className: 'btn btn-cozy', onClick: @onRemove, 'Remove'
                         button className: 'btn btn-cozy', onClick: @onSubmit, buttonLabel
     onSubmit: (event) ->
         # prevents the page from reloading
