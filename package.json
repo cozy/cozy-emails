@@ -14,9 +14,9 @@
   "dependencies": {
     "americano": "0.3.7",
     "americano-cozy": "0.2.6",
-    "printit": "^0.1.3",
-    "async": "^0.9.0",
-    "jade": "^1.5.0"
+    "printit": "0.1.3",
+    "async": "0.9.0",
+    "jade": "1.5.0"
   },
   "devDependencies": {
     "should": "4.0.4",
