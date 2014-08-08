@@ -57,9 +57,7 @@ module.exports = MailboxStore = Fluxxor.createStore
     onRemove: (mailboxID) ->
         index = _.pluck(@mailboxes, 'id').indexOf mailboxID
         mailbox = @mailboxes[index]
-        console.log @mailboxes.length
         @mailboxes.splice index, 1
-        console.log @mailboxes.length
         mailbox = null
         @selectedMailbox = @getDefault()
         @emit 'change'

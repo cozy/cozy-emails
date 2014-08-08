@@ -19,6 +19,7 @@ module.exports = Menu = React.createClass
         newMailboxUrl = @buildUrl
             direction: 'left'
             action: 'mailbox.new'
+            fullWidth: true
 
         div id: 'menu', className: 'col-xs-12 col-md-1 hidden-xs hidden-sm',
             a href: composeUrl, className: 'menu-item compose-action',

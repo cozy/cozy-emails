@@ -24,7 +24,7 @@ module.exports = React.createClass
         else if @props.initialMailboxConfig? then buttonLabel = 'Edit'
         else buttonLabel = 'Add'
 
-        div id: 'mailbox-new',
+        div id: 'mailbox-config',
             h3 className: null, titleLabel
 
             if @props.error

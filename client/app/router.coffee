@@ -14,10 +14,10 @@
         - `mailbox/a/path/:id`
         - `mailbox/a/path/:id/*rightPanel`
 
-        Each pattern is actually the pattern itself plus the pattern and
+        Each pattern is actually the pattern itself plus the pattern itself and
         another pattern.
 
-    Currently, only one parameter is supported per pattern.
+    **Currently, only one parameter is supported per pattern.**
 ###
 
 module.exports = class Router extends Backbone.Router
