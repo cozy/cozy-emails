@@ -12,12 +12,5 @@ module.exports = {
     byMailbox: function(doc) {
       return emit(doc.mailbox, doc);
     }
-  },
-  template: {
-    all: americano.defaultRequests.all,
-    customRequest: {
-      map: function(doc) {},
-      reduce: function(key, values, rereduce) {}
-    }
   }
 };

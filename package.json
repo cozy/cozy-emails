@@ -29,6 +29,13 @@
     "test": "cake tests",
     "start": "node build/server.js"
   },
-  "cozy-permissions": {},
+  "cozy-permissions": {
+    "Mailbox": {
+      "description": "Manages your mailboxes"
+    },
+    "Email": {
+      "description": "Manages your emails"
+    }
+  },
   "cozy-displayName": "Emails"
 }
