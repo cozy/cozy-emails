@@ -13,20 +13,33 @@ module.exports = MailboxStore = Fluxxor.createStore
 
     initialize: ->
         fixtures = [
-
             {
-                id: 1
-                label: 'joseph.silvestre38@gmail.com'
-                unreadCount: 1275
+                id: "gmail-ID2"
+                email: "randomlogin@randomprovider.tld"
+                imapPort: 465
+                imapServer: "imap.gmail.com"
+                label: "Gmail"
+                name: "Random Name"
+                password: "randompassword"
+                smtpPort: 993
+                smtpServer: "smtp.gmail.com"
             },
             {
-                id: 2
-                label: 'joseph.silvestre@cozycloud.cc'
-                unreadCount: 369
+                id: "orange-ID2"
+                email: "randomlogin@randomprovider.tld"
+                imapPort: 465
+                imapServer: "imap.orange.fr"
+                label: "Orange"
+                name: "Random Name"
+                password: "randompassword"
+                smtpPort: 993
+                smtpServer: "smtp.orange.fr"
             }
         ]
 
         @mailboxes = window.mailboxes or fixtures
+        @mailboxes = fixtures if @mailboxes.length is 0
+
         @selectedMailbox = null
         @newMailboxWaiting = false
         @newMailboxError = null
