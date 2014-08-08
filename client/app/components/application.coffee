@@ -64,6 +64,10 @@ module.exports = Application = React.createClass
                 parameter: @state.selectedMailbox.id
                 fullWidth: true
 
+        responsiveBackUrl = @buildUrl
+            leftPanel: layout.leftPanel
+            fullWidth: true
+
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
@@ -79,7 +83,18 @@ module.exports = Application = React.createClass
                     # The quick actions bar shoud be moved in its own component
                     # when its feature is implemented.
                     div id: 'quick-actions', className: 'row',
-                        i className: 'fa fa-bars hidden-md hidden-lg pull-left'
+                        # responsive menu icon
+                        if layout.rightPanel
+                            a href: responsiveBackUrl, className: 'responsive-handler hidden-md hidden-lg',
+                                i className: 'fa fa-chevron-left hidden-md hidden-lg pull-left'
+                                'Back'
+                        else
+                            a onClick: @onResponsiveMenuClick, className: 'responsive-handler hidden-md hidden-lg',
+                                i className: 'fa fa-bars pull-left'
+                                'Menu'
+
+
+
                         form className: 'form-inline col-md-6 hidden-xs hidden-sm pull-left',
                             div className: 'form-group',
                                 div className: 'input-group',
@@ -134,8 +149,8 @@ module.exports = Application = React.createClass
         # ... or a two panels.
         else
             classes =
-                leftPanel: 'panel col-xs-12 col-md-6'
-                rightPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm'
+                leftPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm'
+                rightPanel: 'panel col-xs-12 col-md-6'
 
             # we don't animate in the first render
             if previous?
@@ -257,3 +272,11 @@ module.exports = Application = React.createClass
     # Stops listening to router changes
     componentWillUnmount: ->
         @props.router.off 'fluxRoute', @onRoute
+
+    # dirty, dirty, very dirty hack to handle the menu in smaller devices
+    # only thing that depends on jQuery
+    # we could use the layout store to handle the menu state...
+    onResponsiveMenuClick: ->
+        $('#menu').removeClass 'hidden-xs hidden-sm'
+        $('body').click ->
+            $('#menu').addClass 'hidden-xs hidden-sm'

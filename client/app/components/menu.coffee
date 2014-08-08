@@ -21,7 +21,7 @@ module.exports = Menu = React.createClass
             action: 'mailbox.new'
             fullWidth: true
 
-        div id: 'menu', className: 'col-xs-12 col-md-1 hidden-xs hidden-sm',
+        div id: 'menu', className: 'col-xs-4 col-md-1 hidden-xs hidden-sm',
             a href: composeUrl, className: 'menu-item compose-action',
                 i className: 'fa fa-edit'
                 span className: 'mailbox-label', 'Compose'

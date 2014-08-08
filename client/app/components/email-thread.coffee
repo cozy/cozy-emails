@@ -65,11 +65,11 @@ module.exports = EmailThread = React.createClass
             #        span className: 'close', 'x'
 
             h3 null,
-                a href: closeUrl, className: 'close-email',
+                a href: closeUrl, className: 'close-email hidden-xs hidden-sm',
                     i className:'fa ' + closeIcon
                 @props.email.subject
                 if @props.layout isnt 'full'
-                    a href: expandUrl, className: 'expand',
+                    a href: expandUrl, className: 'expand hidden-xs hidden-sm',
                         i className: 'fa fa-arrows-h'
                 else
                     a href: collapseUrl, className: 'close-email pull-right',

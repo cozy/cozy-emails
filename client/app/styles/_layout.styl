@@ -27,7 +27,10 @@
 
   Menu positionning is completely handled by Bootstrap grid.
 */
-
+@media (max-width 992px)
+  #menu
+    position absolute
+    z-index 150
 
 /*
   PAGE CONTENT
@@ -67,13 +70,18 @@
       &:first-of-type
         // visual separation between panels
         border-right 1px solid #e4e4e4
-
         z-index 100
 
       // right panel
       &:nth-of-type(2)
         left 50%
         z-index 50
+
+      @media (max-width: 992px) {
+        &:nth-of-type(2) {
+          left 0
+        }
+      }
 
 
     // transitions / animations
@@ -108,7 +116,6 @@
         &.slide-in-from-right
           animation moveFromRight animationDuration ease
 
-      &:nth-of-type(2)
         // 'enter' animation from left
         &.slide-in-from-left
           animation moveFromLeft animationDuration ease-out

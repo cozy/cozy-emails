@@ -28,11 +28,11 @@ module.exports = Compose = React.createClass
 
         div id: 'email-compose',
             h3 null,
-                a href: closeUrl, className: 'close-email',
+                a href: closeUrl, className: 'close-email hidden-xs hidden-sm',
                     i className:'fa fa-times'
                 'Compose new email'
                 if @props.layout isnt 'full'
-                    a href: expandUrl, className: 'expand',
+                    a href: expandUrl, className: 'expand hidden-xs hidden-sm',
                         i className: 'fa fa-arrows-h'
                 else
                     a href: collapseUrl, className: 'close-email pull-right',
