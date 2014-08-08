@@ -13,6 +13,9 @@
       - right panel (section#right-panel)
 
   Left and right panel can hold several type of content.
+
+  We use a lot `display flex`, here is how it works (FR):
+  http://www.alsacreations.com/tuto/lire/1493-css3-flexbox-layout-module.html
 */
 
 // Makes the #menu div and the application main row be at screen height.
@@ -52,12 +55,60 @@
     height 100%
     position relative
 
+    // layout
     .panel
       overflow-y auto
       height 85%
 
-      // visual separation between panels
+      // to ease transitions
+      position absolute
+
+      // left panel
       &:first-of-type
+        // visual separation between panels
         border-right 1px solid #e4e4e4
 
+        z-index 100
 
+      // right panel
+      &:nth-of-type(2)
+        left 50%
+        z-index 50
+
+
+    // transitions / animations
+    .panel
+
+      // left panel
+      &:first-of-type
+        // collapse animation
+        &.col-md-6
+          transition width animationDuration ease
+
+        // expand animation
+        &.col-md-12
+          transition width animationDuration ease
+
+        // 'enter' animation
+        &.moveFromLeft
+          animation moveFromLeft animationDuration ease
+
+        // 'enter' animation (from top right corner)
+        &.moveFromTopRightCorner
+          animation moveFromTopRightCorner 0.2s ease
+
+        // right panel expands animation
+        // it's actually the left panel and we trick user's eyes
+        &.expandFromRight
+          animation expandFromRight animationDuration ease
+
+      // right panel
+      &:nth-of-type(2)
+        // 'enter' animation from right
+        &.slide-in-from-right
+          animation moveFromRight animationDuration ease
+
+      &:nth-of-type(2)
+        // 'enter' animation from left
+        &.slide-in-from-left
+          animation moveFromLeft animationDuration ease-out

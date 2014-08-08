@@ -6,6 +6,9 @@
 @import '_base'
 @import '_cozy'
 
+// Animations (for transitions), must be imported before custom styles
+@import '_animations'
+
 // UI skeleton positionning
 @import '_layout'
 
@@ -14,93 +17,25 @@
 @import '_quick-actions-bar'
 @import '_email-list'
 @import '_email-thread'
+@import '_mailbox-config'
+
+
+// tweaks fontawesome icons
+* > .fa-compress
+  transform rotate(45deg)
+
 
 /*
   Put styles here for scaffolding and testing out new features/stuff
   "Production-ready" components styles should live in a dedicated file
 */
 
-animationDuration = .3s
-
-
-* > .fa-compress
-  transform rotate(45deg)
 
 /*
-  Panels animations
+  Contextual actions
 */
-
-@keyframes moveFromLeft {
-  from {
-    transform translate(-100%)
-  }
-  to {
-    transform translate(0)
-  }
-}
-
-@keyframes moveFromRight {
-  from {
-    transform translate(100%)
-  }
-  to {
-    transform translate(0)
-  }
-}
-
-@keyframes expandFromRight {
-  from {
-    transform translate(50%)
-  }
-  to {
-    transform translate(0)
-  }
-}
-
-.panel:first-of-type
-  z-index 100
-
-.panel:nth-of-type(2)
-  z-index 50
-
-// left panel collapse animation
-.panel:first-of-type.col-md-6
-  transition width animationDuration ease
-
-// left panel expand animation
-.panel:first-of-type.col-md-12
-  transition width animationDuration ease
-
-// left panel 'enter' animation
-.panel:first-of-type.moveFromLeft
-  animation moveFromLeft animationDuration ease
-
-// right panel expands animation
-.panel:first-of-type.expandFromRight
-  animation expandFromRight animationDuration ease
-
-// rightPanel 'enter' animation from right
-.panel:nth-of-type(2).slide-in-from-right
-  animation moveFromRight animationDuration ease
-
-// rightPanel 'enter' animation from left
-.panel:nth-of-type(2).slide-in-from-left
-  animation moveFromLeft animationDuration ease-out
-
-/*
-  mailbox config window
-*/
-#mailbox-new
-  h3
-    color #444
-    margin-top 0
-    padding-bottom 10px
-    border-bottom 1px solid #f4f4f4
-
-  button
-    margin-left 5px
-
-
+#contextual-actions
+  padding 0
 
 /*
   new email window
@@ -138,7 +73,7 @@ animationDuration = .3s
 /*
   Open email tabs
 
-  -- disabled because of the ugly scrollbar on most of the computers
+  -- disabled because of the ugly scrollbar on most computers
 */
 #email-thread .nav
   display block
