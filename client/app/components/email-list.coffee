@@ -14,11 +14,14 @@ module.exports = EmailList = React.createClass
             ul className: 'list-unstyled',
                 for email, key in @props.emails
                     if email.inReplyTo.length is 0
-                        @getEmailRender email, key
+                        isActive = @props.openEmail? and @props.openEmail.id is email.id
+                        @getEmailRender email, key, isActive
 
-    getEmailRender: (email, key) ->
+    getEmailRender: (email, key, isActive) ->
 
-        classes = classer read: email.isRead
+        classes = classer
+            read: email.isRead
+            active: isActive
 
         url = @buildUrl
             direction: 'right'
@@ -33,7 +36,6 @@ module.exports = EmailList = React.createClass
                     span className: 'email-title', email.subject
                     p null, email.text
                 span className: 'email-hour', '23:20'
-
 
 
     getParticipants: (email) ->

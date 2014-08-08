@@ -170,6 +170,13 @@ module.exports = Application = React.createClass
         if panelInfo.action is 'mailbox.emails'
             firstMailbox = flux.store('MailboxStore').getDefault()
 
+            # gets the selected email if any
+            openEmail = null
+            direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
+            otherPanelInfo = @props.router.current[direction]
+            if otherPanelInfo?.action is 'email'
+                openEmail = flux.store('EmailStore').getByID otherPanelInfo.parameter
+
             # display emails of the selected mailbox
             if panelInfo.parameter?
                 emailStore = flux.store 'EmailStore'
@@ -178,6 +185,7 @@ module.exports = Application = React.createClass
                     emails: emailStore.getEmailsByMailbox mailboxID
                     mailboxID: mailboxID
                     layout: layout
+                    openEmail: openEmail
 
             # default: display emails of the first mailbox
             else if not panelInfo.parameter? and firstMailbox?
@@ -187,6 +195,7 @@ module.exports = Application = React.createClass
                     emails: emailStore.getEmailsByMailbox mailboxID
                     mailboxID: mailboxID
                     layout: layout
+                    openEmail: openEmail
 
             # there is no mailbox or mailbox is not found
             else
