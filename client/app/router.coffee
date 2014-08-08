@@ -164,7 +164,7 @@ module.exports = class Router extends Backbone.Router
 
         # if the `fullWidth` parameter is set, it ignores the right panel info
         if (options.leftPanel? or options.direction is 'left') and options.fullWidth
-            if options.leftPanel? or options.direction is 'right'
+            if options.rightPanel? and options.direction is 'right'
                 console.warn "You shouldn't use the fullWidth option with a right panel"
             rightPanelInfo = null
 
