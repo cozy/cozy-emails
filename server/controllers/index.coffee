@@ -1,5 +1,5 @@
 async = require 'async'
-Mailbox = require '../models/Mailbox'
+Mailbox = require '../models/mailbox'
 
 #CozyInstance = require '../models/cozy_instance'
 
@@ -10,7 +10,9 @@ module.exports.main = (req, res, next) ->
 
     ], (err, results) ->
 
-        if err then next err
+        if err?
+            # for now we handle error case loosely
+            res.render 'index.jade', imports: ""
         else
             [mailboxes] = results
             res.render 'index.jade', imports: """

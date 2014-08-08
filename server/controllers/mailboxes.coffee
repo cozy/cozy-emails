@@ -1,7 +1,7 @@
 async = require 'async'
 
-Mailbox = require '../models/Mailbox'
-Email = require '../models/Email'
+Mailbox = require '../models/mailbox'
+Email = require '../models/email'
 
 module.exports.create = (req, res, next) ->
 

@@ -3,7 +3,7 @@ var Mailbox, async;
 
 async = require('async');
 
-Mailbox = require('../models/Mailbox');
+Mailbox = require('../models/mailbox');
 
 module.exports.main = function(req, res, next) {
   return async.parallel([
@@ -12,8 +12,10 @@ module.exports.main = function(req, res, next) {
     }
   ], function(err, results) {
     var mailboxes;
-    if (err) {
-      return next(err);
+    if (err != null) {
+      return res.render('index.jade', {
+        imports: ""
+      });
     } else {
       mailboxes = results[0];
       return res.render('index.jade', {

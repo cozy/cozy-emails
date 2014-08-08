@@ -1,4 +1,4 @@
-Email = require '../models/Email'
+Email = require '../models/email'
 
 module.exports.listByMailbox = (req, res, next) ->
 

@@ -3,9 +3,9 @@ var Email, Mailbox, async;
 
 async = require('async');
 
-Mailbox = require('../models/Mailbox');
+Mailbox = require('../models/mailbox');
 
-Email = require('../models/Email');
+Email = require('../models/email');
 
 module.exports.create = function(req, res, next) {
   return Mailbox.create(req.body, function(err, mailbox) {
