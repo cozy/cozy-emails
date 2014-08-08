@@ -88,9 +88,10 @@ module.exports = Application = React.createClass
                                         span className: 'fa fa-search'
 
                         div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
-                            if showMailboxConfigButton
-                                a href: configMailboxUrl, className: 'btn btn-cozy',
-                                    i className: 'fa fa-cog'
+                            ReactCSSTransitionGroup transitionName: 'fade',
+                                if showMailboxConfigButton
+                                    a href: configMailboxUrl, className: 'btn btn-cozy mailbox-config',
+                                        i className: 'fa fa-cog'
 
                     # Two layout modes: one full-width panel or two panels
                     div id: 'panels', className: 'row',
