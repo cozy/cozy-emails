@@ -90,22 +90,94 @@
   globals.require.list = list;
   globals.require.brunch = true;
 })();
-require.register("actions/layout_actions", function(exports, require, module) {
+require.register("actions/email_actions", function(exports, require, module) {
 module.exports = {
-  showRoute: function(name, leftPanelInfo, rightPanelInfo) {
-    return this.dispatch('SHOW_ROUTE', {
-      name: name,
-      leftPanelInfo: leftPanelInfo,
-      rightPanelInfo: rightPanelInfo
-    });
+  receiveRawEmails: function(emails) {
+    return this.dispatch('RECEIVE_RAW_EMAILS', emails);
+  },
+  receiveRawEmail: function(email) {
+    return this.dispatch('RECEIVE_RAW_EMAIL', email);
+  }
+};
+});
+
+;require.register("actions/layout_actions", function(exports, require, module) {
+var XHRUtils;
+
+XHRUtils = require('../utils/XHRUtils');
+
+module.exports = {
+  showEmailList: function(panelInfo, direction) {
+    var defaultMailbox, flux, mailboxID;
+    this.dispatch('SELECT_MAILBOX', panelInfo.parameter);
+    flux = require('../fluxxor');
+    defaultMailbox = flux.store('MailboxStore').getDefault();
+    mailboxID = panelInfo.parameter || (defaultMailbox != null ? defaultMailbox.id : void 0);
+    if (mailboxID != null) {
+      return XHRUtils.fetchEmailsByMailbox(mailboxID);
+    }
+  },
+  showEmailThread: function(panelInfo, direction) {
+    return XHRUtils.fetchEmailThread(panelInfo.parameter);
+  },
+  showComposeNewEmail: function(panelInfo, direction) {},
+  showCreateMailbox: function(panelInfo, direction) {
+    return this.dispatch('SELECT_MAILBOX', -1);
+  },
+  showConfigMailbox: function(panelInfo, direction) {
+    return this.dispatch('SELECT_MAILBOX', panelInfo.parameter);
+  }
+};
+});
+
+;require.register("actions/mailbox_actions", function(exports, require, module) {
+var XHRUtils;
+
+XHRUtils = require('../utils/XHRUtils');
+
+module.exports = {
+  create: function(inputValues) {
+    this.dispatch('NEW_MAILBOX_WAITING', true);
+    return XHRUtils.createMailbox(inputValues, (function(_this) {
+      return function(error, mailbox) {
+        return setTimeout(function() {
+          _this.dispatch('NEW_MAILBOX_WAITING', false);
+          if (error != null) {
+            return _this.dispatch('NEW_MAILBOX_ERROR', error);
+          } else {
+            return _this.dispatch('ADD_MAILBOX', mailbox);
+          }
+        }, 2000);
+      };
+    })(this));
+  },
+  edit: function(inputValues) {
+    this.dispatch('NEW_MAILBOX_WAITING', true);
+    return XHRUtils.editMailbox(inputValues, (function(_this) {
+      return function(error, mailbox) {
+        return setTimeout(function() {
+          _this.dispatch('NEW_MAILBOX_WAITING', false);
+          if (error != null) {
+            return _this.dispatch('NEW_MAILBOX_ERROR', error);
+          } else {
+            return _this.dispatch('EDIT_MAILBOX', mailbox);
+          }
+        }, 2000);
+      };
+    })(this));
+  },
+  remove: function(mailboxID) {
+    this.dispatch('REMOVE_MAILBOX', mailboxID);
+    XHRUtils.removeMailbox(mailboxID);
+    return window.router.navigate('', true);
   }
 };
 });
 
 ;require.register("components/application", function(exports, require, module) {
-var Application, Compose, EmailList, EmailThread, FluxMixin, Menu, StoreWatchMixin, body, div, form, i, input, p, span, _ref;
+var Application, Compose, EmailList, EmailThread, FluxMixin, MailboxConfig, Menu, ReactCSSTransitionGroup, RouterMixin, StoreWatchMixin, a, body, div, form, i, input, p, span, _ref;
 
-_ref = React.DOM, body = _ref.body, div = _ref.div, p = _ref.p, form = _ref.form, i = _ref.i, input = _ref.input, span = _ref.span;
+_ref = React.DOM, body = _ref.body, div = _ref.div, p = _ref.p, form = _ref.form, i = _ref.i, input = _ref.input, span = _ref.span, a = _ref.a;
 
 Menu = require('./menu');
 
@@ -115,9 +187,15 @@ EmailThread = require('./email-thread');
 
 Compose = require('./compose');
 
+MailboxConfig = require('./mailbox-config');
+
+ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
+
 FluxMixin = Fluxxor.FluxMixin(React);
 
 StoreWatchMixin = Fluxxor.StoreWatchMixin;
+
+RouterMixin = require('../mixins/router');
 
 
 /*
@@ -138,28 +216,53 @@ StoreWatchMixin = Fluxxor.StoreWatchMixin;
 
 module.exports = Application = React.createClass({
   displayName: 'Application',
-  mixins: [FluxMixin, StoreWatchMixin("MailboxStore", "EmailStore", "LayoutStore")],
+  mixins: [FluxMixin, StoreWatchMixin("MailboxStore", "EmailStore", "LayoutStore"), RouterMixin],
   render: function() {
-    var isFullWidth, layout, leftPanelLayoutMode, panelClasses;
-    layout = this.state.layout;
-    isFullWidth = this.state.isLayoutFullWidth;
+    var configMailboxUrl, isFullWidth, layout, leftPanelLayoutMode, panelClasses, responsiveBackUrl, showMailboxConfigButton;
+    layout = this.props.router.current;
+    if (layout == null) {
+      return div(null, "Loading...");
+    }
+    isFullWidth = layout.rightPanel == null;
     leftPanelLayoutMode = isFullWidth ? 'full' : 'left';
     panelClasses = this.getPanelClasses(isFullWidth);
+    showMailboxConfigButton = (this.state.selectedMailbox != null) && layout.leftPanel.action !== 'mailbox.new';
+    if (showMailboxConfigButton) {
+      configMailboxUrl = this.buildUrl({
+        direction: 'left',
+        action: 'mailbox.config',
+        parameter: this.state.selectedMailbox.id,
+        fullWidth: true
+      });
+    }
+    responsiveBackUrl = this.buildUrl({
+      leftPanel: layout.leftPanel,
+      fullWidth: true
+    });
     return div({
       className: 'container-fluid'
     }, div({
       className: 'row'
     }, Menu({
-      mailboxes: this.state.mailboxes
+      mailboxes: this.state.mailboxes,
+      selectedMailbox: this.state.selectedMailbox
     }), div({
       id: 'page-content',
       className: 'col-xs-12 col-md-11'
     }, div({
       id: 'quick-actions',
       className: 'row'
+    }, layout.rightPanel ? a({
+      href: responsiveBackUrl,
+      className: 'responsive-handler hidden-md hidden-lg'
     }, i({
-      className: 'fa fa-bars hidden-md hidden-lg pull-left'
-    }), form({
+      className: 'fa fa-chevron-left hidden-md hidden-lg pull-left'
+    }), 'Back') : a({
+      onClick: this.onResponsiveMenuClick,
+      className: 'responsive-handler hidden-md hidden-lg'
+    }, i({
+      className: 'fa fa-bars pull-left'
+    }), 'Menu'), form({
       className: 'form-inline col-md-6 hidden-xs hidden-sm pull-left'
     }, div({
       className: 'form-group'
@@ -173,60 +276,131 @@ module.exports = Application = React.createClass({
       className: 'input-group-addon btn btn-cozy'
     }, span({
       className: 'fa fa-search'
-    })))))), div({
+    }))))), div({
+      id: 'contextual-actions',
+      className: 'col-md-6 hidden-xs hidden-sm pull-left text-right'
+    }, ReactCSSTransitionGroup({
+      transitionName: 'fade'
+    }, showMailboxConfigButton ? a({
+      href: configMailboxUrl,
+      className: 'btn btn-cozy mailbox-config'
+    }, i({
+      className: 'fa fa-cog'
+    })) : void 0))), div({
       id: 'panels',
       className: 'row'
     }, div({
-      className: panelClasses.leftPanel
-    }, this.getPanelComponent(layout.leftPanel, leftPanelLayoutMode)), !isFullWidth ? div({
-      className: panelClasses.rightPanel
+      className: panelClasses.leftPanel,
+      key: 'left-panel-' + layout.leftPanel.action + '-' + layout.leftPanel.parameter
+    }, this.getPanelComponent(layout.leftPanel, leftPanelLayoutMode)), !isFullWidth && (layout.rightPanel != null) ? div({
+      className: panelClasses.rightPanel,
+      key: 'right-panel-' + layout.rightPanel.action + '-' + layout.rightPanel.parameter
     }, this.getPanelComponent(layout.rightPanel, 'right')) : void 0))));
   },
   getPanelClasses: function(isFullWidth) {
-    var classes;
+    var classes, layout, left, previous, right, wasFullWidth;
+    previous = this.props.router.previous;
+    layout = this.props.router.current;
+    left = layout.leftPanel;
+    right = layout.rightPanel;
     if (isFullWidth) {
       classes = {
         leftPanel: 'panel col-xs-12 col-md-12'
       };
+      if ((previous != null) && left.action === 'mailbox.config') {
+        classes.leftPanel += ' moveFromTopRightCorner';
+      } else if ((previous != null) && previous.rightPanel) {
+        if (previous.rightPanel.action === layout.leftPanel.action && previous.rightPanel.parameter === layout.leftPanel.parameter) {
+          classes.leftPanel += ' expandFromRight';
+        }
+      } else if (previous != null) {
+        classes.leftPanel += ' moveFromLeft';
+      }
     } else {
       classes = {
-        leftPanel: 'panel col-xs-12 col-md-6',
-        rightPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm'
+        leftPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm',
+        rightPanel: 'panel col-xs-12 col-md-6'
       };
+      if (previous != null) {
+        wasFullWidth = previous.rightPanel == null;
+        if (wasFullWidth && !isFullWidth) {
+          if (previous.leftPanel.action === right.action && previous.leftPanel.parameter === right.parameter) {
+            classes.leftPanel += ' moveFromLeft';
+            classes.rightPanel += ' slide-in-from-left';
+          } else {
+            classes.rightPanel += ' slide-in-from-right';
+          }
+        } else if (!isFullWidth) {
+          classes.rightPanel += ' slide-in-from-left';
+        }
+      }
     }
     return classes;
   },
   getPanelComponent: function(panelInfo, layout) {
-    var email, emailStore, firstMailbox, mailboxID;
+    var direction, email, emailStore, error, firstMailbox, flux, initialMailboxConfig, isWaiting, mailboxID, openEmail, otherPanelInfo, selectedMailbox, thread;
+    flux = this.getFlux();
     if (panelInfo.action === 'mailbox.emails') {
-      firstMailbox = this.getFlux().store('MailboxStore').getDefault();
+      firstMailbox = flux.store('MailboxStore').getDefault();
+      openEmail = null;
+      direction = layout === 'left' ? 'rightPanel' : 'leftPanel';
+      otherPanelInfo = this.props.router.current[direction];
+      if ((otherPanelInfo != null ? otherPanelInfo.action : void 0) === 'email') {
+        openEmail = flux.store('EmailStore').getByID(otherPanelInfo.parameter);
+      }
       if (panelInfo.parameter != null) {
-        emailStore = this.getFlux().store('EmailStore');
-        mailboxID = parseInt(panelInfo.parameter);
+        emailStore = flux.store('EmailStore');
+        mailboxID = panelInfo.parameter;
         return EmailList({
           emails: emailStore.getEmailsByMailbox(mailboxID),
-          layout: layout
+          mailboxID: mailboxID,
+          layout: layout,
+          openEmail: openEmail
         });
       } else if ((panelInfo.parameter == null) && (firstMailbox != null)) {
-        emailStore = this.getFlux().store('EmailStore');
+        emailStore = flux.store('EmailStore');
         mailboxID = firstMailbox.id;
         return EmailList({
           emails: emailStore.getEmailsByMailbox(mailboxID),
-          layout: layout
+          mailboxID: mailboxID,
+          layout: layout,
+          openEmail: openEmail
         });
       } else {
-        return div(null, 'Handle empty mailbox case');
+        return div(null, 'Handle no mailbox or mailbox not found case');
       }
     } else if (panelInfo.action === 'mailbox.config') {
-      return div(null, 'Mailbox configuration/creation');
+      initialMailboxConfig = this.state.selectedMailbox;
+      error = flux.store('MailboxStore').getError();
+      isWaiting = flux.store('MailboxStore').isWaiting();
+      return MailboxConfig({
+        layout: layout,
+        error: error,
+        isWaiting: isWaiting,
+        initialMailboxConfig: initialMailboxConfig
+      });
+    } else if (panelInfo.action === 'mailbox.new') {
+      error = flux.store('MailboxStore').getError();
+      isWaiting = flux.store('MailboxStore').isWaiting();
+      return MailboxConfig({
+        layout: layout,
+        error: error,
+        isWaiting: isWaiting
+      });
     } else if (panelInfo.action === 'email') {
-      email = this.getFlux().store('EmailStore').getByID(panelInfo.parameter);
+      email = flux.store('EmailStore').getByID(panelInfo.parameter);
+      thread = flux.store('EmailStore').getEmailsByThread(panelInfo.parameter);
+      selectedMailbox = flux.store('MailboxStore').getSelectedMailbox();
       return EmailThread({
         email: email,
+        thread: thread,
+        selectedMailbox: selectedMailbox,
         layout: layout
       });
     } else if (panelInfo.action === 'compose') {
+      selectedMailbox = flux.store('MailboxStore').getSelectedMailbox();
       return Compose({
+        selectedMailbox: selectedMailbox,
         layout: layout
       });
     } else {
@@ -238,19 +412,29 @@ module.exports = Application = React.createClass({
     flux = this.getFlux();
     return {
       mailboxes: flux.store('MailboxStore').getAll(),
+      selectedMailbox: flux.store('MailboxStore').getSelectedMailbox(),
       emails: flux.store('EmailStore').getAll(),
-      layout: flux.store('LayoutStore').getState(),
       isLayoutFullWidth: flux.store('LayoutStore').isFullWidth()
     };
   },
   componentWillMount: function() {
     this.onRoute = (function(_this) {
-      return function(route, params) {};
+      return function(params) {
+        var leftPanelInfo, rightPanelInfo;
+        leftPanelInfo = params.leftPanelInfo, rightPanelInfo = params.rightPanelInfo;
+        return _this.forceUpdate();
+      };
     })(this);
-    return this.props.router.on('route', this.onRoute);
+    return this.props.router.on('fluxRoute', this.onRoute);
   },
   componentWillUnmount: function() {
-    return this.props.router.off('route', this.onRoute);
+    return this.props.router.off('fluxRoute', this.onRoute);
+  },
+  onResponsiveMenuClick: function() {
+    $('#menu').removeClass('hidden-xs hidden-sm');
+    return $('body').click(function() {
+      return $('#menu').addClass('hidden-xs hidden-sm');
+    });
   }
 });
 });
@@ -268,26 +452,41 @@ module.exports = Compose = React.createClass({
   displayName: 'Compose',
   mixins: [RouterMixin],
   render: function() {
-    var closeUrl, expandUrl;
+    var closeUrl, collapseUrl, expandUrl;
     expandUrl = this.buildUrl({
       direction: 'left',
       action: 'compose',
       parameter: null,
       fullWidth: true
     });
+    collapseUrl = this.buildUrl({
+      leftPanel: {
+        action: 'mailbox.emails',
+        parameter: this.props.selectedMailbox.id
+      },
+      rightPanel: {
+        action: 'compose',
+        parameter: null
+      }
+    });
     closeUrl = this.buildClosePanelUrl(this.props.layout);
     return div({
       id: 'email-compose'
     }, h3(null, a({
-      href: expandUrl,
-      className: 'expand'
-    }, i({
-      className: 'fa fa-angle-left'
-    })), 'Compose new email', a({
       href: closeUrl,
-      className: 'close-email'
+      className: 'close-email hidden-xs hidden-sm'
     }, i({
       className: 'fa fa-times'
+    })), 'Compose new email', this.props.layout !== 'full' ? a({
+      href: expandUrl,
+      className: 'expand hidden-xs hidden-sm'
+    }, i({
+      className: 'fa fa-arrows-h'
+    })) : a({
+      href: collapseUrl,
+      className: 'close-email pull-right'
+    }, i({
+      className: 'fa fa-compress'
     }))), textarea({
       defaultValue: 'Hello, how are you doing today?'
     }));
@@ -296,7 +495,7 @@ module.exports = Compose = React.createClass({
 });
 
 ;require.register("components/email-list", function(exports, require, module) {
-var EmailList, RouterMixin, a, classer, div, i, li, p, span, ul, _ref;
+var EmailList, FluxChildMixin, RouterMixin, a, classer, div, i, li, p, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p;
 
@@ -304,11 +503,13 @@ classer = React.addons.classSet;
 
 RouterMixin = require('../mixins/router');
 
+FluxChildMixin = Fluxxor.FluxChildMixin(React);
+
 module.exports = EmailList = React.createClass({
   displayName: 'EmailList',
-  mixins: [RouterMixin],
+  mixins: [RouterMixin, FluxChildMixin],
   render: function() {
-    var email, key;
+    var email, isActive, key;
     return div({
       id: 'email-list'
     }, ul({
@@ -319,15 +520,21 @@ module.exports = EmailList = React.createClass({
       _results = [];
       for (key = _i = 0, _len = _ref1.length; _i < _len; key = ++_i) {
         email = _ref1[key];
-        _results.push(this.getEmailRender(email, key));
+        if (email.inReplyTo.length === 0) {
+          isActive = (this.props.openEmail != null) && this.props.openEmail.id === email.id;
+          _results.push(this.getEmailRender(email, key, isActive));
+        } else {
+          _results.push(void 0);
+        }
       }
       return _results;
     }).call(this)));
   },
-  getEmailRender: function(email, key) {
+  getEmailRender: function(email, key, isActive) {
     var classes, url;
     classes = classer({
-      read: email.isRead
+      read: email.isRead,
+      active: isActive
     });
     url = this.buildUrl({
       direction: 'right',
@@ -347,55 +554,132 @@ module.exports = EmailList = React.createClass({
       className: 'email-preview'
     }, span({
       className: 'email-title'
-    }, email.title), p(null, email.content)), span({
+    }, email.subject), p(null, email.text)), span({
       className: 'email-hour'
-    }, email.date)));
+    }, '23:20')));
   },
   getParticipants: function(email) {
-    var list;
-    list = [email.sender].concat(email.receivers);
-    return list.join(', ');
+    return email.from + ', ' + email.to;
   }
 });
 });
 
 ;require.register("components/email-thread", function(exports, require, module) {
-var EmailThread, RouterMixin, a, classer, div, h3, i, li, p, span, ul, _ref;
+var Email, EmailThread, FluxChildMixin, RouterMixin, a, classer, div, h3, i, li, p, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a;
+
+Email = require('./email');
 
 classer = React.addons.classSet;
 
 RouterMixin = require('../mixins/router');
 
+FluxChildMixin = Fluxxor.FluxChildMixin(React);
+
 module.exports = EmailThread = React.createClass({
   displayName: 'EmailThread',
-  mixins: [RouterMixin],
+  mixins: [RouterMixin, FluxChildMixin],
   render: function() {
-    var closeUrl, expandUrl;
+    var closeIcon, closeUrl, collapseUrl, email, expandUrl, isLast, key, selectedMailboxID;
+    if ((this.props.email == null) || !this.props.thread) {
+      return p(null, 'Loading...');
+    }
     expandUrl = this.buildUrl({
       direction: 'left',
       action: 'email',
       parameter: this.props.email.id,
       fullWidth: true
     });
-    closeUrl = this.buildClosePanelUrl(this.props.layout);
+    if (window.router.previous != null) {
+      selectedMailboxID = this.props.selectedMailbox.id;
+    } else {
+      selectedMailboxID = this.props.thread[0].mailbox;
+    }
+    collapseUrl = this.buildUrl({
+      leftPanel: {
+        action: 'mailbox.emails',
+        parameter: selectedMailboxID
+      },
+      rightPanel: {
+        action: 'email',
+        parameter: this.props.thread[0].id
+      }
+    });
+    if (this.props.layout === 'full') {
+      closeUrl = this.buildUrl({
+        direction: 'left',
+        action: 'mailbox.emails',
+        parameter: this.props.selectedMailbox.id,
+        fullWidth: true
+      });
+    } else {
+      closeUrl = this.buildClosePanelUrl(this.props.layout);
+    }
+    closeIcon = this.props.layout === 'full' ? 'fa-th-list' : 'fa-times';
     return div({
       id: 'email-thread'
     }, h3(null, a({
-      href: expandUrl,
-      className: 'expand'
-    }, i({
-      className: 'fa fa-angle-left'
-    })), this.props.email.title, a({
       href: closeUrl,
-      className: 'close-email'
+      className: 'close-email hidden-xs hidden-sm'
     }, i({
-      className: 'fa fa-times'
+      className: 'fa ' + closeIcon
+    })), this.props.email.subject, this.props.layout !== 'full' ? a({
+      href: expandUrl,
+      className: 'expand hidden-xs hidden-sm'
+    }, i({
+      className: 'fa fa-arrows-h'
+    })) : a({
+      href: collapseUrl,
+      className: 'close-email pull-right'
+    }, i({
+      className: 'fa fa-compress'
     }))), ul({
       className: 'email-thread list-unstyled'
-    }, li({
-      className: 'email unread'
+    }, (function() {
+      var _i, _len, _ref1, _results;
+      _ref1 = this.props.thread;
+      _results = [];
+      for (key = _i = 0, _len = _ref1.length; _i < _len; key = ++_i) {
+        email = _ref1[key];
+        isLast = key === this.props.thread.length - 1;
+        _results.push(Email({
+          email: email,
+          key: key,
+          isLast: isLast
+        }));
+      }
+      return _results;
+    }).call(this)));
+  }
+});
+});
+
+;require.register("components/email", function(exports, require, module) {
+var EmailThread, a, classer, div, h3, i, li, p, span, ul, _ref;
+
+_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a;
+
+classer = React.addons.classSet;
+
+module.exports = EmailThread = React.createClass({
+  displayName: 'Email',
+  getInitialState: function() {
+    return {
+      active: false
+    };
+  },
+  render: function() {
+    var classes, clickHandler;
+    clickHandler = this.props.isLast ? null : this.onClick;
+    classes = classer({
+      email: true,
+      active: this.state.active
+    });
+    return li({
+      className: classes,
+      key: this.props.key,
+      onClick: clickHandler
     }, div({
       className: 'email-header'
     }, i({
@@ -404,17 +688,213 @@ module.exports = EmailThread = React.createClass({
       className: 'email-participants'
     }, span({
       className: 'sender'
-    }, 'Joseph'), span({
+    }, this.props.email.from), span({
       className: 'receivers'
-    }, 'À Frank Rousseau')), span({
+    }, 'À ' + this.props.email.to)), span({
       className: 'email-hour'
     }, this.props.email.date)), div({
       className: 'email-preview'
-    }, p(null, this.props.email.content)), div({
+    }, p(null, this.props.email.text)), div({
       className: 'email-content'
-    }, this.props.email.content), div({
+    }, this.props.email.text), div({
       className: 'clearfix'
-    }))));
+    }));
+  },
+  onClick: function(args) {
+    return this.setState({
+      active: !this.state.active
+    });
+  }
+});
+});
+
+;require.register("components/mailbox-config", function(exports, require, module) {
+var FluxChildMixin, button, classer, div, form, h3, input, label, _ref;
+
+_ref = React.DOM, div = _ref.div, h3 = _ref.h3, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button;
+
+classer = React.addons.classSet;
+
+FluxChildMixin = Fluxxor.FluxChildMixin(React);
+
+module.exports = React.createClass({
+  displayName: 'MailboxConfig',
+  mixins: [FluxChildMixin, React.addons.LinkedStateMixin],
+  render: function() {
+    var buttonLabel, titleLabel;
+    titleLabel = this.props.initialMailboxConfig != null ? 'Edit mailbox' : 'New mailbox';
+    if (this.props.isWaiting) {
+      buttonLabel = 'Saving...';
+    } else if (this.props.initialMailboxConfig != null) {
+      buttonLabel = 'Edit';
+    } else {
+      buttonLabel = 'Add';
+    }
+    return div({
+      id: 'mailbox-config'
+    }, h3({
+      className: null
+    }, titleLabel), this.props.error ? div({
+      className: 'error'
+    }, this.props.error) : void 0, form({
+      className: 'form-horizontal'
+    }, div({
+      className: 'form-group'
+    }, label({
+      htmlFor: 'mailbox-label',
+      className: 'col-sm-2 col-sm-offset-2 control-label'
+    }, 'Label'), div({
+      className: 'col-sm-3'
+    }, input({
+      id: 'mailbox-label',
+      valueLink: this.linkState('label'),
+      type: 'text',
+      className: 'form-control',
+      placeholder: 'A short mailbox name'
+    }))), div({
+      className: 'form-group'
+    }, label({
+      htmlFor: 'mailbox-name',
+      className: 'col-sm-2 col-sm-offset-2 control-label'
+    }, 'Your name'), div({
+      className: 'col-sm-3'
+    }, input({
+      id: 'mailbox-name',
+      valueLink: this.linkState('name'),
+      type: 'text',
+      className: 'form-control',
+      placeholder: 'Your name, as it will be displayed'
+    }))), div({
+      className: 'form-group'
+    }, label({
+      htmlFor: 'mailbox-email-address',
+      className: 'col-sm-2 col-sm-offset-2 control-label'
+    }, 'Email address'), div({
+      className: 'col-sm-3'
+    }, input({
+      id: 'mailbox-email-address',
+      valueLink: this.linkState('email'),
+      type: 'email',
+      className: 'form-control',
+      placeholder: 'Your email address'
+    }))), div({
+      className: 'form-group'
+    }, label({
+      htmlFor: 'mailbox-password',
+      className: 'col-sm-2 col-sm-offset-2 control-label'
+    }, 'Password'), div({
+      className: 'col-sm-3'
+    }, input({
+      id: 'mailbox-password',
+      valueLink: this.linkState('password'),
+      type: 'password',
+      className: 'form-control'
+    }))), div({
+      className: 'form-group'
+    }, label({
+      htmlFor: 'mailbox-smtp-server',
+      className: 'col-sm-2 col-sm-offset-2 control-label'
+    }, 'Sending server'), div({
+      className: 'col-sm-3'
+    }, input({
+      id: 'mailbox-smtp-server',
+      valueLink: this.linkState('smtpServer'),
+      type: 'text',
+      className: 'form-control',
+      placeholder: 'smtp.provider.tld'
+    })), label({
+      htmlFor: 'mailbox-smtp-port',
+      className: 'col-sm-1 control-label'
+    }, 'Port'), div({
+      className: 'col-sm-1'
+    }, input({
+      id: 'mailbox-smtp-port',
+      valueLink: this.linkState('smtpPort'),
+      type: 'text',
+      className: 'form-control'
+    }))), div({
+      className: 'form-group'
+    }, label({
+      htmlFor: 'mailbox-imap-server',
+      className: 'col-sm-2 col-sm-offset-2 control-label'
+    }, 'Receiving server'), div({
+      className: 'col-sm-3'
+    }, input({
+      id: 'mailbox-imap-server',
+      valueLink: this.linkState('imapServer'),
+      type: 'text',
+      className: 'form-control',
+      placeholder: 'imap.provider.tld'
+    })), label({
+      htmlFor: 'mailbox-imap-port',
+      className: 'col-sm-1 control-label'
+    }, 'Port'), div({
+      className: 'col-sm-1'
+    }, input({
+      id: 'mailbox-imap-port',
+      valueLink: this.linkState('imapPort'),
+      type: 'text',
+      className: 'form-control'
+    }))), div({
+      className: 'form-group'
+    }, div({
+      className: 'col-sm-offset-2 col-sm-5 text-right'
+    }, this.props.initialMailboxConfig != null ? button({
+      className: 'btn btn-cozy',
+      onClick: this.onRemove
+    }, 'Remove') : void 0, button({
+      className: 'btn btn-cozy',
+      onClick: this.onSubmit
+    }, buttonLabel)))));
+  },
+  onSubmit: function(event) {
+    var mailboxValue;
+    event.preventDefault();
+    mailboxValue = this.state;
+    if (this.props.initialMailboxConfig != null) {
+      mailboxValue.id = this.props.initialMailboxConfig.id;
+      return this.getFlux().actions.mailbox.edit(this.state);
+    } else {
+      return this.getFlux().actions.mailbox.create(this.state);
+    }
+  },
+  onRemove: function(event) {
+    event.preventDefault();
+    return this.getFlux().actions.mailbox.remove(this.props.initialMailboxConfig.id);
+  },
+  componentWillReceiveProps: function(props) {
+    if (!props.isWaiting) {
+      if (props.initialMailboxConfig != null) {
+        return this.setState(props.initialMailboxConfig);
+      } else {
+        return this.setState(this.getInitialState(true));
+      }
+    }
+  },
+  getInitialState: function(forceDefault) {
+    if (this.props.initialMailboxConfig && !forceDefault) {
+      return {
+        label: this.props.initialMailboxConfig.label,
+        name: this.props.initialMailboxConfig.name,
+        email: this.props.initialMailboxConfig.email,
+        password: this.props.initialMailboxConfig.password,
+        smtpServer: this.props.initialMailboxConfig.smtpServer,
+        smtpPort: this.props.initialMailboxConfig.smtpPort,
+        imapServer: this.props.initialMailboxConfig.imapServer,
+        imapPort: this.props.initialMailboxConfig.imapPort
+      };
+    } else {
+      return {
+        label: '',
+        name: '',
+        email: '',
+        password: '',
+        smtpServer: '',
+        smtpPort: 993,
+        imapServer: '',
+        imapPort: 465
+      };
+    }
   }
 });
 });
@@ -431,22 +911,22 @@ RouterMixin = require('../mixins/router');
 module.exports = Menu = React.createClass({
   displayName: 'Menu',
   mixins: [RouterMixin],
-  getInitialState: function() {
-    return {
-      activeMailbox: null
-    };
-  },
   render: function() {
-    var composeUrl, key, mailbox;
+    var composeUrl, key, mailbox, newMailboxUrl;
     composeUrl = this.buildUrl({
       direction: 'right',
       action: 'compose',
       parameter: null,
       fullWidth: false
     });
+    newMailboxUrl = this.buildUrl({
+      direction: 'left',
+      action: 'mailbox.new',
+      fullWidth: true
+    });
     return div({
       id: 'menu',
-      className: 'col-xs-12 col-md-1 hidden-xs hidden-sm'
+      className: 'col-xs-4 col-md-1 hidden-xs hidden-sm'
     }, a({
       href: composeUrl,
       className: 'menu-item compose-action'
@@ -467,7 +947,7 @@ module.exports = Menu = React.createClass({
       }
       return _results;
     }).call(this)), a({
-      href: '#',
+      href: newMailboxUrl,
       className: 'menu-item new-mailbox-action'
     }, i({
       className: 'fa fa-inbox'
@@ -476,10 +956,10 @@ module.exports = Menu = React.createClass({
     }, 'New mailbox')));
   },
   getMailboxRender: function(mailbox, key) {
-    var isActive, mailboxClasses, url;
-    isActive = (!this.state.activeMailbox && key === 0) || this.state.activeMailbox === mailbox.id;
+    var isSelected, mailboxClasses, url;
+    isSelected = (!this.props.selectedMailbox && key === 0) || this.props.selectedMailbox.id === mailbox.id;
     mailboxClasses = classer({
-      active: isActive
+      active: isSelected
     });
     url = this.buildUrl({
       direction: 'left',
@@ -533,50 +1013,53 @@ module.exports = Menu = React.createClass({
 });
 });
 
-;require.register("components/new-mailbox", function(exports, require, module) {
-var a, classer, div, form, h3, i, li, p, span, ul, _ref;
+;require.register("fluxxor", function(exports, require, module) {
 
-_ref = React.DOM, div = _ref.div, h3 = _ref.h3, form = _ref.form, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p;
+/*
+    We store flux instance a separate file to be able to access it from various
+    places of the application (i.e. utils)
+ */
+var EmailStore, LayoutStore, MailboxStore, actions, flux, stores;
 
-classer = React.addons.classSet;
+MailboxStore = require('./stores/mailboxes');
 
-module.exports = React.createClass({
-  displayName: 'NewMailbox',
-  render: function() {
-    return div({
-      id: 'mailbox-new'
-    }, h3(null, 'New mailbox'));
-  }
-});
+EmailStore = require('./stores/emails');
+
+LayoutStore = require('./stores/layout');
+
+stores = {
+  MailboxStore: new MailboxStore(),
+  EmailStore: new EmailStore(),
+  LayoutStore: new LayoutStore()
+};
+
+actions = {
+  layout: require('./actions/layout_actions'),
+  mailbox: require('./actions/mailbox_actions'),
+  email: require('./actions/email_actions')
+};
+
+flux = new Fluxxor.Flux(stores, actions);
+
+module.exports = flux;
 });
 
 ;require.register("initialize", function(exports, require, module) {
 $(function() {
-  var Application, EmailStore, LayoutStore, MailboxStore, Router, actions, application, flux, stores;
-  MailboxStore = require('./stores/mailboxes');
-  EmailStore = require('./stores/emails');
-  LayoutStore = require('./stores/layout');
-  stores = {
-    MailboxStore: new MailboxStore(),
-    EmailStore: new EmailStore(),
-    LayoutStore: new LayoutStore()
-  };
-  actions = {
-    layout: require('./actions/layout_actions')
-  };
-  flux = new Fluxxor.Flux(stores, actions);
+  var Application, Router, application, flux;
+  flux = require('./fluxxor');
   Router = require('router');
   this.router = new Router({
     flux: flux
   });
   window.router = this.router;
-  Backbone.history.start();
   Application = require('./components/application');
   application = Application({
     router: this.router,
     flux: flux
   });
   React.renderComponent(application, document.body);
+  Backbone.history.start();
   if (typeof Object.freeze === 'function') {
     return Object.freeze(this);
   }
@@ -621,10 +1104,10 @@ module.exports = {
         - `mailbox/a/path/:id`
         - `mailbox/a/path/:id/*rightPanel`
 
-        Each pattern is actually the pattern itself plus the pattern and
+        Each pattern is actually the pattern itself plus the pattern itself and
         another pattern.
 
-    Currently, only one parameter is supported per pattern.
+    **Currently, only one parameter is supported per pattern.**
  */
 var Router,
   __hasProp = {}.hasOwnProperty,
@@ -640,29 +1123,33 @@ module.exports = Router = (function(_super) {
   Router.prototype.patterns = {
     'mailbox.config': {
       pattern: 'mailbox/:id/config',
-      callback: 'mailbox.config'
+      fluxAction: 'showConfigMailbox'
     },
     'mailbox.new': {
       pattern: 'mailbox/new',
-      callback: 'mailbox.new'
+      fluxAction: 'showCreateMailbox'
     },
     'mailbox.emails': {
       pattern: 'mailbox/:id',
-      callback: 'mailbox.emails'
+      fluxAction: 'showEmailList'
     },
     'email': {
       pattern: 'email/:id',
-      callback: 'email'
+      fluxAction: 'showEmailThread'
     },
     'compose': {
       pattern: 'compose',
-      callback: 'compose'
+      fluxAction: 'showComposeNewEmail'
     }
   };
 
   Router.prototype.routes = {
     '': 'mailbox.emails'
   };
+
+  Router.prototype.previous = null;
+
+  Router.prototype.current = null;
 
   Router.prototype.cachedPatterns = [];
 
@@ -675,18 +1162,50 @@ module.exports = Router = (function(_super) {
         key: key,
         pattern: this._routeToRegExp(route.pattern)
       });
-      this.routes[route.pattern] = route.callback;
-      this.routes["" + route.pattern + "/*rightPanel"] = route.callback;
+      this.routes[route.pattern] = key;
+      this.routes["" + route.pattern + "/*rightPanel"] = key;
     }
     this._bindRoutes();
     this.flux = options.flux;
+    this.flux.router = this;
     return this.on('route', (function(_this) {
       return function(name, args) {
-        var leftPanelInfo, rightPanelInfo, _ref1;
-        _ref1 = _this._processSubRouting(args), leftPanelInfo = _ref1[0], rightPanelInfo = _ref1[1];
-        return _this.flux.actions.layout.showRoute(name, leftPanelInfo, rightPanelInfo);
+        var leftAction, leftPanelInfo, rightAction, rightPanelInfo, _ref1;
+        _ref1 = _this._processSubRouting(name, args), leftPanelInfo = _ref1[0], rightPanelInfo = _ref1[1];
+        leftAction = _this.fluxActionFactory(leftPanelInfo);
+        rightAction = _this.fluxActionFactory(rightPanelInfo);
+        _this.previous = _this.current;
+        _this.current = {
+          leftPanel: leftPanelInfo,
+          rightPanel: rightPanelInfo
+        };
+        if (leftAction != null) {
+          leftAction(leftPanelInfo, 'left');
+        }
+        if (rightAction != null) {
+          rightAction(rightPanelInfo, 'right');
+        }
+        return _this.trigger('fluxRoute', _this.current);
       };
     })(this));
+  };
+
+
+  /*
+      Gets the Flux action to execute given a panel info.
+   */
+
+  Router.prototype.fluxActionFactory = function(panelInfo) {
+    var fluxAction, pattern;
+    fluxAction = null;
+    pattern = this.patterns[panelInfo != null ? panelInfo.action : void 0];
+    if (pattern != null) {
+      fluxAction = this.flux.actions.layout[pattern.fluxAction];
+      if (fluxAction == null) {
+        console.warn("`" + pattern.fluxAction + "` method not found in layout actions.");
+      }
+      return fluxAction;
+    }
   };
 
 
@@ -694,7 +1213,7 @@ module.exports = Router = (function(_super) {
       Extracts and matches the second part of the URl if it exists.
    */
 
-  Router.prototype._processSubRouting = function(args) {
+  Router.prototype._processSubRouting = function(name, args) {
     var isNumber, leftPanelInfo, rightPanelInfo, route;
     leftPanelInfo = args[0], rightPanelInfo = args[1];
     isNumber = /[0-9]+/.test(leftPanelInfo);
@@ -713,6 +1232,10 @@ module.exports = Router = (function(_super) {
     } else {
       rightPanelInfo = null;
     }
+    leftPanelInfo = {
+      action: name,
+      parameter: leftPanelInfo
+    };
     return [leftPanelInfo, rightPanelInfo];
   };
 
@@ -728,7 +1251,6 @@ module.exports = Router = (function(_super) {
 
   Router.prototype.buildUrl = function(options) {
     var leftPanelInfo, leftPart, rightPanelInfo, rightPart, url;
-    this.current = this.flux.store('LayoutStore').getState();
     if ((options.leftPanel != null) || (options.rightPanel != null)) {
       leftPanelInfo = options.leftPanel || this.current.leftPanel;
       rightPanelInfo = options.rightPanel || this.current.rightPanel;
@@ -785,11 +1307,16 @@ module.exports = Router = (function(_super) {
   };
 
   Router.prototype._getURLFromCurrentRoute = function(panel) {
-    var partURL, pattern;
+    var defaultMailbox, partURL, pattern;
     if (panel != null) {
       pattern = this.patterns[panel.action].pattern;
       if (panel.action === 'mailbox.emails' && (panel.parameter == null)) {
-        panel.parameter = this.flux.store('MailboxStore').getDefault().id;
+        defaultMailbox = this.flux.store('MailboxStore').getDefault();
+        if (defaultMailbox != null) {
+          panel.parameter = defaultMailbox.id;
+        } else {
+          panel.parameter = null;
+        }
       }
       partURL = pattern.replace(':id', panel.parameter);
       return partURL;
@@ -804,44 +1331,160 @@ module.exports = Router = (function(_super) {
 });
 
 ;require.register("stores/emails", function(exports, require, module) {
-var EmailStore;
+var EmailStore, request;
+
+request = superagent;
 
 module.exports = EmailStore = Fluxxor.createStore({
+  actions: {
+    'RECEIVE_RAW_EMAILS': '_receiveRawEmails',
+    'RECEIVE_RAW_EMAIL': '_receiveRawEmail',
+    'REMOVE_MAILBOX': '_removeMailbox'
+  },
   initialize: function() {
-    return this.emails = [
+    var fixtures;
+    fixtures = [
       {
-        id: 1,
-        title: 'Question application Email',
-        sender: 'joseph.silvestre@cozycloud.cc',
-        receivers: ['frank.rousseau@cozycloud.cc'],
-        content: 'Salut Frank,\n\nJ\'ai une question concernant l\'application Email : jusqu\'à quel niveau doit-on gérer le responsive ?\n\nJ\'ai commencé à vouloir le faire très proprement mais je me suis dit la chose suivante : personne n\'utilise un navigateur sur mobile pour regarder ses emails. Où je me trompe ?',
-        date: '12:38',
-        isRead: true,
-        mailbox: 1
+        id: "f1a1dc66df94e19a0407c633e6003a832",
+        createdAt: "2014-07-11T08:38:23.000Z",
+        docType: "email",
+        from: "natacha@provider.com",
+        hasAttachments: false,
+        html: "Hello, how are you ? bis",
+        'imap-folder': "orange-ID-folder1",
+        inReplyTo: "",
+        mailbox: "orange-ID2",
+        reads: false,
+        references: "",
+        subject: "Hey back",
+        text: "Hello, how are you ? bis",
+        to: "bob@provider.com"
       }, {
-        id: 2,
-        title: 'Question application Email',
-        sender: 'frank.rousseau@cozycloud.cc',
-        receivers: ['joseph.silvestre@cozycloud.cc'],
-        content: 'Je pense que ce n\'est utile que pour la démo mais bon c\'est ce que les gens regardent en premier. Notre expérience mobile est assez mauvaise aujourd\'hui (j\'ai testé ça ce week-end, il n\'y que contacts de bien). Du coup pour emails ce serait pas mal d\'avoir quelque chose qui passe aussi (mais vas-y bourrin, quand ça ne rentre pas enlève des éléments/features).\n\nPour le responsive on a en gros quatre tailles :\n\n- 1900px de large pour les grands écrans\n- 1200px de large pour les portables (En général ce qui passe bien sur 1200px passe bien sur 1900px)\n- 960px de large pour les tablettes (en fait ici on fait pour 720px mais on actionne à partir de 960px les modifs).\n- 480px de large pour les téléphones',
-        date: '12:38',
-        isRead: true,
-        mailbox: 1
+        id: "f1a1dc66df94e19a0407c633e6003b272",
+        createdAt: "2014-07-11T08:38:23.000Z",
+        docType: "email",
+        from: "alice@provider.com",
+        hasAttachments: false,
+        html: "Hello, how are you ? bis",
+        'imap-folder': "orange-ID-folder2",
+        inReplyTo: "",
+        mailbox: "orange-ID2",
+        reads: false,
+        references: "",
+        subject: "Another email",
+        text: "Hello, how are you ? bis",
+        to: "bob@provider.com"
+      }, {
+        id: "f1a1dc66df94e19a0407c633e600112a2",
+        createdAt: "2014-07-11T08:38:23.000Z",
+        docType: "email",
+        from: "alice@provider.com",
+        hasAttachments: false,
+        html: "Hello, how are you ?",
+        'imap-folder': "gmail-ID-folder1",
+        inReplyTo: "",
+        mailbox: "gmail-ID2",
+        reads: false,
+        references: "",
+        subject: "Hello Cozy Email manager!",
+        text: "Hello, how are you ?",
+        to: "bob@provider.com"
+      }, {
+        id: "email-ID-12",
+        createdAt: "2014-07-11T08:38:23.000Z",
+        docType: "email",
+        from: "alice@provider.com",
+        hasAttachments: false,
+        html: "Hello, how are you ? bis",
+        'imap-folder': "gmail-ID-folder1",
+        inReplyTo: "",
+        mailbox: "gmail-ID2",
+        reads: false,
+        references: "",
+        subject: "First email of thread",
+        text: "Hello, how are you ? bis",
+        to: "bob@provider.com"
+      }, {
+        id: "f1a1dc66df94e19a0407c633e60037e52",
+        createdAt: "2014-07-11T08:38:23.000Z",
+        docType: "email",
+        from: "bob@provider.com",
+        hasAttachments: false,
+        html: "Hello, how are you ? bis",
+        'imap-folder': "gmail-ID-folder1",
+        inReplyTo: "email-ID-12",
+        mailbox: "gmail-ID2",
+        reads: false,
+        references: "",
+        subject: "Email in reply to",
+        text: "Hello, how are you ? bis",
+        to: "alice@provider.com"
       }
     ];
+    this.emails = [];
+    if ((window.mailboxes == null) || window.mailboxes.length === 0) {
+      return this.emails = fixtures;
+    }
   },
   getAll: function() {
     return this.emails;
   },
   getByID: function(emailID) {
     return _.findWhere(this.emails, {
-      id: parseInt(emailID)
+      id: emailID
     });
   },
   getEmailsByMailbox: function(mailboxID) {
-    return _.filter(this.emails, function(email) {
-      return email.mailbox === mailboxID;
+    return _.where(this.emails, {
+      mailbox: mailboxID
     });
+  },
+  getEmailsByThread: function(emailID) {
+    var idToLook, idsToLook, temp, thread;
+    idsToLook = [emailID];
+    thread = [];
+    while (idToLook = idsToLook.pop()) {
+      thread.push(this.getByID(idToLook));
+      temp = _.where(this.emails, {
+        inReplyTo: idToLook
+      });
+      idsToLook = idsToLook.concat(_.pluck(temp, 'id'));
+    }
+    return thread;
+  },
+  _receiveRawEmails: function(emails) {
+    var email, _i, _len;
+    for (_i = 0, _len = emails.length; _i < _len; _i++) {
+      email = emails[_i];
+      this._receiveRawEmail(email, true);
+    }
+    return this.emit('change');
+  },
+  _receiveRawEmail: function(email, silent) {
+    var existingEmail;
+    if (silent == null) {
+      silent = false;
+    }
+    existingEmail = this.getByID(email.id);
+    if (existingEmail != null) {
+      existingEmail = email;
+    } else {
+      this.emails.push(email);
+    }
+    if (silent !== true) {
+      return this.emit('change');
+    }
+  },
+  _removeMailbox: function(mailboxID) {
+    var email, emails, index, _i, _len;
+    emails = this.getEmailsByMailbox(mailboxID);
+    for (index = _i = 0, _len = emails.length; _i < _len; index = ++_i) {
+      email = emails[index];
+      email = this.emails[index];
+      this.emails.splice(index, 1);
+      email = null;
+    }
+    return this.emit('change');
   }
 });
 });
@@ -851,7 +1494,8 @@ var LayoutStore;
 
 module.exports = LayoutStore = Fluxxor.createStore({
   actions: {
-    'SHOW_ROUTE': 'onRoute'
+    'SHOW_PANEL': '_showPanel',
+    'HIDE_PANEL': '_hidePanel'
   },
   initialize: function() {
     return this.layout = {
@@ -862,16 +1506,23 @@ module.exports = LayoutStore = Fluxxor.createStore({
       rightPanel: null
     };
   },
-  onRoute: function(args) {
-    var leftPanelInfo, name, rightPanelInfo;
-    name = args.name, leftPanelInfo = args.leftPanelInfo, rightPanelInfo = args.rightPanelInfo;
-    this.layout = {
-      leftPanel: {
-        action: name,
-        parameter: leftPanelInfo
-      },
-      rightPanel: rightPanelInfo
-    };
+  _showPanel: function(payload) {
+    var direction, panelInfo;
+    panelInfo = payload.panelInfo, direction = payload.direction;
+    if (direction === 'left') {
+      this.layout.leftPanel = panelInfo;
+    } else {
+      this.layout.rightPanel = panelInfo;
+    }
+    return this.emit('change');
+  },
+  _hidePanel: function(direction) {
+    if (direction === 'left') {
+      this.layout.leftPanel = this.layout.rightPanel;
+      this.layout.rightPanel = null;
+    } else {
+      this.layout.rightPanel = null;
+    }
     return this.emit('change');
   },
   getState: function() {
@@ -884,29 +1535,157 @@ module.exports = LayoutStore = Fluxxor.createStore({
 });
 
 ;require.register("stores/mailboxes", function(exports, require, module) {
-var MailboxStore;
+var MailboxStore, request;
+
+request = superagent;
 
 module.exports = MailboxStore = Fluxxor.createStore({
+  actions: {
+    'ADD_MAILBOX': 'onCreate',
+    'REMOVE_MAILBOX': 'onRemove',
+    'EDIT_MAILBOX': 'onEdit',
+    'SELECT_MAILBOX': 'onSelectMailbox',
+    'NEW_MAILBOX_WAITING': 'onNewMailboxWaiting',
+    'NEW_MAILBOX_ERROR': 'onNewMailboxError'
+  },
   initialize: function() {
-    return this.mailboxes = [
+    var fixtures;
+    fixtures = [
       {
-        id: 1,
-        label: 'joseph.silvestre38@gmail.com',
-        unreadCount: 1275
+        id: "gmail-ID2",
+        email: "randomlogin@randomprovider.tld",
+        imapPort: 465,
+        imapServer: "imap.gmail.com",
+        label: "Gmail",
+        name: "Random Name",
+        password: "randompassword",
+        smtpPort: 993,
+        smtpServer: "smtp.gmail.com"
       }, {
-        id: 2,
-        label: 'joseph.silvestre@cozycloud.cc',
-        unreadCount: 369
+        id: "orange-ID2",
+        email: "randomlogin@randomprovider.tld",
+        imapPort: 465,
+        imapServer: "imap.orange.fr",
+        label: "Orange",
+        name: "Random Name",
+        password: "randompassword",
+        smtpPort: 993,
+        smtpServer: "smtp.orange.fr"
       }
     ];
+    this.mailboxes = window.mailboxes || fixtures;
+    if (this.mailboxes.length === 0) {
+      this.mailboxes = fixtures;
+    }
+    this.selectedMailbox = null;
+    this.newMailboxWaiting = false;
+    return this.newMailboxError = null;
+  },
+  onCreate: function(mailbox) {
+    this.mailboxes.push(mailbox);
+    return this.emit('change');
+  },
+  onSelectMailbox: function(mailboxID) {
+    this.selectedMailbox = _.findWhere(this.mailboxes, {
+      id: mailboxID
+    });
+    return this.emit('change');
+  },
+  onNewMailboxWaiting: function(payload) {
+    this.newMailboxWaiting = payload;
+    return this.emit('change');
+  },
+  onNewMailboxError: function(error) {
+    this.newMailboxError = error;
+    return this.emit('change');
+  },
+  onEdit: function(mailbox) {
+    var index;
+    index = _.pluck(this.mailboxes, 'id').indexOf(mailbox.id);
+    this.mailboxes[index] = mailbox;
+    this.selectedMailbox = this.mailboxes[index];
+    return this.emit('change');
+  },
+  onRemove: function(mailboxID) {
+    var index, mailbox;
+    index = _.pluck(this.mailboxes, 'id').indexOf(mailboxID);
+    mailbox = this.mailboxes[index];
+    this.mailboxes.splice(index, 1);
+    mailbox = null;
+    this.selectedMailbox = this.getDefault();
+    return this.emit('change');
   },
   getAll: function() {
+    this.mailboxes = _.sortBy(this.mailboxes, function(mailbox) {
+      return mailbox.label;
+    });
     return this.mailboxes;
   },
   getDefault: function() {
-    return this.mailboxes[0];
+    return this.mailboxes[0] || null;
+  },
+  getSelectedMailbox: function() {
+    return this.selectedMailbox || this.getDefault();
+  },
+  getError: function() {
+    return this.newMailboxError;
+  },
+  isWaiting: function() {
+    return this.newMailboxWaiting;
   }
 });
+});
+
+;require.register("utils/XHRUtils", function(exports, require, module) {
+var request;
+
+request = superagent;
+
+module.exports = {
+  fetchEmailsByMailbox: function(mailboxID) {
+    var flux;
+    flux = require('../fluxxor');
+    return request.get("mailbox/" + mailboxID + "/emails").set('Accept', 'application/json').end(function(res) {
+      if (res.ok) {
+        return flux.actions.email.receiveRawEmails(res.body);
+      } else {
+        return console.log("Something went wrong -- " + res.body);
+      }
+    });
+  },
+  fetchEmailThread: function(emailID) {
+    var flux;
+    flux = require('../fluxxor');
+    return request.get("email/" + emailID).set('Accept', 'application/json').end(function(res) {
+      if (res.ok) {
+        return flux.actions.email.receiveRawEmail(res.body);
+      } else {
+        return console.log("Something went wrong -- " + res.body);
+      }
+    });
+  },
+  createMailbox: function(mailbox, callback) {
+    return request.post('mailbox').send(mailbox).set('Accept', 'application/json').end(function(res) {
+      if (res.ok) {
+        return callback(null, res.body);
+      } else {
+        return callback(res.body, null);
+      }
+    });
+  },
+  editMailbox: function(mailbox, callback) {
+    return request.put("mailbox/" + mailbox.id).send(mailbox).set('Accept', 'application/json').end(function(res) {
+      if (res.ok) {
+        return callback(null, res.body);
+      } else {
+        return callback(res.body, null);
+      }
+    });
+  },
+  removeMailbox: function(mailboxID) {
+    return request.del("mailbox/" + mailboxID).set('Accept', 'application/json').end(function(res) {});
+  }
+};
 });
 
 ;

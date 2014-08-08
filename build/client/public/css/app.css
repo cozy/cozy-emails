@@ -1622,13 +1622,6 @@ a:hover,
 a:visited:hover {
   text-decoration: underline;
 }
-.container {
-  float: left;
-  margin: 0;
-  padding: 0;
-  width: 80%;
-  height: 100%;
-}
 @font-face {
   font-family: styled;
   src: url("/fonts/maven-pro-light-200.otf");
@@ -1638,15 +1631,15 @@ a:visited:hover {
   src: url("/fonts/signika-light.ttf");
 }
 a {
-  color: #00f;
+  color: #34a6ff;
 }
 a:hover {
-  color: #ffa500;
+  color: #fe8800;
 }
 input,
 select,
 textarea {
-  border: 1px solid #00f;
+  border: 1px solid #34a6ff;
   -webkit-border-radius: 0;
   border-radius: 0;
   font-family: styled;
@@ -1654,7 +1647,7 @@ textarea {
 input:hover,
 select:hover,
 textarea:hover {
-  border: 1px solid #ffa500;
+  border: 1px solid #fe8800;
 }
 input:active,
 select:active,
@@ -1727,9 +1720,319 @@ textarea:active {
   background-color: #fe8800;
   border-color: #fe8800;
 }
+@-moz-keyframes fadeIn {
+  from {
+    opacity: 0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+  }
+  to {
+    opacity: 1;
+    -ms-filter: none;
+    filter: none;
+  }
+}
+@-webkit-keyframes fadeIn {
+  from {
+    opacity: 0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+  }
+  to {
+    opacity: 1;
+    -ms-filter: none;
+    filter: none;
+  }
+}
+@-o-keyframes fadeIn {
+  from {
+    opacity: 0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+  }
+  to {
+    opacity: 1;
+    -ms-filter: none;
+    filter: none;
+  }
+}
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+    filter: alpha(opacity=0);
+  }
+  to {
+    opacity: 1;
+    -ms-filter: none;
+    filter: none;
+  }
+}
+@-moz-keyframes moveFromLeft {
+  from {
+    -webkit-transform: translate(-100%);
+    -moz-transform: translate(-100%);
+    -o-transform: translate(-100%);
+    -ms-transform: translate(-100%);
+    transform: translate(-100%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
+@-webkit-keyframes moveFromLeft {
+  from {
+    -webkit-transform: translate(-100%);
+    -moz-transform: translate(-100%);
+    -o-transform: translate(-100%);
+    -ms-transform: translate(-100%);
+    transform: translate(-100%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
+@-o-keyframes moveFromLeft {
+  from {
+    -webkit-transform: translate(-100%);
+    -moz-transform: translate(-100%);
+    -o-transform: translate(-100%);
+    -ms-transform: translate(-100%);
+    transform: translate(-100%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
+@keyframes moveFromLeft {
+  from {
+    -webkit-transform: translate(-100%);
+    -moz-transform: translate(-100%);
+    -o-transform: translate(-100%);
+    -ms-transform: translate(-100%);
+    transform: translate(-100%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
+@-moz-keyframes moveFromRight {
+  from {
+    -webkit-transform: translate(100%);
+    -moz-transform: translate(100%);
+    -o-transform: translate(100%);
+    -ms-transform: translate(100%);
+    transform: translate(100%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
+@-webkit-keyframes moveFromRight {
+  from {
+    -webkit-transform: translate(100%);
+    -moz-transform: translate(100%);
+    -o-transform: translate(100%);
+    -ms-transform: translate(100%);
+    transform: translate(100%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
+@-o-keyframes moveFromRight {
+  from {
+    -webkit-transform: translate(100%);
+    -moz-transform: translate(100%);
+    -o-transform: translate(100%);
+    -ms-transform: translate(100%);
+    transform: translate(100%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
+@keyframes moveFromRight {
+  from {
+    -webkit-transform: translate(100%);
+    -moz-transform: translate(100%);
+    -o-transform: translate(100%);
+    -ms-transform: translate(100%);
+    transform: translate(100%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
+@-moz-keyframes moveFromTopRightCorner {
+  from {
+    -webkit-transform: translate(100%, -100%) scale(0.5);
+    -moz-transform: translate(100%, -100%) scale(0.5);
+    -o-transform: translate(100%, -100%) scale(0.5);
+    -ms-transform: translate(100%, -100%) scale(0.5);
+    transform: translate(100%, -100%) scale(0.5);
+  }
+  to {
+    -webkit-transform: translate(0, 0) scale(1);
+    -moz-transform: translate(0, 0) scale(1);
+    -o-transform: translate(0, 0) scale(1);
+    -ms-transform: translate(0, 0) scale(1);
+    transform: translate(0, 0) scale(1);
+  }
+}
+@-webkit-keyframes moveFromTopRightCorner {
+  from {
+    -webkit-transform: translate(100%, -100%) scale(0.5);
+    -moz-transform: translate(100%, -100%) scale(0.5);
+    -o-transform: translate(100%, -100%) scale(0.5);
+    -ms-transform: translate(100%, -100%) scale(0.5);
+    transform: translate(100%, -100%) scale(0.5);
+  }
+  to {
+    -webkit-transform: translate(0, 0) scale(1);
+    -moz-transform: translate(0, 0) scale(1);
+    -o-transform: translate(0, 0) scale(1);
+    -ms-transform: translate(0, 0) scale(1);
+    transform: translate(0, 0) scale(1);
+  }
+}
+@-o-keyframes moveFromTopRightCorner {
+  from {
+    -webkit-transform: translate(100%, -100%) scale(0.5);
+    -moz-transform: translate(100%, -100%) scale(0.5);
+    -o-transform: translate(100%, -100%) scale(0.5);
+    -ms-transform: translate(100%, -100%) scale(0.5);
+    transform: translate(100%, -100%) scale(0.5);
+  }
+  to {
+    -webkit-transform: translate(0, 0) scale(1);
+    -moz-transform: translate(0, 0) scale(1);
+    -o-transform: translate(0, 0) scale(1);
+    -ms-transform: translate(0, 0) scale(1);
+    transform: translate(0, 0) scale(1);
+  }
+}
+@keyframes moveFromTopRightCorner {
+  from {
+    -webkit-transform: translate(100%, -100%) scale(0.5);
+    -moz-transform: translate(100%, -100%) scale(0.5);
+    -o-transform: translate(100%, -100%) scale(0.5);
+    -ms-transform: translate(100%, -100%) scale(0.5);
+    transform: translate(100%, -100%) scale(0.5);
+  }
+  to {
+    -webkit-transform: translate(0, 0) scale(1);
+    -moz-transform: translate(0, 0) scale(1);
+    -o-transform: translate(0, 0) scale(1);
+    -ms-transform: translate(0, 0) scale(1);
+    transform: translate(0, 0) scale(1);
+  }
+}
+@-moz-keyframes expandFromRight {
+  from {
+    -webkit-transform: translate(50%);
+    -moz-transform: translate(50%);
+    -o-transform: translate(50%);
+    -ms-transform: translate(50%);
+    transform: translate(50%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
+@-webkit-keyframes expandFromRight {
+  from {
+    -webkit-transform: translate(50%);
+    -moz-transform: translate(50%);
+    -o-transform: translate(50%);
+    -ms-transform: translate(50%);
+    transform: translate(50%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
+@-o-keyframes expandFromRight {
+  from {
+    -webkit-transform: translate(50%);
+    -moz-transform: translate(50%);
+    -o-transform: translate(50%);
+    -ms-transform: translate(50%);
+    transform: translate(50%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
+@keyframes expandFromRight {
+  from {
+    -webkit-transform: translate(50%);
+    -moz-transform: translate(50%);
+    -o-transform: translate(50%);
+    -ms-transform: translate(50%);
+    transform: translate(50%);
+  }
+  to {
+    -webkit-transform: translate(0);
+    -moz-transform: translate(0);
+    -o-transform: translate(0);
+    -ms-transform: translate(0);
+    transform: translate(0);
+  }
+}
 .container-fluid,
 .container-fluid > .row {
   height: 100%;
+}
+@media (max-width: 992px) {
+  #menu {
+    position: absolute;
+    z-index: 150;
+  }
 }
 #page-content {
   display: -webkit-box;
@@ -1764,16 +2067,74 @@ textarea:active {
   flex: 1;
   overflow-y: hidden;
   height: 100%;
+  position: relative;
 }
 #page-content #panels .panel {
   overflow-y: auto;
-  height: 80%;
+  height: 85%;
+  position: absolute;
 }
 #page-content #panels .panel:first-of-type {
   border-right: 1px solid #e4e4e4;
+  z-index: 100;
 }
-#page-content #panels .panel.hidden {
-  display: none;
+#page-content #panels .panel:nth-of-type(2) {
+  left: 50%;
+  z-index: 50;
+}
+@media (max-width: 992px) {
+  #page-content #panels .panel:nth-of-type(2) {
+    left: 0;
+  }
+}
+#page-content #panels .panel:first-of-type.col-md-6 {
+  -webkit-transition: width 0.3s ease;
+  -moz-transition: width 0.3s ease;
+  -o-transition: width 0.3s ease;
+  -ms-transition: width 0.3s ease;
+  transition: width 0.3s ease;
+}
+#page-content #panels .panel:first-of-type.col-md-12 {
+  -webkit-transition: width 0.3s ease;
+  -moz-transition: width 0.3s ease;
+  -o-transition: width 0.3s ease;
+  -ms-transition: width 0.3s ease;
+  transition: width 0.3s ease;
+}
+#page-content #panels .panel:first-of-type.moveFromLeft {
+  -webkit-animation: moveFromLeft 0.3s ease;
+  -moz-animation: moveFromLeft 0.3s ease;
+  -o-animation: moveFromLeft 0.3s ease;
+  -ms-animation: moveFromLeft 0.3s ease;
+  animation: moveFromLeft 0.3s ease;
+}
+#page-content #panels .panel:first-of-type.moveFromTopRightCorner {
+  -webkit-animation: moveFromTopRightCorner 0.2s ease;
+  -moz-animation: moveFromTopRightCorner 0.2s ease;
+  -o-animation: moveFromTopRightCorner 0.2s ease;
+  -ms-animation: moveFromTopRightCorner 0.2s ease;
+  animation: moveFromTopRightCorner 0.2s ease;
+}
+#page-content #panels .panel:first-of-type.expandFromRight {
+  -webkit-animation: expandFromRight 0.3s ease;
+  -moz-animation: expandFromRight 0.3s ease;
+  -o-animation: expandFromRight 0.3s ease;
+  -ms-animation: expandFromRight 0.3s ease;
+  animation: expandFromRight 0.3s ease;
+}
+#page-content #panels .panel:nth-of-type(2).slide-in-from-right {
+  -webkit-animation: moveFromRight 0.3s ease;
+  -moz-animation: moveFromRight 0.3s ease;
+  -o-animation: moveFromRight 0.3s ease;
+  -ms-animation: moveFromRight 0.3s ease;
+  animation: moveFromRight 0.3s ease;
+}
+#page-content #panels .panel:nth-of-type(2).slide-in-from-left {
+  -webkit-animation: moveFromLeft 0.3s ease-out;
+  -moz-animation: moveFromLeft 0.3s ease-out;
+  -o-animation: moveFromLeft 0.3s ease-out;
+  -ms-animation: moveFromLeft 0.3s ease-out;
+  animation: moveFromLeft 0.3s ease-out;
 }
 #menu {
   display: -webkit-box;
@@ -1854,8 +2215,12 @@ textarea:active {
   background: #474c5c;
   color: #fff;
 }
+#menu #mailbox-list li {
+  border-left: 5px solid transparent;
+}
 #menu #mailbox-list li .submenu {
   display: none;
+  background: #3e4351;
 }
 #menu #mailbox-list li .submenu .menu-item i {
   font-size: 20px;
@@ -1880,9 +2245,17 @@ textarea:active {
   -ms-filter: none;
   filter: none;
 }
-#quick-actions .fa-bars {
-  font-size: 35px;
+#quick-actions .responsive-handler {
   color: #333;
+  font-size: 25px;
+  text-decoration: none;
+  cursor: pointer;
+}
+#quick-actions .responsive-handler .fa-bars {
+  font-size: 35px;
+}
+#quick-actions .responsive-handler .fa-chevron-left {
+  font-size: 30px;
 }
 #quick-actions form {
   padding-left: 0;
@@ -1902,7 +2275,8 @@ textarea:active {
   transition: width 0.2s ease-out;
 }
 #email-list .email {
-  padding: 5px 15px;
+  padding: 5px;
+  border-left: 5px solid transparent;
   border-bottom: 1px solid #e4e4e4;
   cursor: pointer;
 }
@@ -1975,7 +2349,11 @@ textarea:active {
   border: 1px solid #aaa;
 }
 #email-list .email:hover {
+  border-left: 5px solid #fe8800;
   background: #f4f4f4;
+}
+#email-list .email.active {
+  border-left: 5px solid #34a6ff;
 }
 #email-thread.enable {
   display: block;
@@ -1984,11 +2362,22 @@ textarea:active {
   color: #444;
   margin-top: 0;
   padding-bottom: 10px;
+}
+#email-thread h3 .close-email {
+  cursor: pointer;
+  font-size: 20px;
+  margin-right: 15px;
+}
+#email-thread h3 .expand {
+  float: right;
+}
+#email-thread h3 .expand,
+#email-thread h3 .close-email {
   color: #34a6ff;
 }
-#email-thread h3 small {
-  float: right;
-  cursor: pointer;
+#email-thread h3 .expand:hover,
+#email-thread h3 .close-email:hover {
+  color: #fe8800;
 }
 #email-thread .email-thread {
   padding: 0;
@@ -2012,6 +2401,9 @@ textarea:active {
 #email-thread .email-thread .email.active .email-content,
 #email-thread .email-thread .email:last-of-type .email-content {
   display: block;
+}
+#email-thread .email-thread .email:last-of-type {
+  cursor: default;
 }
 #email-thread .email-thread .email span,
 #email-thread .email-thread .email .email-preview,
@@ -2076,9 +2468,48 @@ textarea:active {
 #email-thread .email-thread .email:hover:not(.active):not(:last-of-type) {
   background: #f4f4f4;
 }
+#mailbox-config h3 {
+  color: #444;
+  margin-top: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f4f4f4;
+}
+#mailbox-config button {
+  margin-left: 5px;
+}
+* > .fa-compress {
+  -webkit-transform: rotate(45deg);
+  -moz-transform: rotate(45deg);
+  -o-transform: rotate(45deg);
+  -ms-transform: rotate(45deg);
+  transform: rotate(45deg);
+}
 /*
   Put styles here for scaffolding and testing out new features/stuff
   "Production-ready" components styles should live in a dedicated file
+*/
+/*
+  Contextual actions
+*/
+#contextual-actions {
+  padding: 0;
+}
+#contextual-actions .mailbox-config.fade-enter {
+  -webkit-animation: fadeIn 0.3s ease;
+  -moz-animation: fadeIn 0.3s ease;
+  -o-animation: fadeIn 0.3s ease;
+  -ms-animation: fadeIn 0.3s ease;
+  animation: fadeIn 0.3s ease;
+}
+#contextual-actions .mailbox-config.fade-leave {
+  -webkit-animation: fadeIn 0.3s ease reverse;
+  -moz-animation: fadeIn 0.3s ease reverse;
+  -o-animation: fadeIn 0.3s ease reverse;
+  -ms-animation: fadeIn 0.3s ease reverse;
+  animation: fadeIn 0.3s ease reverse;
+}
+/*
+  new email window
 */
 #email-compose.enable {
   display: block;
@@ -2099,11 +2530,11 @@ textarea:active {
   color: #34a6ff;
 }
 #email-compose h3 a.close-email {
-  float: right;
+  margin-right: 15px;
 }
 #email-compose h3 a.expand {
+  float: right;
   font-size: 25px;
-  margin-right: 10px;
 }
 #email-compose textarea {
   border: 1px solid #444;
@@ -2114,10 +2545,10 @@ textarea:active {
 /*
   Open email tabs
 
-  -- disabled because of the ugly scrollbar on most of the computers
+  -- disabled because of the ugly scrollbar on most computers
 */
 #email-thread .nav {
-  display: none;
+  display: block;
   margin-bottom: 30px;
   overflow: auto;
 }
