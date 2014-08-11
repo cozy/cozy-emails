@@ -7,6 +7,7 @@ Compose = require './compose'
 MailboxConfig = require './mailbox-config'
 
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup
+classer = React.addons.classSet
 
 # React mixins
 FluxMixin = Fluxxor.FluxMixin React
@@ -68,6 +69,11 @@ module.exports = Application = React.createClass
             leftPanel: layout.leftPanel
             fullWidth: true
 
+        # classes for page-content
+        responsiveClasses = classer
+            'col-xs-12 col-md-11': true
+            'pushed': @state.isResponsiveMenuShown
+
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
@@ -77,8 +83,9 @@ module.exports = Application = React.createClass
                 Menu
                     mailboxes: @state.mailboxes
                     selectedMailbox: @state.selectedMailbox
+                    isResponsiveMenuShown: @state.isResponsiveMenuShown
 
-                div id: 'page-content', className: 'col-xs-12 col-md-11',
+                div id: 'page-content', className: responsiveClasses,
 
                     # The quick actions bar shoud be moved in its own component
                     # when its feature is implemented.
@@ -253,8 +260,7 @@ module.exports = Application = React.createClass
             mailboxes: flux.store('MailboxStore').getAll()
             selectedMailbox: flux.store('MailboxStore').getSelectedMailbox()
             emails: flux.store('EmailStore').getAll()
-            #layout: flux.store('LayoutStore').getState()
-            isLayoutFullWidth: flux.store('LayoutStore').isFullWidth()
+            isResponsiveMenuShown: flux.store('LayoutStore').isMenuShown()
         }
 
 
@@ -273,10 +279,11 @@ module.exports = Application = React.createClass
     componentWillUnmount: ->
         @props.router.off 'fluxRoute', @onRoute
 
-    # dirty, dirty, very dirty hack to handle the menu in smaller devices
-    # only thing that depends on jQuery
-    # we could use the layout store to handle the menu state...
-    onResponsiveMenuClick: ->
-        $('#menu').removeClass 'hidden-xs hidden-sm'
-        $('body').click ->
-            $('#menu').addClass 'hidden-xs hidden-sm'
+    # Toggle the menu in responsive mode
+    onResponsiveMenuClick: (event) ->
+        event.preventDefault()
+        if @state.isResponsiveMenuShown
+            @getFlux().actions.layout.hideReponsiveMenu()
+        else
+            @getFlux().actions.layout.showReponsiveMenu()
+

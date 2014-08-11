@@ -25,7 +25,7 @@
 /*
   MENU
 
-  Menu positionning is completely handled by Bootstrap grid.
+  Menu positionning is handled by Bootstrap grid, except for smaller devices
 */
 @media (max-width 992px)
   #menu
@@ -44,6 +44,10 @@
   position relative
   height 100%
   overflow hidden
+
+  // when menu is open on smaller devices
+  &.pushed
+    transform translate(33%)
 
   /*
     Quick actions bar
