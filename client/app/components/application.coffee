@@ -59,11 +59,19 @@ module.exports = Application = React.createClass
         showMailboxConfigButton = @state.selectedMailbox? and
                                   layout.leftPanel.action isnt 'mailbox.new'
         if showMailboxConfigButton
-            configMailboxUrl = @buildUrl
-                direction: 'left'
-                action: 'mailbox.config'
-                parameter: @state.selectedMailbox.id
-                fullWidth: true
+            # the button toggles the mailbox config
+            if layout.leftPanel.action is 'mailbox.config'
+                configMailboxUrl = @buildUrl
+                    direction: 'left'
+                    action: 'mailbox.emails'
+                    parameter: @state.selectedMailbox.id
+                    fullWidth: true
+            else
+                configMailboxUrl = @buildUrl
+                    direction: 'left'
+                    action: 'mailbox.config'
+                    parameter: @state.selectedMailbox.id
+                    fullWidth: true
 
         responsiveBackUrl = @buildUrl
             leftPanel: layout.leftPanel
@@ -84,6 +92,7 @@ module.exports = Application = React.createClass
                     mailboxes: @state.mailboxes
                     selectedMailbox: @state.selectedMailbox
                     isResponsiveMenuShown: @state.isResponsiveMenuShown
+                    layout: @props.router.current
 
                 div id: 'page-content', className: responsiveClasses,
 

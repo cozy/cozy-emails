@@ -10,16 +10,32 @@ module.exports = Menu = React.createClass
     mixins: [RouterMixin]
 
     render: ->
-        composeUrl = @buildUrl
-            direction: 'right'
-            action: 'compose'
-            parameter: null
-            fullWidth: false
 
-        newMailboxUrl = @buildUrl
+        selectedMailboxUrl = @buildUrl
             direction: 'left'
-            action: 'mailbox.new'
+            action: 'mailbox.emails'
+            parameter: @props.selectedMailbox.id
             fullWidth: true
+
+        # the button toggles the "compose" screen
+        if @props.layout.leftPanel.action is 'compose' or
+           @props.layout.rightPanel?.action is 'compose'
+            composeUrl = selectedMailboxUrl
+        else
+            composeUrl = @buildUrl
+                direction: 'right'
+                action: 'compose'
+                parameter: null
+                fullWidth: false
+
+        # the button toggle the "new mailbox" screen
+        if @props.layout.leftPanel.action is 'mailbox.new'
+            newMailboxUrl = selectedMailboxUrl
+        else
+            newMailboxUrl = @buildUrl
+                direction: 'left'
+                action: 'mailbox.new'
+                fullWidth: true
 
         classes = classer
             'hidden-xs hidden-sm': not @props.isResponsiveMenuShown
@@ -70,3 +86,4 @@ module.exports = Menu = React.createClass
                     i className: 'fa fa-trash-o'
                     span className: 'badge', ''
                     span className: 'mailbox-label', 'Trash'
+
