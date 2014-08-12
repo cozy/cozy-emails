@@ -5,7 +5,6 @@ module.exports = EmailStore = Fluxxor.createStore
     actions:
         'RECEIVE_RAW_EMAILS': '_receiveRawEmails'
         'RECEIVE_RAW_EMAIL': '_receiveRawEmail'
-
         'REMOVE_MAILBOX': '_removeMailbox'
 
     initialize: ->
@@ -93,38 +92,41 @@ module.exports = EmailStore = Fluxxor.createStore
 
         ]
 
-        @emails = []
+        emails = []
         if not window.mailboxes? or window.mailboxes.length is 0
-            @emails = fixtures
+            emails = fixtures
+
+        @emails = Immutable.OrderedMap()
+        @emails = @emails.withMutations (map) =>
+            map.set email.id, email for email in emails
 
     getAll: -> return @emails
 
-    getByID: (emailID) -> _.findWhere @emails, id: emailID
+    getByID: (emailID) -> @emails.get(emailID) or null
 
-    getEmailsByMailbox: (mailboxID) -> _.where @emails, mailbox: mailboxID
+    getEmailsByMailbox: (mailboxID) ->
+        # sequences are lazy so we need .toOrderedMap() to actually execute it
+        @emails.filter (email) ->
+            email.mailbox is mailboxID
+        .toOrderedMap()
 
     getEmailsByThread: (emailID) ->
         idsToLook = [emailID]
         thread = []
         while idToLook = idsToLook.pop()
             thread.push @getByID idToLook
-            temp = _.where @emails, inReplyTo: idToLook
-            idsToLook = idsToLook.concat _.pluck temp, 'id'
+            temp = @emails.filter (email) -> email.inReplyTo is idToLook
+            idsToLook = idsToLook.concat temp.map((item) -> item.id).toArray()
 
         return thread
-
-
 
     _receiveRawEmails: (emails) ->
         @_receiveRawEmail email, true for email in emails
         @emit 'change'
 
     _receiveRawEmail: (email, silent = false) ->
-        existingEmail = @getByID email.id
-        if existingEmail?
-            existingEmail = email
-        else
-            @emails.push email
+        # create or update
+        @emails = @emails.set email.id, email
 
         # strict equality check because silent is equal to action's name
         # when not specified
@@ -132,9 +134,8 @@ module.exports = EmailStore = Fluxxor.createStore
 
     _removeMailbox: (mailboxID) ->
         emails = @getEmailsByMailbox mailboxID
-        for email, index in emails
-            email = @emails[index]
-            @emails.splice index, 1
-            email = null
+        @emails = @emails.withMutations (map) ->
+            emails.forEach (email) -> map.remove email.id
+
         @emit 'change'
 

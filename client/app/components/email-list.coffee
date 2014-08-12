@@ -9,16 +9,22 @@ module.exports = EmailList = React.createClass
 
     mixins: [RouterMixin, FluxChildMixin]
 
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not Immutable.is(nextProps.emails, @props.emails) or
+               not Immutable.is(nextProps.openEmail, @props.openEmail)
+
     render: ->
         div id: 'email-list',
             ul className: 'list-unstyled',
-                for email, key in @props.emails
+                @props.emails.map (email, key) =>
+                    # only displays initial email of a thread
                     if email.inReplyTo.length is 0
-                        isActive = @props.openEmail? and @props.openEmail.id is email.id
+                        isActive = @props.openEmail? and
+                                   @props.openEmail.id is email.id
                         @getEmailRender email, key, isActive
+                .toJS()
 
     getEmailRender: (email, key, isActive) ->
-
         classes = classer
             read: email.isRead
             active: isActive
@@ -27,7 +33,6 @@ module.exports = EmailList = React.createClass
             direction: 'right'
             action: 'email'
             parameter: email.id
-
         li className: 'email ' + classes, key: key,
             a href: url,
                 i className: 'fa fa-user'

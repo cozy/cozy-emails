@@ -10,7 +10,6 @@ module.exports = MailboxStore = Fluxxor.createStore
         'NEW_MAILBOX_WAITING': 'onNewMailboxWaiting'
         'NEW_MAILBOX_ERROR': 'onNewMailboxError'
 
-
     initialize: ->
         fixtures = [
             {
@@ -37,8 +36,12 @@ module.exports = MailboxStore = Fluxxor.createStore
             }
         ]
 
-        @mailboxes = window.mailboxes or fixtures
-        @mailboxes = fixtures if @mailboxes.length is 0
+        mailboxes = window.mailboxes or fixtures
+        mailboxes = fixtures if mailboxes.length is 0
+
+        @mailboxes = Immutable.OrderedMap()
+        @mailboxes = @mailboxes.withMutations (map) =>
+            map.set mailbox.id, mailbox for mailbox in mailboxes
 
         @selectedMailbox = null
         @newMailboxWaiting = false
@@ -46,11 +49,11 @@ module.exports = MailboxStore = Fluxxor.createStore
 
 
     onCreate: (mailbox) ->
-        @mailboxes.push mailbox
+        @mailboxes = @mailboxes.set mailbox.id, mailbox
         @emit 'change'
 
     onSelectMailbox: (mailboxID) ->
-        @selectedMailbox = _.findWhere @mailboxes, id: mailboxID
+        @selectedMailbox = @mailboxes.get(mailboxID) or null
         @emit 'change'
 
     onNewMailboxWaiting: (payload) ->
@@ -62,25 +65,23 @@ module.exports = MailboxStore = Fluxxor.createStore
         @emit 'change'
 
     onEdit: (mailbox) ->
-        index = _.pluck(@mailboxes, 'id').indexOf mailbox.id
-        @mailboxes[index] = mailbox
-        @selectedMailbox = @mailboxes[index]
+        @mailboxes = @mailboxes.set mailbox.id, mailbox
+        @selectedMailbox = @mailboxes.get mailbox.id
         @emit 'change'
 
     onRemove: (mailboxID) ->
-        index = _.pluck(@mailboxes, 'id').indexOf mailboxID
-        mailbox = @mailboxes[index]
-        @mailboxes.splice index, 1
-        mailbox = null
+        @mailboxes = @mailboxes.delete mailboxID
         @selectedMailbox = @getDefault()
         @emit 'change'
 
     getAll: ->
-        @mailboxes = _.sortBy @mailboxes, (mailbox) ->
-            return mailbox.label
+        @mailboxes = @mailboxes.sortBy (mailbox) -> mailbox.label
+                    .toOrderedMap()
 
         return @mailboxes
-    getDefault: -> return @mailboxes[0] or null
+    getDefault: -> return @mailboxes.first() or null
     getSelectedMailbox: -> return @selectedMailbox or @getDefault()
     getError: -> return @newMailboxError
     isWaiting: -> return @newMailboxWaiting
+
+

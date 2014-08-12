@@ -9,8 +9,11 @@ module.exports = Menu = React.createClass
 
     mixins: [RouterMixin]
 
-    render: ->
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not Immutable.is(nextProps.mailboxes, @props.mailboxes) or
+               not Immutable.is(nextProps.selectedMailbox, @props.selectedMailbox)
 
+    render: ->
         selectedMailboxUrl = @buildUrl
             direction: 'left'
             action: 'mailbox.emails'
@@ -47,8 +50,9 @@ module.exports = Menu = React.createClass
                 span className: 'mailbox-label', 'Compose'
 
             ul id: 'mailbox-list', className: 'list-unstyled',
-                for mailbox, key in @props.mailboxes
+                @props.mailboxes.map (mailbox, key) =>
                     @getMailboxRender mailbox, key
+                .toJS()
 
             a href: newMailboxUrl, className: 'menu-item new-mailbox-action',
                 i className: 'fa fa-inbox'
@@ -58,7 +62,7 @@ module.exports = Menu = React.createClass
     # renders a single mailbox and its submenu
     getMailboxRender: (mailbox, key) ->
         isSelected = (not @props.selectedMailbox and key is 0) \
-                    or @props.selectedMailbox.id is mailbox.id
+                     or @props.selectedMailbox.id is mailbox.id
 
         mailboxClasses = classer active: isSelected
         url = @buildUrl
