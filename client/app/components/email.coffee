@@ -14,13 +14,22 @@ module.exports = EmailThread = React.createClass
             email: true
             active: @state.active
 
+        today = moment()
+        date = moment @props.email.createdAt
+        if date.isBefore today, 'year'
+            formatter = 'DD/MM/YYYY'
+        else if date.isBefore today, 'day'
+            formatter = 'DD MMMM'
+        else
+            formatter = 'hh:mm'
+
         li className: classes, key: @props.key, onClick: clickHandler,
             div className: 'email-header',
                 i className: 'fa fa-user'
                 div className: 'email-participants',
                     span  className: 'sender', @props.email.from
                     span className: 'receivers', 'À ' + @props.email.to
-                span className: 'email-hour', @props.email.date
+                span className: 'email-hour', date.format formatter
             div className: 'email-preview',
                 p null, @props.email.text
             div className: 'email-content', @props.email.text

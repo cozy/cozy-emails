@@ -33,6 +33,16 @@ module.exports = EmailList = React.createClass
             direction: 'right'
             action: 'email'
             parameter: email.id
+
+        today = moment()
+        date = moment email.createdAt
+        if date.isBefore today, 'year'
+            formatter = 'DD/MM/YYYY'
+        else if date.isBefore today, 'day'
+            formatter = 'DD MMMM'
+        else
+            formatter = 'hh:mm'
+
         li className: 'email ' + classes, key: key,
             a href: url,
                 i className: 'fa fa-user'
@@ -40,7 +50,7 @@ module.exports = EmailList = React.createClass
                 div className: 'email-preview',
                     span className: 'email-title', email.subject
                     p null, email.text
-                span className: 'email-hour', '23:20'
+                span className: 'email-hour', date.format formatter
 
 
     getParticipants: (email) ->

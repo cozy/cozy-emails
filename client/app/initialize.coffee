@@ -1,6 +1,9 @@
 # Waits for the DOM to be ready
 $ ->
 
+    # set date locale here
+    #moment.locale 'fr'
+
     # Fluxxor initialization (model)
     flux = require './fluxxor'
 
