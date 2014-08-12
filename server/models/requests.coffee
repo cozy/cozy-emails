@@ -9,3 +9,4 @@ module.exports =
     email:
         all: americano.defaultRequests.all
         byMailbox: (doc) -> emit doc.mailbox, doc
+        byMailboxAndDate: (doc) -> emit [doc.mailbox, doc.createdAt], doc

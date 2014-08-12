@@ -7,9 +7,14 @@ module.exports = Email = americano.getModel 'Email',
     text: String
     date: Date
     inReplyTo: String
+    createdAt: Date
 
-Email.getByMailbox = (mailboxID, callback) ->
-    Email.request 'byMailbox', key: mailboxID, callback
+Email.getByMailboxAndDate = (mailboxID, callback) ->
+    options =
+        startkey: [mailboxID, {}]
+        endkey: [mailboxID]
+        descending: true
+    Email.request 'byMailboxAndDate', options, callback
 
 Email.destroyByMailbox = (mailboxID, callback) ->
     Email.requestDestroy 'byMailbox', key: mailboxID, callback

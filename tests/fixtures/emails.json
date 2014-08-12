@@ -1,7 +1,7 @@
 [
     {
         "docType": "Email",
-        "createdAt": "2014-07-11T08:38:23.000Z",
+        "createdAt": "2014-07-10T08:38:23.000Z",
         "subject": "Hello Cozy Email manager!",
         "from": "alice@provider.com",
         "to": "bob@provider.com",
@@ -18,7 +18,7 @@
     },
     {
         "docType": "Email",
-        "createdAt": "2014-07-11T08:38:23.000Z",
+        "createdAt": "2014-07-11T10:38:23.000Z",
         "subject": "Another email",
         "from": "alice@provider.com",
         "to": "bob@provider.com",
@@ -35,7 +35,7 @@
     },
     {
         "docType": "Email",
-        "createdAt": "2014-07-11T08:38:23.000Z",
+        "createdAt": "2014-07-11T08:00:23.000Z",
         "subject": "An HTML email",
         "from": "alice@provider.com",
         "to": "bob@provider.com",
@@ -70,7 +70,7 @@
     {
         "_id": "email-ID-1",
         "docType": "Email",
-        "createdAt": "2014-07-11T08:38:23.000Z",
+        "createdAt": "2014-06-11T08:38:23.000Z",
         "subject": "First email of thread",
         "from": "alice@provider.com",
         "to": "bob@provider.com",
@@ -104,7 +104,7 @@
     },
     {
         "docType": "Email",
-        "createdAt": "2014-07-11T08:38:23.000Z",
+        "createdAt": "2014-07-11T15:38:23.000Z",
         "subject": "Hey back",
         "from": "natacha@provider.com",
         "to": "bob@provider.com",
@@ -121,7 +121,7 @@
     },
     {
         "docType": "Email",
-        "createdAt": "2014-07-11T08:38:23.000Z",
+        "createdAt": "2014-07-11T12:00:00.000Z",
         "subject": "Another email",
         "from": "alice@provider.com",
         "to": "bob@provider.com",
@@ -138,7 +138,7 @@
     },
        {
         "docType": "Email",
-        "createdAt": "2014-07-11T08:38:23.000Z",
+        "createdAt": "2014-07-11T22:00:23.000Z",
         "subject": "Another email",
         "from": "alice@provider.com",
         "to": "bob@provider.com",

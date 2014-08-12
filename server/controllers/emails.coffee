@@ -2,7 +2,7 @@ Email = require '../models/email'
 
 module.exports.listByMailbox = (req, res, next) ->
 
-    Email.getByMailbox req.mailbox.id, (err, emails) ->
+    Email.getByMailboxAndDate req.mailbox.id, (err, emails) ->
         if err? then next err
         else
             res.send 200, emails
