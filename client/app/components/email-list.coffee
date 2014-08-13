@@ -32,7 +32,7 @@ module.exports = EmailList = React.createClass
         url = @buildUrl
             direction: 'right'
             action: 'email'
-            parameter: email.id
+            parameters: email.id
 
         today = moment()
         date = moment email.createdAt

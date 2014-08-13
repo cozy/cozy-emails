@@ -64,13 +64,13 @@ module.exports = Application = React.createClass
                 configMailboxUrl = @buildUrl
                     direction: 'left'
                     action: 'mailbox.emails'
-                    parameter: @state.selectedMailbox.id
+                    parameters: @state.selectedMailbox.id
                     fullWidth: true
             else
                 configMailboxUrl = @buildUrl
                     direction: 'left'
                     action: 'mailbox.config'
-                    parameter: @state.selectedMailbox.id
+                    parameters: @state.selectedMailbox.id
                     fullWidth: true
 
         responsiveBackUrl = @buildUrl
@@ -110,13 +110,13 @@ module.exports = Application = React.createClass
                                 'Menu'
 
 
-
-                        form className: 'form-inline col-md-6 hidden-xs hidden-sm pull-left',
-                            div className: 'form-group',
-                                div className: 'input-group',
-                                    input className: 'form-control', type: 'text', placeholder: 'Search...'
-                                    div className: 'input-group-addon btn btn-cozy',
-                                        span className: 'fa fa-search'
+                        div className: 'col-md-6 hidden-xs hidden-sm pull-left',
+                            form className: 'form-inline col-md-12',
+                                div className: 'form-group pull-left',
+                                    div className: 'input-group',
+                                        input className: 'form-control', type: 'text', placeholder: 'Search...', onFocus: @onFocusSearchInput, onBlur: @onBlurSearchInput
+                                        div className: 'input-group-addon btn btn-cozy',
+                                            span className: 'fa fa-search'
 
                         div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
                             ReactCSSTransitionGroup transitionName: 'fade',
@@ -126,10 +126,10 @@ module.exports = Application = React.createClass
 
                     # Two layout modes: one full-width panel or two panels
                     div id: 'panels', className: 'row',
-                        div className: panelClasses.leftPanel, key: 'left-panel-' + layout.leftPanel.action + '-' + layout.leftPanel.parameter,
+                        div className: panelClasses.leftPanel, key: 'left-panel-' + layout.leftPanel.action + '-' + layout.leftPanel.parameters.join('-'),
                             @getPanelComponent layout.leftPanel, leftPanelLayoutMode
                         if not isFullWidth and layout.rightPanel?
-                            div className: panelClasses.rightPanel, key: 'right-panel-' + layout.rightPanel.action + '-' + layout.rightPanel.parameter,
+                            div className: panelClasses.rightPanel, key: 'right-panel-' + layout.rightPanel.action + '-' + layout.rightPanel.parameters.join('-'),
                                 @getPanelComponent layout.rightPanel, 'right'
 
 
@@ -154,7 +154,7 @@ module.exports = Application = React.createClass
 
                 # if the full-width panel was on right right before, it expands
                 if previous.rightPanel.action is layout.leftPanel.action and
-                   previous.rightPanel.parameter is layout.leftPanel.parameter
+                   _.difference(previous.rightPanel.parameters, layout.leftPanel.parameters).length is 0
                     classes.leftPanel += ' expandFromRight'
 
             # (default) when full-width panel is shown after a full-width panel
@@ -177,7 +177,7 @@ module.exports = Application = React.createClass
 
                     # expanded right panel collapses
                     if previous.leftPanel.action is right.action and
-                       previous.leftPanel.parameter is right.parameter
+                       _.difference(previous.leftPanel.parameters, right.parameters).length is 0
                         classes.leftPanel += ' moveFromLeft'
                         classes.rightPanel += ' slide-in-from-left'
 
@@ -199,6 +199,7 @@ module.exports = Application = React.createClass
 
         # -- Generates a list of emails for a given mailbox
         if panelInfo.action is 'mailbox.emails'
+
             firstMailbox = flux.store('MailboxStore').getDefault()
 
             # gets the selected email if any
@@ -206,12 +207,12 @@ module.exports = Application = React.createClass
             direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
             otherPanelInfo = @props.router.current[direction]
             if otherPanelInfo?.action is 'email'
-                openEmail = flux.store('EmailStore').getByID otherPanelInfo.parameter
+                openEmail = flux.store('EmailStore').getByID otherPanelInfo.parameters[0]
 
             # display emails of the selected mailbox
-            if panelInfo.parameter?
+            if panelInfo.parameters? and panelInfo.parameters.length > 0
                 emailStore = flux.store 'EmailStore'
-                mailboxID = panelInfo.parameter
+                mailboxID = panelInfo.parameters[0]
                 return EmailList
                     emails: emailStore.getEmailsByMailbox mailboxID
                     mailboxID: mailboxID
@@ -219,9 +220,10 @@ module.exports = Application = React.createClass
                     openEmail: openEmail
 
             # default: display emails of the first mailbox
-            else if not panelInfo.parameter? and firstMailbox?
+            else if (not panelInfo.parameters? or panelInfo.parameters.length is 0) and firstMailbox?
                 emailStore = flux.store 'EmailStore'
                 mailboxID = firstMailbox.id
+
                 return EmailList
                     emails: emailStore.getEmailsByMailbox mailboxID
                     mailboxID: mailboxID
@@ -248,8 +250,8 @@ module.exports = Application = React.createClass
 
         # -- Generates an email thread
         else if panelInfo.action is 'email'
-            email = flux.store('EmailStore').getByID panelInfo.parameter
-            thread = flux.store('EmailStore').getEmailsByThread panelInfo.parameter
+            email = flux.store('EmailStore').getByID panelInfo.parameters[0]
+            thread = flux.store('EmailStore').getEmailsByThread panelInfo.parameters[0]
             selectedMailbox = flux.store('MailboxStore').getSelectedMailbox()
             return EmailThread {email, thread, selectedMailbox, layout}
 
@@ -295,4 +297,3 @@ module.exports = Application = React.createClass
             @getFlux().actions.layout.hideReponsiveMenu()
         else
             @getFlux().actions.layout.showReponsiveMenu()
-

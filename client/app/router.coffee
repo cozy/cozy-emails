@@ -16,8 +16,6 @@
 
         Each pattern is actually the pattern itself plus the pattern itself and
         another pattern.
-
-    **Currently, only one parameter is supported per pattern.**
 ###
 
 module.exports = class Router extends Backbone.Router
@@ -29,9 +27,13 @@ module.exports = class Router extends Backbone.Router
         'mailbox.new':
             pattern: 'mailbox/new'
             fluxAction: 'showCreateMailbox'
+        'mailbox.imap.emails':
+            pattern: 'mailbox/:id/folder/:folder'
+            fluxAction: 'showEmailList'
         'mailbox.emails':
             pattern: 'mailbox/:id'
             fluxAction: 'showEmailList'
+
         'email':
             pattern: 'email/:id'
             fluxAction: 'showEmailThread'
@@ -69,6 +71,7 @@ module.exports = class Router extends Backbone.Router
         @flux = options.flux
         @flux.router = @
         @on 'route', (name, args) =>
+
             [leftPanelInfo, rightPanelInfo] = @_processSubRouting name, args
 
             leftAction = @fluxActionFactory leftPanelInfo
@@ -106,30 +109,39 @@ module.exports = class Router extends Backbone.Router
         Extracts and matches the second part of the URl if it exists.
     ###
     _processSubRouting: (name, args) ->
-        [leftPanelInfo, rightPanelInfo] = args
 
-        # if the first panel route doesn't have a parameter or if it,
-        # the rightPanelInfo is its first parameter.
-        # Otherwise, leftPanelInfo is the parameter value.
-        isNumber = /[0-9]+/.test leftPanelInfo
-        if not rightPanelInfo? and leftPanelInfo? and \
-           leftPanelInfo.indexOf(':') is -1
-            rightPanelInfo = leftPanelInfo
+        # remove the last argument which is always `null`, not sure why
+        args.pop()
+
+        # next comes the rightPanel url if it exists
+        # or a leftPanel parameter there is not rightPanel
+        rightPanelString = args.pop()
+
+        # if left panel number of expected params is bigger what is left
+        # it means there are no right panel and that what we got before was a
+        # parameter of the left panel
+        params = @patterns[name].pattern.match(/:[\w]+/g) or []
+        if params.length > args.length
+            args.push rightPanelString
+            rightPanelString = null
+
+        leftPanelParameters = args
 
         # check all the routes for the second part of the URL
         route = _.first _.filter @cachedPatterns, (element) ->
-            return element.pattern.test rightPanelInfo
+            return element.pattern.test rightPanelString
 
-        # if a route has been found, we format it
+        # if a route has been found, we retrieve the params' value and format it
         if route?
-            args = @_extractParameters route.pattern, rightPanelInfo
-            rightPanelInfo = action: route.key, parameter: args[0]
+            args = @_extractParameters route.pattern, rightPanelString
+            # remove the last argument which is alway `null`, not sure why
+            args.pop()
+            rightPanelInfo = action: route.key, parameters: args
         else
             rightPanelInfo = null
 
         # normalize the leftPanelInfo
-        leftPanelInfo = action: name, parameter: leftPanelInfo
-
+        leftPanelInfo = action: name, parameters: leftPanelParameters
         return [leftPanelInfo, rightPanelInfo]
 
 
@@ -169,8 +181,8 @@ module.exports = class Router extends Backbone.Router
             rightPanelInfo = null
 
         # Actual building
-        leftPart = @_getURLFromCurrentRoute leftPanelInfo
-        rightPart = @_getURLFromCurrentRoute rightPanelInfo
+        leftPart = @_getURLFromRoute leftPanelInfo
+        rightPart = @_getURLFromRoute rightPanelInfo
 
         url = "##{leftPart}"
         if rightPart? and rightPart.length > 0
@@ -201,21 +213,51 @@ module.exports = class Router extends Backbone.Router
             return '#' # loads the default route
 
 
-    # Builds the URL string from a route. Only handles routes with
-    # the `:id` named parameter or no parameter.
-    _getURLFromCurrentRoute: (panel) ->
+    # Builds the URL string from a route.
+    _getURLFromRoute: (panel) ->
         if panel?
             pattern = @patterns[panel.action].pattern
 
-            if panel.action is 'mailbox.emails' and not panel.parameter?
-                defaultMailbox = @flux.store('MailboxStore').getDefault()
-                if defaultMailbox?
-                    panel.parameter = defaultMailbox.id
+            if panel.parameters? and not (panel.parameters instanceof Array)
+                panel.parameters = [panel.parameters]
+
+            # gets default values (if relevant) to ease `@buildUrl` usage
+            if (defaultParameters = @_getDefaultParameters(panel.action))?
+                # sets the parameters if they don't exist at all...
+                if not panel.parameters? or panel.parameters.length is 0
+                    panel.parameters = defaultParameters
+
+                # ... or adds them in the relevant place if only some of them
+                # are missing
                 else
-                    panel.parameter = null
+                    for defaultParameter, key in defaultParameters
+                        if not panel.parameters[key]?
+                            panel.parameters.splice key, 0, defaultParameter
 
-            partURL = pattern.replace ':id', panel.parameter
+            # we default to empty array if there is no parameter in the route
+            parametersInPattern = pattern.match(/:[\w]+/gi) or []
 
-            return partURL
+            # the pattern is progressively filled with values
+            filledPattern = pattern
+            for paramInPattern, key in parametersInPattern
+                paramValue = panel.parameters[key]
+                filledPattern = filledPattern.replace paramInPattern, paramValue
+
+            return filledPattern
         else
             return ''
+
+    # Determines and gets the default parameters regarding a specific action
+    _getDefaultParameters: (action) ->
+        switch action
+            when 'mailbox.emails', 'mailbox.config'
+                defaultMailbox = @flux.store('MailboxStore').getDefault().id
+                defaultParameters = [defaultMailbox]
+            when 'mailbox.imap.emails'
+                defaultMailbox = @flux.store('MailboxStore').getDefault().id
+                defaultImapFolder = 'lala'
+                defaultParameters = [defaultMailbox, defaultImapFolder]
+            else
+                defaultParameters = null
+
+        return defaultParameters

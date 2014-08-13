@@ -18,7 +18,7 @@ module.exports = Menu = React.createClass
         selectedMailboxUrl = @buildUrl
             direction: 'left'
             action: 'mailbox.emails'
-            parameter: @props.selectedMailbox.id
+            parameters: @props.selectedMailbox.id
             fullWidth: true
 
         # the button toggles the "compose" screen
@@ -29,7 +29,7 @@ module.exports = Menu = React.createClass
             composeUrl = @buildUrl
                 direction: 'right'
                 action: 'compose'
-                parameter: null
+                parameters: null
                 fullWidth: false
 
         # the button toggle the "new mailbox" screen
@@ -69,7 +69,7 @@ module.exports = Menu = React.createClass
         url = @buildUrl
             direction: 'left'
             action: 'mailbox.emails'
-            parameter: mailbox.id
+            parameters: mailbox.id
             fullWidth: false
 
         li className: mailboxClasses, key: key,

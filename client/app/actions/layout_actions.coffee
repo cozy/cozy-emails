@@ -10,17 +10,17 @@ module.exports =
 
     showEmailList: (panelInfo, direction) ->
         @dispatch 'HIDE_MENU_RESPONSIVE'
-        @dispatch 'SELECT_MAILBOX', panelInfo.parameter
+        @dispatch 'SELECT_MAILBOX', panelInfo.parameters[0]
 
         flux = require '../fluxxor'
         defaultMailbox = flux.store('MailboxStore').getDefault()
-        mailboxID = panelInfo.parameter or defaultMailbox?.id
+        mailboxID = panelInfo.parameters[0] or defaultMailbox?.id
         if mailboxID?
             XHRUtils.fetchEmailsByMailbox mailboxID
 
     showEmailThread: (panelInfo, direction) ->
         @dispatch 'HIDE_MENU_RESPONSIVE'
-        XHRUtils.fetchEmailThread panelInfo.parameter
+        XHRUtils.fetchEmailThread panelInfo.parameters[0]
 
     showComposeNewEmail: (panelInfo, direction) ->
         @dispatch 'HIDE_MENU_RESPONSIVE'
@@ -32,4 +32,4 @@ module.exports =
 
     showConfigMailbox: (panelInfo, direction) ->
         @dispatch 'HIDE_MENU_RESPONSIVE'
-        @dispatch 'SELECT_MAILBOX', panelInfo.parameter
+        @dispatch 'SELECT_MAILBOX', panelInfo.parameters[0]

@@ -17,7 +17,7 @@ module.exports = EmailThread = React.createClass
         expandUrl = @buildUrl
             direction: 'left'
             action: 'email'
-            parameter: @props.email.id
+            parameters: @props.email.id
             fullWidth: true
 
         if window.router.previous?
@@ -28,16 +28,16 @@ module.exports = EmailThread = React.createClass
         collapseUrl = @buildUrl
             leftPanel:
                 action: 'mailbox.emails'
-                parameter: selectedMailboxID
+                parameters: selectedMailboxID
             rightPanel:
                 action: 'email'
-                parameter: @props.thread[0].id
+                parameters: @props.thread[0].id
 
         if @props.layout is 'full'
             closeUrl = @buildUrl
                 direction: 'left'
                 action: 'mailbox.emails'
-                parameter: @props.selectedMailbox.id
+                parameters: @props.selectedMailbox.id
                 fullWidth: true
         else
             closeUrl = @buildClosePanelUrl @props.layout
