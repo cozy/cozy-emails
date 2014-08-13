@@ -96,9 +96,10 @@ module.exports = EmailStore = Fluxxor.createStore
         if not window.mailboxes? or window.mailboxes.length is 0
             emails = fixtures
 
-        @emails = Immutable.OrderedMap()
-        @emails = @emails.withMutations (map) =>
-            map.set email.id, email for email in emails
+        # Create an OrderedMap with email id as index
+        @emails = Immutable.Sequence emails
+                    .mapKeys (_, email) -> email.id
+                    .toOrderedMap()
 
     getAll: -> return @emails
 

@@ -39,9 +39,10 @@ module.exports = MailboxStore = Fluxxor.createStore
         mailboxes = window.mailboxes or fixtures
         mailboxes = fixtures if mailboxes.length is 0
 
-        @mailboxes = Immutable.OrderedMap()
-        @mailboxes = @mailboxes.withMutations (map) =>
-            map.set mailbox.id, mailbox for mailbox in mailboxes
+        # Create an OrderedMap with mailbox id as index
+        @mailboxes = Immutable.Sequence mailboxes
+                        .mapKeys (_, mailbox) -> mailbox.id
+                        .toOrderedMap()
 
         @selectedMailbox = null
         @newMailboxWaiting = false
