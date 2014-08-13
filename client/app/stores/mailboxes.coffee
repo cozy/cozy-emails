@@ -42,6 +42,7 @@ module.exports = MailboxStore = Fluxxor.createStore
         # Create an OrderedMap with mailbox id as index
         @mailboxes = Immutable.Sequence mailboxes
                         .mapKeys (_, mailbox) -> mailbox.id
+                        .map (mailbox) -> Immutable.Map mailbox
                         .toOrderedMap()
 
         @selectedMailbox = null

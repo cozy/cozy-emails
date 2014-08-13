@@ -99,6 +99,7 @@ module.exports = EmailStore = Fluxxor.createStore
         # Create an OrderedMap with email id as index
         @emails = Immutable.Sequence emails
                     .mapKeys (_, email) -> email.id
+                    .map (email) -> Immutable.Map email
                     .toOrderedMap()
 
     getAll: -> return @emails
