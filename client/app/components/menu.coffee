@@ -11,7 +11,8 @@ module.exports = Menu = React.createClass
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not Immutable.is(nextProps.mailboxes, @props.mailboxes) or
-               not Immutable.is(nextProps.selectedMailbox, @props.selectedMailbox)
+               not Immutable.is(nextProps.selectedMailbox, @props.selectedMailbox) or
+               not _.isEqual(nextProps.layout, @props.layout)
 
     render: ->
         selectedMailboxUrl = @buildUrl
