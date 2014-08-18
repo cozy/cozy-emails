@@ -22,7 +22,7 @@ module.exports = Menu = React.createClass
         selectedMailboxUrl = @buildUrl
             direction: 'left'
             action: 'mailbox.emails'
-            parameters: @props.selectedMailbox.id
+            parameters: @props.selectedMailbox.get('id')
             fullWidth: true
 
         # the button toggles the "compose" screen
@@ -67,20 +67,20 @@ module.exports = Menu = React.createClass
     # renders a single mailbox and its submenu
     getMailboxRender: (mailbox, key) ->
         isSelected = (not @props.selectedMailbox and key is 0) \
-                     or @props.selectedMailbox.id is mailbox.id
+                     or @props.selectedMailbox.get('id') is mailbox.get('id')
 
         mailboxClasses = classer active: isSelected
         url = @buildUrl
             direction: 'left'
             action: 'mailbox.emails'
-            parameters: mailbox.id
+            parameters: mailbox.get 'id'
             fullWidth: false
 
         li className: mailboxClasses, key: key,
             a href: url, className: 'menu-item ' + mailboxClasses,
                 i className: 'fa fa-inbox'
-                span className: 'badge', mailbox.unreadCount
-                span className: 'mailbox-label', mailbox.label
+                span className: 'badge', mailbox.get 'unreadCount'
+                span className: 'mailbox-label', mailbox.get 'label'
 
             ul className: 'list-unstyled submenu',
                 a href: '#', className: 'menu-item',
