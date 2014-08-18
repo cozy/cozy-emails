@@ -1,3 +1,5 @@
+React = require 'react/addons'
+Fluxxor = require 'fluxxor'
 {div, h3, form, label, input, button} = React.DOM
 classer = React.addons.classSet
 

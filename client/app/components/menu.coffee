@@ -1,3 +1,7 @@
+React = require 'react/addons'
+Immutable = require 'immutable'
+_ = require 'underscore'
+
 {div, ul, li, a, span, i} = React.DOM
 
 classer = React.addons.classSet

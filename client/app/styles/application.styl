@@ -19,7 +19,6 @@
 @import '_email-thread'
 @import '_mailbox-config'
 
-
 // tweaks fontawesome icons
 * > .fa-compress
   transform rotate(45deg)
@@ -29,6 +28,25 @@
   Put styles here for scaffolding and testing out new features/stuff
   "Production-ready" components styles should live in a dedicated file
 */
+
+#quick-actions
+  //
+  &> div
+    padding 0
+
+
+  form
+    display table
+
+    .dropdown
+    .form-group
+      display table-cell
+
+    .dropdown
+      max-width 30%
+    .form-group
+      max-width 70%
+      padding-left 10px
 
 
 /*

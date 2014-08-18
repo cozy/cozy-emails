@@ -1,4 +1,6 @@
-request = superagent
+request = require 'superagent'
+Fluxxor = require 'fluxxor'
+Immutable = require 'immutable'
 
 module.exports = MailboxStore = Fluxxor.createStore
 

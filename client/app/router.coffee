@@ -18,6 +18,9 @@
         another pattern.
 ###
 
+Backbone = require 'backbone'
+_ = require 'underscore'
+
 module.exports = class Router extends Backbone.Router
 
     patterns:

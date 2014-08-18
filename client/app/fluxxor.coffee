@@ -3,6 +3,8 @@
     places of the application (i.e. utils)
 ###
 
+Fluxxor = require 'fluxxor'
+
 # Requires all the stores
 MailboxStore = require './stores/mailboxes'
 EmailStore = require './stores/emails'

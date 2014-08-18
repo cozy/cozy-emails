@@ -1,4 +1,4 @@
-request = superagent
+request = require 'superagent'
 
 # The flux instance is required in each method because when this file is loaded
 # the flux instance is being created.

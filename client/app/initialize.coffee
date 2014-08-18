@@ -1,3 +1,8 @@
+$ = require 'jquery'
+Backbone = require 'backbone'
+Backbone.$ = $
+React = require 'react/addons'
+
 # Waits for the DOM to be ready
 $ ->
 
@@ -8,7 +13,7 @@ $ ->
     flux = require './fluxxor'
 
     # Routing management
-    Router = require 'router'
+    Router = require './router'
     @router = new Router flux: flux
     window.router = @router
 

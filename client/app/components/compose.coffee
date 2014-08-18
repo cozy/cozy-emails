@@ -1,3 +1,4 @@
+React = require 'react/addons'
 {div, h3, a, i, textarea} = React.DOM
 classer = React.addons.classSet
 

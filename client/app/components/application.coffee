@@ -1,10 +1,13 @@
-# React components
+Fluxxor = require 'fluxxor'
+React = require 'react/addons'
 {body, div, p, form, i, input, span, a} = React.DOM
+# React components
 Menu = require './menu'
 EmailList = require './email-list'
 EmailThread = require './email-thread'
 Compose = require './compose'
 MailboxConfig = require './mailbox-config'
+ImapFolderList = require './imap-folder-list'
 
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup
 classer = React.addons.classSet
@@ -112,6 +115,7 @@ module.exports = Application = React.createClass
 
                         div className: 'col-md-6 hidden-xs hidden-sm pull-left',
                             form className: 'form-inline col-md-12',
+                                ImapFolderList selectedMailbox: @state.selectedMailbox
                                 div className: 'form-group pull-left',
                                     div className: 'input-group',
                                         input className: 'form-control', type: 'text', placeholder: 'Search...', onFocus: @onFocusSearchInput, onBlur: @onBlurSearchInput
@@ -162,7 +166,7 @@ module.exports = Application = React.createClass
                 classes.leftPanel += ' moveFromLeft'
 
 
-        # ... or a two panels.
+        # ... or a two panels layout.
         else
             classes =
                 leftPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm'

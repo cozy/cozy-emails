@@ -1,3 +1,6 @@
+React = require 'react/addons'
+moment = require 'moment'
+
 {div, ul, li, span, i, p, h3, a} = React.DOM
 classer = React.addons.classSet
 

@@ -1,3 +1,5 @@
+Fluxxor = require 'fluxxor'
+
 module.exports = LayoutStore = Fluxxor.createStore
 
     actions:

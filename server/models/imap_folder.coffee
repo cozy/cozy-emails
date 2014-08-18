@@ -3,6 +3,7 @@
 # MailFolder is a IMAP Mailbox, it contains mails.
 #module.exports = MailFolder = americano.getModel 'MailFolder',
 attributes =
+    id: String
     name: String
     path: String # ?
     specialType: String # ?
