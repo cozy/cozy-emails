@@ -39,13 +39,12 @@ module.exports = Application = React.createClass
 
     mixins: [
         FluxMixin
-        StoreWatchMixin("MailboxStore", "EmailStore", "LayoutStore")
+        StoreWatchMixin("MailboxStore", "EmailStore", "LayoutStore", "ImapFolderStore")
         RouterMixin
     ]
 
     render: ->
         # Shortcut
-        #layout = @state.layout
         layout = @props.router.current
 
         if not layout?
@@ -115,7 +114,10 @@ module.exports = Application = React.createClass
 
                         div className: 'col-md-6 hidden-xs hidden-sm pull-left',
                             form className: 'form-inline col-md-12',
-                                ImapFolderList selectedMailbox: @state.selectedMailbox
+                                ImapFolderList
+                                    selectedMailbox: @state.selectedMailbox
+                                    imapFolders: @state.imapFolders
+                                    selectedImapFolder: @state.selectedImapFolder
                                 div className: 'form-group pull-left',
                                     div className: 'input-group',
                                         input className: 'form-control', type: 'text', placeholder: 'Search...', onFocus: @onFocusSearchInput, onBlur: @onBlurSearchInput
@@ -238,6 +240,27 @@ module.exports = Application = React.createClass
             else
                 return div null, 'Handle no mailbox or mailbox not found case'
 
+        # -- Generates a list of emails for a given mailbox and imap folder
+        else if panelInfo.action is 'mailbox.imap.emails'
+            mailboxID = panelInfo.parameters[0]
+            imapFolderID = panelInfo.parameters[1]
+
+            emailStore = flux.store 'EmailStore'
+
+            # gets the selected email if any
+            openEmail = null
+            direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
+            otherPanelInfo = @props.router.current[direction]
+            if otherPanelInfo?.action is 'email'
+                openEmail = flux.store('EmailStore').getByID otherPanelInfo.parameters[0]
+
+            return EmailList
+                emails: emailStore.getEmailsByImapFolder imapFolderID
+                mailboxID: mailboxID
+                layout: layout
+                openEmail: openEmail
+
+
         # -- Generates a configuration window for a given mailbox
         # or the mailbox creation form.
         else if panelInfo.action is 'mailbox.config'
@@ -271,11 +294,22 @@ module.exports = Application = React.createClass
     # Result will be merged with `getInitialState` result.
     getStateFromFlux: ->
         flux = @getFlux()
+        selectedMailbox = flux.store('MailboxStore').getSelectedMailbox()
+
+        leftPanelInfo = @props.router.current?.leftPanel
+        if leftPanelInfo?.action is 'mailbox.imap.emails'
+            selectedImapFolderID = leftPanelInfo.parameters[1]
+        else
+            selectedImapFolderID = null
+
+        selectedImapFolder = flux.store('ImapFolderStore').getSelected selectedMailbox.get('id'), selectedImapFolderID
         return {
             mailboxes: flux.store('MailboxStore').getAll()
-            selectedMailbox: flux.store('MailboxStore').getSelectedMailbox()
+            selectedMailbox: selectedMailbox
             emails: flux.store('EmailStore').getAll()
             isResponsiveMenuShown: flux.store('LayoutStore').isMenuShown()
+            imapFolders: flux.store('ImapFolderStore').getByMailbox selectedMailbox.get('id')
+            selectedImapFolder: selectedImapFolder
         }
 
 

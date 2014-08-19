@@ -10,24 +10,26 @@ module.exports = ImapFolderList = React.createClass
 
     render: ->
 
-        folders = ['Favorite', 'Spam', 'Trash', 'Draft']
-
-        div className: 'dropdown pull-left',
-            button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown',
-                'Boite de réception'
-                span className: 'caret', ''
-            ul className: 'dropdown-menu', role: 'menu',
-                for folder, key in folders
-                    @getImapFolderRender folder, key
+        if @props.imapFolders.length > 0
+            firstItem = @props.selectedImapFolder
+            div className: 'dropdown pull-left',
+                button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown',
+                    firstItem.name
+                    span className: 'caret', ''
+                ul className: 'dropdown-menu', role: 'menu',
+                    @props.imapFolders.map (folder, key) =>
+                        if folder.id isnt @props.selectedImapFolder.id
+                            @getImapFolderRender folder, key
+                    .toJS()
+        else
+            div null, 'Loading...'
 
 
     getImapFolderRender: (folder, key) ->
         url = @buildUrl
                 direction: 'left'
                 action: 'mailbox.imap.emails'
-                parameters: [@props.selectedMailbox.id, folder.toLowerCase()]
+                parameters: [@props.selectedMailbox.get('id'), folder.id]
 
         li role: 'presentation', key: key,
-            a href: url, role: 'menuitem',
-                #span className: 'fa fa-folder'
-                folder
+            a href: url, role: 'menuitem', folder.name

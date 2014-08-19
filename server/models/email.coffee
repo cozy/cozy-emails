@@ -8,6 +8,7 @@ module.exports = Email = americano.getModel 'Email',
     date: Date
     inReplyTo: String
     createdAt: Date
+    imapFolder: String
 
 Email.getByMailboxAndDate = (mailboxID, callback) ->
     options =

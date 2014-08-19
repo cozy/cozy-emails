@@ -14,9 +14,10 @@ module.exports =
 
         flux = require '../fluxxor'
         defaultMailbox = flux.store('MailboxStore').getDefault()
-        mailboxID = panelInfo.parameters[0] or defaultMailbox?.id
+        mailboxID = panelInfo.parameters[0] or defaultMailbox?.get('id')
         if mailboxID?
             XHRUtils.fetchEmailsByMailbox mailboxID
+            XHRUtils.fetchImapFolderByMailbox mailboxID
 
     showEmailThread: (panelInfo, direction) ->
         @dispatch 'HIDE_MENU_RESPONSIVE'
@@ -24,7 +25,6 @@ module.exports =
 
     showComposeNewEmail: (panelInfo, direction) ->
         @dispatch 'HIDE_MENU_RESPONSIVE'
-        # nothing
 
     showCreateMailbox: (panelInfo, direction) ->
         @dispatch 'HIDE_MENU_RESPONSIVE'

@@ -7,6 +7,13 @@ module.exports.listByMailbox = (req, res, next) ->
         else
             res.send 200, emails
 
+module.exports.listByImapFolder = (req, res, next) ->
+
+    Email.getByMailboxAndDate req.imapFolder.id, (err, emails) ->
+        if err? then next err
+        else
+            res.send 200, emails
+
 module.exports.fetch = (req, res, next) ->
 
     Email.find req.params.id, (err, email) ->

@@ -13,7 +13,7 @@
         "html": "Hello, how are you ?",
         "reads": false,
         "hasAttachments": false,
-        "imap-folder": "gmail-ID-folder1",
+        "imapFolder": "gmail-ID-folder1",
         "mailbox": "gmail-ID"
     },
     {
@@ -30,7 +30,7 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "imap-folder": "gmail-ID-folder1",
+        "imapFolder": "gmail-ID-folder1",
         "mailbox": "gmail-ID"
     },
     {
@@ -47,7 +47,7 @@
         "html": "<b>Hello, how are you ? bis</b>",
         "reads": false,
         "hasAttachments": false,
-        "imap-folder": "gmail-ID-folder1",
+        "imapFolder": "gmail-ID-folder1",
         "mailbox": "gmail-ID"
     },
     {
@@ -64,7 +64,7 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "imap-folder": "gmail-ID-folder2",
+        "imapFolder": "gmail-ID-folder2",
         "mailbox": "gmail-ID"
     },
     {
@@ -82,7 +82,7 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "imap-folder": "gmail-ID-folder1",
+        "imapFolder": "gmail-ID-folder1",
         "mailbox": "gmail-ID"
     },
     {
@@ -99,7 +99,7 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "imap-folder": "gmail-ID-folder1",
+        "imapFolder": "gmail-ID-folder1",
         "mailbox": "gmail-ID"
     },
     {
@@ -116,7 +116,7 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "imap-folder": "orange-ID-folder1",
+        "imapFolder": "orange-ID-folder1",
         "mailbox": "orange-ID"
     },
     {
@@ -133,7 +133,7 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "imap-folder": "orange-ID-folder2",
+        "imapFolder": "orange-ID-folder2",
         "mailbox": "orange-ID"
     },
        {
@@ -150,7 +150,7 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "imap-folder": "orange-ID-folder2",
+        "imapFolder": "orange-ID-folder2",
         "mailbox": "orange-ID"
     }
 ]

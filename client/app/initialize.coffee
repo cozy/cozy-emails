@@ -3,6 +3,11 @@ Backbone = require 'backbone'
 Backbone.$ = $
 React = require 'react/addons'
 
+# Haven't managed to make bootstrap.dropdown relies on jQuery in a proper "browserify" way
+window.jQuery = $
+require 'bootstrap/js/dropdown'
+
+
 # Waits for the DOM to be ready
 $ ->
 

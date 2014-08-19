@@ -26,6 +26,26 @@ module.exports =
             else
                 console.log "Something went wrong -- #{res.body}"
 
+    fetchImapFolderByMailbox: (mailboxID) ->
+        flux = require '../fluxxor'
+        request.get "mailbox/#{mailboxID}/folders"
+               .set 'Accept', 'application/json'
+               .end (res) ->
+            if res.ok
+                flux.actions.imapFolder.receiveRawImapFolders res.body
+            else
+                console.log "Something went wrong -- #{res.body}"
+
+    fetchEmailsByFolder: (imapFolderID) ->
+        flux = require '../fluxxor'
+        request.get "folder/#{imapFolderID}/emails"
+               .set 'Accept', 'application/json'
+               .end (res) ->
+            if res.ok
+                flux.actions.email.receiveRawEmails res.body
+            else
+                console.log "Something went wrong -- #{res.body}"
+
     createMailbox: (mailbox, callback) ->
 
         # TODO: validation & sanitization

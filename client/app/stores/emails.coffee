@@ -110,8 +110,12 @@ module.exports = EmailStore = Fluxxor.createStore
 
     getEmailsByMailbox: (mailboxID) ->
         # sequences are lazy so we need .toOrderedMap() to actually execute it
-        @emails.filter (email) ->
-            email.mailbox is mailboxID
+        @emails.filter (email) -> email.mailbox is mailboxID
+        .toOrderedMap()
+
+    getEmailsByImapFolder: (imapFolderID) ->
+        # sequences are lazy so we need .toOrderedMap() to actually execute it
+        @emails.filter (email) -> email.imapFolder is imapFolderID
         .toOrderedMap()
 
     getEmailsByThread: (emailID) ->
