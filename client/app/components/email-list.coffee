@@ -6,7 +6,7 @@ moment = require 'moment'
 {div, ul, li, a, span, i, p} = React.DOM
 classer = React.addons.classSet
 
-RouterMixin = require '../mixins/router'
+RouterMixin = require '../mixins/RouterMixin'
 FluxChildMixin = Fluxxor.FluxChildMixin React
 
 module.exports = EmailList = React.createClass

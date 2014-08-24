@@ -1,7 +1,8 @@
-Fluxxor = require 'fluxxor'
 React = require 'react/addons'
-{body, div, p, form, i, input, span, a} = React.DOM
+_ = require 'underscore'
+
 # React components
+{body, div, p, form, i, input, span, a} = React.DOM
 Menu = require './menu'
 EmailList = require './email-list'
 EmailThread = require './email-thread'
@@ -9,15 +10,23 @@ Compose = require './compose'
 MailboxConfig = require './mailbox-config'
 ImapFolderList = require './imap-folder-list'
 
+# React addons
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup
 classer = React.addons.classSet
 
-# React mixins
-FluxMixin = Fluxxor.FluxMixin React
-StoreWatchMixin = Fluxxor.StoreWatchMixin
+# React Mixins
+RouterMixin = require '../mixins/RouterMixin'
+StoreWatchMixin = require '../mixins/StoreWatchMixin'
 
-# Custom mixins
-RouterMixin = require '../mixins/router'
+# Flux stores
+MailboxStore = require '../stores/MailboxStore'
+EmailStore = require '../stores/EmailStore'
+LayoutStore = require '../stores/LayoutStore'
+ImapFolderStore = require '../stores/ImapFolderStore'
+
+# Flux actions
+LayoutActionCreator = require '../actions/LayoutActionCreator'
+
 
 ###
     This component is the root of the React tree.
@@ -29,17 +38,12 @@ RouterMixin = require '../mixins/router'
 
     About routing: it uses Backbone.Router as a source of truth for the layout.
     (based on: https://medium.com/react-tutorials/react-backbone-router-c00be0cf1592)
-
-    Fluxxor reference:
-     - FluxMixin: http://fluxxor.com/documentation/flux-mixin.html
-     - StoreWatchMixin: http://fluxxor.com/documentation/store-watch-mixin.html
 ###
 module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        FluxMixin
-        StoreWatchMixin("MailboxStore", "EmailStore", "LayoutStore", "ImapFolderStore")
+        StoreWatchMixin [MailboxStore, EmailStore, LayoutStore, ImapFolderStore]
         RouterMixin
     ]
 
@@ -66,13 +70,13 @@ module.exports = Application = React.createClass
                 configMailboxUrl = @buildUrl
                     direction: 'left'
                     action: 'mailbox.emails'
-                    parameters: @state.selectedMailbox.id
+                    parameters: @state.selectedMailbox.get 'id'
                     fullWidth: true
             else
                 configMailboxUrl = @buildUrl
                     direction: 'left'
                     action: 'mailbox.config'
-                    parameters: @state.selectedMailbox.id
+                    parameters: @state.selectedMailbox.get 'id'
                     fullWidth: true
 
         responsiveBackUrl = @buildUrl
@@ -201,23 +205,21 @@ module.exports = Application = React.createClass
     # Factory of React components for panels
     getPanelComponent: (panelInfo, layout) ->
 
-        flux = @getFlux()
-
         # -- Generates a list of emails for a given mailbox
         if panelInfo.action is 'mailbox.emails'
 
-            firstMailbox = flux.store('MailboxStore').getDefault()
+            firstMailbox = MailboxStore.getDefault()
 
             # gets the selected email if any
             openEmail = null
             direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
             otherPanelInfo = @props.router.current[direction]
             if otherPanelInfo?.action is 'email'
-                openEmail = flux.store('EmailStore').getByID otherPanelInfo.parameters[0]
+                openEmail = EmailStore.getByID otherPanelInfo.parameters[0]
 
             # display emails of the selected mailbox
             if panelInfo.parameters? and panelInfo.parameters.length > 0
-                emailStore = flux.store 'EmailStore'
+                emailStore = EmailStore
                 mailboxID = panelInfo.parameters[0]
                 return EmailList
                     emails: emailStore.getEmailsByMailbox mailboxID
@@ -227,7 +229,7 @@ module.exports = Application = React.createClass
 
             # default: display emails of the first mailbox
             else if (not panelInfo.parameters? or panelInfo.parameters.length is 0) and firstMailbox?
-                emailStore = flux.store 'EmailStore'
+                emailStore = EmailStore
                 mailboxID = firstMailbox.id
 
                 return EmailList
@@ -245,14 +247,14 @@ module.exports = Application = React.createClass
             mailboxID = panelInfo.parameters[0]
             imapFolderID = panelInfo.parameters[1]
 
-            emailStore = flux.store 'EmailStore'
+            emailStore = EmailStore
 
             # gets the selected email if any
             openEmail = null
             direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
             otherPanelInfo = @props.router.current[direction]
             if otherPanelInfo?.action is 'email'
-                openEmail = flux.store('EmailStore').getByID otherPanelInfo.parameters[0]
+                openEmail = EmailStore.getByID otherPanelInfo.parameters[0]
 
             return EmailList
                 emails: emailStore.getEmailsByImapFolder imapFolderID
@@ -265,36 +267,34 @@ module.exports = Application = React.createClass
         # or the mailbox creation form.
         else if panelInfo.action is 'mailbox.config'
             initialMailboxConfig = @state.selectedMailbox
-            error = flux.store('MailboxStore').getError()
-            isWaiting = flux.store('MailboxStore').isWaiting()
+            error = MailboxStore.getError()
+            isWaiting = MailboxStore.isWaiting()
             return MailboxConfig {layout, error, isWaiting, initialMailboxConfig}
 
         # -- Generates a configuration window to create a new mailbox
         else if panelInfo.action is 'mailbox.new'
-            error = flux.store('MailboxStore').getError()
-            isWaiting = flux.store('MailboxStore').isWaiting()
+            error = MailboxStore.getError()
+            isWaiting = MailboxStore.isWaiting()
             return MailboxConfig {layout, error, isWaiting}
 
         # -- Generates an email thread
         else if panelInfo.action is 'email'
-            email = flux.store('EmailStore').getByID panelInfo.parameters[0]
-            thread = flux.store('EmailStore').getEmailsByThread panelInfo.parameters[0]
-            selectedMailbox = flux.store('MailboxStore').getSelectedMailbox()
+            email = EmailStore.getByID panelInfo.parameters[0]
+            thread = EmailStore.getEmailsByThread panelInfo.parameters[0]
+            selectedMailbox = @state.selectedMailbox
             return EmailThread {email, thread, selectedMailbox, layout}
 
         # -- Generates the new email composition form
         else if panelInfo.action is 'compose'
-            selectedMailbox = flux.store('MailboxStore').getSelectedMailbox()
+            selectedMailbox = @state.selectedMailbox
             return Compose {selectedMailbox, layout}
 
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else return div null, 'Unknown component'
 
+    getStateFromStores: ->
 
-    # Result will be merged with `getInitialState` result.
-    getStateFromFlux: ->
-        flux = @getFlux()
-        selectedMailbox = flux.store('MailboxStore').getSelectedMailbox()
+        selectedMailbox = MailboxStore.getSelectedMailbox()
 
         leftPanelInfo = @props.router.current?.leftPanel
         if leftPanelInfo?.action is 'mailbox.imap.emails'
@@ -302,13 +302,13 @@ module.exports = Application = React.createClass
         else
             selectedImapFolderID = null
 
-        selectedImapFolder = flux.store('ImapFolderStore').getSelected selectedMailbox.get('id'), selectedImapFolderID
+        selectedImapFolder = ImapFolderStore.getSelected selectedMailbox.get('id'), selectedImapFolderID
         return {
-            mailboxes: flux.store('MailboxStore').getAll()
+            mailboxes: MailboxStore.getAll()
             selectedMailbox: selectedMailbox
-            emails: flux.store('EmailStore').getAll()
-            isResponsiveMenuShown: flux.store('LayoutStore').isMenuShown()
-            imapFolders: flux.store('ImapFolderStore').getByMailbox selectedMailbox.get('id')
+            emails: EmailStore.getAll()
+            isResponsiveMenuShown: LayoutStore.isMenuShown()
+            imapFolders: ImapFolderStore.getByMailbox selectedMailbox.get('id')
             selectedImapFolder: selectedImapFolder
         }
 
@@ -332,6 +332,6 @@ module.exports = Application = React.createClass
     onResponsiveMenuClick: (event) ->
         event.preventDefault()
         if @state.isResponsiveMenuShown
-            @getFlux().actions.layout.hideReponsiveMenu()
+            LayoutActionCreator.hideReponsiveMenu()
         else
-            @getFlux().actions.layout.showReponsiveMenu()
+            LayoutActionCreator.showReponsiveMenu()

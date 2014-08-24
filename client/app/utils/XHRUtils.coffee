@@ -1,48 +1,46 @@
 request = require 'superagent'
 
+EmailActionCreator = require '../actions/EmailActionCreator'
+ImapFolderActionCreator = require '../actions/ImapFolderActionCreator'
+
 # The flux instance is required in each method because when this file is loaded
 # the flux instance is being created.
 
 module.exports =
 
     fetchEmailsByMailbox: (mailboxID) ->
-        flux = require '../fluxxor'
         request.get "mailbox/#{mailboxID}/emails"
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
-                flux.actions.email.receiveRawEmails res.body
+                EmailActionCreator.receiveRawEmails res.body
             else
                 console.log "Something went wrong -- #{res.body}"
 
-
     fetchEmailThread: (emailID) ->
-        flux = require '../fluxxor'
         request.get "email/#{emailID}"
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
-                flux.actions.email.receiveRawEmail res.body
+                EmailActionCreator.receiveRawEmail res.body
             else
                 console.log "Something went wrong -- #{res.body}"
 
     fetchImapFolderByMailbox: (mailboxID) ->
-        flux = require '../fluxxor'
         request.get "mailbox/#{mailboxID}/folders"
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
-                flux.actions.imapFolder.receiveRawImapFolders res.body
+                ImapFolderActionCreator.receiveRawImapFolders res.body
             else
                 console.log "Something went wrong -- #{res.body}"
 
     fetchEmailsByFolder: (imapFolderID) ->
-        flux = require '../fluxxor'
         request.get "folder/#{imapFolderID}/emails"
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
-                flux.actions.email.receiveRawEmails res.body
+                EmailActionCreator.receiveRawEmails res.body
             else
                 console.log "Something went wrong -- #{res.body}"
 

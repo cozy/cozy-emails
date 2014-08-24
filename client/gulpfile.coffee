@@ -17,6 +17,7 @@ buffer      = require 'vinyl-buffer'
 concat      = require 'gulp-concat'
 #order       = require 'gulp-order'
 
+gReplace     = require 'gulp-replace'
 
 bundleLogger = require './utils/bundle_logger'
 handleErrors = require './utils/handle_errors'
@@ -58,6 +59,7 @@ gulp.task 'coffee', ->
                 .pipe gulpif isProd(), uglify()
 
             .pipe sourceMaps.write('.')
+            .pipe gReplace /__DEV__/g, 'false'
             .pipe gulp.dest './public/js'
 
     if global.isWatching

@@ -5,7 +5,7 @@ React = require 'react/addons'
 Email = require './email'
 classer = React.addons.classSet
 
-RouterMixin = require '../mixins/router'
+RouterMixin = require '../mixins/RouterMixin'
 FluxChildMixin = Fluxxor.FluxChildMixin React
 
 module.exports = EmailThread = React.createClass
@@ -24,7 +24,7 @@ module.exports = EmailThread = React.createClass
             fullWidth: true
 
         if window.router.previous?
-            selectedMailboxID = @props.selectedMailbox.id
+            selectedMailboxID = @props.selectedMailbox.get 'id'
         else
             selectedMailboxID= @props.thread[0].mailbox
 
@@ -40,7 +40,7 @@ module.exports = EmailThread = React.createClass
             closeUrl = @buildUrl
                 direction: 'left'
                 action: 'mailbox.emails'
-                parameters: @props.selectedMailbox.id
+                parameters: selectedMailboxID
                 fullWidth: true
         else
             closeUrl = @buildClosePanelUrl @props.layout

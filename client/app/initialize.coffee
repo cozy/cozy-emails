@@ -14,17 +14,20 @@ $ ->
     # set date locale here
     #moment.locale 'fr'
 
-    # Fluxxor initialization (model)
-    flux = require './fluxxor'
+    # Flux initialization (must be called at the begining)
+    LayoutStore = require './stores/LayoutStore'
+    EmailStore = require './stores/EmailStore'
+    MailboxStore = require './stores/MailboxStore'
+    ImapFolderStore = require './stores/ImapFolderStore'
 
     # Routing management
     Router = require './router'
-    @router = new Router flux: flux
+    @router = new Router()
     window.router = @router
 
     # Binds the router and flux to the React application
     Application = require './components/application'
-    application = Application router: @router, flux: flux
+    application = Application router: @router
     React.renderComponent application, document.body
 
 

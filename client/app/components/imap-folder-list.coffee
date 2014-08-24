@@ -1,7 +1,7 @@
 React = require 'react/addons'
 {div, ul, li, span, a, button} = React.DOM
 
-RouterMixin = require '../mixins/router'
+RouterMixin = require '../mixins/RouterMixin'
 
 module.exports = ImapFolderList = React.createClass
     displayName: 'ImapFolderList'

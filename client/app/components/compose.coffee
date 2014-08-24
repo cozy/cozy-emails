@@ -2,7 +2,7 @@ React = require 'react/addons'
 {div, h3, a, i, textarea} = React.DOM
 classer = React.addons.classSet
 
-RouterMixin = require '../mixins/router'
+RouterMixin = require '../mixins/RouterMixin'
 
 module.exports = Compose = React.createClass
     displayName: 'Compose'

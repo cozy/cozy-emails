@@ -1,15 +1,13 @@
 React = require 'react/addons'
-Fluxxor = require 'fluxxor'
 {div, h3, form, label, input, button} = React.DOM
 classer = React.addons.classSet
 
-FluxChildMixin = Fluxxor.FluxChildMixin React
+MailboxActionCreator = require '../actions/MailboxActionCreator'
 
 module.exports = React.createClass
     displayName: 'MailboxConfig'
 
     mixins: [
-        FluxChildMixin # makes `@getFlux()` available
         React.addons.LinkedStateMixin # two-way data binding
     ]
 
@@ -70,18 +68,17 @@ module.exports = React.createClass
         event.preventDefault()
 
         mailboxValue = @state
-
         if @props.initialMailboxConfig?
-            mailboxValue.id = @props.initialMailboxConfig.id
-            @getFlux().actions.mailbox.edit @state
+            mailboxValue.id = @props.initialMailboxConfig.get 'id'
+            MailboxActionCreator.edit @state
         else
-            @getFlux().actions.mailbox.create @state
+            MailboxActionCreator.create @state
 
     onRemove: (event) ->
         # prevents the page from reloading
         event.preventDefault()
 
-        @getFlux().actions.mailbox.remove @props.initialMailboxConfig.id
+        MailboxActionCreator.remove @props.initialMailboxConfig.get 'id'
 
     componentWillReceiveProps: (props) ->
 
@@ -97,14 +94,14 @@ module.exports = React.createClass
     getInitialState: (forceDefault) ->
         if @props.initialMailboxConfig and not forceDefault
             return {
-                label: @props.initialMailboxConfig.label
-                name: @props.initialMailboxConfig.name
-                email: @props.initialMailboxConfig.email
-                password: @props.initialMailboxConfig.password
-                smtpServer: @props.initialMailboxConfig.smtpServer
-                smtpPort: @props.initialMailboxConfig.smtpPort
-                imapServer: @props.initialMailboxConfig.imapServer
-                imapPort: @props.initialMailboxConfig.imapPort
+                label: @props.initialMailboxConfig.get 'label'
+                name: @props.initialMailboxConfig.get 'name'
+                email: @props.initialMailboxConfig.get 'email'
+                password: @props.initialMailboxConfig.get 'password'
+                smtpServer: @props.initialMailboxConfig.get 'smtpServer'
+                smtpPort: @props.initialMailboxConfig.get 'smtpPort'
+                imapServer: @props.initialMailboxConfig.get 'imapServer'
+                imapPort: @props.initialMailboxConfig.get 'imapPort'
             }
         else
             return {

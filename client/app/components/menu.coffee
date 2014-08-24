@@ -6,7 +6,7 @@ _ = require 'underscore'
 
 classer = React.addons.classSet
 
-RouterMixin = require '../mixins/router'
+RouterMixin = require '../mixins/RouterMixin'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
