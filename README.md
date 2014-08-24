@@ -48,7 +48,7 @@ build:
 Each modification of the client requires a specific build too.
 
     cd client
-    brunch build
+    coffeegulp watch
 
 ## Tests
 
