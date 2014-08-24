@@ -59,7 +59,7 @@ gulp.task 'coffee', ->
                 .pipe gulpif isProd(), uglify()
 
             .pipe sourceMaps.write('.')
-            .pipe gReplace /__DEV__/g, 'false'
+            .pipe gReplace /__DEV__/g, "#{not isProd()}"
             .pipe gulp.dest './public/js'
 
     if global.isWatching
