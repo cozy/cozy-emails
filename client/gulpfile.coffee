@@ -27,6 +27,10 @@ global = {}
 
 gulp.task 'setWatch', -> global.isWatching = true
 
+gulp.task 'assets', ->
+    gulp.src ['./app/assets/*', './vendor/assets/*'], base: './'
+        .pipe gulp.dest './public'
+
 gulp.task 'stylus', ->
   gulp.src ['./vendor/styles/**/*.css', './app/styles/application.styl']
     .pipe stylus use: [nib()]
@@ -74,5 +78,6 @@ gulp.task 'coffee', ->
 
 gulp.task 'watch', ['setWatch',  'coffee'], ->
     gulp.watch './app/styles/application.styl', ['stylus']
+    gulp.watch './app/assets/**', ['assets']
 
-gulp.task 'build',   ['stylus', 'coffee']
+gulp.task 'build',   ['assets', 'stylus', 'coffee']
