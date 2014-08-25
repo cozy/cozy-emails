@@ -14,7 +14,7 @@ We assume here that the Cozy platform is correctly [installed](http://cozy.io/ho
  on your server.
 
 You can simply install the Emails application via the app registry. Click on
-ythe *Chose Your Apps* button located on the right of your Cozy Home
+ythe *Chose Your Apps* button located on the right of your Cozy Home.
 
 From the command line you can type this command:
 
@@ -63,7 +63,8 @@ In order to run the tests, you must only have the Data System started.
 
 ## Icons
 
---
+By [Fontawesome](http://fortawesome.github.io/Font-Awesome/).
+Main icon by [Elegant Themes](http://www.elegantthemes.com/blog/freebie-of-the-week/beautiful-flat-icons-for-free).
 
 ## License
 
@@ -87,3 +88,28 @@ You can reach the Cozy Community by:
 * Posting on our [Forum](https://groups.google.com/forum/?fromgroups#!forum/cozy-cloud)
 * Posting issues on the [Github repos](https://github.com/mycozycloud/)
 * Mentioning us on [Twitter](http://twitter.com/mycozycloud)
+
+## Technical reference
+
+### Javascript
+* ReactJS: http://facebook.github.io/react/
+* Flux:
+    * http://facebook.github.io/flux/
+    * http://facebook.github.io/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html
+    * https://github.com/facebook/flux/blob/master/examples/flux-chat/
+* Immutable: https://github.com/facebook/immutable-js/
+* Underscore: http://underscorejs.org
+* Backbone: http://backbonejs.org (used for Backbone.Router) -- will be discard at some point
+* jQuery: http://jquery.com (used for `bootstrap/dropdown` and Backbone compatibility) -- will be discard at some point
+
+### Layout and styles
+* Bootstrap: http://getbootstrap.com
+* Fontawesome: http://fortawesome.github.io/Font-Awesome/
+
+### Build
+* Browserify: http://browserify.org/
+* Gulp:
+    * http://gulpjs.com/
+    * https://github.com/greypants/gulp-starter
+
+
