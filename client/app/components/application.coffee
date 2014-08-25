@@ -294,7 +294,7 @@ module.exports = Application = React.createClass
 
     getStateFromStores: ->
 
-        selectedMailbox = MailboxStore.getSelectedMailbox()
+        selectedMailbox = MailboxStore.getSelected()
 
         leftPanelInfo = @props.router.current?.leftPanel
         if leftPanelInfo?.action is 'mailbox.imap.emails'
@@ -302,13 +302,13 @@ module.exports = Application = React.createClass
         else
             selectedImapFolderID = null
 
-        selectedImapFolder = ImapFolderStore.getSelected selectedMailbox.get('id'), selectedImapFolderID
+        selectedImapFolder = ImapFolderStore.getSelected selectedMailbox?.get('id'), selectedImapFolderID
         return {
             mailboxes: MailboxStore.getAll()
             selectedMailbox: selectedMailbox
             emails: EmailStore.getAll()
             isResponsiveMenuShown: LayoutStore.isMenuShown()
-            imapFolders: ImapFolderStore.getByMailbox selectedMailbox.get('id')
+            imapFolders: ImapFolderStore.getByMailbox selectedMailbox?.get('id')
             selectedImapFolder: selectedImapFolder
         }
 

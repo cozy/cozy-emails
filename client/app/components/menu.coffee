@@ -23,7 +23,7 @@ module.exports = Menu = React.createClass
         selectedMailboxUrl = @buildUrl
             direction: 'left'
             action: 'mailbox.emails'
-            parameters: @props.selectedMailbox.get('id')
+            parameters: @props.selectedMailbox?.get('id')
             fullWidth: true
 
         # the button toggles the "compose" screen
@@ -67,8 +67,9 @@ module.exports = Menu = React.createClass
 
     # renders a single mailbox and its submenu
     getMailboxRender: (mailbox, key) ->
-        isSelected = (not @props.selectedMailbox and key is 0) \
-                     or @props.selectedMailbox.get('id') is mailbox.get('id')
+
+        isSelected = (not @props.selectedMailbox? and key is 0) \
+                     or @props.selectedMailbox?.get('id') is mailbox.get('id')
 
         mailboxClasses = classer active: isSelected
         url = @buildUrl

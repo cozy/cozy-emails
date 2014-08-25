@@ -47,3 +47,8 @@ module.exports = MailboxActionCreator =
        AppDispatcher.handleViewAction
             type: ActionTypes.NEW_MAILBOX_ERROR
             value: errorMessage
+
+    selectMailbox: (mailboxID) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SELECT_MAILBOX
+            value: mailboxID

@@ -77,7 +77,7 @@ class MailboxStore extends Store
 
     getDefault: -> return _mailboxes.first() or null
 
-    getSelectedMailbox: -> return _selectedMailbox or @getDefault()
+    getSelected: -> return _selectedMailbox
 
     getError: -> return _newMailboxError
 
