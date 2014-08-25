@@ -9,7 +9,7 @@ require 'bootstrap/js/dropdown'
 
 
 # Waits for the DOM to be ready
-$ ->
+window.onload = ->
 
     # set date locale here
     #moment.locale 'fr'
