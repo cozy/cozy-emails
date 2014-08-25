@@ -91,6 +91,10 @@ You can reach the Cozy Community by:
 
 ## Technical reference
 
+You will find all relevant resources about Emails development under this section.
+
+* https://github.com/cozy/cozy-guidelines
+
 ### Javascript
 * ReactJS: http://facebook.github.io/react/
 * Flux:
@@ -101,6 +105,8 @@ You can reach the Cozy Community by:
 * Underscore: http://underscorejs.org
 * Backbone: http://backbonejs.org (used for Backbone.Router) -- will be discard at some point
 * jQuery: http://jquery.com (used for `bootstrap/dropdown` and Backbone compatibility) -- will be discard at some point
+* Polyglot: http://airbnb.github.io/polyglot.js/ (localization)
+* Moment: http://momentjs.com/ (date manipulating and formatting)
 
 ### Layout and styles
 * Bootstrap: http://getbootstrap.com
