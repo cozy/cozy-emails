@@ -1,6 +1,5 @@
 request = require 'superagent'
 
-MailboxActionCreator = require '../actions/MailboxActionCreator'
 EmailActionCreator = require '../actions/EmailActionCreator'
 ImapFolderActionCreator = require '../actions/ImapFolderActionCreator'
 

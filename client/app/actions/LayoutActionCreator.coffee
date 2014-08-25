@@ -26,7 +26,6 @@ module.exports = LayoutActionCreator =
 
         if mailboxID?
             XHRUtils.fetchEmailsByMailbox mailboxID
-            XHRUtils.fetchImapFolderByMailbox mailboxID
 
     showEmailThread: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
@@ -41,6 +40,13 @@ module.exports = LayoutActionCreator =
 
     showComposeNewEmail: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
+
+        # if there isn't a selected mailbox (page loaded directly),
+        # select the default mailbox
+        selectedMailbox = MailboxStore.getSelected()
+        if  not selectedMailbox? and rawEmail.mailbox
+            defaultMailbox = MailboxStore.getDefault()
+            MailboxActionCreator.selectMailbox defaultMailbox.get 'id'
 
     showCreateMailbox: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()

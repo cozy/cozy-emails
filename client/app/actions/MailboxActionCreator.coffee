@@ -1,5 +1,6 @@
 XHRUtils = require '../utils/XHRUtils'
 AppDispatcher = require '../AppDispatcher'
+ImapFolderStore = require '../stores/ImapFolderStore'
 {ActionTypes} = require '../constants/AppConstants'
 
 module.exports = MailboxActionCreator =
@@ -52,3 +53,8 @@ module.exports = MailboxActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.SELECT_MAILBOX
             value: mailboxID
+
+        # fetch the imap folders if necessary
+        imapFolders = ImapFolderStore.getByMailbox mailboxID
+        if (not imapFolders? or imapFolders.count() is 0) and mailboxID
+            XHRUtils.fetchImapFolderByMailbox mailboxID
