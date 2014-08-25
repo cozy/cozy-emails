@@ -1,4 +1,3 @@
-Fluxxor = require 'fluxxor'
 React = require 'react/addons'
 Immutable = require 'immutable'
 moment = require 'moment'
@@ -7,12 +6,11 @@ moment = require 'moment'
 classer = React.addons.classSet
 
 RouterMixin = require '../mixins/RouterMixin'
-FluxChildMixin = Fluxxor.FluxChildMixin React
 
 module.exports = EmailList = React.createClass
     displayName: 'EmailList'
 
-    mixins: [RouterMixin, FluxChildMixin]
+    mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not Immutable.is(nextProps.emails, @props.emails) or

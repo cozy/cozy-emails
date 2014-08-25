@@ -1,4 +1,3 @@
-Fluxxor = require 'fluxxor'
 React = require 'react/addons'
 
 {div, ul, li, span, i, p, h3, a} = React.DOM
@@ -6,12 +5,11 @@ Email = require './email'
 classer = React.addons.classSet
 
 RouterMixin = require '../mixins/RouterMixin'
-FluxChildMixin = Fluxxor.FluxChildMixin React
 
 module.exports = EmailThread = React.createClass
     displayName: 'EmailThread'
 
-    mixins: [RouterMixin, FluxChildMixin]
+    mixins: [RouterMixin]
 
     render: ->
         if not @props.email? or not @props.thread
