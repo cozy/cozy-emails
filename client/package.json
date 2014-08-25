@@ -4,7 +4,7 @@
     "backbone": "1.1.2",
     "jquery": "2.1.1",
     "superagent": "0.18.2",
-    "immutable": "2.0.9",
+    "immutable": "2.0.15",
     "react": "0.11.1",
     "moment": "2.8.1",
     "gulp-minify-css": "^0.3.7",
