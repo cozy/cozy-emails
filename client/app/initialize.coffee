@@ -15,13 +15,12 @@ require 'bootstrap/js/dropdown'
 # Waits for the DOM to be ready
 window.onload = ->
 
-    # set date locale here
-    locale = window.navigator.language or "en" # default locale
+    # use Cozy instance locale or navigator language or "en" by default
+    locale = window.locale or window.navigator.language or "en"
     moment.locale locale
     locales = {}
     try
         locales = require "./locales/#{locale}"
-        locales = require "./locales/fr"
     catch err
         console.log err
         locales = require "./locales/en"
