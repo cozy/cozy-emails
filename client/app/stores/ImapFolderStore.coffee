@@ -26,6 +26,11 @@ class ImapFolderStore extends Store
     # Creates an OrderedMap of imap folders
     _imapFolders = Immutable.Sequence imapFolders
 
+        # patch to use fixtures
+        .map (imapFolder) ->
+            imapFolder.id = imapFolder.id or imapFolder._id
+            return imapFolder
+
         # sets mailbox ID as index
         .mapKeys (_, imapFolder) -> imapFolder.id
 

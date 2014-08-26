@@ -6,6 +6,7 @@ Immutable = require 'immutable'
 # Used in production instead of real data during development early stage
 fixtures = require '../../../tests/fixtures/mailboxes.json'
 
+
 class MailboxStore extends Store
 
     ###
@@ -14,11 +15,17 @@ class MailboxStore extends Store
     ###
 
     # Loads data passed by the server or the fixtures
-    _mailboxes = window.mailboxes or fixtures
-    _mailboxes = fixtures if mailboxes.length is 0
+    mailboxes = window.mailboxes or fixtures
+    mailboxes = fixtures if mailboxes.length is 0
 
+    mailboxes = fixtures
     # Creates an OrderedMap of mailboxes
     _mailboxes = Immutable.Sequence mailboxes
+
+        # patch to use fixtures
+        .map (mailbox) ->
+            mailbox.id = mailbox.id or mailbox._id
+            return mailbox
 
         # sort first
         .sort (mb1, mb2) ->
@@ -27,10 +34,11 @@ class MailboxStore extends Store
             else return 0
 
         # sets mailbox ID as index
-        .mapKeys (_, mailbox) -> mailbox.id
+        .mapKeys (_, mailbox) -> return mailbox.id
 
         # makes mailbox object an immutable Map
-        .map (mailbox) -> Immutable.Map mailbox
+        .map (mailbox) ->
+            return Immutable.Map mailbox
         .toOrderedMap()
 
     _selectedMailbox = null

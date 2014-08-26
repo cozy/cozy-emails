@@ -10,7 +10,6 @@ module.exports = EmailThread = React.createClass
     getInitialState: -> active: false
 
     render: ->
-
         clickHandler = if @props.isLast then null else @onClick
 
         classes = classer
@@ -18,7 +17,7 @@ module.exports = EmailThread = React.createClass
             active: @state.active
 
         today = moment()
-        date = moment @props.email.createdAt
+        date = moment @props.email.get 'createdAt'
         if date.isBefore today, 'year'
             formatter = 'DD/MM/YYYY'
         else if date.isBefore today, 'day'
@@ -30,12 +29,12 @@ module.exports = EmailThread = React.createClass
             div className: 'email-header',
                 i className: 'fa fa-user'
                 div className: 'email-participants',
-                    span  className: 'sender', @props.email.from
-                    span className: 'receivers', 'À ' + @props.email.to
+                    span  className: 'sender', @props.email.get 'from'
+                    span className: 'receivers', 'À ' + @props.email.get 'to'
                 span className: 'email-hour', date.format formatter
             div className: 'email-preview',
-                p null, @props.email.text
-            div className: 'email-content', @props.email.text
+                p null, @props.email.get 'text'
+            div className: 'email-content', @props.email.get 'text'
             div className: 'clearfix'
 
     onClick: (args) ->

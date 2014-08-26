@@ -24,24 +24,24 @@ module.exports = EmailList = React.createClass
                 ul className: 'list-unstyled',
                     @props.emails.map (email, key) =>
                         # only displays initial email of a thread
-                        if email.inReplyTo.length is 0
+                        if email.get('inReplyTo').length is 0
                             isActive = @props.openEmail? and
-                                       @props.openEmail.id is email.id
+                                       @props.openEmail.id is email.get('id')
                             @getEmailRender email, key, isActive
                     .toJS()
 
     getEmailRender: (email, key, isActive) ->
         classes = classer
-            read: email.isRead
+            read: email.get('isRead')
             active: isActive
 
         url = @buildUrl
             direction: 'right'
             action: 'email'
-            parameters: email.id
+            parameters: email.get('id')
 
         today = moment()
-        date = moment email.createdAt
+        date = moment email.get('createdAt')
         if date.isBefore today, 'year'
             formatter = 'DD/MM/YYYY'
         else if date.isBefore today, 'day'
@@ -54,12 +54,10 @@ module.exports = EmailList = React.createClass
                 i className: 'fa fa-user'
                 span className: 'email-participants', @getParticipants email
                 div className: 'email-preview',
-                    span className: 'email-title', email.subject
-                    p null, email.text
+                    span className: 'email-title', email.get('subject')
+                    p null, email.get('text')
                 span className: 'email-hour', date.format formatter
 
 
     getParticipants: (email) ->
-        #list = [email.sender].concat email.receivers
-        #return list.join ', '
-        return email.from + ', ' + email.to
+        return email.get('from') + ', ' + email.get('to')
