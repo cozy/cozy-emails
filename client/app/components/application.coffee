@@ -232,7 +232,6 @@ module.exports = Application = React.createClass
             else if (not panelInfo.parameters? or panelInfo.parameters.length is 0) and firstMailbox?
                 emailStore = EmailStore
                 mailboxID = firstMailbox.id
-
                 return EmailList
                     emails: emailStore.getEmailsByMailbox mailboxID
                     mailboxID: mailboxID
