@@ -1,9 +1,13 @@
 $ = require 'jquery'
 Backbone = require 'backbone'
 Backbone.$ = $
-React = require 'react/addons'
+React    = require 'react/addons'
+Polyglot = require 'node-polyglot'
+moment   = require 'moment'
 
-# Haven't managed to make bootstrap.dropdown relies on jQuery in a proper "browserify" way
+
+# Haven't managed to make bootstrap.dropdown relies on jQuery
+# in a proper "browserify" way
 window.jQuery = $
 require 'bootstrap/js/dropdown'
 
@@ -11,8 +15,21 @@ require 'bootstrap/js/dropdown'
 # Waits for the DOM to be ready
 window.onload = ->
 
-    # set date locale here
-    #moment.locale 'fr'
+    # use Cozy instance locale or navigator language or "en" by default
+    locale = window.locale or window.navigator.language or "en"
+    moment.locale locale
+    locales = {}
+    try
+        locales = require "./locales/#{locale}"
+    catch err
+        console.log err
+        locales = require "./locales/en"
+    polyglot = new Polyglot()
+    # we give polyglot the data
+    polyglot.extend locales
+    # handy shortcut
+    window.t = polyglot.t.bind polyglot
+
 
     # Flux initialization (must be called at the begining)
     LayoutStore = require './stores/LayoutStore'

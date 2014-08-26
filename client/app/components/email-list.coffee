@@ -19,7 +19,7 @@ module.exports = EmailList = React.createClass
     render: ->
         div id: 'email-list',
             if @props.emails.count() is 0
-                'No email in this box.'
+                t "list empty"
             else
                 ul className: 'list-unstyled',
                     @props.emails.map (email, key) =>

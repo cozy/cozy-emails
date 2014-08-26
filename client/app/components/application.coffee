@@ -52,7 +52,7 @@ module.exports = Application = React.createClass
         layout = @props.router.current
 
         if not layout?
-            return div null, "Loading..."
+            return div null, t "app loading"
 
         # is the layout a full-width panel or two panels sharing the width
         isFullWidth = not layout.rightPanel?
@@ -110,11 +110,11 @@ module.exports = Application = React.createClass
                         if layout.rightPanel
                             a href: responsiveBackUrl, className: 'responsive-handler hidden-md hidden-lg',
                                 i className: 'fa fa-chevron-left hidden-md hidden-lg pull-left'
-                                'Back'
+                                t "app back"
                         else
                             a onClick: @onResponsiveMenuClick, className: 'responsive-handler hidden-md hidden-lg',
                                 i className: 'fa fa-bars pull-left'
-                                'Menu'
+                                t "app menu"
 
 
                         div className: 'col-md-6 hidden-xs hidden-sm pull-left',
@@ -125,7 +125,7 @@ module.exports = Application = React.createClass
                                     selectedImapFolder: @state.selectedImapFolder
                                 div className: 'form-group pull-left',
                                     div className: 'input-group',
-                                        input className: 'form-control', type: 'text', placeholder: 'Search...', onFocus: @onFocusSearchInput, onBlur: @onBlurSearchInput
+                                        input className: 'form-control', type: 'text', placeholder: t "app search", onFocus: @onFocusSearchInput, onBlur: @onBlurSearchInput
                                         div className: 'input-group-addon btn btn-cozy',
                                             span className: 'fa fa-search'
 

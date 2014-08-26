@@ -54,7 +54,7 @@ module.exports = Menu = React.createClass
         div id: 'menu', className: classes,
             a href: composeUrl, className: 'menu-item compose-action',
                 i className: 'fa fa-edit'
-                span className: 'mailbox-label', 'Compose'
+                span className: 'mailbox-label', t 'menu compose'
 
             ul id: 'mailbox-list', className: 'list-unstyled',
                 @props.mailboxes.map (mailbox, key) =>
@@ -63,7 +63,7 @@ module.exports = Menu = React.createClass
 
             a href: newMailboxUrl, className: 'menu-item new-mailbox-action',
                 i className: 'fa fa-inbox'
-                span className: 'mailbox-label', 'New mailbox'
+                span className: 'mailbox-label', t 'menu account new'
 
 
     # renders a single mailbox and its submenu
