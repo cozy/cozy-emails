@@ -9,6 +9,7 @@ module.exports = MailboxActionCreator =
         MailboxActionCreator._setNewMailboxWaitingStatus true
 
         XHRUtils.createMailbox inputValues, (error, mailbox) =>
+            # set a timeout to simulate the "waiting" state
             setTimeout ->
                 MailboxActionCreator._setNewMailboxWaitingStatus false
                 if error?
@@ -22,6 +23,7 @@ module.exports = MailboxActionCreator =
     edit: (inputValues) ->
         MailboxActionCreator._setNewMailboxWaitingStatus true
         XHRUtils.editMailbox inputValues, (error, mailbox) =>
+            # set a timeout to simulate the "waiting" state
             setTimeout ->
                 MailboxActionCreator._setNewMailboxWaitingStatus false
                 if error?
@@ -55,6 +57,7 @@ module.exports = MailboxActionCreator =
             value: mailboxID
 
         # fetch the imap folders if necessary
+        # useful when the page loads the first time
         imapFolders = ImapFolderStore.getByMailbox mailboxID
         if (not imapFolders? or imapFolders.count() is 0) and mailboxID
             XHRUtils.fetchImapFolderByMailbox mailboxID
