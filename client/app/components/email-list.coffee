@@ -26,7 +26,7 @@ module.exports = EmailList = React.createClass
                         # only displays initial email of a thread
                         if email.get('inReplyTo').length is 0
                             isActive = @props.openEmail? and
-                                       @props.openEmail.id is email.get('id')
+                                       @props.openEmail.get('id') is email.get('id')
                             @getEmailRender email, key, isActive
                     .toJS()
 
