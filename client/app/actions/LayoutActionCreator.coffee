@@ -2,6 +2,7 @@ XHRUtils = require '../utils/XHRUtils'
 MailboxStore = require '../stores/MailboxStore'
 AppDispatcher = require '../AppDispatcher'
 {ActionTypes} = require '../constants/AppConstants'
+MailboxActionCreator = require './MailboxActionCreator'
 
 module.exports = LayoutActionCreator =
 
@@ -21,28 +22,36 @@ module.exports = LayoutActionCreator =
         defaultMailbox = MailboxStore.getDefault()
         mailboxID = panelInfo.parameters[0] or defaultMailbox?.get('id')
 
-        LayoutActionCreator._selectMailbox mailboxID
+        MailboxActionCreator.selectMailbox mailboxID
 
         if mailboxID?
             XHRUtils.fetchEmailsByMailbox mailboxID
-            XHRUtils.fetchImapFolderByMailbox mailboxID
 
     showEmailThread: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        XHRUtils.fetchEmailThread panelInfo.parameters[0]
+        XHRUtils.fetchEmailThread panelInfo.parameters[0], (err, rawEmail) ->
+
+            # if there isn't a selected mailbox (page loaded directly),
+            # select the email's mailbox
+            selectedMailbox = MailboxStore.getSelected()
+            if  not selectedMailbox? and rawEmail.mailbox
+                MailboxActionCreator.selectMailbox rawEmail.mailbox
+
 
     showComposeNewEmail: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
 
+        # if there isn't a selected mailbox (page loaded directly),
+        # select the default mailbox
+        selectedMailbox = MailboxStore.getSelected()
+        if  not selectedMailbox? and rawEmail.mailbox
+            defaultMailbox = MailboxStore.getDefault()
+            MailboxActionCreator.selectMailbox defaultMailbox.get 'id'
+
     showCreateMailbox: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        LayoutActionCreator._selectMailbox -1
+        MailboxActionCreator.selectMailbox -1
 
     showConfigMailbox: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        LayoutActionCreator._selectMailbox panelInfo.parameters[0]
-
-    _selectMailbox: (mailboxID) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SELECT_MAILBOX
-            value: mailboxID
+        MailboxActionCreator.selectMailbox panelInfo.parameters[0]

@@ -3,8 +3,7 @@ request = require 'superagent'
 EmailActionCreator = require '../actions/EmailActionCreator'
 ImapFolderActionCreator = require '../actions/ImapFolderActionCreator'
 
-# The flux instance is required in each method because when this file is loaded
-# the flux instance is being created.
+MailboxStore = require '../stores/MailboxStore'
 
 module.exports =
 
@@ -17,14 +16,15 @@ module.exports =
             else
                 console.log "Something went wrong -- #{res.body}"
 
-    fetchEmailThread: (emailID) ->
+    fetchEmailThread: (emailID, callback) ->
         request.get "email/#{emailID}"
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
                 EmailActionCreator.receiveRawEmail res.body
+                callback null, res.body
             else
-                console.log "Something went wrong -- #{res.body}"
+                callback "Something went wrong -- #{res.body}"
 
     fetchImapFolderByMailbox: (mailboxID) ->
         request.get "mailbox/#{mailboxID}/folders"

@@ -18,14 +18,17 @@ module.exports = EmailList = React.createClass
 
     render: ->
         div id: 'email-list',
-            ul className: 'list-unstyled',
-                @props.emails.map (email, key) =>
-                    # only displays initial email of a thread
-                    if email.inReplyTo.length is 0
-                        isActive = @props.openEmail? and
-                                   @props.openEmail.id is email.id
-                        @getEmailRender email, key, isActive
-                .toJS()
+            if @props.emails.count() is 0
+                'No email in this box.'
+            else
+                ul className: 'list-unstyled',
+                    @props.emails.map (email, key) =>
+                        # only displays initial email of a thread
+                        if email.inReplyTo.length is 0
+                            isActive = @props.openEmail? and
+                                       @props.openEmail.id is email.id
+                            @getEmailRender email, key, isActive
+                    .toJS()
 
     getEmailRender: (email, key, isActive) ->
         classes = classer

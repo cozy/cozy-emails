@@ -16,13 +16,15 @@ module.exports = Menu = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         return not Immutable.is(nextProps.mailboxes, @props.mailboxes) or
                not Immutable.is(nextProps.selectedMailbox, @props.selectedMailbox) or
-               not _.isEqual(nextProps.layout, @props.layout)
+               not _.isEqual(nextProps.layout, @props.layout) or
+               nextProps.isResponsiveMenuShown isnt @props.isResponsiveMenuShown or
+               not Immutable.is(nextProps.favoriteImapFolders, @props.favoriteImapFolders)
 
     render: ->
         selectedMailboxUrl = @buildUrl
             direction: 'left'
             action: 'mailbox.emails'
-            parameters: @props.selectedMailbox.get('id')
+            parameters: @props.selectedMailbox?.get('id')
             fullWidth: true
 
         # the button toggles the "compose" screen
@@ -66,8 +68,9 @@ module.exports = Menu = React.createClass
 
     # renders a single mailbox and its submenu
     getMailboxRender: (mailbox, key) ->
-        isSelected = (not @props.selectedMailbox and key is 0) \
-                     or @props.selectedMailbox.get('id') is mailbox.get('id')
+
+        isSelected = (not @props.selectedMailbox? and key is 0) \
+                     or @props.selectedMailbox?.get('id') is mailbox.get('id')
 
         mailboxClasses = classer active: isSelected
         url = @buildUrl
@@ -83,16 +86,18 @@ module.exports = Menu = React.createClass
                 span className: 'mailbox-label', mailbox.get 'label'
 
             ul className: 'list-unstyled submenu',
-                a href: '#', className: 'menu-item',
-                    i className: 'fa fa-star'
-                    span className: 'badge', 3
-                    span className: 'mailbox-label', 'Favorite'
-                a href: '#', className: 'menu-item',
-                    i className: 'fa fa-send'
-                    span className: 'badge', ''
-                    span className: 'mailbox-label', 'Sent'
-                a href: '#', className: 'menu-item',
-                    i className: 'fa fa-trash-o'
-                    span className: 'badge', ''
-                    span className: 'mailbox-label', 'Trash'
+                @props.favoriteImapFolders.map (imapFolder, key) =>
+                    @getImapFolderRender imapFolder, key
+                .toJS()
 
+    getImapFolderRender: (imapFolder, key) ->
+        imapFolderUrl = @buildUrl
+            direction: 'left'
+            action: 'mailbox.imap.emails'
+            parameters: [imapFolder.get('mailbox'), imapFolder.get('id')]
+
+        a href: imapFolderUrl, className: 'menu-item', key: key,
+            # Something must be rethought about the icon
+            i className: 'fa fa-star'
+            span className: 'badge', Math.floor((Math.random() * 10) + 1) # placeholder
+            span className: 'mailbox-label', imapFolder.get 'name'

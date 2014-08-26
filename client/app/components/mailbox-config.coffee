@@ -81,18 +81,17 @@ module.exports = React.createClass
         MailboxActionCreator.remove @props.initialMailboxConfig.get 'id'
 
     componentWillReceiveProps: (props) ->
-
         # prevents the form from changing during submission
         if not props.isWaiting
             # display the mailbox values
             if props.initialMailboxConfig?
-                @setState props.initialMailboxConfig
+                @setState props.initialMailboxConfig.toJS()
             else # reset the form if it is on 'new mailbox' page
                 @setState @getInitialState true
 
 
     getInitialState: (forceDefault) ->
-        if @props.initialMailboxConfig and not forceDefault
+        if @props.initialMailboxConfig? and not forceDefault
             return {
                 label: @props.initialMailboxConfig.get 'label'
                 name: @props.initialMailboxConfig.get 'name'
