@@ -5,7 +5,6 @@ module.exports =
       "app back"                : "Retour"
       "app menu"                : "Menu"
       "app search"              : "Rechercher…"
-      
       # Compose window
       "compose"                 : "Écrire un nouveau message"
       "compose default"         : "Bonjour, comment ça va ?"
@@ -13,7 +12,10 @@ module.exports =
       # Menu
       "menu compose"            : "Nouveau"
       "menu account new"        : "Ajouter un compte"
-      
+
+      # List
+      "list empty"              : "No email in this box."
+
       # Mail
       "mail receivers"          : "À %{dest}"
 
@@ -31,4 +33,3 @@ module.exports =
       "mailbox sending server"      : "Serveur sortant"
       "mailbox receiving server"    : "Serveur IMAP"
       "mailbox remove"              : "Supprimer"
-      

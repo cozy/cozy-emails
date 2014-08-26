@@ -30,7 +30,7 @@ module.exports = EmailThread = React.createClass
                 i className: 'fa fa-user'
                 div className: 'email-participants',
                     span  className: 'sender', @props.email.get 'from'
-                    span className: 'receivers', t "mail receivers", {dest: @props.email.to}
+                    span className: 'receivers', t "mail receivers", {dest: @props.email.get 'to'}
                 span className: 'email-hour', date.format formatter
             div className: 'email-preview',
                 p null, @props.email.get 'text'

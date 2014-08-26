@@ -5,7 +5,7 @@ module.exports =
       "app back"                : "Back"
       "app menu"                : "Menu"
       "app search"              : "Search…"
-      
+
       # Compose window
       "compose"                 : "Compose new email"
       "compose default"         : 'Hello, how are you doing today ?'
@@ -13,9 +13,11 @@ module.exports =
       # Menu
       "menu compose"            : "Compose"
       "menu account new"        : "New account"
-      
+
+      # List
+      "list empty"              : "No email in this box."
+
       # Mail
-      "mail receivers"          : "To %{dest}"
       "mail receivers"          : "To %{dest}"
 
       # Account
