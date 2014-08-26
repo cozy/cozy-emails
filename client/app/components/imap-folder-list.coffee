@@ -9,16 +9,15 @@ module.exports = ImapFolderList = React.createClass
     mixins: [RouterMixin]
 
     render: ->
-
         if @props.imapFolders.length > 0
             firstItem = @props.selectedImapFolder
             div className: 'dropdown pull-left',
                 button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown',
-                    firstItem.name
+                    firstItem.get 'name'
                     span className: 'caret', ''
                 ul className: 'dropdown-menu', role: 'menu',
                     @props.imapFolders.map (folder, key) =>
-                        if folder.id isnt @props.selectedImapFolder.id
+                        if folder.get('id') isnt @props.selectedImapFolder.get('id')
                             @getImapFolderRender folder, key
                     .toJS()
         else
@@ -29,7 +28,7 @@ module.exports = ImapFolderList = React.createClass
         url = @buildUrl
                 direction: 'left'
                 action: 'mailbox.imap.emails'
-                parameters: [@props.selectedMailbox.get('id'), folder.id]
+                parameters: [@props.selectedMailbox.get('id'), folder.get('id')]
 
         li role: 'presentation', key: key,
-            a href: url, role: 'menuitem', folder.name
+            a href: url, role: 'menuitem', folder.get 'name'
