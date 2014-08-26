@@ -13,7 +13,7 @@ module.exports = EmailThread = React.createClass
 
     render: ->
         if not @props.email? or not @props.thread
-            return p null, 'Loading...'
+            return p null, t "app loading"
 
         expandUrl = @buildUrl
             direction: 'left'

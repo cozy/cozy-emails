@@ -21,7 +21,7 @@ module.exports = ImapFolderList = React.createClass
                             @getImapFolderRender folder, key
                     .toJS()
         else
-            div null, 'Loading...'
+            div null, t "app loading"
 
 
     getImapFolderRender: (folder, key) ->

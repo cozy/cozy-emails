@@ -29,11 +29,11 @@ module.exports = Compose = React.createClass
             h3 null,
                 a href: closeUrl, className: 'close-email hidden-xs hidden-sm',
                     i className:'fa fa-times'
-                'Compose new email'
+                t 'compose'
                 if @props.layout isnt 'full'
                     a href: expandUrl, className: 'expand hidden-xs hidden-sm',
                         i className: 'fa fa-arrows-h'
                 else
                     a href: collapseUrl, className: 'close-email pull-right',
                         i className:'fa fa-compress'
-            textarea defaultValue: 'Hello, how are you doing today?'
+            textarea defaultValue: t 'compose default'

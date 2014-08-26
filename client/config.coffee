@@ -16,6 +16,7 @@ exports.config =
                     'bower_components/backbone/backbone.js'
                     'vendor/javascripts/superagent.js'
                     'vendor/javascripts/bootstrap-3.1.1.min.js'
+                    'vendor/javascripts/polyglot.js'
                 ]
 
         stylesheets:

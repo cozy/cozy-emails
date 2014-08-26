@@ -10,7 +10,8 @@
     "moment": "2.8.1",
     "nib": "1.0.3",
     "pretty-hrtime": "0.2.1",
-    "watchify": "1.0.1"
+    "watchify": "1.0.1",
+    "node-polyglot": "0.3.0"
   },
   "devDependencies": {
     "coffeeify": "0.7.0",
