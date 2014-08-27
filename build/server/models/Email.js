@@ -10,13 +10,19 @@ module.exports = Email = americano.getModel('Email', {
   to: String,
   text: String,
   date: Date,
-  inReplyTo: String
+  inReplyTo: String,
+  createdAt: Date,
+  imapFolder: String
 });
 
-Email.getByMailbox = function(mailboxID, callback) {
-  return Email.request('byMailbox', {
-    key: mailboxID
-  }, callback);
+Email.getByMailboxAndDate = function(mailboxID, callback) {
+  var options;
+  options = {
+    startkey: [mailboxID, {}],
+    endkey: [mailboxID],
+    descending: true
+  };
+  return Email.request('byMailboxAndDate', options, callback);
 };
 
 Email.destroyByMailbox = function(mailboxID, callback) {

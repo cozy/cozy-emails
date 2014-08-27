@@ -4,7 +4,17 @@ var Email;
 Email = require('../models/email');
 
 module.exports.listByMailbox = function(req, res, next) {
-  return Email.getByMailbox(req.mailbox.id, function(err, emails) {
+  return Email.getByMailboxAndDate(req.mailbox.id, function(err, emails) {
+    if (err != null) {
+      return next(err);
+    } else {
+      return res.send(200, emails);
+    }
+  });
+};
+
+module.exports.listByImapFolder = function(req, res, next) {
+  return Email.getByMailboxAndDate(req.imapFolder.id, function(err, emails) {
     if (err != null) {
       return next(err);
     } else {
