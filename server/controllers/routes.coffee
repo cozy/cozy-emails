@@ -9,24 +9,24 @@ module.exports =
 
     '': get: index.main
 
-    'mailbox':
+    'account':
         post: mailboxes.create
         get: mailboxes.list
 
-    'mailbox/:id':
+    'account/:id':
         put: [mailboxes.fetch, mailboxes.edit]
         delete: [mailboxes.fetch, mailboxes.remove]
 
-    'mailbox/:id/emails':
+    'account/:id/messages':
         get: [mailboxes.fetch, emails.listByMailbox]
 
-    'mailbox/:id/folders':
+    'account/:id/mailboxes':
         get: [mailboxes.fetch, imapFolders.listByMailbox]
 
-    'folder/:id/emails':
+    'mailbox/:id/messages':
         get: [imapFolders.fetch, emails.listByImapFolder]
 
 
-    'email/:id': get: [emails.fetch, emails.get]
+    'message/:id': get: [emails.fetch, emails.get]
 
 
