@@ -14,8 +14,8 @@ module.exports.main = (req, res, next) ->
             # for now we handle error case loosely
             res.render 'index.jade', imports: ""
         else
-            [locale, mailboxes] = results
+            [locale, accounts] = results
             res.render 'index.jade', imports: """
                 window.locale = "#{locale}";
-                window.mailboxes = #{JSON.stringify mailboxes};
+                window.accounts = #{JSON.stringify accounts};
             """

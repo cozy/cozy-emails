@@ -1,26 +1,82 @@
 [
     {
-        "_id": "gmail-ID",
-        "docType": "Mailbox",
-        "label": "Gmail",
-        "name": "Random Name",
-        "email": "randomlogin@randomprovider.tld",
-        "password": "randompassword",
-        "smtpServer": "smtp.gmail.com",
-        "smtpPort": 993,
-        "imapServer": "imap.gmail.com",
-        "imapPort": 465
+        "_id": "gmail-ID-folder1",
+        "docType": "ImapFolder",
+        "name": "Inbox",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "gmail-ID"
     },
     {
-        "_id": "orange-ID",
-        "docType": "Mailbox",
-        "label": "Orange",
-        "name": "Random Name",
-        "email": "randomlogin@randomprovider.tld",
-        "password": "randompassword",
-        "smtpServer": "smtp.orange.fr",
-        "smtpPort": 993,
-        "imapServer": "imap.orange.fr",
-        "imapPort": 465
+        "_id": "gmail-ID-folder2",
+        "docType": "ImapFolder",
+        "name": "Sent",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "gmail-ID"
+    },
+    {
+        "_id": "gmail-ID-folder3",
+        "docType": "ImapFolder",
+        "name": "Draft",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "gmail-ID"
+    },
+    {
+        "_id": "gmail-ID-folder4",
+        "docType": "ImapFolder",
+        "name": "Trash",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "gmail-ID"
+    },
+    {
+        "_id": "gmail-ID-folder5",
+        "docType": "ImapFolder",
+        "name": "Spam",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "gmail-ID"
+    },
+    {
+        "_id": "gmail-ID-folder6",
+        "docType": "ImapFolder",
+        "name": "Random folder",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "gmail-ID"
+    },
+    {
+        "_id": "orange-ID-folder1",
+        "docType": "ImapFolder",
+        "name": "Inbox",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "orange-ID"
+    },
+    {
+        "_id": "orange-ID-folder2",
+        "docType": "ImapFolder",
+        "name": "Random folder",
+        "path": "",
+        "specialType": "",
+        "imapLastFetchedId": 0,
+        "mailsToBe": {},
+        "mailbox": "orange-ID"
     }
 ]

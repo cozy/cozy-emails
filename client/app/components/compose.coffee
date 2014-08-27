@@ -18,8 +18,8 @@ module.exports = Compose = React.createClass
 
         collapseUrl = @buildUrl
             leftPanel:
-                action: 'mailbox.emails'
-                parameters: @props.selectedMailbox.id
+                action: 'account.messages'
+                parameters: @props.selectedAccount?.get 'id'
             rightPanel:
                 action: 'compose'
 

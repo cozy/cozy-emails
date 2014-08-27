@@ -1,0 +1,26 @@
+[
+    {
+        "_id": "gmail-ID",
+        "docType": "Mailbox",
+        "label": "Gmail",
+        "name": "Random Name",
+        "email": "randomlogin@randomprovider.tld",
+        "password": "randompassword",
+        "smtpServer": "smtp.gmail.com",
+        "smtpPort": 993,
+        "imapServer": "imap.gmail.com",
+        "imapPort": 465
+    },
+    {
+        "_id": "orange-ID",
+        "docType": "Mailbox",
+        "label": "Orange",
+        "name": "Random Name",
+        "email": "randomlogin@randomprovider.tld",
+        "password": "randompassword",
+        "smtpServer": "smtp.orange.fr",
+        "smtpPort": 993,
+        "imapServer": "imap.orange.fr",
+        "imapPort": 465
+    }
+]

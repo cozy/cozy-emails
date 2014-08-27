@@ -1,21 +1,20 @@
 /*
-  Email list
+  Message list
 
-  -- Email list bar internal layout and styles
+  -- Message list bar internal layout and styles
 */
 
-#email-list
+.message-list
   padding 0
 
   &.disable
     display none
 
-  // must be reworked
   &.col-md-6
   &.col-md-12
     transition width 0.2s ease-out
 
-  .email
+  .message
     padding 5px
     border-left 5px solid transparent
     border-bottom 1px solid #e4e4e4
@@ -25,7 +24,7 @@
       display block
       outline none
 
-      // We use a flexbox display so the email preview takes all the width left
+      // We use a flexbox display so the message preview takes all the width left
       display flex
       justify-content flex-start
       align-items center
@@ -33,11 +32,11 @@
       text-decoration none
 
       span
-      .email-preview
+      .preview
         font-size 13px
         margin 0 5px
 
-      .email-preview
+      .preview
         flex 1
         margin 0 10px 0 auto
         overflow hidden
@@ -45,22 +44,22 @@
         text-overflow ellipsis
         color mediumcolor // for ellipsis + p
 
-        .email-title
+        .title
           color darkcolor
         p
           margin 0
           display inline
 
-      .email-participants
+      .participants
         width 200px
         color darkcolor
 
-      .email-title
+      .title
         min-width 200px
         &:after
           content ' - '
 
-      .email-hour
+      .hour
         margin-left auto
         color darkcolor
 

@@ -23,7 +23,7 @@ _ = require 'underscore'
 
 LayoutActionCreator = require '../actions/LayoutActionCreator'
 
-MailboxStore = require '../stores/MailboxStore'
+AccountStore = require '../stores/AccountStore'
 
 module.exports = class Router extends Backbone.Router
 
@@ -236,13 +236,13 @@ module.exports = class Router extends Backbone.Router
     # Determines and gets the default parameters regarding a specific action
     _getDefaultParameters: (action) ->
         switch action
-            when 'mailbox.emails', 'mailbox.config'
-                defaultMailbox = MailboxStore.getDefault().id
-                defaultParameters = [defaultMailbox]
-            when 'mailbox.imap.emails'
-                defaultMailbox = MailboxStore.getDefault().id
-                defaultImapFolder = 'lala'
-                defaultParameters = [defaultMailbox, defaultImapFolder]
+            when 'account.messages', 'account.config'
+                defaultAccount = AccountStore.getDefault()?.id
+                defaultParameters = [defaultAccount]
+            when 'account.imap.messages'
+                defaultAccount = AccountStore.getDefault()?.id
+                defaultMailbox = 'lala'
+                defaultParameters = [defaultAccount, defaultMailbox]
             else
                 defaultParameters = null
 

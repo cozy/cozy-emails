@@ -1,8 +1,8 @@
 XHRUtils = require '../utils/XHRUtils'
-MailboxStore = require '../stores/MailboxStore'
+AccountStore = require '../stores/AccountStore'
 AppDispatcher = require '../AppDispatcher'
 {ActionTypes} = require '../constants/AppConstants'
-MailboxActionCreator = require './MailboxActionCreator'
+AccountActionCreator = require './AccountActionCreator'
 
 module.exports = LayoutActionCreator =
 
@@ -16,42 +16,42 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.HIDE_MENU_RESPONSIVE
             value: null
 
-    showEmailList: (panelInfo, direction) ->
+    showMessageList: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
 
-        defaultMailbox = MailboxStore.getDefault()
-        mailboxID = panelInfo.parameters[0] or defaultMailbox?.get('id')
+        defaultAccount = AccountStore.getDefault()
+        accountID = panelInfo.parameters[0] or defaultAccount?.get('id')
 
-        MailboxActionCreator.selectMailbox mailboxID
+        AccountActionCreator.selectAccount accountID
 
-        if mailboxID?
-            XHRUtils.fetchEmailsByMailbox mailboxID
+        if accountID?
+            XHRUtils.fetchMessagesByAccount accountID
 
-    showEmailThread: (panelInfo, direction) ->
+    showConversation: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        XHRUtils.fetchEmailThread panelInfo.parameters[0], (err, rawEmail) ->
+        XHRUtils.fetchConversation panelInfo.parameters[0], (err, rawMessage) ->
 
-            # if there isn't a selected mailbox (page loaded directly),
-            # select the email's mailbox
-            selectedMailbox = MailboxStore.getSelected()
-            if  not selectedMailbox? and rawEmail.mailbox
-                MailboxActionCreator.selectMailbox rawEmail.mailbox
+            # if there isn't a selected account (page loaded directly),
+            # select the message's account
+            selectedAccount = AccountStore.getSelected()
+            if  not selectedAccount? and rawMessage?.mailbox
+                AccountActionCreator.selectAccount rawMessage.mailbox
 
 
-    showComposeNewEmail: (panelInfo, direction) ->
+    showComposeNewMessage: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
 
-        # if there isn't a selected mailbox (page loaded directly),
-        # select the default mailbox
-        selectedMailbox = MailboxStore.getSelected()
-        if  not selectedMailbox? and rawEmail.mailbox
-            defaultMailbox = MailboxStore.getDefault()
-            MailboxActionCreator.selectMailbox defaultMailbox.get 'id'
+        # if there isn't a selected account (page loaded directly),
+        # select the default account
+        selectedAccount = AccountStore.getSelected()
+        if not selectedAccount?
+            defaultAccount = AccountStore.getDefault()
+            AccountActionCreator.selectAccount defaultAccount.get 'id'
 
-    showCreateMailbox: (panelInfo, direction) ->
+    showCreateAccount: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        MailboxActionCreator.selectMailbox -1
+        AccountActionCreator.selectAccount -1
 
-    showConfigMailbox: (panelInfo, direction) ->
+    showConfigAccount: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        MailboxActionCreator.selectMailbox panelInfo.parameters[0]
+        AccountActionCreator.selectAccount panelInfo.parameters[0]
