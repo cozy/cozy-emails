@@ -1,5 +1,7 @@
 PanelRouter = require './libs/PanelRouter'
 
+AccountStore = require './stores/AccountStore'
+
 module.exports = class Router extends PanelRouter
 
     patterns:
@@ -25,3 +27,18 @@ module.exports = class Router extends PanelRouter
 
     # default route
     routes: '': 'account.messages'
+
+    # Determines and gets the default parameters regarding a specific action
+    _getDefaultParameters: (action) ->
+        switch action
+            when 'account.messages', 'account.config'
+                defaultAccount = AccountStore.getDefault()?.id
+                defaultParameters = [defaultAccount]
+            when 'account.imap.messages'
+                defaultAccount = AccountStore.getDefault()?.id
+                defaultMailbox = 'lala'
+                defaultParameters = [defaultAccount, defaultMailbox]
+            else
+                defaultParameters = null
+
+        return defaultParameters

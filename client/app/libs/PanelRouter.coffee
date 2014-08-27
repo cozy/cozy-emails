@@ -23,8 +23,6 @@ _ = require 'underscore'
 
 LayoutActionCreator = require '../actions/LayoutActionCreator'
 
-AccountStore = require '../stores/AccountStore'
-
 module.exports = class Router extends Backbone.Router
 
     patterns: {}
@@ -232,18 +230,3 @@ module.exports = class Router extends Backbone.Router
             return filledPattern
         else
             return ''
-
-    # Determines and gets the default parameters regarding a specific action
-    _getDefaultParameters: (action) ->
-        switch action
-            when 'account.messages', 'account.config'
-                defaultAccount = AccountStore.getDefault()?.id
-                defaultParameters = [defaultAccount]
-            when 'account.imap.messages'
-                defaultAccount = AccountStore.getDefault()?.id
-                defaultMailbox = 'lala'
-                defaultParameters = [defaultAccount, defaultMailbox]
-            else
-                defaultParameters = null
-
-        return defaultParameters
