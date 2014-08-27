@@ -1,5 +1,4 @@
 Store = require '../libs/flux/store/Store'
-Immutable = require 'immutable'
 AppDispatcher = require '../AppDispatcher'
 
 MailboxStore = require './MailboxStore'
@@ -7,7 +6,7 @@ MailboxStore = require './MailboxStore'
 {ActionTypes} = require '../constants/AppConstants'
 
 # Used in production instead of real data during development early stage
-fixtures = require '../../../tests/fixtures/emails.json'
+fixtures = [] # @FIXME require '../tests/fixtures/emails.json'
 _idGenerator = 0
 
 class EmailStore extends Store

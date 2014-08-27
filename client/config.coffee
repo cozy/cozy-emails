@@ -5,18 +5,20 @@ exports.config =
         javascripts:
             joinTo:
                 'js/app.js': /^app/
-                'js/vendor.js': /^vendor|bower_components/
+                'js/vendor.js': /^vendor/
             order:
                 # Files in `vendor` directories are compiled before other files
                 # even if they aren't specified in order.
                 before: [
-                    'bower_components/react/react-with-addons.js'
-                    'bower_components/jquery/dist/jquery.js'
-                    'bower_components/underscore/underscore.js'
-                    'bower_components/backbone/backbone.js'
-                    'vendor/javascripts/superagent.js'
-                    'vendor/javascripts/bootstrap-3.1.1.min.js'
-                    'vendor/javascripts/polyglot.js'
+                    'vendor/scripts/events.js'
+                    'vendor/scripts/react-with-addons.js'
+                    'vendor/scripts/jquery.js'
+                    'vendor/scripts/underscore.js'
+                    'vendor/scripts/backbone.js'
+                    'vendor/scripts/superagent.js'
+                    'vendor/scripts/bootstrap-3.1.1.min.js'
+                    'vendor/scripts/moment.js'
+                    'vendor/scripts/polyglot.js'
                 ]
 
         stylesheets:

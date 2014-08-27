@@ -1,6 +1,3 @@
-React = require 'react/addons'
-_ = require 'underscore'
-
 # React components
 {body, div, p, form, i, input, span, a} = React.DOM
 Menu = require './menu'

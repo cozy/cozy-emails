@@ -1,7 +1,3 @@
-React = require 'react/addons'
-Immutable = require 'immutable'
-moment = require 'moment'
-
 {div, ul, li, a, span, i, p} = React.DOM
 classer = React.addons.classSet
 

@@ -113,9 +113,8 @@ You will find all relevant resources about Emails development under this section
 * Fontawesome: http://fortawesome.github.io/Font-Awesome/
 
 ### Build
-* Browserify: http://browserify.org/
-* Gulp:
-    * http://gulpjs.com/
-    * https://github.com/greypants/gulp-starter
+
+    cd client
+    brunch build
 
 

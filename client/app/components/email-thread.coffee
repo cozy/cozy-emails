@@ -1,5 +1,3 @@
-React = require 'react/addons'
-
 {div, ul, li, span, i, p, h3, a} = React.DOM
 Email = require './email'
 classer = React.addons.classSet
