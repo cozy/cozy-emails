@@ -3,10 +3,6 @@ AppDispatcher = require '../AppDispatcher'
 AccountStore  = require './AccountStore'
 {ActionTypes} = require '../constants/AppConstants'
 
-# Used in production instead of real data during development early stage
-fixtures = [] # @FIXME require '../../../tests/fixtures/mailboxes.json'
-
-
 class MailboxStore extends Store
 
     ###
@@ -14,19 +10,8 @@ class MailboxStore extends Store
         Defines private variables here.
     ###
 
-    # Loads from fixtures if necessary
-    if not window.accounts? or window.accounts.length is 0
-        mailboxes = fixtures
-    else
-        mailboxes = []
-
     # Creates an OrderedMap of mailboxes
-    _mailboxes = Immutable.Sequence mailboxes
-
-        # patch to use fixtures
-        .map (mailbox) ->
-            mailbox.id = mailbox.id or mailbox._id
-            return mailbox
+    _mailboxes = Immutable.Sequence()
 
         # sets mailbox ID as index
         .mapKeys (_, mailbox) -> mailbox.id
@@ -35,13 +20,12 @@ class MailboxStore extends Store
         .map (mailbox) -> Immutable.Map mailbox
         .toOrderedMap()
 
-
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RECEIVE_RAW_MAILBOX, (rawMailboxes) ->
+        handle ActionTypes.RECEIVE_RAW_MAILBOXES, (rawMailboxes) ->
             _mailboxes = _mailboxes.withMutations (map) ->
                 # create or update
                 for rawMailbox in rawMailboxes

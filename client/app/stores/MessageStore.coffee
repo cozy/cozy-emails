@@ -5,12 +5,6 @@ AccountStore = require './AccountStore'
 
 {ActionTypes} = require '../constants/AppConstants'
 
-# Used in production instead of real data during development early stage
-#fixtures = require '../../../tests/fixtures/messages.json'
-#fixtures = fixtures.concat require '../../../tests/fixtures/messages_generated.json'
-fixtures = [] # @FIXME
-_idGenerator = 0
-
 class MessageStore extends Store
 
     ###
@@ -18,28 +12,8 @@ class MessageStore extends Store
         Defines private variables here.
     ###
 
-    # Loads from fixtures if necessary
-    if not window.accounts? or window.accounts.length is 0
-        messages = fixtures
-        # messages are sorted server-side so we manually sort them
-        # if we use fixtures
-        messages.sort (e1, e2) ->
-            if e1.createdAt < e2.createdAt
-                return 1
-            else if e1.createdAt > e2.createdAt
-                return -1
-            else
-                return 0
-    else
-        messages = []
-
     # Creates an OrderedMap of messages
-    _message = Immutable.Sequence messages
-
-        # patch to use fixtures (some of them don't have an ID)
-        .map (message) ->
-            message.id = message.id or message._id or 'id_' + _idGenerator++
-            return message
+    _message = Immutable.Sequence()
 
         # sets message ID as index
         .mapKeys (_, message) -> message.id
@@ -60,8 +34,8 @@ class MessageStore extends Store
 
             @emit 'change' unless silent
 
-        handle ActionTypes.RECEIVE_RAW_MESSAGE, (messages) ->
-            onReceiveRawmessage message, true for message in messages
+        handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
+            onReceiveRawMessage message, true for message in messages
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->

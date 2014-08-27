@@ -15,7 +15,7 @@ module.exports =
         'HIDE_MENU_RESPONSIVE'      : 'HIDE_MENU_RESPONSIVE'
         'SELECT_ACCOUNT'            : 'SELECT_ACCOUNT'
 
-        'RECEIVE_RAW_MAILBOX'  : 'RECEIVE_RAW_MAILBOX'
+        'RECEIVE_RAW_MAILBOXES'  : 'RECEIVE_RAW_MAILBOXES'
 
 
     PayloadSources:

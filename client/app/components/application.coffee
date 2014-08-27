@@ -297,7 +297,6 @@ module.exports = Application = React.createClass
             selectedMailboxID = null
 
         selectedMailbox = MailboxStore.getSelected selectedAccountID, selectedMailboxID
-
         return {
             accounts: AccountStore.getAll()
             selectedAccount: selectedAccount

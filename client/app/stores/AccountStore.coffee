@@ -2,10 +2,6 @@ Store = require '../libs/flux/store/Store'
 
 {ActionTypes} = require '../constants/AppConstants'
 
-# Used in production instead of real data during development early stage
-fixtures = [] # @FIXME require '../../../tests/fixtures/accounts.json'
-
-
 class AccountStore extends Store
 
     ###
@@ -13,17 +9,8 @@ class AccountStore extends Store
         Defines private variables here.
     ###
 
-    # Loads data passed by the server or the fixtures
-    accounts = window.accounts or fixtures
-    accounts = fixtures if accounts.length is 0
-
     # Creates an OrderedMap of accounts
-    _accounts = Immutable.Sequence accounts
-
-        # patch to use fixtures
-        .map (account) ->
-            account.id = account.id or account._id
-            return account
+    _accounts = Immutable.Sequence window.accounts
 
         # sort first
         .sort (mb1, mb2) ->
