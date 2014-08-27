@@ -8,6 +8,7 @@ MailboxStore = require './MailboxStore'
 
 # Used in production instead of real data during development early stage
 fixtures = require '../../../tests/fixtures/emails.json'
+fixtures = fixtures.concat require '../../../tests/fixtures/emails_generated.json'
 _idGenerator = 0
 
 class EmailStore extends Store
@@ -20,6 +21,15 @@ class EmailStore extends Store
     # Loads from fixtures if necessary
     if not window.mailboxes? or window.mailboxes.length is 0
         emails = fixtures
+        # emails are sorted server-side so we manually sort them
+        # if we use fixtures
+        emails.sort (e1, e2) ->
+            if e1.createdAt < e2.createdAt
+                return 1
+            else if e1.createdAt > e2.createdAt
+                return -1
+            else
+                return 0
     else
         emails = []
 
