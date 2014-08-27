@@ -1,11 +1,11 @@
 # React components
 {body, div, p, form, i, input, span, a} = React.DOM
 Menu = require './menu'
-EmailList = require './email-list'
-EmailThread = require './email-thread'
+MessageList = require './message-list'
+Conversation = require './conversation'
 Compose = require './compose'
-MailboxConfig = require './mailbox-config'
-ImapFolderList = require './imap-folder-list'
+AccountConfig = require './account-config'
+MailboxList = require './mailbox-list'
 
 # React addons
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup
@@ -16,10 +16,10 @@ RouterMixin = require '../mixins/RouterMixin'
 StoreWatchMixin = require '../mixins/StoreWatchMixin'
 
 # Flux stores
-MailboxStore = require '../stores/MailboxStore'
-EmailStore = require '../stores/EmailStore'
+AccountStore = require '../stores/AccountStore'
+MessageStore = require '../stores/MessageStore'
 LayoutStore = require '../stores/LayoutStore'
-ImapFolderStore = require '../stores/ImapFolderStore'
+MailboxStore = require '../stores/MailboxStore'
 
 # Flux actions
 LayoutActionCreator = require '../actions/LayoutActionCreator'
@@ -40,14 +40,13 @@ module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [MailboxStore, EmailStore, LayoutStore, ImapFolderStore]
+        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, MailboxStore]
         RouterMixin
     ]
 
     render: ->
         # Shortcut
         layout = @props.router.current
-
         if not layout?
             return div null, t "app loading"
 
@@ -59,21 +58,21 @@ module.exports = Application = React.createClass
         # css classes are a bit long so we use a subfunction to get them
         panelClasses = @getPanelClasses isFullWidth
 
-        showMailboxConfigButton = @state.selectedMailbox? and
-                                  layout.leftPanel.action isnt 'mailbox.new'
+        showMailboxConfigButton = @state.selectedAccount? and
+                                  layout.leftPanel.action isnt 'account.new'
         if showMailboxConfigButton
             # the button toggles the mailbox config
-            if layout.leftPanel.action is 'mailbox.config'
+            if layout.leftPanel.action is 'account.config'
                 configMailboxUrl = @buildUrl
                     direction: 'left'
-                    action: 'mailbox.emails'
-                    parameters: @state.selectedMailbox.get 'id'
+                    action: 'account.messages'
+                    parameters: @state.selectedAccount.get 'id'
                     fullWidth: true
             else
                 configMailboxUrl = @buildUrl
                     direction: 'left'
-                    action: 'mailbox.config'
-                    parameters: @state.selectedMailbox.get 'id'
+                    action: 'account.config'
+                    parameters: @state.selectedAccount.get 'id'
                     fullWidth: true
 
         responsiveBackUrl = @buildUrl
@@ -92,11 +91,11 @@ module.exports = Application = React.createClass
                 # Menu is self-managed because this part of the layout
                 # is always the same.
                 Menu
-                    mailboxes: @state.mailboxes
-                    selectedMailbox: @state.selectedMailbox
+                    accounts: @state.accounts
+                    selectedAccount: @state.selectedAccount
                     isResponsiveMenuShown: @state.isResponsiveMenuShown
                     layout: @props.router.current
-                    favoriteImapFolders: @state.favoriteImapFolders
+                    favoriteMailboxes: @state.favoriteMailboxes
 
                 div id: 'page-content', className: responsiveClasses,
 
@@ -116,10 +115,10 @@ module.exports = Application = React.createClass
 
                         div className: 'col-md-6 hidden-xs hidden-sm pull-left',
                             form className: 'form-inline col-md-12',
-                                ImapFolderList
+                                MailboxList
+                                    selectedAccount: @state.selectedAccount
+                                    mailboxes: @state.mailboxes
                                     selectedMailbox: @state.selectedMailbox
-                                    imapFolders: @state.imapFolders
-                                    selectedImapFolder: @state.selectedImapFolder
                                 div className: 'form-group pull-left',
                                     div className: 'input-group',
                                         input className: 'form-control', type: 'text', placeholder: t "app search", onFocus: @onFocusSearchInput, onBlur: @onBlurSearchInput
@@ -154,7 +153,7 @@ module.exports = Application = React.createClass
             classes = leftPanel: 'panel col-xs-12 col-md-12'
 
             # custom case for mailbox.config action (top right cog button)
-            if previous? and left.action is 'mailbox.config'
+            if previous? and left.action is 'account.config'
                 classes.leftPanel += ' moveFromTopRightCorner'
 
             # (default) when full-width panel is shown after a two-panels structure
@@ -203,113 +202,109 @@ module.exports = Application = React.createClass
     # Factory of React components for panels
     getPanelComponent: (panelInfo, layout) ->
 
-        # -- Generates a list of emails for a given mailbox
-        if panelInfo.action is 'mailbox.emails'
+        # -- Generates a list of messages for a given mailbox
+        if panelInfo.action is 'account.messages'
 
-            firstMailbox = MailboxStore.getDefault()
+            firstMailbox = AccountStore.getDefault()
 
-            # gets the selected email if any
-            openEmail = null
+            # gets the selected message if any
+            openMessage = null
             direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
             otherPanelInfo = @props.router.current[direction]
-            if otherPanelInfo?.action is 'email'
-                openEmail = EmailStore.getByID otherPanelInfo.parameters[0]
+            if otherPanelInfo?.action is 'message'
+                openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
 
-            # display emails of the selected mailbox
+            # display messages of the selected mailbox
             if panelInfo.parameters? and panelInfo.parameters.length > 0
-                emailStore = EmailStore
-                mailboxID = panelInfo.parameters[0]
-                return EmailList
-                    emails: emailStore.getEmailsByMailbox mailboxID
-                    mailboxID: mailboxID
+                MessageStore = MessageStore
+                accountID = panelInfo.parameters[0]
+                return MessageList
+                    messages: MessageStore.getMessagesByAccount accountID
+                    accountID: accountID
                     layout: layout
-                    openEmail: openEmail
+                    openMessage: openMessage
 
-            # default: display emails of the first mailbox
+            # default: display messages of the first mailbox
             else if (not panelInfo.parameters? or panelInfo.parameters.length is 0) and firstMailbox?
-                emailStore = EmailStore
-                mailboxID = firstMailbox.id
-                return EmailList
-                    emails: emailStore.getEmailsByMailbox mailboxID
-                    mailboxID: mailboxID
+                MessageStore = MessageStore
+                accountID = firstMailbox.id
+                return MessageList
+                    messages: MessageStore.getMessagesByAccount accountID
+                    accountID: accountID
                     layout: layout
-                    openEmail: openEmail
+                    openMessage: openMessage
 
             # there is no mailbox or mailbox is not found
             else
                 return div null, 'Handle no mailbox or mailbox not found case'
 
-        # -- Generates a list of emails for a given mailbox and imap folder
-        else if panelInfo.action is 'mailbox.imap.emails'
-            mailboxID = panelInfo.parameters[0]
-            imapFolderID = panelInfo.parameters[1]
+        # -- Generates a list of messages for a given account and mailbox
+        else if panelInfo.action is 'account.mailbox.messages'
+            accountID = panelInfo.parameters[0]
+            mailboxID = panelInfo.parameters[1]
 
-            emailStore = EmailStore
-
-            # gets the selected email if any
-            openEmail = null
+            # gets the selected message if any
+            openMessage = null
             direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
             otherPanelInfo = @props.router.current[direction]
-            if otherPanelInfo?.action is 'email'
-                openEmail = EmailStore.getByID otherPanelInfo.parameters[0]
+            if otherPanelInfo?.action is 'message'
+                openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
 
-            return EmailList
-                emails: emailStore.getEmailsByImapFolder imapFolderID
-                mailboxID: mailboxID
+            return MessageList
+                messages: MessageStore.getMessagesByMailbox mailboxID
+                accountID: accountID
                 layout: layout
-                openEmail: openEmail
+                openMessage: openMessage
 
 
-        # -- Generates a configuration window for a given mailbox
-        # or the mailbox creation form.
-        else if panelInfo.action is 'mailbox.config'
-            initialMailboxConfig = @state.selectedMailbox
-            error = MailboxStore.getError()
-            isWaiting = MailboxStore.isWaiting()
-            return MailboxConfig {layout, error, isWaiting, initialMailboxConfig}
+        # -- Generates a configuration window for a given account
+        else if panelInfo.action is 'account.config'
+            initialAccountConfig = @state.selectedAccount
+            error = AccountStore.getError()
+            isWaiting = AccountStore.isWaiting()
+            return AccountConfig {layout, error, isWaiting, initialAccountConfig}
 
-        # -- Generates a configuration window to create a new mailbox
-        else if panelInfo.action is 'mailbox.new'
-            error = MailboxStore.getError()
-            isWaiting = MailboxStore.isWaiting()
-            return MailboxConfig {layout, error, isWaiting}
+        # -- Generates a configuration window to create a new account
+        else if panelInfo.action is 'account.new'
+            error = AccountStore.getError()
+            isWaiting = AccountStore.isWaiting()
+            return AccountConfig {layout, error, isWaiting}
 
-        # -- Generates an email thread
-        else if panelInfo.action is 'email'
-            email = EmailStore.getByID panelInfo.parameters[0]
-            thread = EmailStore.getEmailsByThread panelInfo.parameters[0]
-            selectedMailbox = @state.selectedMailbox
-            return EmailThread {email, thread, selectedMailbox, layout}
+        # -- Generates a conversation
+        else if panelInfo.action is 'message'
+            message = MessageStore.getByID panelInfo.parameters[0]
+            conversation = MessageStore.getMessagesByConversation panelInfo.parameters[0]
+            selectedAccount = @state.selectedAccount
+            return Conversation {message, conversation, selectedAccount, layout}
 
-        # -- Generates the new email composition form
+        # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
-            selectedMailbox = @state.selectedMailbox
-            return Compose {selectedMailbox, layout}
+            selectedAccount = @state.selectedAccount
+            return Compose {selectedAccount, layout}
 
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else return div null, 'Unknown component'
 
     getStateFromStores: ->
 
-        selectedMailbox = MailboxStore.getSelected()
-        selectedMailboxID = selectedMailbox?.get('id') or null
+        selectedAccount = AccountStore.getSelected()
+        selectedAccountID = selectedAccount?.get('id') or null
 
         leftPanelInfo = @props.router.current?.leftPanel
-        if leftPanelInfo?.action is 'mailbox.imap.emails'
-            selectedImapFolderID = leftPanelInfo.parameters[1]
+        if leftPanelInfo?.action is 'account.account.messages'
+            selectedMailboxID = leftPanelInfo.parameters[1]
         else
-            selectedImapFolderID = null
+            selectedMailboxID = null
 
-        selectedImapFolder = ImapFolderStore.getSelected selectedMailboxID, selectedImapFolderID
+        selectedMailbox = MailboxStore.getSelected selectedAccountID, selectedMailboxID
 
         return {
-            mailboxes: MailboxStore.getAll()
-            selectedMailbox: selectedMailbox
-            emails: EmailStore.getAll()
+            accounts: AccountStore.getAll()
+            selectedAccount: selectedAccount
             isResponsiveMenuShown: LayoutStore.isMenuShown()
-            imapFolders: ImapFolderStore.getByMailbox selectedMailboxID
-            selectedImapFolder: selectedImapFolder
-            favoriteImapFolders: ImapFolderStore.getFavorites selectedMailboxID
+            mailboxes: MailboxStore.getByAccount selectedAccountID
+            selectedMailbox: selectedMailbox
+            favoriteMailboxes: MailboxStore.getFavorites selectedAccountID
         }
 
 

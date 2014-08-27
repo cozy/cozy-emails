@@ -10,23 +10,23 @@ module.exports = Menu = React.createClass
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not Immutable.is(nextProps.mailboxes, @props.mailboxes) or
-               not Immutable.is(nextProps.selectedMailbox, @props.selectedMailbox) or
+        return not Immutable.is(nextProps.accounts, @props.accounts) or
+               not Immutable.is(nextProps.selectedAccount, @props.selectedAccount) or
                not _.isEqual(nextProps.layout, @props.layout) or
                nextProps.isResponsiveMenuShown isnt @props.isResponsiveMenuShown or
-               not Immutable.is(nextProps.favoriteImapFolders, @props.favoriteImapFolders)
+               not Immutable.is(nextProps.favoriteMailboxes, @props.favoriteMailboxes)
 
     render: ->
-        selectedMailboxUrl = @buildUrl
+        selectedAccountUrl = @buildUrl
             direction: 'left'
-            action: 'mailbox.emails'
-            parameters: @props.selectedMailbox?.get('id')
+            action: 'account.messages'
+            parameters: @props.selectedAccount?.get 'id'
             fullWidth: true
 
         # the button toggles the "compose" screen
         if @props.layout.leftPanel.action is 'compose' or
            @props.layout.rightPanel?.action is 'compose'
-            composeUrl = selectedMailboxUrl
+            composeUrl = selectedAccountUrl
         else
             composeUrl = @buildUrl
                 direction: 'right'
@@ -35,12 +35,12 @@ module.exports = Menu = React.createClass
                 fullWidth: false
 
         # the button toggle the "new mailbox" screen
-        if @props.layout.leftPanel.action is 'mailbox.new'
-            newMailboxUrl = selectedMailboxUrl
+        if @props.layout.leftPanel.action is 'account.new'
+            newMailboxUrl = selectedAccountUrl
         else
             newMailboxUrl = @buildUrl
                 direction: 'left'
-                action: 'mailbox.new'
+                action: 'account.new'
                 fullWidth: true
 
         classes = classer
@@ -50,50 +50,50 @@ module.exports = Menu = React.createClass
         div id: 'menu', className: classes,
             a href: composeUrl, className: 'menu-item compose-action',
                 i className: 'fa fa-edit'
-                span className: 'mailbox-label', t 'menu compose'
+                span className: 'item-label', t 'menu compose'
 
-            ul id: 'mailbox-list', className: 'list-unstyled',
-                @props.mailboxes.map (mailbox, key) =>
-                    @getMailboxRender mailbox, key
+            ul id: 'account-list', className: 'list-unstyled',
+                @props.accounts.map (account, key) =>
+                    @getAccountRender account, key
                 .toJS()
 
-            a href: newMailboxUrl, className: 'menu-item new-mailbox-action',
+            a href: newMailboxUrl, className: 'menu-item new-account-action',
                 i className: 'fa fa-inbox'
-                span className: 'mailbox-label', t 'menu account new'
+                span className: 'item-label', t 'menu account new'
 
 
     # renders a single mailbox and its submenu
-    getMailboxRender: (mailbox, key) ->
+    getAccountRender: (account, key) ->
 
-        isSelected = (not @props.selectedMailbox? and key is 0) \
-                     or @props.selectedMailbox?.get('id') is mailbox.get('id')
+        isSelected = (not @props.selectedAccount? and key is 0) \
+                     or @props.selectedAccount?.get('id') is account.get('id')
 
-        mailboxClasses = classer active: isSelected
+        accountClasses = classer active: isSelected
         url = @buildUrl
             direction: 'left'
-            action: 'mailbox.emails'
-            parameters: mailbox.get 'id'
+            action: 'account.messages'
+            parameters: account.get 'id'
             fullWidth: false
 
-        li className: mailboxClasses, key: key,
-            a href: url, className: 'menu-item ' + mailboxClasses,
+        li className: accountClasses, key: key,
+            a href: url, className: 'menu-item ' + accountClasses,
                 i className: 'fa fa-inbox'
-                span className: 'badge', mailbox.get 'unreadCount'
-                span className: 'mailbox-label', mailbox.get 'label'
+                span className: 'badge', account.get 'unreadCount'
+                span className: 'item-label', account.get 'label'
 
-            ul className: 'list-unstyled submenu',
-                @props.favoriteImapFolders.map (imapFolder, key) =>
-                    @getImapFolderRender imapFolder, key
+            ul className: 'list-unstyled submenu mailbox-list',
+                @props.favoriteMailboxes.map (mailbox, key) =>
+                    @getMailboxRender mailbox, key
                 .toJS()
 
-    getImapFolderRender: (imapFolder, key) ->
-        imapFolderUrl = @buildUrl
+    getMailboxRender: (mailbox, key) ->
+        mailboxUrl = @buildUrl
             direction: 'left'
-            action: 'mailbox.imap.emails'
-            parameters: [imapFolder.get('mailbox'), imapFolder.get('id')]
+            action: 'account.mailbox.messages'
+            parameters: [mailbox.get('mailbox'), mailbox.get('id')]
 
-        a href: imapFolderUrl, className: 'menu-item', key: key,
+        a href: mailboxUrl, className: 'menu-item', key: key,
             # Something must be rethought about the icon
             i className: 'fa fa-star'
             span className: 'badge', Math.floor((Math.random() * 10) + 1) # placeholder
-            span className: 'mailbox-label', imapFolder.get 'name'
+            span className: 'item-label', mailbox.get 'name'

@@ -1,20 +1,20 @@
 {div, h3, form, label, input, button} = React.DOM
 classer = React.addons.classSet
 
-MailboxActionCreator = require '../actions/MailboxActionCreator'
+AccountActionCreator = require '../actions/AccountActionCreator'
 
 module.exports = React.createClass
-    displayName: 'MailboxConfig'
+    displayName: 'AccountConfig'
 
     mixins: [
         React.addons.LinkedStateMixin # two-way data binding
     ]
 
     render: ->
-        titleLabel = if @props.initialMailboxConfig? then t "mailbox edit" else t "mailbox new"
+        titleLabel = if @props.initialAccountConfig? then t "mailbox edit" else t "mailbox new"
 
         if @props.isWaiting then buttonLabel = 'Saving...'
-        else if @props.initialMailboxConfig? then buttonLabel = 'Edit'
+        else if @props.initialAccountConfig? then buttonLabel = 'Edit'
         else buttonLabel = t "mailbox add"
 
         div id: 'mailbox-config',
@@ -59,47 +59,47 @@ module.exports = React.createClass
 
                 div className: 'form-group',
                     div className: 'col-sm-offset-2 col-sm-5 text-right',
-                        if @props.initialMailboxConfig?
+                        if @props.initialAccountConfig?
                             button className: 'btn btn-cozy', onClick: @onRemove, t "mailbox remove"
                         button className: 'btn btn-cozy', onClick: @onSubmit, buttonLabel
     onSubmit: (event) ->
         # prevents the page from reloading
         event.preventDefault()
 
-        mailboxValue = @state
-        if @props.initialMailboxConfig?
-            mailboxValue.id = @props.initialMailboxConfig.get 'id'
-            MailboxActionCreator.edit @state
+        accountValue = @state
+        if @props.initialAccountConfig?
+            mailboxValue.id = @props.initialAccountConfig.get 'id'
+            AccountActionCreator.edit @state
         else
-            MailboxActionCreator.create @state
+            AccountActionCreator.create @state
 
     onRemove: (event) ->
         # prevents the page from reloading
         event.preventDefault()
 
-        MailboxActionCreator.remove @props.initialMailboxConfig.get 'id'
+        AccountActionCreator.remove @props.initialAccountConfig.get 'id'
 
     componentWillReceiveProps: (props) ->
         # prevents the form from changing during submission
         if not props.isWaiting
-            # display the mailbox values
-            if props.initialMailboxConfig?
-                @setState props.initialMailboxConfig.toJS()
-            else # reset the form if it is on 'new mailbox' page
+            # display the account values
+            if props.initialAccountConfig?
+                @setState props.initialAccountConfig.toJS()
+            else # reset the form if it is on 'new account' page
                 @setState @getInitialState true
 
 
     getInitialState: (forceDefault) ->
-        if @props.initialMailboxConfig? and not forceDefault
+        if @props.initialAccountConfig? and not forceDefault
             return {
-                label: @props.initialMailboxConfig.get 'label'
-                name: @props.initialMailboxConfig.get 'name'
-                email: @props.initialMailboxConfig.get 'email'
-                password: @props.initialMailboxConfig.get 'password'
-                smtpServer: @props.initialMailboxConfig.get 'smtpServer'
-                smtpPort: @props.initialMailboxConfig.get 'smtpPort'
-                imapServer: @props.initialMailboxConfig.get 'imapServer'
-                imapPort: @props.initialMailboxConfig.get 'imapPort'
+                label: @props.initialAccountConfig.get 'label'
+                name: @props.initialAccountConfig.get 'name'
+                email: @props.initialAccountConfig.get 'email'
+                password: @props.initialAccountConfig.get 'password'
+                smtpServer: @props.initialAccountConfig.get 'smtpServer'
+                smtpPort: @props.initialAccountConfig.get 'smtpPort'
+                imapServer: @props.initialAccountConfig.get 'imapServer'
+                imapPort: @props.initialAccountConfig.get 'imapPort'
             }
         else
             return {

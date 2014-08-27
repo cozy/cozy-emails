@@ -117,4 +117,11 @@ You will find all relevant resources about Emails development under this section
     cd client
     brunch build
 
+## Naming conventions
+We've adopted IMAP naming conventions, which means:
+* Account: bound to a provider like Gmail
+* Mailbox: equivalent to imap folder
+* Message: an email
+* Conversation: a thread of Message
+
 

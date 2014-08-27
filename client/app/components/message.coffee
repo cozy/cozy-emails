@@ -1,8 +1,8 @@
 {div, ul, li, span, i, p, h3, a} = React.DOM
 classer = React.addons.classSet
 
-module.exports = EmailThread = React.createClass
-    displayName: 'Email'
+module.exports = React.createClass
+    displayName: 'Message'
 
     getInitialState: -> active: false
 
@@ -10,11 +10,11 @@ module.exports = EmailThread = React.createClass
         clickHandler = if @props.isLast then null else @onClick
 
         classes = classer
-            email: true
+            message: true
             active: @state.active
 
         today = moment()
-        date = moment @props.email.get 'createdAt'
+        date = moment @props.message.get 'createdAt'
         if date.isBefore today, 'year'
             formatter = 'DD/MM/YYYY'
         else if date.isBefore today, 'day'
@@ -23,15 +23,15 @@ module.exports = EmailThread = React.createClass
             formatter = 'hh:mm'
 
         li className: classes, key: @props.key, onClick: clickHandler,
-            div className: 'email-header',
+            div className: 'header',
                 i className: 'fa fa-user'
-                div className: 'email-participants',
-                    span  className: 'sender', @props.email.get 'from'
-                    span className: 'receivers', t "mail receivers", {dest: @props.email.get 'to'}
-                span className: 'email-hour', date.format formatter
-            div className: 'email-preview',
-                p null, @props.email.get 'text'
-            div className: 'email-content', @props.email.get 'text'
+                div className: 'participants',
+                    span  className: 'sender', @props.message.get 'from'
+                    span className: 'receivers', t "mail receivers", {dest: @props.message.get 'to'}
+                span className: 'hour', date.format formatter
+            div className: 'preview',
+                p null, @props.message.get 'text'
+            div className: 'content', @props.message.get 'text'
             div className: 'clearfix'
 
     onClick: (args) ->

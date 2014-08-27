@@ -20,9 +20,9 @@ window.onload = ->
 
     # Flux initialization (must be called at the begining)
     LayoutStore = require './stores/LayoutStore'
-    EmailStore = require './stores/EmailStore'
+    MessageStore = require './stores/MessageStore'
+    AccountStore = require './stores/AccountStore'
     MailboxStore = require './stores/MailboxStore'
-    ImapFolderStore = require './stores/ImapFolderStore'
 
     # Routing management
     Router = require './router'
