@@ -1,5 +1,8 @@
 Store = require '../libs/flux/store/Store'
 Immutable = require 'immutable'
+AppDispatcher = require '../AppDispatcher'
+
+AccountStore = require './AccountStore'
 
 {ActionTypes} = require '../constants/AppConstants'
 
@@ -14,11 +17,12 @@ class MailboxStore extends Store
         Defines private variables here.
     ###
 
-    # Loads data passed by the server or the fixtures
-    mailboxes = window.mailboxes or fixtures
-    mailboxes = fixtures if mailboxes.length is 0
+    # Loads from fixtures if necessary
+    if not window.accounts? or window.accounts.length is 0
+        mailboxes = fixtures
+    else
+        mailboxes = []
 
-    mailboxes = fixtures
     # Creates an OrderedMap of mailboxes
     _mailboxes = Immutable.Sequence mailboxes
 
@@ -27,68 +31,51 @@ class MailboxStore extends Store
             mailbox.id = mailbox.id or mailbox._id
             return mailbox
 
-        # sort first
-        .sort (mb1, mb2) ->
-            if mb1.label > mb2.label then return 1
-            else if mb1.label < mb2.label then return -1
-            else return 0
-
         # sets mailbox ID as index
-        .mapKeys (_, mailbox) -> return mailbox.id
+        .mapKeys (_, mailbox) -> mailbox.id
 
         # makes mailbox object an immutable Map
-        .map (mailbox) ->
-            return Immutable.Map mailbox
+        .map (mailbox) -> Immutable.Map mailbox
         .toOrderedMap()
 
-    _selectedMailbox = null
-    _newMailboxWaiting = false
-    _newMailboxError = null
 
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ADD_MAILBOX, (mailbox) ->
-            mailbox = Immutable.Map mailbox
-            _mailboxes = _mailboxes.set mailbox.get('id'), mailbox
+        handle ActionTypes.RECEIVE_RAW_MAILBOX, (rawMailboxes) ->
+            _mailboxes = _mailboxes.withMutations (map) ->
+                # create or update
+                for rawMailbox in rawMailboxes
+                    mailbox = Immutable.Map rawMailbox
+                    map.set mailbox.get('id'), mailbox
+
             @emit 'change'
 
-        handle ActionTypes.SELECT_MAILBOX, (mailboxID) ->
-            _selectedMailbox = _mailboxes.get(mailboxID) or null
-            @emit 'change'
-
-        handle ActionTypes.NEW_MAILBOX_WAITING, (payload) ->
-            _newMailboxWaiting = payload
-            @emit 'change'
-
-        handle ActionTypes.NEW_MAILBOX_ERROR, (error) ->
-            _newMailboxError = error
-            @emit 'change'
-
-        handle ActionTypes.EDIT_MAILBOX, (mailbox) ->
-            mailbox = Immutable.Map mailbox
-            _mailboxes = _mailboxes.set mailbox.get('id'), mailbox
-            _selectedMailbox = _mailboxes.get mailbox.get 'id'
-            @emit 'change'
-
-        handle ActionTypes.REMOVE_MAILBOX, (mailboxID) ->
-            _mailboxes = _mailboxes.delete mailboxID
-            _selectedMailbox = @getDefault()
-            @emit 'change'
 
     ###
         Public API
     ###
-    getAll: -> return _mailboxes
+    getByAccount: (accountID) ->
+        # sequences are lazy so we need .toOrderedMap() to actually execute it
+        _mailboxes.filter (mailbox) -> mailbox.get('mailbox') is accountID
+        .toOrderedMap()
 
-    getDefault: -> return _mailboxes.first() or null
+    getSelected: (accountID, mailboxID) ->
+        mailboxes = @getByAccount accountID
+        if mailboxID?
+            return mailboxes.get mailboxID
+        else
+            return mailboxes.first()
 
-    getSelected: -> return _selectedMailbox
-
-    getError: -> return _newMailboxError
-
-    isWaiting: -> return _newMailboxWaiting
+    # Takes the 3 first mailboxes to show as "favorite".
+    # Skip the first 1, assumed to be the inbox
+    # Should be made configurable.
+    getFavorites: (accountID) ->
+        _mailboxes.filter (mailbox) -> mailbox.get('mailbox') is accountID
+        .skip 1
+        .take 3
+        .toOrderedMap()
 
 module.exports = new MailboxStore()

@@ -1,51 +1,51 @@
 React = require 'react/addons'
 
 {div, ul, li, span, i, p, h3, a} = React.DOM
-Email = require './email'
+Message = require './message'
 classer = React.addons.classSet
 
 RouterMixin = require '../mixins/RouterMixin'
 
-module.exports = EmailThread = React.createClass
-    displayName: 'EmailThread'
+module.exports = React.createClass
+    displayName: 'Conversation'
 
     mixins: [RouterMixin]
 
     render: ->
-        if not @props.email? or not @props.thread
+        if not @props.message? or not @props.conversation
             return p null, t "app loading"
 
         expandUrl = @buildUrl
             direction: 'left'
-            action: 'email'
-            parameters: @props.email.get('id')
+            action: 'message'
+            parameters: @props.message.get 'id'
             fullWidth: true
 
         if window.router.previous?
-            selectedMailboxID = @props.selectedMailbox.get 'id'
+            selectedAccountID = @props.selectedAccount.get 'id'
         else
-            selectedMailboxID = @props.thread[0].mailbox
+            selectedAccountID = @props.conversation[0].mailbox
 
         collapseUrl = @buildUrl
             leftPanel:
-                action: 'mailbox.emails'
-                parameters: selectedMailboxID
+                action: 'account.messages'
+                parameters: selectedAccountID
             rightPanel:
-                action: 'email'
-                parameters: @props.thread[0].get('id')
+                action: 'message'
+                parameters: @props.conversation[0].get 'id'
 
         if @props.layout is 'full'
             closeUrl = @buildUrl
                 direction: 'left'
-                action: 'mailbox.emails'
-                parameters: selectedMailboxID
+                action: 'account.messages'
+                parameters: selectedAccountID
                 fullWidth: true
         else
             closeUrl = @buildClosePanelUrl @props.layout
 
         closeIcon = if @props.layout is 'full' then 'fa-th-list' else 'fa-times'
 
-        div id: 'email-thread',
+        div className: 'conversation',
 
             # allows multiple email open but UI is not good enough
             #ul className: 'nav nav-tabs nav-justified',
@@ -66,17 +66,17 @@ module.exports = EmailThread = React.createClass
             #        span className: 'close', 'x'
 
             h3 null,
-                a href: closeUrl, className: 'close-email hidden-xs hidden-sm',
+                a href: closeUrl, className: 'close-conversation hidden-xs hidden-sm',
                     i className:'fa ' + closeIcon
-                @props.email.get 'subject'
+                @props.message.get 'subject'
                 if @props.layout isnt 'full'
                     a href: expandUrl, className: 'expand hidden-xs hidden-sm',
                         i className: 'fa fa-arrows-h'
                 else
-                    a href: collapseUrl, className: 'close-email pull-right',
+                    a href: collapseUrl, className: 'close-conversation pull-right',
                         i className:'fa fa-compress'
 
-            ul className: 'email-thread list-unstyled',
-                for email, key in @props.thread
-                    isLast = key is @props.thread.length - 1
-                    Email {email, key, isLast}
+            ul className: 'thread list-unstyled',
+                for message, key in @props.conversation
+                    isLast = key is @props.conversation.length - 1
+                    Message {message, key, isLast}

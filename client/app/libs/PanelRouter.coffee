@@ -23,8 +23,6 @@ _ = require 'underscore'
 
 LayoutActionCreator = require '../actions/LayoutActionCreator'
 
-MailboxStore = require '../stores/MailboxStore'
-
 module.exports = class Router extends Backbone.Router
 
     patterns: {}
@@ -232,18 +230,3 @@ module.exports = class Router extends Backbone.Router
             return filledPattern
         else
             return ''
-
-    # Determines and gets the default parameters regarding a specific action
-    _getDefaultParameters: (action) ->
-        switch action
-            when 'mailbox.emails', 'mailbox.config'
-                defaultMailbox = MailboxStore.getDefault().id
-                defaultParameters = [defaultMailbox]
-            when 'mailbox.imap.emails'
-                defaultMailbox = MailboxStore.getDefault().id
-                defaultImapFolder = 'lala'
-                defaultParameters = [defaultMailbox, defaultImapFolder]
-            else
-                defaultParameters = null
-
-        return defaultParameters

@@ -1,55 +1,53 @@
 request = require 'superagent'
 
-EmailActionCreator = require '../actions/EmailActionCreator'
-ImapFolderActionCreator = require '../actions/ImapFolderActionCreator'
-
-MailboxStore = require '../stores/MailboxStore'
+MessageActionCreator = require '../actions/MessageActionCreator'
+MailboxActionCreator = require '../actions/MailboxActionCreator'
 
 module.exports =
 
-    fetchEmailsByMailbox: (mailboxID) ->
-        request.get "mailbox/#{mailboxID}/emails"
+    fetchMessagesByAccount: (mailboxID) ->
+        request.get "account/#{mailboxID}/messages"
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
-                EmailActionCreator.receiveRawEmails res.body
+                MessageActionCreator.receiveRawMessages res.body
             else
                 console.log "Something went wrong -- #{res.body}"
 
-    fetchEmailThread: (emailID, callback) ->
-        request.get "email/#{emailID}"
+    fetchConversation: (emailID, callback) ->
+        request.get "message/#{emailID}"
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
-                EmailActionCreator.receiveRawEmail res.body
+                MessageActionCreator.receiveRawMessage res.body
                 callback null, res.body
             else
                 callback "Something went wrong -- #{res.body}"
 
-    fetchImapFolderByMailbox: (mailboxID) ->
-        request.get "mailbox/#{mailboxID}/folders"
+    fetchMailboxByAccount: (accountID) ->
+        request.get "account/#{accountID}/mailboxes"
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
-                ImapFolderActionCreator.receiveRawImapFolders res.body
+                MailboxActionCreator.receiveRawMailboxes res.body
             else
                 console.log "Something went wrong -- #{res.body}"
 
-    fetchEmailsByFolder: (imapFolderID) ->
-        request.get "folder/#{imapFolderID}/emails"
+    fetchMessagesByFolder: (mailboxID) ->
+        request.get "mailbox/#{mailboxID}/messages"
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
-                EmailActionCreator.receiveRawEmails res.body
+                MessageActionCreator.receiveRawMessage res.body
             else
                 console.log "Something went wrong -- #{res.body}"
 
-    createMailbox: (mailbox, callback) ->
+    createAccount: (account, callback) ->
 
         # TODO: validation & sanitization
 
-        request.post 'mailbox'
-               .send mailbox
+        request.post 'account'
+               .send account
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
@@ -57,12 +55,12 @@ module.exports =
             else
                 callback res.body, null
 
-    editMailbox: (mailbox, callback) ->
+    editAccount: (account, callback) ->
 
         # TODO: validation & sanitization
 
-        request.put "mailbox/#{mailbox.id}"
-               .send mailbox
+        request.put "account/#{account.id}"
+               .send account
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
@@ -70,9 +68,8 @@ module.exports =
             else
                 callback res.body, null
 
-    removeMailbox: (mailboxID) ->
+    removeAccount: (accountID) ->
 
-        request.del "mailbox/#{mailboxID}"
+        request.del "account/#{accountID}"
                .set 'Accept', 'application/json'
-               .end (res) ->
-                    # nothing
+               .end (res) -> # nothing

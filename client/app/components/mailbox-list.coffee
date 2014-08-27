@@ -3,32 +3,32 @@ React = require 'react/addons'
 
 RouterMixin = require '../mixins/RouterMixin'
 
-module.exports = ImapFolderList = React.createClass
-    displayName: 'ImapFolderList'
+module.exports = React.createClass
+    displayName: 'MailboxList'
 
     mixins: [RouterMixin]
 
     render: ->
-        if @props.imapFolders.length > 0
-            firstItem = @props.selectedImapFolder
+        if @props.mailboxes.length > 0
+            firstItem = @props.selectedMailbox
             div className: 'dropdown pull-left',
                 button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown',
                     firstItem.get 'name'
                     span className: 'caret', ''
                 ul className: 'dropdown-menu', role: 'menu',
-                    @props.imapFolders.map (folder, key) =>
-                        if folder.get('id') isnt @props.selectedImapFolder.get('id')
-                            @getImapFolderRender folder, key
+                    @props.mailboxes.map (mailbox, key) =>
+                        if mailbox.get('id') isnt @props.selectedMailbox.get('id')
+                            @getMailboxRender mailbox, key
                     .toJS()
         else
             div null, t "app loading"
 
 
-    getImapFolderRender: (folder, key) ->
+    getMailboxRender: (mailbox, key) ->
         url = @buildUrl
                 direction: 'left'
-                action: 'mailbox.imap.emails'
-                parameters: [@props.selectedMailbox.get('id'), folder.get('id')]
+                action: 'account.mailbox.messages'
+                parameters: [@props.selectedAccount.get('id'), mailbox.get('id')]
 
         li role: 'presentation', key: key,
-            a href: url, role: 'menuitem', folder.get 'name'
+            a href: url, role: 'menuitem', mailbox.get 'name'

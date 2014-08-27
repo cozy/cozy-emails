@@ -12,7 +12,7 @@ numberOfEmails = process.argv[2] or 100
 
 getRandom = (max) -> Math.floor (Math.random() * max)
 
-objects = []
+messages = []
 for i in [1..numberOfEmails] by 1
 
     # sender and receiver must not be the same
@@ -38,7 +38,7 @@ for i in [1..numberOfEmails] by 1
     minute = getRandom today.minutes()
     date = moment().months(month).days(day).hours(hour).minutes(minute)
 
-    objects.push
+    messages.push
         "_id": "generated_id_#{i}"
         "docType": "Email",
         "createdAt": date.toISOString(),
@@ -55,7 +55,7 @@ for i in [1..numberOfEmails] by 1
         "mailbox": mailbox
 
 
-targetFile = './tests/fixtures/emails_generated.json'
-jsonObject = JSON.stringify objects
-fs.writeFile targetFile, jsonObject, flag: 'w', (err) ->
+targetFile = './tests/fixtures/messages_generated.json'
+json = JSON.stringify messages
+fs.writeFile targetFile, json, flag: 'w', (err) ->
     console.log err if err?

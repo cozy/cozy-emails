@@ -118,4 +118,11 @@ You will find all relevant resources about Emails development under this section
     * http://gulpjs.com/
     * https://github.com/greypants/gulp-starter
 
+## Naming conventions
+We've adopted IMAP naming conventions, which means:
+* Account: bound to a provider like Gmail
+* Mailbox: equivalent to imap folder
+* Message: an email
+* Conversation: a thread of Message
+
 

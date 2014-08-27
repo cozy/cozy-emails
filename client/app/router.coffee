@@ -1,27 +1,44 @@
 PanelRouter = require './libs/PanelRouter'
 
+AccountStore = require './stores/AccountStore'
+
 module.exports = class Router extends PanelRouter
 
     patterns:
-        'mailbox.config':
-            pattern: 'mailbox/:id/config'
-            fluxAction: 'showConfigMailbox'
-        'mailbox.new':
-            pattern: 'mailbox/new'
-            fluxAction: 'showCreateMailbox'
-        'mailbox.imap.emails':
-            pattern: 'mailbox/:id/folder/:folder'
-            fluxAction: 'showEmailList'
-        'mailbox.emails':
-            pattern: 'mailbox/:id'
-            fluxAction: 'showEmailList'
+        'account.config':
+            pattern: 'account/:id/config'
+            fluxAction: 'showConfigAccount'
+        'account.new':
+            pattern: 'account/new'
+            fluxAction: 'showCreateAccount'
+        'account.mailbox.messages':
+            pattern: 'account/:id/mailbox/:mailbox'
+            fluxAction: 'showMessageList'
+        'account.messages':
+            pattern: 'account/:id'
+            fluxAction: 'showMessageList'
 
-        'email':
-            pattern: 'email/:id'
-            fluxAction: 'showEmailThread'
+        'message':
+            pattern: 'message/:id'
+            fluxAction: 'showConversation'
         'compose':
             pattern: 'compose'
-            fluxAction: 'showComposeNewEmail'
+            fluxAction: 'showComposeNewMessage'
 
     # default route
-    routes: '': 'mailbox.emails'
+    routes: '': 'account.messages'
+
+    # Determines and gets the default parameters regarding a specific action
+    _getDefaultParameters: (action) ->
+        switch action
+            when 'account.messages', 'account.config'
+                defaultAccount = AccountStore.getDefault()?.id
+                defaultParameters = [defaultAccount]
+            when 'account.imap.messages'
+                defaultAccount = AccountStore.getDefault()?.id
+                defaultMailbox = 'lala'
+                defaultParameters = [defaultAccount, defaultMailbox]
+            else
+                defaultParameters = null
+
+        return defaultParameters

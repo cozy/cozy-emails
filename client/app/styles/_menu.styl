@@ -17,12 +17,12 @@
   /*
     Menu layout
   */
-  #mailbox-list
+  #account-list
     flex 1 // Takes all height left
     overflow auto
     margin 0
 
-  .new-mailbox-action
+  .new-account-action
     // Sets position at the bottom of the menu
     margin-top auto
 
@@ -32,7 +32,7 @@
 
   // Clickable menu elements
   .menu-item
-    display inline-block // used for non flexed elements (within .mailbox-list)
+    display inline-block // used for non flexed elements (within .account-list)
     position relative // for badge positionning
     width 100%
     padding 10px 5px
@@ -45,7 +45,7 @@
     text-decoration none
 
     i
-    .mailbox-label
+    .item-label
     .badge
       vertical-align middle
 
@@ -53,7 +53,7 @@
     i
       font-size 25px
 
-    .mailbox-label
+    .item-label
       display block
       overflow hidden
       text-overflow ellipsis
@@ -73,8 +73,8 @@
       background #363a46 + 10%
       color #fff
 
-  // Mailbox list
-  #mailbox-list
+  // Account list
+  #account-list
     li
       .submenu
         display none
@@ -98,8 +98,8 @@
         .submenu
           display block
 
-  // New mailbox action button
-  .new-mailbox-action
+  // New account action button
+  .new-account-action
     font-size 15px
     opacity 0.5
 

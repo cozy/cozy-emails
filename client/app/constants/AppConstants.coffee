@@ -1,21 +1,21 @@
 module.exports =
 
     ActionTypes:
-        'ADD_MAILBOX'               : 'ADD_MAILBOX'
-        'REMOVE_MAILBOX'            : 'REMOVE_MAILBOX'
-        'EDIT_MAILBOX'              : 'EDIT_MAILBOX'
-        'SELECT_MAILBOX'            : 'SELECT_MAILBOX'
-        'NEW_MAILBOX_WAITING'       : 'NEW_MAILBOX_WAITING'
-        'NEW_MAILBOX_ERROR'         : 'NEW_MAILBOX_ERROR'
+        'ADD_ACCOUNT'               : 'ADD_ACCOUNT'
+        'REMOVE_ACCOUNT'            : 'REMOVE_ACCOUNT'
+        'EDIT_ACCOUNT'              : 'EDIT_ACCOUNT'
+        'SELECT_ACCOUNT'            : 'SELECT_ACCOUNT'
+        'NEW_ACCOUNT_WAITING'       : 'NEW_ACCOUNT_WAITING'
+        'NEW_ACCOUNT_ERROR'         : 'NEW_ACCOUNT_ERROR'
 
-        'RECEIVE_RAW_EMAIL'         : 'RECEIVE_RAW_EMAIL'
-        'RECEIVE_RAW_EMAILS'        : 'RECEIVE_RAW_EMAILS'
+        'RECEIVE_RAW_MESSAGE'       : 'RECEIVE_RAW_MESSAGE'
+        'RECEIVE_RAW_MESSAGES'      : 'RECEIVE_RAW_MESSAGES'
 
         'SHOW_MENU_RESPONSIVE'      : 'SHOW_MENU_RESPONSIVE'
         'HIDE_MENU_RESPONSIVE'      : 'HIDE_MENU_RESPONSIVE'
-        'SELECT_MAILBOX'            : 'SELECT_MAILBOX'
+        'SELECT_ACCOUNT'            : 'SELECT_ACCOUNT'
 
-        'RECEIVE_RAW_IMAP_FOLDERS'  : 'RECEIVE_RAW_IMAP_FOLDERS'
+        'RECEIVE_RAW_MAILBOX'  : 'RECEIVE_RAW_MAILBOX'
 
 
     PayloadSources:
