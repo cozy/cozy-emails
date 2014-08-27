@@ -26,22 +26,22 @@ module.exports = EmailList = React.createClass
                         # only displays initial email of a thread
                         if email.get('inReplyTo').length is 0
                             isActive = @props.openEmail? and
-                                       @props.openEmail.id is email.get('id')
+                                       @props.openEmail.get('id') is email.get('id')
                             @getEmailRender email, key, isActive
                     .toJS()
 
     getEmailRender: (email, key, isActive) ->
         classes = classer
-            read: email.get('isRead')
+            read: email.get 'isRead'
             active: isActive
 
         url = @buildUrl
             direction: 'right'
             action: 'email'
-            parameters: email.get('id')
+            parameters: email.get 'id'
 
         today = moment()
-        date = moment email.get('createdAt')
+        date = moment email.get 'createdAt'
         if date.isBefore today, 'year'
             formatter = 'DD/MM/YYYY'
         else if date.isBefore today, 'day'
@@ -54,10 +54,9 @@ module.exports = EmailList = React.createClass
                 i className: 'fa fa-user'
                 span className: 'email-participants', @getParticipants email
                 div className: 'email-preview',
-                    span className: 'email-title', email.get('subject')
-                    p null, email.get('text')
+                    span className: 'email-title', email.get 'subject'
+                    p null, email.get 'text'
                 span className: 'email-hour', date.format formatter
 
 
-    getParticipants: (email) ->
-        return email.get('from') + ', ' + email.get('to')
+    getParticipants: (email) -> "#{email.get 'from'}, #{email.get 'to'}"
