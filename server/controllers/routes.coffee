@@ -29,4 +29,7 @@ module.exports =
 
     'message/:id': get: [emails.fetch, emails.get]
 
+    'load-fixtures':
+        get: index.loadFixtures
+
 

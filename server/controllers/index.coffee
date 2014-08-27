@@ -3,6 +3,8 @@ Mailbox = require '../models/mailbox'
 
 CozyInstance = require '../models/cozy_instance'
 
+fixtures = require 'cozy-fixtures'
+
 module.exports.main = (req, res, next) ->
     async.parallel [
         (cb) -> CozyInstance.getLocale cb
@@ -19,3 +21,9 @@ module.exports.main = (req, res, next) ->
                 window.locale = "#{locale}";
                 window.accounts = #{JSON.stringify accounts};
             """
+
+module.exports.loadFixtures = (req, res, next) ->
+    fixtures.load silent: true, callback: (err) ->
+        if err? then next err
+        else
+            res.send 200, message: 'LOAD FIXTURES SUCCESS'
