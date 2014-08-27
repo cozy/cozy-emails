@@ -18,10 +18,9 @@
         another pattern.
 ###
 
-Backbone = require 'backbone'
-_ = require 'underscore'
-
 LayoutActionCreator = require '../actions/LayoutActionCreator'
+
+MailboxStore = require '../stores/MailboxStore'
 
 module.exports = class Router extends Backbone.Router
 
@@ -223,10 +222,28 @@ module.exports = class Router extends Backbone.Router
 
             # the pattern is progressively filled with values
             filledPattern = pattern
-            for paramInPattern, key in parametersInPattern
-                paramValue = panel.parameters[key]
-                filledPattern = filledPattern.replace paramInPattern, paramValue
+            if panel.parameters
+                for paramInPattern, key in parametersInPattern
+                    paramValue = panel.parameters[key]
+                    filledPattern = filledPattern.replace paramInPattern, paramValue
 
             return filledPattern
         else
             return ''
+
+    # Determines and gets the default parameters regarding a specific action
+    _getDefaultParameters: (action) ->
+        defaultParameters = null
+        switch action
+            when 'mailbox.emails', 'mailbox.config'
+                defaultMailbox = MailboxStore.getDefault()
+                defaultParameters = [defaultMailbox.id] if defaultMailbox
+            when 'mailbox.imap.emails'
+                defaultMailbox = MailboxStore.getDefault().id
+                if defaultMailbox
+                    defaultImapFolder = 'lala'
+                    defaultParameters = [defaultMailbox, defaultImapFolder]
+            else
+                defaultParameters = null
+
+        return defaultParameters

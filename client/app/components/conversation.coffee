@@ -1,5 +1,3 @@
-React = require 'react/addons'
-
 {div, ul, li, span, i, p, h3, a} = React.DOM
 Message = require './message'
 classer = React.addons.classSet

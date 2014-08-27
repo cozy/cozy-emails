@@ -1,4 +1,3 @@
-{EventEmitter} = require 'events'
 AppDispatcher = require '../../../AppDispatcher'
 
 

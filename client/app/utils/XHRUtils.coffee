@@ -1,5 +1,3 @@
-request = require 'superagent'
-
 MessageActionCreator = require '../actions/MessageActionCreator'
 MailboxActionCreator = require '../actions/MailboxActionCreator'
 

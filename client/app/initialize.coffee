@@ -1,20 +1,7 @@
-$ = require 'jquery'
-Backbone = require 'backbone'
-Backbone.$ = $
-React    = require 'react/addons'
-Polyglot = require 'node-polyglot'
-moment   = require 'moment'
-
-
-# Haven't managed to make bootstrap.dropdown relies on jQuery
-# in a proper "browserify" way
-window.jQuery = $
-require 'bootstrap/js/dropdown'
-
-
 # Waits for the DOM to be ready
 window.onload = ->
 
+    window.__DEV__ = window.location.hostname is 'localhost'
     # use Cozy instance locale or navigator language or "en" by default
     locale = window.locale or window.navigator.language or "en"
     moment.locale locale

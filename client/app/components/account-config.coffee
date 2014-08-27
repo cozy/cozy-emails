@@ -1,4 +1,3 @@
-React = require 'react/addons'
 {div, h3, form, label, input, button} = React.DOM
 classer = React.addons.classSet
 

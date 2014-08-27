@@ -1,4 +1,3 @@
-React = require 'react/addons'
 {div, ul, li, span, a, button} = React.DOM
 
 RouterMixin = require '../mixins/RouterMixin'

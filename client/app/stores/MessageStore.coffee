@@ -1,5 +1,4 @@
 Store = require '../libs/flux/store/Store'
-Immutable = require 'immutable'
 AppDispatcher = require '../AppDispatcher'
 
 AccountStore = require './AccountStore'
@@ -7,8 +6,9 @@ AccountStore = require './AccountStore'
 {ActionTypes} = require '../constants/AppConstants'
 
 # Used in production instead of real data during development early stage
-fixtures = require '../../../tests/fixtures/messages.json'
-fixtures = fixtures.concat require '../../../tests/fixtures/messages_generated.json'
+#fixtures = require '../../../tests/fixtures/messages.json'
+#fixtures = fixtures.concat require '../../../tests/fixtures/messages_generated.json'
+fixtures = [] # @FIXME
 _idGenerator = 0
 
 class MessageStore extends Store

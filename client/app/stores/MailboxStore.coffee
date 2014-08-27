@@ -1,13 +1,10 @@
-Store = require '../libs/flux/store/Store'
-Immutable = require 'immutable'
+Store         = require '../libs/flux/store/Store'
 AppDispatcher = require '../AppDispatcher'
-
-AccountStore = require './AccountStore'
-
+AccountStore  = require './AccountStore'
 {ActionTypes} = require '../constants/AppConstants'
 
 # Used in production instead of real data during development early stage
-fixtures = require '../../../tests/fixtures/mailboxes.json'
+fixtures = [] # @FIXME require '../../../tests/fixtures/mailboxes.json'
 
 
 class MailboxStore extends Store

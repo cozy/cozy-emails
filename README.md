@@ -48,7 +48,7 @@ build:
 Each modification of the client requires a specific build too.
 
     cd client
-    coffeegulp watch
+    brunch watch
 
 ## Tests
 
@@ -113,10 +113,11 @@ You will find all relevant resources about Emails development under this section
 * Fontawesome: http://fortawesome.github.io/Font-Awesome/
 
 ### Build
-* Browserify: http://browserify.org/
-* Gulp:
-    * http://gulpjs.com/
-    * https://github.com/greypants/gulp-starter
+
+We use [Brunch](http://brunch.io/) to build the client :
+
+    cd client
+    brunch build
 
 ## Naming conventions
 We've adopted IMAP naming conventions, which means:

@@ -1,10 +1,9 @@
 Store = require '../libs/flux/store/Store'
-Immutable = require 'immutable'
 
 {ActionTypes} = require '../constants/AppConstants'
 
 # Used in production instead of real data during development early stage
-fixtures = require '../../../tests/fixtures/accounts.json'
+fixtures = [] # @FIXME require '../../../tests/fixtures/accounts.json'
 
 
 class AccountStore extends Store
