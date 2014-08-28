@@ -1,6 +1,7 @@
 PanelRouter = require './libs/PanelRouter'
 
 AccountStore = require './stores/AccountStore'
+MailboxStore = require './stores/MailboxStore'
 
 module.exports = class Router extends PanelRouter
 
@@ -12,10 +13,10 @@ module.exports = class Router extends PanelRouter
             pattern: 'account/new'
             fluxAction: 'showCreateAccount'
         'account.mailbox.messages':
-            pattern: 'account/:id/mailbox/:mailbox'
+            pattern: 'account/:id/mailbox/:mailbox/page/:page'
             fluxAction: 'showMessageList'
         'account.messages':
-            pattern: 'account/:id'
+            pattern: 'account/:id/page/:page'
             fluxAction: 'showMessageList'
 
         'message':
@@ -33,11 +34,11 @@ module.exports = class Router extends PanelRouter
         switch action
             when 'account.messages', 'account.config'
                 defaultAccount = AccountStore.getDefault()?.id
-                defaultParameters = [defaultAccount]
-            when 'account.imap.messages'
+                defaultParameters = [defaultAccount, 1]
+            when 'account.mailbox.messages'
                 defaultAccount = AccountStore.getDefault()?.id
                 defaultMailbox = 'lala'
-                defaultParameters = [defaultAccount, defaultMailbox]
+                defaultParameters = [defaultAccount, defaultMailbox, 1]
             else
                 defaultParameters = null
 
