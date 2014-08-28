@@ -83,17 +83,17 @@ module.exports = Menu = React.createClass
 
             ul className: 'list-unstyled submenu mailbox-list',
                 @props.favoriteMailboxes.map (mailbox, key) =>
-                    @getMailboxRender mailbox, key
+                    @getMailboxRender account, mailbox, key
                 .toJS()
 
-    getMailboxRender: (mailbox, key) ->
+    getMailboxRender: (account, mailbox, key) ->
         mailboxUrl = @buildUrl
             direction: 'left'
             action: 'account.mailbox.messages'
-            parameters: [mailbox.get('mailbox'), mailbox.get('id')]
+            parameters: [account.get('id'), mailbox.get('id')]
 
         a href: mailboxUrl, className: 'menu-item', key: key,
             # Something must be rethought about the icon
             i className: 'fa fa-star'
             span className: 'badge', Math.floor((Math.random() * 10) + 1) # placeholder
-            span className: 'item-label', mailbox.get 'name'
+            span className: 'item-label', mailbox.get 'label'

@@ -1,35 +1,28 @@
 # See documentation on https://github.com/frankrousseau/americano#routes
 
 index = require './index'
-mailboxes = require './mailboxes'
-emails = require './emails'
-imapFolders = require './imap_folders'
+accounts = require './accounts'
+messages = require './messages'
 
 module.exports =
 
     '': get: index.main
 
     'account':
-        post: mailboxes.create
-        get: mailboxes.list
+        post: accounts.create
+        get: accounts.list
 
-    'account/:id':
-        put: [mailboxes.fetch, mailboxes.edit]
-        delete: [mailboxes.fetch, mailboxes.remove]
+    'account/:accountID':
+        get: [accounts.fetch, accounts.details]
+        put: [accounts.fetch, accounts.edit]
+        delete: [accounts.fetch, accounts.remove]
 
-    'account/:id/messages':
-        get: [mailboxes.fetch, emails.listByMailbox]
+    'mailbox/:mailboxID':
+        get: [messages.listByMailboxId]
 
-    'account/:id/mailboxes':
-        get: [mailboxes.fetch, imapFolders.listByMailbox]
-
-    'mailbox/:id/messages':
-        get: [imapFolders.fetch, emails.listByImapFolder]
-
-
-    'message/:id': get: [emails.fetch, emails.get]
+    'message/:messageID':
+        get: [messages.fetch, messages.details]
+        put: [messages.fetch, messages.updateFlags]
 
     'load-fixtures':
         get: index.loadFixtures
-
-

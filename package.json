@@ -19,7 +19,11 @@
     "jade": "1.5.0",
     "node-polyglot": "0.3.0",
     "moment": "2.8.2",
-    "cozy-fixtures": "1.1.1"
+    "cozy-fixtures": "1.1.1",
+    "bluebird": "2.3.2",
+    "imap": "0.8.13",
+    "guid": "0.0.12",
+    "lodash": "^2.4.1"
   },
   "devDependencies": {
     "should": "4.0.4",

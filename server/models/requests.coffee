@@ -1,17 +1,20 @@
-# See documentation on https://github.com/frankrousseau/americano-cozy/#requests
-
 americano = require 'americano'
 
-byMailbox = (doc) -> emit doc.mailbox, doc
-
 module.exports =
-    mailbox:
+    account:
         all: americano.defaultRequests.all
+        # browse mailboxes tree and emit id, path
+        pathById: (doc) ->
+            do emitChildren = (children = doc.mailboxes) ->
+                for child in children
+                    emit child.id, child.path
+                    if child.children?.length
+                        emitChildren child.children
+                return # prevent coffeescript magic loop
 
-    email:
+    message:
         all: americano.defaultRequests.all
-        byMailbox: byMailbox
-        byMailboxAndDate: (doc) -> emit [doc.mailbox, doc.createdAt], doc
+        byMailboxAndDate: (doc) ->
+            for boxid in doc.mailboxIDs
+                emit [boxid, doc.createdAt], null
 
-    imap_folder:
-        byMailbox: byMailbox

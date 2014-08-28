@@ -1,6 +1,9 @@
 path = require 'path'
 americano = require 'americano'
 
+if process.env.NODE_ENV isnt 'production'
+    require('bluebird').longStackTraces()
+
 config =
     common:
         set:

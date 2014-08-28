@@ -56,12 +56,12 @@ class MessageStore extends Store
 
     getMessagesByAccount: (accountID) ->
         # sequences are lazy so we need .toOrderedMap() to actually execute it
-        _message.filter (message) -> message.get('mailbox') is accountID
+        _message.filter (message) -> message.get('account') is accountID
         .toOrderedMap()
 
     getMessagesByMailbox: (mailboxID) ->
         # sequences are lazy so we need .toOrderedMap() to actually execute it
-        _message.filter (message) -> message.get('imapFolder') is mailboxID
+        _message.filter (message) -> mailboxID in message.get('mailboxIDs')
         .toOrderedMap()
 
     getMessagesByConversation: (messageID) ->

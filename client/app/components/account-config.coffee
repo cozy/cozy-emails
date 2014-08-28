@@ -35,7 +35,7 @@ module.exports = React.createClass
                 div className: 'form-group',
                     label htmlFor: 'mailbox-email-address', className: 'col-sm-2 col-sm-offset-2 control-label', t "mailbox address"
                     div className: 'col-sm-3',
-                        input id: 'mailbox-email-address', valueLink: @linkState('email'), type: 'email', className: 'form-control', placeholder: t "mailbox address placeholder"
+                        input id: 'mailbox-email-address', valueLink: @linkState('login'), type: 'email', className: 'form-control', placeholder: t "mailbox address placeholder"
                 div className: 'form-group',
                     label htmlFor: 'mailbox-password', className: 'col-sm-2 col-sm-offset-2 control-label', t 'mailbox password'
                     div className: 'col-sm-3',
@@ -94,7 +94,7 @@ module.exports = React.createClass
             return {
                 label: @props.initialAccountConfig.get 'label'
                 name: @props.initialAccountConfig.get 'name'
-                email: @props.initialAccountConfig.get 'email'
+                login: @props.initialAccountConfig.get 'login'
                 password: @props.initialAccountConfig.get 'password'
                 smtpServer: @props.initialAccountConfig.get 'smtpServer'
                 smtpPort: @props.initialAccountConfig.get 'smtpPort'
@@ -105,7 +105,7 @@ module.exports = React.createClass
             return {
                 label: ''
                 name: ''
-                email: ''
+                login: ''
                 password: ''
                 smtpServer: ''
                 smtpPort: 993
