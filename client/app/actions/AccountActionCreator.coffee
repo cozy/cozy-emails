@@ -55,9 +55,3 @@ module.exports = AccountActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.SELECT_ACCOUNT
             value: accountID
-
-        # fetch the mailboxes if necessary
-        # useful when the page loads the first time
-        mailboxes = MailboxStore.getByAccount accountID
-        if (not mailboxes? or mailboxes.count() is 0) and accountID
-            XHRUtils.fetchMailboxByAccount accountID

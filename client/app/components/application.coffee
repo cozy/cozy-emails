@@ -202,10 +202,8 @@ module.exports = Application = React.createClass
     # Factory of React components for panels
     getPanelComponent: (panelInfo, layout) ->
 
-        # -- Generates a list of messages for a given mailbox
+        # -- Generates a list of messages for a given account
         if panelInfo.action is 'account.messages'
-
-            firstMailbox = AccountStore.getDefault()
 
             # gets the selected message if any
             openMessage = null
@@ -214,27 +212,22 @@ module.exports = Application = React.createClass
             if otherPanelInfo?.action is 'message'
                 openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
 
-            # display messages of the selected mailbox
-            if panelInfo.parameters? and panelInfo.parameters.length > 0
-                MessageStore = MessageStore
-                accountID = panelInfo.parameters[0]
+            # display messages of the selected account default mailbox
+            if panelInfo.parameters?.length > 0
+                account = AccountStore.getAll().get panelInfo.parameters[0]
+            else
+                account = AccountStore.getDefault()
+
+
+            if account
+                mailboxID = account.get('mailboxes').first().get('id')
                 return MessageList
-                    messages: MessageStore.getMessagesByAccount accountID
-                    accountID: accountID
+                    messages: MessageStore.getMessagesByMailbox mailboxID
+                    accountID: account.get('id')
                     layout: layout
                     openMessage: openMessage
 
-            # default: display messages of the first mailbox
-            else if (not panelInfo.parameters? or panelInfo.parameters.length is 0) and firstMailbox?
-                MessageStore = MessageStore
-                accountID = firstMailbox.id
-                return MessageList
-                    messages: MessageStore.getMessagesByAccount accountID
-                    accountID: accountID
-                    layout: layout
-                    openMessage: openMessage
-
-            # there is no mailbox or mailbox is not found
+            # there is no account
             else
                 return div null, 'Handle no mailbox or mailbox not found case'
 
@@ -249,7 +242,6 @@ module.exports = Application = React.createClass
             otherPanelInfo = @props.router.current[direction]
             if otherPanelInfo?.action is 'message'
                 openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
-
             return MessageList
                 messages: MessageStore.getMessagesByMailbox mailboxID
                 accountID: accountID
@@ -296,14 +288,13 @@ module.exports = Application = React.createClass
         else
             selectedMailboxID = null
 
-        selectedMailbox = MailboxStore.getSelected selectedAccountID, selectedMailboxID
         return {
             accounts: AccountStore.getAll()
             selectedAccount: selectedAccount
             isResponsiveMenuShown: LayoutStore.isMenuShown()
-            mailboxes: MailboxStore.getByAccount selectedAccountID
-            selectedMailbox: selectedMailbox
-            favoriteMailboxes: MailboxStore.getFavorites selectedAccountID
+            mailboxes: AccountStore.getSelectedMailboxes()
+            selectedMailbox: AccountStore.getSelectedMailbox(selectedMailboxID)
+            favoriteMailboxes: AccountStore.getSelectedFavorites()
         }
 
 

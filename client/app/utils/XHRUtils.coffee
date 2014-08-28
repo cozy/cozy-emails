@@ -5,14 +5,14 @@ MailboxActionCreator = require '../actions/MailboxActionCreator'
 
 module.exports =
 
-    fetchMessagesByAccount: (mailboxID) ->
-        request.get "account/#{mailboxID}/messages"
-               .set 'Accept', 'application/json'
-               .end (res) ->
-            if res.ok
-                MessageActionCreator.receiveRawMessages res.body
-            else
-                console.log "Something went wrong -- #{res.body}"
+    # fetchMessagesByAccount: (mailboxID) ->
+    #     request.get "account/#{mailboxID}/messages"
+    #            .set 'Accept', 'application/json'
+    #            .end (res) ->
+    #         if res.ok
+    #             MessageActionCreator.receiveRawMessages res.body
+    #         else
+    #             console.log "Something went wrong -- #{res.body}"
 
     fetchConversation: (emailID, callback) ->
         request.get "message/#{emailID}"
@@ -24,21 +24,12 @@ module.exports =
             else
                 callback "Something went wrong -- #{res.body}"
 
-    fetchMailboxByAccount: (accountID) ->
-        request.get "account/#{accountID}/mailboxes"
-               .set 'Accept', 'application/json'
-               .end (res) ->
-            if res.ok
-                MailboxActionCreator.receiveRawMailboxes res.body
-            else
-                console.log "Something went wrong -- #{res.body}"
-
     fetchMessagesByFolder: (mailboxID) ->
-        request.get "mailbox/#{mailboxID}/messages"
+        request.get "mailbox/#{mailboxID}"
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok
-                MessageActionCreator.receiveRawMessage res.body
+                MessageActionCreator.receiveRawMessages res.body
             else
                 console.log "Something went wrong -- #{res.body}"
 

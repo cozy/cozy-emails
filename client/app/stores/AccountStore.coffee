@@ -23,7 +23,19 @@ class AccountStore extends Store
 
         # makes account object an immutable Map
         .map (account) ->
+
+            account.mailboxes = Immutable.Sequence(account.mailboxes)
+
+                # sets mailbox ID as index
+                .mapKeys (_, mailbox) -> mailbox.id
+
+                # makes mailbox object an immutable Map
+                .map (mailbox) -> Immutable.Map mailbox
+                .toOrderedMap()
+
             return Immutable.Map account
+
+
         .toOrderedMap()
 
     _selectedAccount = null
@@ -71,6 +83,25 @@ class AccountStore extends Store
     getDefault: -> return _accounts.first() or null
 
     getSelected: -> return _selectedAccount
+
+    getSelectedMailboxes: ->
+        return _selectedAccount?.get('mailboxes') or Immutable.Set.empty()
+
+    getSelectedMailbox: (selectedID) ->
+        mailboxes = @getSelectedMailboxes()
+        if selectedID?
+            return mailboxes.get selectedID
+        else
+            return mailboxes.first()
+
+    # Takes the 3 first mailboxes to show as "favorite".
+    # Skip the first 1, assumed to be the inbox
+    # Should be made configurable.
+    getSelectedFavorites: () ->
+        return @getSelectedMailboxes()
+            .skip 1
+            .take 3
+            .toOrderedMap()
 
     getError: -> return _newAccountError
 

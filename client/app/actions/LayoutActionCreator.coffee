@@ -21,11 +21,11 @@ module.exports = LayoutActionCreator =
 
         defaultAccount = AccountStore.getDefault()
         accountID = panelInfo.parameters[0] or defaultAccount?.get('id')
+        mailboxID = panelInfo.parameters[1] or defaultAccount.get('mailboxes').first().get('id')
 
         AccountActionCreator.selectAccount accountID
 
-        if accountID?
-            XHRUtils.fetchMessagesByAccount accountID
+        XHRUtils.fetchMessagesByFolder mailboxID
 
     showConversation: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
