@@ -32,7 +32,7 @@ ImapHelpers.getConnection = (account) ->
             password: account.password
             host: account.imapServer
             port: parseInt account.imapPort
-            tls: account.imapSecure
+            tls: account.imapSecure or true
             tlsOptions: rejectUnauthorized: false
 
         connection.once 'ready', ->
