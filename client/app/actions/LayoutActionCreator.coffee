@@ -21,7 +21,8 @@ module.exports = LayoutActionCreator =
 
         defaultAccount = AccountStore.getDefault()
         accountID = panelInfo.parameters[0] or defaultAccount?.get('id')
-        mailboxID = panelInfo.parameters[1] or defaultAccount.get('mailboxes').first().get('id')
+        # @TODO : make this a getDefaultMailbox() method on the store
+        mailboxID = panelInfo.parameters[1] or defaultAccount?.get('mailboxes').first().get('id')
 
         AccountActionCreator.selectAccount accountID
 
