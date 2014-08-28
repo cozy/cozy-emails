@@ -60,7 +60,6 @@ class MessageStore extends Store
         .toOrderedMap()
 
     getMessagesByMailbox: (mailboxID) ->
-        console.log "THERE", mailboxID, _message.length
         # sequences are lazy so we need .toOrderedMap() to actually execute it
         _message.filter (message) -> mailboxID in message.get('mailboxIDs')
         .toOrderedMap()
