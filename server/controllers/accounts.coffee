@@ -10,16 +10,17 @@ module.exports.create = (req, res, next) ->
     Imap.getMailboxes account
         .then (mailboxes) -> account.mailboxes = mailboxes
         .then (mailboxes) -> Account.createPromised account
-        .then (account)   -> res.send 201, account
+        .then (account)   -> res.send 201, Account.clientVersion account
         .catch next
 
 module.exports.list = (req, res, next) ->
-    Account.getAll()
-        .then (accounts) -> res.send 200, accounts
+    Account.getAllPromised()
+        .then (accounts) ->
+            res.send 200, accounts.map Account.clientVersion
         .catch next
 
 module.exports.fetch = (req, res, next) ->
-    Account.findPromised(req.params.accountID)
+    Account.findPromised req.params.accountID
         .then (account) ->
             if account then req.account = account
             else throw new HttpError 404, 'Not Found'

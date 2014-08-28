@@ -23,6 +23,17 @@ Account::mailboxIds = (callback) ->
             getIDs child.children
     return ids
 
+Account.clientVersion = (account) ->
+
+    cleanUp = (children) -> children.map (child) ->
+        id: child.id
+        label: child.label
+        children: cleanUp child.children
+
+    account.mailboxes = cleanUp account.mailboxes
+
+    return account
+
 
 require('bluebird').promisifyAll Account, suffix: 'Promised'
 require('bluebird').promisifyAll Account::, suffix: 'Promised'
