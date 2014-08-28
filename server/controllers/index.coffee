@@ -1,5 +1,5 @@
 async = require 'async'
-Mailbox = require '../models/mailbox'
+Account = require '../models/account'
 
 CozyInstance = require '../models/cozy_instance'
 
@@ -8,8 +8,7 @@ fixtures = require 'cozy-fixtures'
 module.exports.main = (req, res, next) ->
     async.parallel [
         (cb) -> CozyInstance.getLocale cb
-        (cb) -> Mailbox.getAll cb
-
+        (cb) -> Account.getAll cb
     ], (err, results) ->
 
         if err?
