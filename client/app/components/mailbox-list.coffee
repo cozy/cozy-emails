@@ -12,7 +12,7 @@ module.exports = React.createClass
             firstItem = @props.selectedMailbox
             div className: 'dropdown pull-left',
                 button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown',
-                    firstItem.get 'name'
+                    firstItem.get 'label'
                     span className: 'caret', ''
                 ul className: 'dropdown-menu', role: 'menu',
                     @props.mailboxes.map (mailbox, key) =>
@@ -30,4 +30,4 @@ module.exports = React.createClass
                 parameters: [@props.selectedAccount.get('id'), mailbox.get('id')]
 
         li role: 'presentation', key: key,
-            a href: url, role: 'menuitem', mailbox.get 'name'
+            a href: url, role: 'menuitem', mailbox.get 'label'

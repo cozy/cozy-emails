@@ -1,7 +1,7 @@
 americano = require 'americano-cozy'
 module.exports = Message = americano.getModel 'Message',
-    accountID: String
-    mailboxID: String
+    account: String
+    mailboxIDs: (x) -> x
     subject: String
     from: String
     to: String
