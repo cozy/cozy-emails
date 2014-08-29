@@ -310,8 +310,8 @@ module.exports = Application = React.createClass
             accounts: AccountStore.getAll()
             selectedAccount: selectedAccount
             isResponsiveMenuShown: LayoutStore.isMenuShown()
-            mailboxes: AccountStore.getSelectedMailboxes()
-            selectedMailbox: AccountStore.getSelectedMailbox(selectedMailboxID)
+            mailboxes: AccountStore.getSelectedMailboxes true
+            selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
         }
 

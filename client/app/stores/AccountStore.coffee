@@ -90,7 +90,6 @@ class AccountStore extends Store
             getFlattenMailboxes = (childrenMailboxes, depth = 0) ->
                 result = Immutable.OrderedMap()
                 for id, rawMailbox of childrenMailboxes
-                    #console.log id, rawMailbox
                     children = rawMailbox.children
                     delete rawMailbox.children
                     mailbox = Immutable.Map rawMailbox

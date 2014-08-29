@@ -29,5 +29,9 @@ module.exports = React.createClass
                 action: 'account.mailbox.messages'
                 parameters: [@props.selectedAccount.get('id'), mailbox.get('id')]
 
+        # Mark nested levels with "--" because plain space just doesn't work for some reason
+        pusher = ""
+        pusher += "--" for i in [1..mailbox.get('depth')] by 1
+
         li role: 'presentation', key: key,
-            a href: url, role: 'menuitem', mailbox.get 'label'
+            a href: url, role: 'menuitem', "#{pusher}#{mailbox.get 'label'}"
