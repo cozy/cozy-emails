@@ -301,7 +301,7 @@ module.exports = Application = React.createClass
         selectedAccountID = selectedAccount?.get('id') or null
 
         leftPanelInfo = @props.router.current?.leftPanel
-        if leftPanelInfo?.action is 'account.account.messages'
+        if leftPanelInfo?.action is 'account.mailbox.messages'
             selectedMailboxID = leftPanelInfo.parameters[1]
         else
             selectedMailboxID = null
