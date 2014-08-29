@@ -70,7 +70,7 @@ class MessageStore extends Store
         .slice(first, last)
 
     getMessagesCountByAccount: (accountID) ->
-        _message.filter (message) -> message.get('mailbox') is accountID
+        _message.filter (message) -> message.get('account') is accountID
         .count()
 
     ###*
@@ -90,7 +90,7 @@ class MessageStore extends Store
 
     getMessagesCountByMailbox: (mailboxID, first, last) ->
         # sequences are lazy so we need .toOrderedMap() to actually execute it
-        _message.filter (message) -> message.get('imapFolder') is mailboxID
+        _message.filter (message) -> mailboxID in message.get('mailboxIDs')
         .count()
 
     getMessagesByConversation: (messageID) ->
