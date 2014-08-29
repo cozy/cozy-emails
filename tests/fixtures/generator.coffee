@@ -3,10 +3,20 @@ loremIpsum = require 'lorem-ipsum'
 moment = require 'moment'
 
 names = ['alice', 'bob', 'natacha', 'mark', 'zoey', 'john', 'felicia' ,'max']
-mailboxes = ['gmail-ID', 'orange-ID']
-imapFolders =
-    'gmail-ID': 6
-    'orange-ID': 2
+
+accounts = require './accounts.json'
+
+getMailboxesRecursively = (mboxes) ->
+    result = []
+    for mailbox in mboxes
+        result.push mailbox.id
+        result = result.concat getMailboxesRecursively mailbox.children
+
+    return result
+
+mailboxes = {}
+for account in accounts
+    mailboxes[account._id] = getMailboxesRecursively account.mailboxes
 
 numberOfEmails = process.argv[2] or 100
 
@@ -21,8 +31,8 @@ for i in [1..numberOfEmails] by 1
         to = names[getRandom(8)]
         break if to isnt from
 
-    mailbox = mailboxes[getRandom(2)]
-    imapFolder = "#{mailbox}-folder#{getRandom(imapFolders[mailbox]) + 1}"
+    account = accounts[getRandom(accounts.length)]._id
+    mailbox = mailboxes[account][getRandom mailboxes[account].length]
 
     subject = loremIpsum count: getRandom(5), units: 'words'
     content = loremIpsum count: getRandom(10), units: 'sentences'
@@ -40,7 +50,7 @@ for i in [1..numberOfEmails] by 1
 
     messages.push
         "_id": "generated_id_#{i}"
-        "docType": "Email",
+        "docType": "Message",
         "createdAt": date.toISOString(),
         "subject": subject,
         "from": "#{from}@provider.com",
@@ -51,8 +61,8 @@ for i in [1..numberOfEmails] by 1
         "text": content,
         "html": content,
         "reads": false,
-        "imapFolder": imapFolder,
-        "mailbox": mailbox
+        "mailboxIDs": [mailbox],
+        "account": account
 
 
 targetFile = './tests/fixtures/messages_generated.json'
