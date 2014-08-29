@@ -1,7 +1,6 @@
 PanelRouter = require './libs/PanelRouter'
 
 AccountStore = require './stores/AccountStore'
-MailboxStore = require './stores/MailboxStore'
 
 module.exports = class Router extends PanelRouter
 
