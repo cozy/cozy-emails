@@ -68,10 +68,9 @@ module.exports = React.createClass
 
         accountValue = @state
         if @props.initialAccountConfig?
-            mailboxValue.id = @props.initialAccountConfig.get 'id'
-            AccountActionCreator.edit @state
+            AccountActionCreator.edit accountValue, @props.initialAccountConfig.get 'id'
         else
-            AccountActionCreator.create @state
+            AccountActionCreator.create accountValue
 
     onRemove: (event) ->
         # prevents the page from reloading

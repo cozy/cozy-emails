@@ -2,6 +2,8 @@ XHRUtils = require '../utils/XHRUtils'
 AppDispatcher = require '../AppDispatcher'
 {ActionTypes} = require '../constants/AppConstants'
 
+AccountStore = require '../stores/AccountStore'
+
 module.exports = AccountActionCreator =
 
     create: (inputValues) ->
@@ -19,19 +21,24 @@ module.exports = AccountActionCreator =
                         value: account
             , 2000
 
-    edit: (inputValues) ->
+    edit: (inputValues, accountID) ->
         AccountActionCreator._setNewAccountWaitingStatus true
-        XHRUtils.editAccount inputValues, (error, account) ->
+
+        account = AccountStore.getByID accountID
+        newAccount = account.mergeDeep inputValues
+
+        XHRUtils.editAccount newAccount, (error, rawAccount) ->
             # set a timeout to simulate the "waiting" state
             setTimeout ->
                 AccountActionCreator._setNewAccountWaitingStatus false
                 if error?
                     AccountActionCreator._setNewAccountError error
                 else
-                   AppDispatcher.handleViewAction
+                    AppDispatcher.handleViewAction
                         type: ActionTypes.EDIT_ACCOUNT
-                        value: account
+                        value: rawAccount
             , 2000
+
 
     remove: (accountID) ->
        AppDispatcher.handleViewAction
