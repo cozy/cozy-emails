@@ -54,15 +54,44 @@ class MessageStore extends Store
 
     getByID: (messageID) -> _message.get(messageID) or null
 
-    getMessagesByAccount: (accountID) ->
+    ###*
+    * Get messages from account
+    *
+    * @param {String} accountID
+    * @param {Number} first     index of first message
+    * @param {Number} last      index of last message
+    *
+    * @return {Array}
+    ###
+    getMessagesByAccount: (accountID, first, last) ->
         # sequences are lazy so we need .toOrderedMap() to actually execute it
         _message.filter (message) -> message.get('account') is accountID
         .toOrderedMap()
+        .slice(first, last)
 
-    getMessagesByMailbox: (mailboxID) ->
+    getMessagesCountByAccount: (accountID) ->
+        _message.filter (message) -> message.get('account') is accountID
+        .count()
+
+    ###*
+    * Get messages from mailbox
+    *
+    * @param {String} mailboxID
+    * @param {Number} first     index of first message
+    * @param {Number} last      index of last message
+    *
+    * @return {Array}
+    ###
+    getMessagesByMailbox: (mailboxID, first, last) ->
         # sequences are lazy so we need .toOrderedMap() to actually execute it
         _message.filter (message) -> mailboxID in message.get('mailboxIDs')
         .toOrderedMap()
+        .slice(first, last)
+
+    getMessagesCountByMailbox: (mailboxID, first, last) ->
+        # sequences are lazy so we need .toOrderedMap() to actually execute it
+        _message.filter (message) -> mailboxID in message.get('mailboxIDs')
+        .count()
 
     getMessagesByConversation: (messageID) ->
         idsToLook = [messageID]

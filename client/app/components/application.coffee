@@ -16,10 +16,11 @@ RouterMixin = require '../mixins/RouterMixin'
 StoreWatchMixin = require '../mixins/StoreWatchMixin'
 
 # Flux stores
-AccountStore = require '../stores/AccountStore'
-MessageStore = require '../stores/MessageStore'
-LayoutStore = require '../stores/LayoutStore'
-MailboxStore = require '../stores/MailboxStore'
+AccountStore  = require '../stores/AccountStore'
+LayoutStore   = require '../stores/LayoutStore'
+MailboxStore  = require '../stores/MailboxStore'
+MessageStore  = require '../stores/MessageStore'
+SettingsStore = require '../stores/SettingsStore'
 
 # Flux actions
 LayoutActionCreator = require '../actions/LayoutActionCreator'
@@ -205,6 +206,12 @@ module.exports = Application = React.createClass
         # -- Generates a list of messages for a given account
         if panelInfo.action is 'account.messages'
 
+            # display messages of the selected account default mailbox
+            if panelInfo.parameters?.length > 0
+                account = AccountStore.getAll().get panelInfo.parameters[0]
+            else
+                account = AccountStore.getDefault()
+
             # gets the selected message if any
             openMessage = null
             direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
@@ -212,20 +219,25 @@ module.exports = Application = React.createClass
             if otherPanelInfo?.action is 'message'
                 openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
 
-            # display messages of the selected account default mailbox
-            if panelInfo.parameters?.length > 0
-                account = AccountStore.getAll().get panelInfo.parameters[0]
-            else
-                account = AccountStore.getDefault()
+            listParams =
+                layout: layout
+                openMessage: openMessage
+                messagesPerPage: SettingsStore.get().messagesPerPage
+                pageNum: panelInfo.parameters[1] ? 1
 
+            # display messages of the selected account
+            if panelInfo.parameters? and panelInfo.parameters.length > 0
+                listParams.accountID = panelInfo.parameters[0]
+                listParams.messages  = MessageStore.getMessagesByAccount listParams.accountID, 0, listParams.messagesPerPage - 1
+                listParams.messagesCount  = MessageStore.getMessagesCountByAccount listParams.accountID
+                return MessageList listParams
 
-            if account
-                mailboxID = account.get('mailboxes').first().get('id')
-                return MessageList
-                    messages: MessageStore.getMessagesByMailbox mailboxID
-                    accountID: account.get('id')
-                    layout: layout
-                    openMessage: openMessage
+            # default: display messages of the first account
+            else if (not panelInfo.parameters? or panelInfo.parameters.length is 0) and account?
+                listParams.accountID = firstaccount.id
+                listParams.messages  = MessageStore.getMessagesByAccount listParams.accountID, 0, listParams.messagesPerPage - 1
+                listParams.messagesCount  = MessageStore.getMessagesCountByAccount listParams.accountID
+                return MessageList listParams
 
             # there is no account
             else
@@ -235,6 +247,10 @@ module.exports = Application = React.createClass
         else if panelInfo.action is 'account.mailbox.messages'
             accountID = panelInfo.parameters[0]
             mailboxID = panelInfo.parameters[1]
+            pageNum   = panelInfo.parameters[2] ? 1
+            nbpp      = SettingsStore.get().messagesPerPage
+            first     = ( pageNum - 1 ) * nbpp
+            last      = ( pageNum * nbpp )
 
             # gets the selected message if any
             openMessage = null
@@ -243,11 +259,14 @@ module.exports = Application = React.createClass
             if otherPanelInfo?.action is 'message'
                 openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
             return MessageList
-                messages: MessageStore.getMessagesByMailbox mailboxID
+                messages: MessageStore.getMessagesByMailbox mailboxID, first, last
+                messagesCount: MessageStore.getMessagesCountByMailbox mailboxID
                 accountID: accountID
+                mailboxID: mailboxID
                 layout: layout
                 openMessage: openMessage
-
+                messagesPerPage: nbpp
+                pageNum: pageNum
 
         # -- Generates a configuration window for a given account
         else if panelInfo.action is 'account.config'

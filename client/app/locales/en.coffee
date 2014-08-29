@@ -16,6 +16,7 @@ module.exports =
 
       # List
       "list empty"              : "No email in this box."
+      "list count"              : "%{smart_count} message in this box |||| %{smart_count} messages in this box"
 
       # Mail
       "mail receivers"          : "To %{dest}"
