@@ -2,6 +2,8 @@ Store = require '../libs/flux/store/Store'
 
 {ActionTypes} = require '../constants/AppConstants'
 
+AccountTranslator = require '../utils/translators/AccountTranslator'
+
 class AccountStore extends Store
 
     ###
@@ -22,19 +24,7 @@ class AccountStore extends Store
         .mapKeys (_, account) -> return account.id
 
         # makes account object an immutable Map
-        .map (account) ->
-
-            account.mailboxes = Immutable.Sequence(account.mailboxes)
-
-                # sets mailbox ID as index
-                .mapKeys (_, mailbox) -> mailbox.id
-
-                # makes mailbox object an immutable Map
-                .map (mailbox) -> Immutable.Map mailbox
-                .toOrderedMap()
-
-            return Immutable.Map account
-
+        .map (account) -> AccountTranslator.toImmutable account
 
         .toOrderedMap()
 
@@ -42,13 +32,17 @@ class AccountStore extends Store
     _newAccountWaiting = false
     _newAccountError = null
 
+    account = _accounts.get('gmail-ID')
+    AccountTranslator.toRawObject account
+
+
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
         handle ActionTypes.ADD_ACCOUNT, (account) ->
-            account = Immutable.Map account
+            account = _makeAccountImmutable account
             _accounts = _accounts.set account.get('id'), account
             @emit 'change'
 
@@ -64,8 +58,8 @@ class AccountStore extends Store
             _newAccountError = error
             @emit 'change'
 
-        handle ActionTypes.EDIT_ACCOUNT, (account) ->
-            account = Immutable.Map account
+        handle ActionTypes.EDIT_ACCOUNT, (rawAccount) ->
+            account = AccountTranslator.toImmutable rawAccount
             _accounts = _accounts.set account.get('id'), account
             _selectedAccount = _accounts.get account.get 'id'
             @emit 'change'
@@ -80,12 +74,34 @@ class AccountStore extends Store
     ###
     getAll: -> return _accounts
 
+    getByID: (accountID) -> return _accounts.get accountID
+
     getDefault: -> return _accounts.first() or null
 
     getSelected: -> return _selectedAccount
 
-    getSelectedMailboxes: ->
-        return _selectedAccount?.get('mailboxes') or Immutable.Set.empty()
+    getSelectedMailboxes: (flatten = false) ->
+
+        return Immutable.OrderedMap.empty() unless _selectedAccount?
+
+        if flatten
+            rawMailboxesTree = _selectedAccount.get('mailboxes').toJS()
+            # @FIXME Should be done with iterator when they are fixed
+            getFlattenMailboxes = (childrenMailboxes, depth = 0) ->
+                result = Immutable.OrderedMap()
+                for id, rawMailbox of childrenMailboxes
+                    children = rawMailbox.children
+                    delete rawMailbox.children
+                    mailbox = Immutable.Map rawMailbox
+                    # we add a depth indicator for display
+                    mailbox = mailbox.set 'depth', depth
+                    result = result.set mailbox.get('id'), mailbox
+                    result = result.merge getFlattenMailboxes children, (depth + 1)
+                return result.toOrderedMap()
+
+            return getFlattenMailboxes(rawMailboxesTree).toOrderedMap()
+        else
+            return _selectedAccount?.get('mailboxes') or Immutable.OrderedMap.empty()
 
     getSelectedMailbox: (selectedID) ->
         mailboxes = @getSelectedMailboxes()

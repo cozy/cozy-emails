@@ -1,18 +1,9 @@
 request = superagent
 
 MessageActionCreator = require '../actions/MessageActionCreator'
-MailboxActionCreator = require '../actions/MailboxActionCreator'
+AccountTranslator = require './translators/AccountTranslator'
 
 module.exports =
-
-    # fetchMessagesByAccount: (mailboxID) ->
-    #     request.get "account/#{mailboxID}/messages"
-    #            .set 'Accept', 'application/json'
-    #            .end (res) ->
-    #         if res.ok
-    #             MessageActionCreator.receiveRawMessages res.body
-    #         else
-    #             console.log "Something went wrong -- #{res.body}"
 
     fetchConversation: (emailID, callback) ->
         request.get "message/#{emailID}"
@@ -49,9 +40,10 @@ module.exports =
     editAccount: (account, callback) ->
 
         # TODO: validation & sanitization
+        rawAccount = AccountTranslator.toRawObject account
 
-        request.put "account/#{account.id}"
-               .send account
+        request.put "account/#{rawAccount.id}"
+               .send rawAccount
                .set 'Accept', 'application/json'
                .end (res) ->
             if res.ok

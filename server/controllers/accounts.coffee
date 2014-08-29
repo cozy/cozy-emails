@@ -27,13 +27,23 @@ module.exports.fetch = (req, res, next) ->
         .nodeify next
 
 module.exports.details = (req, res, next) ->
-    res.send 200, req.account
+    res.send 200, Account.clientVersion req.account
 
 module.exports.edit = (req, res, next) ->
     # @TODO : validate req.body
-    changes = req.body
+
+    # we don't take all the fields, only some of them are editable
+    changes =
+        label: req.body.label
+        login: req.body.login
+        password: req.body.password
+        smtpServer: req.body.smtpServer
+        smtpPort: req.body.smtpPort
+        imapServer: req.body.imapServer
+        imapPort: req.body.imapPort
+
     req.account.updateAttributesPromised(changes)
-        .then (account) -> res.send 200, account
+        .then (account) -> res.send 200, Account.clientVersion account
         .catch next
 
 module.exports.remove = (req, res, next) ->

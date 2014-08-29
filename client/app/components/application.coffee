@@ -16,10 +16,9 @@ RouterMixin = require '../mixins/RouterMixin'
 StoreWatchMixin = require '../mixins/StoreWatchMixin'
 
 # Flux stores
-AccountStore  = require '../stores/AccountStore'
-LayoutStore   = require '../stores/LayoutStore'
-MailboxStore  = require '../stores/MailboxStore'
-MessageStore  = require '../stores/MessageStore'
+AccountStore = require '../stores/AccountStore'
+MessageStore = require '../stores/MessageStore'
+LayoutStore = require '../stores/LayoutStore'
 SettingsStore = require '../stores/SettingsStore'
 
 # Flux actions
@@ -41,7 +40,7 @@ module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, MailboxStore]
+        StoreWatchMixin [AccountStore, MessageStore, LayoutStore]
         RouterMixin
     ]
 
@@ -302,7 +301,7 @@ module.exports = Application = React.createClass
         selectedAccountID = selectedAccount?.get('id') or null
 
         leftPanelInfo = @props.router.current?.leftPanel
-        if leftPanelInfo?.action is 'account.account.messages'
+        if leftPanelInfo?.action is 'account.mailbox.messages'
             selectedMailboxID = leftPanelInfo.parameters[1]
         else
             selectedMailboxID = null
@@ -311,8 +310,8 @@ module.exports = Application = React.createClass
             accounts: AccountStore.getAll()
             selectedAccount: selectedAccount
             isResponsiveMenuShown: LayoutStore.isMenuShown()
-            mailboxes: AccountStore.getSelectedMailboxes()
-            selectedMailbox: AccountStore.getSelectedMailbox(selectedMailboxID)
+            mailboxes: AccountStore.getSelectedMailboxes true
+            selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
         }
 
