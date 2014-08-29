@@ -9,6 +9,15 @@ class AccountStore extends Store
         Defines private variables here.
     ###
 
+    # Recursively creates Immutable OrderedMap of mailboxes
+    createImmutableMailboxes = (children) ->
+        Immutable.Sequence children
+            .mapKeys (_, mailbox) -> mailbox.id
+            .map (mailbox) ->
+                mailbox.children = createImmutableMailboxes mailbox.children
+                return Immutable.Map mailbox
+            .toOrderedMap()
+
     # Creates an OrderedMap of accounts
     _accounts = Immutable.Sequence window.accounts
 
@@ -23,24 +32,15 @@ class AccountStore extends Store
 
         # makes account object an immutable Map
         .map (account) ->
-
-            account.mailboxes = Immutable.Sequence(account.mailboxes)
-
-                # sets mailbox ID as index
-                .mapKeys (_, mailbox) -> mailbox.id
-
-                # makes mailbox object an immutable Map
-                .map (mailbox) -> Immutable.Map mailbox
-                .toOrderedMap()
-
+            account.mailboxes = createImmutableMailboxes account.mailboxes
             return Immutable.Map account
-
 
         .toOrderedMap()
 
     _selectedAccount = null
     _newAccountWaiting = false
     _newAccountError = null
+
 
     ###
         Defines here the action handlers.
