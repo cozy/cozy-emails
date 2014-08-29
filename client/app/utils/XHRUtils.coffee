@@ -5,15 +5,6 @@ AccountTranslator = require './translators/AccountTranslator'
 
 module.exports =
 
-    # fetchMessagesByAccount: (mailboxID) ->
-    #     request.get "account/#{mailboxID}/messages"
-    #            .set 'Accept', 'application/json'
-    #            .end (res) ->
-    #         if res.ok
-    #             MessageActionCreator.receiveRawMessages res.body
-    #         else
-    #             console.log "Something went wrong -- #{res.body}"
-
     fetchConversation: (emailID, callback) ->
         request.get "message/#{emailID}"
                .set 'Accept', 'application/json'
