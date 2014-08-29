@@ -1,6 +1,5 @@
 XHRUtils = require '../utils/XHRUtils'
 AppDispatcher = require '../AppDispatcher'
-MailboxStore = require '../stores/MailboxStore'
 {ActionTypes} = require '../constants/AppConstants'
 
 module.exports = AccountActionCreator =

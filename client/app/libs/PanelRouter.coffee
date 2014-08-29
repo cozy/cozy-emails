@@ -20,8 +20,6 @@
 
 LayoutActionCreator = require '../actions/LayoutActionCreator'
 
-MailboxStore = require '../stores/MailboxStore'
-
 module.exports = class Router extends Backbone.Router
 
     patterns: {}
