@@ -207,7 +207,7 @@ module.exports = Application = React.createClass
             accountID = panelInfo.parameters[0]
             mailboxID = panelInfo.parameters[1]
             pageNum   = panelInfo.parameters[2] ? 1
-            numPerPage      = SettingsStore.get().messagesPerPage
+            numPerPage      = SettingsStore.get 'messagesPerPage'
             firstOfPage     = ( pageNum - 1 ) * numPerPage
             lastOfPage      = ( pageNum * numPerPage )
 
@@ -219,7 +219,7 @@ module.exports = Application = React.createClass
                 openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
 
             return MessageList
-                messages: MessageStore.getMessagesByMailbox mailboxID, first, last
+                messages: MessageStore.getMessagesByMailbox mailboxID, firstOfPage, lastOfPage
                 messagesCount: MessageStore.getMessagesCountByMailbox mailboxID
                 accountID: accountID
                 mailboxID: mailboxID
