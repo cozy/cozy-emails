@@ -85,11 +85,11 @@ module.exports = React.createClass
         else
             urlFirst = @buildUrl
                 direction: 'left'
-                action: 'account.messages'
+                action: 'account.mailbox.messages'
                 parameters: [@props.accountID, @props.mailboxID, 1]
             urlLast = @buildUrl
                 direction: 'left'
-                action: 'account.messages'
+                action: 'account.mailbox.messages'
                 parameters: [@props.accountID, nbPages]
         ul className: 'pagination',
             li className: classFirst,
@@ -107,7 +107,7 @@ module.exports = React.createClass
                 else
                     urlCurr = @buildUrl
                         direction: 'left'
-                        action: 'account.messages'
+                        action: 'account.mailbox.messages'
                         parameters: [@props.accountID, j]
                 li className: classCurr, key: j,
                     a href: urlCurr, j

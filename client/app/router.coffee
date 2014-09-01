@@ -14,9 +14,6 @@ module.exports = class Router extends PanelRouter
         'account.mailbox.messages':
             pattern: 'account/:id/mailbox/:mailbox/page/:page'
             fluxAction: 'showMessageList'
-        'account.messages':
-            pattern: 'account/:id/page/:page'
-            fluxAction: 'showMessageList'
 
         'message':
             pattern: 'message/:id'
@@ -26,19 +23,22 @@ module.exports = class Router extends PanelRouter
             fluxAction: 'showComposeNewMessage'
 
     # default route
-    routes: '': 'account.messages'
+    routes: '': 'account.mailbox.messages'
 
     # Determines and gets the default parameters regarding a specific action
     _getDefaultParameters: (action) ->
         switch action
-            when 'account.messages', 'account.config'
-                defaultAccount = AccountStore.getDefault()?.id
-                defaultParameters = [defaultAccount, 1]
             when 'account.mailbox.messages'
-                defaultAccount = AccountStore.getDefault()?.id
-                defaultMailbox = 'lala'
-                defaultParameters = [defaultAccount, defaultMailbox, 1]
+                defaultAccount = AccountStore.getDefault()
+                defaultMailbox = defaultAccount?.get('mailboxes').first()
+                defaultParameters = [
+                    defaultAccount?.get('id')
+                    defaultMailbox?.get('id')
+                    1
+                ]
+            when 'account.config'
+                defaultAccount = AccountStore.getDefault()?.get 'id'
+                defaultParameters = [defaultAccount]
             else
                 defaultParameters = null
-
         return defaultParameters

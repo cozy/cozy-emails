@@ -65,7 +65,7 @@ module.exports = Application = React.createClass
             if layout.leftPanel.action is 'account.config'
                 configMailboxUrl = @buildUrl
                     direction: 'left'
-                    action: 'account.messages'
+                    action: 'account.mailbox.messages'
                     parameters: @state.selectedAccount.get 'id'
                     fullWidth: true
             else
@@ -202,54 +202,14 @@ module.exports = Application = React.createClass
     # Factory of React components for panels
     getPanelComponent: (panelInfo, layout) ->
 
-        # -- Generates a list of messages for a given account
-        if panelInfo.action is 'account.messages'
-
-            # display messages of the selected account default mailbox
-            if panelInfo.parameters?.length > 0
-                account = AccountStore.getAll().get panelInfo.parameters[0]
-            else
-                account = AccountStore.getDefault()
-
-            # gets the selected message if any
-            openMessage = null
-            direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
-            otherPanelInfo = @props.router.current[direction]
-            if otherPanelInfo?.action is 'message'
-                openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
-
-            listParams =
-                layout: layout
-                openMessage: openMessage
-                messagesPerPage: SettingsStore.get().messagesPerPage
-                pageNum: panelInfo.parameters[1] ? 1
-
-            # display messages of the selected account
-            if panelInfo.parameters? and panelInfo.parameters.length > 0
-                listParams.accountID = panelInfo.parameters[0]
-                listParams.messages  = MessageStore.getMessagesByAccount listParams.accountID, 0, listParams.messagesPerPage - 1
-                listParams.messagesCount  = MessageStore.getMessagesCountByAccount listParams.accountID
-                return MessageList listParams
-
-            # default: display messages of the first account
-            else if (not panelInfo.parameters? or panelInfo.parameters.length is 0) and account?
-                listParams.accountID = firstaccount.id
-                listParams.messages  = MessageStore.getMessagesByAccount listParams.accountID, 0, listParams.messagesPerPage - 1
-                listParams.messagesCount  = MessageStore.getMessagesCountByAccount listParams.accountID
-                return MessageList listParams
-
-            # there is no account
-            else
-                return div null, 'Handle no mailbox or mailbox not found case'
-
         # -- Generates a list of messages for a given account and mailbox
-        else if panelInfo.action is 'account.mailbox.messages'
+        if panelInfo.action is 'account.mailbox.messages'
             accountID = panelInfo.parameters[0]
             mailboxID = panelInfo.parameters[1]
             pageNum   = panelInfo.parameters[2] ? 1
-            nbpp      = SettingsStore.get().messagesPerPage
-            first     = ( pageNum - 1 ) * nbpp
-            last      = ( pageNum * nbpp )
+            numPerPage      = SettingsStore.get().messagesPerPage
+            firstOfPage     = ( pageNum - 1 ) * numPerPage
+            lastOfPage      = ( pageNum * numPerPage )
 
             # gets the selected message if any
             openMessage = null
@@ -257,6 +217,7 @@ module.exports = Application = React.createClass
             otherPanelInfo = @props.router.current[direction]
             if otherPanelInfo?.action is 'message'
                 openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
+
             return MessageList
                 messages: MessageStore.getMessagesByMailbox mailboxID, first, last
                 messagesCount: MessageStore.getMessagesCountByMailbox mailboxID
@@ -264,7 +225,7 @@ module.exports = Application = React.createClass
                 mailboxID: mailboxID
                 layout: layout
                 openMessage: openMessage
-                messagesPerPage: nbpp
+                messagesPerPage: numPerPage
                 pageNum: pageNum
 
         # -- Generates a configuration window for a given account

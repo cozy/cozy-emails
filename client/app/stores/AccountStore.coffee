@@ -78,6 +78,12 @@ class AccountStore extends Store
 
     getDefault: -> return _accounts.first() or null
 
+    getDefaultMailbox: (accountID) ->
+
+        account = _accounts.get(accountID) or @getDefault()
+
+        return account.get('mailboxes').first()
+
     getSelected: -> return _selectedAccount
 
     getSelectedMailboxes: (flatten = false) ->

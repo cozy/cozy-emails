@@ -26,7 +26,7 @@ module.exports = React.createClass
 
         collapseUrl = @buildUrl
             leftPanel:
-                action: 'account.messages'
+                action: 'account.mailbox.messages'
                 parameters: selectedAccountID
             rightPanel:
                 action: 'message'
@@ -35,7 +35,7 @@ module.exports = React.createClass
         if @props.layout is 'full'
             closeUrl = @buildUrl
                 direction: 'left'
-                action: 'account.messages'
+                action: 'account.mailbox.messages'
                 parameters: selectedAccountID
                 fullWidth: true
         else
