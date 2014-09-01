@@ -13,7 +13,7 @@ class MessageStore extends Store
     ###
 
     # Creates an OrderedMap of messages
-    _message = Immutable.Sequence()
+    _messages = Immutable.Sequence()
 
         # sets message ID as index
         .mapKeys (_, message) -> message.id
@@ -30,7 +30,7 @@ class MessageStore extends Store
         handle ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage = (message, silent = false) ->
             # create or update
             message = Immutable.Map message
-            _message = _message.set message.get('id'), message
+            _messages = _messages.set message.get('id'), message
 
             @emit 'change' unless silent
 
@@ -41,7 +41,7 @@ class MessageStore extends Store
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]
             messages = @getMessagesByAccount accountID
-            _message = _message.withMutations (map) ->
+            _messages = _messages.withMutations (map) ->
                 messages.forEach (message) -> map.remove message.get 'id'
 
             @emit 'change'
@@ -50,12 +50,12 @@ class MessageStore extends Store
     ###
         Public API
     ###
-    getAll: -> return _message
+    getAll: -> return _messages
 
-    getByID: (messageID) -> _message.get(messageID) or null
+    getByID: (messageID) -> _messages.get(messageID) or null
 
     ###*
-    * Get messages from account
+    * Get messages from account, with optional pagination
     *
     * @param {String} accountID
     * @param {Number} first     index of first message
@@ -63,18 +63,20 @@ class MessageStore extends Store
     *
     * @return {Array}
     ###
-    getMessagesByAccount: (accountID, first, last) ->
+    getMessagesByAccount: (accountID, first = null, last = null) ->
+        sequence = _messages.filter (message) -> message.get('account') is accountID
+        if first? and last?
+            sequence = sequence.slice first, last
+
         # sequences are lazy so we need .toOrderedMap() to actually execute it
-        _message.filter (message) -> message.get('account') is accountID
-        .toOrderedMap()
-        .slice(first, last)
+        return sequence.toOrderedMap()
+
 
     getMessagesCountByAccount: (accountID) ->
-        _message.filter (message) -> message.get('account') is accountID
-        .count()
+        return @getMessagesByAccount(accountID).count()
 
     ###*
-    * Get messages from mailbox
+    * Get messages from mailbox, with optional pagination
     *
     * @param {String} mailboxID
     * @param {Number} first     index of first message
@@ -82,23 +84,23 @@ class MessageStore extends Store
     *
     * @return {Array}
     ###
-    getMessagesByMailbox: (mailboxID, first, last) ->
-        # sequences are lazy so we need .toOrderedMap() to actually execute it
-        _message.filter (message) -> mailboxID in message.get('mailboxIDs')
-        .toOrderedMap()
-        .slice(first, last)
+    getMessagesByMailbox: (mailboxID, first = null, last = null) ->
+        sequence = _messages.filter (message) -> mailboxID in message.get('mailboxIDs')
+        if first? and last?
+            sequence = sequence.slice first, last
 
-    getMessagesCountByMailbox: (mailboxID, first, last) ->
         # sequences are lazy so we need .toOrderedMap() to actually execute it
-        _message.filter (message) -> mailboxID in message.get('mailboxIDs')
-        .count()
+        return sequence.toOrderedMap()
+
+    getMessagesCountByMailbox: (mailboxID) ->
+        return @getMessagesByMailbox(mailboxID).count()
 
     getMessagesByConversation: (messageID) ->
         idsToLook = [messageID]
         conversation = []
         while idToLook = idsToLook.pop()
             conversation.push @getByID idToLook
-            temp = _message.filter (message) -> message.get('inReplyTo') is idToLook
+            temp = _messages.filter (message) -> message.get('inReplyTo') is idToLook
             idsToLook = idsToLook.concat temp.map((item) -> item.get('id')).toArray()
 
         return conversation
