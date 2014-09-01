@@ -5,9 +5,23 @@ module.exports =
       "app back"                : "Retour"
       "app menu"                : "Menu"
       "app search"              : "Rechercher…"
+
       # Compose window
-      "compose"                 : "Écrire un nouveau message"
-      "compose default"         : "Bonjour, comment ça va ?"
+      "compose"                   : "Écrire un nouveau message"
+      "compose default"           : "Bonjour, comment ça va ?"
+      "compose from"              : "De"
+      "compose to"                : "À"
+      "compose to help"           : "Liste des destinataires principaux"
+      "compose cc"                : "Cc"
+      "compose cc help"           : "Liste des destinataires en copie"
+      "compose bcc"               : "Cci"
+      "compose bcc help"          : "Liste des destinataires en copie caché"
+      "compose subject"           : "Objet"
+      "compose subject help"      : "Objet du message"
+      "compose reply prefix"      : "Re: "
+      "compose reply separator"   : "\n\nLe %{date}, %{sender} a écrit \n\n"
+      "compose forward prefix"    : "Fwd: "
+      "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n\n"
 
       # Menu
       "menu compose"            : "Nouveau"
@@ -19,6 +33,19 @@ module.exports =
 
       # Mail
       "mail receivers"          : "À %{dest}"
+      "mail action reply"       : "Répondre"
+      "mail action reply all"   : "Répondre à tous"
+      "mail action forward"     : "Transférer"
+      "mail action delete"      : "Supprimer"
+      "mail action mark"        : "Marquer comme"
+      "mail action copy"        : "Copier…"
+      "mail action move"        : "Déplacer…"
+      "mail mark spam"          : "Pourriel"
+      "mail mark nospam"        : "Légitime"
+      "mail mark fav"           : "Important"
+      "mail mark nofav"         : "Normal"
+      "mail mark read"          : "Lu"
+      "mail mark unread"        : "Non lu"
 
       # Account
       "mailbox new"                 : "Nouveau compte"
