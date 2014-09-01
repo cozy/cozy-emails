@@ -8,7 +8,7 @@ module.exports = React.createClass
     mixins: [RouterMixin]
 
     render: ->
-        if @props.mailboxes.length > 0
+        if @props.mailboxes.length > 0 and @props.selectedMailbox?
             firstItem = @props.selectedMailbox
             div className: 'dropdown pull-left',
                 button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown',

@@ -8,8 +8,8 @@ class SettingsStore extends Store
         Initialization.
         Defines private variables here.
     ###
-    _settings =
-        messagesPerPage : 5
+    _settings = Immutable.Map
+        messagesPerPage: 5
         displayConversation: false
 
     ###
@@ -25,6 +25,10 @@ class SettingsStore extends Store
     ###
         Public API
     ###
-    get: -> return _settings
+    get: (settingName = null) ->
+        if settingName?
+            return _settings.get settingName
+        else
+            return _settings
 
 module.exports = new SettingsStore()

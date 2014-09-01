@@ -4,6 +4,8 @@ classer = React.addons.classSet
 
 RouterMixin = require '../mixins/RouterMixin'
 
+AccountStore = require '../stores/AccountStore'
+
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
@@ -19,7 +21,7 @@ module.exports = Menu = React.createClass
     render: ->
         selectedAccountUrl = @buildUrl
             direction: 'left'
-            action: 'account.messages'
+            action: 'account.mailbox.messages'
             parameters: @props.selectedAccount?.get 'id'
             fullWidth: true
 
@@ -69,10 +71,12 @@ module.exports = Menu = React.createClass
                      or @props.selectedAccount?.get('id') is account.get('id')
 
         accountClasses = classer active: isSelected
+        accountID = account.get 'id'
+        defaultMailbox = AccountStore.getDefaultMailbox accountID
         url = @buildUrl
             direction: 'left'
-            action: 'account.messages'
-            parameters: account.get 'id'
+            action: 'account.mailbox.messages'
+            parameters: [accountID, defaultMailbox.get 'id']
             fullWidth: false
 
         li className: accountClasses, key: key,
