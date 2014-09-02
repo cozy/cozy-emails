@@ -3,12 +3,16 @@ module.exports = Message = americano.getModel 'Message',
     account: String
     mailboxIDs: (x) -> x
     subject: String
-    from: String
-    to: String
+    from: (x) -> x
+    to: (x) -> x
+    cc: (x) -> x
+    replyTo: (x) -> x
     text: String
+    html: String
     date: Date
     inReplyTo: String
     createdAt: Date
+    priority: String
 
 Message.getByMailboxAndDate = (mailboxID, callback) ->
     options =

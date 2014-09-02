@@ -30,6 +30,10 @@ class MessageStore extends Store
         handle ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage = (message, silent = false) ->
             # create or update
             message = Immutable.Map message
+            message.getReplyToAddress = ->
+                reply = this.get 'replyTo'
+                reply = if reply.length == 0 then this.get 'from'
+                return reply
             _messages = _messages.set message.get('id'), message
 
             @emit 'change' unless silent

@@ -2,11 +2,30 @@
     {
         "docType": "Message",
         "createdAt": "2014-07-10T08:38:23.000Z",
+        "from": [
+          {
+            "address": "alice@provider.com",
+            "name": "Alice"
+          }
+        ],
+        "to": [
+          {
+            "address": "bob@provider.com",
+            "name": "Bob"
+          },
+          {
+            "address": "zoey@provider.com",
+            "name": "Zoey"
+          }
+        ],
+        "cc": [
+          {
+            "address": "felicia@provider.com",
+            "name": "felicia"
+          }
+        ],
+        "replyTo": [],
         "subject": "Hello Cozy Email manager!",
-        "from": "alice@provider.com",
-        "to": "bob@provider.com",
-        "cc": "",
-        "bcc": "",
         "references": "",
         "inReplyTo": "",
         "text": "Hello, how are you ?",
@@ -19,11 +38,30 @@
     {
         "docType": "Message",
         "createdAt": "2014-07-11T10:38:23.000Z",
+        "from": [
+          {
+            "address": "alice@provider.com",
+            "name": "Alice"
+          }
+        ],
+        "to": [
+          {
+            "address": "bob@provider.com",
+            "name": "Bob"
+          },
+          {
+            "address": "zoey@provider.com",
+            "name": "Zoey"
+          }
+        ],
+        "cc": [
+          {
+            "address": "felicia@provider.com",
+            "name": "felicia"
+          }
+        ],
+        "replyTo": [],
         "subject": "Another email",
-        "from": "alice@provider.com",
-        "to": "bob@provider.com",
-        "cc": "",
-        "bcc": "",
         "references": "",
         "inReplyTo": "",
         "text": "Hello, how are you ? bis",
@@ -36,11 +74,30 @@
     {
         "docType": "Message",
         "createdAt": "2014-07-11T08:00:23.000Z",
+        "from": [
+          {
+            "address": "alice@provider.com",
+            "name": "Alice"
+          }
+        ],
+        "to": [
+          {
+            "address": "bob@provider.com",
+            "name": "Bob"
+          },
+          {
+            "address": "zoey@provider.com",
+            "name": "Zoey"
+          }
+        ],
+        "cc": [
+          {
+            "address": "felicia@provider.com",
+            "name": "felicia"
+          }
+        ],
+        "replyTo": [],
         "subject": "An HTML email",
-        "from": "alice@provider.com",
-        "to": "bob@provider.com",
-        "cc": "",
-        "bcc": "",
         "references": "",
         "inReplyTo": "",
         "text": "Hello, how are you ? bis",
@@ -53,11 +110,30 @@
     {
         "docType": "Message",
         "createdAt": "2014-07-11T08:38:23.000Z",
+        "from": [
+          {
+            "address": "alice@provider.com",
+            "name": "Alice"
+          }
+        ],
+        "to": [
+          {
+            "address": "bob@provider.com",
+            "name": "Bob"
+          },
+          {
+            "address": "zoey@provider.com",
+            "name": "Zoey"
+          }
+        ],
+        "cc": [
+          {
+            "address": "felicia@provider.com",
+            "name": "felicia"
+          }
+        ],
+        "replyTo": [],
         "subject": "Email box 2",
-        "from": "alice@provider.com",
-        "to": "bob@provider.com",
-        "cc": "",
-        "bcc": "",
         "references": "",
         "inReplyTo": "",
         "text": "Hello, how are you ? bis",
@@ -71,11 +147,30 @@
         "_id": "email-ID-1",
         "docType": "Message",
         "createdAt": "2014-06-11T08:38:23.000Z",
+        "from": [
+          {
+            "address": "alice@provider.com",
+            "name": "Alice"
+          }
+        ],
+        "to": [
+          {
+            "address": "bob@provider.com",
+            "name": "Bob"
+          },
+          {
+            "address": "zoey@provider.com",
+            "name": "Zoey"
+          }
+        ],
+        "cc": [
+          {
+            "address": "felicia@provider.com",
+            "name": "felicia"
+          }
+        ],
+        "replyTo": [],
         "subject": "First email of thread",
-        "from": "alice@provider.com",
-        "to": "bob@provider.com",
-        "cc": "",
-        "bcc": "",
         "references": "",
         "inReplyTo": "",
         "text": "Hello, how are you ? bis",
@@ -88,11 +183,30 @@
     {
         "docType": "Message",
         "createdAt": "2014-07-11T08:38:23.000Z",
+        "from": [
+          {
+            "address": "alice@provider.com",
+            "name": "Alice"
+          }
+        ],
+        "to": [
+          {
+            "address": "bob@provider.com",
+            "name": "Bob"
+          },
+          {
+            "address": "zoey@provider.com",
+            "name": "Zoey"
+          }
+        ],
+        "cc": [
+          {
+            "address": "felicia@provider.com",
+            "name": "felicia"
+          }
+        ],
+        "replyTo": [],
         "subject": "Email in reply to",
-        "from": "bob@provider.com",
-        "to": "alice@provider.com",
-        "cc": "",
-        "bcc": "",
         "references": "",
         "inReplyTo": "email-ID-1",
         "text": "Hello, how are you ? bis",
@@ -105,11 +219,30 @@
     {
         "docType": "Message",
         "createdAt": "2014-07-11T15:38:23.000Z",
+        "from": [
+          {
+            "address": "alice@provider.com",
+            "name": "Alice"
+          }
+        ],
+        "to": [
+          {
+            "address": "bob@provider.com",
+            "name": "Bob"
+          },
+          {
+            "address": "zoey@provider.com",
+            "name": "Zoey"
+          }
+        ],
+        "cc": [
+          {
+            "address": "felicia@provider.com",
+            "name": "felicia"
+          }
+        ],
+        "replyTo": [],
         "subject": "Hey back",
-        "from": "natacha@provider.com",
-        "to": "bob@provider.com",
-        "cc": "",
-        "bcc": "",
         "references": "",
         "inReplyTo": "",
         "text": "Hello, how are you ? bis",
@@ -122,11 +255,30 @@
     {
         "docType": "Message",
         "createdAt": "2014-07-11T12:00:00.000Z",
+        "from": [
+          {
+            "address": "alice@provider.com",
+            "name": "Alice"
+          }
+        ],
+        "to": [
+          {
+            "address": "bob@provider.com",
+            "name": "Bob"
+          },
+          {
+            "address": "zoey@provider.com",
+            "name": "Zoey"
+          }
+        ],
+        "cc": [
+          {
+            "address": "felicia@provider.com",
+            "name": "felicia"
+          }
+        ],
+        "replyTo": [],
         "subject": "Another email",
-        "from": "alice@provider.com",
-        "to": "bob@provider.com",
-        "cc": "",
-        "bcc": "",
         "references": "",
         "inReplyTo": "",
         "text": "Hello, how are you ? bis",
@@ -139,11 +291,30 @@
        {
         "docType": "Message",
         "createdAt": "2014-07-11T22:00:23.000Z",
+        "from": [
+          {
+            "address": "alice@provider.com",
+            "name": "Alice"
+          }
+        ],
+        "to": [
+          {
+            "address": "bob@provider.com",
+            "name": "Bob"
+          },
+          {
+            "address": "zoey@provider.com",
+            "name": "Zoey"
+          }
+        ],
+        "cc": [
+          {
+            "address": "felicia@provider.com",
+            "name": "felicia"
+          }
+        ],
+        "replyTo": [],
         "subject": "Another email",
-        "from": "alice@provider.com",
-        "to": "bob@provider.com",
-        "cc": "",
-        "bcc": "",
         "references": "",
         "inReplyTo": "",
         "text": "Hello, how are you ? bis",

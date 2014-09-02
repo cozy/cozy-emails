@@ -1,6 +1,7 @@
 {div, ul, li, span, i, p, h3, a, button} = React.DOM
 MailboxList  = require './mailbox-list'
 Compose      = require './compose'
+MessageUtils = require '../utils/MessageUtils'
 {ComposeActions} = require '../constants/AppConstants'
 
 # Flux stores
@@ -21,12 +22,14 @@ module.exports = React.createClass
     render: ->
         clickHandler = if @props.isLast then null else @onClick
 
+        message = @props.message
+
         classes = classer
             message: true
             active: @state.active
 
         today = moment()
-        date = moment @props.message.get 'createdAt'
+        date = moment message.get 'createdAt'
         if date.isBefore today, 'year'
             formatter = 'DD/MM/YYYY'
         else if date.isBefore today, 'day'
@@ -35,23 +38,25 @@ module.exports = React.createClass
             formatter = 'hh:mm'
 
         li className: classes, key: @props.key, onClick: clickHandler,
-            if @state.composing
-                selectedAccount = @props.selectedAccount
-                message  = @props.message
-                action   = @state.composeAction
-                Compose {selectedAccount, 'right', message, action}
             @getToolboxRender()
             div className: 'header',
                 i className: 'fa fa-user'
                 div className: 'participants',
-                    span  className: 'sender', @props.message.get 'from'
-                    span className: 'receivers', t "mail receivers", {dest: @props.message.get 'to'}
+                    span  className: 'sender', MessageUtils.displayAddresses(message.get('from'), true)
+                    span className: 'receivers', t "mail receivers", {dest: MessageUtils.displayAddresses(message.get('to'), true)}
+                    span className: 'receivers', t "mail receivers cc", {dest: MessageUtils.displayAddresses(message.get('cc'), true)}
                 span className: 'hour', date.format formatter
             div className: 'preview',
-                p null, @props.message.get 'text'
-            div className: 'content', @props.message.get 'text'
+                p null, message.get 'text'
+            div className: 'content', message.get 'text'
             div className: 'clearfix'
-            #@getToolboxRender()
+
+            # Display Compose block
+            if @state.composing
+                selectedAccount = @props.selectedAccount
+                message  = message
+                action   = @state.composeAction
+                Compose {selectedAccount, 'right', message, action}
 
     getToolboxRender: ->
 
@@ -116,6 +121,7 @@ module.exports = React.createClass
             a href: url, role: 'menuitem', "#{pusher}#{mailbox.get 'label'}"
 
     onClick: (args) ->
+        @setState active: not @state.active
 
     onReply: (args) ->
         @setState composing: true

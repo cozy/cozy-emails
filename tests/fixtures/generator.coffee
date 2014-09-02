@@ -3,6 +3,7 @@ loremIpsum = require 'lorem-ipsum'
 moment = require 'moment'
 
 names = ['alice', 'bob', 'natacha', 'mark', 'zoey', 'john', 'felicia' ,'max']
+priorities = ['low', 'normal', 'high']
 
 accounts = require './accounts.json'
 
@@ -20,25 +21,49 @@ for account in accounts
 
 numberOfEmails = process.argv[2] or 100
 
-getRandom = (max) -> Math.floor (Math.random() * max)
+getRandom = (max) -> Math.round (Math.random() * max)
+getRandomElmt = (array) -> array[getRandom(array.length - 1)]
 
 messages = []
 for i in [1..numberOfEmails] by 1
 
     # sender and receiver must not be the same
-    from = names[getRandom(8)]
-    loop
-        to = names[getRandom(8)]
-        break if to isnt from
+    name = getRandomElmt names
+    from =
+        "address": "#{name}@provider.com",
+        "name": name
 
-    account = accounts[getRandom(accounts.length)]._id
-    mailbox = mailboxes[account][getRandom mailboxes[account].length]
+    replyTo = []
+    if getRandom(2) > 0
+        name = getRandomElmt names
+        replyTo.push
+            "address": "#{name}@provider.com",
+            "name": name
+
+    nbDest = getRandom(1) + 1
+    to = []
+    for j in [0..nbDest]
+        name = getRandomElmt names
+        to.push
+            "address": "#{name}@provider.com",
+            "name": name
+    nbDest = getRandom(1)
+    cc = []
+    for j in [0..nbDest]
+        name = getRandomElmt names
+        cc.push
+            "address": "#{name}@provider.com",
+            "name": name
+
+    account = getRandomElmt(accounts)._id
+    mailbox = getRandomElmt mailboxes[account]
 
     subject = loremIpsum count: getRandom(5), units: 'words'
     content = loremIpsum count: getRandom(10), units: 'sentences'
 
     # simulate email thread
     inReplyTo = if getRandom(10) > 3 then "generated_id_#{i - 1}" else ""
+    priority  = getRandomElmt priorities
 
     # random date this year before now
     today = moment()
@@ -53,19 +78,22 @@ for i in [1..numberOfEmails] by 1
         "docType": "Message",
         "createdAt": date.toISOString(),
         "subject": subject,
-        "from": "#{from}@provider.com",
-        "to": "#{to}@provider.com",
-        "cc": "",
-        "bcc": "",
+        "from": [from]
+        "to": to,
+        "cc": cc,
         "inReplyTo": inReplyTo,
+        "replyTo": replyTo,
         "text": content,
-        "html": content,
+        "html": "<html><body><div>#{content}</div></body></html>",
+        "priority": priority,
         "reads": false,
         "mailboxIDs": [mailbox],
-        "account": account
+        "account": account,
+        "attachments": []
 
 
 targetFile = './tests/fixtures/messages_generated.json'
-json = JSON.stringify messages
+json = JSON.stringify messages, null, '  '
 fs.writeFile targetFile, json, flag: 'w', (err) ->
     console.log err if err?
+console.log "Done generating #{numberOfEmails} messages"
