@@ -7,8 +7,21 @@ module.exports =
       "app search"              : "Search…"
 
       # Compose window
-      "compose"                 : "Compose new email"
-      "compose default"         : 'Hello, how are you doing today ?'
+      "compose"                   : "Compose new email"
+      "compose default"           : 'Hello, how are you doing today ?'
+      "compose from"              : "From"
+      "compose to"                : "To"
+      "compose to help"           : "Reciepients list"
+      "compose cc"                : "Cc"
+      "compose cc help"           : "Copy list"
+      "compose bcc"               : "Bcc"
+      "compose bcc help"          : "Hidden copy list"
+      "compose subject"           : "Subject"
+      "compose subject help"      : "Message subject"
+      "compose reply prefix"      : "Re: "
+      "compose reply separator"   : "\n\nOn %{date}, %{sender} wrote \n\n"
+      "compose forward prefix"    : "Fwd: "
+      "compose forward separator" : "\n\nOn %{date}, %{sender} wrote \n\n"
 
       # Menu
       "menu compose"            : "Compose"
@@ -20,6 +33,19 @@ module.exports =
 
       # Mail
       "mail receivers"          : "To %{dest}"
+      "mail action reply"       : "Reply"
+      "mail action reply all"   : "Reply all"
+      "mail action forward"     : "Forward"
+      "mail action delete"      : "Delete"
+      "mail action mark"        : "Mark as…"
+      "mail action copy"        : "Copy…"
+      "mail action move"        : "Move…"
+      "mail mark spam"          : "Spam"
+      "mail mark nospam"        : "No spam"
+      "mail mark fav"           : "Important"
+      "mail mark nofav"         : "Not important"
+      "mail mark read"          : "Read"
+      "mail mark unread"        : "Not read"
 
       # Account
       "mailbox new"                 : "New account"

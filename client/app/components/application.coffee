@@ -251,7 +251,10 @@ module.exports = Application = React.createClass
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
             selectedAccount = @state.selectedAccount
-            return Compose {selectedAccount, layout}
+            accounts = @state.accounts
+            message  = null
+            action   = null
+            return Compose {selectedAccount, layout, accounts, message, action}
 
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else return div null, 'Unknown component'

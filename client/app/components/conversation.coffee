@@ -20,7 +20,10 @@ module.exports = React.createClass
             fullWidth: true
 
         if window.router.previous?
-            selectedAccountID = @props.selectedAccount.get 'id'
+            try
+                selectedAccountID = @props.selectedAccount.get 'id'
+            catch
+                selectedAccountID = @props.conversation[0].mailbox
         else
             selectedAccountID = @props.conversation[0].mailbox
 
@@ -77,4 +80,5 @@ module.exports = React.createClass
             ul className: 'thread list-unstyled',
                 for message, key in @props.conversation
                     isLast = key is @props.conversation.length - 1
-                    Message {message, key, isLast}
+                    selectedAccount = @props.selectedAccount
+                    Message {message, key, isLast, selectedAccount}

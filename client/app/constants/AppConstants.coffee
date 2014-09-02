@@ -27,3 +27,8 @@ module.exports =
     PayloadSources:
         'VIEW_ACTION'   : 'VIEW_ACTION'
         'SERVER_ACTION' : 'SERVER_ACTION'
+
+    ComposeActions:
+        'REPLY'         : 'REPLY'
+        'REPLY_ALL'     : 'REPLY_ALL'
+        'FORWARD'       : 'FORWARD'

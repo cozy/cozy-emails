@@ -91,30 +91,31 @@ module.exports = React.createClass
                 direction: 'left'
                 action: 'account.mailbox.messages'
                 parameters: [@props.accountID, nbPages]
-        ul className: 'pagination',
-            li className: classFirst,
-                a href: urlFirst, '«'
-            if minPage > 1
-                li className: 'disabled',
-                    a href: urlFirst, '…'
-            for j in [minPage..maxPage] by 1
-                classCurr = if j is curPage then 'active' else ''
-                if (@props.mailboxID)
-                    urlCurr = @buildUrl
-                        direction: 'left'
-                        action: 'account.mailbox.messages'
-                        parameters: [@props.accountID, @props.mailboxID, j]
-                else
-                    urlCurr = @buildUrl
-                        direction: 'left'
-                        action: 'account.mailbox.messages'
-                        parameters: [@props.accountID, j]
-                li className: classCurr, key: j,
-                    a href: urlCurr, j
-            if maxPage < nbPages
-                li className: 'disabled',
-                    a href: urlFirst, '…'
-            li className: classLast,
-                a href: urlLast, '»'
+        div className: 'pagination-box',
+            ul className: 'pagination',
+                li className: classFirst,
+                    a href: urlFirst, '«'
+                if minPage > 1
+                    li className: 'disabled',
+                        a href: urlFirst, '…'
+                for j in [minPage..maxPage] by 1
+                    classCurr = if j is curPage then 'current' else ''
+                    if (@props.mailboxID)
+                        urlCurr = @buildUrl
+                            direction: 'left'
+                            action: 'account.mailbox.messages'
+                            parameters: [@props.accountID, @props.mailboxID, j]
+                    else
+                        urlCurr = @buildUrl
+                            direction: 'left'
+                            action: 'account.mailbox.messages'
+                            parameters: [@props.accountID, j]
+                    li className: classCurr, key: j,
+                        a href: urlCurr, j
+                if maxPage < nbPages
+                    li className: 'disabled',
+                        a href: urlFirst, '…'
+                li className: classLast,
+                    a href: urlLast, '»'
 
     getParticipants: (message) -> "#{message.get 'from'}, #{message.get 'to'}"
