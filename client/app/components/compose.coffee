@@ -2,6 +2,7 @@
 classer = React.addons.classSet
 AccountStore = require '../stores/AccountStore'
 {ComposeActions} = require '../constants/AppConstants'
+MessageUtils = require '../utils/MessageUtils'
 
 RouterMixin = require '../mixins/RouterMixin'
 
@@ -88,9 +89,10 @@ module.exports = Compose = React.createClass
         li null, selected: isSelected, account.get 'label'
 
     getInitialState: (forceDefault) ->
-        if @props.message?
+        message = @props.message
+        if message?
             today = moment()
-            date = moment @props.message.get 'createdAt'
+            date = moment message.get 'createdAt'
             if date.isBefore today, 'year'
                 formatter = 'DD/MM/YYYY'
             else if date.isBefore today, 'day'
@@ -100,27 +102,27 @@ module.exports = Compose = React.createClass
         switch @props.action
             when ComposeActions.REPLY
                 return {
-                    to: @props.message.get 'from'
+                    to: message.getReplyToAddress()
                     cc: ''
                     bcc: ''
-                    subject: t('compose reply prefix') + @props.message.get 'subject'
-                    body: t('compose reply separator', {date: date.format(formatter), sender: @props.message.get 'from'}) + @props.message.get 'text'
+                    subject: t('compose reply prefix') + message.get 'subject'
+                    body: t('compose reply separator', {date: date.format(formatter), sender: message.get 'from'}) + message.get 'text'
                 }
             when ComposeActions.REPLY_ALL
                 return {
-                    to: @props.message.get 'from'
-                    cc: ''
+                    to: MessageUtils.displayAddresses(message.getReplyToAddress(), true)
+                    cc: MessageUtils.displayAddresses(Array.concat(message.get('to'), message.get('cc')), true)
                     bcc: ''
-                    subject: t('compose reply prefix') + @props.message.get 'subject'
-                    body: t('compose reply separator', {date: date.format(formatter), sender: @props.message.get 'from'}) + @props.message.get 'text'
+                    subject: t('compose reply prefix') + message.get 'subject'
+                    body: t('compose reply separator', {date: date.format(formatter), sender: message.get 'from'}) + message.get 'text'
                 }
             when ComposeActions.FORWARD
                 return {
                     to: ''
                     cc: ''
                     bcc: ''
-                    subject: t('compose forward prefix') + @props.message.get 'subject'
-                    body: t('compose forward separator', {date: date.format(formatter), sender: @props.message.get 'from'}) + @props.message.get 'text'
+                    subject: t('compose forward prefix') + message.get 'subject'
+                    body: t('compose forward separator', {date: date.format(formatter), sender: message.get 'from'}) + message.get 'text'
                 }
             when null
                 return {

@@ -33,6 +33,7 @@ module.exports =
 
       # Mail
       "mail receivers"          : "To %{dest}"
+      "mail receivers cc"       : "Cc %{dest}"
       "mail action reply"       : "Reply"
       "mail action reply all"   : "Reply all"
       "mail action forward"     : "Forward"

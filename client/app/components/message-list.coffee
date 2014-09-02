@@ -1,7 +1,8 @@
 {div, ul, li, a, span, i, p} = React.DOM
 classer = React.addons.classSet
 
-RouterMixin = require '../mixins/RouterMixin'
+RouterMixin  = require '../mixins/RouterMixin'
+MessageUtils = require '../utils/MessageUtils'
 
 module.exports = React.createClass
     displayName: 'MessageList'
@@ -118,4 +119,4 @@ module.exports = React.createClass
                 li className: classLast,
                     a href: urlLast, '»'
 
-    getParticipants: (message) -> "#{message.get 'from'}, #{message.get 'to'}"
+    getParticipants: (message) -> "#{MessageUtils.displayAddresses(message.get 'from')}, #{MessageUtils.displayAddresses(Array.concat(message.get('to'), message.get('cc')))}"
