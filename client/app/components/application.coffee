@@ -1,5 +1,5 @@
 # React components
-{body, div, p, form, i, input, span, a} = React.DOM
+{body, div, p, form, i, input, span, a, button, strong} = React.DOM
 Menu = require './menu'
 MessageList = require './message-list'
 Conversation = require './conversation'
@@ -24,6 +24,7 @@ SettingsStore = require '../stores/SettingsStore'
 # Flux actions
 LayoutActionCreator = require '../actions/LayoutActionCreator'
 
+{AlertLevel}     = require '../constants/AppConstants'
 
 ###
     This component is the root of the React tree.
@@ -84,6 +85,14 @@ module.exports = Application = React.createClass
             'col-xs-12 col-md-11': true
             'pushed': @state.isResponsiveMenuShown
 
+        alert = @state.alertMessage
+        if alert.level?
+            levels = {}
+            levels[AlertLevel.SUCCESS] = 'alert-success'
+            levels[AlertLevel.INFO]    = 'alert-info'
+            levels[AlertLevel.WARNING] = 'alert-warning'
+            levels[AlertLevel.ERROR]   = 'alert-danger'
+
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
@@ -98,6 +107,15 @@ module.exports = Application = React.createClass
                     favoriteMailboxes: @state.favoriteMailboxes
 
                 div id: 'page-content', className: responsiveClasses,
+                    # message
+                    if alert.level?
+                        div className: 'row',
+                          div className: "alert #{levels[alert.level]} alert-dismissible", role: "alert",
+                            button type: "button", className: "close", "data-dismiss": "alert",
+                              span 'aria-hidden': "true", "×"
+                              span className: "sr-only", t "app alert close"
+                            strong> null, alert.message
+
 
                     # The quick actions bar shoud be moved in its own component
                     # when its feature is implemented.
@@ -274,6 +292,7 @@ module.exports = Application = React.createClass
             accounts: AccountStore.getAll()
             selectedAccount: selectedAccount
             isResponsiveMenuShown: LayoutStore.isMenuShown()
+            alertMessage: LayoutStore.getAlert()
             mailboxes: AccountStore.getSelectedMailboxes true
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()

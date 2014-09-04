@@ -32,3 +32,9 @@ module.exports =
         'REPLY'         : 'REPLY'
         'REPLY_ALL'     : 'REPLY_ALL'
         'FORWARD'       : 'FORWARD'
+
+    AlertLevel:
+        'SUCCESS'      : 'SUCCESS'
+        'INFO'         : 'INFO'
+        'WARNING'      : 'WARNING'
+        'ERROR'        : 'ERROR'

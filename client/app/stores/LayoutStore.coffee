@@ -9,6 +9,9 @@ class LayoutStore extends Store
         Defines private variables here.
     ###
     _responsiveMenuShown = false
+    _alert =
+        level: null
+        message: null
 
 
     ###
@@ -29,5 +32,12 @@ class LayoutStore extends Store
         Public API
     ###
     isMenuShown: -> return _responsiveMenuShown
+
+    displayAlert: (level, message) ->
+        _alert.level   = level
+        _alert.message = message
+        @emit 'change'
+
+    getAlert: -> return _alert
 
 module.exports = new LayoutStore()
