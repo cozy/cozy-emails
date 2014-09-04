@@ -2,6 +2,8 @@ request = superagent
 
 AccountTranslator = require './translators/AccountTranslator'
 
+SettingsStore = require '../stores/SettingsStore'
+
 module.exports =
 
     fetchConversation: (emailID, callback) ->
@@ -65,3 +67,13 @@ module.exports =
         request.del "account/#{accountID}"
                .set 'Accept', 'application/json'
                .end (res) -> # nothing
+
+    search: (query, numPage, callback) ->
+        encodedQuery = encodeURIComponent query
+        numByPage = SettingsStore.get 'messagesPerPage'
+        request.get "search/#{encodedQuery}/page/#{numPage}/limit/#{numByPage}"
+            .end (res) ->
+                if res.ok
+                    callback null, res.body
+                else
+                    callback res.body, null

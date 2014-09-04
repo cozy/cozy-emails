@@ -23,6 +23,7 @@ window.onload = ->
     LayoutStore   = require './stores/LayoutStore'
     MessageStore  = require './stores/MessageStore'
     SettingsStore = require './stores/SettingsStore'
+    SearchStore = require './stores/SearchStore'
 
 
     # Routing management

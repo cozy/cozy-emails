@@ -32,8 +32,10 @@ module.exports =
       "menu account new"        : "Ajouter un compte"
 
       # List
-      "list empty"              : "No email in this box."
+      "list empty"              : "Pas d'email dans cette boîte.."
+      "list search empty"       : "Aucun résultat trouvé pour la requête \"%{query}\"."
       "list count"              : "%{smart_count} message dans cette boite |||| %{smart_count} messages dans cette boite"
+      "list search count"       : "%{smart_count} résultat trouvé. |||| %{smart_count} résultats trouvés."
 
       # Mail
       "mail receivers"          : "À %{dest}"

@@ -15,6 +15,10 @@ module.exports = class Router extends PanelRouter
             pattern: 'account/:id/mailbox/:mailbox/page/:page'
             fluxAction: 'showMessageList'
 
+        'search':
+            pattern: 'search/:query/page/:page'
+            fluxAction: 'showSearch'
+
         'message':
             pattern: 'message/:id'
             fluxAction: 'showConversation'
@@ -39,6 +43,8 @@ module.exports = class Router extends PanelRouter
             when 'account.config'
                 defaultAccount = AccountStore.getDefault()?.get 'id'
                 defaultParameters = [defaultAccount]
+            when 'search'
+                defaultParameters = ["", 1]
             else
                 defaultParameters = null
         return defaultParameters

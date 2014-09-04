@@ -26,6 +26,7 @@ class MessageStore extends Store
         .map (message) -> Immutable.fromJS message
         .toOrderedMap()
 
+
     ###
         Defines here the action handlers.
     ###

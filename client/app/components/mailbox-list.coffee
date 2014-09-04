@@ -20,7 +20,8 @@ module.exports = React.createClass
                             @getMailboxRender mailbox, key
                     .toJS()
         else
-            div null, t "app loading"
+            # no account selected
+            div null, ""
 
 
     getMailboxRender: (mailbox, key) ->
