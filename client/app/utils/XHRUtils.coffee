@@ -1,6 +1,5 @@
 request = superagent
 
-MessageActionCreator = require '../actions/MessageActionCreator'
 AccountTranslator = require './translators/AccountTranslator'
 
 module.exports =
@@ -9,20 +8,30 @@ module.exports =
         request.get "message/#{emailID}"
                .set 'Accept', 'application/json'
                .end (res) ->
-            if res.ok
-                MessageActionCreator.receiveRawMessage res.body
-                callback null, res.body
-            else
-                callback "Something went wrong -- #{res.body}"
+                   if res.ok
+                       callback null, res.body
+                   else
+                       callback "Something went wrong -- #{res.body}"
 
-    fetchMessagesByFolder: (mailboxID) ->
+
+    fetchMessagesByFolder: (mailboxID, callback) ->
         request.get "mailbox/#{mailboxID}"
                .set 'Accept', 'application/json'
                .end (res) ->
-            if res.ok
-                MessageActionCreator.receiveRawMessages res.body
-            else
-                console.log "Something went wrong -- #{res.body}"
+                   if res.ok
+                       callback null, res.body
+                   else
+                       callback "Something went wrong -- #{res.body}"
+
+    messageSend: (message, callback) ->
+        request.post "/message"
+               .send message
+               .set 'Accept', 'application/json'
+               .end (res) ->
+                   if res.ok
+                       callback null, res.body
+                   else
+                       callback "Something went wrong -- #{res.body}"
 
     createAccount: (account, callback) ->
 
@@ -32,10 +41,10 @@ module.exports =
                .send account
                .set 'Accept', 'application/json'
                .end (res) ->
-            if res.ok
-                callback null, res.body
-            else
-                callback res.body, null
+                   if res.ok
+                       callback null, res.body
+                   else
+                       callback res.body, null
 
     editAccount: (account, callback) ->
 
@@ -46,10 +55,10 @@ module.exports =
                .send rawAccount
                .set 'Accept', 'application/json'
                .end (res) ->
-            if res.ok
-                callback null, res.body
-            else
-                callback res.body, null
+                   if res.ok
+                       callback null, res.body
+                   else
+                       callback res.body, null
 
     removeAccount: (accountID) ->
 

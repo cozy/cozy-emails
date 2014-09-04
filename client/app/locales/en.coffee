@@ -5,6 +5,8 @@ module.exports =
       "app back"                : "Back"
       "app menu"                : "Menu"
       "app search"              : "Search…"
+      "app alert close"         : "Close"
+      "app unimplemented"       : "Not implemented yet"
 
       # Compose window
       "compose"                   : "Compose new email"
@@ -19,9 +21,11 @@ module.exports =
       "compose subject"           : "Subject"
       "compose subject help"      : "Message subject"
       "compose reply prefix"      : "Re: "
-      "compose reply separator"   : "\n\nOn %{date}, %{sender} wrote \n\n"
+      "compose reply separator"   : "\n\nOn %{date}, %{sender} wrote \n"
       "compose forward prefix"    : "Fwd: "
-      "compose forward separator" : "\n\nOn %{date}, %{sender} wrote \n\n"
+      "compose forward separator" : "\n\nOn %{date}, %{sender} wrote \n"
+      "compose action draft"      : "Enregistrer le brouillon"
+      "compose action send"       : "Envoyer"
 
       # Menu
       "menu compose"            : "Compose"
@@ -62,3 +66,7 @@ module.exports =
       "mailbox sending server"      : "Sending server"
       "mailbox receiving server"    : "IMAP server"
       "mailbox remove"              : "Remove"
+
+      # Message Action
+      "message action sent ok"      : "Message sent"
+      "message action sent ko"      : "Error sending message: "

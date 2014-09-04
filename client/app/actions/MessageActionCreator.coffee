@@ -12,3 +12,9 @@ module.exports =
         AppDispatcher.handleViewAction
             type: ActionTypes.RECEIVE_RAW_MESSAGE
             value: message
+
+    send: (message) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SEND_MESSAGE
+            value: message
+

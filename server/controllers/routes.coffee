@@ -20,6 +20,9 @@ module.exports =
     'mailbox/:mailboxID':
         get: [messages.listByMailboxId]
 
+    'message':
+        post: messages.send
+
     'message/:messageID':
         get: [messages.fetch, messages.details]
         put: [messages.fetch, messages.updateFlags]

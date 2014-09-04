@@ -5,6 +5,8 @@ module.exports =
       "app back"                : "Retour"
       "app menu"                : "Menu"
       "app search"              : "Rechercher…"
+      "app alert close"         : "Fermer"
+      "app unimplemented"       : "Non implémenté"
 
       # Compose window
       "compose"                   : "Écrire un nouveau message"
@@ -19,9 +21,11 @@ module.exports =
       "compose subject"           : "Objet"
       "compose subject help"      : "Objet du message"
       "compose reply prefix"      : "Re: "
-      "compose reply separator"   : "\n\nLe %{date}, %{sender} a écrit \n\n"
+      "compose reply separator"   : "\n\nLe %{date}, %{sender} a écrit \n"
       "compose forward prefix"    : "Fwd: "
-      "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n\n"
+      "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n"
+      "compose action draft"      : "Save as draft"
+      "compose action send"       : "Send"
 
       # Menu
       "menu compose"            : "Nouveau"
@@ -62,3 +66,7 @@ module.exports =
       "mailbox sending server"      : "Serveur sortant"
       "mailbox receiving server"    : "Serveur IMAP"
       "mailbox remove"              : "Supprimer"
+
+      # Message Action
+      "message action sent ok"      : "Message envoyé !"
+      "message action sent ko"      : "Une erreur est survenue : "

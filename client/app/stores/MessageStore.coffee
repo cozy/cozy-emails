@@ -3,7 +3,11 @@ AppDispatcher = require '../AppDispatcher'
 
 AccountStore = require './AccountStore'
 
-{ActionTypes} = require '../constants/AppConstants'
+{ActionTypes}       = require '../constants/AppConstants'
+
+XHRUtils            = require '../utils/XHRUtils'
+
+LayoutActionCreator = require '../actions/LayoutActionCreator'
 
 class MessageStore extends Store
 
@@ -19,7 +23,7 @@ class MessageStore extends Store
         .mapKeys (_, message) -> message.id
 
         # makes message object an immutable Map
-        .map (message) -> Immutable.Map message
+        .map (message) -> Immutable.fromJS message
         .toOrderedMap()
 
     ###
@@ -32,7 +36,7 @@ class MessageStore extends Store
             message = Immutable.Map message
             message.getReplyToAddress = ->
                 reply = this.get 'replyTo'
-                reply = if reply.length == 0 then this.get 'from'
+                reply = if reply.length == 0 then this.get 'from' else reply
                 return reply
             _messages = _messages.set message.get('id'), message
 
@@ -49,6 +53,13 @@ class MessageStore extends Store
                 messages.forEach (message) -> map.remove message.get 'id'
 
             @emit 'change'
+
+        handle ActionTypes.SEND_MESSAGE, (message) ->
+            XHRUtils.messageSend message, (error, message) ->
+                if error?
+                    LayoutActionCreator.alertError(t "message action sent ko") + error
+                else
+                    LayoutActionCreator.alertSuccess t "message action sent ok"
 
 
     ###

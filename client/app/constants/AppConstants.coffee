@@ -12,6 +12,7 @@ module.exports =
         # Message
         'RECEIVE_RAW_MESSAGE'       : 'RECEIVE_RAW_MESSAGE'
         'RECEIVE_RAW_MESSAGES'      : 'RECEIVE_RAW_MESSAGES'
+        'SEND_MESSAGE'              : 'SEND_MESSAGE'
 
         # Layout
         'SHOW_MENU_RESPONSIVE'      : 'SHOW_MENU_RESPONSIVE'
