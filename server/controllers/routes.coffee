@@ -24,5 +24,11 @@ module.exports =
         get: [messages.fetch, messages.details]
         put: [messages.fetch, messages.updateFlags]
 
+    'search/:query/page/:numPage/limit/:numByPage':
+        get: messages.search
+
+    # temporary routes for testing purpose
+    'messages/index': get: messages.index
+
     'load-fixtures':
         get: index.loadFixtures

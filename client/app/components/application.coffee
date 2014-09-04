@@ -6,6 +6,7 @@ Conversation = require './conversation'
 Compose = require './compose'
 AccountConfig = require './account-config'
 MailboxList = require './mailbox-list'
+SearchForm = require './search-form'
 
 # React addons
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup
@@ -20,6 +21,7 @@ AccountStore = require '../stores/AccountStore'
 MessageStore = require '../stores/MessageStore'
 LayoutStore = require '../stores/LayoutStore'
 SettingsStore = require '../stores/SettingsStore'
+SearchStore = require '../stores/SearchStore'
 
 # Flux actions
 LayoutActionCreator = require '../actions/LayoutActionCreator'
@@ -40,7 +42,7 @@ module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, LayoutStore]
+        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SearchStore]
         RouterMixin
     ]
 
@@ -119,11 +121,7 @@ module.exports = Application = React.createClass
                                     selectedAccount: @state.selectedAccount
                                     mailboxes: @state.mailboxes
                                     selectedMailbox: @state.selectedMailbox
-                                div className: 'form-group pull-left',
-                                    div className: 'input-group',
-                                        input className: 'form-control', type: 'text', placeholder: t "app search", onFocus: @onFocusSearchInput, onBlur: @onBlurSearchInput
-                                        div className: 'input-group-addon btn btn-cozy',
-                                            span className: 'fa fa-search'
+                                SearchForm query: @state.searchQuery
 
                         div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
                             ReactCSSTransitionGroup transitionName: 'fade',
@@ -218,15 +216,23 @@ module.exports = Application = React.createClass
             if otherPanelInfo?.action is 'message'
                 openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
 
+            messagesCount = MessageStore.getMessagesCountByMailbox mailboxID
             return MessageList
                 messages: MessageStore.getMessagesByMailbox mailboxID, firstOfPage, lastOfPage
-                messagesCount: MessageStore.getMessagesCountByMailbox mailboxID
+                messagesCount: messagesCount
                 accountID: accountID
                 mailboxID: mailboxID
                 layout: layout
                 openMessage: openMessage
                 messagesPerPage: numPerPage
                 pageNum: pageNum
+                emptyListMessage: t 'list empty'
+                counterMessage: t 'list count', messagesCount
+                buildPaginationUrl: (numPage) =>
+                    @buildUrl
+                        direction: 'left'
+                        action: 'account.mailbox.messages'
+                        parameters: [accountID, mailboxID, numPage]
 
         # -- Generates a configuration window for a given account
         else if panelInfo.action is 'account.config'
@@ -256,6 +262,40 @@ module.exports = Application = React.createClass
             action   = null
             return Compose {selectedAccount, layout, accounts, message, action}
 
+        # -- Generates a message list based on search result
+        else if panelInfo.action is 'search'
+            accountID = null
+            mailboxID = null
+            pageNum   = panelInfo.parameters[1]
+            numPerPage      = SettingsStore.get 'messagesPerPage'
+            firstOfPage     = ( pageNum - 1 ) * numPerPage
+            lastOfPage      = ( pageNum * numPerPage )
+
+            # gets the selected message if any
+            openMessage = null
+            direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
+            otherPanelInfo = @props.router.current[direction]
+            if otherPanelInfo?.action is 'message'
+                openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
+
+            results = SearchStore.getResults()
+            return MessageList
+                messages: results
+                messagesCount: results.count()
+                accountID: accountID
+                mailboxID: mailboxID
+                layout: layout
+                openMessage: openMessage
+                messagesPerPage: numPerPage
+                pageNum: pageNum
+                emptyListMessage: t 'list search empty', query: @state.searchQuery
+                counterMessage: t 'list search count', results.count()
+                buildPaginationUrl: (numPage) =>
+                    @buildUrl
+                        direction: 'left'
+                        action: 'search'
+                        parameters: [@state.searchQuery, numPage]
+
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else return div null, 'Unknown component'
 
@@ -277,6 +317,7 @@ module.exports = Application = React.createClass
             mailboxes: AccountStore.getSelectedMailboxes true
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
+            searchQuery: SearchStore.getQuery()
         }
 
 
