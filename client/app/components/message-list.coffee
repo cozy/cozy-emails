@@ -17,12 +17,12 @@ module.exports = React.createClass
         curPage = parseInt @props.pageNum, 10
         nbPages = Math.ceil(@props.messagesCount / @props.messagesPerPage)
         div className: 'message-list',
-            @getPagerRender(curPage, nbPages),
+            @getPagerRender curPage, nbPages
             if @props.messages.count() is 0
-                p null, t "list empty"
+                p null, @props.emptyListMessage
             else
                 div null,
-                    p null, t "list count", @props.messagesCount
+                    p null, @props.counterMessage
                     ul className: 'list-unstyled',
                         @props.messages.map (message, key) =>
                             # only displays initial email of a thread
@@ -31,7 +31,7 @@ module.exports = React.createClass
                                            @props.openMessage.get('id') is message.get('id')
                                 @getMessageRender message, key, isActive
                         .toJS()
-            @getPagerRender(curPage, nbPages),
+            @getPagerRender curPage, nbPages
 
     getMessageRender: (message, key, isActive) ->
         classes = classer
@@ -74,24 +74,10 @@ module.exports = React.createClass
             maxPage = minPage + 4
             if maxPage > nbPages
                 maxPage = nbPages
-        if (@props.mailboxID)
-            urlFirst = @buildUrl
-                direction: 'left'
-                action: 'account.mailbox.messages'
-                parameters: [@props.accountID, @props.mailboxID, 1]
-            urlLast = @buildUrl
-                direction: 'left'
-                action: 'account.mailbox.messages'
-                parameters: [@props.accountID, @props.mailboxID, nbPages]
-        else
-            urlFirst = @buildUrl
-                direction: 'left'
-                action: 'account.mailbox.messages'
-                parameters: [@props.accountID, @props.mailboxID, 1]
-            urlLast = @buildUrl
-                direction: 'left'
-                action: 'account.mailbox.messages'
-                parameters: [@props.accountID, nbPages]
+
+        urlFirst = @props.buildPaginationUrl 1
+        urlLast = @props.buildPaginationUrl nbPages
+
         div className: 'pagination-box',
             ul className: 'pagination',
                 li className: classFirst,
@@ -101,16 +87,7 @@ module.exports = React.createClass
                         a href: urlFirst, '…'
                 for j in [minPage..maxPage] by 1
                     classCurr = if j is curPage then 'current' else ''
-                    if (@props.mailboxID)
-                        urlCurr = @buildUrl
-                            direction: 'left'
-                            action: 'account.mailbox.messages'
-                            parameters: [@props.accountID, @props.mailboxID, j]
-                    else
-                        urlCurr = @buildUrl
-                            direction: 'left'
-                            action: 'account.mailbox.messages'
-                            parameters: [@props.accountID, j]
+                    urlCurr = @props.buildPaginationUrl j
                     li className: classCurr, key: j,
                         a href: urlCurr, j
                 if maxPage < nbPages

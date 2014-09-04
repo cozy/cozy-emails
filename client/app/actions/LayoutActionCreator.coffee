@@ -2,7 +2,9 @@ XHRUtils = require '../utils/XHRUtils'
 AccountStore = require '../stores/AccountStore'
 AppDispatcher = require '../AppDispatcher'
 {ActionTypes} = require '../constants/AppConstants'
+
 AccountActionCreator = require './AccountActionCreator'
+SearchActionCreator = require './SearchActionCreator'
 
 module.exports = LayoutActionCreator =
 
@@ -53,3 +55,18 @@ module.exports = LayoutActionCreator =
     showConfigAccount: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
         AccountActionCreator.selectAccount panelInfo.parameters[0]
+
+    showSearch: (panelInfo, direction) ->
+        AccountActionCreator.selectAccount -1
+
+        [query, page] = panelInfo.parameters
+
+        SearchActionCreator.setQuery query
+
+        XHRUtils.search query, page, (err, results) ->
+            if err?
+                console.log err
+            else
+                SearchActionCreator.receiveRawSearchResults results
+
+
