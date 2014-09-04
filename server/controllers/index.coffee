@@ -13,7 +13,12 @@ module.exports.main = (req, res, next) ->
 
         if err?
             # for now we handle error case loosely
-            res.render 'index.jade', imports: ""
+            console.log err
+            res.render 'index.jade', imports: """
+                console.log("#{err}")
+                window.locale = "en";
+                window.accounts = {};
+            """
         else
             [locale, accounts] = results
             accounts = accounts.map Account.clientVersion
