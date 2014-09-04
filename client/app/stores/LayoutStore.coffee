@@ -27,16 +27,16 @@ class LayoutStore extends Store
             _responsiveMenuShown = false
             @emit 'change'
 
+        handle ActionTypes.DISPLAY_ALERT, (value) ->
+            _alert.level   = value.level
+            _alert.message = value.message
+            @emit 'change'
+
 
     ###
         Public API
     ###
     isMenuShown: -> return _responsiveMenuShown
-
-    displayAlert: (level, message) ->
-        _alert.level   = level
-        _alert.message = message
-        @emit 'change'
 
     getAlert: -> return _alert
 

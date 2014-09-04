@@ -17,6 +17,7 @@ module.exports =
         'SHOW_MENU_RESPONSIVE'      : 'SHOW_MENU_RESPONSIVE'
         'HIDE_MENU_RESPONSIVE'      : 'HIDE_MENU_RESPONSIVE'
         'SELECT_ACCOUNT'            : 'SELECT_ACCOUNT'
+        'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
 
         # Mailbox
         'RECEIVE_RAW_MAILBOXES'     : 'RECEIVE_RAW_MAILBOXES'
