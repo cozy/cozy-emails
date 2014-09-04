@@ -14,3 +14,10 @@ module.exports =
                 else
                     res.push item.address.split('@')[0]
         return res.join ", "
+
+    generateReplyText: (text) ->
+        text = text.split '\n'
+        res  = []
+        text.forEach (line) ->
+            res.push "> #{line}"
+        return res.join "\n"

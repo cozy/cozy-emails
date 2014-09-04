@@ -3,6 +3,7 @@ MailboxList  = require './mailbox-list'
 Compose      = require './compose'
 MessageUtils = require '../utils/MessageUtils'
 {ComposeActions} = require '../constants/AppConstants'
+LayoutActionCreator  = require '../actions/LayoutActionCreator'
 
 # Flux stores
 AccountStore = require '../stores/AccountStore'
@@ -136,7 +137,10 @@ module.exports = React.createClass
         @setState composeAction: ComposeActions.FORWARD
 
     onDelete: (args) ->
+        LayoutActionCreator.alertWarning t "app unimplemented"
 
     onCopy: (args) ->
+        LayoutActionCreator.alertWarning t "app unimplemented"
 
     onMove: (args) ->
+        LayoutActionCreator.alertWarning t "app unimplemented"

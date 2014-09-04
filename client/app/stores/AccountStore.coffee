@@ -119,7 +119,7 @@ class AccountStore extends Store
     # Takes the 3 first mailboxes to show as "favorite".
     # Skip the first 1, assumed to be the inbox
     # Should be made configurable.
-    getSelectedFavorites: () ->
+    getSelectedFavorites: ->
         return @getSelectedMailboxes()
             .skip 1
             .take 3

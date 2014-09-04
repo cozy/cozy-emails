@@ -11,6 +11,7 @@ module.exports = Message = americano.getModel 'Message',
     html: String
     date: Date
     inReplyTo: String
+    references: String
     createdAt: Date
     priority: String
 
