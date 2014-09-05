@@ -5,8 +5,6 @@ AccountStore = require './AccountStore'
 
 {ActionTypes}       = require '../constants/AppConstants'
 
-XHRUtils            = require '../utils/XHRUtils'
-
 LayoutActionCreator = require '../actions/LayoutActionCreator'
 
 class MessageStore extends Store
@@ -56,11 +54,9 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.SEND_MESSAGE, (message) ->
-            XHRUtils.messageSend message, (error, message) ->
-                if error?
-                    LayoutActionCreator.alertError(t "message action sent ko") + error
-                else
-                    LayoutActionCreator.alertSuccess t "message action sent ok"
+            # message should have been copied to Sent mailbox,
+            # so it seems reasonable to emit change
+            @emit 'change'
 
 
     ###

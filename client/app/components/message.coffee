@@ -54,10 +54,14 @@ module.exports = React.createClass
 
             # Display Compose block
             if @state.composing
+                self = this
                 selectedAccount = @props.selectedAccount
                 message  = message
                 action   = @state.composeAction
-                Compose {selectedAccount, 'right', message, action}
+                callback = (error) ->
+                    if not(error?)
+                        self.setState composing: false
+                Compose {selectedAccount, 'right', message, action, callback}
 
     getToolboxRender: ->
 

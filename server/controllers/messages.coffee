@@ -6,11 +6,11 @@ Client = require('request-json').JsonClient
 # The data system listens to localhost:9101
 dataSystem = new Client 'http://localhost:9101/'
 
-# In production we must authentificate the application
-#if process.env.NODE_ENV is 'production'
-#    user = process.env.NAME
-#    password = process.env.TOKEN
-#    dataSystem.setBasicAuth(user, password)
+# In production we must authenticate the application
+if process.env.NODE_ENV is 'production'
+    user = process.env.NAME
+    password = process.env.TOKEN
+    dataSystem.setBasicAuth user, password
 
 module.exports.listByMailboxId = (req, res, next) ->
 

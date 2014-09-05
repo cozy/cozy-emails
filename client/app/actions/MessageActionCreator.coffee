@@ -1,5 +1,7 @@
-AppDispatcher = require '../AppDispatcher'
-{ActionTypes} = require '../constants/AppConstants'
+AppDispatcher        = require '../AppDispatcher'
+{ActionTypes}        = require '../constants/AppConstants'
+XHRUtils             = require '../utils/XHRUtils'
+
 
 module.exports =
 
@@ -13,8 +15,10 @@ module.exports =
             type: ActionTypes.RECEIVE_RAW_MESSAGE
             value: message
 
-    send: (message) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SEND_MESSAGE
-            value: message
-
+    send: (message, callback) ->
+        XHRUtils.messageSend message, (error, message) ->
+            if not(error?)
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.SEND_MESSAGE
+                    value: message
+            callback error

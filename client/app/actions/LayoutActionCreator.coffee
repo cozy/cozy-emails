@@ -5,8 +5,7 @@ LayoutStore   = require '../stores/LayoutStore'
 
 AppDispatcher = require '../AppDispatcher'
 
-{ActionTypes} = require '../constants/AppConstants'
-{AlertLevel}  = require '../constants/AppConstants'
+{ActionTypes, AlertLevel} = require '../constants/AppConstants'
 
 AccountActionCreator = require './AccountActionCreator'
 MessageActionCreator = require './MessageActionCreator'

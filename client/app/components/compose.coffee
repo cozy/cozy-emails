@@ -40,10 +40,7 @@ module.exports = Compose = React.createClass
 
         accounts = AccountStore.getAll()
 
-        if @props.selectedAccount?
-            @currentAccount = @props.selectedAccount
-        else
-            @currentAccount = accounts.first()
+        @currentAccount = @props.selectedAccount
 
         div id: 'email-compose',
             h3 null,
@@ -96,6 +93,11 @@ module.exports = Compose = React.createClass
                                 span className: 'fa fa-send'
                                 span className: 'tool-long', t 'compose action send'
 
+    componentDidUpdate: ->
+        # scroll compose window into view
+        node = @getDOMNode()
+        node.scrollIntoView()
+
     getAccountRender: (account, key) ->
 
         isSelected = (not @props.selectedAccount? and key is 0) \
@@ -115,31 +117,35 @@ module.exports = Compose = React.createClass
                 formatter = 'DD MMMM'
             else
                 formatter = 'hh:mm'
+            dateHuman = date.format(formatter)
+            sender = MessageUtils.displayAddresses(message.get 'from')
+
         switch @props.action
             when ComposeActions.REPLY
                 return {
-                    to: MessageUtils.displayAddresses(message.getReplyToAddress(), true)
+                    to: MessageUtils.displayAddresses message.getReplyToAddress(), true
                     cc: ''
                     bcc: ''
-                    subject: t('compose reply prefix') + message.get 'subject'
-                    body: t('compose reply separator', {date: date.format(formatter), sender: MessageUtils.displayAddresses(message.get 'from')}) + MessageUtils.generateReplyText(message.get('text')) + "\n"
+                    subject: "#{t 'compose reply prefix'}#{message.get 'subject'}"
+                    body: t('compose reply separator', {date: dateHuman, sender: sender}) +
+                        MessageUtils.generateReplyText(message.get('text')) + "\n"
                 }
             when ComposeActions.REPLY_ALL
                 return {
                     to: MessageUtils.displayAddresses(message.getReplyToAddress(), true)
                     cc: MessageUtils.displayAddresses(Array.concat(message.get('to'), message.get('cc')), true)
                     bcc: ''
-                    subject: t('compose reply prefix') + message.get 'subject'
-                    body: t('compose reply separator', {date: date.format(formatter), sender: MessageUtils.displayAddresses(message.get 'from')}) + MessageUtils.generateReplyText(message.get('text')) + "\n"
+                    subject: "#{t 'compose reply prefix'}#{message.get 'subject'}"
+                    body: t('compose reply separator', {date: dateHuman, sender: sender}) +
+                        MessageUtils.generateReplyText(message.get('text')) + "\n"
                 }
             when ComposeActions.FORWARD
                 return {
                     to: ''
                     cc: ''
                     bcc: ''
-                    subject: t('compose forward prefix') + message.get 'subject'
-                    body: t('compose forward separator',
-                        {date: date.format(formatter), sender: MessageUtils.displayAddresses(message.get 'from')}) + message.get('text')
+                    subject: "#{t 'compose forward prefix'}#{message.get 'subject'}"
+                    body: t('compose forward separator', {date: dateHuman, sender: sender}) + message.get('text')
                 }
             when null
                 return {
@@ -152,8 +158,8 @@ module.exports = Compose = React.createClass
 
     onAccountChange: (args) ->
         selected = args.target.dataset.value
-        if selected isnt @currentAccount.get 'id'
-            @currentAccount = AccountStore.getByID(selected)
+        if (selected isnt @currentAccount.get 'id')
+            @currentAccount = AccountStore.getByID selected
 
     onDraft: (args) ->
         LayoutActionCreator.alertWarning t "app unimplemented"
@@ -181,4 +187,11 @@ module.exports = Compose = React.createClass
             else
                 message.references = msgId
 
-        MessageActionCreator.send message
+        callback = @props.callback
+        MessageActionCreator.send message, (error) ->
+            if error?
+                LayoutActionCreator.alertError(t "message action sent ko") + error
+            else
+                LayoutActionCreator.alertSuccess t "message action sent ok"
+            if callback?
+                callback error
