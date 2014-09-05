@@ -12,6 +12,7 @@ module.exports =
         # Message
         'RECEIVE_RAW_MESSAGE'       : 'RECEIVE_RAW_MESSAGE'
         'RECEIVE_RAW_MESSAGES'      : 'RECEIVE_RAW_MESSAGES'
+        'SEND_MESSAGE'              : 'SEND_MESSAGE'
 
         # Search
         'SET_SEARCH_QUERY'          : 'SET_SEARCH_QUERY'
@@ -22,6 +23,7 @@ module.exports =
         'SHOW_MENU_RESPONSIVE'      : 'SHOW_MENU_RESPONSIVE'
         'HIDE_MENU_RESPONSIVE'      : 'HIDE_MENU_RESPONSIVE'
         'SELECT_ACCOUNT'            : 'SELECT_ACCOUNT'
+        'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
 
         # Mailbox
         'RECEIVE_RAW_MAILBOXES'     : 'RECEIVE_RAW_MAILBOXES'
@@ -37,3 +39,9 @@ module.exports =
         'REPLY'         : 'REPLY'
         'REPLY_ALL'     : 'REPLY_ALL'
         'FORWARD'       : 'FORWARD'
+
+    AlertLevel:
+        'SUCCESS'      : 'SUCCESS'
+        'INFO'         : 'INFO'
+        'WARNING'      : 'WARNING'
+        'ERROR'        : 'ERROR'

@@ -3,7 +3,9 @@ AppDispatcher = require '../AppDispatcher'
 
 AccountStore = require './AccountStore'
 
-{ActionTypes} = require '../constants/AppConstants'
+{ActionTypes}       = require '../constants/AppConstants'
+
+LayoutActionCreator = require '../actions/LayoutActionCreator'
 
 class MessageStore extends Store
 
@@ -19,7 +21,7 @@ class MessageStore extends Store
         .mapKeys (_, message) -> message.id
 
         # makes message object an immutable Map
-        .map (message) -> Immutable.Map message
+        .map (message) -> Immutable.fromJS message
         .toOrderedMap()
 
 
@@ -33,7 +35,7 @@ class MessageStore extends Store
             message = Immutable.Map message
             message.getReplyToAddress = ->
                 reply = this.get 'replyTo'
-                reply = if reply.length == 0 then this.get 'from'
+                reply = if reply.length == 0 then this.get 'from' else reply
                 return reply
             _messages = _messages.set message.get('id'), message
 
@@ -49,6 +51,11 @@ class MessageStore extends Store
             _messages = _messages.withMutations (map) ->
                 messages.forEach (message) -> map.remove message.get 'id'
 
+            @emit 'change'
+
+        handle ActionTypes.SEND_MESSAGE, (message) ->
+            # message should have been copied to Sent mailbox,
+            # so it seems reasonable to emit change
             @emit 'change'
 
 

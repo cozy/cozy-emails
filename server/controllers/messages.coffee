@@ -1,6 +1,16 @@
 async = require 'async'
 Message = require '../models/message'
 {HttpError} = require '../utils/errors'
+Client = require('request-json').JsonClient
+
+# The data system listens to localhost:9101
+dataSystem = new Client 'http://localhost:9101/'
+
+# In production we must authenticate the application
+if process.env.NODE_ENV in ['production', 'test']
+    user = process.env.NAME
+    password = process.env.TOKEN
+    dataSystem.setBasicAuth user, password
 
 module.exports.listByMailboxId = (req, res, next) ->
 
@@ -32,6 +42,13 @@ module.exports.updateFlags = (req, res, next) ->
 
     next new Error 'not implemented'
 
+module.exports.send = (req, res, next) ->
+    console.log "Server: ", typeof req.body
+    dataSystem.post 'mail/', req.body, (dsErr, dsRes, dsBody) ->
+        if dsErr
+            res.send 500, dsBody
+        else
+            res.send 200, dsBody
 
 module.exports.search = (req, res, next) ->
 

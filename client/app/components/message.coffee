@@ -3,6 +3,7 @@ MailboxList  = require './mailbox-list'
 Compose      = require './compose'
 MessageUtils = require '../utils/MessageUtils'
 {ComposeActions} = require '../constants/AppConstants'
+LayoutActionCreator  = require '../actions/LayoutActionCreator'
 
 # Flux stores
 AccountStore = require '../stores/AccountStore'
@@ -20,7 +21,7 @@ module.exports = React.createClass
         }
 
     render: ->
-        clickHandler = if @props.isLast then null else @onClick
+        clickHandler = if @props.isLast then null else @onFold
 
         message = @props.message
 
@@ -54,9 +55,13 @@ module.exports = React.createClass
             # Display Compose block
             if @state.composing
                 selectedAccount = @props.selectedAccount
-                message  = message
-                action   = @state.composeAction
-                Compose {selectedAccount, 'right', message, action}
+                layout          = 'right'
+                message         = message
+                action          = @state.composeAction
+                callback        = (error) =>
+                    if not error?
+                        @setState composing: false
+                Compose {selectedAccount, layout, message, action, callback}
 
     getToolboxRender: ->
 
@@ -120,7 +125,7 @@ module.exports = React.createClass
         li role: 'presentation', key: key,
             a href: url, role: 'menuitem', "#{pusher}#{mailbox.get 'label'}"
 
-    onClick: (args) ->
+    onFold: (args) ->
         @setState active: not @state.active
 
     onReply: (args) ->
@@ -136,7 +141,10 @@ module.exports = React.createClass
         @setState composeAction: ComposeActions.FORWARD
 
     onDelete: (args) ->
+        LayoutActionCreator.alertWarning t "app unimplemented"
 
     onCopy: (args) ->
+        LayoutActionCreator.alertWarning t "app unimplemented"
 
     onMove: (args) ->
+        LayoutActionCreator.alertWarning t "app unimplemented"

@@ -1,11 +1,12 @@
 # React components
-{body, div, p, form, i, input, span, a} = React.DOM
-Menu = require './menu'
-MessageList = require './message-list'
-Conversation = require './conversation'
-Compose = require './compose'
+{body, div, p, form, i, input, span, a, button, strong} = React.DOM
 AccountConfig = require './account-config'
-MailboxList = require './mailbox-list'
+Alert         = require './alert'
+Compose       = require './compose'
+Conversation  = require './conversation'
+MailboxList   = require './mailbox-list'
+Menu          = require './menu'
+MessageList   = require './message-list'
 SearchForm = require './search-form'
 
 # React addons
@@ -25,7 +26,6 @@ SearchStore = require '../stores/SearchStore'
 
 # Flux actions
 LayoutActionCreator = require '../actions/LayoutActionCreator'
-
 
 ###
     This component is the root of the React tree.
@@ -86,6 +86,8 @@ module.exports = Application = React.createClass
             'col-xs-12 col-md-11': true
             'pushed': @state.isResponsiveMenuShown
 
+        alert = @state.alertMessage
+
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
@@ -100,6 +102,9 @@ module.exports = Application = React.createClass
                     favoriteMailboxes: @state.favoriteMailboxes
 
                 div id: 'page-content', className: responsiveClasses,
+
+                    # Display feedback
+                    Alert { alert }
 
                     # The quick actions bar shoud be moved in its own component
                     # when its feature is implemented.
@@ -314,6 +319,7 @@ module.exports = Application = React.createClass
             accounts: AccountStore.getAll()
             selectedAccount: selectedAccount
             isResponsiveMenuShown: LayoutStore.isMenuShown()
+            alertMessage: LayoutStore.getAlert()
             mailboxes: AccountStore.getSelectedMailboxes true
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
