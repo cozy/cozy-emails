@@ -21,7 +21,7 @@ module.exports = React.createClass
         }
 
     render: ->
-        clickHandler = if @props.isLast then null else @onClick
+        clickHandler = if @props.isLast then null else @onFold
 
         message = @props.message
 
@@ -54,14 +54,14 @@ module.exports = React.createClass
 
             # Display Compose block
             if @state.composing
-                self = this
                 selectedAccount = @props.selectedAccount
-                message  = message
-                action   = @state.composeAction
-                callback = (error) ->
-                    if not(error?)
-                        self.setState composing: false
-                Compose {selectedAccount, 'right', message, action, callback}
+                layout          = 'right'
+                message         = message
+                action          = @state.composeAction
+                callback        = (error) =>
+                    if not error?
+                        @setState composing: false
+                Compose {selectedAccount, layout, message, action, callback}
 
     getToolboxRender: ->
 
@@ -125,7 +125,7 @@ module.exports = React.createClass
         li role: 'presentation', key: key,
             a href: url, role: 'menuitem', "#{pusher}#{mailbox.get 'label'}"
 
-    onClick: (args) ->
+    onFold: (args) ->
         @setState active: not @state.active
 
     onReply: (args) ->

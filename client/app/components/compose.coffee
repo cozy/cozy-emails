@@ -29,7 +29,7 @@ module.exports = Compose = React.createClass
         collapseUrl = @buildUrl
             leftPanel:
                 action: 'account.mailbox.messages'
-                parameters: @props.selectedAccount?.get 'id'
+                parameters: @state.currentAccount?.get 'id'
             rightPanel:
                 action: 'compose'
 
@@ -39,8 +39,6 @@ module.exports = Compose = React.createClass
         classInput = 'col-sm-8'
 
         accounts = AccountStore.getAll()
-
-        @currentAccount = @props.selectedAccount
 
         div id: 'email-compose',
             h3 null,
@@ -57,8 +55,8 @@ module.exports = Compose = React.createClass
                 div className: 'form-group',
                     label htmlFor: 'compose-from', className: classLabel, t "compose from"
                     div className: classInput,
-                        button id: 'compose-from', ref: 'account', className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', null,
-                            @currentAccount.get 'label'
+                        button id: 'compose-from', className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', null,
+                            span ref: 'account', @state.currentAccount.get 'label'
                             span className: 'caret'
                         ul className: 'dropdown-menu', role: 'menu',
                             accounts.map (account, key) =>
@@ -100,14 +98,17 @@ module.exports = Compose = React.createClass
 
     getAccountRender: (account, key) ->
 
-        isSelected = (not @props.selectedAccount? and key is 0) \
-                     or @props.selectedAccount?.get('id') is account.id
+        isSelected = (not @state.currentAccount? and key is 0) \
+                     or @state.currentAccount?.get('id') is account.get 'id'
 
-        li role: 'presentation', key: key,
-            a role: 'menuitem', onClick: @onAccountChange, 'data-value': key, account.get 'label'
+        if not isSelected
+            li role: 'presentation', key: key,
+                a role: 'menuitem', onClick: @onAccountChange, 'data-value': key, account.get 'label'
 
     getInitialState: (forceDefault) ->
         message = @props.message
+        state =
+            currentAccount : @props.selectedAccount
         if message?
             today = moment()
             date = moment message.get 'createdAt'
@@ -122,51 +123,46 @@ module.exports = Compose = React.createClass
 
         switch @props.action
             when ComposeActions.REPLY
-                return {
-                    to: MessageUtils.displayAddresses message.getReplyToAddress(), true
-                    cc: ''
-                    bcc: ''
-                    subject: "#{t 'compose reply prefix'}#{message.get 'subject'}"
-                    body: t('compose reply separator', {date: dateHuman, sender: sender}) +
-                        MessageUtils.generateReplyText(message.get('text')) + "\n"
-                }
+                state.to = MessageUtils.displayAddresses message.getReplyToAddress(), true
+                state.cc = ''
+                state.bcc = ''
+                state.subject = "#{t 'compose reply prefix'}#{message.get 'subject'}"
+                state.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
+                    MessageUtils.generateReplyText(message.get('text')) + "\n"
             when ComposeActions.REPLY_ALL
-                return {
-                    to: MessageUtils.displayAddresses(message.getReplyToAddress(), true)
-                    cc: MessageUtils.displayAddresses(Array.concat(message.get('to'), message.get('cc')), true)
-                    bcc: ''
-                    subject: "#{t 'compose reply prefix'}#{message.get 'subject'}"
-                    body: t('compose reply separator', {date: dateHuman, sender: sender}) +
-                        MessageUtils.generateReplyText(message.get('text')) + "\n"
-                }
+                state.to = MessageUtils.displayAddresses(message.getReplyToAddress(), true)
+                state.cc = MessageUtils.displayAddresses(Array.concat(message.get('to'), message.get('cc')), true)
+                state.bcc = ''
+                state.subject = "#{t 'compose reply prefix'}#{message.get 'subject'}"
+                state.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
+                    MessageUtils.generateReplyText(message.get('text')) + "\n"
             when ComposeActions.FORWARD
-                return {
-                    to: ''
-                    cc: ''
-                    bcc: ''
-                    subject: "#{t 'compose forward prefix'}#{message.get 'subject'}"
-                    body: t('compose forward separator', {date: dateHuman, sender: sender}) + message.get('text')
-                }
+                state.to = ''
+                state.cc = ''
+                state.bcc = ''
+                state.subject = "#{t 'compose forward prefix'}#{message.get 'subject'}"
+                state.body = t('compose forward separator', {date: dateHuman, sender: sender}) + message.get('text')
             when null
-                return {
-                    to: ''
-                    cc: ''
-                    bcc: ''
-                    subject: ''
-                    body: t 'compose default'
-                }
+                state.to      = ''
+                state.cc      = ''
+                state.bcc     = ''
+                state.subject = ''
+                state.body    = t 'compose default'
+
+        return state
 
     onAccountChange: (args) ->
         selected = args.target.dataset.value
-        if (selected isnt @currentAccount.get 'id')
-            @currentAccount = AccountStore.getByID selected
+        if (selected isnt @state.currentAccount.get 'id')
+            @setState currentAccount : AccountStore.getByID selected
+            #this.refs.account.getDOMNode().innerHTML = @state.currentAccount.get 'label'
 
     onDraft: (args) ->
         LayoutActionCreator.alertWarning t "app unimplemented"
 
     onSend: (args) ->
         message =
-            from        : @currentAccount.get 'login'
+            from        : @state.currentAccount.get 'login'
             to          : this.refs.to.getDOMNode().value.trim()
             cc          : this.refs.cc.getDOMNode().value.trim()
             bcc         : this.refs.bcc.getDOMNode().value.trim()

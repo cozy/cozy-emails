@@ -7,7 +7,7 @@ Client = require('request-json').JsonClient
 dataSystem = new Client 'http://localhost:9101/'
 
 # In production we must authenticate the application
-if process.env.NODE_ENV is 'production'
+if process.env.NODE_ENV in ['production', 'test']
     user = process.env.NAME
     password = process.env.TOKEN
     dataSystem.setBasicAuth user, password

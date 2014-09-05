@@ -96,4 +96,4 @@ module.exports = React.createClass
                 li className: classLast,
                     a href: urlLast, '»'
 
-    getParticipants: (message) -> "#{MessageUtils.displayAddresses(message.get 'from')}, #{MessageUtils.displayAddresses(Array.concat(message.get('to'), message.get('cc')))}"
+    getParticipants: (message) -> "#{MessageUtils.displayAddresses(message.get 'from')}, #{MessageUtils.displayAddresses(message.get('to').concat(message.get('cc')))}"
