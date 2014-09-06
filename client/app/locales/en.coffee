@@ -1,7 +1,7 @@
 module.exports =
 
       # Application
-      "app loading"             : "Chargement…"
+      "app loading"             : "Loading…"
       "app back"                : "Back"
       "app menu"                : "Menu"
       "app search"              : "Search…"
@@ -13,7 +13,7 @@ module.exports =
       "compose default"           : 'Hello, how are you doing today ?'
       "compose from"              : "From"
       "compose to"                : "To"
-      "compose to help"           : "Reciepients list"
+      "compose to help"           : "Recipients list"
       "compose cc"                : "Cc"
       "compose cc help"           : "Copy list"
       "compose bcc"               : "Bcc"
@@ -24,8 +24,8 @@ module.exports =
       "compose reply separator"   : "\n\nOn %{date}, %{sender} wrote \n"
       "compose forward prefix"    : "Fwd: "
       "compose forward separator" : "\n\nOn %{date}, %{sender} wrote \n"
-      "compose action draft"      : "Enregistrer le brouillon"
-      "compose action send"       : "Envoyer"
+      "compose action draft"      : "Save draft"
+      "compose action send"       : "Send"
 
       # Menu
       "menu compose"            : "Compose"
