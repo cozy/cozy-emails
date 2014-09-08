@@ -270,7 +270,6 @@ module.exports = Application = React.createClass
 
         # -- Display the settings form
         else if panelInfo.action is 'settings'
-            settings = @state.settings
             return Settings {}
 
         # -- Generates a message list based on search result

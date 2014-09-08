@@ -96,6 +96,5 @@ module.exports = LayoutActionCreator =
 
     showSettings: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        SettingsActionCreator.showSettings()
 
 

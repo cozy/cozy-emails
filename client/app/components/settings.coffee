@@ -43,8 +43,6 @@ module.exports = React.createClass
         SettingsActionCreator.edit @state
 
     getInitialState: (forceDefault) ->
-        settings = {}
-        settings.messagesPerPage = SettingsStore.get "messagesPerPage"
-        settings.composeInHTML   = SettingsStore.get "composeInHTML"
+        settings = SettingsStore.get().toObject()
 
         return settings
