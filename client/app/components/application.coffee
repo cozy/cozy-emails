@@ -7,6 +7,7 @@ Conversation  = require './conversation'
 MailboxList   = require './mailbox-list'
 Menu          = require './menu'
 MessageList   = require './message-list'
+Settings      = require './settings'
 SearchForm = require './search-form'
 
 # React addons
@@ -18,11 +19,11 @@ RouterMixin = require '../mixins/RouterMixin'
 StoreWatchMixin = require '../mixins/StoreWatchMixin'
 
 # Flux stores
-AccountStore = require '../stores/AccountStore'
-MessageStore = require '../stores/MessageStore'
-LayoutStore = require '../stores/LayoutStore'
+AccountStore  = require '../stores/AccountStore'
+MessageStore  = require '../stores/MessageStore'
+LayoutStore   = require '../stores/LayoutStore'
 SettingsStore = require '../stores/SettingsStore'
-SearchStore = require '../stores/SearchStore'
+SearchStore   = require '../stores/SearchStore'
 
 # Flux actions
 LayoutActionCreator = require '../actions/LayoutActionCreator'
@@ -266,6 +267,11 @@ module.exports = Application = React.createClass
             message  = null
             action   = null
             return Compose {selectedAccount, layout, accounts, message, action}
+
+        # -- Display the settings form
+        else if panelInfo.action is 'settings'
+            settings = @state.settings
+            return Settings {}
 
         # -- Generates a message list based on search result
         else if panelInfo.action is 'search'

@@ -45,6 +45,16 @@ module.exports = Menu = React.createClass
                 action: 'account.new'
                 fullWidth: true
 
+        # the button toggles the "settings" screen
+        if @props.layout.leftPanel.action is 'settings' or
+           @props.layout.rightPanel?.action is 'settings'
+            settingsUrl = selectedAccountUrl
+        else
+            settingsUrl = @buildUrl
+                direction: 'left'
+                action: 'settings'
+                fullWidth: true
+
         classes = classer
             'hidden-xs hidden-sm': not @props.isResponsiveMenuShown
             'col-xs-4 col-md-1': true
@@ -62,6 +72,10 @@ module.exports = Menu = React.createClass
             a href: newMailboxUrl, className: 'menu-item new-account-action',
                 i className: 'fa fa-inbox'
                 span className: 'item-label', t 'menu account new'
+
+            a href: settingsUrl, className: 'menu-item settings-action',
+                i className: 'fa fa-cog'
+                span className: 'item-label', t 'menu settings'
 
 
     # renders a single mailbox and its submenu
