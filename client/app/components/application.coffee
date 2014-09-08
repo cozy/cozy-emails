@@ -7,6 +7,7 @@ Conversation  = require './conversation'
 MailboxList   = require './mailbox-list'
 Menu          = require './menu'
 MessageList   = require './message-list'
+Settings      = require './settings'
 SearchForm = require './search-form'
 
 # React addons
@@ -18,11 +19,11 @@ RouterMixin = require '../mixins/RouterMixin'
 StoreWatchMixin = require '../mixins/StoreWatchMixin'
 
 # Flux stores
-AccountStore = require '../stores/AccountStore'
-MessageStore = require '../stores/MessageStore'
-LayoutStore = require '../stores/LayoutStore'
+AccountStore  = require '../stores/AccountStore'
+MessageStore  = require '../stores/MessageStore'
+LayoutStore   = require '../stores/LayoutStore'
 SettingsStore = require '../stores/SettingsStore'
-SearchStore = require '../stores/SearchStore'
+SearchStore   = require '../stores/SearchStore'
 
 # Flux actions
 LayoutActionCreator = require '../actions/LayoutActionCreator'
@@ -210,7 +211,7 @@ module.exports = Application = React.createClass
             accountID = panelInfo.parameters[0]
             mailboxID = panelInfo.parameters[1]
             pageNum   = panelInfo.parameters[2] ? 1
-            numPerPage      = SettingsStore.get 'messagesPerPage'
+            numPerPage      = @state.settings.get 'messagesPerPage'
             firstOfPage     = ( pageNum - 1 ) * numPerPage
             lastOfPage      = ( pageNum * numPerPage )
 
@@ -267,12 +268,17 @@ module.exports = Application = React.createClass
             action   = null
             return Compose {selectedAccount, layout, accounts, message, action}
 
+        # -- Display the settings form
+        else if panelInfo.action is 'settings'
+            settings = @state.settings
+            return Settings {settings}
+
         # -- Generates a message list based on search result
         else if panelInfo.action is 'search'
             accountID = null
             mailboxID = null
             pageNum   = panelInfo.parameters[1]
-            numPerPage      = SettingsStore.get 'messagesPerPage'
+            numPerPage      = @state.settings.get 'messagesPerPage'
             firstOfPage     = ( pageNum - 1 ) * numPerPage
             lastOfPage      = ( pageNum * numPerPage )
 
@@ -324,6 +330,7 @@ module.exports = Application = React.createClass
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
             searchQuery: SearchStore.getQuery()
+            settings: SettingsStore.get()
         }
 
 

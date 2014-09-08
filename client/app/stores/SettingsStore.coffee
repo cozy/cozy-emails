@@ -11,6 +11,7 @@ class SettingsStore extends Store
     _settings = Immutable.Map
         messagesPerPage: 5
         displayConversation: false
+        composeInHTML: true
 
     ###
         Defines here the action handlers.

@@ -94,4 +94,7 @@ module.exports = LayoutActionCreator =
             else
                 SearchActionCreator.receiveRawSearchResults results
 
+    showSettings: (panelInfo, direction) ->
+        LayoutActionCreator.hideReponsiveMenu()
+
 
