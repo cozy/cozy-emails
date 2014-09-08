@@ -13,8 +13,3 @@ module.exports = SettingsActionCreator =
             value: inputValues
 
 
-    showSettings: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SETTINGS_SHOW
-            value: null
-

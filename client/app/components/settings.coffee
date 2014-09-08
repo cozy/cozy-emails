@@ -43,6 +43,6 @@ module.exports = React.createClass
         SettingsActionCreator.edit @state
 
     getInitialState: (forceDefault) ->
-        settings = SettingsStore.get().toObject()
+        settings = @props.settings
 
-        return settings
+        return settings.toObject()

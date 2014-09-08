@@ -29,7 +29,6 @@ module.exports =
         'RECEIVE_RAW_MAILBOXES'     : 'RECEIVE_RAW_MAILBOXES'
 
         # Settings
-        'SETTINGS_SHOW'             : 'SETTINGS_SHOW'
         'SETTINGS_UPDATED'          : 'SETTINGS_UPDATED'
 
     PayloadSources:

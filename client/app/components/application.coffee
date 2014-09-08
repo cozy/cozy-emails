@@ -211,7 +211,7 @@ module.exports = Application = React.createClass
             accountID = panelInfo.parameters[0]
             mailboxID = panelInfo.parameters[1]
             pageNum   = panelInfo.parameters[2] ? 1
-            numPerPage      = SettingsStore.get 'messagesPerPage'
+            numPerPage      = @state.settings.get 'messagesPerPage'
             firstOfPage     = ( pageNum - 1 ) * numPerPage
             lastOfPage      = ( pageNum * numPerPage )
 
@@ -270,14 +270,15 @@ module.exports = Application = React.createClass
 
         # -- Display the settings form
         else if panelInfo.action is 'settings'
-            return Settings {}
+            settings = @state.settings
+            return Settings {settings}
 
         # -- Generates a message list based on search result
         else if panelInfo.action is 'search'
             accountID = null
             mailboxID = null
             pageNum   = panelInfo.parameters[1]
-            numPerPage      = SettingsStore.get 'messagesPerPage'
+            numPerPage      = @state.settings.get 'messagesPerPage'
             firstOfPage     = ( pageNum - 1 ) * numPerPage
             lastOfPage      = ( pageNum * numPerPage )
 
@@ -329,6 +330,7 @@ module.exports = Application = React.createClass
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
             searchQuery: SearchStore.getQuery()
+            settings: SettingsStore.get()
         }
 
 
