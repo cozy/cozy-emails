@@ -26,6 +26,10 @@ module.exports = class Router extends PanelRouter
             pattern: 'compose'
             fluxAction: 'showComposeNewMessage'
 
+        'settings':
+            pattern: 'settings'
+            fluxAction: 'showSettings'
+
     # default route
     routes: '': 'account.mailbox.messages'
 

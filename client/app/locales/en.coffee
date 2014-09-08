@@ -30,6 +30,7 @@ module.exports =
       # Menu
       "menu compose"            : "Compose"
       "menu account new"        : "New account"
+      "menu settings"           : "Paramètres"
 
       # List
       "list empty"              : "No email in this box."
@@ -72,3 +73,9 @@ module.exports =
       # Message Action
       "message action sent ok"      : "Message sent"
       "message action sent ko"      : "Error sending message: "
+
+      # Settings
+      "settings title"             : "Settings"
+      "settings button save"       : "Save"
+      "settings label mpp"         : "Messages per page"
+      "settings label compose"     : "Rich message editor"
