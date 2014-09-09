@@ -40,11 +40,14 @@
     "start": "node build/server.js"
   },
   "cozy-permissions": {
-    "Mailbox": {
+    "Account": {
       "description": "Manages your mailboxes"
     },
-    "Email": {
+    "Message": {
       "description": "Manages your emails"
+    },
+    "send mail": {
+      "description": "Send emails to your contacts"
     }
   },
   "cozy-displayName": "Emails"
