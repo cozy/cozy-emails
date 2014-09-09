@@ -46,6 +46,9 @@
     "Message": {
       "description": "Manages your emails"
     },
+    "CozyInstance": {
+      "description": "Localize the application with your language"
+    },
     "send mail": {
       "description": "Send emails to your contacts"
     }
