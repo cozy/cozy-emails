@@ -81,7 +81,8 @@ module.exports = class Router extends Backbone.Router
             fluxAction = LayoutActionCreator[pattern.fluxAction]
 
             if not fluxAction?
-                console.warn "`#{pattern.fluxAction}` method not found in layout actions."
+                console.warn "`#{pattern.fluxAction}` method not found in " + \
+                             "layout actions."
 
             return fluxAction
 
@@ -91,11 +92,11 @@ module.exports = class Router extends Backbone.Router
     ###
     _processSubRouting: (name, args) ->
 
-        # remove the last argument which is always `null`, not sure why
+        # removes the last argument which is always `null`, not sure why
         args.pop()
 
         # next comes the rightPanel url if it exists
-        # or a leftPanel parameter there is not rightPanel
+        # or a leftPanel parameter if there is not rightPanel
         rightPanelString = args.pop()
 
         # if left panel number of expected params is bigger what is left
@@ -108,7 +109,7 @@ module.exports = class Router extends Backbone.Router
 
         leftPanelParameters = args
 
-        # check all the routes for the second part of the URL
+        # checks all the routes for the second part of the URL
         route = _.first _.filter @cachedPatterns, (element) ->
             return element.pattern.test rightPanelString
 
@@ -121,7 +122,7 @@ module.exports = class Router extends Backbone.Router
         else
             rightPanelInfo = null
 
-        # normalize the leftPanelInfo
+        # normalizes the leftPanelInfo
         leftPanelInfo = action: name, parameters: leftPanelParameters
         return [leftPanelInfo, rightPanelInfo]
 
@@ -153,12 +154,15 @@ module.exports = class Router extends Backbone.Router
                 else
                     console.warn '`direction` should be `left`, `right`.'
             else
-                console.warn '`direction` parameter is mandatory when using short call.'
+                console.warn '`direction` parameter is mandatory when ' + \
+                             'using short call.'
 
         # if the `fullWidth` parameter is set, it ignores the right panel info
-        if (options.leftPanel? or options.direction is 'left') and options.fullWidth
+        isLeftDirection = options.leftPanel? or options.direction is 'left'
+        if isLeftDirection and options.fullWidth
             if options.rightPanel? and options.direction is 'right'
-                console.warn "You shouldn't use the fullWidth option with a right panel"
+                console.warn "You shouldn't use the fullWidth option with " + \
+                             "a right panel"
             rightPanelInfo = null
 
         # Actual building
@@ -223,7 +227,8 @@ module.exports = class Router extends Backbone.Router
             if panel.parameters
                 for paramInPattern, key in parametersInPattern
                     paramValue = panel.parameters[key]
-                    filledPattern = filledPattern.replace paramInPattern, paramValue
+                    filledPattern = filledPattern.replace paramInPattern, \
+                                                                    paramValue
 
             return filledPattern
         else
