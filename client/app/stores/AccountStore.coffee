@@ -32,9 +32,6 @@ class AccountStore extends Store
     _newAccountWaiting = false
     _newAccountError = null
 
-    account = _accounts.get('gmail-ID')
-    AccountTranslator.toRawObject account
-
 
     ###
         Defines here the action handlers.
