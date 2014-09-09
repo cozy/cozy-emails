@@ -91,7 +91,6 @@ module.exports = class Router extends Backbone.Router
         Extracts and matches the second part of the URl if it exists.
     ###
     _processSubRouting: (name, args) ->
-
         # removes the last argument which is always `null`, not sure why
         args.pop()
 
@@ -103,7 +102,7 @@ module.exports = class Router extends Backbone.Router
         # it means there are no right panel and that what we got before was a
         # parameter of the left panel
         params = @patterns[name].pattern.match(/:[\w]+/g) or []
-        if params.length > args.length
+        if params.length > args.length and rightPanelString?
             args.push rightPanelString
             rightPanelString = null
 
@@ -121,6 +120,7 @@ module.exports = class Router extends Backbone.Router
             rightPanelInfo = action: route.key, parameters: args
         else
             rightPanelInfo = null
+
 
         # normalizes the leftPanelInfo
         leftPanelInfo = action: name, parameters: leftPanelParameters
@@ -186,9 +186,9 @@ module.exports = class Router extends Backbone.Router
         # If a full-width panel is closed, `@current.rightPanel` is null and
         # the default route is loaded.
         if direction is 'left' or direction is 'full'
-            panelInfo = @current.rightPanel
+            panelInfo = _.clone @current.rightPanel
         else
-            panelInfo = @current.leftPanel
+            panelInfo = _.clone @current.leftPanel
 
         if panelInfo?
             panelInfo.direction = 'left'
@@ -200,6 +200,9 @@ module.exports = class Router extends Backbone.Router
 
     # Builds the URL string from a route.
     _getURLFromRoute: (panel) ->
+        # Clones the parameter because we are going to mutate it
+        panel = _.clone panel
+
         if panel?
             pattern = @patterns[panel.action].pattern
 
