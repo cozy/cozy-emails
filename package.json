@@ -23,7 +23,8 @@
     "bluebird": "2.3.2",
     "imap": "0.8.13",
     "guid": "0.0.12",
-    "lodash": "^2.4.1"
+    "lodash": "^2.4.1",
+    "request-json": "0.4.12"
   },
   "devDependencies": {
     "should": "4.0.4",
