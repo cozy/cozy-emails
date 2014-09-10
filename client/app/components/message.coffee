@@ -70,7 +70,7 @@ module.exports = React.createClass
 
     componentWillReceiveProps: ->
         @_markRead @props.message
-        @setState messageDisplayHTML: SettingsStore.get 'messageDisplayHTML'
+        @setState @getInitialState()
 
     _markRead: (message) ->
         # Mark message as seen if needed
@@ -247,12 +247,15 @@ module.exports = React.createClass
                 frame.style.height = "#{rect.height + 40}px"
                 if not component.state.messageDisplayImages and component.refs.imagesDisplay?
                     component.refs.imagesDisplay.getDOMNode().addEventListener 'click', ->
+                        component.setState messageDisplayImages: true
+                        ###
                         showImage = (img) ->
                             img.setAttribute 'src', img.dataset.src
                             rect = doc.body.getBoundingClientRect()
                             frame.style.height = "#{rect.height + 40}px"
                         showImage img for img in doc.querySelectorAll 'IMG'
                         component.refs.imagesWarning.getDOMNode().classList.add 'hidden'
+                        ###
 
     componentDidMount: ->
         @_initFrame()

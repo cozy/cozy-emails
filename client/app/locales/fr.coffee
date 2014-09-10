@@ -114,6 +114,7 @@ module.exports =
       "settings label compose"     : "Éditeur riche"
       "settings label html"        : "Afficher les messages en HTML"
       "settings label images"      : "Afficher les images"
+      "settings plugins"           : "Modules complémentaires"
 
       # File picker
       "picker drop here"           : "Déposer les fichiers ici"

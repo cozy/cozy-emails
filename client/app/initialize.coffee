@@ -17,6 +17,8 @@ window.onload = ->
     # handy shortcut
     window.t = polyglot.t.bind polyglot
 
+    # init plugins
+    require("./utils/plugin_utils").init()
 
     # Flux initialization (must be called at the begining)
     AccountStore  = require './stores/account_store'
