@@ -23,7 +23,8 @@
     "bluebird": "2.3.2",
     "imap": "0.8.13",
     "guid": "0.0.12",
-    "lodash": "^2.4.1"
+    "lodash": "^2.4.1",
+    "request-json": "0.4.12"
   },
   "devDependencies": {
     "should": "4.0.4",
@@ -39,11 +40,17 @@
     "start": "node build/server.js"
   },
   "cozy-permissions": {
-    "Mailbox": {
+    "Account": {
       "description": "Manages your mailboxes"
     },
-    "Email": {
+    "Message": {
       "description": "Manages your emails"
+    },
+    "CozyInstance": {
+      "description": "Localize the application with your language"
+    },
+    "send mail": {
+      "description": "Send emails to your contacts"
     }
   },
   "cozy-displayName": "Emails"

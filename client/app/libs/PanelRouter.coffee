@@ -81,7 +81,8 @@ module.exports = class Router extends Backbone.Router
             fluxAction = LayoutActionCreator[pattern.fluxAction]
 
             if not fluxAction?
-                console.warn "`#{pattern.fluxAction}` method not found in layout actions."
+                console.warn "`#{pattern.fluxAction}` method not found in " + \
+                             "layout actions."
 
             return fluxAction
 
@@ -90,25 +91,24 @@ module.exports = class Router extends Backbone.Router
         Extracts and matches the second part of the URl if it exists.
     ###
     _processSubRouting: (name, args) ->
-
-        # remove the last argument which is always `null`, not sure why
+        # removes the last argument which is always `null`, not sure why
         args.pop()
 
         # next comes the rightPanel url if it exists
-        # or a leftPanel parameter there is not rightPanel
+        # or a leftPanel parameter if there is not rightPanel
         rightPanelString = args.pop()
 
         # if left panel number of expected params is bigger what is left
         # it means there are no right panel and that what we got before was a
         # parameter of the left panel
         params = @patterns[name].pattern.match(/:[\w]+/g) or []
-        if params.length > args.length
+        if params.length > args.length and rightPanelString?
             args.push rightPanelString
             rightPanelString = null
 
         leftPanelParameters = args
 
-        # check all the routes for the second part of the URL
+        # checks all the routes for the second part of the URL
         route = _.first _.filter @cachedPatterns, (element) ->
             return element.pattern.test rightPanelString
 
@@ -121,7 +121,8 @@ module.exports = class Router extends Backbone.Router
         else
             rightPanelInfo = null
 
-        # normalize the leftPanelInfo
+
+        # normalizes the leftPanelInfo
         leftPanelInfo = action: name, parameters: leftPanelParameters
         return [leftPanelInfo, rightPanelInfo]
 
@@ -153,12 +154,15 @@ module.exports = class Router extends Backbone.Router
                 else
                     console.warn '`direction` should be `left`, `right`.'
             else
-                console.warn '`direction` parameter is mandatory when using short call.'
+                console.warn '`direction` parameter is mandatory when ' + \
+                             'using short call.'
 
         # if the `fullWidth` parameter is set, it ignores the right panel info
-        if (options.leftPanel? or options.direction is 'left') and options.fullWidth
+        isLeftDirection = options.leftPanel? or options.direction is 'left'
+        if isLeftDirection and options.fullWidth
             if options.rightPanel? and options.direction is 'right'
-                console.warn "You shouldn't use the fullWidth option with a right panel"
+                console.warn "You shouldn't use the fullWidth option with " + \
+                             "a right panel"
             rightPanelInfo = null
 
         # Actual building
@@ -182,9 +186,9 @@ module.exports = class Router extends Backbone.Router
         # If a full-width panel is closed, `@current.rightPanel` is null and
         # the default route is loaded.
         if direction is 'left' or direction is 'full'
-            panelInfo = @current.rightPanel
+            panelInfo = _.clone @current.rightPanel
         else
-            panelInfo = @current.leftPanel
+            panelInfo = _.clone @current.leftPanel
 
         if panelInfo?
             panelInfo.direction = 'left'
@@ -196,6 +200,9 @@ module.exports = class Router extends Backbone.Router
 
     # Builds the URL string from a route.
     _getURLFromRoute: (panel) ->
+        # Clones the parameter because we are going to mutate it
+        panel = _.clone panel
+
         if panel?
             pattern = @patterns[panel.action].pattern
 
@@ -223,7 +230,8 @@ module.exports = class Router extends Backbone.Router
             if panel.parameters
                 for paramInPattern, key in parametersInPattern
                     paramValue = panel.parameters[key]
-                    filledPattern = filledPattern.replace paramInPattern, paramValue
+                    filledPattern = filledPattern.replace paramInPattern, \
+                                                                    paramValue
 
             return filledPattern
         else

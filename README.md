@@ -20,6 +20,13 @@ From the command line you can type this command:
 
     cozy-monitor install emails
 
+**Disclaimer**
+We're still in the early stages of the development, the app doesn't have all the basic features yet. Once you've installed it, you will have to load the fixtures and process the indexation.
+* go to https://yourcozyaddress/apps/emails/load-fixtures
+* go to https://yourcozyaddress/apps/emails/messages/index
+
+Then you're ready to use the application :)
+
 
 ## Contribution
 
