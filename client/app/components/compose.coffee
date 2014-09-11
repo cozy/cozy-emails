@@ -23,15 +23,15 @@ module.exports = Compose = React.createClass
     render: ->
 
         expandUrl = @buildUrl
-            direction: 'left'
+            direction: 'first'
             action: 'compose'
             fullWidth: true
 
         collapseUrl = @buildUrl
-            leftPanel:
+            firstPanel:
                 action: 'account.mailbox.messages'
                 parameters: @state.currentAccount?.get 'id'
-            rightPanel:
+            secondPanel:
                 action: 'compose'
 
         closeUrl = @buildClosePanelUrl @props.layout

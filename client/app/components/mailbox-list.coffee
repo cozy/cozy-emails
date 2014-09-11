@@ -26,7 +26,7 @@ module.exports = React.createClass
 
     getMailboxRender: (mailbox, key) ->
         url = @buildUrl
-                direction: 'left'
+                direction: 'first'
                 action: 'account.mailbox.messages'
                 parameters: [@props.selectedAccount.get('id'), mailbox.get('id')]
 

@@ -26,7 +26,7 @@ module.exports = React.createClass
         # @TODO: validate and give feedback to the user
         if query.length > 3
             @redirect
-                direction: 'left'
+                direction: 'first'
                 action: 'search'
                 parameters: [query]
 

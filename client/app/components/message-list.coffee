@@ -39,7 +39,7 @@ module.exports = React.createClass
             active: isActive
 
         url = @buildUrl
-            direction: 'right'
+            direction: 'second'
             action: 'message'
             parameters: message.get 'id'
 

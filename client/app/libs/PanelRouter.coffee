@@ -3,8 +3,8 @@
     and we format the varying parts of the layout.
 
     URLs are built in the following way:
-        - a first part that represents the left panel
-        - a second part that represents the right panel
+        - a first part that represents the first panel
+        - a second part that represents the second panel
         - if there is just one part, it represents a full width panel
 
     Since Backbone.Router only handles one part, routes initialization mechanism
@@ -12,7 +12,7 @@
 
     Example: a defined pattern will generates two routes.
         - `mailbox/a/path/:id`
-        - `mailbox/a/path/:id/*rightPanel`
+        - `mailbox/a/path/:id/*secondPanel`
 
         Each pattern is actually the pattern itself plus the pattern itself and
         another pattern.
@@ -43,9 +43,9 @@ module.exports = class Router extends Backbone.Router
                 key: key
                 pattern: @_routeToRegExp route.pattern
 
-            # each pattern has two routes: full-width or with a right panel
+            # each pattern has two routes: full-width or with a second panel
             @routes[route.pattern] = key
-            @routes["#{route.pattern}/*rightPanel"] = key
+            @routes["#{route.pattern}/*secondPanel"] = key
 
         # Backbone's magic
         @_bindRoutes()
@@ -53,19 +53,19 @@ module.exports = class Router extends Backbone.Router
         # Updates the LayoutStore for each matched request
         @on 'route', (name, args) =>
 
-            [leftPanelInfo, rightPanelInfo] = @_processSubRouting name, args
+            [firstPanelInfo, secondPanelInfo] = @_processSubRouting name, args
 
-            leftAction = @fluxActionFactory leftPanelInfo
-            rightAction = @fluxActionFactory rightPanelInfo
+            firstAction = @fluxActionFactory firstPanelInfo
+            secondAction = @fluxActionFactory secondPanelInfo
 
             @previous = @current
-            @current = leftPanel: leftPanelInfo, rightPanel: rightPanelInfo
+            @current = firstPanel: firstPanelInfo, secondPanel: secondPanelInfo
 
-            if leftAction?
-                leftAction leftPanelInfo, 'left'
+            if firstAction?
+                firstAction firstPanelInfo, 'first'
 
-            if rightAction?
-                rightAction rightPanelInfo, 'right'
+            if secondAction?
+                secondAction secondPanelInfo, 'second'
             @trigger 'fluxRoute', @current
 
 
@@ -94,84 +94,84 @@ module.exports = class Router extends Backbone.Router
         # removes the last argument which is always `null`, not sure why
         args.pop()
 
-        # next comes the rightPanel url if it exists
-        # or a leftPanel parameter if there is not rightPanel
-        rightPanelString = args.pop()
+        # next comes the secondPanel url if it exists
+        # or a firstPanel parameter if there is not secondPanel
+        secondPanelString = args.pop()
 
-        # if left panel number of expected params is bigger what is left
-        # it means there are no right panel and that what we got before was a
-        # parameter of the left panel
+        # if first panel number of expected params is bigger what is first
+        # it means there are no second panel and that what we got before was a
+        # parameter of the first panel
         params = @patterns[name].pattern.match(/:[\w]+/g) or []
-        if params.length > args.length and rightPanelString?
-            args.push rightPanelString
-            rightPanelString = null
+        if params.length > args.length and secondPanelString?
+            args.push secondPanelString
+            secondPanelString = null
 
-        leftPanelParameters = args
+        firstPanelParameters = args
 
         # checks all the routes for the second part of the URL
         route = _.first _.filter @cachedPatterns, (element) ->
-            return element.pattern.test rightPanelString
+            return element.pattern.test secondPanelString
 
         # if a route has been found, we retrieve the params' value and format it
         if route?
-            args = @_extractParameters route.pattern, rightPanelString
+            args = @_extractParameters route.pattern, secondPanelString
             # remove the last argument which is alway `null`, not sure why
             args.pop()
-            rightPanelInfo = action: route.key, parameters: args
+            secondPanelInfo = action: route.key, parameters: args
         else
-            rightPanelInfo = null
+            secondPanelInfo = null
 
 
-        # normalizes the leftPanelInfo
-        leftPanelInfo = action: name, parameters: leftPanelParameters
-        return [leftPanelInfo, rightPanelInfo]
+        # normalizes the firstPanelInfo
+        firstPanelInfo = action: name, parameters: firstPanelParameters
+        return [firstPanelInfo, secondPanelInfo]
 
 
     ###
         Builds a route from panel information.
         Two modes:
-            - options has leftPanel and/or rightPanel attributes with the
+            - options has firstPanel and/or secondPanel attributes with the
               panel(s) information.
             - options has the panel information along a `direction` attribute
-              that can be `left` or `right`. It's the short version.
+              that can be `first` or `second`. It's the short version.
     ###
     buildUrl: (options) ->
 
         # Loads the panel from the options or the current router status to keep
         # track of current URLs
-        if options.leftPanel? or options.rightPanel?
-            leftPanelInfo = options.leftPanel or @current.leftPanel
-            rightPanelInfo = options.rightPanel or @current.rightPanel
+        if options.firstPanel? or options.secondPanel?
+            firstPanelInfo = options.firstPanel or @current.firstPanel
+            secondPanelInfo = options.secondPanel or @current.secondPanel
         else
             # Handles short version
             if options.direction?
-                if options.direction is 'left'
-                    leftPanelInfo = options
-                    rightPanelInfo = @current.rightPanel
-                else if options.direction is 'right'
-                    leftPanelInfo = @current.leftPanel
-                    rightPanelInfo = options
+                if options.direction is 'first'
+                    firstPanelInfo = options
+                    secondPanelInfo = @current.secondPanel
+                else if options.direction is 'second'
+                    firstPanelInfo = @current.firstPanel
+                    secondPanelInfo = options
                 else
-                    console.warn '`direction` should be `left`, `right`.'
+                    console.warn '`direction` should be `first`, `second`.'
             else
                 console.warn '`direction` parameter is mandatory when ' + \
                              'using short call.'
 
-        # if the `fullWidth` parameter is set, it ignores the right panel info
-        isLeftDirection = options.leftPanel? or options.direction is 'left'
-        if isLeftDirection and options.fullWidth
-            if options.rightPanel? and options.direction is 'right'
+        # if the `fullWidth` parameter is set, it ignores the second panel info
+        isFirstDirection = options.firstPanel? or options.direction is 'first'
+        if isFirstDirection and options.fullWidth
+            if options.secondPanel? and options.direction is 'second'
                 console.warn "You shouldn't use the fullWidth option with " + \
-                             "a right panel"
-            rightPanelInfo = null
+                             "a second panel"
+            secondPanelInfo = null
 
         # Actual building
-        leftPart = @_getURLFromRoute leftPanelInfo
-        rightPart = @_getURLFromRoute rightPanelInfo
+        firstPart = @_getURLFromRoute firstPanelInfo
+        secondPart = @_getURLFromRoute secondPanelInfo
 
-        url = "##{leftPart}"
-        if rightPart? and rightPart.length > 0
-            url = "#{url}/#{rightPart}"
+        url = "##{firstPart}"
+        if secondPart? and secondPart.length > 0
+            url = "#{url}/#{secondPart}"
 
         return url
 
@@ -182,16 +182,16 @@ module.exports = class Router extends Backbone.Router
     ###
     buildClosePanelUrl: (direction) ->
 
-        # If a left panel is closed, the right panel becomes full-width.
-        # If a full-width panel is closed, `@current.rightPanel` is null and
+        # If a first panel is closed, the second panel becomes full-width.
+        # If a full-width panel is closed, `@current.secondPanel` is null and
         # the default route is loaded.
-        if direction is 'left' or direction is 'full'
-            panelInfo = _.clone @current.rightPanel
+        if direction is 'first' or direction is 'full'
+            panelInfo = _.clone @current.secondPanel
         else
-            panelInfo = _.clone @current.leftPanel
+            panelInfo = _.clone @current.firstPanel
 
         if panelInfo?
-            panelInfo.direction = 'left'
+            panelInfo.direction = 'first'
             panelInfo.fullWidth = true
             return @buildUrl panelInfo
         else

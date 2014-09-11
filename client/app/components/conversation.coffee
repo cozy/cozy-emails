@@ -14,7 +14,7 @@ module.exports = React.createClass
             return p null, t "app loading"
 
         expandUrl = @buildUrl
-            direction: 'left'
+            direction: 'first'
             action: 'message'
             parameters: @props.message.get 'id'
             fullWidth: true
@@ -28,16 +28,16 @@ module.exports = React.createClass
             selectedAccountID = @props.conversation[0].mailbox
 
         collapseUrl = @buildUrl
-            leftPanel:
+            firstPanel:
                 action: 'account.mailbox.messages'
                 parameters: selectedAccountID
-            rightPanel:
+            secondPanel:
                 action: 'message'
                 parameters: @props.conversation[0].get 'id'
 
         if @props.layout is 'full'
             closeUrl = @buildUrl
-                direction: 'left'
+                direction: 'first'
                 action: 'account.mailbox.messages'
                 parameters: selectedAccountID
                 fullWidth: true

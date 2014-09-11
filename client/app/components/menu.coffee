@@ -20,38 +20,38 @@ module.exports = Menu = React.createClass
 
     render: ->
         selectedAccountUrl = @buildUrl
-            direction: 'left'
+            direction: 'first'
             action: 'account.mailbox.messages'
             parameters: @props.selectedAccount?.get 'id'
             fullWidth: true
 
         # the button toggles the "compose" screen
-        if @props.layout.leftPanel.action is 'compose' or
-           @props.layout.rightPanel?.action is 'compose'
+        if @props.layout.firstPanel.action is 'compose' or
+           @props.layout.secondPanel?.action is 'compose'
             composeUrl = selectedAccountUrl
         else
             composeUrl = @buildUrl
-                direction: 'right'
+                direction: 'second'
                 action: 'compose'
                 parameters: null
                 fullWidth: false
 
         # the button toggle the "new mailbox" screen
-        if @props.layout.leftPanel.action is 'account.new'
+        if @props.layout.firstPanel.action is 'account.new'
             newMailboxUrl = selectedAccountUrl
         else
             newMailboxUrl = @buildUrl
-                direction: 'left'
+                direction: 'first'
                 action: 'account.new'
                 fullWidth: true
 
         # the button toggles the "settings" screen
-        if @props.layout.leftPanel.action is 'settings' or
-           @props.layout.rightPanel?.action is 'settings'
+        if @props.layout.firstPanel.action is 'settings' or
+           @props.layout.secondPanel?.action is 'settings'
             settingsUrl = selectedAccountUrl
         else
             settingsUrl = @buildUrl
-                direction: 'left'
+                direction: 'first'
                 action: 'settings'
                 fullWidth: true
 
@@ -88,7 +88,7 @@ module.exports = Menu = React.createClass
         accountID = account.get 'id'
         defaultMailbox = AccountStore.getDefaultMailbox accountID
         url = @buildUrl
-            direction: 'left'
+            direction: 'first'
             action: 'account.mailbox.messages'
             parameters: [accountID, defaultMailbox.get 'id']
             fullWidth: false
@@ -106,7 +106,7 @@ module.exports = Menu = React.createClass
 
     getMailboxRender: (account, mailbox, key) ->
         mailboxUrl = @buildUrl
-            direction: 'left'
+            direction: 'first'
             action: 'account.mailbox.messages'
             parameters: [account.get('id'), mailbox.get('id')]
 
