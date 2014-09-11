@@ -100,15 +100,68 @@ module.exports = Compose = React.createClass
         node = @getDOMNode()
         node.scrollIntoView()
         if @state.composeInHTML
+            # Some DOM manipulation when replying inside the message.
+            # When inserting a new line, we must close all blockquotes,
+            # insert a blank line and then open again blockquotes
             jQuery('#email-compose .rt-editor').on('keypress', (e) ->
                 if e.keyCode is 13
-                    # timeout to let the editeor perform its own stuff
+                    # timeout to let the editor perform its own stuff
                     setTimeout ->
+                        matchesSelector = document.documentElement.matches ||
+                              document.documentElement.matchesSelector ||
+                              document.documentElement.webkitMatchesSelector ||
+                              document.documentElement.mozMatchesSelector ||
+                              document.documentElement.oMatchesSelector ||
+                              document.documentElement.msMatchesSelector
+
                         target = document.getSelection().anchorNode
+                        if matchesSelector? and not target.matches('.rt-editor blockquote *')
+                            # we are not inside a blockquote, nothing to do
+                            return
+
                         if target.lastChild
                             target = target.lastChild.previousElementSibling
                         parent = target
+
+                        # alternative 1
+                        # we create 2 ranges, one from the begining of message
+                        # to the caret position, the second from caret to the
+                        # end. We then create fragments from the ranges and
+                        # override message with first fragment, a blank line
+                        # and second fragment
+                        process = ->
+                            current = parent
+                            parent = parent.parentNode
+                        process()
+                        process() while (parent? and
+                            not parent.classList.contains 'rt-editor')
+                        rangeBefore = document.createRange()
+                        rangeBefore.setEnd target, 0
+                        rangeBefore.setStartBefore parent.firstChild
+                        rangeAfter = document.createRange()
+                        if target.nextSibling?
+                            # remove the BR the <enter> key probably inserted
+                            rangeAfter.setStart target.nextSibling, 0
+                        else
+                            rangeAfter.setStart target, 0
+                        rangeAfter.setEndAfter parent.lastChild
+                        before = rangeBefore.cloneContents()
+                        after = rangeAfter.cloneContents()
+                        inserted = document.createElement 'p'
+                        inserted.innerHTML = "<br />"
+                        parent.innerHTML = ""
+                        parent.appendChild before
+                        parent.appendChild inserted
+                        parent.appendChild after
+
+                        ###
+                        # alternative 2
+                        # We move every node from the caret to the end of the
+                        # message to a new DOM tree, then insert a blank line
+                        # and the new tree
+                        parent = target
                         p2 = null
+                        p3 = null
                         process = ->
                             p3 = p2
                             current = parent
@@ -123,21 +176,24 @@ module.exports = Compose = React.createClass
                                 parent.removeChild s
                                 s = s2
                         process()
-                        process() while (parent.parentNode? && not parent.parentNode.classList.contains 'rt-editor')
-                        second = p2
+                        process() while (parent.parentNode? and
+                            not parent.parentNode.classList.contains 'rt-editor')
+                        after = p2
                         inserted = document.createElement 'p'
                         inserted.innerHTML = "<br />"
                         if parent.nextSibling
                             parent.parentNode.insertBefore inserted, parent.nextSibling
-                            parent.parentNode.insertBefore second, parent.nextSibling
+                            parent.parentNode.insertBefore after, parent.nextSibling
                         else
                             parent.parentNode.appendChild inserted
-                            parent.parentNode.appendChild second
+                            parent.parentNode.appendChild after
+                        ###
 
                         inserted.focus()
                         sel = window.getSelection()
                         sel.collapse inserted, 0
-                    , 50
+
+                    , 0
             )
 
 
@@ -186,6 +242,7 @@ module.exports = Compose = React.createClass
                 state.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
                     MessageUtils.generateReplyText(text) + "\n"
                 state.html = """
+                    <p><br /></p>
                     <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
                     <blockquote>#{html}</blockquote>
                     """
@@ -197,6 +254,7 @@ module.exports = Compose = React.createClass
                 state.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
                     MessageUtils.generateReplyText(text) + "\n"
                 state.html = """
+                    <p><br /></p>
                     <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
                     <blockquote>#{html}</blockquote>
                     """
