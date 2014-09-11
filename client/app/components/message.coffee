@@ -21,9 +21,19 @@ module.exports = React.createClass
         }
 
     render: ->
-        clickHandler = if @props.isLast then null else @onFold
 
         message = @props.message
+
+        text = message.get 'text'
+        html = message.get 'html'
+
+        if text and not html and state.composeInHTML
+            html = markdown.toHTML text
+
+        if html and not text and not state.composeInHTML
+            text = toMarkdown html
+
+        clickHandler = if @props.isLast then null else @onFold
 
         classes = classer
             message: true
@@ -49,7 +59,7 @@ module.exports = React.createClass
                 span className: 'hour', date.format formatter
             div className: 'preview',
                 p null, message.get 'text'
-            div className: 'content', message.get 'text'
+            div className: 'content', dangerouslySetInnerHTML: {__html: html}
             div className: 'clearfix'
 
             # Display Compose block
@@ -102,13 +112,6 @@ module.exports = React.createClass
                                 a href: '#', t 'mail mark read'
                             li null,
                                 a href: '#', t 'mail mark unread'
-                    div className: 'btn-group btn-group-sm',
-                        button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', onClick: @onCopy, t 'mail action copy',
-                            span className: 'caret'
-                        ul className: 'dropdown-menu', role: 'menu',
-                            mailboxes.map (mailbox, key) =>
-                                @getMailboxRender mailbox, key
-                            .toJS()
                     div className: 'btn-group btn-group-sm',
                         button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', onClick: @onMove, t 'mail action move',
                             span className: 'caret'

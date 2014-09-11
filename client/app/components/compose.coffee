@@ -1,6 +1,7 @@
 {div, h3, a, i, textarea, form, label, button, span, ul, li, input} = React.DOM
 classer = React.addons.classSet
-AccountStore = require '../stores/AccountStore'
+AccountStore  = require '../stores/AccountStore'
+SettingsStore = require '../stores/SettingsStore'
 
 {ComposeActions} = require '../constants/AppConstants'
 
@@ -79,7 +80,10 @@ module.exports = Compose = React.createClass
                     div className: classInput,
                         input id: 'compose-subject', ref: 'subject', valueLink: @linkState('subject'), type: 'text', className: 'form-control', placeholder: t "compose subject help"
                 div className: 'form-group',
-                    textarea ref: 'content', defaultValue: @linkState('body').value
+                    if @state.composeInHTML
+                        div className: 'rt-editor', contentEditable: true, dangerouslySetInnerHTML: {__html: @linkState('html').value}
+                    else
+                        textarea className: 'editor', ref: 'content', defaultValue: @linkState('body').value
                 div className: 'composeToolbox',
                     div className: 'btn-toolbar', role: 'toolbar',
                         div className: 'btn-group btn-group-sm',
@@ -91,10 +95,51 @@ module.exports = Compose = React.createClass
                                 span className: 'fa fa-send'
                                 span className: 'tool-long', t 'compose action send'
 
-    componentDidUpdate: ->
+    componentDidMount: ->
         # scroll compose window into view
         node = @getDOMNode()
         node.scrollIntoView()
+        if @state.composeInHTML
+            jQuery('#email-compose .rt-editor').on('keypress', (e) ->
+                if e.keyCode is 13
+                    # timeout to let the editeor perform its own stuff
+                    setTimeout ->
+                        target = document.getSelection().anchorNode
+                        if target.lastChild
+                            target = target.lastChild.previousElementSibling
+                        parent = target
+                        p2 = null
+                        process = ->
+                            p3 = p2
+                            current = parent
+                            parent = parent.parentNode
+                            p2 = parent.cloneNode false
+                            if p3?
+                                p2.appendChild p3
+                            s = current.nextSibling
+                            while s?
+                                p2.appendChild(s.cloneNode(true))
+                                s2 = s.nextSibling
+                                parent.removeChild s
+                                s = s2
+                        process()
+                        process() while (parent.parentNode? && not parent.parentNode.classList.contains 'rt-editor')
+                        second = p2
+                        inserted = document.createElement 'p'
+                        inserted.innerHTML = "<br />"
+                        if parent.nextSibling
+                            parent.parentNode.insertBefore inserted, parent.nextSibling
+                            parent.parentNode.insertBefore second, parent.nextSibling
+                        else
+                            parent.parentNode.appendChild inserted
+                            parent.parentNode.appendChild second
+
+                        inserted.focus()
+                        sel = window.getSelection()
+                        sel.collapse inserted, 0
+                    , 50
+            )
+
 
     getAccountRender: (account, key) ->
 
@@ -108,7 +153,9 @@ module.exports = Compose = React.createClass
     getInitialState: (forceDefault) ->
         message = @props.message
         state =
-            currentAccount : @props.selectedAccount
+            currentAccount: @props.selectedAccount
+            composeInHTML:  SettingsStore.get 'composeInHTML'
+
         if message?
             today = moment()
             date = moment message.get 'createdAt'
@@ -121,6 +168,15 @@ module.exports = Compose = React.createClass
             dateHuman = date.format(formatter)
             sender = MessageUtils.displayAddresses(message.get 'from')
 
+            text = message.get 'text'
+            html = message.get 'html'
+
+            if text and not html and state.composeInHTML
+                html = markdown.toHTML text
+
+            if html and not text and not state.composeInHTML
+                text = toMarkdown html
+
         switch @props.action
             when ComposeActions.REPLY
                 state.to = MessageUtils.displayAddresses message.getReplyToAddress(), true
@@ -128,20 +184,30 @@ module.exports = Compose = React.createClass
                 state.bcc = ''
                 state.subject = "#{t 'compose reply prefix'}#{message.get 'subject'}"
                 state.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
-                    MessageUtils.generateReplyText(message.get('text')) + "\n"
+                    MessageUtils.generateReplyText(text) + "\n"
+                state.html = """
+                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
+                    <blockquote>#{html}</blockquote>
+                    """
             when ComposeActions.REPLY_ALL
                 state.to = MessageUtils.displayAddresses(message.getReplyToAddress(), true)
                 state.cc = MessageUtils.displayAddresses(Array.concat(message.get('to'), message.get('cc')), true)
                 state.bcc = ''
                 state.subject = "#{t 'compose reply prefix'}#{message.get 'subject'}"
                 state.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
-                    MessageUtils.generateReplyText(message.get('text')) + "\n"
+                    MessageUtils.generateReplyText(text) + "\n"
+                state.html = """
+                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
+                    <blockquote>#{html}</blockquote>
+                    """
             when ComposeActions.FORWARD
                 state.to = ''
                 state.cc = ''
                 state.bcc = ''
                 state.subject = "#{t 'compose forward prefix'}#{message.get 'subject'}"
-                state.body = t('compose forward separator', {date: dateHuman, sender: sender}) + message.get('text')
+                state.body = t('compose forward separator', {date: dateHuman, sender: sender}) + text
+                state.html = "<p>#{t('compose forward separator', {date: dateHuman, sender: sender})}</p>" + html
+
             when null
                 state.to      = ''
                 state.cc      = ''
@@ -167,10 +233,15 @@ module.exports = Compose = React.createClass
             cc          : this.refs.cc.getDOMNode().value.trim()
             bcc         : this.refs.bcc.getDOMNode().value.trim()
             subject     : this.refs.subject.getDOMNode().value.trim()
-            content     : this.refs.content.getDOMNode().value.trim()
             #headers     :
             #date        :
             #encoding    :
+
+        if @state.composeInHTML
+            message.html    = this.refs.html.getDOMNode().innerHTML
+            message.content = toMarkdown(message.html)
+        else
+            message.content = this.refs.content.getDOMNode().value.trim()
 
         if @props.message?
             msg   = @props.message
