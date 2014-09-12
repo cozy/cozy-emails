@@ -54,32 +54,32 @@ module.exports = Application = React.createClass
             return div null, t "app loading"
 
         # is the layout a full-width panel or two panels sharing the width
-        isFullWidth = not layout.rightPanel?
+        isFullWidth = not layout.secondPanel?
 
-        leftPanelLayoutMode = if isFullWidth then 'full' else 'left'
+        firstPanelLayoutMode = if isFullWidth then 'full' else 'first'
 
         # css classes are a bit long so we use a subfunction to get them
         panelClasses = @getPanelClasses isFullWidth
 
         showMailboxConfigButton = @state.selectedAccount? and
-                                  layout.leftPanel.action isnt 'account.new'
+                                  layout.firstPanel.action isnt 'account.new'
         if showMailboxConfigButton
             # the button toggles the mailbox config
-            if layout.leftPanel.action is 'account.config'
+            if layout.firstPanel.action is 'account.config'
                 configMailboxUrl = @buildUrl
-                    direction: 'left'
+                    direction: 'first'
                     action: 'account.mailbox.messages'
                     parameters: @state.selectedAccount.get 'id'
                     fullWidth: true
             else
                 configMailboxUrl = @buildUrl
-                    direction: 'left'
+                    direction: 'first'
                     action: 'account.config'
                     parameters: @state.selectedAccount.get 'id'
                     fullWidth: true
 
         responsiveBackUrl = @buildUrl
-            leftPanel: layout.leftPanel
+            firstPanel: layout.firstPanel
             fullWidth: true
 
         # classes for page-content
@@ -111,7 +111,7 @@ module.exports = Application = React.createClass
                     # when its feature is implemented.
                     div id: 'quick-actions', className: 'row',
                         # responsive menu icon
-                        if layout.rightPanel
+                        if layout.secondPanel
                             a href: responsiveBackUrl, className: 'responsive-handler hidden-md hidden-lg',
                                 i className: 'fa fa-chevron-left hidden-md hidden-lg pull-left'
                                 t "app back"
@@ -137,68 +137,68 @@ module.exports = Application = React.createClass
 
                     # Two layout modes: one full-width panel or two panels
                     div id: 'panels', className: 'row',
-                        div className: panelClasses.leftPanel, key: 'left-panel-' + layout.leftPanel.action + '-' + layout.leftPanel.parameters.join('-'),
-                            @getPanelComponent layout.leftPanel, leftPanelLayoutMode
-                        if not isFullWidth and layout.rightPanel?
-                            div className: panelClasses.rightPanel, key: 'right-panel-' + layout.rightPanel.action + '-' + layout.rightPanel.parameters.join('-'),
-                                @getPanelComponent layout.rightPanel, 'right'
+                        div className: panelClasses.firstPanel, key: 'left-panel-' + layout.firstPanel.action + '-' + layout.firstPanel.parameters.join('-'),
+                            @getPanelComponent layout.firstPanel, firstPanelLayoutMode
+                        if not isFullWidth and layout.secondPanel?
+                            div className: panelClasses.secondPanel, key: 'right-panel-' + layout.secondPanel.action + '-' + layout.secondPanel.parameters.join('-'),
+                                @getPanelComponent layout.secondPanel, 'second'
 
 
     # Panels CSS classes are a bit long so we get them from a this subfunction
     # Also, it manages transitions between screens by adding relevant classes
     getPanelClasses: (isFullWidth) ->
         previous = @props.router.previous
-        layout = @props.router.current
-        left = layout.leftPanel
-        right = layout.rightPanel
+        layout   = @props.router.current
+        first     = layout.firstPanel
+        second   = layout.secondPanel
 
         # Two cases: the layout has a full-width panel...
         if isFullWidth
-            classes = leftPanel: 'panel col-xs-12 col-md-12'
+            classes = firstPanel: 'panel col-xs-12 col-md-12'
 
             # custom case for mailbox.config action (top right cog button)
-            if previous? and left.action is 'account.config'
-                classes.leftPanel += ' moveFromTopRightCorner'
+            if previous? and first.action is 'account.config'
+                classes.firstPanel += ' moveFromTopRightCorner'
 
             # (default) when full-width panel is shown after a two-panels structure
-            else if previous? and previous.rightPanel
+            else if previous? and previous.secondPanel
 
                 # if the full-width panel was on right right before, it expands
-                if previous.rightPanel.action is layout.leftPanel.action and
-                   _.difference(previous.rightPanel.parameters, layout.leftPanel.parameters).length is 0
-                    classes.leftPanel += ' expandFromRight'
+                if previous.secondPanel.action is layout.firstPanel.action and
+                   _.difference(previous.secondPanel.parameters, layout.firstPanel.parameters).length is 0
+                    classes.firstPanel += ' expandFromRight'
 
             # (default) when full-width panel is shown after a full-width panel
             else if previous?
-                classes.leftPanel += ' moveFromLeft'
+                classes.firstPanel += ' moveFromLeft'
 
 
         # ... or a two panels layout.
         else
             classes =
-                leftPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm'
-                rightPanel: 'panel col-xs-12 col-md-6'
+                firstPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm'
+                secondPanel: 'panel col-xs-12 col-md-6'
 
             # we don't animate in the first render
             if previous?
-                wasFullWidth = not previous.rightPanel?
+                wasFullWidth = not previous.secondPanel?
 
                 # transition from full-width to two-panels layout
                 if wasFullWidth and not isFullWidth
 
-                    # expanded right panel collapses
-                    if previous.leftPanel.action is right.action and
-                       _.difference(previous.leftPanel.parameters, right.parameters).length is 0
-                        classes.leftPanel += ' moveFromLeft'
-                        classes.rightPanel += ' slide-in-from-left'
+                    # expanded second panel collapses
+                    if previous.firstPanel.action is second.action and
+                       _.difference(previous.firstPanel.parameters, second.parameters).length is 0
+                        classes.firstPanel += ' moveFromLeft'
+                        classes.secondPanel += ' slide-in-from-left'
 
-                    # (default) opens right panel sliding from the right
+                    # (default) opens second panel sliding from the right
                     else
-                        classes.rightPanel += ' slide-in-from-right'
+                        classes.secondPanel += ' slide-in-from-right'
 
-                # (default) opens right panel sliding from the left
+                # (default) opens second panel sliding from the left
                 else if not isFullWidth
-                    classes.rightPanel += ' slide-in-from-left'
+                    classes.secondPanel += ' slide-in-from-left'
 
         return classes
 
@@ -217,7 +217,7 @@ module.exports = Application = React.createClass
 
             # gets the selected message if any
             openMessage = null
-            direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
+            direction = if layout is 'first' then 'secondPanel' else 'firstPanel'
             otherPanelInfo = @props.router.current[direction]
             if otherPanelInfo?.action is 'message'
                 openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
@@ -236,7 +236,7 @@ module.exports = Application = React.createClass
                 counterMessage: t 'list count', messagesCount
                 buildPaginationUrl: (numPage) =>
                     @buildUrl
-                        direction: 'left'
+                        direction: 'first'
                         action: 'account.mailbox.messages'
                         parameters: [accountID, mailboxID, numPage]
 
@@ -284,7 +284,7 @@ module.exports = Application = React.createClass
 
             # gets the selected message if any
             openMessage = null
-            direction = if layout is 'left' then 'rightPanel' else 'leftPanel'
+            direction = if layout is 'first' then 'secondPanel' else 'firstPanel'
             otherPanelInfo = @props.router.current[direction]
             if otherPanelInfo?.action is 'message'
                 openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
@@ -303,7 +303,7 @@ module.exports = Application = React.createClass
                 counterMessage: t 'list search count', results.count()
                 buildPaginationUrl: (numPage) =>
                     @buildUrl
-                        direction: 'left'
+                        direction: 'first'
                         action: 'search'
                         parameters: [@state.searchQuery, numPage]
 
@@ -315,9 +315,9 @@ module.exports = Application = React.createClass
         selectedAccount = AccountStore.getSelected()
         selectedAccountID = selectedAccount?.get('id') or null
 
-        leftPanelInfo = @props.router.current?.leftPanel
-        if leftPanelInfo?.action is 'account.mailbox.messages'
-            selectedMailboxID = leftPanelInfo.parameters[1]
+        firstPanelInfo = @props.router.current?.firstPanel
+        if firstPanelInfo?.action is 'account.mailbox.messages'
+            selectedMailboxID = firstPanelInfo.parameters[1]
         else
             selectedMailboxID = null
 
@@ -339,7 +339,7 @@ module.exports = Application = React.createClass
         # Uses `forceUpdate` with the proper scope because React doesn't allow
         # to rebind its scope on the fly
         @onRoute = (params) =>
-            {leftPanelInfo, rightPanelInfo} = params
+            {firstPanelInfo, secondPanelInfo} = params
             @forceUpdate()
 
         @props.router.on 'fluxRoute', @onRoute

@@ -65,7 +65,7 @@ module.exports = React.createClass
             # Display Compose block
             if @state.composing
                 selectedAccount = @props.selectedAccount
-                layout          = 'right'
+                layout          = 'second'
                 message         = message
                 action          = @state.composeAction
                 callback        = (error) =>
