@@ -48,6 +48,8 @@ module.exports =
       "mail action mark"        : "Marquer comme"
       "mail action copy"        : "Copier…"
       "mail action move"        : "Déplacer…"
+      "mail action more"        : "Plus…"
+      "mail action headers"     : "Entêtes"
       "mail mark spam"          : "Pourriel"
       "mail mark nospam"        : "Légitime"
       "mail mark fav"           : "Important"
