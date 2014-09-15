@@ -32,6 +32,7 @@ class MessageStore extends Store
 
         handle ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage = (message, silent = false) ->
             # create or update
+            message.hasAttachments = message.attachments.length > 0
             message = Immutable.Map message
             message.getReplyToAddress = ->
                 reply = this.get 'replyTo'

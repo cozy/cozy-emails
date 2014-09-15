@@ -74,7 +74,18 @@
         justify-content flex-start
         align-items center
 
+      .sender-avatar
+          display block
+          float left
+          padding: 0 .5em
+          margin 0 .5em 0 0
+          font-size 2em
+          line-height 2em
+          color #aaa
+          border 1px solid #aaa
+
       .participants
+        color darkcolor
         span
           display block
 
@@ -96,19 +107,9 @@
           margin 0
           display inline
 
-      .participants
-        width 200px
-        color darkcolor
-
       .hour
         margin-left auto
         color darkcolor
-
-      // placeholder until we have images
-      .fa-user
-        color #aaa
-        font-size 30px
-        border 1px solid #aaa
 
       &:hover:not(.active):not(:last-of-type)
         background #f4f4f4
@@ -119,3 +120,19 @@
   .with-headers
     .full-headers
       display: block
+
+  .attachments
+    max-height 5em
+    overflow auto
+
+    .attachment
+      margin 0 0 .25em 0
+      white-space no-wrap
+
+    .mime
+      line-height 1.5em
+      font-size 1.5em
+      float left
+
+    .attachment-name
+      color darkcolor
