@@ -5,72 +5,72 @@
 */
 
 .message-list
-  padding 0
+    padding 0
 
-  &.disable
-    display none
+    &.disable
+        display none
 
-  &.col-md-6
-  &.col-md-12
-    transition width 0.2s ease-out
+    &.col-md-6
+    &.col-md-12
+        transition width 0.2s ease-out
 
-  .pagination-box
-    text-align: center
+    .pagination-box
+        text-align: center
 
-  .pagination > li > a, .pagination > li > span
-    border-width: 0
+    .pagination > li > a, .pagination > li > span
+        border-width: 0
 
-  .pagination > li.current
-    font-weight: bold
+    .pagination > li.current
+        font-weight: bold
 
-  .message
-    padding 5px
-    border-left 5px solid transparent
-    border-bottom 1px solid #e4e4e4
-    cursor pointer
+    .message
+        padding 5px
+        border-left 5px solid transparent
+        border-bottom 1px solid #e4e4e4
+        cursor pointer
 
-    a
-      display block
-      outline none
+        a
+          display block
+          outline none
 
-      // We use a flexbox display so the message preview takes all the width left
-      display flex
-      justify-content flex-start
-      align-items center
+          // We use a flexbox display so the message preview takes all the width left
+          display flex
+          justify-content flex-start
+          align-items center
 
-      text-decoration none
+          text-decoration none
 
-      span
-      .preview
-        font-size 13px
-        margin 0 5px
+        span
+        .preview
+            font-size 13px
+            margin 0 5px
 
-      .preview
-        flex 1
-        margin 0 10px 0 auto
-        overflow hidden
-        white-space nowrap
-        text-overflow ellipsis
-        color mediumcolor // for ellipsis + p
+        .preview
+            flex 1
+            margin 0 10px 0 auto
+            overflow hidden
+            white-space nowrap
+            text-overflow ellipsis
+            color mediumcolor // for ellipsis + p
+
+            .title
+                color darkcolor
+            p
+                margin 0
+                display inline
+
+        .participants
+            width 200px
+            color darkcolor
 
         .title
-          color darkcolor
-        p
-          margin 0
-          display inline
+            min-width 200px
+            &:after
+                content ' - '
 
-      .participants
-        width 200px
-        color darkcolor
-
-      .title
-        min-width 200px
-        &:after
-          content ' - '
-
-      .hour
-        margin-left auto
-        color darkcolor
+        .hour
+            margin-left auto
+            color darkcolor
 
       // placeholder until we have images
       .fa-user
@@ -78,9 +78,9 @@
         font-size 30px
         border 1px solid #aaa
 
-    &:hover
-      border-left 5px solid actioncolor
-      background #f4f4f4
+        &:hover
+          border-left 5px solid actioncolor
+          background #f4f4f4
 
-    &.active
-      border-left 5px solid basecolor
+        &.active
+          border-left 5px solid basecolor

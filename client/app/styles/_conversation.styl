@@ -6,118 +6,127 @@
 
 .conversation
 
-  &.enable
-    display block
+    &.enable
+        display block
 
-  h3
-    color #444
-    margin-top 0
-    padding-bottom 10px
+    h3
+        color #444
+        margin-top 0
+        padding-bottom 10px
 
-    .close-conversation
-      cursor pointer
-      font-size 20px
-      margin-right 15px
+        .close-conversation
+            cursor pointer
+            font-size 20px
+            margin-right 15px
 
-    .expand
-      float right
+        .expand
+            float right
 
-    .expand
-    .close-conversation
-      color basecolor
-      &:hover
-        color actioncolor
+        .expand
+        .close-conversation
+            color basecolor
+            &:hover
+                color actioncolor
 
-  .thread
-    padding 0
-    border-top 1px solid #f4f4f4
+    .thread
+        padding 0
+        border-top 1px solid #f4f4f4
 
-    .message
-      padding 5px 15px
-      border-bottom 1px solid #e4e4e4
-      cursor pointer
+        .message
+            padding 5px 15px
+            border-bottom 1px solid #e4e4e4
+            cursor pointer
 
-      font-size 13px
+            font-size 13px
 
-      background #f4f4f4
+            background #f4f4f4
 
-      &.active
-      &:last-of-type
-        background #fff
+            &.active
+            &:last-of-type
+                background #fff
 
-        .preview
-          display none
-        .content
-          display block
+                .preview
+                    display none
+                .content
+                    display block
 
-      &:last-of-type
-        cursor default
+            &:last-of-type
+                cursor default
 
-      .messageToolbox
-          margin: 1em auto
-          opacity: .3
+            .messageToolbox
+                margin 1em auto
+                opacity .3
 
-      .messageToolbox:hover
-          margin: 1em auto
-          opacity: 1
+            .messageToolbox:hover
+                margin 1em auto
+                opacity 1
 
-      .messageToolbox .tool-long
-          display: none
+            .messageToolbox .tool-long
+                display none
 
-      span
-      .preview
-      .content
-        margin 0 5px
+            span
+            .preview
+            .content
+                margin 0 5px
 
-      .header
-        display flex
-        justify-content flex-start
-        align-items center
+            .header
+                display flex
+                justify-content flex-start
+                align-items center
 
-      .sender-avatar
-          display block
-          float left
-          padding: 0 .5em
-          margin 0 .5em 0 0
-          font-size 2em
-          line-height 2em
-          color #aaa
-          border 1px solid #aaa
+            .sender-avatar
+                display block
+                float left
+                padding 0 .5em
+                margin 0 .5em 0 0
+                font-size 2em
+                line-height 2em
+                color #aaa
+                border 1px solid #aaa
 
-      .participants
-        color darkcolor
-        span
-          display block
+            .participants
+                span
+                    display block
 
-          &.receivers
-            color mediumcolor
+                &.receivers
+                    color mediumcolor
 
-      .content
-        white-space: pre-line
-        margin-top 15px
-        display none
-      .preview
-        margin-top 15px
-        overflow hidden
-        white-space nowrap
-        text-overflow ellipsis
-        color mediumcolor // for ellipsis + p
+            .content
+                white-space: pre-line
+                margin-top 15px
+                display none
 
-        p
-          margin 0
-          display inline
+            .preview
+                margin-top 15px
+                overflow hidden
+                white-space nowrap
+                text-overflow ellipsis
+                color mediumcolor // for ellipsis + p
 
-      .hour
-        margin-left auto
-        color darkcolor
+                p
+                    margin 0
+                    display inline
 
-      &:hover:not(.active):not(:last-of-type)
-        background #f4f4f4
+            .participants
+                width 200px
+                color darkcolor
 
-  .full-headers
-    display none
+            .hour
+                margin-left auto
+                color darkcolor
 
-  .with-headers
+            // placeholder until we have images
+            .fa-user
+                color #aaa
+                font-size 30px
+                border 1px solid #aaa
+
+            &:hover:not(.active):not(:last-of-type)
+                background #f4f4f4
+
     .full-headers
-      display: block
+        display none
 
+    .with-headers
+        .full-headers
+            display block

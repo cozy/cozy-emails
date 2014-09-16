@@ -22,7 +22,7 @@
 
 // tweaks fontawesome icons
 * > .fa-compress
-  transform rotate(45deg)
+    transform rotate(45deg)
 
 
 /*
@@ -31,65 +31,65 @@
 */
 
 #quick-actions
-  //
-  &> div
-    padding 0
+    &> div
+        padding 0
 
 
-  form
-    display table
+    form
+        display table
 
-    .dropdown
-    .form-group
-      display table-cell
+        .dropdown
+        .form-group
+            display table-cell
 
-    .dropdown
-      max-width 30%
-    .form-group
-      max-width 70%
-      padding-left 10px
+        .dropdown
+            max-width 30%
+        .form-group
+            max-width 70%
+            padding-left 10px
 
 
 /*
   Contextual actions
 */
 #contextual-actions
-  padding 0
+    padding 0
 
-  .mailbox-config
+    .mailbox-config
     &.fade-enter
-      animation fadeIn animationDuration ease
+        animation fadeIn animationDuration ease
 
     &.fade-leave
-      animation fadeIn animationDuration ease reverse
+        animation fadeIn animationDuration ease reverse
 
 /*
   new email window
 */
 #email-compose
 
-  &.enable
-    display block
+    &.enable
+        display block
 
-  &.col-md-6
-  &.col-md-12
-    transition width 0.2s ease-out
+    &.col-md-6
+    &.col-md-12
+        transition width 0.2s ease-out
 
-  h3
-    color #444
-    margin-top 0
+    h3
+        color #444
+        margin-top 0
 
     a
-      color basecolor
+        color basecolor
 
     a.close-email
-      margin-right 15px
+        margin-right 15px
 
     a.expand
-      float right
-      font-size 25px
+        float right
+        font-size 25px
 
-  .editor
+
+#email-compose .editor
     border 1px solid #444
     min-height 250px
     width 100%
@@ -111,57 +111,57 @@
   -- disabled because of the ugly scrollbar on most computers
 */
 .conversation .nav
-  display block
-  margin-bottom 30px
+    display block
+    margin-bottom 30px
 
-  overflow auto
+    overflow auto
 
-  li
-    position relative
+    li
+        position relative
 
-    &:not(.active)
-      max-width 150px
-      a
-        color mediumcolor
-    a
-      overflow hidden
-      white-space nowrap
-      text-overflow ellipsis
+        &:not(.active)
+            max-width 150px
+            a
+                color mediumcolor
+        a
+            overflow hidden
+            white-space nowrap
+            text-overflow ellipsis
 
-      border none
-      border-bottom 1px solid basecolor
-      margin 0
+            border none
+            border-bottom 1px solid basecolor
+            margin 0
 
-      &:hover
-        color mediumcolor-contrast
+            &:hover
+                color mediumcolor-contrast
 
-    .close
-      position absolute
-      top 0
-      right 0
+        .close
+            position absolute
+            top 0
+            right 0
 
-    &.active a
-    a:hover
-      border-radius 0
-      border none
-      border-bottom 4px solid basecolor
+        &.active a
+        a:hover
+            border-radius 0
+            border none
+            border-bottom 4px solid basecolor
 
 /*
   EDITOR
 
-  -- 
+  --
 */
 
 .rt-editor
 
-  min-height 4em
-  height auto
+    min-height 4em
+    height auto
 
-  blockquote
-    border-left 3px solid blue
-    padding-left: .5em
-    margin: 0
+    blockquote
+        border-left 3px solid blue
+        padding-left .5em
+        margin 0
 
-  div
-  p
-    margin .5em 0
+    div
+    p
+        margin .5em 0
