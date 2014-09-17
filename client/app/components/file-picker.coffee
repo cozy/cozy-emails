@@ -3,65 +3,6 @@
 MessageUtils = require '../utils/MessageUtils'
 
 ###
-# Display a file item
-#
-# Props:
-#  - file
-#  - editable: boolean (false) allow to delete file
-#  - (display): function
-#  - (delete): function
-###
-FileItem = React.createClass
-    displayName: 'FileItem'
-
-    getDefaultProps: ->
-        return {
-            editable: false
-        }
-
-    getInitialState: ->
-        return {}
-
-    render: ->
-        file = @props.file
-        type = MessageUtils.getAttachmentType file.type
-        iconClass = switch type
-            when '' then 'fa-file-word-o'
-            when 'archive'      then 'fa-file-archive-o'
-            when 'audio'        then 'fa-file-audio-o'
-            when 'code'         then 'fa-file-code-o'
-            when 'image'        then 'fa-file-image-o'
-            when 'pdf'          then 'fa-file-pdf-o'
-            when 'word'         then 'fa-file-word-o'
-            when 'presentation' then 'fa-file-powerpoint-o'
-            when 'spreadsheet'  then 'fa-file-excel-o'
-            when 'text'         then 'fa-file-text-o'
-            when 'video'        then 'fa-file-video-o'
-            when 'word'         then 'fa-file-word-o'
-            else 'fa-file-o'
-
-        if @props.display?
-            name = a className: 'file-name', target: '_blank', onClick: @doDisplay, file.name
-        else
-            name = span className: 'file-name', file.name
-
-        li className: "file-item", key: file.name,
-            i className: "mime fa #{iconClass}"
-            if @props.editable
-                i className: "fa fa-times delete", onClick: @doDelete
-            name
-            div className: 'file-detail',
-                span null, "#{(file.size / 1000).toFixed(2)}Ko"
-
-    doDisplay: (e) ->
-        e.preventDefault
-        @props.display()
-
-    doDelete: (e) ->
-        e.preventDefault
-        @props.delete()
-
-###
 # File picker
 #
 # Available props
@@ -74,6 +15,12 @@ FileItem = React.createClass
 FilePicker = React.createClass
     displayName: 'FilePicker'
 
+    propTypes:
+        file:     React.PropTypes.array
+        editable: React.PropTypes.bool
+        form:     React.PropTypes.bool
+        display:  React.PropTypes.func
+
     getDefaultProps: ->
         return {
             editable: false
@@ -83,12 +30,11 @@ FilePicker = React.createClass
 
     getInitialState: ->
         return {
-            editable: @props.editable
             files: @_convertFileList @props.files
         }
 
     componentWillReceiveProps: (props) ->
-        @setState {editable: props.editable, files: @_convertFileList props.files}
+        @setState {files: @_convertFileList props.files}
 
     render: ->
         files = @state.files.map (file) =>
@@ -111,7 +57,7 @@ FilePicker = React.createClass
         container className: 'file-picker',
             ul className: 'files list-unstyled',
                 files
-            if @state.editable
+            if @props.editable
                 div null,
                     # triggering "click" won't work if file input itself is hidden
                     span className: "file-wrapper",
@@ -168,3 +114,72 @@ FilePicker = React.createClass
 
 
 module.exports = FilePicker
+
+###
+# Display a file item
+#
+# Props:
+#  - file
+#  - editable: boolean (false) allow to delete file
+#  - (display): function
+#  - (delete): function
+###
+FileItem = React.createClass
+    displayName: 'FileItem'
+
+    propTypes:
+        file: React.PropTypes.shape({
+            name: React.PropTypes.string
+            type: React.PropTypes.string
+            size: React.PropTypes.number
+        }).isRequired
+        editable: React.PropTypes.bool
+        display:  React.PropTypes.func
+        delete:   React.PropTypes.func
+
+    getDefaultProps: ->
+        return {
+            editable: false
+        }
+
+    getInitialState: ->
+        return {}
+
+    render: ->
+        file = @props.file
+        type = MessageUtils.getAttachmentType file.type
+        iconClass = switch type
+            when '' then 'fa-file-word-o'
+            when 'archive'      then 'fa-file-archive-o'
+            when 'audio'        then 'fa-file-audio-o'
+            when 'code'         then 'fa-file-code-o'
+            when 'image'        then 'fa-file-image-o'
+            when 'pdf'          then 'fa-file-pdf-o'
+            when 'word'         then 'fa-file-word-o'
+            when 'presentation' then 'fa-file-powerpoint-o'
+            when 'spreadsheet'  then 'fa-file-excel-o'
+            when 'text'         then 'fa-file-text-o'
+            when 'video'        then 'fa-file-video-o'
+            when 'word'         then 'fa-file-word-o'
+            else 'fa-file-o'
+
+        if @props.display?
+            name = a className: 'file-name', target: '_blank', onClick: @doDisplay, file.name
+        else
+            name = span className: 'file-name', file.name
+
+        li className: "file-item", key: file.name,
+            i className: "mime fa #{iconClass}"
+            if @props.editable
+                i className: "fa fa-times delete", onClick: @doDelete
+            name
+            div className: 'file-detail',
+                span null, "#{(file.size / 1000).toFixed(2)}Ko"
+
+    doDisplay: (e) ->
+        e.preventDefault
+        @props.display()
+
+    doDelete: (e) ->
+        e.preventDefault
+        @props.delete()

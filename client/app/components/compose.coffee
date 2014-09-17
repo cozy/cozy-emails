@@ -84,9 +84,11 @@ module.exports = Compose = React.createClass
                         input id: 'compose-subject', ref: 'subject', valueLink: @linkState('subject'), type: 'text', className: 'form-control', placeholder: t "compose subject help"
                 div className: 'form-group',
                     if @state.composeInHTML
-                        div className: 'rt-editor', contentEditable: true, dangerouslySetInnerHTML: {__html: @linkState('html').value}
+                        div className: 'rt-editor form-control', contentEditable: true, dangerouslySetInnerHTML: {__html: @linkState('html').value}
                     else
                         textarea className: 'editor', ref: 'content', defaultValue: @linkState('body').value
+                div className: 'attachements',
+                    FilePicker {editable: true, form: false}
                 div className: 'composeToolbox',
                     div className: 'btn-toolbar', role: 'toolbar',
                         div className: 'btn-group btn-group-sm',
@@ -97,7 +99,6 @@ module.exports = Compose = React.createClass
                             button className: 'btn btn-default', type: 'button', onClick: @onSend,
                                 span className: 'fa fa-send'
                                 span className: 'tool-long', t 'compose action send'
-            FilePicker({editable: true})
 
     componentDidMount: ->
         # scroll compose window into view
@@ -119,7 +120,7 @@ module.exports = Compose = React.createClass
                               document.documentElement.msMatchesSelector
 
                         target = document.getSelection().anchorNode
-                        if matchesSelector? and not matchesSelector.call target, '.rt-editor blockquote *'
+                        if matchesSelector? and not matchesSelector.call(target, '.rt-editor blockquote *')
                             # we are not inside a blockquote, nothing to do
                             return
 
