@@ -1,6 +1,7 @@
 {div, ul, li, span, i, p, h3, a, button, pre} = React.DOM
 MailboxList  = require './mailbox-list'
 Compose      = require './compose'
+FilePicker   = require './file-picker'
 MessageUtils = require '../utils/MessageUtils'
 {ComposeActions} = require '../constants/AppConstants'
 LayoutActionCreator  = require '../actions/LayoutActionCreator'
@@ -58,6 +59,23 @@ module.exports = React.createClass
         else
             formatter = 'hh:mm'
 
+        # convert attachment to the format needed by the file picker
+        convert = (file) ->
+            return {
+                name:               file.generatedFileName
+                size:               file.length
+                type:               file.contentType
+                originalName:       file.fileName
+                contentDisposition: file.contentDisposition
+                contentId:          file.contentId
+                transferEncoding:   file.transferEncoding
+            }
+
+        # display attachment
+        display = (file) ->
+            url = "/message/#{message.get 'id'}/attachments/#{file.name}"
+            window.open url
+
         li className: classes, key: @props.key, onClick: clickHandler, 'data-id': message.get('id'),
             @getToolboxRender message.get 'id'
             div className: 'header row',
@@ -69,7 +87,7 @@ module.exports = React.createClass
                         span className: 'receivers', t "mail receivers cc", {dest: MessageUtils.displayAddresses(message.get('cc'), true)}
                     span className: 'hour', date.format formatter
                 div className: 'col-md-4',
-                    @getAttachmentsRender attachments
+                    FilePicker({editable: false, files: attachments.map(convert), display: display})
             div className: 'full-headers',
                 pre null, fullHeaders.join "\n"
             div className: 'preview',
@@ -148,35 +166,6 @@ module.exports = React.createClass
         url    = ''
         li role: 'presentation', key: key,
             a href: url, role: 'menuitem', "#{pusher}#{mailbox.get 'label'}"
-
-    getAttachmentsRender: (attachments) ->
-        ul className: 'attachments list-unstyled',
-            for file in attachments
-                @getAttachmentRender file
-
-    getAttachmentRender: (file) ->
-        console.log file.generatedFileName, file.contentType
-        type = MessageUtils.getAttachmentType file.contentType
-        iconClass = switch type
-            when '' then 'fa-file-word-o'
-            when 'archive'      then 'fa-file-archive-o'
-            when 'audio'        then 'fa-file-audio-o'
-            when 'code'         then 'fa-file-code-o'
-            when 'image'        then 'fa-file-image-o'
-            when 'pdf'          then 'fa-file-pdf-o'
-            when 'word'         then 'fa-file-word-o'
-            when 'presentation' then 'fa-file-powerpoint-o'
-            when 'spreadsheet'  then 'fa-file-excel-o'
-            when 'text'         then 'fa-file-text-o'
-            when 'video'        then 'fa-file-video-o'
-            when 'word'         then 'fa-file-word-o'
-            else 'fa-file-o'
-
-        li className: "attachment",
-            i className: "mime fa #{iconClass}"
-            span className: 'attachment-name', file.generatedFileName
-            div className: 'attachment-detail',
-                span null, "(#{(file.length / 1000).toFixed(2)}Ko)"
 
     onFold: (args) ->
         @setState active: not @state.active

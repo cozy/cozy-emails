@@ -81,4 +81,6 @@ module.exports =
       "settings button save"       : "Enregistrer"
       "settings label mpp"         : "Nombre de messages par page"
       "settings label compose"     : "Éditeur riche"
-      
+
+      # File picker
+      "picker drop here"           : "Déposer les fichiers ici"

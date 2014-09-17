@@ -1,5 +1,8 @@
 {div, h3, a, i, textarea, form, label, button, span, ul, li, input} = React.DOM
 classer = React.addons.classSet
+
+FilePicker = require './file-picker'
+
 AccountStore  = require '../stores/AccountStore'
 SettingsStore = require '../stores/SettingsStore'
 
@@ -94,6 +97,7 @@ module.exports = Compose = React.createClass
                             button className: 'btn btn-default', type: 'button', onClick: @onSend,
                                 span className: 'fa fa-send'
                                 span className: 'tool-long', t 'compose action send'
+            FilePicker({editable: true})
 
     componentDidMount: ->
         # scroll compose window into view

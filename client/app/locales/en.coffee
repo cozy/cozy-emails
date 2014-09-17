@@ -81,3 +81,6 @@ module.exports =
       "settings button save"       : "Save"
       "settings label mpp"         : "Messages per page"
       "settings label compose"     : "Rich message editor"
+
+      # File picker
+      "picker drop here"           : "Drop files here"
