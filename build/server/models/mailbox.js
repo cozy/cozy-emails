@@ -57,14 +57,14 @@ Mailbox.getTree = function(accountID, filter) {
     endkey: [accountID, {}],
     include_docs: true
   }).each(function(row) {
-    var parentPath, path;
+    var box, parentPath, path;
     path = row.key.slice(1);
-    byPath[path.join(DELIMITER)] = row.doc;
+    box = byPath[path.join(DELIMITER)] = transform(row.doc);
     if (path.length === 1) {
-      return out.push(transform(row.doc));
+      return out.push(box);
     } else {
       parentPath = path.slice(0, -1).join(DELIMITER);
-      return byPath[parentPath].children.push(transform(row.doc));
+      return byPath[parentPath].children.push(box);
     }
   })["return"](out);
 };

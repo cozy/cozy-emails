@@ -60,7 +60,7 @@ ImapProcess.fetchMailbox = (account, box) ->
         console.log '   to fetch', toFetch.length
         console.log '   to del', toDelete.length
 
-        Promise.map toFetch, (id) ->
+        Promise.map toFetch.reverse(), (id) ->
             ImapProcess.fetchOneMail account, box, id
 
         # @TODO handle toDelete ?

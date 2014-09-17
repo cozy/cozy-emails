@@ -54,7 +54,7 @@ ImapProcess.fetchMailbox = function(account, box) {
     console.log('   in cozy', cozyIds.length);
     console.log('   to fetch', toFetch.length);
     console.log('   to del', toDelete.length);
-    return Promise.map(toFetch, function(id) {
+    return Promise.map(toFetch.reverse(), function(id) {
       return ImapProcess.fetchOneMail(account, box, id);
     });
   });
