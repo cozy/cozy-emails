@@ -68,7 +68,7 @@ runTests = (fileList) ->
 
 task "lint", "Run coffeelint on source files", ->
 
-    lintFiles = walk '.',  ['node_modules', 'tests']
+    lintFiles = walk '.',  ['node_modules', 'tests', 'components', 'locales']
 
     # if installed globally, output will be colored
     testCommand = "coffeelint -v"
@@ -78,9 +78,8 @@ task "lint", "Run coffeelint on source files", ->
         else
             command = "coffeelint"
 
-        command += " -f coffeelint.json -r " + lintFiles.join " "
+        command += " -f coffeelint.json " + lintFiles.join " "
         exec command, (err, stdout, stderr) ->
-            console.log stderr
             console.log stdout
 
 task 'build', 'Build CoffeeScript to Javascript', ->

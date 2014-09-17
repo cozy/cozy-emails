@@ -8,7 +8,8 @@ module.exports =
             Immutable.Sequence children
                 .mapKeys (_, mailbox) -> mailbox.id
                 .map (mailbox) ->
-                    mailbox.children = _createImmutableMailboxes mailbox.children
+                    children = mailbox.children
+                    mailbox.children = _createImmutableMailboxes children
                     return Immutable.Map mailbox
                 .toOrderedMap()
 
@@ -20,9 +21,11 @@ module.exports =
 
         _createRawObjectMailboxes = (children) ->
             children?.map (child) ->
-                return child.set 'children', _createRawObjectMailboxes child.get 'children'
+                children = child.get 'children'
+                return child.set 'children', _createRawObjectMailboxes children
             .toVector()
 
-        account = account.set 'mailboxes', _createRawObjectMailboxes account.get 'mailboxes'
+        mailboxes = account.get 'mailboxes'
+        account = account.set 'mailboxes', _createRawObjectMailboxes mailboxes
 
         return account.toJS()
