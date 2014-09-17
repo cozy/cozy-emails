@@ -16,8 +16,9 @@ module.exports =
                        callback "Something went wrong -- #{res.body}"
 
 
-    fetchMessagesByFolder: (mailboxID, callback) ->
-        request.get "mailbox/#{mailboxID}"
+    fetchMessagesByFolder: (mailboxID, numPage, callback) ->
+        numByPage = SettingsStore.get 'messagesPerPage'
+        request.get "mailbox/#{mailboxID}/page/#{numPage}/limit/#{numByPage}"
                .set 'Accept', 'application/json'
                .end (res) ->
                    if res.ok

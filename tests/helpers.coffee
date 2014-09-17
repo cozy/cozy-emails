@@ -17,10 +17,10 @@ client = new Client "http://#{helpers.options.serverHost}:#{helpers.options.serv
 helpers.getClient = -> client
 
 helpers.startImapServer = (done) ->
-    @timeout 30000 # this is damn slow
+    @timeout 60000 # this is damn slow
     DovecotStartScript = 'sh tests/DovecotTesting/SetupEnvironment.sh'
     exec DovecotStartScript, (err, stdout, stderr) ->
-        if err or stderr
+        if err
             console.log err, stderr
             done new Error('failed to start dovecot')
         else

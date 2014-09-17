@@ -23,7 +23,9 @@
     "bluebird": "2.3.2",
     "imap": "0.8.13",
     "guid": "0.0.12",
-    "lodash": "^2.4.1",
+    "mailparser": "0.4.6",
+    "iconv": "2.1.4",
+    "lodash": "2.4.1",
     "request-json": "0.4.12"
   },
   "devDependencies": {
@@ -41,7 +43,10 @@
   },
   "cozy-permissions": {
     "Account": {
-      "description": "Manages your mailboxes"
+      "description": "Manages your email Accounts"
+    },
+    "Mailbox": {
+      "description": "Manage your Imap Mailboxes"
     },
     "Message": {
       "description": "Manages your emails"
