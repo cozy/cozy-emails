@@ -7,18 +7,9 @@ priorities = ['low', 'normal', 'high']
 provider = 'cozycloud.cc'
 
 accounts = require './accounts.json'
-
-getMailboxesRecursively = (mboxes) ->
-    result = []
-    for mailbox in mboxes
-        result.push mailbox.id
-        result = result.concat getMailboxesRecursively mailbox.children
-
-    return result
-
 mailboxes = {}
-for account in accounts
-    mailboxes[account._id] = getMailboxesRecursively account.mailboxes
+for box in require './mailboxes.json'
+    mailboxes[box.accountID] = box
 
 numberOfEmails = process.argv[2] or 100
 
