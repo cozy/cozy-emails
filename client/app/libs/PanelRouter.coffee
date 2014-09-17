@@ -117,14 +117,36 @@ module.exports = class Router extends Backbone.Router
             args = @_extractParameters route.pattern, secondPanelString
             # remove the last argument which is alway `null`, not sure why
             args.pop()
-            secondPanelInfo = action: route.key, parameters: args
+
+            # normalizes the secondPanelInfo and adds default parameters if
+            # needed
+            secondPanelInfo = @_mergeDefaultParameter
+                action: route.key
+                parameters: args
         else
             secondPanelInfo = null
 
+        # normalizes the firstPanelInfo and adds default parameters, if needed
+        firstPanelInfo = @_mergeDefaultParameter
+            action: name
+            parameters: firstPanelParameters
 
-        # normalizes the firstPanelInfo
-        firstPanelInfo = action: name, parameters: firstPanelParameters
         return [firstPanelInfo, secondPanelInfo]
+
+
+    ###
+        Turns a parameters array into an object of named parameters
+    ###
+    _arrayToNamedParameters: (patternName, parametersArray) ->
+
+        namedParameters = {}
+        parametersName = @patterns[patternName].pattern.match(/:[\w]+/g) or []
+        for paramName, index in parametersName
+            # Removes the initial ":"
+            unPrefixedParamName = paramName.substr 1
+            namedParameters[unPrefixedParamName] = parametersArray[index]
+
+        return namedParameters
 
 
     ###
@@ -200,6 +222,7 @@ module.exports = class Router extends Backbone.Router
 
     # Builds the URL string from a route.
     _getURLFromRoute: (panel) ->
+
         # Clones the parameter because we are going to mutate it
         panel = _.clone panel
 
@@ -209,18 +232,7 @@ module.exports = class Router extends Backbone.Router
             if panel.parameters? and not (panel.parameters instanceof Array)
                 panel.parameters = [panel.parameters]
 
-            # gets default values (if relevant) to ease `@buildUrl` usage
-            if (defaultParameters = @_getDefaultParameters(panel.action))?
-                # sets the parameters if they don't exist at all...
-                if not panel.parameters? or panel.parameters.length is 0
-                    panel.parameters = defaultParameters
-
-                # ... or adds them in the relevant place if only some of them
-                # are missing
-                else
-                    for defaultParameter, key in defaultParameters
-                        if not panel.parameters[key]?
-                            panel.parameters.splice key, 0, defaultParameter
+            panel = @_mergeDefaultParameter panel
 
             # we default to empty array if there is no parameter in the route
             parametersInPattern = pattern.match(/:[\w]+/gi) or []
@@ -236,3 +248,19 @@ module.exports = class Router extends Backbone.Router
             return filledPattern
         else
             return ''
+
+
+    # Merges defaut parameters into a panel info if there are missing parameters
+    _mergeDefaultParameter: (panelInfo) ->
+        panelInfo = _.clone panelInfo
+        parameters = _.clone panelInfo.parameters or []
+        # gets default values, if there are
+        if (defaultParameters = @_getDefaultParameters panelInfo.action)?
+
+            # merges the parameters in the relevant place
+            for defaultParameter, key in defaultParameters
+                if not parameters[key]?
+                    parameters.splice key, 0, defaultParameter
+
+        panelInfo.parameters = parameters
+        return panelInfo
