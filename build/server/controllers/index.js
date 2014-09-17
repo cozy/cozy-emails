@@ -11,13 +11,16 @@ fixtures = require('cozy-fixtures');
 
 module.exports.main = function(req, res, next) {
   return Promise.all([
-    CozyInstance.getLocalePromised(), Account.getAllPromised().map(function(account) {
+    CozyInstance.getLocalePromised()["catch"](function(err) {
+      return 'en';
+    }), Account.getAllPromised().map(function(account) {
       return account.includeMailboxes();
     })
   ]).spread(function(locale, accounts) {
     return "window.locale = \"" + locale + "\";\nwindow.accounts = " + (JSON.stringify(accounts)) + ";";
   })["catch"](function(err) {
-    return "console.log(\"" + (err.stack || err) + "\");\nwindow.locale = \"en\"\nwindow.accounts = []";
+    console.log(err.stack);
+    return "console.log(\"" + err + "\");\nwindow.locale = \"en\"\nwindow.accounts = []";
   }).then(function(imports) {
     return res.render('index.jade', {
       imports: imports

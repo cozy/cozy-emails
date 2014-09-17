@@ -47,15 +47,15 @@ Mailbox.getTree = (accountID, filter) ->
         path = row.key[1..] # remove accountID
 
         # we keep a reference by path to easily find parent
-        byPath[path.join DELIMITER] = row.doc
+        box = byPath[path.join DELIMITER] = transform row.doc
 
         if path.length is 1 # first level box
-            out.push transform row.doc
+            out.push box
         else
             # this is a submailbox,  we find its parent
             # by path and append it
             parentPath = path[0..-2].join DELIMITER
-            byPath[parentPath].children.push transform row.doc
+            byPath[parentPath].children.push box
 
     .return out
 
