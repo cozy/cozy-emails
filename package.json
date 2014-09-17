@@ -33,7 +33,7 @@
     "mocha": "1.20.1",
     "request-json": "0.4.11",
     "cozy-fixtures": "1.1.1",
-    "coffeelint": "1.5.2",
+    "coffeelint": "^1.6.0",
     "lorem-ipsum": "1.0.1",
     "chai": "1.9.1"
   },

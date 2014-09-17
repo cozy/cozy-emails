@@ -99,12 +99,14 @@ class AccountStore extends Store
                     # we add a depth indicator for display
                     mailbox = mailbox.set 'depth', depth
                     result = result.set mailbox.get('id'), mailbox
-                    result = result.merge getFlattenMailboxes children, (depth + 1)
+                    result = result.merge getFlattenMailboxes children, \
+                                                                    (depth + 1)
                 return result.toOrderedMap()
 
             return getFlattenMailboxes(rawMailboxesTree).toOrderedMap()
         else
-            return _selectedAccount?.get('mailboxes') or Immutable.OrderedMap.empty()
+            emptyMap = Immutable.OrderedMap.empty()
+            return _selectedAccount?.get('mailboxes') or emptyMap
 
     getSelectedMailbox: (selectedID) ->
         mailboxes = @getSelectedMailboxes()

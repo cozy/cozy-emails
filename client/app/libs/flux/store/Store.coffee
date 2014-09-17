@@ -5,8 +5,9 @@ module.exports = class Store extends EventEmitter
 
     uniqID: null
 
-    # this variable will be shared with all subclasses so we store the items by subclass
-    # we don't use `@constructor.name` because it breaks when mangled
+    # this variable will be shared with all subclasses so we store the items
+    # by subclass we don't use `@constructor.name` because it breaks when
+    # mangled
     _nextUniqID = 0
     _handlers = {}
     _addHandlers = (type, callback) ->
@@ -18,7 +19,8 @@ module.exports = class Store extends EventEmitter
     _processBinding = ->
         @dispatchToken = AppDispatcher.register (payload) =>
             {type, value} = payload.action
-            if (callback = _handlers[@uniqID][type])? then callback.call @, value
+            if (callback = _handlers[@uniqID][type])?
+                callback.call @, value
 
 
     constructor: ->
@@ -31,5 +33,7 @@ module.exports = class Store extends EventEmitter
     # Must be overriden by each store
     __bindHandlers: (handle) ->
         if __DEV__
-            throw new Error "The store #{@constructor.name} must define a `__bindHandlers` method"
+            message = "The store #{@constructor.name} must define a " + \
+                      "`__bindHandlers` method"
+            throw new Error message
 

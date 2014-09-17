@@ -5,7 +5,8 @@ module.exports = StoreWatchMixin = (stores) ->
             stores.forEach (store) => store.on 'change', @_setStateFromStores
 
         componentWillUnmount: ->
-            stores.forEach (store) => store.removeListener 'change', @_setStateFromStores
+            stores.forEach (store) =>
+                store.removeListener 'change', @_setStateFromStores
 
         getInitialState: -> return @getStateFromStores()
 

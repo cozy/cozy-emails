@@ -30,10 +30,14 @@ module.exports = LayoutActionCreator =
                 level: level
                 message: message
 
-    alertSuccess: (message) -> LayoutActionCreator.alert AlertLevel.SUCCESS, message
-    alertInfo:    (message) -> LayoutActionCreator.alert AlertLevel.INFO, message
-    alertWarning: (message) -> LayoutActionCreator.alert AlertLevel.WARNING, message
-    alertError:   (message) -> LayoutActionCreator.alert AlertLevel.ERROR, message
+    alertSuccess: (message) ->
+        LayoutActionCreator.alert AlertLevel.SUCCESS, message
+    alertInfo:    (message) ->
+        LayoutActionCreator.alert AlertLevel.INFO, message
+    alertWarning: (message) ->
+        LayoutActionCreator.alert AlertLevel.WARNING, message
+    alertError:   (message) ->
+        LayoutActionCreator.alert AlertLevel.ERROR, message
 
     showMessageList: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()

@@ -1,7 +1,7 @@
 ###
 
-    -- Coffee port of Facebook's flux dispatcher. It was in ES6 and I haven't been
-    successful in adding a transpiler. --
+    -- Coffee port of Facebook's flux dispatcher. It was in ES6 and I haven't
+    been successful in adding a transpiler. --
 
     Copyright (c) 2014, Facebook, Inc.
     All rights reserved.
@@ -18,15 +18,15 @@ _prefix = 'ID_'
 
 module.exports = Dispatcher = class Dispatcher
     constructor: ->
-        this._callbacks = {};
-        this._isPending = {};
-        this._isHandled = {};
-        this._isDispatching = false;
-        this._pendingPayload = null;
+        this._callbacks = {}
+        this._isPending = {}
+        this._isHandled = {}
+        this._isDispatching = false
+        this._pendingPayload = null
 
     ###
-        Registers a callback to be invoked with every dispatched payload. Returns
-        a token that can be used with `waitFor()`.
+        Registers a callback to be invoked with every dispatched payload.
+        Returns a token that can be used with `waitFor()`.
 
         @param {function} callback
         @return {string}
@@ -42,17 +42,19 @@ module.exports = Dispatcher = class Dispatcher
         @param {string} id
     ###
     unregister: (id) ->
+        message = 'Dispatcher.unregister(...): `%s` does not map to a ' + \
+                  'registered callback.'
         invariant(
             this._callbacks[id],
-            'Dispatcher.unregister(...): `%s` does not map to a registered callback.',
+            message,
             id
         )
         delete this._callbacks[id]
 
     ###
-        Waits for the callbacks specified to be invoked before continuing execution
-        of the current callback. This method should only be used by a callback in
-        response to a dispatched payload.
+        Waits for the callbacks specified to be invoked before continuing
+        execution of the current callback. This method should only be used by a
+        callback in response to a dispatched payload.
 
         @param {array<string>} ids
     ###
@@ -61,19 +63,23 @@ module.exports = Dispatcher = class Dispatcher
             this._isDispatching,
             'Dispatcher.waitFor(...): Must be invoked while dispatching.'
         )
+        message = 'Dispatcher.waitFor(...): Circular dependency detected ' + \
+                  'while waiting for `%s`.'
+        message2 = 'Dispatcher.waitFor(...): `%s` does not map to a ' + \
+                   'registered callback.'
         for ii in [0..ids.length - 1] by 1
             id = ids[ii]
             if this._isPending[id]
                 invariant(
                     this._isHandled[id],
-                    'Dispatcher.waitFor(...): Circular dependency detected while waiting for `%s`.',
+                    message,
                     id
                 )
                 continue
 
             invariant(
                 this._callbacks[id],
-                'Dispatcher.waitFor(...): `%s` does not map to a registered callback.',
+                message2,
                 id
             )
             this._invokeCallback id
@@ -84,18 +90,20 @@ module.exports = Dispatcher = class Dispatcher
         @param {object} payload
     ###
     dispatch: (payload) ->
+        message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + \
+                  'of a dispatch.'
         invariant(
-            !this._isDispatching,
-            'Dispatch.dispatch(...): Cannot dispatch in the middle of a dispatch.'
-        );
-        this._startDispatching(payload);
+            not this._isDispatching,
+            message
+        )
+        this._startDispatching(payload)
         try
             for id of this._callbacks
                 if this._isPending[id]
                     continue
                 this._invokeCallback id
         finally
-          this._stopDispatching()
+            this._stopDispatching()
 
     ###
         Is this Dispatcher currently dispatching.
@@ -124,8 +132,8 @@ module.exports = Dispatcher = class Dispatcher
     ###
     _startDispatching: (payload) ->
         for id of this._callbacks
-          this._isPending[id] = false
-          this._isHandled[id] = false
+            this._isPending[id] = false
+            this._isHandled[id] = false
 
         this._pendingPayload = payload
         this._isDispatching = true
