@@ -59,8 +59,7 @@ Each modification of the client requires a specific build too.
 
 ## Tests
 
-![Build
-Status](https://travis-ci.org/mycozycloud/cozy-emails.png?branch=master)
+[![Build Status](https://travis-ci.org/cozy/cozy-emails.png?branch=master)](https://travis-ci.org/cozy/cozy-emails)
 
 To run tests type the following command into the Cozy Emails folder:
 
