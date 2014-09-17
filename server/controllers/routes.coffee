@@ -18,8 +18,10 @@ module.exports =
         put: [accounts.fetch, accounts.edit]
         delete: [accounts.fetch, accounts.remove]
 
-    'mailbox/:mailboxID':
+    'mailbox/:mailboxID/page/:numPage/limit/:numByPage':
         get: [messages.listByMailboxId]
+    'mailbox/:mailboxID/count':
+        get: [messages.countByMailboxId]
 
     'message':
         post: messages.send

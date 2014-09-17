@@ -104,7 +104,8 @@ class MessageStore extends Store
     * @return {Array}
     ###
     getMessagesByMailbox: (mailboxID, first = null, last = null) ->
-        sequence = _messages.filter (message) -> mailboxID in message.get('mailboxIDs')
+        sequence = _messages.filter (message) ->
+            mailboxID in Object.keys message.get('mailboxIDs')
         if first? and last?
             sequence = sequence.slice first, last
 

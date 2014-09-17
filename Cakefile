@@ -64,6 +64,7 @@ runTests = (fileList) ->
             console.log stdout
             if err
                 console.log "Running mocha caught exception: \n" + err
+                setTimeout (-> process.exit 1), 10
 
 task "lint", "Run coffeelint on source files", ->
 
