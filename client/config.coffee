@@ -10,6 +10,7 @@ exports.config =
                 # Files in `vendor` directories are compiled before other files
                 # even if they aren't specified in order.
                 before: [
+                    'vendor/scripts/polyfills.js'
                     'vendor/scripts/events.js'
                     'vendor/scripts/react-with-addons.js'
                     'vendor/scripts/jquery.js'

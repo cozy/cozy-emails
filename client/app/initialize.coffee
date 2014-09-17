@@ -23,8 +23,7 @@ window.onload = ->
     LayoutStore   = require './stores/LayoutStore'
     MessageStore  = require './stores/MessageStore'
     SettingsStore = require './stores/SettingsStore'
-    SearchStore = require './stores/SearchStore'
-
+    SearchStore   = require './stores/SearchStore'
 
     # Routing management
     Router = require './router'
@@ -36,10 +35,8 @@ window.onload = ->
     application = Application router: @router
     React.renderComponent application, document.body
 
-
     # Starts the application by initializing the router
     Backbone.history.start()
-
 
     # Makes this object immuable.
     Object.freeze this if typeof Object.freeze is 'function'

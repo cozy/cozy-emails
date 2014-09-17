@@ -1,8 +1,9 @@
 # See documentation on https://github.com/frankrousseau/americano#routes
 
-index = require './index'
+index    = require './index'
 accounts = require './accounts'
 messages = require './messages'
+test     = require './test'
 
 module.exports =
 
@@ -35,3 +36,5 @@ module.exports =
 
     'load-fixtures':
         get: index.loadFixtures
+
+    'test': get: test.main
