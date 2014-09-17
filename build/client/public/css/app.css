@@ -2590,9 +2590,9 @@ textarea:active {
   float: right;
   font-size: 25px;
 }
-#email-compose textarea {
+#email-compose .editor {
   border: 1px solid #444;
-  height: 250px;
+  min-height: 250px;
   width: 100%;
   text-align: left;
   color: #000;
@@ -2639,6 +2639,20 @@ textarea:active {
   border-radius: 0;
   border: none;
   border-bottom: 4px solid #34a6ff;
+}
+/*
+  EDITOR
+
+  -- 
+*/
+.rt-editor blockquote {
+  border-left: 3px solid #00f;
+  padding-left: 0.5em;
+  margin: 0;
+}
+.rt-editor div,
+.rt-editor p {
+  margin: 0.5em 0;
 }
 
 
