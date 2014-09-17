@@ -48,6 +48,8 @@ module.exports =
       "mail action mark"        : "Mark as…"
       "mail action copy"        : "Copy…"
       "mail action move"        : "Move…"
+      "mail action more"        : "More…"
+      "mail action headers"     : "Headers"
       "mail mark spam"          : "Spam"
       "mail mark nospam"        : "No spam"
       "mail mark fav"           : "Important"
@@ -79,3 +81,6 @@ module.exports =
       "settings button save"       : "Save"
       "settings label mpp"         : "Messages per page"
       "settings label compose"     : "Rich message editor"
+
+      # File picker
+      "picker drop here"           : "Drop files here"

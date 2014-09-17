@@ -13,11 +13,12 @@
 @import '_layout'
 
 // Components styles
-@import '_menu'
-@import '_quick-actions-bar'
-@import '_message-list'
-@import '_conversation'
 @import '_account-config'
+@import '_conversation'
+@import '_file-picker'
+@import '_menu'
+@import '_message-list'
+@import '_quick-actions-bar'
 
 // tweaks fontawesome icons
 * > .fa-compress
@@ -88,13 +89,15 @@
       float right
       font-size 25px
 
-#email-compose
   .editor
     border 1px solid #444
     min-height 250px
     width 100%
     text-align left
-    color: black
+    color black
+
+  .attachements
+      margin 1em 0
 
 /*
   Open email tabs
@@ -144,6 +147,9 @@
 */
 
 .rt-editor
+
+  min-height 4em
+  height auto
 
   blockquote
     border-left 3px solid blue

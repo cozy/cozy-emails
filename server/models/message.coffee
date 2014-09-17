@@ -14,6 +14,8 @@ module.exports = Message = americano.getModel 'Message',
     references: String
     createdAt: Date
     priority: String
+    attachments: (x) -> x
+    headers: (x) -> x
 
 Message.getByMailboxAndDate = (mailboxID, callback) ->
     options =

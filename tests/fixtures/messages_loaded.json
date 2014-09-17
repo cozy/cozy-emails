@@ -1,0 +1,193 @@
+[
+  {
+    "html": "<div dir=\"ltr\">Nouveau test avec une image <img src=\"cid:ii_148690713c468e25\" alt=\"Images intégrées 1\" width=\"480\" height=\"360\"><br></div><div class=\"gmail_extra\"><br><div class=\"gmail_quote\">2014-09-12 10:22 GMT+02:00 Me <span dir=\"ltr\">&lt;<a href=\"mailto:me@cozycloud.cc\" target=\"_blank\">me@cozycloud.cc</a>&gt;</span>:<br><blockquote class=\"gmail_quote\" style=\"margin:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex\"><div dir=\"ltr\">Un email en <b>HTML</b> avec un attachment.<img src=\"http://localhost:9121/files/e766a999a745bee266eb01833c0f15de/attach/chaton-innocent1.jpg\"></div>\n</blockquote></div><br></div>\n",
+    "text": "Nouveau test avec une image [image: Images intégrées 1]\n\n2014-09-12 10:22 GMT+02:00 Me <me@cozycloud.cc>:\n\n> Un email en *HTML* avec un attachment.\n>\n",
+    "headers": {
+      "return-path": "<me@cozycloud.cc>",
+      "mime-version": "1.0",
+      "in-reply-to": "<CAEL743O2AEB9fXPz9etzszN6ohNuZETDevXHmJZZ337nBWa=FA@mail.gmail.com>",
+      "references": "<CAEL743O2AEB9fXPz9etzszN6ohNuZETDevXHmJZZ337nBWa=FA@mail.gmail.com>",
+      "date": "Fri, 12 Sep 2014 10:42:35 +0200",
+      "message-id": "<CAEL743PQBO2JQmogW8-iLWr1u26UWKa2DGWvPTCnDf6o+ivtVQ@mail.gmail.com>",
+      "subject": "Email fixture attachments gmail",
+      "from": "Me <me@cozycloud.cc>",
+      "to": "You <you@cozycloud.cc>",
+      "content-type": "multipart/related; boundary=e89a8f92410e4715ae0502da448a",
+      "status": "RO",
+      "content-length": "48310",
+      "lines": "647"
+    },
+    "subject": "Email fixture attachments gmail",
+    "messageId": "CAEL743PQBO2JQmogW8-iLWr1u26UWKa2DGWvPTCnDf6o+ivtVQ@mail.gmail.com",
+    "priority": "normal",
+    "from": [
+      {
+        "address": "me@cozycloud.cc",
+        "name": "Me"
+      }
+    ],
+    "to": [
+      {
+        "address": "you@cozycloud.cc",
+        "name": "You"
+      }
+    ],
+    "date": "2014-09-12T08:42:35.000Z",
+    "attachments": [
+      {
+        "contentType": "image/jpeg",
+        "fileName": "chaton-innocent1.jpg",
+        "contentDisposition": "inline",
+        "transferEncoding": "base64",
+        "contentId": "ii_148690713c468e25",
+        "generatedFileName": "chaton-innocent1.jpg",
+        "checksum": "01798a77685f15fef90b46e4dba8a727",
+        "length": 34593
+      }
+    ],
+    "_id": "generated_id_0",
+    "docType": "Message",
+    "reads": false,
+    "mailboxIDs": [
+      "dovecot-ID-folder1"
+    ],
+    "account": "dovecot-ID"
+  },
+  {
+    "html": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\">\n<html><body style='font-family: Verdana,Geneva,sans-serif'>\n<p>Hello,</p>\n<p>Who R U, hu hu ?</p>\n<p>Bye !</p>\n<p>&nbsp;</p>\n<div>&nbsp;</div>\n</body></html>\n",
+    "text": " \n\nHello, \n\nWho R U, hu hu ? \n\nBye ! \n\n ",
+    "headers": {
+      "return-path": "<me@cozycloud.cc>",
+      "delivered-to": "me@cozycloud.cc",
+      "received": [
+      ],
+      "x-virus-scanned": [
+      ],
+      "x-originating-ip": "10.58.1.145",
+      "mime-version": "1.0",
+      "content-type": "multipart/mixed; boundary=\"=_640bd8a34ba0839286941a33b97583e9\"",
+      "date": "Mon, 15 Sep 2014 09:54:18 +0200",
+      "from": "me@cozycloud.cc",
+      "to": "me@cozycloud.cc",
+      "subject": "Test attachments",
+      "message-id": "<2ad27f1940f5458dddea0fc02f9c4ad4@cozycloud.cc>",
+      "x-sender": "me@cozycloud.cc",
+      "user-agent": "Roundcube Webmail/0.9.5"
+    },
+    "subject": "Test attachments",
+    "messageId": "2ad27f1940f5458dddea0fc02f9c4ad4@cozycloud.cc",
+    "priority": "normal",
+    "from": [
+      {
+        "address": "me@cozycloud.cc",
+        "name": ""
+      }
+    ],
+    "to": [
+      {
+        "address": "me@cozycloud.cc",
+        "name": ""
+      }
+    ],
+    "date": "2014-09-15T07:54:18.000Z",
+    "attachments": [
+      {
+        "transferEncoding": "base64",
+        "contentType": "image/png",
+        "fileName": "bighappycloud.png",
+        "contentDisposition": "attachment",
+        "generatedFileName": "bighappycloud.png",
+        "contentId": "831978de0e8e5b0fb7a4cd5c37b09a5a@mailparser",
+        "checksum": "324cbbf1d79784e5aacd8db524157616",
+        "length": 21838
+      },
+      {
+        "transferEncoding": "base64",
+        "contentType": "application/msword",
+        "fileName": "test.doc",
+        "contentDisposition": "attachment",
+        "generatedFileName": "test.doc",
+        "contentId": "ee200303f52275647138898037a80e0e@mailparser",
+        "checksum": "e907fb0b0933ac5a0ae12a2ef2107a58",
+        "length": 9216
+      },
+      {
+        "transferEncoding": "base64",
+        "contentType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "fileName": "test.docx",
+        "contentDisposition": "attachment",
+        "generatedFileName": "test.docx",
+        "contentId": "4e33aed994827b8ca35910c2febdf67a@mailparser",
+        "checksum": "2a9c2a21704d57714f02fd61758ee543",
+        "length": 3977
+      },
+      {
+        "transferEncoding": "base64",
+        "contentType": "application/vnd.oasis.opendocument.spreadsheet",
+        "fileName": "test.ods",
+        "contentDisposition": "attachment",
+        "generatedFileName": "test.ods",
+        "contentId": "913519c832368b298077e526c442399c@mailparser",
+        "checksum": "6e4170a8d54ffc2bbf13756301a1e819",
+        "length": 10012
+      },
+      {
+        "transferEncoding": "base64",
+        "contentType": "application/vnd.oasis.opendocument.text",
+        "fileName": "test.odt",
+        "contentDisposition": "attachment",
+        "generatedFileName": "test.odt",
+        "contentId": "42c9d24809ca19a2de2dabadb193afb9@mailparser",
+        "checksum": "b0532251a78e5274d7f15b24d24c3ceb",
+        "length": 8611
+      },
+      {
+        "transferEncoding": "base64",
+        "contentType": "application/pdf",
+        "fileName": "test.pdf",
+        "contentDisposition": "attachment",
+        "generatedFileName": "test.pdf",
+        "contentId": "754dc77d28e62763c4916970d595a10f@mailparser",
+        "checksum": "68c0e87c57222caa5f62ec8047157304",
+        "length": 104339
+      },
+      {
+        "transferEncoding": "base64",
+        "contentType": "text/rtf",
+        "fileName": "test.rtf",
+        "contentDisposition": "attachment",
+        "generatedFileName": "test.rtf",
+        "contentId": "bfba555534865b168d4de603f86cdc8c@mailparser",
+        "checksum": "5111103cb740a6fb4e32fad569cce465",
+        "length": 1753
+      },
+      {
+        "transferEncoding": "base64",
+        "contentType": "application/vnd.ms-excel",
+        "fileName": "test.xls",
+        "contentDisposition": "attachment",
+        "generatedFileName": "test.xls",
+        "contentId": "6d5becfea7c59e0a924938353f01644f@mailparser",
+        "checksum": "196603576ffb2810f4e5a8191aa74cad",
+        "length": 14336
+      },
+      {
+        "transferEncoding": "base64",
+        "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "fileName": "test.xlsx",
+        "contentDisposition": "attachment",
+        "generatedFileName": "test.xlsx",
+        "contentId": "9d8cafe26c4fbf7d98153b972097a9dc@mailparser",
+        "checksum": "b395bba638d8fd6198d441741d9e3630",
+        "length": 4555
+      }
+    ],
+    "_id": "generated_id_1",
+    "docType": "Message",
+    "reads": false,
+    "mailboxIDs": [
+      "dovecot-ID-folder1"
+    ],
+    "account": "dovecot-ID"
+  }
+]

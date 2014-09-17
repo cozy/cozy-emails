@@ -1,5 +1,8 @@
 {div, h3, a, i, textarea, form, label, button, span, ul, li, input} = React.DOM
 classer = React.addons.classSet
+
+FilePicker = require './file-picker'
+
 AccountStore  = require '../stores/AccountStore'
 SettingsStore = require '../stores/SettingsStore'
 
@@ -81,9 +84,11 @@ module.exports = Compose = React.createClass
                         input id: 'compose-subject', ref: 'subject', valueLink: @linkState('subject'), type: 'text', className: 'form-control', placeholder: t "compose subject help"
                 div className: 'form-group',
                     if @state.composeInHTML
-                        div className: 'rt-editor', contentEditable: true, dangerouslySetInnerHTML: {__html: @linkState('html').value}
+                        div className: 'rt-editor form-control', contentEditable: true, dangerouslySetInnerHTML: {__html: @linkState('html').value}
                     else
                         textarea className: 'editor', ref: 'content', defaultValue: @linkState('body').value
+                div className: 'attachements',
+                    FilePicker {editable: true, form: false}
                 div className: 'composeToolbox',
                     div className: 'btn-toolbar', role: 'toolbar',
                         div className: 'btn-group btn-group-sm',
@@ -115,7 +120,7 @@ module.exports = Compose = React.createClass
                               document.documentElement.msMatchesSelector
 
                         target = document.getSelection().anchorNode
-                        if matchesSelector? and not target.matches('.rt-editor blockquote *')
+                        if matchesSelector? and not matchesSelector.call(target, '.rt-editor blockquote *')
                             # we are not inside a blockquote, nothing to do
                             return
 
@@ -131,7 +136,7 @@ module.exports = Compose = React.createClass
                         # and second fragment
                         process = ->
                             current = parent
-                            parent = parent.parentNode
+                            parent = parent?.parentNode
                         process()
                         process() while (parent? and
                             not parent.classList.contains 'rt-editor')

@@ -60,6 +60,8 @@ module.exports = React.createClass
                     span className: 'title', message.get 'subject'
                     p null, message.get 'text'
                 span className: 'hour', date.format formatter
+                if message.get 'hasAttachments'
+                    i className: 'fa fa-paperclip'
 
     getPagerRender: (curPage, nbPages) ->
         if nbPages < 2

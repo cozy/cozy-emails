@@ -92,7 +92,7 @@ for i in [1..numberOfEmails] by 1
         "references": references
         "replyTo": replyTo,
         "text": content,
-        "html": "<html><body><div>#{content}</div></body></html>",
+        "html": "<html><body><div>#{content.split('\r\n').join('</div>\r\n<div>')}</div></body></html>",
         "priority": priority,
         "reads": false,
         "mailboxIDs": [mailbox],
