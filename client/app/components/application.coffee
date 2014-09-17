@@ -313,6 +313,9 @@ module.exports = Application = React.createClass
     getStateFromStores: ->
 
         selectedAccount = AccountStore.getSelected()
+        # When selecting compose in Menu, we may not have a selected account
+        if not selectedAccount?
+            selectedAccount = AccountStore.getDefault()
         selectedAccountID = selectedAccount?.get('id') or null
 
         firstPanelInfo = @props.router.current?.firstPanel

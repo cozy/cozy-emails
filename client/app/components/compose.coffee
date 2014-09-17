@@ -115,7 +115,7 @@ module.exports = Compose = React.createClass
                               document.documentElement.msMatchesSelector
 
                         target = document.getSelection().anchorNode
-                        if matchesSelector? and not target.matches('.rt-editor blockquote *')
+                        if matchesSelector? and not matchesSelector.call target, '.rt-editor blockquote *'
                             # we are not inside a blockquote, nothing to do
                             return
 
@@ -131,7 +131,7 @@ module.exports = Compose = React.createClass
                         # and second fragment
                         process = ->
                             current = parent
-                            parent = parent.parentNode
+                            parent = parent?.parentNode
                         process()
                         process() while (parent? and
                             not parent.classList.contains 'rt-editor')
