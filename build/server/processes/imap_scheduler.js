@@ -80,7 +80,7 @@ module.exports = ImapScheduler = (function() {
   };
 
   ImapScheduler.prototype.closeConnection = function(hard) {
-    console.log("CLOSING CONNECTION");
+    console.log("CLOSING CONNECTION hard=", hard);
     return this.imap.end(hard).then((function(_this) {
       return function() {
         console.log("CLOSED CONNECTION");
@@ -153,8 +153,9 @@ module.exports = ImapScheduler = (function() {
       return false;
     }
     this.pendingTask = this.tasks.shift();
-    return Promise.resolve(this.pendingTask.generator(this.imap)).timeout(60000)["catch"](Promise.TimeoutError, (function(_this) {
+    return Promise.resolve(this.pendingTask.generator(this.imap)).timeout(120000)["catch"](Promise.TimeoutError, (function(_this) {
       return function(err) {
+        console.log("TASK GOT STUCKED");
         _this.closeConnection(true);
         throw err;
       };

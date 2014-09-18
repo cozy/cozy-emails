@@ -21,6 +21,7 @@ ImapProcess.checkConnection = function(account) {
 
 ImapProcess.fetchBoxesTree = function(account) {
   return ImapScheduler.instanceFor(account).doASAP(function(imap) {
+    console.log("FETCH BOX TREE");
     return imap.getBoxes();
   });
 };

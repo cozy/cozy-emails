@@ -91,12 +91,12 @@ module.exports = ImapPromisified = (function() {
           if (hard) {
             _this._super._sock.end();
             _this._super._sock.destroy();
-            resolve('closed');
+            return resolve('closed');
           } else {
             _this._super.end();
           }
           _this._super.once('error', function() {
-            return reject(new Error('fail to logout'));
+            return resolve(new Error('fail to logout'));
           });
           _this._super.once('end', function() {
             return resolve('closed');

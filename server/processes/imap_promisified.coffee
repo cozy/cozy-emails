@@ -87,13 +87,13 @@ module.exports = class ImapPromisified
                     # nuke the socket
                     @_super._sock.end()
                     @_super._sock.destroy()
-                    resolve 'closed'
+                    return resolve 'closed'
                 else
                     # do a logout before closing
                     @_super.end()
 
                 @_super.once 'error', ->
-                    reject new Error 'fail to logout'
+                    resolve new Error 'fail to logout'
                 @_super.once 'end', ->
                     resolve 'closed'
                 @_super.once 'close', ->
