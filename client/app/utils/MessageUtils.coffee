@@ -41,11 +41,13 @@ module.exports =
                     when "msword",\
                          "vnd.ms-word",\
                          "vnd.oasis.opendocument.text",\
-                         "vnd.openxmlformats-officedocument.wordprocessingml.document"
+                         "vnd.openxmlformats-officedocument.wordprocessingm" + \
+                         "l.document"
                         return "word"
                     when "vns.ms-powerpoint",\
                          "vnd.oasis.opendocument.presentation",\
-                         "vnd.openxmlformats-officedocument.presentationml.presentation"
+                         "vnd.openxmlformats-officedocument.presentationml." + \
+                         "presentation"
                         return "presentation"
 
                     when "pdf" then return sub[1]
