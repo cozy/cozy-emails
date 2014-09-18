@@ -42,12 +42,10 @@ module.exports = LayoutActionCreator =
     showMessageList: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
 
-        accountID = panelInfo.parameters[0]
-        mailboxID = panelInfo.parameters[1]
-        numPage = panelInfo.parameters[2]
+        {accountID, mailboxID, page} = panelInfo.parameters
         AccountActionCreator.selectAccount accountID
 
-        XHRUtils.fetchMessagesByFolder mailboxID, numPage, (err, rawMessage) ->
+        XHRUtils.fetchMessagesByFolder mailboxID, page, (err, rawMessage) ->
             if err?
                 LayoutActionCreator.alertError err
             else
@@ -55,7 +53,8 @@ module.exports = LayoutActionCreator =
 
     showConversation: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        XHRUtils.fetchConversation panelInfo.parameters[0], (err, rawMessage) ->
+        messageID = panelInfo.parameters.messageID
+        XHRUtils.fetchConversation messageID, (err, rawMessage) ->
 
             if err?
                 LayoutActionCreator.alertError err
@@ -84,7 +83,7 @@ module.exports = LayoutActionCreator =
 
     showConfigAccount: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        AccountActionCreator.selectAccount panelInfo.parameters[0]
+        AccountActionCreator.selectAccount panelInfo.parameters.accountID
 
     showSearch: (panelInfo, direction) ->
         AccountActionCreator.selectAccount -1

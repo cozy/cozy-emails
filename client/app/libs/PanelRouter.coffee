@@ -106,7 +106,7 @@ module.exports = class Router extends Backbone.Router
             args.push secondPanelString
             secondPanelString = null
 
-        firstPanelParameters = args
+        firstPanelParameters = @_arrayToNamedParameters name, args
 
         # checks all the routes for the second part of the URL
         route = _.first _.filter @cachedPatterns, (element) ->
@@ -122,7 +122,7 @@ module.exports = class Router extends Backbone.Router
             # needed
             secondPanelInfo = @_mergeDefaultParameter
                 action: route.key
-                parameters: args
+                parameters: @_arrayToNamedParameters route.key, args
         else
             secondPanelInfo = null
 
@@ -150,6 +150,20 @@ module.exports = class Router extends Backbone.Router
 
 
     ###
+        Turns a parameters array into an object of named parameters
+    ###
+    _namedParametersToArray: (patternName, namedParameters) ->
+        parametersArray = []
+        parametersName = @patterns[patternName].pattern.match(/:[\w]+/g) or []
+        for paramName, index in parametersName
+            # Removes the initial ":"
+            unPrefixedParamName = paramName.substr 1
+            parametersArray.push namedParameters[paramName]
+
+        return parametersArray
+
+
+    ###
         Builds a route from panel information.
         Two modes:
             - options has firstPanel and/or secondPanel attributes with the
@@ -158,7 +172,6 @@ module.exports = class Router extends Backbone.Router
               that can be `first` or `second`. It's the short version.
     ###
     buildUrl: (options) ->
-
         # Loads the panel from the options or the current router status to keep
         # track of current URLs
         if options.firstPanel? or options.secondPanel?
@@ -228,12 +241,23 @@ module.exports = class Router extends Backbone.Router
 
         # Clones the parameter because we are going to mutate it
         panel = _.clone panel
+        if panel?.parameters?
+            # _.clone doesn't perform a deep copy
+            panel.parameters = _.clone panel.parameters
 
         if panel?
             pattern = @patterns[panel.action].pattern
 
-            if panel.parameters? and not (panel.parameters instanceof Array)
+            # if the parameter is alone, we turn it into an array
+            if panel.parameters? and not (panel.parameters instanceof Array) \
+            and not (panel.parameters instanceof Object)
                 panel.parameters = [panel.parameters]
+
+            # to ensures BC, if it's an array, we turn it into an object of
+            # named parameters
+            if panel.parameters? and panel.parameters instanceof Array
+                {action, parameters} = panel
+                panel.parameters = @_arrayToNamedParameters action, parameters
 
             panel = @_mergeDefaultParameter panel
 
@@ -243,7 +267,8 @@ module.exports = class Router extends Backbone.Router
             # the pattern is progressively filled with values
             filledPattern = pattern
             if panel.parameters
-                for paramInPattern, key in parametersInPattern
+                for paramInPattern in parametersInPattern
+                    key = paramInPattern.substr 1
                     paramValue = panel.parameters[key]
                     filledPattern = filledPattern.replace paramInPattern, \
                                                                     paramValue
@@ -256,14 +281,15 @@ module.exports = class Router extends Backbone.Router
     # Merges defaut parameters into a panel info if there are missing parameters
     _mergeDefaultParameter: (panelInfo) ->
         panelInfo = _.clone panelInfo
-        parameters = _.clone panelInfo.parameters or []
+        parameters = _.clone panelInfo.parameters or {}
         # gets default values, if there are
         if (defaultParameters = @_getDefaultParameters panelInfo.action)?
 
             # merges the parameters in the relevant place
-            for defaultParameter, key in defaultParameters
+            for key, defaultParameter of defaultParameters
                 if not parameters[key]?
-                    parameters.splice key, 0, defaultParameter
+                    parameters[key] = defaultParameter
 
         panelInfo.parameters = parameters
+
         return panelInfo
