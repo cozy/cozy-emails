@@ -21,7 +21,7 @@ module.exports.create = (req, res, next) ->
     # outside of this request lifecycle, we fetch mails
     accountCreated.then (account) ->
         account.fetchMails()
-        .catch (err) -> console.log "FETCH MAIL FAILED", err
+        .catch (err) -> console.log "FETCH MAIL FAILED", err.stack
 
 # fetch an account by id, add it to the request
 module.exports.fetch = (req, res, next) ->
