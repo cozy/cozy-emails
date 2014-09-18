@@ -46,6 +46,9 @@ module.exports = Message = americano.getModel('Message', {
   html: String,
   date: Date,
   priority: String,
+  headers: function(x) {
+    return x;
+  },
   attachments: function(x) {
     return x;
   }

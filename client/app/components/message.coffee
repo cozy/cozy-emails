@@ -31,7 +31,7 @@ module.exports = React.createClass
 
         message = @props.message
 
-        attachments = message.get 'attachments'
+        attachments = message.get('attachments') or []
 
         # display full headers
         fullHeaders = []
