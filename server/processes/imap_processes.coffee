@@ -15,6 +15,7 @@ ImapProcess.checkConnection = (account) ->
 ImapProcess.fetchBoxesTree = (account) ->
     # the user is waiting, we do this ASAP
     ImapScheduler.instanceFor(account).doASAP (imap) ->
+        console.log "FETCH BOX TREE"
         imap.getBoxes()
 
 # refresh one account

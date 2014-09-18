@@ -41,7 +41,7 @@ module.exports = class ImapScheduler
             port: parseInt @account.imapPort
             tls: not @account.imapSecure? or @account.imapSecure
             tlsOptions: rejectUnauthorized: false
-            # debug: console.log
+            debug: console.log
 
         @imap.onTerminated = =>
             @_rejectPending new Error 'connection closed'
@@ -56,7 +56,7 @@ module.exports = class ImapScheduler
             .tap => @_dequeue()
 
     closeConnection: (hard) =>
-        console.log "CLOSING CONNECTION"
+        console.log "CLOSING CONNECTION hard=", hard
         @imap.end(hard).then =>
             console.log "CLOSED CONNECTION"
             @imap = null
@@ -116,8 +116,9 @@ module.exports = class ImapScheduler
         Promise.resolve @pendingTask.generator(@imap)
         # if a task takes more than a minute
         # assume its broken and nuke the socket
-        .timeout 60000
+        .timeout 120000
         .catch Promise.TimeoutError, (err) =>
+            console.log "TASK GOT STUCKED"
             @closeConnection true
             throw err
 

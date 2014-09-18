@@ -55,12 +55,14 @@ Account.createIfValid = function(data) {
   account = null;
   rawBoxesTree = null;
   return Imap.fetchBoxesTree(data).then(function(boxes) {
+    console.log("GOT", boxes, "BOXES");
     rawBoxesTree = boxes;
     return Account.createPromised(data);
   }).then(function(created) {
     account = created;
     return Mailbox.createBoxesFromImapTree(account.id, rawBoxesTree);
   }).then(function() {
+    console.log("CREATED ACCOUNT & BOXES");
     return account.includeMailboxes();
   });
 };

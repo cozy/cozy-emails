@@ -49,6 +49,7 @@ Account.createIfValid = (data) ->
 
     Imap.fetchBoxesTree data
     .then (boxes) ->
+        console.log "GOT", boxes, "BOXES"
         # We managed to get boxes, login settings are OK
         # create Account and Mailboxes
         rawBoxesTree = boxes
@@ -58,7 +59,9 @@ Account.createIfValid = (data) ->
         account = created
         Mailbox.createBoxesFromImapTree account.id, rawBoxesTree
 
-    .then -> return account.includeMailboxes()
+    .then ->
+        console.log "CREATED ACCOUNT & BOXES"
+        return account.includeMailboxes()
 
 
 Promise.promisifyAll Account, suffix: 'Promised'
