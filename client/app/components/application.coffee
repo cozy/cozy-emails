@@ -137,10 +137,10 @@ module.exports = Application = React.createClass
 
                     # Two layout modes: one full-width panel or two panels
                     div id: 'panels', className: 'row',
-                        div className: panelClasses.firstPanel, key: 'left-panel-' + layout.firstPanel.action + '-' + layout.firstPanel.parameters.join('-'),
+                        div className: panelClasses.firstPanel, key: 'left-panel-' + layout.firstPanel.action + '-' + Object.keys(layout.firstPanel.parameters).join('-'),
                             @getPanelComponent layout.firstPanel, firstPanelLayoutMode
                         if not isFullWidth and layout.secondPanel?
-                            div className: panelClasses.secondPanel, key: 'right-panel-' + layout.secondPanel.action + '-' + layout.secondPanel.parameters.join('-'),
+                            div className: panelClasses.secondPanel, key: 'right-panel-' + layout.secondPanel.action + '-' + Object.keys(layout.secondPanel.parameters).join('-'),
                                 @getPanelComponent layout.secondPanel, 'second'
 
 
@@ -208,9 +208,9 @@ module.exports = Application = React.createClass
 
         # -- Generates a list of messages for a given account and mailbox
         if panelInfo.action is 'account.mailbox.messages'
-            accountID = panelInfo.parameters[0]
-            mailboxID = panelInfo.parameters[1]
-            pageNum   = panelInfo.parameters[2] ? 1
+            accountID = panelInfo.parameters.accountID
+            mailboxID = panelInfo.parameters.mailboxID
+            pageNum   = panelInfo.parameters.page ? 1
             numPerPage      = @state.settings.get 'messagesPerPage'
             firstOfPage     = ( pageNum - 1 ) * numPerPage
             lastOfPage      = ( pageNum * numPerPage )
@@ -220,7 +220,7 @@ module.exports = Application = React.createClass
             direction = if layout is 'first' then 'secondPanel' else 'firstPanel'
             otherPanelInfo = @props.router.current[direction]
             if otherPanelInfo?.action is 'message'
-                openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
+                openMessage = MessageStore.getByID otherPanelInfo.parameters.messageID
 
             messagesCount = MessageStore.getMessagesCountByMailbox mailboxID
             return MessageList
@@ -255,8 +255,9 @@ module.exports = Application = React.createClass
 
         # -- Generates a conversation
         else if panelInfo.action is 'message'
-            message = MessageStore.getByID panelInfo.parameters[0]
-            conversation = MessageStore.getMessagesByConversation panelInfo.parameters[0]
+            messageID = panelInfo.parameters.messageID
+            message = MessageStore.getByID messageID
+            conversation = MessageStore.getMessagesByConversation messageID
             selectedAccount = @state.selectedAccount
             return Conversation {message, conversation, selectedAccount, layout}
 
@@ -277,7 +278,7 @@ module.exports = Application = React.createClass
         else if panelInfo.action is 'search'
             accountID = null
             mailboxID = null
-            pageNum   = panelInfo.parameters[1]
+            pageNum   = panelInfo.parameters.page
             numPerPage      = @state.settings.get 'messagesPerPage'
             firstOfPage     = ( pageNum - 1 ) * numPerPage
             lastOfPage      = ( pageNum * numPerPage )
@@ -287,7 +288,8 @@ module.exports = Application = React.createClass
             direction = if layout is 'first' then 'secondPanel' else 'firstPanel'
             otherPanelInfo = @props.router.current[direction]
             if otherPanelInfo?.action is 'message'
-                openMessage = MessageStore.getByID otherPanelInfo.parameters[0]
+                messageID = otherPanelInfo.parameters.messageID
+                openMessage = MessageStore.getByID messageID
 
             results = SearchStore.getResults()
             return MessageList
@@ -320,7 +322,7 @@ module.exports = Application = React.createClass
 
         firstPanelInfo = @props.router.current?.firstPanel
         if firstPanelInfo?.action is 'account.mailbox.messages'
-            selectedMailboxID = firstPanelInfo.parameters[1]
+            selectedMailboxID = firstPanelInfo.parameters.mailboxID
         else
             selectedMailboxID = null
 
