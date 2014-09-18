@@ -971,6 +971,9 @@ module.exports = Application = React.createClass({
   getStateFromStores: function() {
     var firstPanelInfo, selectedAccount, selectedAccountID, selectedMailboxID, _ref1;
     selectedAccount = AccountStore.getSelected();
+    if (selectedAccount == null) {
+      selectedAccount = AccountStore.getDefault();
+    }
     selectedAccountID = (selectedAccount != null ? selectedAccount.get('id') : void 0) || null;
     firstPanelInfo = (_ref1 = this.props.router.current) != null ? _ref1.firstPanel : void 0;
     if ((firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages') {
@@ -1015,11 +1018,13 @@ module.exports = Application = React.createClass({
 });
 
 ;require.register("components/compose", function(exports, require, module) {
-var AccountStore, Compose, ComposeActions, LayoutActionCreator, MessageActionCreator, MessageUtils, RouterMixin, SettingsStore, a, button, classer, div, form, h3, i, input, label, li, span, textarea, ul, _ref;
+var AccountStore, Compose, ComposeActions, FilePicker, LayoutActionCreator, MessageActionCreator, MessageUtils, RouterMixin, SettingsStore, a, button, classer, div, form, h3, i, input, label, li, span, textarea, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label, button = _ref.button, span = _ref.span, ul = _ref.ul, li = _ref.li, input = _ref.input;
 
 classer = React.addons.classSet;
+
+FilePicker = require('./file-picker');
 
 AccountStore = require('../stores/AccountStore');
 
@@ -1159,7 +1164,7 @@ module.exports = Compose = React.createClass({
     }))), div({
       className: 'form-group'
     }, this.state.composeInHTML ? div({
-      className: 'rt-editor',
+      className: 'rt-editor form-control',
       contentEditable: true,
       dangerouslySetInnerHTML: {
         __html: this.linkState('html').value
@@ -1168,6 +1173,11 @@ module.exports = Compose = React.createClass({
       className: 'editor',
       ref: 'content',
       defaultValue: this.linkState('body').value
+    })), div({
+      className: 'attachements'
+    }, FilePicker({
+      editable: true,
+      form: false
     })), div({
       className: 'composeToolbox'
     }, div({
@@ -1206,7 +1216,7 @@ module.exports = Compose = React.createClass({
             var after, before, inserted, matchesSelector, parent, process, rangeAfter, rangeBefore, sel, target;
             matchesSelector = document.documentElement.matches || document.documentElement.matchesSelector || document.documentElement.webkitMatchesSelector || document.documentElement.mozMatchesSelector || document.documentElement.oMatchesSelector || document.documentElement.msMatchesSelector;
             target = document.getSelection().anchorNode;
-            if ((matchesSelector != null) && !target.matches('.rt-editor blockquote *')) {
+            if ((matchesSelector != null) && !matchesSelector.call(target, '.rt-editor blockquote *')) {
               return;
             }
             if (target.lastChild) {
@@ -1216,7 +1226,7 @@ module.exports = Compose = React.createClass({
             process = function() {
               var current;
               current = parent;
-              return parent = parent.parentNode;
+              return parent = parent != null ? parent.parentNode : void 0;
             };
             process();
             while ((parent != null) && !parent.classList.contains('rt-editor')) {
@@ -1525,6 +1535,254 @@ module.exports = React.createClass({
 });
 });
 
+;require.register("components/file-picker", function(exports, require, module) {
+var FileItem, FilePicker, MessageUtils, a, div, form, i, input, li, span, ul, _ref;
+
+_ref = React.DOM, div = _ref.div, form = _ref.form, input = _ref.input, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, a = _ref.a;
+
+MessageUtils = require('../utils/MessageUtils');
+
+
+/*
+ * File picker
+ *
+ * Available props
+ * - editable: boolean (false)
+ * - files: array
+ * - form: boolean (true) embed component inside a form element
+ * - display: function(Object) : called when a file is selected
+ */
+
+FilePicker = React.createClass({
+  displayName: 'FilePicker',
+  propTypes: {
+    file: React.PropTypes.array,
+    editable: React.PropTypes.bool,
+    form: React.PropTypes.bool,
+    display: React.PropTypes.func
+  },
+  getDefaultProps: function() {
+    return {
+      editable: false,
+      form: true,
+      files: []
+    };
+  },
+  getInitialState: function() {
+    return {
+      files: this._convertFileList(this.props.files)
+    };
+  },
+  componentWillReceiveProps: function(props) {
+    return this.setState({
+      files: this._convertFileList(props.files)
+    });
+  },
+  render: function() {
+    var container, files;
+    files = this.state.files.map((function(_this) {
+      return function(file) {
+        var doDelete, options;
+        doDelete = function() {
+          return _this.setState({
+            files: _this.state.files.filter(function(f) {
+              return f.name !== file.name;
+            })
+          });
+        };
+        options = {
+          key: file.name,
+          file: file,
+          editable: _this.props.editable,
+          "delete": doDelete
+        };
+        if (_this.props.display != null) {
+          options.display = function() {
+            return _this.props.display(file);
+          };
+        }
+        return FileItem(options);
+      };
+    })(this));
+    container = this.props.form ? form : div;
+    return container({
+      className: 'file-picker'
+    }, ul({
+      className: 'files list-unstyled'
+    }, files), this.props.editable ? div(null, span({
+      className: "file-wrapper"
+    }, input({
+      type: "file",
+      multiple: "multiple",
+      ref: "file",
+      onChange: this.handleFiles
+    })), div({
+      className: "dropzone",
+      ref: "dropzone",
+      onDragOver: this.allowDrop,
+      onDrop: this.handleFiles,
+      onClick: this.onOpenFile
+    }, i({
+      className: "fa fa-paperclip"
+    }), span(null, t("picker drop here")))) : void 0);
+  },
+  onOpenFile: function(e) {
+    e.preventDefault();
+    return jQuery(this.refs.file.getDOMNode()).trigger("click");
+  },
+  allowDrop: function(e) {
+    return e.preventDefault();
+  },
+  handleFiles: function(e) {
+    var currentFiles, file, files, handle, _i, _len;
+    e.preventDefault();
+    files = e.target.files || e.dataTransfer.files;
+    currentFiles = this.state.files;
+    handle = function(file) {
+      var reader;
+      reader = new FileReader();
+      reader.readAsDataURL(file);
+      return reader.onloadend = function(e) {
+        var txt;
+        txt = e.target.result;
+        return file.content = txt;
+      };
+    };
+    for (_i = 0, _len = files.length; _i < _len; _i++) {
+      file = files[_i];
+      handle(file);
+    }
+    return this.setState({
+      files: currentFiles.concat(this._convertFileList(files))
+    });
+  },
+  _convertFileList: function(files) {
+    var convert;
+    convert = (function(_this) {
+      return function(file) {
+        if (File.prototype.isPrototypeOf(file)) {
+          _this._fromDOM(file);
+        }
+        return file;
+      };
+    })(this);
+    return Array.prototype.map.call(files, convert);
+  },
+  _fromDOM: function(file) {
+    return {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      originalName: null,
+      contentDisposition: null,
+      contentId: null,
+      transferEncoding: null,
+      content: null
+    };
+  }
+});
+
+module.exports = FilePicker;
+
+
+/*
+ * Display a file item
+ *
+ * Props:
+ *  - file
+ *  - editable: boolean (false) allow to delete file
+ *  - (display): function
+ *  - (delete): function
+ */
+
+FileItem = React.createClass({
+  displayName: 'FileItem',
+  propTypes: {
+    file: React.PropTypes.shape({
+      name: React.PropTypes.string,
+      type: React.PropTypes.string,
+      size: React.PropTypes.number
+    }).isRequired,
+    editable: React.PropTypes.bool,
+    display: React.PropTypes.func,
+    "delete": React.PropTypes.func
+  },
+  getDefaultProps: function() {
+    return {
+      editable: false
+    };
+  },
+  getInitialState: function() {
+    return {};
+  },
+  render: function() {
+    var file, iconClass, name, type;
+    file = this.props.file;
+    type = MessageUtils.getAttachmentType(file.type);
+    iconClass = (function() {
+      switch (type) {
+        case '':
+          return 'fa-file-word-o';
+        case 'archive':
+          return 'fa-file-archive-o';
+        case 'audio':
+          return 'fa-file-audio-o';
+        case 'code':
+          return 'fa-file-code-o';
+        case 'image':
+          return 'fa-file-image-o';
+        case 'pdf':
+          return 'fa-file-pdf-o';
+        case 'word':
+          return 'fa-file-word-o';
+        case 'presentation':
+          return 'fa-file-powerpoint-o';
+        case 'spreadsheet':
+          return 'fa-file-excel-o';
+        case 'text':
+          return 'fa-file-text-o';
+        case 'video':
+          return 'fa-file-video-o';
+        case 'word':
+          return 'fa-file-word-o';
+        default:
+          return 'fa-file-o';
+      }
+    })();
+    if (this.props.display != null) {
+      name = a({
+        className: 'file-name',
+        target: '_blank',
+        onClick: this.doDisplay
+      }, file.name);
+    } else {
+      name = span({
+        className: 'file-name'
+      }, file.name);
+    }
+    return li({
+      className: "file-item",
+      key: file.name
+    }, i({
+      className: "mime fa " + iconClass
+    }), this.props.editable ? i({
+      className: "fa fa-times delete",
+      onClick: this.doDelete
+    }) : void 0, name, div({
+      className: 'file-detail'
+    }, span(null, "" + ((file.size / 1000).toFixed(2)) + "Ko")));
+  },
+  doDisplay: function(e) {
+    e.preventDefault;
+    return this.props.display();
+  },
+  doDelete: function(e) {
+    e.preventDefault;
+    return this.props["delete"]();
+  }
+});
+});
+
 ;require.register("components/mailbox-list", function(exports, require, module) {
 var RouterMixin, a, button, div, li, span, ul, _ref;
 
@@ -1799,7 +2057,9 @@ module.exports = React.createClass({
       className: 'title'
     }, message.get('subject')), p(null, message.get('text'))), span({
       className: 'hour'
-    }, date.format(formatter))));
+    }, date.format(formatter)), message.get('hasAttachments') ? i({
+      className: 'fa fa-paperclip'
+    }) : void 0));
   },
   getPagerRender: function(curPage, nbPages) {
     var classCurr, classFirst, classLast, j, maxPage, minPage, urlCurr, urlFirst, urlLast;
@@ -1863,13 +2123,15 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var AccountStore, Compose, ComposeActions, LayoutActionCreator, MailboxList, MessageUtils, a, button, classer, div, h3, i, li, p, span, ul, _ref;
+var AccountStore, Compose, ComposeActions, FilePicker, LayoutActionCreator, MailboxList, MessageUtils, a, button, classer, div, h3, i, li, p, pre, span, ul, _ref;
 
-_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button;
+_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button, pre = _ref.pre;
 
 MailboxList = require('./mailbox-list');
 
 Compose = require('./compose');
+
+FilePicker = require('./file-picker');
 
 MessageUtils = require('../utils/MessageUtils');
 
@@ -1891,14 +2153,25 @@ module.exports = React.createClass({
     };
   },
   render: function() {
-    var action, callback, classes, clickHandler, date, formatter, html, layout, message, selectedAccount, text, today;
+    var action, attachments, callback, classes, clickHandler, convert, date, display, formatter, fullHeaders, html, key, layout, message, selectedAccount, text, today, value, _ref1;
     message = this.props.message;
+    attachments = message.get('attachments') || [];
+    fullHeaders = [];
+    _ref1 = message.get('headers');
+    for (key in _ref1) {
+      value = _ref1[key];
+      if (Array.isArray(value)) {
+        fullHeaders.push("" + key + ": " + (value.join('\n    ')));
+      } else {
+        fullHeaders.push("" + key + ": " + value);
+      }
+    }
     text = message.get('text');
     html = message.get('html');
-    if (text && !html && state.composeInHTML) {
+    if (text && !html && this.state.composeInHTML) {
       html = markdown.toHTML(text);
     }
-    if (html && !text && !state.composeInHTML) {
+    if (html && !text && !this.state.composeInHTML) {
       text = toMarkdown(html);
     }
     clickHandler = this.props.isLast ? null : this.onFold;
@@ -1915,14 +2188,33 @@ module.exports = React.createClass({
     } else {
       formatter = 'hh:mm';
     }
+    convert = function(file) {
+      return {
+        name: file.generatedFileName,
+        size: file.length,
+        type: file.contentType,
+        originalName: file.fileName,
+        contentDisposition: file.contentDisposition,
+        contentId: file.contentId,
+        transferEncoding: file.transferEncoding
+      };
+    };
+    display = function(file) {
+      var url;
+      url = "/message/" + (message.get('id')) + "/attachments/" + file.name;
+      return window.open(url);
+    };
     return li({
       className: classes,
       key: this.props.key,
-      onClick: clickHandler
-    }, this.getToolboxRender(), div({
-      className: 'header'
+      onClick: clickHandler,
+      'data-id': message.get('id')
+    }, this.getToolboxRender(message.get('id')), div({
+      className: 'header row'
+    }, div({
+      className: 'col-md-8'
     }, i({
-      className: 'fa fa-user'
+      className: 'sender-avatar fa fa-user'
     }), div({
       className: 'participants'
     }, span({
@@ -1938,6 +2230,14 @@ module.exports = React.createClass({
     }))), span({
       className: 'hour'
     }, date.format(formatter))), div({
+      className: 'col-md-4'
+    }, FilePicker({
+      editable: false,
+      files: attachments.map(convert),
+      display: display
+    }))), div({
+      className: 'full-headers'
+    }, pre(null, fullHeaders.join("\n"))), div({
       className: 'preview'
     }, p(null, message.get('text'))), div({
       className: 'content',
@@ -1962,7 +2262,7 @@ module.exports = React.createClass({
       callback: callback
     })) : void 0);
   },
-  getToolboxRender: function() {
+  getToolboxRender: function(id) {
     var mailboxes;
     mailboxes = AccountStore.getSelectedMailboxes(true);
     return div({
@@ -2052,7 +2352,22 @@ module.exports = React.createClass({
       return function(mailbox, key) {
         return _this.getMailboxRender(mailbox, key);
       };
-    })(this)).toJS())))));
+    })(this)).toJS())), div({
+      className: 'btn-group btn-group-sm'
+    }, button({
+      className: 'btn btn-default dropdown-toggle',
+      type: 'button',
+      'data-toggle': 'dropdown'
+    }, t('mail action more', span({
+      className: 'caret'
+    }))), ul({
+      className: 'dropdown-menu',
+      role: 'menu'
+    }, li(null, a({
+      href: '#',
+      onClick: this.onHeaders,
+      'data-message-id': id
+    }, t('mail action headers'))))))));
   },
   getMailboxRender: function(mailbox, key) {
     var j, pusher, url, _i, _ref1;
@@ -2106,6 +2421,15 @@ module.exports = React.createClass({
   },
   onMove: function(args) {
     return LayoutActionCreator.alertWarning(t("app unimplemented"));
+  },
+  onMark: function(args) {
+    return LayoutActionCreator.alertWarning(t("app unimplemented"));
+  },
+  onHeaders: function(event) {
+    var messageId;
+    event.preventDefault();
+    messageId = event.target.dataset.messageId;
+    return document.querySelector(".conversation [data-id='" + messageId + "']").classList.toggle('with-headers');
   }
 });
 });
@@ -2886,6 +3210,8 @@ module.exports = {
   "mail action mark": "Mark as…",
   "mail action copy": "Copy…",
   "mail action move": "Move…",
+  "mail action more": "More…",
+  "mail action headers": "Headers",
   "mail mark spam": "Spam",
   "mail mark nospam": "No spam",
   "mail mark fav": "Important",
@@ -2910,7 +3236,8 @@ module.exports = {
   "settings title": "Settings",
   "settings button save": "Save",
   "settings label mpp": "Messages per page",
-  "settings label compose": "Rich message editor"
+  "settings label compose": "Rich message editor",
+  "picker drop here": "Drop files here"
 };
 });
 
@@ -2955,6 +3282,8 @@ module.exports = {
   "mail action mark": "Marquer comme",
   "mail action copy": "Copier…",
   "mail action move": "Déplacer…",
+  "mail action more": "Plus…",
+  "mail action headers": "Entêtes",
   "mail mark spam": "Pourriel",
   "mail mark nospam": "Légitime",
   "mail mark fav": "Important",
@@ -2979,7 +3308,8 @@ module.exports = {
   "settings title": "Paramètres",
   "settings button save": "Enregistrer",
   "settings label mpp": "Nombre de messages par page",
-  "settings label compose": "Éditeur riche"
+  "settings label compose": "Éditeur riche",
+  "picker drop here": "Déposer les fichiers ici"
 };
 });
 
@@ -3403,11 +3733,12 @@ MessageStore = (function(_super) {
       if (silent == null) {
         silent = false;
       }
+      message.hasAttachments = Array.isArray(message.attachments) && message.attachments.length > 0;
       message = Immutable.Map(message);
       message.getReplyToAddress = function() {
         var reply;
         reply = this.get('replyTo');
-        reply = reply.length === 0 ? this.get('from') : reply;
+        reply = (reply == null) || reply.length === 0 ? this.get('from') : reply;
         return reply;
       };
       _messages = _messages.set(message.get('id'), message);
@@ -3683,17 +4014,23 @@ module.exports = {
     if (full == null) {
       full = false;
     }
+    if (addresses == null) {
+      return "";
+    }
     res = [];
     for (_i = 0, _len = addresses.length; _i < _len; _i++) {
       item = addresses[_i];
+      if (item == null) {
+        break;
+      }
       if (full) {
-        if (item.name != null) {
+        if ((item.name != null) && item.name !== "") {
           res.push("\"" + item.name + "\" <" + item.address + ">");
         } else {
-          res.push("<" + item.address + ">");
+          res.push("" + item.address);
         }
       } else {
-        if (item.name != null) {
+        if ((item.name != null) && item.name !== "") {
           res.push(item.name);
         } else {
           res.push(item.address.split('@')[0]);
@@ -3710,6 +4047,38 @@ module.exports = {
       return res.push("> " + line);
     });
     return res.join("\n");
+  },
+  getAttachmentType: function(type) {
+    var sub;
+    sub = type.split('/');
+    switch (sub[0]) {
+      case 'audio':
+      case 'image':
+      case 'text':
+      case 'video':
+        return sub[0];
+      case "application":
+        switch (sub[1]) {
+          case "vnd.ms-excel":
+          case "vnd.oasis.opendocument.spreadsheet":
+          case "vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+            return "spreadsheet";
+          case "msword":
+          case "vnd.ms-word":
+          case "vnd.oasis.opendocument.text":
+          case "vnd.openxmlformats-officedocument.wordprocessingml.document":
+            return "word";
+          case "vns.ms-powerpoint":
+          case "vnd.oasis.opendocument.presentation":
+          case "vnd.openxmlformats-officedocument.presentationml.presentation":
+            return "presentation";
+          case "pdf":
+            return sub[1];
+          case "gzip":
+          case "zip":
+            return 'archive';
+        }
+    }
   }
 };
 });
