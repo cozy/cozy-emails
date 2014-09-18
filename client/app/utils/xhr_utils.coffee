@@ -38,12 +38,12 @@ module.exports =
 
     messageDelete: (messageId, callback) ->
         request.del "/message/#{messageId}"
-               .set 'Accept', 'application/json'
-               .end (res) ->
-                   if res.ok
-                       callback null, res.body
-                   else
-                       callback "Something went wrong -- #{res.body}"
+        .set 'Accept', 'application/json'
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                callback "Something went wrong -- #{res.body}"
 
     createAccount: (account, callback) ->
 
