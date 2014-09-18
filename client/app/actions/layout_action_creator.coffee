@@ -1,15 +1,15 @@
-XHRUtils = require '../utils/XHRUtils'
+XHRUtils = require '../utils/xhr_utils'
 
-AccountStore  = require '../stores/AccountStore'
-LayoutStore   = require '../stores/LayoutStore'
+AccountStore  = require '../stores/account_store'
+LayoutStore   = require '../stores/layout_store'
 
-AppDispatcher = require '../AppDispatcher'
+AppDispatcher = require '../app_dispatcher'
 
-{ActionTypes, AlertLevel} = require '../constants/AppConstants'
+{ActionTypes, AlertLevel} = require '../constants/app_constants'
 
-AccountActionCreator = require './AccountActionCreator'
-MessageActionCreator = require './MessageActionCreator'
-SearchActionCreator = require './SearchActionCreator'
+AccountActionCreator = require './account_action_creator'
+MessageActionCreator = require './message_action_creator'
+SearchActionCreator = require './search_action_creator'
 
 module.exports = LayoutActionCreator =
 

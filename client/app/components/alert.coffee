@@ -1,5 +1,5 @@
 {div, button, span, strong} = React.DOM
-{AlertLevel}     = require '../constants/AppConstants'
+{AlertLevel}     = require '../constants/app_constants'
 
 module.exports = React.createClass
     displayName: 'Alert'

@@ -1,5 +1,5 @@
-AppDispatcher = require '../AppDispatcher'
-{ActionTypes} = require '../constants/AppConstants'
+AppDispatcher = require '../app_dispatcher'
+{ActionTypes} = require '../constants/app_constants'
 
 module.exports = SearchActionCreator =
 

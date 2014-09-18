@@ -3,17 +3,17 @@ classer = React.addons.classSet
 
 FilePicker = require './file-picker'
 
-AccountStore  = require '../stores/AccountStore'
-SettingsStore = require '../stores/SettingsStore'
+AccountStore  = require '../stores/account_store'
+SettingsStore = require '../stores/settings_store'
 
-{ComposeActions} = require '../constants/AppConstants'
+{ComposeActions} = require '../constants/app_constants'
 
-MessageUtils = require '../utils/MessageUtils'
+MessageUtils = require '../utils/message_utils'
 
-LayoutActionCreator  = require '../actions/LayoutActionCreator'
-MessageActionCreator = require '../actions/MessageActionCreator'
+LayoutActionCreator  = require '../actions/layout_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
 
-RouterMixin = require '../mixins/RouterMixin'
+RouterMixin = require '../mixins/router_mixin'
 
 module.exports = Compose = React.createClass
     displayName: 'Compose'

@@ -1,11 +1,11 @@
 {div, input, span} = React.DOM
 classer = React.addons.classSet
 
-SearchActionCreator = require '../actions/SearchActionCreator'
+SearchActionCreator = require '../actions/search_action_creator'
 
 ENTER_KEY = 13
 
-RouterMixin = require '../mixins/RouterMixin'
+RouterMixin = require '../mixins/router_mixin'
 
 module.exports = React.createClass
     displayName: 'SearchForm'

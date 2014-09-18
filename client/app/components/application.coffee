@@ -15,18 +15,18 @@ ReactCSSTransitionGroup = React.addons.CSSTransitionGroup
 classer = React.addons.classSet
 
 # React Mixins
-RouterMixin = require '../mixins/RouterMixin'
-StoreWatchMixin = require '../mixins/StoreWatchMixin'
+RouterMixin = require '../mixins/router_mixin'
+StoreWatchMixin = require '../mixins/store_watch_mixin'
 
 # Flux stores
-AccountStore  = require '../stores/AccountStore'
-MessageStore  = require '../stores/MessageStore'
-LayoutStore   = require '../stores/LayoutStore'
-SettingsStore = require '../stores/SettingsStore'
-SearchStore   = require '../stores/SearchStore'
+AccountStore  = require '../stores/account_store'
+MessageStore  = require '../stores/message_store'
+LayoutStore   = require '../stores/layout_store'
+SettingsStore = require '../stores/settings_store'
+SearchStore   = require '../stores/search_store'
 
 # Flux actions
-LayoutActionCreator = require '../actions/LayoutActionCreator'
+LayoutActionCreator = require '../actions/layout_action_creator'
 
 ###
     This component is the root of the React tree.

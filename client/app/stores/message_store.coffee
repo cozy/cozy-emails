@@ -1,11 +1,11 @@
-Store = require '../libs/flux/store/Store'
-AppDispatcher = require '../AppDispatcher'
+Store = require '../libs/flux/store/store'
+AppDispatcher = require '../app_dispatcher'
 
-AccountStore = require './AccountStore'
+AccountStore = require './account_store'
 
-{ActionTypes}       = require '../constants/AppConstants'
+{ActionTypes}       = require '../constants/app_constants'
 
-LayoutActionCreator = require '../actions/LayoutActionCreator'
+LayoutActionCreator = require '../actions/layout_action_creator'
 
 class MessageStore extends Store
 

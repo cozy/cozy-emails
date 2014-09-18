@@ -1,8 +1,8 @@
-XHRUtils = require '../utils/XHRUtils'
-AppDispatcher = require '../AppDispatcher'
-{ActionTypes} = require '../constants/AppConstants'
+XHRUtils = require '../utils/xhr_utils'
+AppDispatcher = require '../app_dispatcher'
+{ActionTypes} = require '../constants/app_constants'
 
-AccountStore = require '../stores/AccountStore'
+AccountStore = require '../stores/account_store'
 
 module.exports = AccountActionCreator =
 

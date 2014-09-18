@@ -1,8 +1,8 @@
-Store = require '../libs/flux/store/Store'
+Store = require '../libs/flux/store/store'
 
-{ActionTypes} = require '../constants/AppConstants'
+{ActionTypes} = require '../constants/app_constants'
 
-AccountTranslator = require '../utils/translators/AccountTranslator'
+AccountTranslator = require '../utils/translators/account_translator'
 
 class AccountStore extends Store
 

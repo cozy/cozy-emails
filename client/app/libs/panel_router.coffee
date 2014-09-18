@@ -18,7 +18,7 @@
         another pattern.
 ###
 
-LayoutActionCreator = require '../actions/LayoutActionCreator'
+LayoutActionCreator = require '../actions/layout_action_creator'
 
 module.exports = class Router extends Backbone.Router
 

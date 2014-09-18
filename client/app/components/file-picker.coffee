@@ -1,6 +1,6 @@
 {div, form, input, ul, li, span, i, a} = React.DOM
 
-MessageUtils = require '../utils/MessageUtils'
+MessageUtils = require '../utils/message_utils'
 
 ###
 # File picker
