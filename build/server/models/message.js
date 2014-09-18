@@ -123,8 +123,12 @@ Message.createFromImapMessage = function(mail, box, uid) {
   mail.mailboxIDs = {};
   mail.mailboxIDs[box._id] = uid;
   messageID = mail.headers['message-id'];
-  mail.messageID = mailutils.normalizeMessageID(messageID);
-  mail.normSubject = mailutils.normalizeSubject(mail.subject);
+  if (mail.messageID) {
+    mail.messageID = mailutils.normalizeMessageID(messageID);
+  }
+  if (mail.subject) {
+    mail.normSubject = mailutils.normalizeSubject(mail.subject);
+  }
   mail.replyTo = [];
   if (mail.cc == null) {
     mail.cc = [];

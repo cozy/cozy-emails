@@ -29,7 +29,9 @@ ImapProcess.fetchBoxesTree = function(account) {
 ImapProcess.fetchAccount = function(account) {
   return Mailbox.getBoxes(account.id).then(function(boxes) {
     return Promise.serie(boxes, function(box) {
-      return ImapProcess.fetchMailbox(account, box);
+      return ImapProcess.fetchMailbox(account, box)["catch"](function(err) {
+        return console.log("FAILED TO FETCH BOX", box.path, err.stack);
+      });
     });
   });
 };
@@ -56,7 +58,9 @@ ImapProcess.fetchMailbox = function(account, box) {
     console.log('   to fetch', toFetch.length);
     console.log('   to del', toDelete.length);
     return Promise.map(toFetch.reverse(), function(id) {
-      return ImapProcess.fetchOneMail(account, box, id);
+      return ImapProcess.fetchOneMail(account, box, id)["catch"](function(err) {
+        return console.log("FAILED TO FETCH MAIL", box.path, id, err.stack);
+      });
     });
   });
 };

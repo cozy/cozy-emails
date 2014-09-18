@@ -24,6 +24,7 @@ ImapProcess.fetchAccount = (account) ->
     Mailbox.getBoxes(account.id).then (boxes) ->
         Promise.serie boxes, (box) ->
             ImapProcess.fetchMailbox account, box
+            .catch (err) -> console.log "FAILED TO FETCH BOX", box.path, err.stack
 
 # refresh one mailbox
 # return a promise for task completion
@@ -63,6 +64,7 @@ ImapProcess.fetchMailbox = (account, box) ->
 
         Promise.map toFetch.reverse(), (id) ->
             ImapProcess.fetchOneMail account, box, id
+            .catch (err) -> console.log "FAILED TO FETCH MAIL", box.path, id, err.stack
 
         # @TODO handle toDelete ?
 

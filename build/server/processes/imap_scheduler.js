@@ -55,7 +55,8 @@ module.exports = ImapScheduler = (function() {
       tls: (this.account.imapSecure == null) || this.account.imapSecure,
       tlsOptions: {
         rejectUnauthorized: false
-      }
+      },
+      debug: console.log
     });
     this.imap.onTerminated = (function(_this) {
       return function() {
