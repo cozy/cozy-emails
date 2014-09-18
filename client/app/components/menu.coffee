@@ -2,9 +2,9 @@
 
 classer = React.addons.classSet
 
-RouterMixin = require '../mixins/RouterMixin'
+RouterMixin = require '../mixins/router_mixin'
 
-AccountStore = require '../stores/AccountStore'
+AccountStore = require '../stores/account_store'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'

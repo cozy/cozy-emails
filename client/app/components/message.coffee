@@ -2,12 +2,12 @@
 MailboxList  = require './mailbox-list'
 Compose      = require './compose'
 FilePicker   = require './file-picker'
-MessageUtils = require '../utils/MessageUtils'
-{ComposeActions} = require '../constants/AppConstants'
-LayoutActionCreator  = require '../actions/LayoutActionCreator'
+MessageUtils = require '../utils/message_utils'
+{ComposeActions} = require '../constants/app_constants'
+LayoutActionCreator  = require '../actions/layout_action_creator'
 
 # Flux stores
-AccountStore = require '../stores/AccountStore'
+AccountStore = require '../stores/account_store'
 
 classer = React.addons.classSet
 

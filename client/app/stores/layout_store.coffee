@@ -1,6 +1,6 @@
-Store = require '../libs/flux/store/Store'
+Store = require '../libs/flux/store/store'
 
-{ActionTypes} = require '../constants/AppConstants'
+{ActionTypes} = require '../constants/app_constants'
 
 class LayoutStore extends Store
 

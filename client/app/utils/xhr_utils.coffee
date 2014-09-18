@@ -1,8 +1,8 @@
 request = superagent
 
-AccountTranslator = require './translators/AccountTranslator'
+AccountTranslator = require './translators/account_translator'
 
-SettingsStore = require '../stores/SettingsStore'
+SettingsStore = require '../stores/settings_store'
 
 module.exports =
 

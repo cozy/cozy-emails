@@ -1,8 +1,8 @@
-XHRUtils = require '../utils/XHRUtils'
-AppDispatcher = require '../AppDispatcher'
-{ActionTypes} = require '../constants/AppConstants'
+XHRUtils = require '../utils/xhr_utils'
+AppDispatcher = require '../app_dispatcher'
+{ActionTypes} = require '../constants/app_constants'
 
-SettingsStore = require '../stores/SettingsStore'
+SettingsStore = require '../stores/settings_store'
 
 module.exports = SettingsActionCreator =
 

@@ -1,8 +1,8 @@
 {div, ul, li, a, span, i, p} = React.DOM
 classer = React.addons.classSet
 
-RouterMixin  = require '../mixins/RouterMixin'
-MessageUtils = require '../utils/MessageUtils'
+RouterMixin  = require '../mixins/router_mixin'
+MessageUtils = require '../utils/message_utils'
 
 module.exports = React.createClass
     displayName: 'MessageList'

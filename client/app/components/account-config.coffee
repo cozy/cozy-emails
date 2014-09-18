@@ -1,7 +1,7 @@
 {div, h3, form, label, input, button} = React.DOM
 classer = React.addons.classSet
 
-AccountActionCreator = require '../actions/AccountActionCreator'
+AccountActionCreator = require '../actions/account_action_creator'
 
 module.exports = React.createClass
     displayName: 'AccountConfig'
