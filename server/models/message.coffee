@@ -95,8 +95,8 @@ Message.createFromImapMessage = (mail, box, uid) ->
 
     # we store normalized versions of subject & messageID for threading
     messageID = mail.headers['message-id']
-    mail.messageID = mailutils.normalizeMessageID messageID
-    mail.normSubject = mailutils.normalizeSubject mail.subject
+    mail.messageID = mailutils.normalizeMessageID messageID if mail.messageID
+    mail.normSubject = mailutils.normalizeSubject mail.subject if mail.subject
 
     # @TODO, find and parse from mail.headers ?
     mail.replyTo = []

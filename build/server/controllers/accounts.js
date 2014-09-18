@@ -24,7 +24,7 @@ module.exports.create = function(req, res, next) {
   })["catch"](next);
   return accountCreated.then(function(account) {
     return account.fetchMails()["catch"](function(err) {
-      return console.log("FETCH MAIL FAILED", err);
+      return console.log("FETCH MAIL FAILED", err.stack);
     });
   });
 };
