@@ -13,11 +13,12 @@ module.exports =
         'RECEIVE_RAW_MESSAGE'       : 'RECEIVE_RAW_MESSAGE'
         'RECEIVE_RAW_MESSAGES'      : 'RECEIVE_RAW_MESSAGES'
         'SEND_MESSAGE'              : 'SEND_MESSAGE'
+        'DELETE_MESSAGE'            : 'DELETE_MESSAGE'
 
         # Search
         'SET_SEARCH_QUERY'          : 'SET_SEARCH_QUERY'
         'RECEIVE_RAW_SEARCH_RESULTS': 'RECEIVE_RAW_SEARCH_RESULTS'
-        'CLEAR_SEARCH_RESULTS'       : 'CLEAR_SEARCH_RESULTS'
+        'CLEAR_SEARCH_RESULTS'      : 'CLEAR_SEARCH_RESULTS'
 
         # Layout
         'SHOW_MENU_RESPONSIVE'      : 'SHOW_MENU_RESPONSIVE'

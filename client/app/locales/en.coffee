@@ -58,6 +58,7 @@ module.exports =
       "mail mark nofav"         : "Not important"
       "mail mark read"          : "Read"
       "mail mark unread"        : "Not read"
+      "mail confirm delete"     : "Do you really want to delete this message ?"
 
       # Account
       "mailbox new"                 : "New account"
@@ -77,6 +78,8 @@ module.exports =
       # Message Action
       "message action sent ok"      : "Message sent"
       "message action sent ko"      : "Error sending message: "
+      "message action delete ok"    : "Message deleted"
+      "message action delete ko"    : "Error deleting message: "
 
       # Settings
       "settings title"             : "Settings"

@@ -22,3 +22,11 @@ module.exports =
                     type: ActionTypes.SEND_MESSAGE
                     value: message
             callback error
+
+    delete: (message, callback) ->
+        XHRUtils.messageDelete message.get('id'), (error, message) ->
+            if not(error?)
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.DELETE_MESSAGE
+                    value: message
+            callback error

@@ -35,6 +35,15 @@ module.exports =
                    else
                        callback "Something went wrong -- #{res.body}"
 
+    messageDelete: (messageId, callback) ->
+        request.del "/message/#{messageId}"
+               .set 'Accept', 'application/json'
+               .end (res) ->
+                   if res.ok
+                       callback null, res.body
+                   else
+                       callback "Something went wrong -- #{res.body}"
+
     createAccount: (account, callback) ->
 
         # TODO: validation & sanitization

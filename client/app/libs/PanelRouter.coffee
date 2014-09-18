@@ -151,6 +151,9 @@ module.exports = class Router extends Backbone.Router
                 else if options.direction is 'second'
                     firstPanelInfo = @current.firstPanel
                     secondPanelInfo = options
+                else if options.direction is 'full'
+                    firstPanelInfo = options
+                    secondPanelInfo = null
                 else
                     console.warn '`direction` should be `first`, `second`.'
             else

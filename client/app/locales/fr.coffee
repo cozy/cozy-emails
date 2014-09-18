@@ -58,6 +58,7 @@ module.exports =
       "mail mark nofav"         : "Normal"
       "mail mark read"          : "Lu"
       "mail mark unread"        : "Non lu"
+      "mail confirm delete"     : "Voulez-vous vraiment supprimer ce message ?"
 
       # Account
       "mailbox new"                 : "Nouveau compte"
@@ -77,6 +78,8 @@ module.exports =
       # Message Action
       "message action sent ok"      : "Message envoyé !"
       "message action sent ko"      : "Une erreur est survenue : "
+      "message action delete ok"    : "Message supprimé"
+      "message action delete ko"    : "Impossible de supprimer le message : "
 
       # Settings
       "settings title"             : "Paramètres"

@@ -59,6 +59,12 @@ class MessageStore extends Store
             # so it seems reasonable to emit change
             @emit 'change'
 
+        handle ActionTypes.DELETE_MESSAGE, (message) ->
+            # message should have been deleted from current mailbox
+            # and copied to trash
+            # so it seems reasonable to emit change
+            @emit 'change'
+
 
     ###
         Public API

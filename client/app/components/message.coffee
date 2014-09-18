@@ -5,6 +5,8 @@ FilePicker   = require './file-picker'
 MessageUtils = require '../utils/MessageUtils'
 {ComposeActions} = require '../constants/AppConstants'
 LayoutActionCreator  = require '../actions/LayoutActionCreator'
+MessageActionCreator = require '../actions/MessageActionCreator'
+RouterMixin = require '../mixins/RouterMixin'
 
 # Flux stores
 AccountStore = require '../stores/AccountStore'
@@ -13,6 +15,10 @@ classer = React.addons.classSet
 
 module.exports = React.createClass
     displayName: 'Message'
+
+    mixins: [
+        RouterMixin
+    ]
 
     getInitialState: ->
         return {
@@ -171,7 +177,16 @@ module.exports = React.createClass
         @setState composeAction: ComposeActions.FORWARD
 
     onDelete: (args) ->
-        LayoutActionCreator.alertWarning t "app unimplemented"
+        if window.confirm(t 'mail confirm delete')
+            MessageActionCreator.delete @props.message, (error) =>
+                if error?
+                    LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
+                else
+                    LayoutActionCreator.alertSuccess t "message action delete ok"
+                    @redirect
+                        direction: 'full'
+                        action: 'account.mailbox.messages'
+                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
 
     onCopy: (args) ->
         LayoutActionCreator.alertWarning t "app unimplemented"

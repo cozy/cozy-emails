@@ -75,3 +75,10 @@ module.exports.index = (req, res, next) ->
             , (err) ->
                 if err? then next err
                 else res.send 200, 'Indexation OK'
+
+module.exports.del = (req, res, next) ->
+
+    # @TODO : move message to trash
+
+    res.send 200, ""
+
