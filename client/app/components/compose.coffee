@@ -44,6 +44,9 @@ module.exports = Compose = React.createClass
 
         accounts = AccountStore.getAll()
 
+        onAttachmentsUpdate = (files) =>
+            @setState attachments: files
+
         div id: 'email-compose',
             h3 null,
                 a href: closeUrl, className: 'close-email hidden-xs hidden-sm',
@@ -66,15 +69,22 @@ module.exports = Compose = React.createClass
                             accounts.map (account, key) =>
                                 @getAccountRender account, key
                             .toJS()
+                        div className: 'btn-toolbar compose-toggle', role: 'toolbar',
+                            div className: 'btn-group btn-group-sm',
+                                button className: 'btn btn-default', type: 'button', onClick: @onToggleCc,
+                                    span className: 'tool-long', t 'compose toggle cc'
+                            div className: 'btn-group btn-group-sm',
+                                button className: 'btn btn-default', type: 'button', onClick: @onToggleBcc,
+                                    span className: 'tool-long', t 'compose toggle bcc'
                 div className: 'form-group',
                     label htmlFor: 'compose-to', className: classLabel, t "compose to"
                     div className: classInput,
                         input id: 'compose-to', ref: 'to', valueLink: @linkState('to'), type: 'text', className: 'form-control', placeholder: t "compose to help"
-                div className: 'form-group',
+                div className: 'form-group compose-cc',
                     label htmlFor: 'compose-cc', className: classLabel, t "compose cc"
                     div className: classInput,
                         input id: 'compose-cc', ref: 'cc', valueLink: @linkState('cc'), type: 'text', className: 'form-control', placeholder: t "compose cc help"
-                div className: 'form-group',
+                div className: 'form-group compose-bcc',
                     label htmlFor: 'compose-bcc', className: classLabel, t "compose bcc"
                     div className: classInput,
                         input id: 'compose-bcc', ref: 'bcc', valueLink: @linkState('bcc'), type: 'text', className: 'form-control', placeholder: t "compose bcc help"
@@ -84,11 +94,11 @@ module.exports = Compose = React.createClass
                         input id: 'compose-subject', ref: 'subject', valueLink: @linkState('subject'), type: 'text', className: 'form-control', placeholder: t "compose subject help"
                 div className: 'form-group',
                     if @state.composeInHTML
-                        div className: 'rt-editor form-control', contentEditable: true, dangerouslySetInnerHTML: {__html: @linkState('html').value}
+                        div className: 'rt-editor form-control', ref: 'html', contentEditable: true, dangerouslySetInnerHTML: {__html: @linkState('html').value}
                     else
                         textarea className: 'editor', ref: 'content', defaultValue: @linkState('body').value
                 div className: 'attachements',
-                    FilePicker {editable: true, form: false}
+                    FilePicker {editable: true, form: false, onAttachmentsUpdate, files: @state.attachments}
                 div className: 'composeToolbox',
                     div className: 'btn-toolbar', role: 'toolbar',
                         div className: 'btn-group btn-group-sm',
@@ -216,6 +226,7 @@ module.exports = Compose = React.createClass
         state =
             currentAccount: @props.selectedAccount
             composeInHTML:  SettingsStore.get 'composeInHTML'
+            attachments: []
 
         if message?
             today = moment()
@@ -271,6 +282,10 @@ module.exports = Compose = React.createClass
                 state.body = t('compose forward separator', {date: dateHuman, sender: sender}) + text
                 state.html = "<p>#{t('compose forward separator', {date: dateHuman, sender: sender})}</p>" + html
 
+                # Add original message attachments
+                attachments = message.get 'attachments' or []
+                state.attachments = attachments.map(MessageUtils.convertAttachments)
+
             when null
                 state.to      = ''
                 state.cc      = ''
@@ -296,9 +311,18 @@ module.exports = Compose = React.createClass
             cc          : this.refs.cc.getDOMNode().value.trim()
             bcc         : this.refs.bcc.getDOMNode().value.trim()
             subject     : this.refs.subject.getDOMNode().value.trim()
+            attachments : []
             #headers     :
             #date        :
             #encoding    :
+
+        attach = (file) ->
+            f =
+                filename: file.name
+                content: file.content
+            message.attachments.push f
+
+        attach file for file in @state.attachments
 
         if @state.composeInHTML
             message.html    = this.refs.html.getDOMNode().innerHTML
@@ -318,6 +342,7 @@ module.exports = Compose = React.createClass
                 message.references = msgId
 
         callback = @props.callback
+
         MessageActionCreator.send message, (error) ->
             if error?
                 LayoutActionCreator.alertError(t "message action sent ko") + error
@@ -325,3 +350,9 @@ module.exports = Compose = React.createClass
                 LayoutActionCreator.alertSuccess t "message action sent ok"
             if callback?
                 callback error
+
+    onToggleCc: (e) ->
+        jQuery('.compose-cc').toggle()
+
+    onToggleBcc: (e) ->
+        jQuery('.compose-bcc').toggle()

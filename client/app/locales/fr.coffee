@@ -26,6 +26,8 @@ module.exports =
       "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n"
       "compose action draft"      : "Save as draft"
       "compose action send"       : "Send"
+      "compose toggle cc"         : "Cc"
+      "compose toggle bcc"        : "Cci"
 
       # Menu
       "menu compose"            : "Nouveau"

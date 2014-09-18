@@ -10,22 +10,25 @@ MessageUtils = require '../utils/MessageUtils'
 # - files: array
 # - form: boolean (true) embed component inside a form element
 # - display: function(Object) : called when a file is selected
+# - onUpdate: function(Array) : called when file list is updated
 ###
 
 FilePicker = React.createClass
     displayName: 'FilePicker'
 
     propTypes:
-        file:     React.PropTypes.array
+        files:    React.PropTypes.array
         editable: React.PropTypes.bool
         form:     React.PropTypes.bool
         display:  React.PropTypes.func
+        onUpdate: React.PropTypes.func
 
     getDefaultProps: ->
         return {
             editable: false
             form: true
             files: []
+            onUpdate: ->
         }
 
     getInitialState: ->
@@ -39,7 +42,9 @@ FilePicker = React.createClass
     render: ->
         files = @state.files.map (file) =>
             doDelete = =>
-                @setState {files: @state.files.filter (f) -> return f.name isnt file.name }
+                updated = @state.files.filter (f) -> return f.name isnt file.name
+                @props.onUpdate updated
+                @setState {files: updated }
             options =
                 key: file.name
                 file: file
@@ -77,17 +82,23 @@ FilePicker = React.createClass
         e.preventDefault()
         files = e.target.files || e.dataTransfer.files
         currentFiles = @state.files
+        parsed = 0
 
         # convert file content to data url to store it later in local storage
-        handle = (file) ->
+        handle = (file) =>
             reader = new FileReader()
             reader.readAsDataURL(file)
-            reader.onloadend = (e) ->
+            reader.onloadend = (e) =>
                 txt = e.target.result
                 file.content = txt
-        handle file for file in files
+                currentFiles.push file
+                parsed++
+                if parsed is files.length
+                    @props.onUpdate currentFiles
+                    @setState {files: currentFiles }
 
-        @setState {files: currentFiles.concat @_convertFileList files }
+        handle file for file in @_convertFileList files
+
 
     #
     # "private" methods

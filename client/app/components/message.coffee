@@ -59,18 +59,6 @@ module.exports = React.createClass
         else
             formatter = 'hh:mm'
 
-        # convert attachment to the format needed by the file picker
-        convert = (file) ->
-            return {
-                name:               file.generatedFileName
-                size:               file.length
-                type:               file.contentType
-                originalName:       file.fileName
-                contentDisposition: file.contentDisposition
-                contentId:          file.contentId
-                transferEncoding:   file.transferEncoding
-            }
-
         # display attachment
         display = (file) ->
             url = "/message/#{message.get 'id'}/attachments/#{file.name}"
@@ -87,7 +75,7 @@ module.exports = React.createClass
                         span className: 'receivers', t "mail receivers cc", {dest: MessageUtils.displayAddresses(message.get('cc'), true)}
                     span className: 'hour', date.format formatter
                 div className: 'col-md-4',
-                    FilePicker({editable: false, files: attachments.map(convert), display: display})
+                    FilePicker({editable: false, files: attachments.map(MessageUtils.convertAttachments), display: display})
             div className: 'full-headers',
                 pre null, fullHeaders.join "\n"
             div className: 'preview',
