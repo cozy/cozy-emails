@@ -3,18 +3,34 @@ americano = require 'americano'
 module.exports =
     account:
         all: americano.defaultRequests.all
-        # browse mailboxes tree and emit id, path
-        pathById: (doc) ->
-            do emitChildren = (children = doc.mailboxes) ->
-                for child in children
-                    emit child.id, child.path
-                    if child.children?.length
-                        emitChildren child.children
-                return # prevent coffeescript magic loop
+
+
+    mailbox:
+        all: americano.defaultRequests.all
+        treeMap: (doc) ->
+            emit [doc.accountID].concat(doc.tree), null
 
     message:
         all: americano.defaultRequests.all
-        byMailboxAndDate: (doc) ->
-            for boxid in doc.mailboxIDs
-                emit [boxid, doc.createdAt], null
+
+        # this map has 3 usages
+        # - fetch mails of a mailbox between two dates
+        # - fetch mails count of a mailbox
+        # - get UIDs of mails in a mailbox
+        byMailboxAndDate:
+            reduce: '_count'
+            map: (doc) ->
+                for boxid, uid of doc.mailboxIDs
+                    emit [boxid, doc.date], uid
+                    undefined
+
+        # this map is used to dedup by message-id
+        byMessageId: (doc) ->
+            if messageId = doc.headers?["message-id"]
+                emit [doc.accountID, messageId], doc.conversationID
+
+        # this map is used to find conversation by sujects
+        byNormSubject: (doc) ->
+            if doc.normSubject
+                emit doc.normSubject, doc.threadId
 

@@ -40,9 +40,10 @@ module.exports = LayoutActionCreator =
 
         accountID = panelInfo.parameters[0]
         mailboxID = panelInfo.parameters[1]
+        numPage = panelInfo.parameters[2]
         AccountActionCreator.selectAccount accountID
 
-        XHRUtils.fetchMessagesByFolder mailboxID, (err, rawMessage) ->
+        XHRUtils.fetchMessagesByFolder mailboxID, numPage, (err, rawMessage) ->
             if err?
                 LayoutActionCreator.alertError err
             else

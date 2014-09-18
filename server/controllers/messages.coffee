@@ -12,21 +12,35 @@ if process.env.NODE_ENV in ['production', 'test']
     password = process.env.TOKEN
     dataSystem.setBasicAuth user, password
 
+# list messages from a mailbox
+# require numPage & numByPage params
 module.exports.listByMailboxId = (req, res, next) ->
 
     # @TODO : add query parameters for sort & pagination
+    options =
+        numPage: req.params.numPage - 1
+        numByPage: req.params.numByPage
 
-    Message.getByMailboxAndDatePromised(req.params.mailboxID)
-        .then (messages) -> res.send 200, messages
-        .catch next
+    Message.getByMailboxAndDate(req.params.mailboxID, options)
+    .then (messages) -> res.send 200, messages
+    .catch next
 
+# give the number of messages for a mailbox
+# @TODO : number of unread message ?
+module.exports.countByMailboxId = (req, res, next) ->
+    Message.countByMailbox(req.params.mailboxID)
+    .then (count) -> res.send 200, count
+    .catch next
+
+# get a message and attach it to req.message
 module.exports.fetch = (req, res, next) ->
-    Message.findPromised(req.params.messageID)
-        .then (message) ->
-            if message then req.message = message
-            else throw new HttpError 404, 'Not Found'
-        .nodeify next
+    Message.findPromised req.params.messageID
+    .then (message) ->
+        if message then req.message = message
+        else throw new HttpError 404, 'Not Found'
+    .nodeify next
 
+# return a message's details
 module.exports.details = (req, res, next) ->
 
     # @TODO : fetch message's status
@@ -34,6 +48,8 @@ module.exports.details = (req, res, next) ->
 
     res.send 200, req.message
 
+# change the flags of a message
+# ie. mark Read, mark Deleted, ...
 module.exports.updateFlags = (req, res, next) ->
 
     # @TODO : fetch message's status
@@ -42,6 +58,7 @@ module.exports.updateFlags = (req, res, next) ->
 
     next new Error 'not implemented'
 
+# send a message through the DS
 module.exports.send = (req, res, next) ->
     console.log "Server: ", typeof req.body
     dataSystem.post 'mail/', req.body, (dsErr, dsRes, dsBody) ->
@@ -50,6 +67,7 @@ module.exports.send = (req, res, next) ->
         else
             res.send 200, dsBody
 
+# search in the messages using the indexer
 module.exports.search = (req, res, next) ->
 
     if not req.params.query?

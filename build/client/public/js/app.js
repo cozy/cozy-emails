@@ -266,12 +266,13 @@ module.exports = LayoutActionCreator = {
     return LayoutActionCreator.alert(AlertLevel.ERROR, message);
   },
   showMessageList: function(panelInfo, direction) {
-    var accountID, mailboxID;
+    var accountID, mailboxID, numPage;
     LayoutActionCreator.hideReponsiveMenu();
     accountID = panelInfo.parameters[0];
     mailboxID = panelInfo.parameters[1];
+    numPage = panelInfo.parameters[2];
     AccountActionCreator.selectAccount(accountID);
-    return XHRUtils.fetchMessagesByFolder(mailboxID, function(err, rawMessage) {
+    return XHRUtils.fetchMessagesByFolder(mailboxID, numPage, function(err, rawMessage) {
       if (err != null) {
         return LayoutActionCreator.alertError(err);
       } else {
@@ -710,26 +711,26 @@ module.exports = Application = React.createClass({
   displayName: 'Application',
   mixins: [StoreWatchMixin([AccountStore, MessageStore, LayoutStore, SearchStore]), RouterMixin],
   render: function() {
-    var alert, configMailboxUrl, isFullWidth, layout, leftPanelLayoutMode, panelClasses, responsiveBackUrl, responsiveClasses, showMailboxConfigButton;
+    var alert, configMailboxUrl, firstPanelLayoutMode, isFullWidth, layout, panelClasses, responsiveBackUrl, responsiveClasses, showMailboxConfigButton;
     layout = this.props.router.current;
     if (layout == null) {
       return div(null, t("app loading"));
     }
-    isFullWidth = layout.rightPanel == null;
-    leftPanelLayoutMode = isFullWidth ? 'full' : 'left';
+    isFullWidth = layout.secondPanel == null;
+    firstPanelLayoutMode = isFullWidth ? 'full' : 'first';
     panelClasses = this.getPanelClasses(isFullWidth);
-    showMailboxConfigButton = (this.state.selectedAccount != null) && layout.leftPanel.action !== 'account.new';
+    showMailboxConfigButton = (this.state.selectedAccount != null) && layout.firstPanel.action !== 'account.new';
     if (showMailboxConfigButton) {
-      if (layout.leftPanel.action === 'account.config') {
+      if (layout.firstPanel.action === 'account.config') {
         configMailboxUrl = this.buildUrl({
-          direction: 'left',
+          direction: 'first',
           action: 'account.mailbox.messages',
           parameters: this.state.selectedAccount.get('id'),
           fullWidth: true
         });
       } else {
         configMailboxUrl = this.buildUrl({
-          direction: 'left',
+          direction: 'first',
           action: 'account.config',
           parameters: this.state.selectedAccount.get('id'),
           fullWidth: true
@@ -737,7 +738,7 @@ module.exports = Application = React.createClass({
       }
     }
     responsiveBackUrl = this.buildUrl({
-      leftPanel: layout.leftPanel,
+      firstPanel: layout.firstPanel,
       fullWidth: true
     });
     responsiveClasses = classer({
@@ -763,7 +764,7 @@ module.exports = Application = React.createClass({
     }), div({
       id: 'quick-actions',
       className: 'row'
-    }, layout.rightPanel ? a({
+    }, layout.secondPanel ? a({
       href: responsiveBackUrl,
       className: 'responsive-handler hidden-md hidden-lg'
     }, i({
@@ -797,48 +798,48 @@ module.exports = Application = React.createClass({
       id: 'panels',
       className: 'row'
     }, div({
-      className: panelClasses.leftPanel,
-      key: 'left-panel-' + layout.leftPanel.action + '-' + layout.leftPanel.parameters.join('-')
-    }, this.getPanelComponent(layout.leftPanel, leftPanelLayoutMode)), !isFullWidth && (layout.rightPanel != null) ? div({
-      className: panelClasses.rightPanel,
-      key: 'right-panel-' + layout.rightPanel.action + '-' + layout.rightPanel.parameters.join('-')
-    }, this.getPanelComponent(layout.rightPanel, 'right')) : void 0))));
+      className: panelClasses.firstPanel,
+      key: 'left-panel-' + layout.firstPanel.action + '-' + layout.firstPanel.parameters.join('-')
+    }, this.getPanelComponent(layout.firstPanel, firstPanelLayoutMode)), !isFullWidth && (layout.secondPanel != null) ? div({
+      className: panelClasses.secondPanel,
+      key: 'right-panel-' + layout.secondPanel.action + '-' + layout.secondPanel.parameters.join('-')
+    }, this.getPanelComponent(layout.secondPanel, 'second')) : void 0))));
   },
   getPanelClasses: function(isFullWidth) {
-    var classes, layout, left, previous, right, wasFullWidth;
+    var classes, first, layout, previous, second, wasFullWidth;
     previous = this.props.router.previous;
     layout = this.props.router.current;
-    left = layout.leftPanel;
-    right = layout.rightPanel;
+    first = layout.firstPanel;
+    second = layout.secondPanel;
     if (isFullWidth) {
       classes = {
-        leftPanel: 'panel col-xs-12 col-md-12'
+        firstPanel: 'panel col-xs-12 col-md-12'
       };
-      if ((previous != null) && left.action === 'account.config') {
-        classes.leftPanel += ' moveFromTopRightCorner';
-      } else if ((previous != null) && previous.rightPanel) {
-        if (previous.rightPanel.action === layout.leftPanel.action && _.difference(previous.rightPanel.parameters, layout.leftPanel.parameters).length === 0) {
-          classes.leftPanel += ' expandFromRight';
+      if ((previous != null) && first.action === 'account.config') {
+        classes.firstPanel += ' moveFromTopRightCorner';
+      } else if ((previous != null) && previous.secondPanel) {
+        if (previous.secondPanel.action === layout.firstPanel.action && _.difference(previous.secondPanel.parameters, layout.firstPanel.parameters).length === 0) {
+          classes.firstPanel += ' expandFromRight';
         }
       } else if (previous != null) {
-        classes.leftPanel += ' moveFromLeft';
+        classes.firstPanel += ' moveFromLeft';
       }
     } else {
       classes = {
-        leftPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm',
-        rightPanel: 'panel col-xs-12 col-md-6'
+        firstPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm',
+        secondPanel: 'panel col-xs-12 col-md-6'
       };
       if (previous != null) {
-        wasFullWidth = previous.rightPanel == null;
+        wasFullWidth = previous.secondPanel == null;
         if (wasFullWidth && !isFullWidth) {
-          if (previous.leftPanel.action === right.action && _.difference(previous.leftPanel.parameters, right.parameters).length === 0) {
-            classes.leftPanel += ' moveFromLeft';
-            classes.rightPanel += ' slide-in-from-left';
+          if (previous.firstPanel.action === second.action && _.difference(previous.firstPanel.parameters, second.parameters).length === 0) {
+            classes.firstPanel += ' moveFromLeft';
+            classes.secondPanel += ' slide-in-from-left';
           } else {
-            classes.rightPanel += ' slide-in-from-right';
+            classes.secondPanel += ' slide-in-from-right';
           }
         } else if (!isFullWidth) {
-          classes.rightPanel += ' slide-in-from-left';
+          classes.secondPanel += ' slide-in-from-left';
         }
       }
     }
@@ -854,7 +855,7 @@ module.exports = Application = React.createClass({
       firstOfPage = (pageNum - 1) * numPerPage;
       lastOfPage = pageNum * numPerPage;
       openMessage = null;
-      direction = layout === 'left' ? 'rightPanel' : 'leftPanel';
+      direction = layout === 'first' ? 'secondPanel' : 'firstPanel';
       otherPanelInfo = this.props.router.current[direction];
       if ((otherPanelInfo != null ? otherPanelInfo.action : void 0) === 'message') {
         openMessage = MessageStore.getByID(otherPanelInfo.parameters[0]);
@@ -874,7 +875,7 @@ module.exports = Application = React.createClass({
         buildPaginationUrl: (function(_this) {
           return function(numPage) {
             return _this.buildUrl({
-              direction: 'left',
+              direction: 'first',
               action: 'account.mailbox.messages',
               parameters: [accountID, mailboxID, numPage]
             });
@@ -934,7 +935,7 @@ module.exports = Application = React.createClass({
       firstOfPage = (pageNum - 1) * numPerPage;
       lastOfPage = pageNum * numPerPage;
       openMessage = null;
-      direction = layout === 'left' ? 'rightPanel' : 'leftPanel';
+      direction = layout === 'first' ? 'secondPanel' : 'firstPanel';
       otherPanelInfo = this.props.router.current[direction];
       if ((otherPanelInfo != null ? otherPanelInfo.action : void 0) === 'message') {
         openMessage = MessageStore.getByID(otherPanelInfo.parameters[0]);
@@ -956,7 +957,7 @@ module.exports = Application = React.createClass({
         buildPaginationUrl: (function(_this) {
           return function(numPage) {
             return _this.buildUrl({
-              direction: 'left',
+              direction: 'first',
               action: 'search',
               parameters: [_this.state.searchQuery, numPage]
             });
@@ -968,12 +969,15 @@ module.exports = Application = React.createClass({
     }
   },
   getStateFromStores: function() {
-    var leftPanelInfo, selectedAccount, selectedAccountID, selectedMailboxID, _ref1;
+    var firstPanelInfo, selectedAccount, selectedAccountID, selectedMailboxID, _ref1;
     selectedAccount = AccountStore.getSelected();
+    if (selectedAccount == null) {
+      selectedAccount = AccountStore.getDefault();
+    }
     selectedAccountID = (selectedAccount != null ? selectedAccount.get('id') : void 0) || null;
-    leftPanelInfo = (_ref1 = this.props.router.current) != null ? _ref1.leftPanel : void 0;
-    if ((leftPanelInfo != null ? leftPanelInfo.action : void 0) === 'account.mailbox.messages') {
-      selectedMailboxID = leftPanelInfo.parameters[1];
+    firstPanelInfo = (_ref1 = this.props.router.current) != null ? _ref1.firstPanel : void 0;
+    if ((firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages') {
+      selectedMailboxID = firstPanelInfo.parameters[1];
     } else {
       selectedMailboxID = null;
     }
@@ -992,8 +996,8 @@ module.exports = Application = React.createClass({
   componentWillMount: function() {
     this.onRoute = (function(_this) {
       return function(params) {
-        var leftPanelInfo, rightPanelInfo;
-        leftPanelInfo = params.leftPanelInfo, rightPanelInfo = params.rightPanelInfo;
+        var firstPanelInfo, secondPanelInfo;
+        firstPanelInfo = params.firstPanelInfo, secondPanelInfo = params.secondPanelInfo;
         return _this.forceUpdate();
       };
     })(this);
@@ -1014,13 +1018,17 @@ module.exports = Application = React.createClass({
 });
 
 ;require.register("components/compose", function(exports, require, module) {
-var AccountStore, Compose, ComposeActions, LayoutActionCreator, MessageActionCreator, MessageUtils, RouterMixin, a, button, classer, div, form, h3, i, input, label, li, span, textarea, ul, _ref;
+var AccountStore, Compose, ComposeActions, FilePicker, LayoutActionCreator, MessageActionCreator, MessageUtils, RouterMixin, SettingsStore, a, button, classer, div, form, h3, i, input, label, li, span, textarea, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label, button = _ref.button, span = _ref.span, ul = _ref.ul, li = _ref.li, input = _ref.input;
 
 classer = React.addons.classSet;
 
+FilePicker = require('./file-picker');
+
 AccountStore = require('../stores/AccountStore');
+
+SettingsStore = require('../stores/SettingsStore');
 
 ComposeActions = require('../constants/AppConstants').ComposeActions;
 
@@ -1038,16 +1046,16 @@ module.exports = Compose = React.createClass({
   render: function() {
     var accounts, classInput, classLabel, closeUrl, collapseUrl, expandUrl, _ref1;
     expandUrl = this.buildUrl({
-      direction: 'left',
+      direction: 'first',
       action: 'compose',
       fullWidth: true
     });
     collapseUrl = this.buildUrl({
-      leftPanel: {
+      firstPanel: {
         action: 'account.mailbox.messages',
         parameters: (_ref1 = this.state.currentAccount) != null ? _ref1.get('id') : void 0
       },
-      rightPanel: {
+      secondPanel: {
         action: 'compose'
       }
     });
@@ -1155,9 +1163,21 @@ module.exports = Compose = React.createClass({
       placeholder: t("compose subject help")
     }))), div({
       className: 'form-group'
-    }, textarea({
+    }, this.state.composeInHTML ? div({
+      className: 'rt-editor form-control',
+      contentEditable: true,
+      dangerouslySetInnerHTML: {
+        __html: this.linkState('html').value
+      }
+    }) : textarea({
+      className: 'editor',
       ref: 'content',
       defaultValue: this.linkState('body').value
+    })), div({
+      className: 'attachements'
+    }, FilePicker({
+      editable: true,
+      form: false
     })), div({
       className: 'composeToolbox'
     }, div({
@@ -1185,10 +1205,93 @@ module.exports = Compose = React.createClass({
       className: 'tool-long'
     }, t('compose action send'))))))));
   },
-  componentDidUpdate: function() {
+  componentDidMount: function() {
     var node;
     node = this.getDOMNode();
-    return node.scrollIntoView();
+    node.scrollIntoView();
+    if (this.state.composeInHTML) {
+      return jQuery('#email-compose .rt-editor').on('keypress', function(e) {
+        if (e.keyCode === 13) {
+          return setTimeout(function() {
+            var after, before, inserted, matchesSelector, parent, process, rangeAfter, rangeBefore, sel, target;
+            matchesSelector = document.documentElement.matches || document.documentElement.matchesSelector || document.documentElement.webkitMatchesSelector || document.documentElement.mozMatchesSelector || document.documentElement.oMatchesSelector || document.documentElement.msMatchesSelector;
+            target = document.getSelection().anchorNode;
+            if ((matchesSelector != null) && !matchesSelector.call(target, '.rt-editor blockquote *')) {
+              return;
+            }
+            if (target.lastChild) {
+              target = target.lastChild.previousElementSibling;
+            }
+            parent = target;
+            process = function() {
+              var current;
+              current = parent;
+              return parent = parent != null ? parent.parentNode : void 0;
+            };
+            process();
+            while ((parent != null) && !parent.classList.contains('rt-editor')) {
+              process();
+            }
+            rangeBefore = document.createRange();
+            rangeBefore.setEnd(target, 0);
+            rangeBefore.setStartBefore(parent.firstChild);
+            rangeAfter = document.createRange();
+            if (target.nextSibling != null) {
+              rangeAfter.setStart(target.nextSibling, 0);
+            } else {
+              rangeAfter.setStart(target, 0);
+            }
+            rangeAfter.setEndAfter(parent.lastChild);
+            before = rangeBefore.cloneContents();
+            after = rangeAfter.cloneContents();
+            inserted = document.createElement('p');
+            inserted.innerHTML = "<br />";
+            parent.innerHTML = "";
+            parent.appendChild(before);
+            parent.appendChild(inserted);
+            parent.appendChild(after);
+
+            /*
+             * alternative 2
+             * We move every node from the caret to the end of the
+             * message to a new DOM tree, then insert a blank line
+             * and the new tree
+            parent = target
+            p2 = null
+            p3 = null
+            process = ->
+                p3 = p2
+                current = parent
+                parent = parent.parentNode
+                p2 = parent.cloneNode false
+                if p3?
+                    p2.appendChild p3
+                s = current.nextSibling
+                while s?
+                    p2.appendChild(s.cloneNode(true))
+                    s2 = s.nextSibling
+                    parent.removeChild s
+                    s = s2
+            process()
+            process() while (parent.parentNode? and
+                not parent.parentNode.classList.contains 'rt-editor')
+            after = p2
+            inserted = document.createElement 'p'
+            inserted.innerHTML = "<br />"
+            if parent.nextSibling
+                parent.parentNode.insertBefore inserted, parent.nextSibling
+                parent.parentNode.insertBefore after, parent.nextSibling
+            else
+                parent.parentNode.appendChild inserted
+                parent.parentNode.appendChild after
+             */
+            inserted.focus();
+            sel = window.getSelection();
+            return sel.collapse(inserted, 0);
+          }, 0);
+        }
+      });
+    }
   },
   getAccountRender: function(account, key) {
     var isSelected, _ref1;
@@ -1205,10 +1308,11 @@ module.exports = Compose = React.createClass({
     }
   },
   getInitialState: function(forceDefault) {
-    var date, dateHuman, formatter, message, sender, state, today;
+    var date, dateHuman, formatter, html, message, sender, state, text, today;
     message = this.props.message;
     state = {
-      currentAccount: this.props.selectedAccount
+      currentAccount: this.props.selectedAccount,
+      composeInHTML: SettingsStore.get('composeInHTML')
     };
     if (message != null) {
       today = moment();
@@ -1222,6 +1326,14 @@ module.exports = Compose = React.createClass({
       }
       dateHuman = date.format(formatter);
       sender = MessageUtils.displayAddresses(message.get('from'));
+      text = message.get('text');
+      html = message.get('html');
+      if (text && !html && state.composeInHTML) {
+        html = markdown.toHTML(text);
+      }
+      if (html && !text && !state.composeInHTML) {
+        text = toMarkdown(html);
+      }
     }
     switch (this.props.action) {
       case ComposeActions.REPLY:
@@ -1232,7 +1344,11 @@ module.exports = Compose = React.createClass({
         state.body = t('compose reply separator', {
           date: dateHuman,
           sender: sender
-        }) + MessageUtils.generateReplyText(message.get('text')) + "\n";
+        }) + MessageUtils.generateReplyText(text) + "\n";
+        state.html = "<p><br /></p>\n<p>" + (t('compose reply separator', {
+          date: dateHuman,
+          sender: sender
+        })) + "</p>\n<blockquote>" + html + "</blockquote>";
         break;
       case ComposeActions.REPLY_ALL:
         state.to = MessageUtils.displayAddresses(message.getReplyToAddress(), true);
@@ -1242,7 +1358,11 @@ module.exports = Compose = React.createClass({
         state.body = t('compose reply separator', {
           date: dateHuman,
           sender: sender
-        }) + MessageUtils.generateReplyText(message.get('text')) + "\n";
+        }) + MessageUtils.generateReplyText(text) + "\n";
+        state.html = "<p><br /></p>\n<p>" + (t('compose reply separator', {
+          date: dateHuman,
+          sender: sender
+        })) + "</p>\n<blockquote>" + html + "</blockquote>";
         break;
       case ComposeActions.FORWARD:
         state.to = '';
@@ -1252,7 +1372,11 @@ module.exports = Compose = React.createClass({
         state.body = t('compose forward separator', {
           date: dateHuman,
           sender: sender
-        }) + message.get('text');
+        }) + text;
+        state.html = ("<p>" + (t('compose forward separator', {
+          date: dateHuman,
+          sender: sender
+        })) + "</p>") + html;
         break;
       case null:
         state.to = '';
@@ -1282,9 +1406,14 @@ module.exports = Compose = React.createClass({
       to: this.refs.to.getDOMNode().value.trim(),
       cc: this.refs.cc.getDOMNode().value.trim(),
       bcc: this.refs.bcc.getDOMNode().value.trim(),
-      subject: this.refs.subject.getDOMNode().value.trim(),
-      content: this.refs.content.getDOMNode().value.trim()
+      subject: this.refs.subject.getDOMNode().value.trim()
     };
+    if (this.state.composeInHTML) {
+      message.html = this.refs.html.getDOMNode().innerHTML;
+      message.content = toMarkdown(message.html);
+    } else {
+      message.content = this.refs.content.getDOMNode().value.trim();
+    }
     if (this.props.message != null) {
       msg = this.props.message;
       msgId = msg.get('id');
@@ -1331,7 +1460,7 @@ module.exports = React.createClass({
       return p(null, t("app loading"));
     }
     expandUrl = this.buildUrl({
-      direction: 'left',
+      direction: 'first',
       action: 'message',
       parameters: this.props.message.get('id'),
       fullWidth: true
@@ -1346,18 +1475,18 @@ module.exports = React.createClass({
       selectedAccountID = this.props.conversation[0].mailbox;
     }
     collapseUrl = this.buildUrl({
-      leftPanel: {
+      firstPanel: {
         action: 'account.mailbox.messages',
         parameters: selectedAccountID
       },
-      rightPanel: {
+      secondPanel: {
         action: 'message',
         parameters: this.props.conversation[0].get('id')
       }
     });
     if (this.props.layout === 'full') {
       closeUrl = this.buildUrl({
-        direction: 'left',
+        direction: 'first',
         action: 'account.mailbox.messages',
         parameters: selectedAccountID,
         fullWidth: true
@@ -1406,6 +1535,254 @@ module.exports = React.createClass({
 });
 });
 
+;require.register("components/file-picker", function(exports, require, module) {
+var FileItem, FilePicker, MessageUtils, a, div, form, i, input, li, span, ul, _ref;
+
+_ref = React.DOM, div = _ref.div, form = _ref.form, input = _ref.input, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, a = _ref.a;
+
+MessageUtils = require('../utils/MessageUtils');
+
+
+/*
+ * File picker
+ *
+ * Available props
+ * - editable: boolean (false)
+ * - files: array
+ * - form: boolean (true) embed component inside a form element
+ * - display: function(Object) : called when a file is selected
+ */
+
+FilePicker = React.createClass({
+  displayName: 'FilePicker',
+  propTypes: {
+    file: React.PropTypes.array,
+    editable: React.PropTypes.bool,
+    form: React.PropTypes.bool,
+    display: React.PropTypes.func
+  },
+  getDefaultProps: function() {
+    return {
+      editable: false,
+      form: true,
+      files: []
+    };
+  },
+  getInitialState: function() {
+    return {
+      files: this._convertFileList(this.props.files)
+    };
+  },
+  componentWillReceiveProps: function(props) {
+    return this.setState({
+      files: this._convertFileList(props.files)
+    });
+  },
+  render: function() {
+    var container, files;
+    files = this.state.files.map((function(_this) {
+      return function(file) {
+        var doDelete, options;
+        doDelete = function() {
+          return _this.setState({
+            files: _this.state.files.filter(function(f) {
+              return f.name !== file.name;
+            })
+          });
+        };
+        options = {
+          key: file.name,
+          file: file,
+          editable: _this.props.editable,
+          "delete": doDelete
+        };
+        if (_this.props.display != null) {
+          options.display = function() {
+            return _this.props.display(file);
+          };
+        }
+        return FileItem(options);
+      };
+    })(this));
+    container = this.props.form ? form : div;
+    return container({
+      className: 'file-picker'
+    }, ul({
+      className: 'files list-unstyled'
+    }, files), this.props.editable ? div(null, span({
+      className: "file-wrapper"
+    }, input({
+      type: "file",
+      multiple: "multiple",
+      ref: "file",
+      onChange: this.handleFiles
+    })), div({
+      className: "dropzone",
+      ref: "dropzone",
+      onDragOver: this.allowDrop,
+      onDrop: this.handleFiles,
+      onClick: this.onOpenFile
+    }, i({
+      className: "fa fa-paperclip"
+    }), span(null, t("picker drop here")))) : void 0);
+  },
+  onOpenFile: function(e) {
+    e.preventDefault();
+    return jQuery(this.refs.file.getDOMNode()).trigger("click");
+  },
+  allowDrop: function(e) {
+    return e.preventDefault();
+  },
+  handleFiles: function(e) {
+    var currentFiles, file, files, handle, _i, _len;
+    e.preventDefault();
+    files = e.target.files || e.dataTransfer.files;
+    currentFiles = this.state.files;
+    handle = function(file) {
+      var reader;
+      reader = new FileReader();
+      reader.readAsDataURL(file);
+      return reader.onloadend = function(e) {
+        var txt;
+        txt = e.target.result;
+        return file.content = txt;
+      };
+    };
+    for (_i = 0, _len = files.length; _i < _len; _i++) {
+      file = files[_i];
+      handle(file);
+    }
+    return this.setState({
+      files: currentFiles.concat(this._convertFileList(files))
+    });
+  },
+  _convertFileList: function(files) {
+    var convert;
+    convert = (function(_this) {
+      return function(file) {
+        if (File.prototype.isPrototypeOf(file)) {
+          _this._fromDOM(file);
+        }
+        return file;
+      };
+    })(this);
+    return Array.prototype.map.call(files, convert);
+  },
+  _fromDOM: function(file) {
+    return {
+      name: file.name,
+      size: file.size,
+      type: file.type,
+      originalName: null,
+      contentDisposition: null,
+      contentId: null,
+      transferEncoding: null,
+      content: null
+    };
+  }
+});
+
+module.exports = FilePicker;
+
+
+/*
+ * Display a file item
+ *
+ * Props:
+ *  - file
+ *  - editable: boolean (false) allow to delete file
+ *  - (display): function
+ *  - (delete): function
+ */
+
+FileItem = React.createClass({
+  displayName: 'FileItem',
+  propTypes: {
+    file: React.PropTypes.shape({
+      name: React.PropTypes.string,
+      type: React.PropTypes.string,
+      size: React.PropTypes.number
+    }).isRequired,
+    editable: React.PropTypes.bool,
+    display: React.PropTypes.func,
+    "delete": React.PropTypes.func
+  },
+  getDefaultProps: function() {
+    return {
+      editable: false
+    };
+  },
+  getInitialState: function() {
+    return {};
+  },
+  render: function() {
+    var file, iconClass, name, type;
+    file = this.props.file;
+    type = MessageUtils.getAttachmentType(file.type);
+    iconClass = (function() {
+      switch (type) {
+        case '':
+          return 'fa-file-word-o';
+        case 'archive':
+          return 'fa-file-archive-o';
+        case 'audio':
+          return 'fa-file-audio-o';
+        case 'code':
+          return 'fa-file-code-o';
+        case 'image':
+          return 'fa-file-image-o';
+        case 'pdf':
+          return 'fa-file-pdf-o';
+        case 'word':
+          return 'fa-file-word-o';
+        case 'presentation':
+          return 'fa-file-powerpoint-o';
+        case 'spreadsheet':
+          return 'fa-file-excel-o';
+        case 'text':
+          return 'fa-file-text-o';
+        case 'video':
+          return 'fa-file-video-o';
+        case 'word':
+          return 'fa-file-word-o';
+        default:
+          return 'fa-file-o';
+      }
+    })();
+    if (this.props.display != null) {
+      name = a({
+        className: 'file-name',
+        target: '_blank',
+        onClick: this.doDisplay
+      }, file.name);
+    } else {
+      name = span({
+        className: 'file-name'
+      }, file.name);
+    }
+    return li({
+      className: "file-item",
+      key: file.name
+    }, i({
+      className: "mime fa " + iconClass
+    }), this.props.editable ? i({
+      className: "fa fa-times delete",
+      onClick: this.doDelete
+    }) : void 0, name, div({
+      className: 'file-detail'
+    }, span(null, "" + ((file.size / 1000).toFixed(2)) + "Ko")));
+  },
+  doDisplay: function(e) {
+    e.preventDefault;
+    return this.props.display();
+  },
+  doDelete: function(e) {
+    e.preventDefault;
+    return this.props["delete"]();
+  }
+});
+});
+
 ;require.register("components/mailbox-list", function(exports, require, module) {
 var RouterMixin, a, button, div, li, span, ul, _ref;
 
@@ -1445,7 +1822,7 @@ module.exports = React.createClass({
   getMailboxRender: function(mailbox, key) {
     var i, pusher, url, _i, _ref1;
     url = this.buildUrl({
-      direction: 'left',
+      direction: 'first',
       action: 'account.mailbox.messages',
       parameters: [this.props.selectedAccount.get('id'), mailbox.get('id')]
     });
@@ -1484,35 +1861,35 @@ module.exports = Menu = React.createClass({
   render: function() {
     var classes, composeUrl, newMailboxUrl, selectedAccountUrl, settingsUrl, _ref1, _ref2, _ref3;
     selectedAccountUrl = this.buildUrl({
-      direction: 'left',
+      direction: 'first',
       action: 'account.mailbox.messages',
       parameters: (_ref1 = this.props.selectedAccount) != null ? _ref1.get('id') : void 0,
       fullWidth: true
     });
-    if (this.props.layout.leftPanel.action === 'compose' || ((_ref2 = this.props.layout.rightPanel) != null ? _ref2.action : void 0) === 'compose') {
+    if (this.props.layout.firstPanel.action === 'compose' || ((_ref2 = this.props.layout.secondPanel) != null ? _ref2.action : void 0) === 'compose') {
       composeUrl = selectedAccountUrl;
     } else {
       composeUrl = this.buildUrl({
-        direction: 'right',
+        direction: 'second',
         action: 'compose',
         parameters: null,
         fullWidth: false
       });
     }
-    if (this.props.layout.leftPanel.action === 'account.new') {
+    if (this.props.layout.firstPanel.action === 'account.new') {
       newMailboxUrl = selectedAccountUrl;
     } else {
       newMailboxUrl = this.buildUrl({
-        direction: 'left',
+        direction: 'first',
         action: 'account.new',
         fullWidth: true
       });
     }
-    if (this.props.layout.leftPanel.action === 'settings' || ((_ref3 = this.props.layout.rightPanel) != null ? _ref3.action : void 0) === 'settings') {
+    if (this.props.layout.firstPanel.action === 'settings' || ((_ref3 = this.props.layout.secondPanel) != null ? _ref3.action : void 0) === 'settings') {
       settingsUrl = selectedAccountUrl;
     } else {
       settingsUrl = this.buildUrl({
-        direction: 'left',
+        direction: 'first',
         action: 'settings',
         fullWidth: true
       });
@@ -1563,7 +1940,7 @@ module.exports = Menu = React.createClass({
     accountID = account.get('id');
     defaultMailbox = AccountStore.getDefaultMailbox(accountID);
     url = this.buildUrl({
-      direction: 'left',
+      direction: 'first',
       action: 'account.mailbox.messages',
       parameters: [accountID, defaultMailbox.get('id')],
       fullWidth: false
@@ -1591,7 +1968,7 @@ module.exports = Menu = React.createClass({
   getMailboxRender: function(account, mailbox, key) {
     var mailboxUrl;
     mailboxUrl = this.buildUrl({
-      direction: 'left',
+      direction: 'first',
       action: 'account.mailbox.messages',
       parameters: [account.get('id'), mailbox.get('id')]
     });
@@ -1652,7 +2029,7 @@ module.exports = React.createClass({
       active: isActive
     });
     url = this.buildUrl({
-      direction: 'right',
+      direction: 'second',
       action: 'message',
       parameters: message.get('id')
     });
@@ -1680,7 +2057,9 @@ module.exports = React.createClass({
       className: 'title'
     }, message.get('subject')), p(null, message.get('text'))), span({
       className: 'hour'
-    }, date.format(formatter))));
+    }, date.format(formatter)), message.get('hasAttachments') ? i({
+      className: 'fa fa-paperclip'
+    }) : void 0));
   },
   getPagerRender: function(curPage, nbPages) {
     var classCurr, classFirst, classLast, j, maxPage, minPage, urlCurr, urlFirst, urlLast;
@@ -1744,13 +2123,15 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var AccountStore, Compose, ComposeActions, LayoutActionCreator, MailboxList, MessageUtils, a, button, classer, div, h3, i, li, p, span, ul, _ref;
+var AccountStore, Compose, ComposeActions, FilePicker, LayoutActionCreator, MailboxList, MessageUtils, a, button, classer, div, h3, i, li, p, pre, span, ul, _ref;
 
-_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button;
+_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button, pre = _ref.pre;
 
 MailboxList = require('./mailbox-list');
 
 Compose = require('./compose');
+
+FilePicker = require('./file-picker');
 
 MessageUtils = require('../utils/MessageUtils');
 
@@ -1772,9 +2153,28 @@ module.exports = React.createClass({
     };
   },
   render: function() {
-    var action, callback, classes, clickHandler, date, formatter, layout, message, selectedAccount, today;
-    clickHandler = this.props.isLast ? null : this.onFold;
+    var action, attachments, callback, classes, clickHandler, convert, date, display, formatter, fullHeaders, html, key, layout, message, selectedAccount, text, today, value, _ref1;
     message = this.props.message;
+    attachments = message.get('attachments') || [];
+    fullHeaders = [];
+    _ref1 = message.get('headers');
+    for (key in _ref1) {
+      value = _ref1[key];
+      if (Array.isArray(value)) {
+        fullHeaders.push("" + key + ": " + (value.join('\n    ')));
+      } else {
+        fullHeaders.push("" + key + ": " + value);
+      }
+    }
+    text = message.get('text');
+    html = message.get('html');
+    if (text && !html && this.state.composeInHTML) {
+      html = markdown.toHTML(text);
+    }
+    if (html && !text && !this.state.composeInHTML) {
+      text = toMarkdown(html);
+    }
+    clickHandler = this.props.isLast ? null : this.onFold;
     classes = classer({
       message: true,
       active: this.state.active
@@ -1788,14 +2188,33 @@ module.exports = React.createClass({
     } else {
       formatter = 'hh:mm';
     }
+    convert = function(file) {
+      return {
+        name: file.generatedFileName,
+        size: file.length,
+        type: file.contentType,
+        originalName: file.fileName,
+        contentDisposition: file.contentDisposition,
+        contentId: file.contentId,
+        transferEncoding: file.transferEncoding
+      };
+    };
+    display = function(file) {
+      var url;
+      url = "/message/" + (message.get('id')) + "/attachments/" + file.name;
+      return window.open(url);
+    };
     return li({
       className: classes,
       key: this.props.key,
-      onClick: clickHandler
-    }, this.getToolboxRender(), div({
-      className: 'header'
+      onClick: clickHandler,
+      'data-id': message.get('id')
+    }, this.getToolboxRender(message.get('id')), div({
+      className: 'header row'
+    }, div({
+      className: 'col-md-8'
     }, i({
-      className: 'fa fa-user'
+      className: 'sender-avatar fa fa-user'
     }), div({
       className: 'participants'
     }, span({
@@ -1811,12 +2230,23 @@ module.exports = React.createClass({
     }))), span({
       className: 'hour'
     }, date.format(formatter))), div({
+      className: 'col-md-4'
+    }, FilePicker({
+      editable: false,
+      files: attachments.map(convert),
+      display: display
+    }))), div({
+      className: 'full-headers'
+    }, pre(null, fullHeaders.join("\n"))), div({
       className: 'preview'
     }, p(null, message.get('text'))), div({
-      className: 'content'
-    }, message.get('text')), div({
+      className: 'content',
+      dangerouslySetInnerHTML: {
+        __html: html
+      }
+    }), div({
       className: 'clearfix'
-    }), this.state.composing ? (selectedAccount = this.props.selectedAccount, layout = 'right', message = message, action = this.state.composeAction, callback = (function(_this) {
+    }), this.state.composing ? (selectedAccount = this.props.selectedAccount, layout = 'second', message = message, action = this.state.composeAction, callback = (function(_this) {
       return function(error) {
         if (error == null) {
           return _this.setState({
@@ -1832,7 +2262,7 @@ module.exports = React.createClass({
       callback: callback
     })) : void 0);
   },
-  getToolboxRender: function() {
+  getToolboxRender: function(id) {
     var mailboxes;
     mailboxes = AccountStore.getSelectedMailboxes(true);
     return div({
@@ -1912,8 +2342,8 @@ module.exports = React.createClass({
       className: 'btn btn-default dropdown-toggle',
       type: 'button',
       'data-toggle': 'dropdown',
-      onClick: this.onCopy
-    }, t('mail action copy', span({
+      onClick: this.onMove
+    }, t('mail action move', span({
       className: 'caret'
     }))), ul({
       className: 'dropdown-menu',
@@ -1927,18 +2357,17 @@ module.exports = React.createClass({
     }, button({
       className: 'btn btn-default dropdown-toggle',
       type: 'button',
-      'data-toggle': 'dropdown',
-      onClick: this.onMove
-    }, t('mail action move', span({
+      'data-toggle': 'dropdown'
+    }, t('mail action more', span({
       className: 'caret'
     }))), ul({
       className: 'dropdown-menu',
       role: 'menu'
-    }, mailboxes.map((function(_this) {
-      return function(mailbox, key) {
-        return _this.getMailboxRender(mailbox, key);
-      };
-    })(this)).toJS())))));
+    }, li(null, a({
+      href: '#',
+      onClick: this.onHeaders,
+      'data-message-id': id
+    }, t('mail action headers'))))))));
   },
   getMailboxRender: function(mailbox, key) {
     var j, pusher, url, _i, _ref1;
@@ -1992,6 +2421,15 @@ module.exports = React.createClass({
   },
   onMove: function(args) {
     return LayoutActionCreator.alertWarning(t("app unimplemented"));
+  },
+  onMark: function(args) {
+    return LayoutActionCreator.alertWarning(t("app unimplemented"));
+  },
+  onHeaders: function(event) {
+    var messageId;
+    event.preventDefault();
+    messageId = event.target.dataset.messageId;
+    return document.querySelector(".conversation [data-id='" + messageId + "']").classList.toggle('with-headers');
   }
 });
 });
@@ -2036,7 +2474,7 @@ module.exports = React.createClass({
     query = encodeURIComponent(this.refs.searchInput.getDOMNode().value.trim());
     if (query.length > 3) {
       return this.redirect({
-        direction: 'left',
+        direction: 'first',
         action: 'search',
         parameters: [query]
       });
@@ -2217,8 +2655,8 @@ window.onload = function() {
     and we format the varying parts of the layout.
 
     URLs are built in the following way:
-        - a first part that represents the left panel
-        - a second part that represents the right panel
+        - a first part that represents the first panel
+        - a second part that represents the second panel
         - if there is just one part, it represents a full width panel
 
     Since Backbone.Router only handles one part, routes initialization mechanism
@@ -2226,7 +2664,7 @@ window.onload = function() {
 
     Example: a defined pattern will generates two routes.
         - `mailbox/a/path/:id`
-        - `mailbox/a/path/:id/*rightPanel`
+        - `mailbox/a/path/:id/*secondPanel`
 
         Each pattern is actually the pattern itself plus the pattern itself and
         another pattern.
@@ -2264,25 +2702,25 @@ module.exports = Router = (function(_super) {
         pattern: this._routeToRegExp(route.pattern)
       });
       this.routes[route.pattern] = key;
-      this.routes["" + route.pattern + "/*rightPanel"] = key;
+      this.routes["" + route.pattern + "/*secondPanel"] = key;
     }
     this._bindRoutes();
     return this.on('route', (function(_this) {
       return function(name, args) {
-        var leftAction, leftPanelInfo, rightAction, rightPanelInfo, _ref1;
-        _ref1 = _this._processSubRouting(name, args), leftPanelInfo = _ref1[0], rightPanelInfo = _ref1[1];
-        leftAction = _this.fluxActionFactory(leftPanelInfo);
-        rightAction = _this.fluxActionFactory(rightPanelInfo);
+        var firstAction, firstPanelInfo, secondAction, secondPanelInfo, _ref1;
+        _ref1 = _this._processSubRouting(name, args), firstPanelInfo = _ref1[0], secondPanelInfo = _ref1[1];
+        firstAction = _this.fluxActionFactory(firstPanelInfo);
+        secondAction = _this.fluxActionFactory(secondPanelInfo);
         _this.previous = _this.current;
         _this.current = {
-          leftPanel: leftPanelInfo,
-          rightPanel: rightPanelInfo
+          firstPanel: firstPanelInfo,
+          secondPanel: secondPanelInfo
         };
-        if (leftAction != null) {
-          leftAction(leftPanelInfo, 'left');
+        if (firstAction != null) {
+          firstAction(firstPanelInfo, 'first');
         }
-        if (rightAction != null) {
-          rightAction(rightPanelInfo, 'right');
+        if (secondAction != null) {
+          secondAction(secondPanelInfo, 'second');
         }
         return _this.trigger('fluxRoute', _this.current);
       };
@@ -2301,7 +2739,7 @@ module.exports = Router = (function(_super) {
     if (pattern != null) {
       fluxAction = LayoutActionCreator[pattern.fluxAction];
       if (fluxAction == null) {
-        console.warn("`" + pattern.fluxAction + "` method not found in layout actions.");
+        console.warn(("`" + pattern.fluxAction + "` method not found in ") + "layout actions.");
       }
       return fluxAction;
     }
@@ -2313,76 +2751,77 @@ module.exports = Router = (function(_super) {
    */
 
   Router.prototype._processSubRouting = function(name, args) {
-    var leftPanelInfo, leftPanelParameters, params, rightPanelInfo, rightPanelString, route;
+    var firstPanelInfo, firstPanelParameters, params, route, secondPanelInfo, secondPanelString;
     args.pop();
-    rightPanelString = args.pop();
+    secondPanelString = args.pop();
     params = this.patterns[name].pattern.match(/:[\w]+/g) || [];
-    if (params.length > args.length) {
-      args.push(rightPanelString);
-      rightPanelString = null;
+    if (params.length > args.length && (secondPanelString != null)) {
+      args.push(secondPanelString);
+      secondPanelString = null;
     }
-    leftPanelParameters = args;
+    firstPanelParameters = args;
     route = _.first(_.filter(this.cachedPatterns, function(element) {
-      return element.pattern.test(rightPanelString);
+      return element.pattern.test(secondPanelString);
     }));
     if (route != null) {
-      args = this._extractParameters(route.pattern, rightPanelString);
+      args = this._extractParameters(route.pattern, secondPanelString);
       args.pop();
-      rightPanelInfo = {
+      secondPanelInfo = {
         action: route.key,
         parameters: args
       };
     } else {
-      rightPanelInfo = null;
+      secondPanelInfo = null;
     }
-    leftPanelInfo = {
+    firstPanelInfo = {
       action: name,
-      parameters: leftPanelParameters
+      parameters: firstPanelParameters
     };
-    return [leftPanelInfo, rightPanelInfo];
+    return [firstPanelInfo, secondPanelInfo];
   };
 
 
   /*
       Builds a route from panel information.
       Two modes:
-          - options has leftPanel and/or rightPanel attributes with the
+          - options has firstPanel and/or secondPanel attributes with the
             panel(s) information.
           - options has the panel information along a `direction` attribute
-            that can be `left` or `right`. It's the short version.
+            that can be `first` or `second`. It's the short version.
    */
 
   Router.prototype.buildUrl = function(options) {
-    var leftPanelInfo, leftPart, rightPanelInfo, rightPart, url;
-    if ((options.leftPanel != null) || (options.rightPanel != null)) {
-      leftPanelInfo = options.leftPanel || this.current.leftPanel;
-      rightPanelInfo = options.rightPanel || this.current.rightPanel;
+    var firstPanelInfo, firstPart, isFirstDirection, secondPanelInfo, secondPart, url;
+    if ((options.firstPanel != null) || (options.secondPanel != null)) {
+      firstPanelInfo = options.firstPanel || this.current.firstPanel;
+      secondPanelInfo = options.secondPanel || this.current.secondPanel;
     } else {
       if (options.direction != null) {
-        if (options.direction === 'left') {
-          leftPanelInfo = options;
-          rightPanelInfo = this.current.rightPanel;
-        } else if (options.direction === 'right') {
-          leftPanelInfo = this.current.leftPanel;
-          rightPanelInfo = options;
+        if (options.direction === 'first') {
+          firstPanelInfo = options;
+          secondPanelInfo = this.current.secondPanel;
+        } else if (options.direction === 'second') {
+          firstPanelInfo = this.current.firstPanel;
+          secondPanelInfo = options;
         } else {
-          console.warn('`direction` should be `left`, `right`.');
+          console.warn('`direction` should be `first`, `second`.');
         }
       } else {
-        console.warn('`direction` parameter is mandatory when using short call.');
+        console.warn('`direction` parameter is mandatory when ' + 'using short call.');
       }
     }
-    if (((options.leftPanel != null) || options.direction === 'left') && options.fullWidth) {
-      if ((options.rightPanel != null) && options.direction === 'right') {
-        console.warn("You shouldn't use the fullWidth option with a right panel");
+    isFirstDirection = (options.firstPanel != null) || options.direction === 'first';
+    if (isFirstDirection && options.fullWidth) {
+      if ((options.secondPanel != null) && options.direction === 'second') {
+        console.warn("You shouldn't use the fullWidth option with " + "a second panel");
       }
-      rightPanelInfo = null;
+      secondPanelInfo = null;
     }
-    leftPart = this._getURLFromRoute(leftPanelInfo);
-    rightPart = this._getURLFromRoute(rightPanelInfo);
-    url = "#" + leftPart;
-    if ((rightPart != null) && rightPart.length > 0) {
-      url = "" + url + "/" + rightPart;
+    firstPart = this._getURLFromRoute(firstPanelInfo);
+    secondPart = this._getURLFromRoute(secondPanelInfo);
+    url = "#" + firstPart;
+    if ((secondPart != null) && secondPart.length > 0) {
+      url = "" + url + "/" + secondPart;
     }
     return url;
   };
@@ -2395,13 +2834,13 @@ module.exports = Router = (function(_super) {
 
   Router.prototype.buildClosePanelUrl = function(direction) {
     var panelInfo;
-    if (direction === 'left' || direction === 'full') {
-      panelInfo = this.current.rightPanel;
+    if (direction === 'first' || direction === 'full') {
+      panelInfo = _.clone(this.current.secondPanel);
     } else {
-      panelInfo = this.current.leftPanel;
+      panelInfo = _.clone(this.current.firstPanel);
     }
     if (panelInfo != null) {
-      panelInfo.direction = 'left';
+      panelInfo.direction = 'first';
       panelInfo.fullWidth = true;
       return this.buildUrl(panelInfo);
     } else {
@@ -2411,6 +2850,7 @@ module.exports = Router = (function(_super) {
 
   Router.prototype._getURLFromRoute = function(panel) {
     var defaultParameter, defaultParameters, filledPattern, key, paramInPattern, paramValue, parametersInPattern, pattern, _i, _j, _len, _len1;
+    panel = _.clone(panel);
     if (panel != null) {
       pattern = this.patterns[panel.action].pattern;
       if ((panel.parameters != null) && !(panel.parameters instanceof Array)) {
@@ -2731,7 +3171,7 @@ module.exports = Store = (function(_super) {
 
 ;require.register("locales/en", function(exports, require, module) {
 module.exports = {
-  "app loading": "Chargement…",
+  "app loading": "Loading…",
   "app back": "Back",
   "app menu": "Menu",
   "app search": "Search…",
@@ -2741,7 +3181,7 @@ module.exports = {
   "compose default": 'Hello, how are you doing today ?',
   "compose from": "From",
   "compose to": "To",
-  "compose to help": "Reciepients list",
+  "compose to help": "Recipients list",
   "compose cc": "Cc",
   "compose cc help": "Copy list",
   "compose bcc": "Bcc",
@@ -2752,8 +3192,8 @@ module.exports = {
   "compose reply separator": "\n\nOn %{date}, %{sender} wrote \n",
   "compose forward prefix": "Fwd: ",
   "compose forward separator": "\n\nOn %{date}, %{sender} wrote \n",
-  "compose action draft": "Enregistrer le brouillon",
-  "compose action send": "Envoyer",
+  "compose action draft": "Save draft",
+  "compose action send": "Send",
   "menu compose": "Compose",
   "menu account new": "New account",
   "menu settings": "Paramètres",
@@ -2770,6 +3210,8 @@ module.exports = {
   "mail action mark": "Mark as…",
   "mail action copy": "Copy…",
   "mail action move": "Move…",
+  "mail action more": "More…",
+  "mail action headers": "Headers",
   "mail mark spam": "Spam",
   "mail mark nospam": "No spam",
   "mail mark fav": "Important",
@@ -2794,7 +3236,8 @@ module.exports = {
   "settings title": "Settings",
   "settings button save": "Save",
   "settings label mpp": "Messages per page",
-  "settings label compose": "Rich message editor"
+  "settings label compose": "Rich message editor",
+  "picker drop here": "Drop files here"
 };
 });
 
@@ -2839,6 +3282,8 @@ module.exports = {
   "mail action mark": "Marquer comme",
   "mail action copy": "Copier…",
   "mail action move": "Déplacer…",
+  "mail action more": "Plus…",
+  "mail action headers": "Entêtes",
   "mail mark spam": "Pourriel",
   "mail mark nospam": "Légitime",
   "mail mark fav": "Important",
@@ -2863,7 +3308,8 @@ module.exports = {
   "settings title": "Paramètres",
   "settings button save": "Enregistrer",
   "settings label mpp": "Nombre de messages par page",
-  "settings label compose": "Éditeur riche"
+  "settings label compose": "Éditeur riche",
+  "picker drop here": "Déposer les fichiers ici"
 };
 });
 
@@ -3287,11 +3733,12 @@ MessageStore = (function(_super) {
       if (silent == null) {
         silent = false;
       }
+      message.hasAttachments = Array.isArray(message.attachments) && message.attachments.length > 0;
       message = Immutable.Map(message);
       message.getReplyToAddress = function() {
         var reply;
         reply = this.get('replyTo');
-        reply = reply.length === 0 ? this.get('from') : reply;
+        reply = (reply == null) || reply.length === 0 ? this.get('from') : reply;
         return reply;
       };
       _messages = _messages.set(message.get('id'), message);
@@ -3388,7 +3835,7 @@ MessageStore = (function(_super) {
       last = null;
     }
     sequence = _messages.filter(function(message) {
-      return __indexOf.call(message.get('mailboxIDs'), mailboxID) >= 0;
+      return __indexOf.call(Object.keys(message.get('mailboxIDs')), mailboxID) >= 0;
     });
     if ((first != null) && (last != null)) {
       sequence = sequence.slice(first, last);
@@ -3567,17 +4014,23 @@ module.exports = {
     if (full == null) {
       full = false;
     }
+    if (addresses == null) {
+      return "";
+    }
     res = [];
     for (_i = 0, _len = addresses.length; _i < _len; _i++) {
       item = addresses[_i];
+      if (item == null) {
+        break;
+      }
       if (full) {
-        if (item.name != null) {
+        if ((item.name != null) && item.name !== "") {
           res.push("\"" + item.name + "\" <" + item.address + ">");
         } else {
-          res.push("<" + item.address + ">");
+          res.push("" + item.address);
         }
       } else {
-        if (item.name != null) {
+        if ((item.name != null) && item.name !== "") {
           res.push(item.name);
         } else {
           res.push(item.address.split('@')[0]);
@@ -3594,6 +4047,38 @@ module.exports = {
       return res.push("> " + line);
     });
     return res.join("\n");
+  },
+  getAttachmentType: function(type) {
+    var sub;
+    sub = type.split('/');
+    switch (sub[0]) {
+      case 'audio':
+      case 'image':
+      case 'text':
+      case 'video':
+        return sub[0];
+      case "application":
+        switch (sub[1]) {
+          case "vnd.ms-excel":
+          case "vnd.oasis.opendocument.spreadsheet":
+          case "vnd.openxmlformats-officedocument.spreadsheetml.sheet":
+            return "spreadsheet";
+          case "msword":
+          case "vnd.ms-word":
+          case "vnd.oasis.opendocument.text":
+          case "vnd.openxmlformats-officedocument.wordprocessingml.document":
+            return "word";
+          case "vns.ms-powerpoint":
+          case "vnd.oasis.opendocument.presentation":
+          case "vnd.openxmlformats-officedocument.presentationml.presentation":
+            return "presentation";
+          case "pdf":
+            return sub[1];
+          case "gzip":
+          case "zip":
+            return 'archive';
+        }
+    }
   }
 };
 });
@@ -3617,8 +4102,10 @@ module.exports = {
       }
     });
   },
-  fetchMessagesByFolder: function(mailboxID, callback) {
-    return request.get("mailbox/" + mailboxID).set('Accept', 'application/json').end(function(res) {
+  fetchMessagesByFolder: function(mailboxID, numPage, callback) {
+    var numByPage;
+    numByPage = SettingsStore.get('messagesPerPage');
+    return request.get("mailbox/" + mailboxID + "/page/" + numPage + "/limit/" + numByPage).set('Accept', 'application/json').end(function(res) {
       if (res.ok) {
         return callback(null, res.body);
       } else {

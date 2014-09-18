@@ -2143,6 +2143,192 @@ textarea:active {
   -ms-animation: moveFromLeft 0.3s ease-out;
   animation: moveFromLeft 0.3s ease-out;
 }
+#mailbox-config h3 {
+  color: #444;
+  margin-top: 0;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f4f4f4;
+}
+#mailbox-config button {
+  margin-left: 5px;
+}
+.conversation.enable {
+  display: block;
+}
+.conversation h3 {
+  color: #444;
+  margin-top: 0;
+  padding-bottom: 10px;
+}
+.conversation h3 .close-conversation {
+  cursor: pointer;
+  font-size: 20px;
+  margin-right: 15px;
+}
+.conversation h3 .expand {
+  float: right;
+}
+.conversation h3 .expand,
+.conversation h3 .close-conversation {
+  color: #34a6ff;
+}
+.conversation h3 .expand:hover,
+.conversation h3 .close-conversation:hover {
+  color: #fe8800;
+}
+.conversation .thread {
+  padding: 0;
+  border-top: 1px solid #f4f4f4;
+}
+.conversation .thread .message {
+  padding: 5px 15px;
+  border-bottom: 1px solid #e4e4e4;
+  cursor: pointer;
+  font-size: 13px;
+  background: #f4f4f4;
+}
+.conversation .thread .message.active,
+.conversation .thread .message:last-of-type {
+  background: #fff;
+}
+.conversation .thread .message.active .preview,
+.conversation .thread .message:last-of-type .preview {
+  display: none;
+}
+.conversation .thread .message.active .content,
+.conversation .thread .message:last-of-type .content {
+  display: block;
+}
+.conversation .thread .message:last-of-type {
+  cursor: default;
+}
+.conversation .thread .message .messageToolbox {
+  margin: 1em auto;
+  opacity: 0.3;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
+  filter: alpha(opacity=30);
+}
+.conversation .thread .message .messageToolbox:hover {
+  margin: 1em auto;
+  opacity: 1;
+  -ms-filter: none;
+  filter: none;
+}
+.conversation .thread .message .messageToolbox .tool-long {
+  display: none;
+}
+.conversation .thread .message span,
+.conversation .thread .message .preview,
+.conversation .thread .message .content {
+  margin: 0 5px;
+}
+.conversation .thread .message .header {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  -webkit-box-pack: start;
+  -moz-box-pack: start;
+  -o-box-pack: start;
+  -ms-flex-pack: start;
+  -webkit-justify-content: flex-start;
+  justify-content: flex-start;
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -o-box-align: center;
+  -ms-flex-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+}
+.conversation .thread .message .sender-avatar {
+  display: block;
+  float: left;
+  padding: 0 0.5em;
+  margin: 0 0.5em 0 0;
+  font-size: 2em;
+  line-height: 2em;
+  color: #aaa;
+  border: 1px solid #aaa;
+}
+.conversation .thread .message .participants {
+  color: #444;
+}
+.conversation .thread .message .participants span {
+  display: block;
+}
+.conversation .thread .message .participants span.receivers {
+  color: #bdbdbd;
+}
+.conversation .thread .message .content {
+  white-space: pre-line;
+  margin-top: 15px;
+  display: none;
+}
+.conversation .thread .message .preview {
+  margin-top: 15px;
+  overflow: hidden;
+  white-space: nowrap;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  color: #bdbdbd;
+}
+.conversation .thread .message .preview p {
+  margin: 0;
+  display: inline;
+}
+.conversation .thread .message .hour {
+  margin-left: auto;
+  color: #444;
+}
+.conversation .thread .message:hover:not(.active):not(:last-of-type) {
+  background: #f4f4f4;
+}
+.conversation .full-headers {
+  display: none;
+}
+.conversation .with-headers .full-headers {
+  display: block;
+}
+.file-picker .files {
+  max-height: 5em;
+  overflow: auto;
+}
+.file-picker .files .file-item {
+  margin: 0 0 0.25em 0;
+  white-space: nowrap;
+}
+.file-picker .files .file-item .mime {
+  padding: 0 0.5em 0 0;
+  line-height: 1.5em;
+  font-size: 1.5em;
+  float: left;
+}
+.file-picker .files .file-item .delete {
+  position: absolute;
+  line-height: 1.5em;
+  font-size: 1.5em;
+  right: 2em;
+  display: none;
+}
+.file-picker .files .file-item:hover .delete {
+  display: inherit;
+}
+.file-picker .files .attachment-name {
+  color: #444;
+}
+.file-picker .dropzone {
+  width: 20em;
+  height: 2em;
+  border: 2px #00f dashed;
+}
+.file-picker .dropzone i {
+  padding: 0.5em;
+}
+.file-picker .file-wrapper {
+  display: none;
+}
 #menu {
   display: -webkit-box;
   display: -moz-box;
@@ -2255,21 +2441,6 @@ textarea:active {
   -ms-filter: none;
   filter: none;
 }
-#quick-actions .responsive-handler {
-  color: #333;
-  font-size: 25px;
-  text-decoration: none;
-  cursor: pointer;
-}
-#quick-actions .responsive-handler .fa-bars {
-  font-size: 35px;
-}
-#quick-actions .responsive-handler .fa-chevron-left {
-  font-size: 30px;
-}
-#quick-actions form {
-  padding-left: 0;
-}
 .message-list {
   padding: 0;
 }
@@ -2376,143 +2547,20 @@ textarea:active {
 .message-list .message.active {
   border-left: 5px solid #34a6ff;
 }
-.conversation.enable {
-  display: block;
-}
-.conversation h3 {
-  color: #444;
-  margin-top: 0;
-  padding-bottom: 10px;
-}
-.conversation h3 .close-conversation {
+#quick-actions .responsive-handler {
+  color: #333;
+  font-size: 25px;
+  text-decoration: none;
   cursor: pointer;
-  font-size: 20px;
-  margin-right: 15px;
 }
-.conversation h3 .expand {
-  float: right;
+#quick-actions .responsive-handler .fa-bars {
+  font-size: 35px;
 }
-.conversation h3 .expand,
-.conversation h3 .close-conversation {
-  color: #34a6ff;
-}
-.conversation h3 .expand:hover,
-.conversation h3 .close-conversation:hover {
-  color: #fe8800;
-}
-.conversation .thread {
-  padding: 0;
-  border-top: 1px solid #f4f4f4;
-}
-.conversation .thread .message {
-  padding: 5px 15px;
-  border-bottom: 1px solid #e4e4e4;
-  cursor: pointer;
-  font-size: 13px;
-  background: #f4f4f4;
-}
-.conversation .thread .message.active,
-.conversation .thread .message:last-of-type {
-  background: #fff;
-}
-.conversation .thread .message.active .preview,
-.conversation .thread .message:last-of-type .preview {
-  display: none;
-}
-.conversation .thread .message.active .content,
-.conversation .thread .message:last-of-type .content {
-  display: block;
-}
-.conversation .thread .message:last-of-type {
-  cursor: default;
-}
-.conversation .thread .message .messageToolbox {
-  margin: 1em auto;
-  opacity: 0.3;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
-  filter: alpha(opacity=30);
-}
-.conversation .thread .message .messageToolbox:hover {
-  margin: 1em auto;
-  opacity: 1;
-  -ms-filter: none;
-  filter: none;
-}
-.conversation .thread .message .messageToolbox .tool-long {
-  display: none;
-}
-.conversation .thread .message span,
-.conversation .thread .message .preview,
-.conversation .thread .message .content {
-  margin: 0 5px;
-}
-.conversation .thread .message .header {
-  display: -webkit-box;
-  display: -moz-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: box;
-  display: flex;
-  -webkit-box-pack: start;
-  -moz-box-pack: start;
-  -o-box-pack: start;
-  -ms-flex-pack: start;
-  -webkit-justify-content: flex-start;
-  justify-content: flex-start;
-  -webkit-box-align: center;
-  -moz-box-align: center;
-  -o-box-align: center;
-  -ms-flex-align: center;
-  -webkit-align-items: center;
-  align-items: center;
-}
-.conversation .thread .message .participants span {
-  display: block;
-}
-.conversation .thread .message .participants span.receivers {
-  color: #bdbdbd;
-}
-.conversation .thread .message .content {
-  white-space: pre-line;
-  margin-top: 15px;
-  display: none;
-}
-.conversation .thread .message .preview {
-  margin-top: 15px;
-  overflow: hidden;
-  white-space: nowrap;
-  -o-text-overflow: ellipsis;
-  text-overflow: ellipsis;
-  color: #bdbdbd;
-}
-.conversation .thread .message .preview p {
-  margin: 0;
-  display: inline;
-}
-.conversation .thread .message .participants {
-  width: 200px;
-  color: #444;
-}
-.conversation .thread .message .hour {
-  margin-left: auto;
-  color: #444;
-}
-.conversation .thread .message .fa-user {
-  color: #aaa;
+#quick-actions .responsive-handler .fa-chevron-left {
   font-size: 30px;
-  border: 1px solid #aaa;
 }
-.conversation .thread .message:hover:not(.active):not(:last-of-type) {
-  background: #f4f4f4;
-}
-#mailbox-config h3 {
-  color: #444;
-  margin-top: 0;
-  padding-bottom: 10px;
-  border-bottom: 1px solid #f4f4f4;
-}
-#mailbox-config button {
-  margin-left: 5px;
+#quick-actions form {
+  padding-left: 0;
 }
 * > .fa-compress {
   -webkit-transform: rotate(45deg);
@@ -2590,12 +2638,15 @@ textarea:active {
   float: right;
   font-size: 25px;
 }
-#email-compose textarea {
+#email-compose .editor {
   border: 1px solid #444;
-  height: 250px;
+  min-height: 250px;
   width: 100%;
   text-align: left;
   color: #000;
+}
+#email-compose .attachements {
+  margin: 1em 0;
 }
 /*
   Open email tabs
@@ -2639,6 +2690,24 @@ textarea:active {
   border-radius: 0;
   border: none;
   border-bottom: 4px solid #34a6ff;
+}
+/*
+  EDITOR
+
+  -- 
+*/
+.rt-editor {
+  min-height: 4em;
+  height: auto;
+}
+.rt-editor blockquote {
+  border-left: 3px solid #00f;
+  padding-left: 0.5em;
+  margin: 0;
+}
+.rt-editor div,
+.rt-editor p {
+  margin: 0.5em 0;
 }
 
 
