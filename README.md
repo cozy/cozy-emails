@@ -132,4 +132,13 @@ We've adopted IMAP naming conventions, which means:
 * Message: an email
 * Conversation: a thread of Message
 
+## Useful resources
+This section references RFC and resources to understand IMAP.
+
+* [IMAP protocol](https://www.ietf.org/rfc/rfc2060.txt#7.2.2)
+* [IMAP LIST command extensions](http://tools.ietf.org/html/rfc5258)
+* [IMAP LIST command extensions for special-use mailboxes](http://tools.ietf.org/html/rfc6154#2)
+
+* [jmap.io](http://jmap.io/) (it's IMAP-compliant but it is NOT IMAP)
+
 
