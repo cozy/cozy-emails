@@ -35,6 +35,8 @@ class MessageStore extends Store
             # create or update
             message.hasAttachments = Array.isArray(message.attachments) and \
                                      message.attachments.length > 0
+            if not message.createdAt?
+                message.createdAt = message.date
             message = Immutable.Map message
             message.getReplyToAddress = ->
                 reply = this.get 'replyTo'

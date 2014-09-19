@@ -64,3 +64,16 @@ module.exports =
             contentId:          file.contentId
             transferEncoding:   file.transferEncoding
         }
+
+    formatDate: (date) ->
+        if not date?
+            return
+        today = moment()
+        date  = moment date
+        if date.isBefore today, 'year'
+            formatter = 'DD/MM/YYYY'
+        else if date.isBefore today, 'day'
+            formatter = 'DD MMMM'
+        else
+            formatter = 'hh:mm'
+        return date.format formatter

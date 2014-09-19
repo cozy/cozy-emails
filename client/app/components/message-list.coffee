@@ -43,14 +43,7 @@ module.exports = React.createClass
             action: 'message'
             parameters: message.get 'id'
 
-        today = moment()
-        date = moment message.get 'createdAt'
-        if date.isBefore today, 'year'
-            formatter = 'DD/MM/YYYY'
-        else if date.isBefore today, 'day'
-            formatter = 'DD MMMM'
-        else
-            formatter = 'hh:mm'
+        date = MessageUtils.formatDate message.get 'createdAt'
 
         li className: 'message ' + classes, key: key,
             a href: url,
@@ -59,7 +52,7 @@ module.exports = React.createClass
                 div className: 'preview',
                     span className: 'title', message.get 'subject'
                     p null, message.get 'text'
-                span className: 'hour', date.format formatter
+                span className: 'hour', date
                 if message.get 'hasAttachments'
                     i className: 'fa fa-paperclip'
 

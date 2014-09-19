@@ -229,15 +229,7 @@ module.exports = Compose = React.createClass
             attachments: []
 
         if message?
-            today = moment()
-            date = moment message.get 'createdAt'
-            if date.isBefore today, 'year'
-                formatter = 'DD/MM/YYYY'
-            else if date.isBefore today, 'day'
-                formatter = 'DD MMMM'
-            else
-                formatter = 'hh:mm'
-            dateHuman = date.format(formatter)
+            dateHuman = MessageUtils.formatDate message.get 'createdAt'
             sender = MessageUtils.displayAddresses(message.get 'from')
 
             text = message.get 'text'

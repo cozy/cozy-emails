@@ -27,8 +27,7 @@ module.exports = React.createClass
             composeAction: ''
         }
 
-    render: ->
-
+    _prepareMessage: ->
         message = @props.message
 
         attachments = message.get('attachments') or []
@@ -50,27 +49,31 @@ module.exports = React.createClass
         if html and not text and not @state.composeInHTML
             text = toMarkdown html
 
+        return {
+            attachments: attachments
+            fullHeaders: fullHeaders
+            text       : text
+            html       : html
+            date       : MessageUtils.formatDate message.get 'createdAt'
+        }
+
+    render: ->
+
+        message  = @props.message
+        prepared = @_prepareMessage()
+
         clickHandler = if @props.isLast then null else @onFold
 
         classes = classer
             message: true
             active: @state.active
 
-        today = moment()
-        date = moment message.get 'createdAt'
-        if date.isBefore today, 'year'
-            formatter = 'DD/MM/YYYY'
-        else if date.isBefore today, 'day'
-            formatter = 'DD MMMM'
-        else
-            formatter = 'hh:mm'
-
         # display attachment
         display = (file) ->
             url = "/message/#{message.get 'id'}/attachments/#{file.name}"
             window.open url
 
-        li className: classes, key: @props.key, onClick: clickHandler, 'data-id': message.get('id'),
+        li className: classes, key: @props.key, onClick: clickHandler, 'data-id': @props.message.get('id'),
             @getToolboxRender message.get 'id'
             div className: 'header row',
                 div className: 'col-md-8',
@@ -79,26 +82,29 @@ module.exports = React.createClass
                         span  className: 'sender', MessageUtils.displayAddresses(message.get('from'), true)
                         span className: 'receivers', t "mail receivers", {dest: MessageUtils.displayAddresses(message.get('to'), true)}
                         span className: 'receivers', t "mail receivers cc", {dest: MessageUtils.displayAddresses(message.get('cc'), true)}
-                    span className: 'hour', date.format formatter
+                    span className: 'hour', prepared.date
                 div className: 'col-md-4',
-                    FilePicker({editable: false, files: attachments.map(MessageUtils.convertAttachments), display: display})
+                    FilePicker({editable: false, files: prepared.attachments.map(MessageUtils.convertAttachments), display: display})
             div className: 'full-headers',
-                pre null, fullHeaders.join "\n"
+                pre null, prepared.fullHeaders.join "\n"
             div className: 'preview',
-                p null, message.get 'text'
-            div className: 'content', dangerouslySetInnerHTML: {__html: html}
+                p null, prepared.text
+            div className: 'content', dangerouslySetInnerHTML: {__html: prepared.html}
             div className: 'clearfix'
 
             # Display Compose block
-            if @state.composing
-                selectedAccount = @props.selectedAccount
-                layout          = 'second'
-                message         = message
-                action          = @state.composeAction
-                callback        = (error) =>
-                    if not error?
-                        @setState composing: false
-                Compose {selectedAccount, layout, message, action, callback}
+            @getComposeRender()
+
+    getComposeRender: ->
+        if @state.composing
+            selectedAccount = @props.selectedAccount
+            layout          = 'second'
+            message         = @props.message
+            action          = @state.composeAction
+            callback        = (error) =>
+                if not error?
+                    @setState composing: false
+            Compose {selectedAccount, layout, message, action, callback}
 
     getToolboxRender: (id) ->
 
@@ -184,9 +190,10 @@ module.exports = React.createClass
                 else
                     LayoutActionCreator.alertSuccess t "message action delete ok"
                     @redirect
-                        direction: 'full'
+                        direction: 'first'
                         action: 'account.mailbox.messages'
                         parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
+                        fullWidth: true
 
     onCopy: (args) ->
         LayoutActionCreator.alertWarning t "app unimplemented"
