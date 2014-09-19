@@ -1,5 +1,5 @@
-Dispatcher = require './libs/flux/dispatcher/Dispatcher'
-{PayloadSources} = require './constants/AppConstants'
+Dispatcher = require './libs/flux/dispatcher/dispatcher'
+{PayloadSources} = require './constants/app_constants'
 
 ###
     Custom dispatcher class to add semantic method.

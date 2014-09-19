@@ -6,102 +6,102 @@
 
 #menu
   // We use a flexbox display so the #mailbox-list takes all the height left
-  display flex
-  flex-direction column
+    display flex
+    flex-direction column
 
-  height 100%
-  padding 0
+    height 100%
+    padding 0
 
-  background homeheadercolor
+    background homeheadercolor
 
-  /*
-    Menu layout
-  */
-  #account-list
-    flex 1 // Takes all height left
-    overflow auto
-    margin 0
+    /*
+        Menu layout
+    */
+    #account-list
+        flex 1 // Takes all height left
+        overflow auto
+        margin 0
 
-  .new-account-action
-    // Sets position at the bottom of the menu
-    margin-top auto
+    .new-account-action
+        // Sets position at the bottom of the menu
+        margin-top auto
 
-  /*
-    Styles
-  */
+    /*
+        Styles
+    */
 
-  // Clickable menu elements
-  .menu-item
-    display inline-block // used for non flexed elements (within .account-list)
-    position relative // for badge positionning
-    width 100%
-    padding 10px 5px
-    margin 0
-    font-size 14px
-    font-family styled
-    color mediumcolor
-    text-align center
-    vertical-align middle
-    text-decoration none
+    // Clickable menu elements
+    .menu-item
+        display inline-block // used for non flexed elements (within .account-list)
+        position relative // for badge positionning
+        width 100%
+        padding 10px 5px
+        margin 0
+        font-size 14px
+        font-family styled
+        color mediumcolor
+        text-align center
+        vertical-align middle
+        text-decoration none
 
-    i
-    .item-label
-    .badge
-      vertical-align middle
+        i
+        .item-label
+        .badge
+            vertical-align middle
 
-    // icon
-    i
-      font-size 25px
+        // icon
+        i
+            font-size 25px
 
-    .item-label
-      display block
-      overflow hidden
-      text-overflow ellipsis
-      white-space nowrap
+        .item-label
+            display block
+            overflow hidden
+            text-overflow ellipsis
+            white-space nowrap
 
-    .badge
-      position absolute
-      top 10px // equal to parent's padding-top
-      right 5px // equal to parent's padding-right
-      background basecolor
-      font-size 9px
-      margin-left 5px
-      font-family Geneva // Cozy's fonts are not readable
+        .badge
+            position absolute
+            top 10px // equal to parent's padding-top
+            right 5px // equal to parent's padding-right
+            background basecolor
+            font-size 9px
+            margin-left 5px
+            font-family Geneva // Cozy's fonts are not readable
 
-    &:hover
-    &.active
-      background #363a46 + 10%
-      color #fff
+        &:hover
+        &.active
+            background #363a46 + 10%
+            color #fff
 
-  // Account list
-  #account-list
-    li
-      .submenu
-        display none
+    // Account list
+    #account-list
+        li
+            .submenu
+                display none
 
-        background #363a46 + 5%
+                background #363a46 + 5%
 
-        // submenu icons
-        .menu-item i
-          font-size 20px
+                // submenu icons
+                .menu-item i
+                  font-size 20px
 
-      border-left 5px solid transparent
+            border-left 5px solid transparent
 
-      &:hover
-        border-left 5px solid #363a46 + 10%
+            &:hover
+                border-left 5px solid #363a46 + 10%
 
-      &.active
-        border-left 5px solid mediumcolor-contrast - 30%
-        .menu-item
-          color #fff
+            &.active
+                border-left 5px solid mediumcolor-contrast - 30%
+                .menu-item
+                    color #fff
 
-        .submenu
-          display block
+                .submenu
+                    display block
 
-  // New account action button
-  .new-account-action
-    font-size 15px
-    opacity 0.5
+    // New account action button
+    .new-account-action
+        font-size 15px
+        opacity 0.5
 
-    &:hover
-      opacity 1
+        &:hover
+            opacity 1

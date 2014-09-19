@@ -1,6 +1,6 @@
 {div, ul, li, span, a, button} = React.DOM
 
-RouterMixin = require '../mixins/RouterMixin'
+RouterMixin = require '../mixins/router_mixin'
 
 module.exports = React.createClass
     displayName: 'MailboxList'

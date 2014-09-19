@@ -2,7 +2,7 @@
 Message = require './message'
 classer = React.addons.classSet
 
-RouterMixin = require '../mixins/RouterMixin'
+RouterMixin = require '../mixins/router_mixin'
 
 module.exports = React.createClass
     displayName: 'Conversation'

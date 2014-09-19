@@ -1,8 +1,8 @@
-XHRUtils = require '../utils/XHRUtils'
-AppDispatcher = require '../AppDispatcher'
-{ActionTypes} = require '../constants/AppConstants'
+XHRUtils = require '../utils/xhr_utils'
+AppDispatcher = require '../app_dispatcher'
+{ActionTypes} = require '../constants/app_constants'
 
-AccountStore = require '../stores/AccountStore'
+AccountStore = require '../stores/account_store'
 
 module.exports = AccountActionCreator =
 
@@ -16,7 +16,7 @@ module.exports = AccountActionCreator =
                 if error?
                     AccountActionCreator._setNewAccountError error
                 else
-                   AppDispatcher.handleViewAction
+                    AppDispatcher.handleViewAction
                         type: ActionTypes.ADD_ACCOUNT
                         value: account
             , 2000
@@ -41,7 +41,7 @@ module.exports = AccountActionCreator =
 
 
     remove: (accountID) ->
-       AppDispatcher.handleViewAction
+        AppDispatcher.handleViewAction
             type: ActionTypes.REMOVE_ACCOUNT
             value: accountID
         XHRUtils.removeAccount accountID
@@ -53,7 +53,7 @@ module.exports = AccountActionCreator =
             value: status
 
     _setNewAccountError: (errorMessage) ->
-       AppDispatcher.handleViewAction
+        AppDispatcher.handleViewAction
             type: ActionTypes.NEW_ACCOUNT_ERROR
             value: errorMessage
 

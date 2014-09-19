@@ -1,6 +1,6 @@
-AppDispatcher        = require '../AppDispatcher'
-{ActionTypes}        = require '../constants/AppConstants'
-XHRUtils             = require '../utils/XHRUtils'
+AppDispatcher        = require '../app_dispatcher'
+{ActionTypes}        = require '../constants/app_constants'
+XHRUtils             = require '../utils/xhr_utils'
 
 
 module.exports =

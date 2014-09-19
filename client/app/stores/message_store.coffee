@@ -1,11 +1,11 @@
-Store = require '../libs/flux/store/Store'
-AppDispatcher = require '../AppDispatcher'
+Store = require '../libs/flux/store/store'
+AppDispatcher = require '../app_dispatcher'
 
-AccountStore = require './AccountStore'
+AccountStore = require './account_store'
 
-{ActionTypes}       = require '../constants/AppConstants'
+{ActionTypes}       = require '../constants/app_constants'
 
-LayoutActionCreator = require '../actions/LayoutActionCreator'
+LayoutActionCreator = require '../actions/layout_action_creator'
 
 class MessageStore extends Store
 
@@ -30,13 +30,16 @@ class MessageStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage = (message, silent = false) ->
+        handle ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage = \
+        (message, silent = false) ->
             # create or update
-            message.hasAttachments = Array.isArray(message.attachments) and message.attachments.length > 0
+            message.hasAttachments = Array.isArray(message.attachments) and \
+                                     message.attachments.length > 0
             message = Immutable.Map message
             message.getReplyToAddress = ->
                 reply = this.get 'replyTo'
-                reply = if not reply? or reply.length == 0 then this.get 'from' else reply
+                from = this.get 'from'
+                reply = if not reply? or reply.length is 0 then from else reply
                 return reply
             _messages = _messages.set message.get('id'), message
 
@@ -77,7 +80,8 @@ class MessageStore extends Store
     * @return {Array}
     ###
     getMessagesByAccount: (accountID, first = null, last = null) ->
-        sequence = _messages.filter (message) -> message.get('account') is accountID
+        sequence = _messages.filter (message) ->
+            return message.get('account') is accountID
         if first? and last?
             sequence = sequence.slice first, last
 
@@ -99,7 +103,8 @@ class MessageStore extends Store
     ###
     getMessagesByMailbox: (mailboxID, first = null, last = null) ->
         sequence = _messages.filter (message) ->
-            mailboxID in Object.keys message.get('mailboxIDs')
+            return mailboxID in Object.keys message.get 'mailboxIDs'
+
         if first? and last?
             sequence = sequence.slice first, last
 
@@ -114,8 +119,10 @@ class MessageStore extends Store
         conversation = []
         while idToLook = idsToLook.pop()
             conversation.push @getByID idToLook
-            temp = _messages.filter (message) -> message.get('inReplyTo') is idToLook
-            idsToLook = idsToLook.concat temp.map((item) -> item.get('id')).toArray()
+            temp = _messages.filter (message) ->
+                return message.get('inReplyTo') is idToLook
+            newIdsToLook = temp.map((item) -> item.get('id')).toArray()
+            idsToLook = idsToLook.concat newIdsToLook
 
         return conversation
 

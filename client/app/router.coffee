@@ -1,18 +1,18 @@
-PanelRouter = require './libs/PanelRouter'
+PanelRouter = require './libs/panel_router'
 
-AccountStore = require './stores/AccountStore'
+AccountStore = require './stores/account_store'
 
 module.exports = class Router extends PanelRouter
 
     patterns:
         'account.config':
-            pattern: 'account/:id/config'
+            pattern: 'account/:accountID/config'
             fluxAction: 'showConfigAccount'
         'account.new':
             pattern: 'account/new'
             fluxAction: 'showCreateAccount'
         'account.mailbox.messages':
-            pattern: 'account/:id/mailbox/:mailbox/page/:page'
+            pattern: 'account/:accountID/mailbox/:mailboxID/page/:page'
             fluxAction: 'showMessageList'
 
         'search':
@@ -20,7 +20,7 @@ module.exports = class Router extends PanelRouter
             fluxAction: 'showSearch'
 
         'message':
-            pattern: 'message/:id'
+            pattern: 'message/:messageID'
             fluxAction: 'showConversation'
         'compose':
             pattern: 'compose'
@@ -39,16 +39,17 @@ module.exports = class Router extends PanelRouter
             when 'account.mailbox.messages'
                 defaultAccount = AccountStore.getDefault()
                 defaultMailbox = defaultAccount?.get('mailboxes').first()
-                defaultParameters = [
-                    defaultAccount?.get('id')
-                    defaultMailbox?.get('id')
-                    1
-                ]
+                defaultParameters =
+                    accountID: defaultAccount?.get 'id'
+                    mailboxID: defaultMailbox?.get 'id'
+                    page: 1
             when 'account.config'
                 defaultAccount = AccountStore.getDefault()?.get 'id'
-                defaultParameters = [defaultAccount]
+                defaultParameters = accountID: defaultAccount
             when 'search'
-                defaultParameters = ["", 1]
+                defaultParameters =
+                    query: ""
+                    page: 1
             else
                 defaultParameters = null
         return defaultParameters
