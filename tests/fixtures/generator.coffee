@@ -2,6 +2,8 @@ fs = require 'fs'
 loremIpsum = require 'lorem-ipsum'
 moment = require 'moment'
 
+mailboxUID = {}
+
 names = ['alice', 'bob', 'natacha', 'mark', 'zoey', 'john', 'felicia' ,'max']
 priorities = ['low', 'normal', 'high']
 provider = 'cozycloud.cc'
@@ -9,7 +11,8 @@ provider = 'cozycloud.cc'
 accounts = require './accounts.json'
 mailboxes = {}
 for box in require './mailboxes.json'
-    mailboxes[box.accountID] = box
+    mailboxes[box.accountID] = [] unless mailboxes[box.accountID]?
+    mailboxes[box.accountID].push box
 
 numberOfEmails = process.argv[2] or 100
 
@@ -48,7 +51,14 @@ for i in [1..numberOfEmails] by 1
             "name": name
 
     account = getRandomElmt(accounts)._id
-    mailbox = getRandomElmt mailboxes[account]
+    mailbox = getRandomElmt(mailboxes[account])._id
+
+    mailboxUID[mailbox] = 0 unless mailboxUID[mailbox]?
+    mailboxUID[mailbox] = mailboxUID[mailbox] + 1
+
+    mailboxObject = {}
+    mailboxObject[mailbox] = mailboxUID[mailbox]
+    console.log mailbox
 
     subject = loremIpsum count: getRandom(5), units: 'words'
     content = loremIpsum count: getRandom(10), units: 'paragraphs'
@@ -74,7 +84,7 @@ for i in [1..numberOfEmails] by 1
     messages.push
         "_id": "generated_id_#{i}"
         "docType": "Message",
-        "createdAt": date.toISOString(),
+        "date": date.toISOString(),
         "subject": subject,
         "from": [from]
         "to": to,
@@ -86,7 +96,7 @@ for i in [1..numberOfEmails] by 1
         "html": "<html><body><div>#{content.split('\r\n').join('</div>\r\n<div>')}</div></body></html>",
         "priority": priority,
         "reads": false,
-        "mailboxIDs": [mailbox],
+        "mailboxIDs": mailboxObject,
         "account": account,
         "attachments": []
 
