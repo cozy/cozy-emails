@@ -48,9 +48,9 @@
     "_id": "generated_id_0",
     "docType": "Message",
     "reads": false,
-    "mailboxIDs": [
-      "dovecot-ID-folder1"
-    ],
+    "mailboxIDs": {
+      "dovecot-ID-folder1": 5
+    },
     "account": "dovecot-ID"
   },
   {
@@ -185,9 +185,9 @@
     "_id": "generated_id_1",
     "docType": "Message",
     "reads": false,
-    "mailboxIDs": [
-      "dovecot-ID-folder1"
-    ],
+    "mailboxIDs": {
+      "dovecot-ID-folder1": 6
+    },
     "account": "dovecot-ID"
   }
 ]

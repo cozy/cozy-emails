@@ -5,8 +5,8 @@ FilePicker   = require './file-picker'
 MessageUtils = require '../utils/message_utils'
 {ComposeActions} = require '../constants/app_constants'
 LayoutActionCreator  = require '../actions/layout_action_creator'
-MessageActionCreator = require '../actions/MessageActionCreator'
-RouterMixin = require '../mixins/RouterMixin'
+MessageActionCreator = require '../actions/message_action_creator'
+RouterMixin = require '../mixins/router_mixin'
 
 # Flux stores
 AccountStore = require '../stores/account_store'

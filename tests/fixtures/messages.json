@@ -1,7 +1,7 @@
 [
     {
         "docType": "Message",
-        "createdAt": "2014-07-10T08:38:23.000Z",
+        "date": "2014-07-10T08:38:23.000Z",
         "from": [
           {
             "address": "alice@provider.com",
@@ -32,12 +32,12 @@
         "html": "Hello, how are you ?",
         "reads": false,
         "hasAttachments": false,
-        "mailboxIDs": ["gmail-ID-folder1"],
+        "mailboxIDs": {"gmail-ID-folder1": 1},
         "account": "gmail-ID"
     },
     {
         "docType": "Message",
-        "createdAt": "2014-07-11T10:38:23.000Z",
+        "date": "2014-07-11T10:38:23.000Z",
         "from": [
           {
             "address": "alice@provider.com",
@@ -68,12 +68,12 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "mailboxIDs": ["gmail-ID-folder1"],
+        "mailboxIDs": {"gmail-ID-folder1": 2},
         "account": "gmail-ID"
     },
     {
         "docType": "Message",
-        "createdAt": "2014-07-11T08:00:23.000Z",
+        "date": "2014-07-11T08:00:23.000Z",
         "from": [
           {
             "address": "alice@provider.com",
@@ -104,12 +104,12 @@
         "html": "<b>Hello, how are you ? bis</b>",
         "reads": false,
         "hasAttachments": false,
-        "mailboxIDs": ["gmail-ID-folder1"],
+        "mailboxIDs": {"gmail-ID-folder1": 3},
         "account": "gmail-ID"
     },
     {
         "docType": "Message",
-        "createdAt": "2014-07-11T08:38:23.000Z",
+        "date": "2014-07-11T08:38:23.000Z",
         "from": [
           {
             "address": "alice@provider.com",
@@ -140,13 +140,13 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "mailboxIDs": ["gmail-ID-folder2"],
+        "mailboxIDs": {"gmail-ID-folder2": 1},
         "account": "gmail-ID"
     },
     {
         "_id": "email-ID-1",
         "docType": "Message",
-        "createdAt": "2014-06-11T08:38:23.000Z",
+        "date": "2014-06-11T08:38:23.000Z",
         "from": [
           {
             "address": "alice@provider.com",
@@ -177,12 +177,12 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "mailboxIDs": ["gmail-ID-folder1"],
+        "mailboxIDs": {"gmail-ID-folder1": 4},
         "account": "gmail-ID"
     },
     {
         "docType": "Message",
-        "createdAt": "2014-07-11T08:38:23.000Z",
+        "date": "2014-07-11T08:38:23.000Z",
         "from": [
           {
             "address": "alice@provider.com",
@@ -213,12 +213,12 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "mailboxIDs": ["gmail-ID-folder1"],
+        "mailboxIDs": {"gmail-ID-folder1": 5},
         "account": "gmail-ID"
     },
     {
         "docType": "Message",
-        "createdAt": "2014-07-11T15:38:23.000Z",
+        "date": "2014-07-11T15:38:23.000Z",
         "from": [
           {
             "address": "alice@provider.com",
@@ -249,12 +249,12 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "mailboxIDs": ["dovecot-ID-folder1"],
+        "mailboxIDs": {"dovecot-ID-folder1": 1},
         "account": "dovecot-ID"
     },
     {
         "docType": "Message",
-        "createdAt": "2014-07-11T12:00:00.000Z",
+        "date": "2014-07-11T12:00:00.000Z",
         "from": [
           {
             "address": "alice@provider.com",
@@ -285,12 +285,12 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "mailboxIDs": ["dovecot-ID-folder2"],
+        "mailboxIDs": {"dovecot-ID-folder2": 1},
         "account": "dovecot-ID"
     },
        {
         "docType": "Message",
-        "createdAt": "2014-07-11T22:00:23.000Z",
+        "date": "2014-07-11T22:00:23.000Z",
         "from": [
           {
             "address": "alice@provider.com",
@@ -321,7 +321,7 @@
         "html": "Hello, how are you ? bis",
         "reads": false,
         "hasAttachments": false,
-        "mailboxIDs": ["dovecot-ID-folder2"],
+        "mailboxIDs": {"dovecot-ID-folder2": 2},
         "account": "dovecot-ID"
     }
 ]
