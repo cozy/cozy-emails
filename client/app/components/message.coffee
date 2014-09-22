@@ -146,7 +146,7 @@ module.exports = React.createClass
                             li null,
                                 a href: '#', t 'mail mark unread'
                     div className: 'btn-group btn-group-sm',
-                        button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', onClick: @onMove, t 'mail action move',
+                        button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', t 'mail action move',
                             span className: 'caret'
                         ul className: 'dropdown-menu', role: 'menu',
                             mailboxes.map (mailbox, key) =>
@@ -161,11 +161,13 @@ module.exports = React.createClass
 
 
     getMailboxRender: (mailbox, key) ->
+        # Don't display current mailbox
+        if mailbox.get('id') is @props.selectedMailbox.get('id')
+            return
         pusher = ""
         pusher += "--" for j in [1..mailbox.get('depth')] by 1
-        url    = ''
         li role: 'presentation', key: key,
-            a href: url, role: 'menuitem', "#{pusher}#{mailbox.get 'label'}"
+            a role: 'menuitem', onClick: @onMove, 'data-value': key, "#{pusher}#{mailbox.get 'label'}"
 
     onFold: (args) ->
         @setState active: not @state.active
@@ -199,7 +201,18 @@ module.exports = React.createClass
         LayoutActionCreator.alertWarning t "app unimplemented"
 
     onMove: (args) ->
-        LayoutActionCreator.alertWarning t "app unimplemented"
+        oldbox = @props.selectedMailbox.get 'id'
+        newbox = args.target.dataset.value
+        MessageActionCreator.move @props.message, oldbox, newbox, (error) =>
+            if error?
+                LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
+            else
+                LayoutActionCreator.alertSuccess t "message action move ok"
+                @redirect
+                    direction: 'first'
+                    action: 'account.mailbox.messages'
+                    parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
+                    fullWidth: true
 
     onMark: (args) ->
         LayoutActionCreator.alertWarning t "app unimplemented"

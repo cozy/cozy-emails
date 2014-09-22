@@ -80,6 +80,10 @@ module.exports =
       "message action sent ko"      : "Error sending message: "
       "message action delete ok"    : "Message deleted"
       "message action delete ko"    : "Error deleting message: "
+      "message action move ok"      : "Message moved"
+      "message action move ko"      : "Error moving message: "
+      "message action mark ok"      : "Message marked"
+      "message action mark ko"      : "Error marking message: "
 
       # Settings
       "settings title"             : "Settings"

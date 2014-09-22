@@ -59,15 +59,21 @@ class MessageStore extends Store
 
             @emit 'change'
 
-        handle ActionTypes.SEND_MESSAGE, (message) ->
+        handle ActionTypes.MESSAGE_SEND, (message) ->
             # message should have been copied to Sent mailbox,
             # so it seems reasonable to emit change
             @emit 'change'
 
-        handle ActionTypes.DELETE_MESSAGE, (message) ->
+        handle ActionTypes.MESSAGE_DELETE, (message) ->
             # message should have been deleted from current mailbox
             # and copied to trash
             # so it seems reasonable to emit change
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_BOXES, (message) ->
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_FLAG, (message) ->
             @emit 'change'
 
 

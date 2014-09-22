@@ -29,6 +29,7 @@ module.exports =
     'message/:messageID':
         get: [messages.fetch, messages.details]
         put: [messages.fetch, messages.updateFlags]
+        patch: [messages.fetch, messages.patch]
         'delete': messages.del
 
     'search/:query/page/:numPage/limit/:numByPage':

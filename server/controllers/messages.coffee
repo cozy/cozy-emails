@@ -2,6 +2,7 @@ async = require 'async'
 Message = require '../models/message'
 {HttpError} = require '../utils/errors'
 Client = require('request-json').JsonClient
+jsonpatch = require 'fast-json-patch'
 
 # The data system listens to localhost:9101
 dataSystem = new Client 'http://localhost:9101/'
@@ -57,6 +58,13 @@ module.exports.updateFlags = (req, res, next) ->
     # @TODO : do the change in IMAP before ?
 
     next new Error 'not implemented'
+
+# patch e message
+module.exports.patch = (req, res, next) ->
+
+    jsonpatch.apply req.message, req.body
+    # @TODO : save message into DS
+    res.send 200, req.message
 
 # send a message through the DS
 module.exports.send = (req, res, next) ->

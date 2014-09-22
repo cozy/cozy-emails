@@ -20,6 +20,7 @@ exports.config =
                     'vendor/scripts/bootstrap-3.1.1.min.js'
                     'vendor/scripts/moment.js'
                     'vendor/scripts/polyglot.js'
+                    'vendor/scripts/json-patch-duplex.min.js'
                 ]
 
         stylesheets:

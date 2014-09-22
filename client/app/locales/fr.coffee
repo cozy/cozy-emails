@@ -80,6 +80,10 @@ module.exports =
       "message action sent ko"      : "Une erreur est survenue : "
       "message action delete ok"    : "Message supprimé"
       "message action delete ko"    : "Impossible de supprimer le message : "
+      "message action move ok"      : "Message déplacé"
+      "message action move ko"      : "Le déplacement a échoué"
+      "message action mark ok"      : "Ok"
+      "message action mark ko"      : "L'opération a échoué"
 
       # Settings
       "settings title"             : "Paramètres"
