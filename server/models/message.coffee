@@ -11,6 +11,7 @@ module.exports = Message = americano.getModel 'Message',
     conversationID: String   # all message in thread have same conversationID
     mailboxIDs: (x) -> x     # mailboxes where this message appears
                              # as an hash {boxID:uid, boxID2:uid2}
+    flags: (x) -> x          # [String] flags of the message
     headers: (x) -> x        # hash of the message headers
     from: (x) -> x           # array of {name, address}
     to: (x) -> x             # array of {name, address}
