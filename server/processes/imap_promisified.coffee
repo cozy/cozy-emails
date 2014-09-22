@@ -124,6 +124,37 @@ module.exports = class ImapPromisified
     search: ->
         @_super.searchPromised.apply @_super, arguments
 
+    move: ->
+        @_super.movePromised.apply @_super, arguments
+
+    copy: ->
+        @_super.copyPromised.apply @_super, arguments
+
+    # fetch all message-id in this box
+    # return a Promise for an object {uid1:messageid1, uid2:messageid2} ...
+    fetchBoxMessageIds : ->
+        return new Promise (resolve, reject) ->
+            results = {}
+
+            @search [['ALL']]
+            .then (ids) ->
+                fetch = @_super.fetch ids, bodies: 'HEADER.FIELDS (MESSAGE-ID)'
+                fetch.on 'error',
+                fetch.on 'message', (msg) ->
+                    uid = null
+                    messageID = null
+                    msg.on 'error', (err) -> result.error = err
+                    msg.on 'attributes', (attrs) -> uid = attrs.uid
+                    msg.on 'end', -> results[uid] = messageID
+                    msg.on 'body', (stream) ->
+                        stream_to_buffer_array stream, (err, parts) ->
+                            return console.log err if err
+                            header = Buffer.concat(parts).toString('utf8').trim()
+                            messageID = header.substring header.indexOf ':'
+
+                fetch.on 'end', -> resolve results
+
+
     # fetch one mail by its UID from the currently open mailbox
     # return a promise for the mailparser result
     fetchOneMail: (id) ->

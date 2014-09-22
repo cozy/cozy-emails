@@ -62,13 +62,14 @@ Message.countByMailbox = (mailboxID) ->
 
 # given a mailbox
 # get the uids present in the cozy
+# return an array of [couchdID, messageUID]
 Message.getUIDs = (mailboxID) ->
     Message.rawRequestPromised 'byMailboxAndDate',
         startkey: [mailboxID]
         endkey: [mailboxID, {}]
         reduce: false
 
-    .map (row) -> row.value
+    .map (row) -> [row.id, row.value]
 
 # find a message by its message id
 Message.byMessageId = (accountID, messageID) ->
@@ -82,6 +83,10 @@ Message.byMessageId = (accountID, messageID) ->
 # add the message to a box
 Message::addToMailbox = (box, uid) ->
     @mailboxIDs[box.id] = uid
+    @savePromised()
+
+Message::removeFromMailbox = (box) ->
+    delete @mailboxIDs[box.id]
     @savePromised()
 
 # create a message from a raw imap message
@@ -152,7 +157,6 @@ Message.findConversationIdByMessageIds = (mail) ->
     # find all messages in references
     Message.rawRequestPromised 'byMessageId',
         keys: messageIds.map (id) -> [mail.accountID, id]
-        reduce: true
 
     # and get a conversationID from them
     .then Message.pickConversationID
