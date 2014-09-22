@@ -178,7 +178,7 @@ Message.findConversationIdBySubject = (mail) ->
 # and return it
 Message.pickConversationID = (rows) ->
     conversationIDCounts = {}
-    rows.forEach (result, row) ->
+    for row in rows
         conversationIDCounts[row.value] ?= 1
         conversationIDCounts[row.value]++
 
