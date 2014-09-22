@@ -49,20 +49,11 @@ module.exports.details = (req, res, next) ->
 
     res.send 200, req.message
 
-# change the flags of a message
-# ie. mark Read, mark Deleted, ...
-module.exports.updateFlags = (req, res, next) ->
-
-    # @TODO : fetch message's status
-    # @TODO : make sure we only update flags
-    # @TODO : do the change in IMAP before ?
-
-    next new Error 'not implemented'
-
 # patch e message
 module.exports.patch = (req, res, next) ->
 
     jsonpatch.apply req.message, req.body
+
     # @TODO : save message into DS
     res.send 200, req.message
 
@@ -85,11 +76,11 @@ module.exports.search = (req, res, next) ->
         # number of results so we can't paginate properly
         numPageCheat = parseInt(req.params.numPage) * parseInt(req.params.numByPage) + 1
         Message.searchPromised
-                query: req.params.query
-                numPage: req.params.numPage
-                numByPage: numPageCheat
-            .then (messages) -> res.send messages
-            .catch next
+            query: req.params.query
+            numPage: req.params.numPage
+            numByPage: numPageCheat
+        .then (messages) -> res.send messages
+        .catch next
 
 # Temporary routes for testing purpose
 module.exports.index = (req, res, next) ->

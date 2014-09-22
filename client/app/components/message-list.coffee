@@ -3,6 +3,7 @@ classer = React.addons.classSet
 
 RouterMixin  = require '../mixins/router_mixin'
 MessageUtils = require '../utils/message_utils'
+{MessageFlags} = require '../constants/app_constants'
 
 module.exports = React.createClass
     displayName: 'MessageList'
@@ -55,6 +56,8 @@ module.exports = React.createClass
                 span className: 'hour', date
                 if message.get 'hasAttachments'
                     i className: 'fa fa-paperclip'
+                if message.get('flags').indexOf(MessageFlags.FLAGGED) isnt -1
+                    i className: 'isfav fa fa-star'
 
     getPagerRender: (curPage, nbPages) ->
         if nbPages < 2

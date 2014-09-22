@@ -37,6 +37,10 @@ class MessageStore extends Store
                                      message.attachments.length > 0
             if not message.createdAt?
                 message.createdAt = message.date
+            if not message.attachments?
+                message.attachments = []
+            if not message.flags?
+                message.flags = []
             message = Immutable.Map message
             message.getReplyToAddress = ->
                 reply = this.get 'replyTo'

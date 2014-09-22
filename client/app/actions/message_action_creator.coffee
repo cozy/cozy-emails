@@ -44,14 +44,14 @@ module.exports =
                     value: message
             callback error
 
-    updateFlag: (message, callback) ->
+    updateFlag: (message, flags, callback) ->
         msg = message.toObject()
         observer = jsonpatch.observe msg
-        # TODO : update flags
+        msg.flags = flags
         patches = jsonpatch.generate observer
         XHRUtils.messagePatch message.get('id'), patches, (error, message) ->
             if not(error?)
                 AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_FLAG
+                    type: ActionTypes.RECEIVE_RAW_MESSAGE
                     value: message
             callback error

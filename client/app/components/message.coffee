@@ -3,13 +3,19 @@ MailboxList  = require './mailbox-list'
 Compose      = require './compose'
 FilePicker   = require './file-picker'
 MessageUtils = require '../utils/message_utils'
-{ComposeActions} = require '../constants/app_constants'
+{ComposeActions, MessageFlags} = require '../constants/app_constants'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 RouterMixin = require '../mixins/router_mixin'
 
 # Flux stores
 AccountStore = require '../stores/account_store'
+
+FlagsConstants =
+    SEEN   : MessageFlags.SEEN
+    UNSEEN : "Unseen"
+    FLAGGED: MessageFlags.FLAGGED
+    NOFLAG : "Noflag"
 
 classer = React.addons.classSet
 
@@ -30,8 +36,6 @@ module.exports = React.createClass
     _prepareMessage: ->
         message = @props.message
 
-        attachments = message.get('attachments') or []
-
         # display full headers
         fullHeaders = []
         for key, value of message.get 'headers'
@@ -50,7 +54,8 @@ module.exports = React.createClass
             text = toMarkdown html
 
         return {
-            attachments: attachments
+            attachments: message.get('attachments') or []
+            flags      : message.get('flags') or []
             fullHeaders: fullHeaders
             text       : text
             html       : html
@@ -74,7 +79,7 @@ module.exports = React.createClass
             window.open url
 
         li className: classes, key: @props.key, onClick: clickHandler, 'data-id': @props.message.get('id'),
-            @getToolboxRender message.get 'id'
+            @getToolboxRender message.get('id'), prepared
             div className: 'header row',
                 div className: 'col-md-8',
                     i className: 'sender-avatar fa fa-user'
@@ -106,7 +111,7 @@ module.exports = React.createClass
                     @setState composing: false
             Compose {selectedAccount, layout, message, action, callback}
 
-    getToolboxRender: (id) ->
+    getToolboxRender: (id, prepared) ->
 
         mailboxes = AccountStore.getSelectedMailboxes true
 
@@ -130,21 +135,25 @@ module.exports = React.createClass
                             span className: 'fa fa-trash-o'
                             span className: 'tool-long', t 'mail action delete'
                     div className: 'btn-group btn-group-sm',
-                        button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', onClick: @onMark, t 'mail action mark',
+                        button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', t 'mail action mark',
                             span className: 'caret'
                         ul className: 'dropdown-menu', role: 'menu',
-                            li null,
-                                a href: '#', t 'mail mark fav'
-                            li null,
-                                a href: '#', t 'mail mark nofav'
-                            li null,
-                                a href: '#', t 'mail mark spam'
-                            li null,
-                                a href: '#', t 'mail mark nospam'
-                            li null,
-                                a href: '#', t 'mail mark read'
-                            li null,
-                                a href: '#', t 'mail mark unread'
+                            if prepared.flags.indexOf(FlagsConstants.SEEN) is -1
+                                li null,
+                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.UNSEEN, t 'mail mark unread'
+                            else
+                                li null,
+                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.SEEN, t 'mail mark read'
+                            if prepared.flags.indexOf(FlagsConstants.FLAGGED) is -1
+                                li null,
+                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.FLAGGED, t 'mail mark fav'
+                            else
+                                li null,
+                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.NOFLAG, t 'mail mark nofav'
+                            #li null,
+                            #    a role: 'menuitem', onClick: @onMark, 'data-value': '', t 'mail mark spam'
+                            #li null,
+                            #    a role: 'menuitem', onClick: @onMark, 'data-value': '', t 'mail mark nospam'
                     div className: 'btn-group btn-group-sm',
                         button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', t 'mail action move',
                             span className: 'caret'
@@ -215,7 +224,27 @@ module.exports = React.createClass
                     fullWidth: true
 
     onMark: (args) ->
-        LayoutActionCreator.alertWarning t "app unimplemented"
+        flags = @props.message.get('flags').slice()
+        flag = args.target.dataset.value
+        switch flag
+            when FlagsConstants.SEEN
+                flags.push MessageFlags.SEEN
+            when FlagsConstants.UNSEEN
+                flags = flags.filter (e) -> return e isnt FlagsConstants.SEEN
+            when FlagsConstants.FLAGGED
+                flags.push MessageFlags.FLAGGED
+            when FlagsConstants.NOFLAG
+                flags = flags.filter (e) -> return e isnt FlagsConstants.FLAGGED
+        MessageActionCreator.updateFlag @props.message, flags, (error) =>
+            if error?
+                LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
+            else
+                LayoutActionCreator.alertSuccess t "message action move ok"
+                @redirect
+                    direction: 'first'
+                    action: 'account.mailbox.messages'
+                    parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
+                    fullWidth: true
 
     onHeaders: (event) ->
         event.preventDefault()

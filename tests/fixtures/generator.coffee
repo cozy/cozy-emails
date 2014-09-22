@@ -99,6 +99,7 @@ for i in [1..numberOfEmails] by 1
         "mailboxIDs": mailboxObject,
         "account": account,
         "attachments": []
+        "flags": []
 
 
 targetFile = './tests/fixtures/messages_generated.json'

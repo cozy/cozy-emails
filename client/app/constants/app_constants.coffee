@@ -48,3 +48,8 @@ module.exports =
         'INFO'         : 'INFO'
         'WARNING'      : 'WARNING'
         'ERROR'        : 'ERROR'
+
+    MessageFlags:
+        'FLAGGED'      : 'Flagged'
+        'SEEN'         : 'Seen'
+        'DRAFT'        : 'Draft'
