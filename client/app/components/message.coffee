@@ -62,6 +62,19 @@ module.exports = React.createClass
             date       : MessageUtils.formatDate message.get 'createdAt'
         }
 
+    componentWillMount: ->
+        @_markRead @props.message
+
+    componentWillReceiveProps: ->
+        @_markRead @props.message
+
+    _markRead: (message) ->
+        # Mark message as seen if needed
+        flags = message.get('flags').slice()
+        if flags.indexOf(MessageFlags.SEEN) is -1
+            flags.push MessageFlags.SEEN
+            MessageActionCreator.updateFlag message, flags
+
     render: ->
 
         message  = @props.message
@@ -235,16 +248,11 @@ module.exports = React.createClass
                 flags.push MessageFlags.FLAGGED
             when FlagsConstants.NOFLAG
                 flags = flags.filter (e) -> return e isnt FlagsConstants.FLAGGED
-        MessageActionCreator.updateFlag @props.message, flags, (error) =>
+        MessageActionCreator.updateFlag @props.message, flags, (error) ->
             if error?
-                LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
+                LayoutActionCreator.alertError "#{t("message action mark ko")} #{error}"
             else
-                LayoutActionCreator.alertSuccess t "message action move ok"
-                @redirect
-                    direction: 'first'
-                    action: 'account.mailbox.messages'
-                    parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
-                    fullWidth: true
+                LayoutActionCreator.alertSuccess t "message action mark ok"
 
     onHeaders: (event) ->
         event.preventDefault()

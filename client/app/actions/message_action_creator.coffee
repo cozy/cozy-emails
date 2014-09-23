@@ -21,7 +21,8 @@ module.exports =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_SEND
                     value: message
-            callback error
+            if callback?
+                callback error
 
     delete: (message, callback) ->
         XHRUtils.messageDelete message.get('id'), (error, message) ->
@@ -29,7 +30,8 @@ module.exports =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_DELETE
                     value: message
-            callback error
+            if callback?
+                callback error
 
     move: (message, from, to, callback) ->
         msg = message.toObject()
@@ -42,7 +44,8 @@ module.exports =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.RECEIVE_RAW_MESSAGE
                     value: message
-            callback error
+            if callback?
+                callback error
 
     updateFlag: (message, flags, callback) ->
         msg = message.toObject()
@@ -54,4 +57,5 @@ module.exports =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.RECEIVE_RAW_MESSAGE
                     value: message
-            callback error
+            if callback?
+                callback error

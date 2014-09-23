@@ -38,6 +38,9 @@ module.exports = React.createClass
         classes = classer
             read: message.get 'isRead'
             active: isActive
+            'unseen': message.get('flags').indexOf(MessageFlags.SEEN) is -1
+            'has-attachments': message.get 'hasAttachments'
+            'is-fav': message.get('flags').indexOf(MessageFlags.FLAGGED) isnt -1
 
         url = @buildUrl
             direction: 'second'
@@ -54,10 +57,8 @@ module.exports = React.createClass
                     span className: 'title', message.get 'subject'
                     p null, message.get 'text'
                 span className: 'hour', date
-                if message.get 'hasAttachments'
-                    i className: 'fa fa-paperclip'
-                if message.get('flags').indexOf(MessageFlags.FLAGGED) isnt -1
-                    i className: 'isfav fa fa-star'
+                i className: 'attach fa fa-paperclip'
+                i className: 'fav fa fa-star'
 
     getPagerRender: (curPage, nbPages) ->
         if nbPages < 2
