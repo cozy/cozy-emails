@@ -5,7 +5,6 @@ Promise = require 'bluebird'
 # a list of task than need to be executed.
 # It will create and destroy its @imap connection
 # ASAP tasks are run first
-# promiseGenerator is a function that returns a promise
 
 # usage :
 # scheduler = ImapScheduler.instanceFor account
@@ -18,12 +17,8 @@ module.exports = class ImapScheduler
     @instanceFor: (account) ->
         @instances[account.imapServer] ?= new ImapScheduler account
         return @instances[account.imapServer]
-    @summary = ->
-        out = {}
-        for server, instance of @instances
-            out[server] = instance.tasks
-        return out
 
+    # actual IMAP tasks
     tasks: []
     pendingTask: null
 
@@ -41,7 +36,7 @@ module.exports = class ImapScheduler
             port: parseInt @account.imapPort
             tls: not @account.imapSecure? or @account.imapSecure
             tlsOptions: rejectUnauthorized: false
-            debug: console.log
+            # debug: console.log
 
         @imap.onTerminated = =>
             @_rejectPending new Error 'connection closed'
@@ -56,13 +51,14 @@ module.exports = class ImapScheduler
             .tap => @_dequeue()
 
     closeConnection: (hard) =>
-        console.log "CLOSING CONNECTION hard=", hard
+        console.log "CLOSING CONNECTION", (if hard then "HARD" else "")
         @imap.end(hard).then =>
             console.log "CLOSED CONNECTION"
             @imap = null
             @_dequeue()
 
     # add task to queue
+    # gen is a function that returns a promise
     doASAP: (gen) -> @queue gen, true
     doLater: (gen) -> @queue gen, false
     queue: (gen, urgent = false) ->

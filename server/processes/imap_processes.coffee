@@ -1,14 +1,10 @@
 ImapScheduler = require './imap_scheduler'
+ImapReporter = require './imap_reporter'
 Promise = require 'bluebird'
 Message = require '../models/message'
 Mailbox = require '../models/mailbox'
 _ = require 'lodash'
 module.exports = ImapProcess = {}
-
-# @deadcode check the connection
-ImapProcess.checkConnection = (account) ->
-    ImapScheduler.instanceFor(account).doASAP (imap) ->
-        Promise.resolve 'ok'
 
 # get the boxes tree
 # return a promise for the raw imap boxes tree
@@ -28,9 +24,15 @@ ImapProcess.fetchAccount = (account) ->
 
 # refresh one mailbox
 # return a promise for task completion
-ImapProcess.fetchMailbox = (account, box) ->
+ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
+    reporter = ImapReporter.addUserTask
+        code: 'diff'
+        total: 1
+        box: box.path
+
     ImapScheduler.instanceFor(account).doLater (imap) ->
         imap.openBox box.path
+        .tap -> reporter.addProgress 0.1
         .then (imapbox) ->
             unless imapbox.persistentUIDs
                 throw new Error 'UNPERSISTENT UID NOT SUPPORTED'
@@ -45,28 +47,72 @@ ImapProcess.fetchMailbox = (account, box) ->
 
         # fetch UIDS from db & imap in parallel
         .then -> Promise.all [
-            imap.search [['ALL']]
-            Message.getUIDs box.id
+            imap.search([['ALL']]).tap -> reporter.addProgress 0.5
+            Message.getUIDs(box.id).tap -> reporter.addProgress 0.3
         ]
 
     # we got the ids, we fetch them in separate tasks
     .spread (imapIds, cozyIds) ->
 
+        # cozyIds is an array of [cozyID, box UID]
+
         # diff local & remote
-        toFetch = _.difference imapIds, cozyIds
-        toDelete = _.difference cozyIds, imapIds
+        toFetch = _.difference imapIds, cozyIds.map (ids) -> ids[1]
+        toRemove = (ids[0] for ids in cozyIds when ids[1] not in imapIds)
 
         console.log 'FETCHING', box.path
         console.log '   in imap', imapIds.length
         console.log '   in cozy', cozyIds.length
         console.log '   to fetch', toFetch.length
-        console.log '   to del', toDelete.length
+        console.log '   to del', toRemove.length
+        console.log '   limited', limitByBox
 
-        Promise.map toFetch.reverse(), (id) ->
-            ImapProcess.fetchOneMail account, box, id
-            .catch (err) -> console.log "FAILED TO FETCH MAIL", box.path, id, err.stack
+        # get higher UIDs (more recent) first
+        toFetch.reverse()
 
-        # @TODO handle toDelete ?
+        # fetch max limitByBox mails by box
+        if limitByBox
+            toFetch = toFetch[0..limitByBox]
+
+        toDo = []
+        if toFetch.length
+            toDo.push ImapProcess.fetchMails account, box, toFetch
+
+        if toRemove.length
+            toDo.push ImapProcess.removeMails box, toRemove
+
+        reporter.onDone()
+        Promise.all toDo
+
+
+ImapProcess.fetchMails = (account, box, uids) ->
+    reporter = ImapReporter.addUserTask
+        code: 'apply-diff-fetch'
+        box: box.path
+        total: uids.length
+
+    Promise.map uids, (id) ->
+        ImapProcess.fetchOneMail account, box, id
+        .tap -> reporter.addProgress 1
+        .catch (err) -> reporter.onError err
+
+    .tap -> reporter.onDone()
+
+
+ImapProcess.removeMails = (box, cozyIDs) ->
+    reporter = ImapReporter.addUserTask
+        code: 'apply-diff-remove'
+        box: box.path
+        total: cozyIDs.length
+
+    # remove messages from the box
+    Promise.serie cozyIDs, (id) ->
+        Message.findPromised id
+        .then (message) -> message.removeFromMailbox box
+        .tap -> reporter.addProgress 1
+        .catch (err) -> reporter.onError err
+
+    .tap -> reporter.onDone()
 
 # fetch one mail from imap server
 # return a Promise for task completion

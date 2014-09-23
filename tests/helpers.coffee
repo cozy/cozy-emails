@@ -4,6 +4,7 @@
 fixtures = require 'cozy-fixtures'
 {exec} = require 'child_process'
 Client = require('request-json').JsonClient
+Imap = require '../server/processes/imap_promisified'
 
 helpers = {}
 
@@ -35,6 +36,15 @@ helpers.imapServerAccount = ->
     imapServer: "127.0.0.1"
     imapPort: 993
     imapSecure: true
+
+helpers.getImapServerRawConnection = ->
+    imap = new Imap
+        user: "testuser"
+        password: "applesauce"
+        host: "127.0.0.1"
+        port: 993
+        tls: true
+        tlsOptions: rejectUnauthorized: false
 
 helpers.startApp = (done) ->
     @timeout 10000

@@ -32,5 +32,5 @@ module.exports =
         # this map is used to find conversation by sujects
         byNormSubject: (doc) ->
             if doc.normSubject
-                emit doc.normSubject, doc.threadId
+                emit [doc.accountID, doc.normSubject], doc.conversationID
 

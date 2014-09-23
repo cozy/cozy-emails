@@ -1,6 +1,7 @@
 CozyInstance = require '../models/cozy_instance'
 Account = require '../models/account'
 Promise = require 'bluebird'
+ImapReporter = require '../processes/imap_reporter'
 
 fixtures = require 'cozy-fixtures'
 
@@ -37,3 +38,6 @@ module.exports.loadFixtures = (req, res, next) ->
         if err? then next err
         else
             res.send 200, message: 'LOAD FIXTURES SUCCESS'
+
+module.exports.tasks = (req, res, next) ->
+    res.send 200, ImapReporter.summary()

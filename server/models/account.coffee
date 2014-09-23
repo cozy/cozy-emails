@@ -49,7 +49,7 @@ Account.createIfValid = (data) ->
 
     Imap.fetchBoxesTree data
     .then (boxes) ->
-        console.log "GOT", boxes, "BOXES"
+        console.log "GOT", boxes.length, "BOXES"
         # We managed to get boxes, login settings are OK
         # create Account and Mailboxes
         rawBoxesTree = boxes
