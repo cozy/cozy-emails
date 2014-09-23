@@ -59,6 +59,10 @@ module.exports =
       "mail mark read"          : "Read"
       "mail mark unread"        : "Not read"
       "mail confirm delete"     : "Do you really want to delete this message ?"
+      "mail action conversation delete" : "Delete conversation"
+      "mail action conversation move"   : "Move conversation"
+      "mail action conversation seen"   : "Mark conversation as read"
+      "mail action conversation unseen" : "Mark conversation as not read"
 
       # Account
       "mailbox new"                 : "New account"
@@ -84,6 +88,14 @@ module.exports =
       "message action move ko"      : "Error moving message: "
       "message action mark ok"      : "Message marked"
       "message action mark ko"      : "Error marking message: "
+      "conversation move ok"        : "Conversation moved"
+      "conversation move ko"        : "Error moving conversation"
+      "conversation delete ok"      : "Conversation deleted"
+      "conversation delete ko"      : "Error deleting conversation"
+      "conversation seen ok"        : "Conversation marked as read"
+      "conversation seen ko"        : "Error"
+      "conversation unseen ok"      : "Conversation marked as unread"
+      "conversation unseen ko"      : "Error<"
 
       # Settings
       "settings title"             : "Settings"

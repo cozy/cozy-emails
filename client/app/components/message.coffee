@@ -4,8 +4,9 @@ Compose      = require './compose'
 FilePicker   = require './file-picker'
 MessageUtils = require '../utils/message_utils'
 {ComposeActions, MessageFlags} = require '../constants/app_constants'
-LayoutActionCreator  = require '../actions/layout_action_creator'
-MessageActionCreator = require '../actions/message_action_creator'
+LayoutActionCreator       = require '../actions/layout_action_creator'
+ConversationActionCreator = require '../actions/conversation_action_creator'
+MessageActionCreator      = require '../actions/message_action_creator'
 RouterMixin = require '../mixins/router_mixin'
 
 # Flux stores
@@ -178,18 +179,30 @@ module.exports = React.createClass
                         button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', t 'mail action more',
                             span className: 'caret'
                         ul className: 'dropdown-menu', role: 'menu',
-                            li null,
-                                a href: '#', onClick: @onHeaders, 'data-message-id': id, t 'mail action headers'
+                            li role: 'presentation',
+                                a onClick: @onHeaders, 'data-message-id': id, t 'mail action headers'
+                            li role: 'presentation',
+                                a onClick: @onConversation, 'data-action' : 'delete', t 'mail action conversation delete'
+                            li role: 'presentation',
+                                a onClick: @onConversation, 'data-action' : 'seen',   t 'mail action conversation seen'
+                            li role: 'presentation',
+                                a onClick: @onConversation, 'data-action' : 'unseen', t 'mail action conversation unseen'
+                            li role: 'presentation', className: 'divider'
+                            li role: 'presentation', t 'mail action conversation move'
+                            mailboxes.map (mailbox, key) =>
+                                @getMailboxRender mailbox, key, true
+                            .toJS()
+                            li role: 'presentation', className: 'divider'
 
 
-    getMailboxRender: (mailbox, key) ->
+    getMailboxRender: (mailbox, key, conversation) ->
         # Don't display current mailbox
         if mailbox.get('id') is @props.selectedMailbox.get('id')
             return
         pusher = ""
         pusher += "--" for j in [1..mailbox.get('depth')] by 1
         li role: 'presentation', key: key,
-            a role: 'menuitem', onClick: @onMove, 'data-value': key, "#{pusher}#{mailbox.get 'label'}"
+            a role: 'menuitem', onClick: @onMove, 'data-value': key, 'data-conversation': conversation, "#{pusher}#{mailbox.get 'label'}"
 
     onFold: (args) ->
         @setState active: not @state.active
@@ -223,18 +236,30 @@ module.exports = React.createClass
         LayoutActionCreator.alertWarning t "app unimplemented"
 
     onMove: (args) ->
-        oldbox = @props.selectedMailbox.get 'id'
         newbox = args.target.dataset.value
-        MessageActionCreator.move @props.message, oldbox, newbox, (error) =>
-            if error?
-                LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
-            else
-                LayoutActionCreator.alertSuccess t "message action move ok"
-                @redirect
-                    direction: 'first'
-                    action: 'account.mailbox.messages'
-                    parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
-                    fullWidth: true
+        if args.target.dataset.conversation?
+            ConversationActionCreator.move @props.message.get('conversationID'), newbox, (error) =>
+                if error?
+                    LayoutActionCreator.alertError "#{t("conversation move ko")} #{error}"
+                else
+                    LayoutActionCreator.alertSuccess t "conversation move ok"
+                    @redirect
+                        direction: 'first'
+                        action: 'account.mailbox.messages'
+                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
+                        fullWidth: true
+        else
+            oldbox = @props.selectedMailbox.get 'id'
+            MessageActionCreator.move @props.message, oldbox, newbox, (error) =>
+                if error?
+                    LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
+                else
+                    LayoutActionCreator.alertSuccess t "message action move ok"
+                    @redirect
+                        direction: 'first'
+                        action: 'account.mailbox.messages'
+                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
+                        fullWidth: true
 
     onMark: (args) ->
         flags = @props.message.get('flags').slice()
@@ -253,6 +278,29 @@ module.exports = React.createClass
                 LayoutActionCreator.alertError "#{t("message action mark ko")} #{error}"
             else
                 LayoutActionCreator.alertSuccess t "message action mark ok"
+
+    onConversation: (args) ->
+        id     = @props.message.get 'conversationID'
+        action = args.target.dataset.action
+        switch action
+            when 'delete'
+                ConversationActionCreator.delete id, (error) ->
+                    if error?
+                        LayoutActionCreator.alertError "#{t("conversation delete ko")} #{error}"
+                    else
+                        LayoutActionCreator.alertSuccess t "conversation delete ok"
+            when 'seen'
+                ConversationActionCreator.seen id, (error) ->
+                    if error?
+                        LayoutActionCreator.alertError "#{t("conversation seen ok ")} #{error}"
+                    else
+                        LayoutActionCreator.alertSuccess t "conversation seen ko "
+            when 'unseen'
+                ConversationActionCreator.unseen id, (error) ->
+                    if error?
+                        LayoutActionCreator.alertError "#{t("conversation unseen ok")} #{error}"
+                    else
+                        LayoutActionCreator.alertSuccess t "conversation unseen ko"
 
     onHeaders: (event) ->
         event.preventDefault()

@@ -99,3 +99,28 @@ module.exports.del = (req, res, next) ->
 
     res.send 200, ""
 
+module.exports.conversationDelete = (req, res, next) ->
+
+    # @TODO : Delete Conversation
+
+    res.send 200, []
+
+
+module.exports.conversationPatch = (req, res, next) ->
+
+    # @TODO : update Conversation
+    patch = (p) ->
+        path = p.path.split('/')
+        if path[1] is 'flags'
+            if p.op is 'add'
+                console.log "Marking messages as seen"
+            else
+                console.log "Removing seen flag"
+
+        else if path[1] is 'mailboxIDs'
+            console.log "Moving all messages to #{p.value}"
+    patch p for p in req.body
+
+    res.send 200, []
+
+

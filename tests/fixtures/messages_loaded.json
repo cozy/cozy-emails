@@ -47,6 +47,7 @@
     ],
     "flags": [],
     "_id": "generated_id_0",
+    "conversationID": "generated_conv_0",
     "docType": "Message",
     "reads": false,
     "mailboxIDs": {
@@ -185,6 +186,7 @@
     ],
     "flags": [],
     "_id": "generated_id_1",
+    "conversationID": "generated_conv_1",
     "docType": "Message",
     "reads": false,
     "mailboxIDs": {
