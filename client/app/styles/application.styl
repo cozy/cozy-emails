@@ -89,7 +89,8 @@
         font-size 25px
 
 
-#email-compose .editor
+#email-compose
+  .editor
     border 1px solid #444
     min-height 250px
     width 100%
@@ -102,9 +103,13 @@
   .compose-toggle
     float: right
 
-  .compose-cc
+  .compose-cc,
   .compose-bcc
     display: none
+
+  .compose-cc.shown,
+  .compose-bcc.shown
+    display: inherit
 /*
   Open email tabs
 

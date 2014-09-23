@@ -17,7 +17,7 @@ module.exports =
 
     send: (message, callback) ->
         XHRUtils.messageSend message, (error, message) ->
-            if not(error?)
+            if not error?
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_SEND
                     value: message
@@ -25,7 +25,7 @@ module.exports =
 
     delete: (message, callback) ->
         XHRUtils.messageDelete message.get('id'), (error, message) ->
-            if not(error?)
+            if not error?
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_DELETE
                     value: message
@@ -38,7 +38,7 @@ module.exports =
         msg.mailboxIDs[to] = -1
         patches = jsonpatch.generate observer
         XHRUtils.messagePatch message.get('id'), patches, (error, message) ->
-            if not(error?)
+            if not error?
                 AppDispatcher.handleViewAction
                     type: ActionTypes.RECEIVE_RAW_MESSAGE
                     value: message
@@ -50,7 +50,7 @@ module.exports =
         msg.flags = flags
         patches = jsonpatch.generate observer
         XHRUtils.messagePatch message.get('id'), patches, (error, message) ->
-            if not(error?)
+            if not error?
                 AppDispatcher.handleViewAction
                     type: ActionTypes.RECEIVE_RAW_MESSAGE
                     value: message

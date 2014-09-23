@@ -44,7 +44,7 @@ module.exports = Compose = React.createClass
 
         accounts = AccountStore.getAll()
 
-        onAttachmentsUpdate = (files) =>
+        onAttachmentsUpdate = (files) ->
             @setState attachments: files
 
         div id: 'email-compose',
@@ -122,11 +122,11 @@ module.exports = Compose = React.createClass
                 if e.keyCode is 13
                     # timeout to let the editor perform its own stuff
                     setTimeout ->
-                        matchesSelector = document.documentElement.matches ||
-                              document.documentElement.matchesSelector ||
-                              document.documentElement.webkitMatchesSelector ||
-                              document.documentElement.mozMatchesSelector ||
-                              document.documentElement.oMatchesSelector ||
+                        matchesSelector = document.documentElement.matches or
+                              document.documentElement.matchesSelector or
+                              document.documentElement.webkitMatchesSelector or
+                              document.documentElement.mozMatchesSelector or
+                              document.documentElement.oMatchesSelector or
                               document.documentElement.msMatchesSelector
 
                         target = document.getSelection().anchorNode
@@ -344,7 +344,9 @@ module.exports = Compose = React.createClass
                 callback error
 
     onToggleCc: (e) ->
-        jQuery('.compose-cc').toggle()
+        toggle = (e) -> e.classList.toggle 'shown'
+        toggle e for e in @getDOMNode().querySelectorAll '.compose-cc'
 
     onToggleBcc: (e) ->
-        jQuery('.compose-bcc').toggle()
+        toggle = (e) -> e.classList.toggle 'shown'
+        toggle e for e in @getDOMNode().querySelectorAll '.compose-bcc'
