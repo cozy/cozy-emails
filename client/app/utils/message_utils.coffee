@@ -52,3 +52,28 @@ module.exports =
 
                     when "pdf" then return sub[1]
                     when "gzip", "zip" then return 'archive'
+
+    # convert attachment to the format needed by the file picker
+    convertAttachments: (file) ->
+        return {
+            name:               file.generatedFileName
+            size:               file.length
+            type:               file.contentType
+            originalName:       file.fileName
+            contentDisposition: file.contentDisposition
+            contentId:          file.contentId
+            transferEncoding:   file.transferEncoding
+        }
+
+    formatDate: (date) ->
+        if not date?
+            return
+        today = moment()
+        date  = moment date
+        if date.isBefore today, 'year'
+            formatter = 'DD/MM/YYYY'
+        else if date.isBefore today, 'day'
+            formatter = 'DD MMMM'
+        else
+            formatter = 'hh:mm'
+        return date.format formatter

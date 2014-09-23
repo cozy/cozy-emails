@@ -1,7 +1,6 @@
 [
     {
         "docType": "Mailbox",
-        "docType": "Mailbox",
         "accountID": "gmail-ID",
         "attribs": [],
         "children": [],
@@ -11,7 +10,6 @@
         "path": "INBOX"
     },
     {
-        "docType": "Mailbox",
         "docType": "Mailbox",
         "accountID": "gmail-ID",
         "attribs": [

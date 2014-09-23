@@ -259,7 +259,8 @@ module.exports = Application = React.createClass
             message = MessageStore.getByID messageID
             conversation = MessageStore.getMessagesByConversation messageID
             selectedAccount = @state.selectedAccount
-            return Conversation {message, conversation, selectedAccount, layout}
+            selectedMailbox = @state.selectedMailbox
+            return Conversation {message, conversation, selectedAccount, layout, selectedMailbox}
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'

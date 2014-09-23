@@ -26,7 +26,8 @@
     "mailparser": "0.4.6",
     "iconv": "2.1.4",
     "lodash": "2.4.1",
-    "request-json": "0.4.12"
+    "request-json": "0.4.12",
+    "fast-json-patch": "^0.4.0"
   },
   "devDependencies": {
     "should": "4.0.4",

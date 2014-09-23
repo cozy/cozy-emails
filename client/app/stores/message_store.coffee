@@ -35,6 +35,12 @@ class MessageStore extends Store
             # create or update
             message.hasAttachments = Array.isArray(message.attachments) and \
                                      message.attachments.length > 0
+            if not message.createdAt?
+                message.createdAt = message.date
+            if not message.attachments?
+                message.attachments = []
+            if not message.flags?
+                message.flags = []
             message = Immutable.Map message
             message.getReplyToAddress = ->
                 reply = this.get 'replyTo'
@@ -57,9 +63,21 @@ class MessageStore extends Store
 
             @emit 'change'
 
-        handle ActionTypes.SEND_MESSAGE, (message) ->
+        handle ActionTypes.MESSAGE_SEND, (message) ->
             # message should have been copied to Sent mailbox,
             # so it seems reasonable to emit change
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_DELETE, (message) ->
+            # message should have been deleted from current mailbox
+            # and copied to trash
+            # so it seems reasonable to emit change
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_BOXES, (message) ->
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_FLAG, (message) ->
             @emit 'change'
 
 

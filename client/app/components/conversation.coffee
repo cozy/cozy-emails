@@ -81,4 +81,5 @@ module.exports = React.createClass
                 for message, key in @props.conversation
                     isLast = key is @props.conversation.length - 1
                     selectedAccount = @props.selectedAccount
-                    Message {message, key, isLast, selectedAccount}
+                    selectedMailbox = @props.selectedMailbox
+                    Message {message, key, isLast, selectedAccount, selectedMailbox}

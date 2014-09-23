@@ -3,16 +3,28 @@ MailboxList  = require './mailbox-list'
 Compose      = require './compose'
 FilePicker   = require './file-picker'
 MessageUtils = require '../utils/message_utils'
-{ComposeActions} = require '../constants/app_constants'
+{ComposeActions, MessageFlags} = require '../constants/app_constants'
 LayoutActionCreator  = require '../actions/layout_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
+RouterMixin = require '../mixins/router_mixin'
 
 # Flux stores
 AccountStore = require '../stores/account_store'
+
+FlagsConstants =
+    SEEN   : MessageFlags.SEEN
+    UNSEEN : "Unseen"
+    FLAGGED: MessageFlags.FLAGGED
+    NOFLAG : "Noflag"
 
 classer = React.addons.classSet
 
 module.exports = React.createClass
     displayName: 'Message'
+
+    mixins: [
+        RouterMixin
+    ]
 
     getInitialState: ->
         return {
@@ -21,11 +33,8 @@ module.exports = React.createClass
             composeAction: ''
         }
 
-    render: ->
-
+    _prepareMessage: ->
         message = @props.message
-
-        attachments = message.get('attachments') or []
 
         # display full headers
         fullHeaders = []
@@ -44,40 +53,46 @@ module.exports = React.createClass
         if html and not text and not @state.composeInHTML
             text = toMarkdown html
 
+        return {
+            attachments: message.get('attachments') or []
+            flags      : message.get('flags') or []
+            fullHeaders: fullHeaders
+            text       : text
+            html       : html
+            date       : MessageUtils.formatDate message.get 'createdAt'
+        }
+
+    componentWillMount: ->
+        @_markRead @props.message
+
+    componentWillReceiveProps: ->
+        @_markRead @props.message
+
+    _markRead: (message) ->
+        # Mark message as seen if needed
+        flags = message.get('flags').slice()
+        if flags.indexOf(MessageFlags.SEEN) is -1
+            flags.push MessageFlags.SEEN
+            MessageActionCreator.updateFlag message, flags
+
+    render: ->
+
+        message  = @props.message
+        prepared = @_prepareMessage()
+
         clickHandler = if @props.isLast then null else @onFold
 
         classes = classer
             message: true
             active: @state.active
 
-        today = moment()
-        date = moment message.get 'createdAt'
-        if date.isBefore today, 'year'
-            formatter = 'DD/MM/YYYY'
-        else if date.isBefore today, 'day'
-            formatter = 'DD MMMM'
-        else
-            formatter = 'hh:mm'
-
-        # convert attachment to the format needed by the file picker
-        convert = (file) ->
-            return {
-                name:               file.generatedFileName
-                size:               file.length
-                type:               file.contentType
-                originalName:       file.fileName
-                contentDisposition: file.contentDisposition
-                contentId:          file.contentId
-                transferEncoding:   file.transferEncoding
-            }
-
         # display attachment
         display = (file) ->
             url = "/message/#{message.get 'id'}/attachments/#{file.name}"
             window.open url
 
-        li className: classes, key: @props.key, onClick: clickHandler, 'data-id': message.get('id'),
-            @getToolboxRender message.get 'id'
+        li className: classes, key: @props.key, onClick: clickHandler, 'data-id': @props.message.get('id'),
+            @getToolboxRender message.get('id'), prepared
             div className: 'header row',
                 div className: 'col-md-8',
                     i className: 'sender-avatar fa fa-user'
@@ -85,28 +100,31 @@ module.exports = React.createClass
                         span  className: 'sender', MessageUtils.displayAddresses(message.get('from'), true)
                         span className: 'receivers', t "mail receivers", {dest: MessageUtils.displayAddresses(message.get('to'), true)}
                         span className: 'receivers', t "mail receivers cc", {dest: MessageUtils.displayAddresses(message.get('cc'), true)}
-                    span className: 'hour', date.format formatter
+                    span className: 'hour', prepared.date
                 div className: 'col-md-4',
-                    FilePicker({editable: false, files: attachments.map(convert), display: display})
+                    FilePicker({editable: false, files: prepared.attachments.map(MessageUtils.convertAttachments), display: display})
             div className: 'full-headers',
-                pre null, fullHeaders.join "\n"
+                pre null, prepared.fullHeaders.join "\n"
             div className: 'preview',
-                p null, message.get 'text'
-            div className: 'content', dangerouslySetInnerHTML: {__html: html}
+                p null, prepared.text
+            div className: 'content', dangerouslySetInnerHTML: {__html: prepared.html}
             div className: 'clearfix'
 
             # Display Compose block
-            if @state.composing
-                selectedAccount = @props.selectedAccount
-                layout          = 'second'
-                message         = message
-                action          = @state.composeAction
-                callback        = (error) =>
-                    if not error?
-                        @setState composing: false
-                Compose {selectedAccount, layout, message, action, callback}
+            @getComposeRender()
 
-    getToolboxRender: (id) ->
+    getComposeRender: ->
+        if @state.composing
+            selectedAccount = @props.selectedAccount
+            layout          = 'second'
+            message         = @props.message
+            action          = @state.composeAction
+            callback        = (error) =>
+                if not error?
+                    @setState composing: false
+            Compose {selectedAccount, layout, message, action, callback}
+
+    getToolboxRender: (id, prepared) ->
 
         mailboxes = AccountStore.getSelectedMailboxes true
 
@@ -130,23 +148,27 @@ module.exports = React.createClass
                             span className: 'fa fa-trash-o'
                             span className: 'tool-long', t 'mail action delete'
                     div className: 'btn-group btn-group-sm',
-                        button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', onClick: @onMark, t 'mail action mark',
+                        button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', t 'mail action mark',
                             span className: 'caret'
                         ul className: 'dropdown-menu', role: 'menu',
-                            li null,
-                                a href: '#', t 'mail mark fav'
-                            li null,
-                                a href: '#', t 'mail mark nofav'
-                            li null,
-                                a href: '#', t 'mail mark spam'
-                            li null,
-                                a href: '#', t 'mail mark nospam'
-                            li null,
-                                a href: '#', t 'mail mark read'
-                            li null,
-                                a href: '#', t 'mail mark unread'
+                            if prepared.flags.indexOf(FlagsConstants.SEEN) is -1
+                                li null,
+                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.UNSEEN, t 'mail mark unread'
+                            else
+                                li null,
+                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.SEEN, t 'mail mark read'
+                            if prepared.flags.indexOf(FlagsConstants.FLAGGED) is -1
+                                li null,
+                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.FLAGGED, t 'mail mark fav'
+                            else
+                                li null,
+                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.NOFLAG, t 'mail mark nofav'
+                            #li null,
+                            #    a role: 'menuitem', onClick: @onMark, 'data-value': '', t 'mail mark spam'
+                            #li null,
+                            #    a role: 'menuitem', onClick: @onMark, 'data-value': '', t 'mail mark nospam'
                     div className: 'btn-group btn-group-sm',
-                        button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', onClick: @onMove, t 'mail action move',
+                        button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', t 'mail action move',
                             span className: 'caret'
                         ul className: 'dropdown-menu', role: 'menu',
                             mailboxes.map (mailbox, key) =>
@@ -161,11 +183,13 @@ module.exports = React.createClass
 
 
     getMailboxRender: (mailbox, key) ->
+        # Don't display current mailbox
+        if mailbox.get('id') is @props.selectedMailbox.get('id')
+            return
         pusher = ""
         pusher += "--" for j in [1..mailbox.get('depth')] by 1
-        url    = ''
         li role: 'presentation', key: key,
-            a href: url, role: 'menuitem', "#{pusher}#{mailbox.get 'label'}"
+            a role: 'menuitem', onClick: @onMove, 'data-value': key, "#{pusher}#{mailbox.get 'label'}"
 
     onFold: (args) ->
         @setState active: not @state.active
@@ -183,16 +207,52 @@ module.exports = React.createClass
         @setState composeAction: ComposeActions.FORWARD
 
     onDelete: (args) ->
-        LayoutActionCreator.alertWarning t "app unimplemented"
+        if window.confirm(t 'mail confirm delete')
+            MessageActionCreator.delete @props.message, (error) =>
+                if error?
+                    LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
+                else
+                    LayoutActionCreator.alertSuccess t "message action delete ok"
+                    @redirect
+                        direction: 'first'
+                        action: 'account.mailbox.messages'
+                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
+                        fullWidth: true
 
     onCopy: (args) ->
         LayoutActionCreator.alertWarning t "app unimplemented"
 
     onMove: (args) ->
-        LayoutActionCreator.alertWarning t "app unimplemented"
+        oldbox = @props.selectedMailbox.get 'id'
+        newbox = args.target.dataset.value
+        MessageActionCreator.move @props.message, oldbox, newbox, (error) =>
+            if error?
+                LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
+            else
+                LayoutActionCreator.alertSuccess t "message action move ok"
+                @redirect
+                    direction: 'first'
+                    action: 'account.mailbox.messages'
+                    parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
+                    fullWidth: true
 
     onMark: (args) ->
-        LayoutActionCreator.alertWarning t "app unimplemented"
+        flags = @props.message.get('flags').slice()
+        flag = args.target.dataset.value
+        switch flag
+            when FlagsConstants.SEEN
+                flags.push MessageFlags.SEEN
+            when FlagsConstants.UNSEEN
+                flags = flags.filter (e) -> return e isnt FlagsConstants.SEEN
+            when FlagsConstants.FLAGGED
+                flags.push MessageFlags.FLAGGED
+            when FlagsConstants.NOFLAG
+                flags = flags.filter (e) -> return e isnt FlagsConstants.FLAGGED
+        MessageActionCreator.updateFlag @props.message, flags, (error) ->
+            if error?
+                LayoutActionCreator.alertError "#{t("message action mark ko")} #{error}"
+            else
+                LayoutActionCreator.alertSuccess t "message action mark ok"
 
     onHeaders: (event) ->
         event.preventDefault()

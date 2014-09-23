@@ -3,6 +3,7 @@ classer = React.addons.classSet
 
 RouterMixin  = require '../mixins/router_mixin'
 MessageUtils = require '../utils/message_utils'
+{MessageFlags} = require '../constants/app_constants'
 
 module.exports = React.createClass
     displayName: 'MessageList'
@@ -37,20 +38,16 @@ module.exports = React.createClass
         classes = classer
             read: message.get 'isRead'
             active: isActive
+            'unseen': message.get('flags').indexOf(MessageFlags.SEEN) is -1
+            'has-attachments': message.get 'hasAttachments'
+            'is-fav': message.get('flags').indexOf(MessageFlags.FLAGGED) isnt -1
 
         url = @buildUrl
             direction: 'second'
             action: 'message'
             parameters: message.get 'id'
 
-        today = moment()
-        date = moment message.get 'createdAt'
-        if date.isBefore today, 'year'
-            formatter = 'DD/MM/YYYY'
-        else if date.isBefore today, 'day'
-            formatter = 'DD MMMM'
-        else
-            formatter = 'hh:mm'
+        date = MessageUtils.formatDate message.get 'createdAt'
 
         li className: 'message ' + classes, key: key,
             a href: url,
@@ -59,9 +56,9 @@ module.exports = React.createClass
                 div className: 'preview',
                     span className: 'title', message.get 'subject'
                     p null, message.get 'text'
-                span className: 'hour', date.format formatter
-                if message.get 'hasAttachments'
-                    i className: 'fa fa-paperclip'
+                span className: 'hour', date
+                i className: 'attach fa fa-paperclip'
+                i className: 'fav fa fa-star'
 
     getPagerRender: (curPage, nbPages) ->
         if nbPages < 2

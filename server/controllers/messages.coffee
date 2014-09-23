@@ -2,6 +2,7 @@ async = require 'async'
 Message = require '../models/message'
 {HttpError} = require '../utils/errors'
 Client = require('request-json').JsonClient
+jsonpatch = require 'fast-json-patch'
 
 # The data system listens to localhost:9101
 dataSystem = new Client 'http://localhost:9101/'
@@ -48,15 +49,13 @@ module.exports.details = (req, res, next) ->
 
     res.send 200, req.message
 
-# change the flags of a message
-# ie. mark Read, mark Deleted, ...
-module.exports.updateFlags = (req, res, next) ->
+# patch e message
+module.exports.patch = (req, res, next) ->
 
-    # @TODO : fetch message's status
-    # @TODO : make sure we only update flags
-    # @TODO : do the change in IMAP before ?
+    jsonpatch.apply req.message, req.body
 
-    next new Error 'not implemented'
+    # @TODO : save message into DS
+    res.send 200, req.message
 
 # send a message through the DS
 module.exports.send = (req, res, next) ->
@@ -77,11 +76,11 @@ module.exports.search = (req, res, next) ->
         # number of results so we can't paginate properly
         numPageCheat = parseInt(req.params.numPage) * parseInt(req.params.numByPage) + 1
         Message.searchPromised
-                query: req.params.query
-                numPage: req.params.numPage
-                numByPage: numPageCheat
-            .then (messages) -> res.send messages
-            .catch next
+            query: req.params.query
+            numPage: req.params.numPage
+            numByPage: numPageCheat
+        .then (messages) -> res.send messages
+        .catch next
 
 # Temporary routes for testing purpose
 module.exports.index = (req, res, next) ->
@@ -93,3 +92,10 @@ module.exports.index = (req, res, next) ->
             , (err) ->
                 if err? then next err
                 else res.send 200, 'Indexation OK'
+
+module.exports.del = (req, res, next) ->
+
+    # @TODO : move message to trash
+
+    res.send 200, ""
+

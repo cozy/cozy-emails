@@ -24,11 +24,11 @@ module.exports = Message = americano.getModel 'Message',
     html: String             # message content as html
     date: Date               # message date
     priority: String         # message priority
-    headers: (x) -> x        # hash of message headers
     attachments: (x) -> x    # array of message attachments objects
                                 # {contentType, fileName, generatedFileName,
                                 # contentDisposition, contentId,
                                 # transferEncoding, length, checksum}
+    flags: (x) -> x          # array of message flags (Seen, Flagged, Draft)
 
 
 # return a promise for an Array of Message object

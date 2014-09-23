@@ -26,6 +26,8 @@ module.exports =
       "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n"
       "compose action draft"      : "Save as draft"
       "compose action send"       : "Send"
+      "compose toggle cc"         : "Cc"
+      "compose toggle bcc"        : "Cci"
 
       # Menu
       "menu compose"            : "Nouveau"
@@ -56,6 +58,7 @@ module.exports =
       "mail mark nofav"         : "Normal"
       "mail mark read"          : "Lu"
       "mail mark unread"        : "Non lu"
+      "mail confirm delete"     : "Voulez-vous vraiment supprimer ce message ?"
 
       # Account
       "mailbox new"                 : "Nouveau compte"
@@ -75,6 +78,12 @@ module.exports =
       # Message Action
       "message action sent ok"      : "Message envoyé !"
       "message action sent ko"      : "Une erreur est survenue : "
+      "message action delete ok"    : "Message supprimé"
+      "message action delete ko"    : "Impossible de supprimer le message : "
+      "message action move ok"      : "Message déplacé"
+      "message action move ko"      : "Le déplacement a échoué"
+      "message action mark ok"      : "Ok"
+      "message action mark ko"      : "L'opération a échoué"
 
       # Settings
       "settings title"             : "Paramètres"

@@ -45,6 +45,7 @@
         "length": 34593
       }
     ],
+    "flags": [],
     "_id": "generated_id_0",
     "docType": "Message",
     "reads": false,
@@ -182,6 +183,7 @@
         "length": 4555
       }
     ],
+    "flags": [],
     "_id": "generated_id_1",
     "docType": "Message",
     "reads": false,

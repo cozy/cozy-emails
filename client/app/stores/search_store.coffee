@@ -20,10 +20,14 @@ class SearchStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.RECEIVE_RAW_SEARCH_RESULTS, (rawResults) ->
-            _results = _results.withMutations (map) ->
-                rawResults.forEach (rawResult) ->
-                    message = Immutable.Map rawResult
-                    map.set message.get('id'), message
+            if rawResult?
+                _results = _results.withMutations (map) ->
+                    rawResults.forEach (rawResult) ->
+                        message = Immutable.Map rawResult
+                        map.set message.get('id'), message
+            else
+                _results = Immutable.OrderedMap.empty()
+
             @emit 'change'
 
         handle ActionTypes.CLEAR_SEARCH_RESULTS, ->

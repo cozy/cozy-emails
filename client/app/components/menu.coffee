@@ -90,7 +90,7 @@ module.exports = Menu = React.createClass
         url = @buildUrl
             direction: 'first'
             action: 'account.mailbox.messages'
-            parameters: [accountID, defaultMailbox.get 'id']
+            parameters: [accountID, defaultMailbox?.get 'id']
             fullWidth: false
 
         li className: accountClasses, key: key,

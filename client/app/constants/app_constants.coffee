@@ -12,12 +12,15 @@ module.exports =
         # Message
         'RECEIVE_RAW_MESSAGE'       : 'RECEIVE_RAW_MESSAGE'
         'RECEIVE_RAW_MESSAGES'      : 'RECEIVE_RAW_MESSAGES'
-        'SEND_MESSAGE'              : 'SEND_MESSAGE'
+        'MESSAGE_SEND'              : 'MESSAGE_SEND'
+        'MESSAGE_DELETE'            : 'MESSAGE_DELETE'
+        'MESSAGE_BOXES'             : 'MESSAGE_BOXES'
+        'MESSAGE_FLAG'              : 'MESSAGE_FLAG'
 
         # Search
         'SET_SEARCH_QUERY'          : 'SET_SEARCH_QUERY'
         'RECEIVE_RAW_SEARCH_RESULTS': 'RECEIVE_RAW_SEARCH_RESULTS'
-        'CLEAR_SEARCH_RESULTS'       : 'CLEAR_SEARCH_RESULTS'
+        'CLEAR_SEARCH_RESULTS'      : 'CLEAR_SEARCH_RESULTS'
 
         # Layout
         'SHOW_MENU_RESPONSIVE'      : 'SHOW_MENU_RESPONSIVE'
@@ -45,3 +48,8 @@ module.exports =
         'INFO'         : 'INFO'
         'WARNING'      : 'WARNING'
         'ERROR'        : 'ERROR'
+
+    MessageFlags:
+        'FLAGGED'      : 'Flagged'
+        'SEEN'         : 'Seen'
+        'DRAFT'        : 'Draft'
