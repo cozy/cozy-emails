@@ -78,6 +78,8 @@ module.exports =
       # Message Action
       "message action sent ok"      : "Message envoyé !"
       "message action sent ko"      : "Une erreur est survenue : "
+      "message action draft ok"     : "Message sauvegardé !"
+      "message action draft ko"     : "Une erreur est survenue : "
       "message action delete ok"    : "Message supprimé"
       "message action delete ko"    : "Impossible de supprimer le message : "
       "message action move ok"      : "Message déplacé"

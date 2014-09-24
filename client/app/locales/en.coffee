@@ -78,6 +78,8 @@ module.exports =
       # Message Action
       "message action sent ok"      : "Message sent"
       "message action sent ko"      : "Error sending message: "
+      "message action draft ok"     : "Message saved"
+      "message action draft ko"     : "Error saving message: "
       "message action delete ok"    : "Message deleted"
       "message action delete ko"    : "Error deleting message: "
       "message action move ok"      : "Message moved"

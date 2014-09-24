@@ -294,9 +294,12 @@ module.exports = Compose = React.createClass
             #this.refs.account.getDOMNode().innerHTML = @state.currentAccount.get 'label'
 
     onDraft: (args) ->
-        LayoutActionCreator.alertWarning t "app unimplemented"
+        @_doSend true
 
     onSend: (args) ->
+        @_doSend false
+
+    _doSend: (isDraft) ->
         message =
             from        : @state.currentAccount.get 'login'
             to          : this.refs.to.getDOMNode().value.trim()
@@ -304,6 +307,7 @@ module.exports = Compose = React.createClass
             bcc         : this.refs.bcc.getDOMNode().value.trim()
             subject     : this.refs.subject.getDOMNode().value.trim()
             attachments : []
+            isDraft     : isDraft
             #headers     :
             #date        :
             #encoding    :
@@ -336,10 +340,16 @@ module.exports = Compose = React.createClass
         callback = @props.callback
 
         MessageActionCreator.send message, (error) ->
-            if error?
-                LayoutActionCreator.alertError(t "message action sent ko") + error
+            if isDraft
+                msgKo = t "message action draft ko"
+                msgOk = t "message action draft ok"
             else
-                LayoutActionCreator.alertSuccess t "message action sent ok"
+                msgKo = t "message action sent ko"
+                msgOk = t "message action sent ok"
+            if error?
+                LayoutActionCreator.alertError "#{msgKo} :  error"
+            else
+                LayoutActionCreator.alertSuccess msgOk
             if callback?
                 callback error
 
