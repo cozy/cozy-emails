@@ -100,6 +100,7 @@ for i in [1..numberOfEmails] by 1
         "account": account,
         "attachments": []
         "flags": []
+        "conversationID": "conversation_id_#{i}"
 
 
 targetFile = './tests/fixtures/messages_generated.json'

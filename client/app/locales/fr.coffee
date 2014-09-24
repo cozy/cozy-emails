@@ -59,6 +59,10 @@ module.exports =
       "mail mark read"          : "Lu"
       "mail mark unread"        : "Non lu"
       "mail confirm delete"     : "Voulez-vous vraiment supprimer ce message ?"
+      "mail action conversation delete" : "Supprimer la conversation"
+      "mail action conversation move"   : "Déplacer la conversation"
+      "mail action conversation seen"   : "Marquer la conversation comme lue"
+      "mail action conversation unseen" : "Marque la conversation comme non lue"
 
       # Account
       "mailbox new"                 : "Nouveau compte"
@@ -84,6 +88,14 @@ module.exports =
       "message action move ko"      : "Le déplacement a échoué"
       "message action mark ok"      : "Ok"
       "message action mark ko"      : "L'opération a échoué"
+      "conversation move ok"        : "Conversation déplacée"
+      "conversation move ko"        : "L'opération a échoué"
+      "conversation delete ok"      : "Conversation supprimée"
+      "conversation delete ko"      : "L'opération a échoué"
+      "conversation seen ok"        : "Ok"
+      "conversation seen ko"        : "L'opération a échoué"
+      "conversation unseen ok"      : "Ok"
+      "conversation unseen ko"      : "L'opération a échoué"
 
       # Settings
       "settings title"             : "Paramètres"

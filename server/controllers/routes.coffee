@@ -20,6 +20,10 @@ module.exports =
         put: [accounts.fetch, accounts.edit]
         delete: [accounts.fetch, accounts.remove]
 
+    'conversation/:conversationID':
+        delete: [messages.conversationDelete]
+        patch: [messages.conversationPatch]
+
     'mailbox/:mailboxID/page/:numPage/limit/:numByPage':
         get: [messages.listByMailboxId]
     'mailbox/:mailboxID/count':
