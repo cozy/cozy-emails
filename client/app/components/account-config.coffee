@@ -35,7 +35,7 @@ module.exports = React.createClass
                 div className: 'form-group',
                     label htmlFor: 'mailbox-email-address', className: 'col-sm-2 col-sm-offset-2 control-label', t "mailbox address"
                     div className: 'col-sm-3',
-                        input id: 'mailbox-email-address', valueLink: @linkState('login'), type: 'email', className: 'form-control', placeholder: t "mailbox address placeholder"
+                        input id: 'mailbox-email-address', valueLink: @linkState('login'), ref: 'login', onBlur: @discover, type: 'email', className: 'form-control', placeholder: t "mailbox address placeholder"
                 div className: 'form-group',
                     label htmlFor: 'mailbox-password', className: 'col-sm-2 col-sm-offset-2 control-label', t 'mailbox password'
                     div className: 'col-sm-3',
@@ -62,6 +62,7 @@ module.exports = React.createClass
                         if @props.initialAccountConfig?
                             button className: 'btn btn-cozy', onClick: @onRemove, t "mailbox remove"
                         button className: 'btn btn-cozy', onClick: @onSubmit, buttonLabel
+
     onSubmit: (event) ->
         # prevents the page from reloading
         event.preventDefault()
@@ -78,6 +79,30 @@ module.exports = React.createClass
 
         AccountActionCreator.remove @props.initialAccountConfig.get 'id'
 
+
+    discover: ->
+        login = @refs.login.getDOMNode().value.trim()
+
+        AccountActionCreator.discover login.split('@')[1], (err, provider) =>
+            if not err?
+                infos = {}
+                getInfos = (server) ->
+                    if server.type is 'imap' and not infos.imapServer?
+                        infos.imapServer = server.hostname
+                        infos.imapPort   = server.port
+                    if server.type is 'smtp' and not infos.smtpServer?
+                        infos.smtpServer = server.hostname
+                        infos.smtpPort   = server.port
+                getInfos server for server in provider
+                if not infos.imapServer?
+                    infos.imapServer = ''
+                    infos.imapPort   = ''
+                if not infos.smtpServer?
+                    infos.smtpServer = ''
+                    infos.smtpPort   = ''
+                @setState infos
+
+
     componentWillReceiveProps: (props) ->
         # prevents the form from changing during submission
         if not props.isWaiting
@@ -91,24 +116,24 @@ module.exports = React.createClass
     getInitialState: (forceDefault) ->
         if @props.initialAccountConfig? and not forceDefault
             return {
-                label: @props.initialAccountConfig.get 'label'
-                name: @props.initialAccountConfig.get 'name'
-                login: @props.initialAccountConfig.get 'login'
-                password: @props.initialAccountConfig.get 'password'
+                label:      @props.initialAccountConfig.get 'label'
+                name:       @props.initialAccountConfig.get 'name'
+                login:      @props.initialAccountConfig.get 'login'
+                password:   @props.initialAccountConfig.get 'password'
                 smtpServer: @props.initialAccountConfig.get 'smtpServer'
-                smtpPort: @props.initialAccountConfig.get 'smtpPort'
+                smtpPort:   @props.initialAccountConfig.get 'smtpPort'
                 imapServer: @props.initialAccountConfig.get 'imapServer'
-                imapPort: @props.initialAccountConfig.get 'imapPort'
+                imapPort:   @props.initialAccountConfig.get 'imapPort'
             }
         else
             return {
-                label: ''
-                name: ''
-                login: ''
-                password: ''
+                label:      ''
+                name:       ''
+                login:      ''
+                password:   ''
                 smtpServer: ''
-                smtpPort: 993
+                smtpPort:   993
                 imapServer: ''
-                imapPort: 465
+                imapPort:   465
             }
 

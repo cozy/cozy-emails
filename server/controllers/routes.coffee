@@ -1,9 +1,10 @@
 # See documentation on https://github.com/frankrousseau/americano#routes
 
-index    = require './index'
-accounts = require './accounts'
-messages = require './messages'
-test     = require './test'
+index     = require './index'
+accounts  = require './accounts'
+messages  = require './messages'
+providers = require './providers'
+test      = require './test'
 
 module.exports =
 
@@ -39,6 +40,9 @@ module.exports =
 
     'search/:query/page/:numPage/limit/:numByPage':
         get: messages.search
+
+    'provider/:domain':
+        get: providers.get
 
     # temporary routes for testing purpose
     'messages/index': get: messages.index

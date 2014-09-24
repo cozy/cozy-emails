@@ -105,6 +105,16 @@ module.exports =
         .set 'Accept', 'application/json'
         .end (res) -> # nothing
 
+    accountDiscover: (domain, callback) ->
+
+        request.get "provider/#{domain}"
+        .set 'Accept', 'application/json'
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                callback res.body, null
+
     search: (query, numPage, callback) ->
         encodedQuery = encodeURIComponent query
         numByPage = SettingsStore.get 'messagesPerPage'

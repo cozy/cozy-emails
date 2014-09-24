@@ -61,3 +61,9 @@ module.exports = AccountActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.SELECT_ACCOUNT
             value: accountID
+
+    discover: (domain, callback) ->
+        XHRUtils.accountDiscover domain, (err, infos) ->
+            if not infos?
+                infos = []
+            callback err, infos
