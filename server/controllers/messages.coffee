@@ -1,8 +1,9 @@
-async = require 'async'
-Message = require '../models/message'
+async       = require 'async'
+Message     = require '../models/message'
 {HttpError} = require '../utils/errors'
-Client = require('request-json').JsonClient
-jsonpatch = require 'fast-json-patch'
+Client      = require('request-json').JsonClient
+jsonpatch   = require 'fast-json-patch'
+Compiler    = require 'nodemailer/src/compiler'
 
 # The data system listens to localhost:9101
 dataSystem = new Client 'http://localhost:9101/'
@@ -59,12 +60,28 @@ module.exports.patch = (req, res, next) ->
 
 # send a message through the DS
 module.exports.send = (req, res, next) ->
-    console.log "Server: ", typeof req.body
-    dataSystem.post 'mail/', req.body, (dsErr, dsRes, dsBody) ->
-        if dsErr
-            res.send 500, dsBody
-        else
-            res.send 200, dsBody
+
+    # @TODO : save message to Sent folder
+    # @TODO : if message was a draft, delete it from Draft folder
+    # @TODO : save draft into DS
+
+    if req.body.isDraft
+        draft  = new Compiler(req.body).compile()
+        stream = draft.createReadStream()
+        message = ''
+        stream.on 'data', (data) ->
+            message += data.toString()
+        stream.on 'error', (err) ->
+            console.error('Error', err)
+        stream.on 'end', ->
+            # @TODO : save draft into DS
+            res.send 200, message
+    else
+        dataSystem.post 'mail/', req.body, (dsErr, dsRes, dsBody) ->
+            if dsErr
+                res.send 500, dsBody
+            else
+                res.send 200, dsBody
 
 # search in the messages using the indexer
 module.exports.search = (req, res, next) ->
