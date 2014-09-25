@@ -49,9 +49,7 @@ module.exports =
 
     updateFlag: (message, flags, callback) ->
         msg = message.toObject()
-        observer = jsonpatch.observe msg
-        msg.flags = flags
-        patches = jsonpatch.generate observer
+        patches = jsonpatch.compare {flags: msg.flags}, {flags}
         XHRUtils.messagePatch message.get('id'), patches, (error, message) ->
             if not error?
                 AppDispatcher.handleViewAction

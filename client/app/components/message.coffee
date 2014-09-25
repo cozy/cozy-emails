@@ -154,10 +154,10 @@ module.exports = React.createClass
                         ul className: 'dropdown-menu', role: 'menu',
                             if prepared.flags.indexOf(FlagsConstants.SEEN) is -1
                                 li null,
-                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.UNSEEN, t 'mail mark unread'
+                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.SEEN, t 'mail mark read'
                             else
                                 li null,
-                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.SEEN, t 'mail mark read'
+                                    a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.UNSEEN, t 'mail mark unread'
                             if prepared.flags.indexOf(FlagsConstants.FLAGGED) is -1
                                 li null,
                                     a role: 'menuitem', onClick: @onMark, 'data-value': FlagsConstants.FLAGGED, t 'mail mark fav'
