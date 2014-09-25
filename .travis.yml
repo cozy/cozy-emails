@@ -23,6 +23,7 @@ before_install:
     - export NAME=emails
     - export TOKEN=apptoken
     - mkdir log
+    - npm install # do it now, DovecotTesting needs it
     - coffee tests/DovecotTesting/index.coffee
 
 after_failure:
