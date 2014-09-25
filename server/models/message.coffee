@@ -1,6 +1,6 @@
 americano = require 'americano-cozy'
 mailutils = require '../utils/jwz_tools'
-GUID = require 'guid'
+uuid = require 'uuid'
 ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
 
@@ -99,7 +99,7 @@ Message::applyPatchOperations = (patch) ->
     boxOps = {addTo: [], removeFrom: []}
     for operation in patch when operation.path.indexOf('/mailboxIDs/') is 0
         boxid = operation.path.substring 12
-        if operation.op is 'add' 
+        if operation.op is 'add'
             boxOps.addTo.push boxid
         else if operation.op is 'remove'
             boxOps.removeFrom.push boxid
@@ -111,10 +111,10 @@ Message::applyPatchOperations = (patch) ->
         index = parseInt operation.path.substring 7
         if operation.op is 'add'
             flagOps.add.push operation.value
-        
+
         else if operation.op is 'remove'
             flagOps.remove.push @flags[index]
-        
+
         else if operation.op is 'replace'
             flagOps.remove.push @flags[index]
             flagOps.add.push operation.value
@@ -123,7 +123,7 @@ Message::applyPatchOperations = (patch) ->
     # and store results in the message (this)
     # wee need to save afterward
     ImapProcess.applyMessageChanges this, flagOps, boxOps
-    .then -> @savePromised()
+    .then => @savePromised()
 
 
 # create a message from a raw imap message
@@ -235,9 +235,9 @@ Message.pickConversationID = (rows) ->
             pickedConversationID = conversationID
             pickedConversationIDCount = count
 
-    # if its undefined, we create one (GUID)
+    # if its undefined, we create one (UUID)
     unless pickedConversationID? and pickedConversationID isnt 'undefined'
-        pickedConversationID = GUID.raw()
+        pickedConversationID = uuid.v4()
 
     change = conversationID: pickedConversationID
 
