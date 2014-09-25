@@ -129,6 +129,7 @@ describe "Accounts Tests", ->
             body.should.have.lengthOf 3
             body[0].subject.should.equal 'Message with multipart/alternative'
             @latestInboxMessageId = body[0].id
+            done()
 
 
     # Cozy actions
