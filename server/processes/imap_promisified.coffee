@@ -96,8 +96,7 @@ module.exports = class ImapPromisified
             new Promise (resolve, reject) =>
                 if hard
                     # nuke the socket
-                    @_super._sock.end()
-                    @_super._sock.destroy()
+                    @_super.destroy()
                     return resolve 'closed'
                 else
                     # do a logout before closing
@@ -161,13 +160,13 @@ module.exports = class ImapPromisified
     # fetch all message-id in this box
     # return a Promise for an object {uid1:messageid1, uid2:messageid2} ...
     fetchBoxMessageIds : ->
-        return new Promise (resolve, reject) ->
+        return new Promise (resolve, reject) =>
             results = {}
 
             @search [['ALL']]
-            .then (ids) ->
+            .then (ids) =>
                 fetch = @_super.fetch ids, bodies: 'HEADER.FIELDS (MESSAGE-ID)'
-                fetch.on 'error',
+                fetch.on 'error', reject
                 fetch.on 'message', (msg) ->
                     uid = null
                     messageID = null

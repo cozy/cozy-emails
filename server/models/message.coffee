@@ -86,6 +86,7 @@ Message::addToMailbox = (box, uid) ->
     @mailboxIDs[box.id] = uid
     @savePromised()
 
+# remove the message from a box
 Message::removeFromMailbox = (box) ->
     delete @mailboxIDs[box.id]
     @savePromised()
@@ -137,7 +138,7 @@ Message.createFromImapMessage = (mail, box, uid) ->
 
     # we store normalized versions of subject & messageID for threading
     messageID = mail.headers['message-id']
-    mail.messageID = mailutils.normalizeMessageID messageID if mail.messageID
+    mail.messageID = mailutils.normalizeMessageID messageID if messageID
     mail.normSubject = mailutils.normalizeSubject mail.subject if mail.subject
 
     # @TODO, find and parse from mail.headers ?
@@ -159,6 +160,8 @@ Message.createFromImapMessage = (mail, box, uid) ->
                 buffer: buffer
 
     # pick a method to find the conversation id
+    # if there is a x-gm-thrid, use it
+    # else find the thread using References or Subject
     Promise.resolve mail['x-gm-thrid'] or
         Message.findConversationIdByMessageIds(mail) or
         Message.findConversationIdBySubject(mail)

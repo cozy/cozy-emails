@@ -29,29 +29,18 @@ ImapProcess.fetchAccount = (account) ->
 
 # refresh one mailbox
 # return a promise for task completion
+# register a 'diff' task in ImapReporter
 ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
     reporter = ImapReporter.addUserTask
         code: 'diff'
         total: 1
         box: box.path
 
-    ImapScheduler.instanceFor(account).doLater (imap) ->
-        imap.openBox box.path
-        .tap -> reporter.addProgress 0.1
-        .then (imapbox) ->
-            unless imapbox.persistentUIDs
-                throw new Error 'UNPERSISTENT UID NOT SUPPORTED'
+    # let the scheduler safely open the box
+    ImapScheduler.instanceFor(account).doLaterWithBox box, (imap) ->
+        reporter.addProgress 0.1
 
-            if box.uidvalidity and imapbox.uidvalidity isnt box.uidvalidity
-                # uid validity has changed
-                # this should be rare
-                # @TODO : recover from this
-                #    - create a copy of the mailbox, fetch it (deduped)
-                #    - and then destroy old version
-                throw new Error 'UID VALIDITY HAS CHANGED'
-
-        # fetch UIDS from db & imap in parallel
-        .then -> Promise.all [
+        Promise.all [
             imap.search([['ALL']]).tap -> reporter.addProgress 0.5
             Message.getUIDs(box.id).tap -> reporter.addProgress 0.3
         ]
