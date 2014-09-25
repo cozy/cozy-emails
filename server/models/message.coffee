@@ -26,6 +26,7 @@ module.exports = Message = americano.getModel 'Message',
     html: String             # message content as html
     date: Date               # message date
     priority: String         # message priority
+    binary: (x) -> x         # cozy binaries
     attachments: (x) -> x    # array of message attachments objects
                                 # {contentType, fileName, generatedFileName,
                                 # contentDisposition, contentId,

@@ -50,6 +50,13 @@ module.exports.details = (req, res, next) ->
 
     res.send 200, req.message
 
+module.exports.attachment = (req, res, next) ->
+    stream = req.message.getBinary req.params.attachment, (err) ->
+        return next err if err
+    
+    stream.on 'error', next
+    stream.pipe res
+
 # patch e message
 module.exports.patch = (req, res, next) ->
     req.message.applyPatchOperations req.body
