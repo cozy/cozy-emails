@@ -23,6 +23,7 @@ before_install:
     - export NAME=emails
     - export TOKEN=apptoken
     - mkdir log
+    - coffee tests/DovecotTesting/index.coffee
 
 after_failure:
     - cat cozy-data-system/forever-ds.log
