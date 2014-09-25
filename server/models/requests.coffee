@@ -22,7 +22,18 @@ module.exports =
             map: (doc) ->
                 for boxid, uid of doc.mailboxIDs
                     emit [boxid, doc.date], uid
-                    undefined
+                undefined # prevent coffeescript comprehension
+
+        # fastly find unread or flagged count
+        byMailboxAndFlag:
+            reduce: '_count'
+            map: (doc) ->
+                for boxid, uid of doc.mailboxIDs
+                    for flag in doc.flags
+                        emit [boxid, flag], null
+                    undefined # prevent coffeescript comprehension
+                undefined # prevent coffeescript comprehension
+
 
         # this map is used to dedup by message-id
         byMessageId: (doc) ->

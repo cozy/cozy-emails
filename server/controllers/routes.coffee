@@ -26,8 +26,6 @@ module.exports =
 
     'mailbox/:mailboxID/page/:numPage/limit/:numByPage':
         get: [messages.listByMailboxId]
-    'mailbox/:mailboxID/count':
-        get: [messages.countByMailboxId]
 
     'message':
         post: messages.send

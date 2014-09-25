@@ -24,6 +24,9 @@ class MessageStore extends Store
         .map (message) -> Immutable.fromJS message
         .toOrderedMap()
 
+    _counts = {}
+    _unreadCounts = {}
+
 
     ###
         Defines here the action handlers.
@@ -52,6 +55,12 @@ class MessageStore extends Store
             @emit 'change' unless silent
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
+
+            if messages.count? and messages.mailboxID?
+                _counts[messages.mailboxID] = messages.count
+                _unreadCounts[messages.mailboxID] = messages.unread
+                messages = messages.messages
+
             onReceiveRawMessage message, true for message in messages
             @emit 'change'
 
@@ -130,7 +139,10 @@ class MessageStore extends Store
         return sequence.toOrderedMap()
 
     getMessagesCountByMailbox: (mailboxID) ->
-        return @getMessagesByMailbox(mailboxID).count()
+        return _counts[mailboxID] or 0
+
+    getUnreadMessagesCountByMailbox: (mailboxID) ->
+        return _unreadCounts[mailboxID] or 0
 
     getMessagesByConversation: (messageID) ->
         idsToLook = [messageID]

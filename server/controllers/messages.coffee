@@ -4,6 +4,7 @@ Message     = require '../models/message'
 Client      = require('request-json').JsonClient
 jsonpatch   = require 'fast-json-patch'
 Compiler    = require 'nodemailer/src/compiler'
+Promise     = require 'bluebird'
 
 # The data system listens to localhost:9101
 dataSystem = new Client 'http://localhost:9101/'
@@ -23,15 +24,21 @@ module.exports.listByMailboxId = (req, res, next) ->
         numPage: req.params.numPage - 1
         numByPage: req.params.numByPage
 
-    Message.getByMailboxAndDate(req.params.mailboxID, options)
-    .then (messages) -> res.send 200, messages
-    .catch next
+    Promise.all [
+        Message.getByMailboxAndDate req.params.mailboxID, options
+        Message.countByMailbox req.params.mailboxID
+        Message.countReadByMailbox req.params.mailboxID        
+    ]
+    .spread (messages, count, read) ->
 
-# give the number of messages for a mailbox
-# @TODO : number of unread message ?
-module.exports.countByMailboxId = (req, res, next) ->
-    Message.countByMailbox(req.params.mailboxID)
-    .then (count) -> res.send 200, count
+        console.log read
+
+        res.send 200,
+            mailboxID: req.params.mailboxID
+            messages: messages
+            count: count
+            unread: count - read
+
     .catch next
 
 # get a message and attach it to req.message

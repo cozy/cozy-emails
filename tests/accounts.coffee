@@ -52,18 +52,14 @@ describe "Accounts Tests", ->
             unfinishedTask.should.be.false
             done()
 
-    it "When I get a mailbox count", (done) ->
-        client.get "/mailbox/#{@inboxID}/count", (err, res, body) =>
-            body.should.have.property 'count', 12
-            done()
-
     it "When I get a mailbox", (done) ->
         client.get "/mailbox/#{@inboxID}/page/1/limit/3", (err, res, body) =>
-            body.should.have.lengthOf 3
-            body[0].subject.should.equal 'Message with multipart/alternative'
-            @latestInboxMessageId = body[0].id
+            body.should.have.property 'count', 12
+            body.messages.should.have.lengthOf 3
+            body.messages[0].subject.should.equal 'Message with multipart/alternative'
+            @latestInboxMessageId = body.messages[0].id
             # @TODO add a thread in the mailbox to test threading
-            # body[0].conversationID.should.equal body[1].conversationID
+            # body.messages[0].conversationID.should.equal body.messages[1].conversationID
             done()
 
     # Synchronizations test
@@ -84,9 +80,9 @@ describe "Accounts Tests", ->
         .nodeify done
 
     it "Message have moved", (done) ->
-        client.get "/mailbox/#{@inboxID}/count", (err, res, body) =>
+        client.get "/mailbox/#{@inboxID}/page/1/limit/3", (err, res, body) =>
             body.should.have.property 'count', 11
-            client.get "/mailbox/#{@testboxID}/count", (err, res, body) =>
+            client.get "/mailbox/#{@testboxID}/page/1/limit/3", (err, res, body) =>
                 body.should.have.property 'count', 4
                 done()
 
@@ -108,9 +104,9 @@ describe "Accounts Tests", ->
         .nodeify done
 
     it "Message have been copied", (done) ->
-        client.get "/mailbox/#{@inboxID}/count", (err, res, body) =>
+        client.get "/mailbox/#{@inboxID}/page/1/limit/3", (err, res, body) =>
             body.should.have.property 'count', 11
-            client.get "/mailbox/#{@testboxID}/count", (err, res, body) =>
+            client.get "/mailbox/#{@testboxID}/page/1/limit/3", (err, res, body) =>
                 body.should.have.property 'count', 5
                 done()
 
@@ -181,7 +177,7 @@ describe "Accounts Tests", ->
             done()
 
 
-    it "When I delete an account", (done) ->
-        client.del "/account/#{@accountID}", (err, res, body) =>
-            res.statusCode.should.equal 204
-            done()
+    # it "When I delete an account", (done) ->
+    #     client.del "/account/#{@accountID}", (err, res, body) =>
+    #         res.statusCode.should.equal 204
+    #         done()

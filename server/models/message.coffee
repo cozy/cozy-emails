@@ -60,7 +60,15 @@ Message.countByMailbox = (mailboxID) ->
         reduce: true
         group_level: 1 # group by mailboxID
 
-    .then (result) -> return count: result[0]?.value or 0
+    .then (result) -> result[0]?.value or 0
+
+Message.countReadByMailbox = (mailboxID) ->
+    Message.rawRequestPromised 'byMailboxAndFlag',
+        key: [mailboxID, '\\Seen']
+        reduce: true
+        group_level: 1 
+
+    .then (result) -> result[0]?.value or 0
 
 # given a mailbox
 # get the uids present in the cozy

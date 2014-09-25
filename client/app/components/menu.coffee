@@ -6,6 +6,8 @@ RouterMixin = require '../mixins/router_mixin'
 
 AccountStore = require '../stores/account_store'
 
+MessageStore = require '../stores/message_store'
+
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
@@ -110,8 +112,10 @@ module.exports = Menu = React.createClass
             action: 'account.mailbox.messages'
             parameters: [account.get('id'), mailbox.get('id')]
 
+        unread = MessageStore.getUnreadMessagesCountByMailbox mailbox.get('id')
+
         a href: mailboxUrl, className: 'menu-item', key: key,
             # Something must be rethought about the icon
             i className: 'fa fa-star'
-            span className: 'badge', Math.floor((Math.random() * 10) + 1) # placeholder
+            span className: 'badge', unread
             span className: 'item-label', mailbox.get 'label'
