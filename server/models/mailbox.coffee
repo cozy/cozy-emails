@@ -7,7 +7,7 @@ module.exports = Mailbox = americano.getModel 'Mailbox',
     label: String            # Human readable label
     path: String             # IMAP path
     tree: (x) -> x           # Normalized path as Array
-    uidvalidity: String      # Imap UIDValidity
+    uidvalidity: Number      # Imap UIDValidity
     persistentUIDs: Boolean  # Imap persistentUIDs
     attribs: (x) -> x        # [String] Attributes of this folder
     children: (x) -> x       # this should not be saved but juggling doesnt

@@ -2,7 +2,7 @@ Imap = require 'imap'
 Promise = require 'bluebird'
 {MailParser} = require 'mailparser'
 {WrongConfigError} = require '../utils/errors'
-
+log = require('../utils/logging')(prefix: 'imap:promise')
 
 stream_to_buffer_array = (stream, cb) ->
     parts = []
@@ -24,6 +24,10 @@ module.exports = class ImapPromisified
 
     # see node-imap for options
     constructor: (options) ->
+
+        logger = require('../utils/logging')(prefix: 'imap:raw')
+        options.debug = logger.debug.bind logger
+
         @_super = new Imap options
 
         # wait connection as a promise
@@ -64,7 +68,7 @@ module.exports = class ImapPromisified
             @_super.once 'error', (err) ->
                 # an error happened while connection active
                 # @TODO : how do we handle this ?
-                console.log "ERROR ?", err
+                log.error "ERROR ?", err
             @_super.once 'close', =>
                 # if we did not expect the ending
                 @onTerminated?() unless @waitEnding
@@ -92,8 +96,7 @@ module.exports = class ImapPromisified
             new Promise (resolve, reject) =>
                 if hard
                     # nuke the socket
-                    @_super._sock.end()
-                    @_super._sock.destroy()
+                    @_super.destroy()
                     return resolve 'closed'
                 else
                     # do a logout before closing
@@ -124,22 +127,46 @@ module.exports = class ImapPromisified
     search: ->
         @_super.searchPromised.apply @_super, arguments
 
+    # see imap.move
+    # return a Promise for completion
     move: ->
         @_super.movePromised.apply @_super, arguments
 
+    # see imap.expunge
+    # return a Promise for completion
+    expunge: ->
+        @_super.expungePromised.apply @_super, arguments
+
+    # see imap.copy
+    # return a Promise for completion
     copy: ->
         @_super.copyPromised.apply @_super, arguments
+
+    # see imap.setFlags
+    # return a Promise for completion
+    setFlags: ->
+        @_super.setFlagsPromised.apply @_super, arguments
+
+    # see imap.delFlags
+    # return a Promise for completion
+    delFlags: ->
+        @_super.delFlagsPromised.apply @_super, arguments
+
+    # see imap.setFlags
+    # return a Promise for completion
+    addFlags: ->
+        @_super.addFlagsPromised.apply @_super, arguments
 
     # fetch all message-id in this box
     # return a Promise for an object {uid1:messageid1, uid2:messageid2} ...
     fetchBoxMessageIds : ->
-        return new Promise (resolve, reject) ->
+        return new Promise (resolve, reject) =>
             results = {}
 
             @search [['ALL']]
-            .then (ids) ->
+            .then (ids) =>
                 fetch = @_super.fetch ids, bodies: 'HEADER.FIELDS (MESSAGE-ID)'
-                fetch.on 'error',
+                fetch.on 'error', reject
                 fetch.on 'message', (msg) ->
                     uid = null
                     messageID = null
@@ -148,7 +175,7 @@ module.exports = class ImapPromisified
                     msg.on 'end', -> results[uid] = messageID
                     msg.on 'body', (stream) ->
                         stream_to_buffer_array stream, (err, parts) ->
-                            return console.log err if err
+                            return log.error err if err
                             header = Buffer.concat(parts).toString('utf8').trim()
                             messageID = header.substring header.indexOf ':'
 

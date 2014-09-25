@@ -26,8 +26,8 @@ module.exports =
 
         # this map is used to dedup by message-id
         byMessageId: (doc) ->
-            if messageId = doc.headers?["message-id"]
-                emit [doc.accountID, messageId], doc.conversationID
+            if doc.messageID
+                emit [doc.accountID, doc.messageID], doc.conversationID
 
         # this map is used to find conversation by sujects
         byNormSubject: (doc) ->

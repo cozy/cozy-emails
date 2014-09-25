@@ -22,13 +22,13 @@
     "cozy-fixtures": "1.1.1",
     "bluebird": "2.3.2",
     "imap": "0.8.13",
-    "guid": "0.0.12",
+    "uuid": "1.4.2",
     "mailparser": "0.4.6",
     "iconv": "2.1.4",
     "lodash": "2.4.1",
-    "request-json": "0.4.12",
-    "fast-json-patch": "^0.4.0",
-    "nodemailer": "^1.3.0"
+    "request-json": "0.4.11",
+    "fast-json-patch": "0.4.0",
+    "nodemailer": "1.3.0"
   },
   "devDependencies": {
     "should": "4.0.4",
