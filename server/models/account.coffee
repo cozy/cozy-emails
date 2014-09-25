@@ -13,6 +13,8 @@ module.exports = Account = americano.getModel 'Account',
     imapPort: Number
     mailboxes: (x) -> x
 
+log = require('../utils/logging')(prefix: 'models:account')
+
 # fetch the list of all Accounts
 # include the account mailbox tree
 Account.getAll = (callback) ->
@@ -49,7 +51,7 @@ Account.createIfValid = (data) ->
 
     Imap.fetchBoxesTree data
     .then (boxes) ->
-        console.log "GOT", boxes.length, "BOXES"
+        log.info "GOT BOXES", boxes
         # We managed to get boxes, login settings are OK
         # create Account and Mailboxes
         rawBoxesTree = boxes
@@ -60,7 +62,7 @@ Account.createIfValid = (data) ->
         Mailbox.createBoxesFromImapTree account.id, rawBoxesTree
 
     .then ->
-        console.log "CREATED ACCOUNT & BOXES"
+        log.info "CREATED ACCOUNT & BOXES"
         return account.includeMailboxes()
 
 

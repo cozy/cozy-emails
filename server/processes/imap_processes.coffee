@@ -5,13 +5,14 @@ Message = require '../models/message'
 Mailbox = require '../models/mailbox'
 _ = require 'lodash'
 module.exports = ImapProcess = {}
+log = require('../utils/logging')(prefix: 'imap:processes')
 
 # get the boxes tree
 # return a promise for the raw imap boxes tree
 ImapProcess.fetchBoxesTree = (account) ->
     # the user is waiting, we do this ASAP
     ImapScheduler.instanceFor(account).doASAP (imap) ->
-        console.log "FETCH BOX TREE"
+        log.info "FETCH BOX TREE"
         imap.getBoxes()
 
 # refresh one account
@@ -20,7 +21,7 @@ ImapProcess.fetchAccount = (account) ->
     Mailbox.getBoxes(account.id).then (boxes) ->
         Promise.serie boxes, (box) ->
             ImapProcess.fetchMailbox account, box
-            .catch (err) -> console.log "FAILED TO FETCH BOX", box.path, err.stack
+            .catch (err) -> log.error "FAILED TO FETCH BOX", box.path, err.stack
 
 # refresh one mailbox
 # return a promise for task completion
@@ -60,12 +61,12 @@ ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
         toFetch = _.difference imapIds, cozyIds.map (ids) -> ids[1]
         toRemove = (ids[0] for ids in cozyIds when ids[1] not in imapIds)
 
-        console.log 'FETCHING', box.path
-        console.log '   in imap', imapIds.length
-        console.log '   in cozy', cozyIds.length
-        console.log '   to fetch', toFetch.length
-        console.log '   to del', toRemove.length
-        console.log '   limited', limitByBox
+        log.info 'FETCHING', box.path
+        log.info '   in imap', imapIds.length
+        log.info '   in cozy', cozyIds.length
+        log.info '   to fetch', toFetch.length
+        log.info '   to del', toRemove.length
+        log.info '   limited', limitByBox
 
         # get higher UIDs (more recent) first
         toFetch.reverse()
@@ -119,7 +120,6 @@ ImapProcess.removeMails = (box, cozyIDs) ->
 ImapProcess.fetchOneMail = (account, box, uid) ->
     scheduler = ImapScheduler.instanceFor account
     scheduler.doLater (imap) ->
-        log = "MAIL #{box.path}##{uid} "
         mail = null
 
         imap.openBox box.path
@@ -132,7 +132,7 @@ ImapProcess.fetchOneMail = (account, box, uid) ->
         .then (existing) ->
             if existing
                 existing.addToMailbox box, uid
-                .tap -> console.log  log + "already in db"
+                .tap -> log.info "MAIL #{box.path}##{uid} ADDED TO BOX"
             else
                 Message.createFromImapMessage mail, box, uid
-                .tap -> console.log  log + "created"
+                .tap -> log.info "MAIL #{box.path}##{uid} CREATED"

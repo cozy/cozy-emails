@@ -1,3 +1,5 @@
+log = require('../utils/logging')(prefix: 'imap:scheduler')
+
 ImapPromised = require './imap_promisified'
 Promise = require 'bluebird'
 
@@ -28,7 +30,8 @@ module.exports = class ImapScheduler
             @account = new Account @account
 
     createNewConnection: ->
-        console.log "OPEN IMAP CONNECTION", @account.label
+        log.info "OPEN IMAP CONNECTION", @account.label
+
         @imap = new ImapPromised
             user: @account.login
             password: @account.password
@@ -36,7 +39,6 @@ module.exports = class ImapScheduler
             port: parseInt @account.imapPort
             tls: not @account.imapSecure? or @account.imapSecure
             tlsOptions: rejectUnauthorized: false
-            # debug: console.log
 
         @imap.onTerminated = =>
             @_rejectPending new Error 'connection closed'
@@ -44,16 +46,16 @@ module.exports = class ImapScheduler
 
         @imap.waitConnected
             .catch (err) =>
-                console.log "FAILED TO CONNECT", err.stack
+                log.error "FAILED TO CONNECT", err.stack
                 # we cant connect, drop the tasks
                 task.reject err while task = @tasks.shift()
                 throw err
             .tap => @_dequeue()
 
     closeConnection: (hard) =>
-        console.log "CLOSING CONNECTION", (if hard then "HARD" else "")
+        log.info "CLOSING CONNECTION", (if hard then "HARD" else "")
         @imap.end(hard).then =>
-            console.log "CLOSED CONNECTION"
+            log.info "CLOSED CONNECTION"
             @imap = null
             @_dequeue()
 
@@ -114,7 +116,7 @@ module.exports = class ImapScheduler
         # assume its broken and nuke the socket
         .timeout 120000
         .catch Promise.TimeoutError, (err) =>
-            console.log "TASK GOT STUCKED"
+            log.error "TASK GOT STUCKED"
             @closeConnection true
             throw err
 

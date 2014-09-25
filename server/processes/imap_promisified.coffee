@@ -2,7 +2,7 @@ Imap = require 'imap'
 Promise = require 'bluebird'
 {MailParser} = require 'mailparser'
 {WrongConfigError} = require '../utils/errors'
-
+log = require('../utils/logging')(prefix: 'imap:promise')
 
 stream_to_buffer_array = (stream, cb) ->
     parts = []
@@ -24,6 +24,10 @@ module.exports = class ImapPromisified
 
     # see node-imap for options
     constructor: (options) ->
+
+        logger = require('../utils/logging')(prefix: 'imap:raw')
+        options.debug = logger.debug.bind logger
+
         @_super = new Imap options
 
         # wait connection as a promise
@@ -64,7 +68,7 @@ module.exports = class ImapPromisified
             @_super.once 'error', (err) ->
                 # an error happened while connection active
                 # @TODO : how do we handle this ?
-                console.log "ERROR ?", err
+                log.error "ERROR ?", err
             @_super.once 'close', =>
                 # if we did not expect the ending
                 @onTerminated?() unless @waitEnding
@@ -148,7 +152,7 @@ module.exports = class ImapPromisified
                     msg.on 'end', -> results[uid] = messageID
                     msg.on 'body', (stream) ->
                         stream_to_buffer_array stream, (err, parts) ->
-                            return console.log err if err
+                            return log.error err if err
                             header = Buffer.concat(parts).toString('utf8').trim()
                             messageID = header.substring header.indexOf ':'
 
