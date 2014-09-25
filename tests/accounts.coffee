@@ -1,12 +1,13 @@
 should = require('should')
 helpers = require './helpers'
+DovecotTesting = require './DovecotTesting/index'
 client = helpers.getClient()
 Account = require '../server/models/account'
 
 describe "Accounts Tests", ->
 
-    # before helpers.loadFixtures
-    before helpers.startImapServer
+    # before helpers.cleanDB
+    before DovecotTesting.setupEnvironment
     before helpers.startApp
     after helpers.stopApp
 
@@ -26,6 +27,7 @@ describe "Accounts Tests", ->
             @boxes = body.mailboxes
             for box in @boxes
                 @inboxID = box.id if box.label is 'INBOX'
+                @sentID = box.id if box.label is 'Sent'
                 @testboxID = box.id if box.label is 'Test Folder'
 
             @accountID = body.id
@@ -59,6 +61,7 @@ describe "Accounts Tests", ->
         client.get "/mailbox/#{@inboxID}/page/1/limit/3", (err, res, body) =>
             body.should.have.lengthOf 3
             body[0].subject.should.equal 'Message with multipart/alternative'
+            @latestInboxMessageId = body[0].id
             # @TODO add a thread in the mailbox to test threading
             # body[0].conversationID.should.equal body[1].conversationID
             done()
@@ -110,6 +113,59 @@ describe "Accounts Tests", ->
             client.get "/mailbox/#{@testboxID}/count", (err, res, body) =>
                 body.should.have.property 'count', 5
                 done()
+
+    # Cozy actions
+    it "When I send a request to add flag \\Seen", (done) ->
+
+        patch = [ op: 'add', path:'/flags/0', value:'\\Seen' ]
+
+        client.patch "/message/#{@latestInboxMessageId}", patch, (err, res, body) =>
+            res.statusCode.should.equal 200
+            console.log body.flags
+            body.flags.should.containEql '\\Seen'
+            @uid = body.mailboxIDs[@inboxID]
+            done()
+
+    it "The flags has been changed on the server", (done) ->
+        imap = helpers.getImapServerRawConnection()
+        imap.waitConnected
+        .then -> imap.openBox 'INBOX'
+        .then => imap.fetchOneMail @uid
+        .then (msg) -> msg.flags.should.containEql '\\Seen'
+        .nodeify done
+
+
+    it "When I send a request to copy and move (more add)", (done) ->
+        patch = [ 
+            { op: 'remove', path: "/mailboxIDs/#{@inboxID}" }
+            { op: 'add', path: "/mailboxIDs/#{@testboxID}", value: -1 }
+            { op: 'add', path: "/mailboxIDs/#{@sentID}", value: -1 }
+        ]
+
+        client.patch "/message/#{@latestInboxMessageId}", patch, (err, res, body) =>
+            res.statusCode.should.equal 200
+            body.flags.should.containEql '\\Seen'
+            should.exist body.mailboxIDs[@testboxID]
+            should.exist body.mailboxIDs[@sentID]
+            should.not.exist body.mailboxIDs[@inboxID]
+            done()
+
+
+    it "When I send a request to copy and move (more remove)", (done) ->
+        patch = [ 
+            { op: 'add', path: "/mailboxIDs/#{@inboxID}", value: -1 }
+            { op: 'remove', path: "/mailboxIDs/#{@testboxID}" }
+            { op: 'remove', path: "/mailboxIDs/#{@sentID}" }
+        ]
+
+        client.patch "/message/#{@latestInboxMessageId}", patch, (err, res, body) =>
+            res.statusCode.should.equal 200
+            body.flags.should.containEql '\\Seen'
+            should.not.exist body.mailboxIDs[@testboxID]
+            should.not.exist body.mailboxIDs[@sentID]
+            should.exist body.mailboxIDs[@inboxID]
+            done()
+
 
     it "When I delete an account", (done) ->
         client.del "/account/#{@accountID}", (err, res, body) =>

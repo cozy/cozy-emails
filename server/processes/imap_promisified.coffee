@@ -128,11 +128,35 @@ module.exports = class ImapPromisified
     search: ->
         @_super.searchPromised.apply @_super, arguments
 
+    # see imap.move
+    # return a Promise for completion
     move: ->
         @_super.movePromised.apply @_super, arguments
 
+    # see imap.expunge
+    # return a Promise for completion
+    expunge: ->
+        @_super.expungePromised.apply @_super, arguments
+
+    # see imap.copy
+    # return a Promise for completion
     copy: ->
         @_super.copyPromised.apply @_super, arguments
+
+    # see imap.setFlags
+    # return a Promise for completion
+    setFlags: ->
+        @_super.setFlagsPromised.apply @_super, arguments
+
+    # see imap.delFlags
+    # return a Promise for completion
+    delFlags: ->
+        @_super.delFlagsPromised.apply @_super, arguments
+
+    # see imap.setFlags
+    # return a Promise for completion
+    addFlags: ->
+        @_super.addFlagsPromised.apply @_super, arguments
 
     # fetch all message-id in this box
     # return a Promise for an object {uid1:messageid1, uid2:messageid2} ...

@@ -52,11 +52,9 @@ module.exports.details = (req, res, next) ->
 
 # patch e message
 module.exports.patch = (req, res, next) ->
-
-    jsonpatch.apply req.message, req.body
-
-    # @TODO : save message into DS
-    res.send 200, req.message
+    req.message.applyPatchOperations req.body
+    .then -> res.send 200, req.message
+    .catch next
 
 # send a message through the DS
 module.exports.send = (req, res, next) ->

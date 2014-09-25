@@ -1,6 +1,7 @@
 americano = require 'americano-cozy'
 mailutils = require '../utils/jwz_tools'
 GUID = require 'guid'
+ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
 
 module.exports = Message = americano.getModel 'Message',
@@ -88,6 +89,41 @@ Message::addToMailbox = (box, uid) ->
 Message::removeFromMailbox = (box) ->
     delete @mailboxIDs[box.id]
     @savePromised()
+
+# apply a json-patch to the message
+# ensure operations are applied to the server too
+Message::applyPatchOperations = (patch) ->
+
+    # scan the patch
+    boxOps = {addTo: [], removeFrom: []}
+    for operation in patch when operation.path.indexOf('/mailboxIDs/') is 0
+        boxid = operation.path.substring 12
+        if operation.op is 'add' 
+            boxOps.addTo.push boxid
+        else if operation.op is 'remove'
+            boxOps.removeFrom.push boxid
+        else throw new Error 'modifying UID is not possible'
+
+
+    flagOps = {add: [], remove: []}
+    for operation in patch when operation.path.indexOf('/flags/') is 0
+        index = parseInt operation.path.substring 7
+        if operation.op is 'add'
+            flagOps.add.push operation.value
+        
+        else if operation.op is 'remove'
+            flagOps.remove.push @flags[index]
+        
+        else if operation.op is 'replace'
+            flagOps.remove.push @flags[index]
+            flagOps.add.push operation.value
+
+    # applyMessageChanges will perform operation on the server
+    # and store results in the message (this)
+    # wee need to save afterward
+    ImapProcess.applyMessageChanges this, flagOps, boxOps
+    .then -> @savePromised()
+
 
 # create a message from a raw imap message
 # handle normalization of message ids & subjects

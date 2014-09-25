@@ -3,9 +3,13 @@ ImapReporter = require './imap_reporter'
 Promise = require 'bluebird'
 Message = require '../models/message'
 Mailbox = require '../models/mailbox'
+Account = require '../models/account'
 _ = require 'lodash'
-module.exports = ImapProcess = {}
 log = require('../utils/logging')(prefix: 'imap:processes')
+
+# There is a circular dependency between ImapProcess & Account
+# node handles it if we do this instead of module.exports = ImapProcess = {}
+ImapProcess = exports
 
 # get the boxes tree
 # return a promise for the raw imap boxes tree
@@ -136,3 +140,74 @@ ImapProcess.fetchOneMail = (account, box, uid) ->
             else
                 Message.createFromImapMessage mail, box, uid
                 .tap -> log.info "MAIL #{box.path}##{uid} CREATED"
+
+# msg instance of Message
+# flagsOps = {add : [String flag], remove: [String]}
+# boxOps = {addTo : [String boxIds], removeFrom: [String boxIds]}
+ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
+
+    log.info "MESSAGE CHANGE"
+    log.info "BASE"
+    log.info "CHANGES", flagsOps, boxOps
+
+    boxIndex = {}
+    
+    # in parallel
+    Promise.all [
+        # get a scheduler
+        Account.findPromised msg.accountID
+        .then (account) -> ImapScheduler.instanceFor account
+
+        # populate the boxIndex
+        Mailbox.getBoxes msg.accountID
+        .then (boxes) ->
+            for box in boxes
+                uid = msg.mailboxIDs[box.id]
+                boxIndex[box.id] = path: box.path, uid: uid
+    ]
+    .spread (scheduler) -> scheduler.doASAP (imap) ->  
+
+        # ERROR CASES
+        for boxid in boxOps.addTo when not boxIndex[boxid]
+            throw new Error "the box ID=#{box} doesn't exists"
+
+        # step 1 - get the first box + UID
+        boxid = Object.keys(msg.mailboxIDs)[0]
+        uid = msg.mailboxIDs[boxid]
+        
+        # step 2 - apply flags change
+        imap.openBox boxIndex[boxid].path
+        .then -> 
+            if flagsOps.add.length  
+                imap.addFlags uid, flagsOps.add
+        .then -> 
+            if flagsOps.remove.length
+                imap.delFlags uid, flagsOps.remove 
+        .then ->
+            log.info "CHANGED FLAGS #{boxIndex[boxid].path}:#{uid}",
+            "ADD" , flagsOps.add, "REMOVE", flagsOps.remove
+            msg.flags = _.union msg.flags, flagsOps.add
+            msg.flags = _.difference msg.flags, flagsOps.remove
+            log.info "   RESULT = ", msg.flags
+
+        # step 3 - copy the message to its destinations
+        .then -> Promise.serie boxOps.addTo, (destId) ->
+            console.log destId
+            imap.copy uid, boxIndex[destId].path
+            .then (uidInDestination) -> 
+                log.info "COPIED #{boxIndex[boxid].path}:#{uid}",
+                " TO #{boxIndex[destId].path}:#{uidInDestination}"
+                msg.mailboxIDs[destId] = uidInDestination
+    
+        # step 4 - remove the message from the box it shouldn't be in
+        .then -> 
+            Promise.serie boxOps.removeFrom, (boxid) ->
+                {path, uid} = boxIndex[boxid] 
+
+                imap.openBox path
+                .then -> imap.addFlags uid, '\\Deleted'
+                .then -> imap.expunge uid
+                .then -> delete msg.mailboxIDs[boxid]
+                .tap ->
+                    log.info "DELETED #{path}:#{uid}"
+

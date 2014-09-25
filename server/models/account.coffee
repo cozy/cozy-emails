@@ -1,7 +1,3 @@
-Mailbox = require './mailbox'
-Imap = require '../processes/imap_processes'
-Promise = require 'bluebird'
-
 americano = require 'americano-cozy'
 module.exports = Account = americano.getModel 'Account',
     label: String
@@ -13,6 +9,11 @@ module.exports = Account = americano.getModel 'Account',
     imapPort: Number
     mailboxes: (x) -> x
 
+# There is a circular dependency between ImapProcess & Account
+# node handle if we require after module.exports definition
+Mailbox = require './mailbox'
+ImapProcess = require '../processes/imap_processes'
+Promise = require 'bluebird'
 log = require('../utils/logging')(prefix: 'models:account')
 
 # fetch the list of all Accounts
@@ -29,11 +30,11 @@ Account.listWithMailboxes = ->
 # refresh all accounts
 Account.refreshAllAccounts = ->
     Promise.serie Account.getAllPromised(), (account) ->
-        Imap.fetchAccount account
+        ImapProcess.fetchAccount account
 
 # refresh this account
 Account::fetchMails = ->
-    Imap.fetchAccount this
+    ImapProcess.fetchAccount this
 
 # include the mailboxes tree on an account instance
 # return a promise for the account itself
@@ -49,7 +50,7 @@ Account.createIfValid = (data) ->
     account = null
     rawBoxesTree = null
 
-    Imap.fetchBoxesTree data
+    ImapProcess.fetchBoxesTree data
     .then (boxes) ->
         log.info "GOT BOXES", boxes
         # We managed to get boxes, login settings are OK
