@@ -89,6 +89,12 @@ module.exports = Application = React.createClass
 
         alert = @state.alertMessage
 
+        getUrl = (mailbox) =>
+            @buildUrl
+                direction: 'first'
+                action: 'account.mailbox.messages'
+                parameters: [@state.selectedAccount?.get('id'), mailbox.get('id')]
+
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
@@ -127,6 +133,7 @@ module.exports = Application = React.createClass
                                     selectedAccount: @state.selectedAccount
                                     mailboxes: @state.mailboxes
                                     selectedMailbox: @state.selectedMailbox
+                                    getUrl: getUrl
                                 SearchForm query: @state.searchQuery
 
                         div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',

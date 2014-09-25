@@ -6,12 +6,17 @@ americano = require 'americano-cozy'
 module.exports = Account = americano.getModel 'Account',
     label: String
     login: String
+    name: String
     password: String
     smtpServer: String
     smtpPort: Number
     imapServer: String
     imapPort: Number
     mailboxes: (x) -> x
+    draftMailbox: String
+    sentMailbox: String
+    trashMailbox: String
+
 
 # fetch the list of all Accounts
 # include the account mailbox tree

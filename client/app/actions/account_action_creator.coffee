@@ -13,7 +13,7 @@ module.exports = AccountActionCreator =
             # set a timeout to simulate the "waiting" state
             setTimeout ->
                 AccountActionCreator._setNewAccountWaitingStatus false
-                if error?
+                if error? or not account?
                     AccountActionCreator._setNewAccountError error
                 else
                     AppDispatcher.handleViewAction
@@ -28,16 +28,13 @@ module.exports = AccountActionCreator =
         newAccount = account.mergeDeep inputValues
 
         XHRUtils.editAccount newAccount, (error, rawAccount) ->
-            # set a timeout to simulate the "waiting" state
-            setTimeout ->
-                AccountActionCreator._setNewAccountWaitingStatus false
-                if error?
-                    AccountActionCreator._setNewAccountError error
-                else
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.EDIT_ACCOUNT
-                        value: rawAccount
-            , 2000
+            AccountActionCreator._setNewAccountWaitingStatus false
+            if error?
+                AccountActionCreator._setNewAccountError error
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.EDIT_ACCOUNT
+                    value: rawAccount
 
 
     remove: (accountID) ->

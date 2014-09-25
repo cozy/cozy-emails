@@ -5,14 +5,13 @@ SettingsActionCreator = require '../actions/settings_action_creator'
 SettingsStore = require '../stores/settings_store'
 
 module.exports = React.createClass
-    displayName: 'AccountConfig'
+    displayName: 'Settings'
 
     mixins: [
         React.addons.LinkedStateMixin # two-way data binding
     ]
 
     render: ->
-        titleLabel = if @props.initialAccountConfig? then t "mailbox edit" else t "mailbox new"
 
         div id: 'mailbox-config',
             h3 className: null, t "settings title"
