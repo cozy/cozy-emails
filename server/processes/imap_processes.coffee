@@ -181,7 +181,6 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
 
         # step 3 - copy the message to its destinations
         .then -> Promise.serie boxOps.addTo, (destId) ->
-            console.log destId
             imap.copy uid, boxIndex[destId].path
             .then (uidInDestination) -> 
                 log.info "COPIED #{boxIndex[boxid].path}:#{uid}",

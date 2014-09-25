@@ -139,7 +139,6 @@ describe "Accounts Tests", ->
 
         client.patch "/message/#{@latestInboxMessageId}", patch, (err, res, body) =>
             res.statusCode.should.equal 200
-            console.log body.flags
             body.flags.should.containEql '\\Seen'
             @uid = body.mailboxIDs[@inboxID]
             done()
