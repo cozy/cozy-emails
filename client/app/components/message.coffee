@@ -1,5 +1,4 @@
-{div, ul, li, span, i, p, h3, a, button, pre} = React.DOM
-MailboxList  = require './mailbox-list'
+{div, ul, li, span, i, p, h3, a, button, pre, iframe} = React.DOM
 Compose      = require './compose'
 FilePicker   = require './file-picker'
 MessageUtils = require '../utils/message_utils'
@@ -7,6 +6,7 @@ MessageUtils = require '../utils/message_utils'
 LayoutActionCreator       = require '../actions/layout_action_creator'
 ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
+SettingsStore = require '../stores/settings_store'
 RouterMixin = require '../mixins/router_mixin'
 
 # Flux stores
@@ -32,6 +32,8 @@ module.exports = React.createClass
             active: false,
             composing: false
             composeAction: ''
+            messageDisplayHTML:   SettingsStore.get 'messageDisplayHTML'
+            messageDisplayImages: SettingsStore.get 'messageDisplayImages'
         }
 
     _prepareMessage: ->
@@ -48,10 +50,10 @@ module.exports = React.createClass
         text = message.get 'text'
         html = message.get 'html'
 
-        if text and not html and @state.composeInHTML
+        if text and not html and @state.messageDisplayHTML
             html = markdown.toHTML text
 
-        if html and not text and not @state.composeInHTML
+        if html and not text and not @state.messageDisplayHTML
             text = toMarkdown html
 
         return {
@@ -68,6 +70,7 @@ module.exports = React.createClass
 
     componentWillReceiveProps: ->
         @_markRead @props.message
+        @setState messageDisplayHTML: SettingsStore.get 'messageDisplayHTML'
 
     _markRead: (message) ->
         # Mark message as seen if needed
@@ -80,12 +83,26 @@ module.exports = React.createClass
 
         message  = @props.message
         prepared = @_prepareMessage()
+        hasAttachments = prepared.attachments.length
+        if @state.messageDisplayHTML
+            parser = new DOMParser()
+            doc = parser.parseFromString prepared.html, "text/html"
+            if not @state.messageDisplayImages
+                hideImage = (img) ->
+                    img.dataset.src = img.getAttribute 'src'
+                    img.setAttribute 'src', ''
+                images = doc.querySelectorAll 'IMG[src]'
+                hideImage img for img in images
+            else
+                images = []
+            htmluri = "data:text/html;charset=utf-8;base64,#{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
 
         clickHandler = if @props.isLast then null else @onFold
 
         classes = classer
             message: true
             active: @state.active
+        leftClass = if hasAttachments then 'col-md-8' else 'col-md-12'
 
         # display attachment
         display = (file) ->
@@ -95,20 +112,31 @@ module.exports = React.createClass
         li className: classes, key: @props.key, onClick: clickHandler, 'data-id': @props.message.get('id'),
             @getToolboxRender message.get('id'), prepared
             div className: 'header row',
-                div className: 'col-md-8',
+                div className: leftClass,
                     i className: 'sender-avatar fa fa-user'
                     div className: 'participants',
                         span  className: 'sender', MessageUtils.displayAddresses(message.get('from'), true)
                         span className: 'receivers', t "mail receivers", {dest: MessageUtils.displayAddresses(message.get('to'), true)}
                         span className: 'receivers', t "mail receivers cc", {dest: MessageUtils.displayAddresses(message.get('cc'), true)}
                     span className: 'hour', prepared.date
-                div className: 'col-md-4',
-                    FilePicker({editable: false, files: prepared.attachments.map(MessageUtils.convertAttachments), display: display})
+                if hasAttachments
+                    div className: 'col-md-4',
+                        FilePicker({editable: false, files: prepared.attachments.map(MessageUtils.convertAttachments), display: display})
             div className: 'full-headers',
                 pre null, prepared.fullHeaders.join "\n"
-            div className: 'preview',
-                p null, prepared.text
-            div className: 'content', dangerouslySetInnerHTML: {__html: prepared.html}
+            if @state.messageDisplayHTML
+                div null,
+                    if images.length > 0 and not @state.messageDisplayImages
+                        div className: "imagesWarning content-action", ref: "imagesWarning",
+                            span null, t 'message images warning'
+                            button className: 'btn btn-default', type: "button", ref: 'imagesDisplay', t 'message images display'
+                    iframe className: 'content', ref: 'content', sandbox: 'allow-same-origin', allowTransparency: true, frameBorder: 0, src: htmluri, ''
+            else
+                div null,
+                    div className: "content-action",
+                        button className: 'btn btn-default', type: "button", onClick: @displayHTML, t 'message html display'
+                    div className: 'preview',
+                        p null, prepared.text
             div className: 'clearfix'
 
             # Display Compose block
@@ -203,6 +231,34 @@ module.exports = React.createClass
         pusher += "--" for j in [1..mailbox.get('depth')] by 1
         li role: 'presentation', key: key,
             a role: 'menuitem', onClick: @onMove, 'data-value': key, 'data-conversation': conversation, "#{pusher}#{mailbox.get 'label'}"
+
+    _initFrame: ->
+        # - resize the frame to the height of its content
+        # - if images are not displayed, create the function to display them and resize the frame
+        if @state.messageDisplayHTML
+            frame = @refs.content.getDOMNode()
+            component = this
+            frame.addEventListener 'load', ->
+                if this.contentDocument
+                    doc = this.contentDocument
+                else
+                    doc = this.contentWindow.document
+                rect = doc.body.getBoundingClientRect()
+                frame.style.height = "#{rect.height + 40}px"
+                if not component.state.messageDisplayImages and component.refs.imagesDisplay?
+                    component.refs.imagesDisplay.getDOMNode().addEventListener 'click', ->
+                        showImage = (img) ->
+                            img.setAttribute 'src', img.dataset.src
+                            rect = doc.body.getBoundingClientRect()
+                            frame.style.height = "#{rect.height + 40}px"
+                        showImage img for img in doc.querySelectorAll 'IMG'
+                        component.refs.imagesWarning.getDOMNode().classList.add 'hidden'
+
+    componentDidMount: ->
+        @_initFrame()
+
+    componentDidUpdate: ->
+        @_initFrame()
 
     onFold: (args) ->
         @setState active: not @state.active
@@ -306,3 +362,8 @@ module.exports = React.createClass
         event.preventDefault()
         messageId = event.target.dataset.messageId
         document.querySelector(".conversation [data-id='#{messageId}']").classList.toggle('with-headers')
+
+    displayHTML: (event) ->
+        event.preventDefault()
+        @setState messageDisplayHTML: true
+

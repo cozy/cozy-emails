@@ -12,6 +12,8 @@ class SettingsStore extends Store
         messagesPerPage: 5
         displayConversation: false
         composeInHTML: true
+        messageDisplayHTML: true
+        messageDisplayImages: false
 
     ###
         Defines here the action handlers.

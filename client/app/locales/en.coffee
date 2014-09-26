@@ -101,13 +101,18 @@ module.exports =
       "conversation seen ok"        : "Conversation marked as read"
       "conversation seen ko"        : "Error"
       "conversation unseen ok"      : "Conversation marked as unread"
-      "conversation unseen ko"      : "Error<"
+      "conversation unseen ko"      : "Error"
+      "message images warning"      : "Display of images inside message has been blocked"
+      "message images display"      : "Display images"
+      "message html display"        : "Display HTML"
 
       # Settings
       "settings title"             : "Settings"
       "settings button save"       : "Save"
       "settings label mpp"         : "Messages per page"
       "settings label compose"     : "Rich message editor"
+      "settings label html"        : "Display message in HTML"
+      "settings label images"      : "Display images inside messages"
 
       # File picker
       "picker drop here"           : "Drop files here"

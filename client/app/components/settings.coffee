@@ -31,9 +31,22 @@ module.exports = React.createClass
                     div className: 'col-sm-3',
                         input id: 'settings-compose', checkedLink: @linkState('composeInHTML'), type: 'checkbox', className: 'form-control'
 
+            form className: 'form-horizontal',
+                div className: 'form-group',
+                    label htmlFor: 'settings-compose', className: 'col-sm-2 col-sm-offset-2 control-label', t "settings label html"
+                    div className: 'col-sm-3',
+                        input id: 'settings-compose', checkedLink: @linkState('messageDisplayHTML'), type: 'checkbox', className: 'form-control'
+
+            form className: 'form-horizontal',
+                div className: 'form-group',
+                    label htmlFor: 'settings-compose', className: 'col-sm-2 col-sm-offset-2 control-label', t "settings label images"
+                    div className: 'col-sm-3',
+                        input id: 'settings-compose', checkedLink: @linkState('messageDisplayImages'), type: 'checkbox', className: 'form-control'
+
                 div className: 'form-group',
                     div className: 'col-sm-offset-2 col-sm-5 text-right',
                         button className: 'btn btn-cozy', onClick: @onSubmit, t "settings button save"
+
     onSubmit: (event) ->
         # prevents the page from reloading
         event.preventDefault()

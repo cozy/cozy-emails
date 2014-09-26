@@ -102,12 +102,17 @@ module.exports =
       "conversation seen ko"        : "L'opération a échoué"
       "conversation unseen ok"      : "Ok"
       "conversation unseen ko"      : "L'opération a échoué"
+      "message images warning"      : "L'affichage des images du message a été bloqué"
+      "message images display"      : "Afficher les images"
+      "message html display"        : "Afficher en HTML"
 
       # Settings
       "settings title"             : "Paramètres"
       "settings button save"       : "Enregistrer"
       "settings label mpp"         : "Nombre de messages par page"
       "settings label compose"     : "Éditeur riche"
+      "settings label html"        : "Afficher les messages en HTML"
+      "settings label images"      : "Afficher les images"
 
       # File picker
       "picker drop here"           : "Déposer les fichiers ici"
