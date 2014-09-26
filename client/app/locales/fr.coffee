@@ -105,6 +105,7 @@ module.exports =
       "message images warning"      : "L'affichage des images du message a été bloqué"
       "message images display"      : "Afficher les images"
       "message html display"        : "Afficher en HTML"
+      "message delete no trash"     : "Choisissez d'abord un dossier Corbeille"
 
       # Settings
       "settings title"             : "Paramètres"

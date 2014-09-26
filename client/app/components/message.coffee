@@ -277,7 +277,7 @@ module.exports = React.createClass
 
     onDelete: (args) ->
         if window.confirm(t 'mail confirm delete')
-            MessageActionCreator.delete @props.message, (error) =>
+            MessageActionCreator.delete @props.message, @props.selectedAccount, (error) =>
                 if error?
                     LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
                 else

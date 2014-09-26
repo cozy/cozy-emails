@@ -105,6 +105,7 @@ module.exports =
       "message images warning"      : "Display of images inside message has been blocked"
       "message images display"      : "Display images"
       "message html display"        : "Display HTML"
+      "message delete no trash"     : "Please select a Trash folder"
 
       # Settings
       "settings title"             : "Settings"
