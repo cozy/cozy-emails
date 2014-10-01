@@ -19,7 +19,8 @@
     "superagent": "0.18.2",
     "underscore": "1.6.0",
     "watchify": "1.0.1",
-    "node-event-emitter": "0.0.1"
+    "node-event-emitter": "0.0.1",
+    "glob": "4.0.6"
   },
   "devDependencies": {
     "coffeeify": "0.7.0",
