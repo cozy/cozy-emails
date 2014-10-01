@@ -6,7 +6,7 @@ COLORS = [
     '\x1B[31mERROR\x1B[39m'
 ]
 
-LOG_LEVEL = if process.env.DEBUG? then parseInt process.env.DEBUG
+LOG_LEVEL = if process.env.DEBUG_LEVEL? then parseInt process.env.DEBUG_LEVEL
 else if process.env.NODE_ENV is 'test' then 3
 else if process.env.NODE_ENV is 'production' then 1
 else 0

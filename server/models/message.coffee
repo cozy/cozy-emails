@@ -90,6 +90,14 @@ Message.byMessageId = (accountID, messageID) ->
     .then (rows) ->
         if data = rows[0]?.doc then new Message data
 
+Message.byConversationId = (conversationID) ->
+    Message.rawRequestPromised 'byConversationId',
+        key: conversationID
+        include_docs: true
+
+    .map (row) -> new Message row.doc
+
+
 # add the message to a box
 Message::addToMailbox = (box, uid) ->
     @mailboxIDs[box.id] = uid
@@ -134,6 +142,20 @@ Message::applyPatchOperations = (patch) ->
     ImapProcess.applyMessageChanges this, flagOps, boxOps
     .then => @savePromised()
 
+Message::moveToTrash = (patch) ->
+    Account.findPromised @accountID
+    .then (account) =>
+        trashID = account.trashMailbox
+        throw new WrongConfigError 'need define trash' unless trashID
+
+        # build a patch that remove from all mailboxes and add to trash
+        patch = Object.keys @mailboxIDs
+        .filter (boxid) -> boxid isnt trashID
+        .map (boxid) -> op: 'remove', path: "/mailboxIDs/#{boxid}"
+
+        patch.push op: 'add', path: "/mailboxIDs/#{trashID}"
+
+        @applyPatchOperations patch
 
 # create a message from a raw imap message
 # handle normalization of message ids & subjects

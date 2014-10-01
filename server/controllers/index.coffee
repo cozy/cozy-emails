@@ -43,5 +43,10 @@ module.exports.loadFixtures = (req, res, next) ->
         else
             res.send 200, message: 'LOAD FIXTURES SUCCESS'
 
+module.exports.refresh = (req, res, next) ->
+    Account.refreshAllAccounts()
+    .then -> res.send 200, 'done'
+    .catch next
+
 module.exports.tasks = (req, res, next) ->
     res.send 200, ImapReporter.summary()

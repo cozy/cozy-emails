@@ -186,8 +186,7 @@ recoverChangedUIDValidity = (imap, box, accountID) ->
             .get(0)
             .then (row) ->
                 return unless row
-                console.log "MATCH"
-                mailboxIDs = row.mailboxIDs
+                mailboxIDs = row.doc.mailboxIDs
                 mailboxIDs[box.id] = newUID
                 msg = new Message(row.doc)
                 msg.updateAttributesPromised {mailboxIDs}

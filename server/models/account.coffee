@@ -8,12 +8,17 @@ module.exports = Account = americano.getModel 'Account',
     imapServer: String
     imapPort: Number
     mailboxes: (x) -> x
+    draftMailbox: String
+    sentMailbox: String
+    trashMailbox: String
+
 
 # There is a circular dependency between ImapProcess & Account
 # node handle if we require after module.exports definition
 Mailbox = require './mailbox'
 ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
+{WrongConfigError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'models:account')
 
 # fetch the list of all Accounts

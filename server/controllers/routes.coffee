@@ -10,6 +10,8 @@ module.exports =
     '': get: index.main
 
     'tasks': get: index.tasks
+    'refresh': get: index.refresh
+
 
     'account':
         post: accounts.create

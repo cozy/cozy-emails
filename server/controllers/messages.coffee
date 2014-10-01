@@ -30,9 +30,6 @@ module.exports.listByMailboxId = (req, res, next) ->
         Message.countReadByMailbox req.params.mailboxID        
     ]
     .spread (messages, count, read) ->
-
-        console.log read
-
         res.send 200,
             mailboxID: req.params.mailboxID
             messages: messages
@@ -124,9 +121,22 @@ module.exports.index = (req, res, next) ->
 
 module.exports.del = (req, res, next) ->
 
-    # @TODO : move message to trash
+    Account.findPromised req.message.accountID
+    .then (account) ->
+        trashID = account.trashMailbox
+        throw new WrongConfigError 'need define trash' unless trashID
 
-    res.send 200, ""
+        # build a patch that remove from all mailboxes and add to trash
+        patch = Object.keys(req.message.mailboxIDs)
+        .filter (boxid) -> boxid isnt trashID
+        .map (boxid) -> op: 'remove', path: "/mailboxIDs/#{boxid}"
+
+        patch.push op: 'add', path: "/mailboxIDs/#{trashID}"
+
+        req.message.applyPatchOperations patch
+
+    .then -> res.send 200, req.message
+    .catch next
 
 module.exports.conversationDelete = (req, res, next) ->
 
@@ -137,19 +147,12 @@ module.exports.conversationDelete = (req, res, next) ->
 
 module.exports.conversationPatch = (req, res, next) ->
 
-    # @TODO : update Conversation
-    patch = (p) ->
-        path = p.path.split('/')
-        if path[1] is 'flags'
-            if p.op is 'add'
-                console.log "Marking messages as seen"
-            else
-                console.log "Removing seen flag"
-
-        else if path[1] is 'mailboxIDs'
-            console.log "Moving all messages to #{p.value}"
-    patch p for p in req.body
-
-    res.send 200, []
-
-
+    Message.byConversationID req.params.conversationID
+    .then (messages) ->
+        # @TODO : be smarter : dont remove message from sent folder, ...
+        Promise.serie messages, (msg) -> 
+            msg.applyPatchOperations req.body
+        
+        .then -> res.send 200, messages
+    
+    .catch next
