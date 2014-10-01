@@ -34,6 +34,7 @@ ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
     reporter = ImapReporter.addUserTask
         code: 'diff'
         total: 1
+        account: account.label
         box: box.path
 
     # let the scheduler safely open the box
@@ -82,6 +83,7 @@ ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
 ImapProcess.fetchMails = (account, box, uids) ->
     reporter = ImapReporter.addUserTask
         code: 'apply-diff-fetch'
+        account: account.label
         box: box.path
         total: uids.length
 
@@ -96,6 +98,7 @@ ImapProcess.fetchMails = (account, box, uids) ->
 ImapProcess.removeMails = (box, cozyIDs) ->
     reporter = ImapReporter.addUserTask
         code: 'apply-diff-remove'
+        account: account.label
         box: box.path
         total: cozyIDs.length
 

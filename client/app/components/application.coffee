@@ -2,6 +2,7 @@
 {body, div, p, form, i, input, span, a, button, strong} = React.DOM
 AccountConfig = require './account-config'
 Alert         = require './alert'
+Toast         = require './toast'
 Compose       = require './compose'
 Conversation  = require './conversation'
 MailboxList   = require './mailbox-list'
@@ -24,6 +25,7 @@ MessageStore  = require '../stores/message_store'
 LayoutStore   = require '../stores/layout_store'
 SettingsStore = require '../stores/settings_store'
 SearchStore   = require '../stores/search_store'
+TasksStore = require '../stores/tasks_store'
 
 # Flux actions
 LayoutActionCreator = require '../actions/layout_action_creator'
@@ -43,7 +45,7 @@ module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SearchStore]
+        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SearchStore, TasksStore]
         RouterMixin
     ]
 
@@ -106,6 +108,10 @@ module.exports = Application = React.createClass
 
                     # Display feedback
                     Alert { alert }
+
+                    div className: 'toasts-container',
+                        @state.toasts.map (toast) -> Toast toast: toast 
+                        .toJS()
 
                     # The quick actions bar shoud be moved in its own component
                     # when its feature is implemented.
@@ -332,6 +338,7 @@ module.exports = Application = React.createClass
             selectedAccount: selectedAccount
             isResponsiveMenuShown: LayoutStore.isMenuShown()
             alertMessage: LayoutStore.getAlert()
+            toasts: TasksStore.getTasks()
             mailboxes: AccountStore.getSelectedMailboxes true
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()

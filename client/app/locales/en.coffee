@@ -107,3 +107,7 @@ module.exports =
 
       # File picker
       "picker drop here"           : "Drop files here"
+
+      # Tasks
+      "task diff"                  : 'Comparing %{box} of %{account}'
+      "task apply-diff-fetch"      : 'Fetching mails %{box} of %{account}'

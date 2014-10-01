@@ -12,9 +12,12 @@ module.exports.main = (req, res, next) ->
 
         Account.getAllPromised()
             .map (account) -> account.includeMailboxes()
+
+        ImapReporter.summary()
     ]
-    .spread (locale, accounts) ->
+    .spread (locale, accounts, tasks) ->
         """
+            window.tasks = #{JSON.stringify tasks};
             window.locale = "#{locale}";
             window.accounts = #{JSON.stringify accounts};
         """
@@ -26,6 +29,7 @@ module.exports.main = (req, res, next) ->
         """
             console.log("#{err}");
             window.locale = "en"
+            window.tasks = []
             window.accounts = []
         """
 
