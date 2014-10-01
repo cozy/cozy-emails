@@ -2,6 +2,7 @@ americano = require 'americano-cozy'
 module.exports = Account = americano.getModel 'Account',
     label: String
     login: String
+    name: String
     password: String
     smtpServer: String
     smtpPort: Number

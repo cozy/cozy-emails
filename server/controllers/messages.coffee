@@ -5,7 +5,12 @@ Client      = require('request-json').JsonClient
 jsonpatch   = require 'fast-json-patch'
 Compiler    = require 'nodemailer/src/compiler'
 Promise     = require 'bluebird'
+htmlToText  = require 'html-to-text'
+sanitizer   = require 'sanitizer'
 
+htmlToTextOptions =
+    tables: true
+    wordwrap: 80
 # The data system listens to localhost:9101
 dataSystem = new Client 'http://localhost:9101/'
 
@@ -14,6 +19,15 @@ if process.env.NODE_ENV in ['production', 'test']
     user = process.env.NAME
     password = process.env.TOKEN
     dataSystem.setBasicAuth user, password
+
+formatMessage = (message) ->
+    if message.html?
+        message.html = sanitizer.sanitize message.html, (value) -> value.toString()
+
+    if not message.text?
+        message.text = htmlToText.fromString message.html, htmlToTextOptions
+
+    return message
 
 # list messages from a mailbox
 # require numPage & numByPage params
@@ -32,7 +46,7 @@ module.exports.listByMailboxId = (req, res, next) ->
     .spread (messages, count, read) ->
         res.send 200,
             mailboxID: req.params.mailboxID
-            messages: messages
+            messages: messages.map formatMessage
             count: count
             unread: count - read
 
@@ -52,7 +66,7 @@ module.exports.details = (req, res, next) ->
     # @TODO : fetch message's status
     # @TODO : fetch whole conversation ?
 
-    res.send 200, req.message
+    res.send 200, formatMessage req.message
 
 module.exports.attachment = (req, res, next) ->
     stream = req.message.getBinary req.params.attachment, (err) ->
@@ -64,7 +78,7 @@ module.exports.attachment = (req, res, next) ->
 # patch e message
 module.exports.patch = (req, res, next) ->
     req.message.applyPatchOperations req.body
-    .then -> res.send 200, req.message
+    .then -> res.send 200, formatMessage req.message
     .catch next
 
 # send a message through the DS
@@ -105,7 +119,7 @@ module.exports.search = (req, res, next) ->
             query: req.params.query
             numPage: req.params.numPage
             numByPage: numPageCheat
-        .then (messages) -> res.send messages
+        .then (messages) -> res.send 200, messages.map formatMessage
         .catch next
 
 # Temporary routes for testing purpose

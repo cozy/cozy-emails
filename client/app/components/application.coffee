@@ -91,6 +91,12 @@ module.exports = Application = React.createClass
 
         alert = @state.alertMessage
 
+        getUrl = (mailbox) =>
+            @buildUrl
+                direction: 'first'
+                action: 'account.mailbox.messages'
+                parameters: [@state.selectedAccount?.get('id'), mailbox.get('id')]
+
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
@@ -133,6 +139,7 @@ module.exports = Application = React.createClass
                                     selectedAccount: @state.selectedAccount
                                     mailboxes: @state.mailboxes
                                     selectedMailbox: @state.selectedMailbox
+                                    getUrl: getUrl
                                 SearchForm query: @state.searchQuery
 
                         div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
@@ -279,7 +286,8 @@ module.exports = Application = React.createClass
         # -- Display the settings form
         else if panelInfo.action is 'settings'
             settings = @state.settings
-            return Settings {settings}
+            plugins  = @state.plugins
+            return Settings {settings, plugins}
 
         # -- Generates a message list based on search result
         else if panelInfo.action is 'search'
@@ -344,6 +352,7 @@ module.exports = Application = React.createClass
             favoriteMailboxes: AccountStore.getSelectedFavorites()
             searchQuery: SearchStore.getQuery()
             settings: SettingsStore.get()
+            plugins: window.plugins
         }
 
 

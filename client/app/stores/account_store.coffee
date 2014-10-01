@@ -39,7 +39,7 @@ class AccountStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.ADD_ACCOUNT, (account) ->
-            account = _makeAccountImmutable account
+            account = AccountTranslator.toImmutable account
             _accounts = _accounts.set account.get('id'), account
             @emit 'change'
 

@@ -88,7 +88,7 @@ module.exports = LayoutActionCreator =
     showSearch: (panelInfo, direction) ->
         AccountActionCreator.selectAccount -1
 
-        [query, page] = panelInfo.parameters
+        {query, page} = panelInfo.parameters
 
         SearchActionCreator.setQuery query
 

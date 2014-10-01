@@ -46,7 +46,7 @@
                 background #fff
 
                 .preview
-                    display none
+                    display block
                 .content
                     display block
 
@@ -91,15 +91,19 @@
                 &.receivers
                     color mediumcolor
 
+            .content-action
+                background-color lightcolor
+
             .content
-                white-space: pre-line
-                margin-top 15px
+                white-space pre-line
+                margin 1em 0 0 0
                 display none
+                width 100%
 
             .preview
                 margin-top 15px
                 overflow hidden
-                white-space nowrap
+                white-space pre-line
                 text-overflow ellipsis
                 color mediumcolor // for ellipsis + p
 
@@ -108,7 +112,6 @@
                     display inline
 
             .participants
-                width 200px
                 color darkcolor
 
             .hour
