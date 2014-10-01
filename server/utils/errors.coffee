@@ -13,6 +13,13 @@ utils.WrongConfigError = class WrongConfigError extends Error
         @message = "Wrong Imap config on field #{field}"
         Error.captureStackTrace this, arguments.callee
 
+utils.UIDValidityChanged = class UIDValidityChanged extends Error
+    constructor: (uidvalidity) ->
+        @name = UIDValidityChanged
+        @newUidvalidity = uidvalidity
+        @message = "UID Validty has changed"
+        Error.captureStackTrace this, arguments.callee
+
 utils.HttpError = (status, msg) ->
     if msg instanceof Error
         msg.status = status

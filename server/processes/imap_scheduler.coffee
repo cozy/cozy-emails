@@ -1,5 +1,12 @@
+log = require('../utils/logging')(prefix: 'imap:scheduler')
+
 ImapPromised = require './imap_promisified'
+ImapReporter = require './imap_reporter'
 Promise = require 'bluebird'
+_ = require 'lodash'
+{UIDValidityChanged} = require '../utils/errors'
+Message = require '../models/message'
+mailutils = require '../utils/jwz_tools'
 
 # The imap scheduler is responsible to maintain
 # a list of task than need to be executed.
@@ -28,7 +35,8 @@ module.exports = class ImapScheduler
             @account = new Account @account
 
     createNewConnection: ->
-        console.log "OPEN IMAP CONNECTION", @account.label
+        log.info "OPEN IMAP CONNECTION", @account.label
+
         @imap = new ImapPromised
             user: @account.login
             password: @account.password
@@ -36,7 +44,6 @@ module.exports = class ImapScheduler
             port: parseInt @account.imapPort
             tls: not @account.imapSecure? or @account.imapSecure
             tlsOptions: rejectUnauthorized: false
-            # debug: console.log
 
         @imap.onTerminated = =>
             @_rejectPending new Error 'connection closed'
@@ -44,24 +51,24 @@ module.exports = class ImapScheduler
 
         @imap.waitConnected
             .catch (err) =>
-                console.log "FAILED TO CONNECT", err.stack
+                log.error "FAILED TO CONNECT", err.stack
                 # we cant connect, drop the tasks
                 task.reject err while task = @tasks.shift()
                 throw err
             .tap => @_dequeue()
 
     closeConnection: (hard) =>
-        console.log "CLOSING CONNECTION", (if hard then "HARD" else "")
+        log.info "CLOSING CONNECTION", (if hard then "HARD" else "")
         @imap.end(hard).then =>
-            console.log "CLOSED CONNECTION"
+            log.info "CLOSED CONNECTION"
             @imap = null
             @_dequeue()
 
     # add task to queue
     # gen is a function that returns a promise
-    doASAP: (gen) -> @queue gen, true
-    doLater: (gen) -> @queue gen, false
-    queue: (gen, urgent = false) ->
+    doASAP: (gen) -> @queue true, gen
+    doLater: (gen) -> @queue false, gen
+    queue: (urgent = false, gen) ->
         return new Promise (resolve, reject) =>
             fn = if urgent then 'unshift' else 'push'
             @tasks[fn]
@@ -71,6 +78,49 @@ module.exports = class ImapScheduler
                 reject: reject
 
             @_dequeue()
+
+
+    # utility function for actions in a box
+    # handle the case where UIDValidity has changed
+    doASAPWithBox: (box, gen) -> @queueWithBox true, box, gen
+    doLaterWithBox: (box, gen) -> @queueWithBox false, box, gen
+    queueWithBox: (urgent, box, gen) ->
+        @queue urgent, (imap) ->
+
+            uidvalidity = null
+
+            imap.openBox box.path
+            .then (imapbox) ->
+                unless imapbox.persistentUIDs
+                    throw new Error 'UNPERSISTENT UID NOT SUPPORTED'
+
+                log.info "UIDVALIDITY", box.uidvalidity, imapbox.uidvalidity
+
+                # not the same uidvalidity
+                if box.uidvalidity and box.uidvalidity isnt imapbox.uidvalidity
+                    throw new UIDValidityChanged imapbox.uidvalidity
+
+                # call the wrapped generator
+                gen imap
+                .tap -> unless box.uidvalidity
+                    # we store the uidvalidity
+                    log.info "FIRST UIDVALIDITY", imapbox.uidvalidity
+                    box.updateAttributesPromised
+                        uidvalidity: imapbox.uidvalidity
+
+        # if UIDValidity has changed, we recover
+        .catch UIDValidityChanged, (err) =>
+            log.warn "UID VALIDITY HAS CHANGED, RECOVERING"
+
+            @doASAP (imap) => 
+                recoverChangedUIDValidity imap, box, @account._id
+            .then ->
+                box.updateAttributesPromised
+                    uidvalidity: err.newUidvalidity
+            
+            .then =>
+                log.warn "RECOVERED"
+                @queueWithBox urgent, box, gen
 
     _resolvePending: (result) =>
         @pendingTask.resolve result
@@ -114,12 +164,33 @@ module.exports = class ImapScheduler
         # assume its broken and nuke the socket
         .timeout 120000
         .catch Promise.TimeoutError, (err) =>
-            console.log "TASK GOT STUCKED"
+            log.error "TASK GOT STUCKED"
             @closeConnection true
             throw err
 
         .then @_resolvePending, @_rejectPending
 
+recoverChangedUIDValidity = (imap, box, accountID) ->
+    reporter = ImapReporter.addUserTask
+        code: 'fix-changed-uidvalidity'
+        box: box.path
+
+    imap.openBox(box.path)
+    .then -> imap.fetchBoxMessageIds()
+    .then (map) ->
+        Promise.serie _.keys(map), (newUID) ->
+            messageID = mailutils.normalizeMessageID map[newUID]
+            Message.rawRequestPromised 'byMessageId',
+                key: [accountID, messageID]
+                include_docs: true
+            .get(0)
+            .then (row) ->
+                return unless row
+                console.log "MATCH"
+                mailboxIDs = row.mailboxIDs
+                mailboxIDs[box.id] = newUID
+                msg = new Message(row.doc)
+                msg.updateAttributesPromised {mailboxIDs}
 
 # @TODO, put this elsewhere
 Promise.serie = (items, mapper) ->

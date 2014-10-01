@@ -38,6 +38,9 @@ module.exports =
         patch: [messages.fetch, messages.patch]
         'delete': messages.del
 
+    'message/:messageID/attachments/:attachment':
+        get: [messages.fetch, messages.attachment]
+
     'search/:query/page/:numPage/limit/:numByPage':
         get: messages.search
 

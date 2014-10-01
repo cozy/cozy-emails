@@ -4,9 +4,10 @@
 fixtures = require 'cozy-fixtures'
 {exec} = require 'child_process'
 Client = require('request-json').JsonClient
+DovecotTesting = require './DovecotTesting/index'
 Imap = require '../server/processes/imap_promisified'
 
-helpers = {}
+module.exports = helpers = {}
 
 # server management
 helpers.options =
@@ -17,15 +18,6 @@ client = new Client "http://#{helpers.options.serverHost}:#{helpers.options.serv
 
 helpers.getClient = -> client
 
-helpers.startImapServer = (done) ->
-    @timeout 60000 # this is damn slow
-    DovecotStartScript = 'sh tests/DovecotTesting/SetupEnvironment.sh'
-    exec DovecotStartScript, (err, stdout, stderr) ->
-        if err
-            console.log err, stderr
-            done new Error('failed to start dovecot')
-        else
-            done null
 
 helpers.imapServerAccount = ->
     label: "DoveCot"
@@ -33,7 +25,7 @@ helpers.imapServerAccount = ->
     password: "applesauce"
     smtpServer: "172.0.0.1"
     smtpPort: 0
-    imapServer: "127.0.0.1"
+    imapServer: DovecotTesting.serverIP()
     imapPort: 993
     imapSecure: true
 
@@ -41,7 +33,7 @@ helpers.getImapServerRawConnection = ->
     imap = new Imap
         user: "testuser"
         password: "applesauce"
-        host: "127.0.0.1"
+        host: DovecotTesting.serverIP()
         port: 993
         tls: true
         tlsOptions: rejectUnauthorized: false
@@ -78,5 +70,3 @@ helpers.loadFixtures = (done) ->
         dirPath: __dirname + '/fixtures'
         silent: true
         callback: done
-
-module.exports = helpers
