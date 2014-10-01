@@ -74,7 +74,7 @@ ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
             toDo.push ImapProcess.fetchMails account, box, toFetch
 
         if toRemove.length
-            toDo.push ImapProcess.removeMails box, toRemove
+            toDo.push ImapProcess.removeMails account, box, toRemove
 
         reporter.onDone()
         Promise.all toDo
@@ -95,7 +95,7 @@ ImapProcess.fetchMails = (account, box, uids) ->
     .tap -> reporter.onDone()
 
 
-ImapProcess.removeMails = (box, cozyIDs) ->
+ImapProcess.removeMails = (account, box, cozyIDs) ->
     reporter = ImapReporter.addUserTask
         code: 'apply-diff-remove'
         account: account.label
