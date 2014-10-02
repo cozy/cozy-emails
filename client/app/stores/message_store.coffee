@@ -39,6 +39,11 @@ class MessageStore extends Store
                 message.createdAt = message.date
             if not message.attachments?
                 message.attachments = []
+            # Add messageId to every attachment
+            message.attachments = message.attachments.map (file) ->
+                file.messageId = message.id
+                return file
+
             if not message.flags?
                 message.flags = []
             message = Immutable.Map message

@@ -42,7 +42,8 @@ FilePicker = React.createClass
     render: ->
         files = @state.files.map (file) =>
             doDelete = =>
-                updated = @state.files.filter (f) -> return f.name isnt file.name
+                updated = @state.files.filter (f) ->
+                    return f.name isnt file.name
                 @props.onUpdate updated
                 @setState {files: updated }
             options =
@@ -64,12 +65,20 @@ FilePicker = React.createClass
                 files
             if @props.editable
                 div null,
-                    # triggering "click" won't work if file input itself is hidden
+                    # triggering "click" won't work if file input is hidden
                     span className: "file-wrapper",
-                        input type: "file", multiple: "multiple", ref: "file", onChange: @handleFiles
-                    div className: "dropzone", ref: "dropzone", onDragOver: @allowDrop, onDrop: @handleFiles, onClick: @onOpenFile,
-                        i className: "fa fa-paperclip"
-                        span null, t "picker drop here"
+                        input
+                            type: "file",
+                            multiple: "multiple",
+                            ref: "file",
+                            onChange: @handleFiles
+                    div className: "dropzone",
+                        ref: "dropzone",
+                        onDragOver: @allowDrop,
+                        onDrop: @handleFiles,
+                        onClick: @onOpenFile,
+                            i className: "fa fa-paperclip"
+                            span null, t "picker drop here"
 
     onOpenFile: (e) ->
         e.preventDefault()
@@ -80,7 +89,7 @@ FilePicker = React.createClass
 
     handleFiles: (e) ->
         e.preventDefault()
-        files = e.target.files || e.dataTransfer.files
+        files = e.target.files or e.dataTransfer.files
         currentFiles = @state.files
         parsed = 0
 
@@ -121,6 +130,7 @@ FilePicker = React.createClass
             contentId:          null
             transferEncoding:   null
             content:            null
+            url:                null
         }
 
 
@@ -159,23 +169,26 @@ FileItem = React.createClass
     render: ->
         file = @props.file
         type = MessageUtils.getAttachmentType file.type
-        iconClass = switch type
-            when '' then 'fa-file-word-o'
-            when 'archive'      then 'fa-file-archive-o'
-            when 'audio'        then 'fa-file-audio-o'
-            when 'code'         then 'fa-file-code-o'
-            when 'image'        then 'fa-file-image-o'
-            when 'pdf'          then 'fa-file-pdf-o'
-            when 'word'         then 'fa-file-word-o'
-            when 'presentation' then 'fa-file-powerpoint-o'
-            when 'spreadsheet'  then 'fa-file-excel-o'
-            when 'text'         then 'fa-file-text-o'
-            when 'video'        then 'fa-file-video-o'
-            when 'word'         then 'fa-file-word-o'
-            else 'fa-file-o'
+        icons =
+            'archive'      : 'fa-file-archive-o'
+            'audio'        : 'fa-file-audio-o'
+            'code'         : 'fa-file-code-o'
+            'image'        : 'fa-file-image-o'
+            'pdf'          : 'fa-file-pdf-o'
+            'word'         : 'fa-file-word-o'
+            'presentation' : 'fa-file-powerpoint-o'
+            'spreadsheet'  : 'fa-file-excel-o'
+            'text'         : 'fa-file-text-o'
+            'video'        : 'fa-file-video-o'
+            'word'         : 'fa-file-word-o'
+        iconClass = icons[type] or 'fa-file-o'
 
         if @props.display?
-            name = a className: 'file-name', target: '_blank', onClick: @doDisplay, file.name
+            name = a
+                className: 'file-name',
+                target: '_blank',
+                onClick: @doDisplay,
+                file.name
         else
             name = span className: 'file-name', file.name
 
@@ -185,7 +198,9 @@ FileItem = React.createClass
                 i className: "fa fa-times delete", onClick: @doDelete
             name
             div className: 'file-detail',
-                span null, "#{(file.size / 1000).toFixed(2)}Ko"
+                span
+                    'data-file-url': file.url,
+                    "#{(file.size / 1000).toFixed(2)}Ko"
 
     doDisplay: (e) ->
         e.preventDefault
