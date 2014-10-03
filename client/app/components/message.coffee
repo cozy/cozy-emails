@@ -50,8 +50,9 @@ module.exports = React.createClass
         text = message.get 'text'
         html = message.get 'html'
 
-        if text and not html and @state.messageDisplayHTML
-            html = markdown.toHTML text
+        # @TODO Do we want to convert text only messages to HTML ?
+        #if text and not html and @state.messageDisplayHTML
+        #    html = markdown.toHTML text
 
         if html and not text and not @state.messageDisplayHTML
             text = toMarkdown html
@@ -84,7 +85,7 @@ module.exports = React.createClass
         message  = @props.message
         prepared = @_prepareMessage()
         hasAttachments = prepared.attachments.length
-        if @state.messageDisplayHTML
+        if @state.messageDisplayHTML and prepared.html
             parser = new DOMParser()
             doc = parser.parseFromString prepared.html, "text/html"
             if doc and not @state.messageDisplayImages
@@ -125,7 +126,7 @@ module.exports = React.createClass
                         FilePicker({editable: false, files: prepared.attachments.map(MessageUtils.convertAttachments), display: display})
             div className: 'full-headers',
                 pre null, prepared.fullHeaders.join "\n"
-            if @state.messageDisplayHTML
+            if @state.messageDisplayHTML and prepared.html
                 div null,
                     if images.length > 0 and not @state.messageDisplayImages
                         div className: "imagesWarning content-action", ref: "imagesWarning",

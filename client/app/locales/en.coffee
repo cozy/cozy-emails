@@ -111,10 +111,10 @@ module.exports =
       "settings title"             : "Settings"
       "settings button save"       : "Save"
       "settings label mpp"         : "Messages per page"
-      "settings label compose"     : "Rich message editor"
-      "settings label html"        : "Display message in HTML"
-      "settings label images"      : "Display images inside messages"
       "settings plugins"           : "Add ons"
+      "settings label composeInHTML"        : "Rich message editor"
+      "settings label messageDisplayHTML"   : "Display message in HTML"
+      "settings label messageDisplayImages" : "Display images inside messages"
 
       # File picker
       "picker drop here"           : "Drop files here"

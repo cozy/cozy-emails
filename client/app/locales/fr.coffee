@@ -24,8 +24,8 @@ module.exports =
       "compose reply separator"   : "\n\nLe %{date}, %{sender} a écrit \n"
       "compose forward prefix"    : "Fwd: "
       "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n"
-      "compose action draft"      : "Save as draft"
-      "compose action send"       : "Send"
+      "compose action draft"      : "Enregistrer le brouillon"
+      "compose action send"       : "Envoyer"
       "compose toggle cc"         : "Cc"
       "compose toggle bcc"        : "Cci"
 
@@ -75,7 +75,7 @@ module.exports =
       "account user fullname"       : "Votre nom, tel qu'il sera affiché"
       "account address"             : "Adresse"
       "account address placeholder" : "Votre adresse électronique"
-      "account password"            : "Maot de passe"
+      "account password"            : "Mot de passe"
       "account sending server"      : "Serveur sortant"
       "account receiving server"    : "Serveur IMAP"
       "account remove"              : "Supprimer"
@@ -111,10 +111,10 @@ module.exports =
       "settings title"             : "Paramètres"
       "settings button save"       : "Enregistrer"
       "settings label mpp"         : "Nombre de messages par page"
-      "settings label compose"     : "Éditeur riche"
-      "settings label html"        : "Afficher les messages en HTML"
-      "settings label images"      : "Afficher les images"
       "settings plugins"           : "Modules complémentaires"
+      "settings label composeInHTML"        : "Éditeur riche"
+      "settings label messageDisplayHTML"   : "Afficher les messages en HTML"
+      "settings label messageDisplayImages" : "Afficher les images"
 
       # File picker
       "picker drop here"           : "Déposer les fichiers ici"

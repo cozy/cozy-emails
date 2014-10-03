@@ -38,53 +38,10 @@ module.exports = React.createClass
                             step: 5,
                             className: 'form-control'
 
-            form className: 'form-horizontal',
-                div className: 'form-group',
-                    label
-                        htmlFor: 'settings-compose',
-                        className: classLabel,
-                        t "settings label compose"
-                    div className: 'col-sm-3',
-                        input
-                            id: 'settings-compose',
-                            checked: @state.settings.composeInHTML,
-                            onChange: @handleChange,
-                            'data-target': 'composeInHTML',
-                            type: 'checkbox',
-                            className: 'form-control'
 
-            form className: 'form-horizontal',
-                div className: 'form-group',
-                    label
-                        htmlFor: 'settings-compose',
-                        className: classLabel,
-                        t "settings label html"
-                    div className: 'col-sm-3',
-                        input
-                            id: 'settings-compose',
-                            checkedLink: @linkState('messageDisplayHTML'),
-                            type: 'checkbox',
-                            className: 'form-control'
-
-            form className: 'form-horizontal',
-                div className: 'form-group',
-                    label
-                        htmlFor: 'settings-compose',
-                        className: classLabel,
-                        t "settings label images"
-                    div className: 'col-sm-3',
-                        input
-                            id: 'settings-compose',
-                            checkedLink: @linkState('messageDisplayImages'),
-                            type: 'checkbox',
-                            className: 'form-control'
-
-                div className: 'form-group',
-                    div className: 'col-sm-offset-2 col-sm-5 text-right',
-                        button
-                            className: 'btn btn-cozy',
-                            onClick: @onSubmit,
-                            t "settings button save"
+            @_renderOption 'composeInHTML'
+            @_renderOption 'messageDisplayHTML'
+            @_renderOption 'messageDisplayImages'
 
             fieldset null,
                 legend null, t 'settings plugins'
@@ -101,6 +58,23 @@ module.exports = React.createClass
                                     type: 'checkbox',
                                     className: 'form-control'
 
+    _renderOption: (option) ->
+        classLabel = 'col-sm-2 col-sm-offset-2 control-label'
+        form className: 'form-horizontal',
+            div className: 'form-group',
+                label
+                    htmlFor: 'settings-' + option,
+                    className: classLabel,
+                    t "settings label " + option
+                div className: 'col-sm-3',
+                    input
+                        id: 'settings-' + option,
+                        checked: @state.settings[option],
+                        onChange: @handleChange,
+                        'data-target': option,
+                        type: 'checkbox',
+                        className: 'form-control'
+
     handleChange: (event) ->
         target = event.target
         switch target.dataset.target
@@ -109,9 +83,9 @@ module.exports = React.createClass
                 settings.messagesPerPage = target.value
                 @setState({settings: settings})
                 SettingsActionCreator.edit settings
-            when 'composeInHTML'
+            when 'composeInHTML', 'messageDisplayHTML', 'messageDisplayImages'
                 settings = @state.settings
-                settings.composeInHTML = target.checked
+                settings[target.dataset.target] = target.checked
                 @setState({settings: settings})
                 SettingsActionCreator.edit settings
             when 'plugin'
@@ -120,13 +94,6 @@ module.exports = React.createClass
                 else
                     PluginUtils.deactivate target.dataset.plugin
                 @setState({plugins: window.plugins})
-
-    onSubmit: (event) ->
-        # prevents the page from reloading
-        event.preventDefault()
-
-        settingsValue = @state.settings
-        SettingsActionCreator.edit @state.settings
 
     getInitialState: (forceDefault) ->
         return {
