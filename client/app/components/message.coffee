@@ -96,8 +96,9 @@ module.exports = React.createClass
                 hideImage img for img in images
             else
                 images = []
-            if doc?
-                htmluri = "data:text/html;charset=utf-8;base64,#{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
+            @_htmlContent = doc.body.innerHTML
+            #if doc?
+                #htmluri = "data:text/html;charset=utf-8;base64,#{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
 
         clickHandler = if @props.isLast then null else @onFold
 
@@ -132,7 +133,7 @@ module.exports = React.createClass
                         div className: "imagesWarning content-action", ref: "imagesWarning",
                             span null, t 'message images warning'
                             button className: 'btn btn-default', type: "button", ref: 'imagesDisplay', t 'message images display'
-                    iframe className: 'content', ref: 'content', sandbox: 'allow-same-origin', allowTransparency: true, frameBorder: 0, src: htmluri, ''
+                    iframe className: 'content', ref: 'content', sandbox: 'allow-same-origin', allowTransparency: true, frameBorder: 0, ''
             else
                 div null,
                     div className: "content-action",
@@ -239,25 +240,13 @@ module.exports = React.createClass
         # - if images are not displayed, create the function to display them and resize the frame
         if @state.messageDisplayHTML
             frame = @refs.content.getDOMNode()
-            component = this
-            frame.addEventListener 'load', ->
-                if this.contentDocument
-                    doc = this.contentDocument
-                else
-                    doc = this.contentWindow.document
-                rect = doc.body.getBoundingClientRect()
-                frame.style.height = "#{rect.height + 40}px"
-                if not component.state.messageDisplayImages and component.refs.imagesDisplay?
-                    component.refs.imagesDisplay.getDOMNode().addEventListener 'click', ->
-                        component.setState messageDisplayImages: true
-                        ###
-                        showImage = (img) ->
-                            img.setAttribute 'src', img.dataset.src
-                            rect = doc.body.getBoundingClientRect()
-                            frame.style.height = "#{rect.height + 40}px"
-                        showImage img for img in doc.querySelectorAll 'IMG'
-                        component.refs.imagesWarning.getDOMNode().classList.add 'hidden'
-                        ###
+            doc = frame.contentDocument or frame.contentWindow.document
+            doc.body.innerHTML = @_htmlContent
+            rect = doc.body.getBoundingClientRect()
+            frame.style.height = "#{rect.height + 40}px"
+            if not @state.messageDisplayImages and @refs.imagesDisplay?
+                @refs.imagesDisplay.getDOMNode().addEventListener 'click', =>
+                    @setState messageDisplayImages: true
 
     componentDidMount: ->
         @_initFrame()
