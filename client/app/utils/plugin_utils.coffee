@@ -5,7 +5,8 @@ module.exports =
             window.plugins = {}
 
         for own pluginName, pluginConf of window.plugins
-            @activate pluginName
+            if pluginConf.active
+                @activate pluginName
 
         if MutationObserver?
 

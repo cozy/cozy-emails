@@ -91,10 +91,10 @@ module.exports = Menu = React.createClass
             direction: 'first'
             action: 'account.mailbox.messages'
             parameters: [accountID, defaultMailbox?.get 'id']
-            fullWidth: false
+            fullWidth: true # /!\ Hide second panel when switching account
 
         li className: accountClasses, key: key,
-            a href: url, className: 'menu-item ' + accountClasses,
+            a href: url, className: 'menu-item account ' + accountClasses,
                 i className: 'fa fa-inbox'
                 span className: 'badge', account.get 'unreadCount'
                 span className: 'item-label', account.get 'label'

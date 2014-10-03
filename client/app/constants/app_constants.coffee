@@ -50,6 +50,6 @@ module.exports =
         'ERROR'        : 'ERROR'
 
     MessageFlags:
-        'FLAGGED'      : 'Flagged'
-        'SEEN'         : 'Seen'
+        'FLAGGED'      : '\\Flagged'
+        'SEEN'         : '\\Seen'
         'DRAFT'        : 'Draft'

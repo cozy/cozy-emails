@@ -21,7 +21,6 @@ module.exports.main = (req, res, next) ->
             """
         else
             [locale, accounts] = results
-            accounts = accounts.map Account.clientVersion
             res.render 'test.jade', imports: """
                 window.locale   = "#{locale}";
                 window.accounts = #{JSON.stringify accounts};

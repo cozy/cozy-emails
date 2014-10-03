@@ -87,7 +87,7 @@ module.exports = React.createClass
         if @state.messageDisplayHTML
             parser = new DOMParser()
             doc = parser.parseFromString prepared.html, "text/html"
-            if not @state.messageDisplayImages
+            if doc and not @state.messageDisplayImages
                 hideImage = (img) ->
                     img.dataset.src = img.getAttribute 'src'
                     img.setAttribute 'src', ''
@@ -95,7 +95,8 @@ module.exports = React.createClass
                 hideImage img for img in images
             else
                 images = []
-            htmluri = "data:text/html;charset=utf-8;base64,#{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
+            if doc?
+                htmluri = "data:text/html;charset=utf-8;base64,#{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
 
         clickHandler = if @props.isLast then null else @onFold
 
