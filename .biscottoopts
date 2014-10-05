@@ -1,0 +1,9 @@
+--name       "Cozy Mails"
+--readme     README.md
+--title      "Cozy Mails Documentation"
+--private
+--quiet
+--output-dir ./doc
+server/
+-
+LICENSE
