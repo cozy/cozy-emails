@@ -143,6 +143,20 @@ ImapProcess.removeMails = (account, box, cozyIDs) ->
     .tap -> reporter.onDone()
 
 
+# Public: create a mail in the given box
+# used for drafts
+# 
+# account - the {Account} to create mail into
+# box - the {Mailbox} to create mail into
+# mail - a {Message} to create
+# 
+# Returns a {Promise} for the UID of the created mail
+ImapProcess.createMail = (account, box, mail) ->
+    message = new Compiler(mail).compile().build()
+    scheduler = ImapScheduler.instanceFor account
+    scheduler.doASAP (imap) ->
+        imap.append message, mailbox: box.path
+
 
 # Public: fetch one mail from IMAP and create a 
 # {Message} in cozy for it. If the message

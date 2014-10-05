@@ -123,6 +123,9 @@ module.exports = class ImapPromisified
             return Promise.resolve @_super._box
         @_super.openBoxPromised.apply @_super, arguments
 
+    append: ->
+        @_super.appendPromised.apply @_super, arguments
+
     # see imap.search
     # return a Promise of the search result (UIDs array)
     search: ->

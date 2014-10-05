@@ -16,8 +16,16 @@ module.exports = Mailbox = americano.getModel 'Mailbox',
     attribs: (x) -> x        # [String] Attributes of this folder
     children: (x) -> x       # [BLAMEJDB] children should not be saved
 
+# map of account's attributes -> RFC6154 special use box attributes
+Mailbox.RFC6154 = 
+    draftMailbox:   '\\Drafts'
+    sentMailbox:    '\\Sent'
+    trashMailbox:   '\\Trash'
+    allMailbox:     '\\All'
+    spamMailbox:    '\\Junk'
+    flaggedMailbox: '\\Flagged'
 
-# Return an array of selectable mailboxes for an accountID
+
 # Public: find selectable mailbox for an account ID 
 # as an array
 # 
@@ -97,21 +105,83 @@ Mailbox.createBoxesFromImapTree = (accountID, tree) ->
     boxes = []
 
     # recursively browse the imap box tree
-
+    # building pathStr and pathArr
     do handleLevel = (children = tree, pathStr = '', pathArr = []) ->
         for name, child of children
             subPathStr = pathStr + name + child.delimiter
             subPathArr = pathArr.concat name
             handleLevel child.children, subPathStr, subPathArr
-            boxes.push
+            boxes.push new Mailbox
                 accountID: accountID
                 label: name
                 path: pathStr + name
                 tree: subPathArr
                 attribs: _.difference child.attribs, IGNORE_ATTRIBUTES
 
-    Promise.serie boxes, (box) ->
+    useRFC6154 = false
+    specialUses = {}
+    specialUsesGuess = {}
+    Promise.serie boxes, (box) -> 
+        
+        # create box in data system (we need the id)
         Mailbox.createPromised box
+        .then (jdbBox) ->
+            if jdbBox.path is 'INBOX'
+                specialUses['inboxMailbox'] = jdbBox.id
+                return jdbBox
+
+            # check if there is a RFC6154 attribute
+            for field, attribute of Mailbox.RFC6154
+                if attribute in jdbBox.attribs
+                    
+                    # first RFC6154 attribute
+                    unless useRFC6154
+                        useRFC6154 = true
+
+                    # add it to specialUses
+                    specialUses[field] = jdbBox.id
+
+            # do not attempt fuzzy match if the server uses RFC6154
+            unless useRFC6154
+
+                path = box.path.toLowerCase()
+                if 0 is path.indexOf 'sent'
+                    specialUsesGuess['sentMailbox'] = jdbBox.id
+                else if 0 is path.indexOf 'draft'
+                    specialUsesGuess['draftMailbox'] = jdbBox.id
+                else if 0 is path.indexOf 'flagged'
+                    specialUsesGuess['flaggedMailbox'] = jdbBox.id
+                else if 0 is path.indexOf 'trash'
+                    specialUsesGuess['trashMailbox'] = jdbBox.id
+                # @TODO add more
+
+            return jdbBox
+
+    .then (boxes) ->
+        # pick the default 4 favorites box
+        favorites = []
+        priorities = ['inbox', 'all', 'sent', 'draft']
+
+        unless useRFC6154
+            specialUses[key] = value for key, value of specialUsesGuess
+
+
+        # see if we have some of the priorities box
+        for type in priorities when id = specialUses[type + 'Mailbox']
+            favorites.push id
+
+
+        # we dont have our 4 favorites, pick at random
+        for box in boxes when favorites.length < 4
+            if box.id not in favorites and '\\NoSelect' not in box.attribs
+                favorites.push box.id
+
+        return favorites
+
+    .then (favorites) -> 
+        specialUses.favorites = favorites
+        return specialUses
+
 
 require('bluebird').promisifyAll Mailbox, suffix: 'Promised'
 require('bluebird').promisifyAll Mailbox::, suffix: 'Promised'

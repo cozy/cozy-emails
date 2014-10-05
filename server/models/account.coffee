@@ -85,5 +85,24 @@ Account.createIfValid = (data) ->
 
     return returnValue
 
+# Public: send a message using this account SMTP config
+# 
+# message - a raw message
+# callback - a (err, info) callback with the following parameters
+#            :err
+#            :info the nodemailer's info
+# 
+# Returns void
+Account::sendMessage = (message, callback) ->
+    transport = nodemailer.createTransport
+        port: @smtpPort
+        host: @smtpHost
+        auth: 
+            user: @login
+            pass: @password
+
+    transport.sendMail message, callback
+
+
 Promise.promisifyAll Account, suffix: 'Promised'
 Promise.promisifyAll Account::, suffix: 'Promised'

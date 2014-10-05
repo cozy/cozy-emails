@@ -3,6 +3,8 @@ mailutils = require '../utils/jwz_tools'
 uuid = require 'uuid'
 ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
+Mailbox = require './mailbox'
+
 # Public: Message
 # 
 
@@ -164,6 +166,28 @@ Message::moveToTrash = (patch) ->
         patch.push op: 'add', path: "/mailboxIDs/#{trashID}"
 
         @applyPatchOperations patch
+
+
+# create a message and store it on the imap server
+# used for drafts
+Message.saveOnImapServer = (message, boxtype, uid) ->
+    Account.findPromised message.accountID
+    .then (account) =>
+        boxID = account[boxtype]
+        throw new WrongConfigError 'wrong boxtype' unless boxid
+        
+        Mailbox.findPromised boxID
+        .then (box) -> [account, box] 
+
+    .spread (account, box) ->
+        ImapProcess.createMail account, box, message
+        .then (uid) ->
+            message.mailboxIDs[box.id] = uid
+            Message.createPromised message
+
+    .then 
+            
+
 
 # create a message from a raw imap message
 # handle normalization of message ids & subjects
