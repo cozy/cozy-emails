@@ -26,9 +26,14 @@ describe "Accounts Tests", ->
             body.should.have.property('mailboxes').with.lengthOf(4)
             @boxes = body.mailboxes
             for box in @boxes
-                @inboxID = box.id if box.label is 'INBOX'
-                @sentID = box.id if box.label is 'Sent'
-                @testboxID = box.id if box.label is 'Test Folder'
+                if box.label is 'INBOX' then @inboxID = box.id 
+                else if box.label is 'Sent' then @sentID = box.id 
+                else if box.label is 'Test Folder' then @testboxID = box.id
+                else @flaggedBoxId = box.id
+
+            body.inboxMailbox.should.equal @inboxID
+            body.sentMailbox.should.equal @sentID
+            body.flaggedMailbox.should.equal @flaggedBoxId
 
             @accountID = body.id
             done()
