@@ -32,7 +32,7 @@ module.exports =
       # Menu
       "menu compose"            : "Compose"
       "menu account new"        : "New account"
-      "menu settings"           : "Paramètres"
+      "menu settings"           : "Parameters"
 
       # List
       "list empty"              : "No email in this box."
