@@ -58,25 +58,32 @@ Account::includeMailboxes = ->
 # 
 # Returns {Promise} promise for the created {Account}, boxes included
 Account.createIfValid = (data) ->
-    account = null
-    rawBoxesTree = null
-
-    ImapProcess.fetchBoxesTree data
-    .then (boxes) ->
-        log.info "GOT BOXES", boxes
+    
+    accountAndBoxesCreated = ImapProcess.fetchBoxesTree data
+    .then (rawBoxesTree) ->
         # We managed to get boxes, login settings are OK
         # create Account and Mailboxes
-        rawBoxesTree = boxes
-        Account.createPromised data
+        log.info "GOT BOXES", rawBoxesTree
+        # pass rawBoxesTree down the chain
+        Promise.all [ rawBoxesTree, Account.createPromised data ]
 
-    .then (created) ->
-        account = created
-        Mailbox.createBoxesFromImapTree account.id, rawBoxesTree
+    .spread (rawBoxesTree, account) ->
+        Mailbox.createBoxesFromImapTree account.id, rawBoxesTree    
+        .then (specialUses) -> 
+            account.updateAttributesPromised specialUses
 
-    .then ->
+    # fork the promise
+    # return from this function a fast promise for account with boxes
+    returnValue = accountAndBoxesCreated.then (account) ->
         log.info "CREATED ACCOUNT & BOXES"
         return account.includeMailboxes()
 
+    # in a detached chain, fetch the Account
+    accountAndBoxesCreated.then (account) ->
+        ImapProcess.fetchAccount account
+        .catch (err) -> console.log "FETCH MAIL FAILED", err.stack
+
+    return returnValue
 
 Promise.promisifyAll Account, suffix: 'Promised'
 Promise.promisifyAll Account::, suffix: 'Promised'

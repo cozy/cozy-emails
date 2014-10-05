@@ -8,7 +8,7 @@ fixtures = require 'cozy-fixtures'
 module.exports.main = (req, res, next) ->
     async.parallel [
         (cb) -> CozyInstance.getLocale cb
-        (cb) -> Account.getAll cb
+        (cb) -> Account.request 'all', cb
     ], (err, results) ->
 
         if err?

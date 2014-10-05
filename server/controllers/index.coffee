@@ -10,7 +10,7 @@ module.exports.main = (req, res, next) ->
         CozyInstance.getLocalePromised()
             .catch (err) -> 'en'
 
-        Account.getAllPromised()
+        Account.requestPromised 'all'
             .map (account) -> account.includeMailboxes()
 
         ImapReporter.summary()
