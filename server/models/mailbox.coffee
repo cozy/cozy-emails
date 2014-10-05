@@ -2,6 +2,10 @@ americano = require 'americano-cozy'
 Promise = require 'bluebird'
 _ = require 'lodash'
 
+# Public: Mailbox
+# a {JugglingDBModel} for a mailbox (imap folder)
+class Mailbox # make biscotto happy
+
 module.exports = Mailbox = americano.getModel 'Mailbox',
     accountID: String        # Parent account
     label: String            # Human readable label
@@ -10,11 +14,16 @@ module.exports = Mailbox = americano.getModel 'Mailbox',
     uidvalidity: Number      # Imap UIDValidity
     persistentUIDs: Boolean  # Imap persistentUIDs
     attribs: (x) -> x        # [String] Attributes of this folder
-    children: (x) -> x       # this should not be saved but juggling doesnt
-                             # allow seting properties not in the model
+    children: (x) -> x       # [BLAMEJDB] children should not be saved
 
 
 # Return an array of selectable mailboxes for an accountID
+# Public: find selectable mailbox for an account ID 
+# as an array
+# 
+# accountID - id of the account
+# 
+# Returns a {Promise} for [{Mailbox}] 
 Mailbox.getBoxes = (accountID) ->
     Mailbox.rawRequestPromised 'treeMap',
         startkey: [accountID]
@@ -24,9 +33,13 @@ Mailbox.getBoxes = (accountID) ->
     .map (row) -> new Mailbox row.doc
     .filter (box) -> '\\Noselect' not in box.attribs
 
-# Returns the mailboxes tree for an accountID
-# the filter, if provided will be applied to each box
-Mailbox.getTree = (accountID, filter) ->
+# Public: build a tree of the mailboxes
+#
+# accountID - id of the account 
+# mapper - if provided, it will be applied to each box
+# 
+# Returns a {Promise} for the tree
+Mailbox.getTree = (accountID, mapper = null) ->
 
     out = []
     byPath = {}
@@ -35,7 +48,7 @@ Mailbox.getTree = (accountID, filter) ->
     transform = (boxData) ->
         box = new Mailbox boxData
         box.children = []
-        return if filter then filter box
+        return if mapper then mapper box
         else box
 
     Mailbox.rawRequestPromised 'treeMap',
@@ -59,17 +72,27 @@ Mailbox.getTree = (accountID, filter) ->
 
     .return out
 
-# simpler version of the tree for client
+# Public: build a simpler version of the tree for client
+# each node only have id, label and children fields
+# 
+# accountID - id of the account
+# 
+# Returns a {Promise} for the tree
 Mailbox.getClientTree = (accountID) ->
     filter = (box) -> _.pick box, 'id', 'label', 'children'
     Mailbox.getTree accountID, filter
 
 
-# This function take the tree from node-imap
-# and create appropriate boxes
-# @TODO handle normalization of special folders
-# @TODO tentatively find special folders by name (Sent, SENT, ...)
 IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren']
+# Public: This function take the tree from node-imap
+# and create appropriate boxes
+# 
+# @TODO handle normalization of special folders
+# 
+# accountID - id of the account
+# tree - the raw boxes tree from {ImapPromisified::getBoxes}
+# 
+# Returns a {Promise} for the {Account}'s specialUses attributes
 Mailbox.createBoxesFromImapTree = (accountID, tree) ->
     boxes = []
 

@@ -10,9 +10,10 @@ stream_to_buffer_array = (stream, cb) ->
     stream.on 'data', (d) -> parts.push d
     stream.on 'end', -> cb null, parts
 
-
-# better Promisify of node-imap
 Promise.promisifyAll Imap.prototype, suffix: 'Promised'
+
+
+# Public: better Promisify of node-imap
 module.exports = class ImapPromisified
 
 

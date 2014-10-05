@@ -1,3 +1,11 @@
+# There is a circular dependency between ImapProcess & Account
+# node handles it if we do module.exports before imports
+
+# Public: static class with imap methods
+# if i write here
+module.exports = class ImapProcess
+    constructor: ->
+
 ImapScheduler = require './imap_scheduler'
 ImapReporter = require './imap_reporter'
 Promise = require 'bluebird'
@@ -7,29 +15,38 @@ Account = require '../models/account'
 _ = require 'lodash'
 log = require('../utils/logging')(prefix: 'imap:processes')
 
-# There is a circular dependency between ImapProcess & Account
-# node handles it if we do this instead of module.exports = ImapProcess = {}
-ImapProcess = exports
-
-# get the boxes tree
-# return a promise for the raw imap boxes tree
+# Public: get the boxes tree
+# 
+# account - the {Account} to fetch from
+# 
+# Returns a {Promise} for the raw imap boxes tree {Object}
 ImapProcess.fetchBoxesTree = (account) ->
     # the user is waiting, we do this ASAP
     ImapScheduler.instanceFor(account).doASAP (imap) ->
         log.info "FETCH BOX TREE"
         imap.getBoxes()
 
-# refresh one account
-# return a Promise for task completion
-ImapProcess.fetchAccount = (account) ->
+
+# Public: refresh the account
+# 
+# account - the {Account} to fetch from
+# limitByBox - the maximum {Number} of message to fetch at once
+# 
+# Returns a {Promise} for task completion
+ImapProcess.fetchAccount = (account, limitByBox = false) ->
     Mailbox.getBoxes(account.id).then (boxes) ->
         Promise.serie boxes, (box) ->
-            ImapProcess.fetchMailbox account, box
+            ImapProcess.fetchMailbox account, box, limitByBox
             .catch (err) -> log.error "FAILED TO FETCH BOX", box.path, err.stack
 
-# refresh one mailbox
-# return a promise for task completion
-# register a 'diff' task in ImapReporter
+# Public: refresh one mailbox
+# register a 'diff' task in {ImapReporter}
+# 
+# account - the {Account} to fetch from
+# box - the {Mailbox} to fetch from
+# limitByBox - the maximum {Number} of message to fetch at once
+# 
+# Returns a {Promise} for task completion
 ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
     reporter = ImapReporter.addUserTask
         code: 'diff'
@@ -79,7 +96,14 @@ ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
         reporter.onDone()
         Promise.all toDo
 
-
+# Private: fetch mails from a box
+# register a 'apply-diff-fetch' task in {ImapReporter}
+# 
+# account - the {Account} to fetch from
+# box - the {Mailbox} to fetch from
+# uids - an [{Number}], the uids to fetch
+# 
+# Returns a {Promise} for task completion
 ImapProcess.fetchMails = (account, box, uids) ->
     reporter = ImapReporter.addUserTask
         code: 'apply-diff-fetch'
@@ -94,7 +118,14 @@ ImapProcess.fetchMails = (account, box, uids) ->
 
     .tap -> reporter.onDone()
 
-
+# Private: remove mails from a box in the cozy
+# register a 'apply-diff-remove' task in {ImapReporter}
+# 
+# account - the {Account} to fetch from
+# box - the {Mailbox} to fetch from
+# cozyIDs - an [{String}], the cozy {Message} ids to remove from this box
+# 
+# Returns a {Promise} for task completion
 ImapProcess.removeMails = (account, box, cozyIDs) ->
     reporter = ImapReporter.addUserTask
         code: 'apply-diff-remove'
@@ -111,8 +142,17 @@ ImapProcess.removeMails = (account, box, cozyIDs) ->
 
     .tap -> reporter.onDone()
 
-# fetch one mail from imap server
-# return a Promise for task completion
+
+
+# Public: fetch one mail from IMAP and create a 
+# {Message} in cozy for it. If the message
+# already exists in another mailbox, we just add to its mailboxIDs
+# 
+# account - the {Account} to create mail into
+# box - the {Mailbox} to create mail into
+# uid - {Number} the UID of message to fetch
+# 
+# Returns a {Promise} for the created/updated {Message}
 ImapProcess.fetchOneMail = (account, box, uid) ->
     scheduler = ImapScheduler.instanceFor account
     scheduler.doLater (imap) ->
@@ -133,9 +173,13 @@ ImapProcess.fetchOneMail = (account, box, uid) ->
                 Message.createFromImapMessage mail, box, uid
                 .tap -> log.info "MAIL #{box.path}##{uid} CREATED"
 
-# msg instance of Message
-# flagsOps = {add : [String flag], remove: [String]}
-# boxOps = {addTo : [String boxIds], removeFrom: [String boxIds]}
+# Public: apply a flags & boxes patch to message
+# 
+# msg      - the target {Message}
+# flagsOps - {add : [String flag], remove: [String]}
+# boxOps   - {addTo : [String boxIds], removeFrom: [String boxIds]}
+# 
+# Returns a {Promise} for task completion
 ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
 
     log.info "MESSAGE CHANGE"

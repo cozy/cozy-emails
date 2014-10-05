@@ -3,6 +3,8 @@ mailutils = require '../utils/jwz_tools'
 uuid = require 'uuid'
 ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
+# Public: Message
+# 
 
 module.exports = Message = americano.getModel 'Message',
 
@@ -10,8 +12,7 @@ module.exports = Message = americano.getModel 'Message',
     messageID: String        # normalized message-id (no <"">)
     normSubject: String      # normalized subject (no Re: ...)
     conversationID: String   # all message in thread have same conversationID
-    mailboxIDs: (x) -> x     # mailboxes where this message appears
-                             # as an hash {boxID:uid, boxID2:uid2}
+    mailboxIDs: (x) -> x     # mailboxes as an hash {boxID:uid, boxID2:uid2}
     flags: (x) -> x          # [String] flags of the message
     headers: (x) -> x        # hash of the message headers
     from: (x) -> x           # array of {name, address}
@@ -28,14 +29,17 @@ module.exports = Message = americano.getModel 'Message',
     priority: String         # message priority
     binary: (x) -> x         # cozy binaries
     attachments: (x) -> x    # array of message attachments objects
-                                # {contentType, fileName, generatedFileName,
-                                # contentDisposition, contentId,
-                                # transferEncoding, length, checksum}
     flags: (x) -> x          # array of message flags (Seen, Flagged, Draft)
 
 
-# return a promise for an Array of Message object
-# params : numByPage & numPage
+# Public: get messages in a box, sorted by Date
+# 
+# mailboxID - {String} the mailbox's ID
+# params - query's options
+#    :numByPage - number of message in one page 
+#    :numPage - number of the page we want
+# 
+# Returns {Promise} for an array of {Message}
 Message.getByMailboxAndDate = (mailboxID, params) ->
     options =
         startkey: [mailboxID, {}]
@@ -51,8 +55,12 @@ Message.getByMailboxAndDate = (mailboxID, params) ->
     Message.rawRequestPromised 'byMailboxAndDate', options
     .map (row) -> new Message(row.doc)
 
-# count number of messages in a box
+# Publix: get the number of messages in a box
 # @TODO: also count read/unread messages ?
+# 
+# mailboxID - {String} the mailbox's ID
+# 
+# Returns {Promise} for the count
 Message.countByMailbox = (mailboxID) ->
     Message.rawRequestPromised 'byMailboxAndDate',
         startkey: [mailboxID]
