@@ -50,8 +50,9 @@ module.exports = React.createClass
         text = message.get 'text'
         html = message.get 'html'
 
-        if text and not html and @state.messageDisplayHTML
-            html = markdown.toHTML text
+        # @TODO Do we want to convert text only messages to HTML ?
+        #if text and not html and @state.messageDisplayHTML
+        #    html = markdown.toHTML text
 
         if html and not text and not @state.messageDisplayHTML
             text = toMarkdown html
@@ -84,10 +85,10 @@ module.exports = React.createClass
         message  = @props.message
         prepared = @_prepareMessage()
         hasAttachments = prepared.attachments.length
-        if @state.messageDisplayHTML
+        if @state.messageDisplayHTML and prepared.html
             parser = new DOMParser()
             doc = parser.parseFromString prepared.html, "text/html"
-            if not @state.messageDisplayImages
+            if doc and not @state.messageDisplayImages
                 hideImage = (img) ->
                     img.dataset.src = img.getAttribute 'src'
                     img.setAttribute 'src', ''
@@ -95,7 +96,9 @@ module.exports = React.createClass
                 hideImage img for img in images
             else
                 images = []
-            htmluri = "data:text/html;charset=utf-8;base64,#{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
+            @_htmlContent = doc.body.innerHTML
+            #if doc?
+                #htmluri = "data:text/html;charset=utf-8;base64,#{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
 
         clickHandler = if @props.isLast then null else @onFold
 
@@ -124,13 +127,13 @@ module.exports = React.createClass
                         FilePicker({editable: false, files: prepared.attachments.map(MessageUtils.convertAttachments), display: display})
             div className: 'full-headers',
                 pre null, prepared.fullHeaders.join "\n"
-            if @state.messageDisplayHTML
+            if @state.messageDisplayHTML and prepared.html
                 div null,
                     if images.length > 0 and not @state.messageDisplayImages
                         div className: "imagesWarning content-action", ref: "imagesWarning",
                             span null, t 'message images warning'
                             button className: 'btn btn-default', type: "button", ref: 'imagesDisplay', t 'message images display'
-                    iframe className: 'content', ref: 'content', sandbox: 'allow-same-origin', allowTransparency: true, frameBorder: 0, src: htmluri, ''
+                    iframe className: 'content', ref: 'content', sandbox: 'allow-same-origin', allowTransparency: true, frameBorder: 0, ''
             else
                 div null,
                     div className: "content-action",
@@ -237,25 +240,13 @@ module.exports = React.createClass
         # - if images are not displayed, create the function to display them and resize the frame
         if @state.messageDisplayHTML
             frame = @refs.content.getDOMNode()
-            component = this
-            frame.addEventListener 'load', ->
-                if this.contentDocument
-                    doc = this.contentDocument
-                else
-                    doc = this.contentWindow.document
-                rect = doc.body.getBoundingClientRect()
-                frame.style.height = "#{rect.height + 40}px"
-                if not component.state.messageDisplayImages and component.refs.imagesDisplay?
-                    component.refs.imagesDisplay.getDOMNode().addEventListener 'click', ->
-                        component.setState messageDisplayImages: true
-                        ###
-                        showImage = (img) ->
-                            img.setAttribute 'src', img.dataset.src
-                            rect = doc.body.getBoundingClientRect()
-                            frame.style.height = "#{rect.height + 40}px"
-                        showImage img for img in doc.querySelectorAll 'IMG'
-                        component.refs.imagesWarning.getDOMNode().classList.add 'hidden'
-                        ###
+            doc = frame.contentDocument or frame.contentWindow.document
+            doc.body.innerHTML = @_htmlContent
+            rect = doc.body.getBoundingClientRect()
+            frame.style.height = "#{rect.height + 40}px"
+            if not @state.messageDisplayImages and @refs.imagesDisplay?
+                @refs.imagesDisplay.getDOMNode().addEventListener 'click', =>
+                    @setState messageDisplayImages: true
 
     componentDidMount: ->
         @_initFrame()

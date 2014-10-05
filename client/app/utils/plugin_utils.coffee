@@ -1,5 +1,3 @@
-{PayloadSources} = require '../constants/app_constants'
-
 module.exports =
 
     init: ->
@@ -7,33 +5,43 @@ module.exports =
             window.plugins = {}
 
         for own pluginName, pluginConf of window.plugins
-            @activate pluginName
+            if pluginConf.active
+                @activate pluginName
 
         if MutationObserver?
-            # Observes DOM mutation to see if a plugin should be called
-            observer = new MutationObserver (mutations) ->
-                checkNode = (node) ->
-                    if node.nodeType isnt Node.ELEMENT_NODE
-                        return
-
-                    for own pluginName, pluginConf of window.plugins
-                        if pluginConf.active
-                            if pluginConf.onAdd?
-                                if pluginConf.onAdd.condition node
-                                    pluginConf.onAdd.action node
-
-                check = (mutation) ->
-                    nodes = Array.prototype.slice.call mutation.addedNodes
-                    checkNode node for node in nodes
-
-                check mutation for mutation in mutations
 
             config =
                 attributes: false
                 childList: true
                 characterData: false
                 subtree: true
-            observer.observe document.body, config
+
+            onMutation = (mutations) ->
+                checkNode = (node, action) ->
+                    if node.nodeType isnt Node.ELEMENT_NODE
+                        return
+
+                    for own pluginName, pluginConf of window.plugins
+                        if pluginConf.active
+                            listener = pluginConf.onAdd if action is 'add'
+                            listener = pluginConf.onDelete if action is 'delete'
+                            if listener? and
+                            listener.condition.bind(pluginConf)(node)
+                                listener.action.bind(pluginConf)(node)
+
+                check = (mutation) ->
+
+                    nodes = Array.prototype.slice.call mutation.addedNodes
+                    checkNode node, 'add' for node in nodes
+
+                    nodes = Array.prototype.slice.call mutation.removedNodes
+                    checkNode node, 'del' for node in nodes
+
+                check mutation for mutation in mutations
+
+            # Observes DOM mutation to see if a plugin should be called
+            observer = new MutationObserver onMutation
+            observer.observe document, config
 
         else
             # Dirty fallback for IE
@@ -55,7 +63,7 @@ module.exports =
         # Add custom events listeners
         if plugin.listeners?
             for own event, listener of plugin.listeners
-                window.addEventListener event, listener
+                window.addEventListener event, listener.bind(plugin)
 
         if plugin.onActivate
             plugin.onActivate()

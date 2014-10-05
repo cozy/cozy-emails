@@ -1,5 +1,5 @@
 require = patchRequire global.require
-init = require("common").init
+init = require("../common").init
 files = [
     {
         name: "file1.txt"
