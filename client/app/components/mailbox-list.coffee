@@ -7,18 +7,24 @@ module.exports = React.createClass
 
     mixins: [RouterMixin]
 
+    onChange: (boxid) ->
+        @props.onChange? boxid
+
     render: ->
-        selected = @props.selectedMailbox
-        if typeof selected is "string"
-            selected = @props.mailboxes.get selected
-        if @props.mailboxes.length > 0 and selected?
+        selectedId = @props.selectedMailbox
+        selected = @props.mailboxes.get selectedId
+        if @props.mailboxes.length > 0
             div className: 'dropdown pull-left',
                 button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown',
-                    selected.get 'label'
+                    selected?.get('label') or t 'mailbox pick one'
                     span className: 'caret', ''
                 ul className: 'dropdown-menu', role: 'menu',
+                    if @props.allowUndefined and selected
+                        li role: 'presentation', key: null, onClick: @onChange.bind(this, null),
+                            a role: 'menuitem', t 'mailbox pick null'
+
                     @props.mailboxes.map (mailbox, key) =>
-                        if mailbox.get('id') isnt selected.get('id')
+                        if mailbox.get('id') isnt selectedId
                             @getMailboxRender mailbox, key
                     .toJS()
         else
@@ -27,14 +33,8 @@ module.exports = React.createClass
 
 
     getMailboxRender: (mailbox, key) ->
-        if @props.getUrl?
-            url = @props.getUrl(mailbox)
-
-        if @props.onChange
-            onChange = =>
-                @props.onChange(mailbox)
-        else
-            onChange = ->
+        url = @props.getUrl?(mailbox)
+        onChange = @onChange.bind(this, key)
 
         # Mark nested levels with "--" because plain space just doesn't work for some reason
         pusher = ""

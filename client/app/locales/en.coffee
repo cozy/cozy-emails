@@ -119,6 +119,10 @@ module.exports =
       # File picker
       "picker drop here"           : "Drop files here"
 
+      # Mailbox List
+      "mailbox pick one"           : "Pick one"
+      "mailbox pick null"          : "No box for this"
+
       # Tasks
       "task diff"                  : 'Comparing %{box} of %{account}'
       "task apply-diff-fetch"      : 'Fetching mails %{box} of %{account}'

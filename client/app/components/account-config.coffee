@@ -22,7 +22,7 @@ module.exports = React.createClass
         else buttonLabel = t "account add"
 
         if @props.initialAccountConfig?
-            mailboxes = @props.initialAccountConfig.get 'mailboxes'
+            mailboxes = AccountStore.getSelectedMailboxes true
 
         div id: 'mailbox-config',
             h3 className: null, titleLabel
@@ -69,7 +69,7 @@ module.exports = React.createClass
                         label className: 'col-sm-2 col-sm-offset-2 control-label', t 'account draft mailbox'
                         div className: 'col-sm-3',
                             MailboxList
-                                selectedAccount: @props.initiaAccountConfig
+                                allowUndefined: true
                                 mailboxes: mailboxes
                                 selectedMailbox: @state.draftMailbox
                                 onChange: (mailbox) => @setState 'draftMailbox': mailbox
@@ -79,7 +79,7 @@ module.exports = React.createClass
                         label className: 'col-sm-2 col-sm-offset-2 control-label', t 'account sent mailbox'
                         div className: 'col-sm-3',
                             MailboxList
-                                selectedAccount: @props.initiaAccountConfig
+                                allowUndefined: true
                                 mailboxes: mailboxes
                                 selectedMailbox: @state.sentMailbox
                                 onChange: (mailbox) => @setState 'sentMailbox': mailbox
@@ -89,7 +89,7 @@ module.exports = React.createClass
                         label className: 'col-sm-2 col-sm-offset-2 control-label', t 'account trash mailbox'
                         div className: 'col-sm-3',
                             MailboxList
-                                selectedAccount: @props.initiaAccountConfig
+                                allowUndefined: true
                                 mailboxes: mailboxes
                                 selectedMailbox: @state.trashMailbox
                                 onChange: (mailbox) => @setState 'trashMailbox': mailbox
@@ -105,9 +105,9 @@ module.exports = React.createClass
         event.preventDefault()
 
         accountValue = @state
-        accountValue.draftMailbox = accountValue.draftMailbox?.get 'id'
-        accountValue.sentMailbox  = accountValue.sentMailbox?.get 'id'
-        accountValue.trashMailbox = accountValue.trashMailbox?.get 'id'
+        accountValue.draftMailbox = accountValue.draftMailbox
+        accountValue.sentMailbox  = accountValue.sentMailbox
+        accountValue.trashMailbox = accountValue.trashMailbox
 
         if @props.initialAccountConfig?
             AccountActionCreator.edit accountValue, @props.initialAccountConfig.get 'id'
@@ -157,17 +157,6 @@ module.exports = React.createClass
 
     _accountToState: (account)->
         if account?
-            mailboxes = account.get 'mailboxes'
-            draft = account.get 'draftMailbox'
-            if draft?
-                draftMailbox = mailboxes.get draft
-            sent = account.get 'sentMailbox'
-            if sent?
-                sentMailbox = mailboxes.get sent
-            trash = account.get 'trashMailbox'
-            if trash?
-                trashMailbox = mailboxes.get trash
-
             return {
                 label:        account.get 'label'
                 name:         account.get 'name'
@@ -177,9 +166,9 @@ module.exports = React.createClass
                 smtpPort:     account.get 'smtpPort'
                 imapServer:   account.get 'imapServer'
                 imapPort:     account.get 'imapPort'
-                draftMailbox: draftMailbox or mailboxes.first()
-                sentMailbox:  sentMailbox  or mailboxes.first()
-                trashMailbox: trashMailbox or mailboxes.first()
+                draftMailbox: account.get 'draftMailbox'
+                sentMailbox:  account.get 'sentMailbox'
+                trashMailbox: account.get 'trashMailbox'
             }
         else
             return {

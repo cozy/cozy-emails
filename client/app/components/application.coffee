@@ -109,6 +109,7 @@ module.exports = Application = React.createClass
                     isResponsiveMenuShown: @state.isResponsiveMenuShown
                     layout: @props.router.current
                     favoriteMailboxes: @state.favoriteMailboxes
+                    unreadCounts: @state.unreadCounts
 
                 div id: 'page-content', className: responsiveClasses,
 
@@ -136,10 +137,9 @@ module.exports = Application = React.createClass
                         div className: 'col-md-6 hidden-xs hidden-sm pull-left',
                             form className: 'form-inline col-md-12',
                                 MailboxList
-                                    selectedAccount: @state.selectedAccount
-                                    mailboxes: @state.mailboxes
-                                    selectedMailbox: @state.selectedMailbox
                                     getUrl: getUrl
+                                    mailboxes: @state.mailboxes
+                                    selectedMailbox: @state.selectedMailbox?.get('id')
                                 SearchForm query: @state.searchQuery
 
                         div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
@@ -235,7 +235,7 @@ module.exports = Application = React.createClass
             if otherPanelInfo?.action is 'message'
                 openMessage = MessageStore.getByID otherPanelInfo.parameters.messageID
 
-            messagesCount = MessageStore.getMessagesCountByMailbox mailboxID
+            messagesCount = MessageStore.getMessagesCounts().get mailboxID
             return MessageList
                 messages: MessageStore.getMessagesByMailbox mailboxID, firstOfPage, lastOfPage
                 messagesCount: messagesCount
@@ -350,6 +350,7 @@ module.exports = Application = React.createClass
             mailboxes: AccountStore.getSelectedMailboxes true
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
+            unreadCounts: MessageStore.getUnreadMessagesCounts()
             searchQuery: SearchStore.getQuery()
             settings: SettingsStore.get()
             plugins: window.plugins

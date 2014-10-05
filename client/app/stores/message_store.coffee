@@ -24,8 +24,8 @@ class MessageStore extends Store
         .map (message) -> Immutable.fromJS message
         .toOrderedMap()
 
-    _counts = {}
-    _unreadCounts = {}
+    _counts = Immutable.Map()
+    _unreadCounts = Immutable.Map()
 
 
     ###
@@ -57,8 +57,8 @@ class MessageStore extends Store
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
 
             if messages.count? and messages.mailboxID?
-                _counts[messages.mailboxID] = messages.count
-                _unreadCounts[messages.mailboxID] = messages.unread
+                _counts = _counts.set messages.mailboxID, messages.count
+                _unreadCounts = _unreadCounts.set messages.mailboxID, messages.unread
                 messages = messages.messages
 
             onReceiveRawMessage message, true for message in messages
@@ -138,11 +138,11 @@ class MessageStore extends Store
         # sequences are lazy so we need .toOrderedMap() to actually execute it
         return sequence.toOrderedMap()
 
-    getMessagesCountByMailbox: (mailboxID) ->
-        return _counts[mailboxID] or 0
+    getMessagesCounts: ->
+        return _counts
 
-    getUnreadMessagesCountByMailbox: (mailboxID) ->
-        return _unreadCounts[mailboxID] or 0
+    getUnreadMessagesCounts:  ->
+        return _unreadCounts
 
     getMessagesByConversation: (messageID) ->
         idsToLook = [messageID]
