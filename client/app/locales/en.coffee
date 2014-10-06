@@ -126,3 +126,6 @@ module.exports =
       # Tasks
       "task diff"                  : 'Comparing %{box} of %{account}'
       "task apply-diff-fetch"      : 'Fetching mails %{box} of %{account}'
+      "there were errors"          : '%{smart_count} error. |||| %{smart_count} errors.'
+      "modal please report"        : "Please transmit this information to cozy."
+      "modal please contribute"    : "Please contribute"

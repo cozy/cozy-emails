@@ -23,14 +23,14 @@ module.exports = React.createClass
             div className: "modal-dialog",
                 div className: "modal-content",
                     div className: "modal-header",
-                        h4 className: "modal-title", t 'please contribute'
+                        h4 className: "modal-title", t 'modal please contribute'
                     div className: "modal-body",
-                        span null, t 'please report the following errors to cozy'
+                        span null, t 'modal please report'
                         pre style: "max-height": "300px", "word-wrap": "normal", 
                             @state.modalErrors.join "\n\n"
                     div className: "modal-footer",
                         button type: 'button', className: 'btn', onClick: @closeModal,
-                            t 'close'
+                            t 'app alert close'
 
     render: ->
         toast = @props.toast.toJS()
@@ -38,9 +38,10 @@ module.exports = React.createClass
         percent = parseInt 100 * toast.done / toast.total
         showModal = @showModal.bind(this, toast.errors)
         type = if toast.errors.length then 'alert-warning'
+        else 'alert-info'
         
 
-        div className: "alert toast alert-info #{dismissible}", role: "alert",
+        div className: "alert toast #{type} #{dismissible}", role: "alert",
             if @state.modalErrors
                 @renderErrorModal() 
 
