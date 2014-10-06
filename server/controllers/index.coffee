@@ -10,11 +10,14 @@ module.exports.main = (req, res, next) ->
         CozyInstance.getLocalePromised()
             .catch (err) -> 'en'
 
-        Account.getAllPromised()
+        Account.requestPromised 'all'
             .map (account) -> account.includeMailboxes()
+
+        ImapReporter.summary()
     ]
-    .spread (locale, accounts) ->
+    .spread (locale, accounts, tasks) ->
         """
+            window.tasks = #{JSON.stringify tasks};
             window.locale = "#{locale}";
             window.accounts = #{JSON.stringify accounts};
         """
@@ -26,6 +29,7 @@ module.exports.main = (req, res, next) ->
         """
             console.log("#{err}");
             window.locale = "en"
+            window.tasks = []
             window.accounts = []
         """
 
@@ -38,6 +42,11 @@ module.exports.loadFixtures = (req, res, next) ->
         if err? then next err
         else
             res.send 200, message: 'LOAD FIXTURES SUCCESS'
+
+module.exports.refresh = (req, res, next) ->
+    Account.refreshAllAccounts()
+    .then -> res.send 200, 'done'
+    .catch next
 
 module.exports.tasks = (req, res, next) ->
     res.send 200, ImapReporter.summary()

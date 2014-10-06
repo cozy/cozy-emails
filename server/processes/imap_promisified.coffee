@@ -10,9 +10,10 @@ stream_to_buffer_array = (stream, cb) ->
     stream.on 'data', (d) -> parts.push d
     stream.on 'end', -> cb null, parts
 
-
-# better Promisify of node-imap
 Promise.promisifyAll Imap.prototype, suffix: 'Promised'
+
+
+# Public: better Promisify of node-imap
 module.exports = class ImapPromisified
 
 
@@ -121,6 +122,9 @@ module.exports = class ImapPromisified
         if @_super._box?.name is name
             return Promise.resolve @_super._box
         @_super.openBoxPromised.apply @_super, arguments
+
+    append: ->
+        @_super.appendPromised.apply @_super, arguments
 
     # see imap.search
     # return a Promise of the search result (UIDs array)

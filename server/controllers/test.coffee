@@ -8,7 +8,7 @@ fixtures = require 'cozy-fixtures'
 module.exports.main = (req, res, next) ->
     async.parallel [
         (cb) -> CozyInstance.getLocale cb
-        (cb) -> Account.getAll cb
+        (cb) -> Account.request 'all', cb
     ], (err, results) ->
 
         if err?
@@ -21,7 +21,6 @@ module.exports.main = (req, res, next) ->
             """
         else
             [locale, accounts] = results
-            accounts = accounts.map Account.clientVersion
             res.render 'test.jade', imports: """
                 window.locale   = "#{locale}";
                 window.accounts = #{JSON.stringify accounts};

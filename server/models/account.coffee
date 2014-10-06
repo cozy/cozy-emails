@@ -1,70 +1,107 @@
 americano = require 'americano-cozy'
+
+# Public: Account
+# a {JugglingDBModel} for an account
+class Account # make biscotto happy
+
 module.exports = Account = americano.getModel 'Account',
-    label: String
-    login: String
-    password: String
-    smtpServer: String
-    smtpPort: Number
-    imapServer: String
-    imapPort: Number
-    mailboxes: (x) -> x
+    label: String               # human readable label for the account
+    name: String                # user name to put in sent mails
+    login: String               # IMAP & SMTP login
+    password: String            # IMAP & SMTP password
+    smtpServer: String          # SMTP host
+    smtpPort: Number            # SMTP port
+    imapServer: String          # IMAP host
+    imapPort: Number            # IMAP port
+    inboxMailbox: String        # INBOX Maibox id
+    draftMailbox: String        # \Draft Maibox id
+    sentMailbox: String         # \Sent Maibox id
+    trashMailbox: String        # \Trash Maibox id
+    junkMailbox: String         # \Junk Maibox id
+    allMailbox: String          # \All Maibox id
+    favorites: (x) -> x         # [String] Maibox id of displayed boxes
+    mailboxes: (x) -> x         # [BLAMEJDB] mailboxes should not saved
 
 # There is a circular dependency between ImapProcess & Account
 # node handle if we require after module.exports definition
 Mailbox = require './mailbox'
 ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
+{WrongConfigError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'models:account')
 
-# fetch the list of all Accounts
-# include the account mailbox tree
-Account.getAll = (callback) ->
-    Account.request 'all', callback
-
-# fetch the list of all Accounts
-# include the account mailbox tree
-Account.listWithMailboxes = ->
-    Account.requestPromised 'all'
-    .map (account) -> account.includeMailboxes()
-
-# refresh all accounts
+# Public: refresh all accounts
+# 
+# Returns {Promise} for task completion
 Account.refreshAllAccounts = ->
-    Promise.serie Account.getAllPromised(), (account) ->
+    allAccounts = Account.requestPromised 'all'
+    Promise.serie allAccounts, (account) ->
         ImapProcess.fetchAccount account
 
-# refresh this account
+# Public: refresh this account
+# 
+# Returns a {Promise} for task completion
 Account::fetchMails = ->
     ImapProcess.fetchAccount this
 
-# include the mailboxes tree on an account instance
-# return a promise for the account itself
+# Public: include the mailboxes tree on this account instance
+# 
+# Returns {Promise} for the account itself
 Account::includeMailboxes = ->
     Mailbox.getClientTree @id
     .then (mailboxes) =>
         @mailboxes = mailboxes
     .return this
 
-# fetch the mailbox tree of a new ImapAccount
+# Public: fetch the mailbox tree of a new {Account}
 # if the fetch succeeds, create the account and mailbox in couch
+# 
+# Returns {Promise} promise for the created {Account}, boxes included
 Account.createIfValid = (data) ->
-    account = null
-    rawBoxesTree = null
-
-    ImapProcess.fetchBoxesTree data
-    .then (boxes) ->
-        log.info "GOT BOXES", boxes
+    
+    accountAndBoxesCreated = ImapProcess.fetchBoxesTree data
+    .then (rawBoxesTree) ->
         # We managed to get boxes, login settings are OK
         # create Account and Mailboxes
-        rawBoxesTree = boxes
-        Account.createPromised data
+        log.info "GOT BOXES", rawBoxesTree
+        # pass rawBoxesTree down the chain
+        Promise.all [ rawBoxesTree, Account.createPromised data ]
 
-    .then (created) ->
-        account = created
-        Mailbox.createBoxesFromImapTree account.id, rawBoxesTree
+    .spread (rawBoxesTree, account) ->
+        Mailbox.createBoxesFromImapTree account.id, rawBoxesTree    
+        .then (specialUses) -> 
+            account.updateAttributesPromised specialUses
 
-    .then ->
+    # fork the promise
+    # return from this function a fast promise for account with boxes
+    returnValue = accountAndBoxesCreated.then (account) ->
         log.info "CREATED ACCOUNT & BOXES"
         return account.includeMailboxes()
+
+    # in a detached chain, fetch the Account
+    accountAndBoxesCreated.then (account) ->
+        ImapProcess.fetchAccount account
+        .catch (err) -> console.log "FETCH MAIL FAILED", err.stack
+
+    return returnValue
+
+# Public: send a message using this account SMTP config
+# 
+# message - a raw message
+# callback - a (err, info) callback with the following parameters
+#            :err
+#            :info the nodemailer's info
+# 
+# Returns void
+Account::sendMessage = (message, callback) ->
+    transport = nodemailer.createTransport
+        port: @smtpPort
+        host: @smtpHost
+        auth: 
+            user: @login
+            pass: @password
+
+    transport.sendMail message, callback
 
 
 Promise.promisifyAll Account, suffix: 'Promised'

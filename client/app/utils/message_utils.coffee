@@ -55,14 +55,16 @@ module.exports =
 
     # convert attachment to the format needed by the file picker
     convertAttachments: (file) ->
+        name = file.generatedFileName
         return {
-            name:               file.generatedFileName
+            name:               name
             size:               file.length
             type:               file.contentType
             originalName:       file.fileName
             contentDisposition: file.contentDisposition
             contentId:          file.contentId
             transferEncoding:   file.transferEncoding
+            url: "/message/#{file.messageId}/attachments/#{name}"
         }
 
     formatDate: (date) ->

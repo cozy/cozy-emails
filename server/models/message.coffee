@@ -3,6 +3,10 @@ mailutils = require '../utils/jwz_tools'
 uuid = require 'uuid'
 ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
+Mailbox = require './mailbox'
+
+# Public: Message
+# 
 
 module.exports = Message = americano.getModel 'Message',
 
@@ -10,8 +14,7 @@ module.exports = Message = americano.getModel 'Message',
     messageID: String        # normalized message-id (no <"">)
     normSubject: String      # normalized subject (no Re: ...)
     conversationID: String   # all message in thread have same conversationID
-    mailboxIDs: (x) -> x     # mailboxes where this message appears
-                             # as an hash {boxID:uid, boxID2:uid2}
+    mailboxIDs: (x) -> x     # mailboxes as an hash {boxID:uid, boxID2:uid2}
     flags: (x) -> x          # [String] flags of the message
     headers: (x) -> x        # hash of the message headers
     from: (x) -> x           # array of {name, address}
@@ -28,14 +31,17 @@ module.exports = Message = americano.getModel 'Message',
     priority: String         # message priority
     binary: (x) -> x         # cozy binaries
     attachments: (x) -> x    # array of message attachments objects
-                                # {contentType, fileName, generatedFileName,
-                                # contentDisposition, contentId,
-                                # transferEncoding, length, checksum}
     flags: (x) -> x          # array of message flags (Seen, Flagged, Draft)
 
 
-# return a promise for an Array of Message object
-# params : numByPage & numPage
+# Public: get messages in a box, sorted by Date
+# 
+# mailboxID - {String} the mailbox's ID
+# params - query's options
+#    :numByPage - number of message in one page 
+#    :numPage - number of the page we want
+# 
+# Returns {Promise} for an array of {Message}
 Message.getByMailboxAndDate = (mailboxID, params) ->
     options =
         startkey: [mailboxID, {}]
@@ -51,8 +57,12 @@ Message.getByMailboxAndDate = (mailboxID, params) ->
     Message.rawRequestPromised 'byMailboxAndDate', options
     .map (row) -> new Message(row.doc)
 
-# count number of messages in a box
+# Publix: get the number of messages in a box
 # @TODO: also count read/unread messages ?
+# 
+# mailboxID - {String} the mailbox's ID
+# 
+# Returns {Promise} for the count
 Message.countByMailbox = (mailboxID) ->
     Message.rawRequestPromised 'byMailboxAndDate',
         startkey: [mailboxID]
@@ -60,7 +70,15 @@ Message.countByMailbox = (mailboxID) ->
         reduce: true
         group_level: 1 # group by mailboxID
 
-    .then (result) -> return count: result[0]?.value or 0
+    .then (result) -> result[0]?.value or 0
+
+Message.countReadByMailbox = (mailboxID) ->
+    Message.rawRequestPromised 'byMailboxAndFlag',
+        key: [mailboxID, '\\Seen']
+        reduce: true
+        group_level: 1 
+
+    .then (result) -> result[0]?.value or 0
 
 # given a mailbox
 # get the uids present in the cozy
@@ -81,6 +99,14 @@ Message.byMessageId = (accountID, messageID) ->
 
     .then (rows) ->
         if data = rows[0]?.doc then new Message data
+
+Message.byConversationId = (conversationID) ->
+    Message.rawRequestPromised 'byConversationId',
+        key: conversationID
+        include_docs: true
+
+    .map (row) -> new Message row.doc
+
 
 # add the message to a box
 Message::addToMailbox = (box, uid) ->
@@ -125,6 +151,42 @@ Message::applyPatchOperations = (patch) ->
     # wee need to save afterward
     ImapProcess.applyMessageChanges this, flagOps, boxOps
     .then => @savePromised()
+
+Message::moveToTrash = (patch) ->
+    Account.findPromised @accountID
+    .then (account) =>
+        trashID = account.trashMailbox
+        throw new WrongConfigError 'need define trash' unless trashID
+
+        # build a patch that remove from all mailboxes and add to trash
+        patch = Object.keys @mailboxIDs
+        .filter (boxid) -> boxid isnt trashID
+        .map (boxid) -> op: 'remove', path: "/mailboxIDs/#{boxid}"
+
+        patch.push op: 'add', path: "/mailboxIDs/#{trashID}"
+
+        @applyPatchOperations patch
+
+
+# create a message and store it on the imap server
+# used for drafts
+Message.saveOnImapServer = (message, boxtype, uid) ->
+    Account.findPromised message.accountID
+    .then (account) =>
+        boxID = account[boxtype]
+        throw new WrongConfigError 'wrong boxtype' unless boxid
+        
+        Mailbox.findPromised boxID
+        .then (box) -> [account, box] 
+
+    .spread (account, box) ->
+        ImapProcess.createMail account, box, message
+        .then (uid) ->
+            message.mailboxIDs[box.id] = uid
+            Message.createPromised message
+
+    .then 
+            
 
 
 # create a message from a raw imap message

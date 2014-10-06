@@ -24,8 +24,8 @@ module.exports =
       "compose reply separator"   : "\n\nLe %{date}, %{sender} a écrit \n"
       "compose forward prefix"    : "Fwd: "
       "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n"
-      "compose action draft"      : "Save as draft"
-      "compose action send"       : "Send"
+      "compose action draft"      : "Enregistrer le brouillon"
+      "compose action send"       : "Envoyer"
       "compose toggle cc"         : "Cc"
       "compose toggle bcc"        : "Cci"
 
@@ -65,19 +65,23 @@ module.exports =
       "mail action conversation unseen" : "Marque la conversation comme non lue"
 
       # Account
-      "mailbox new"                 : "Nouveau compte"
-      "mailbox edit"                : "Modifier le compte"
-      "mailbox add"                 : "Créer"
-      "mailbox label"               : "Nom"
-      "mailbox name short"          : "Nom abbrégé"
-      "mailbox user name"           : "Votre nom"
-      "mailbox user fullname"       : "Votre nom, tel qu'il sera affiché"
-      "mailbox address"             : "Adresse"
-      "mailbox address placeholder" : "Votre adresse électronique"
-      "mailbox password"            : "Maot de passe"
-      "mailbox sending server"      : "Serveur sortant"
-      "mailbox receiving server"    : "Serveur IMAP"
-      "mailbox remove"              : "Supprimer"
+      "account new"                 : "Nouveau compte"
+      "account edit"                : "Modifier le compte"
+      "account add"                 : "Créer"
+      "account save"                : "Enregistrer"
+      "account label"               : "Nom"
+      "account name short"          : "Nom abbrégé"
+      "account user name"           : "Votre nom"
+      "account user fullname"       : "Votre nom, tel qu'il sera affiché"
+      "account address"             : "Adresse"
+      "account address placeholder" : "Votre adresse électronique"
+      "account password"            : "Mot de passe"
+      "account sending server"      : "Serveur sortant"
+      "account receiving server"    : "Serveur IMAP"
+      "account remove"              : "Supprimer"
+      "account draft mailbox"       : "Enregistrer les brouillons dans"
+      "account sent mailbox"        : "Enregistrer les messages envoyés dans"
+      "account trash mailbox"       : "Corbeille"
 
       # Message Action
       "message action sent ok"      : "Message envoyé !"
@@ -98,12 +102,27 @@ module.exports =
       "conversation seen ko"        : "L'opération a échoué"
       "conversation unseen ok"      : "Ok"
       "conversation unseen ko"      : "L'opération a échoué"
+      "message images warning"      : "L'affichage des images du message a été bloqué"
+      "message images display"      : "Afficher les images"
+      "message html display"        : "Afficher en HTML"
+      "message delete no trash"     : "Choisissez d'abord un dossier Corbeille"
 
       # Settings
       "settings title"             : "Paramètres"
       "settings button save"       : "Enregistrer"
       "settings label mpp"         : "Nombre de messages par page"
-      "settings label compose"     : "Éditeur riche"
+      "settings plugins"           : "Modules complémentaires"
+      "settings label composeInHTML"        : "Éditeur riche"
+      "settings label messageDisplayHTML"   : "Afficher les messages en HTML"
+      "settings label messageDisplayImages" : "Afficher les images"
 
       # File picker
       "picker drop here"           : "Déposer les fichiers ici"
+
+      # Mailbox List
+      "mailbox pick one"           : "Choisissez une boite"
+      "mailbox pick null"          : "Pas de boite pour ça"
+
+      # Tasks
+      "task diff"                  : 'Comparaison %{box} of %{account}'
+      "task apply-diff-fetch"      : 'Téléchargement emails %{box} of %{account}'

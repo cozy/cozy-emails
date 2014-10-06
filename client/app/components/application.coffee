@@ -2,6 +2,7 @@
 {body, div, p, form, i, input, span, a, button, strong} = React.DOM
 AccountConfig = require './account-config'
 Alert         = require './alert'
+Toast         = require './toast'
 Compose       = require './compose'
 Conversation  = require './conversation'
 MailboxList   = require './mailbox-list'
@@ -24,6 +25,7 @@ MessageStore  = require '../stores/message_store'
 LayoutStore   = require '../stores/layout_store'
 SettingsStore = require '../stores/settings_store'
 SearchStore   = require '../stores/search_store'
+TasksStore = require '../stores/tasks_store'
 
 # Flux actions
 LayoutActionCreator = require '../actions/layout_action_creator'
@@ -43,7 +45,7 @@ module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SearchStore]
+        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SearchStore, TasksStore]
         RouterMixin
     ]
 
@@ -89,6 +91,12 @@ module.exports = Application = React.createClass
 
         alert = @state.alertMessage
 
+        getUrl = (mailbox) =>
+            @buildUrl
+                direction: 'first'
+                action: 'account.mailbox.messages'
+                parameters: [@state.selectedAccount?.get('id'), mailbox.get('id')]
+
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
@@ -101,11 +109,16 @@ module.exports = Application = React.createClass
                     isResponsiveMenuShown: @state.isResponsiveMenuShown
                     layout: @props.router.current
                     favoriteMailboxes: @state.favoriteMailboxes
+                    unreadCounts: @state.unreadCounts
 
                 div id: 'page-content', className: responsiveClasses,
 
                     # Display feedback
                     Alert { alert }
+
+                    div className: 'toasts-container',
+                        @state.toasts.map (toast) -> Toast toast: toast 
+                        .toJS()
 
                     # The quick actions bar shoud be moved in its own component
                     # when its feature is implemented.
@@ -124,9 +137,9 @@ module.exports = Application = React.createClass
                         div className: 'col-md-6 hidden-xs hidden-sm pull-left',
                             form className: 'form-inline col-md-12',
                                 MailboxList
-                                    selectedAccount: @state.selectedAccount
+                                    getUrl: getUrl
                                     mailboxes: @state.mailboxes
-                                    selectedMailbox: @state.selectedMailbox
+                                    selectedMailbox: @state.selectedMailbox?.get('id')
                                 SearchForm query: @state.searchQuery
 
                         div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
@@ -222,7 +235,7 @@ module.exports = Application = React.createClass
             if otherPanelInfo?.action is 'message'
                 openMessage = MessageStore.getByID otherPanelInfo.parameters.messageID
 
-            messagesCount = MessageStore.getMessagesCountByMailbox mailboxID
+            messagesCount = MessageStore.getMessagesCounts().get mailboxID
             return MessageList
                 messages: MessageStore.getMessagesByMailbox mailboxID, firstOfPage, lastOfPage
                 messagesCount: messagesCount
@@ -273,7 +286,8 @@ module.exports = Application = React.createClass
         # -- Display the settings form
         else if panelInfo.action is 'settings'
             settings = @state.settings
-            return Settings {settings}
+            plugins  = @state.plugins
+            return Settings {settings, plugins}
 
         # -- Generates a message list based on search result
         else if panelInfo.action is 'search'
@@ -332,11 +346,14 @@ module.exports = Application = React.createClass
             selectedAccount: selectedAccount
             isResponsiveMenuShown: LayoutStore.isMenuShown()
             alertMessage: LayoutStore.getAlert()
+            toasts: TasksStore.getTasks()
             mailboxes: AccountStore.getSelectedMailboxes true
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
+            unreadCounts: MessageStore.getUnreadMessagesCounts()
             searchQuery: SearchStore.getQuery()
             settings: SettingsStore.get()
+            plugins: window.plugins
         }
 
 

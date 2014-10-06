@@ -6,6 +6,8 @@ RouterMixin = require '../mixins/router_mixin'
 
 AccountStore = require '../stores/account_store'
 
+MessageStore = require '../stores/message_store'
+
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
@@ -16,7 +18,8 @@ module.exports = Menu = React.createClass
                not Immutable.is(nextProps.selectedAccount, @props.selectedAccount) or
                not _.isEqual(nextProps.layout, @props.layout) or
                nextProps.isResponsiveMenuShown isnt @props.isResponsiveMenuShown or
-               not Immutable.is(nextProps.favoriteMailboxes, @props.favoriteMailboxes)
+               not Immutable.is(nextProps.favoriteMailboxes, @props.favoriteMailboxes) or 
+               not Immutable.is(nextProps.unreadCounts, @props.unreadCounts)
 
     render: ->
         selectedAccountUrl = @buildUrl
@@ -91,16 +94,16 @@ module.exports = Menu = React.createClass
             direction: 'first'
             action: 'account.mailbox.messages'
             parameters: [accountID, defaultMailbox?.get 'id']
-            fullWidth: false
+            fullWidth: true # /!\ Hide second panel when switching account
 
         li className: accountClasses, key: key,
-            a href: url, className: 'menu-item ' + accountClasses,
+            a href: url, className: 'menu-item account ' + accountClasses,
                 i className: 'fa fa-inbox'
-                span className: 'badge', account.get 'unreadCount'
+                span className: 'badge', @props.unreadCounts.get defaultMailbox?.get 'id'
                 span className: 'item-label', account.get 'label'
 
             ul className: 'list-unstyled submenu mailbox-list',
-                @props.favoriteMailboxes.map (mailbox, key) =>
+                @props.favoriteMailboxes?.map (mailbox, key) =>
                     @getMailboxRender account, mailbox, key
                 .toJS()
 
@@ -110,8 +113,10 @@ module.exports = Menu = React.createClass
             action: 'account.mailbox.messages'
             parameters: [account.get('id'), mailbox.get('id')]
 
+        unread = @props.unreadCounts.get mailbox.get('id')
+
         a href: mailboxUrl, className: 'menu-item', key: key,
             # Something must be rethought about the icon
             i className: 'fa fa-star'
-            span className: 'badge', Math.floor((Math.random() * 10) + 1) # placeholder
+            span className: 'badge', unread
             span className: 'item-label', mailbox.get 'label'

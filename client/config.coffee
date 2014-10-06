@@ -1,4 +1,5 @@
 path = require 'path'
+glob = require 'glob'
 
 exports.config =
     files:
@@ -21,13 +22,14 @@ exports.config =
                     'vendor/scripts/moment.js'
                     'vendor/scripts/polyglot.js'
                     'vendor/scripts/json-patch-duplex.min.js'
-                ]
+                ].concat(glob.sync 'vendor/plugins/**/*.js')
 
         stylesheets:
             joinTo: 'css/app.css'
             order:
                 before: []
                 after: ['vendor/stylesheets/helpers.css']
+                    .concat(glob.sync 'vendor/plugins/**/*.css')
 
     plugins:
         cleancss:

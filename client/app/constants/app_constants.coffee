@@ -34,6 +34,10 @@ module.exports =
         # Settings
         'SETTINGS_UPDATED'          : 'SETTINGS_UPDATED'
 
+        # Tasks
+        'RECEIVE_TASK_UPDATE'       : 'RECEIVE_TASK_UPDATE'
+        'RECEIVE_TASK_DELETE'       : 'RECEIVE_TASK_DELETE'
+
     PayloadSources:
         'VIEW_ACTION'   : 'VIEW_ACTION'
         'SERVER_ACTION' : 'SERVER_ACTION'
@@ -50,6 +54,6 @@ module.exports =
         'ERROR'        : 'ERROR'
 
     MessageFlags:
-        'FLAGGED'      : 'Flagged'
-        'SEEN'         : 'Seen'
-        'DRAFT'        : 'Draft'
+        'FLAGGED'      : '\\Flagged'
+        'SEEN'         : '\\Seen'
+        'DRAFT'        : '\\Draft'

@@ -1,15 +1,18 @@
 # See documentation on https://github.com/frankrousseau/americano#routes
 
-index    = require './index'
-accounts = require './accounts'
-messages = require './messages'
-test     = require './test'
+index     = require './index'
+accounts  = require './accounts'
+messages  = require './messages'
+providers = require './providers'
+test      = require './test'
 
 module.exports =
 
     '': get: index.main
 
     'tasks': get: index.tasks
+    'refresh': get: index.refresh
+
 
     'account':
         post: accounts.create
@@ -26,8 +29,6 @@ module.exports =
 
     'mailbox/:mailboxID/page/:numPage/limit/:numByPage':
         get: [messages.listByMailboxId]
-    'mailbox/:mailboxID/count':
-        get: [messages.countByMailboxId]
 
     'message':
         post: messages.send
@@ -42,6 +43,9 @@ module.exports =
 
     'search/:query/page/:numPage/limit/:numByPage':
         get: messages.search
+
+    'provider/:domain':
+        get: providers.get
 
     # temporary routes for testing purpose
     'messages/index': get: messages.index

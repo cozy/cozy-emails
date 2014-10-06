@@ -1,5 +1,8 @@
 log = require('../utils/logging')(prefix: 'imap:scheduler')
 
+# Public : see bluebird
+class Promise # reference for biscotto, @TODO : move it away
+
 ImapPromised = require './imap_promisified'
 ImapReporter = require './imap_reporter'
 Promise = require 'bluebird'
@@ -7,20 +10,29 @@ _ = require 'lodash'
 {UIDValidityChanged} = require '../utils/errors'
 Message = require '../models/message'
 mailutils = require '../utils/jwz_tools'
+Account = null
 
-# The imap scheduler is responsible to maintain
+# Public: The imap scheduler is responsible to maintain
 # a list of task than need to be executed.
 # It will create and destroy its @imap connection
 # ASAP tasks are run first
-
-# usage :
-# scheduler = ImapScheduler.instanceFor account
-# pResult = scheduler.doASAP (imap) -> imap.doSomething()
-
+# 
+# Examples
+# 
+#  scheduler = ImapScheduler.instanceFor account
+#  pResult = scheduler.doASAP (imap) -> 
+#    imap.doSomething()
 module.exports = class ImapScheduler
 
     # static function, we have 1 ImapScheduler by imap server
     @instances = {}
+    
+    # Public: get the singleton instance of {ImapScheduler}
+    # for the passed {Account}
+    # 
+    # account - an {Account} to get the instance for
+    # 
+    # Returns an {ImapScheduler} linked to this account
     @instanceFor: (account) ->
         @instances[account.imapServer] ?= new ImapScheduler account
         return @instances[account.imapServer]
@@ -29,11 +41,21 @@ module.exports = class ImapScheduler
     tasks: []
     pendingTask: null
 
+    # Private: create a new connection for this 
+    # scheduler instance
+    # 
+    # account - account to create the scheduler for
+    # 
+    # Returns a {Promise} for the connected imap object
     constructor: (@account) ->
-        Account = require '../models/account'
+        Account ?= require '../models/account'
         unless @account instanceof Account
             @account = new Account @account
 
+    # Private: create a new connection for this 
+    # scheduler instance
+    # 
+    # Returns a {Promise} for the connected imap object
     createNewConnection: ->
         log.info "OPEN IMAP CONNECTION", @account.label
 
@@ -57,6 +79,12 @@ module.exports = class ImapScheduler
                 throw err
             .tap => @_dequeue()
 
+    # Private: close the connection
+    # 
+    # hard - {Boolean} either to force close the socket
+    #         or wait for it to connect
+    # 
+    # Returns a {Promise} for the connected imap object
     closeConnection: (hard) =>
         log.info "CLOSING CONNECTION", (if hard then "HARD" else "")
         @imap.end(hard).then =>
@@ -64,10 +92,28 @@ module.exports = class ImapScheduler
             @imap = null
             @_dequeue()
 
-    # add task to queue
-    # gen is a function that returns a promise
+    # Public: run generator as soon as the connection
+    # is available
+    # 
+    # gen - a {Function} that returns a {Promise}
+    # 
+    # Returns a {Promise} for the return value of gen
     doASAP: (gen) -> @queue true, gen
+
+    # Public: run generator later when the connection
+    # is available
+    # 
+    # gen - a {Function} that returns a {Promise}
+    # 
+    # Returns a {Promise} for the return value of gen
     doLater: (gen) -> @queue false, gen
+
+    # Public: run generator later when the connection
+    # is available
+    # 
+    # gen - a {Function} that returns a {Promise}
+    # 
+    # Returns a {Promise} for the return value of gen
     queue: (urgent = false, gen) ->
         return new Promise (resolve, reject) =>
             fn = if urgent then 'unshift' else 'push'
@@ -80,10 +126,31 @@ module.exports = class ImapScheduler
             @_dequeue()
 
 
-    # utility function for actions in a box
+    # Public: utility function for actions in a box
     # handle the case where UIDValidity has changed
+    # 
+    # box - {Mailbox} to work in
+    # gen - a {Function} that returns a Promise
+    # 
+    # Returns a {Promise} for the return value of gen
     doASAPWithBox: (box, gen) -> @queueWithBox true, box, gen
+
+    # Public: utility function for actions in a box
+    # handle the case where UIDValidity has changed
+    # 
+    # box - {Mailbox} to work in
+    # gen - a {Function} that returns a Promise
+    # 
+    # Returns a {Promise} for the return value of gen
     doLaterWithBox: (box, gen) -> @queueWithBox false, box, gen
+
+    # Private: utility function for actions in a box
+    # handle the case where UIDValidity has changed
+    # 
+    # box - {Mailbox} to work in
+    # gen - a {Function} that returns a Promise
+    # 
+    # Returns a {Promise} for the return value of gen
     queueWithBox: (urgent, box, gen) ->
         @queue urgent, (imap) ->
 
@@ -122,16 +189,33 @@ module.exports = class ImapScheduler
                 log.warn "RECOVERED"
                 @queueWithBox urgent, box, gen
 
+    # Private: solve the pending task promise
+    # 
+    # result - the result to solve it with
+    # 
+    # Returns: {void}
     _resolvePending: (result) =>
         @pendingTask.resolve result
         @pendingTask = null
         setTimeout @_dequeue, 1
 
+    # Private: solve the pending task promise
+    # 
+    # err - the {Error} to reject the promise with
+    # 
+    # Returns: {void}
     _rejectPending: (err) =>
         @pendingTask.reject err
         @pendingTask = null
         setTimeout @_dequeue, 1
 
+
+    # Private: handle next step of the processing
+    # - open and close the imap connection as appropriate
+    # - timeout every task for 2min
+    # 
+    # 
+    # Returns: {void}
     _dequeue: =>
 
         # already working, ignore
@@ -186,8 +270,7 @@ recoverChangedUIDValidity = (imap, box, accountID) ->
             .get(0)
             .then (row) ->
                 return unless row
-                console.log "MATCH"
-                mailboxIDs = row.mailboxIDs
+                mailboxIDs = row.doc.mailboxIDs
                 mailboxIDs[box.id] = newUID
                 msg = new Message(row.doc)
                 msg.updateAttributesPromised {mailboxIDs}

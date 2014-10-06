@@ -18,11 +18,6 @@ module.exports.create = (req, res, next) ->
         throw new HttpError 401, err
     .catch next
 
-    # outside of this request lifecycle, we fetch mails
-    accountCreated.then (account) ->
-        account.fetchMails()
-        .catch (err) -> console.log "FETCH MAIL FAILED", err.stack
-
 # fetch an account by id, add it to the request
 module.exports.fetch = (req, res, next) ->
     Account.findPromised req.params.accountID
@@ -34,7 +29,8 @@ module.exports.fetch = (req, res, next) ->
 # fetch the list of all Accounts
 # include the account mailbox tree
 module.exports.list = (req, res, next) ->
-    Account.listWithMailboxes()
+    Account.requestPromised 'all'
+    .map (account) -> account.includeMailboxes()
     .then (accounts) -> res.send 200, accounts
     .catch next
 
@@ -48,11 +44,13 @@ module.exports.details = (req, res, next) ->
 module.exports.edit = (req, res, next) ->
     # @TODO : may be only allow changes to label, unless connection broken
 
-    changes = _.pick req.body, 'label', 'login', 'password',
-        'smtpServer', 'smtpPort', 'imapServer', 'imapPort'
+    changes = _.pick req.body, 'label', 'login', 'password', 'name',
+        'smtpServer', 'smtpPort', 'imapServer', 'imapPort',
+        'draftMailbox', 'sentMailbox', 'trashMailbox'
 
     req.account.updateAttributesPromised changes
-        .then (account) -> res.send 200, account
+        .then (account) -> account.includeMailboxes()
+        .then (account) -> res.send 200, req.account
         .catch next
 
 # delete an account

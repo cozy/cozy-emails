@@ -1,5 +1,7 @@
 path = require 'path'
 americano = require 'americano'
+ImapReporter = require './processes/imap_reporter'
+Account = require './models/account'
 
 if process.env.NODE_ENV isnt 'production'
     require('bluebird').longStackTraces()
@@ -18,6 +20,11 @@ config =
             americano.static __dirname + '/../client/public',
                 maxAge: 86400000
         ]
+
+        afterStart: (app, server) ->
+            ImapReporter.initSocketIO app, server
+            Account.refreshAllAccounts()
+
 
     development: [
         americano.logger 'dev'

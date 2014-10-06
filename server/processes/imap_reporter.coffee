@@ -1,7 +1,7 @@
 _ = require 'lodash'
-
-module.exports = ImapReporter = {}
-
+uuid = require 'uuid'
+ioServer = require 'socket.io'
+log = require('../utils/logging')('imap:reporter')
 
 # user visible tasks, those are not the same than the IMAP tasks
 # example : the userTask fetch mailbox X
@@ -13,27 +13,72 @@ module.exports = ImapReporter = {}
 # reporter.addProgress 2 # progress is now 2/5
 # reporter.addProgress 1 # progress is now 3/5
 # reporter.onProgress 4 # progress is now 4/5
-# reporter.onError new Error 'shit happened'
+# reporter.onError new Error 'shit happened' 
+# reporter.onError new Error 'another shit happened' 
 # reporter.onDone()
-ImapReporter.userTasks = []
 
 
-ImapReporter.addUserTask = (options) ->
-    task = _.extend {done: 0}, options
-    ImapReporter.userTasks.push task
+io = null
+module.exports = class ImapReporter
 
-    return api =
-        onDone: ->
-            task.finished = true
-        onProgress: (done) ->
-            task.done = done
-        addProgress: (delta) ->
-            task.done += delta
-        onError: (err) ->
-            console.log err
-            task.errors ?= []
-            task.errors.push err
+    # STATIC
+    @userTasks = {}
+    @addUserTask = (options) -> 
+        new ImapReporter options
 
-ImapReporter.summary = ->
-    # @TODO format this a bit
-    ImapReporter.userTasks
+    @summary = ->
+        # @TODO format this a bit ?
+        for id, task of ImapReporter.userTasks
+            task.toObject()
+
+    @initSocketIO = (app, server) ->
+        app.io = io = ioServer server
+        io.on 'connection', (sock) ->
+            sock.on 'mark_ack', ImapReporter.acknowledge
+
+    # when the user click OK on a finished task
+    # we remove it from the userTasks
+    @acknowledge = (id) ->
+        if id and ImapReporter.userTasks[id]?.finished
+            delete ImapReporter.userTasks[id]
+            io?.emit 'task.delete', id
+
+    # INSTANCE
+    constructor: (options) ->
+        @id = uuid.v4()
+        @done = 0
+        @finished = false
+        @errors = []
+        @total = options.total
+        @box = options.box
+        @account = options.account
+        @code = options.code
+
+        ImapReporter.userTasks[@id] = this
+        io?.emit 'task.create', @toObject()
+
+    sendtoclient: (nocooldown) ->
+        return if @cooldown and not nocooldown
+        io.emit 'task.update', @toObject()
+        @cooldown = true
+        setTimeout (=> @cooldown = false) , 500
+
+    toObject: =>
+        {@id, @finished, @done, @total, @errors, @box, @account, @code}
+
+    onDone: ->
+        @finished = true
+        @done = @total
+        @sendtoclient(true)
+    
+    onProgress: (done) ->
+        @done = done
+        @sendtoclient()
+    
+    addProgress: (delta) ->
+        @done += delta
+        @sendtoclient()
+    
+    onError: (err) ->
+        @errors.push err
+        @sendtoclient()

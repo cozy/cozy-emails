@@ -3,8 +3,15 @@ Message     = require '../models/message'
 {HttpError} = require '../utils/errors'
 Client      = require('request-json').JsonClient
 jsonpatch   = require 'fast-json-patch'
+nodemailer  = require 'nodemailer'
 Compiler    = require 'nodemailer/src/compiler'
+Promise     = require 'bluebird'
+htmlToText  = require 'html-to-text'
+sanitizer   = require 'sanitizer'
 
+htmlToTextOptions =
+    tables: true
+    wordwrap: 80
 # The data system listens to localhost:9101
 dataSystem = new Client 'http://localhost:9101/'
 
@@ -13,6 +20,15 @@ if process.env.NODE_ENV in ['production', 'test']
     user = process.env.NAME
     password = process.env.TOKEN
     dataSystem.setBasicAuth user, password
+
+formatMessage = (message) ->
+    if message.html?
+        message.html = sanitizer.sanitize message.html, (value) -> value.toString()
+
+    if not message.text?
+        message.text = htmlToText.fromString message.html, htmlToTextOptions
+
+    return message
 
 # list messages from a mailbox
 # require numPage & numByPage params
@@ -23,15 +39,18 @@ module.exports.listByMailboxId = (req, res, next) ->
         numPage: req.params.numPage - 1
         numByPage: req.params.numByPage
 
-    Message.getByMailboxAndDate(req.params.mailboxID, options)
-    .then (messages) -> res.send 200, messages
-    .catch next
+    Promise.all [
+        Message.getByMailboxAndDate req.params.mailboxID, options
+        Message.countByMailbox req.params.mailboxID
+        Message.countReadByMailbox req.params.mailboxID        
+    ]
+    .spread (messages, count, read) ->
+        res.send 200,
+            mailboxID: req.params.mailboxID
+            messages: messages.map formatMessage
+            count: count
+            unread: count - read
 
-# give the number of messages for a mailbox
-# @TODO : number of unread message ?
-module.exports.countByMailboxId = (req, res, next) ->
-    Message.countByMailbox(req.params.mailboxID)
-    .then (count) -> res.send 200, count
     .catch next
 
 # get a message and attach it to req.message
@@ -48,7 +67,7 @@ module.exports.details = (req, res, next) ->
     # @TODO : fetch message's status
     # @TODO : fetch whole conversation ?
 
-    res.send 200, req.message
+    res.send 200, formatMessage req.message
 
 module.exports.attachment = (req, res, next) ->
     stream = req.message.getBinary req.params.attachment, (err) ->
@@ -60,33 +79,73 @@ module.exports.attachment = (req, res, next) ->
 # patch e message
 module.exports.patch = (req, res, next) ->
     req.message.applyPatchOperations req.body
-    .then -> res.send 200, req.message
+    .then -> res.send 200, formatMessage req.message
     .catch next
 
 # send a message through the DS
 module.exports.send = (req, res, next) ->
 
-    # @TODO : save message to Sent folder
     # @TODO : if message was a draft, delete it from Draft folder
     # @TODO : save draft into DS
 
-    if req.body.isDraft
-        draft  = new Compiler(req.body).compile()
-        stream = draft.createReadStream()
-        message = ''
-        stream.on 'data', (data) ->
-            message += data.toString()
-        stream.on 'error', (err) ->
-            console.error('Error', err)
-        stream.on 'end', ->
-            # @TODO : save draft into DS
-            res.send 200, message
-    else
-        dataSystem.post 'mail/', req.body, (dsErr, dsRes, dsBody) ->
-            if dsErr
-                res.send 500, dsBody
+    message = req.body
+
+    # convert base64 attachments to buffer
+    message.attachments.map (attachment) ->
+        filename: attachment.filename
+        contents: new Buffer attachment.content.split(",")[1], 'base64'
+
+    # @TODO : save attachments in the DS
+
+    # compile the message
+    rawMessage = new Compiler(mail).compile().build()
+    
+    # find the account and draftbox
+    Account.findPromised message.accountID
+    .then (account) ->
+        Mailbox.findPromised account.draftMailbox
+        .then (draftBox) -> return [account, draftBox]
+
+    .spread (account, draftBox) ->
+
+        # remove the old version if necessary
+        removeOld = ->
+            uid = message.mailboxIDs[draftBox.id]
+            if uid then ImapProcess.remove account, draftBox, uid 
+            else Promise.resolve()
+
+        # store the message in IMAP
+        createMessageInIMAP = ->
+            pDestBox = if message.isDraft then Promise.resolve draftBox
+            else Mailbox.findPromised account.sentMailbox
+            
+            pDestBox.then (dest) -> 
+                ImapProcess.append account, dest, rawMessage 
+                .then (uidInDest) ->
+                    message.mailboxIDs = {}
+                    message.mailboxIDs[dest.id] = uidInDest
+
+        # create or update the message in the DS
+        saveMessage = ->
+            if message.id
+                new Message(id: message.id).updateAttributesPromised message
             else
-                res.send 200, dsBody
+                Message.create message
+
+
+        if message.isDraft
+            removeOld()
+            .then -> createMessageInIMAP()
+            .then -> saveMessage()
+
+        else 
+            # send before deleting draft
+            account.sendMessagePromised message
+            .then (info) -> message.headers['message-id'] = info.messageId
+            .then -> removeOld()
+            .then -> createMessageInIMAP()
+            .then -> saveMessage()
+
 
 # search in the messages using the indexer
 module.exports.search = (req, res, next) ->
@@ -101,7 +160,7 @@ module.exports.search = (req, res, next) ->
             query: req.params.query
             numPage: req.params.numPage
             numByPage: numPageCheat
-        .then (messages) -> res.send messages
+        .then (messages) -> res.send 200, messages.map formatMessage
         .catch next
 
 # Temporary routes for testing purpose
@@ -117,9 +176,22 @@ module.exports.index = (req, res, next) ->
 
 module.exports.del = (req, res, next) ->
 
-    # @TODO : move message to trash
+    Account.findPromised req.message.accountID
+    .then (account) ->
+        trashID = account.trashMailbox
+        throw new WrongConfigError 'need define trash' unless trashID
 
-    res.send 200, ""
+        # build a patch that remove from all mailboxes and add to trash
+        patch = Object.keys(req.message.mailboxIDs)
+        .filter (boxid) -> boxid isnt trashID
+        .map (boxid) -> op: 'remove', path: "/mailboxIDs/#{boxid}"
+
+        patch.push op: 'add', path: "/mailboxIDs/#{trashID}"
+
+        req.message.applyPatchOperations patch
+
+    .then -> res.send 200, req.message
+    .catch next
 
 module.exports.conversationDelete = (req, res, next) ->
 
@@ -130,19 +202,12 @@ module.exports.conversationDelete = (req, res, next) ->
 
 module.exports.conversationPatch = (req, res, next) ->
 
-    # @TODO : update Conversation
-    patch = (p) ->
-        path = p.path.split('/')
-        if path[1] is 'flags'
-            if p.op is 'add'
-                console.log "Marking messages as seen"
-            else
-                console.log "Removing seen flag"
-
-        else if path[1] is 'mailboxIDs'
-            console.log "Moving all messages to #{p.value}"
-    patch p for p in req.body
-
-    res.send 200, []
-
-
+    Message.byConversationID req.params.conversationID
+    .then (messages) ->
+        # @TODO : be smarter : dont remove message from sent folder, ...
+        Promise.serie messages, (msg) -> 
+            msg.applyPatchOperations req.body
+        
+        .then -> res.send 200, messages
+    
+    .catch next

@@ -2,6 +2,10 @@ americano = require 'americano-cozy'
 Promise = require 'bluebird'
 _ = require 'lodash'
 
+# Public: Mailbox
+# a {JugglingDBModel} for a mailbox (imap folder)
+class Mailbox # make biscotto happy
+
 module.exports = Mailbox = americano.getModel 'Mailbox',
     accountID: String        # Parent account
     label: String            # Human readable label
@@ -10,11 +14,24 @@ module.exports = Mailbox = americano.getModel 'Mailbox',
     uidvalidity: Number      # Imap UIDValidity
     persistentUIDs: Boolean  # Imap persistentUIDs
     attribs: (x) -> x        # [String] Attributes of this folder
-    children: (x) -> x       # this should not be saved but juggling doesnt
-                             # allow seting properties not in the model
+    children: (x) -> x       # [BLAMEJDB] children should not be saved
+
+# map of account's attributes -> RFC6154 special use box attributes
+Mailbox.RFC6154 = 
+    draftMailbox:   '\\Drafts'
+    sentMailbox:    '\\Sent'
+    trashMailbox:   '\\Trash'
+    allMailbox:     '\\All'
+    spamMailbox:    '\\Junk'
+    flaggedMailbox: '\\Flagged'
 
 
-# Return an array of selectable mailboxes for an accountID
+# Public: find selectable mailbox for an account ID 
+# as an array
+# 
+# accountID - id of the account
+# 
+# Returns a {Promise} for [{Mailbox}] 
 Mailbox.getBoxes = (accountID) ->
     Mailbox.rawRequestPromised 'treeMap',
         startkey: [accountID]
@@ -24,9 +41,13 @@ Mailbox.getBoxes = (accountID) ->
     .map (row) -> new Mailbox row.doc
     .filter (box) -> '\\Noselect' not in box.attribs
 
-# Returns the mailboxes tree for an accountID
-# the filter, if provided will be applied to each box
-Mailbox.getTree = (accountID, filter) ->
+# Public: build a tree of the mailboxes
+#
+# accountID - id of the account 
+# mapper - if provided, it will be applied to each box
+# 
+# Returns a {Promise} for the tree
+Mailbox.getTree = (accountID, mapper = null) ->
 
     out = []
     byPath = {}
@@ -35,7 +56,7 @@ Mailbox.getTree = (accountID, filter) ->
     transform = (boxData) ->
         box = new Mailbox boxData
         box.children = []
-        return if filter then filter box
+        return if mapper then mapper box
         else box
 
     Mailbox.rawRequestPromised 'treeMap',
@@ -59,36 +80,108 @@ Mailbox.getTree = (accountID, filter) ->
 
     .return out
 
-# simpler version of the tree for client
+# Public: build a simpler version of the tree for client
+# each node only have id, label and children fields
+# 
+# accountID - id of the account
+# 
+# Returns a {Promise} for the tree
 Mailbox.getClientTree = (accountID) ->
     filter = (box) -> _.pick box, 'id', 'label', 'children'
     Mailbox.getTree accountID, filter
 
 
-# This function take the tree from node-imap
-# and create appropriate boxes
-# @TODO handle normalization of special folders
-# @TODO tentatively find special folders by name (Sent, SENT, ...)
 IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren']
+# Public: This function take the tree from node-imap
+# and create appropriate boxes
+# 
+# @TODO handle normalization of special folders
+# 
+# accountID - id of the account
+# tree - the raw boxes tree from {ImapPromisified::getBoxes}
+# 
+# Returns a {Promise} for the {Account}'s specialUses attributes
 Mailbox.createBoxesFromImapTree = (accountID, tree) ->
     boxes = []
 
     # recursively browse the imap box tree
-
+    # building pathStr and pathArr
     do handleLevel = (children = tree, pathStr = '', pathArr = []) ->
         for name, child of children
             subPathStr = pathStr + name + child.delimiter
             subPathArr = pathArr.concat name
             handleLevel child.children, subPathStr, subPathArr
-            boxes.push
+            boxes.push new Mailbox
                 accountID: accountID
                 label: name
                 path: pathStr + name
                 tree: subPathArr
                 attribs: _.difference child.attribs, IGNORE_ATTRIBUTES
 
-    Promise.serie boxes, (box) ->
+    useRFC6154 = false
+    specialUses = {}
+    specialUsesGuess = {}
+    Promise.serie boxes, (box) -> 
+        
+        # create box in data system (we need the id)
         Mailbox.createPromised box
+        .then (jdbBox) ->
+            if jdbBox.path is 'INBOX'
+                specialUses['inboxMailbox'] = jdbBox.id
+                return jdbBox
+
+            # check if there is a RFC6154 attribute
+            for field, attribute of Mailbox.RFC6154
+                if attribute in jdbBox.attribs
+                    
+                    # first RFC6154 attribute
+                    unless useRFC6154
+                        useRFC6154 = true
+
+                    # add it to specialUses
+                    specialUses[field] = jdbBox.id
+
+            # do not attempt fuzzy match if the server uses RFC6154
+            unless useRFC6154
+
+                path = box.path.toLowerCase()
+                if 0 is path.indexOf 'sent'
+                    specialUsesGuess['sentMailbox'] = jdbBox.id
+                else if 0 is path.indexOf 'draft'
+                    specialUsesGuess['draftMailbox'] = jdbBox.id
+                else if 0 is path.indexOf 'flagged'
+                    specialUsesGuess['flaggedMailbox'] = jdbBox.id
+                else if 0 is path.indexOf 'trash'
+                    specialUsesGuess['trashMailbox'] = jdbBox.id
+                # @TODO add more
+
+            return jdbBox
+
+    .then (boxes) ->
+        # pick the default 4 favorites box
+        favorites = []
+        priorities = ['inbox', 'all', 'sent', 'draft']
+
+        unless useRFC6154
+            specialUses[key] = value for key, value of specialUsesGuess
+
+
+        # see if we have some of the priorities box
+        for type in priorities when id = specialUses[type + 'Mailbox']
+            favorites.push id
+
+
+        # we dont have our 4 favorites, pick at random
+        for box in boxes when favorites.length < 4
+            if box.id not in favorites and '\\NoSelect' not in box.attribs
+                favorites.push box.id
+
+        return favorites
+
+    .then (favorites) -> 
+        specialUses.favorites = favorites
+        return specialUses
+
 
 require('bluebird').promisifyAll Mailbox, suffix: 'Promised'
 require('bluebird').promisifyAll Mailbox::, suffix: 'Promised'

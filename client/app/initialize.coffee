@@ -17,6 +17,8 @@ window.onload = ->
     # handy shortcut
     window.t = polyglot.t.bind polyglot
 
+    # init plugins
+    require("./utils/plugin_utils").init()
 
     # Flux initialization (must be called at the begining)
     AccountStore  = require './stores/account_store'
@@ -37,6 +39,9 @@ window.onload = ->
 
     # Starts the application by initializing the router
     Backbone.history.start()
+
+    # begin realtime
+    require './utils/socketio_utils'
 
     # Makes this object immuable.
     Object.freeze this if typeof Object.freeze is 'function'

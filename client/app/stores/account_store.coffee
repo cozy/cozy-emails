@@ -39,7 +39,7 @@ class AccountStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.ADD_ACCOUNT, (account) ->
-            account = _makeAccountImmutable account
+            account = AccountTranslator.toImmutable account
             _accounts = _accounts.set account.get('id'), account
             @emit 'change'
 
@@ -78,8 +78,11 @@ class AccountStore extends Store
     getDefaultMailbox: (accountID) ->
 
         account = _accounts.get(accountID) or @getDefault()
+        mailboxes = account.get('mailboxes')
+        defaultID = account.get('favorites')[0]
 
-        return account.get('mailboxes').first()
+        return if defaultID then mailboxes.get defaultID
+        else mailboxes.first()
 
     getSelected: -> return _selectedAccount
 
@@ -119,9 +122,13 @@ class AccountStore extends Store
     # Skip the first 1, assumed to be the inbox
     # Should be made configurable.
     getSelectedFavorites: ->
-        return @getSelectedMailboxes()
-            .skip 1
-            .take 3
+
+
+        mailboxes = @getSelectedMailboxes true
+        ids = _selectedAccount?.get 'favorites'
+        
+        return mailboxes
+            .filter (box, key) -> key in ids[1..]
             .toOrderedMap()
 
     getError: -> return _newAccountError

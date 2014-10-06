@@ -11,15 +11,14 @@ module.exports = AccountActionCreator =
 
         XHRUtils.createAccount inputValues, (error, account) ->
             # set a timeout to simulate the "waiting" state
-            setTimeout ->
-                AccountActionCreator._setNewAccountWaitingStatus false
-                if error?
-                    AccountActionCreator._setNewAccountError error
-                else
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.ADD_ACCOUNT
-                        value: account
-            , 2000
+            AccountActionCreator._setNewAccountWaitingStatus false
+            console.log "THERE", account
+            if error? or not account?
+                AccountActionCreator._setNewAccountError error
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.ADD_ACCOUNT
+                    value: account
 
     edit: (inputValues, accountID) ->
         AccountActionCreator._setNewAccountWaitingStatus true
@@ -28,16 +27,13 @@ module.exports = AccountActionCreator =
         newAccount = account.mergeDeep inputValues
 
         XHRUtils.editAccount newAccount, (error, rawAccount) ->
-            # set a timeout to simulate the "waiting" state
-            setTimeout ->
-                AccountActionCreator._setNewAccountWaitingStatus false
-                if error?
-                    AccountActionCreator._setNewAccountError error
-                else
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.EDIT_ACCOUNT
-                        value: rawAccount
-            , 2000
+            AccountActionCreator._setNewAccountWaitingStatus false
+            if error?
+                AccountActionCreator._setNewAccountError error
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.EDIT_ACCOUNT
+                    value: rawAccount
 
 
     remove: (accountID) ->
@@ -61,3 +57,9 @@ module.exports = AccountActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.SELECT_ACCOUNT
             value: accountID
+
+    discover: (domain, callback) ->
+        XHRUtils.accountDiscover domain, (err, infos) ->
+            if not infos?
+                infos = []
+            callback err, infos

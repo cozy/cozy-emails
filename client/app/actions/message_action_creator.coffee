@@ -24,14 +24,24 @@ module.exports =
             if callback?
                 callback error
 
-    delete: (message, callback) ->
-        XHRUtils.messageDelete message.get('id'), (error, message) ->
-            if not error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_DELETE
-                    value: message
-            if callback?
-                callback error
+    delete: (message, account, callback) ->
+        # Move message to Trash folder
+        trash = account.get 'trashMailbox'
+        if not trash?
+            LayoutActionCreator.alertError "#{t("message idelete no trash")} #{error}"
+        else
+            msg = message.toObject()
+            observer = jsonpatch.observe msg
+            msg.mailboxIDs = {}
+            msg.mailboxIDs[trash] = -1
+            patches = jsonpatch.generate observer
+            XHRUtils.messagePatch message.get('id'), patches, (error, message) ->
+                if not error?
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_DELETE
+                        value: message
+                if callback?
+                    callback error
 
     move: (message, from, to, callback) ->
         msg = message.toObject()
@@ -49,9 +59,7 @@ module.exports =
 
     updateFlag: (message, flags, callback) ->
         msg = message.toObject()
-        observer = jsonpatch.observe msg
-        msg.flags = flags
-        patches = jsonpatch.generate observer
+        patches = jsonpatch.compare {flags: msg.flags}, {flags}
         XHRUtils.messagePatch message.get('id'), patches, (error, message) ->
             if not error?
                 AppDispatcher.handleViewAction
