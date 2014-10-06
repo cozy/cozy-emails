@@ -57,3 +57,11 @@ module.exports =
         'FLAGGED'      : '\\Flagged'
         'SEEN'         : '\\Seen'
         'DRAFT'        : '\\Draft'
+
+    MailboxFlags:
+        'DRAFT'   :  '\\Drafts'
+        'SENT'    :  '\\Sent'
+        'TRASH'   :  '\\Trash'
+        'ALL'     :  '\\All'
+        'SPAM'    :  '\\Junk'
+        'FLAGGED' :  '\\Flagged'

@@ -117,7 +117,7 @@ module.exports = Application = React.createClass
                     Alert { alert }
 
                     div className: 'toasts-container',
-                        @state.toasts.map (toast) -> Toast toast: toast 
+                        @state.toasts.map (toast) -> Toast toast: toast
                         .toJS()
 
                     # The quick actions bar shoud be moved in its own component
@@ -255,10 +255,11 @@ module.exports = Application = React.createClass
 
         # -- Generates a configuration window for a given account
         else if panelInfo.action is 'account.config'
-            initialAccountConfig = @state.selectedAccount
-            error = AccountStore.getError()
-            isWaiting = AccountStore.isWaiting()
-            return AccountConfig {layout, error, isWaiting, initialAccountConfig}
+            selectedAccount = @state.selectedAccount
+            error           = AccountStore.getError()
+            isWaiting       = AccountStore.isWaiting()
+            mailboxes       = AccountStore.getSelectedMailboxes true
+            return AccountConfig {layout, error, isWaiting, selectedAccount, mailboxes}
 
         # -- Generates a configuration window to create a new account
         else if panelInfo.action is 'account.new'

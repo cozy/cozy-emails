@@ -18,7 +18,7 @@ module.exports = Menu = React.createClass
                not Immutable.is(nextProps.selectedAccount, @props.selectedAccount) or
                not _.isEqual(nextProps.layout, @props.layout) or
                nextProps.isResponsiveMenuShown isnt @props.isResponsiveMenuShown or
-               not Immutable.is(nextProps.favoriteMailboxes, @props.favoriteMailboxes) or 
+               not Immutable.is(nextProps.favoriteMailboxes, @props.favoriteMailboxes) or
                not Immutable.is(nextProps.unreadCounts, @props.unreadCounts)
 
     render: ->
@@ -90,6 +90,8 @@ module.exports = Menu = React.createClass
         accountClasses = classer active: isSelected
         accountID = account.get 'id'
         defaultMailbox = AccountStore.getDefaultMailbox accountID
+        unread = @props.unreadCounts.get defaultMailbox?.get 'id'
+
         url = @buildUrl
             direction: 'first'
             action: 'account.mailbox.messages'
@@ -99,7 +101,8 @@ module.exports = Menu = React.createClass
         li className: accountClasses, key: key,
             a href: url, className: 'menu-item account ' + accountClasses,
                 i className: 'fa fa-inbox'
-                span className: 'badge', @props.unreadCounts.get defaultMailbox?.get 'id'
+                if unread > 0
+                    span className: 'badge', unread
                 span className: 'item-label', account.get 'label'
 
             ul className: 'list-unstyled submenu mailbox-list',
@@ -118,5 +121,6 @@ module.exports = Menu = React.createClass
         a href: mailboxUrl, className: 'menu-item', key: key,
             # Something must be rethought about the icon
             i className: 'fa fa-star'
-            span className: 'badge', unread
+            if unread > 0
+                span className: 'badge', unread
             span className: 'item-label', mailbox.get 'label'

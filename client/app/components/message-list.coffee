@@ -18,11 +18,11 @@ module.exports = React.createClass
         curPage = parseInt @props.pageNum, 10
         nbPages = Math.ceil(@props.messagesCount / @props.messagesPerPage)
         div className: 'message-list',
-            @getPagerRender curPage, nbPages
             if @props.messages.count() is 0
                 p null, @props.emptyListMessage
             else
                 div null,
+                    @getPagerRender curPage, nbPages
                     p null, @props.counterMessage
                     ul className: 'list-unstyled',
                         @props.messages.map (message, key) =>
@@ -32,7 +32,7 @@ module.exports = React.createClass
                                            @props.openMessage.get('id') is message.get('id')
                                 @getMessageRender message, key, isActive
                         .toJS()
-            @getPagerRender curPage, nbPages
+                    @getPagerRender curPage, nbPages
 
     getMessageRender: (message, key, isActive) ->
         classes = classer

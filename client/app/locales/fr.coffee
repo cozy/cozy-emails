@@ -79,6 +79,7 @@ module.exports =
       "account sending server"      : "Serveur sortant"
       "account receiving server"    : "Serveur IMAP"
       "account remove"              : "Supprimer"
+      "account remove confirm"      : "Voulez-vous vraiment supprimer ce compte ?"
       "account draft mailbox"       : "Enregistrer les brouillons dans"
       "account sent mailbox"        : "Enregistrer les messages envoyés dans"
       "account trash mailbox"       : "Corbeille"

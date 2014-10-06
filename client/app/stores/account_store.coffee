@@ -79,7 +79,8 @@ class AccountStore extends Store
 
         account = _accounts.get(accountID) or @getDefault()
         mailboxes = account.get('mailboxes')
-        defaultID = account.get('favorites')[0]
+        favorites = account.get('favorites')
+        defaultID = if favorites? then favorites[0]
 
         return if defaultID then mailboxes.get defaultID
         else mailboxes.first()
@@ -126,10 +127,14 @@ class AccountStore extends Store
 
         mailboxes = @getSelectedMailboxes true
         ids = _selectedAccount?.get 'favorites'
-        
-        return mailboxes
-            .filter (box, key) -> key in ids[1..]
-            .toOrderedMap()
+
+        if ids?
+            return mailboxes
+                .filter (box, key) -> key in ids[1..]
+                .toOrderedMap()
+        else
+            return mailboxes
+                .toOrderedMap()
 
     getError: -> return _newAccountError
 

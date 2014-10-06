@@ -15,14 +15,11 @@ module.exports = React.createClass
     ]
 
     render: ->
-        titleLabel = if @props.initialAccountConfig? then t "account edit" else t "account new"
+        titleLabel = if @props.selectedAccount? then t "account edit" else t "account new"
 
         if @props.isWaiting then buttonLabel = 'Saving...'
-        else if @props.initialAccountConfig? then buttonLabel = t "account save"
+        else if @props.selectedAccount? then buttonLabel = t "account save"
         else buttonLabel = t "account add"
-
-        if @props.initialAccountConfig?
-            mailboxes = AccountStore.getSelectedMailboxes true
 
         div id: 'mailbox-config',
             h3 className: null, titleLabel
@@ -64,41 +61,29 @@ module.exports = React.createClass
                     div className: 'col-sm-1',
                         input id: 'mailbox-imap-port', valueLink: @linkState('imapPort'), type: 'text', className: 'form-control'
 
-                if @props.initialAccountConfig?
-                    div className: 'form-group',
-                        label className: 'col-sm-2 col-sm-offset-2 control-label', t 'account draft mailbox'
-                        div className: 'col-sm-3',
-                            MailboxList
-                                allowUndefined: true
-                                mailboxes: mailboxes
-                                selectedMailbox: @state.draftMailbox
-                                onChange: (mailbox) => @setState 'draftMailbox': mailbox
-
-                if @props.initialAccountConfig?
-                    div className: 'form-group',
-                        label className: 'col-sm-2 col-sm-offset-2 control-label', t 'account sent mailbox'
-                        div className: 'col-sm-3',
-                            MailboxList
-                                allowUndefined: true
-                                mailboxes: mailboxes
-                                selectedMailbox: @state.sentMailbox
-                                onChange: (mailbox) => @setState 'sentMailbox': mailbox
-
-                if @props.initialAccountConfig?
-                    div className: 'form-group',
-                        label className: 'col-sm-2 col-sm-offset-2 control-label', t 'account trash mailbox'
-                        div className: 'col-sm-3',
-                            MailboxList
-                                allowUndefined: true
-                                mailboxes: mailboxes
-                                selectedMailbox: @state.trashMailbox
-                                onChange: (mailbox) => @setState 'trashMailbox': mailbox
+                @_renderMailboxChoice 'account draft mailbox', "draftMailbox"
+                @_renderMailboxChoice 'account sent mailbox',  "sentMailbox"
+                @_renderMailboxChoice 'account trash mailbox', "trashMailbox"
 
                 div className: 'form-group',
                     div className: 'col-sm-offset-2 col-sm-5 text-right',
-                        if @props.initialAccountConfig?
+                        if @props.selectedAccount?
                             button className: 'btn btn-cozy', onClick: @onRemove, t "account remove"
                         button className: 'btn btn-cozy', onClick: @onSubmit, buttonLabel
+
+    _renderMailboxChoice: (labelText, box) ->
+        if @props.selectedAccount?
+            div className: 'form-group',
+                label className: 'col-sm-2 col-sm-offset-2 control-label', t labelText
+                div className: 'col-sm-3',
+                    MailboxList
+                        allowUndefined: true
+                        mailboxes: @props.mailboxes
+                        selectedMailbox: @state[box]
+                        onChange: (mailbox) =>
+                            newState = {}
+                            newState[box] = mailbox
+                            @setState newState
 
     onSubmit: (event) ->
         # prevents the page from reloading
@@ -109,8 +94,8 @@ module.exports = React.createClass
         accountValue.sentMailbox  = accountValue.sentMailbox
         accountValue.trashMailbox = accountValue.trashMailbox
 
-        if @props.initialAccountConfig?
-            AccountActionCreator.edit accountValue, @props.initialAccountConfig.get 'id'
+        if @props.selectedAccount?
+            AccountActionCreator.edit accountValue, @props.selectedAccount.get 'id'
         else
             AccountActionCreator.create accountValue
 
@@ -118,7 +103,8 @@ module.exports = React.createClass
         # prevents the page from reloading
         event.preventDefault()
 
-        AccountActionCreator.remove @props.initialAccountConfig.get 'id'
+        if window.confirm(t 'account remove confirm')
+            AccountActionCreator.remove @props.selectedAccount.get 'id'
 
 
     discover: ->
@@ -148,12 +134,12 @@ module.exports = React.createClass
         # prevents the form from changing during submission
         if not props.isWaiting
             # display the account values
-            @setState @_accountToState(props.initialAccountConfig)
+            @setState @_accountToState(props.selectedAccount)
 
 
 
     getStateFromStores: ->
-        return @_accountToState(@props.initialAccountConfig)
+        return @_accountToState(@props.selectedAccount)
 
     _accountToState: (account)->
         if account?

@@ -79,6 +79,7 @@ module.exports =
       "account sending server"      : "Sending server"
       "account receiving server"    : "IMAP server"
       "account remove"              : "Remove"
+      "account remove confirm"      : "Do you really want to remove this account?"
       "account draft mailbox"       : "Draft box"
       "account sent mailbox"        : "Sent box"
       "account trash mailbox"       : "Trash"
