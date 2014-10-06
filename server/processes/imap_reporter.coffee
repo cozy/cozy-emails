@@ -80,5 +80,5 @@ module.exports = class ImapReporter
         @sendtoclient()
     
     onError: (err) ->
-        @errors.push err
+        @errors.push err.stack
         @sendtoclient()

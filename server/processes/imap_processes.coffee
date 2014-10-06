@@ -114,7 +114,9 @@ ImapProcess.fetchMails = (account, box, uids) ->
     Promise.map uids, (id) ->
         ImapProcess.fetchOneMail account, box, id
         .tap -> reporter.addProgress 1
-        .catch (err) -> reporter.onError err
+        .catch (err) -> 
+            log.warn "MAIL #{box.path}##{id} ERROR", err
+            reporter.onError err
 
     .tap -> reporter.onDone()
 
