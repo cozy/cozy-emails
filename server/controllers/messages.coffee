@@ -1,13 +1,15 @@
 async       = require 'async'
 Message     = require '../models/message'
-{HttpError} = require '../utils/errors'
+Account     = require '../models/account'
+Mailbox     = require '../models/mailbox'
+{HttpError, WrongConfigError} = require '../utils/errors'
 Client      = require('request-json').JsonClient
 jsonpatch   = require 'fast-json-patch'
 nodemailer  = require 'nodemailer'
-Compiler    = require 'nodemailer/src/compiler'
 Promise     = require 'bluebird'
 htmlToText  = require 'html-to-text'
 sanitizer   = require 'sanitizer'
+ImapProcess = require '../processes/imap_processes'
 
 htmlToTextOptions =
     tables: true
@@ -96,9 +98,6 @@ module.exports.send = (req, res, next) ->
         contents: new Buffer attachment.content.split(",")[1], 'base64'
 
     # @TODO : save attachments in the DS
-
-    # compile the message
-    rawMessage = new Compiler(mail).compile().build()
     
     # find the account and draftbox
     Account.findPromised message.accountID
@@ -110,41 +109,42 @@ module.exports.send = (req, res, next) ->
 
         # remove the old version if necessary
         removeOld = ->
-            uid = message.mailboxIDs[draftBox.id]
+            uid = message.mailboxIDs?[draftBox?.id]
             if uid then ImapProcess.remove account, draftBox, uid 
             else Promise.resolve()
 
-        # store the message in IMAP
-        createMessageInIMAP = ->
-            pDestBox = if message.isDraft then Promise.resolve draftBox
-            else Mailbox.findPromised account.sentMailbox
-            
-            pDestBox.then (dest) -> 
-                ImapProcess.append account, dest, rawMessage 
-                .then (uidInDest) ->
-                    message.mailboxIDs = {}
-                    message.mailboxIDs[dest.id] = uidInDest
-
-        # create or update the message in the DS
-        saveMessage = ->
-            if message.id
-                new Message(id: message.id).updateAttributesPromised message
-            else
-                Message.create message
-
+        message.flags = ['\\Seen']
 
         if message.isDraft
-            removeOld()
-            .then -> createMessageInIMAP()
-            .then -> saveMessage()
+            out = removeOld()
+            .then -> 
+                unless draftBox
+                    throw new WrongConfigError('need a draftbox') 
+
+                message.flags.push '\\Draft'
+                ImapProcess.createMail account, draftBox, message
 
         else 
             # send before deleting draft
-            account.sendMessagePromised message
+            out = account.sendMessagePromised message
             .then (info) -> message.headers['message-id'] = info.messageId
             .then -> removeOld()
-            .then -> createMessageInIMAP()
-            .then -> saveMessage()
+            .then -> Mailbox.findPromised account.sentMailbox
+            .then (sentBox) -> 
+                ImapProcess.createMail account, sentBox, message
+
+    # save the message
+    .spread (dest, uidInDest) ->
+        message.mailboxIDs = {}
+        message.mailboxIDs[dest.id] = uidInDest
+        message.date = new Date().toISOString()
+
+        if message.id
+            new Message(id: message.id).updateAttributesPromised message
+        else
+            Message.create message
+    .then (msg) -> res.send 200, msg
+    .catch next
 
 
 # search in the messages using the indexer

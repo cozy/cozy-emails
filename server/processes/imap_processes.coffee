@@ -152,12 +152,30 @@ ImapProcess.removeMails = (account, box, cozyIDs) ->
 # box - the {Mailbox} to create mail into
 # mail - a {Message} to create
 # 
-# Returns a {Promise} for the UID of the created mail
+# Returns a {Promise} for the box & UID of the created mail
 ImapProcess.createMail = (account, box, mail) ->
-    message = new Compiler(mail).compile().build()
     scheduler = ImapScheduler.instanceFor account
     scheduler.doASAP (imap) ->
-        imap.append message, mailbox: box.path
+        Message.toRawMessagePromised mail
+        .then (rawMessage) ->
+            imap.append rawMessage, 
+                mailbox: box.path
+                flags: mail.flags
+    
+    .then (uid) -> return [box, uid]
+
+# Public: remove a mail in the given box
+# used for drafts
+# 
+# account - the {Account} to delete mail from
+# box - the {Mailbox} to delete mail from
+# mail - a {Message} to create
+# 
+# Returns a {Promise} for the UID of the created mail
+ImapProcess.removeMail = (account, box, uid) ->
+    scheduler = ImapScheduler.instanceFor account
+    scheduler.doASAP (imap) ->
+        imap.expunge uid, mailbox: box.path
 
 
 # Public: fetch one mail from IMAP and create a 

@@ -24,6 +24,7 @@ module.exports = Account = americano.getModel 'Account',
 
 # There is a circular dependency between ImapProcess & Account
 # node handle if we require after module.exports definition
+nodemailer = require 'nodemailer'
 Mailbox = require './mailbox'
 ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
@@ -96,7 +97,7 @@ Account.createIfValid = (data) ->
 Account::sendMessage = (message, callback) ->
     transport = nodemailer.createTransport
         port: @smtpPort
-        host: @smtpHost
+        host: @smtpServer
         auth: 
             user: @login
             pass: @password

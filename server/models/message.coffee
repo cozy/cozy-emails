@@ -4,6 +4,7 @@ uuid = require 'uuid'
 ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
 Mailbox = require './mailbox'
+Compiler    = require 'nodemailer/src/compiler'
 
 # Public: Message
 # 
@@ -167,6 +168,10 @@ Message::moveToTrash = (patch) ->
 
         @applyPatchOperations patch
 
+
+Message.toRawMessage = (message, callback) ->
+    mailbuilder = new Compiler(message).compile()
+    return mailbuilder.build callback
 
 # create a message and store it on the imap server
 # used for drafts
