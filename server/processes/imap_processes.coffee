@@ -2,9 +2,7 @@
 # node handles it if we do module.exports before imports
 
 # Public: static class with imap methods
-# if i write here
-module.exports = class ImapProcess
-    constructor: ->
+module.exports = ImapProcess = {}
 
 ImapScheduler = require './imap_scheduler'
 ImapReporter = require './imap_reporter'
