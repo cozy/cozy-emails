@@ -87,7 +87,7 @@ Mailbox.getTree = (accountID, mapper = null) ->
 # 
 # Returns a {Promise} for the tree
 Mailbox.getClientTree = (accountID) ->
-    filter = (box) -> _.pick box, 'id', 'label', 'children'
+    filter = (box) -> _.pick box, 'id', 'label', 'children', 'attribs'
     Mailbox.getTree accountID, filter
 
 

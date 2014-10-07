@@ -117,10 +117,19 @@ module.exports = Menu = React.createClass
             parameters: [account.get('id'), mailbox.get('id')]
 
         unread = @props.unreadCounts.get mailbox.get('id')
+        selectedClass = if mailbox.get('id') is @props.selectedMailboxID then 'active'
+        else ''
+        specialUse = mailbox.get('attribs')?[0]
+        icon = switch specialUse
+            when '\\All' then 'fa-archive'
+            when '\\Drafts' then 'fa-edit'
+            when '\\Sent' then 'fa-share-square-o'
+            else 'fa-folder'
 
-        a href: mailboxUrl, className: 'menu-item', key: key,
-            # Something must be rethought about the icon
-            i className: 'fa fa-star'
-            if unread > 0
-                span className: 'badge', unread
-            span className: 'item-label', mailbox.get 'label'
+        li className: selectedClass,
+            a href: mailboxUrl, className: 'menu-item', key: key,
+                # Something must be rethought about the icon
+                i className: 'fa ' + icon
+                if unread and unread > 0
+                    span className: 'badge', unread
+                span className: 'item-label', mailbox.get 'label'
