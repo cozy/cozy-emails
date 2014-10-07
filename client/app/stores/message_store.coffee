@@ -78,6 +78,7 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_SEND, (message) ->
             # message should have been copied to Sent mailbox,
             # so it seems reasonable to emit change
+            onReceiveRawMessage message, true
             @emit 'change'
 
         handle ActionTypes.MESSAGE_DELETE, (message) ->

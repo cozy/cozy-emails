@@ -42,9 +42,11 @@ module.exports = React.createClass
             'has-attachments': message.get 'hasAttachments'
             'is-fav': message.get('flags').indexOf(MessageFlags.FLAGGED) isnt -1
 
+        isDraft = message.get('flags').indexOf(MessageFlags.DRAFT) isnt -1
+
         url = @buildUrl
             direction: 'second'
-            action: 'message'
+            action: if isDraft then 'compose' else 'message'
             parameters: message.get 'id'
 
         date = MessageUtils.formatDate message.get 'createdAt'
