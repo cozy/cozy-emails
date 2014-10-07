@@ -10,9 +10,20 @@ stream_to_buffer_array = (stream, cb) ->
     stream.on 'data', (d) -> parts.push d
     stream.on 'end', -> cb null, parts
 
+
+
+# Monkey patches : to be merged upstream ?
+# Malformed message #1
+# PROBLEM : missing semi colon in headers
+# FOUND AT : aenario's rmf/All#525
+# SENT FROM : some php script (probably very specific)
+# @TODO : PR to mailparser to be more lenient in parsing headers ?
+_old1 = MailParser::_parseHeaderLineWithParams
+MailParser::_parseHeaderLineWithParams = (value) ->
+    _old1.call this, value.replace '" format=flowed', '"; format=flowed'
+
+
 Promise.promisifyAll Imap.prototype, suffix: 'Promised'
-
-
 # Public: better Promisify of node-imap
 module.exports = class ImapPromisified
 
