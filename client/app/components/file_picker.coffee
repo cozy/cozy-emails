@@ -9,42 +9,42 @@ MessageUtils = require '../utils/message_utils'
 # - editable: boolean (false)
 # - files: array
 # - form: boolean (true) embed component inside a form element
-# - display: function(Object) : called when a file is selected
-# - onUpdate: function(Array) : called when file list is updated
+# - valueLink: a ReactLink for files
 ###
 
 FilePicker = React.createClass
     displayName: 'FilePicker'
 
     propTypes:
-        files:    React.PropTypes.array
         editable: React.PropTypes.bool
         form:     React.PropTypes.bool
         display:  React.PropTypes.func
-        onUpdate: React.PropTypes.func
+        value:    React.PropTypes.array
+        valueLink: React.PropTypes.shape
+            value: React.PropTypes.array
+            requestChange: React.PropTypes.func
 
-    getDefaultProps: ->
-        return {
-            editable: false
-            form: true
-            files: []
-            onUpdate: ->
-        }
+    getDefaultProps: ->        
+        editable: false
+        form: true
+        value: []
+        valueLink: 
+            value: []
+            requestChange: ->
 
     getInitialState: ->
-        return {
-            files: @_convertFileList @props.files
-        }
+        files: @_convertFileList @props.value or @props.valueLink.value
 
     componentWillReceiveProps: (props) ->
-        @setState {files: @_convertFileList props.files}
+        files = @_convertFileList @props.value or @props.valueLink.value
+        @setState files: files
 
     render: ->
         files = @state.files.map (file) =>
             doDelete = =>
                 updated = @state.files.filter (f) ->
                     return f.name isnt file.name
-                @props.onUpdate updated
+                @props.valueLink.requestChange updated
                 @setState {files: updated }
             options =
                 key: file.name
@@ -103,7 +103,7 @@ FilePicker = React.createClass
                 currentFiles.push file
                 parsed++
                 if parsed is files.length
-                    @props.onUpdate currentFiles
+                    @props.valueLink.requestChange currentFiles
                     @setState {files: currentFiles }
 
         handle file for file in @_convertFileList files

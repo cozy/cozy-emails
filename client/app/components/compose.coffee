@@ -1,7 +1,7 @@
 {div, h3, a, i, textarea, form, label, button, span, ul, li, input} = React.DOM
 classer = React.addons.classSet
 
-FilePicker = require './file-picker'
+FilePicker = require './file_picker'
 
 {ComposeActions} = require '../constants/app_constants'
 
@@ -47,9 +47,6 @@ module.exports = Compose = React.createClass
 
         classLabel = 'col-sm-2 col-sm-offset-0 control-label'
         classInput = 'col-sm-8'
-
-        onAttachmentsUpdate = (files) ->
-            @setState attachments: files
 
         div id: 'email-compose',
             h3 null,
@@ -101,8 +98,12 @@ module.exports = Compose = React.createClass
                         div className: 'rt-editor form-control', ref: 'html', contentEditable: true, dangerouslySetInnerHTML: {__html: @linkState('html').value}
                     else
                         textarea className: 'editor', ref: 'content', defaultValue: @linkState('body').value
-                div className: 'attachements',
-                    FilePicker {editable: true, form: false, onAttachmentsUpdate, files: @state.attachments}
+                
+                div className: 'attachements', FilePicker 
+                    editable: true
+                    form: false
+                    valueLink: @linkState 'attachments'
+                
                 div className: 'composeToolbox',
                     div className: 'btn-toolbar', role: 'toolbar',
                         div className: 'btn-group btn-group-sm',
@@ -310,19 +311,9 @@ module.exports = Compose = React.createClass
             cc          : this.refs.cc.getDOMNode().value.trim()
             bcc         : this.refs.bcc.getDOMNode().value.trim()
             subject     : this.refs.subject.getDOMNode().value.trim()
-            attachments : []
             isDraft     : isDraft
-            #headers     :
-            #date        :
-            #encoding    :
+            attachments : @state.attachments
 
-        attach = (file) ->
-            f =
-                filename: file.name
-                content: file.content
-            message.attachments.push f
-
-        attach file for file in @state.attachments
 
         if @state.composeInHTML
             message.html    = this.refs.html.getDOMNode().innerHTML
