@@ -1,6 +1,6 @@
 {div, ul, li, span, i, p, h3, a, button, pre, iframe} = React.DOM
 Compose      = require './compose'
-FilePicker   = require './file-picker'
+FilePicker   = require './file_picker'
 MessageUtils = require '../utils/message_utils'
 {ComposeActions, MessageFlags} = require '../constants/app_constants'
 LayoutActionCreator       = require '../actions/layout_action_creator'
@@ -152,7 +152,10 @@ module.exports = React.createClass
                     span className: 'hour', prepared.date
                 if hasAttachments
                     div className: 'col-md-4',
-                        FilePicker({editable: false, files: prepared.attachments.map(MessageUtils.convertAttachments), display: display})
+                        FilePicker
+                            editable: false
+                            value: files: prepared.attachments.map(MessageUtils.convertAttachments)
+                            display: display
             div className: 'full-headers',
                 pre null, prepared.fullHeaders.join "\n"
             if @state.messageDisplayHTML and prepared.html
