@@ -2,6 +2,7 @@
 classer = React.addons.classSet
 
 FilePicker = require './file_picker'
+MailsInput = require './mails_input'
 
 {ComposeActions} = require '../constants/app_constants'
 
@@ -77,18 +78,28 @@ module.exports = Compose = React.createClass
                             div className: 'btn-group btn-group-sm',
                                 button className: 'btn btn-default', type: 'button', onClick: @onToggleBcc,
                                     span className: 'tool-long', t 'compose toggle bcc'
-                div className: 'form-group',
-                    label htmlFor: 'compose-to', className: classLabel, t "compose to"
-                    div className: classInput,
-                        input id: 'compose-to', ref: 'to', valueLink: @linkState('to'), type: 'text', className: 'form-control', placeholder: t "compose to help"
-                div className: 'form-group compose-cc',
-                    label htmlFor: 'compose-cc', className: classLabel, t "compose cc"
-                    div className: classInput,
-                        input id: 'compose-cc', ref: 'cc', valueLink: @linkState('cc'), type: 'text', className: 'form-control', placeholder: t "compose cc help"
-                div className: 'form-group compose-bcc',
-                    label htmlFor: 'compose-bcc', className: classLabel, t "compose bcc"
-                    div className: classInput,
-                        input id: 'compose-bcc', ref: 'bcc', valueLink: @linkState('bcc'), type: 'text', className: 'form-control', placeholder: t "compose bcc help"
+
+
+                MailsInput
+                    id: 'compose-to'
+                    valueLink: @linkState 'to'
+                    label: t 'compose to'
+                    placeholder: t 'compose to help'
+
+                MailsInput
+                    id: 'compose-cc'
+                    className: 'compose-cc'
+                    valueLink: @linkState 'cc'
+                    label: t 'compose cc'
+                    placeholder: t 'compose cc help'
+
+                MailsInput
+                    id: 'compose-bcc'
+                    className: 'compose-bcc'
+                    valueLink: @linkState 'bcc'
+                    label: t 'compose bcc'
+                    placeholder: t 'compose bcc help'
+
                 div className: 'form-group',
                     label htmlFor: 'compose-subject', className: classLabel, t "compose subject"
                     div className: classInput,
@@ -307,9 +318,9 @@ module.exports = Compose = React.createClass
     _doSend: (isDraft) ->
         message =
             from        : @state.currentAccount.get 'login'
-            to          : this.refs.to.getDOMNode().value.trim()
-            cc          : this.refs.cc.getDOMNode().value.trim()
-            bcc         : this.refs.bcc.getDOMNode().value.trim()
+            to          : @state.to
+            cc          : @state.cc
+            bcc         : @state.bcc
             subject     : this.refs.subject.getDOMNode().value.trim()
             isDraft     : isDraft
             attachments : @state.attachments
