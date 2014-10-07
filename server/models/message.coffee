@@ -94,6 +94,7 @@ Message.getUIDs = (mailboxID) ->
 
 # find a message by its message id
 Message.byMessageId = (accountID, messageID) ->
+    messageID = mailutils.normalizeMessageID messageID
     Message.rawRequestPromised 'byMessageId',
         key: [accountID, messageID]
         include_docs: true
