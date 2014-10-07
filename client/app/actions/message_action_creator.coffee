@@ -28,11 +28,12 @@ module.exports =
         # Move message to Trash folder
         trash = account.get 'trashMailbox'
         if not trash?
-            LayoutActionCreator.alertError "#{t("message idelete no trash")} #{error}"
+            LayoutActionCreator  = require './layout_action_creator'
+            LayoutActionCreator.alertError t 'message idelete no trash'
         else
             msg = message.toObject()
             observer = jsonpatch.observe msg
-            msg.mailboxIDs = {}
+            delete msg.mailboxIDs[id] for id of msg.mailboxIDs
             msg.mailboxIDs[trash] = -1
             patches = jsonpatch.generate observer
             XHRUtils.messagePatch message.get('id'), patches, (error, message) ->
