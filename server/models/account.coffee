@@ -81,7 +81,9 @@ Account.createIfValid = (data) ->
 
     # in a detached chain, fetch the Account
     accountAndBoxesCreated.then (account) ->
-        ImapProcess.fetchAccount account
+        # first fetch 15 mails from each box
+        ImapProcess.fetchAccount account, 15
+        .then -> ImapProcess.fetchAccount account
         .catch (err) -> console.log "FETCH MAIL FAILED", err.stack
 
     return returnValue
