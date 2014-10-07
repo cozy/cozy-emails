@@ -2,7 +2,6 @@
 classer = React.addons.classSet
 
 SettingsActionCreator = require '../actions/settings_action_creator'
-SettingsStore = require '../stores/settings_store'
 PluginUtils   = require '../utils/plugin_utils'
 
 module.exports = React.createClass

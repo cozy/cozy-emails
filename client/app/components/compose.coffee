@@ -3,9 +3,6 @@ classer = React.addons.classSet
 
 FilePicker = require './file-picker'
 
-AccountStore  = require '../stores/account_store'
-SettingsStore = require '../stores/settings_store'
-
 {ComposeActions} = require '../constants/app_constants'
 
 MessageUtils = require '../utils/message_utils'
@@ -22,6 +19,15 @@ module.exports = Compose = React.createClass
         RouterMixin,
         React.addons.LinkedStateMixin # two-way data binding
     ]
+
+    propTypes:
+        selectedAccount: React.PropTypes.object.isRequired
+        layout:          React.PropTypes.string.isRequired
+        accounts:        React.PropTypes.object.isRequired
+        message:         React.PropTypes.object
+        action:          React.PropTypes.string
+        callback:        React.PropTypes.func
+        settings:        React.PropTypes.object.isRequired
 
     render: ->
 
@@ -41,8 +47,6 @@ module.exports = Compose = React.createClass
 
         classLabel = 'col-sm-2 col-sm-offset-0 control-label'
         classInput = 'col-sm-8'
-
-        accounts = AccountStore.getAll()
 
         onAttachmentsUpdate = (files) ->
             @setState attachments: files
@@ -66,7 +70,7 @@ module.exports = Compose = React.createClass
                             span ref: 'account', @state.currentAccount.get 'label'
                             span className: 'caret'
                         ul className: 'dropdown-menu', role: 'menu',
-                            accounts.map (account, key) =>
+                            @props.accounts.map (account, key) =>
                                 @getAccountRender account, key
                             .toJS()
                         div className: 'btn-toolbar compose-toggle', role: 'toolbar',
@@ -225,7 +229,7 @@ module.exports = Compose = React.createClass
         message = @props.message
         state =
             currentAccount: @props.selectedAccount
-            composeInHTML:  SettingsStore.get 'composeInHTML'
+            composeInHTML:  @props.settings.get 'composeInHTML'
             attachments: []
 
         if message?
@@ -290,7 +294,7 @@ module.exports = Compose = React.createClass
     onAccountChange: (args) ->
         selected = args.target.dataset.value
         if (selected isnt @state.currentAccount.get 'id')
-            @setState currentAccount : AccountStore.getByID selected
+            @setState currentAccount : @props.accounts.get selected
             #this.refs.account.getDOMNode().innerHTML = @state.currentAccount.get 'label'
 
     onDraft: (args) ->

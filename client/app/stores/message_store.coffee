@@ -49,6 +49,9 @@ class MessageStore extends Store
 
             if not message.flags?
                 message.flags = []
+            # message loaded from fixtures for test purpose have a docType
+            # that may cause some troubles
+            delete message.docType
             message = Immutable.Map message
             message.getReplyToAddress = ->
                 reply = this.get 'replyTo'

@@ -9,6 +9,36 @@ module.exports = React.createClass
 
     mixins: [RouterMixin]
 
+    propTypes:
+        message:         React.PropTypes.object
+        conversation:    React.PropTypes.array
+        selectedAccount: React.PropTypes.object.isRequired
+        layout:          React.PropTypes.string.isRequired
+        selectedMailbox: React.PropTypes.object.isRequired
+        mailboxes:       React.PropTypes.object.isRequired
+        settings:        React.PropTypes.object.isRequired
+        accounts:        React.PropTypes.object.isRequired
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+
+        comp = (a, b) ->
+            if (a? and not b?) or (not a? and b?) then return false
+            if typeof b.toJSON isnt 'function' or typeof b.toJSON isnt 'function'
+                return JSON.stringify(a) is JSON.stringify(b)
+            return JSON.stringify(a.toJSON()) is JSON.stringify(b.toJSON())
+
+        shouldUpdate =
+            not comp nextProps.message, @props.message or
+            not comp nextProps.conversation, @props.conversation or
+            not comp nextProps.selectedAccount, @props.selectedAccount or
+            not comp nextProps.selectedMailbox, @props.selectedMailbox or
+            not comp nextProps.mailboxes, @props.mailboxes or
+            not comp nextProps.settings, @props.settings or
+            not comp nextProps.accounts, @props.accounts or
+            nextProps.layout isnt @props.layout
+
+        return shouldUpdate
+
     render: ->
         if not @props.message? or not @props.conversation
             return p null, t "app loading"
@@ -82,4 +112,7 @@ module.exports = React.createClass
                     isLast = key is @props.conversation.length - 1
                     selectedAccount = @props.selectedAccount
                     selectedMailbox = @props.selectedMailbox
-                    Message {message, key, isLast, selectedAccount, selectedMailbox}
+                    mailboxes       = @props.mailboxes
+                    settings        = @props.settings
+                    accounts        = @props.accounts
+                    Message {message, key, isLast, selectedAccount, selectedMailbox, mailboxes, settings, accounts}

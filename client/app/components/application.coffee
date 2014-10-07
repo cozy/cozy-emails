@@ -269,12 +269,15 @@ module.exports = Application = React.createClass
 
         # -- Generates a conversation
         else if panelInfo.action is 'message'
-            messageID = panelInfo.parameters.messageID
-            message = MessageStore.getByID messageID
-            conversation = MessageStore.getMessagesByConversation messageID
+            messageID       = panelInfo.parameters.messageID
+            message         = MessageStore.getByID messageID
+            conversation    = MessageStore.getMessagesByConversation messageID
             selectedAccount = @state.selectedAccount
             selectedMailbox = @state.selectedMailbox
-            return Conversation {message, conversation, selectedAccount, layout, selectedMailbox}
+            mailboxes       = AccountStore.getSelectedMailboxes true
+            settings        = @state.settings
+            accounts        = @state.accounts
+            return Conversation {message, conversation, selectedAccount, layout, selectedMailbox, mailboxes, settings, accounts}
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
@@ -282,7 +285,9 @@ module.exports = Application = React.createClass
             accounts = @state.accounts
             message  = null
             action   = null
-            return Compose {selectedAccount, layout, accounts, message, action}
+            callback = null
+            settings = @state.settings
+            return Compose {selectedAccount, layout, accounts, message, action, callback, settings}
 
         # -- Display the settings form
         else if panelInfo.action is 'settings'

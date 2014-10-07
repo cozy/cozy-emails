@@ -6,11 +6,7 @@ MessageUtils = require '../utils/message_utils'
 LayoutActionCreator       = require '../actions/layout_action_creator'
 ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
-SettingsStore = require '../stores/settings_store'
 RouterMixin = require '../mixins/router_mixin'
-
-# Flux stores
-AccountStore = require '../stores/account_store'
 
 FlagsConstants =
     SEEN   : MessageFlags.SEEN
@@ -32,9 +28,34 @@ module.exports = React.createClass
             active: false,
             composing: false
             composeAction: ''
-            messageDisplayHTML:   SettingsStore.get 'messageDisplayHTML'
-            messageDisplayImages: SettingsStore.get 'messageDisplayImages'
+            messageDisplayHTML:   @props.settings.get 'messageDisplayHTML'
+            messageDisplayImages: @props.settings.get 'messageDisplayImages'
         }
+
+    propTypes:
+        message:         React.PropTypes.object.isRequired
+        key:             React.PropTypes.number.isRequired
+        isLast:          React.PropTypes.bool.isRequired
+        selectedAccount: React.PropTypes.object.isRequired
+        selectedMailbox: React.PropTypes.object.isRequired
+        mailboxes:       React.PropTypes.object.isRequired
+        settings:        React.PropTypes.object.isRequired
+        accounts:        React.PropTypes.object.isRequired
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+
+        shouldUpdate =
+            JSON.stringify(nextProps.message.toJSON()) isnt JSON.stringify(@props.message.toJSON()) or
+            #not Immutable.is(nextProps.message, @props.message) or
+            not Immutable.is(nextProps.key, @props.key) or
+            not Immutable.is(nextProps.isLast, @props.isLast) or
+            not Immutable.is(nextProps.selectedAccount, @props.selectedAccount) or
+            not Immutable.is(nextProps.selectedMailbox, @props.selectedMailbox) or
+            not Immutable.is(nextProps.mailboxes, @props.mailboxes) or
+            not Immutable.is(nextProps.settings, @props.settings) or
+            not Immutable.is(nextProps.accounts, @props.accounts)
+
+        return shouldUpdate
 
     _prepareMessage: ->
         message = @props.message
@@ -74,6 +95,11 @@ module.exports = React.createClass
         @setState @getInitialState()
 
     _markRead: (message) ->
+        # Hack to prevent infinite loop if server side mark as read fails
+        if @_currentMessageId is message.get 'id'
+            return
+        @_currentMessageId = message.get 'id'
+
         # Mark message as seen if needed
         flags = message.get('flags').slice()
         if flags.indexOf(MessageFlags.SEEN) is -1
@@ -96,8 +122,10 @@ module.exports = React.createClass
                 hideImage img for img in images
             else
                 images = []
-            @_htmlContent = doc.body.innerHTML
-            #if doc?
+            if doc?
+                @_htmlContent = doc.body.innerHTML
+            else
+                @_htmlContent = prepared.html
                 #htmluri = "data:text/html;charset=utf-8;base64,#{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
 
         clickHandler = if @props.isLast then null else @onFold
@@ -151,14 +179,14 @@ module.exports = React.createClass
             layout          = 'second'
             message         = @props.message
             action          = @state.composeAction
+            settings        = @props.settings
+            accounts        = @props.accounts
             callback        = (error) =>
                 if not error?
                     @setState composing: false
-            Compose {selectedAccount, layout, message, action, callback}
+            Compose {selectedAccount, layout, message, action, callback, settings, accounts}
 
     getToolboxRender: (id, prepared) ->
-
-        mailboxes = AccountStore.getSelectedMailboxes true
 
         div className: 'messageToolbox',
             div className: 'btn-toolbar', role: 'toolbar',
@@ -203,7 +231,7 @@ module.exports = React.createClass
                         button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', t 'mail action move',
                             span className: 'caret'
                         ul className: 'dropdown-menu', role: 'menu',
-                            mailboxes.map (mailbox, key) =>
+                            @props.mailboxes.map (mailbox, key) =>
                                 @getMailboxRender mailbox, key
                             .toJS()
                     div className: 'btn-group btn-group-sm',
@@ -220,7 +248,7 @@ module.exports = React.createClass
                                 a onClick: @onConversation, 'data-action' : 'unseen', t 'mail action conversation unseen'
                             li role: 'presentation', className: 'divider'
                             li role: 'presentation', t 'mail action conversation move'
-                            mailboxes.map (mailbox, key) =>
+                            @props.mailboxes.map (mailbox, key) =>
                                 @getMailboxRender mailbox, key, true
                             .toJS()
                             li role: 'presentation', className: 'divider'

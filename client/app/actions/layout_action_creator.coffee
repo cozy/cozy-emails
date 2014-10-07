@@ -43,7 +43,9 @@ module.exports = LayoutActionCreator =
         LayoutActionCreator.hideReponsiveMenu()
 
         {accountID, mailboxID, page} = panelInfo.parameters
-        AccountActionCreator.selectAccount accountID
+        selectedAccount = AccountStore.getSelected()
+        if  not selectedAccount? or selectedAccount.get('id') isnt accountID
+            AccountActionCreator.selectAccount accountID
 
         XHRUtils.fetchMessagesByFolder mailboxID, page, (err, rawMessage) ->
             if err?
