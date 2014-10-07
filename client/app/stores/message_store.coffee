@@ -53,11 +53,6 @@ class MessageStore extends Store
             # that may cause some troubles
             delete message.docType
             message = Immutable.Map message
-            message.getReplyToAddress = ->
-                reply = this.get 'replyTo'
-                from = this.get 'from'
-                reply = if not reply? or reply.length is 0 then from else reply
-                return reply
             _messages = _messages.set message.get('id'), message
 
             @emit 'change' unless silent

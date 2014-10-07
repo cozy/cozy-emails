@@ -244,62 +244,6 @@ module.exports = Compose = React.createClass
             composeInHTML:  @props.settings.get 'composeInHTML'
             attachments: []
 
-        if message?
-            dateHuman = MessageUtils.formatDate message.get 'createdAt'
-            sender = MessageUtils.displayAddresses(message.get 'from')
-
-            text = message.get 'text'
-            html = message.get 'html'
-
-            if text and not html and state.composeInHTML
-                html = markdown.toHTML text
-
-            if html and not text and not state.composeInHTML
-                text = toMarkdown html
-
-        switch @props.action
-            when ComposeActions.REPLY
-                state.to = MessageUtils.displayAddresses message.getReplyToAddress(), true
-                state.cc = ''
-                state.bcc = ''
-                state.subject = "#{t 'compose reply prefix'}#{message.get 'subject'}"
-                state.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
-                    MessageUtils.generateReplyText(text) + "\n"
-                state.html = """
-                    <p><br /></p>
-                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
-                    <blockquote>#{html}</blockquote>
-                    """
-            when ComposeActions.REPLY_ALL
-                state.to = MessageUtils.displayAddresses(message.getReplyToAddress(), true)
-                state.cc = MessageUtils.displayAddresses(Array.concat(message.get('to'), message.get('cc')), true)
-                state.bcc = ''
-                state.subject = "#{t 'compose reply prefix'}#{message.get 'subject'}"
-                state.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
-                    MessageUtils.generateReplyText(text) + "\n"
-                state.html = """
-                    <p><br /></p>
-                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
-                    <blockquote>#{html}</blockquote>
-                    """
-            when ComposeActions.FORWARD
-                state.to = ''
-                state.cc = ''
-                state.bcc = ''
-                state.subject = "#{t 'compose forward prefix'}#{message.get 'subject'}"
-                state.body = t('compose forward separator', {date: dateHuman, sender: sender}) + text
-                state.html = "<p>#{t('compose forward separator', {date: dateHuman, sender: sender})}</p>" + html
-
-                # Add original message attachments
-                attachments = message.get 'attachments' or []
-                state.attachments = attachments.map(MessageUtils.convertAttachments)
-
-            when null
-                state.to      = ''
-                state.cc      = ''
-                state.bcc     = ''
-                state.subject = ''
-                state.body    = t 'compose default'
 
         return state
 
@@ -316,8 +260,18 @@ module.exports = Compose = React.createClass
         @_doSend false
 
     _doSend: (isDraft) ->
+
+        account = @props.accounts.get @state.accountID
+
+        from = 
+            name: account?.get('name') or undefined
+            address: account.get('login')
+
+        unless ~from.address.indexOf '@'
+            from.address += '@' + account.get('imapServer')
+
         message =
-            from        : @state.currentAccount.get 'login'
+            from        : [from]
             to          : @state.to
             cc          : @state.cc
             bcc         : @state.bcc
@@ -331,17 +285,6 @@ module.exports = Compose = React.createClass
             message.content = toMarkdown(message.html)
         else
             message.content = this.refs.content.getDOMNode().value.trim()
-
-        if @props.message?
-            msg   = @props.message
-            msgId = msg.get 'id'
-            message.inReplyTo = msgId
-
-            references = msg.references
-            if references?
-                message.references = references + msgId
-            else
-                message.references = msgId
 
         callback = @props.callback
 

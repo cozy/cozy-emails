@@ -1,4 +1,6 @@
-module.exports =
+{ComposeActions} = require '../constants/app_constants'
+
+module.exports = MessageUtils = 
 
     displayAddresses: (addresses, full = false) ->
         if not addresses?
@@ -19,6 +21,81 @@ module.exports =
                 else
                     res.push item.address.split('@')[0]
         return res.join ", "
+
+
+    getReplyToAddress: (message) ->
+        reply = message.get 'replyTo'
+        from = message.get 'from'
+        return if reply?.length isnt 0 then reply else from
+        
+
+
+    makeReplyMessage: (inReplyTo, action) ->
+        message = {}
+        
+        if inReplyTo
+            message.accountID = inReplyTo.get 'accountID'
+            dateHuman = @formatDate inReplyTo.get 'createdAt'
+            sender = @displayAddresses inReplyTo.get 'from'
+
+            text = inReplyTo.get 'text'
+            html = inReplyTo.get 'html'
+
+            if text and not html and state.composeInHTML
+                html = markdown.toHTML text
+
+            if html and not text and not state.composeInHTML
+                text = toMarkdown html
+        
+            message.inReplyTo = inReplyTo.get 'id'
+            message.references = inReplyTo.get('references') or []
+            message.references = message.references.concat message.inReplyTo
+
+        switch action
+            when ComposeActions.REPLY
+                message.to = @getReplyToAddress inReplyTo
+                message.cc = []
+                message.bcc = []
+                message.subject = "#{t 'compose reply prefix'}#{inReplyTo.get 'subject'}"
+                message.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
+                    @generateReplyText(text) + "\n"
+                message.html = """
+                    <p><br /></p>
+                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
+                    <blockquote>#{html}</blockquote>
+                    """
+            when ComposeActions.REPLY_ALL
+                message.to = @getReplyToAddress inReplyTo
+                message.cc = [].concat inReplyTo.get('to'), inReplyTo.get('cc')
+                message.bcc = []
+                message.subject = "#{t 'compose reply prefix'}#{inReplyTo.get 'subject'}"
+                message.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
+                    @generateReplyText(text) + "\n"
+                message.html = """
+                    <p><br /></p>
+                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
+                    <blockquote>#{html}</blockquote>
+                    """
+            when ComposeActions.FORWARD
+                message.to = []
+                message.cc = []
+                message.bcc = []
+                message.subject = "#{t 'compose forward prefix'}#{inReplyTo.get 'subject'}"
+                message.body = t('compose forward separator', {date: dateHuman, sender: sender}) + text
+                message.html = "<p>#{t('compose forward separator', {date: dateHuman, sender: sender})}</p>" + html
+
+                # Add original message attachments
+                attachments = inReplyTo.get 'attachments' or []
+                message.attachments = attachments.map @convertAttachments
+
+            when null
+                message.to      = []
+                message.cc      = []
+                message.bcc     = []
+                message.subject = ''
+                message.body    = t 'compose default'
+
+        return message
 
     generateReplyText: (text) ->
         text = text.split '\n'
