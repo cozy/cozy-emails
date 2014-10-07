@@ -51,8 +51,8 @@ describe "Accounts Tests", ->
 
     it "When I query the /tasks, they are all finished", (done) ->
         client.get "/tasks", (err, res, body) =>
-            body.should.have.length 8
-            # 8 = 1 diff + 1 diff-apply-fetch / mailbox
+            body.should.have.length 12
+            # 12 = 1 diff (limited) + 1 diff-apply-fetch + 1 diff (not limited but nothing) / mailbox
             unfinishedTask = body.some (task) -> not task.finished
             unfinishedTask.should.be.false
             done()
