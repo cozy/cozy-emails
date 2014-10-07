@@ -106,6 +106,7 @@ module.exports = Application = React.createClass
                 Menu
                     accounts: @state.accounts
                     selectedAccount: @state.selectedAccount
+                    selectedMailboxID: @state.selectedMailboxID
                     isResponsiveMenuShown: @state.isResponsiveMenuShown
                     layout: @props.router.current
                     favoriteMailboxes: @state.favoriteMailboxes
@@ -139,7 +140,7 @@ module.exports = Application = React.createClass
                                 MailboxList
                                     getUrl: getUrl
                                     mailboxes: @state.mailboxes
-                                    selectedMailbox: @state.selectedMailbox?.get('id')
+                                    selectedMailbox: @state.selectedMailboxID
                                 SearchForm query: @state.searchQuery
 
                         div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
@@ -269,25 +270,29 @@ module.exports = Application = React.createClass
 
         # -- Generates a conversation
         else if panelInfo.action is 'message'
-            messageID       = panelInfo.parameters.messageID
-            message         = MessageStore.getByID messageID
-            conversation    = MessageStore.getMessagesByConversation messageID
-            selectedAccount = @state.selectedAccount
-            selectedMailbox = @state.selectedMailbox
-            mailboxes       = AccountStore.getSelectedMailboxes true
-            settings        = @state.settings
-            accounts        = @state.accounts
-            return Conversation {message, conversation, selectedAccount, layout, selectedMailbox, mailboxes, settings, accounts}
+
+            return Conversation
+                layout            : layout
+                settings          : @state.settings
+                accounts          : @state.accounts
+                mailboxes         : @state.mailboxes
+                selectedAccount   : @state.selectedAccount
+                selectedMailboxID : @state.selectedMailboxID
+                conversation      : MessageStore.getMessagesByConversation messageID
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
-            selectedAccount = @state.selectedAccount
-            accounts = @state.accounts
-            message  = null
-            action   = null
-            callback = null
-            settings = @state.settings
-            return Compose {selectedAccount, layout, accounts, message, action, callback, settings}
+                        
+            if messageID = panelInfo.parameters.messageID
+                message = MessageStore.getByID messageID
+ 
+            return Compose 
+                layout          : layout
+                action          : null
+                inReplyTo       : null
+                accounts        : @state.accounts
+                selectedAccount : @state.selectedAccount
+                message         : message or null
 
         # -- Display the settings form
         else if panelInfo.action is 'settings'
@@ -354,6 +359,7 @@ module.exports = Application = React.createClass
             alertMessage: LayoutStore.getAlert()
             toasts: TasksStore.getTasks()
             mailboxes: AccountStore.getSelectedMailboxes true
+            selectedMailboxID: selectedMailboxID
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
             unreadCounts: MessageStore.getUnreadMessagesCounts()

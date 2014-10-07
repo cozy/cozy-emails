@@ -10,14 +10,14 @@ module.exports = React.createClass
     mixins: [RouterMixin]
 
     propTypes:
-        message:         React.PropTypes.object
-        conversation:    React.PropTypes.array
-        selectedAccount: React.PropTypes.object.isRequired
-        layout:          React.PropTypes.string.isRequired
-        selectedMailbox: React.PropTypes.object.isRequired
-        mailboxes:       React.PropTypes.object.isRequired
-        settings:        React.PropTypes.object.isRequired
-        accounts:        React.PropTypes.object.isRequired
+        message           : React.PropTypes.object
+        conversation      : React.PropTypes.array
+        selectedAccount   : React.PropTypes.object.isRequired
+        layout            : React.PropTypes.string.isRequired
+        selectedMailboxID : React.PropTypes.string.isRequired
+        mailboxes         : React.PropTypes.object.isRequired
+        settings          : React.PropTypes.object.isRequired
+        accounts          : React.PropTypes.object.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
 
@@ -110,9 +110,12 @@ module.exports = React.createClass
             ul className: 'thread list-unstyled',
                 for message, key in @props.conversation
                     isLast = key is @props.conversation.length - 1
-                    selectedAccount = @props.selectedAccount
-                    selectedMailbox = @props.selectedMailbox
-                    mailboxes       = @props.mailboxes
-                    settings        = @props.settings
-                    accounts        = @props.accounts
-                    Message {message, key, isLast, selectedAccount, selectedMailbox, mailboxes, settings, accounts}
+                    Message 
+                        key: key
+                        isLast: isLast
+                        message: message
+                        settings: @props.settings
+                        accounts: @props.accounts 
+                        mailboxes: @props.mailboxes
+                        selectedAccount: @props.selectedAccount
+                        selectedMailboxID: @props.selectedMailboxID

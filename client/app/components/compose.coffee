@@ -4,6 +4,8 @@ classer = React.addons.classSet
 FilePicker = require './file_picker'
 MailsInput = require './mails_input'
 
+AccountPicker = require './account_picker'
+
 {ComposeActions} = require '../constants/app_constants'
 
 MessageUtils = require '../utils/message_utils'
@@ -32,6 +34,8 @@ module.exports = Compose = React.createClass
 
     render: ->
 
+        return unless @props.accounts
+
         expandUrl = @buildUrl
             direction: 'first'
             action: 'compose'
@@ -40,7 +44,7 @@ module.exports = Compose = React.createClass
         collapseUrl = @buildUrl
             firstPanel:
                 action: 'account.mailbox.messages'
-                parameters: @state.currentAccount?.get 'id'
+                parameters: @state.accountID
             secondPanel:
                 action: 'compose'
 
@@ -63,22 +67,17 @@ module.exports = Compose = React.createClass
             form className: 'form-horizontal',
                 div className: 'form-group',
                     label htmlFor: 'compose-from', className: classLabel, t "compose from"
-                    div className: classInput,
-                        button id: 'compose-from', className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', null,
-                            span ref: 'account', @state.currentAccount.get 'label'
-                            span className: 'caret'
-                        ul className: 'dropdown-menu', role: 'menu',
-                            @props.accounts.map (account, key) =>
-                                @getAccountRender account, key
-                            .toJS()
-                        div className: 'btn-toolbar compose-toggle', role: 'toolbar',
-                            div className: 'btn-group btn-group-sm',
-                                button className: 'btn btn-default', type: 'button', onClick: @onToggleCc,
-                                    span className: 'tool-long', t 'compose toggle cc'
-                            div className: 'btn-group btn-group-sm',
-                                button className: 'btn btn-default', type: 'button', onClick: @onToggleBcc,
-                                    span className: 'tool-long', t 'compose toggle bcc'
+                    AccountPicker
+                        accounts: @props.accounts
+                        valueLink: @linkState 'accountID'
 
+                    div className: 'btn-toolbar compose-toggle', role: 'toolbar',
+                        div className: 'btn-group btn-group-sm',
+                            button className: 'btn btn-default', type: 'button', onClick: @onToggleCc,
+                                span className: 'tool-long', t 'compose toggle cc'
+                        div className: 'btn-group btn-group-sm',
+                            button className: 'btn btn-default', type: 'button', onClick: @onToggleBcc,
+                                span className: 'tool-long', t 'compose toggle bcc'
 
                 MailsInput
                     id: 'compose-to'
@@ -227,31 +226,25 @@ module.exports = Compose = React.createClass
                     , 0
             )
 
-
-    getAccountRender: (account, key) ->
-
-        isSelected = (not @state.currentAccount? and key is 0) \
-                     or @state.currentAccount?.get('id') is account.get 'id'
-
-        if not isSelected
-            li role: 'presentation', key: key,
-                a role: 'menuitem', onClick: @onAccountChange, 'data-value': key, account.get 'label'
-
     getInitialState: (forceDefault) ->
-        message = @props.message
-        state =
-            currentAccount: @props.selectedAccount
-            composeInHTML:  @props.settings.get 'composeInHTML'
-            attachments: []
 
+        # edition of an existing draft
+        if message = @props.message
+            state = 
+                composeInHTML: message.get('html')?
 
+            # TODO : smarter ?
+            state[key] = value for key, value of message.toJS()
+                
+        # new draft
+        else
+            state = MessageUtils.makeReplyMessage @props.inReplyTo, @props.action
+            state.composeInHTML = @props.settings.get 'composeInHTML'
+            state.accountID ?= @props.selectedAccount.get 'id'
+
+        state.attachments ?= []
+        
         return state
-
-    onAccountChange: (args) ->
-        selected = args.target.dataset.value
-        if (selected isnt @state.currentAccount.get 'id')
-            @setState currentAccount : @props.accounts.get selected
-            #this.refs.account.getDOMNode().innerHTML = @state.currentAccount.get 'label'
 
     onDraft: (args) ->
         @_doSend true
@@ -271,6 +264,7 @@ module.exports = Compose = React.createClass
             from.address += '@' + account.get('imapServer')
 
         message =
+            accountID   : @state.accountID
             from        : [from]
             to          : @state.to
             cc          : @state.cc
@@ -279,6 +273,8 @@ module.exports = Compose = React.createClass
             isDraft     : isDraft
             attachments : @state.attachments
 
+        if @state.id
+            message.id = @state.id
 
         if @state.composeInHTML
             message.html    = this.refs.html.getDOMNode().innerHTML

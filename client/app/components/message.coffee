@@ -33,14 +33,14 @@ module.exports = React.createClass
         }
 
     propTypes:
-        message:         React.PropTypes.object.isRequired
-        key:             React.PropTypes.number.isRequired
-        isLast:          React.PropTypes.bool.isRequired
-        selectedAccount: React.PropTypes.object.isRequired
-        selectedMailbox: React.PropTypes.object.isRequired
-        mailboxes:       React.PropTypes.object.isRequired
-        settings:        React.PropTypes.object.isRequired
-        accounts:        React.PropTypes.object.isRequired
+        message           : React.PropTypes.object.isRequired
+        key               : React.PropTypes.number.isRequired
+        isLast            : React.PropTypes.bool.isRequired
+        selectedAccount   : React.PropTypes.object.isRequired
+        selectedMailboxID : React.PropTypes.string.isRequired
+        mailboxes         : React.PropTypes.object.isRequired
+        settings          : React.PropTypes.object.isRequired
+        accounts          : React.PropTypes.object.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
 
@@ -175,16 +175,16 @@ module.exports = React.createClass
 
     getComposeRender: ->
         if @state.composing
-            selectedAccount = @props.selectedAccount
-            layout          = 'second'
-            message         = @props.message
-            action          = @state.composeAction
-            settings        = @props.settings
-            accounts        = @props.accounts
-            callback        = (error) =>
-                if not error?
-                    @setState composing: false
-            Compose {selectedAccount, layout, message, action, callback, settings, accounts}
+            Compose
+                inReplyTo       : @props.inReplyTo
+                accounts        : @props.accounts
+                settings        : @props.settings
+                selectedAccount : @props.selectedAccount
+                action          : @state.composeAction
+                layout          : 'second'
+                callback: (error) =>
+                    if not error?
+                        @setState composing: false
 
     getToolboxRender: (id, prepared) ->
 
@@ -256,7 +256,7 @@ module.exports = React.createClass
 
     getMailboxRender: (mailbox, key, conversation) ->
         # Don't display current mailbox
-        if mailbox.get('id') is @props.selectedMailbox.get('id')
+        if mailbox.get('id') is @props.selectedMailboxID
             return
         pusher = ""
         pusher += "--" for j in [1..mailbox.get('depth')] by 1
@@ -307,7 +307,7 @@ module.exports = React.createClass
                     @redirect
                         direction: 'first'
                         action: 'account.mailbox.messages'
-                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
+                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailboxID, 1]
                         fullWidth: true
 
     onCopy: (args) ->
@@ -324,10 +324,10 @@ module.exports = React.createClass
                     @redirect
                         direction: 'first'
                         action: 'account.mailbox.messages'
-                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
+                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailboxID, 1]
                         fullWidth: true
         else
-            oldbox = @props.selectedMailbox.get 'id'
+            oldbox = @props.selectedMailboxID
             MessageActionCreator.move @props.message, oldbox, newbox, (error) =>
                 if error?
                     LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
@@ -336,7 +336,7 @@ module.exports = React.createClass
                     @redirect
                         direction: 'first'
                         action: 'account.mailbox.messages'
-                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailbox.get('id'), 1]
+                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailboxID, 1]
                         fullWidth: true
 
     onMark: (args) ->
