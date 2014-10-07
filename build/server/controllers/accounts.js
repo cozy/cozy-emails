@@ -17,16 +17,11 @@ module.exports.create = function(req, res, next) {
   var accountCreated, data;
   data = req.body;
   accountCreated = Account.createIfValid(data);
-  accountCreated.then(function(account) {
+  return accountCreated.then(function(account) {
     return res.send(201, account);
   })["catch"](WrongConfigError, function(err) {
     throw new HttpError(401, err);
   })["catch"](next);
-  return accountCreated.then(function(account) {
-    return account.fetchMails()["catch"](function(err) {
-      return console.log("FETCH MAIL FAILED", err.stack);
-    });
-  });
 };
 
 module.exports.fetch = function(req, res, next) {
@@ -40,7 +35,9 @@ module.exports.fetch = function(req, res, next) {
 };
 
 module.exports.list = function(req, res, next) {
-  return Account.listWithMailboxes().then(function(accounts) {
+  return Account.requestPromised('all').map(function(account) {
+    return account.includeMailboxes();
+  }).then(function(accounts) {
     return res.send(200, accounts);
   })["catch"](next);
 };
@@ -53,9 +50,11 @@ module.exports.details = function(req, res, next) {
 
 module.exports.edit = function(req, res, next) {
   var changes;
-  changes = _.pick(req.body, 'label', 'login', 'password', 'smtpServer', 'smtpPort', 'imapServer', 'imapPort');
+  changes = _.pick(req.body, 'label', 'login', 'password', 'name', 'smtpServer', 'smtpPort', 'imapServer', 'imapPort', 'draftMailbox', 'sentMailbox', 'trashMailbox');
   return req.account.updateAttributesPromised(changes).then(function(account) {
-    return res.send(200, account);
+    return account.includeMailboxes();
+  }).then(function(account) {
+    return res.send(200, req.account);
   })["catch"](next);
 };
 
