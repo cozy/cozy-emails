@@ -271,6 +271,9 @@ module.exports = Application = React.createClass
         # -- Generates a conversation
         else if panelInfo.action is 'message'
 
+            if messageID = panelInfo.parameters.messageID
+                message = MessageStore.getByID messageID
+
             return Conversation
                 layout            : layout
                 settings          : @state.settings
@@ -278,6 +281,7 @@ module.exports = Application = React.createClass
                 mailboxes         : @state.mailboxes
                 selectedAccount   : @state.selectedAccount
                 selectedMailboxID : @state.selectedMailboxID
+                message           : MessageStore.getByID messageID
                 conversation      : MessageStore.getMessagesByConversation messageID
 
         # -- Generates the new message composition form
@@ -290,6 +294,7 @@ module.exports = Application = React.createClass
                 layout          : layout
                 action          : null
                 inReplyTo       : null
+                settings        : @state.settings
                 accounts        : @state.accounts
                 selectedAccount : @state.selectedAccount
                 message         : message or null
