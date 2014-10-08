@@ -4,6 +4,7 @@ index     = require './index'
 accounts  = require './accounts'
 messages  = require './messages'
 providers = require './providers'
+settings  = require './settings'
 test      = require './test'
 
 module.exports =
@@ -12,6 +13,9 @@ module.exports =
 
     'tasks': get: index.tasks
     'refresh': get: index.refresh
+
+    'settings': 
+        put: settings.change
 
 
     'account':

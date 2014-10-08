@@ -6,6 +6,18 @@ SettingsStore = require '../stores/settings_store'
 
 module.exports =
 
+
+    changeSettings: (settings) ->
+        request.put "settings"
+        .set 'Accept', 'application/json'
+        .send settings
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                callback "Something went wrong -- #{res.body}"
+
+
     fetchConversation: (emailID, callback) ->
         request.get "message/#{emailID}"
         .set 'Accept', 'application/json'

@@ -1,6 +1,9 @@
 americano = require 'americano'
 
 module.exports =
+    settings:
+        all: americano.defaultRequests.all
+
     account:
         all: americano.defaultRequests.all
 

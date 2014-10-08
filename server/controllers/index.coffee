@@ -1,5 +1,6 @@
 CozyInstance = require '../models/cozy_instance'
 Account = require '../models/account'
+Settings = require '../models/settings'
 Promise = require 'bluebird'
 ImapReporter = require '../processes/imap_reporter'
 
@@ -7,6 +8,8 @@ fixtures = require 'cozy-fixtures'
 
 module.exports.main = (req, res, next) ->
     Promise.all [
+        Settings.getInstance()
+        
         CozyInstance.getLocalePromised()
             .catch (err) -> 'en'
 
@@ -15,8 +18,9 @@ module.exports.main = (req, res, next) ->
 
         ImapReporter.summary()
     ]
-    .spread (locale, accounts, tasks) ->
+    .spread (settings, locale, accounts, tasks) ->
         """
+            window.settings = #{JSON.stringify settings}
             window.tasks = #{JSON.stringify tasks};
             window.locale = "#{locale}";
             window.accounts = #{JSON.stringify accounts};

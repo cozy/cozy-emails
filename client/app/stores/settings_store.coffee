@@ -8,12 +8,7 @@ class SettingsStore extends Store
         Initialization.
         Defines private variables here.
     ###
-    _settings = Immutable.Map
-        messagesPerPage: 5
-        displayConversation: false
-        composeInHTML: true
-        messageDisplayHTML: true
-        messageDisplayImages: false
+    _settings = Immutable.Map window.settings
 
     ###
         Defines here the action handlers.
