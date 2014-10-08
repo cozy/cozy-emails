@@ -44,7 +44,7 @@ module.exports = LayoutActionCreator =
 
         {accountID, mailboxID, page} = panelInfo.parameters
         selectedAccount = AccountStore.getSelected()
-        if  not selectedAccount? or selectedAccount.get('id') isnt accountID
+        if not selectedAccount? or selectedAccount.get('id') isnt accountID
             AccountActionCreator.selectAccount accountID
 
         XHRUtils.fetchMessagesByFolder mailboxID, page, (err, rawMessage) ->
