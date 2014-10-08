@@ -11,12 +11,22 @@
         padding-bottom 10px
         border-bottom 1px solid #f4f4f4
 
+    .nav-tabs
+        margin-bottom 1em
+
+        li:not(.active) a
+            cursor: pointer
+
     button
         margin-left 5px
 
     .boxes
         .box
             display flex
+            height 2em
+            align-items center
+        .box.edited
+            height 2.5em
         .box-action
             width 2em
             cursor pointer

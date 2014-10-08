@@ -88,6 +88,21 @@ module.exports =
       "account newmailbox placeholder" : "Name"
       "account newmailbox parent"   : "Parent"
       "account confirm delbox"      : "Do you really want to delete this box and everything in it ?"
+      "account tab account"         : "Account"
+      "account tab mailboxes"       : "Folders"
+      "mailbox create ok"           : "Folder created"
+      "mailbox create ko"           : "Error creating folder"
+      "mailbox update ok"           : "Folder updated"
+      "mailbox update ko"           : "Error updating folder"
+      "mailbox delete ok"           : "Folder deleted"
+      "mailbox delete ko"           : "Error deleting folder"
+      "mailbox title edit"          : "Rename folder"
+      "mailbox title delete"        : "Delete folder"
+      "mailbox title edit save"     : "Save"
+      "mailbox title edit cancel"   : "Cancel"
+      "mailbox title add"           : "Add new folder"
+      "mailbox title add cancel"    : "Cancel"
+
 
       # Message Action
       "message action sent ok"      : "Message sent"
