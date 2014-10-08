@@ -3,7 +3,11 @@ window.onload = ->
 
     window.__DEV__ = window.location.hostname is 'localhost'
     # use Cozy instance locale or navigator language or "en" by default
-    locale = window.locale or window.navigator.language or "en"
+    locale =
+        window.settings.lang or
+        window.locale or
+        window.navigator.language or
+        "en"
     moment.locale locale
     locales = {}
     try

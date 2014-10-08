@@ -136,6 +136,9 @@ module.exports =
       "settings label composeInHTML"        : "Rich message editor"
       "settings label messageDisplayHTML"   : "Display message in HTML"
       "settings label messageDisplayImages" : "Display images inside messages"
+      "settings lang"             : "Language"
+      "settings lang en"          : "English"
+      "settings lang fr"          : "Français"
 
       # File picker
       "picker drop here"           : "Drop files here"
