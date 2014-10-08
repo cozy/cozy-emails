@@ -228,9 +228,9 @@ module.exports = React.createClass
                 login:        ''
                 password:     ''
                 smtpServer:   ''
-                smtpPort:     993
+                smtpPort:     587
                 imapServer:   ''
-                imapPort:     465
+                imapPort:     993
                 draftMailbox: ''
                 sentMailbox:  ''
                 trashMailbox: ''
