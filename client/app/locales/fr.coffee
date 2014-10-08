@@ -83,6 +83,11 @@ module.exports =
       "account draft mailbox"       : "Enregistrer les brouillons dans"
       "account sent mailbox"        : "Enregistrer les messages envoyés dans"
       "account trash mailbox"       : "Corbeille"
+      "account mailboxes"           : "Dossiers"
+      "account newmailbox label"    : "Nouveaux dossier"
+      "account newmailbox placeholder" : "Nom"
+      "account newmailbox parent"   : "Créer sous"
+      "account confirm delbox"      : "Voulez-vous vraiment supprimer ce dossier et tout son contenu ?"
 
       # Message Action
       "message action sent ok"      : "Message envoyé !"

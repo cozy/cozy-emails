@@ -12,7 +12,8 @@ module.exports = React.createClass
 
     render: ->
         selectedId = @props.selectedMailbox
-        selected = @props.mailboxes.get selectedId
+        if selectedId?
+            selected = @props.mailboxes.get selectedId
         if @props.mailboxes.length > 0
             div className: 'dropdown pull-left',
                 button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown',

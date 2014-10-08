@@ -1,4 +1,4 @@
-{div, h3, form, label, input, button} = React.DOM
+{div, h3, h4, form, label, input, button, ul, li, a, span, i} = React.DOM
 classer = React.addons.classSet
 
 MailboxList   = require './mailbox-list'
@@ -136,6 +136,44 @@ module.exports = React.createClass
                             className: 'btn btn-cozy',
                             onClick: @onSubmit, buttonLabel
 
+            if @props.selectedAccount?
+                @_renderMailboxes()
+
+    _renderMailboxes: ->
+        mailboxes = @props.mailboxes.map (mailbox, key) =>
+            MailboxItem {account: @props.selectedAccount, mailbox: mailbox}
+        .toJS()
+        div null,
+            h4 className: "mailboxes", t "account mailboxes"
+
+            form className: 'form-horizontal',
+                div className: 'form-group',
+                    label
+                        htmlFor: 'newmailbox',
+                        className: 'col-sm-2 control-label',
+                        t "account newmailbox label"
+                    div className: 'col-sm-2',
+                        input
+                            id: 'newmailbox',
+                            ref: 'newmailbox',
+                            type: 'text',
+                            className: 'form-control',
+                            placeholder: t "account newmailbox placeholder"
+                    label
+                        className: 'col-sm-1 control-label',
+                        t "account newmailbox parent"
+                    div className: 'col-sm-1',
+                        MailboxList
+                            allowUndefined: true
+                            mailboxes: @props.mailboxes
+                            selectedMailbox: @state.newMailboxParent
+                            onChange: (mailbox) =>
+                                @setState newMailboxParent: mailbox
+                    span className: "col-sm-1 control-label", onClick: @addMailbox,
+                        i className: 'fa fa-plus'
+            ul className: "list-unstyled boxes",
+                mailboxes
+
     _renderMailboxChoice: (labelText, box) ->
         if @props.selectedAccount?
             div className: 'form-group',
@@ -173,6 +211,16 @@ module.exports = React.createClass
         if window.confirm(t 'account remove confirm')
             AccountActionCreator.remove @props.selectedAccount.get 'id'
 
+
+    addMailbox: (event) ->
+        event.preventDefault()
+
+        mailbox =
+            label: @refs.newmailbox.getDOMNode().value.trim()
+            accountID: @props.selectedAccount.get 'id'
+            parentID: @state.newMailboxParent
+
+        AccountActionCreator.mailboxCreate mailbox
 
     discover: ->
         login = @refs.login.getDOMNode().value.trim()
@@ -220,6 +268,7 @@ module.exports = React.createClass
                 draftMailbox: account.get 'draftMailbox'
                 sentMailbox:  account.get 'sentMailbox'
                 trashMailbox: account.get 'trashMailbox'
+                newMailboxParent: null
             }
         else
             return {
@@ -234,4 +283,81 @@ module.exports = React.createClass
                 draftMailbox: ''
                 sentMailbox:  ''
                 trashMailbox: ''
+                newMailboxParent: null
             }
+
+MailboxItem = React.createClass
+    displayName: 'MailboxItem'
+
+    propTypes:
+        mailbox: React.PropTypes.object
+
+    #getDefaultProps: ->
+    #    return {}
+
+    getInitialState: ->
+        return {
+            edited: false
+        }
+
+    render: ->
+        pusher = ""
+        pusher += "--" for j in [1..@props.mailbox.get('depth')] by 1
+        key = @props.mailbox.get 'id'
+        li key: key,
+            if @state.edited
+                div className: "box",
+                    input
+                        className: "box-label form-control"
+                        ref: 'label',
+                        defaultValue: @props.mailbox.get 'label'
+                        type: 'text'
+                    span
+                        className: "box-action"
+                        onClick: @updateMailbox,
+                        i className: 'fa fa-check'
+                    span
+                        className: "box-action"
+                        onClick: @undoMailbox,
+                        i className: 'fa fa-undo'
+            else
+                div className: "box",
+                    span
+                        className: "box-label"
+                        "#{pusher}#{@props.mailbox.get 'label'}"
+                    span
+                        className: "box-action"
+                        onClick: @editMailbox,
+                        i className: 'fa fa-pencil'
+                    span
+                        className: "box-action"
+                        onClick: @deleteMailbox,
+                        i className: 'fa fa-trash-o'
+
+    editMailbox: (e) ->
+        e.preventDefault()
+        @setState edited: true
+
+    undoMailbox: (e) ->
+        e.preventDefault()
+        @setState edited: false
+
+    updateMailbox: (e) ->
+        e.preventDefault()
+
+        mailbox =
+            label: @refs.label.getDOMNode().value.trim()
+            mailboxID: @props.mailbox.get 'id'
+            accountID: @props.account.get 'id'
+
+        AccountActionCreator.mailboxUpdate mailbox
+
+    deleteMailbox: (e) ->
+        e.preventDefault()
+
+        if window.confirm(t 'account confirm delbox')
+            mailbox =
+                mailboxID: @props.mailbox.get 'id'
+                accountID: @props.account.get 'id'
+
+            AccountActionCreator.mailboxDelete mailbox

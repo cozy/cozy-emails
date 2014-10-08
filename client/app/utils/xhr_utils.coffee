@@ -38,6 +38,35 @@ module.exports =
             else
                 callback "Something went wrong -- #{res.body}"
 
+    mailboxCreate: (mailbox, callback) ->
+        request.post "/mailbox"
+        .send mailbox
+        .set 'Accept', 'application/json'
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                callback "Something went wrong -- #{res.body}"
+
+    mailboxUpdate: (data, callback) ->
+        request.put "/mailbox/#{data.mailboxID}"
+        .send data
+        .set 'Accept', 'application/json'
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                callback "Something went wrong -- #{res.body}"
+
+    mailboxDelete: (data, callback) ->
+        request.del "/mailbox/#{data.mailboxID}"
+        .set 'Accept', 'application/json'
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                callback "Something went wrong -- #{res.body}"
+
     messageSend: (message, callback) ->
         request.post "/message"
         .send message

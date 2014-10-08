@@ -83,6 +83,11 @@ module.exports =
       "account draft mailbox"       : "Draft box"
       "account sent mailbox"        : "Sent box"
       "account trash mailbox"       : "Trash"
+      "account mailboxes"           : "Folders"
+      "account newmailbox label"    : "New Folder"
+      "account newmailbox placeholder" : "Name"
+      "account newmailbox parent"   : "Parent"
+      "account confirm delbox"      : "Do you really want to delete this box and everything in it ?"
 
       # Message Action
       "message action sent ok"      : "Message sent"
