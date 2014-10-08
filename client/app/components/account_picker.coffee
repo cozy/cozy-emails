@@ -1,4 +1,4 @@
-{div, ul, li, span, a, button} = React.DOM
+{div, ul, li, span, a, button, input} = React.DOM
 
 RouterMixin = require '../mixins/router_mixin'
 
@@ -19,18 +19,16 @@ module.exports = React.createClass
 
     renderNoChoice: ->
         account = @props.accounts.get @props.valueLink.value
-        classInput = 'col-sm-8'
 
-        div className: classInput,
-            input className: 'form-control', type: "text", disabled: true, value: account.get 'label'
+        div style: width: "30%",
+            input className: 'form-control col-sm-3', type: "text", disabled: true, value: account.get 'label'
 
 
     renderPicker:  ->
         accounts = @props.accounts
         account = accounts.get @props.valueLink.value
-        classInput = 'col-sm-3'
 
-        div className: classInput,
+        div null,
             button id: 'compose-from', className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', null,
                 span ref: 'account', account.get 'label'
                 span className: 'caret'

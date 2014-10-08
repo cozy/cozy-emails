@@ -67,17 +67,19 @@ module.exports = Compose = React.createClass
             form className: 'form-horizontal',
                 div className: 'form-group',
                     label htmlFor: 'compose-from', className: classLabel, t "compose from"
-                    AccountPicker
-                        accounts: @props.accounts
-                        valueLink: @linkState 'accountID'
+                    div className: classInput,
+                        div className: 'btn-toolbar compose-toggle', role: 'toolbar',
+                            div className: 'btn-group btn-group-sm',
+                                button className: 'btn btn-default', type: 'button', onClick: @onToggleCc,
+                                    span className: 'tool-long', t 'compose toggle cc'
+                            div className: 'btn-group btn-group-sm',
+                                button className: 'btn btn-default', type: 'button', onClick: @onToggleBcc,
+                                    span className: 'tool-long', t 'compose toggle bcc'
+                        
+                        AccountPicker
+                            accounts: @props.accounts
+                            valueLink: @linkState 'accountID'
 
-                    div className: 'btn-toolbar compose-toggle', role: 'toolbar',
-                        div className: 'btn-group btn-group-sm',
-                            button className: 'btn btn-default', type: 'button', onClick: @onToggleCc,
-                                span className: 'tool-long', t 'compose toggle cc'
-                        div className: 'btn-group btn-group-sm',
-                            button className: 'btn btn-default', type: 'button', onClick: @onToggleBcc,
-                                span className: 'tool-long', t 'compose toggle bcc'
 
                 MailsInput
                     id: 'compose-to'
