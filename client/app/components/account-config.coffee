@@ -355,12 +355,20 @@ MailboxItem = React.createClass
     getInitialState: ->
         return {
             edited: false
+            favorite: @props.favorite
         }
 
     render: ->
         pusher = ""
         pusher += "--" for j in [1..@props.mailbox.get('depth')] by 1
         key = @props.mailbox.get 'id'
+        "#{pusher}#{@props.mailbox.get 'label'}"
+        if @state.favorite
+            favoriteClass = "fa fa-eye"
+            favoriteTitle = t "mailbox title favorite"
+        else
+            favoriteClass = "fa fa-eye-slash"
+            favoriteTitle = t "mailbox title not favorite"
         li key: key,
             if @state.edited
                 div className: "box edited",
@@ -395,12 +403,11 @@ MailboxItem = React.createClass
                         className: "box-label",
                         onClick: @editMailbox,
                         "#{pusher}#{@props.mailbox.get 'label'}"
-                    input
-                        ref: 'favorite',
-                        defaultChecked: @props.favorite,
-                        onChange: @toggleFavorite,
-                        type: 'checkbox',
-                        className: 'box-action'
+                    span
+                        className: "box-action",
+                        title: favoriteTitle
+                        onClick: @toggleFavorite,
+                            i className: favoriteClass
 
     editMailbox: (e) ->
         e.preventDefault()
@@ -426,9 +433,8 @@ MailboxItem = React.createClass
 
     toggleFavorite: (e) ->
 
-
         mailbox =
-            favorite: @refs.favorite.getDOMNode().checked
+            favorite: not @state.favorite
             mailboxID: @props.mailbox.get 'id'
             accountID: @props.account.get 'id'
 
@@ -437,6 +443,8 @@ MailboxItem = React.createClass
                 LAC.alertError "#{t("mailbox update ko")} #{error}"
             else
                 LAC.alertSuccess t "mailbox update ok"
+
+        @setState favorite: not @state.favorite
 
     deleteMailbox: (e) ->
         e.preventDefault()
