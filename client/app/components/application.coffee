@@ -256,11 +256,12 @@ module.exports = Application = React.createClass
 
         # -- Generates a configuration window for a given account
         else if panelInfo.action is 'account.config'
-            selectedAccount = @state.selectedAccount
-            error           = AccountStore.getError()
-            isWaiting       = AccountStore.isWaiting()
-            mailboxes       = AccountStore.getSelectedMailboxes true
-            return AccountConfig {layout, error, isWaiting, selectedAccount, mailboxes}
+            selectedAccount   = @state.selectedAccount
+            error             = AccountStore.getError()
+            isWaiting         = AccountStore.isWaiting()
+            mailboxes         = AccountStore.getSelectedMailboxes true
+            favoriteMailboxes = @state.favoriteMailboxes
+            return AccountConfig {layout, error, isWaiting, selectedAccount, mailboxes, favoriteMailboxes}
 
         # -- Generates a configuration window to create a new account
         else if panelInfo.action is 'account.new'
@@ -286,11 +287,11 @@ module.exports = Application = React.createClass
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
-                        
+
             if messageID = panelInfo.parameters.messageID
                 message = MessageStore.getByID messageID
- 
-            return Compose 
+
+            return Compose
                 layout          : layout
                 action          : null
                 inReplyTo       : null

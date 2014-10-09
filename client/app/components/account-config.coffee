@@ -167,8 +167,10 @@ module.exports = React.createClass
                         onClick: @onSubmit, buttonLabel
 
     renderMailboxes: ->
+        favorites = @props.favoriteMailboxes
         mailboxes = @props.mailboxes.map (mailbox, key) =>
-            MailboxItem {account: @props.selectedAccount, mailbox: mailbox}
+            favorite = true if favorites.get(mailbox.get('id'))
+            MailboxItem {account: @props.selectedAccount, mailbox, favorite}
         .toJS()
         div null,
 
@@ -390,9 +392,15 @@ MailboxItem = React.createClass
                         title: t("mailbox title delete"),
                             i className: 'fa fa-trash-o'
                     span
-                        className: "box-label"
+                        className: "box-label",
                         onClick: @editMailbox,
                         "#{pusher}#{@props.mailbox.get 'label'}"
+                    input
+                        ref: 'favorite',
+                        defaultChecked: @props.favorite,
+                        onChange: @toggleFavorite,
+                        type: 'checkbox',
+                        className: 'box-action'
 
     editMailbox: (e) ->
         e.preventDefault()
@@ -407,6 +415,20 @@ MailboxItem = React.createClass
 
         mailbox =
             label: @refs.label.getDOMNode().value.trim()
+            mailboxID: @props.mailbox.get 'id'
+            accountID: @props.account.get 'id'
+
+        AccountActionCreator.mailboxUpdate mailbox, (error) ->
+            if error?
+                LAC.alertError "#{t("mailbox update ko")} #{error}"
+            else
+                LAC.alertSuccess t "mailbox update ok"
+
+    toggleFavorite: (e) ->
+
+
+        mailbox =
+            favorite: @refs.favorite.getDOMNode().checked
             mailboxID: @props.mailbox.get 'id'
             accountID: @props.account.get 'id'
 
