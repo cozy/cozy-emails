@@ -116,6 +116,11 @@ Account::sendMessage = (message, callback) ->
 # 
 # Returns a {Promise} that reject/resolve if the credentials are corrects
 Account.testSMTPConnection = (data) ->
+
+    # we need a smtp server in tests
+    # disable this for now
+    return Promise.resolve('ok') if Account.testHookDisableSMTPCheck
+
     connection = new SMTPConnection 
         port: data.smtpPort
         host: data.smtpServer

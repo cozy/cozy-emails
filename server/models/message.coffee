@@ -1,10 +1,4 @@
 americano = require 'americano-cozy'
-mailutils = require '../utils/jwz_tools'
-uuid = require 'uuid'
-ImapProcess = require '../processes/imap_processes'
-Promise = require 'bluebird'
-Mailbox = require './mailbox'
-Compiler    = require 'nodemailer/src/compiler'
 
 # Public: Message
 # 
@@ -34,6 +28,12 @@ module.exports = Message = americano.getModel 'Message',
     attachments: (x) -> x    # array of message attachments objects
     flags: (x) -> x          # array of message flags (Seen, Flagged, Draft)
 
+mailutils = require '../utils/jwz_tools'
+uuid = require 'uuid'
+ImapProcess = require '../processes/imap_processes'
+Promise = require 'bluebird'
+Mailbox = require './mailbox'
+Compiler    = require 'nodemailer/src/compiler'
 
 # Public: get messages in a box, sorted by Date
 # 
@@ -146,40 +146,75 @@ CONCURRENT_DESTROY = 5
 # play it safe by limiting number of messages in RAM
 # and number of concurrent requests to the DS
 # and allowing for the occasional DS failure
+# @TODO : refactor this after a good night
+# @TODO : stress test DS requestDestroy
 # 
 # accountID - {String} id of the account
 # retries - {Number} of DS failures we tolerate
 # 
 # Returns a {Promise} for task completion
 Message.safeDestroyByAccountID = (accountID, retries = 2) ->
+
+    destroyOne = (row) -> Message.destroyByIDPromised row.id
+
     # get LIMIT_DESTROY messages IDs in RAM
     Message.rawRequestPromised 'treemap',
         limit: LIMIT_DESTROY
         startkey: [accountID]
         endkey: [accountID, {}]
 
-    .map (row) -> row.id
-    .then (ids) ->
-        # no more results, we are done here
-        return 'done' if rows.length is 0
-
-        # delete messages
-        # CONCURRENT_DESTROY by CONCURRENT_DESTROY
-        Promise.map ids, Message.destroyByIDPromised
-        , concurrency: CONCURRENT_DESTROY
-
-    # one good loop, reset retries
-    .then -> retries = 2
-
-    # random DS failure
-    .catch (err) ->
-        throw err if retries < 1
-        retries = retries - 1
-        Promise.delay 4000 # wait a few seconds to let DS & Couch restore
+    .map destroyOne, concurrency: CONCURRENT_DESTROY
     
-    # keep trying
-    .then -> Message.safeDestroyByAccountID retries
-        
+    .then (results) ->
+        # no more messages, we are done here
+        return 'done' if results.length is 0
+
+        # we are not done, loop again, resetting the retries
+        Message.safeDestroyByAccountID accountID, 2
+
+    , (err) ->
+        # random DS failure
+        throw err unless retries > 0
+        # wait a few seconds to let DS & Couch restore
+        Promise.delay 4000 
+        .then -> Message.safeDestroyByAccountID accountID, retries - 1
+
+
+# Public: remove all messages from a mailbox
+# play it safe by limiting number of messages in RAM
+# and number of concurrent requests to the DS
+# and allowing for the occasional DS failure
+# @TODO : refactor this after a good night 
+# @TODO : stress test DS requestDestroy & use it instead
+# 
+# mailboxID - {String} id of the mailbox
+# retries - {Number} of DS failures we tolerate
+# 
+# Returns a {Promise} for task completion
+Message.safeRemoveAllFromBox = (mailboxID, retries = 2) -> 
+
+    removeOne = (message) -> message.removeFromMailbox(id: mailboxID)
+
+    Message.getByMailboxAndDate mailboxID, 
+        numByPage: 30
+        numPage: 0
+
+    .map removeOne, concurrency: CONCURRENT_DESTROY
+
+    
+    .then (results) -> 
+        if results.length is 0 then return 'done' 
+
+        # we are not done, loop again, resetting the retries
+        Message.safeRemoveAllFromBox mailboxID, 2
+
+    , (err) ->
+        # random DS failure
+        throw err unless retries > 0
+        # wait a few seconds to let DS & Couch restore
+        Promise.delay 4000 
+        .then -> Message.safeRemoveAllFromBox mailboxID, retries - 1        
+
 
 # Public: add the message to a mailbox in the cozy
 # 
@@ -192,14 +227,16 @@ Message::addToMailbox = (box, uid) ->
     @savePromised()
 
 # Public: remove a message from a mailbox in the cozy
+# if the message becomes an orphan, we destroy it
 # 
 # box - {Mailbox} to remove this message from
-# uid - {Number} uid of the message in the mailbox
+# noDestroy - {Boolean} dont destroy orphan messages 
 # 
 # Returns {Promise} for the updated {Message}
-Message::removeFromMailbox = (box) ->
+Message::removeFromMailbox = (box, noDestroy = false) ->
     delete @mailboxIDs[box.id]
-    @savePromised()
+    if noDestroy or Object.keys(@mailboxIDs).length > 0 then @savePromised()
+    else @destroyPromised()
 
 
 # Public: apply a json-patch to the message in both cozy & imap

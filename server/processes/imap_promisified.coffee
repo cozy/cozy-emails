@@ -172,6 +172,15 @@ module.exports = class ImapPromisified
     addFlags: ->
         @_super.addFlagsPromised.apply @_super, arguments
 
+    addBox: ->
+        @_super.addBoxPromised.apply @_super, arguments
+
+    delBox: ->
+        @_super.delBoxPromised.apply @_super, arguments
+
+    renameBox: ->
+        @_super.renameBoxPromised.apply @_super, arguments
+
     # fetch all message-id in this box
     # return a Promise for an object {uid1:messageid1, uid2:messageid2} ...
     fetchBoxMessageIds : ->
