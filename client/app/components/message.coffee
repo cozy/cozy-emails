@@ -154,7 +154,7 @@ module.exports = React.createClass
                     div className: 'col-md-4',
                         FilePicker
                             editable: false
-                            value: files: prepared.attachments.map(MessageUtils.convertAttachments)
+                            value: prepared.attachments.map(MessageUtils.convertAttachments)
                             display: display
             div className: 'full-headers',
                 pre null, prepared.fullHeaders.join "\n"

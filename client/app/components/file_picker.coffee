@@ -24,11 +24,11 @@ FilePicker = React.createClass
             value: React.PropTypes.array
             requestChange: React.PropTypes.func
 
-    getDefaultProps: ->        
+    getDefaultProps: ->
         editable: false
         form: true
         value: []
-        valueLink: 
+        valueLink:
             value: []
             requestChange: ->
 
