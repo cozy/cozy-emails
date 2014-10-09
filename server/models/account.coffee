@@ -142,5 +142,34 @@ Account.testSMTPConnection = (data) ->
                 else resolve 'ok'
                 connection.close()
 
+# Public: destroy an account and all messages within
+# returns fast after destroying account
+# in the background, proceeds to erase all boxes & message
+# 
+# Returns a {Promise} for account destroyed completion
+Account::destroyEverything = ->
+    accountDestroyed = @destroyPromised()
+
+    accountID = @id
+    
+    # this runs in the background
+    accountDestroyed.then ->
+        Mailbox.rawRequestPromised 'treemap',
+            startkey: [accountID]
+            endkey: [accountID, {}]
+    
+    .map (row) ->
+        new Mailbox(id: row.id).destroy()
+        .catch (err) -> log.warn "FAIL TO DELETE BOX", row.id
+
+    .then -> 
+        Message.safeDestroyByAccountID accountID
+
+    # return as soon as the account is destroyed
+    # (the interface will be correct)
+    return accountDestroyed
+
+
+
 Promise.promisifyAll Account, suffix: 'Promised'
 Promise.promisifyAll Account::, suffix: 'Promised'

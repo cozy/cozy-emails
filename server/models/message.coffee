@@ -58,8 +58,7 @@ Message.getByMailboxAndDate = (mailboxID, params) ->
     Message.rawRequestPromised 'byMailboxAndDate', options
     .map (row) -> new Message(row.doc)
 
-# Publix: get the number of messages in a box
-# @TODO: also count read/unread messages ?
+# Public: get the number of messages in a box
 # 
 # mailboxID - {String} the mailbox's ID
 # 
@@ -73,6 +72,11 @@ Message.countByMailbox = (mailboxID) ->
 
     .then (result) -> result[0]?.value or 0
 
+# Public: get the number of unread messages in a box
+# 
+# mailboxID - {String} the mailbox's ID
+# 
+# Returns {Promise} for the count
 Message.countReadByMailbox = (mailboxID) ->
     Message.rawRequestPromised 'byMailboxAndFlag',
         key: [mailboxID, '\\Seen']
@@ -81,9 +85,11 @@ Message.countReadByMailbox = (mailboxID) ->
 
     .then (result) -> result[0]?.value or 0
 
-# given a mailbox
-# get the uids present in the cozy
-# return an array of [couchdID, messageUID]
+# Public: get the uids present in a box in coz
+# 
+# mailboxID - id of the mailbox to check
+# 
+# Returns a {Promise} for an array of [couchdID, messageUID]
 Message.getUIDs = (mailboxID) ->
     Message.rawRequestPromised 'byMailboxAndDate',
         startkey: [mailboxID]
@@ -92,7 +98,12 @@ Message.getUIDs = (mailboxID) ->
 
     .map (row) -> [row.id, row.value]
 
-# find a message by its message id
+# Public: find a message by its message id
+# 
+# accountID - id of the account to scan
+# messageID - message-id to search, no need to normalize
+# 
+# Returns a {Promise} for an array of {Message}
 Message.byMessageId = (accountID, messageID) ->
     messageID = mailutils.normalizeMessageID messageID
     Message.rawRequestPromised 'byMessageId',
@@ -102,6 +113,11 @@ Message.byMessageId = (accountID, messageID) ->
     .then (rows) ->
         if data = rows[0]?.doc then new Message data
 
+# Public: find messages by there conversation-id
+# 
+# conversationID - id of the conversation to fetch
+# 
+# Returns a {Promise} for an array of {Message}
 Message.byConversationId = (conversationID) ->
     Message.rawRequestPromised 'byConversationId',
         key: conversationID
@@ -110,18 +126,87 @@ Message.byConversationId = (conversationID) ->
     .map (row) -> new Message row.doc
 
 
-# add the message to a box
+# Public: destroy a message without making a new JDB Model
+# 
+# messageID - id of the message to destroy
+# cb - {Function}(err) for task completion
+# 
+# Returns {void}
+Message.destroyByID = (messageID, cb) ->
+    Message.adapter.destroy null, messageID, cb
+
+
+# safeDestroy parameters (to be tweaked)
+# loads 200 ids in memory at once
+LIMIT_DESTROY = 200
+# send 5 request to the DS in parallel
+CONCURRENT_DESTROY = 5
+
+# Public: destroy all messages for an account
+# play it safe by limiting number of messages in RAM
+# and number of concurrent requests to the DS
+# and allowing for the occasional DS failure
+# 
+# accountID - {String} id of the account
+# retries - {Number} of DS failures we tolerate
+# 
+# Returns a {Promise} for task completion
+Message.safeDestroyByAccountID = (accountID, retries = 2) ->
+    # get LIMIT_DESTROY messages IDs in RAM
+    Message.rawRequestPromised 'treemap',
+        limit: LIMIT_DESTROY
+        startkey: [accountID]
+        endkey: [accountID, {}]
+
+    .map (row) -> row.id
+    .then (ids) ->
+        # no more results, we are done here
+        return 'done' if rows.length is 0
+
+        # delete messages
+        # CONCURRENT_DESTROY by CONCURRENT_DESTROY
+        Promise.map ids, Message.destroyByIDPromised
+        , concurrency: CONCURRENT_DESTROY
+
+    # one good loop, reset retries
+    .then -> retries = 2
+
+    # random DS failure
+    .catch (err) ->
+        throw err if retries < 1
+        retries = retries - 1
+        Promise.delay 4000 # wait a few seconds to let DS & Couch restore
+    
+    # keep trying
+    .then -> Message.safeDestroyByAccountID retries
+        
+
+# Public: add the message to a mailbox in the cozy
+# 
+# box - {Mailbox} to add this message to
+# uid - {Number} uid of the message in the mailbox
+# 
+# Returns {Promise} for the updated {Message}
 Message::addToMailbox = (box, uid) ->
     @mailboxIDs[box.id] = uid
     @savePromised()
 
-# remove the message from a box
+# Public: remove a message from a mailbox in the cozy
+# 
+# box - {Mailbox} to remove this message from
+# uid - {Number} uid of the message in the mailbox
+# 
+# Returns {Promise} for the updated {Message}
 Message::removeFromMailbox = (box) ->
     delete @mailboxIDs[box.id]
     @savePromised()
 
-# apply a json-patch to the message
-# ensure operations are applied to the server too
+
+# Public: apply a json-patch to the message in both cozy & imap
+# 
+# patch: {Object} the json-patch
+# 
+# Returns {Promise} for the updated {Message}
 Message::applyPatchOperations = (patch) ->
 
     # scan the patch
@@ -154,7 +239,11 @@ Message::applyPatchOperations = (patch) ->
     ImapProcess.applyMessageChanges this, flagOps, boxOps
     .then => @savePromised()
 
-Message::moveToTrash = (patch) ->
+# Public: move a message to trash
+# @DEADCODE (done in client now)
+# 
+# Returns a {Promise} for the updated {Message}
+Message::moveToTrash = ->
     Account.findPromised @accountID
     .then (account) =>
         trashID = account.trashMailbox
@@ -174,8 +263,13 @@ Message.toRawMessage = (message, callback) ->
     mailbuilder = new Compiler(message).compile()
     return mailbuilder.build callback
 
-# create a message and store it on the imap server
-# used for drafts
+# Public: create a message and store it on the imap server
+# 
+# message - {Object} the message attributes
+# boxtypes - {String} one of the account specialuse attributes
+# uid - 
+# 
+# Returns a {Promise} for the created {Message}
 Message.saveOnImapServer = (message, boxtype, uid) ->
     Account.findPromised message.accountID
     .then (account) =>
