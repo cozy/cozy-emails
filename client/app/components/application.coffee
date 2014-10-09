@@ -2,7 +2,7 @@
 {body, div, p, form, i, input, span, a, button, strong} = React.DOM
 AccountConfig = require './account-config'
 Alert         = require './alert'
-Toast         = require './toast'
+ToastContainer = require('./toast').Container
 Compose       = require './compose'
 Conversation  = require './conversation'
 MailboxList   = require './mailbox-list'
@@ -116,10 +116,7 @@ module.exports = Application = React.createClass
 
                     # Display feedback
                     Alert { alert }
-
-                    div className: 'toasts-container',
-                        @state.toasts.map (toast) -> Toast toast: toast
-                        .toJS()
+                    ToastContainer toasts: @state.toasts
 
                     # The quick actions bar shoud be moved in its own component
                     # when its feature is implemented.
