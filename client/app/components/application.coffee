@@ -101,6 +101,7 @@ module.exports = Application = React.createClass
                     # The quick actions bar 
                     Topbar 
                         layout: @props.router.current
+                        mailboxes: @state.mailboxes
                         selectedAccount: @state.selectedAccount
                         selectedMailboxID: @state.selectedMailboxID
                         searchQuery: @state.searchQuery

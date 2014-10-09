@@ -25,14 +25,11 @@ module.exports = Topbar = React.createClass
 
     render: ->
 
-        {layout, selectedAccount, selectedMailboxID, searchQuery} = @props
+        {layout, selectedAccount, selectedMailboxID, mailboxes, searchQuery} = @props
         
         responsiveBackUrl = @buildUrl
             firstPanel: layout.firstPanel
             fullWidth: true
-        
-
-        mailboxes = selectedAccount?.get('mailboxes') or Immutable.Map.empty()
 
         getUrl = (mailbox) => 
             @buildUrl
