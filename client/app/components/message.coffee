@@ -272,12 +272,32 @@ module.exports = React.createClass
         if @state.messageDisplayHTML
             frame = @refs.content.getDOMNode()
             doc = frame.contentDocument or frame.contentWindow.document
-            doc.body.innerHTML = @_htmlContent
-            rect = doc.body.getBoundingClientRect()
-            frame.style.height = "#{rect.height + 40}px"
-            if not @state.messageDisplayImages and @refs.imagesDisplay?
-                @refs.imagesDisplay.getDOMNode().addEventListener 'click', =>
-                    @setState messageDisplayImages: true
+            if doc?
+                s = document.createElement 'style'
+                doc.head.appendChild(s)
+                font = """
+@font-face{
+  font-family: 'Source Sans Pro';
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: normal;
+  src: url('../fonts/sourcesanspro/SourceSansPro-Regular.eot') format('embedded-opentype'),
+       url('../fonts/sourcesanspro/SourceSansPro-Regular.otf.woff') format('woff'),
+       url('../fonts/sourcesanspro/SourceSansPro-Regular.otf') format('opentype'),
+       url('../fonts/sourcesanspro/SourceSansPro-Regular.ttf') format('truetype');
+}
+                """
+                s.sheet.insertRule font, 0
+                s.sheet.insertRule "body { font-family: 'Source Sans Pro'; }", 1
+                doc.body.innerHTML = @_htmlContent
+                rect = doc.body.getBoundingClientRect()
+                frame.style.height = "#{rect.height + 40}px"
+                if not @state.messageDisplayImages and @refs.imagesDisplay?
+                    @refs.imagesDisplay.getDOMNode().addEventListener 'click', =>
+                        @setState messageDisplayImages: true
+            else
+                # try to display text only
+                @setState messageDisplayHTML: false
 
     componentDidMount: ->
         @_initFrame()
