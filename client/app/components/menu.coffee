@@ -22,27 +22,39 @@ module.exports = Menu = React.createClass
                not Immutable.is(nextProps.unreadCounts, @props.unreadCounts)
 
     render: ->
-        selectedAccountUrl = @buildUrl
-            direction: 'first'
-            action: 'account.mailbox.messages'
-            parameters: @props.selectedAccount?.get 'id'
-            fullWidth: true
+
+
+        if @props.accounts.length
+            selectedAccountUrl = @buildUrl
+                direction: 'first'
+                action: 'account.mailbox.messages'
+                parameters: @props.selectedAccount?.get 'id'
+                fullWidth: true
+        else
+            selectedAccountUrl = @buildUrl
+                direction: 'first'
+                action: 'account.new'
+                fullWidth: true
 
         # the button toggles the "compose" screen
         if @props.layout.firstPanel.action is 'compose' or
            @props.layout.secondPanel?.action is 'compose'
+            composeClass = 'active'
             composeUrl = selectedAccountUrl
         else
+            composeClass = ''
             composeUrl = @buildUrl
                 direction: 'second'
                 action: 'compose'
                 parameters: null
                 fullWidth: false
 
-        # the button toggle the "new mailbox" screen
+        # the button toggle the "new account" screen
         if @props.layout.firstPanel.action is 'account.new'
+            newMailboxClass = 'active'
             newMailboxUrl = selectedAccountUrl
         else
+            newMailboxClass = ''
             newMailboxUrl = @buildUrl
                 direction: 'first'
                 action: 'account.new'
@@ -51,8 +63,10 @@ module.exports = Menu = React.createClass
         # the button toggles the "settings" screen
         if @props.layout.firstPanel.action is 'settings' or
            @props.layout.secondPanel?.action is 'settings'
+            settingsClass = 'active'
             settingsUrl = selectedAccountUrl
         else
+            settingsClass = ''
             settingsUrl = @buildUrl
                 direction: 'first'
                 action: 'settings'
@@ -63,20 +77,21 @@ module.exports = Menu = React.createClass
             'col-xs-4 col-md-1': true
 
         div id: 'menu', className: classes,
-            a href: composeUrl, className: 'menu-item compose-action',
-                i className: 'fa fa-edit'
-                span className: 'item-label', t 'menu compose'
+            unless @props.accounts.length is 0
+                a href: composeUrl, className: 'menu-item compose-action ' + composeClass,
+                    i className: 'fa fa-edit'
+                    span className: 'item-label', t 'menu compose'
 
             ul id: 'account-list', className: 'list-unstyled',
                 @props.accounts.map (account, key) =>
                     @getAccountRender account, key
                 .toJS()
 
-            a href: newMailboxUrl, className: 'menu-item new-account-action',
+            a href: newMailboxUrl, className: 'menu-item new-account-action ' + newMailboxClass,
                 i className: 'fa fa-inbox'
                 span className: 'item-label', t 'menu account new'
 
-            a href: settingsUrl, className: 'menu-item settings-action',
+            a href: settingsUrl, className: 'menu-item settings-action ' + settingsClass,
                 i className: 'fa fa-cog'
                 span className: 'item-label', t 'menu settings'
 
