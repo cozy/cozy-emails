@@ -29,9 +29,13 @@ module.exports = class Router extends PanelRouter
         'settings':
             pattern: 'settings'
             fluxAction: 'showSettings'
+        
+        'default':
+            pattern: ''
+            fluxAction: ''
 
     # default route
-    routes: '': 'account.mailbox.messages'
+    routes: '': 'default'
 
     # Determines and gets the default parameters regarding a specific action
     _getDefaultParameters: (action) ->

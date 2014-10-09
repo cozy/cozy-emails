@@ -3,22 +3,24 @@ AppDispatcher = require '../app_dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 
 AccountStore = require '../stores/account_store'
+LayoutActionCreator = null
 
 module.exports = AccountActionCreator =
 
-    create: (inputValues) ->
+    create: (inputValues, afterCreation) ->
         AccountActionCreator._setNewAccountWaitingStatus true
 
         XHRUtils.createAccount inputValues, (error, account) ->
-            # set a timeout to simulate the "waiting" state
             AccountActionCreator._setNewAccountWaitingStatus false
-            console.log "THERE", account
             if error? or not account?
                 AccountActionCreator._setNewAccountError error
             else
                 AppDispatcher.handleViewAction
                     type: ActionTypes.ADD_ACCOUNT
                     value: account
+
+                afterCreation account
+
 
     edit: (inputValues, accountID) ->
         AccountActionCreator._setNewAccountWaitingStatus true

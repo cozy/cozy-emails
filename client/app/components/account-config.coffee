@@ -3,11 +3,13 @@ classer = React.addons.classSet
 
 MailboxList   = require './mailbox-list'
 AccountActionCreator = require '../actions/account_action_creator'
+RouterMixin = require '../mixins/router_mixin'
 
 module.exports = React.createClass
     displayName: 'AccountConfig'
 
     mixins: [
+        RouterMixin
         React.addons.LinkedStateMixin # two-way data binding
     ]
 
@@ -94,13 +96,12 @@ module.exports = React.createClass
                         htmlFor: 'mailbox-smtp-port',
                         className: 'col-sm-1 control-label',
                         'Port'
-                            div
-                                className: 'col-sm-1',
-                            input
-                                id: 'mailbox-smtp-port',
-                                valueLink: @linkState('smtpPort'),
-                                type: 'text',
-                                className: 'form-control'
+                    div className: 'col-sm-1',
+                    input
+                        id: 'mailbox-smtp-port',
+                        valueLink: @linkState('smtpPort'),
+                        type: 'text',
+                        className: 'form-control'
 
                 div className: 'form-group',
                     label
@@ -156,6 +157,7 @@ module.exports = React.createClass
                             newState[box] = mailbox
                             @setState newState
 
+
     onSubmit: (event) ->
         # prevents the page from reloading
         event.preventDefault()
@@ -165,10 +167,18 @@ module.exports = React.createClass
         accountValue.sentMailbox  = accountValue.sentMailbox
         accountValue.trashMailbox = accountValue.trashMailbox
 
+        afterCreation = (id) =>
+            @redirect 
+                direction: 'first'
+                fullWidth: true
+                action: 'account.mailbox.messages'
+                parameters: id
+
+
         if @props.selectedAccount?
             AccountActionCreator.edit accountValue, @props.selectedAccount.get 'id'
         else
-            AccountActionCreator.create accountValue
+            AccountActionCreator.create accountValue, afterCreation
 
     onRemove: (event) ->
         # prevents the page from reloading
@@ -202,6 +212,11 @@ module.exports = React.createClass
 
 
     componentWillReceiveProps: (props) ->
+
+        # do not refresh form when handling errors
+        # @TODO better React's way ?
+        return if @state.label?
+        
         # prevents the form from changing during submission
         if not props.isWaiting
             # display the account values

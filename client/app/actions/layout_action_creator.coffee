@@ -39,6 +39,13 @@ module.exports = LayoutActionCreator =
     alertError:   (message) ->
         LayoutActionCreator.alert AlertLevel.ERROR, message
 
+    getDefaultRoute: ->
+        # if there is no account, we display the configAccount
+        if AccountStore.getAll().length is 0 then 'account.new'
+        # else go directly to first account
+        else 'account.mailbox.messages'
+        
+
     showMessageList: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
 
