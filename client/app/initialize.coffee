@@ -22,7 +22,11 @@ window.onload = ->
     window.t = polyglot.t.bind polyglot
 
     # init plugins
-    require("./utils/plugin_utils").init()
+    PluginUtils = require("./utils/plugin_utils")
+    if not window.settings.plugins?
+        window.settings.plugins = {}
+    PluginUtils.merge window.settings.plugins
+    PluginUtils.init()
 
     # Flux initialization (must be called at the begining)
     AccountStore  = require './stores/account_store'

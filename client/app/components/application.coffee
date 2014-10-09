@@ -303,8 +303,7 @@ module.exports = Application = React.createClass
         # -- Display the settings form
         else if panelInfo.action is 'settings'
             settings = @state.settings
-            plugins  = @state.plugins
-            return Settings {settings, plugins}
+            return Settings {settings}
 
         # -- Generates a message list based on search result
         else if panelInfo.action is 'search'

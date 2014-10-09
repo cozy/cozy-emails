@@ -67,14 +67,14 @@ module.exports = React.createClass
             @_renderOption 'messageDisplayImages'
 
             fieldset null,
-                legend null, t 'settings lang'
-                for own pluginName, pluginConf of @state.plugins
+                legend null, t 'settings plugins'
+                for own pluginName, pluginConf of @state.settings.plugins
                     form className: 'form-horizontal', key: pluginName,
                         div className: 'form-group',
                             label className: classLabel, pluginConf.name
                             div className: 'col-sm-3',
                                 input
-                                    checked: @state.plugins[pluginName].active,
+                                    checked: pluginConf.active,
                                     onChange: @handleChange,
                                     'data-target': 'plugin',
                                     'data-plugin': pluginName,
@@ -127,14 +127,19 @@ module.exports = React.createClass
                 window.t = polyglot.t.bind polyglot
                 SettingsActionCreator.edit settings
             when 'plugin'
+                name = target.dataset.plugin
+                settings = @state.settings
                 if target.checked
-                    PluginUtils.activate target.dataset.plugin
+                    PluginUtils.activate name
                 else
-                    PluginUtils.deactivate target.dataset.plugin
-                @setState({plugins: window.plugins})
+                    PluginUtils.deactivate name
+                for own pluginName, pluginConf of settings.plugins
+                    pluginConf.active = window.plugins[pluginName].active
+                @setState({settings: settings})
+                SettingsActionCreator.edit settings
 
     getInitialState: (forceDefault) ->
+        settings = @props.settings.toObject()
         return {
             settings: @props.settings.toObject()
-            plugins: @props.plugins
         }
