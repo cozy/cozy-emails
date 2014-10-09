@@ -73,7 +73,7 @@ module.exports = class ImapScheduler
 
         @imap.waitConnected
             .catch (err) =>
-                log.error "FAILED TO CONNECT", err.stack
+                log.error "FAILED TO CONNECT", err, @tasks.length
                 # we cant connect, drop the tasks
                 task.reject err while task = @tasks.shift()
                 throw err

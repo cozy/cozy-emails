@@ -21,8 +21,12 @@ module.exports = React.createClass
         div id: 'mailbox-config',
             h3 className: null, titleLabel
 
-            if @props.error
-                div className: 'error', @props.error
+            if @props.error and @props.error.name is 'AccountConfigError'
+                message = t 'config errror ' + @props.error.field
+                div className: 'alert alert-warning', message
+            else
+                console.log @props.error.stack
+                div className: 'alert alert-warning', @props.error.message
 
             form className: 'form-horizontal',
                 div className: 'form-group',

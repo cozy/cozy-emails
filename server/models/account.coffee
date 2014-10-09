@@ -28,8 +28,12 @@ nodemailer = require 'nodemailer'
 Mailbox = require './mailbox'
 ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
-{WrongConfigError} = require '../utils/errors'
+{AccountConfigError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'models:account')
+
+# @TODO : import directly ?
+SMTPConnection = require 'nodemailer/node_modules/' + 
+    'nodemailer-smtp-transport/node_modules/smtp-connection'
 
 # Public: refresh all accounts
 # 
@@ -57,36 +61,36 @@ Account::includeMailboxes = ->
 # Public: fetch the mailbox tree of a new {Account}
 # if the fetch succeeds, create the account and mailbox in couch
 # 
+# data - account parameters
+# 
 # Returns {Promise} promise for the created {Account}, boxes included
 Account.createIfValid = (data) ->
+
+    Account.testSMTPConnection data
+    .then (err) ->
+        ImapProcess.fetchBoxesTree data
     
-    accountAndBoxesCreated = ImapProcess.fetchBoxesTree data
     .then (rawBoxesTree) ->
         # We managed to get boxes, login settings are OK
         # create Account and Mailboxes
         log.info "GOT BOXES", rawBoxesTree
-        # pass rawBoxesTree down the chain
-        Promise.all [ rawBoxesTree, Account.createPromised data ]
+        
+        Account.createPromised data
+        .then (account) -> 
+            Mailbox.createBoxesFromImapTree account.id, rawBoxesTree    
+            .then (specialUses) -> 
+                account.updateAttributesPromised specialUses
 
-    .spread (rawBoxesTree, account) ->
-        Mailbox.createBoxesFromImapTree account.id, rawBoxesTree    
-        .then (specialUses) -> 
-            account.updateAttributesPromised specialUses
+    .then (account) ->
 
-    # fork the promise
-    # return from this function a fast promise for account with boxes
-    returnValue = accountAndBoxesCreated.then (account) ->
-        log.info "CREATED ACCOUNT & BOXES"
-        return account.includeMailboxes()
-
-    # in a detached chain, fetch the Account
-    accountAndBoxesCreated.then (account) ->
-        # first fetch 15 mails from each box
-        ImapProcess.fetchAccount account, 15
+        # in a detached chain, fetch the Account
+        # first fetch 100 mails from each box
+        ImapProcess.fetchAccount account, 100
+        # then fectch the rest
         .then -> ImapProcess.fetchAccount account
-        .catch (err) -> console.log "FETCH MAIL FAILED", err.stack
+        .catch (err) -> console.log "FETCH MAIL FAILED", err
 
-    return returnValue
+        return account.includeMailboxes()
 
 # Public: send a message using this account SMTP config
 # 
@@ -106,6 +110,37 @@ Account::sendMessage = (message, callback) ->
 
     transport.sendMail message, callback
 
+# Private: check smtp credentials
+# used in createIfValid
+# throws AccountConfigError
+# 
+# Returns a {Promise} that reject/resolve if the credentials are corrects
+Account.testSMTPConnection = (data) ->
+    connection = new SMTPConnection 
+        port: data.smtpPort
+        host: data.smtpServer
+
+    auth =
+        user: data.login
+        pass: data.password        
+    
+    return new Promise (resolve, reject) ->
+        connection.once 'error', (err) ->
+            console.log "ERROR CALLED"
+            reject new AccountConfigError 'smtp'
+        
+        # in case of wrong port, the connection takes forever to emit error
+        setTimeout -> 
+            reject new AccountConfigError 'smtpPort'
+            connection.close()
+        , 2000
+        
+        connection.connect (err) ->
+            if err then reject new AccountConfigError 'smtpServer'
+            else connection.login auth, (err) ->
+                if err then reject new AccountConfigError 'auth'
+                else resolve 'ok'
+                connection.close()
 
 Promise.promisifyAll Account, suffix: 'Promised'
 Promise.promisifyAll Account::, suffix: 'Promised'

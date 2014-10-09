@@ -183,15 +183,11 @@ Message.saveOnImapServer = (message, boxtype, uid) ->
         throw new WrongConfigError 'wrong boxtype' unless boxid
         
         Mailbox.findPromised boxID
-        .then (box) -> [account, box] 
-
-    .spread (account, box) ->
-        ImapProcess.createMail account, box, message
+        .then (box) -> 
+            ImapProcess.createMail account, box, message
         .then (uid) ->
             message.mailboxIDs[box.id] = uid
             Message.createPromised message
-
-    .then 
             
 
 
