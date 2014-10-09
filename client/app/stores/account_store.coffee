@@ -38,6 +38,12 @@ class AccountStore extends Store
     ###
     __bindHandlers: (handle) ->
 
+        onUpdate = (rawAccount) =>
+            account = AccountTranslator.toImmutable rawAccount
+            _accounts = _accounts.set account.get('id'), account
+            _selectedAccount = _accounts.get account.get 'id'
+            @emit 'change'
+
         handle ActionTypes.ADD_ACCOUNT, (account) ->
             account = AccountTranslator.toImmutable account
             _accounts = _accounts.set account.get('id'), account
@@ -56,10 +62,16 @@ class AccountStore extends Store
             @emit 'change'
 
         handle ActionTypes.EDIT_ACCOUNT, (rawAccount) ->
-            account = AccountTranslator.toImmutable rawAccount
-            _accounts = _accounts.set account.get('id'), account
-            _selectedAccount = _accounts.get account.get 'id'
-            @emit 'change'
+            onUpdate rawAccount
+
+        handle ActionTypes.MAILBOX_CREATE, (rawAccount) ->
+            onUpdate rawAccount
+
+        handle ActionTypes.MAILBOX_UPDATE, (rawAccount) ->
+            onUpdate rawAccount
+
+        handle ActionTypes.MAILBOX_DELETE, (rawAccount) ->
+            onUpdate rawAccount
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
             _accounts = _accounts.delete accountID

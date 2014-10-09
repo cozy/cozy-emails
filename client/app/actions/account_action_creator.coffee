@@ -65,3 +65,31 @@ module.exports = AccountActionCreator =
             if not infos?
                 infos = []
             callback err, infos
+
+    mailboxCreate: (inputValues, callback) ->
+        XHRUtils.mailboxCreate inputValues, (error, account) ->
+            if not error?
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MAILBOX_CREATE
+                    value: account
+            if callback?
+                callback error
+
+    mailboxUpdate: (inputValues, callback) ->
+        XHRUtils.mailboxUpdate inputValues, (error, account) ->
+            if not error?
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MAILBOX_UPDATE
+                    value: account
+            if callback?
+                callback error
+
+
+    mailboxDelete: (inputValues, callback) ->
+        XHRUtils.mailboxDelete inputValues, (error, account) ->
+            if not error?
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MAILBOX_DELETE
+                    value: account
+            if callback?
+                callback error

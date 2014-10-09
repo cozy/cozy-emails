@@ -2,6 +2,7 @@
 
 index     = require './index'
 accounts  = require './accounts'
+mailboxes = require './mailboxes'
 messages  = require './messages'
 providers = require './providers'
 settings  = require './settings'
@@ -30,6 +31,13 @@ module.exports =
     'conversation/:conversationID':
         delete: [messages.conversationDelete]
         patch: [messages.conversationPatch]
+
+    'mailbox':
+        post: mailboxes.create
+
+    'mailbox/:mailboxID':
+        put: mailboxes.update
+        delete: mailboxes.delete
 
     'mailbox/:mailboxID/page/:numPage/limit/:numByPage':
         get: [messages.listByMailboxId]

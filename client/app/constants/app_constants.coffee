@@ -9,6 +9,11 @@ module.exports =
         'NEW_ACCOUNT_WAITING'       : 'NEW_ACCOUNT_WAITING'
         'NEW_ACCOUNT_ERROR'         : 'NEW_ACCOUNT_ERROR'
 
+        # Mailbox
+        'MAILBOX_ADD'               : 'MAILBOX_ADD'
+        'MAILBOX_UPDATE'            : 'MAILBOX_UPDATE'
+        'MAILBOX_DELETE'            : 'MAILBOX_DELETE'
+
         # Message
         'RECEIVE_RAW_MESSAGE'       : 'RECEIVE_RAW_MESSAGE'
         'RECEIVE_RAW_MESSAGES'      : 'RECEIVE_RAW_MESSAGES'
