@@ -28,6 +28,7 @@ module.exports.create = function(req, res, next) {
     return res.send(400, {
       name: err.name,
       field: err.field,
+      stack: err.stack,
       error: true
     });
   })["catch"](next);
