@@ -1,10 +1,15 @@
 module.exports = utils = {}
 
-utils.customError = (name) ->
-    return class CustomError extends Error
-        constructor: (@message) ->
-            @name = name
-            Error.captureStackTrace(this, name)
+
+utils.AccountConfigError = class AccountConfigError extends Error
+    constructor: (field) ->
+        @name = 'AccountConfigError'
+        @field = field
+        @message = "on field '#{field}'"
+        @stack = ''
+        # WE DONT NEED STACK FOR THIS ERROR
+        # Error.captureStackTrace this, arguments.callee
+        return this
 
 utils.WrongConfigError = class WrongConfigError extends Error
     constructor: (field) ->
@@ -12,6 +17,7 @@ utils.WrongConfigError = class WrongConfigError extends Error
         @field = field
         @message = "Wrong Imap config on field #{field}"
         Error.captureStackTrace this, arguments.callee
+        return this
 
 utils.UIDValidityChanged = class UIDValidityChanged extends Error
     constructor: (uidvalidity) ->
@@ -19,6 +25,7 @@ utils.UIDValidityChanged = class UIDValidityChanged extends Error
         @newUidvalidity = uidvalidity
         @message = "UID Validty has changed"
         Error.captureStackTrace this, arguments.callee
+        return this
 
 utils.HttpError = (status, msg) ->
     if msg instanceof Error

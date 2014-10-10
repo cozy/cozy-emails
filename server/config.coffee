@@ -14,14 +14,13 @@ config =
         use: [
             americano.bodyParser()
             americano.methodOverride()
-            americano.errorHandler
-                dumpExceptions: true
-                showStack: true
             americano.static __dirname + '/../client/public',
                 maxAge: 86400000
         ]
 
         afterStart: (app, server) ->
+            # move it here needed after express 4.4
+            app.use americano.errorHandler()
             ImapReporter.initSocketIO app, server
             Account.refreshAllAccounts()
 

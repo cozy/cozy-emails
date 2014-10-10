@@ -2,7 +2,7 @@
 SocketUtils = require '../utils/socketio_utils'
 
 
-module.exports = React.createClass
+module.exports = Toast = React.createClass
     displayName: 'Toast'
 
     getInitialState: ->
@@ -15,7 +15,7 @@ module.exports = React.createClass
         @setState modalErrors: errors
 
     acknowledge: ->
-        SocketUtils.acknowledgeTask @props.toast.get('id')
+        SocketUtils.acknowledgeTask @props.toast.id
 
     renderErrorModal: ->
         console.log @state.modalErrors
@@ -33,9 +33,9 @@ module.exports = React.createClass
                             t 'app alert close'
 
     render: ->
-        toast = @props.toast.toJS()
+        toast = @props.toast
         dismissible = if toast.finished then 'alert-dismissible' else ''
-        percent = parseInt 100 * toast.done / toast.total
+        percent = parseInt(100 * toast.done / toast.total) + '%'
         showModal = @showModal.bind(this, toast.errors)
         type = if toast.errors.length then 'alert-warning'
         else 'alert-info'
@@ -46,14 +46,9 @@ module.exports = React.createClass
                 @renderErrorModal() 
 
             div className:"progress",
-                div 
-                    className: 'progress-bar', 
-                    role: 'progressbar', 
-                    "style": width: "#{percent}%",
-                    "aria-valuenow": toast.done, 
-                    "aria-valuemin": 0, 
-                    "aria-valuemax": toast.total,
-                    "#{t "task " + toast.code, toast} : #{percent}%"
+                div className: 'progress-bar', style: width: percent
+                div className: 'progress-bar-label', 
+                    "#{t "task " + toast.code, toast} : #{percent}"
             
             if toast.finished
                 button type: "button", className: "close", onClick: @acknowledge,
@@ -64,3 +59,10 @@ module.exports = React.createClass
                 a onClick: showModal, 
                     t 'there were errors', smart_count: len
                     
+module.exports.Container = ToastContainer =  React.createClass
+    displayName: 'ToastContainer'
+
+    render: ->
+        toasts = @props.toasts.toJS?() or @props.toasts
+        div className: 'toasts-container',
+            Toast {toast} for id, toast of toasts

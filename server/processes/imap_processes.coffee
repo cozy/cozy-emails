@@ -175,6 +175,40 @@ ImapProcess.removeMail = (account, box, uid) ->
     scheduler.doASAP (imap) ->
         imap.expunge uid, mailbox: box.path
 
+# Public: create a box in the account
+# 
+# account - the {Account} to create box in
+# path - {String} the full path  of the mailbox
+# 
+# Returns a {Promise} for task completion
+ImapProcess.createBox = (account, path) ->
+    scheduler = ImapScheduler.instanceFor account
+    scheduler.doASAP (imap) ->
+        imap.addBox path
+
+# Public: rename/move a box in the account
+# 
+# account - the {Account} to create box in
+# oldpath - {String} the full current path of the mailbox
+# newpath - {String} the full path to move the box to
+# 
+# Returns a {Promise} for task completion
+ImapProcess.renameBox = (account, oldpath, newpath) ->
+    scheduler = ImapScheduler.instanceFor account
+    scheduler.doASAP (imap) ->
+        imap.renameBox oldpath, newpath
+
+# Public: delete a box in the account
+# 
+# account - the {Account} to delete the box from
+# path - {String} the full path  of the mailbox
+# 
+# Returns a {Promise} for task completion
+ImapProcess.deleteBox = (account, path) ->
+    scheduler = ImapScheduler.instanceFor account
+    scheduler.doASAP (imap) ->
+        imap.delBox path
+
 
 # Public: fetch one mail from IMAP and create a 
 # {Message} in cozy for it. If the message

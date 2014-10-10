@@ -3,14 +3,15 @@ classer = React.addons.classSet
 
 MailboxList   = require './mailbox-list'
 AccountActionCreator = require '../actions/account_action_creator'
+RouterMixin = require '../mixins/router_mixin'
 LAC  = require '../actions/layout_action_creator'
-
 classer = React.addons.classSet
 
 module.exports = React.createClass
     displayName: 'AccountConfig'
 
     mixins: [
+        RouterMixin
         React.addons.LinkedStateMixin # two-way data binding
     ]
 
@@ -51,8 +52,12 @@ module.exports = React.createClass
         else if @props.selectedAccount? then buttonLabel = t "account save"
         else buttonLabel = t "account add"
 
-        if @props.error
-            div className: 'error', @props.error
+        if @props.error and @props.error.name is 'AccountConfigError'
+            message = t 'config errror ' + @props.error.field
+            div className: 'alert alert-warning', message
+        else if @props.error
+            console.log @props.error.stack
+            div className: 'alert alert-warning', @props.error.message
 
         form className: 'form-horizontal',
             div className: 'form-group',
@@ -78,6 +83,7 @@ module.exports = React.createClass
                         type: 'text',
                         className: 'form-control',
                         placeholder: t "account user fullname"
+            
             div className: 'form-group',
                 label
                     htmlFor: 'mailbox-email-address',
@@ -104,6 +110,7 @@ module.exports = React.createClass
                         type: 'password',
                         className: 'form-control'
 
+
             div className: 'form-group',
                 label
                     htmlFor: 'mailbox-smtp-server',
@@ -119,14 +126,13 @@ module.exports = React.createClass
                 label
                     htmlFor: 'mailbox-smtp-port',
                     className: 'col-sm-1 control-label',
-                    'Port'
-                        div
-                            className: 'col-sm-1',
-                        input
-                            id: 'mailbox-smtp-port',
-                            valueLink: @linkState('smtpPort'),
-                            type: 'text',
-                            className: 'form-control'
+                    t 'port'
+                div className: 'col-sm-1',
+                    input
+                        id: 'mailbox-smtp-port',
+                        valueLink: @linkState('smtpPort'),
+                        type: 'text',
+                        className: 'form-control'
 
             div className: 'form-group',
                 label
@@ -222,6 +228,7 @@ module.exports = React.createClass
                             newState[box] = mailbox
                             @setState newState
 
+
     onSubmit: (event) ->
         # prevents the page from reloading
         event.preventDefault()
@@ -231,11 +238,19 @@ module.exports = React.createClass
         accountValue.sentMailbox  = accountValue.sentMailbox
         accountValue.trashMailbox = accountValue.trashMailbox
 
+        afterCreation = (id) =>
+            @redirect 
+                direction: 'first'
+                fullWidth: true
+                action: 'account.mailbox.messages'
+                parameters: id
+
+
         if @props.selectedAccount?
             AccountActionCreator.edit accountValue,
                 @props.selectedAccount.get 'id'
         else
-            AccountActionCreator.create accountValue
+            AccountActionCreator.create accountValue, afterCreation
 
     onRemove: (event) ->
         # prevents the page from reloading
@@ -295,6 +310,11 @@ module.exports = React.createClass
 
 
     componentWillReceiveProps: (props) ->
+
+        # do not refresh form when handling errors
+        # @TODO better React's way ?
+        return if @state.label?
+        
         # prevents the form from changing during submission
         if not props.isWaiting
             # display the account values
@@ -333,9 +353,9 @@ module.exports = React.createClass
                 login:        ''
                 password:     ''
                 smtpServer:   ''
-                smtpPort:     993
+                smtpPort:     587
                 imapServer:   ''
-                imapPort:     465
+                imapPort:     993
                 draftMailbox: ''
                 sentMailbox:  ''
                 trashMailbox: ''

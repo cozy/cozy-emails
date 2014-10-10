@@ -2,7 +2,8 @@
 {body, div, p, form, i, input, span, a, button, strong} = React.DOM
 AccountConfig = require './account-config'
 Alert         = require './alert'
-Toast         = require './toast'
+Topbar        = require './topbar'
+ToastContainer = require('./toast').Container
 Compose       = require './compose'
 Conversation  = require './conversation'
 MailboxList   = require './mailbox-list'
@@ -63,27 +64,6 @@ module.exports = Application = React.createClass
         # css classes are a bit long so we use a subfunction to get them
         panelClasses = @getPanelClasses isFullWidth
 
-        showMailboxConfigButton = @state.selectedAccount? and
-                                  layout.firstPanel.action isnt 'account.new'
-        if showMailboxConfigButton
-            # the button toggles the mailbox config
-            if layout.firstPanel.action is 'account.config'
-                configMailboxUrl = @buildUrl
-                    direction: 'first'
-                    action: 'account.mailbox.messages'
-                    parameters: @state.selectedAccount.get 'id'
-                    fullWidth: true
-            else
-                configMailboxUrl = @buildUrl
-                    direction: 'first'
-                    action: 'account.config'
-                    parameters: @state.selectedAccount.get 'id'
-                    fullWidth: true
-
-        responsiveBackUrl = @buildUrl
-            firstPanel: layout.firstPanel
-            fullWidth: true
-
         # classes for page-content
         responsiveClasses = classer
             'col-xs-12 col-md-11': true
@@ -116,38 +96,15 @@ module.exports = Application = React.createClass
 
                     # Display feedback
                     Alert { alert }
+                    ToastContainer toasts: @state.toasts
 
-                    div className: 'toasts-container',
-                        @state.toasts.map (toast) -> Toast toast: toast
-                        .toJS()
-
-                    # The quick actions bar shoud be moved in its own component
-                    # when its feature is implemented.
-                    div id: 'quick-actions', className: 'row',
-                        # responsive menu icon
-                        if layout.secondPanel
-                            a href: responsiveBackUrl, className: 'responsive-handler hidden-md hidden-lg',
-                                i className: 'fa fa-chevron-left hidden-md hidden-lg pull-left'
-                                t "app back"
-                        else
-                            a onClick: @onResponsiveMenuClick, className: 'responsive-handler hidden-md hidden-lg',
-                                i className: 'fa fa-bars pull-left'
-                                t "app menu"
-
-
-                        div className: 'col-md-6 hidden-xs hidden-sm pull-left',
-                            form className: 'form-inline col-md-12',
-                                MailboxList
-                                    getUrl: getUrl
-                                    mailboxes: @state.mailboxes
-                                    selectedMailbox: @state.selectedMailboxID
-                                SearchForm query: @state.searchQuery
-
-                        div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
-                            ReactCSSTransitionGroup transitionName: 'fade',
-                                if showMailboxConfigButton
-                                    a href: configMailboxUrl, className: 'btn btn-cozy mailbox-config',
-                                        i className: 'fa fa-cog'
+                    # The quick actions bar 
+                    Topbar 
+                        layout: @props.router.current
+                        mailboxes: @state.mailboxes
+                        selectedAccount: @state.selectedAccount
+                        selectedMailboxID: @state.selectedMailboxID
+                        searchQuery: @state.searchQuery
 
                     # Two layout modes: one full-width panel or two panels
                     div id: 'panels', className: 'row',
@@ -389,10 +346,3 @@ module.exports = Application = React.createClass
     componentWillUnmount: ->
         @props.router.off 'fluxRoute', @onRoute
 
-    # Toggle the menu in responsive mode
-    onResponsiveMenuClick: (event) ->
-        event.preventDefault()
-        if @state.isResponsiveMenuShown
-            LayoutActionCreator.hideReponsiveMenu()
-        else
-            LayoutActionCreator.showReponsiveMenu()

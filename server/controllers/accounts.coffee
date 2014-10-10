@@ -4,27 +4,29 @@ Account = require '../models/account'
 Mailbox = require '../models/mailbox'
 Imap = require '../processes/imap_processes'
 _ = require 'lodash'
-{WrongConfigError, HttpError} = require '../utils/errors'
+{AccountConfigError, HttpError} = require '../utils/errors'
+log = require('../utils/logging')(prefix: 'accounts:controller')
 
 # create an account
 # and lauch fetching of this account mails
 module.exports.create = (req, res, next) ->
     # @TODO : validate req.body
     data = req.body
-    accountCreated = Account.createIfValid data
-
-    accountCreated.then (account) -> res.send 201, account
-    .catch WrongConfigError, (err) ->
-        throw new HttpError 401, err
+    Account.createIfValid data
+    .then (account) -> res.send 201, account
+    .catch AccountConfigError, (err) ->
+        log.warn err.toString()
+        log.warn err.stack.split("\n")[2]
+        res.send 400, {name: err.name, field: err.field, error: true}
     .catch next
 
 # fetch an account by id, add it to the request
 module.exports.fetch = (req, res, next) ->
     Account.findPromised req.params.accountID
-        .then (account) ->
-            if account then req.account = account
-            else throw new HttpError 404, 'Not Found'
-        .nodeify next
+    .then (account) ->
+        if account then req.account = account
+        else throw new HttpError 404, 'Not Found'
+    .nodeify next
 
 # fetch the list of all Accounts
 # include the account mailbox tree
@@ -37,8 +39,8 @@ module.exports.list = (req, res, next) ->
 # get an account with its mailboxes
 module.exports.details = (req, res, next) ->
     req.account.includeMailboxes()
-        .then -> res.send 200, req.account
-        .catch next
+    .then -> res.send 200, req.account
+    .catch next
 
 # change an account
 module.exports.edit = (req, res, next) ->
@@ -49,13 +51,13 @@ module.exports.edit = (req, res, next) ->
         'draftMailbox', 'sentMailbox', 'trashMailbox'
 
     req.account.updateAttributesPromised changes
-        .then (account) -> account.includeMailboxes()
-        .then (account) -> res.send 200, req.account
-        .catch next
+    .then (account) -> account.includeMailboxes()
+    .then (account) -> res.send 200, req.account
+    .catch next
 
 # delete an account
 module.exports.remove = (req, res, next) ->
     # @TODO, handle clean up of boxes & mails
-    req.account.destroyPromised()
-        .then -> res.send 204
-        .catch next
+    req.account.destroyEverything()
+    .then -> res.send 204
+    .catch next

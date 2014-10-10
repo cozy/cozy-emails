@@ -21,6 +21,7 @@ describe "Accounts Tests", ->
     it "When I post a new account to /accounts", (done) ->
         @timeout 10000
         account = helpers.imapServerAccount()
+        Account.testHookDisableSMTPCheck = true
         client.post '/account', account, (err, res, body) =>
             res.statusCode.should.equal 201
             body.should.have.property('mailboxes').with.lengthOf(4)
@@ -179,6 +180,87 @@ describe "Accounts Tests", ->
             should.not.exist body.mailboxIDs[@testboxID]
             should.not.exist body.mailboxIDs[@sentID]
             should.exist body.mailboxIDs[@inboxID]
+            done()
+
+
+    it "When I add a draft mailbox", (done) ->
+        box = 
+            accountID: @accountID
+            label: 'Drafts'
+            parentID: null
+
+
+        client.post "/mailbox/", box, (err, res, body) =>
+            res.statusCode.should.equal 200
+            body.id.should.equal @accountID
+            body.should.have.property('mailboxes').with.lengthOf(5)
+            @newBoxID = box.id for box in body.mailboxes when box.label is 'Drafts'
+            should.exist @newBoxID
+            done()
+
+    it "When I change this box label", (done) ->
+        box = 
+            accountID: @accountID
+            label: 'My Drafts'
+
+
+        client.put "/mailbox/#{@newBoxID}", box, (err, res, body) =>
+            res.statusCode.should.equal 200
+            body.id.should.equal @accountID
+            body.should.have.property('mailboxes').with.lengthOf(5)
+            for box of body.mailboxes when box.id is @newBoxID
+                box.label.should.equal 'My Drafts'
+            @accountState = body
+            done()
+
+
+    it "When I set this box as Draft Folder", (done) ->
+
+        @accountState.draftMailbox = @newBoxID
+
+        client.put "/account/#{@accountID}", @accountState, (err, res, body) =>
+            res.statusCode.should.equal 200
+            body.should.have.property 'draftMailbox', @newBoxID
+            done()
+
+
+    it "When I create a Draft", (done) ->
+
+        draft = 
+            isDraft     : true
+            accountID   : @accountID
+            from        : [name: 'testuser', address: 'testuser@dovecot.local']
+            to          : [name: 'Bob', address: 'bob@example.com']
+            cc          : []
+            bcc         : []
+            attachments : []
+            subject     : 'Wanted : dragon slayer'
+            content     : 'Hi, I am a recruiter and ...'
+
+        client.post "/message", draft, (err, res, body) =>
+            res.statusCode.should.equal 200
+            body.should.have.property 'mailboxIDs'
+            body.mailboxIDs.should.have.property @newBoxID
+            body.mailboxIDs[@newBoxID].should.equal 1
+            done()
+
+    it "When I delete the box", (done) ->
+        @timeout 4000
+
+        client.del "/mailbox/#{@newBoxID}", (err, res, body) =>
+            res.statusCode.should.equal 200
+            body.should.have.property('mailboxes').with.lengthOf(4)
+            box.id.should.not.equal @newBoxID for box in body.mailboxes 
+            done()
+
+    it "Wait a sec", (done) ->
+        @timeout 4000
+        setTimeout done, 3000
+
+    it "And its message have been cleaned up", (done) ->
+        client.get "/mailbox/#{@newBoxID}/page/1/limit/3", (err, res, body) ->
+            res.statusCode.should.equal 200
+            body.messages.should.have.lengthOf 0
             done()
 
 

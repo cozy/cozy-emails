@@ -53,6 +53,10 @@ module.exports = class Router extends Backbone.Router
         # Updates the LayoutStore for each matched request
         @on 'route', (name, args) =>
 
+            if name is 'default'
+                name = LayoutActionCreator.getDefaultRoute()
+                args = [null]
+
             [firstPanelInfo, secondPanelInfo] = @_processSubRouting name, args
 
             firstAction = @fluxActionFactory firstPanelInfo

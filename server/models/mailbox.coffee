@@ -11,10 +11,15 @@ module.exports = Mailbox = americano.getModel 'Mailbox',
     label: String            # Human readable label
     path: String             # IMAP path
     tree: (x) -> x           # Normalized path as Array
+    delimiter: String        # delimiter between this box and its children
     uidvalidity: Number      # Imap UIDValidity
     persistentUIDs: Boolean  # Imap persistentUIDs
     attribs: (x) -> x        # [String] Attributes of this folder
     children: (x) -> x       # [BLAMEJDB] children should not be saved
+
+Message = require './message'
+log = require('../utils/logging')(prefix: 'models:mailbox')
+
 
 # map of account's attributes -> RFC6154 special use box attributes
 Mailbox.RFC6154 = 
@@ -114,6 +119,7 @@ Mailbox.createBoxesFromImapTree = (accountID, tree) ->
             boxes.push new Mailbox
                 accountID: accountID
                 label: name
+                delimiter: child.delimiter
                 path: pathStr + name
                 tree: subPathArr
                 attribs: _.difference child.attribs, IGNORE_ATTRIBUTES
@@ -181,6 +187,27 @@ Mailbox.createBoxesFromImapTree = (accountID, tree) ->
     .then (favorites) -> 
         specialUses.favorites = favorites
         return specialUses
+
+
+# Public: destroy a mailbox
+# remove all message from it
+# returns fast after destroying mailbox
+# in the background, proceeds to remove messages
+# 
+# Returns a {Promise} for mailbox destroyed completion
+Mailbox::destroyEverything = ->
+
+    mailboxID = @id
+    
+    mailboxDestroyed = @destroyPromised()
+
+    # do this in the background (wont change the interface)
+    mailboxDestroyed.then -> Message.safeRemoveAllFromBox mailboxID
+    .catch (err) -> log.error err
+
+    # returns fastly success or error for mailboxDestruction
+    return mailboxDestroyed
+    
 
 
 require('bluebird').promisifyAll Mailbox, suffix: 'Promised'

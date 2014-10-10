@@ -1,7 +1,7 @@
 Imap = require 'imap'
 Promise = require 'bluebird'
 {MailParser} = require 'mailparser'
-{WrongConfigError} = require '../utils/errors'
+{AccountConfigError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'imap:promise')
 
 stream_to_buffer_array = (stream, cb) ->
@@ -60,17 +60,17 @@ module.exports = class ImapPromisified
             # if the know the type of error, clean it up for the user
 
             if err.textCode is 'AUTHENTICATIONFAILED'
-                throw new WrongConfigError 'auth'
+                throw new AccountConfigError 'auth'
 
             if err.code is 'ENOTFOUND' and err.syscall is 'getaddrinfo'
-                throw new WrongConfigError 'server'
+                throw new AccountConfigError 'server'
 
             if err instanceof Promise.TimeoutError
                 @_super.end()
-                throw new WrongConfigError 'port'
+                throw new AccountConfigError 'port'
 
             if err.source is 'timeout-auth'
-                throw new WrongConfigError 'tls'
+                throw new AccountConfigError 'tls'
 
             # unknown err
             throw err
@@ -171,6 +171,15 @@ module.exports = class ImapPromisified
     # return a Promise for completion
     addFlags: ->
         @_super.addFlagsPromised.apply @_super, arguments
+
+    addBox: ->
+        @_super.addBoxPromised.apply @_super, arguments
+
+    delBox: ->
+        @_super.delBoxPromised.apply @_super, arguments
+
+    renameBox: ->
+        @_super.renameBoxPromised.apply @_super, arguments
 
     # fetch all message-id in this box
     # return a Promise for an object {uid1:messageid1, uid2:messageid2} ...
