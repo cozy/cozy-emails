@@ -3892,10 +3892,7 @@ window.onload = function() {
   });
   React.renderComponent(application, document.body);
   Backbone.history.start();
-  require('./utils/socketio_utils');
-  if (typeof Object.freeze === 'function') {
-    return Object.freeze(this);
-  }
+  return require('./utils/socketio_utils');
 };
 });
 
