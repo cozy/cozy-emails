@@ -22,5 +22,4 @@ socket.on 'task.delete', dispatchTaskDelete
 module.exports = 
 
 	acknowledgeTask: (taskid) ->
-		console.log taskid
 		socket.emit 'mark_ack', taskid

@@ -65,4 +65,4 @@ module.exports.Container = ToastContainer =  React.createClass
     render: ->
         toasts = @props.toasts.toJS?() or @props.toasts
         div className: 'toasts-container',
-            Toast {toast} for id, toast of toasts
+            Toast {key, toast} for key, toast of toasts
