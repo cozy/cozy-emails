@@ -1,6 +1,7 @@
 should = require('should')
 helpers = require './helpers'
 DovecotTesting = require './DovecotTesting/index'
+SMTPTesting = require './SMTPTesting/index'
 client = helpers.getClient()
 Account = require '../server/models/account'
 
@@ -8,6 +9,7 @@ describe "Accounts Tests", ->
 
     # before helpers.cleanDB
     before DovecotTesting.setupEnvironment
+    before helpers.startSMTPTesting
     before helpers.startApp
     after helpers.stopApp
 
@@ -19,9 +21,8 @@ describe "Accounts Tests", ->
             done()
 
     it "When I post a new account to /accounts", (done) ->
-        @timeout 10000
+        @timeout 12000
         account = helpers.imapServerAccount()
-        Account.testHookDisableSMTPCheck = true
         client.post '/account', account, (err, res, body) =>
             res.statusCode.should.equal 201
             body.should.have.property('mailboxes').with.lengthOf(4)
@@ -242,6 +243,36 @@ describe "Accounts Tests", ->
             body.should.have.property 'mailboxIDs'
             body.mailboxIDs.should.have.property @newBoxID
             body.mailboxIDs[@newBoxID].should.equal 1
+            @draftID = body.id
+            done()
+
+
+    it "When I send this Draft", (done) ->
+
+        smtpOK = false
+        httpOK = false
+
+
+        email = 
+            id          : @draftID
+            accountID   : @accountID
+            from        : [name: 'testuser', address: 'testuser@dovecot.local']
+            to          : [name: 'Bob', address: 'bob@example.com']
+            cc          : []
+            bcc         : []
+            attachments : []
+            subject     : 'Wanted : dragon slayer'
+            content     : 'Hello, I am a recruiter and ...'
+
+        client.post "/message", email, (err, res, body) =>
+            res.statusCode.should.equal 200
+            body.id.should.equal @draftID
+            body.should.have.property 'mailboxIDs'
+            body.mailboxIDs.should.have.property @sentID
+            body.mailboxIDs.should.not.have.property @newBoxID
+
+            SMTPTesting.mailStore.should.have.lengthOf 1
+            console.log SMTPTesting.mailStore.pop()
             done()
 
     it "When I delete the box", (done) ->

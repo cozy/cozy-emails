@@ -41,7 +41,8 @@
     "cozy-fixtures": "1.1.1",
     "coffeelint": "^1.6.0",
     "lorem-ipsum": "1.0.1",
-    "chai": "1.9.1"
+    "chai": "1.9.1",
+    "simplesmtp": "^0.3.33"
   },
   "scripts": {
     "test": "cake tests",

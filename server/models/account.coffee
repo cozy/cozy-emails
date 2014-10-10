@@ -88,7 +88,7 @@ Account.createIfValid = (data) ->
         ImapProcess.fetchAccount account, 100
         # then fectch the rest
         .then -> ImapProcess.fetchAccount account
-        .catch (err) -> console.log "FETCH MAIL FAILED", err
+        .catch (err) -> log.error "FETCH MAIL FAILED", err
 
         return account.includeMailboxes()
 
@@ -104,6 +104,7 @@ Account::sendMessage = (message, callback) ->
     transport = nodemailer.createTransport
         port: @smtpPort
         host: @smtpServer
+        tls: rejectUnauthorized: false        
         auth: 
             user: @login
             pass: @password
@@ -117,13 +118,10 @@ Account::sendMessage = (message, callback) ->
 # Returns a {Promise} that reject/resolve if the credentials are corrects
 Account.testSMTPConnection = (data) ->
 
-    # we need a smtp server in tests
-    # disable this for now
-    return Promise.resolve('ok') if Account.testHookDisableSMTPCheck
-
     connection = new SMTPConnection 
         port: data.smtpPort
         host: data.smtpServer
+        tls: rejectUnauthorized: false
 
     auth =
         user: data.login
@@ -131,18 +129,20 @@ Account.testSMTPConnection = (data) ->
     
     return new Promise (resolve, reject) ->
         connection.once 'error', (err) ->
-            console.log "ERROR CALLED"
+            log.warn "SMTP CONNECTION ERROR", err
             reject new AccountConfigError 'smtp'
         
         # in case of wrong port, the connection takes forever to emit error
-        setTimeout -> 
+        timeout = setTimeout -> 
             reject new AccountConfigError 'smtpPort'
             connection.close()
-        , 2000
+        , 10000
         
         connection.connect (err) ->
-            if err then reject new AccountConfigError 'smtpServer'
-            else connection.login auth, (err) ->
+            return reject new AccountConfigError 'smtpServer' if err
+            clearTimeout timeout
+            
+            connection.login auth, (err) ->
                 if err then reject new AccountConfigError 'auth'
                 else resolve 'ok'
                 connection.close()
