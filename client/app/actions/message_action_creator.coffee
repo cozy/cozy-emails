@@ -22,7 +22,7 @@ module.exports =
                     type: ActionTypes.MESSAGE_SEND
                     value: message
             if callback?
-                callback error
+                callback error, message
 
     delete: (message, account, callback) ->
         # Move message to Trash folder
