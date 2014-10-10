@@ -5934,7 +5934,7 @@ url = window.location.origin;
 pathToSocketIO = "" + window.location.pathname + "socket.io";
 
 socket = io.connect(url, {
-  resource: pathToSocketIO
+  path: pathToSocketIO
 });
 
 dispatchTaskUpdate = function(task) {

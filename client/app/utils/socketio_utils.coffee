@@ -3,7 +3,7 @@ AppDispatcher = require '../app_dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 url = window.location.origin
 pathToSocketIO = "#{window.location.pathname}socket.io"
-socket = io.connect url, resource: pathToSocketIO
+socket = io.connect url, path: pathToSocketIO
 
 dispatchTaskUpdate = (task) ->
 	AppDispatcher.handleServerAction
@@ -19,7 +19,7 @@ socket.on 'task.create', dispatchTaskUpdate
 socket.on 'task.update', dispatchTaskUpdate
 socket.on 'task.delete', dispatchTaskDelete
 
-module.exports = 
+module.exports =
 
 	acknowledgeTask: (taskid) ->
 		socket.emit 'mark_ack', taskid
