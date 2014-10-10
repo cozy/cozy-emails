@@ -52,14 +52,15 @@ module.exports = React.createClass
         else if @props.selectedAccount? then buttonLabel = t "account save"
         else buttonLabel = t "account add"
 
-        if @props.error and @props.error.name is 'AccountConfigError'
-            message = t 'config errror ' + @props.error.field
-            div className: 'alert alert-warning', message
-        else if @props.error
-            console.log @props.error.stack
-            div className: 'alert alert-warning', @props.error.message
 
         form className: 'form-horizontal',
+            if @props.error and @props.error.name is 'AccountConfigError'
+                message = t 'config errror ' + @props.error.field
+                div className: 'alert alert-warning', message
+            else if @props.error
+                console.log @props.error.stack
+                div className: 'alert alert-warning', @props.error.message
+
             div className: 'form-group',
                 label
                     htmlFor: 'mailbox-label',
@@ -83,7 +84,7 @@ module.exports = React.createClass
                         type: 'text',
                         className: 'form-control',
                         placeholder: t "account user fullname"
-            
+
             div className: 'form-group',
                 label
                     htmlFor: 'mailbox-email-address',
@@ -237,7 +238,7 @@ module.exports = React.createClass
         accountValue.trashMailbox = accountValue.trashMailbox
 
         afterCreation = (id) =>
-            @redirect 
+            @redirect
                 direction: 'first'
                 fullWidth: true
                 action: 'account.mailbox.messages'
@@ -312,7 +313,7 @@ module.exports = React.createClass
         # do not refresh form when handling errors
         # @TODO better React's way ?
         return if @state.label?
-        
+
         # prevents the form from changing during submission
         if not props.isWaiting
             # display the account values

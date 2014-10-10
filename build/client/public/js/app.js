@@ -715,20 +715,13 @@ module.exports = React.createClass({
     } else {
       buttonLabel = t("account add");
     }
-    if (this.props.error && this.props.error.name === 'AccountConfigError') {
-      message = t('config errror ' + this.props.error.field);
-      div({
-        className: 'alert alert-warning'
-      }, message);
-    } else if (this.props.error) {
-      console.log(this.props.error.stack);
-      div({
-        className: 'alert alert-warning'
-      }, this.props.error.message);
-    }
     return form({
       className: 'form-horizontal'
-    }, div({
+    }, this.props.error && this.props.error.name === 'AccountConfigError' ? (message = t('config errror ' + this.props.error.field), div({
+      className: 'alert alert-warning'
+    }, message)) : this.props.error ? (console.log(this.props.error.stack), div({
+      className: 'alert alert-warning'
+    }, this.props.error.message)) : void 0, div({
       className: 'form-group'
     }, label({
       htmlFor: 'mailbox-label',
