@@ -140,9 +140,11 @@ module.exports.send = (req, res, next) ->
         message.date = new Date().toISOString()
 
         if message.id
-            new Message(id: message.id).updateAttributesPromised message
+            Message.findPromised message.id
+            .then (jdbMessage) -> jdbMessage.updateAttributesPromised message
         else
-            Message.create message
+            Message.createPromised message
+    
     .then (msg) -> res.send 200, msg
     .catch next
 

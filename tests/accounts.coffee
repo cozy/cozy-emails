@@ -240,6 +240,7 @@ describe "Accounts Tests", ->
 
         client.post "/message", draft, (err, res, body) =>
             res.statusCode.should.equal 200
+            body.should.have.property 'id'
             body.should.have.property 'mailboxIDs'
             body.mailboxIDs.should.have.property @newBoxID
             body.mailboxIDs[@newBoxID].should.equal 1
@@ -266,7 +267,7 @@ describe "Accounts Tests", ->
 
         client.post "/message", email, (err, res, body) =>
             res.statusCode.should.equal 200
-            body.id.should.equal @draftID
+            body.should.have.property 'id', @draftID
             body.should.have.property 'mailboxIDs'
             body.mailboxIDs.should.have.property @sentID
             body.mailboxIDs.should.not.have.property @newBoxID
