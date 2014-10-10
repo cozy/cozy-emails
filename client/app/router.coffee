@@ -41,10 +41,10 @@ module.exports = class Router extends PanelRouter
     _getDefaultParameters: (action) ->
         switch action
             when 'account.mailbox.messages'
-                defaultAccount = AccountStore.getDefault()
-                defaultMailbox = defaultAccount?.get('mailboxes').first()
+                defaultAccountID = AccountStore.getDefault()?.get 'id'
+                defaultMailbox = AccountStore.getDefaultMailbox defaultAccountID
                 defaultParameters =
-                    accountID: defaultAccount?.get 'id'
+                    accountID: defaultAccountID
                     mailboxID: defaultMailbox?.get 'id'
                     page: 1
             when 'account.config'
