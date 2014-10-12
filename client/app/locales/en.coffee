@@ -80,6 +80,9 @@ module.exports =
       "account password"            : "Password"
       "account sending server"      : "Sending server"
       "account receiving server"    : "IMAP server"
+      "account port"                : "Port"
+      "account SSL"                 : "Use SSL"
+      "account TLS"                 : "Use STARTTLS"
       "account remove"              : "Remove"
       "account remove confirm"      : "Do you really want to remove this
                                         account?"
@@ -108,7 +111,12 @@ module.exports =
       "mailbox title add cancel"    : "Cancel"
       "mailbox title favorite"      : "Folder is displayed"
       "mailbox title not favorite"  : "Folder not displayed"
-
+      "config error auth"           : "Wrong connection parameters"
+      "config error imapPort"       : "Wrong IMAP port"
+      "config error imapServer"     : "Wrong IMAP server"
+      "config error imapTLS"        : "Wrong IMAP TLS"
+      "config error smtpPort"       : "Wrong SMTP Port"
+      "config error smtpServer"     : "Wrong SMTP Server"
 
       # Message Action
       "message action sent ok"      : "Message sent"
@@ -161,3 +169,6 @@ module.exports =
                                         errors.'
       "modal please report"        : "Please transmit this information to cozy."
       "modal please contribute"    : "Please contribute"
+
+      # Validation
+      "validate must not be empty" : "Mandatory field"

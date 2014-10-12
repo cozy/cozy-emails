@@ -22,6 +22,7 @@ exports.config =
                     'vendor/scripts/moment.js'
                     'vendor/scripts/polyglot.js'
                     'vendor/scripts/json-patch-duplex.min.js'
+                    'vendor/scripts/revalidator.js'
                 ].concat(glob.sync 'vendor/plugins/**/*.js')
 
         stylesheets:

@@ -82,6 +82,9 @@ module.exports =
       "account password"            : "Mot de passe"
       "account sending server"      : "Serveur sortant"
       "account receiving server"    : "Serveur IMAP"
+      "account port"                : "Port"
+      "account SSL"                 : "Utiliser SSL"
+      "account TLS"                 : "Utiliser STARTTLS"
       "account remove"              : "Supprimer"
       "account remove confirm"      : "Voulez-vous vraiment supprimer
                                         ce compte ?"
@@ -110,6 +113,12 @@ module.exports =
       "mailbox title add cancel"    : "Annuler"
       "mailbox title favorite"      : "Dossier affiché"
       "mailbox title not favorite"  : "Dossier non affiché"
+      "config error auth"           : "Impossible de se connecter avec ces paramètres"
+      "config error imapPort"       : "Port du serveur IMAP invalide"
+      "config error imapServer"     : "Serveur IMAP invalide"
+      "config error imapTLS"        : "Erreur IMAP TLS"
+      "config error smtpPort"       : "Port du serveur d'envoi invalide"
+      "config error smtpServer"     : "Serveur d'envoi invalide"
 
       # Message Action
       "message action sent ok"      : "Message envoyé !"
@@ -164,3 +173,6 @@ module.exports =
       "modal please report"        : "Merci de bien vouloir transmettre ces
                                         informations à cozy."
       "modal please contribute"    : "Merci de contribuer"
+
+      # Validation
+      "validate must not be empty" : "Ce champ doit être renseigné"
