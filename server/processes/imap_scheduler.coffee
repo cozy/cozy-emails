@@ -34,8 +34,10 @@ module.exports = class ImapScheduler
     # 
     # Returns an {ImapScheduler} linked to this account
     @instanceFor: (account) ->
-        @instances[account.imapServer] ?= new ImapScheduler account
-        return @instances[account.imapServer]
+        # Prevent exception with data from fixtures
+        if account?
+            @instances[account.imapServer] ?= new ImapScheduler account
+            return @instances[account.imapServer]
 
     # actual IMAP tasks
     tasks: []
@@ -179,12 +181,12 @@ module.exports = class ImapScheduler
         .catch UIDValidityChanged, (err) =>
             log.warn "UID VALIDITY HAS CHANGED, RECOVERING"
 
-            @doASAP (imap) => 
+            @doASAP (imap) =>
                 recoverChangedUIDValidity imap, box, @account._id
             .then ->
                 box.updateAttributesPromised
                     uidvalidity: err.newUidvalidity
-            
+
             .then =>
                 log.warn "RECOVERED"
                 @queueWithBox urgent, box, gen

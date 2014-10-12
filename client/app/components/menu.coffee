@@ -44,10 +44,10 @@ module.exports = Menu = React.createClass
         else
             composeClass = ''
             composeUrl = @buildUrl
-                direction: 'second'
+                direction: 'first'
                 action: 'compose'
                 parameters: null
-                fullWidth: false
+                fullWidth: true
 
         # the button toggle the "new account" screen
         if @props.layout.firstPanel.action is 'account.new'
@@ -118,7 +118,7 @@ module.exports = Menu = React.createClass
                 i className: 'fa fa-inbox'
                 if unread > 0
                     span className: 'badge', unread
-                span className: 'item-label', account.get 'label'
+                span 'data-account-id': key, className: 'item-label', account.get 'label'
 
             ul className: 'list-unstyled submenu mailbox-list',
                 @props.favoriteMailboxes?.map (mailbox, key) =>
