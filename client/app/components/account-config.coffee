@@ -88,7 +88,6 @@ module.exports = React.createClass
         return should
 
     render: ->
-        console.log "Render", @props.error, @state.errors
         if @props.selectedAccount?
             titleLabel = t "account edit"
         else
@@ -224,6 +223,8 @@ module.exports = React.createClass
                             valueLink: @linkState('smtpPort'),
                             type: 'text',
                             className: 'form-control'
+                            onBlur: @_onSMTPPort,
+                            onInput: => @setState(smtpManualPort: true)
                     getError 'smtpServer'
                     getError 'smtpPort'
                 div className: 'form-group',
@@ -234,9 +235,10 @@ module.exports = React.createClass
                     div className: 'col-sm-1',
                         input
                             id: 'mailbox-smtp-ssl',
-                            valueLink: @linkState('smtpSSL'),
+                            checkedLink: @linkState('smtpSSL'),
                             type: 'checkbox',
                             className: 'form-control'
+                            onClick: (ev) => @_onServerParam ev.target, 'smtp', 'ssl'
                     label
                         htmlFor: 'mailbox-smtp-tls',
                         className: 'col-sm-2 control-label',
@@ -244,9 +246,10 @@ module.exports = React.createClass
                     div className: 'col-sm-1',
                         input
                             id: 'mailbox-smtp-tls',
-                            valueLink: @linkState('smtpTLS'),
+                            checkedLink: @linkState('smtpTLS'),
                             type: 'checkbox',
                             className: 'form-control'
+                            onClick: (ev) => @_onServerParam ev.target, 'smtp', 'tls'
 
             fieldset null,
                 legend null, t 'account receiving server'
@@ -271,7 +274,9 @@ module.exports = React.createClass
                             id: 'mailbox-imap-port',
                             valueLink: @linkState('imapPort'),
                             type: 'text',
-                            className: 'form-control'
+                            className: 'form-control',
+                            onBlur: @_onIMAPPort
+                            onInput: => @setState(imapManualPort: true)
                     getError 'imapServer'
                     getError 'imapPort'
                 div className: 'form-group',
@@ -282,9 +287,10 @@ module.exports = React.createClass
                     div className: 'col-sm-1',
                         input
                             id: 'mailbox-imap-ssl',
-                            valueLink: @linkState('imapSSL'),
+                            checkedLink: @linkState('imapSSL'),
                             type: 'checkbox',
                             className: 'form-control'
+                            onClick: (ev) => @_onServerParam ev.target, 'imap', 'ssl'
                     label
                         htmlFor: 'mailbox-imap-tls',
                         className: 'col-sm-2 control-label',
@@ -292,9 +298,10 @@ module.exports = React.createClass
                     div className: 'col-sm-1',
                         input
                             id: 'mailbox-imap-tls',
-                            valueLink: @linkState('imapTLS'),
+                            checkedLink: @linkState('imapTLS'),
                             type: 'checkbox',
                             className: 'form-control'
+                            onClick: (ev) => @_onServerParam ev.target, 'imap', 'tls'
 
             div className: 'form-group',
                 div className: 'col-sm-offset-2 col-sm-5 text-right',
@@ -454,13 +461,73 @@ module.exports = React.createClass
                     infos.imapPort   = '993'
                 if not infos.smtpServer?
                     infos.smtpServer = ''
-                    infos.smtpPort   = '587'
+                    infos.smtpPort   = '465'
+                switch infos.imapPort
+                    when '993'
+                        infos.imapSSL = true
+                        infos.imapTLS = false
+                    else
+                        infos.imapSSL = false
+                        infos.imapTLS = false
+                switch infos.smtpPort
+                    when '465'
+                        infos.smtpSSL = true
+                        infos.smtpTLS = false
+                    when '587'
+                        infos.smtpSSL = false
+                        infos.smtpTLS = true
+                    else
+                        infos.smtpSSL = false
+                        infos.smtpTLS = false
                 @setState infos
 
+    _onServerParam: (target, server, type) ->
+        if (server is 'imap' and @state.imapManualPort) or
+        (server is 'smtp' and @state.smtpManualPort)
+            # port has been set manually, don't update it
+            return
+        if server is 'smtp'
+            if type is 'ssl' and target.checked
+                @setState smtpPort: 465
+            else if type is 'tls' and target.checked
+                @setState smtpPort: 587
+        else
+            if target.checked
+                @setState imapPort: 993
+            else
+                @setState imapPort: 143
+
+    _onIMAPPort: (ev) ->
+        port = ev.target.value.trim()
+        infos =
+            imapPort: port
+        switch port
+            when '993'
+                infos.imapSSL = true
+                infos.imapTLS = false
+            else
+                infos.imapSSL = false
+                infos.imapTLS = false
+        @setState infos
+
+    _onSMTPPort: (ev) ->
+        port = ev.target.value.trim()
+        infos = {}
+        switch port
+            when '465'
+                infos.smtpSSL = true
+                infos.smtpTLS = false
+            when '587'
+                infos.smtpSSL = false
+                infos.smtpTLS = true
+            else
+                infos.smtpSSL = false
+                infos.smtpTLS = false
+        console.log port, infos
+        @setState infos
 
     componentWillReceiveProps: (props) ->
 
-        console.log "Will receive", props.error, props.isWaiting, @state.errors
         # prevents the form from changing during submission
         if not props.isWaiting
             # display the account values
@@ -502,8 +569,12 @@ module.exports = React.createClass
             init = (field) ->
                 state[field] = ''
             init field for field in @_accountFields
-            state.smtpPort = 587
+            state.smtpPort = 465
+            state.smtpSSL  = true
+            state.smtpTLS  = false
             state.imapPort = 993
+            state.imapSSL  = true
+            state.imapTLS  = false
             state.newMailboxParent = null
             state.tab = null
 
