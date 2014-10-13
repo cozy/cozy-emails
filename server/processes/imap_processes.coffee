@@ -94,6 +94,11 @@ ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
         reporter.onDone()
         Promise.all toDo
 
+    .catch (err) ->
+        reporter.onError err
+        reporter.onDone()
+        throw err
+
 # Private: fetch mails from a box
 # register a 'apply-diff-fetch' task in {ImapReporter}
 # 
