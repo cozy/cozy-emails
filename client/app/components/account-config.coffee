@@ -321,12 +321,13 @@ module.exports = React.createClass
                 favorite = true if favorites.get(mailbox.get('id'))
                 MailboxItem {account: @props.selectedAccount, mailbox, favorite}
             .toJS()
-        div null,
+        form className: 'form-horizontal',
 
             @_renderMailboxChoice 'account draft mailbox', "draftMailbox"
             @_renderMailboxChoice 'account sent mailbox',  "sentMailbox"
             @_renderMailboxChoice 'account trash mailbox', "trashMailbox"
 
+            h4 null, t "account tab mailboxes"
             ul className: "list-unstyled boxes",
                 mailboxes
                 li null
@@ -551,7 +552,7 @@ module.exports = React.createClass
     getInitialState: (forceDefault) ->
         return @_accountToState("account")
 
-    _accountToState: (account, tab)->
+    _accountToState: (tab)->
         account = @props.selectedAccount
         state =
             errors: {}
@@ -597,7 +598,7 @@ MailboxItem = React.createClass
 
     render: ->
         pusher = ""
-        pusher += "--" for j in [1..@props.mailbox.get('depth')] by 1
+        pusher += "    " for j in [1..@props.mailbox.get('depth')] by 1
         key = @props.mailbox.get 'id'
         "#{pusher}#{@props.mailbox.get 'label'}"
         if @state.favorite
