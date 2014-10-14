@@ -42,6 +42,13 @@ module.exports =
                                     %{smart_count} messages dans cette boite"
       "list search count"       : "%{smart_count} résultat trouvé. ||||
                                     %{smart_count} résultats trouvés."
+      "list filter"             : "Filtrer"
+      "list filter all"         : "Tous"
+      "list filter unseen"      : "Non lus"
+      "list filter flagged"     : "Importants"
+      "list sort"               : "Trier"
+      "list sort date"          : "Date"
+      "list sort subject"       : "Sujet"
 
       # Mail
       "mail receivers"          : "À %{dest}"

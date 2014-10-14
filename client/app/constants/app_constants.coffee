@@ -42,6 +42,11 @@ module.exports =
         'RECEIVE_TASK_UPDATE'       : 'RECEIVE_TASK_UPDATE'
         'RECEIVE_TASK_DELETE'       : 'RECEIVE_TASK_DELETE'
 
+        # List
+        'LIST_FILTER'               : 'LIST_FILTER'
+        'LIST_QUICK_FILTER'         : 'LIST_QUICK_FILTER'
+        'LIST_SORT'                 : 'LIST_SORT'
+
     PayloadSources:
         'VIEW_ACTION'   : 'VIEW_ACTION'
         'SERVER_ACTION' : 'SERVER_ACTION'
@@ -61,6 +66,11 @@ module.exports =
         'FLAGGED'      : '\\Flagged'
         'SEEN'         : '\\Seen'
         'DRAFT'        : '\\Draft'
+
+    MessageFilter:
+        'ALL'          : 'All'
+        'FLAGGED'      : 'Flagged'
+        'UNSEEN'       : 'Unseen'
 
     MailboxFlags:
         'DRAFT'   :  '\\Drafts'

@@ -1,11 +1,12 @@
-{div, ul, li, a, span, i, p} = React.DOM
+{div, ul, li, a, span, i, p, button, input} = React.DOM
 classer = React.addons.classSet
 
-RouterMixin  = require '../mixins/router_mixin'
-MessageUtils = require '../utils/message_utils'
-{MessageFlags} = require '../constants/app_constants'
+RouterMixin    = require '../mixins/router_mixin'
+MessageUtils   = require '../utils/message_utils'
+{MessageFlags, MessageFilter} = require '../constants/app_constants'
+LayoutActionCreator = require '../actions/layout_action_creator'
 
-module.exports = React.createClass
+MessageList = React.createClass
     displayName: 'MessageList'
 
     mixins: [RouterMixin]
@@ -18,6 +19,10 @@ module.exports = React.createClass
         curPage = parseInt @props.pageNum, 10
         nbPages = Math.ceil(@props.messagesCount / @props.messagesPerPage)
         div className: 'message-list',
+            div className: 'message-list-actions',
+                MessagesQuickFilter {}
+                MessagesFilter {}
+                MessagesSort {}
             if @props.messages.count() is 0
                 p null, @props.emptyListMessage
             else
@@ -99,3 +104,93 @@ module.exports = React.createClass
                     a href: urlLast, '»'
 
     getParticipants: (message) -> "#{MessageUtils.displayAddresses(message.get 'from')}, #{MessageUtils.displayAddresses(message.get('to').concat(message.get('cc')))}"
+
+module.exports = MessageList
+
+MessagesQuickFilter = React.createClass
+    displayName: 'MessagesQuickFilter'
+
+    render: ->
+        div
+            className: "form-group pull-left message-list-action",
+            input
+                className: "form-control"
+                type: "text"
+                onBlur: @onQuick
+
+    onQuick: (ev) ->
+        LayoutActionCreator.quickFilterMessages ev.target.value.trim()
+
+MessagesFilter = React.createClass
+    displayName: 'MessagesFilter'
+
+    render: ->
+        div className: 'dropdown pull-left filter-dropdown',
+            button
+                className: 'btn btn-default dropdown-toggle message-list-action',
+                type: 'button',
+                'data-toggle': 'dropdown',
+                t 'list filter',
+                    span className: 'caret'
+            ul
+                className: 'dropdown-menu',
+                role: 'menu',
+                    li role: 'presentation',
+                        a
+                            onClick: @onFilter,
+                            'data-filter': MessageFilter.ALL,
+                            t 'list filter all'
+                    li role: 'presentation',
+                        a
+                            onClick: @onFilter,
+                            'data-filter': MessageFilter.UNSEEN,
+                            t 'list filter unseen'
+                    li role: 'presentation',
+                        a
+                            onClick: @onFilter,
+                            'data-filter': MessageFilter.FLAGGED,
+                            t 'list filter flagged'
+
+    onFilter: (ev) ->
+        LayoutActionCreator.filterMessages ev.target.dataset.filter
+
+MessagesSort = React.createClass
+    displayName: 'MessagesSort'
+
+    getInitialState: ->
+        return {
+            field: "date",
+            order: -1
+        }
+
+    render: ->
+        div className: 'dropdown pull-left sort-dropdown',
+            button
+                className: 'btn btn-default dropdown-toggle message-list-action',
+                type: 'button',
+                'data-toggle': 'dropdown',
+                t 'list sort',
+                    span className: 'caret'
+            ul
+                className: 'dropdown-menu',
+                role: 'menu',
+                    li role: 'presentation',
+                        a
+                            onClick: @onSort,
+                            'data-sort': 'date',
+                            t 'list sort date'
+                    li role: 'presentation',
+                        a
+                            onClick: @onSort,
+                            'data-sort': 'subject',
+                            t 'list sort subject'
+
+    onSort: (ev) ->
+        field = ev.target.dataset.sort
+        order = if field is @state.field then -1 * @state.order else 1
+
+        LayoutActionCreator.sortMessages
+            field: field
+            order: order
+
+        @setState field: field, order: order

@@ -43,7 +43,7 @@ module.exports = Toast = React.createClass
         percent = parseInt(100 * toast.done / toast.total) + '%'
         showModal = @showModal.bind(this, toast.errors)
 
-        div className: classes, role: "alert",
+        div className: classes, role: "alert", key: @props.toast.id,
             if @state.modalErrors
                 @renderErrorModal()
 
@@ -79,7 +79,7 @@ module.exports.Container = ToastContainer =  React.createClass
 
         div className: classes,
             Toast {toast} for id, toast of toasts
-            div className: 'alert alert-success toast toast-actions',
+            div className: 'alert alert-success toast toast-actions', key: 'action',
                 span
                     className: "toast-action hide-action",
                     title: t 'toast hide'
