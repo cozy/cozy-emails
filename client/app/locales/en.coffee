@@ -172,3 +172,8 @@ module.exports =
 
       # Validation
       "validate must not be empty" : "Mandatory field"
+
+      # Toast
+      "toast hide"      : "Hide alerts"
+      "toast show"      : "Display alerts"
+      "toast close all" : "Close all alerts"

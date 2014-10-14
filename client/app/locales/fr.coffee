@@ -176,3 +176,8 @@ module.exports =
 
       # Validation
       "validate must not be empty" : "Ce champ doit être renseigné"
+
+      # Toast
+      "toast hide"      : "Masquer les alertes"
+      "toast show"      : "Afficher les alertes"
+      "toast close all" : "Fermer toutes les alertes"
