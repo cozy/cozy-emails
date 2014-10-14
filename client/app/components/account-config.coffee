@@ -229,28 +229,20 @@ module.exports = React.createClass
                     getError 'smtpServer'
                     getError 'smtpPort'
                 div className: 'form-group',
-                    label
-                        htmlFor: 'mailbox-smtp-ssl',
-                        className: 'col-sm-4 control-label',
-                        t 'account SSL'
-                    div className: 'col-sm-1',
-                        input
-                            id: 'mailbox-smtp-ssl',
-                            checkedLink: @linkState('smtpSSL'),
-                            type: 'checkbox',
-                            className: 'form-control'
-                            onClick: (ev) => @_onServerParam ev.target, 'smtp', 'ssl'
-                    label
-                        htmlFor: 'mailbox-smtp-tls',
-                        className: 'col-sm-2 control-label',
-                        t 'account TLS'
-                    div className: 'col-sm-1',
-                        input
-                            id: 'mailbox-smtp-tls',
-                            checkedLink: @linkState('smtpTLS'),
-                            type: 'checkbox',
-                            className: 'form-control'
-                            onClick: (ev) => @_onServerParam ev.target, 'smtp', 'tls'
+
+                    div className: 'col-sm-2 col-sm-offset-4 checkbox-inline',
+                        label null, t('account SSL'),
+                            input
+                                type: 'checkbox',
+                                checkedLink: @linkState('smtpSSL'),
+                                onClick: (ev) => @_onServerParam ev.target, 'smtp', 'ssl'
+
+                    div className: 'col-sm-2 checkbox-inline',
+                        label null, t('account TLS'),
+                            input
+                                type: 'checkbox',
+                                checkedLink: @linkState('smtpTLS'),
+                                onClick: (ev) => @_onServerParam ev.target, 'smtp', 'ssl'
 
             fieldset null,
                 legend null, t 'account receiving server'
@@ -281,28 +273,20 @@ module.exports = React.createClass
                     getError 'imapServer'
                     getError 'imapPort'
                 div className: 'form-group',
-                    label
-                        htmlFor: 'mailbox-imap-ssl',
-                        className: 'col-sm-4 control-label',
-                        t 'account SSL'
-                    div className: 'col-sm-1',
-                        input
-                            id: 'mailbox-imap-ssl',
-                            checkedLink: @linkState('imapSSL'),
-                            type: 'checkbox',
-                            className: 'form-control'
-                            onClick: (ev) => @_onServerParam ev.target, 'imap', 'ssl'
-                    label
-                        htmlFor: 'mailbox-imap-tls',
-                        className: 'col-sm-2 control-label',
-                        t 'account TLS'
-                    div className: 'col-sm-1',
-                        input
-                            id: 'mailbox-imap-tls',
-                            checkedLink: @linkState('imapTLS'),
-                            type: 'checkbox',
-                            className: 'form-control'
-                            onClick: (ev) => @_onServerParam ev.target, 'imap', 'tls'
+
+                    div className: 'col-sm-2 col-sm-offset-4 checkbox-inline',
+                        label null, t('account SSL'),
+                            input
+                                type: 'checkbox',
+                                checkedLink: @linkState('imapSSL'),
+                                onClick: (ev) => @_onServerParam ev.target, 'imap', 'ssl'
+
+                    div className: 'col-sm-2 checkbox-inline',
+                        label null, t('account TLS'),
+                            input
+                                type: 'checkbox',
+                                checkedLink: @linkState('imapTLS'),
+                                onClick: (ev) => @_onServerParam ev.target, 'imap', 'ssl'
 
             div className: 'form-group',
                 div className: 'col-sm-offset-2 col-sm-5 text-right',
