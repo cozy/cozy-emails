@@ -10,7 +10,11 @@ module.exports = Settings = americano.getModel('MailsSettings', {
   displayConversation: Boolean,
   composeInHTML: Boolean,
   messageDisplayHTML: Boolean,
-  messageDisplayImages: Boolean
+  messageDisplayImages: Boolean,
+  lang: String,
+  plugins: function(x) {
+    return x;
+  }
 });
 
 Settings.getInstance = function() {
@@ -20,7 +24,9 @@ Settings.getInstance = function() {
       displayConversation: false,
       composeInHTML: true,
       messageDisplayHTML: true,
-      messageDisplayImages: false
+      messageDisplayImages: false,
+      lang: 'en',
+      plugins: null
     });
   });
 };

@@ -653,9 +653,9 @@ module.exports = new AppDispatcher();
 });
 
 ;require.register("components/account-config", function(exports, require, module) {
-var AccountActionCreator, LAC, MailboxItem, MailboxList, RouterMixin, a, button, classer, div, form, h3, h4, i, input, label, li, span, ul, _ref;
+var AccountActionCreator, LAC, MailboxItem, MailboxList, RouterMixin, a, button, classer, div, fieldset, form, h3, h4, i, input, label, legend, li, span, ul, _ref;
 
-_ref = React.DOM, div = _ref.div, h3 = _ref.h3, h4 = _ref.h4, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i;
+_ref = React.DOM, div = _ref.div, h3 = _ref.h3, h4 = _ref.h4, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, fieldset = _ref.fieldset, legend = _ref.legend;
 
 classer = React.addons.classSet;
 
@@ -672,6 +672,69 @@ classer = React.addons.classSet;
 module.exports = React.createClass({
   displayName: 'AccountConfig',
   mixins: [RouterMixin, React.addons.LinkedStateMixin],
+  _accountFields: ['id', 'label', 'name', 'login', 'password', 'imapServer', 'imapPort', 'imapSSL', 'imapTLS', 'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'draftMailbox', 'sentMailbox', 'trashMailbox'],
+  _accountSchema: {
+    properties: {
+      'label': {
+        allowEmpty: false
+      },
+      'name': {
+        allowEmpty: false
+      },
+      'login': {
+        allowEmpty: false
+      },
+      'password': {
+        allowEmpty: false
+      },
+      'imapServer': {
+        allowEmpty: false
+      },
+      'imapPort': {
+        allowEmpty: false
+      },
+      'imapSSL': {
+        allowEmpty: true
+      },
+      'imapTLS': {
+        allowEmpty: true
+      },
+      'smtpServer': {
+        allowEmpty: false
+      },
+      'smtpPort': {
+        allowEmpty: false
+      },
+      'smtpSSL': {
+        allowEmpty: true
+      },
+      'smtpTLS': {
+        allowEmpty: true
+      },
+      'draftMailbox': {
+        allowEmpty: true
+      },
+      'sentMailbox': {
+        allowEmpty: true
+      },
+      'trashMailbox': {
+        allowEmpty: true
+      }
+    }
+  },
+  shouldComponentUpdate: function(nextProps, nextState) {
+    var should;
+    if (!Immutable.is(nextState, this.state)) {
+      return true;
+    } else {
+      if (nextProps.selectedAccount == null) {
+        should = nextProps.layout !== this.props.layout || nextProps.error !== this.props.error || nextProps.isWaiting !== this.props.isWaiting;
+      } else {
+        should = nextProps.layout !== this.props.layout || nextProps.error !== this.props.error || nextProps.isWaiting !== this.props.isWaiting || !Immutable.is(nextProps.selectedAccount, this.props.selectedAccount) || !Immutable.is(nextProps.mailboxes, this.props.mailboxes) || !Immutable.is(nextProps.favoriteMailboxes, this.props.favoriteMailboxes);
+      }
+    }
+    return should;
+  },
   render: function() {
     var classes, titleLabel;
     if (this.props.selectedAccount != null) {
@@ -707,7 +770,7 @@ module.exports = React.createClass({
     }, t("account tab mailboxes")))) : void 0, !this.state.tab || this.state.tab === 'account' ? this.renderMain() : void 0, this.state.tab === 'mailboxes' ? this.renderMailboxes() : void 0);
   },
   renderMain: function() {
-    var buttonLabel, message;
+    var buttonLabel, getError, hasError, renderError;
     if (this.props.isWaiting) {
       buttonLabel = 'Saving...';
     } else if (this.props.selectedAccount != null) {
@@ -715,14 +778,44 @@ module.exports = React.createClass({
     } else {
       buttonLabel = t("account add");
     }
+    renderError = (function(_this) {
+      return function() {
+        var message;
+        if (_this.props.error && _this.props.error.name === 'AccountConfigError') {
+          message = t('config error ' + _this.props.error.field);
+          return div({
+            className: 'alert alert-warning'
+          }, message);
+        } else if (_this.props.error) {
+          console.log(_this.props.error.stack);
+          return div({
+            className: 'alert alert-warning'
+          }, _this.props.error.message);
+        }
+      };
+    })(this);
+    hasError = (function(_this) {
+      return function(field) {
+        if (_this.state.errors[field] != null) {
+          return ' has-error';
+        } else {
+          return '';
+        }
+      };
+    })(this);
+    getError = (function(_this) {
+      return function(field) {
+        if (_this.state.errors[field] != null) {
+          return div({
+            className: 'col-sm-5 col-sm-offset-2 control-label'
+          }, _this.state.errors[field]);
+        }
+      };
+    })(this);
     return form({
       className: 'form-horizontal'
-    }, this.props.error && this.props.error.name === 'AccountConfigError' ? (message = t('config errror ' + this.props.error.field), div({
-      className: 'alert alert-warning'
-    }, message)) : this.props.error ? (console.log(this.props.error.stack), div({
-      className: 'alert alert-warning'
-    }, this.props.error.message)) : void 0, div({
-      className: 'form-group'
+    }, renderError(), div({
+      className: 'form-group' + hasError('label')
     }, label({
       htmlFor: 'mailbox-label',
       className: 'col-sm-2 col-sm-offset-2 control-label'
@@ -734,8 +827,8 @@ module.exports = React.createClass({
       type: 'text',
       className: 'form-control',
       placeholder: t("account name short")
-    }))), div({
-      className: 'form-group'
+    })), getError('label')), div({
+      className: 'form-group' + hasError('name')
     }, label({
       htmlFor: 'mailbox-name',
       className: 'col-sm-2 col-sm-offset-2 control-label'
@@ -747,8 +840,8 @@ module.exports = React.createClass({
       type: 'text',
       className: 'form-control',
       placeholder: t("account user fullname")
-    }))), div({
-      className: 'form-group'
+    })), getError('name')), div({
+      className: 'form-group' + hasError('login') + hasError('auth')
     }, label({
       htmlFor: 'mailbox-email-address',
       className: 'col-sm-2 col-sm-offset-2 control-label'
@@ -762,8 +855,8 @@ module.exports = React.createClass({
       type: 'email',
       className: 'form-control',
       placeholder: t("account address placeholder")
-    }))), div({
-      className: 'form-group'
+    })), getError('login')), div({
+      className: 'form-group' + hasError('password') + hasError('auth')
     }, label({
       htmlFor: 'mailbox-password',
       className: 'col-sm-2 col-sm-offset-2 control-label'
@@ -774,8 +867,8 @@ module.exports = React.createClass({
       valueLink: this.linkState('password'),
       type: 'password',
       className: 'form-control'
-    }))), div({
-      className: 'form-group'
+    })), getError('password')), fieldset(null, legend(null, t('account sending server')), div({
+      className: 'form-group' + hasError('smtp') + hasError('smtpServer') + hasError('smtpPort')
     }, label({
       htmlFor: 'mailbox-smtp-server',
       className: 'col-sm-2 col-sm-offset-2 control-label'
@@ -790,15 +883,55 @@ module.exports = React.createClass({
     })), label({
       htmlFor: 'mailbox-smtp-port',
       className: 'col-sm-1 control-label'
-    }, t('port')), div({
+    }, t('account port')), div({
       className: 'col-sm-1'
     }, input({
       id: 'mailbox-smtp-port',
       valueLink: this.linkState('smtpPort'),
       type: 'text',
-      className: 'form-control'
-    }))), div({
+      className: 'form-control',
+      onBlur: this._onSMTPPort,
+      onInput: (function(_this) {
+        return function() {
+          return _this.setState({
+            smtpManualPort: true
+          });
+        };
+      })(this)
+    })), getError('smtpServer'), getError('smtpPort')), div({
       className: 'form-group'
+    }, label({
+      htmlFor: 'mailbox-smtp-ssl',
+      className: 'col-sm-4 control-label'
+    }, t('account SSL')), div({
+      className: 'col-sm-1'
+    }, input({
+      id: 'mailbox-smtp-ssl',
+      checkedLink: this.linkState('smtpSSL'),
+      type: 'checkbox',
+      className: 'form-control',
+      onClick: (function(_this) {
+        return function(ev) {
+          return _this._onServerParam(ev.target, 'smtp', 'ssl');
+        };
+      })(this)
+    })), label({
+      htmlFor: 'mailbox-smtp-tls',
+      className: 'col-sm-2 control-label'
+    }, t('account TLS')), div({
+      className: 'col-sm-1'
+    }, input({
+      id: 'mailbox-smtp-tls',
+      checkedLink: this.linkState('smtpTLS'),
+      type: 'checkbox',
+      className: 'form-control',
+      onClick: (function(_this) {
+        return function(ev) {
+          return _this._onServerParam(ev.target, 'smtp', 'tls');
+        };
+      })(this)
+    })))), fieldset(null, legend(null, t('account receiving server')), div({
+      className: 'form-group' + hasError('imap') + hasError('imapServer') + hasError('imapPort')
     }, label({
       htmlFor: 'mailbox-imap-server',
       className: 'col-sm-2 col-sm-offset-2 control-label'
@@ -819,8 +952,48 @@ module.exports = React.createClass({
       id: 'mailbox-imap-port',
       valueLink: this.linkState('imapPort'),
       type: 'text',
-      className: 'form-control'
-    }))), this._renderMailboxChoice('account draft mailbox', "draftMailbox"), this._renderMailboxChoice('account sent mailbox', "sentMailbox"), this._renderMailboxChoice('account trash mailbox', "trashMailbox"), div({
+      className: 'form-control',
+      onBlur: this._onIMAPPort,
+      onInput: (function(_this) {
+        return function() {
+          return _this.setState({
+            imapManualPort: true
+          });
+        };
+      })(this)
+    })), getError('imapServer'), getError('imapPort')), div({
+      className: 'form-group'
+    }, label({
+      htmlFor: 'mailbox-imap-ssl',
+      className: 'col-sm-4 control-label'
+    }, t('account SSL')), div({
+      className: 'col-sm-1'
+    }, input({
+      id: 'mailbox-imap-ssl',
+      checkedLink: this.linkState('imapSSL'),
+      type: 'checkbox',
+      className: 'form-control',
+      onClick: (function(_this) {
+        return function(ev) {
+          return _this._onServerParam(ev.target, 'imap', 'ssl');
+        };
+      })(this)
+    })), label({
+      htmlFor: 'mailbox-imap-tls',
+      className: 'col-sm-2 control-label'
+    }, t('account TLS')), div({
+      className: 'col-sm-1'
+    }, input({
+      id: 'mailbox-imap-tls',
+      checkedLink: this.linkState('imapTLS'),
+      type: 'checkbox',
+      className: 'form-control',
+      onClick: (function(_this) {
+        return function(ev) {
+          return _this._onServerParam(ev.target, 'imap', 'tls');
+        };
+      })(this)
+    })))), div({
       className: 'form-group'
     }, div({
       className: 'col-sm-offset-2 col-sm-5 text-right'
@@ -833,16 +1006,26 @@ module.exports = React.createClass({
     }, buttonLabel))));
   },
   renderMailboxes: function() {
-    var mailboxes;
-    mailboxes = this.props.mailboxes.map((function(_this) {
-      return function(mailbox, key) {
-        return MailboxItem({
-          account: _this.props.selectedAccount,
-          mailbox: mailbox
-        });
-      };
-    })(this)).toJS();
-    return div(null, ul({
+    var favorites, mailboxes;
+    favorites = this.props.favoriteMailboxes;
+    if (this.props.mailboxes != null) {
+      mailboxes = this.props.mailboxes.map((function(_this) {
+        return function(mailbox, key) {
+          var favorite;
+          if (favorites.get(mailbox.get('id'))) {
+            favorite = true;
+          }
+          return MailboxItem({
+            account: _this.props.selectedAccount,
+            mailbox: mailbox,
+            favorite: favorite
+          });
+        };
+      })(this)).toJS();
+    }
+    return form({
+      className: 'form-horizontal'
+    }, this._renderMailboxChoice('account draft mailbox', "draftMailbox"), this._renderMailboxChoice('account sent mailbox', "sentMailbox"), this._renderMailboxChoice('account trash mailbox', "trashMailbox"), h4(null, t("account tab mailboxes")), ul({
       className: "list-unstyled boxes"
     }, mailboxes, li(null), div({
       className: "box edited"
@@ -905,26 +1088,52 @@ module.exports = React.createClass({
     }
   },
   onSubmit: function(event) {
-    var accountValue, afterCreation;
+    var accountValue, afterCreation, error, errors, field, init, setError, valid, validOptions, _i, _j, _len, _len1, _ref1, _ref2;
     event.preventDefault();
-    accountValue = this.state;
-    accountValue.draftMailbox = accountValue.draftMailbox;
-    accountValue.sentMailbox = accountValue.sentMailbox;
-    accountValue.trashMailbox = accountValue.trashMailbox;
-    afterCreation = (function(_this) {
-      return function(id) {
-        return _this.redirect({
-          direction: 'first',
-          fullWidth: true,
-          action: 'account.mailbox.messages',
-          parameters: id
-        });
+    accountValue = {};
+    init = (function(_this) {
+      return function(field) {
+        return accountValue[field] = _this.state[field];
       };
     })(this);
-    if (this.props.selectedAccount != null) {
-      return AccountActionCreator.edit(accountValue, this.props.selectedAccount.get('id'));
+    _ref1 = this._accountFields;
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      field = _ref1[_i];
+      init(field);
+    }
+    validOptions = {
+      additionalProperties: true
+    };
+    valid = validate(accountValue, this._accountSchema, validOptions);
+    if (valid.valid) {
+      this.setState({
+        errors: {}
+      });
+      afterCreation = (function(_this) {
+        return function(id) {
+          return _this.setState({
+            tab: 'mailboxes'
+          });
+        };
+      })(this);
+      if (this.props.selectedAccount != null) {
+        return AccountActionCreator.edit(accountValue, this.props.selectedAccount.get('id'));
+      } else {
+        return AccountActionCreator.create(accountValue, afterCreation);
+      }
     } else {
-      return AccountActionCreator.create(accountValue, afterCreation);
+      errors = {};
+      setError = function(error) {
+        return errors[error.property] = t("validate " + error.message);
+      };
+      _ref2 = valid.errors;
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        error = _ref2[_j];
+        setError(error);
+      }
+      return this.setState({
+        errors: errors
+      });
     }
   },
   onRemove: function(event) {
@@ -986,70 +1195,172 @@ module.exports = React.createClass({
           }
           if (infos.imapServer == null) {
             infos.imapServer = '';
-            infos.imapPort = '';
+            infos.imapPort = '993';
           }
           if (infos.smtpServer == null) {
             infos.smtpServer = '';
-            infos.smtpPort = '';
+            infos.smtpPort = '465';
+          }
+          switch (infos.imapPort) {
+            case '993':
+              infos.imapSSL = true;
+              infos.imapTLS = false;
+              break;
+            default:
+              infos.imapSSL = false;
+              infos.imapTLS = false;
+          }
+          switch (infos.smtpPort) {
+            case '465':
+              infos.smtpSSL = true;
+              infos.smtpTLS = false;
+              break;
+            case '587':
+              infos.smtpSSL = false;
+              infos.smtpTLS = true;
+              break;
+            default:
+              infos.smtpSSL = false;
+              infos.smtpTLS = false;
           }
           return _this.setState(infos);
         }
       };
     })(this));
   },
-  componentWillReceiveProps: function(props) {
-    var tab;
-    if (this.state.label != null) {
+  _onServerParam: function(target, server, type) {
+    if ((server === 'imap' && this.state.imapManualPort) || (server === 'smtp' && this.state.smtpManualPort)) {
       return;
     }
+    if (server === 'smtp') {
+      if (type === 'ssl' && target.checked) {
+        return this.setState({
+          smtpPort: 465
+        });
+      } else if (type === 'tls' && target.checked) {
+        return this.setState({
+          smtpPort: 587
+        });
+      }
+    } else {
+      if (target.checked) {
+        return this.setState({
+          imapPort: 993
+        });
+      } else {
+        return this.setState({
+          imapPort: 143
+        });
+      }
+    }
+  },
+  _onIMAPPort: function(ev) {
+    var infos, port;
+    port = ev.target.value.trim();
+    infos = {
+      imapPort: port
+    };
+    switch (port) {
+      case '993':
+        infos.imapSSL = true;
+        infos.imapTLS = false;
+        break;
+      default:
+        infos.imapSSL = false;
+        infos.imapTLS = false;
+    }
+    return this.setState(infos);
+  },
+  _onSMTPPort: function(ev) {
+    var infos, port;
+    port = ev.target.value.trim();
+    infos = {};
+    switch (port) {
+      case '465':
+        infos.smtpSSL = true;
+        infos.smtpTLS = false;
+        break;
+      case '587':
+        infos.smtpSSL = false;
+        infos.smtpTLS = true;
+        break;
+      default:
+        infos.smtpSSL = false;
+        infos.smtpTLS = false;
+    }
+    console.log(port, infos);
+    return this.setState(infos);
+  },
+  componentWillReceiveProps: function(props) {
+    var field, state, tab;
     if (!props.isWaiting) {
-      if (this.state.id !== props.selectedAccount.get('id')) {
+      if ((props.selectedAccount == null) || this.state.id !== props.selectedAccount.get('id')) {
         tab = "account";
       } else {
         tab = this.state.tab;
       }
-      return this.setState(this._accountToState(props.selectedAccount, tab));
+      if (props.selectedAccount != null) {
+        return this.setState(this._accountToState(tab));
+      } else {
+        state = {
+          tab: null,
+          errors: {}
+        };
+        if (props.error != null) {
+          if (props.error.name === 'AccountConfigError') {
+            field = props.error.field;
+            state.errors[field] = t('config error ' + field);
+          }
+        }
+        return this.setState(state);
+      }
     }
   },
   getInitialState: function(forceDefault) {
-    return this._accountToState(this.props.selectedAccount, "account");
+    return this._accountToState("account");
   },
-  _accountToState: function(account, tab) {
-    if (account != null) {
-      return {
-        id: account.get('id'),
-        label: account.get('label'),
-        name: account.get('name'),
-        login: account.get('login'),
-        password: account.get('password'),
-        smtpServer: account.get('smtpServer'),
-        smtpPort: account.get('smtpPort'),
-        imapServer: account.get('imapServer'),
-        imapPort: account.get('imapPort'),
-        draftMailbox: account.get('draftMailbox'),
-        sentMailbox: account.get('sentMailbox'),
-        trashMailbox: account.get('trashMailbox'),
-        newMailboxParent: null,
-        tab: tab
-      };
-    } else {
-      return {
-        id: null,
-        label: '',
-        name: '',
-        login: '',
-        password: '',
-        smtpServer: '',
-        smtpPort: 587,
-        imapServer: '',
-        imapPort: 993,
-        draftMailbox: '',
-        sentMailbox: '',
-        trashMailbox: '',
-        newMailboxParent: null,
-        tab: null
-      };
+  _accountToState: function(tab) {
+    var account, field, init, state, _i, _j, _len, _len1, _ref1, _ref2;
+    account = this.props.selectedAccount;
+    state = {
+      errors: {}
+    };
+    if (this.props.error != null) {
+      if (this.props.error.name === 'AccountConfigError') {
+        field = this.props.error.field;
+        errors[field] = t('config error ' + this.props.field);
+      }
     }
+    if (account != null) {
+      init = function(field) {
+        return state[field] = account.get(field);
+      };
+      _ref1 = this._accountFields;
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        field = _ref1[_i];
+        init(field);
+      }
+      state.newMailboxParent = null;
+      state.tab = tab;
+    } else {
+      init = function(field) {
+        return state[field] = '';
+      };
+      _ref2 = this._accountFields;
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        field = _ref2[_j];
+        init(field);
+      }
+      state.smtpPort = 465;
+      state.smtpSSL = true;
+      state.smtpTLS = false;
+      state.imapPort = 993;
+      state.imapSSL = true;
+      state.imapTLS = false;
+      state.newMailboxParent = null;
+      state.tab = null;
+    }
+    return state;
   }
 });
 
@@ -1065,16 +1376,25 @@ MailboxItem = React.createClass({
   },
   getInitialState: function() {
     return {
-      edited: false
+      edited: false,
+      favorite: this.props.favorite
     };
   },
   render: function() {
-    var j, key, pusher, _i, _ref1;
+    var favoriteClass, favoriteTitle, j, key, pusher, _i, _ref1;
     pusher = "";
     for (j = _i = 1, _ref1 = this.props.mailbox.get('depth'); _i <= _ref1; j = _i += 1) {
-      pusher += "--";
+      pusher += "    ";
     }
     key = this.props.mailbox.get('id');
+    "" + pusher + (this.props.mailbox.get('label'));
+    if (this.state.favorite) {
+      favoriteClass = "fa fa-eye";
+      favoriteTitle = t("mailbox title favorite");
+    } else {
+      favoriteClass = "fa fa-eye-slash";
+      favoriteTitle = t("mailbox title not favorite");
+    }
     return li({
       key: key
     }, this.state.edited ? div({
@@ -1113,7 +1433,13 @@ MailboxItem = React.createClass({
     })), span({
       className: "box-label",
       onClick: this.editMailbox
-    }, "" + pusher + (this.props.mailbox.get('label')))));
+    }, "" + pusher + (this.props.mailbox.get('label'))), span({
+      className: "box-action",
+      title: favoriteTitle,
+      onClick: this.toggleFavorite
+    }, i({
+      className: favoriteClass
+    }))));
   },
   editMailbox: function(e) {
     e.preventDefault();
@@ -1141,6 +1467,24 @@ MailboxItem = React.createClass({
       } else {
         return LAC.alertSuccess(t("mailbox update ok"));
       }
+    });
+  },
+  toggleFavorite: function(e) {
+    var mailbox;
+    mailbox = {
+      favorite: !this.state.favorite,
+      mailboxID: this.props.mailbox.get('id'),
+      accountID: this.props.account.get('id')
+    };
+    AccountActionCreator.mailboxUpdate(mailbox, function(error) {
+      if (error != null) {
+        return LAC.alertError("" + (t("mailbox update ko")) + " " + error);
+      } else {
+        return LAC.alertSuccess(t("mailbox update ok"));
+      }
+    });
+    return this.setState({
+      favorite: !this.state.favorite
     });
   },
   deleteMailbox: function(e) {
@@ -1440,7 +1784,7 @@ module.exports = Application = React.createClass({
     return classes;
   },
   getPanelComponent: function(panelInfo, layout) {
-    var accountID, direction, error, firstOfPage, isWaiting, lastOfPage, mailboxID, mailboxes, message, messageID, messagesCount, numPerPage, openMessage, otherPanelInfo, pageNum, plugins, results, selectedAccount, settings, _ref1;
+    var accountID, direction, error, favoriteMailboxes, firstOfPage, isWaiting, lastOfPage, mailboxID, mailboxes, message, messageID, messagesCount, numPerPage, openMessage, otherPanelInfo, pageNum, results, selectedAccount, settings, _ref1;
     if (panelInfo.action === 'account.mailbox.messages') {
       accountID = panelInfo.parameters.accountID;
       mailboxID = panelInfo.parameters.mailboxID;
@@ -1481,12 +1825,14 @@ module.exports = Application = React.createClass({
       error = AccountStore.getError();
       isWaiting = AccountStore.isWaiting();
       mailboxes = AccountStore.getSelectedMailboxes(true);
+      favoriteMailboxes = this.state.favoriteMailboxes;
       return AccountConfig({
         layout: layout,
         error: error,
         isWaiting: isWaiting,
         selectedAccount: selectedAccount,
-        mailboxes: mailboxes
+        mailboxes: mailboxes,
+        favoriteMailboxes: favoriteMailboxes
       });
     } else if (panelInfo.action === 'account.new') {
       error = AccountStore.getError();
@@ -1525,10 +1871,8 @@ module.exports = Application = React.createClass({
       });
     } else if (panelInfo.action === 'settings') {
       settings = this.state.settings;
-      plugins = this.state.plugins;
       return Settings({
-        settings: settings,
-        plugins: plugins
+        settings: settings
       });
     } else if (panelInfo.action === 'search') {
       accountID = null;
@@ -2511,7 +2855,7 @@ module.exports = MailsInput = React.createClass({
 });
 
 ;require.register("components/menu", function(exports, require, module) {
-var AccountStore, Menu, MessageStore, RouterMixin, a, classer, div, i, li, span, ul, _ref;
+var AccountStore, Menu, RouterMixin, a, classer, div, i, li, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i;
 
@@ -2520,8 +2864,6 @@ classer = React.addons.classSet;
 RouterMixin = require('../mixins/router_mixin');
 
 AccountStore = require('../stores/account_store');
-
-MessageStore = require('../stores/message_store');
 
 module.exports = Menu = React.createClass({
   displayName: 'Menu',
@@ -2551,10 +2893,10 @@ module.exports = Menu = React.createClass({
     } else {
       composeClass = '';
       composeUrl = this.buildUrl({
-        direction: 'second',
+        direction: 'first',
         action: 'compose',
         parameters: null,
-        fullWidth: false
+        fullWidth: true
       });
     }
     if (this.props.layout.firstPanel.action === 'account.new') {
@@ -2642,6 +2984,7 @@ module.exports = Menu = React.createClass({
     }), unread > 0 ? span({
       className: 'badge'
     }, unread) : void 0, span({
+      'data-account-id': key,
       className: 'item-label'
     }, account.get('label'))), ul({
       className: 'list-unstyled submenu mailbox-list'
@@ -2758,11 +3101,13 @@ module.exports = React.createClass({
       className: 'title'
     }, message.get('subject')), p(null, message.get('text'))), span({
       className: 'hour'
-    }, date), i({
+    }, date), span({
+      className: "flags"
+    }, i({
       className: 'attach fa fa-paperclip'
     }), i({
       className: 'fav fa fa-star'
-    })));
+    }))));
   },
   getPagerRender: function(curPage, nbPages) {
     var classCurr, classFirst, classLast, j, maxPage, minPage, urlCurr, urlFirst, urlLast;
@@ -3013,12 +3358,6 @@ module.exports = React.createClass({
       allowTransparency: true,
       frameBorder: 0
     }, '')) : div(null, div({
-      className: "content-action"
-    }, button({
-      className: 'btn btn-default',
-      type: "button",
-      onClick: this.displayHTML
-    }, t('message html display'))), div({
       className: 'preview'
     }, p(null, prepared.text))), div({
       className: 'clearfix'
@@ -3200,21 +3539,33 @@ module.exports = React.createClass({
     }, "" + pusher + (mailbox.get('label'))));
   },
   _initFrame: function() {
-    var doc, frame, rect;
-    if (this.state.messageDisplayHTML) {
+    var doc, font, frame, rect, s;
+    if (this.refs.content) {
       frame = this.refs.content.getDOMNode();
       doc = frame.contentDocument || frame.contentWindow.document;
-      doc.body.innerHTML = this._htmlContent;
-      rect = doc.body.getBoundingClientRect();
-      frame.style.height = "" + (rect.height + 40) + "px";
-      if (!this.state.messageDisplayImages && (this.refs.imagesDisplay != null)) {
-        return this.refs.imagesDisplay.getDOMNode().addEventListener('click', (function(_this) {
-          return function() {
-            return _this.setState({
-              messageDisplayImages: true
-            });
-          };
-        })(this));
+      if (doc != null) {
+        s = document.createElement('style');
+        doc.head.appendChild(s);
+        font = "@font-face{\n  font-family: 'Source Sans Pro';\n  font-weight: 400;\n  font-style: normal;\n  font-stretch: normal;\n  src: url('../fonts/sourcesanspro/SourceSansPro-Regular.eot') format('embedded-opentype'),\n       url('../fonts/sourcesanspro/SourceSansPro-Regular.otf.woff') format('woff'),\n       url('../fonts/sourcesanspro/SourceSansPro-Regular.otf') format('opentype'),\n       url('../fonts/sourcesanspro/SourceSansPro-Regular.ttf') format('truetype');\n}";
+        s.sheet.insertRule(font, 0);
+        s.sheet.insertRule("body { font-family: 'Source Sans Pro'; }", 1);
+        s.sheet.insertRule("blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue;}", 2);
+        doc.body.innerHTML = this._htmlContent;
+        rect = doc.body.getBoundingClientRect();
+        frame.style.height = "" + (rect.height + 40) + "px";
+        if (!this.state.messageDisplayImages && (this.refs.imagesDisplay != null)) {
+          return this.refs.imagesDisplay.getDOMNode().addEventListener('click', (function(_this) {
+            return function() {
+              return _this.setState({
+                messageDisplayImages: true
+              });
+            };
+          })(this));
+        }
+      } else {
+        return this.setState({
+          messageDisplayHTML: false
+        });
       }
     }
   },
@@ -3449,10 +3800,10 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/settings", function(exports, require, module) {
-var PluginUtils, SettingsActionCreator, button, classer, div, fieldset, form, h3, input, label, legend, _ref,
+var PluginUtils, SettingsActionCreator, a, button, classer, div, fieldset, form, h3, input, label, legend, li, ul, _ref,
   __hasProp = {}.hasOwnProperty;
 
-_ref = React.DOM, div = _ref.div, h3 = _ref.h3, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, fieldset = _ref.fieldset, legend = _ref.legend;
+_ref = React.DOM, div = _ref.div, h3 = _ref.h3, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, fieldset = _ref.fieldset, legend = _ref.legend, ul = _ref.ul, li = _ref.li, a = _ref.a;
 
 classer = React.addons.classSet;
 
@@ -3491,9 +3842,39 @@ module.exports = React.createClass({
       max: 100,
       step: 5,
       className: 'form-control'
-    })))), this._renderOption('composeInHTML'), this._renderOption('messageDisplayHTML'), this._renderOption('messageDisplayImages'), fieldset(null, legend(null, t('settings plugins')), (function() {
+    }))), div({
+      className: 'form-group'
+    }, label({
+      htmlFor: 'settings-mpp',
+      className: classLabel
+    }, t("settings lang")), div({
+      className: 'col-sm-3'
+    }, div({
+      className: "dropdown"
+    }, button({
+      className: "btn btn-default dropdown-toggle",
+      type: "button",
+      "data-toggle": "dropdown"
+    }, t("settings lang " + this.state.settings.lang)), ul({
+      className: "dropdown-menu",
+      role: "menu"
+    }, li({
+      role: "presentation",
+      'data-target': 'lang',
+      'data-lang': 'en',
+      onClick: this.handleChange
+    }, a({
+      role: "menuitem"
+    }, t("settings lang en"))), li({
+      role: "presentation",
+      'data-target': 'lang',
+      'data-lang': 'fr',
+      onClick: this.handleChange
+    }, a({
+      role: "menuitem"
+    }, t("settings lang fr")))))))), this._renderOption('composeInHTML'), this._renderOption('messageDisplayHTML'), this._renderOption('messageDisplayImages'), fieldset(null, legend(null, t('settings plugins')), (function() {
       var _ref1, _results;
-      _ref1 = this.state.plugins;
+      _ref1 = this.state.settings.plugins;
       _results = [];
       for (pluginName in _ref1) {
         if (!__hasProp.call(_ref1, pluginName)) continue;
@@ -3508,7 +3889,7 @@ module.exports = React.createClass({
         }, pluginConf.name), div({
           className: 'col-sm-3'
         }, input({
-          checked: this.state.plugins[pluginName].active,
+          checked: pluginConf.active,
           onChange: this.handleChange,
           'data-target': 'plugin',
           'data-plugin': pluginName,
@@ -3541,8 +3922,8 @@ module.exports = React.createClass({
     }))));
   },
   handleChange: function(event) {
-    var settings, target;
-    target = event.target;
+    var err, lang, locales, name, pluginConf, pluginName, polyglot, settings, target, _ref1;
+    target = event.currentTarget;
     switch (target.dataset.target) {
       case 'messagesPerPage':
         settings = this.state.settings;
@@ -3560,32 +3941,63 @@ module.exports = React.createClass({
           settings: settings
         });
         return SettingsActionCreator.edit(settings);
-      case 'plugin':
-        if (target.checked) {
-          PluginUtils.activate(target.dataset.plugin);
-        } else {
-          PluginUtils.deactivate(target.dataset.plugin);
-        }
-        return this.setState({
-          plugins: window.plugins
+      case 'lang':
+        lang = target.dataset.lang;
+        settings = this.state.settings;
+        settings.lang = lang;
+        this.setState({
+          settings: settings
         });
+        moment.locale(lang);
+        try {
+          locales = require("../locales/" + lang);
+        } catch (_error) {
+          err = _error;
+          console.log(err);
+          locales = require("../locales/en");
+        }
+        polyglot = new Polyglot();
+        polyglot.extend(locales);
+        window.t = polyglot.t.bind(polyglot);
+        return SettingsActionCreator.edit(settings);
+      case 'plugin':
+        name = target.dataset.plugin;
+        settings = this.state.settings;
+        if (target.checked) {
+          PluginUtils.activate(name);
+        } else {
+          PluginUtils.deactivate(name);
+        }
+        _ref1 = settings.plugins;
+        for (pluginName in _ref1) {
+          if (!__hasProp.call(_ref1, pluginName)) continue;
+          pluginConf = _ref1[pluginName];
+          pluginConf.active = window.plugins[pluginName].active;
+        }
+        this.setState({
+          settings: settings
+        });
+        return SettingsActionCreator.edit(settings);
     }
   },
   getInitialState: function(forceDefault) {
+    var settings;
+    settings = this.props.settings.toObject();
     return {
-      settings: this.props.settings.toObject(),
-      plugins: this.props.plugins
+      settings: this.props.settings.toObject()
     };
   }
 });
 });
 
 ;require.register("components/toast", function(exports, require, module) {
-var SocketUtils, Toast, ToastContainer, a, button, div, h4, pre, span, strong, _ref;
+var SocketUtils, Toast, ToastContainer, a, button, classer, div, h4, i, pre, span, strong, _ref;
 
-_ref = React.DOM, a = _ref.a, h4 = _ref.h4, pre = _ref.pre, div = _ref.div, button = _ref.button, span = _ref.span, strong = _ref.strong;
+_ref = React.DOM, a = _ref.a, h4 = _ref.h4, pre = _ref.pre, div = _ref.div, button = _ref.button, span = _ref.span, strong = _ref.strong, i = _ref.i;
 
 SocketUtils = require('../utils/socketio_utils');
+
+classer = React.addons.classSet;
 
 module.exports = Toast = React.createClass({
   displayName: 'Toast',
@@ -3608,7 +4020,6 @@ module.exports = Toast = React.createClass({
     return SocketUtils.acknowledgeTask(this.props.toast.id);
   },
   renderErrorModal: function() {
-    console.log(this.state.modalErrors);
     return div({
       className: "modal fade in",
       role: "dialog",
@@ -3639,14 +4050,19 @@ module.exports = Toast = React.createClass({
     }, t('app alert close'))))));
   },
   render: function() {
-    var dismissible, len, percent, showModal, toast, type;
+    var classes, len, percent, showModal, toast;
     toast = this.props.toast;
-    dismissible = toast.finished ? 'alert-dismissible' : '';
+    classes = classer({
+      alert: true,
+      toast: true,
+      'alert-dismissible': toast.finished,
+      'alert-info': !toast.errors.length,
+      'alert-warning': toast.errors.length
+    });
     percent = parseInt(100 * toast.done / toast.total) + '%';
     showModal = this.showModal.bind(this, toast.errors);
-    type = toast.errors.length ? 'alert-warning' : 'alert-info';
     return div({
-      className: "alert toast " + type + " " + dismissible,
+      className: classes,
       role: "alert"
     }, this.state.modalErrors ? this.renderErrorModal() : void 0, div({
       className: "progress"
@@ -3656,7 +4072,12 @@ module.exports = Toast = React.createClass({
         width: percent
       }
     }), div({
-      className: 'progress-bar-label'
+      className: 'progress-bar-label start',
+      style: {
+        width: percent
+      }
+    }, "" + (t("task " + toast.code, toast)) + " : " + percent), div({
+      className: 'progress-bar-label end'
     }, "" + (t("task " + toast.code, toast)) + " : " + percent)), toast.finished ? button({
       type: "button",
       className: "close",
@@ -3675,23 +4096,69 @@ module.exports = Toast = React.createClass({
 
 module.exports.Container = ToastContainer = React.createClass({
   displayName: 'ToastContainer',
+  getInitialState: function() {
+    return {
+      hidden: false
+    };
+  },
   render: function() {
-    var key, toast, toasts, _base;
+    var classes, id, toast, toasts, _base;
     toasts = (typeof (_base = this.props.toasts).toJS === "function" ? _base.toJS() : void 0) || this.props.toasts;
+    classes = classer({
+      'toasts-container': true,
+      'action-hidden': this.state.hidden,
+      'has-toasts': Object.keys(toasts).length !== 0
+    });
     return div({
-      className: 'toasts-container'
+      className: classes
     }, (function() {
       var _results;
       _results = [];
-      for (key in toasts) {
-        toast = toasts[key];
+      for (id in toasts) {
+        toast = toasts[id];
         _results.push(Toast({
-          key: key,
           toast: toast
         }));
       }
       return _results;
-    })());
+    })(), div({
+      className: 'alert alert-success toast toast-actions'
+    }, span({
+      className: "toast-action hide-action",
+      title: t('toast hide'),
+      onClick: this.toggleHidden
+    }, i({
+      className: 'fa fa-eye-slash'
+    })), span({
+      className: "toast-action show-action",
+      title: t('toast show'),
+      onClick: this.toggleHidden
+    }, i({
+      className: 'fa fa-eye'
+    })), span({
+      className: "toast-action close-action",
+      title: t('toast close all'),
+      onClick: this.closeAll
+    }, i({
+      className: 'fa fa-times'
+    }))));
+  },
+  toggleHidden: function() {
+    return this.setState({
+      hidden: !this.state.hidden
+    });
+  },
+  closeAll: function() {
+    var close, id, toast, toasts, _base;
+    toasts = (typeof (_base = this.props.toasts).toJS === "function" ? _base.toJS() : void 0) || this.props.toasts;
+    close = function(toast) {
+      return SocketUtils.acknowledgeTask(toast.id);
+    };
+    for (id in toasts) {
+      toast = toasts[id];
+      close(toast);
+    }
+    return this.props.toasts.clear();
   }
 });
 });
@@ -3855,9 +4322,12 @@ module.exports = {
 
 ;require.register("initialize", function(exports, require, module) {
 window.onload = function() {
-  var AccountStore, Application, LayoutStore, MessageStore, Router, SearchStore, SettingsStore, application, err, locale, locales, polyglot;
+  var AccountStore, Application, LayoutStore, MessageStore, PluginUtils, Router, SearchStore, SettingsStore, application, err, locale, locales, polyglot;
   window.__DEV__ = window.location.hostname === 'localhost';
-  locale = window.locale || window.navigator.language || "en";
+  if (window.settings == null) {
+    window.settings = {};
+  }
+  locale = window.settings.lang || window.locale || window.navigator.language || "en";
   moment.locale(locale);
   locales = {};
   try {
@@ -3870,7 +4340,12 @@ window.onload = function() {
   polyglot = new Polyglot();
   polyglot.extend(locales);
   window.t = polyglot.t.bind(polyglot);
-  require("./utils/plugin_utils").init();
+  PluginUtils = require("./utils/plugin_utils");
+  if (window.settings.plugins == null) {
+    window.settings.plugins = {};
+  }
+  PluginUtils.merge(window.settings.plugins);
+  PluginUtils.init();
   AccountStore = require('./stores/account_store');
   LayoutStore = require('./stores/layout_store');
   MessageStore = require('./stores/message_store');
@@ -4496,11 +4971,11 @@ module.exports = {
   "compose toggle cc": "Cc",
   "compose toggle bcc": "Bcc",
   "menu compose": "Compose",
-  "menu account new": "New account",
+  "menu account new": "New Mailbox",
   "menu settings": "Parameters",
   "list empty": "No email in this box.",
   "list search empty": "No result found for the query \"%{query}\".",
-  "list count": "%{smart_count} message in this box |||| %{smart_count} messages in this box",
+  "list count": "%{smart_count} mcolorcolumnessage in this box |||| %{smart_count} messages in this box",
   "list search count": "%{smart_count} result found. |||| %{smart_count} results found.",
   "mail receivers": "To %{dest}",
   "mail receivers cc": "Cc %{dest}",
@@ -4537,6 +5012,9 @@ module.exports = {
   "account password": "Password",
   "account sending server": "Sending server",
   "account receiving server": "IMAP server",
+  "account port": "Port",
+  "account SSL": "Use SSL",
+  "account TLS": "Use STARTTLS",
   "account remove": "Remove",
   "account remove confirm": "Do you really want to remove this account?",
   "account draft mailbox": "Draft box",
@@ -4561,6 +5039,14 @@ module.exports = {
   "mailbox title edit cancel": "Cancel",
   "mailbox title add": "Add new folder",
   "mailbox title add cancel": "Cancel",
+  "mailbox title favorite": "Folder is displayed",
+  "mailbox title not favorite": "Folder not displayed",
+  "config error auth": "Wrong connection parameters",
+  "config error imapPort": "Wrong IMAP port",
+  "config error imapServer": "Wrong IMAP server",
+  "config error imapTLS": "Wrong IMAP TLS",
+  "config error smtpPort": "Wrong SMTP Port",
+  "config error smtpServer": "Wrong SMTP Server",
   "message action sent ok": "Message sent",
   "message action sent ko": "Error sending message: ",
   "message action draft ok": "Message saved",
@@ -4590,6 +5076,9 @@ module.exports = {
   "settings label composeInHTML": "Rich message editor",
   "settings label messageDisplayHTML": "Display message in HTML",
   "settings label messageDisplayImages": "Display images inside messages",
+  "settings lang": "Language",
+  "settings lang en": "English",
+  "settings lang fr": "Français",
   "picker drop here": "Drop files here",
   "mailbox pick one": "Pick one",
   "mailbox pick null": "No box for this",
@@ -4597,7 +5086,11 @@ module.exports = {
   "task apply-diff-fetch": 'Fetching mails %{box} of %{account}',
   "there were errors": '%{smart_count} error. |||| %{smart_count} errors.',
   "modal please report": "Please transmit this information to cozy.",
-  "modal please contribute": "Please contribute"
+  "modal please contribute": "Please contribute",
+  "validate must not be empty": "Mandatory field",
+  "toast hide": "Hide alerts",
+  "toast show": "Display alerts",
+  "toast close all": "Close all alerts"
 };
 });
 
@@ -4670,6 +5163,9 @@ module.exports = {
   "account password": "Mot de passe",
   "account sending server": "Serveur sortant",
   "account receiving server": "Serveur IMAP",
+  "account port": "Port",
+  "account SSL": "Utiliser SSL",
+  "account TLS": "Utiliser STARTTLS",
   "account remove": "Supprimer",
   "account remove confirm": "Voulez-vous vraiment supprimer ce compte ?",
   "account draft mailbox": "Enregistrer les brouillons dans",
@@ -4694,6 +5190,14 @@ module.exports = {
   "mailbox title edit cancel": "Annuler",
   "mailbox title add": "Créer un dossier",
   "mailbox title add cancel": "Annuler",
+  "mailbox title favorite": "Dossier affiché",
+  "mailbox title not favorite": "Dossier non affiché",
+  "config error auth": "Impossible de se connecter avec ces paramètres",
+  "config error imapPort": "Port du serveur IMAP invalide",
+  "config error imapServer": "Serveur IMAP invalide",
+  "config error imapTLS": "Erreur IMAP TLS",
+  "config error smtpPort": "Port du serveur d'envoi invalide",
+  "config error smtpServer": "Serveur d'envoi invalide",
   "message action sent ok": "Message envoyé !",
   "message action sent ko": "Une erreur est survenue : ",
   "message action draft ok": "Message sauvegardé !",
@@ -4723,14 +5227,21 @@ module.exports = {
   "settings label composeInHTML": "Éditeur riche",
   "settings label messageDisplayHTML": "Afficher les messages en HTML",
   "settings label messageDisplayImages": "Afficher les images",
+  "settings lang": "Langue",
+  "settings lang en": "English",
+  "settings lang fr": "Français",
   "picker drop here": "Déposer les fichiers ici",
   "mailbox pick one": "Choisissez une boite",
   "mailbox pick null": "Pas de boite pour ça",
-  "task diff": 'Comparaison %{box} of %{account}',
-  "task apply-diff-fetch": 'Téléchargement emails %{box} of %{account}',
+  "task diff": 'Comparaison %{box} de %{account}',
+  "task apply-diff-fetch": 'Téléchargement des messages du dossier %{box} de %{account}',
   "there were errors": '%{smart_count} erreur. |||| %{smart_count} erreurs.',
   "modal please report": "Merci de bien vouloir transmettre ces informations à cozy.",
-  "modal please contribute": "Merci de contribuer"
+  "modal please contribute": "Merci de contribuer",
+  "validate must not be empty": "Ce champ doit être renseigné",
+  "toast hide": "Masquer les alertes",
+  "toast show": "Afficher les alertes",
+  "toast close all": "Fermer toutes les alertes"
 };
 });
 
@@ -4826,7 +5337,7 @@ module.exports = Router = (function(_super) {
       fluxAction: 'showConversation'
     },
     'compose': {
-      pattern: 'compose/:messageID',
+      pattern: 'compose',
       fluxAction: 'showComposeNewMessage'
     },
     'settings': {
@@ -5909,6 +6420,34 @@ module.exports = {
     if (plugin.onDeactivate) {
       return plugin.onDeactivate();
     }
+  },
+  merge: function(remote) {
+    var local, pluginConf, pluginName, _ref, _results;
+    for (pluginName in remote) {
+      if (!__hasProp.call(remote, pluginName)) continue;
+      pluginConf = remote[pluginName];
+      local = window.plugins[pluginName];
+      if (local != null) {
+        local.active = pluginConf.active;
+      } else {
+        delete remote[pluginName];
+      }
+    }
+    _ref = window.plugins;
+    _results = [];
+    for (pluginName in _ref) {
+      if (!__hasProp.call(_ref, pluginName)) continue;
+      pluginConf = _ref[pluginName];
+      if (remote[pluginName] == null) {
+        _results.push(remote[pluginName] = {
+          name: pluginConf.name,
+          active: pluginConf.active
+        });
+      } else {
+        _results.push(void 0);
+      }
+    }
+    return _results;
   }
 };
 });
@@ -6000,7 +6539,7 @@ AccountTranslator = require('./translators/account_translator');
 SettingsStore = require('../stores/settings_store');
 
 module.exports = {
-  changeSettings: function(settings) {
+  changeSettings: function(settings, callback) {
     return request.put("settings").set('Accept', 'application/json').send(settings).end(function(res) {
       if (res.ok) {
         return callback(null, res.body);

@@ -386,7 +386,7 @@ Message.findConversationIdByMessageIds = function(mail) {
     return null;
   }
   return Message.rawRequestPromised('byMessageId', {
-    keys: messageIds.map(function(id) {
+    keys: references.map(function(id) {
       return [mail.accountID, id];
     })
   }).then(Message.pickConversationID);

@@ -122,7 +122,7 @@ Account.testSMTPConnection = function(data) {
     var timeout;
     connection.once('error', function(err) {
       log.warn("SMTP CONNECTION ERROR", err);
-      return reject(new AccountConfigError('smtp'));
+      return reject(new AccountConfigError('smtpServer'));
     });
     timeout = setTimeout(function() {
       reject(new AccountConfigError('smtpPort'));

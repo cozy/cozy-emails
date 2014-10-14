@@ -97,6 +97,10 @@ ImapProcess.fetchMailbox = function(account, box, limitByBox) {
     }
     reporter.onDone();
     return Promise.all(toDo);
+  })["catch"](function(err) {
+    reporter.onError(err);
+    reporter.onDone();
+    throw err;
   });
 };
 
@@ -200,6 +204,9 @@ ImapProcess.fetchOneMail = function(account, box, uid) {
       return imap.fetchOneMail(uid);
     }).then(function(fetched) {
       mail = fetched;
+      if (!mail.headers['message-id']) {
+        return null;
+      }
       return Message.byMessageId(account.id, mail.headers['message-id']);
     }).then(function(existing) {
       if (existing) {
@@ -238,7 +245,7 @@ ImapProcess.applyMessageChanges = function(msg, flagsOps, boxOps) {
       return _results;
     })
   ]).spread(function(scheduler) {
-    return scheduler.doASAP(function(imap) {
+    return scheduler != null ? scheduler.doASAP(function(imap) {
       var boxid, uid, _i, _len, _ref;
       _ref = boxOps.addTo;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -284,6 +291,6 @@ ImapProcess.applyMessageChanges = function(msg, flagsOps, boxOps) {
           });
         });
       });
-    });
+    }) : void 0;
   });
 };

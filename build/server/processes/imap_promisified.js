@@ -69,14 +69,14 @@ module.exports = ImapPromisified = (function() {
           throw new AccountConfigError('auth');
         }
         if (err.code === 'ENOTFOUND' && err.syscall === 'getaddrinfo') {
-          throw new AccountConfigError('server');
+          throw new AccountConfigError('imapServer');
         }
         if (err instanceof Promise.TimeoutError) {
           _this._super.end();
-          throw new AccountConfigError('port');
+          throw new AccountConfigError('imapPort');
         }
         if (err.source === 'timeout-auth') {
-          throw new AccountConfigError('tls');
+          throw new AccountConfigError('imapTLS');
         }
         throw err;
       };

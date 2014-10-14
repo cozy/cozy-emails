@@ -34,10 +34,12 @@ module.exports = ImapScheduler = (function() {
 
   ImapScheduler.instanceFor = function(account) {
     var _base, _name;
-    if ((_base = this.instances)[_name = account.imapServer] == null) {
-      _base[_name] = new ImapScheduler(account);
+    if (account != null) {
+      if ((_base = this.instances)[_name = account.imapServer] == null) {
+        _base[_name] = new ImapScheduler(account);
+      }
+      return this.instances[account.imapServer];
     }
-    return this.instances[account.imapServer];
   };
 
   ImapScheduler.prototype.tasks = [];
