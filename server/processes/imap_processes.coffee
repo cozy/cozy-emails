@@ -181,10 +181,10 @@ ImapProcess.removeMail = (account, box, uid) ->
         imap.expunge uid, mailbox: box.path
 
 # Public: create a box in the account
-# 
+#
 # account - the {Account} to create box in
 # path - {String} the full path  of the mailbox
-# 
+#
 # Returns a {Promise} for task completion
 ImapProcess.createBox = (account, path) ->
     scheduler = ImapScheduler.instanceFor account
@@ -192,11 +192,11 @@ ImapProcess.createBox = (account, path) ->
         imap.addBox path
 
 # Public: rename/move a box in the account
-# 
+#
 # account - the {Account} to create box in
 # oldpath - {String} the full current path of the mailbox
 # newpath - {String} the full path to move the box to
-# 
+#
 # Returns a {Promise} for task completion
 ImapProcess.renameBox = (account, oldpath, newpath) ->
     scheduler = ImapScheduler.instanceFor account
@@ -204,10 +204,10 @@ ImapProcess.renameBox = (account, oldpath, newpath) ->
         imap.renameBox oldpath, newpath
 
 # Public: delete a box in the account
-# 
+#
 # account - the {Account} to delete the box from
 # path - {String} the full path  of the mailbox
-# 
+#
 # Returns a {Promise} for task completion
 ImapProcess.deleteBox = (account, path) ->
     scheduler = ImapScheduler.instanceFor account
@@ -233,6 +233,9 @@ ImapProcess.fetchOneMail = (account, box, uid) ->
         .then -> imap.fetchOneMail uid
         .then (fetched) ->
             mail = fetched
+
+            # @TODO, may be try other dedup solutions (perfectly equal subject ?)
+            return null unless mail.headers['message-id']
             # check if the message already exists in another mailbox
             Message.byMessageId account.id, mail.headers['message-id']
 

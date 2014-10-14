@@ -1,7 +1,7 @@
 americano = require 'americano-cozy'
 
 # Public: Message
-# 
+#
 
 module.exports = Message = americano.getModel 'Message',
 
@@ -36,12 +36,12 @@ Mailbox = require './mailbox'
 Compiler    = require 'nodemailer/src/compiler'
 
 # Public: get messages in a box, sorted by Date
-# 
+#
 # mailboxID - {String} the mailbox's ID
 # params - query's options
-#    :numByPage - number of message in one page 
+#    :numByPage - number of message in one page
 #    :numPage - number of the page we want
-# 
+#
 # Returns {Promise} for an array of {Message}
 Message.getByMailboxAndDate = (mailboxID, params) ->
     options =
@@ -59,9 +59,9 @@ Message.getByMailboxAndDate = (mailboxID, params) ->
     .map (row) -> new Message(row.doc)
 
 # Public: get the number of messages in a box
-# 
+#
 # mailboxID - {String} the mailbox's ID
-# 
+#
 # Returns {Promise} for the count
 Message.countByMailbox = (mailboxID) ->
     Message.rawRequestPromised 'byMailboxAndDate',
@@ -73,22 +73,22 @@ Message.countByMailbox = (mailboxID) ->
     .then (result) -> result[0]?.value or 0
 
 # Public: get the number of unread messages in a box
-# 
+#
 # mailboxID - {String} the mailbox's ID
-# 
+#
 # Returns {Promise} for the count
 Message.countReadByMailbox = (mailboxID) ->
     Message.rawRequestPromised 'byMailboxAndFlag',
         key: [mailboxID, '\\Seen']
         reduce: true
-        group_level: 1 
+        group_level: 1
 
     .then (result) -> result[0]?.value or 0
 
 # Public: get the uids present in a box in coz
-# 
+#
 # mailboxID - id of the mailbox to check
-# 
+#
 # Returns a {Promise} for an array of [couchdID, messageUID]
 Message.getUIDs = (mailboxID) ->
     Message.rawRequestPromised 'byMailboxAndDate',
@@ -99,10 +99,10 @@ Message.getUIDs = (mailboxID) ->
     .map (row) -> [row.id, row.value]
 
 # Public: find a message by its message id
-# 
+#
 # accountID - id of the account to scan
 # messageID - message-id to search, no need to normalize
-# 
+#
 # Returns a {Promise} for an array of {Message}
 Message.byMessageId = (accountID, messageID) ->
     messageID = mailutils.normalizeMessageID messageID
@@ -114,9 +114,9 @@ Message.byMessageId = (accountID, messageID) ->
         if data = rows[0]?.doc then new Message data
 
 # Public: find messages by there conversation-id
-# 
+#
 # conversationID - id of the conversation to fetch
-# 
+#
 # Returns a {Promise} for an array of {Message}
 Message.byConversationId = (conversationID) ->
     Message.rawRequestPromised 'byConversationId',
@@ -127,10 +127,10 @@ Message.byConversationId = (conversationID) ->
 
 
 # Public: destroy a message without making a new JDB Model
-# 
+#
 # messageID - id of the message to destroy
 # cb - {Function}(err) for task completion
-# 
+#
 # Returns {void}
 Message.destroyByID = (messageID, cb) ->
     Message.adapter.destroy null, messageID, cb
@@ -148,10 +148,10 @@ CONCURRENT_DESTROY = 5
 # and allowing for the occasional DS failure
 # @TODO : refactor this after a good night
 # @TODO : stress test DS requestDestroy
-# 
+#
 # accountID - {String} id of the account
 # retries - {Number} of DS failures we tolerate
-# 
+#
 # Returns a {Promise} for task completion
 Message.safeDestroyByAccountID = (accountID, retries = 2) ->
 
@@ -164,7 +164,7 @@ Message.safeDestroyByAccountID = (accountID, retries = 2) ->
         endkey: [accountID, {}]
 
     .map destroyOne, concurrency: CONCURRENT_DESTROY
-    
+
     .then (results) ->
         # no more messages, we are done here
         return 'done' if results.length is 0
@@ -176,7 +176,7 @@ Message.safeDestroyByAccountID = (accountID, retries = 2) ->
         # random DS failure
         throw err unless retries > 0
         # wait a few seconds to let DS & Couch restore
-        Promise.delay 4000 
+        Promise.delay 4000
         .then -> Message.safeDestroyByAccountID accountID, retries - 1
 
 
@@ -184,26 +184,26 @@ Message.safeDestroyByAccountID = (accountID, retries = 2) ->
 # play it safe by limiting number of messages in RAM
 # and number of concurrent requests to the DS
 # and allowing for the occasional DS failure
-# @TODO : refactor this after a good night 
+# @TODO : refactor this after a good night
 # @TODO : stress test DS requestDestroy & use it instead
-# 
+#
 # mailboxID - {String} id of the mailbox
 # retries - {Number} of DS failures we tolerate
-# 
+#
 # Returns a {Promise} for task completion
-Message.safeRemoveAllFromBox = (mailboxID, retries = 2) -> 
+Message.safeRemoveAllFromBox = (mailboxID, retries = 2) ->
 
     removeOne = (message) -> message.removeFromMailbox(id: mailboxID)
 
-    Message.getByMailboxAndDate mailboxID, 
+    Message.getByMailboxAndDate mailboxID,
         numByPage: 30
         numPage: 0
 
     .map removeOne, concurrency: CONCURRENT_DESTROY
 
-    
-    .then (results) -> 
-        if results.length is 0 then return 'done' 
+
+    .then (results) ->
+        if results.length is 0 then return 'done'
 
         # we are not done, loop again, resetting the retries
         Message.safeRemoveAllFromBox mailboxID, 2
@@ -212,15 +212,15 @@ Message.safeRemoveAllFromBox = (mailboxID, retries = 2) ->
         # random DS failure
         throw err unless retries > 0
         # wait a few seconds to let DS & Couch restore
-        Promise.delay 4000 
-        .then -> Message.safeRemoveAllFromBox mailboxID, retries - 1        
+        Promise.delay 4000
+        .then -> Message.safeRemoveAllFromBox mailboxID, retries - 1
 
 
 # Public: add the message to a mailbox in the cozy
-# 
+#
 # box - {Mailbox} to add this message to
 # uid - {Number} uid of the message in the mailbox
-# 
+#
 # Returns {Promise} for the updated {Message}
 Message::addToMailbox = (box, uid) ->
     @mailboxIDs[box.id] = uid
@@ -228,10 +228,10 @@ Message::addToMailbox = (box, uid) ->
 
 # Public: remove a message from a mailbox in the cozy
 # if the message becomes an orphan, we destroy it
-# 
+#
 # box - {Mailbox} to remove this message from
-# noDestroy - {Boolean} dont destroy orphan messages 
-# 
+# noDestroy - {Boolean} dont destroy orphan messages
+#
 # Returns {Promise} for the updated {Message}
 Message::removeFromMailbox = (box, noDestroy = false) ->
     delete @mailboxIDs[box.id]
@@ -240,9 +240,9 @@ Message::removeFromMailbox = (box, noDestroy = false) ->
 
 
 # Public: apply a json-patch to the message in both cozy & imap
-# 
+#
 # patch: {Object} the json-patch
-# 
+#
 # Returns {Promise} for the updated {Message}
 Message::applyPatchOperations = (patch) ->
 
@@ -278,7 +278,7 @@ Message::applyPatchOperations = (patch) ->
 
 # Public: move a message to trash
 # @DEADCODE (done in client now)
-# 
+#
 # Returns a {Promise} for the updated {Message}
 Message::moveToTrash = ->
     Account.findPromised @accountID
@@ -301,25 +301,25 @@ Message.toRawMessage = (message, callback) ->
     return mailbuilder.build callback
 
 # Public: create a message and store it on the imap server
-# 
+#
 # message - {Object} the message attributes
 # boxtypes - {String} one of the account specialuse attributes
-# uid - 
-# 
+# uid -
+#
 # Returns a {Promise} for the created {Message}
 Message.saveOnImapServer = (message, boxtype, uid) ->
     Account.findPromised message.accountID
     .then (account) =>
         boxID = account[boxtype]
         throw new WrongConfigError 'wrong boxtype' unless boxid
-        
+
         Mailbox.findPromised boxID
-        .then (box) -> 
+        .then (box) ->
             ImapProcess.createMail account, box, message
         .then (uid) ->
             message.mailboxIDs[box.id] = uid
             Message.createPromised message
-            
+
 
 
 # create a message from a raw imap message
@@ -391,7 +391,7 @@ Message.findConversationIdByMessageIds = (mail) ->
 
     # find all messages in references
     Message.rawRequestPromised 'byMessageId',
-        keys: messageIds.map (id) -> [mail.accountID, id]
+        keys: references.map (id) -> [mail.accountID, id]
 
     # and get a conversationID from them
     .then Message.pickConversationID
