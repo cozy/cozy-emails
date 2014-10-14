@@ -6,8 +6,6 @@ RouterMixin = require '../mixins/router_mixin'
 
 AccountStore = require '../stores/account_store'
 
-MessageStore = require '../stores/message_store'
-
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
