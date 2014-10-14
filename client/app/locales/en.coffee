@@ -31,14 +31,16 @@ module.exports =
 
       # Menu
       "menu compose"            : "Compose"
-      "menu account new"        : "New account"
+      "menu account new"        : "New Mailbox"
       "menu settings"           : "Parameters"
 
       # List
       "list empty"              : "No email in this box."
       "list search empty"       : "No result found for the query \"%{query}\"."
-      "list count"              : "%{smart_count} message in this box |||| %{smart_count} messages in this box"
-      "list search count"       : "%{smart_count} result found. |||| %{smart_count} results found."
+      "list count"              : "%{smart_count} mcolorcolumnessage in this
+                                  box |||| %{smart_count} messages in this box"
+      "list search count"       : "%{smart_count} result found. ||||
+                                    %{smart_count} results found."
 
       # Mail
       "mail receivers"          : "To %{dest}"
@@ -78,8 +80,12 @@ module.exports =
       "account password"            : "Password"
       "account sending server"      : "Sending server"
       "account receiving server"    : "IMAP server"
+      "account port"                : "Port"
+      "account SSL"                 : "Use SSL"
+      "account TLS"                 : "Use STARTTLS"
       "account remove"              : "Remove"
-      "account remove confirm"      : "Do you really want to remove this account?"
+      "account remove confirm"      : "Do you really want to remove this
+                                        account?"
       "account draft mailbox"       : "Draft box"
       "account sent mailbox"        : "Sent box"
       "account trash mailbox"       : "Trash"
@@ -87,7 +93,8 @@ module.exports =
       "account newmailbox label"    : "New Folder"
       "account newmailbox placeholder" : "Name"
       "account newmailbox parent"   : "Parent"
-      "account confirm delbox"      : "Do you really want to delete this box and everything in it ?"
+      "account confirm delbox"      : "Do you really want to delete this box
+                                        and everything in it ?"
       "account tab account"         : "Account"
       "account tab mailboxes"       : "Folders"
       "mailbox create ok"           : "Folder created"
@@ -102,7 +109,14 @@ module.exports =
       "mailbox title edit cancel"   : "Cancel"
       "mailbox title add"           : "Add new folder"
       "mailbox title add cancel"    : "Cancel"
-
+      "mailbox title favorite"      : "Folder is displayed"
+      "mailbox title not favorite"  : "Folder not displayed"
+      "config error auth"           : "Wrong connection parameters"
+      "config error imapPort"       : "Wrong IMAP port"
+      "config error imapServer"     : "Wrong IMAP server"
+      "config error imapTLS"        : "Wrong IMAP TLS"
+      "config error smtpPort"       : "Wrong SMTP Port"
+      "config error smtpServer"     : "Wrong SMTP Server"
 
       # Message Action
       "message action sent ok"      : "Message sent"
@@ -123,7 +137,8 @@ module.exports =
       "conversation seen ko"        : "Error"
       "conversation unseen ok"      : "Conversation marked as unread"
       "conversation unseen ko"      : "Error"
-      "message images warning"      : "Display of images inside message has been blocked"
+      "message images warning"      : "Display of images inside message has
+                                        been blocked"
       "message images display"      : "Display images"
       "message html display"        : "Display HTML"
       "message delete no trash"     : "Please select a Trash folder"
@@ -136,6 +151,9 @@ module.exports =
       "settings label composeInHTML"        : "Rich message editor"
       "settings label messageDisplayHTML"   : "Display message in HTML"
       "settings label messageDisplayImages" : "Display images inside messages"
+      "settings lang"             : "Language"
+      "settings lang en"          : "English"
+      "settings lang fr"          : "Français"
 
       # File picker
       "picker drop here"           : "Drop files here"
@@ -147,6 +165,15 @@ module.exports =
       # Tasks
       "task diff"                  : 'Comparing %{box} of %{account}'
       "task apply-diff-fetch"      : 'Fetching mails %{box} of %{account}'
-      "there were errors"          : '%{smart_count} error. |||| %{smart_count} errors.'
+      "there were errors"          : '%{smart_count} error. |||| %{smart_count}
+                                        errors.'
       "modal please report"        : "Please transmit this information to cozy."
       "modal please contribute"    : "Please contribute"
+
+      # Validation
+      "validate must not be empty" : "Mandatory field"
+
+      # Toast
+      "toast hide"      : "Hide alerts"
+      "toast show"      : "Display alerts"
+      "toast close all" : "Close all alerts"

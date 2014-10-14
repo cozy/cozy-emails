@@ -167,8 +167,8 @@ module.exports = React.createClass
                     iframe className: 'content', ref: 'content', sandbox: 'allow-same-origin', allowTransparency: true, frameBorder: 0, ''
             else
                 div null,
-                    div className: "content-action",
-                        button className: 'btn btn-default', type: "button", onClick: @displayHTML, t 'message html display'
+                    #div className: "content-action",
+                    #    button className: 'btn btn-default', type: "button", onClick: @displayHTML, t 'message html display'
                     div className: 'preview',
                         p null, prepared.text
             div className: 'clearfix'
@@ -269,15 +269,36 @@ module.exports = React.createClass
     _initFrame: ->
         # - resize the frame to the height of its content
         # - if images are not displayed, create the function to display them and resize the frame
-        if @state.messageDisplayHTML
+        if @refs.content
             frame = @refs.content.getDOMNode()
             doc = frame.contentDocument or frame.contentWindow.document
-            doc.body.innerHTML = @_htmlContent
-            rect = doc.body.getBoundingClientRect()
-            frame.style.height = "#{rect.height + 40}px"
-            if not @state.messageDisplayImages and @refs.imagesDisplay?
-                @refs.imagesDisplay.getDOMNode().addEventListener 'click', =>
-                    @setState messageDisplayImages: true
+            if doc?
+                s = document.createElement 'style'
+                doc.head.appendChild(s)
+                font = """
+@font-face{
+  font-family: 'Source Sans Pro';
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: normal;
+  src: url('../fonts/sourcesanspro/SourceSansPro-Regular.eot') format('embedded-opentype'),
+       url('../fonts/sourcesanspro/SourceSansPro-Regular.otf.woff') format('woff'),
+       url('../fonts/sourcesanspro/SourceSansPro-Regular.otf') format('opentype'),
+       url('../fonts/sourcesanspro/SourceSansPro-Regular.ttf') format('truetype');
+}
+                """
+                s.sheet.insertRule font, 0
+                s.sheet.insertRule "body { font-family: 'Source Sans Pro'; }", 1
+                s.sheet.insertRule "blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue;}", 2
+                doc.body.innerHTML = @_htmlContent
+                rect = doc.body.getBoundingClientRect()
+                frame.style.height = "#{rect.height + 40}px"
+                if not @state.messageDisplayImages and @refs.imagesDisplay?
+                    @refs.imagesDisplay.getDOMNode().addEventListener 'click', =>
+                        @setState messageDisplayImages: true
+            else
+                # try to display text only
+                @setState messageDisplayHTML: false
 
     componentDidMount: ->
         @_initFrame()

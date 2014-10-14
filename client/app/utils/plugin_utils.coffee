@@ -87,4 +87,17 @@ module.exports =
         if plugin.onDeactivate
             plugin.onDeactivate()
 
+    merge: (remote) ->
+        for own pluginName, pluginConf of remote
+            local = window.plugins[pluginName]
+            if local?
+                local.active = pluginConf.active
+            else
+                delete remote[pluginName]
+
+        for own pluginName, pluginConf of window.plugins
+            if not remote[pluginName]?
+                remote[pluginName] =
+                    name: pluginConf.name
+                    active: pluginConf.active
 

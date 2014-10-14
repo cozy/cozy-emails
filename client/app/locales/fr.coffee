@@ -36,9 +36,12 @@ module.exports =
 
       # List
       "list empty"              : "Pas d'email dans cette boîte.."
-      "list search empty"       : "Aucun résultat trouvé pour la requête \"%{query}\"."
-      "list count"              : "%{smart_count} message dans cette boite |||| %{smart_count} messages dans cette boite"
-      "list search count"       : "%{smart_count} résultat trouvé. |||| %{smart_count} résultats trouvés."
+      "list search empty"       : "Aucun résultat trouvé pour la requête
+                                    \"%{query}\"."
+      "list count"              : "%{smart_count} message dans cette boite ||||
+                                    %{smart_count} messages dans cette boite"
+      "list search count"       : "%{smart_count} résultat trouvé. ||||
+                                    %{smart_count} résultats trouvés."
 
       # Mail
       "mail receivers"          : "À %{dest}"
@@ -62,7 +65,8 @@ module.exports =
       "mail action conversation delete" : "Supprimer la conversation"
       "mail action conversation move"   : "Déplacer la conversation"
       "mail action conversation seen"   : "Marquer la conversation comme lue"
-      "mail action conversation unseen" : "Marquer la conversation comme non lue"
+      "mail action conversation unseen" : "Marquer la conversation comme
+                                            non lue"
 
       # Account
       "account new"                 : "Nouveau compte"
@@ -78,8 +82,12 @@ module.exports =
       "account password"            : "Mot de passe"
       "account sending server"      : "Serveur sortant"
       "account receiving server"    : "Serveur IMAP"
+      "account port"                : "Port"
+      "account SSL"                 : "Utiliser SSL"
+      "account TLS"                 : "Utiliser STARTTLS"
       "account remove"              : "Supprimer"
-      "account remove confirm"      : "Voulez-vous vraiment supprimer ce compte ?"
+      "account remove confirm"      : "Voulez-vous vraiment supprimer
+                                        ce compte ?"
       "account draft mailbox"       : "Enregistrer les brouillons dans"
       "account sent mailbox"        : "Enregistrer les messages envoyés dans"
       "account trash mailbox"       : "Corbeille"
@@ -87,7 +95,8 @@ module.exports =
       "account newmailbox label"    : "Nouveaux dossier"
       "account newmailbox placeholder" : "Nom"
       "account newmailbox parent"   : "Créer sous"
-      "account confirm delbox"      : "Voulez-vous vraiment supprimer ce dossier et tout son contenu ?"
+      "account confirm delbox"      : "Voulez-vous vraiment supprimer ce
+                                        dossier et tout son contenu ?"
       "account tab account"         : "Compte"
       "account tab mailboxes"       : "Dossiers"
       "mailbox create ok"           : "Dossier créé"
@@ -102,6 +111,14 @@ module.exports =
       "mailbox title edit cancel"   : "Annuler"
       "mailbox title add"           : "Créer un dossier"
       "mailbox title add cancel"    : "Annuler"
+      "mailbox title favorite"      : "Dossier affiché"
+      "mailbox title not favorite"  : "Dossier non affiché"
+      "config error auth"           : "Impossible de se connecter avec ces paramètres"
+      "config error imapPort"       : "Port du serveur IMAP invalide"
+      "config error imapServer"     : "Serveur IMAP invalide"
+      "config error imapTLS"        : "Erreur IMAP TLS"
+      "config error smtpPort"       : "Port du serveur d'envoi invalide"
+      "config error smtpServer"     : "Serveur d'envoi invalide"
 
       # Message Action
       "message action sent ok"      : "Message envoyé !"
@@ -122,7 +139,8 @@ module.exports =
       "conversation seen ko"        : "L'opération a échoué"
       "conversation unseen ok"      : "Ok"
       "conversation unseen ko"      : "L'opération a échoué"
-      "message images warning"      : "L'affichage des images du message a été bloqué"
+      "message images warning"      : "L'affichage des images du message a été
+                                        bloqué"
       "message images display"      : "Afficher les images"
       "message html display"        : "Afficher en HTML"
       "message delete no trash"     : "Choisissez d'abord un dossier Corbeille"
@@ -135,6 +153,9 @@ module.exports =
       "settings label composeInHTML"        : "Éditeur riche"
       "settings label messageDisplayHTML"   : "Afficher les messages en HTML"
       "settings label messageDisplayImages" : "Afficher les images"
+      "settings lang"             : "Langue"
+      "settings lang en"          : "English"
+      "settings lang fr"          : "Français"
 
       # File picker
       "picker drop here"           : "Déposer les fichiers ici"
@@ -144,8 +165,19 @@ module.exports =
       "mailbox pick null"          : "Pas de boite pour ça"
 
       # Tasks
-      "task diff"                  : 'Comparaison %{box} of %{account}'
-      "task apply-diff-fetch"      : 'Téléchargement emails %{box} of %{account}'
-      "there were errors"          : '%{smart_count} erreur. |||| %{smart_count} erreurs.'
-      "modal please report"        : "Merci de bien vouloir transmettre ces informations à cozy."
+      "task diff"                  : 'Comparaison %{box} de %{account}'
+      "task apply-diff-fetch"      : 'Téléchargement des messages du dossier
+                                        %{box} de %{account}'
+      "there were errors"          : '%{smart_count} erreur. ||||
+                                        %{smart_count} erreurs.'
+      "modal please report"        : "Merci de bien vouloir transmettre ces
+                                        informations à cozy."
       "modal please contribute"    : "Merci de contribuer"
+
+      # Validation
+      "validate must not be empty" : "Ce champ doit être renseigné"
+
+      # Toast
+      "toast hide"      : "Masquer les alertes"
+      "toast show"      : "Afficher les alertes"
+      "toast close all" : "Fermer toutes les alertes"

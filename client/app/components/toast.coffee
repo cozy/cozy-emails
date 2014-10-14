@@ -1,13 +1,14 @@
-{a, h4,  pre, div, button, span, strong} = React.DOM
+{a, h4,  pre, div, button, span, strong, i} = React.DOM
 SocketUtils = require '../utils/socketio_utils'
 
+classer = React.addons.classSet
 
 module.exports = Toast = React.createClass
     displayName: 'Toast'
 
     getInitialState: ->
         return modalErrors: false
-    
+
     closeModal: ->
         @setState modalErrors: false
 
@@ -18,7 +19,6 @@ module.exports = Toast = React.createClass
         SocketUtils.acknowledgeTask @props.toast.id
 
     renderErrorModal: ->
-        console.log @state.modalErrors
         div className: "modal fade in", role: "dialog", style: display: 'block',
             div className: "modal-dialog",
                 div className: "modal-content",
@@ -26,7 +26,7 @@ module.exports = Toast = React.createClass
                         h4 className: "modal-title", t 'modal please contribute'
                     div className: "modal-body",
                         span null, t 'modal please report'
-                        pre style: "max-height": "300px", "word-wrap": "normal", 
+                        pre style: "max-height": "300px", "word-wrap": "normal",
                             @state.modalErrors.join "\n\n"
                     div className: "modal-footer",
                         button type: 'button', className: 'btn', onClick: @closeModal,
@@ -34,35 +34,74 @@ module.exports = Toast = React.createClass
 
     render: ->
         toast = @props.toast
-        dismissible = if toast.finished then 'alert-dismissible' else ''
+        classes = classer
+            alert: true
+            toast: true
+            'alert-dismissible': toast.finished
+            'alert-info': not toast.errors.length
+            'alert-warning': toast.errors.length
         percent = parseInt(100 * toast.done / toast.total) + '%'
         showModal = @showModal.bind(this, toast.errors)
-        type = if toast.errors.length then 'alert-warning'
-        else 'alert-info'
-        
 
-        div className: "alert toast #{type} #{dismissible}", role: "alert",
+        div className: classes, role: "alert",
             if @state.modalErrors
-                @renderErrorModal() 
+                @renderErrorModal()
 
             div className:"progress",
                 div className: 'progress-bar', style: width: percent
-                div className: 'progress-bar-label', 
+                div className: 'progress-bar-label start', style: width: percent,
                     "#{t "task " + toast.code, toast} : #{percent}"
-            
+                div className: 'progress-bar-label end',
+                    "#{t "task " + toast.code, toast} : #{percent}"
+
             if toast.finished
                 button type: "button", className: "close", onClick: @acknowledge,
                     span 'aria-hidden': "true", "×"
                     span className: "sr-only", t "app alert close"
 
             if len = toast.errors.length
-                a onClick: showModal, 
+                a onClick: showModal,
                     t 'there were errors', smart_count: len
-                    
+
 module.exports.Container = ToastContainer =  React.createClass
     displayName: 'ToastContainer'
 
+    getInitialState: ->
+        return hidden: false
+
     render: ->
         toasts = @props.toasts.toJS?() or @props.toasts
-        div className: 'toasts-container',
-            Toast {key, toast} for key, toast of toasts
+
+        classes = classer
+            'toasts-container': true
+            'action-hidden': @state.hidden
+            'has-toasts': Object.keys(toasts).length isnt 0
+
+        div className: classes,
+            Toast {toast} for id, toast of toasts
+            div className: 'alert alert-success toast toast-actions',
+                span
+                    className: "toast-action hide-action",
+                    title: t 'toast hide'
+                    onClick: @toggleHidden,
+                        i className: 'fa fa-eye-slash'
+                span
+                    className: "toast-action show-action",
+                    title: t 'toast show'
+                    onClick: @toggleHidden,
+                        i className: 'fa fa-eye'
+                span
+                    className: "toast-action close-action",
+                    title: t 'toast close all'
+                    onClick: @closeAll,
+                        i className: 'fa fa-times'
+
+    toggleHidden: ->
+        @setState hidden: not @state.hidden
+
+    closeAll: ->
+        toasts = @props.toasts.toJS?() or @props.toasts
+        close = (toast) ->
+            SocketUtils.acknowledgeTask toast.id
+        close toast for id, toast of toasts
+        @props.toasts.clear()

@@ -59,8 +59,9 @@ module.exports = React.createClass
                     span className: 'title', message.get 'subject'
                     p null, message.get 'text'
                 span className: 'hour', date
-                i className: 'attach fa fa-paperclip'
-                i className: 'fav fa fa-star'
+                span className: "flags",
+                    i className: 'attach fa fa-paperclip'
+                    i className: 'fav fa fa-star'
 
     getPagerRender: (curPage, nbPages) ->
         if nbPages < 2

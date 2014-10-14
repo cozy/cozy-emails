@@ -3,7 +3,13 @@ window.onload = ->
 
     window.__DEV__ = window.location.hostname is 'localhost'
     # use Cozy instance locale or navigator language or "en" by default
-    locale = window.locale or window.navigator.language or "en"
+    if not window.settings?
+        window.settings = {}
+    locale =
+        window.settings.lang or
+        window.locale or
+        window.navigator.language or
+        "en"
     moment.locale locale
     locales = {}
     try
@@ -18,7 +24,11 @@ window.onload = ->
     window.t = polyglot.t.bind polyglot
 
     # init plugins
-    require("./utils/plugin_utils").init()
+    PluginUtils = require("./utils/plugin_utils")
+    if not window.settings.plugins?
+        window.settings.plugins = {}
+    PluginUtils.merge window.settings.plugins
+    PluginUtils.init()
 
     # Flux initialization (must be called at the begining)
     AccountStore  = require './stores/account_store'

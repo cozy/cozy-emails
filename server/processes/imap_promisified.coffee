@@ -63,14 +63,14 @@ module.exports = class ImapPromisified
                 throw new AccountConfigError 'auth'
 
             if err.code is 'ENOTFOUND' and err.syscall is 'getaddrinfo'
-                throw new AccountConfigError 'server'
+                throw new AccountConfigError 'imapServer'
 
             if err instanceof Promise.TimeoutError
                 @_super.end()
-                throw new AccountConfigError 'port'
+                throw new AccountConfigError 'imapPort'
 
             if err.source is 'timeout-auth'
-                throw new AccountConfigError 'tls'
+                throw new AccountConfigError 'imapTLS'
 
             # unknown err
             throw err

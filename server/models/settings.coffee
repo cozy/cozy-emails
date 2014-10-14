@@ -7,6 +7,8 @@ module.exports = Settings = americano.getModel 'MailsSettings',
     composeInHTML: Boolean
     messageDisplayHTML: Boolean
     messageDisplayImages: Boolean
+    lang: String
+    plugins: (x) -> x
 
 
 Settings.getInstance = ->
@@ -19,6 +21,8 @@ Settings.getInstance = ->
             composeInHTML: true
             messageDisplayHTML: true
             messageDisplayImages: false
+            lang: 'en'
+            plugins: null
 
 Promise.promisifyAll Settings, suffix: 'Promised'
 Promise.promisifyAll Settings::, suffix: 'Promised'

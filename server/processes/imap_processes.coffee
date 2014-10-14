@@ -14,9 +14,9 @@ _ = require 'lodash'
 log = require('../utils/logging')(prefix: 'imap:processes')
 
 # Public: get the boxes tree
-# 
+#
 # account - the {Account} to fetch from
-# 
+#
 # Returns a {Promise} for the raw imap boxes tree {Object}
 ImapProcess.fetchBoxesTree = (account) ->
     # the user is waiting, we do this ASAP
@@ -26,10 +26,10 @@ ImapProcess.fetchBoxesTree = (account) ->
 
 
 # Public: refresh the account
-# 
+#
 # account - the {Account} to fetch from
 # limitByBox - the maximum {Number} of message to fetch at once
-# 
+#
 # Returns a {Promise} for task completion
 ImapProcess.fetchAccount = (account, limitByBox = false) ->
     Mailbox.getBoxes(account.id).then (boxes) ->
@@ -39,11 +39,11 @@ ImapProcess.fetchAccount = (account, limitByBox = false) ->
 
 # Public: refresh one mailbox
 # register a 'diff' task in {ImapReporter}
-# 
+#
 # account - the {Account} to fetch from
 # box - the {Mailbox} to fetch from
 # limitByBox - the maximum {Number} of message to fetch at once
-# 
+#
 # Returns a {Promise} for task completion
 ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
     reporter = ImapReporter.addUserTask
@@ -101,11 +101,11 @@ ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
 
 # Private: fetch mails from a box
 # register a 'apply-diff-fetch' task in {ImapReporter}
-# 
+#
 # account - the {Account} to fetch from
 # box - the {Mailbox} to fetch from
 # uids - an [{Number}], the uids to fetch
-# 
+#
 # Returns a {Promise} for task completion
 ImapProcess.fetchMails = (account, box, uids) ->
     reporter = ImapReporter.addUserTask
@@ -117,7 +117,7 @@ ImapProcess.fetchMails = (account, box, uids) ->
     Promise.map uids, (id) ->
         ImapProcess.fetchOneMail account, box, id
         .tap -> reporter.addProgress 1
-        .catch (err) -> 
+        .catch (err) ->
             log.warn "MAIL #{box.path}##{id} ERROR", err
             reporter.onError err
 
@@ -125,11 +125,11 @@ ImapProcess.fetchMails = (account, box, uids) ->
 
 # Private: remove mails from a box in the cozy
 # register a 'apply-diff-remove' task in {ImapReporter}
-# 
+#
 # account - the {Account} to fetch from
 # box - the {Mailbox} to fetch from
 # cozyIDs - an [{String}], the cozy {Message} ids to remove from this box
-# 
+#
 # Returns a {Promise} for task completion
 ImapProcess.removeMails = (account, box, cozyIDs) ->
     reporter = ImapReporter.addUserTask
@@ -150,30 +150,30 @@ ImapProcess.removeMails = (account, box, cozyIDs) ->
 
 # Public: create a mail in the given box
 # used for drafts
-# 
+#
 # account - the {Account} to create mail into
 # box - the {Mailbox} to create mail into
 # mail - a {Message} to create
-# 
+#
 # Returns a {Promise} for the box & UID of the created mail
 ImapProcess.createMail = (account, box, mail) ->
     scheduler = ImapScheduler.instanceFor account
     scheduler.doASAP (imap) ->
         Message.toRawMessagePromised mail
         .then (rawMessage) ->
-            imap.append rawMessage, 
+            imap.append rawMessage,
                 mailbox: box.path
                 flags: mail.flags
-    
+
     .then (uid) -> return [box, uid]
 
 # Public: remove a mail in the given box
 # used for drafts
-# 
+#
 # account - the {Account} to delete mail from
 # box - the {Mailbox} to delete mail from
 # mail - a {Message} to create
-# 
+#
 # Returns a {Promise} for the UID of the created mail
 ImapProcess.removeMail = (account, box, uid) ->
     scheduler = ImapScheduler.instanceFor account
@@ -215,14 +215,14 @@ ImapProcess.deleteBox = (account, path) ->
         imap.delBox path
 
 
-# Public: fetch one mail from IMAP and create a 
+# Public: fetch one mail from IMAP and create a
 # {Message} in cozy for it. If the message
 # already exists in another mailbox, we just add to its mailboxIDs
-# 
+#
 # account - the {Account} to create mail into
 # box - the {Mailbox} to create mail into
 # uid - {Number} the UID of message to fetch
-# 
+#
 # Returns a {Promise} for the created/updated {Message}
 ImapProcess.fetchOneMail = (account, box, uid) ->
     scheduler = ImapScheduler.instanceFor account
@@ -245,11 +245,11 @@ ImapProcess.fetchOneMail = (account, box, uid) ->
                 .tap -> log.info "MAIL #{box.path}##{uid} CREATED"
 
 # Public: apply a flags & boxes patch to message
-# 
+#
 # msg      - the target {Message}
 # flagsOps - {add : [String flag], remove: [String]}
 # boxOps   - {addTo : [String boxIds], removeFrom: [String boxIds]}
-# 
+#
 # Returns a {Promise} for task completion
 ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
 
@@ -258,7 +258,7 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
     log.info "CHANGES", flagsOps, boxOps
 
     boxIndex = {}
-    
+
     # in parallel
     Promise.all [
         # get a scheduler
@@ -272,7 +272,7 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
                 uid = msg.mailboxIDs[box.id]
                 boxIndex[box.id] = path: box.path, uid: uid
     ]
-    .spread (scheduler) -> scheduler.doASAP (imap) ->  
+    .spread (scheduler) -> scheduler?.doASAP (imap) ->
 
         # ERROR CASES
         for boxid in boxOps.addTo when not boxIndex[boxid]
@@ -281,15 +281,15 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
         # step 1 - get the first box + UID
         boxid = Object.keys(msg.mailboxIDs)[0]
         uid = msg.mailboxIDs[boxid]
-        
+
         # step 2 - apply flags change
         imap.openBox boxIndex[boxid].path
-        .then -> 
-            if flagsOps.add.length  
+        .then ->
+            if flagsOps.add.length
                 imap.addFlags uid, flagsOps.add
-        .then -> 
+        .then ->
             if flagsOps.remove.length
-                imap.delFlags uid, flagsOps.remove 
+                imap.delFlags uid, flagsOps.remove
         .then ->
             log.info "CHANGED FLAGS #{boxIndex[boxid].path}:#{uid}",
             "ADD" , flagsOps.add, "REMOVE", flagsOps.remove
@@ -300,15 +300,15 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
         # step 3 - copy the message to its destinations
         .then -> Promise.serie boxOps.addTo, (destId) ->
             imap.copy uid, boxIndex[destId].path
-            .then (uidInDestination) -> 
+            .then (uidInDestination) ->
                 log.info "COPIED #{boxIndex[boxid].path}:#{uid}",
                 " TO #{boxIndex[destId].path}:#{uidInDestination}"
                 msg.mailboxIDs[destId] = uidInDestination
-    
+
         # step 4 - remove the message from the box it shouldn't be in
-        .then -> 
+        .then ->
             Promise.serie boxOps.removeFrom, (boxid) ->
-                {path, uid} = boxIndex[boxid] 
+                {path, uid} = boxIndex[boxid]
 
                 imap.openBox path
                 .then -> imap.addFlags uid, '\\Deleted'

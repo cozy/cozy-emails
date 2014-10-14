@@ -7,7 +7,7 @@ SettingsStore = require '../stores/settings_store'
 module.exports =
 
 
-    changeSettings: (settings) ->
+    changeSettings: (settings, callback) ->
         request.put "settings"
         .set 'Accept', 'application/json'
         .send settings
