@@ -34,14 +34,14 @@ DovecotTesting.changeSentUIDValidity = (done) ->
     run cmd, (err) ->
         if err
             return done new Error('failed to change UID')
-        
+
         # let dovecot time to start
         setTimeout ( -> done null ), 3000
 
 DovecotTesting.setupEnvironment = (done) ->
     @timeout? 300000
-    
-    if RUN_IN_VAGRANT 
+
+    if RUN_IN_VAGRANT
        console.log 'Starting Vagrant Provisioning'
        DovecotTesting.isVagrantUp (err, vagrantIsUp) ->
             cmd = if vagrantIsUp then 'vagrant provision'
@@ -50,10 +50,10 @@ DovecotTesting.setupEnvironment = (done) ->
             run "cd #{__dirname}/vagrant && " + cmd, (err) ->
                 if err
                     return done new Error('failed to start Dovecot')
-                
+
                 # let dovecot time to start
                 setTimeout ( -> done null ), 1000
-    
+
     else
         console.log 'Starting Local Provisioning'
         run """
@@ -62,13 +62,19 @@ DovecotTesting.setupEnvironment = (done) ->
             sudo /bin/bash /resources/Scripts/SSL.sh
         """
         , (err) ->
-            if err 
+            if err
                 return done new Error('failed to start Dovecot')
-            
+
             # let dovecot time to start
             setTimeout ( -> done null ), 1000
-    
+
+
+DovecotTesting.saveChanges = (done) ->
+    copy = if RUN_IN_VAGRANT then 'scp -r vagrant@172.31.1.2:'
+    else 'sudo cp -Rp '
+
+    run "#{copy}/home/testuser/Maildir #{__dirname}/resources/", done
 
 unless module.parent
-    DovecotTesting.setupEnvironment -> 
+    DovecotTesting.setupEnvironment ->
         console.log "ALL SET, IN VAGRANT =", RUN_IN_VAGRANT
