@@ -2,7 +2,8 @@
 classer = React.addons.classSet
 
 SettingsActionCreator = require '../actions/settings_action_creator'
-PluginUtils   = require '../utils/plugin_utils'
+PluginUtils = require '../utils/plugin_utils'
+ApiUtils = require '../utils/api_utils'
 
 module.exports = React.createClass
     displayName: 'Settings'
@@ -116,15 +117,7 @@ module.exports = React.createClass
                 settings = @state.settings
                 settings.lang = lang
                 @setState({settings: settings})
-                moment.locale lang
-                try
-                    locales = require "../locales/#{lang}"
-                catch err
-                    console.log err
-                    locales = require "../locales/en"
-                polyglot = new Polyglot()
-                polyglot.extend locales
-                window.t = polyglot.t.bind polyglot
+                ApiUtils.setLocale lang, true
                 SettingsActionCreator.edit settings
             when 'plugin'
                 name = target.dataset.plugin

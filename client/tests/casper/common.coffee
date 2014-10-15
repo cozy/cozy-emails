@@ -17,5 +17,9 @@ exports.init = (casper) ->
     casper.on "page.error", (msg, trace) ->
         casper.echo "Error: " + msg, "ERROR"
         utils.dump trace.slice 0, 2
+    casper.on "load.finished", ->
+        # ensure locale is english
+        casper.evaluate ->
+            window.cozyMails.setLocale 'en', true
 
 

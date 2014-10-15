@@ -30,6 +30,11 @@ module.exports = LayoutActionCreator =
                 level: level
                 message: message
 
+    refresh: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.REFRESH
+            value: null
+
     alertSuccess: (message) ->
         LayoutActionCreator.alert AlertLevel.SUCCESS, message
     alertInfo:    (message) ->

@@ -31,6 +31,7 @@ module.exports =
         'SHOW_MENU_RESPONSIVE'      : 'SHOW_MENU_RESPONSIVE'
         'HIDE_MENU_RESPONSIVE'      : 'HIDE_MENU_RESPONSIVE'
         'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
+        'REFRESH'                   : 'REFRESH'
 
         # Mailbox
         'RECEIVE_RAW_MAILBOXES'     : 'RECEIVE_RAW_MAILBOXES'
