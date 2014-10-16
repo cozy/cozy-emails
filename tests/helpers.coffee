@@ -4,9 +4,9 @@
 fixtures = require 'cozy-fixtures'
 {exec} = require 'child_process'
 Client = require('request-json').JsonClient
-DovecotTesting = require './DovecotTesting/index'
+DovecotTesting = require 'dovecot-testing'
 Imap = require '../server/processes/imap_promisified'
-SMTPTesting = require './SMTPTesting/index'
+SMTPTesting = require './smtp-testing/index'
 
 module.exports = helpers = {}
 

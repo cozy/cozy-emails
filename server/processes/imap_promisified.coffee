@@ -81,13 +81,13 @@ module.exports = class ImapPromisified
                 # an error happened while connection active
                 # @TODO : how do we handle this ?
                 log.error "ERROR ?", err
-            @_super.once 'close', =>
+            @_super.once 'close', (err) =>
                 # if we did not expect the ending
-                @onTerminated?() unless @waitEnding
+                @onTerminated?(err) unless @waitEnding
                 @closed = true
-            @_super.once 'end', =>
+            @_super.once 'end', (err) =>
                 # if we did not expect the ending
-                @onTerminated?() unless @waitEnding
+                @onTerminated?(err) unless @waitEnding
                 @closed = true
 
     # end the connection

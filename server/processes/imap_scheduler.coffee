@@ -69,8 +69,8 @@ module.exports = class ImapScheduler
             tls: not @account.imapSecure? or @account.imapSecure
             tlsOptions: rejectUnauthorized: false
 
-        @imap.onTerminated = =>
-            log.error 'IMAP TERMINATED'
+        @imap.onTerminated = (err) =>
+            log.error 'IMAP TERMINATED', err
             @_rejectPending new Error 'connection closed'
             @closeConnection()
 

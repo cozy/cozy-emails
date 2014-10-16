@@ -1,7 +1,7 @@
 should = require('should')
 helpers = require './helpers'
-DovecotTesting = require './DovecotTesting/index'
-SMTPTesting = require './SMTPTesting/index'
+DovecotTesting = require 'dovecot-testing'
+SMTPTesting = require './smtp-testing/index'
 client = helpers.getClient()
 Account = require '../server/models/account'
 

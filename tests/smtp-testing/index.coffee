@@ -19,7 +19,7 @@ SMTPTesting.init = (port, done) ->
     smtpServer.on 'authorizeUser', (connection, username, password, callback) ->
         SMTPTesting.lastConnection = {username, password}
         callback null, true
-    
+
     smtpServer.on 'dataReady', (envelope, callback) ->
         SMTPTesting.mailStore.push envelope
         callback null, "ABC" + queueID++
