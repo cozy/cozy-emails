@@ -11,6 +11,8 @@ classer = React.addons.classSet
 module.exports = React.createClass
     displayName: 'AccountConfig'
 
+    _lastDiscovered: ''
+
     mixins: [
         RouterMixin
         React.addons.LinkedStateMixin # two-way data binding
@@ -20,6 +22,7 @@ module.exports = React.createClass
         'id', 'label', 'name', 'login', 'password',
         'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
         'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
+        'serverType', 'mailboxes', 'favoriteMailboxes',
         'draftMailbox', 'sentMailbox', 'trashMailbox'
     ]
     _accountSchema:
@@ -69,6 +72,9 @@ module.exports = React.createClass
             'trashMailbox':
                 allowEmpty: true
                 #type: 'string'
+            'serverType':
+                allowEmpty: true
+                #type: 'string'
 
     shouldComponentUpdate: (nextProps, nextState) ->
         if not Immutable.is(nextState, @state)
@@ -88,7 +94,7 @@ module.exports = React.createClass
         return should
 
     render: ->
-        if @props.selectedAccount?
+        if @state.id
             titleLabel = t "account edit"
         else
             titleLabel = t "account new"
@@ -118,19 +124,21 @@ module.exports = React.createClass
             if @state.tab is 'mailboxes'
                 @renderMailboxes()
 
+    renderError: ->
+        if @props.error and @props.error.name is 'AccountConfigError'
+            message = t 'config error ' + @props.error.field
+            div className: 'alert alert-warning', message
+        else if @props.error
+            div className: 'alert alert-warning', @props.error.message
+        else if Object.keys(@state.errors).length isnt 0
+            div className: 'alert alert-warning', t 'account errors'
+
     renderMain: ->
 
         if @props.isWaiting then buttonLabel = 'Saving...'
         else if @props.selectedAccount? then buttonLabel = t "account save"
         else buttonLabel = t "account add"
 
-        renderError = =>
-            if @props.error and @props.error.name is 'AccountConfigError'
-                message = t 'config error ' + @props.error.field
-                div className: 'alert alert-warning', message
-            else if @props.error
-                console.log @props.error.stack
-                div className: 'alert alert-warning', @props.error.message
 
         hasError = (field) =>
             if @state.errors[field]?
@@ -142,18 +150,20 @@ module.exports = React.createClass
                 div className: 'col-sm-5 col-sm-offset-2 control-label', @state.errors[field]
 
         form className: 'form-horizontal',
-            renderError()
+            @renderError()
             div className: 'form-group' + hasError('label'),
                 label
                     htmlFor: 'mailbox-label',
                     className: 'col-sm-2 col-sm-offset-2 control-label',
                     t "account label"
                 div className: 'col-sm-3',
-                    input id: 'mailbox-label',
-                    valueLink: @linkState('label'),
-                    type: 'text',
-                    className: 'form-control',
-                    placeholder: t "account name short"
+                    input
+                        id: 'mailbox-label',
+                        valueLink: @linkState('label'),
+                        type: 'text',
+                        className: 'form-control',
+                        placeholder: t "account name short"
+                        onBlur: @validateForm
                 getError 'label'
 
             div className: 'form-group' + hasError('name'),
@@ -168,6 +178,7 @@ module.exports = React.createClass
                         type: 'text',
                         className: 'form-control',
                         placeholder: t "account user fullname"
+                        onBlur: @validateForm
                 getError 'name'
 
             div className: 'form-group' + hasError('login') + hasError('auth'),
@@ -197,6 +208,7 @@ module.exports = React.createClass
                         valueLink: @linkState('password'),
                         type: 'password',
                         className: 'form-control'
+                        onBlur: @validateForm
                 getError 'password'
 
             fieldset null,
@@ -213,6 +225,7 @@ module.exports = React.createClass
                             type: 'text',
                             className: 'form-control',
                             placeholder: 'smtp.provider.tld'
+                            onBlur: @validateForm
                     label
                         htmlFor: 'mailbox-smtp-port',
                         className: 'col-sm-1 control-label',
@@ -251,6 +264,18 @@ module.exports = React.createClass
                             className: 'form-control'
                             onClick: (ev) => @_onServerParam ev.target, 'smtp', 'tls'
 
+            div className: 'hidden',
+                label
+                    htmlFor: 'account-type',
+                    className: 'col-sm-2 col-sm-offset-2 control-label',
+                    t 'account type'
+                div className: 'col-sm-3',
+                    input
+                        id: 'account-type',
+                        valueLink: @linkState('accountType'),
+                        type: 'hidden',
+                        className: 'form-control'
+                getError 'password'
             fieldset null,
                 legend null, t 'account receiving server'
                 div className: 'form-group' + hasError('imap') + hasError('imapServer') + hasError('imapPort'),
@@ -265,6 +290,7 @@ module.exports = React.createClass
                             type: 'text',
                             className: 'form-control',
                             placeholder: 'imap.provider.tld'
+                            onBlur: @validateForm
                     label
                         htmlFor: 'mailbox-imap-port',
                         className: 'col-sm-1 control-label',
@@ -305,7 +331,7 @@ module.exports = React.createClass
 
             div className: 'form-group',
                 div className: 'col-sm-offset-2 col-sm-5 text-right',
-                    if @props.selectedAccount?
+                    if @state.id?
                         button
                             className: 'btn btn-cozy',
                             onClick: @onRemove,
@@ -315,14 +341,15 @@ module.exports = React.createClass
                         onClick: @onSubmit, buttonLabel
 
     renderMailboxes: ->
-        favorites = @props.favoriteMailboxes
-        if @props.mailboxes?
-            mailboxes = @props.mailboxes.map (mailbox, key) =>
+        favorites = @state.favoriteMailboxes
+        if @state.mailboxes?
+            mailboxes = @state.mailboxes.map (mailbox, key) =>
                 favorite = true if favorites.get(mailbox.get('id'))
-                MailboxItem {account: @props.selectedAccount, mailbox, favorite}
+                MailboxItem {accountID: @state.id, mailbox, favorite}
             .toJS()
         form className: 'form-horizontal',
 
+            @renderError()
             @_renderMailboxChoice 'account draft mailbox', "draftMailbox"
             @_renderMailboxChoice 'account sent mailbox',  "sentMailbox"
             @_renderMailboxChoice 'account trash mailbox', "trashMailbox"
@@ -330,15 +357,15 @@ module.exports = React.createClass
             h4 null, t "account tab mailboxes"
             ul className: "list-unstyled boxes",
                 mailboxes
-                li null
+                li null,
                     div className: "box edited",
                         span
-                            className: "box-action"
+                            className: "box-action add"
                             onClick: @addMailbox
                             title: t("mailbox title add"),
                                 i className: 'fa fa-plus'
                         span
-                            className: "box-action"
+                            className: "box-action cancel"
                             onClick: @undoMailbox
                             title: t("mailbox title add cancel"),
                                 i className: 'fa fa-undo'
@@ -355,32 +382,40 @@ module.exports = React.createClass
                         div className: 'col-sm-1',
                             MailboxList
                                 allowUndefined: true
-                                mailboxes: @props.mailboxes
+                                mailboxes: @state.mailboxes
                                 selectedMailbox: @state.newMailboxParent
                                 onChange: (mailbox) =>
                                     @setState newMailboxParent: mailbox
 
     _renderMailboxChoice: (labelText, box) ->
-        if @props.selectedAccount?
-            div className: 'form-group',
+        if @state.id?
+            div className: "form-group #{box}",
                 label
                     className: 'col-sm-2 col-sm-offset-2 control-label',
                     t labelText
                 div className: 'col-sm-3',
                     MailboxList
                         allowUndefined: true
-                        mailboxes: @props.mailboxes
+                        mailboxes: @state.mailboxes
                         selectedMailbox: @state[box]
                         onChange: (mailbox) =>
                             newState = {}
                             newState[box] = mailbox
                             @setState newState
 
+    componentDidMount: ->
+        # On error, scroll to message
+        node = document.querySelector("#mailbox-config .alert")
+        if node?
+            node.scrollIntoView()
 
-    onSubmit: (event) ->
-        # prevents the page from reloading
-        event.preventDefault()
+    componentDidUpdate: ->
+        # On error, scroll to message
+        node = document.querySelector("#mailbox-config .alert")
+        if node?
+            node.scrollIntoView()
 
+    doValidate: ->
         accountValue = {}
         init = (field) =>
             accountValue[field] = @state[field]
@@ -391,15 +426,44 @@ module.exports = React.createClass
 
         valid = validate accountValue, @_accountSchema, validOptions
 
+        return {accountValue, valid}
+
+    validateForm: (event) ->
+        event.preventDefault()
+        # If form contains errors, re-validate it every time the user updates
+        # a field
+        if Object.keys(@state.errors).length isnt 0
+            {accountValue, valid} = @doValidate()
+            if valid.valid
+                @setState errors: {}
+            else
+                errors = {}
+                setError = (error) ->
+                    errors[error.property] = t "validate #{error.message}"
+                setError error for error in valid.errors
+                @setState errors: errors
+
+    onSubmit: (event) ->
+        # prevents the page from reloading
+        event.preventDefault()
+
+        {accountValue, valid} = @doValidate()
+
         if valid.valid
             @setState errors: {}
-            afterCreation = (id) =>
-                @setState tab: 'mailboxes'
+            afterCreation = (account) =>
+                state = {}
+                init = (field) ->
+                    state[field] = account.get field
+                init field for field in @_accountFields
+                state.newMailboxParent = null
+                state.tab = 'mailboxes'
+                @setState state
 
 
-            if @props.selectedAccount?
+            if @state.id?
                 AccountActionCreator.edit accountValue,
-                    @props.selectedAccount.get 'id'
+                    @state.id
             else
                 AccountActionCreator.create accountValue, afterCreation
         else
@@ -414,7 +478,7 @@ module.exports = React.createClass
         event.preventDefault()
 
         if window.confirm(t 'account remove confirm')
-            AccountActionCreator.remove @props.selectedAccount.get 'id'
+            AccountActionCreator.remove @state.id
 
 
     tabChange: (e) ->
@@ -427,7 +491,7 @@ module.exports = React.createClass
 
         mailbox =
             label: @refs.newmailbox.getDOMNode().value.trim()
-            accountID: @props.selectedAccount.get 'id'
+            accountID: @state.id
             parentID: @state.newMailboxParent
 
         AccountActionCreator.mailboxCreate mailbox, (error) ->
@@ -443,44 +507,49 @@ module.exports = React.createClass
         @setState newMailboxParent: null
 
 
-    discover: ->
-        login = @refs.login.getDOMNode().value.trim()
+    discover: (event) ->
+        @validateForm event
 
-        AccountActionCreator.discover login.split('@')[1], (err, provider) =>
-            if not err?
-                infos = {}
-                getInfos = (server) ->
-                    if server.type is 'imap' and not infos.imapServer?
-                        infos.imapServer = server.hostname
-                        infos.imapPort   = server.port
-                    if server.type is 'smtp' and not infos.smtpServer?
-                        infos.smtpServer = server.hostname
-                        infos.smtpPort   = server.port
-                getInfos server for server in provider
-                if not infos.imapServer?
-                    infos.imapServer = ''
-                    infos.imapPort   = '993'
-                if not infos.smtpServer?
-                    infos.smtpServer = ''
-                    infos.smtpPort   = '465'
-                switch infos.imapPort
-                    when '993'
-                        infos.imapSSL = true
-                        infos.imapTLS = false
-                    else
-                        infos.imapSSL = false
-                        infos.imapTLS = false
-                switch infos.smtpPort
-                    when '465'
-                        infos.smtpSSL = true
-                        infos.smtpTLS = false
-                    when '587'
-                        infos.smtpSSL = false
-                        infos.smtpTLS = true
-                    else
-                        infos.smtpSSL = false
-                        infos.smtpTLS = false
-                @setState infos
+        login = @state.login#@refs.login.getDOMNode().value.trim()
+
+        if login isnt @_lastDiscovered
+            AccountActionCreator.discover login.split('@')[1], (err, provider) =>
+                if not err?
+                    infos = {}
+                    getInfos = (server) ->
+                        if server.type is 'imap' and not infos.imapServer?
+                            infos.imapServer = server.hostname
+                            infos.imapPort   = server.port
+                        if server.type is 'smtp' and not infos.smtpServer?
+                            infos.smtpServer = server.hostname
+                            infos.smtpPort   = server.port
+                    getInfos server for server in provider
+                    if not infos.imapServer?
+                        infos.imapServer = ''
+                        infos.imapPort   = '993'
+                    if not infos.smtpServer?
+                        infos.smtpServer = ''
+                        infos.smtpPort   = '465'
+                    switch infos.imapPort
+                        when '993'
+                            infos.imapSSL = true
+                            infos.imapTLS = false
+                        else
+                            infos.imapSSL = false
+                            infos.imapTLS = false
+                    switch infos.smtpPort
+                        when '465'
+                            infos.smtpSSL = true
+                            infos.smtpTLS = false
+                        when '587'
+                            infos.smtpSSL = false
+                            infos.smtpTLS = true
+                        else
+                            infos.smtpSSL = false
+                            infos.smtpTLS = false
+                    @setState infos
+                    @validateForm event
+            @_lastDiscovered = login
 
     _onServerParam: (target, server, type) ->
         if (server is 'imap' and @state.imapManualPort) or
@@ -524,7 +593,6 @@ module.exports = React.createClass
             else
                 infos.smtpSSL = false
                 infos.smtpTLS = false
-        console.log port, infos
         @setState infos
 
     componentWillReceiveProps: (props) ->
@@ -537,19 +605,9 @@ module.exports = React.createClass
                 tab = "account"
             else
                 tab = @state.tab
-            if props.selectedAccount?
-                @setState @_accountToState(tab)
-            else
-                state =
-                    tab: null
-                    errors: {}
-                if props.error?
-                    if props.error.name is 'AccountConfigError'
-                        field = props.error.field
-                        state.errors[field] = t 'config error ' + field
-                @setState state
+            @setState @_accountToState(tab)
 
-    getInitialState: (forceDefault) ->
+    getInitialState: ->
         return @_accountToState("account")
 
     _accountToState: (tab)->
@@ -559,23 +617,28 @@ module.exports = React.createClass
         if @props.error?
             if @props.error.name is 'AccountConfigError'
                 field = @props.error.field
-                errors[field] = t 'config error ' + @props.field
+                state.errors[field] = t 'config error ' + field
         if account?
             init = (field) ->
                 state[field] = account.get field
             init field for field in @_accountFields
             state.newMailboxParent = null
             state.tab = tab
+            if state.mailboxes.length is 0
+                state.tab = 'mailboxes'
+            state.favoriteMailboxes = @props.favoriteMailboxes
         else
             init = (field) ->
                 state[field] = ''
             init field for field in @_accountFields
+            state.id       = null
             state.smtpPort = 465
             state.smtpSSL  = true
             state.smtpTLS  = false
             state.imapPort = 993
             state.imapSSL  = true
             state.imapTLS  = false
+            state.accountType = 'IMAP'
             state.newMailboxParent = null
             state.tab = null
 
@@ -607,16 +670,16 @@ MailboxItem = React.createClass
         else
             favoriteClass = "fa fa-eye-slash"
             favoriteTitle = t "mailbox title not favorite"
-        li key: key,
+        li className: 'box-item', key: key,
             if @state.edited
                 div className: "box edited",
                     span
-                        className: "box-action"
+                        className: "box-action save"
                         onClick: @updateMailbox
                         title: t("mailbox title edit save"),
                             i className: 'fa fa-check'
                     span
-                        className: "box-action"
+                        className: "box-action cancel"
                         onClick: @undoMailbox
                         title: t("mailbox title edit cancel"),
                             i className: 'fa fa-undo'
@@ -628,12 +691,12 @@ MailboxItem = React.createClass
             else
                 div className: "box",
                     span
-                        className: "box-action",
+                        className: "box-action edit",
                         onClick: @editMailbox,
                         title: t("mailbox title edit"),
                             i className: 'fa fa-pencil'
                     span
-                        className: "box-action",
+                        className: "box-action delete",
                         onClick: @deleteMailbox,
                         title: t("mailbox title delete"),
                             i className: 'fa fa-trash-o'
@@ -642,7 +705,7 @@ MailboxItem = React.createClass
                         onClick: @editMailbox,
                         "#{pusher}#{@props.mailbox.get 'label'}"
                     span
-                        className: "box-action",
+                        className: "box-action favorite",
                         title: favoriteTitle
                         onClick: @toggleFavorite,
                             i className: favoriteClass
@@ -661,7 +724,7 @@ MailboxItem = React.createClass
         mailbox =
             label: @refs.label.getDOMNode().value.trim()
             mailboxID: @props.mailbox.get 'id'
-            accountID: @props.account.get 'id'
+            accountID: @props.accountID
 
         AccountActionCreator.mailboxUpdate mailbox, (error) ->
             if error?
@@ -674,7 +737,7 @@ MailboxItem = React.createClass
         mailbox =
             favorite: not @state.favorite
             mailboxID: @props.mailbox.get 'id'
-            accountID: @props.account.get 'id'
+            accountID: @props.accountID
 
         AccountActionCreator.mailboxUpdate mailbox, (error) ->
             if error?
@@ -690,7 +753,7 @@ MailboxItem = React.createClass
         if window.confirm(t 'account confirm delbox')
             mailbox =
                 mailboxID: @props.mailbox.get 'id'
-                accountID: @props.account.get 'id'
+                accountID: @props.accountID
 
             AccountActionCreator.mailboxDelete mailbox, (error) ->
                 if error?

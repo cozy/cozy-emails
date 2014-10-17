@@ -27,3 +27,6 @@ module.exports =
         window.t = polyglot.t.bind polyglot
         if refresh
             LayoutActionCreator.refresh()
+
+    getAccountByLabel: (label) ->
+        return AccountStore.getByLabel label

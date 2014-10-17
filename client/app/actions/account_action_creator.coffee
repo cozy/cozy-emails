@@ -19,7 +19,7 @@ module.exports = AccountActionCreator =
                     type: ActionTypes.ADD_ACCOUNT
                     value: account
 
-                afterCreation account
+                afterCreation(AccountStore.getByID account.id)
 
 
     edit: (inputValues, accountID) ->

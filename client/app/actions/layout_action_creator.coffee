@@ -107,14 +107,14 @@ module.exports = LayoutActionCreator =
 
     showCreateAccount: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        AccountActionCreator.selectAccount -1
+        AccountActionCreator.selectAccount null
 
     showConfigAccount: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
         AccountActionCreator.selectAccount panelInfo.parameters.accountID
 
     showSearch: (panelInfo, direction) ->
-        AccountActionCreator.selectAccount -1
+        AccountActionCreator.selectAccount null
 
         {query, page} = panelInfo.parameters
 

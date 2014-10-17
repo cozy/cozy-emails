@@ -106,6 +106,9 @@ module.exports =
                                         dossier et tout son contenu ?"
       "account tab account"         : "Compte"
       "account tab mailboxes"       : "Dossiers"
+      "account errors"              : "Certaines informations manquent ou
+                                        sont incorrectes"
+      "account type"                : "Type de compte"
       "mailbox create ok"           : "Dossier créé"
       "mailbox create ko"           : "Erreur de création du dossier"
       "mailbox update ok"           : "Dossier mis à jour"
@@ -126,6 +129,8 @@ module.exports =
       "config error imapTLS"        : "Erreur IMAP TLS"
       "config error smtpPort"       : "Port du serveur d'envoi invalide"
       "config error smtpServer"     : "Serveur d'envoi invalide"
+      "config error nomailboxes"    : "Ce compte n'a pas encore de dossier,
+                                        commencez par en créer"
 
       # Message Action
       "message action sent ok"      : "Message envoyé !"
