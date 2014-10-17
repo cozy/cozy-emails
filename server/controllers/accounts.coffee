@@ -46,8 +46,10 @@ module.exports.details = (req, res, next) ->
 module.exports.edit = (req, res, next) ->
     # @TODO : may be only allow changes to label, unless connection broken
 
-    changes = _.pick req.body, 'label', 'login', 'password', 'name',
-        'smtpServer', 'smtpPort', 'imapServer', 'imapPort',
+    changes = _.pick req.body,
+        'label', 'login', 'password', 'name', 'account_type'
+        'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
+        'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
         'draftMailbox', 'sentMailbox', 'trashMailbox'
 
     req.account.updateAttributesPromised changes

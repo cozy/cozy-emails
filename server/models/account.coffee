@@ -9,10 +9,15 @@ module.exports = Account = americano.getModel 'Account',
     name: String                # user name to put in sent mails
     login: String               # IMAP & SMTP login
     password: String            # IMAP & SMTP password
+    accountType: String         # "IMAP3" or "TEST"
     smtpServer: String          # SMTP host
     smtpPort: Number            # SMTP port
+    smtpSSL: Boolean            # Use SSL
+    smtpTLS: Boolean            # Use STARTTLS
     imapServer: String          # IMAP host
     imapPort: Number            # IMAP port
+    imapSSL: Boolean            # Use SSL
+    imapTLS: Boolean            # Use STARTTLS
     inboxMailbox: String        # INBOX Maibox id
     draftMailbox: String        # \Draft Maibox id
     sentMailbox: String         # \Sent Maibox id
@@ -24,10 +29,11 @@ module.exports = Account = americano.getModel 'Account',
 
 # There is a circular dependency between ImapProcess & Account
 # node handle if we require after module.exports definition
-nodemailer = require 'nodemailer'
-Mailbox = require './mailbox'
+nodemailer  = require 'nodemailer'
+Mailbox     = require './mailbox'
 ImapProcess = require '../processes/imap_processes'
-Promise = require 'bluebird'
+Promise     = require 'bluebird'
+Message     = require './message'
 {AccountConfigError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'models:account')
 
@@ -41,13 +47,15 @@ SMTPConnection = require 'nodemailer/node_modules/' +
 Account.refreshAllAccounts = ->
     allAccounts = Account.requestPromised 'all'
     Promise.serie allAccounts, (account) ->
-        ImapProcess.fetchAccount account
+        if not account.accountType is 'TEST'
+            ImapProcess.fetchAccount account
 
 # Public: refresh this account
 #
 # Returns a {Promise} for task completion
 Account::fetchMails = ->
-    ImapProcess.fetchAccount this
+    if not account.accountType is 'TEST'
+        ImapProcess.fetchAccount this
 
 # Public: include the mailboxes tree on this account instance
 #
@@ -66,31 +74,43 @@ Account::includeMailboxes = ->
 # Returns {Promise} promise for the created {Account}, boxes included
 Account.createIfValid = (data) ->
 
-    Account.testSMTPConnection data
-    .then (err) ->
-        ImapProcess.fetchBoxesTree data
+    if not data.accountType is 'TEST'
+        Account.testSMTPConnection data
+        .then (err) ->
+            ImapProcess.fetchBoxesTree data
 
-    .then (rawBoxesTree) ->
-        # We managed to get boxes, login settings are OK
-        # create Account and Mailboxes
-        log.info "GOT BOXES", rawBoxesTree
+        .then (rawBoxesTree) ->
+            # We managed to get boxes, login settings are OK
+            # create Account and Mailboxes
+            log.info "GOT BOXES", rawBoxesTree
 
+            Account.createPromised data
+            .then (account) ->
+                Mailbox.createBoxesFromImapTree account.id, rawBoxesTree
+                .then (specialUses) ->
+                    account.updateAttributesPromised specialUses
+
+        .then (account) ->
+
+            # in a detached chain, fetch the Account
+            # first fetch 100 mails from each box
+            ImapProcess.fetchAccount account, 100
+            # then fectch the rest
+            .then -> ImapProcess.fetchAccount account
+            .catch (err) -> console.log "FETCH MAIL FAILED", err
+
+            return account.includeMailboxes()
+    else
+        log.info "TEST ACCOUNT"
         Account.createPromised data
         .then (account) ->
-            Mailbox.createBoxesFromImapTree account.id, rawBoxesTree
+            Mailbox.createBoxesFromImapTree account.id, null
             .then (specialUses) ->
                 account.updateAttributesPromised specialUses
 
-    .then (account) ->
+        .then (account) ->
 
-        # in a detached chain, fetch the Account
-        # first fetch 100 mails from each box
-        ImapProcess.fetchAccount account, 100
-        # then fectch the rest
-        .then -> ImapProcess.fetchAccount account
-        .catch (err) -> console.log "FETCH MAIL FAILED", err
-
-        return account.includeMailboxes()
+            return account.includeMailboxes()
 
 # Public: send a message using this account SMTP config
 #

@@ -16,22 +16,22 @@ Account = null
 # a list of task than need to be executed.
 # It will create and destroy its @imap connection
 # ASAP tasks are run first
-# 
+#
 # Examples
-# 
+#
 #  scheduler = ImapScheduler.instanceFor account
-#  pResult = scheduler.doASAP (imap) -> 
+#  pResult = scheduler.doASAP (imap) ->
 #    imap.doSomething()
 module.exports = class ImapScheduler
 
     # static function, we have 1 ImapScheduler by imap server
     @instances = {}
-    
+
     # Public: get the singleton instance of {ImapScheduler}
     # for the passed {Account}
-    # 
+    #
     # account - an {Account} to get the instance for
-    # 
+    #
     # Returns an {ImapScheduler} linked to this account
     @instanceFor: (account) ->
         # Prevent exception with data from fixtures
@@ -43,20 +43,20 @@ module.exports = class ImapScheduler
     tasks: []
     pendingTask: null
 
-    # Private: create a new connection for this 
+    # Private: create a new connection for this
     # scheduler instance
-    # 
+    #
     # account - account to create the scheduler for
-    # 
+    #
     # Returns a {Promise} for the connected imap object
     constructor: (@account) ->
         Account ?= require '../models/account'
         unless @account instanceof Account
             @account = new Account @account
 
-    # Private: create a new connection for this 
+    # Private: create a new connection for this
     # scheduler instance
-    # 
+    #
     # Returns a {Promise} for the connected imap object
     createNewConnection: ->
         log.info "OPEN IMAP CONNECTION", @account.label
@@ -66,7 +66,7 @@ module.exports = class ImapScheduler
             password: @account.password
             host: @account.imapServer
             port: parseInt @account.imapPort
-            tls: not @account.imapSecure? or @account.imapSecure
+            tls: not @account.imapSSL? or @account.imapSSL
             tlsOptions: rejectUnauthorized: false
 
         @imap.onTerminated = =>
@@ -82,10 +82,10 @@ module.exports = class ImapScheduler
             .tap => @_dequeue()
 
     # Private: close the connection
-    # 
+    #
     # hard - {Boolean} either to force close the socket
     #         or wait for it to connect
-    # 
+    #
     # Returns a {Promise} for the connected imap object
     closeConnection: (hard) =>
         log.info "CLOSING CONNECTION", (if hard then "HARD" else "")
@@ -96,25 +96,25 @@ module.exports = class ImapScheduler
 
     # Public: run generator as soon as the connection
     # is available
-    # 
+    #
     # gen - a {Function} that returns a {Promise}
-    # 
+    #
     # Returns a {Promise} for the return value of gen
     doASAP: (gen) -> @queue true, gen
 
     # Public: run generator later when the connection
     # is available
-    # 
+    #
     # gen - a {Function} that returns a {Promise}
-    # 
+    #
     # Returns a {Promise} for the return value of gen
     doLater: (gen) -> @queue false, gen
 
     # Public: run generator later when the connection
     # is available
-    # 
+    #
     # gen - a {Function} that returns a {Promise}
-    # 
+    #
     # Returns a {Promise} for the return value of gen
     queue: (urgent = false, gen) ->
         return new Promise (resolve, reject) =>
@@ -130,28 +130,28 @@ module.exports = class ImapScheduler
 
     # Public: utility function for actions in a box
     # handle the case where UIDValidity has changed
-    # 
+    #
     # box - {Mailbox} to work in
     # gen - a {Function} that returns a Promise
-    # 
+    #
     # Returns a {Promise} for the return value of gen
     doASAPWithBox: (box, gen) -> @queueWithBox true, box, gen
 
     # Public: utility function for actions in a box
     # handle the case where UIDValidity has changed
-    # 
+    #
     # box - {Mailbox} to work in
     # gen - a {Function} that returns a Promise
-    # 
+    #
     # Returns a {Promise} for the return value of gen
     doLaterWithBox: (box, gen) -> @queueWithBox false, box, gen
 
     # Private: utility function for actions in a box
     # handle the case where UIDValidity has changed
-    # 
+    #
     # box - {Mailbox} to work in
     # gen - a {Function} that returns a Promise
-    # 
+    #
     # Returns a {Promise} for the return value of gen
     queueWithBox: (urgent, box, gen) ->
         @queue urgent, (imap) ->
@@ -192,9 +192,9 @@ module.exports = class ImapScheduler
                 @queueWithBox urgent, box, gen
 
     # Private: solve the pending task promise
-    # 
+    #
     # result - the result to solve it with
-    # 
+    #
     # Returns: {void}
     _resolvePending: (result) =>
         @pendingTask.resolve result
@@ -202,9 +202,9 @@ module.exports = class ImapScheduler
         setTimeout @_dequeue, 1
 
     # Private: solve the pending task promise
-    # 
+    #
     # err - the {Error} to reject the promise with
-    # 
+    #
     # Returns: {void}
     _rejectPending: (err) =>
         @pendingTask.reject err
@@ -215,8 +215,8 @@ module.exports = class ImapScheduler
     # Private: handle next step of the processing
     # - open and close the imap connection as appropriate
     # - timeout every task for 2min
-    # 
-    # 
+    #
+    #
     # Returns: {void}
     _dequeue: =>
 

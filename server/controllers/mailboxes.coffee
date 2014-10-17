@@ -11,14 +11,14 @@ module.exports.create = (req, res, next) ->
     log.info "Creating #{req.body.label} under #{req.body.parentID} in #{req.body.accountID}"
 
     pAccount = Account.findPromised req.body.accountID
-    pParent = if req.body.parentID then Mailbox.findPromised req.body.parentID 
+    pParent = if req.body.parentID then Mailbox.findPromised req.body.parentID
     else Promise.resolve null
 
 
     Promise.join pAccount, pParent, (account, parent) ->
-        if parent 
+        if parent
             path = parent.path + parent.delimiter + req.body.label
-            tree = parent.tree.concat req.body.label 
+            tree = parent.tree.concat req.body.label
         else
             path = req.body.label
             tree = [req.body.label]
@@ -32,14 +32,18 @@ module.exports.create = (req, res, next) ->
             delimiter: '/' #@TODO : this is probably not safe
             attribs: []
             children: []
-        
-        ImapProcess.createBox account, mailbox.path
-        .then -> Mailbox.createPromised mailbox.toObject()
-        .return account
-    
+
+        if not account.accountType is 'TEST'
+            ImapProcess.createBox account, mailbox.path
+            .then -> Mailbox.createPromised mailbox.toObject()
+            .return account
+        else
+            Mailbox.createPromised mailbox.toObject()
+            .return account
+
     .then (account) -> account.includeMailboxes()
     .then (account) -> res.send account
-    .catch (err) -> 
+    .catch (err) ->
         log.error err
         next err
 
@@ -54,13 +58,20 @@ module.exports.update = (req, res, next) ->
             parentPath = box.path.substring 0, box.path.lastIndexOf box.label
             newPath = parentPath + req.body.label
 
-            ImapProcess.renameBox account, box.path, newPath
-            .then -> 
-                box.label = req.body.label 
+            if not account.accountType is 'TEST'
+                ImapProcess.renameBox account, box.path, newPath
+                .then ->
+                    box.label = req.body.label
+                    box.path = newPath
+                    box.tree[box.tree.length - 1] = req.body.label
+                    box.savePromised()
+                .return account
+            else
+                box.label = req.body.label
                 box.path = newPath
-                box.tree[box.tree.length - 1] = req.body.label 
-                box.savePromised()
-            .return account
+                box.tree[box.tree.length - 1] = req.body.label
+                box.savePromised().then ->
+                    return account
 
     .then (account) -> account.includeMailboxes()
     .then (account) -> res.send account
@@ -73,9 +84,12 @@ module.exports.delete = (req, res, next) ->
     .then (box) ->
         Account.findPromised box.accountID
         .then (account) ->
-            ImapProcess.deleteBox account, box.path
-            .then -> box.destroyEverything()
-            .return account
+            if not account.accountType is 'TEST'
+                ImapProcess.deleteBox account, box.path
+                .then -> box.destroyEverything()
+                .return account
+            else
+                box.destroyEverything().then -> return account
 
     .then (account) -> account.includeMailboxes()
     .then (account) -> res.send account
