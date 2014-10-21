@@ -3,9 +3,7 @@ AppDispatcher = require '../app_dispatcher'
 
 AccountStore = require './account_store'
 
-{ActionTypes}       = require '../constants/app_constants'
-
-LayoutActionCreator = require '../actions/layout_action_creator'
+{ActionTypes, MessageFlags, MessageFilter} = require '../constants/app_constants'
 
 class MessageStore extends Store
 
@@ -14,8 +12,29 @@ class MessageStore extends Store
         Defines private variables here.
     ###
 
+    _sortField   = 'date'
+    _sortOrder   = 1
+    _filter      = MessageFilter.ALL
+    _quickFilter = ''
+    __getSortFunction = (criteria) ->
+        sortFunction = (message1, message2) ->
+            if typeof message1.get is 'function'
+                val1 = message1.get criteria
+                val2 = message2.get criteria
+            else
+                val1 = message1[criteria]
+                val2 = message2[criteria]
+            if val1 > val2 then return -1 * _sortOrder
+            else if val1 < val2 then return 1 * _sortOrder
+            else return 0
+
+    __sortFunction = __getSortFunction 'date'
+
     # Creates an OrderedMap of messages
     _messages = Immutable.Sequence()
+
+        # sort first
+        .sort __sortFunction
 
         # sets message ID as index
         .mapKeys (_, message) -> message.id
@@ -24,7 +43,7 @@ class MessageStore extends Store
         .map (message) -> Immutable.fromJS message
         .toOrderedMap()
 
-    _counts = Immutable.Map()
+    _counts       = Immutable.Map()
     _unreadCounts = Immutable.Map()
 
 
@@ -62,7 +81,7 @@ class MessageStore extends Store
             if messages.count? and messages.mailboxID?
                 _counts = _counts.set messages.mailboxID, messages.count
                 _unreadCounts = _unreadCounts.set messages.mailboxID, messages.unread
-                messages = messages.messages
+                messages = messages.messages.sort __sortFunction
 
             onReceiveRawMessage message, true for message in messages
             @emit 'change'
@@ -91,6 +110,19 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FLAG, (message) ->
+            @emit 'change'
+
+        handle ActionTypes.LIST_FILTER, (filter) ->
+            _filter = filter
+            @emit 'change'
+
+        handle ActionTypes.LIST_QUICK_FILTER, (filter) ->
+            _quickFilter = filter
+            @emit 'change'
+
+        handle ActionTypes.LIST_SORT, (sort) ->
+            _sortField = sort.field
+            _sortOrder = sort.order
             @emit 'change'
 
 
@@ -135,6 +167,22 @@ class MessageStore extends Store
     getMessagesByMailbox: (mailboxID, first = null, last = null) ->
         sequence = _messages.filter (message) ->
             return mailboxID in Object.keys message.get 'mailboxIDs'
+        .sort(__getSortFunction _sortField)
+
+        if _filter isnt MessageFilter.ALL
+            if _filter is MessageFilter.FLAGGED
+                filterFunction = (message) ->
+                    return MessageFlags.FLAGGED in message.get 'flags'
+            else if _filter is MessageFilter.UNSEEN
+                filterFunction = (message) ->
+                    return MessageFlags.SEEN not in message.get 'flags'
+        if filterFunction?
+            sequence = sequence.filter filterFunction
+
+        if _quickFilter isnt ''
+            re = new RegExp _quickFilter, 'i'
+            sequence = sequence.filter (message) ->
+                return re.test(message.get 'subject')
 
         if first? and last?
             sequence = sequence.slice first, last

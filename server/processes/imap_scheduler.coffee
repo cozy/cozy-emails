@@ -66,7 +66,7 @@ module.exports = class ImapScheduler
             password: @account.password
             host: @account.imapServer
             port: parseInt @account.imapPort
-            tls: not @account.imapSecure? or @account.imapSecure
+            tls: not @account.imapSSL? or @account.imapSSL
             tlsOptions: rejectUnauthorized: false
 
         @imap.onTerminated = (err) =>

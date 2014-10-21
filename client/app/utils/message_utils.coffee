@@ -1,6 +1,6 @@
 {ComposeActions} = require '../constants/app_constants'
 
-module.exports = MessageUtils = 
+module.exports = MessageUtils =
 
     displayAddresses: (addresses, full = false) ->
         if not addresses?
@@ -27,12 +27,12 @@ module.exports = MessageUtils =
         reply = message.get 'replyTo'
         from = message.get 'from'
         return if reply?.length isnt 0 then reply else from
-        
+
 
 
     makeReplyMessage: (inReplyTo, action) ->
         message = {}
-        
+
         if inReplyTo
             message.accountID = inReplyTo.get 'accountID'
             dateHuman = @formatDate inReplyTo.get 'createdAt'
@@ -46,7 +46,7 @@ module.exports = MessageUtils =
 
             if html and not text and not state.composeInHTML
                 text = toMarkdown html
-        
+
             message.inReplyTo = inReplyTo.get 'id'
             message.references = inReplyTo.get('references') or []
             message.references = message.references.concat message.inReplyTo

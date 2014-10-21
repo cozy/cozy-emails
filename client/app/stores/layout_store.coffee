@@ -32,6 +32,8 @@ class LayoutStore extends Store
             _alert.message = value.message
             @emit 'change'
 
+        handle ActionTypes.REFRESH, ->
+            @emit 'change'
 
     ###
         Public API

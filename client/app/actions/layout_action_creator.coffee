@@ -30,6 +30,11 @@ module.exports = LayoutActionCreator =
                 level: level
                 message: message
 
+    refresh: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.REFRESH
+            value: null
+
     alertSuccess: (message) ->
         LayoutActionCreator.alert AlertLevel.SUCCESS, message
     alertInfo:    (message) ->
@@ -39,12 +44,26 @@ module.exports = LayoutActionCreator =
     alertError:   (message) ->
         LayoutActionCreator.alert AlertLevel.ERROR, message
 
+    filterMessages: (filter) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.LIST_FILTER
+            value: filter
+
+    quickFilterMessages: (filter) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.LIST_QUICK_FILTER
+            value: filter
+
+    sortMessages: (sort) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.LIST_SORT
+            value: sort
+
     getDefaultRoute: ->
         # if there is no account, we display the configAccount
         if AccountStore.getAll().length is 0 then 'account.new'
         # else go directly to first account
         else 'account.mailbox.messages'
-        
 
     showMessageList: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
@@ -88,14 +107,14 @@ module.exports = LayoutActionCreator =
 
     showCreateAccount: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        AccountActionCreator.selectAccount -1
+        AccountActionCreator.selectAccount null
 
     showConfigAccount: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
         AccountActionCreator.selectAccount panelInfo.parameters.accountID
 
     showSearch: (panelInfo, direction) ->
-        AccountActionCreator.selectAccount -1
+        AccountActionCreator.selectAccount null
 
         {query, page} = panelInfo.parameters
 

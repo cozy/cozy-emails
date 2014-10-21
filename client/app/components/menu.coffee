@@ -105,11 +105,19 @@ module.exports = Menu = React.createClass
         defaultMailbox = AccountStore.getDefaultMailbox accountID
         unread = @props.unreadCounts.get defaultMailbox?.get 'id'
 
-        url = @buildUrl
-            direction: 'first'
-            action: 'account.mailbox.messages'
-            parameters: [accountID, defaultMailbox?.get 'id']
-            fullWidth: true # /!\ Hide second panel when switching account
+        if defaultMailbox?
+            url = @buildUrl
+                direction: 'first'
+                action: 'account.mailbox.messages'
+                parameters: [accountID, defaultMailbox?.get 'id']
+                fullWidth: true # /!\ Hide second panel when switching account
+        else
+            # Go to account settings to add mailboxes
+            url = @buildUrl
+                direction: 'first'
+                action: 'account.config'
+                parameters: [accountID]
+                fullWidth: true # /!\ Hide second panel when switching account
 
         li className: accountClasses, key: key,
             a href: url, className: 'menu-item account ' + accountClasses,

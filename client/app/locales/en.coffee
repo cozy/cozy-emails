@@ -41,6 +41,13 @@ module.exports =
                                   box |||| %{smart_count} messages in this box"
       "list search count"       : "%{smart_count} result found. ||||
                                     %{smart_count} results found."
+      "list filter"             : "Filter"
+      "list filter all"         : "All"
+      "list filter unseen"      : "Unseen"
+      "list filter flagged"     : "Importants"
+      "list sort"               : "Sort"
+      "list sort date"          : "Date"
+      "list sort subject"       : "Subject"
 
       # Mail
       "mail receivers"          : "To %{dest}"
@@ -97,6 +104,8 @@ module.exports =
                                         and everything in it ?"
       "account tab account"         : "Account"
       "account tab mailboxes"       : "Folders"
+      "account errors"              : "Some data are missing or invalid"
+      "account type"                : "Account type"
       "mailbox create ok"           : "Folder created"
       "mailbox create ko"           : "Error creating folder"
       "mailbox update ok"           : "Folder updated"
@@ -117,6 +126,8 @@ module.exports =
       "config error imapTLS"        : "Wrong IMAP TLS"
       "config error smtpPort"       : "Wrong SMTP Port"
       "config error smtpServer"     : "Wrong SMTP Server"
+      "config error nomailboxes"    : "No folder in this account, please create
+                                        some"
 
       # Message Action
       "message action sent ok"      : "Message sent"

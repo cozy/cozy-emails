@@ -9,10 +9,15 @@ module.exports = Account = americano.getModel 'Account',
     name: String                # user name to put in sent mails
     login: String               # IMAP & SMTP login
     password: String            # IMAP & SMTP password
+    accountType: String         # "IMAP3" or "TEST"
     smtpServer: String          # SMTP host
     smtpPort: Number            # SMTP port
+    smtpSSL: Boolean            # Use SSL
+    smtpTLS: Boolean            # Use STARTTLS
     imapServer: String          # IMAP host
     imapPort: Number            # IMAP port
+    imapSSL: Boolean            # Use SSL
+    imapTLS: Boolean            # Use STARTTLS
     inboxMailbox: String        # INBOX Maibox id
     draftMailbox: String        # \Draft Maibox id
     sentMailbox: String         # \Sent Maibox id
@@ -24,10 +29,11 @@ module.exports = Account = americano.getModel 'Account',
 
 # There is a circular dependency between ImapProcess & Account
 # node handle if we require after module.exports definition
-nodemailer = require 'nodemailer'
-Mailbox = require './mailbox'
+nodemailer  = require 'nodemailer'
+Mailbox     = require './mailbox'
 ImapProcess = require '../processes/imap_processes'
-Promise = require 'bluebird'
+Promise     = require 'bluebird'
+Message     = require './message'
 {AccountConfigError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'models:account')
 
@@ -41,13 +47,15 @@ SMTPConnection = require 'nodemailer/node_modules/' +
 Account.refreshAllAccounts = ->
     allAccounts = Account.requestPromised 'all'
     Promise.serie allAccounts, (account) ->
-        ImapProcess.fetchAccount account
+        if not account.accountType is 'TEST'
+            ImapProcess.fetchAccount account
 
 # Public: refresh this account
 #
 # Returns a {Promise} for task completion
 Account::fetchMails = ->
-    ImapProcess.fetchAccount this
+    if not account.accountType is 'TEST'
+        ImapProcess.fetchAccount this
 
 # Public: include the mailboxes tree on this account instance
 #
@@ -66,10 +74,10 @@ Account::includeMailboxes = ->
 # Returns {Promise} promise for the created {Account}, boxes included
 Account.createIfValid = (data) ->
 
-    pSMTPValid = Account.testSMTPConnection data
-
-    pBoxes = pSMTPValid.then ->
-        ImapProcess.fetchBoxesTree data
+    pBoxes = if data.accountType is 'TEST' then Promise.resolve []
+    else
+        Account.testSMTPConnection data
+        .then -> ImapProcess.fetchBoxesTree data
 
     # We managed to get boxes, login settings are OK
     pAccount = pBoxes.then ->
@@ -93,6 +101,7 @@ Account.createIfValid = (data) ->
 
     # returns once the account is ready (do not wait for mails)
     return pAccountReady.then (account) -> account.includeMailboxes()
+
 
 # Public: send a message using this account SMTP config
 #

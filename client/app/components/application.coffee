@@ -98,8 +98,8 @@ module.exports = Application = React.createClass
                     Alert { alert }
                     ToastContainer toasts: @state.toasts
 
-                    # The quick actions bar 
-                    Topbar 
+                    # The quick actions bar
+                    Topbar
                         layout: @props.router.current
                         mailboxes: @state.mailboxes
                         selectedAccount: @state.selectedAccount
@@ -212,19 +212,25 @@ module.exports = Application = React.createClass
                         parameters: [accountID, mailboxID, numPage]
 
         # -- Generates a configuration window for a given account
-        else if panelInfo.action is 'account.config'
-            selectedAccount   = @state.selectedAccount
+        else if panelInfo.action is 'account.config' or panelInfo.action is 'account.new'
+            # don't use @state.selectedAccount
+            selectedAccount   = AccountStore.getSelected()
             error             = AccountStore.getError()
             isWaiting         = AccountStore.isWaiting()
             mailboxes         = AccountStore.getSelectedMailboxes true
             favoriteMailboxes = @state.favoriteMailboxes
+            if selectedAccount and not error and mailboxes.length is 0
+                error =
+                    name: 'AccountConfigError'
+                    field: 'nomailboxes'
+
             return AccountConfig {layout, error, isWaiting, selectedAccount, mailboxes, favoriteMailboxes}
 
         # -- Generates a configuration window to create a new account
-        else if panelInfo.action is 'account.new'
-            error = AccountStore.getError()
-            isWaiting = AccountStore.isWaiting()
-            return AccountConfig {layout, error, isWaiting}
+        #else if panelInfo.action is 'account.new'
+        #    error = AccountStore.getError()
+        #    isWaiting = AccountStore.isWaiting()
+        #    return AccountConfig {layout, error, isWaiting}
 
         # -- Generates a conversation
         else if panelInfo.action is 'message'

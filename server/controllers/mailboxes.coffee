@@ -23,7 +23,6 @@ module.exports.create = (req, res, next) ->
             path = req.body.label
             tree = [req.body.label]
 
-
         mailbox = new Mailbox
             accountID: account.id
             label: req.body.label

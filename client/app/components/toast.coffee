@@ -78,7 +78,7 @@ module.exports.Container = ToastContainer =  React.createClass
             'has-toasts': Object.keys(toasts).length isnt 0
 
         div className: classes,
-            Toast {toast} for id, toast of toasts
+            Toast {toast, key: id} for id, toast of toasts
             div className: 'alert alert-success toast toast-actions',
                 span
                     className: "toast-action hide-action",

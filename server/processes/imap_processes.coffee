@@ -187,6 +187,7 @@ ImapProcess.removeMail = (account, box, uid) ->
 #
 # Returns a {Promise} for task completion
 ImapProcess.createBox = (account, path) ->
+    return Promise.resolve {path} if account.accountType is 'TEST'
     scheduler = ImapScheduler.instanceFor account
     scheduler.doASAP (imap) ->
         imap.addBox path
@@ -199,6 +200,7 @@ ImapProcess.createBox = (account, path) ->
 #
 # Returns a {Promise} for task completion
 ImapProcess.renameBox = (account, oldpath, newpath) ->
+    return Promise.resolve {path: newpath} if account.accountType is 'TEST'
     scheduler = ImapScheduler.instanceFor account
     scheduler.doASAP (imap) ->
         imap.renameBox oldpath, newpath
@@ -210,6 +212,7 @@ ImapProcess.renameBox = (account, oldpath, newpath) ->
 #
 # Returns a {Promise} for task completion
 ImapProcess.deleteBox = (account, path) ->
+    return Promise.resolve null if account.accountType is 'TEST'
     scheduler = ImapScheduler.instanceFor account
     scheduler.doASAP (imap) ->
         imap.delBox path

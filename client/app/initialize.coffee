@@ -2,6 +2,10 @@
 window.onload = ->
 
     window.__DEV__ = window.location.hostname is 'localhost'
+
+    # expose an API
+    window.cozyMails = require './utils/api_utils'
+
     # use Cozy instance locale or navigator language or "en" by default
     if not window.settings?
         window.settings = {}
@@ -10,18 +14,8 @@ window.onload = ->
         window.locale or
         window.navigator.language or
         "en"
-    moment.locale locale
-    locales = {}
-    try
-        locales = require "./locales/#{locale}"
-    catch err
-        console.log err
-        locales = require "./locales/en"
-    polyglot = new Polyglot()
-    # we give polyglot the data
-    polyglot.extend locales
-    # handy shortcut
-    window.t = polyglot.t.bind polyglot
+
+    window.cozyMails.setLocale locale
 
     # init plugins
     PluginUtils = require("./utils/plugin_utils")

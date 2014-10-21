@@ -47,10 +47,14 @@ class AccountStore extends Store
         handle ActionTypes.ADD_ACCOUNT, (account) ->
             account = AccountTranslator.toImmutable account
             _accounts = _accounts.set account.get('id'), account
+            _selectedAccount = account
             @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (accountID) ->
-            _selectedAccount = _accounts.get(accountID) or null
+            if accountID?
+                _selectedAccount = _accounts.get(accountID) or null
+            else
+                _selectedAccount = null
             @emit 'change'
 
         handle ActionTypes.NEW_ACCOUNT_WAITING, (payload) ->
@@ -84,6 +88,9 @@ class AccountStore extends Store
     getAll: -> return _accounts
 
     getByID: (accountID) -> return _accounts.get accountID
+
+    getByLabel: (label) ->
+        _accounts.find (account) -> account.get('label') is label
 
     getDefault: -> return _accounts.first() or null
 

@@ -31,6 +31,7 @@ module.exports =
         'SHOW_MENU_RESPONSIVE'      : 'SHOW_MENU_RESPONSIVE'
         'HIDE_MENU_RESPONSIVE'      : 'HIDE_MENU_RESPONSIVE'
         'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
+        'REFRESH'                   : 'REFRESH'
 
         # Mailbox
         'RECEIVE_RAW_MAILBOXES'     : 'RECEIVE_RAW_MAILBOXES'
@@ -41,6 +42,11 @@ module.exports =
         # Tasks
         'RECEIVE_TASK_UPDATE'       : 'RECEIVE_TASK_UPDATE'
         'RECEIVE_TASK_DELETE'       : 'RECEIVE_TASK_DELETE'
+
+        # List
+        'LIST_FILTER'               : 'LIST_FILTER'
+        'LIST_QUICK_FILTER'         : 'LIST_QUICK_FILTER'
+        'LIST_SORT'                 : 'LIST_SORT'
 
     PayloadSources:
         'VIEW_ACTION'   : 'VIEW_ACTION'
@@ -61,6 +67,11 @@ module.exports =
         'FLAGGED'      : '\\Flagged'
         'SEEN'         : '\\Seen'
         'DRAFT'        : '\\Draft'
+
+    MessageFilter:
+        'ALL'          : 'All'
+        'FLAGGED'      : 'Flagged'
+        'UNSEEN'       : 'Unseen'
 
     MailboxFlags:
         'DRAFT'   :  '\\Drafts'
