@@ -46,7 +46,7 @@
     "dovecot-testing": "0.0.3"
   },
   "scripts": {
-    "test": "cake tests",
+    "test": "dovecot-testing setup && cake tests",
     "start": "node build/server.js"
   },
   "cozy-permissions": {
