@@ -60,7 +60,7 @@ module.exports.details = function(req, res, next) {
 
 module.exports.edit = function(req, res, next) {
   var changes;
-  changes = _.pick(req.body, 'label', 'login', 'password', 'name', 'smtpServer', 'smtpPort', 'imapServer', 'imapPort', 'draftMailbox', 'sentMailbox', 'trashMailbox');
+  changes = _.pick(req.body, 'label', 'login', 'password', 'name', 'account_type', 'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'imapServer', 'imapPort', 'imapSSL', 'imapTLS', 'draftMailbox', 'sentMailbox', 'trashMailbox');
   return req.account.updateAttributesPromised(changes).then(function(account) {
     return account.includeMailboxes();
   }).then(function(account) {

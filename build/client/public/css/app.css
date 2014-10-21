@@ -1642,6 +1642,10 @@ a:hover,
 a:visited:hover {
   text-decoration: underline;
 }
+.form-horizontal .radio-inline,
+.form-horizontal .checkbox-inline {
+  padding-top: 9px;
+}
 @font-face {
   font-family: styled;
   src: url("/fonts/maven-pro-light-200.otf");
@@ -2638,6 +2642,12 @@ textarea:active {
 .message.is-fav .fav {
   display: inline;
   padding: 0 0.5em;
+}
+.message-list-actions {
+  clear: both;
+}
+.message-list-actions .message-list-action {
+  margin-right: 1em;
 }
 #quick-actions .responsive-handler {
   color: #333;

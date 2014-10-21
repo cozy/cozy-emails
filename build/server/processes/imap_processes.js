@@ -33,11 +33,12 @@ ImapProcess.fetchAccount = function(account, limitByBox) {
   if (limitByBox == null) {
     limitByBox = false;
   }
-  return Mailbox.getBoxes(account.id).then(function(boxes) {
-    return Promise.serie(boxes, function(box) {
-      return ImapProcess.fetchMailbox(account, box, limitByBox)["catch"](function(err) {
-        return log.error("FAILED TO FETCH BOX", box.path, err.stack);
-      });
+  if (account.accountType === 'TEST') {
+    return Promise.resolve(null);
+  }
+  return Mailbox.getBoxes(account.id).serie(function(box) {
+    return ImapProcess.fetchMailbox(account, box, limitByBox)["catch"](function(err) {
+      return log.error("FAILED TO FETCH BOX", box.path, err.stack);
     });
   });
 };
@@ -172,6 +173,11 @@ ImapProcess.removeMail = function(account, box, uid) {
 
 ImapProcess.createBox = function(account, path) {
   var scheduler;
+  if (account.accountType === 'TEST') {
+    return Promise.resolve({
+      path: path
+    });
+  }
   scheduler = ImapScheduler.instanceFor(account);
   return scheduler.doASAP(function(imap) {
     return imap.addBox(path);
@@ -180,6 +186,11 @@ ImapProcess.createBox = function(account, path) {
 
 ImapProcess.renameBox = function(account, oldpath, newpath) {
   var scheduler;
+  if (account.accountType === 'TEST') {
+    return Promise.resolve({
+      path: newpath
+    });
+  }
   scheduler = ImapScheduler.instanceFor(account);
   return scheduler.doASAP(function(imap) {
     return imap.renameBox(oldpath, newpath);
@@ -188,6 +199,9 @@ ImapProcess.renameBox = function(account, oldpath, newpath) {
 
 ImapProcess.deleteBox = function(account, path) {
   var scheduler;
+  if (account.accountType === 'TEST') {
+    return Promise.resolve(null);
+  }
   scheduler = ImapScheduler.instanceFor(account);
   return scheduler.doASAP(function(imap) {
     return imap.delBox(path);
@@ -225,8 +239,10 @@ ImapProcess.fetchOneMail = function(account, box, uid) {
 ImapProcess.applyMessageChanges = function(msg, flagsOps, boxOps) {
   var boxIndex;
   log.info("MESSAGE CHANGE");
-  log.info("BASE");
-  log.info("CHANGES", flagsOps, boxOps);
+  log.info("  CHANGES BOXES", boxOps);
+  if (flagsOps.add.length || flagsOps.remove.length) {
+    log.info("  CHANGES FLAGS", flagsOps);
+  }
   boxIndex = {};
   return Promise.all([
     Account.findPromised(msg.accountID).then(function(account) {
@@ -245,7 +261,7 @@ ImapProcess.applyMessageChanges = function(msg, flagsOps, boxOps) {
       return _results;
     })
   ]).spread(function(scheduler) {
-    return scheduler != null ? scheduler.doASAP(function(imap) {
+    return scheduler.doASAP(function(imap) {
       var boxid, uid, _i, _len, _ref;
       _ref = boxOps.addTo;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
@@ -265,14 +281,15 @@ ImapProcess.applyMessageChanges = function(msg, flagsOps, boxOps) {
           return imap.delFlags(uid, flagsOps.remove);
         }
       }).then(function() {
-        log.info("CHANGED FLAGS " + boxIndex[boxid].path + ":" + uid, "ADD", flagsOps.add, "REMOVE", flagsOps.remove);
         msg.flags = _.union(msg.flags, flagsOps.add);
         msg.flags = _.difference(msg.flags, flagsOps.remove);
-        return log.info("   RESULT = ", msg.flags);
+        log.info("  CHANGED FLAGS " + boxIndex[boxid].path + ":" + uid);
+        return log.info("    RESULT = ", msg.flags);
       }).then(function() {
         return Promise.serie(boxOps.addTo, function(destId) {
           return imap.copy(uid, boxIndex[destId].path).then(function(uidInDestination) {
-            log.info("COPIED " + boxIndex[boxid].path + ":" + uid, " TO " + boxIndex[destId].path + ":" + uidInDestination);
+            log.info("  COPIED " + boxIndex[boxid].path + ":" + uid);
+            log.info("  TO " + boxIndex[destId].path + ":" + uidInDestination);
             return msg.mailboxIDs[destId] = uidInDestination;
           });
         }).then(function() {
@@ -286,11 +303,11 @@ ImapProcess.applyMessageChanges = function(msg, flagsOps, boxOps) {
             }).then(function() {
               return delete msg.mailboxIDs[boxid];
             }).tap(function() {
-              return log.info("DELETED " + path + ":" + uid);
+              return log.info("  DELETED " + path + ":" + uid);
             });
           });
         });
       });
-    }) : void 0;
+    });
   });
 };

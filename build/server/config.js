@@ -9,6 +9,8 @@ ImapReporter = require('./processes/imap_reporter');
 
 Account = require('./models/account');
 
+require('./utils/promise_extensions');
+
 if (process.env.NODE_ENV !== 'production') {
   require('bluebird').longStackTraces();
 }

@@ -43628,6 +43628,464 @@ if("undefined"==typeof jQuery)throw new Error("Bootstrap's JavaScript requires j
 var jsonpatch;!function(a){function b(a,c){switch(typeof a){case"undefined":case"boolean":case"string":case"number":return a===c;case"object":if(null===a)return null===c;if(z(a)){if(!z(c)||a.length!==c.length)return!1;for(var d=0,e=a.length;e>d;d++)if(!b(a[d],c[d]))return!1;return!0}var f=r(c),g=f.length;if(r(a).length!==g)return!1;for(var d=0;g>d;d++)if(!b(a[d],c[d]))return!1;return!0;default:return!1}}function c(a){return-1===a.indexOf("/")&&-1===a.indexOf("~")?a:a.replace(/~/g,"~0").replace(/\//g,"~1")}function d(a,b){var e;for(var f in a)if(a.hasOwnProperty(f)){if(a[f]===b)return c(f)+"/";if("object"==typeof a[f]&&(e=d(a[f],b),""!=e))return c(f)+"/"+e}return""}function e(a,b){if(a===b)return"/";var c=d(a,b);if(""===c)throw new Error("Object not found in root");return"/"+c}function f(a){for(var b=0,c=w.length;c>b;b++)if(w[b].obj===a)return w[b]}function g(a,b){for(var c=0,d=a.observers.length;d>c;c++)if(a.observers[c].callback===b)return a.observers[c].observer}function h(a,b){for(var c=0,d=a.observers.length;d>c;c++)if(a.observers[c].observer===b)return void a.observers.splice(c,1)}function i(a,b){m(b),Object.observe?l(b,a):clearTimeout(b.next);var c=f(a);h(c,b)}function j(a,b){var c,d=[],h=a,i=f(a);if(i?c=g(i,b):(i=new x(a),w.push(i)),c)return c;if(Object.observe)c=function(f){l(c,a),k(c,a);for(var g=0,i=f.length;i>g;){if(("length"!==f[g].name||!z(f[g].object))&&"__Jasmine_been_here_before__"!==f[g].name){var j=f[g].type;switch(j){case"new":j="add";break;case"deleted":j="delete";break;case"updated":j="update"}v[j].call(f[g],d,e(h,f[g].object))}g++}d&&b&&b(d),c.patches=d,d=[]};else if(c={},i.value=JSON.parse(JSON.stringify(a)),b){c.callback=b,c.next=null;var j=this.intervals||[100,1e3,1e4,6e4];if(void 0===j.push)throw new Error("jsonpatch.intervals must be an array");var n=0,o=function(){m(c)},p=function(){clearTimeout(c.next),c.next=setTimeout(function(){o(),n=0,c.next=setTimeout(q,j[n++])},0)},q=function(){o(),n==j.length&&(n=j.length-1),c.next=setTimeout(q,j[n++])};"undefined"!=typeof window&&(window.addEventListener?(window.addEventListener("mousedown",p),window.addEventListener("mouseup",p),window.addEventListener("keydown",p)):(window.attachEvent("onmousedown",p),window.attachEvent("onmouseup",p),window.attachEvent("onkeydown",p))),c.next=setTimeout(q,j[n++])}return c.patches=d,c.object=a,i.observers.push(new y(b,c)),k(c,a)}function k(a,b){if(Object.observe){Object.observe(b,a);for(var c in b)if(b.hasOwnProperty(c)){var d=b[c];d&&"object"==typeof d&&k(a,d)}}return a}function l(a,b){if(Object.observe){Object.unobserve(b,a);for(var c in b)if(b.hasOwnProperty(c)){var d=b[c];d&&"object"==typeof d&&l(a,d)}}return a}function m(a){if(Object.observe)Object.deliverChangeRecords(a);else{for(var b,c=0,d=w.length;d>c;c++)if(w[c].obj===a.object){b=w[c];break}n(b.value,a.object,a.patches,"")}var e=a.patches;return e.length>0&&(a.patches=[],a.callback&&a.callback(e)),e}function n(a,b,d,e){for(var f=r(b),g=r(a),h=!1,i=!1,j=g.length-1;j>=0;j--){var k=g[j],l=a[k];if(b.hasOwnProperty(k)){var m=b[k];l instanceof Object?n(l,m,d,e+"/"+c(k)):l!=m&&(h=!0,d.push({op:"replace",path:e+"/"+c(k),value:m}),a[k]=m)}else d.push({op:"remove",path:e+"/"+c(k)}),delete a[k],i=!0}if(i||f.length!=g.length)for(var j=0;j<f.length;j++){var k=f[j];a.hasOwnProperty(k)||(d.push({op:"add",path:e+"/"+c(k),value:b[k]}),a[k]=JSON.parse(JSON.stringify(b[k])))}}function o(a){for(var b,c=0,d=a.length;d>c;){b=a.charCodeAt(c);{if(!(b>=48&&57>=b))return!1;c++}}return!0}function p(a,b){for(var c,d=!1,e=0,f=b.length;f>e;){c=b[e],e++;var g=c.path.split("/"),h=a,i=1,j=g.length;if(void 0===c.value&&("add"===c.op||"replace"===c.op||"test"===c.op))throw new Error("'value' MUST be defined");if(void 0===c.from&&("copy"===c.op||"move"===c.op))throw new Error("'from' MUST be defined");for(;;)if(z(h)){var k;if("-"===g[i])k=h.length;else{if(!o(g[i]))throw new Error("Expected an unsigned base-10 integer value, making the new referenced value the array element with the zero-based index");k=parseInt(g[i],10)}if(i++,i>=j){d=t[c.op].call(c,h,k,a);break}h=h[k]}else{var l=g[i];if(void 0!==l){if(l&&-1!=l.indexOf("~")&&(l=l.replace(/~1/g,"/").replace(/~0/g,"~")),i++,i>=j){d=s[c.op].call(c,h,l,a);break}}else if(i++,i>=j){d=u[c.op].call(c,h,l,a);break}h=h[l]}}return d}function q(a,b){var c=[];return n(a,b,c,""),c}var r=function(){return Object.keys?Object.keys:function(a){var b=[];for(var c in a)a.hasOwnProperty(c)&&b.push(c);return b}}(),s={add:function(a,b){return a[b]=this.value,!0},remove:function(a,b){return delete a[b],!0},replace:function(a,b){return a[b]=this.value,!0},move:function(a,b,c){var d={op:"_get",path:this.from};return p(c,[d]),p(c,[{op:"remove",path:this.from}]),p(c,[{op:"add",path:this.path,value:d.value}]),!0},copy:function(a,b,c){var d={op:"_get",path:this.from};return p(c,[d]),p(c,[{op:"add",path:this.path,value:d.value}]),!0},test:function(a,c){return b(a[c],this.value)},_get:function(a,b){this.value=a[b]}},t={add:function(a,b){if(b>a.length)throw new Error("The specified index MUST NOT be greater than the number of elements in the array.");return a.splice(b,0,this.value),!0},remove:function(a,b){return a.splice(b,1),!0},replace:function(a,b){return a[b]=this.value,!0},move:s.move,copy:s.copy,test:s.test,_get:s._get},u={add:function(a){u.remove.call(this,a);for(var b in this.value)this.value.hasOwnProperty(b)&&(a[b]=this.value[b]);return!0},remove:function(a){for(var b in a)a.hasOwnProperty(b)&&s.remove.call(this,a,b);return!0},replace:function(a){return p(a,[{op:"remove",path:this.path}]),p(a,[{op:"add",path:this.path,value:this.value}]),!0},move:s.move,copy:s.copy,test:function(a){return JSON.stringify(a)===JSON.stringify(this.value)},_get:s._get},v={add:function(a,b){var d={op:"add",path:b+c(this.name),value:this.object[this.name]};a.push(d)},"delete":function(a,b){var d={op:"remove",path:b+c(this.name)};a.push(d)},update:function(a,b){var d={op:"replace",path:b+c(this.name),value:this.object[this.name]};a.push(d)}},w=[];a.intervals;var x=function(){function a(a){this.observers=[],this.obj=a}return a}(),y=function(){function a(a,b){this.callback=a,this.observer=b}return a}();a.unobserve=i,a.observe=j,a.generate=m;var z;z=Array.isArray?Array.isArray:function(a){return a.push&&"number"==typeof a.length},a.apply=p,a.compare=q}(jsonpatch||(jsonpatch={})),"undefined"!=typeof exports&&(exports.apply=jsonpatch.apply,exports.observe=jsonpatch.observe,exports.unobserve=jsonpatch.unobserve,exports.generate=jsonpatch.generate,exports.compare=jsonpatch.compare);
 //# sourceMappingURL=json-patch-duplex.min.js.map
 
+;(function (exports) {
+  exports.validate = validate;
+  exports.mixin = mixin;
+
+  //
+  // ### function validate (object, schema, options)
+  // #### {Object} object the object to validate.
+  // #### {Object} schema (optional) the JSON Schema to validate against.
+  // #### {Object} options (optional) options controlling the validation
+  //      process. See {@link #validate.defaults) for details.
+  // Validate <code>object</code> against a JSON Schema.
+  // If <code>object</code> is self-describing (i.e. has a
+  // <code>$schema</code> property), it will also be validated
+  // against the referenced schema. [TODO]: This behaviour bay be
+  // suppressed by setting the {@link #validate.options.???}
+  // option to <code>???</code>.[/TODO]
+  //
+  // If <code>schema</code> is not specified, and <code>object</code>
+  // is not self-describing, validation always passes.
+  //
+  // <strong>Note:</strong> in order to pass options but no schema,
+  // <code>schema</code> <em>must</em> be specified in the call to
+  // <code>validate()</code>; otherwise, <code>options</code> will
+  // be interpreted as the schema. <code>schema</code> may be passed
+  // as <code>null</code>, <code>undefinded</code>, or the empty object
+  // (<code>{}</code>) in this case.
+  //
+  function validate(object, schema, options) {
+    options = mixin({}, validate.defaults, options);
+    var errors = [];
+
+    validateObject(object, schema, options, errors);
+
+    //
+    // TODO: self-described validation
+    // if (! options.selfDescribing) { ... }
+    //
+
+    return {
+      valid: !(errors.length),
+      errors: errors
+    };
+  };
+
+  /**
+   * Default validation options. Defaults can be overridden by
+   * passing an 'options' hash to {@link #validate}. They can
+   * also be set globally be changing the values in
+   * <code>validate.defaults</code> directly.
+   */
+  validate.defaults = {
+      /**
+       * <p>
+       * Enforce 'format' constraints.
+       * </p><p>
+       * <em>Default: <code>true</code></em>
+       * </p>
+       */
+      validateFormats: true,
+      /**
+       * <p>
+       * When {@link #validateFormats} is <code>true</code>,
+       * treat unrecognized formats as validation errors.
+       * </p><p>
+       * <em>Default: <code>false</code></em>
+       * </p>
+       *
+       * @see validation.formats for default supported formats.
+       */
+      validateFormatsStrict: false,
+      /**
+       * <p>
+       * When {@link #validateFormats} is <code>true</code>,
+       * also validate formats defined in {@link #validate.formatExtensions}.
+       * </p><p>
+       * <em>Default: <code>true</code></em>
+       * </p>
+       */
+      validateFormatExtensions: true,
+      /**
+       * <p>
+       * When {@link #additionalProperties} is <code>true</code>,
+       * allow additional unvisited properties on the object.
+       * </p><p>
+       * <em>Default: <code>true</code></em>
+       * </p>
+       */
+      additionalProperties: true
+  };
+
+  /**
+   * Default messages to include with validation errors.
+   */
+  validate.messages = {
+      required:             "is required",
+      allowEmpty:           "must not be empty",
+      minLength:            "is too short (minimum is %{expected} characters)",
+      maxLength:            "is too long (maximum is %{expected} characters)",
+      pattern:              "invalid input",
+      minimum:              "must be greater than or equal to %{expected}",
+      maximum:              "must be less than or equal to %{expected}",
+      exclusiveMinimum:     "must be greater than %{expected}",
+      exclusiveMaximum:     "must be less than %{expected}",
+      divisibleBy:          "must be divisible by %{expected}",
+      minItems:             "must contain more than %{expected} items",
+      maxItems:             "must contain less than %{expected} items",
+      uniqueItems:          "must hold a unique set of values",
+      format:               "is not a valid %{expected}",
+      conform:              "must conform to given constraint",
+      type:                 "must be of %{expected} type",
+      additionalProperties: "must not exist"
+  };
+  validate.messages['enum'] = "must be present in given enumerator";
+
+  /**
+   *
+   */
+  validate.formats = {
+    'email':          /^((([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+(\.([a-z]|\d|[!#\$%&'\*\+\-\/=\?\^_`{\|}~]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])+)*)|((\x22)((((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(([\x01-\x08\x0b\x0c\x0e-\x1f\x7f]|\x21|[\x23-\x5b]|[\x5d-\x7e]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(\\([\x01-\x09\x0b\x0c\x0d-\x7f]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF]))))*(((\x20|\x09)*(\x0d\x0a))?(\x20|\x09)+)?(\x22)))@((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?$/i,
+    'ip-address':     /^(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/i,
+    'ipv6':           /^([0-9A-Fa-f]{1,4}:){7}[0-9A-Fa-f]{1,4}$/,
+    'date-time':      /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:.\d{1,3})?Z$/,
+    'date':           /^\d{4}-\d{2}-\d{2}$/,
+    'time':           /^\d{2}:\d{2}:\d{2}$/,
+    'color':          /^#[a-z0-9]{6}|#[a-z0-9]{3}|(?:rgb\(\s*(?:[+-]?\d+%?)\s*,\s*(?:[+-]?\d+%?)\s*,\s*(?:[+-]?\d+%?)\s*\))aqua|black|blue|fuchsia|gray|green|lime|maroon|navy|olive|orange|purple|red|silver|teal|white|yellow$/i,
+    //'style':        (not supported)
+    //'phone':        (not supported)
+    //'uri':          (not supported)
+    'host-name':      /^(([a-zA-Z]|[a-zA-Z][a-zA-Z0-9\-]*[a-zA-Z0-9])\.)*([A-Za-z]|[A-Za-z][A-Za-z0-9\-]*[A-Za-z0-9])/,
+    'utc-millisec':   {
+      test: function (value) {
+        return typeof(value) === 'number' && value >= 0;
+      }
+    },
+    'regex':          {
+      test: function (value) {
+        try { new RegExp(value) }
+        catch (e) { return false }
+
+        return true;
+      }
+    }
+  };
+
+  /**
+   *
+   */
+  validate.formatExtensions = {
+    'url': /^(https?|ftp|git):\/\/(((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:)*@)?(((\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5])\.(\d|[1-9]\d|1\d\d|2[0-4]\d|25[0-5]))|((([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|\d|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.)+(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])*([a-z]|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])))\.?)(:\d*)?)(\/((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)+(\/(([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)*)*)?)?(\?((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|[\uE000-\uF8FF]|\/|\?)*)?(\#((([a-z]|\d|-|\.|_|~|[\u00A0-\uD7FF\uF900-\uFDCF\uFDF0-\uFFEF])|(%[\da-f]{2})|[!\$&'\(\)\*\+,;=]|:|@)|\/|\?)*)?$/i
+  };
+
+  function mixin(obj) {
+    var sources = Array.prototype.slice.call(arguments, 1);
+    while (sources.length) {
+      var source = sources.shift();
+      if (!source) { continue }
+
+      if (typeof(source) !== 'object') {
+        throw new TypeError('mixin non-object');
+      }
+
+      for (var p in source) {
+        if (source.hasOwnProperty(p)) {
+          obj[p] = source[p];
+        }
+      }
+    }
+
+    return obj;
+  };
+
+  function validateObject(object, schema, options, errors) {
+    var props, allProps = Object.keys(object),
+        visitedProps = [];
+
+    // see 5.2
+    if (schema.properties) {
+      props = schema.properties;
+      for (var p in props) {
+        if (props.hasOwnProperty(p)) {
+          visitedProps.push(p);
+          validateProperty(object, object[p], p, props[p], options, errors);
+        }
+      }
+    }
+
+    // see 5.3
+    if (schema.patternProperties) {
+      props = schema.patternProperties;
+      for (var p in props) {
+        if (props.hasOwnProperty(p)) {
+          var re = new RegExp(p);
+
+          // Find all object properties that are matching `re`
+          for (var k in object) {
+            if (object.hasOwnProperty(k)) {
+              if (re.exec(k) !== null) {
+                validateProperty(object, object[k], k, props[p], options, errors);
+                visitedProps.push(k);
+              }
+            }
+          }
+        }
+      }
+    }
+
+    //if additionalProperties is not defined set default value
+    if (schema.additionalProperties === undefined) {
+      schema.additionalProperties = options.additionalProperties;
+    }
+
+    // see 5.4
+    if (undefined !== schema.additionalProperties) {
+      var i, l;
+
+      var unvisitedProps = allProps.filter(function(k){
+        return -1 === visitedProps.indexOf(k);
+      });
+
+      // Prevent additional properties; each unvisited property is therefore an error
+      if (schema.additionalProperties === false && unvisitedProps.length > 0) {
+        for (i = 0, l = unvisitedProps.length; i < l; i++) {
+          error("additionalProperties", unvisitedProps[i], object[unvisitedProps[i]], false, errors);
+        }
+      }
+      // additionalProperties is a schema and validate unvisited properties against that schema
+      else if (typeof schema.additionalProperties == "object" && unvisitedProps.length > 0) {
+        for (i = 0, l = unvisitedProps.length; i < l; i++) {
+          validateProperty(object, object[unvisitedProps[i]], unvisitedProps[i], schema.unvisitedProperties, options, errors);
+        }
+      }
+    }
+
+  };
+
+  function validateProperty(object, value, property, schema, options, errors) {
+    var format,
+        valid,
+        spec,
+        type;
+
+    function constrain(name, value, assert) {
+      if (schema[name] !== undefined && !assert(value, schema[name])) {
+        error(name, property, value, schema, errors);
+      }
+    }
+
+    if (value === undefined) {
+      if (schema.required && schema.type !== 'any') {
+        return error('required', property, undefined, schema, errors);
+      } else {
+        return;
+      }
+    }
+
+    if (options.cast) {
+      if (('integer' === schema.type || 'number' === schema.type) && value == +value) {
+        value = +value;
+        object[property] = value;
+      }
+
+      if ('boolean' === schema.type) {
+        if ('true' === value || '1' === value || 1 === value) {
+          value = true;
+          object[property] = value;
+        }
+
+        if ('false' === value || '0' === value || 0 === value) {
+          value = false;
+          object[property] = value;
+        }
+      }
+    }
+
+    if (schema.format && options.validateFormats) {
+      format = schema.format;
+
+      if (options.validateFormatExtensions) { spec = validate.formatExtensions[format] }
+      if (!spec) { spec = validate.formats[format] }
+      if (!spec) {
+        if (options.validateFormatsStrict) {
+          return error('format', property, value, schema, errors);
+        }
+      }
+      else {
+        if (!spec.test(value)) {
+          return error('format', property, value, schema, errors);
+        }
+      }
+    }
+
+    if (schema['enum'] && schema['enum'].indexOf(value) === -1) {
+      error('enum', property, value, schema, errors);
+    }
+
+    // Dependencies (see 5.8)
+    if (typeof schema.dependencies === 'string' &&
+        object[schema.dependencies] === undefined) {
+      error('dependencies', property, null, schema, errors);
+    }
+
+    if (isArray(schema.dependencies)) {
+      for (var i = 0, l = schema.dependencies.length; i < l; i++) {
+        if (object[schema.dependencies[i]] === undefined) {
+          error('dependencies', property, null, schema, errors);
+        }
+      }
+    }
+
+    if (typeof schema.dependencies === 'object') {
+      validateObject(object, schema.dependencies, options, errors);
+    }
+
+    checkType(value, schema.type, function(err, type) {
+      if (err) return error('type', property, typeof value, schema, errors);
+
+      constrain('conform', value, function (a, e) { return e(a, object) });
+
+      switch (type || (isArray(value) ? 'array' : typeof value)) {
+        case 'string':
+          constrain('allowEmpty', value,        function (a, e) { return e ? e : a !== '' });
+          constrain('minLength',  value.length, function (a, e) { return a >= e });
+          constrain('maxLength',  value.length, function (a, e) { return a <= e });
+          constrain('pattern',    value,        function (a, e) {
+            e = typeof e === 'string'
+              ? e = new RegExp(e)
+              : e;
+            return e.test(a)
+          });
+          break;
+        case 'integer':
+        case 'number':
+          constrain('minimum',     value, function (a, e) { return a >= e });
+          constrain('maximum',     value, function (a, e) { return a <= e });
+          constrain('exclusiveMinimum', value, function (a, e) { return a > e });
+          constrain('exclusiveMaximum', value, function (a, e) { return a < e });
+          constrain('divisibleBy', value, function (a, e) {
+            var multiplier = Math.max((a - Math.floor(a)).toString().length - 2, (e - Math.floor(e)).toString().length - 2);
+            multiplier = multiplier > 0 ? Math.pow(10, multiplier) : 1;
+            return (a * multiplier) % (e * multiplier) === 0
+          });
+          break;
+        case 'array':
+          constrain('items', value, function (a, e) {
+            var nestedErrors;
+            for (var i = 0, l = a.length; i < l; i++) {
+              nestedErrors = [];
+              validateProperty(object, a[i], property, e, options, nestedErrors);
+              nestedErrors.forEach(function (err) {
+                err.property = property + '.' + i + '.' + err.property.replace(property + '.', '')
+              });
+              nestedErrors.unshift(0, 0);
+              Array.prototype.splice.apply(errors, nestedErrors);
+            }
+            return true;
+          });
+          constrain('minItems', value, function (a, e) { return a.length >= e });
+          constrain('maxItems', value, function (a, e) { return a.length <= e });
+          constrain('uniqueItems', value, function (a, e) {
+            if (!e) return true;
+
+            var h = {};
+
+            for (var i = 0, l = a.length; i < l; i++) {
+              var key = JSON.stringify(a[i]);
+              if (h[key]) return false;
+              h[key] = true;
+            }
+
+            return true;
+          });
+          break;
+        case 'object':
+          // Recursive validation
+          if (schema.properties || schema.patternProperties || schema.additionalProperties) {
+            var nestedErrors = [];
+            validateObject(value, schema, options, nestedErrors);
+            nestedErrors.forEach(function (e) {
+              e.property = property + '.' + e.property
+            });
+            nestedErrors.unshift(0, 0);
+            Array.prototype.splice.apply(errors, nestedErrors);
+          }
+          break;
+      }
+    });
+  };
+
+  function checkType(val, type, callback) {
+    var result = false,
+        types = isArray(type) ? type : [type];
+
+    // No type - no check
+    if (type === undefined) return callback(null, type);
+
+    // Go through available types
+    // And fine first matching
+    for (var i = 0, l = types.length; i < l; i++) {
+      type = types[i].toLowerCase().trim();
+      if (type === 'string' ? typeof val === 'string' :
+          type === 'array' ? isArray(val) :
+          type === 'object' ? val && typeof val === 'object' &&
+                             !isArray(val) :
+          type === 'number' ? typeof val === 'number' :
+          type === 'integer' ? typeof val === 'number' && Math.floor(val) === val :
+          type === 'null' ? val === null :
+          type === 'boolean'? typeof val === 'boolean' :
+          type === 'date' ? isDate(val) :
+          type === 'any' ? typeof val !== 'undefined' : false) {
+        return callback(null, type);
+      }
+    };
+
+    callback(true);
+  };
+
+  function error(attribute, property, actual, schema, errors) {
+    var lookup = { expected: schema[attribute], actual: actual, attribute: attribute, property: property };
+    var message = schema.messages && schema.messages[attribute] || schema.message || validate.messages[attribute] || "no default message";
+    message = message.replace(/%\{([a-z]+)\}/ig, function (_, match) { return lookup[match.toLowerCase()] || ''; });
+    errors.push({
+      attribute: attribute,
+      property:  property,
+      expected:  schema[attribute],
+      actual:    actual,
+      message:   message
+    });
+  };
+
+  function isArray(value) {
+    var s = typeof value;
+    if (s === 'object') {
+      if (value) {
+        if (typeof value.length === 'number' &&
+           !(value.propertyIsEnumerable('length')) &&
+           typeof value.splice === 'function') {
+           return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  function isDate(value) {
+    var s = typeof value;
+    if (s === 'object') {
+      if (value) {
+        if (typeof value.getTime === 'function') {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+})(typeof module === 'object' && module && module.exports ? module.exports : window);
+
 ;/*!
  * baguetteBox.js
  * @author  feimosi

@@ -67,13 +67,14 @@ module.exports = ImapScheduler = (function() {
       password: this.account.password,
       host: this.account.imapServer,
       port: parseInt(this.account.imapPort),
-      tls: (this.account.imapSecure == null) || this.account.imapSecure,
+      tls: (this.account.imapSSL == null) || this.account.imapSSL,
       tlsOptions: {
         rejectUnauthorized: false
       }
     });
     this.imap.onTerminated = (function(_this) {
-      return function() {
+      return function(err) {
+        log.error('IMAP TERMINATED', err);
         _this._rejectPending(new Error('connection closed'));
         return _this.closeConnection();
       };
@@ -255,11 +256,5 @@ recoverChangedUIDValidity = function(imap, box, accountID) {
         });
       });
     });
-  });
-};
-
-Promise.serie = function(items, mapper) {
-  return Promise.map(items, mapper, {
-    concurrency: 1
   });
 };
