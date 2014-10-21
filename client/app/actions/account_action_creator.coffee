@@ -11,7 +11,6 @@ module.exports = AccountActionCreator =
         AccountActionCreator._setNewAccountWaitingStatus true
 
         XHRUtils.createAccount inputValues, (error, account) ->
-            AccountActionCreator._setNewAccountWaitingStatus false
             if error? or not account?
                 AccountActionCreator._setNewAccountError error
             else
@@ -29,7 +28,6 @@ module.exports = AccountActionCreator =
         newAccount = account.mergeDeep inputValues
 
         XHRUtils.editAccount newAccount, (error, rawAccount) ->
-            AccountActionCreator._setNewAccountWaitingStatus false
             if error?
                 AccountActionCreator._setNewAccountError error
             else
