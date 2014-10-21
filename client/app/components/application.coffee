@@ -46,7 +46,7 @@ module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SearchStore, TasksStore]
+        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SettingsStore, SearchStore, TasksStore]
         RouterMixin
     ]
 

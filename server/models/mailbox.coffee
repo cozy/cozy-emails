@@ -22,7 +22,7 @@ log = require('../utils/logging')(prefix: 'models:mailbox')
 
 
 # map of account's attributes -> RFC6154 special use box attributes
-Mailbox.RFC6154 = 
+Mailbox.RFC6154 =
     draftMailbox:   '\\Drafts'
     sentMailbox:    '\\Sent'
     trashMailbox:   '\\Trash'
@@ -31,12 +31,12 @@ Mailbox.RFC6154 =
     flaggedMailbox: '\\Flagged'
 
 
-# Public: find selectable mailbox for an account ID 
+# Public: find selectable mailbox for an account ID
 # as an array
-# 
+#
 # accountID - id of the account
-# 
-# Returns a {Promise} for [{Mailbox}] 
+#
+# Returns a {Promise} for [{Mailbox}]
 Mailbox.getBoxes = (accountID) ->
     Mailbox.rawRequestPromised 'treeMap',
         startkey: [accountID]
@@ -48,9 +48,9 @@ Mailbox.getBoxes = (accountID) ->
 
 # Public: build a tree of the mailboxes
 #
-# accountID - id of the account 
+# accountID - id of the account
 # mapper - if provided, it will be applied to each box
-# 
+#
 # Returns a {Promise} for the tree
 Mailbox.getTree = (accountID, mapper = null) ->
 
@@ -81,15 +81,18 @@ Mailbox.getTree = (accountID, mapper = null) ->
             # this is a submailbox,  we find its parent
             # by path and append it
             parentPath = path[0..-2].join DELIMITER
-            byPath[parentPath].children.push box
+            if byPath[parentPath]?
+                byPath[parentPath].children.push box
+            else
+                log.error "NO MAILBOX of path #{parentPath} in #{accountID}"
 
     .return out
 
 # Public: build a simpler version of the tree for client
 # each node only have id, label and children fields
-# 
+#
 # accountID - id of the account
-# 
+#
 # Returns a {Promise} for the tree
 Mailbox.getClientTree = (accountID) ->
     filter = (box) -> _.pick box, 'id', 'label', 'children', 'attribs'
@@ -99,12 +102,12 @@ Mailbox.getClientTree = (accountID) ->
 IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren']
 # Public: This function take the tree from node-imap
 # and create appropriate boxes
-# 
+#
 # @TODO handle normalization of special folders
-# 
+#
 # accountID - id of the account
 # tree - the raw boxes tree from {ImapPromisified::getBoxes}
-# 
+#
 # Returns a {Promise} for the {Account}'s specialUses attributes
 Mailbox.createBoxesFromImapTree = (accountID, tree) ->
     boxes = []
@@ -127,8 +130,8 @@ Mailbox.createBoxesFromImapTree = (accountID, tree) ->
     useRFC6154 = false
     specialUses = {}
     specialUsesGuess = {}
-    Promise.serie boxes, (box) -> 
-        
+    Promise.serie boxes, (box) ->
+
         # create box in data system (we need the id)
         Mailbox.createPromised box
         .then (jdbBox) ->
@@ -139,7 +142,7 @@ Mailbox.createBoxesFromImapTree = (accountID, tree) ->
             # check if there is a RFC6154 attribute
             for field, attribute of Mailbox.RFC6154
                 if attribute in jdbBox.attribs
-                    
+
                     # first RFC6154 attribute
                     unless useRFC6154
                         useRFC6154 = true
@@ -184,7 +187,7 @@ Mailbox.createBoxesFromImapTree = (accountID, tree) ->
 
         return favorites
 
-    .then (favorites) -> 
+    .then (favorites) ->
         specialUses.favorites = favorites
         return specialUses
 
@@ -193,12 +196,12 @@ Mailbox.createBoxesFromImapTree = (accountID, tree) ->
 # remove all message from it
 # returns fast after destroying mailbox
 # in the background, proceeds to remove messages
-# 
+#
 # Returns a {Promise} for mailbox destroyed completion
 Mailbox::destroyEverything = ->
 
     mailboxID = @id
-    
+
     mailboxDestroyed = @destroyPromised()
 
     # do this in the background (wont change the interface)
@@ -207,7 +210,7 @@ Mailbox::destroyEverything = ->
 
     # returns fastly success or error for mailboxDestruction
     return mailboxDestroyed
-    
+
 
 
 require('bluebird').promisifyAll Mailbox, suffix: 'Promised'

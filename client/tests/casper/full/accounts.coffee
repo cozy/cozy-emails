@@ -143,7 +143,6 @@ casper.test.begin 'Create account', (test) ->
     casper.run ->
         test.done()
 
-###
 casper.test.begin 'Test accounts', (test) ->
     init casper
 
@@ -162,4 +161,3 @@ casper.test.begin 'Test accounts', (test) ->
 
     casper.run ->
         test.done()
-###

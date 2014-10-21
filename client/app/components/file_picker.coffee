@@ -36,7 +36,7 @@ FilePicker = React.createClass
         files: @_convertFileList @props.value or @props.valueLink.value
 
     componentWillReceiveProps: (props) ->
-        files = @_convertFileList @props.value or @props.valueLink.value
+        files = @_convertFileList props.value or props.valueLink.value
         @setState files: files
 
     render: ->
@@ -193,7 +193,7 @@ FileItem = React.createClass
             name = span className: 'file-name', file.name
 
         li className: "file-item", key: file.name,
-            i className: "mime fa #{iconClass}"
+            i className: "mime #{type} fa #{iconClass}"
             if @props.editable
                 i className: "fa fa-times delete", onClick: @doDelete
             name

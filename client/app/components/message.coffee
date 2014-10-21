@@ -44,18 +44,19 @@ module.exports = React.createClass
 
     shouldComponentUpdate: (nextProps, nextState) ->
 
-        shouldUpdate =
-            JSON.stringify(nextProps.message.toJSON()) isnt JSON.stringify(@props.message.toJSON()) or
-            #not Immutable.is(nextProps.message, @props.message) or
-            not Immutable.is(nextProps.key, @props.key) or
-            not Immutable.is(nextProps.isLast, @props.isLast) or
-            not Immutable.is(nextProps.selectedAccount, @props.selectedAccount) or
-            not Immutable.is(nextProps.selectedMailbox, @props.selectedMailbox) or
-            not Immutable.is(nextProps.mailboxes, @props.mailboxes) or
-            not Immutable.is(nextProps.settings, @props.settings) or
-            not Immutable.is(nextProps.accounts, @props.accounts)
+        same =
+            JSON.stringify(nextState) is JSON.stringify(@state) and
+            JSON.stringify(nextProps.message.toJSON()) is JSON.stringify(@props.message.toJSON()) and
+            #Immutable.is(nextProps.message, @props.message) and
+            Immutable.is(nextProps.key, @props.key) and
+            Immutable.is(nextProps.isLast, @props.isLast) and
+            Immutable.is(nextProps.selectedAccount, @props.selectedAccount) and
+            Immutable.is(nextProps.selectedMailbox, @props.selectedMailbox) and
+            Immutable.is(nextProps.mailboxes, @props.mailboxes) and
+            Immutable.is(nextProps.settings, @props.settings) and
+            Immutable.is(nextProps.accounts, @props.accounts)
 
-        return shouldUpdate
+        return not same
 
     _prepareMessage: ->
         message = @props.message
@@ -111,13 +112,20 @@ module.exports = React.createClass
         message  = @props.message
         prepared = @_prepareMessage()
         hasAttachments = prepared.attachments.length
-        if @state.messageDisplayHTML and prepared.html
+        messageDisplayHTML = @state.messageDisplayHTML
+        if messageDisplayHTML and prepared.html
             parser = new DOMParser()
-            doc = parser.parseFromString prepared.html, "text/html"
+            doc = parser.parseFromString "<html><head></head><body>#{prepared.html}</body></html>", "text/html"
+            if not doc
+                doc = document.implementation.createHTMLDocument("")
+                doc.documentElement.innerHTML = "<html><head></head><body>#{prepared.html}</body></html>"
+            if not doc
+                console.log "Unable to parse HTML content of message"
+                messageDisplayHTML = false
             if doc and not @state.messageDisplayImages
                 hideImage = (img) ->
                     img.dataset.src = img.getAttribute 'src'
-                    img.setAttribute 'src', ''
+                    img.removeAttribute 'src'
                 images = doc.querySelectorAll 'IMG[src]'
                 hideImage img for img in images
             else
@@ -140,7 +148,12 @@ module.exports = React.createClass
             url = "/message/#{message.get 'id'}/attachments/#{file.name}"
             window.open url
 
-        li className: classes, key: @props.key, onClick: clickHandler, 'data-id': @props.message.get('id'),
+        attachments = FilePicker
+            editable: false
+            value: prepared.attachments.map(MessageUtils.convertAttachments)
+            display: display
+
+        li className: classes, key: @props.key, onClick: clickHandler, 'data-id': message.get('id'),
             @getToolboxRender message.get('id'), prepared
             div className: 'header row',
                 div className: leftClass,
@@ -152,19 +165,16 @@ module.exports = React.createClass
                     span className: 'hour', prepared.date
                 if hasAttachments
                     div className: 'col-md-4',
-                        FilePicker
-                            editable: false
-                            value: prepared.attachments.map(MessageUtils.convertAttachments)
-                            display: display
+                        attachments
             div className: 'full-headers',
                 pre null, prepared.fullHeaders.join "\n"
-            if @state.messageDisplayHTML and prepared.html
+            if messageDisplayHTML and prepared.html
                 div null,
                     if images.length > 0 and not @state.messageDisplayImages
                         div className: "imagesWarning content-action", ref: "imagesWarning",
                             span null, t 'message images warning'
-                            button className: 'btn btn-default', type: "button", ref: 'imagesDisplay', t 'message images display'
-                    iframe className: 'content', ref: 'content', sandbox: 'allow-same-origin', allowTransparency: true, frameBorder: 0, ''
+                            button className: 'btn btn-default', type: "button", ref: 'imagesDisplay', onClick: @displayImages, t 'message images display'
+                    iframe className: 'content', ref: 'content', sandbox: 'allow-same-origin', allowTransparency: true, frameBorder: 0, name: "message-" + message.get('id'), ''
             else
                 div null,
                     #div className: "content-action",
@@ -293,9 +303,6 @@ module.exports = React.createClass
                 doc.body.innerHTML = @_htmlContent
                 rect = doc.body.getBoundingClientRect()
                 frame.style.height = "#{rect.height + 40}px"
-                if not @state.messageDisplayImages and @refs.imagesDisplay?
-                    @refs.imagesDisplay.getDOMNode().addEventListener 'click', =>
-                        @setState messageDisplayImages: true
             else
                 # try to display text only
                 @setState messageDisplayHTML: false
@@ -412,4 +419,8 @@ module.exports = React.createClass
     displayHTML: (event) ->
         event.preventDefault()
         @setState messageDisplayHTML: true
+
+    displayImages: (event) ->
+        event.preventDefault()
+        @setState messageDisplayImages: true
 

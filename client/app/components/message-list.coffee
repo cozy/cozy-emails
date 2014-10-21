@@ -11,10 +11,6 @@ MessageList = React.createClass
 
     mixins: [RouterMixin]
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not Immutable.is(nextProps.messages, @props.messages) or
-               not Immutable.is(nextProps.openMessage, @props.openMessage)
-
     render: ->
         curPage = parseInt @props.pageNum, 10
         nbPages = Math.ceil(@props.messagesCount / @props.messagesPerPage)
@@ -164,7 +160,7 @@ MessagesSort = React.createClass
         }
 
     render: ->
-        div className: 'dropdown pull-left sort-dropdown',
+        div className: 'dropdown sort-dropdown',
             button
                 className: 'btn btn-default dropdown-toggle message-list-action',
                 type: 'button',
