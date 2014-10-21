@@ -2526,6 +2526,9 @@ textarea:active {
 .message-list .pagination-box {
   text-align: center;
 }
+.message-list .pagination {
+  margin: 0.5em 0 1em 0;
+}
 .message-list .pagination > li > a,
 .message-list .pagination > li > span {
   border-width: 0;
@@ -2643,10 +2646,10 @@ textarea:active {
   display: inline;
   padding: 0 0.5em;
 }
-.message-list-actions {
+.message-list-actions + * {
   clear: both;
 }
-.message-list-actions .message-list-action {
+.message-list-actions + * .message-list-action {
   margin-right: 1em;
 }
 #quick-actions .responsive-handler {
@@ -2681,6 +2684,10 @@ textarea:active {
   -o-transition-duration: 0.5s;
   -ms-transition-duration: 0.5s;
   transition-duration: 0.5s;
+  pointer-events: none;
+}
+.toasts-container > * {
+  pointer-events: none;
 }
 .toasts-container .alert {
   margin-bottom: 0.5em;

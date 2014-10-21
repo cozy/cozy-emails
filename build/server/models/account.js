@@ -60,7 +60,7 @@ Account.refreshAllAccounts = function() {
   var allAccounts;
   allAccounts = Account.requestPromised('all');
   return Promise.serie(allAccounts, function(account) {
-    if (!account.accountType === 'TEST') {
+    if (account.accountType !== 'TEST') {
       return ImapProcess.fetchAccount(account);
     }
   });
