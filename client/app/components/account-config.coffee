@@ -22,7 +22,7 @@ module.exports = React.createClass
         'id', 'label', 'name', 'login', 'password',
         'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
         'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
-        'serverType', 'mailboxes', 'favoriteMailboxes',
+        'accountType', 'mailboxes', 'favoriteMailboxes',
         'draftMailbox', 'sentMailbox', 'trashMailbox'
     ]
     _accountSchema:
@@ -72,7 +72,7 @@ module.exports = React.createClass
             'trashMailbox':
                 allowEmpty: true
                 #type: 'string'
-            'serverType':
+            'accountType':
                 allowEmpty: true
                 #type: 'string'
 
@@ -159,6 +159,7 @@ module.exports = React.createClass
                 div className: 'col-sm-3',
                     input
                         id: 'mailbox-label',
+                        name: 'mailbox-label',
                         valueLink: @linkState('label'),
                         type: 'text',
                         className: 'form-control',
@@ -174,6 +175,7 @@ module.exports = React.createClass
                 div className: 'col-sm-3',
                     input
                         id: 'mailbox-name',
+                        name: 'mailbox-name',
                         valueLink: @linkState('name'),
                         type: 'text',
                         className: 'form-control',
@@ -189,6 +191,7 @@ module.exports = React.createClass
                 div className: 'col-sm-3',
                     input
                         id: 'mailbox-email-address',
+                        name: 'mailbox-email-address',
                         valueLink: @linkState('login'),
                         ref: 'login',
                         onBlur: @discover,
@@ -205,6 +208,7 @@ module.exports = React.createClass
                 div className: 'col-sm-3',
                     input
                         id: 'mailbox-password',
+                        name: 'mailbox-password',
                         valueLink: @linkState('password'),
                         type: 'password',
                         className: 'form-control'
@@ -221,6 +225,7 @@ module.exports = React.createClass
                     div className: 'col-sm-3',
                         input
                             id: 'mailbox-smtp-server',
+                            name: 'mailbox-smtp-server',
                             valueLink: @linkState('smtpServer'),
                             type: 'text',
                             className: 'form-control',
@@ -233,6 +238,7 @@ module.exports = React.createClass
                     div className: 'col-sm-1',
                         input
                             id: 'mailbox-smtp-port',
+                            name: 'mailbox-smtp-port',
                             valueLink: @linkState('smtpPort'),
                             type: 'text',
                             className: 'form-control'
@@ -248,6 +254,7 @@ module.exports = React.createClass
                     div className: 'col-sm-1',
                         input
                             id: 'mailbox-smtp-ssl',
+                            name: 'mailbox-smtp-ssl',
                             checkedLink: @linkState('smtpSSL'),
                             type: 'checkbox',
                             className: 'form-control'
@@ -259,6 +266,7 @@ module.exports = React.createClass
                     div className: 'col-sm-1',
                         input
                             id: 'mailbox-smtp-tls',
+                            name: 'mailbox-smtp-tls',
                             checkedLink: @linkState('smtpTLS'),
                             type: 'checkbox',
                             className: 'form-control'
@@ -272,8 +280,10 @@ module.exports = React.createClass
                 div className: 'col-sm-3',
                     input
                         id: 'account-type',
+                        name: 'account-type',
+                        ref: 'type',
                         valueLink: @linkState('accountType'),
-                        type: 'hidden',
+                        type: 'text',
                         className: 'form-control'
                 getError 'password'
             fieldset null,
@@ -286,6 +296,7 @@ module.exports = React.createClass
                     div className: 'col-sm-3',
                         input
                             id: 'mailbox-imap-server',
+                            name: 'mailbox-imap-server',
                             valueLink: @linkState('imapServer'),
                             type: 'text',
                             className: 'form-control',
@@ -298,6 +309,7 @@ module.exports = React.createClass
                     div className: 'col-sm-1',
                         input
                             id: 'mailbox-imap-port',
+                            name: 'mailbox-imap-port',
                             valueLink: @linkState('imapPort'),
                             type: 'text',
                             className: 'form-control',
@@ -313,6 +325,7 @@ module.exports = React.createClass
                     div className: 'col-sm-1',
                         input
                             id: 'mailbox-imap-ssl',
+                            name: 'mailbox-imap-ssl',
                             checkedLink: @linkState('imapSSL'),
                             type: 'checkbox',
                             className: 'form-control'
@@ -324,6 +337,7 @@ module.exports = React.createClass
                     div className: 'col-sm-1',
                         input
                             id: 'mailbox-imap-tls',
+                            name: 'mailbox-imap-tls',
                             checkedLink: @linkState('imapTLS'),
                             type: 'checkbox',
                             className: 'form-control'
@@ -429,7 +443,8 @@ module.exports = React.createClass
         return {accountValue, valid}
 
     validateForm: (event) ->
-        event.preventDefault()
+        if event?
+            event.preventDefault()
         # If form contains errors, re-validate it every time the user updates
         # a field
         if Object.keys(@state.errors).length isnt 0
@@ -548,7 +563,7 @@ module.exports = React.createClass
                             infos.smtpSSL = false
                             infos.smtpTLS = false
                     @setState infos
-                    @validateForm event
+                    @validateForm()
             @_lastDiscovered = login
 
     _onServerParam: (target, server, type) ->
@@ -605,19 +620,20 @@ module.exports = React.createClass
                 tab = "account"
             else
                 tab = @state.tab
-            @setState @_accountToState(tab)
+            @setState @_accountToState(tab, props)
 
     getInitialState: ->
         return @_accountToState("account")
 
-    _accountToState: (tab)->
-        account = @props.selectedAccount
+    _accountToState: (tab, props)->
         state =
             errors: {}
-        if @props.error?
-            if @props.error.name is 'AccountConfigError'
-                field = @props.error.field
-                state.errors[field] = t 'config error ' + field
+        if props?
+            account = @props.selectedAccount
+            if props.error?
+                if props.error.name is 'AccountConfigError'
+                    field = props.error.field
+                    state.errors[field] = t 'config error ' + field
         if account?
             init = (field) ->
                 state[field] = account.get field
@@ -626,8 +642,8 @@ module.exports = React.createClass
             state.tab = tab
             if state.mailboxes.length is 0
                 state.tab = 'mailboxes'
-            state.favoriteMailboxes = @props.favoriteMailboxes
-        else
+            state.favoriteMailboxes = props.favoriteMailboxes
+        else if Object.keys(state.errors).length is 0
             init = (field) ->
                 state[field] = ''
             init field for field in @_accountFields

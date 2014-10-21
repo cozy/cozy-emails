@@ -42,12 +42,14 @@ class AccountStore extends Store
             account = AccountTranslator.toImmutable rawAccount
             _accounts = _accounts.set account.get('id'), account
             _selectedAccount = _accounts.get account.get 'id'
+            _newAccountWaiting = false
             @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT, (account) ->
             account = AccountTranslator.toImmutable account
             _accounts = _accounts.set account.get('id'), account
             _selectedAccount = account
+            _newAccountWaiting = false
             @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (accountID) ->
@@ -62,6 +64,7 @@ class AccountStore extends Store
             @emit 'change'
 
         handle ActionTypes.NEW_ACCOUNT_ERROR, (error) ->
+            _newAccountWaiting = false
             _newAccountError = error
             @emit 'change'
 

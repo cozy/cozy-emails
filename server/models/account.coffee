@@ -9,7 +9,7 @@ module.exports = Account = americano.getModel 'Account',
     name: String                # user name to put in sent mails
     login: String               # IMAP & SMTP login
     password: String            # IMAP & SMTP password
-    accountType: String         # "IMAP3" or "TEST"
+    accountType: String         # "IMAP" or "TEST"
     smtpServer: String          # SMTP host
     smtpPort: Number            # SMTP port
     smtpSSL: Boolean            # Use SSL
@@ -74,7 +74,7 @@ Account::includeMailboxes = ->
 # Returns {Promise} promise for the created {Account}, boxes included
 Account.createIfValid = (data) ->
 
-    if not data.accountType is 'TEST'
+    if not (data.accountType is 'TEST')
         Account.testSMTPConnection data
         .then (err) ->
             ImapProcess.fetchBoxesTree data
