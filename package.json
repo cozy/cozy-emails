@@ -43,7 +43,7 @@
     "lorem-ipsum": "1.0.1",
     "chai": "1.9.1",
     "simplesmtp": "0.3.33",
-    "dovecot-testing": "0.0.2"
+    "dovecot-testing": "0.0.3"
   },
   "scripts": {
     "test": "cake tests",
