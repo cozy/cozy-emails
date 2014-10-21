@@ -30,3 +30,15 @@ module.exports =
 
     getAccountByLabel: (label) ->
         return AccountStore.getByLabel label
+
+    # warning: don't update setting value server side
+    setSetting: (key, value) ->
+        SettingsStore = require '../stores/settings_store'
+        AppDispatcher = require '../app_dispatcher'
+        {ActionTypes} = require '../constants/app_constants'
+        settings = SettingsStore.get().toJS()
+        settings[key] = value
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SETTINGS_UPDATED
+            value: settings
+

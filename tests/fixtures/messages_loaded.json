@@ -56,7 +56,7 @@
     "account": "dovecot-ID"
   },
   {
-    "html": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\">\n<html><body style='font-family: Verdana,Geneva,sans-serif'>\n<p>Hello,</p>\n<p>Who R U, hu hu ?</p>\n<p>Bye !</p>\n<p>&nbsp;</p>\n<div>&nbsp;</div>\n</body></html>\n",
+    "html": "<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Transitional//EN\">\n<html><body style='font-family: Verdana,Geneva,sans-serif'>\n<p>Hello,</p>\n<p>Who R U, hu hu ?</p>\n<p>Bye !</p>\n<p>&nbsp;</p>\n<div>&nbsp;</div>\n<div>Image: <img src='http://cozy.io/assets/images/bighappycloud.png' />;</div></body></html>\n",
     "text": " \n\nHello, \n\nWho R U, hu hu ? \n\nBye ! \n\n ",
     "headers": {
       "return-path": "<me@cozycloud.cc>",

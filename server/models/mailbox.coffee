@@ -81,7 +81,10 @@ Mailbox.getTree = (accountID, mapper = null) ->
             # this is a submailbox,  we find its parent
             # by path and append it
             parentPath = path[0..-2].join DELIMITER
-            byPath[parentPath].children.push box
+            if byPath[parentPath]?
+                byPath[parentPath].children.push box
+            else
+                log.error "NO MAILBOX of path #{parentPath} in #{accountID}"
 
     .return out
 
