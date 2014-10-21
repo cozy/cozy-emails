@@ -276,7 +276,6 @@ describe "Accounts Tests", ->
             body.mailboxIDs.should.not.have.property @newBoxID
 
             SMTPTesting.mailStore.should.have.lengthOf 1
-            console.log SMTPTesting.mailStore.pop()
             done()
 
     it "When I delete the box", (done) ->
