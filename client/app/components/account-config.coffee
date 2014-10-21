@@ -415,7 +415,8 @@ module.exports = React.createClass
                         onChange: (mailbox) =>
                             newState = {}
                             newState[box] = mailbox
-                            @setState newState
+                            @setState newState, =>
+                                @onSubmit()
 
     componentDidMount: ->
         # On error, scroll to message
@@ -459,8 +460,9 @@ module.exports = React.createClass
                 @setState errors: errors
 
     onSubmit: (event) ->
-        # prevents the page from reloading
-        event.preventDefault()
+        if event?
+            # prevents the page from reloading
+            event.preventDefault()
 
         {accountValue, valid} = @doValidate()
 
@@ -629,7 +631,7 @@ module.exports = React.createClass
         state =
             errors: {}
         if props?
-            account = @props.selectedAccount
+            account = props.selectedAccount
             if props.error?
                 if props.error.name is 'AccountConfigError'
                     field = props.error.field

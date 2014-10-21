@@ -39,9 +39,10 @@ class AccountStore extends Store
     __bindHandlers: (handle) ->
 
         onUpdate = (rawAccount) =>
+            accountID = rawAccount.id
             account = AccountTranslator.toImmutable rawAccount
-            _accounts = _accounts.set account.get('id'), account
-            _selectedAccount = _accounts.get account.get 'id'
+            _accounts = _accounts.set accountID, account
+            _selectedAccount = _accounts.get accountID
             _newAccountWaiting = false
             @emit 'change'
 
