@@ -59,7 +59,7 @@ runTests = (fileList) ->
 
         command = "#{env} #{command}"
         command += " #{fileList.join(" ")} "
-        command += " --reporter spec --require should --compilers coffee:coffee-script/register --colors"
+        command += " --bail --reporter spec --require should --compilers coffee:coffee-script/register --colors"
         exec command, (err, stdout, stderr) ->
             console.log stdout
             if err

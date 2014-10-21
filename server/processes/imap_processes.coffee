@@ -32,10 +32,10 @@ ImapProcess.fetchBoxesTree = (account) ->
 #
 # Returns a {Promise} for task completion
 ImapProcess.fetchAccount = (account, limitByBox = false) ->
-    Mailbox.getBoxes(account.id).then (boxes) ->
-        Promise.serie boxes, (box) ->
-            ImapProcess.fetchMailbox account, box, limitByBox
-            .catch (err) -> log.error "FAILED TO FETCH BOX", box.path, err.stack
+    Mailbox.getBoxes(account.id)
+    .serie (box) ->
+        ImapProcess.fetchMailbox account, box, limitByBox
+        .catch (err) -> log.error "FAILED TO FETCH BOX", box.path, err.stack
 
 # Public: refresh one mailbox
 # register a 'diff' task in {ImapReporter}
@@ -320,4 +320,3 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
                 .then -> delete msg.mailboxIDs[boxid]
                 .tap ->
                     log.info "  DELETED #{path}:#{uid}"
-

@@ -1,9 +1,9 @@
 
 COLORS = [
-    '\x1B[32mDEBUG\x1B[39m'
+    '\x1B[32mDBUG\x1B[39m'
     '\x1B[34mINFO\x1B[39m'
     '\x1B[33mWARN\x1B[39m'
-    '\x1B[31mERROR\x1B[39m'
+    '\x1B[31mEROR\x1B[39m'
 ]
 
 LOG_LEVEL = if process.env.DEBUG_LEVEL? then parseInt process.env.DEBUG_LEVEL
@@ -24,10 +24,10 @@ module.exports = (options) ->
         args[1] = prefix
         for arg, i in arguments
             args[i+2] = arg
-        
+
         console.log.apply console, args
 
-    return api = 
+    return api =
         debug: logger 0
         info: logger 1
         warn: logger 2

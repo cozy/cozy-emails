@@ -2,6 +2,7 @@ Imap = require 'imap'
 Promise = require 'bluebird'
 {MailParser} = require 'mailparser'
 {AccountConfigError} = require '../utils/errors'
+_ = require 'lodash'
 log = require('../utils/logging')(prefix: 'imap:promise')
 
 stream_to_buffer_array = (stream, cb) ->
@@ -11,6 +12,7 @@ stream_to_buffer_array = (stream, cb) ->
     stream.on 'end', -> cb null, parts
 
 
+open_conn = 0
 
 # Monkey patches : to be merged upstream ?
 # Malformed message #1
@@ -46,6 +48,7 @@ module.exports = class ImapPromisified
         @waitConnected = new Promise (resolve, reject) =>
             @_super.once 'ready', =>
                 @state = 'connected'
+                log.warn "OPEN", ++open_conn
                 resolve this
             @_super.once 'error', (err) =>
                 @state = 'errored'
@@ -83,12 +86,14 @@ module.exports = class ImapPromisified
                 log.error "ERROR ?", err
             @_super.once 'close', (err) =>
                 # if we did not expect the ending
+                log.warn "CLOSE", --open_conn unless @state is 'closed'
+                @closed = 'closed'
                 @onTerminated?(err) unless @waitEnding
-                @closed = true
             @_super.once 'end', (err) =>
                 # if we did not expect the ending
+                log.warn "END", --open_conn unless @state is 'closed'
+                @state = 'closed'
                 @onTerminated?(err) unless @waitEnding
-                @closed = true
 
     # end the connection
     # if hard == false, we attempt to logout
@@ -122,9 +127,26 @@ module.exports = class ImapPromisified
                     resolve 'closed'
 
     # see imap.getBoxes
-    # return a Promise of the boxtree
+    # change: return a Promise for an array of boxes
     getBoxes: ->
+        IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren']
         @_super.getBoxesPromised.apply @_super, arguments
+        .then (tree) ->
+            boxes = []
+            # recursively browse the imap box tree building pathStr and pathArr
+            do handleLevel = (children = tree, pathStr = '', pathArr = []) ->
+                for name, child of children
+                    subPathStr = pathStr + name + child.delimiter
+                    subPathArr = pathArr.concat name
+                    handleLevel child.children, subPathStr, subPathArr
+                    boxes.push
+                        label: name
+                        delimiter: child.delimiter
+                        path: pathStr + name
+                        tree: subPathArr
+                        attribs: _.difference child.attribs, IGNORE_ATTRIBUTES
+
+            return boxes
 
     # see imap.openBox
     # return a Promise of the box

@@ -3,6 +3,7 @@ americano = require 'americano'
 ImapReporter = require './processes/imap_reporter'
 Account = require './models/account'
 
+require './utils/promise_extensions'
 if process.env.NODE_ENV isnt 'production'
     require('bluebird').longStackTraces()
 

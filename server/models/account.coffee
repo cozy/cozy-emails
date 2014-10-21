@@ -66,31 +66,33 @@ Account::includeMailboxes = ->
 # Returns {Promise} promise for the created {Account}, boxes included
 Account.createIfValid = (data) ->
 
-    Account.testSMTPConnection data
-    .then (err) ->
+    pSMTPValid = Account.testSMTPConnection data
+
+    pBoxes = pSMTPValid.then ->
         ImapProcess.fetchBoxesTree data
 
-    .then (rawBoxesTree) ->
-        # We managed to get boxes, login settings are OK
-        # create Account and Mailboxes
-        log.info "GOT BOXES", rawBoxesTree
-
+    # We managed to get boxes, login settings are OK
+    pAccount = pBoxes.then ->
         Account.createPromised data
-        .then (account) ->
-            Mailbox.createBoxesFromImapTree account.id, rawBoxesTree
-            .then (specialUses) ->
-                account.updateAttributesPromised specialUses
 
-    .then (account) ->
+    # scan account mailboxes for special-use
+    pSpecialUseBoxes = Promise.join pAccount, pBoxes, (account, boxes) ->
+        Mailbox.createBoxesFromImapTree account.id, boxes
 
+    # save special-use into the account
+    pAccountReady = Promise.join pAccount, pSpecialUseBoxes, (account, specialUses) ->
+        account.updateAttributesPromised specialUses
+
+    pAccountReady.then (account) ->
         # in a detached chain, fetch the Account
         # first fetch 100 mails from each box
         ImapProcess.fetchAccount account, 100
-        # then fectch the rest
+        # then fetch the rest
         .then -> ImapProcess.fetchAccount account
         .catch (err) -> log.error "FETCH MAIL FAILED", err
 
-        return account.includeMailboxes()
+    # returns once the account is ready (do not wait for mails)
+    return pAccountReady.then (account) -> account.includeMailboxes()
 
 # Public: send a message using this account SMTP config
 #

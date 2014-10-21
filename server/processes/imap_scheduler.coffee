@@ -277,7 +277,3 @@ recoverChangedUIDValidity = (imap, box, accountID) ->
                 mailboxIDs[box.id] = newUID
                 msg = new Message(row.doc)
                 msg.updateAttributesPromised {mailboxIDs}
-
-# @TODO, put this elsewhere
-Promise.serie = (items, mapper) ->
-    Promise.map items, mapper, concurrency: 1
