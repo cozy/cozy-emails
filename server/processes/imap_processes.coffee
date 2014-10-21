@@ -32,6 +32,7 @@ ImapProcess.fetchBoxesTree = (account) ->
 #
 # Returns a {Promise} for task completion
 ImapProcess.fetchAccount = (account, limitByBox = false) ->
+    return Promise.resolve null if account.accountType is 'TEST'
     Mailbox.getBoxes(account.id)
     .serie (box) ->
         ImapProcess.fetchMailbox account, box, limitByBox

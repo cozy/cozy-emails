@@ -54,8 +54,7 @@ Account.refreshAllAccounts = ->
 #
 # Returns a {Promise} for task completion
 Account::fetchMails = ->
-    if not account.accountType is 'TEST'
-        ImapProcess.fetchAccount this
+    ImapProcess.fetchAccount this
 
 # Public: include the mailboxes tree on this account instance
 #
