@@ -141,3 +141,8 @@ module.exports = LayoutActionCreator =
         LayoutActionCreator.hideReponsiveMenu()
 
 
+    refreshMessages: ->
+        XHRUtils.refresh (results) ->
+            if results is "done"
+                LayoutActionCreator.notify t 'account refreshed'
+

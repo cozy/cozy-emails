@@ -109,6 +109,8 @@ module.exports =
       "account errors"              : "Certaines informations manquent ou
                                         sont incorrectes"
       "account type"                : "Type de compte"
+      "account updated"             : "Modification enregistrée"
+      "account refreshed"           : "Actualisé"
       "mailbox create ok"           : "Dossier créé"
       "mailbox create ko"           : "Erreur de création du dossier"
       "mailbox update ok"           : "Dossier mis à jour"

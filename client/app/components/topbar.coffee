@@ -23,15 +23,19 @@ module.exports = Topbar = React.createClass
         else
             LayoutActionCreator.showReponsiveMenu()
 
+    refresh: (event) ->
+        event.preventDefault()
+        LayoutActionCreator.refreshMessages()
+
     render: ->
 
         {layout, selectedAccount, selectedMailboxID, mailboxes, searchQuery} = @props
-        
+
         responsiveBackUrl = @buildUrl
             firstPanel: layout.firstPanel
             fullWidth: true
 
-        getUrl = (mailbox) => 
+        getUrl = (mailbox) =>
             @buildUrl
                 direction: 'first'
                 action: 'account.mailbox.messages'
@@ -51,7 +55,7 @@ module.exports = Topbar = React.createClass
                     action: 'account.config'
                     parameters: selectedAccount.get 'id'
                     fullWidth: true
-        
+
 
         div id: 'quick-actions', className: 'row',
             # responsive menu icon
@@ -75,6 +79,8 @@ module.exports = Topbar = React.createClass
 
             if layout.firstPanel.action is 'account.mailbox.messages'
                 div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
+                    a onClick: @refresh, className: 'btn btn-cozy-contrast',
+                        i className: 'fa fa-refresh'
                     ReactCSSTransitionGroup transitionName: 'fade',
                         if configMailboxUrl
                             a href: configMailboxUrl, className: 'btn btn-cozy mailbox-config',

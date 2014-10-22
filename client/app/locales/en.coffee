@@ -106,6 +106,8 @@ module.exports =
       "account tab mailboxes"       : "Folders"
       "account errors"              : "Some data are missing or invalid"
       "account type"                : "Account type"
+      "account updated"             : "Account updated"
+      "account refreshed"           : "Account refreshed"
       "mailbox create ok"           : "Folder created"
       "mailbox create ko"           : "Error creating folder"
       "mailbox update ok"           : "Folder updated"
