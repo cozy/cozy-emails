@@ -33,7 +33,7 @@ module.exports.create = (req, res, next) ->
             attribs: []
             children: []
 
-        if not account.accountType is 'TEST'
+        if not (account.accountType is 'TEST')
             ImapProcess.createBox account, mailbox.path
             .then -> Mailbox.createPromised mailbox.toObject()
             .return account
@@ -58,7 +58,7 @@ module.exports.update = (req, res, next) ->
             parentPath = box.path.substring 0, box.path.lastIndexOf box.label
             newPath = parentPath + req.body.label
 
-            if not account.accountType is 'TEST'
+            if not (account.accountType is 'TEST')
                 ImapProcess.renameBox account, box.path, newPath
                 .then ->
                     box.label = req.body.label
@@ -84,7 +84,7 @@ module.exports.delete = (req, res, next) ->
     .then (box) ->
         Account.findPromised box.accountID
         .then (account) ->
-            if not account.accountType is 'TEST'
+            if not (account.accountType is 'TEST')
                 ImapProcess.deleteBox account, box.path
                 .then -> box.destroyEverything()
                 .return account

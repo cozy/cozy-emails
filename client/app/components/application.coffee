@@ -105,6 +105,7 @@ module.exports = Application = React.createClass
                         selectedAccount: @state.selectedAccount
                         selectedMailboxID: @state.selectedMailboxID
                         searchQuery: @state.searchQuery
+                        isResponsiveMenuShown: @state.isResponsiveMenuShown
 
                     # Two layout modes: one full-width panel or two panels
                     div id: 'panels', className: 'row',

@@ -47,14 +47,14 @@ SMTPConnection = require 'nodemailer/node_modules/' +
 Account.refreshAllAccounts = ->
     allAccounts = Account.requestPromised 'all'
     Promise.serie allAccounts, (account) ->
-        if not account.accountType is 'TEST'
+        if not (account.accountType is 'TEST')
             ImapProcess.fetchAccount account
 
 # Public: refresh this account
 #
 # Returns a {Promise} for task completion
 Account::fetchMails = ->
-    if not account.accountType is 'TEST'
+    if not (account.accountType is 'TEST')
         ImapProcess.fetchAccount this
 
 # Public: include the mailboxes tree on this account instance

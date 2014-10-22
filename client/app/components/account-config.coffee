@@ -358,7 +358,7 @@ module.exports = React.createClass
         favorites = @state.favoriteMailboxes
         if @state.mailboxes?
             mailboxes = @state.mailboxes.map (mailbox, key) =>
-                favorite = true if favorites.get(mailbox.get('id'))
+                favorite = true if favorites? and favorites.get(mailbox.get('id'))
                 MailboxItem {accountID: @state.id, mailbox, favorite}
             .toJS()
         form className: 'form-horizontal',
@@ -642,9 +642,10 @@ module.exports = React.createClass
             init field for field in @_accountFields
             state.newMailboxParent = null
             state.tab = tab
+            state.mailboxes         = props.mailboxes
+            state.favoriteMailboxes = props.favoriteMailboxes
             if state.mailboxes.length is 0
                 state.tab = 'mailboxes'
-            state.favoriteMailboxes = props.favoriteMailboxes
         else if Object.keys(state.errors).length is 0
             init = (field) ->
                 state[field] = ''

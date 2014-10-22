@@ -144,5 +144,5 @@ module.exports = LayoutActionCreator =
     refreshMessages: ->
         XHRUtils.refresh (results) ->
             if results is "done"
-                LayoutActionCreator.notify t 'account refreshed'
+                LayoutActionCreator.notify t('account refreshed'), autoclose: true
 

@@ -18,7 +18,7 @@ module.exports = Topbar = React.createClass
     # Toggle the menu in responsive mode
     onResponsiveMenuClick: (event) ->
         event.preventDefault()
-        if @state.isResponsiveMenuShown
+        if @props.isResponsiveMenuShown
             LayoutActionCreator.hideReponsiveMenu()
         else
             LayoutActionCreator.showReponsiveMenu()

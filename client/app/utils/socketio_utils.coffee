@@ -12,7 +12,6 @@ dispatchTaskUpdate = (task) ->
         value: task
 
 dispatchTaskDelete = (taskid) ->
-    task.type = 'SERVER'
     AppDispatcher.handleServerAction
         type: ActionTypes.RECEIVE_TASK_DELETE
         value: taskid
