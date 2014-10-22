@@ -47,7 +47,7 @@ MessageList = React.createClass
 
         url = @buildUrl
             direction: 'second'
-            action: if isDraft then 'compose' else 'message'
+            action: if isDraft then 'edit' else 'message'
             parameters: message.get 'id'
 
         date = MessageUtils.formatDate message.get 'createdAt'

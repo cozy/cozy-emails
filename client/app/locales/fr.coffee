@@ -26,6 +26,7 @@ module.exports =
       "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n"
       "compose action draft"      : "Enregistrer en tant que brouillon"
       "compose action send"       : "Envoyer"
+      "compose action delete"     : "Supprimer le brouillon"
       "compose toggle cc"         : "Copie à"
       "compose toggle bcc"        : "Copie cachée à"
 

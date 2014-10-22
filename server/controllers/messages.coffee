@@ -44,7 +44,7 @@ module.exports.listByMailboxId = (req, res, next) ->
     Promise.all [
         Message.getByMailboxAndDate req.params.mailboxID, options
         Message.countByMailbox req.params.mailboxID
-        Message.countReadByMailbox req.params.mailboxID        
+        Message.countReadByMailbox req.params.mailboxID
     ]
     .spread (messages, count, read) ->
         res.send 200,
@@ -74,7 +74,7 @@ module.exports.details = (req, res, next) ->
 module.exports.attachment = (req, res, next) ->
     stream = req.message.getBinary req.params.attachment, (err) ->
         return next err if err
-    
+
     stream.on 'error', next
     stream.pipe res
 
@@ -98,7 +98,7 @@ module.exports.send = (req, res, next) ->
         contents: new Buffer attachment.content.split(",")[1], 'base64'
 
     # @TODO : save attachments in the DS
-    
+
     # find the account and draftbox
     Account.findPromised message.accountID
     .then (account) ->
@@ -110,27 +110,27 @@ module.exports.send = (req, res, next) ->
         # remove the old version if necessary
         removeOld = ->
             uid = message.mailboxIDs?[draftBox?.id]
-            if uid then ImapProcess.remove account, draftBox, uid 
+            if uid then ImapProcess.removeMail account, draftBox, uid
             else Promise.resolve()
 
         message.flags = ['\\Seen']
 
         if message.isDraft
             out = removeOld()
-            .then -> 
+            .then ->
                 unless draftBox
-                    throw new WrongConfigError('need a draftbox') 
+                    throw new WrongConfigError('need a draftbox')
 
                 message.flags.push '\\Draft'
                 ImapProcess.createMail account, draftBox, message
 
-        else 
+        else
             # send before deleting draft
             out = account.sendMessagePromised message
             .then (info) -> message.headers['message-id'] = info.messageId
             .then -> removeOld()
             .then -> Mailbox.findPromised account.sentMailbox
-            .then (sentBox) -> 
+            .then (sentBox) ->
                 ImapProcess.createMail account, sentBox, message
 
     # save the message
@@ -205,9 +205,9 @@ module.exports.conversationPatch = (req, res, next) ->
     Message.byConversationID req.params.conversationID
     .then (messages) ->
         # @TODO : be smarter : dont remove message from sent folder, ...
-        Promise.serie messages, (msg) -> 
+        Promise.serie messages, (msg) ->
             msg.applyPatchOperations req.body
-        
+
         .then -> res.send 200, messages
-    
+
     .catch next

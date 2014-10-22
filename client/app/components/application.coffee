@@ -252,8 +252,20 @@ module.exports = Application = React.createClass
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
 
-            if messageID = panelInfo.parameters.messageID
-                message = MessageStore.getByID messageID
+            return Compose
+                layout          : layout
+                action          : null
+                inReplyTo       : null
+                settings        : @state.settings
+                accounts        : @state.accounts
+                selectedAccount : @state.selectedAccount
+                message         : null
+
+        # -- Generates the edit draft composition form
+        else if panelInfo.action is 'edit'
+
+            messageID = panelInfo.parameters.messageID
+            message = MessageStore.getByID messageID
 
             return Compose
                 layout          : layout
@@ -262,7 +274,7 @@ module.exports = Application = React.createClass
                 settings        : @state.settings
                 accounts        : @state.accounts
                 selectedAccount : @state.selectedAccount
-                message         : message or null
+                message         : message
 
         # -- Display the settings form
         else if panelInfo.action is 'settings'

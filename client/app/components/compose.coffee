@@ -75,7 +75,7 @@ module.exports = Compose = React.createClass
                             div className: 'btn-group btn-group-sm',
                                 button className: 'btn btn-default', type: 'button', onClick: @onToggleBcc,
                                     span className: 'tool-long', t 'compose toggle bcc'
-                        
+
                         AccountPicker
                             accounts: @props.accounts
                             valueLink: @linkState 'accountID'
@@ -102,30 +102,44 @@ module.exports = Compose = React.createClass
                     placeholder: t 'compose bcc help'
 
                 div className: 'form-group',
-                    label htmlFor: 'compose-subject', className: classLabel, t "compose subject"
+                    label
+                        htmlFor: 'compose-subject',
+                        className: classLabel,
+                        t "compose subject"
                     div className: classInput,
-                        input id: 'compose-subject', ref: 'subject', valueLink: @linkState('subject'), type: 'text', className: 'form-control', placeholder: t "compose subject help"
+                        input
+                            id: 'compose-subject',
+                            ref: 'subject',
+                            valueLink: @linkState('subject'),
+                            type: 'text',
+                            className: 'form-control',
+                            placeholder: t "compose subject help"
                 div className: 'form-group',
                     if @state.composeInHTML
                         div className: 'rt-editor form-control', ref: 'html', contentEditable: true, dangerouslySetInnerHTML: {__html: @linkState('html').value}
                     else
                         textarea className: 'editor', ref: 'content', defaultValue: @linkState('body').value
-                
-                div className: 'attachements', FilePicker 
+
+                div className: 'attachements', FilePicker
                     editable: true
                     form: false
                     valueLink: @linkState 'attachments'
-                
+
                 div className: 'composeToolbox',
                     div className: 'btn-toolbar', role: 'toolbar',
-                        div className: 'btn-group btn-group-sm',
-                            button className: 'btn btn-default', type: 'button', onClick: @onDraft,
-                                span className: 'fa fa-save'
-                                span className: 'tool-long', t 'compose action draft'
                         div className: 'btn-group btn-group-lg',
                             button className: 'btn btn-default', type: 'button', onClick: @onSend,
                                 span className: 'fa fa-send'
                                 span className: 'tool-long', t 'compose action send'
+                        div className: 'btn-group btn-group-sm',
+                            button className: 'btn btn-default', type: 'button', onClick: @onDraft,
+                                span className: 'fa fa-save'
+                                span className: 'tool-long', t 'compose action draft'
+                        if @props.message?
+                            div className: 'btn-group btn-group-sm',
+                                button className: 'btn btn-default', type: 'button', onClick: @onDelete,
+                                    span className: 'fa fa-trash-o'
+                                    span className: 'tool-long', t 'compose action delete'
 
     componentDidMount: ->
         # scroll compose window into view
@@ -232,12 +246,12 @@ module.exports = Compose = React.createClass
 
         # edition of an existing draft
         if message = @props.message
-            state = 
+            state =
                 composeInHTML: message.get('html')?
 
             # TODO : smarter ?
             state[key] = value for key, value of message.toJS()
-                
+
         # new draft
         else
             state = MessageUtils.makeReplyMessage @props.inReplyTo, @props.action
@@ -245,7 +259,7 @@ module.exports = Compose = React.createClass
             state.accountID ?= @props.selectedAccount.get 'id'
 
         state.attachments ?= []
-        
+
         return state
 
     onDraft: (args) ->
@@ -258,7 +272,7 @@ module.exports = Compose = React.createClass
 
         account = @props.accounts.get @state.accountID
 
-        from = 
+        from =
             name: account?.get('name') or undefined
             address: account.get('login')
 
@@ -271,12 +285,12 @@ module.exports = Compose = React.createClass
             to          : @state.to
             cc          : @state.cc
             bcc         : @state.bcc
-            subject     : this.refs.subject.getDOMNode().value.trim()
+            subject     : @state.subject
             isDraft     : isDraft
             attachments : @state.attachments
 
-        if @state.id
-            message.id = @state.id
+        if @props.message?
+            message.mailboxIDs = @props.message.get 'mailboxIDs'
 
         if @state.composeInHTML
             message.html    = this.refs.html.getDOMNode().innerHTML
@@ -300,6 +314,19 @@ module.exports = Compose = React.createClass
             if callback?
                 callback error
 
+
+    onDelete: (args) ->
+        if window.confirm(t 'mail confirm delete')
+            MessageActionCreator.delete @props.message, @props.selectedAccount, (error) =>
+                if error?
+                    LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
+                else
+                    LayoutActionCreator.alertSuccess t "message action delete ok"
+                    @redirect
+                        direction: 'first'
+                        action: 'account.mailbox.messages'
+                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailboxID, 1]
+                        fullWidth: true
     onToggleCc: (e) ->
         toggle = (e) -> e.classList.toggle 'shown'
         toggle e for e in @getDOMNode().querySelectorAll '.compose-cc'

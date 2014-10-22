@@ -72,7 +72,8 @@ FilePicker = React.createClass
                             multiple: "multiple",
                             ref: "file",
                             onChange: @handleFiles
-                    div className: "dropzone",
+                    div
+                        className: "dropzone",
                         ref: "dropzone",
                         onDragOver: @allowDrop,
                         onDrop: @handleFiles,

@@ -116,6 +116,17 @@ module.exports = LayoutActionCreator =
             defaultAccount = AccountStore.getDefault()
             AccountActionCreator.selectAccount defaultAccount.get 'id'
 
+    # Edit draft
+    showComposeMessage: (panelInfo, direction) ->
+        LayoutActionCreator.hideReponsiveMenu()
+
+        # if there isn't a selected account (page loaded directly),
+        # select the default account
+        selectedAccount = AccountStore.getSelected()
+        if not selectedAccount?
+            defaultAccount = AccountStore.getDefault()
+            AccountActionCreator.selectAccount defaultAccount.get 'id'
+
     showCreateAccount: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
         AccountActionCreator.selectAccount null

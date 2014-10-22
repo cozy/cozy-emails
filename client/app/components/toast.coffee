@@ -125,6 +125,11 @@ module.exports.Container = ToastContainer =  React.createClass
     closeAll: ->
         toasts = @props.toasts.toJS?() or @props.toasts
         close = (toast) ->
-            SocketUtils.acknowledgeTask toast.id
+            if toast.type is NotifyType.SERVER
+                SocketUtils.acknowledgeTask toast.id
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.RECEIVE_TASK_DELETE
+                    value: toast.id
         close toast for id, toast of toasts
         @props.toasts.clear()
