@@ -6,11 +6,13 @@ pathToSocketIO = "#{window.location.pathname}socket.io"
 socket = io.connect url, resource: pathToSocketIO
 
 dispatchTaskUpdate = (task) ->
+    task.type = 'SERVER'
     AppDispatcher.handleServerAction
         type: ActionTypes.RECEIVE_TASK_UPDATE
         value: task
 
 dispatchTaskDelete = (taskid) ->
+    task.type = 'SERVER'
     AppDispatcher.handleServerAction
         type: ActionTypes.RECEIVE_TASK_DELETE
         value: taskid

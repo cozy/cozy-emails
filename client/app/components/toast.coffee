@@ -1,5 +1,7 @@
 {a, h4,  pre, div, button, span, strong, i} = React.DOM
 SocketUtils = require '../utils/socketio_utils'
+AppDispatcher = require '../app_dispatcher'
+{ActionTypes, NotifyType} = require '../constants/app_constants'
 
 classer = React.addons.classSet
 
@@ -16,7 +18,12 @@ module.exports = Toast = React.createClass
         @setState modalErrors: errors
 
     acknowledge: ->
-        SocketUtils.acknowledgeTask @props.toast.id
+        if @props.toast.type is NotifyType.SERVER
+            SocketUtils.acknowledgeTask @props.toast.id
+        else
+            AppDispatcher.handleViewAction
+                type: ActionTypes.RECEIVE_TASK_DELETE
+                value: @props.toast.id
 
     renderErrorModal: ->
         div className: "modal fade in", role: "dialog", style: display: 'block',
@@ -34,34 +41,50 @@ module.exports = Toast = React.createClass
 
     render: ->
         toast = @props.toast
+        hasErrors = toast.errors? and toast.errors.length
         classes = classer
             alert: true
             toast: true
             'alert-dismissible': toast.finished
-            'alert-info': not toast.errors.length
-            'alert-warning': toast.errors.length
-        percent = parseInt(100 * toast.done / toast.total) + '%'
-        showModal = @showModal.bind(this, toast.errors)
+            'alert-info': not hasErrors
+            'alert-warning': hasErrors
+        if toast.done? and toast.total?
+            percent = parseInt(100 * toast.done / toast.total) + '%'
+        if hasErrors
+            showModal = @showModal.bind(this, toast.errors)
 
         div className: classes, role: "alert",
             if @state.modalErrors
                 @renderErrorModal()
 
-            div className:"progress",
-                div className: 'progress-bar', style: width: percent
-                div className: 'progress-bar-label start', style: width: percent,
-                    "#{t "task " + toast.code, toast} : #{percent}"
-                div className: 'progress-bar-label end',
-                    "#{t "task " + toast.code, toast} : #{percent}"
+            if percent?
+                div className: "progress",
+                    div className: 'progress-bar', style: width: percent
+                    div className: 'progress-bar-label start', style: width: percent,
+                        "#{t "task " + toast.code, toast} : #{percent}"
+                    div className: 'progress-bar-label end',
+                        "#{t "task " + toast.code, toast} : #{percent}"
+
+            if toast.message
+                div className: "message", toast.message
 
             if toast.finished
                 button type: "button", className: "close", onClick: @acknowledge,
                     span 'aria-hidden': "true", "×"
                     span className: "sr-only", t "app alert close"
 
-            if len = toast.errors.length
+            if hasErrors
                 a onClick: showModal,
                     t 'there were errors', smart_count: len
+
+    componentDidMount: ->
+        if @props.toast.autoclose
+            setTimeout =>
+                @getDOMNode().classList.add 'autoclose'
+            , 1000
+            setTimeout =>
+                @acknowledge()
+            , 10000
 
 module.exports.Container = ToastContainer =  React.createClass
     displayName: 'ToastContainer'

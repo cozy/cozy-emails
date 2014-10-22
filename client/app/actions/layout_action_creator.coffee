@@ -5,7 +5,7 @@ LayoutStore   = require '../stores/layout_store'
 
 AppDispatcher = require '../app_dispatcher'
 
-{ActionTypes, AlertLevel} = require '../constants/app_constants'
+{ActionTypes, AlertLevel, NotifyType} = require '../constants/app_constants'
 
 AccountActionCreator = require './account_action_creator'
 MessageActionCreator = require './message_action_creator'
@@ -43,6 +43,17 @@ module.exports = LayoutActionCreator =
         LayoutActionCreator.alert AlertLevel.WARNING, message
     alertError:   (message) ->
         LayoutActionCreator.alert AlertLevel.ERROR, message
+    notify: (message, options) ->
+        task =
+            id: Date.now()
+            type: NotifyType.CLIENT
+            finished: true
+            message: message
+        if options?
+            task.autoclose = options.autoclose
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RECEIVE_TASK_UPDATE
+            value: task
 
     filterMessages: (filter) ->
         AppDispatcher.handleViewAction
