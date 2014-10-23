@@ -10,6 +10,7 @@ selectMessage = (account, box, subject, cb) ->
             accounts[e.querySelector('.item-label').textContent.trim()] = e.dataset.reactid
         return accounts
     id = accounts[account]
+    casper.test.assert (typeof id is 'string'), "Account #{account} found"
     casper.click "[data-reactid='#{id}']"
     casper.waitForSelector "[data-reactid='#{id}'].active", ->
         mailboxes = casper.evaluate ->
@@ -31,7 +32,7 @@ casper.test.begin 'Test conversation', (test) ->
 
     casper.start "http://localhost:9125/", ->
         casper.evaluate ->
-            window.cozyMails.setSetting 'messagesPerPage', 500
+            window.cozyMails.setSetting 'messagesPerPage', 100
             window.cozyMails.setSetting 'messageDisplayHTML', true
             window.cozyMails.setSetting 'messageDisplayImages', false
 
