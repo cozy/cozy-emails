@@ -540,9 +540,27 @@ module.exports = React.createClass
                         if server.type is 'imap' and not infos.imapServer?
                             infos.imapServer = server.hostname
                             infos.imapPort   = server.port
+                            if server.socketType is 'SSL'
+                                infos.imapSSL = true
+                                infos.imapTLS = false
+                            else if server.socketType is 'STARTTLS'
+                                infos.imapSSL = false
+                                infos.imapTLS = true
+                            else if server.socketType is 'plain'
+                                infos.imapSSL = false
+                                infos.imapTLS = false
                         if server.type is 'smtp' and not infos.smtpServer?
                             infos.smtpServer = server.hostname
                             infos.smtpPort   = server.port
+                            if server.socketType is 'SSL'
+                                infos.smtpSSL = true
+                                infos.smtpTLS = false
+                            else if server.socketType is 'STARTTLS'
+                                infos.smtpSSL = false
+                                infos.smtpTLS = true
+                            else if server.socketType is 'plain'
+                                infos.smtpSSL = false
+                                infos.smtpTLS = false
                     getInfos server for server in provider
                     if not infos.imapServer?
                         infos.imapServer = ''
@@ -550,23 +568,25 @@ module.exports = React.createClass
                     if not infos.smtpServer?
                         infos.smtpServer = ''
                         infos.smtpPort   = '465'
-                    switch infos.imapPort
-                        when '993'
-                            infos.imapSSL = true
-                            infos.imapTLS = false
-                        else
-                            infos.imapSSL = false
-                            infos.imapTLS = false
-                    switch infos.smtpPort
-                        when '465'
-                            infos.smtpSSL = true
-                            infos.smtpTLS = false
-                        when '587'
-                            infos.smtpSSL = false
-                            infos.smtpTLS = true
-                        else
-                            infos.smtpSSL = false
-                            infos.smtpTLS = false
+                    if not infos.imapSSL
+                        switch infos.imapPort
+                            when '993'
+                                infos.imapSSL = true
+                                infos.imapTLS = false
+                            else
+                                infos.imapSSL = false
+                                infos.imapTLS = false
+                    if not infos.smtpSSL
+                        switch infos.smtpPort
+                            when '465'
+                                infos.smtpSSL = true
+                                infos.smtpTLS = false
+                            when '587'
+                                infos.smtpSSL = false
+                                infos.smtpTLS = true
+                            else
+                                infos.smtpSSL = false
+                                infos.smtpTLS = false
                     @setState infos
                     @validateForm()
             @_lastDiscovered = login

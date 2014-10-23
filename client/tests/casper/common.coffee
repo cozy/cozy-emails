@@ -1,10 +1,17 @@
 require = patchRequire global.require
-utils = require "/usr/local/lib/node_modules/casperjs/modules/utils.js"
+utils   = require "/usr/local/lib/node_modules/casperjs/modules/utils.js"
+system  = require "system"
 
 dev = false
 
 if utils.cmpVersion("1.1", phantom.casperVersion) > 0
     casper.die "You need at least CasperJS 1.1"
+
+casper.cozy =
+    startUrl: system.env.COZY_URL
+
+if not casper.cozy.startUrl?
+    casper.die "Please set the base URL into COZY_URL environment variable"
 
 exports.init = (casper) ->
     dev = casper.cli.options.dev?
@@ -39,4 +46,3 @@ exports.init = (casper) ->
             PluginUtils = require '../utils/plugin_utils'
             for pluginName, pluginConf of window.plugins
                 PluginUtils.deactivate pluginName
-

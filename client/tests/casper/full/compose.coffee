@@ -5,7 +5,7 @@ utils   = require "/usr/local/lib/node_modules/casperjs/modules/utils.js"
 casper.test.begin 'Test compose in HTML', (test) ->
     init casper
 
-    casper.start "http://localhost:9125/#settings", ->
+    casper.start casper.cozy.startUrl + "#settings", ->
         accountSel = "#account-list .menu-item.account .item-label"
         accounts = casper.getElementsInfo accountSel
         ids = accounts.map (e) -> return e.attributes['data-account-id']
