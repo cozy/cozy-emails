@@ -30,7 +30,7 @@ selectMessage = (account, box, subject, cb) ->
 casper.test.begin 'Test conversation', (test) ->
     init casper
 
-    casper.start "http://localhost:9125/", ->
+    casper.start casper.cozy.startUrl, ->
         casper.evaluate ->
             window.cozyMails.setSetting 'messagesPerPage', 100
             window.cozyMails.setSetting 'messageDisplayHTML', true

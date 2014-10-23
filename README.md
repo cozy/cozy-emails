@@ -67,9 +67,12 @@ To run tests type the following command into the Cozy Emails folder:
 
 In order to run the tests, you must only have the Data System started.
 
-For frontend tests, you need a working [CasperJS](http://casperjs.org/) installation. Then go to the Cozy emails folder and:
+For frontend tests, you need a working [CasperJS](http://casperjs.org/) installation, and to set up some environment variables:
+* `COZY_URL`: base URL of the application, for example "http://localhost:9125/"
 
-    casperjs test client/tests/casper/full
+Then go to the Cozy emails folder and:
+
+    COZY_URL="http://localhost:9125/" casperjs test client/tests/casper/full
 
 ## Icons
 

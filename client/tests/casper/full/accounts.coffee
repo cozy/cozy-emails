@@ -18,7 +18,7 @@ deleteTestAccounts = ->
 casper.test.begin 'Test accounts', (test) ->
     init casper
 
-    casper.start "http://localhost:9125/", ->
+    casper.start casper.cozy.startUrl, ->
         accountSel = "#account-list .menu-item.account"
         test.assertExists accountSel, "Accounts in menu"
 
@@ -44,7 +44,7 @@ casper.test.begin 'Test accounts', (test) ->
 casper.test.begin 'Create account', (test) ->
     init casper
 
-    casper.start "http://localhost:9125/", ->
+    casper.start casper.cozy.startUrl, ->
         values =
             "account-type": "IMAP",
             "mailbox-email-address": "test@cozytest.org",
@@ -169,7 +169,7 @@ casper.test.begin 'Create account', (test) ->
 casper.test.begin 'Test accounts', (test) ->
     init casper
 
-    casper.start "http://localhost:9125/", ->
+    casper.start casper.cozy.startUrl, ->
         accountSel = "#account-list .menu-item.account"
         accounts = casper.getElementsInfo accountSel
         id = accounts[0].attributes['data-reactid']
