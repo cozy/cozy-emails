@@ -1,11 +1,7 @@
-async       = require 'async'
 Message     = require '../models/message'
 Account     = require '../models/account'
 Mailbox     = require '../models/mailbox'
-{HttpError, WrongConfigError} = require '../utils/errors'
-Client      = require('request-json').JsonClient
-jsonpatch   = require 'fast-json-patch'
-nodemailer  = require 'nodemailer'
+{HttpError, AccountConfigError} = require '../utils/errors'
 Promise     = require 'bluebird'
 htmlToText  = require 'html-to-text'
 sanitizer   = require 'sanitizer'
@@ -14,14 +10,7 @@ ImapProcess = require '../processes/imap_processes'
 htmlToTextOptions =
     tables: true
     wordwrap: 80
-# The data system listens to localhost:9101
-dataSystem = new Client 'http://localhost:9101/'
 
-# In production we must authenticate the application
-if process.env.NODE_ENV in ['production', 'test']
-    user = process.env.NAME
-    password = process.env.TOKEN
-    dataSystem.setBasicAuth user, password
 
 formatMessage = (message) ->
     if message.html?
@@ -119,7 +108,7 @@ module.exports.send = (req, res, next) ->
             out = removeOld()
             .then ->
                 unless draftBox
-                    throw new WrongConfigError('need a draftbox')
+                    throw new AccountConfigError('draftMailbox')
 
                 message.flags.push '\\Draft'
                 ImapProcess.createMail account, draftBox, message
