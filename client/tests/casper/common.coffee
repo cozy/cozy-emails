@@ -3,6 +3,9 @@ utils = require "/usr/local/lib/node_modules/casperjs/modules/utils.js"
 
 dev = false
 
+if utils.cmpVersion("1.1", phantom.casperVersion) > 0
+    casper.die "You need at least CasperJS 1.1"
+
 exports.init = (casper) ->
     dev = casper.cli.options.dev?
 
