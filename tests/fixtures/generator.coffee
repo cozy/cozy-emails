@@ -97,7 +97,7 @@ for i in [1..numberOfEmails] by 1
         "priority": priority,
         "reads": false,
         "mailboxIDs": mailboxObject,
-        "account": account,
+        "accountID": account,
         "attachments": []
         "flags": []
         "conversationID": "conversation_id_#{i}"

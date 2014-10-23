@@ -41,7 +41,9 @@ module.exports = class ImapScheduler
         pAccount = if account then Promise.resolve account
         else Account.findPromised accountID
         pAccount.then (account) =>
-            scheduler = new ImapScheduler account.makeImapConfig()
+
+            scheduler = if account.isTest() then new TestScheduler()
+            else new ImapScheduler account.makeImapConfig()
             @instances[accountID] = scheduler
             return scheduler
 
@@ -254,3 +256,11 @@ module.exports = class ImapScheduler
             throw err
 
         .then @_resolvePending, @_rejectPending
+
+
+class TestScheduler
+
+    doASAP: (gen) -> Promise.resolve null
+    doASAPWithBox: (gen) -> Promise.resolve null
+    doLater: (gen) -> Promise.resolve null
+    doLaterWithBox: (gen) -> Promise.resolve null

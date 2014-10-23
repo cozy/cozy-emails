@@ -89,6 +89,7 @@ Mailbox.getClientTree = (accountID) ->
             _.pick row.doc, 'label', 'children', 'attribs'
 
         box.id = row.id
+        box.children = []
 
         if path.length is 1 # first level box
             out.push box

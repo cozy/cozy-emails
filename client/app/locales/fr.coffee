@@ -180,7 +180,7 @@ module.exports =
       "mailbox pick null"          : "Pas de boite pour ça"
 
       # Tasks
-      "task diff"                  : 'Comparaison %{box} de %{account}'
+      "task account-fetch"         : 'Rafraichissement %{account}'
       "task apply-diff-fetch"      : 'Téléchargement des messages du dossier
                                         %{box} de %{account}'
       "there were errors"          : '%{smart_count} erreur. ||||

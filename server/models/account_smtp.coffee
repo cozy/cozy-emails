@@ -3,6 +3,7 @@ Promise = require 'bluebird'
 nodemailer = require 'nodemailer'
 {AccountConfigError} = require '../utils/errors'
 # @TODO : import directly ?
+log = require('../utils/logging')(prefix: 'models:account_smtp')
 SMTPConnection = require 'nodemailer/node_modules/' +
     'nodemailer-smtp-transport/node_modules/smtp-connection'
 
@@ -15,6 +16,7 @@ SMTPConnection = require 'nodemailer/node_modules/' +
 #
 # Returns void
 Account::sendMessage = (message, callback) ->
+    return callback null, messageId: 66 if @isTest()
     transport = nodemailer.createTransport
         port: @smtpPort
         host: @smtpServer
@@ -34,6 +36,7 @@ Account::sendMessage = (message, callback) ->
 #
 # Returns a {Promise} that reject/resolve if the credentials are corrects
 Account::testSMTPConnection = ->
+    return Promise.resolve null if @isTest()
 
     connection = new SMTPConnection
         port: @smtpPort

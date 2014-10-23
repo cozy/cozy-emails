@@ -90,7 +90,7 @@ Account::imap_createMail = (box, message) ->
 #
 # Returns a {Promise} for task completion
 Account::imap_createBox = (path) ->
-    return Promise.resolve {path: path} if @accountType is 'TEST'
+    return Promise.resolve {path: path} if @isTest()
     @doASAP (imap) -> imap.addBox path
 
 # Public: rename/move a box in the account
@@ -100,7 +100,7 @@ Account::imap_createBox = (path) ->
 #
 # Returns a {Promise} for task completion
 Account::imap_renameBox = (oldpath, newpath) ->
-    return Promise.resolve {path: newpath} if @accountType is 'TEST'
+    return Promise.resolve {path: newpath} if @isTest()
     @doASAP (imap) -> imap.renameBox oldpath, newpath
 
 # Public: delete a box in the account
@@ -110,7 +110,7 @@ Account::imap_renameBox = (oldpath, newpath) ->
 #
 # Returns a {Promise} for task completion
 Account::imap_deleteBox = (path) ->
-    return Promise.resolve null if @accountType is 'TEST'
+    return Promise.resolve null if @isTest()
     @doASAP (imap) -> imap.delBox path
 
 
