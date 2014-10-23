@@ -107,7 +107,6 @@ module.exports = AccountActionCreator = {
   create: function(inputValues, afterCreation) {
     AccountActionCreator._setNewAccountWaitingStatus(true);
     return XHRUtils.createAccount(inputValues, function(error, account) {
-      AccountActionCreator._setNewAccountWaitingStatus(false);
       if ((error != null) || (account == null)) {
         return AccountActionCreator._setNewAccountError(error);
       } else {
@@ -125,7 +124,6 @@ module.exports = AccountActionCreator = {
     account = AccountStore.getByID(accountID);
     newAccount = account.mergeDeep(inputValues);
     return XHRUtils.editAccount(newAccount, function(error, rawAccount) {
-      AccountActionCreator._setNewAccountWaitingStatus(false);
       if (error != null) {
         return AccountActionCreator._setNewAccountError(error);
       } else {
@@ -697,7 +695,7 @@ module.exports = React.createClass({
   displayName: 'AccountConfig',
   _lastDiscovered: '',
   mixins: [RouterMixin, React.addons.LinkedStateMixin],
-  _accountFields: ['id', 'label', 'name', 'login', 'password', 'imapServer', 'imapPort', 'imapSSL', 'imapTLS', 'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'serverType', 'mailboxes', 'favoriteMailboxes', 'draftMailbox', 'sentMailbox', 'trashMailbox'],
+  _accountFields: ['id', 'label', 'name', 'login', 'password', 'imapServer', 'imapPort', 'imapSSL', 'imapTLS', 'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'accountType', 'mailboxes', 'favoriteMailboxes', 'draftMailbox', 'sentMailbox', 'trashMailbox'],
   _accountSchema: {
     properties: {
       'label': {
@@ -745,7 +743,7 @@ module.exports = React.createClass({
       'trashMailbox': {
         allowEmpty: true
       },
-      'serverType': {
+      'accountType': {
         allowEmpty: true
       }
     }
@@ -852,6 +850,7 @@ module.exports = React.createClass({
       className: 'col-sm-3'
     }, input({
       id: 'mailbox-label',
+      name: 'mailbox-label',
       valueLink: this.linkState('label'),
       type: 'text',
       className: 'form-control',
@@ -866,6 +865,7 @@ module.exports = React.createClass({
       className: 'col-sm-3'
     }, input({
       id: 'mailbox-name',
+      name: 'mailbox-name',
       valueLink: this.linkState('name'),
       type: 'text',
       className: 'form-control',
@@ -880,6 +880,7 @@ module.exports = React.createClass({
       className: 'col-sm-3'
     }, input({
       id: 'mailbox-email-address',
+      name: 'mailbox-email-address',
       valueLink: this.linkState('login'),
       ref: 'login',
       onBlur: this.discover,
@@ -895,6 +896,7 @@ module.exports = React.createClass({
       className: 'col-sm-3'
     }, input({
       id: 'mailbox-password',
+      name: 'mailbox-password',
       valueLink: this.linkState('password'),
       type: 'password',
       className: 'form-control',
@@ -908,6 +910,7 @@ module.exports = React.createClass({
       className: 'col-sm-3'
     }, input({
       id: 'mailbox-smtp-server',
+      name: 'mailbox-smtp-server',
       valueLink: this.linkState('smtpServer'),
       type: 'text',
       className: 'form-control',
@@ -920,6 +923,7 @@ module.exports = React.createClass({
       className: 'col-sm-1'
     }, input({
       id: 'mailbox-smtp-port',
+      name: 'mailbox-smtp-port',
       valueLink: this.linkState('smtpPort'),
       type: 'text',
       className: 'form-control',
@@ -933,27 +937,39 @@ module.exports = React.createClass({
       })(this)
     })), getError('smtpServer'), getError('smtpPort')), div({
       className: 'form-group'
-    }, div({
-      className: 'col-sm-2 col-sm-offset-4 checkbox-inline'
-    }, label(null, t('account SSL'), input({
-      type: 'checkbox',
+    }, label({
+      htmlFor: 'mailbox-smtp-ssl',
+      className: 'col-sm-4 control-label'
+    }, t('account SSL')), div({
+      className: 'col-sm-1'
+    }, input({
+      id: 'mailbox-smtp-ssl',
+      name: 'mailbox-smtp-ssl',
       checkedLink: this.linkState('smtpSSL'),
-      onClick: (function(_this) {
-        return function(ev) {
-          return _this._onServerParam(ev.target, 'smtp', 'ssl');
-        };
-      })(this)
-    }))), div({
-      className: 'col-sm-2 checkbox-inline'
-    }, label(null, t('account TLS'), input({
       type: 'checkbox',
-      checkedLink: this.linkState('smtpTLS'),
+      className: 'form-control',
       onClick: (function(_this) {
         return function(ev) {
           return _this._onServerParam(ev.target, 'smtp', 'ssl');
         };
       })(this)
-    }))))), div({
+    })), label({
+      htmlFor: 'mailbox-smtp-tls',
+      className: 'col-sm-2 control-label'
+    }, t('account TLS')), div({
+      className: 'col-sm-1'
+    }, input({
+      id: 'mailbox-smtp-tls',
+      name: 'mailbox-smtp-tls',
+      checkedLink: this.linkState('smtpTLS'),
+      type: 'checkbox',
+      className: 'form-control',
+      onClick: (function(_this) {
+        return function(ev) {
+          return _this._onServerParam(ev.target, 'smtp', 'tls');
+        };
+      })(this)
+    })))), div({
       className: 'hidden'
     }, label({
       htmlFor: 'account-type',
@@ -962,8 +978,10 @@ module.exports = React.createClass({
       className: 'col-sm-3'
     }, input({
       id: 'account-type',
+      name: 'account-type',
+      ref: 'type',
       valueLink: this.linkState('accountType'),
-      type: 'hidden',
+      type: 'text',
       className: 'form-control'
     })), getError('password')), fieldset(null, legend(null, t('account receiving server')), div({
       className: 'form-group' + hasError('imap') + hasError('imapServer') + hasError('imapPort')
@@ -974,6 +992,7 @@ module.exports = React.createClass({
       className: 'col-sm-3'
     }, input({
       id: 'mailbox-imap-server',
+      name: 'mailbox-imap-server',
       valueLink: this.linkState('imapServer'),
       type: 'text',
       className: 'form-control',
@@ -986,6 +1005,7 @@ module.exports = React.createClass({
       className: 'col-sm-1'
     }, input({
       id: 'mailbox-imap-port',
+      name: 'mailbox-imap-port',
       valueLink: this.linkState('imapPort'),
       type: 'text',
       className: 'form-control',
@@ -999,27 +1019,39 @@ module.exports = React.createClass({
       })(this)
     })), getError('imapServer'), getError('imapPort')), div({
       className: 'form-group'
-    }, div({
-      className: 'col-sm-2 col-sm-offset-4 checkbox-inline'
-    }, label(null, t('account SSL'), input({
-      type: 'checkbox',
+    }, label({
+      htmlFor: 'mailbox-imap-ssl',
+      className: 'col-sm-4 control-label'
+    }, t('account SSL')), div({
+      className: 'col-sm-1'
+    }, input({
+      id: 'mailbox-imap-ssl',
+      name: 'mailbox-imap-ssl',
       checkedLink: this.linkState('imapSSL'),
-      onClick: (function(_this) {
-        return function(ev) {
-          return _this._onServerParam(ev.target, 'imap', 'ssl');
-        };
-      })(this)
-    }))), div({
-      className: 'col-sm-2 checkbox-inline'
-    }, label(null, t('account TLS'), input({
       type: 'checkbox',
-      checkedLink: this.linkState('imapTLS'),
+      className: 'form-control',
       onClick: (function(_this) {
         return function(ev) {
           return _this._onServerParam(ev.target, 'imap', 'ssl');
         };
       })(this)
-    }))))), div({
+    })), label({
+      htmlFor: 'mailbox-imap-tls',
+      className: 'col-sm-2 control-label'
+    }, t('account TLS')), div({
+      className: 'col-sm-1'
+    }, input({
+      id: 'mailbox-imap-tls',
+      name: 'mailbox-imap-tls',
+      checkedLink: this.linkState('imapTLS'),
+      type: 'checkbox',
+      className: 'form-control',
+      onClick: (function(_this) {
+        return function(ev) {
+          return _this._onServerParam(ev.target, 'imap', 'tls');
+        };
+      })(this)
+    })))), div({
       className: 'form-group'
     }, div({
       className: 'col-sm-offset-2 col-sm-5 text-right'
@@ -1151,7 +1183,9 @@ module.exports = React.createClass({
   },
   validateForm: function(event) {
     var accountValue, error, errors, setError, valid, _i, _len, _ref1, _ref2;
-    event.preventDefault();
+    if (event != null) {
+      event.preventDefault();
+    }
     if (Object.keys(this.state.errors).length !== 0) {
       _ref1 = this.doValidate(), accountValue = _ref1.accountValue, valid = _ref1.valid;
       if (valid.valid) {
@@ -1309,7 +1343,7 @@ module.exports = React.createClass({
                 infos.smtpTLS = false;
             }
             _this.setState(infos);
-            return _this.validateForm(event);
+            return _this.validateForm();
           }
         };
       })(this));
@@ -1386,22 +1420,24 @@ module.exports = React.createClass({
       } else {
         tab = this.state.tab;
       }
-      return this.setState(this._accountToState(tab));
+      return this.setState(this._accountToState(tab, props));
     }
   },
   getInitialState: function() {
     return this._accountToState("account");
   },
-  _accountToState: function(tab) {
+  _accountToState: function(tab, props) {
     var account, field, init, state, _i, _j, _len, _len1, _ref1, _ref2;
-    account = this.props.selectedAccount;
     state = {
       errors: {}
     };
-    if (this.props.error != null) {
-      if (this.props.error.name === 'AccountConfigError') {
-        field = this.props.error.field;
-        state.errors[field] = t('config error ' + field);
+    if (props != null) {
+      account = this.props.selectedAccount;
+      if (props.error != null) {
+        if (props.error.name === 'AccountConfigError') {
+          field = props.error.field;
+          state.errors[field] = t('config error ' + field);
+        }
       }
     }
     if (account != null) {
@@ -1418,8 +1454,8 @@ module.exports = React.createClass({
       if (state.mailboxes.length === 0) {
         state.tab = 'mailboxes';
       }
-      state.favoriteMailboxes = this.props.favoriteMailboxes;
-    } else {
+      state.favoriteMailboxes = props.favoriteMailboxes;
+    } else if (Object.keys(state.errors).length === 0) {
       init = function(field) {
         return state[field] = '';
       };
@@ -1755,7 +1791,7 @@ LayoutActionCreator = require('../actions/layout_action_creator');
 
 module.exports = Application = React.createClass({
   displayName: 'Application',
-  mixins: [StoreWatchMixin([AccountStore, MessageStore, LayoutStore, SearchStore, TasksStore]), RouterMixin],
+  mixins: [StoreWatchMixin([AccountStore, MessageStore, LayoutStore, SettingsStore, SearchStore, TasksStore]), RouterMixin],
   render: function() {
     var alert, firstPanelLayoutMode, getUrl, isFullWidth, layout, panelClasses, responsiveClasses;
     layout = this.props.router.current;
@@ -2584,7 +2620,7 @@ FilePicker = React.createClass({
   },
   componentWillReceiveProps: function(props) {
     var files;
-    files = this._convertFileList(this.props.value || this.props.valueLink.value);
+    files = this._convertFileList(props.value || props.valueLink.value);
     return this.setState({
       files: files
     });
@@ -2775,7 +2811,7 @@ FileItem = React.createClass({
       className: "file-item",
       key: file.name
     }, i({
-      className: "mime fa " + iconClass
+      className: "mime " + type + " fa " + iconClass
     }), this.props.editable ? i({
       className: "fa fa-times delete",
       onClick: this.doDelete
@@ -3131,9 +3167,6 @@ LayoutActionCreator = require('../actions/layout_action_creator');
 MessageList = React.createClass({
   displayName: 'MessageList',
   mixins: [RouterMixin],
-  shouldComponentUpdate: function(nextProps, nextState) {
-    return !Immutable.is(nextProps.messages, this.props.messages) || !Immutable.is(nextProps.openMessage, this.props.openMessage);
-  },
   render: function() {
     var curPage, nbPages;
     curPage = parseInt(this.props.pageNum, 10);
@@ -3317,7 +3350,7 @@ MessagesSort = React.createClass({
   },
   render: function() {
     return div({
-      className: 'dropdown pull-left sort-dropdown'
+      className: 'dropdown sort-dropdown'
     }, button({
       className: 'btn btn-default dropdown-toggle message-list-action',
       type: 'button',
@@ -3408,9 +3441,9 @@ module.exports = React.createClass({
     accounts: React.PropTypes.object.isRequired
   },
   shouldComponentUpdate: function(nextProps, nextState) {
-    var shouldUpdate;
-    shouldUpdate = JSON.stringify(nextProps.message.toJSON()) !== JSON.stringify(this.props.message.toJSON()) || !Immutable.is(nextProps.key, this.props.key) || !Immutable.is(nextProps.isLast, this.props.isLast) || !Immutable.is(nextProps.selectedAccount, this.props.selectedAccount) || !Immutable.is(nextProps.selectedMailbox, this.props.selectedMailbox) || !Immutable.is(nextProps.mailboxes, this.props.mailboxes) || !Immutable.is(nextProps.settings, this.props.settings) || !Immutable.is(nextProps.accounts, this.props.accounts);
-    return shouldUpdate;
+    var same;
+    same = JSON.stringify(nextState) === JSON.stringify(this.state) && JSON.stringify(nextProps.message.toJSON()) === JSON.stringify(this.props.message.toJSON()) && Immutable.is(nextProps.key, this.props.key) && Immutable.is(nextProps.isLast, this.props.isLast) && Immutable.is(nextProps.selectedAccount, this.props.selectedAccount) && Immutable.is(nextProps.selectedMailbox, this.props.selectedMailbox) && Immutable.is(nextProps.mailboxes, this.props.mailboxes) && Immutable.is(nextProps.settings, this.props.settings) && Immutable.is(nextProps.accounts, this.props.accounts);
+    return !same;
   },
   _prepareMessage: function() {
     var fullHeaders, html, key, message, text, value, _ref2;
@@ -3459,17 +3492,26 @@ module.exports = React.createClass({
     }
   },
   render: function() {
-    var classes, clickHandler, display, doc, hasAttachments, hideImage, images, img, leftClass, message, parser, prepared, _i, _len;
+    var attachments, classes, clickHandler, display, doc, hasAttachments, hideImage, images, img, leftClass, message, messageDisplayHTML, parser, prepared, _i, _len;
     message = this.props.message;
     prepared = this._prepareMessage();
     hasAttachments = prepared.attachments.length;
-    if (this.state.messageDisplayHTML && prepared.html) {
+    messageDisplayHTML = this.state.messageDisplayHTML;
+    if (messageDisplayHTML && prepared.html) {
       parser = new DOMParser();
-      doc = parser.parseFromString(prepared.html, "text/html");
+      doc = parser.parseFromString("<html><head></head><body>" + prepared.html + "</body></html>", "text/html");
+      if (!doc) {
+        doc = document.implementation.createHTMLDocument("");
+        doc.documentElement.innerHTML = "<html><head></head><body>" + prepared.html + "</body></html>";
+      }
+      if (!doc) {
+        console.log("Unable to parse HTML content of message");
+        messageDisplayHTML = false;
+      }
       if (doc && !this.state.messageDisplayImages) {
         hideImage = function(img) {
           img.dataset.src = img.getAttribute('src');
-          return img.setAttribute('src', '');
+          return img.removeAttribute('src');
         };
         images = doc.querySelectorAll('IMG[src]');
         for (_i = 0, _len = images.length; _i < _len; _i++) {
@@ -3496,11 +3538,16 @@ module.exports = React.createClass({
       url = "/message/" + (message.get('id')) + "/attachments/" + file.name;
       return window.open(url);
     };
+    attachments = FilePicker({
+      editable: false,
+      value: prepared.attachments.map(MessageUtils.convertAttachments),
+      display: display
+    });
     return li({
       className: classes,
       key: this.props.key,
       onClick: clickHandler,
-      'data-id': this.props.message.get('id')
+      'data-id': message.get('id')
     }, this.getToolboxRender(message.get('id'), prepared), div({
       className: 'header row'
     }, div({
@@ -3523,25 +3570,23 @@ module.exports = React.createClass({
       className: 'hour'
     }, prepared.date)), hasAttachments ? div({
       className: 'col-md-4'
-    }, FilePicker({
-      editable: false,
-      value: prepared.attachments.map(MessageUtils.convertAttachments),
-      display: display
-    })) : void 0), div({
+    }, attachments) : void 0), div({
       className: 'full-headers'
-    }, pre(null, prepared.fullHeaders.join("\n"))), this.state.messageDisplayHTML && prepared.html ? div(null, images.length > 0 && !this.state.messageDisplayImages ? div({
+    }, pre(null, prepared.fullHeaders.join("\n"))), messageDisplayHTML && prepared.html ? div(null, images.length > 0 && !this.state.messageDisplayImages ? div({
       className: "imagesWarning content-action",
       ref: "imagesWarning"
     }, span(null, t('message images warning')), button({
       className: 'btn btn-default',
       type: "button",
-      ref: 'imagesDisplay'
+      ref: 'imagesDisplay',
+      onClick: this.displayImages
     }, t('message images display'))) : void 0, iframe({
       className: 'content',
       ref: 'content',
       sandbox: 'allow-same-origin',
       allowTransparency: true,
-      frameBorder: 0
+      frameBorder: 0,
+      name: "message-" + message.get('id')
     }, '')) : div(null, div({
       className: 'preview'
     }, p(null, prepared.text))), div({
@@ -3737,16 +3782,7 @@ module.exports = React.createClass({
         s.sheet.insertRule("blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue;}", 2);
         doc.body.innerHTML = this._htmlContent;
         rect = doc.body.getBoundingClientRect();
-        frame.style.height = "" + (rect.height + 40) + "px";
-        if (!this.state.messageDisplayImages && (this.refs.imagesDisplay != null)) {
-          return this.refs.imagesDisplay.getDOMNode().addEventListener('click', (function(_this) {
-            return function() {
-              return _this.setState({
-                messageDisplayImages: true
-              });
-            };
-          })(this));
-        }
+        return frame.style.height = "" + (rect.height + 40) + "px";
       } else {
         return this.setState({
           messageDisplayHTML: false
@@ -3919,6 +3955,12 @@ module.exports = React.createClass({
     event.preventDefault();
     return this.setState({
       messageDisplayHTML: true
+    });
+  },
+  displayImages: function(event) {
+    event.preventDefault();
+    return this.setState({
+      messageDisplayImages: true
     });
   }
 });
@@ -4541,6 +4583,181 @@ window.onload = function() {
 };
 });
 
+;require.register("libs/flux/dispatcher/Dispatcher", function(exports, require, module) {
+
+/*
+
+    -- Coffee port of Facebook's flux dispatcher. It was in ES6 and I haven't
+    been successful in adding a transpiler. --
+
+    Copyright (c) 2014, Facebook, Inc.
+    All rights reserved.
+
+    This source code is licensed under the BSD-style license found in the
+    LICENSE file in the root directory of this source tree. An additional grant
+    of patent rights can be found in the PATENTS file in the same directory.
+ */
+var Dispatcher, invariant, _lastID, _prefix;
+
+invariant = require('../invariant');
+
+_lastID = 1;
+
+_prefix = 'ID_';
+
+module.exports = Dispatcher = Dispatcher = (function() {
+  function Dispatcher() {
+    this._callbacks = {};
+    this._isPending = {};
+    this._isHandled = {};
+    this._isDispatching = false;
+    this._pendingPayload = null;
+  }
+
+
+  /*
+      Registers a callback to be invoked with every dispatched payload.
+      Returns a token that can be used with `waitFor()`.
+  
+      @param {function} callback
+      @return {string}
+   */
+
+  Dispatcher.prototype.register = function(callback) {
+    var id;
+    id = _prefix + _lastID++;
+    this._callbacks[id] = callback;
+    return id;
+  };
+
+
+  /*
+      Removes a callback based on its token.
+  
+      @param {string} id
+   */
+
+  Dispatcher.prototype.unregister = function(id) {
+    var message;
+    message = 'Dispatcher.unregister(...): `%s` does not map to a ' + 'registered callback.';
+    invariant(this._callbacks[id], message, id);
+    return delete this._callbacks[id];
+  };
+
+
+  /*
+      Waits for the callbacks specified to be invoked before continuing
+      execution of the current callback. This method should only be used by a
+      callback in response to a dispatched payload.
+  
+      @param {array<string>} ids
+   */
+
+  Dispatcher.prototype.waitFor = function(ids) {
+    var id, ii, message, message2, _i, _ref, _results;
+    invariant(this._isDispatching, 'Dispatcher.waitFor(...): Must be invoked while dispatching.');
+    message = 'Dispatcher.waitFor(...): Circular dependency detected ' + 'while waiting for `%s`.';
+    message2 = 'Dispatcher.waitFor(...): `%s` does not map to a ' + 'registered callback.';
+    _results = [];
+    for (ii = _i = 0, _ref = ids.length - 1; _i <= _ref; ii = _i += 1) {
+      id = ids[ii];
+      if (this._isPending[id]) {
+        invariant(this._isHandled[id], message, id);
+        continue;
+      }
+      invariant(this._callbacks[id], message2, id);
+      _results.push(this._invokeCallback(id));
+    }
+    return _results;
+  };
+
+
+  /*
+      Dispatches a payload to all registered callbacks.
+  
+      @param {object} payload
+   */
+
+  Dispatcher.prototype.dispatch = function(payload) {
+    var id, message, _results;
+    message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + 'of a dispatch.';
+    invariant(!this._isDispatching, message);
+    this._startDispatching(payload);
+    try {
+      _results = [];
+      for (id in this._callbacks) {
+        if (this._isPending[id]) {
+          continue;
+        }
+        _results.push(this._invokeCallback(id));
+      }
+      return _results;
+    } finally {
+      this._stopDispatching();
+    }
+  };
+
+
+  /*
+      Is this Dispatcher currently dispatching.
+  
+      @return {boolean}
+   */
+
+  Dispatcher.prototype.isDispatching = function() {
+    return this._isDispatching;
+  };
+
+
+  /*
+      Call the callback stored with the given id. Also do some internal
+      bookkeeping.
+  
+      @param {string} id
+      @internal
+   */
+
+  Dispatcher.prototype._invokeCallback = function(id) {
+    this._isPending[id] = true;
+    this._callbacks[id](this._pendingPayload);
+    return this._isHandled[id] = true;
+  };
+
+
+  /*
+      Set up bookkeeping needed when dispatching.
+  
+      @param {object} payload
+      @internal
+   */
+
+  Dispatcher.prototype._startDispatching = function(payload) {
+    var id;
+    for (id in this._callbacks) {
+      this._isPending[id] = false;
+      this._isHandled[id] = false;
+    }
+    this._pendingPayload = payload;
+    return this._isDispatching = true;
+  };
+
+
+  /*
+      Clear bookkeeping used for dispatching.
+  
+      @internal
+   */
+
+  Dispatcher.prototype._stopDispatching = function() {
+    this._pendingPayload = null;
+    return this._isDispatching = false;
+  };
+
+  return Dispatcher;
+
+})();
+});
+
 ;require.register("libs/flux/dispatcher/dispatcher", function(exports, require, module) {
 
 /*
@@ -4770,6 +4987,63 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 };
 
 module.exports = invariant;
+});
+
+;require.register("libs/flux/store/Store", function(exports, require, module) {
+var AppDispatcher, Store,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+AppDispatcher = require('../../../app_dispatcher');
+
+module.exports = Store = (function(_super) {
+  var _addHandlers, _handlers, _nextUniqID, _processBinding;
+
+  __extends(Store, _super);
+
+  Store.prototype.uniqID = null;
+
+  _nextUniqID = 0;
+
+  _handlers = {};
+
+  _addHandlers = function(type, callback) {
+    if (_handlers[this.uniqID] == null) {
+      _handlers[this.uniqID] = {};
+    }
+    return _handlers[this.uniqID][type] = callback;
+  };
+
+  _processBinding = function() {
+    return this.dispatchToken = AppDispatcher.register((function(_this) {
+      return function(payload) {
+        var callback, type, value, _ref;
+        _ref = payload.action, type = _ref.type, value = _ref.value;
+        if ((callback = _handlers[_this.uniqID][type]) != null) {
+          return callback.call(_this, value);
+        }
+      };
+    })(this));
+  };
+
+  function Store() {
+    Store.__super__.constructor.call(this);
+    this.uniqID = _nextUniqID++;
+    this.__bindHandlers(_addHandlers.bind(this));
+    _processBinding.call(this);
+  }
+
+  Store.prototype.__bindHandlers = function(handle) {
+    var message;
+    if (__DEV__) {
+      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
+      throw new Error(message);
+    }
+  };
+
+  return Store;
+
+})(EventEmitter);
 });
 
 ;require.register("libs/flux/store/store", function(exports, require, module) {
@@ -5645,6 +5919,7 @@ AccountStore = (function(_super) {
         account = AccountTranslator.toImmutable(rawAccount);
         _accounts = _accounts.set(account.get('id'), account);
         _selectedAccount = _accounts.get(account.get('id'));
+        _newAccountWaiting = false;
         return _this.emit('change');
       };
     })(this);
@@ -5652,6 +5927,7 @@ AccountStore = (function(_super) {
       account = AccountTranslator.toImmutable(account);
       _accounts = _accounts.set(account.get('id'), account);
       _selectedAccount = account;
+      _newAccountWaiting = false;
       return this.emit('change');
     });
     handle(ActionTypes.SELECT_ACCOUNT, function(accountID) {
@@ -5667,6 +5943,7 @@ AccountStore = (function(_super) {
       return this.emit('change');
     });
     handle(ActionTypes.NEW_ACCOUNT_ERROR, function(error) {
+      _newAccountWaiting = false;
       _newAccountError = error;
       return this.emit('change');
     });
@@ -6388,6 +6665,18 @@ module.exports = {
   },
   getAccountByLabel: function(label) {
     return AccountStore.getByLabel(label);
+  },
+  setSetting: function(key, value) {
+    var ActionTypes, AppDispatcher, SettingsStore, settings;
+    SettingsStore = require('../stores/settings_store');
+    AppDispatcher = require('../app_dispatcher');
+    ActionTypes = require('../constants/app_constants').ActionTypes;
+    settings = SettingsStore.get().toJS();
+    settings[key] = value;
+    return AppDispatcher.handleViewAction({
+      type: ActionTypes.SETTINGS_UPDATED,
+      value: settings
+    });
   }
 };
 });

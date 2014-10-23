@@ -14,7 +14,6 @@ class TasksStore extends Store
     .map (message) -> Immutable.fromJS message
     .toOrderedMap()
 
-    
     ###
         Defines here the action handlers.
     ###
@@ -30,7 +29,7 @@ class TasksStore extends Store
             @emit 'change'
 
 
-    getTasks: -> _tasks.toOrderedMap() 
+    getTasks: -> _tasks.toOrderedMap()
 
 
 module.exports = new TasksStore()

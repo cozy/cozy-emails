@@ -18,6 +18,8 @@ Account::sendMessage = (message, callback) ->
     transport = nodemailer.createTransport
         port: @smtpPort
         host: @smtpServer
+        secure: @smtpSSL
+        ignoreTLS: not @smtpTLS
         tls: rejectUnauthorized: false
         auth:
             user: @login
@@ -36,6 +38,8 @@ Account::testSMTPConnection = ->
     connection = new SMTPConnection
         port: @smtpPort
         host: @smtpServer
+        secure: @smtpSSL
+        ignoreTLS: not @smtpTLS
         tls: rejectUnauthorized: false
 
     auth =

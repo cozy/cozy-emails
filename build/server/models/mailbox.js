@@ -90,7 +90,11 @@ Mailbox.getTree = function(accountID, mapper) {
       return out.push(box);
     } else {
       parentPath = path.slice(0, -1).join(DELIMITER);
-      return byPath[parentPath].children.push(box);
+      if (byPath[parentPath] != null) {
+        return byPath[parentPath].children.push(box);
+      } else {
+        return log.error("NO MAILBOX of path " + parentPath + " in " + accountID);
+      }
     }
   })["return"](out);
 };

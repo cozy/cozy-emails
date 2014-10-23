@@ -6,6 +6,7 @@ pathToSocketIO = "#{window.location.pathname}socket.io"
 socket = io.connect url, path: pathToSocketIO
 
 dispatchTaskUpdate = (task) ->
+    task.type = 'SERVER'
     AppDispatcher.handleServerAction
         type: ActionTypes.RECEIVE_TASK_UPDATE
         value: task

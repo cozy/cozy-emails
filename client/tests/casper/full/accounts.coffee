@@ -45,6 +45,21 @@ casper.test.begin 'Create account', (test) ->
     init casper
 
     casper.start "http://localhost:9125/", ->
+        values =
+            "account-type": "IMAP",
+            "mailbox-email-address": "test@cozytest.org",
+            "mailbox-imap-port": "993",
+            "mailbox-imap-server": "toto",
+            "mailbox-imap-ssl": true,
+            "mailbox-imap-tls": false,
+            "mailbox-label": "Test Account",
+            "mailbox-name": "Test",
+            "mailbox-password": "toto",
+            "mailbox-smtp-port": "465",
+            "mailbox-smtp-server": "toto",
+            "mailbox-smtp-ssl": true,
+            "mailbox-smtp-tls": false
+
         deleteTestAccounts()
         account = casper.evaluate ->
             AccountStore  = require '../stores/account_store'
@@ -61,21 +76,29 @@ casper.test.begin 'Create account', (test) ->
             casper.waitForSelector "#mailbox-config .alert", ->
                 test.pass "Error message displayed"
                 test.assertElementCount ".form-group.has-error", 6, "Errors are underlined"
-                casper.fillSelectors 'form', '#mailbox-label': 'Test Account'
+                casper.fillSelectors 'form', '#mailbox-label':  values['mailbox-label']
                 casper.click "#mailbox-config button"
                 casper.wait 100, ->
                     test.assertElementCount ".form-group.has-error", 5, "Errors are underlined"
                     casper.fillSelectors 'form',
-                        '#mailbox-name': 'Test'
-                        '#mailbox-email-address': 'test@cozytest.org'
-                        '#mailbox-password': 'toto'
-                        '#mailbox-smtp-server': '127.0.0.1'
-                        '#mailbox-imap-server': '127.0.0.1'
-                        '#account-type': 'TEST'
+                        '#mailbox-name': values['mailbox-name']
+                        '#mailbox-email-address': values['mailbox-email-address']
+                        '#mailbox-password': values['mailbox-password']
+                        '#mailbox-smtp-server': values['mailbox-smtp-server']
+                        '#mailbox-imap-server': values['mailbox-imap-server']
+                        '#account-type': values['account-type']
                     casper.click "#mailbox-config button"
                     casper.waitWhileSelector "#mailbox-config .alert", ->
-                        test.pass 'No more errors ☺'
-                        casper.waitForSelector "#mailbox-config .nav-tabs", ->
+                        casper.waitForSelector "#mailbox-config .alert", ->
+                            test.assertSelectorHasText "#mailbox-config button", "Add", "Wrong SMTP Server"
+                            test.assertEquals casper.getFormValues('form'), values, "Form not changed"
+                            test.assertDoesntExist ".has-error #mailbox-label", "No error on label"
+                            test.assertExist ".has-error #mailbox-smtp-server", "Error on SMTP"
+                            casper.fillSelectors 'form', '#account-type': 'TEST'
+                            casper.wait 500, ->
+                                casper.click "#mailbox-config button"
+                                casper.waitForSelector "#mailbox-config .nav-tabs", ->
+                                    test.pass 'No more errors ☺'
 
     casper.then ->
         test.comment "Creating mailbox"

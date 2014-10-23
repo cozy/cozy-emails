@@ -13,7 +13,8 @@ htmlToTextOptions =
 
 formatMessage = (message) ->
     if message.html?
-        message.html = sanitizer.sanitize message.html, (value) -> value.toString()
+        message.html = sanitizer.sanitize message.html, (value) ->
+            value.toString()
 
     if not message.text?
         message.text = htmlToText.fromString message.html, htmlToTextOptions
@@ -147,7 +148,8 @@ module.exports.search = (req, res, next) ->
 
     # we add one temporary because the search doesn't return the
     # number of results so we can't paginate properly
-    numPageCheat = parseInt(req.params.numPage) * parseInt(req.params.numByPage) + 1
+    numPageCheat = parseInt(req.params.numPage) *
+                    parseInt(req.params.numByPage) + 1
     Message.searchPromised
         query: req.params.query
         numPage: req.params.numPage

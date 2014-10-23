@@ -29,7 +29,7 @@ module.exports =
         trash = account.get 'trashMailbox'
         if not trash?
             LayoutActionCreator  = require './layout_action_creator'
-            LayoutActionCreator.alertError t 'message idelete no trash'
+            LayoutActionCreator.alertError t 'message delete no trash'
         else
             msg = message.toObject()
             observer = jsonpatch.observe msg

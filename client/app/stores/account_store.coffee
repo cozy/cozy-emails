@@ -39,15 +39,18 @@ class AccountStore extends Store
     __bindHandlers: (handle) ->
 
         onUpdate = (rawAccount) =>
+            accountID = rawAccount.id
             account = AccountTranslator.toImmutable rawAccount
-            _accounts = _accounts.set account.get('id'), account
-            _selectedAccount = _accounts.get account.get 'id'
+            _accounts = _accounts.set accountID, account
+            _selectedAccount = _accounts.get accountID
+            _newAccountWaiting = false
             @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT, (account) ->
             account = AccountTranslator.toImmutable account
             _accounts = _accounts.set account.get('id'), account
             _selectedAccount = account
+            _newAccountWaiting = false
             @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (accountID) ->
@@ -62,6 +65,7 @@ class AccountStore extends Store
             @emit 'change'
 
         handle ActionTypes.NEW_ACCOUNT_ERROR, (error) ->
+            _newAccountWaiting = false
             _newAccountError = error
             @emit 'change'
 

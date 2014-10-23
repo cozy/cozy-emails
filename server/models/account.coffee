@@ -9,7 +9,7 @@ module.exports = Account = americano.getModel 'Account',
     name: String                # user name to put in sent mails
     login: String               # IMAP & SMTP login
     password: String            # IMAP & SMTP password
-    accountType: String         # "IMAP3" or "TEST"
+    accountType: String         # "IMAP" or "TEST"
     smtpServer: String          # SMTP host
     smtpPort: Number            # SMTP port
     smtpSSL: Boolean            # Use SSL
@@ -37,12 +37,18 @@ Message     = require './message'
 {AccountConfigError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'models:account')
 
+Account::isTest = ->
+    @accountType is 'TEST'
+
 # Public: refresh all accounts
 #
 # Returns {Promise} for task completion
 Account.refreshAllAccounts = ->
     Account.requestPromised 'all'
-    .serie (account) -> account.imap_fetchMails()
+    .serie (account) ->
+        return null if account.isTest()
+        account.imap_fetchMails()
+
 
 # Public: include the mailboxes tree on this account instance
 #
@@ -64,7 +70,7 @@ Account.createIfValid = (data) ->
 
     account = new Account data
 
-    pBoxes = if account.accountType is 'TEST'
+    pBoxes = if account.isTest()
         Promise.resolve []
     else
         account.testSMTPConnection()
@@ -99,6 +105,7 @@ Account.createIfValid = (data) ->
 
 
 # Public: destroy an account and all messages within cozy
+#
 # returns fast after destroying account
 # in the background, proceeds to erase all boxes & message
 #

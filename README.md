@@ -74,6 +74,10 @@ To add mails to the test suite
 In order to run the tests, you must only have the Data System started.
 The tests wont pass if you already have an account in your data-system
 
+For frontend tests, you need a working [CasperJS](http://casperjs.org/) installation. Then go to the Cozy emails folder and:
+
+    casperjs test client/tests/casper/full
+
 ## Icons
 
 By [Fontawesome](http://fortawesome.github.io/Font-Awesome/).

@@ -26,6 +26,7 @@ module.exports =
       "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n"
       "compose action draft"      : "Enregistrer en tant que brouillon"
       "compose action send"       : "Envoyer"
+      "compose action delete"     : "Supprimer le brouillon"
       "compose toggle cc"         : "Copie à"
       "compose toggle bcc"        : "Copie cachée à"
 
@@ -109,6 +110,8 @@ module.exports =
       "account errors"              : "Certaines informations manquent ou
                                         sont incorrectes"
       "account type"                : "Type de compte"
+      "account updated"             : "Modification enregistrée"
+      "account refreshed"           : "Actualisé"
       "mailbox create ok"           : "Dossier créé"
       "mailbox create ko"           : "Erreur de création du dossier"
       "mailbox update ok"           : "Dossier mis à jour"
