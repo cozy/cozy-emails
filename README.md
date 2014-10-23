@@ -65,7 +65,14 @@ To run tests type the following command into the Cozy Emails folder:
 
     cake tests
 
+To add mails to the test suite
+
+    cd node_modules/dovecot-testing
+    npm link
+    dovecot-testing import
+
 In order to run the tests, you must only have the Data System started.
+The tests wont pass if you already have an account in your data-system
 
 ## Icons
 
