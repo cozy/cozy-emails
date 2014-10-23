@@ -152,6 +152,7 @@ module.exports = React.createClass
         form className: 'form-horizontal',
             @renderError()
             div className: 'form-group' + hasError('label'),
+
                 label
                     htmlFor: 'mailbox-label',
                     className: 'col-sm-2 col-sm-offset-2 control-label',
@@ -247,6 +248,7 @@ module.exports = React.createClass
                     getError 'smtpServer'
                     getError 'smtpPort'
                 div className: 'form-group',
+
                     label
                         htmlFor: 'mailbox-smtp-ssl',
                         className: 'col-sm-4 control-label',
@@ -318,6 +320,7 @@ module.exports = React.createClass
                     getError 'imapServer'
                     getError 'imapPort'
                 div className: 'form-group',
+
                     label
                         htmlFor: 'mailbox-imap-ssl',
                         className: 'col-sm-4 control-label',
@@ -613,6 +616,7 @@ module.exports = React.createClass
         @setState infos
 
     componentWillReceiveProps: (props) ->
+
 
         # prevents the form from changing during submission
         if not props.isWaiting

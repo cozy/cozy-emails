@@ -47,15 +47,14 @@ SMTPConnection = require 'nodemailer/node_modules/' +
 Account.refreshAllAccounts = ->
     allAccounts = Account.requestPromised 'all'
     Promise.serie allAccounts, (account) ->
-        if not (account.accountType is 'TEST')
+        unless account.accountType is 'TEST'
             ImapProcess.fetchAccount account
 
 # Public: refresh this account
 #
 # Returns a {Promise} for task completion
 Account::fetchMails = ->
-    if not (account.accountType is 'TEST')
-        ImapProcess.fetchAccount this
+    ImapProcess.fetchAccount this
 
 # Public: include the mailboxes tree on this account instance
 #
@@ -74,43 +73,34 @@ Account::includeMailboxes = ->
 # Returns {Promise} promise for the created {Account}, boxes included
 Account.createIfValid = (data) ->
 
-    if not (data.accountType is 'TEST')
-        Account.testSMTPConnection data
-        .then (err) ->
-            ImapProcess.fetchBoxesTree data
-
-        .then (rawBoxesTree) ->
-            # We managed to get boxes, login settings are OK
-            # create Account and Mailboxes
-            log.info "GOT BOXES", rawBoxesTree
-
-            Account.createPromised data
-            .then (account) ->
-                Mailbox.createBoxesFromImapTree account.id, rawBoxesTree
-                .then (specialUses) ->
-                    account.updateAttributesPromised specialUses
-
-        .then (account) ->
-
-            # in a detached chain, fetch the Account
-            # first fetch 100 mails from each box
-            ImapProcess.fetchAccount account, 100
-            # then fectch the rest
-            .then -> ImapProcess.fetchAccount account
-            .catch (err) -> console.log "FETCH MAIL FAILED", err
-
-            return account.includeMailboxes()
+    pBoxes = if data.accountType is 'TEST' then Promise.resolve []
     else
-        log.info "TEST ACCOUNT"
+        Account.testSMTPConnection data
+        .then -> ImapProcess.fetchBoxesTree data
+
+    # We managed to get boxes, login settings are OK
+    pAccount = pBoxes.then ->
         Account.createPromised data
-        .then (account) ->
-            Mailbox.createBoxesFromImapTree account.id, null
-            .then (specialUses) ->
-                account.updateAttributesPromised specialUses
 
-        .then (account) ->
+    # scan account mailboxes for special-use
+    pSpecialUseBoxes = Promise.join pAccount, pBoxes, (account, boxes) ->
+        Mailbox.createBoxesFromImapTree account.id, boxes
 
-            return account.includeMailboxes()
+    # save special-use into the account
+    pAccountReady = Promise.join pAccount, pSpecialUseBoxes, (account, specialUses) ->
+        account.updateAttributesPromised specialUses
+
+    pAccountReady.then (account) ->
+        # in a detached chain, fetch the Account
+        # first fetch 100 mails from each box
+        ImapProcess.fetchAccount account, 100
+        # then fetch the rest
+        .then -> ImapProcess.fetchAccount account
+        .catch (err) -> log.error "FETCH MAIL FAILED", err
+
+    # returns once the account is ready (do not wait for mails)
+    return pAccountReady.then (account) -> account.includeMailboxes()
+
 
 # Public: send a message using this account SMTP config
 #
@@ -124,6 +114,7 @@ Account::sendMessage = (message, callback) ->
     transport = nodemailer.createTransport
         port: @smtpPort
         host: @smtpServer
+        tls: rejectUnauthorized: false
         auth:
             user: @login
             pass: @password
@@ -137,13 +128,10 @@ Account::sendMessage = (message, callback) ->
 # Returns a {Promise} that reject/resolve if the credentials are corrects
 Account.testSMTPConnection = (data) ->
 
-    # we need a smtp server in tests
-    # disable this for now
-    return Promise.resolve('ok') if Account.testHookDisableSMTPCheck
-
     connection = new SMTPConnection
         port: data.smtpPort
         host: data.smtpServer
+        tls: rejectUnauthorized: false
 
     auth =
         user: data.login
@@ -151,18 +139,20 @@ Account.testSMTPConnection = (data) ->
 
     return new Promise (resolve, reject) ->
         connection.once 'error', (err) ->
-            console.log "ERROR CALLED"
+            log.warn "SMTP CONNECTION ERROR", err
             reject new AccountConfigError 'smtpServer'
 
         # in case of wrong port, the connection takes forever to emit error
-        setTimeout ->
+        timeout = setTimeout ->
             reject new AccountConfigError 'smtpPort'
             connection.close()
         , 10000
 
         connection.connect (err) ->
-            if err then reject new AccountConfigError 'smtpServer'
-            else connection.login auth, (err) ->
+            return reject new AccountConfigError 'smtpServer' if err
+            clearTimeout timeout
+
+            connection.login auth, (err) ->
                 if err then reject new AccountConfigError 'auth'
                 else resolve 'ok'
                 connection.close()

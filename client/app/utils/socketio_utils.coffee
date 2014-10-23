@@ -3,7 +3,7 @@ AppDispatcher = require '../app_dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 url = window.location.origin
 pathToSocketIO = "#{window.location.pathname}socket.io"
-socket = io.connect url, resource: pathToSocketIO
+socket = io.connect url, path: pathToSocketIO
 
 dispatchTaskUpdate = (task) ->
     task.type = 'SERVER'

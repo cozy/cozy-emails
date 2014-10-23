@@ -32,10 +32,11 @@ ImapProcess.fetchBoxesTree = (account) ->
 #
 # Returns a {Promise} for task completion
 ImapProcess.fetchAccount = (account, limitByBox = false) ->
-    Mailbox.getBoxes(account.id).then (boxes) ->
-        Promise.serie boxes, (box) ->
-            ImapProcess.fetchMailbox account, box, limitByBox
-            .catch (err) -> log.error "FAILED TO FETCH BOX", box.path, err.stack
+    return Promise.resolve null if account.accountType is 'TEST'
+    Mailbox.getBoxes(account.id)
+    .serie (box) ->
+        ImapProcess.fetchMailbox account, box, limitByBox
+        .catch (err) -> log.error "FAILED TO FETCH BOX", box.path, err.stack
 
 # Public: refresh one mailbox
 # register a 'diff' task in {ImapReporter}
@@ -93,6 +94,11 @@ ImapProcess.fetchMailbox = (account, box, limitByBox = false) ->
 
         reporter.onDone()
         Promise.all toDo
+
+    .catch (err) ->
+        reporter.onError err
+        reporter.onDone()
+        throw err
 
 # Private: fetch mails from a box
 # register a 'apply-diff-fetch' task in {ImapReporter}
@@ -176,35 +182,38 @@ ImapProcess.removeMail = (account, box, uid) ->
         imap.expunge uid, mailbox: box.path
 
 # Public: create a box in the account
-# 
+#
 # account - the {Account} to create box in
 # path - {String} the full path  of the mailbox
-# 
+#
 # Returns a {Promise} for task completion
 ImapProcess.createBox = (account, path) ->
+    return Promise.resolve {path} if account.accountType is 'TEST'
     scheduler = ImapScheduler.instanceFor account
     scheduler.doASAP (imap) ->
         imap.addBox path
 
 # Public: rename/move a box in the account
-# 
+#
 # account - the {Account} to create box in
 # oldpath - {String} the full current path of the mailbox
 # newpath - {String} the full path to move the box to
-# 
+#
 # Returns a {Promise} for task completion
 ImapProcess.renameBox = (account, oldpath, newpath) ->
+    return Promise.resolve {path: newpath} if account.accountType is 'TEST'
     scheduler = ImapScheduler.instanceFor account
     scheduler.doASAP (imap) ->
         imap.renameBox oldpath, newpath
 
 # Public: delete a box in the account
-# 
+#
 # account - the {Account} to delete the box from
 # path - {String} the full path  of the mailbox
-# 
+#
 # Returns a {Promise} for task completion
 ImapProcess.deleteBox = (account, path) ->
+    return Promise.resolve null if account.accountType is 'TEST'
     scheduler = ImapScheduler.instanceFor account
     scheduler.doASAP (imap) ->
         imap.delBox path
@@ -228,6 +237,9 @@ ImapProcess.fetchOneMail = (account, box, uid) ->
         .then -> imap.fetchOneMail uid
         .then (fetched) ->
             mail = fetched
+
+            # @TODO, may be try other dedup solutions (perfectly equal subject ?)
+            return null unless mail.headers['message-id']
             # check if the message already exists in another mailbox
             Message.byMessageId account.id, mail.headers['message-id']
 
@@ -249,8 +261,9 @@ ImapProcess.fetchOneMail = (account, box, uid) ->
 ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
 
     log.info "MESSAGE CHANGE"
-    log.info "BASE"
-    log.info "CHANGES", flagsOps, boxOps
+    log.info "  CHANGES BOXES", boxOps
+    if flagsOps.add.length or flagsOps.remove.length
+        log.info "  CHANGES FLAGS", flagsOps
 
     boxIndex = {}
 
@@ -267,7 +280,8 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
                 uid = msg.mailboxIDs[box.id]
                 boxIndex[box.id] = path: box.path, uid: uid
     ]
-    .spread (scheduler) -> scheduler?.doASAP (imap) ->
+
+    .spread (scheduler) -> scheduler.doASAP (imap) ->
 
         # ERROR CASES
         for boxid in boxOps.addTo when not boxIndex[boxid]
@@ -286,18 +300,17 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
             if flagsOps.remove.length
                 imap.delFlags uid, flagsOps.remove
         .then ->
-            log.info "CHANGED FLAGS #{boxIndex[boxid].path}:#{uid}",
-            "ADD" , flagsOps.add, "REMOVE", flagsOps.remove
             msg.flags = _.union msg.flags, flagsOps.add
             msg.flags = _.difference msg.flags, flagsOps.remove
-            log.info "   RESULT = ", msg.flags
+            log.info "  CHANGED FLAGS #{boxIndex[boxid].path}:#{uid}"
+            log.info "    RESULT = ", msg.flags
 
         # step 3 - copy the message to its destinations
         .then -> Promise.serie boxOps.addTo, (destId) ->
             imap.copy uid, boxIndex[destId].path
             .then (uidInDestination) ->
-                log.info "COPIED #{boxIndex[boxid].path}:#{uid}",
-                " TO #{boxIndex[destId].path}:#{uidInDestination}"
+                log.info "  COPIED #{boxIndex[boxid].path}:#{uid}"
+                log.info "  TO #{boxIndex[destId].path}:#{uidInDestination}"
                 msg.mailboxIDs[destId] = uidInDestination
 
         # step 4 - remove the message from the box it shouldn't be in
@@ -310,5 +323,4 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
                 .then -> imap.expunge uid
                 .then -> delete msg.mailboxIDs[boxid]
                 .tap ->
-                    log.info "DELETED #{path}:#{uid}"
-
+                    log.info "  DELETED #{path}:#{uid}"

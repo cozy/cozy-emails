@@ -13,8 +13,8 @@ log = require('../utils/logging')('imap:reporter')
 # reporter.addProgress 2 # progress is now 2/5
 # reporter.addProgress 1 # progress is now 3/5
 # reporter.onProgress 4 # progress is now 4/5
-# reporter.onError new Error 'shit happened' 
-# reporter.onError new Error 'another shit happened' 
+# reporter.onError new Error 'shit happened'
+# reporter.onError new Error 'another shit happened'
 # reporter.onDone()
 
 
@@ -23,7 +23,7 @@ module.exports = class ImapReporter
 
     # STATIC
     @userTasks = {}
-    @addUserTask = (options) -> 
+    @addUserTask = (options) ->
         new ImapReporter options
 
     @summary = ->
@@ -70,15 +70,15 @@ module.exports = class ImapReporter
         @finished = true
         @done = @total
         @sendtoclient(true)
-    
+
     onProgress: (done) ->
         @done = done
         @sendtoclient()
-    
+
     addProgress: (delta) ->
         @done += delta
         @sendtoclient()
-    
+
     onError: (err) ->
         @errors.push err.stack
         @sendtoclient()

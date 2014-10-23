@@ -37,7 +37,7 @@ task 'tests', 'run server tests, ./test is parsed by default, otherwise use -f o
     if options.file
         testFiles  = testFiles.concat options.file
     if not(options.dir or options.file)
-        testFiles = walk "tests"
+        testFiles = ["tests/index.coffee"]
 
     runTests testFiles
 
@@ -59,7 +59,7 @@ runTests = (fileList) ->
 
         command = "#{env} #{command}"
         command += " #{fileList.join(" ")} "
-        command += " --reporter spec --require should --compilers coffee:coffee-script/register --colors"
+        command += " --bail --reporter spec --require should --compilers coffee:coffee-script/register --colors"
         exec command, (err, stdout, stderr) ->
             console.log stdout
             if err

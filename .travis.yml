@@ -24,7 +24,6 @@ before_install:
     - export TOKEN=apptoken
     - mkdir log
     - npm install # do it now, DovecotTesting needs it
-    - coffee tests/DovecotTesting/index.coffee
 
 after_failure:
     - cat cozy-data-system/forever-ds.log

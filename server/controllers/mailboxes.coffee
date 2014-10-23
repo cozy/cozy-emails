@@ -23,7 +23,6 @@ module.exports.create = (req, res, next) ->
             path = req.body.label
             tree = [req.body.label]
 
-
         mailbox = new Mailbox
             accountID: account.id
             label: req.body.label
@@ -33,13 +32,9 @@ module.exports.create = (req, res, next) ->
             attribs: []
             children: []
 
-        if not (account.accountType is 'TEST')
-            ImapProcess.createBox account, mailbox.path
-            .then -> Mailbox.createPromised mailbox.toObject()
-            .return account
-        else
-            Mailbox.createPromised mailbox.toObject()
-            .return account
+        ImapProcess.createBox account, mailbox.path
+        .then -> Mailbox.createPromised mailbox.toObject()
+        .return account
 
     .then (account) -> account.includeMailboxes()
     .then (account) -> res.send account
@@ -58,20 +53,13 @@ module.exports.update = (req, res, next) ->
             parentPath = box.path.substring 0, box.path.lastIndexOf box.label
             newPath = parentPath + req.body.label
 
-            if not (account.accountType is 'TEST')
-                ImapProcess.renameBox account, box.path, newPath
-                .then ->
-                    box.label = req.body.label
-                    box.path = newPath
-                    box.tree[box.tree.length - 1] = req.body.label
-                    box.savePromised()
-                .return account
-            else
+            ImapProcess.renameBox account, box.path, newPath
+            .then ->
                 box.label = req.body.label
                 box.path = newPath
                 box.tree[box.tree.length - 1] = req.body.label
-                box.savePromised().then ->
-                    return account
+                box.savePromised()
+            .return account
 
     .then (account) -> account.includeMailboxes()
     .then (account) -> res.send account
@@ -84,12 +72,9 @@ module.exports.delete = (req, res, next) ->
     .then (box) ->
         Account.findPromised box.accountID
         .then (account) ->
-            if not (account.accountType is 'TEST')
-                ImapProcess.deleteBox account, box.path
-                .then -> box.destroyEverything()
-                .return account
-            else
-                box.destroyEverything().then -> return account
+            ImapProcess.deleteBox account, box.path
+            .then -> box.destroyEverything()
+            .return account
 
     .then (account) -> account.includeMailboxes()
     .then (account) -> res.send account

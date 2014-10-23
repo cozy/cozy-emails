@@ -69,7 +69,8 @@ module.exports = class ImapScheduler
             tls: not @account.imapSSL? or @account.imapSSL
             tlsOptions: rejectUnauthorized: false
 
-        @imap.onTerminated = =>
+        @imap.onTerminated = (err) =>
+            log.error 'IMAP TERMINATED', err
             @_rejectPending new Error 'connection closed'
             @closeConnection()
 
@@ -276,7 +277,3 @@ recoverChangedUIDValidity = (imap, box, accountID) ->
                 mailboxIDs[box.id] = newUID
                 msg = new Message(row.doc)
                 msg.updateAttributesPromised {mailboxIDs}
-
-# @TODO, put this elsewhere
-Promise.serie = (items, mapper) ->
-    Promise.map items, mapper, concurrency: 1

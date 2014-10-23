@@ -14,7 +14,7 @@ module.exports.main = function(req, res, next) {
     function(cb) {
       return CozyInstance.getLocale(cb);
     }, function(cb) {
-      return Account.getAll(cb);
+      return Account.request('all', cb);
     }
   ], function(err, results) {
     var accounts, locale;
@@ -25,7 +25,6 @@ module.exports.main = function(req, res, next) {
       });
     } else {
       locale = results[0], accounts = results[1];
-      accounts = accounts.map(Account.clientVersion);
       return res.render('test.jade', {
         imports: "window.locale   = \"" + locale + "\";\nwindow.accounts = " + (JSON.stringify(accounts)) + ";"
       });

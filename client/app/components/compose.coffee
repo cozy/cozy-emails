@@ -300,7 +300,7 @@ module.exports = Compose = React.createClass
 
         callback = @props.callback
 
-        MessageActionCreator.send message, (error) ->
+        MessageActionCreator.send message, (error, message) =>
             if isDraft
                 msgKo = t "message action draft ko"
                 msgOk = t "message action draft ok"
@@ -311,8 +311,13 @@ module.exports = Compose = React.createClass
                 LayoutActionCreator.alertError "#{msgKo} :  error"
             else
                 LayoutActionCreator.alertSuccess msgOk
-            if callback?
-                callback error
+                @setState message
+                
+                if callback?
+                    callback error
+                else if not isDraft
+                    # mail sent close the pane
+                    @redirect @buildClosePanelUrl @props.layout
 
 
     onDelete: (args) ->

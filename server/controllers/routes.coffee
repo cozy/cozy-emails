@@ -15,7 +15,7 @@ module.exports =
     'tasks': get: index.tasks
     'refresh': get: index.refresh
 
-    'settings': 
+    'settings':
         put: settings.change
 
 

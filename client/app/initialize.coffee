@@ -46,6 +46,3 @@ window.onload = ->
 
     # begin realtime
     require './utils/socketio_utils'
-
-    # Makes this object immuable.
-    Object.freeze this if typeof Object.freeze is 'function'

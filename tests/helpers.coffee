@@ -4,13 +4,15 @@
 fixtures = require 'cozy-fixtures'
 {exec} = require 'child_process'
 Client = require('request-json').JsonClient
-DovecotTesting = require './DovecotTesting/index'
+DovecotTesting = require 'dovecot-testing'
 Imap = require '../server/processes/imap_promisified'
+SMTPTesting = require './smtp-testing/index'
 
 module.exports = helpers = {}
 
 # server management
 helpers.options =
+    smtpPort: 8889
     serverPort: '8888'
     serverHost: 'localhost'
 helpers.app = null
@@ -23,8 +25,8 @@ helpers.imapServerAccount = ->
     label: "DoveCot"
     login: "testuser"
     password: "applesauce"
-    smtpServer: "172.0.0.1"
-    smtpPort: 0
+    smtpServer: "127.0.0.1"
+    smtpPort: helpers.options.smtpPort
     imapServer: DovecotTesting.serverIP()
     imapPort: 993
     imapSecure: true
@@ -49,6 +51,10 @@ helpers.startApp = (done) ->
         @app = app
         @app.server = server
         done()
+
+helpers.startSMTPTesting = (done) ->
+    @timeout 3000
+    SMTPTesting.init helpers.options.smtpPort, done
 
 helpers.stopApp = (done) ->
     @timeout 10000

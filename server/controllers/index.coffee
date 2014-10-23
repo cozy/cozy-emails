@@ -9,7 +9,7 @@ fixtures = require 'cozy-fixtures'
 module.exports.main = (req, res, next) ->
     Promise.all [
         Settings.getInstance()
-        
+
         CozyInstance.getLocalePromised()
             .catch (err) -> 'en'
 

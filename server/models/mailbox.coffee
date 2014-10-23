@@ -99,7 +99,7 @@ Mailbox.getClientTree = (accountID) ->
     Mailbox.getTree accountID, filter
 
 
-IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren']
+
 # Public: This function take the tree from node-imap
 # and create appropriate boxes
 #
@@ -109,28 +109,13 @@ IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren']
 # tree - the raw boxes tree from {ImapPromisified::getBoxes}
 #
 # Returns a {Promise} for the {Account}'s specialUses attributes
-Mailbox.createBoxesFromImapTree = (accountID, tree) ->
-    boxes = []
-
-    # recursively browse the imap box tree
-    # building pathStr and pathArr
-    do handleLevel = (children = tree, pathStr = '', pathArr = []) ->
-        for name, child of children
-            subPathStr = pathStr + name + child.delimiter
-            subPathArr = pathArr.concat name
-            handleLevel child.children, subPathStr, subPathArr
-            boxes.push new Mailbox
-                accountID: accountID
-                label: name
-                delimiter: child.delimiter
-                path: pathStr + name
-                tree: subPathArr
-                attribs: _.difference child.attribs, IGNORE_ATTRIBUTES
+Mailbox.createBoxesFromImapTree = (accountID, boxes) ->
 
     useRFC6154 = false
     specialUses = {}
     specialUsesGuess = {}
     Promise.serie boxes, (box) ->
+        box.accountID = accountID
 
         # create box in data system (we need the id)
         Mailbox.createPromised box

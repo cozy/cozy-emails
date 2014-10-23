@@ -25,7 +25,8 @@ if process.env.NODE_ENV in ['production', 'test']
 
 formatMessage = (message) ->
     if message.html?
-        message.html = sanitizer.sanitize message.html, (value) -> value.toString()
+        message.html = sanitizer.sanitize message.html, (value) ->
+            value.toString()
 
     if not message.text?
         message.text = htmlToText.fromString message.html, htmlToTextOptions
@@ -140,9 +141,11 @@ module.exports.send = (req, res, next) ->
         message.date = new Date().toISOString()
 
         if message.id
-            new Message(id: message.id).updateAttributesPromised message
+            Message.findPromised message.id
+            .then (jdbMessage) -> jdbMessage.updateAttributesPromised message
         else
-            Message.create message
+            Message.createPromised message
+
     .then (msg) -> res.send 200, msg
     .catch next
 
@@ -155,7 +158,8 @@ module.exports.search = (req, res, next) ->
     else
         # we add one temporary because the search doesn't return the
         # number of results so we can't paginate properly
-        numPageCheat = parseInt(req.params.numPage) * parseInt(req.params.numByPage) + 1
+        numPageCheat = parseInt(req.params.numPage) *
+                        parseInt(req.params.numByPage) + 1
         Message.searchPromised
             query: req.params.query
             numPage: req.params.numPage
