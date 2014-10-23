@@ -35,7 +35,7 @@ module.exports.create = (req, res, next) ->
         .then -> Mailbox.createPromised mailbox.toObject()
         .return account
 
-    .then (account) -> account.includeMailboxes()
+    .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send account
     .catch (err) ->
         log.error err
@@ -60,7 +60,7 @@ module.exports.update = (req, res, next) ->
                 box.savePromised()
             .return account
 
-    .then (account) -> account.includeMailboxes()
+    .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send account
     .catch next
 
@@ -75,6 +75,6 @@ module.exports.delete = (req, res, next) ->
             .then -> box.destroyAndRemoveAllMessages()
             .return account
 
-    .then (account) -> account.includeMailboxes()
+    .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send account
     .catch next
