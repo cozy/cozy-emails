@@ -47,6 +47,7 @@
   },
   "scripts": {
     "test": "dovecot-testing setup && cake tests",
+    "client-test": "casperjs --dev test client/tests/casper/full",
     "start": "node build/server.js"
   },
   "cozy-permissions": {
