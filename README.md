@@ -20,13 +20,6 @@ From the command line you can type this command:
 
     cozy-monitor install emails
 
-**Disclaimer**
-We're still in the early stages of the development, the app doesn't have all the basic features yet. Once you've installed it, you will have to load the fixtures and process the indexation.
-* go to https://yourcozyaddress/apps/emails/load-fixtures
-* go to https://yourcozyaddress/apps/emails/messages/index
-
-Then you're ready to use the application :)
-
 
 ## Contribution
 
@@ -36,6 +29,7 @@ You can contribute to the Cozy Emails in many ways:
 * Translate it in [a new language](https://github.com/mycozycloud/cozy-emails/tree/master/client/app/locales).
 
 [![Stories in Ready](https://badge.waffle.io/mycozycloud/cozy-emails.png?label=ready)](https://waffle.io/mycozycloud/cozy-emails)
+
 
 ## Hack
 
@@ -57,24 +51,58 @@ Each modification of the client requires a specific build too.
     cd client
     brunch watch
 
+### Naming conventions
+
+We've adopted IMAP naming conventions, which means:
+* Account: bound to a provider like Gmail
+* Mailbox: equivalent to imap folder
+* Message: an email
+* Conversation: a thread of Message
+
+
 ## Tests
+
+
+### Frontend
+
+Test suite is based on CasperJS. So you need to additional tools to run it:
+  
+    sudo apt-get install phantomjs
+    sudo npm install casperjs -g # version >= 1.1 is required.
+
+    cd client/tests/casper
+    npm run-script client-test
+
+### Backend
 
 [![Build Status](https://travis-ci.org/cozy/cozy-emails.png?branch=master)](https://travis-ci.org/cozy/cozy-emails)
 
-To run tests type the following command into the Cozy Emails folder:
+Running tests requires first that you run the Dovecot Testing Vagrant VM first.
+For that you must clone the dovecot-testing respository then launch its script
+
+    coffee cli.coffee status
+
+Then type the following command into the Cozy Emails folder:
 
     cake tests
 
 In order to run the tests, you must only have the Data System started.
+
+### Mail Loader
+
+Mail loader test is based on the Dovecot Testing repository.
+
 
 ## Icons
 
 By [Fontawesome](http://fortawesome.github.io/Font-Awesome/).
 Main icon by [Elegant Themes](http://www.elegantthemes.com/blog/freebie-of-the-week/beautiful-flat-icons-for-free).
 
+
 ## License
 
 Cozy Emails is developed by Cozy Cloud and distributed under the AGPL v3 license.
+
 
 ## What is Cozy?
 
@@ -85,6 +113,7 @@ same private space.  With it, your web apps and your devices can share data
 easily, providing you
 with a new experience. You can install Cozy on your own hardware where no one
 profiles you.
+
 
 ## Community
 
@@ -102,6 +131,7 @@ You will find all relevant resources about Emails development under this section
 * https://github.com/cozy/cozy-guidelines
 
 ### Javascript
+
 * ReactJS: http://facebook.github.io/react/
 * Flux:
     * http://facebook.github.io/flux/
@@ -115,24 +145,12 @@ You will find all relevant resources about Emails development under this section
 * Moment: http://momentjs.com/ (date manipulating and formatting)
 
 ### Layout and styles
+
 * Bootstrap: http://getbootstrap.com
 * Fontawesome: http://fortawesome.github.io/Font-Awesome/
 
-### Build
+### Useful resources
 
-We use [Brunch](http://brunch.io/) to build the client :
-
-    cd client
-    brunch build
-
-## Naming conventions
-We've adopted IMAP naming conventions, which means:
-* Account: bound to a provider like Gmail
-* Mailbox: equivalent to imap folder
-* Message: an email
-* Conversation: a thread of Message
-
-## Useful resources
 This section references RFC and resources to understand IMAP.
 
 * [IMAP protocol](https://www.ietf.org/rfc/rfc2060.txt#7.2.2)
@@ -140,5 +158,3 @@ This section references RFC and resources to understand IMAP.
 * [IMAP LIST command extensions for special-use mailboxes](http://tools.ietf.org/html/rfc6154#2)
 
 * [jmap.io](http://jmap.io/) (it's IMAP-compliant but it is NOT IMAP)
-
-
