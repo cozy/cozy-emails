@@ -26,11 +26,12 @@ module.exports = Account = americano.getModel 'Account',
     allMailbox: String          # \All Maibox id
     favorites: (x) -> x         # [String] Maibox id of displayed boxes
 
+
+
 # There is a circular dependency between ImapProcess & Account
 # node handle if we require after module.exports definition
 nodemailer  = require 'nodemailer'
 Mailbox     = require './mailbox'
-ImapProcess = require '../processes/imap_processes'
 Promise     = require 'bluebird'
 Message     = require './message'
 {AccountConfigError} = require '../utils/errors'
@@ -40,16 +41,8 @@ log = require('../utils/logging')(prefix: 'models:account')
 #
 # Returns {Promise} for task completion
 Account.refreshAllAccounts = ->
-    allAccounts = Account.requestPromised 'all'
-    Promise.serie allAccounts, (account) ->
-        if not account.accountType is 'TEST'
-            ImapProcess.fetchAccount account
-
-# Public: refresh this account
-#
-# Returns a {Promise} for task completion
-Account::fetchMails = ->
-    ImapProcess.fetchAccount this
+    Account.requestPromised 'all'
+    .serie (account) -> account.imap_fetchMails()
 
 # Public: include the mailboxes tree on this account instance
 #
@@ -69,37 +62,43 @@ Account::toObjectWithMailbox = ->
 # Returns {Promise} promise for the created {Account}, boxes included
 Account.createIfValid = (data) ->
 
-    pBoxes = if data.accountType is 'TEST' then Promise.resolve []
+    account = new Account data
+
+    pBoxes = if account.accountType is 'TEST'
+        Promise.resolve []
     else
-        Account.testSMTPConnection data
-        .then -> ImapProcess.fetchBoxesTree data
+        account.testSMTPConnection()
+        .then -> account.imap_getBoxes data
 
-    # We managed to get boxes, login settings are OK
-    pAccount = pBoxes.then ->
-        Account.createPromised data
+    pAccountReady = pBoxes
+    # save now so we have an account id
+    .tap ->
+        # should be account.save() but juggling
+        Account.createPromised account
+        .then (created) -> account = created
 
-    # scan account mailboxes for special-use
-    pSpecialUseBoxes = Promise.join pAccount, pBoxes, (account, boxes) ->
-        Mailbox.createBoxesFromImapTree account.id, boxes
+    # save boxes, we need their IDs
+    .map (box) ->
+        box.accountID = account.id
+        Mailbox.createPromised box
 
-    # save special-use into the account
-    pAccountReady = Promise.join pAccount, pSpecialUseBoxes, (account, specialUses) ->
-        account.updateAttributesPromised specialUses
+    # find special mailboxes
+    .then (boxes) =>
+        account.imap_scanBoxesForSpecialUse boxes
 
+    # in a detached chain, fetch the Account
     pAccountReady.then (account) ->
-        # in a detached chain, fetch the Account
         # first fetch 100 mails from each box
-        ImapProcess.fetchAccount account, 100
+        account.imap_fetchMails 100
         # then fetch the rest
-        .then -> ImapProcess.fetchAccount account
-        .catch (err) -> log.error "FETCH MAIL FAILED", err
+        .then -> account.imap_fetchMails()
+        .catch (err) -> log.error "FETCH MAIL FAILED", err.stack or err
 
     # returns once the account is ready (do not wait for mails)
-    return pAccountReady.then (account) -> account.includeMailboxes()
+    return pAccountReady
 
 
-
-# Public: destroy an account and all messages within
+# Public: destroy an account and all messages within cozy
 # returns fast after destroying account
 # in the background, proceeds to erase all boxes & message
 #
@@ -110,24 +109,15 @@ Account::destroyEverything = ->
     accountID = @id
 
     # this runs in the background
-    accountDestroyed.then ->
-        Mailbox.rawRequestPromised 'treemap',
-            startkey: [accountID]
-            endkey: [accountID, {}]
-
-    .map (row) ->
-        new Mailbox(id: row.id).destroy()
-        .catch (err) -> log.warn "FAIL TO DELETE BOX", row.id
-
-    .then ->
-        Message.safeDestroyByAccountID accountID
+    accountDestroyed
+    .then -> Mailbox.destroyByAccount accountID
+    .then -> Message.safeDestroyByAccountID accountID
 
     # return as soon as the account is destroyed
     # (the interface will be correct)
     return accountDestroyed
 
-
-
+require './account_imap'
 require './account_smtp'
 Promise.promisifyAll Account, suffix: 'Promised'
 Promise.promisifyAll Account::, suffix: 'Promised'

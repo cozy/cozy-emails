@@ -30,10 +30,8 @@ module.exports = Message = americano.getModel 'Message',
 
 mailutils = require '../utils/jwz_tools'
 uuid = require 'uuid'
-ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
 Mailbox = require './mailbox'
-Compiler    = require 'nodemailer/src/compiler'
 
 # Public: get messages in a box, sorted by Date
 #
@@ -88,15 +86,33 @@ Message.countReadByMailbox = (mailboxID) ->
 # Public: get the uids present in a box in coz
 #
 # mailboxID - id of the mailbox to check
+# flag - get only UIDs with this flag
 #
 # Returns a {Promise} for an array of [couchdID, messageUID]
-Message.getUIDs = (mailboxID) ->
-    Message.rawRequestPromised 'byMailboxAndDate',
-        startkey: [mailboxID]
-        endkey: [mailboxID, {}]
+Message.getUIDs = (mailboxID, flag = null) ->
+
+    startkey = if flag then [mailboxID, flag]     else [mailboxID]
+    endkey =   if flag then [mailboxID, flag, {}] else [mailboxID, {}]
+
+    Message.rawRequestPromised 'byMailboxAndFlag',
+        startkey: startkey
+        endkey: endkey
         reduce: false
 
     .map (row) -> [row.id, row.value]
+
+Message.UIDsInRange = (mailboxID, min, max) ->
+    result = {}
+    Message.rawRequestPromised 'byMailboxAndUID',
+        startkey: [mailboxID, min]
+        endkey: [mailboxID, max]
+        inclusive_end: true
+
+    .map (row) ->
+        uid = row.key[1]
+        result[uid] = [row.id, row.value]
+
+    .then -> return result
 
 # Public: find a message by its message id
 #
@@ -155,7 +171,9 @@ CONCURRENT_DESTROY = 5
 # Returns a {Promise} for task completion
 Message.safeDestroyByAccountID = (accountID, retries = 2) ->
 
-    destroyOne = (row) -> Message.destroyByIDPromised row.id
+    destroyOne = (row) ->
+        Message.destroyByIDPromised(row.id)
+        .delay 100 # let the DS breath
 
     # get LIMIT_DESTROY messages IDs in RAM
     Message.rawRequestPromised 'treemap',
@@ -238,6 +256,14 @@ Message::removeFromMailbox = (box, noDestroy = false) ->
     if noDestroy or Object.keys(@mailboxIDs).length > 0 then @savePromised()
     else @destroyPromised()
 
+Message.removeFromMailbox = (id, box) ->
+    Message.findPromised id
+    .then (message) -> message.removeFromMailbox box
+
+Message.applyFlagsChanges = (id, flags) ->
+    Message.findPromised id
+    .then (message) -> message.updateAttributesPromised flags: flags
+
 
 # Public: apply a json-patch to the message in both cozy & imap
 #
@@ -270,55 +296,11 @@ Message::applyPatchOperations = (patch) ->
             flagOps.remove.push @flags[index]
             flagOps.add.push operation.value
 
-    # applyMessageChanges will perform operation on the server
+    # applyMessageChanges will perform operation in IMAP
     # and store results in the message (this)
     # wee need to save afterward
-    ImapProcess.applyMessageChanges this, flagOps, boxOps
+    @imap_applyChanges flagOps, boxOps
     .then => @savePromised()
-
-# Public: move a message to trash
-# @DEADCODE (done in client now)
-#
-# Returns a {Promise} for the updated {Message}
-Message::moveToTrash = ->
-    Account.findPromised @accountID
-    .then (account) =>
-        trashID = account.trashMailbox
-        throw new WrongConfigError 'need define trash' unless trashID
-
-        # build a patch that remove from all mailboxes and add to trash
-        patch = Object.keys @mailboxIDs
-        .filter (boxid) -> boxid isnt trashID
-        .map (boxid) -> op: 'remove', path: "/mailboxIDs/#{boxid}"
-
-        patch.push op: 'add', path: "/mailboxIDs/#{trashID}"
-
-        @applyPatchOperations patch
-
-
-Message.toRawMessage = (message, callback) ->
-    mailbuilder = new Compiler(message).compile()
-    return mailbuilder.build callback
-
-# Public: create a message and store it on the imap server
-#
-# message - {Object} the message attributes
-# boxtypes - {String} one of the account specialuse attributes
-# uid -
-#
-# Returns a {Promise} for the created {Message}
-Message.saveOnImapServer = (message, boxtype, uid) ->
-    Account.findPromised message.accountID
-    .then (account) =>
-        boxID = account[boxtype]
-        throw new WrongConfigError 'wrong boxtype' unless boxid
-
-        Mailbox.findPromised boxID
-        .then (box) ->
-            ImapProcess.createMail account, box, message
-        .then (uid) ->
-            message.mailboxIDs[box.id] = uid
-            Message.createPromised message
 
 
 
@@ -447,6 +429,6 @@ Message.pickConversationID = (rows) ->
     # we pass it to the next function
     .return pickedConversationID
 
-
+require './message_imap'
 Promise.promisifyAll Message, suffix: 'Promised'
 Promise.promisifyAll Message::, suffix: 'Promised'

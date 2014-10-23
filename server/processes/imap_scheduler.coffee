@@ -10,7 +10,7 @@ _ = require 'lodash'
 {UIDValidityChanged} = require '../utils/errors'
 Message = require '../models/message'
 mailutils = require '../utils/jwz_tools'
-Account = null
+Account = require '../models/account'
 
 # Public: The imap scheduler is responsible to maintain
 # a list of task than need to be executed.
@@ -30,14 +30,20 @@ module.exports = class ImapScheduler
     # Public: get the singleton instance of {ImapScheduler}
     # for the passed {Account}
     #
-    # account - an {Account} to get the instance for
+    # accountID - the id of the {Account} to get the instance for
+    # account - if the scheduler doesnt exist, create it using account
     #
     # Returns an {ImapScheduler} linked to this account
-    @instanceFor: (account) ->
-        # Prevent exception with data from fixtures
-        if account?
-            @instances[account.imapServer] ?= new ImapScheduler account
-            return @instances[account.imapServer]
+    @instanceFor = (accountID, account) ->
+        if scheduler = @instances[accountID]
+            return Promise.resolve scheduler
+
+        pAccount = if account then Promise.resolve account
+        else Account.findPromised accountID
+        pAccount.then (account) =>
+            scheduler = new ImapScheduler account.makeImapConfig()
+            @instances[accountID] = scheduler
+            return scheduler
 
     # actual IMAP tasks
     tasks: []
@@ -46,28 +52,21 @@ module.exports = class ImapScheduler
     # Private: create a new connection for this
     # scheduler instance
     #
-    # account - account to create the scheduler for
+    # config - imap config
     #
     # Returns a {Promise} for the connected imap object
-    constructor: (@account) ->
-        Account ?= require '../models/account'
-        unless @account instanceof Account
-            @account = new Account @account
+    constructor: (config) ->
+        @config = config
+        @accoutnID = config._id
 
     # Private: create a new connection for this
     # scheduler instance
     #
     # Returns a {Promise} for the connected imap object
     createNewConnection: ->
-        log.info "OPEN IMAP CONNECTION", @account.label
+        log.info "OPEN IMAP CONNECTION", @config.label
 
-        @imap = new ImapPromised
-            user: @account.login
-            password: @account.password
-            host: @account.imapServer
-            port: parseInt @account.imapPort
-            tls: not @account.imapSSL? or @account.imapSSL
-            tlsOptions: rejectUnauthorized: false
+        @imap = new ImapPromised @config
 
         @imap.onTerminated = (err) =>
             log.error 'IMAP TERMINATED', err
@@ -164,14 +163,12 @@ module.exports = class ImapScheduler
                 unless imapbox.persistentUIDs
                     throw new Error 'UNPERSISTENT UID NOT SUPPORTED'
 
-                log.info "UIDVALIDITY", box.uidvalidity, imapbox.uidvalidity
-
                 # not the same uidvalidity
                 if box.uidvalidity and box.uidvalidity isnt imapbox.uidvalidity
                     throw new UIDValidityChanged imapbox.uidvalidity
 
                 # call the wrapped generator
-                gen imap
+                gen imap, imapbox
                 .tap -> unless box.uidvalidity
                     # we store the uidvalidity
                     log.info "FIRST UIDVALIDITY", imapbox.uidvalidity
@@ -180,10 +177,11 @@ module.exports = class ImapScheduler
 
         # if UIDValidity has changed, we recover
         .catch UIDValidityChanged, (err) =>
+            log.info "UIDVALIDITY", box.uidvalidity, err.newUidvalidity
             log.warn "UID VALIDITY HAS CHANGED, RECOVERING"
 
             @doASAP (imap) =>
-                recoverChangedUIDValidity imap, box, @account._id
+                box.recoverChangedUIDValidity imap, @accountID
             .then ->
                 box.updateAttributesPromised
                     uidvalidity: err.newUidvalidity
@@ -256,24 +254,3 @@ module.exports = class ImapScheduler
             throw err
 
         .then @_resolvePending, @_rejectPending
-
-recoverChangedUIDValidity = (imap, box, accountID) ->
-    reporter = ImapReporter.addUserTask
-        code: 'fix-changed-uidvalidity'
-        box: box.path
-
-    imap.openBox(box.path)
-    .then -> imap.fetchBoxMessageIds()
-    .then (map) ->
-        Promise.serie _.keys(map), (newUID) ->
-            messageID = mailutils.normalizeMessageID map[newUID]
-            Message.rawRequestPromised 'byMessageId',
-                key: [accountID, messageID]
-                include_docs: true
-            .get(0)
-            .then (row) ->
-                return unless row
-                mailboxIDs = row.doc.mailboxIDs
-                mailboxIDs[box.id] = newUID
-                msg = new Message(row.doc)
-                msg.updateAttributesPromised {mailboxIDs}

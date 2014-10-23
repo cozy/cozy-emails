@@ -5,7 +5,6 @@ Mailbox     = require '../models/mailbox'
 Promise     = require 'bluebird'
 htmlToText  = require 'html-to-text'
 sanitizer   = require 'sanitizer'
-ImapProcess = require '../processes/imap_processes'
 
 htmlToTextOptions =
     tables: true
@@ -88,7 +87,7 @@ module.exports.send = (req, res, next) ->
 
     # @TODO : save attachments in the DS
 
-    # find the account and draftbox
+    # find the account and draftBox
     Account.findPromised message.accountID
     .then (account) ->
         Mailbox.findPromised account.draftMailbox
@@ -99,8 +98,8 @@ module.exports.send = (req, res, next) ->
         # remove the old version if necessary
         removeOld = ->
             uid = message.mailboxIDs?[draftBox?.id]
-            if uid then ImapProcess.remove account, draftBox, uid
-            else Promise.resolve()
+            if uid then draftBox?.imap_removeMail uid
+            else Promise.resolve null
 
         message.flags = ['\\Seen']
 
@@ -111,7 +110,7 @@ module.exports.send = (req, res, next) ->
                     throw new AccountConfigError('draftMailbox')
 
                 message.flags.push '\\Draft'
-                ImapProcess.createMail account, draftBox, message
+                account.imap_createMail draftBox, message
 
         else
             # send before deleting draft
@@ -120,7 +119,9 @@ module.exports.send = (req, res, next) ->
             .then -> removeOld()
             .then -> Mailbox.findPromised account.sentMailbox
             .then (sentBox) ->
-                ImapProcess.createMail account, sentBox, message
+                account.imap_createMail sentBox, message
+
+        return out
 
     # save the message
     .spread (dest, uidInDest) ->
@@ -142,28 +143,24 @@ module.exports.send = (req, res, next) ->
 module.exports.search = (req, res, next) ->
 
     if not req.params.query?
-        next new HttpError 400, '`query` body field is mandatory'
-    else
-        # we add one temporary because the search doesn't return the
-        # number of results so we can't paginate properly
-        numPageCheat = parseInt(req.params.numPage) * parseInt(req.params.numByPage) + 1
-        Message.searchPromised
-            query: req.params.query
-            numPage: req.params.numPage
-            numByPage: numPageCheat
-        .then (messages) -> res.send 200, messages.map formatMessage
-        .catch next
+        return next new HttpError 400, '`query` body field is mandatory'
+
+    # we add one temporary because the search doesn't return the
+    # number of results so we can't paginate properly
+    numPageCheat = parseInt(req.params.numPage) * parseInt(req.params.numByPage) + 1
+    Message.searchPromised
+        query: req.params.query
+        numPage: req.params.numPage
+        numByPage: numPageCheat
+    .then (messages) -> res.send 200, messages.map formatMessage
+    .catch next
 
 # Temporary routes for testing purpose
 module.exports.index = (req, res, next) ->
-    Message.request 'all', {}, (err, messages) ->
-        if err? then next err
-        else
-            async.each messages, (message, callback) ->
-                message.index ['subject', 'text'], callback
-            , (err) ->
-                if err? then next err
-                else res.send 200, 'Indexation OK'
+    Message.requestPromised 'all', {}
+    .map (message) -> messages.indexPromised ['subject', 'text']
+    .then -> res.send 200, 'Indexation OK'
+    .catch next
 
 module.exports.del = (req, res, next) ->
 
