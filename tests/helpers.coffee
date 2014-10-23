@@ -27,6 +27,8 @@ helpers.imapServerAccount = ->
     password: "applesauce"
     smtpServer: "127.0.0.1"
     smtpPort: helpers.options.smtpPort
+    smtpSSL: false
+    smtpTLS: true
     imapServer: DovecotTesting.serverIP()
     imapPort: 993
     imapSecure: true
@@ -64,11 +66,14 @@ helpers.stopApp = (done) ->
 # database helper
 helpers.cleanDB = (done) ->
     @timeout 20000
-    fixtures.resetDatabase callback: done
+    fixtures.removeDocumentsOf 'account', (err) ->
+        return done err if err
+        fixtures.removeDocumentsOf 'message', (err) ->
+            return done err if err
+            fixtures.removeDocumentsOf 'mailbox', (err) ->
+                return done err if err
 
-helpers.cleanDBWithRequests = (done) ->
-    @timeout 20000
-    fixtures.resetDatabase removeAllRequests: true, callback: done
+                done null
 
 helpers.loadFixtures = (done) ->
     @timeout 20000

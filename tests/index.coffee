@@ -8,7 +8,7 @@ Mailbox = require '../server/models/mailbox'
 
 describe "Accounts Tests", ->
 
-    # before helpers.cleanDB
+    before helpers.cleanDB
     before DovecotTesting.setupEnvironment
     before helpers.startSMTPTesting
     before helpers.startApp
@@ -37,6 +37,8 @@ describe "Accounts Tests", ->
             body.inboxMailbox.should.equal @inboxID
             body.sentMailbox.should.equal @sentID
             body.flaggedMailbox.should.equal @flaggedBoxId
+
+            body.should.have.property('favorites').with.lengthOf 4
 
             @accountID = body.id
             done()
