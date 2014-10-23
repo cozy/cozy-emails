@@ -127,6 +127,7 @@ Account::sendMessage = (message, callback) ->
 #
 # Returns a {Promise} that reject/resolve if the credentials are corrects
 Account.testSMTPConnection = (data) ->
+    return Promise.resolve null if data.accountType is 'TEST'
 
     connection = new SMTPConnection
         port: data.smtpPort

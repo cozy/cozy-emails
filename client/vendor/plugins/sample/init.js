@@ -4,7 +4,7 @@ if (typeof window.plugins !== "object") {
 }
 window.plugins.sample = {
   name: "Sample JS",
-  active: true,
+  active: false,
   onAdd: {
     /**
      * Should return true if plugin applies on added subtree
@@ -32,7 +32,7 @@ window.plugins.sample = {
    * Called when plugin is deactivated
    */
   onDeactivate: function () {
-    console.log('Plugin sample deactivated');
+    //console.log('Plugin sample deactivated');
   },
   listeners: {
     'VIEW_ACTION': function (params) {

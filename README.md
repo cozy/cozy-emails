@@ -67,6 +67,10 @@ To run tests type the following command into the Cozy Emails folder:
 
 In order to run the tests, you must only have the Data System started.
 
+For frontend tests, you need a working [CasperJS](http://casperjs.org/) installation. Then go to the Cozy emails folder and:
+
+    casperjs test client/tests/casper/full
+
 ## Icons
 
 By [Fontawesome](http://fortawesome.github.io/Font-Awesome/).

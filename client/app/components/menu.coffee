@@ -12,12 +12,15 @@ module.exports = Menu = React.createClass
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not Immutable.is(nextProps.accounts, @props.accounts) or
-               not Immutable.is(nextProps.selectedAccount, @props.selectedAccount) or
-               not _.isEqual(nextProps.layout, @props.layout) or
-               nextProps.isResponsiveMenuShown isnt @props.isResponsiveMenuShown or
-               not Immutable.is(nextProps.favoriteMailboxes, @props.favoriteMailboxes) or
-               not Immutable.is(nextProps.unreadCounts, @props.unreadCounts)
+        return nextState isnt @state or
+           not Immutable.is(nextProps.accounts, @props.accounts) or
+           not Immutable.is(nextProps.selectedAccount,
+                @props.selectedAccount) or
+           not _.isEqual(nextProps.layout, @props.layout) or
+           nextProps.isResponsiveMenuShown isnt @props.isResponsiveMenuShown or
+           not Immutable.is(nextProps.favoriteMailboxes,
+                @props.favoriteMailboxes) or
+           not Immutable.is(nextProps.unreadCounts, @props.unreadCounts)
 
     render: ->
 
@@ -76,22 +79,29 @@ module.exports = Menu = React.createClass
 
         div id: 'menu', className: classes,
             unless @props.accounts.length is 0
-                a href: composeUrl, className: 'menu-item compose-action ' + composeClass,
-                    i className: 'fa fa-edit'
-                    span className: 'item-label', t 'menu compose'
+                a
+                    href: composeUrl,
+                    className: 'menu-item compose-action ' + composeClass,
+                        i className: 'fa fa-edit'
+                        span className: 'item-label', t 'menu compose'
 
-            ul id: 'account-list', className: 'list-unstyled',
-                @props.accounts.map (account, key) =>
-                    @getAccountRender account, key
-                .toJS()
+            if @props.accounts.length isnt 0
+                ul id: 'account-list', className: 'list-unstyled',
+                    @props.accounts.map (account, key) =>
+                        @getAccountRender account, key
+                    .toJS()
 
-            a href: newMailboxUrl, className: 'menu-item new-account-action ' + newMailboxClass,
-                i className: 'fa fa-inbox'
-                span className: 'item-label', t 'menu account new'
+            a
+                href: newMailboxUrl,
+                className: 'menu-item new-account-action ' + newMailboxClass,
+                    i className: 'fa fa-inbox'
+                    span className: 'item-label', t 'menu account new'
 
-            a href: settingsUrl, className: 'menu-item settings-action ' + settingsClass,
-                i className: 'fa fa-cog'
-                span className: 'item-label', t 'menu settings'
+            a
+                href: settingsUrl,
+                className: 'menu-item settings-action ' + settingsClass,
+                    i className: 'fa fa-cog'
+                    span className: 'item-label', t 'menu settings'
 
 
     # renders a single mailbox and its submenu
@@ -124,7 +134,10 @@ module.exports = Menu = React.createClass
                 i className: 'fa fa-inbox'
                 if unread > 0
                     span className: 'badge', unread
-                span 'data-account-id': key, className: 'item-label', account.get 'label'
+                span
+                    'data-account-id': key,
+                    className: 'item-label',
+                    account.get 'label'
 
             ul className: 'list-unstyled submenu mailbox-list',
                 @props.favoriteMailboxes?.map (mailbox, key) =>
@@ -138,7 +151,8 @@ module.exports = Menu = React.createClass
             parameters: [account.get('id'), mailbox.get('id')]
 
         unread = @props.unreadCounts.get mailbox.get('id')
-        selectedClass = if mailbox.get('id') is @props.selectedMailboxID then 'active'
+        selectedClass = if mailbox.get('id') is @props.selectedMailboxID
+        then 'active'
         else ''
         specialUse = mailbox.get('attribs')?[0]
         icon = switch specialUse

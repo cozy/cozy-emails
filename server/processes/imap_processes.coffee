@@ -271,7 +271,11 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
     Promise.all [
         # get a scheduler
         Account.findPromised msg.accountID
-        .then (account) -> ImapScheduler.instanceFor account
+        .then (account) ->
+            if account?.accountType is 'TEST'
+                return Promise.resolve null
+            else
+                ImapScheduler.instanceFor account
 
         # populate the boxIndex
         Mailbox.getBoxes msg.accountID
@@ -281,46 +285,48 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
                 boxIndex[box.id] = path: box.path, uid: uid
     ]
 
-    .spread (scheduler) -> scheduler.doASAP (imap) ->
+    .spread (scheduler) ->
+        if scheduler?
+            scheduler.doASAP (imap) ->
 
-        # ERROR CASES
-        for boxid in boxOps.addTo when not boxIndex[boxid]
-            throw new Error "the box ID=#{box} doesn't exists"
+                # ERROR CASES
+                for boxid in boxOps.addTo when not boxIndex[boxid]
+                    throw new Error "the box ID=#{box} doesn't exists"
 
-        # step 1 - get the first box + UID
-        boxid = Object.keys(msg.mailboxIDs)[0]
-        uid = msg.mailboxIDs[boxid]
+                # step 1 - get the first box + UID
+                boxid = Object.keys(msg.mailboxIDs)[0]
+                uid = msg.mailboxIDs[boxid]
 
-        # step 2 - apply flags change
-        imap.openBox boxIndex[boxid].path
-        .then ->
-            if flagsOps.add.length
-                imap.addFlags uid, flagsOps.add
-        .then ->
-            if flagsOps.remove.length
-                imap.delFlags uid, flagsOps.remove
-        .then ->
-            msg.flags = _.union msg.flags, flagsOps.add
-            msg.flags = _.difference msg.flags, flagsOps.remove
-            log.info "  CHANGED FLAGS #{boxIndex[boxid].path}:#{uid}"
-            log.info "    RESULT = ", msg.flags
+                # step 2 - apply flags change
+                imap.openBox boxIndex[boxid].path
+                .then ->
+                    if flagsOps.add.length
+                        imap.addFlags uid, flagsOps.add
+                .then ->
+                    if flagsOps.remove.length
+                        imap.delFlags uid, flagsOps.remove
+                .then ->
+                    msg.flags = _.union msg.flags, flagsOps.add
+                    msg.flags = _.difference msg.flags, flagsOps.remove
+                    log.info "  CHANGED FLAGS #{boxIndex[boxid].path}:#{uid}"
+                    log.info "    RESULT = ", msg.flags
 
-        # step 3 - copy the message to its destinations
-        .then -> Promise.serie boxOps.addTo, (destId) ->
-            imap.copy uid, boxIndex[destId].path
-            .then (uidInDestination) ->
-                log.info "  COPIED #{boxIndex[boxid].path}:#{uid}"
-                log.info "  TO #{boxIndex[destId].path}:#{uidInDestination}"
-                msg.mailboxIDs[destId] = uidInDestination
+                # step 3 - copy the message to its destinations
+                .then -> Promise.serie boxOps.addTo, (destId) ->
+                    imap.copy uid, boxIndex[destId].path
+                    .then (uidInDestination) ->
+                        log.info "  COPIED #{boxIndex[boxid].path}:#{uid}"
+                        log.info "  TO #{boxIndex[destId].path}:#{uidInDestination}"
+                        msg.mailboxIDs[destId] = uidInDestination
 
-        # step 4 - remove the message from the box it shouldn't be in
-        .then ->
-            Promise.serie boxOps.removeFrom, (boxid) ->
-                {path, uid} = boxIndex[boxid]
+                # step 4 - remove the message from the box it shouldn't be in
+                .then ->
+                    Promise.serie boxOps.removeFrom, (boxid) ->
+                        {path, uid} = boxIndex[boxid]
 
-                imap.openBox path
-                .then -> imap.addFlags uid, '\\Deleted'
-                .then -> imap.expunge uid
-                .then -> delete msg.mailboxIDs[boxid]
-                .tap ->
-                    log.info "  DELETED #{path}:#{uid}"
+                        imap.openBox path
+                        .then -> imap.addFlags uid, '\\Deleted'
+                        .then -> imap.expunge uid
+                        .then -> delete msg.mailboxIDs[boxid]
+                        .tap ->
+                            log.info "  DELETED #{path}:#{uid}"

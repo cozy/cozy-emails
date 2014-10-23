@@ -36,7 +36,10 @@ module.exports = Toast = React.createClass
                         pre style: "max-height": "300px", "word-wrap": "normal",
                             @state.modalErrors.join "\n\n"
                     div className: "modal-footer",
-                        button type: 'button', className: 'btn', onClick: @closeModal,
+                        button
+                            type: 'button',
+                            className: 'btn',
+                            onClick: @closeModal,
                             t 'app alert close'
 
     render: ->
@@ -59,23 +62,31 @@ module.exports = Toast = React.createClass
 
             if percent?
                 div className: "progress",
-                    div className: 'progress-bar', style: width: percent
-                    div className: 'progress-bar-label start', style: width: percent,
+                    div
+                        className: 'progress-bar',
+                        style: width: percent
+                    div
+                        className: 'progress-bar-label start',
+                        style: width: percent,
                         "#{t "task " + toast.code, toast} : #{percent}"
-                    div className: 'progress-bar-label end',
+                    div
+                        className: 'progress-bar-label end',
                         "#{t "task " + toast.code, toast} : #{percent}"
 
             if toast.message
                 div className: "message", toast.message
 
             if toast.finished
-                button type: "button", className: "close", onClick: @acknowledge,
-                    span 'aria-hidden': "true", "×"
-                    span className: "sr-only", t "app alert close"
+                button
+                    type: "button",
+                    className: "close",
+                    onClick: @acknowledge,
+                        span 'aria-hidden': "true", "×"
+                        span className: "sr-only", t "app alert close"
 
             if hasErrors
                 a onClick: showModal,
-                    t 'there were errors', smart_count: len
+                    t 'there were errors', smart_count: toast.errors.length
 
     componentDidMount: ->
         if @props.toast.autoclose
