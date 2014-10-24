@@ -98,7 +98,7 @@ Mailbox::imap_refreshStep = (limitByBox, laststep) ->
 
     .tap (ops) ->
         Promise.map ops.toFetch, (msg) ->
-            Message.findPromised msg.mid
+            Message.byMessageId msg.mid
             .then (existing) =>
                 if existing then existing.addToBox boxID, msg.uid
                 else box.imap_fetchOneMail msg.uid
