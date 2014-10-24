@@ -1,9 +1,5 @@
-async = require 'async'
-
-Account = require '../models/account'
-Mailbox = require '../models/mailbox'
-Imap = require '../processes/imap_processes'
 _ = require 'lodash'
+Account = require '../models/account'
 {AccountConfigError, HttpError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'accounts:controller')
 
@@ -13,6 +9,7 @@ module.exports.create = (req, res, next) ->
     # @TODO : validate req.body
     data = req.body
     Account.createIfValid data
+    .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send 201, account
     .catch AccountConfigError, (err) ->
         log.warn err.toString()
@@ -32,13 +29,13 @@ module.exports.fetch = (req, res, next) ->
 # include the account mailbox tree
 module.exports.list = (req, res, next) ->
     Account.requestPromised 'all'
-    .map (account) -> account.includeMailboxes()
+    .map (account) -> account.toObjectWithMailbox()
     .then (accounts) -> res.send 200, accounts
     .catch next
 
 # get an account with its mailboxes
 module.exports.details = (req, res, next) ->
-    req.account.includeMailboxes()
+    req.account.toObjectWithMailbox()
     .then -> res.send 200, req.account
     .catch next
 
@@ -53,7 +50,7 @@ module.exports.edit = (req, res, next) ->
         'draftMailbox', 'sentMailbox', 'trashMailbox'
 
     req.account.updateAttributesPromised changes
-    .then (account) -> account.includeMailboxes()
+    .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send 200, req.account
     .catch next
 

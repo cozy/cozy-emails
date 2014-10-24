@@ -14,6 +14,12 @@ MessageList = React.createClass
     render: ->
         curPage = parseInt @props.pageNum, 10
         nbPages = Math.ceil(@props.messagesCount / @props.messagesPerPage)
+        messages = @props.messages.map (message, key) =>
+            isActive = @props.openMessage? and
+                       @props.openMessage.get('id') is message.get('id')
+            # @TODO @FIXME Only display initial mail of a thread
+            @getMessageRender message, key, isActive
+        .toJS()
         div className: 'message-list',
             div className: 'message-list-actions',
                 MessagesQuickFilter {}
@@ -26,28 +32,23 @@ MessageList = React.createClass
                     @getPagerRender curPage, nbPages
                     p null, @props.counterMessage
                     ul className: 'list-unstyled',
-                        @props.messages.map (message, key) =>
-                            # only displays initial email of a thread
-                            if true # @FIXME Mage conversation # message.get('inReplyTo').length is 0
-                                isActive = @props.openMessage? and
-                                           @props.openMessage.get('id') is message.get('id')
-                                @getMessageRender message, key, isActive
-                        .toJS()
+                        messages
                     @getPagerRender curPage, nbPages
 
     getMessageRender: (message, key, isActive) ->
+        flags = message.get('flags')
         classes = classer
             read: message.get 'isRead'
             active: isActive
-            'unseen': message.get('flags').indexOf(MessageFlags.SEEN) is -1
+            'unseen': flags.indexOf(MessageFlags.SEEN) is -1
             'has-attachments': message.get 'hasAttachments'
-            'is-fav': message.get('flags').indexOf(MessageFlags.FLAGGED) isnt -1
+            'is-fav': flags.indexOf(MessageFlags.FLAGGED) isnt -1
 
         isDraft = message.get('flags').indexOf(MessageFlags.DRAFT) isnt -1
 
         url = @buildUrl
             direction: 'second'
-            action: if isDraft then 'compose' else 'message'
+            action: if isDraft then 'edit' else 'message'
             parameters: message.get 'id'
 
         date = MessageUtils.formatDate message.get 'createdAt'
@@ -99,7 +100,11 @@ MessageList = React.createClass
                 li className: classLast,
                     a href: urlLast, '»'
 
-    getParticipants: (message) -> "#{MessageUtils.displayAddresses(message.get 'from')}, #{MessageUtils.displayAddresses(message.get('to').concat(message.get('cc')))}"
+    getParticipants: (message) ->
+        from = MessageUtils.displayAddresses(message.get 'from')
+        to   = MessageUtils.displayAddresses(message.get('to')
+                .concat(message.get('cc')))
+        "#{from}, #{to}"
 
 module.exports = MessageList
 
@@ -108,7 +113,7 @@ MessagesQuickFilter = React.createClass
 
     render: ->
         div
-            className: "form-group pull-left message-list-action",
+            className: "form-group message-list-action",
             input
                 className: "form-control"
                 type: "text"
@@ -121,12 +126,12 @@ MessagesFilter = React.createClass
     displayName: 'MessagesFilter'
 
     render: ->
-        div className: 'dropdown pull-left filter-dropdown',
+        div className: 'dropdown filter-dropdown',
             button
-                className: 'btn btn-default dropdown-toggle message-list-action',
-                type: 'button',
-                'data-toggle': 'dropdown',
-                t 'list filter',
+                className: 'btn btn-default dropdown-toggle message-list-action'
+                type: 'button'
+                'data-toggle': 'dropdown'
+                t 'list filter'
                     span className: 'caret'
             ul
                 className: 'dropdown-menu',
@@ -162,10 +167,10 @@ MessagesSort = React.createClass
     render: ->
         div className: 'dropdown sort-dropdown',
             button
-                className: 'btn btn-default dropdown-toggle message-list-action',
-                type: 'button',
-                'data-toggle': 'dropdown',
-                t 'list sort',
+                className: 'btn btn-default dropdown-toggle message-list-action'
+                type: 'button'
+                'data-toggle': 'dropdown'
+                t 'list sort'
                     span className: 'caret'
             ul
                 className: 'dropdown-menu',

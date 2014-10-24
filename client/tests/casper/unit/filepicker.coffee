@@ -12,7 +12,7 @@ casper.test.begin 'Test file picker', 9, (test) ->
     casper.start "http://localhost:9125/test", ->
         casper.evaluate ->
             window.__tests = {}
-            FilePicker = require "components/file-picker"
+            FilePicker = require "components/file_picker"
             window.__tests.fp = React.renderComponent new FilePicker({editable: true}), document.body
         test.assertExists "input[type=file]", "File selector is visible"
         test.assertVisible ".dropzone", "Drop zone is visible"
@@ -30,7 +30,7 @@ casper.test.begin 'Test file picker', 9, (test) ->
     casper.then ->
         casper.evaluate (files) ->
             window.__tests.rendered = false
-            window.__tests.fp.setProps({editable: false, files: files}, -> window.__tests.rendered = true)
+            window.__tests.fp.setProps({editable: false, value: files}, -> window.__tests.rendered = true)
         , {files: files}
         casper.waitFor ->
             return casper.evaluate -> return window.__tests.rendered

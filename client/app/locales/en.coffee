@@ -26,6 +26,7 @@ module.exports =
       "compose forward separator" : "\n\nOn %{date}, %{sender} wrote \n"
       "compose action draft"      : "Save draft"
       "compose action send"       : "Send"
+      "compose action delete"     : "Delete draft"
       "compose toggle cc"         : "Cc"
       "compose toggle bcc"        : "Bcc"
 
@@ -37,7 +38,7 @@ module.exports =
       # List
       "list empty"              : "No email in this box."
       "list search empty"       : "No result found for the query \"%{query}\"."
-      "list count"              : "%{smart_count} mcolorcolumnessage in this
+      "list count"              : "%{smart_count} message in this
                                   box |||| %{smart_count} messages in this box"
       "list search count"       : "%{smart_count} result found. ||||
                                     %{smart_count} results found."
@@ -106,6 +107,8 @@ module.exports =
       "account tab mailboxes"       : "Folders"
       "account errors"              : "Some data are missing or invalid"
       "account type"                : "Account type"
+      "account updated"             : "Account updated"
+      "account refreshed"           : "Account refreshed"
       "mailbox create ok"           : "Folder created"
       "mailbox create ko"           : "Error creating folder"
       "mailbox update ok"           : "Folder updated"
@@ -174,7 +177,7 @@ module.exports =
       "mailbox pick null"          : "No box for this"
 
       # Tasks
-      "task diff"                  : 'Comparing %{box} of %{account}'
+      "task account-fetch"         : 'Refreshing %{account}'
       "task apply-diff-fetch"      : 'Fetching mails %{box} of %{account}'
       "there were errors"          : '%{smart_count} error. |||| %{smart_count}
                                         errors.'

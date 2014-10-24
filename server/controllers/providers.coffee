@@ -20,9 +20,10 @@ module.exports.get = (req, res, next) ->
                         return nodes[0].childNodes[0].nodeValue
                 parseServer = (node) ->
                     server =
-                        type:     node.getAttribute 'type'
-                        hostname: getValue node, 'hostname'
-                        port:     getValue node, 'port'
+                        type:       node.getAttribute 'type'
+                        hostname:   getValue node, 'hostname'
+                        port:       getValue node, 'port'
+                        socketType: getValue node, 'socketType'
                     infos.push server
                 getServers = (provider) ->
                     servers = provider.getElementsByTagName 'incomingServer'

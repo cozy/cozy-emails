@@ -8,7 +8,8 @@
        "smtpServer": "smtp.gmail.com",
        "smtpPort": 465,
        "imapServer": "imap.gmail.com",
-       "imapPort": 993
+       "imapPort": 993,
+       "accountType": "TEST"
     },
     {
        "_id": "dovecot-ID",
@@ -19,6 +20,7 @@
        "smtpServer": "172.0.0.1",
        "smtpPort": 0,
        "imapServer": "127.0.0.1",
-       "imapPort": 993
+       "imapPort": 993,
+       "accountType": "TEST"
     }
 ]

@@ -361,7 +361,7 @@ module.exports = React.createClass
         favorites = @state.favoriteMailboxes
         if @state.mailboxes?
             mailboxes = @state.mailboxes.map (mailbox, key) =>
-                favorite = true if favorites.get(mailbox.get('id'))
+                favorite = true if favorites? and favorites.get(mailbox.get('id'))
                 MailboxItem {accountID: @state.id, mailbox, favorite}
             .toJS()
         form className: 'form-horizontal',
@@ -418,7 +418,8 @@ module.exports = React.createClass
                         onChange: (mailbox) =>
                             newState = {}
                             newState[box] = mailbox
-                            @setState newState
+                            @setState newState, =>
+                                @onSubmit()
 
     componentDidMount: ->
         # On error, scroll to message
@@ -462,8 +463,9 @@ module.exports = React.createClass
                 @setState errors: errors
 
     onSubmit: (event) ->
-        # prevents the page from reloading
-        event.preventDefault()
+        if event?
+            # prevents the page from reloading
+            event.preventDefault()
 
         {accountValue, valid} = @doValidate()
 
@@ -538,9 +540,27 @@ module.exports = React.createClass
                         if server.type is 'imap' and not infos.imapServer?
                             infos.imapServer = server.hostname
                             infos.imapPort   = server.port
+                            if server.socketType is 'SSL'
+                                infos.imapSSL = true
+                                infos.imapTLS = false
+                            else if server.socketType is 'STARTTLS'
+                                infos.imapSSL = false
+                                infos.imapTLS = true
+                            else if server.socketType is 'plain'
+                                infos.imapSSL = false
+                                infos.imapTLS = false
                         if server.type is 'smtp' and not infos.smtpServer?
                             infos.smtpServer = server.hostname
                             infos.smtpPort   = server.port
+                            if server.socketType is 'SSL'
+                                infos.smtpSSL = true
+                                infos.smtpTLS = false
+                            else if server.socketType is 'STARTTLS'
+                                infos.smtpSSL = false
+                                infos.smtpTLS = true
+                            else if server.socketType is 'plain'
+                                infos.smtpSSL = false
+                                infos.smtpTLS = false
                     getInfos server for server in provider
                     if not infos.imapServer?
                         infos.imapServer = ''
@@ -548,23 +568,25 @@ module.exports = React.createClass
                     if not infos.smtpServer?
                         infos.smtpServer = ''
                         infos.smtpPort   = '465'
-                    switch infos.imapPort
-                        when '993'
-                            infos.imapSSL = true
-                            infos.imapTLS = false
-                        else
-                            infos.imapSSL = false
-                            infos.imapTLS = false
-                    switch infos.smtpPort
-                        when '465'
-                            infos.smtpSSL = true
-                            infos.smtpTLS = false
-                        when '587'
-                            infos.smtpSSL = false
-                            infos.smtpTLS = true
-                        else
-                            infos.smtpSSL = false
-                            infos.smtpTLS = false
+                    if not infos.imapSSL
+                        switch infos.imapPort
+                            when '993'
+                                infos.imapSSL = true
+                                infos.imapTLS = false
+                            else
+                                infos.imapSSL = false
+                                infos.imapTLS = false
+                    if not infos.smtpSSL
+                        switch infos.smtpPort
+                            when '465'
+                                infos.smtpSSL = true
+                                infos.smtpTLS = false
+                            when '587'
+                                infos.smtpSSL = false
+                                infos.smtpTLS = true
+                            else
+                                infos.smtpSSL = false
+                                infos.smtpTLS = false
                     @setState infos
                     @validateForm()
             @_lastDiscovered = login
@@ -633,7 +655,7 @@ module.exports = React.createClass
         state =
             errors: {}
         if props?
-            account = @props.selectedAccount
+            account = props.selectedAccount
             if props.error?
                 if props.error.name is 'AccountConfigError'
                     field = props.error.field
@@ -644,9 +666,10 @@ module.exports = React.createClass
             init field for field in @_accountFields
             state.newMailboxParent = null
             state.tab = tab
+            state.mailboxes         = props.mailboxes
+            state.favoriteMailboxes = props.favoriteMailboxes
             if state.mailboxes.length is 0
                 state.tab = 'mailboxes'
-            state.favoriteMailboxes = props.favoriteMailboxes
         else if Object.keys(state.errors).length is 0
             init = (field) ->
                 state[field] = ''

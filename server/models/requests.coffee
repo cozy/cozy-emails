@@ -19,7 +19,6 @@ module.exports =
         # this map has 3 usages
         # - fetch mails of a mailbox between two dates
         # - fetch mails count of a mailbox
-        # - get UIDs of mails in a mailbox
         byMailboxAndDate:
             reduce: '_count'
             map: (doc) ->
@@ -27,13 +26,17 @@ module.exports =
                     emit [boxid, doc.date], uid
                 undefined # prevent coffeescript comprehension
 
+        byMailboxAndUID: (doc) ->
+            for boxid, uid of doc.mailboxIDs
+                emit [boxid, uid], doc.flags
+
         # fastly find unread or flagged count
         byMailboxAndFlag:
             reduce: '_count'
             map: (doc) ->
                 for boxid, uid of doc.mailboxIDs
                     for flag in doc.flags
-                        emit [boxid, flag], null
+                        emit [boxid, flag], uid
                     undefined # prevent coffeescript comprehension
                 undefined # prevent coffeescript comprehension
 

@@ -14,7 +14,7 @@ module.exports.main = (req, res, next) ->
             .catch (err) -> 'en'
 
         Account.requestPromised 'all'
-            .map (account) -> account.includeMailboxes()
+            .map (account) -> account.toObjectWithMailbox()
 
         ImapReporter.summary()
     ]
@@ -49,7 +49,7 @@ module.exports.loadFixtures = (req, res, next) ->
 
 module.exports.refresh = (req, res, next) ->
     Account.refreshAllAccounts()
-    .then -> res.send 200, 'done'
+    .then -> res.send 200, refresh: 'done'
     .catch next
 
 module.exports.tasks = (req, res, next) ->

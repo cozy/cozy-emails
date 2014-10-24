@@ -10,7 +10,8 @@
     pointer-events none
 
     > *
-        pointer-events none
+        pointer-events auto
+        opacity 1
 
     .alert
         margin-bottom .5em
@@ -42,6 +43,15 @@
             z-index 1
     .toast-actions
         display none
+    .message
+        display inline-block
+        margin-bottom 0
+        width 17em
+        position relative
+
+    .autoclose
+        opacity 0
+        transition opacity 10s
 
 .toasts-container.action-hidden
     top 100%

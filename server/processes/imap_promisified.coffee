@@ -4,15 +4,8 @@ Promise = require 'bluebird'
 {AccountConfigError} = require '../utils/errors'
 _ = require 'lodash'
 log = require('../utils/logging')(prefix: 'imap:promise')
+stream_to_buffer_array = require '../utils/stream_to_array'
 
-stream_to_buffer_array = (stream, cb) ->
-    parts = []
-    stream.on 'error', (err) -> cb err
-    stream.on 'data', (d) -> parts.push d
-    stream.on 'end', -> cb null, parts
-
-
-open_conn = 0
 
 # Monkey patches : to be merged upstream ?
 # Malformed message #1
@@ -25,12 +18,12 @@ MailParser::_parseHeaderLineWithParams = (value) ->
     _old1.call this, value.replace '" format=flowed', '"; format=flowed'
 
 
+
 Promise.promisifyAll Imap.prototype, suffix: 'Promised'
-# Public: better Promisify of node-imap
+# Public: better Promisify of node-imap (due to event-based interface)
+# one instance per connection
+# instance is destroyed when connection is closed
 module.exports = class ImapPromisified
-
-
-    state: 'not connected'
 
     # called when the connection breaks randomly
     # can be overwritten
@@ -46,14 +39,8 @@ module.exports = class ImapPromisified
 
         # wait connection as a promise
         @waitConnected = new Promise (resolve, reject) =>
-            @_super.once 'ready', =>
-                @state = 'connected'
-                log.warn "OPEN", ++open_conn
-                resolve this
-            @_super.once 'error', (err) =>
-                @state = 'errored'
-                if @waitConnected.isPending()
-                    reject err
+            @_super.once 'ready', => resolve this
+            @_super.once 'error', (err) => reject err
             @_super.connect()
 
         # we time out the connection at 10s
@@ -73,6 +60,8 @@ module.exports = class ImapPromisified
                 throw new AccountConfigError 'imapPort'
 
             if err.source is 'timeout-auth'
+                # @TODO : this can happen for other reason,
+                # we need to retry before throwing
                 throw new AccountConfigError 'imapTLS'
 
             # unknown err
@@ -86,12 +75,10 @@ module.exports = class ImapPromisified
                 log.error "ERROR ?", err
             @_super.once 'close', (err) =>
                 # if we did not expect the ending
-                log.warn "CLOSE", --open_conn unless @state is 'closed'
                 @closed = 'closed'
                 @onTerminated?(err) unless @waitEnding
             @_super.once 'end', (err) =>
                 # if we did not expect the ending
-                log.warn "END", --open_conn unless @state is 'closed'
                 @state = 'closed'
                 @onTerminated?(err) unless @waitEnding
 
@@ -156,52 +143,19 @@ module.exports = class ImapPromisified
             return Promise.resolve @_super._box
         @_super.openBoxPromised.apply @_super, arguments
 
-    append: ->
-        @_super.appendPromised.apply @_super, arguments
 
-    # see imap.search
-    # return a Promise of the search result (UIDs array)
-    search: ->
-        @_super.searchPromised.apply @_super, arguments
-
-    # see imap.move
-    # return a Promise for completion
-    move: ->
-        @_super.movePromised.apply @_super, arguments
-
-    # see imap.expunge
-    # return a Promise for completion
-    expunge: ->
-        @_super.expungePromised.apply @_super, arguments
-
-    # see imap.copy
-    # return a Promise for completion
-    copy: ->
-        @_super.copyPromised.apply @_super, arguments
-
-    # see imap.setFlags
-    # return a Promise for completion
-    setFlags: ->
-        @_super.setFlagsPromised.apply @_super, arguments
-
-    # see imap.delFlags
-    # return a Promise for completion
-    delFlags: ->
-        @_super.delFlagsPromised.apply @_super, arguments
-
-    # see imap.setFlags
-    # return a Promise for completion
-    addFlags: ->
-        @_super.addFlagsPromised.apply @_super, arguments
-
-    addBox: ->
-        @_super.addBoxPromised.apply @_super, arguments
-
-    delBox: ->
-        @_super.delBoxPromised.apply @_super, arguments
-
-    renameBox: ->
-        @_super.renameBoxPromised.apply @_super, arguments
+    # simple promisify
+    append    : -> @_super.appendPromised.apply @_super, arguments
+    search    : -> @_super.searchPromised.apply @_super, arguments
+    move      : -> @_super.movePromised.apply @_super, arguments
+    expunge   : -> @_super.expungePromised.apply @_super, arguments
+    copy      : -> @_super.copyPromised.apply @_super, arguments
+    setFlags  : -> @_super.setFlagsPromised.apply @_super, arguments
+    delFlags  : -> @_super.delFlagsPromised.apply @_super, arguments
+    addFlags  : -> @_super.addFlagsPromised.apply @_super, arguments
+    addBox    : -> @_super.addBoxPromised.apply @_super, arguments
+    delBox    : -> @_super.delBoxPromised.apply @_super, arguments
+    renameBox : -> @_super.renameBoxPromised.apply @_super, arguments
 
     # fetch all message-id in this box
     # return a Promise for an object {uid1:messageid1, uid2:messageid2} ...
@@ -227,6 +181,30 @@ module.exports = class ImapPromisified
 
                 fetch.on 'end', -> resolve results
 
+    # fetch metadata for a range of uid in open mailbox
+    # return a Promise for an object
+    # {uid1: [messageid, flags as a bitfield]}
+    fetchMetadata : (ids, range) ->
+        return {} unless ids.length
+        return new Promise (resolve, reject) =>
+            results = {}
+            fetch = @_super.fetch ids, bodies: 'HEADER.FIELDS (MESSAGE-ID)'
+            fetch.on 'error', reject
+            fetch.on 'message', (msg) ->
+                uid = null # message uid
+                flags = null # message flags
+                mid = null # message id
+                msg.on 'error', (err) -> result.error = err
+                msg.on 'end', -> results[uid] = [ mid, flags ]
+                msg.on 'attributes', (attrs) ->
+                    {flags, uid} = attrs
+                msg.on 'body', (stream) ->
+                    stream_to_buffer_array stream, (err, parts) ->
+                        return log.error err if err
+                        header = Buffer.concat(parts).toString('utf8').trim()
+                        mid = header.substring header.indexOf(':') + 1
+
+            fetch.on 'end', -> resolve results
 
     # fetch one mail by its UID from the currently open mailbox
     # return a promise for the mailparser result

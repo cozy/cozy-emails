@@ -2,7 +2,6 @@ async = require 'async'
 
 Account = require '../models/account'
 Mailbox = require '../models/mailbox'
-ImapProcess = require '../processes/imap_processes'
 Promise = require 'bluebird'
 log = require('../utils/logging')(prefix: 'mailbox:controller')
 
@@ -32,11 +31,11 @@ module.exports.create = (req, res, next) ->
             attribs: []
             children: []
 
-        ImapProcess.createBox account, mailbox.path
+        account.imap_createBox mailbox.path
         .then -> Mailbox.createPromised mailbox.toObject()
         .return account
 
-    .then (account) -> account.includeMailboxes()
+    .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send account
     .catch (err) ->
         log.error err
@@ -53,7 +52,7 @@ module.exports.update = (req, res, next) ->
             parentPath = box.path.substring 0, box.path.lastIndexOf box.label
             newPath = parentPath + req.body.label
 
-            ImapProcess.renameBox account, box.path, newPath
+            account.imap_renameBox box.path, newPath
             .then ->
                 box.label = req.body.label
                 box.path = newPath
@@ -61,7 +60,7 @@ module.exports.update = (req, res, next) ->
                 box.savePromised()
             .return account
 
-    .then (account) -> account.includeMailboxes()
+    .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send account
     .catch next
 
@@ -72,10 +71,10 @@ module.exports.delete = (req, res, next) ->
     .then (box) ->
         Account.findPromised box.accountID
         .then (account) ->
-            ImapProcess.deleteBox account, box.path
-            .then -> box.destroyEverything()
+            account.imap_deleteBox box.path
+            .then -> box.destroyAndRemoveAllMessages()
             .return account
 
-    .then (account) -> account.includeMailboxes()
+    .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send account
     .catch next

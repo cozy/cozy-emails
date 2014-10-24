@@ -59,7 +59,7 @@ module.exports = class ImapReporter
 
     sendtoclient: (nocooldown) ->
         return if @cooldown and not nocooldown
-        io.emit 'task.update', @toObject()
+        io?.emit 'task.update', @toObject()
         @cooldown = true
         setTimeout (=> @cooldown = false) , 500
 
@@ -80,5 +80,25 @@ module.exports = class ImapReporter
         @sendtoclient()
 
     onError: (err) ->
+        log.error err.stack
         @errors.push err.stack
         @sendtoclient()
+
+
+ImapReporter.accountFetch = (account, boxesLength) ->
+    return new ImapReporter
+        total: boxesLength
+        account: account.label
+        code: 'account-fetch'
+
+ImapReporter.boxFetch = (box, total) ->
+    return new ImapReporter
+        total: total
+        box: box.label
+        code: 'box-fetch'
+
+ImapReporter.recoverUIDValidty = (box, total) ->
+    return new ImapReporter
+        total: total
+        box: box.label
+        code: 'recover-uidvalidity'

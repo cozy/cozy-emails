@@ -34,7 +34,8 @@ module.exports = AccountActionCreator =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.EDIT_ACCOUNT
                     value: rawAccount
-
+                LayoutActionCreator = require '../actions/layout_action_creator'
+                LayoutActionCreator.notify t('account updated'), autoclose: true
 
     remove: (accountID) ->
         AppDispatcher.handleViewAction

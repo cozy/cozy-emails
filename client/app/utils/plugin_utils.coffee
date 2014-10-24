@@ -50,8 +50,11 @@ module.exports =
                 for own pluginName, pluginConf of window.plugins
                     if pluginConf.active
                         if pluginConf.onAdd?
-                            if pluginConf.onAdd.condition document.body
-                                pluginConf.onAdd.action document.body
+                            if pluginConf.onAdd.condition.bind(pluginConf)(document.body)
+                                pluginConf.onAdd.action.bind(pluginConf)(document.body)
+                        if pluginConf.onDelete?
+                            if pluginConf.onDelete.condition.bind(pluginConf)(document.body)
+                                pluginConf.onDelete.action.bind(pluginConf)(document.body)
 
             , 200
 

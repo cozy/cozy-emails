@@ -165,3 +165,8 @@ module.exports =
                 callback null, res.body
             else
                 callback res.body, null
+
+    refresh: (callback) ->
+        request.get "refresh"
+        .end (res) ->
+            callback(res.text)

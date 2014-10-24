@@ -11,6 +11,13 @@ utils.AccountConfigError = class AccountConfigError extends Error
         # Error.captureStackTrace this, arguments.callee
         return this
 
+utils.Break = class Break extends Error
+    constructor: ->
+        @name = 'Break'
+        @stack = ''
+        return this
+
+
 utils.WrongConfigError = class WrongConfigError extends Error
     constructor: (field) ->
         @name = 'WrongConfigError'

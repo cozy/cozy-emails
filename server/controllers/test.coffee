@@ -3,8 +3,6 @@ Account = require '../models/account'
 
 CozyInstance = require '../models/cozy_instance'
 
-fixtures = require 'cozy-fixtures'
-
 module.exports.main = (req, res, next) ->
     async.parallel [
         (cb) -> CozyInstance.getLocale cb

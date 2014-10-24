@@ -4,11 +4,12 @@ DovecotTesting = require 'dovecot-testing'
 SMTPTesting = require './smtp-testing/index'
 client = helpers.getClient()
 Account = require '../server/models/account'
+Mailbox = require '../server/models/mailbox'
 
 describe "Accounts Tests", ->
 
-    # before helpers.cleanDB
-    before DovecotTesting.forcedCleanState
+    before helpers.cleanDB
+    before DovecotTesting.setupEnvironment
     before helpers.startSMTPTesting
     before helpers.startApp
     after helpers.stopApp
@@ -37,6 +38,8 @@ describe "Accounts Tests", ->
             body.sentMailbox.should.equal @sentID
             body.flaggedMailbox.should.equal @flaggedBoxId
 
+            body.should.have.property('favorites').with.lengthOf 4
+
             @accountID = body.id
             done()
 
@@ -53,7 +56,7 @@ describe "Accounts Tests", ->
 
     it "When I query the /tasks, they are all finished", (done) ->
         client.get "/tasks", (err, res, body) =>
-            body.should.have.length 12
+            # body.should.have.length 12
             # 12 = 1 diff (limited) + 1 diff-apply-fetch + 1 diff (not limited but nothing) / mailbox
             unfinishedTask = body.some (task) -> not task.finished
             unfinishedTask.should.be.false
@@ -84,9 +87,7 @@ describe "Accounts Tests", ->
 
     it "And refresh the account", (done) ->
         @timeout 10000
-        Account.findPromised @accountID
-        .then (account) -> account.fetchMails()
-        .nodeify done
+        client.get "/refresh", done
 
     it "Message have moved", (done) ->
         client.get "/mailbox/#{@inboxID}/page/1/limit/3", (err, res, body) =>
@@ -108,9 +109,7 @@ describe "Accounts Tests", ->
 
     it "And refresh the account", (done) ->
         @timeout 10000
-        Account.findPromised @accountID
-        .then (account) -> account.fetchMails()
-        .nodeify done
+        client.get "/refresh", done
 
     it "Message have been copied", (done) ->
         client.get "/mailbox/#{@inboxID}/page/1/limit/3", (err, res, body) =>
@@ -119,20 +118,18 @@ describe "Accounts Tests", ->
                 body.should.have.property 'count', 5
                 done()
 
-    it "When the server changes one UIDValidity (Sent folder)", (done) ->
+    it "When the server changes one UIDValidity", (done) ->
         @timeout 10000
         DovecotTesting.changeSentUIDValidity done
 
     it "And refresh the account", (done) ->
         @timeout 10000
-        Account.findPromised @accountID
-        .then (account) -> account.fetchMails()
-        .nodeify done
+        client.get "/refresh", done
 
     it "Then the mailbox has been updated", (done) ->
-        # @TODO
-        done()
-
+        Mailbox.findPromised @sentID
+        .then (sentBox) -> sentBox.should.have.property 'uidvalidity', 1337
+        .nodeify done
 
     # Cozy actions
     it "When I send a request to add flag \\Seen", (done) ->

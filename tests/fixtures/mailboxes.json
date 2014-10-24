@@ -7,7 +7,8 @@
         "delimiter": "/",
         "_id": "gmail-ID-folder1",
         "label": "INBOX",
-        "path": "INBOX"
+        "path": "INBOX",
+        "tree": ["INBOX"]
     },
     {
         "docType": "Mailbox",
@@ -18,7 +19,9 @@
         "delimiter": "/",
         "_id": "e7332094-e043-0156-0b5c-790219161c7a",
         "label": "[Gmail]",
-        "path": "[Gmail]"
+        "path": "[Gmail]",
+        "tree": ["[Gmail]"]
+
     },
     {
         "docType": "Mailbox",
@@ -30,7 +33,8 @@
         "delimiter": "/",
         "_id": "5fd7b96a-6bc1-d1ec-747e-3a238386013c",
         "label": "Brouillons",
-        "path": "[Gmail]/Brouillons"
+        "path": "[Gmail]/Brouillons",
+        "tree": ["[Gmail]", "Brouillons"]
     },
     {
         "docType": "Mailbox",
@@ -42,7 +46,8 @@
         "delimiter": "/",
         "_id": "6a4803cf-fe3d-6f56-287e-45198f8c2ab6",
         "label": "Corbeille",
-        "path": "[Gmail]/Corbeille"
+        "path": "[Gmail]/Corbeille",
+        "tree": ["[Gmail]", "Corbeille"]
     },
     {
         "docType": "Mailbox",
@@ -54,7 +59,8 @@
         "delimiter": "/",
         "_id": "gmail-ID-folder6",
         "label": "Important",
-        "path": "[Gmail]/Important"
+        "path": "[Gmail]/Important",
+        "tree": ["[Gmail]", "Important"]
     },
     {
         "docType": "Mailbox",
@@ -66,7 +72,8 @@
         "delimiter": "/",
         "_id": "ef0d8561-80f7-3f7d-841a-58a5c170a250",
         "label": "Messages envoy\u00e9s",
-        "path": "[Gmail]/Messages envoy\u00e9s"
+        "path": "[Gmail]/Messages envoy\u00e9s",
+        "tree": ["[Gmail]", "Messages envoy\u00e9s"]
     },
     {
         "docType": "Mailbox",
@@ -78,7 +85,8 @@
         "delimiter": "/",
         "_id": "d77dacc9-e794-ac80-ea9f-39ce38a10871",
         "label": "Spam",
-        "path": "[Gmail]/Spam"
+        "path": "[Gmail]/Spam",
+        "tree": ["[Gmail]", "Spam"]
     },
     {
         "docType": "Mailbox",
@@ -90,7 +98,8 @@
         "delimiter": "/",
         "_id": "e72b1432-a1b6-100f-363d-6ac228a67cd4",
         "label": "Suivis",
-        "path": "[Gmail]/Suivis"
+        "path": "[Gmail]/Suivis",
+        "tree": ["[Gmail]", "Suivis"]
     },
     {
         "docType": "Mailbox",
@@ -102,7 +111,8 @@
         "delimiter": "/",
         "_id": "0d886c94-be51-fc71-790d-7f4ff5da2af7",
         "label": "Tous les messages",
-        "path": "[Gmail]/Tous les messages"
+        "path": "[Gmail]/Tous les messages",
+        "tree": ["[Gmail]", "Tous les messages"]
     },
     {
         "docType": "Mailbox",
@@ -112,7 +122,8 @@
         "delimiter": "/",
         "_id": "gmail-ID-folder2",
         "label": "contact",
-        "path": "contact"
+        "path": "contact",
+        "tree": ["contact"]
     },
     {
         "docType": "Mailbox",
@@ -122,7 +133,8 @@
         "delimiter": ".",
         "_id": "dovecot-ID-folder2",
         "label": "Sent",
-        "path": "Sent"
+        "path": "Sent",
+        "tree": ["Sent"]
     },
     {
         "docType": "Mailbox",
@@ -132,7 +144,8 @@
         "delimiter": ".",
         "_id": "f5cbd722-c3f9-4f6e-73d0-c75ddf65a2f1",
         "label": "Test Folder",
-        "path": "Test Folder"
+        "path": "Test Folder",
+        "tree": ["Test Folder"]
     },
     {
         "docType": "Mailbox",
@@ -142,7 +155,8 @@
         "delimiter": ".",
         "_id": "0b3a2b31-7acb-dbab-d57f-3050ae2c78c5",
         "label": "Flagged Email",
-        "path": "Flagged Email"
+        "path": "Flagged Email",
+        "tree": ["Flagged Email"]
     },
     {
         "docType": "Mailbox",
@@ -152,6 +166,7 @@
         "delimiter": ".",
         "_id": "dovecot-ID-folder1",
         "label": "INBOX",
-        "path": "INBOX"
+        "path": "INBOX",
+        "tree": ["INBOX"]
     }
 ]
