@@ -30,6 +30,7 @@ module.exports = Message = americano.getModel 'Message',
 
 mailutils = require '../utils/jwz_tools'
 uuid = require 'uuid'
+log = require('../utils/logging')(prefix: 'models:message')
 Promise = require 'bluebird'
 Mailbox = require './mailbox'
 
@@ -241,6 +242,7 @@ Message.safeRemoveAllFromBox = (mailboxID, retries = 2) ->
 #
 # Returns {Promise} for the updated {Message}
 Message::addToMailbox = (box, uid) ->
+    log.info "MAIL #{box.path}:#{uid} ADDED TO BOX"
     @mailboxIDs[box.id] = uid
     @savePromised()
 

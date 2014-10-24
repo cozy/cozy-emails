@@ -5,6 +5,7 @@ SMTPTesting = require './smtp-testing/index'
 client = helpers.getClient()
 Account = require '../server/models/account'
 Mailbox = require '../server/models/mailbox'
+Message = require '../server/models/message'
 
 require './units/mailbox_flattening'
 
@@ -54,7 +55,13 @@ describe "Accounts Tests", ->
 
     it "Wait for mails fetching", (done) ->
         @timeout 30000
-        setTimeout done, 29000
+        checkIfDone = ->
+            client.get "/tasks", (err, res, body) ->
+                unfinishedTask = body.some (task) -> not task.finished
+                if unfinishedTask then setTimeout checkIfDone, 1000
+                else done()
+
+        setTimeout checkIfDone, 1000
 
     it "When I query the /tasks, they are all finished", (done) ->
         client.get "/tasks", (err, res, body) =>
@@ -84,6 +91,7 @@ describe "Accounts Tests", ->
         imap.waitConnected
         .then -> imap.openBox 'INBOX'
         .then -> imap.move '8', 'Test Folder'
+        .then -> imap.closeBox()
         .then -> imap.end()
         .nodeify done
 
@@ -119,6 +127,28 @@ describe "Accounts Tests", ->
             client.get "/mailbox/#{@testboxID}/page/1/limit/3", (err, res, body) =>
                 body.should.have.property 'count', 5
                 done()
+
+    it "When I read a message on the IMAP server", (done) ->
+        @timeout 10000
+        imap = helpers.getImapServerRawConnection()
+
+        imap.waitConnected
+        .then -> imap.openBox 'INBOX'
+        .then -> imap.addFlags '10', ['\\Seen']
+        .then -> imap.end()
+        .nodeify done
+
+    it "And refresh the account", (done) ->
+        @timeout 10000
+        client.get "/refresh", done
+
+    it "Message have been copied", (done) ->
+        Message.UIDsInRange @inboxID, 10, 10
+        .then (msg) ->
+            flags = msg[10][1]
+            flags.should.containEql '\\Seen'
+
+        .nodeify done
 
     it "When the server changes one UIDValidity", (done) ->
         @timeout 10000

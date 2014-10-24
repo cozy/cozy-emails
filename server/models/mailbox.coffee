@@ -65,8 +65,8 @@ Mailbox.getBoxes = (accountID) ->
 # Returns a {Promise} for [{Mailbox}]
 Mailbox::getChildren = ->
     Mailbox.rawRequestPromised 'treemap',
-        startkey: [accountID].concat @tree
-        endkey: [accountID].concat @tree, {}
+        startkey: [@accountID].concat @tree, ''
+        endkey: [@accountID].concat @tree, {}
         include_docs: true
 
     .map (row) -> new Mailbox row.doc

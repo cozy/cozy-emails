@@ -28,7 +28,7 @@ module.exports.create = (req, res, next) ->
             label: req.body.label
             path: path
             tree: tree
-            delimiter: parent.delimiter
+            delimiter: parent?.delimiter or '/'
             attribs: []
 
         account.imap_createBox path

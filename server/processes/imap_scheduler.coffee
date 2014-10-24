@@ -72,8 +72,12 @@ module.exports = class ImapScheduler
 
         @imap.onTerminated = (err) =>
             log.error 'IMAP TERMINATED', err
-            @_rejectPending new Error 'connection closed'
-            @closeConnection()
+            if @pendingTask
+                @_rejectPending new Error 'connection closed'
+            if @closingTimer
+                clearTimeout @closingTimer
+                @closingTimer = null
+            @closeConnection true
 
         @imap.waitConnected
             .catch (err) =>
@@ -90,9 +94,8 @@ module.exports = class ImapScheduler
     #
     # Returns a {Promise} for the connected imap object
     closeConnection: (hard) =>
-        log.info "CLOSING CONNECTION", (if hard then "HARD" else "")
         @imap.end(hard).then =>
-            log.info "CLOSED CONNECTION"
+            log.info "CLOSED CONNECTION ", (if hard then "HARD" else "")
             @imap = null
             @_dequeue()
 
@@ -236,8 +239,14 @@ module.exports = class ImapScheduler
 
         # we are done with current tasks
         if @imap and not moreTasks
-            @closeConnection()
+            @closingTimer ?= setTimeout @closeConnection, 3000
             return false
+
+        # a new task was added and we have closing timer
+        # stop it
+        if @closingTimer
+            clearTimeout @closingTimer
+            @closingTimer = null
 
         # we need a connection
         if moreTasks and not @imap

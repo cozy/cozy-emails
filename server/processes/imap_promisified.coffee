@@ -139,6 +139,8 @@ module.exports = class ImapPromisified
             return Promise.resolve @_super._box
         @_super.openBoxPromised.apply @_super, arguments
 
+    closeBox: ->
+        @_super.closeBoxPromised.apply @_super, arguments
 
     # simple promisify
     append    : ->

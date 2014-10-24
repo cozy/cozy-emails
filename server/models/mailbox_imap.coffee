@@ -40,11 +40,13 @@ Mailbox::imap_refreshStep = (limitByBox, laststep) ->
         if limitByBox
             step.min = Math.max 1, laststep.min - limitByBox
 
-        log.info "IMAP REFRESH STEP", imapbox.uidnext, box.label, step.min, step.max
+        log.info "IMAP REFRESH", box.label, "UID #{step.min}:#{step.max}"
 
         Promise.all [
             imap.search [['UID', "#{step.min}:#{step.max}"]]
-            .then (UIDs) -> imap.fetchMetadata(UIDs)
+            .then (UIDs) ->
+                UIDs.sort().reverse()
+                imap.fetchMetadata(UIDs)
 
             Message.UIDsInRange box.id, step.min, step.max
         ]
