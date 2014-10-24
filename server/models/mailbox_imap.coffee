@@ -25,7 +25,6 @@ FETCH_AT_ONCE = 1000
 Mailbox::imap_refreshStep = (limitByBox, laststep) ->
 
     step = null
-    boxID = @id
     box = @
     reporter = null
 
@@ -47,7 +46,7 @@ Mailbox::imap_refreshStep = (limitByBox, laststep) ->
             imap.search [['UID', "#{step.min}:#{step.max}"]]
             .then (UIDs) -> imap.fetchMetadata(UIDs)
 
-            Message.UIDsInRange boxID, step.min, step.max
+            Message.UIDsInRange box.id, step.min, step.max
         ]
 
     .spread (imapUIDs, cozyIds) =>
@@ -97,10 +96,10 @@ Mailbox::imap_refreshStep = (limitByBox, laststep) ->
             .delay 100 # let the DS breath
 
     .tap (ops) ->
-        Promise.map ops.toFetch, (msg) ->
-            Message.byMessageId msg.mid
+        Promise.serie ops.toFetch, (msg) ->
+            Message.byMessageId box.accountID, msg.mid
             .then (existing) =>
-                if existing then existing.addToBox boxID, msg.uid
+                if existing then existing.addToMailbox box.id, msg.uid
                 else box.imap_fetchOneMail msg.uid
             .catch (err) -> reporter.onError err
             .tap -> reporter.addProgress 1
@@ -134,7 +133,7 @@ Mailbox::imap_removeMail = (uid) ->
     @doASAPWithBox (imap) =>
         imap.expunge uid, @path
 
-Mailbox::recoverChangedUIDValidity = (imap, accountID) ->
+Mailbox::recoverChangedUIDValidity = (imap) ->
     box = this
     imap.openBox @path
     .then -> imap.fetchBoxMessageIds()
@@ -144,7 +143,7 @@ Mailbox::recoverChangedUIDValidity = (imap, accountID) ->
         Promise.serie uids, (newUID) ->
             messageID = mailutils.normalizeMessageID map[newUID]
             Message.rawRequestPromised 'byMessageId',
-                key: [accountID, messageID]
+                key: [box.accountID, messageID]
                 include_docs: true
             .get(0)
             .then (row) ->
