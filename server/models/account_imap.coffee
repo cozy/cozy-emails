@@ -39,7 +39,7 @@ Account::imap_getBoxes = ->
 Account::imap_fetchMails = (limitByBox) ->
     reporter = null
     Mailbox.getBoxes @id
-    .tap (boxes) ->
+    .tap (boxes) =>
         reporter = ImapReporter.accountFetch this, boxes.length
     .serie (box) =>
         box.imap_fetchMails limitByBox
