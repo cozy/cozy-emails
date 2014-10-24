@@ -9,7 +9,7 @@ files = [
 ]
 casper.test.begin 'Test file picker', 9, (test) ->
     init casper
-    casper.start "http://localhost:9125/test", ->
+    casper.start casper.cozy.startUrl + "test", ->
         casper.evaluate ->
             window.__tests = {}
             FilePicker = require "components/file_picker"

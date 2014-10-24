@@ -170,3 +170,13 @@ module.exports =
         request.get "refresh"
         .end (res) ->
             callback(res.text)
+
+    activityCreate: (options, callback) ->
+        request.post "/activity"
+        .send options
+        .set 'Accept', 'application/json'
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                callback res.body, null

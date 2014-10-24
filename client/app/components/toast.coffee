@@ -89,7 +89,8 @@ module.exports = Toast = React.createClass
                     t 'there were errors', smart_count: toast.errors.length
 
     componentDidMount: ->
-        if @props.toast.autoclose
+        hasErrors = @props.toast.errors? and @props.toast.errors.length
+        if @props.toast.autoclose or (@props.toast.finished and not hasErrors)
             setTimeout =>
                 @getDOMNode().classList.add 'autoclose'
             , 1000

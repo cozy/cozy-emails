@@ -1,5 +1,6 @@
 MessageUtils = require '../utils/message_utils'
-{div, label, input} = React.DOM
+ContactForm = require './contact-form'
+{div, label, input, span} = React.DOM
 
 # Public: input to enter multiple mails
 # @TODO : use something tag-it like
@@ -12,6 +13,11 @@ module.exports = MailsInput = React.createClass
         React.addons.LinkedStateMixin # two-way data binding
     ]
 
+    getInitialState: ->
+        return {
+            contactShown: false
+        }
+
     # convert mailslist between human-readable and [{address, name}]
     proxyValueLink: ->
         value: MessageUtils.displayAddresses @props.valueLink.value, true
@@ -22,22 +28,39 @@ module.exports = MailsInput = React.createClass
                     name: match[1], address: match[2]
                 else
                     address: tupple
-            
+
             @props.valueLink.requestChange result
 
     render: ->
         className = (@props.className or '') + ' form-group'
         classLabel = 'col-sm-2 col-sm-offset-0 control-label'
-        classInput = 'col-sm-8'
+        classInput = 'col-sm-8 input-group'
+
+        onContact = (contact) =>
+            val = @proxyValueLink()
+            console.log @props.valueLink.value
+            current = if @props.valueLink.value.length > 0 then "#{val.value}, " else ""
+            val.requestChange "#{current}#{contact.get 'name'} <#{contact.get 'address'}>"
+            @setState contactShown: false
 
         div className: className,
-            label htmlFor: @props.id, className: classLabel, 
+            label htmlFor: @props.id, className: classLabel,
                 @props.label
             div className: classInput,
-                input 
+                input
                     id: @props.id,
-                    className: 'form-control', 
-                    ref: @props.ref, 
-                    valueLink: @proxyValueLink(), 
-                    type: 'text', 
+                    className: 'form-control',
+                    ref: @props.ref,
+                    valueLink: @proxyValueLink(),
+                    type: 'text',
                     placeholder: @props.placeholder
+                div
+                    className: 'input-group-addon btn btn-cozy',
+                    onClick: @toggleContact,
+                        span className: 'fa fa-search'
+
+                if @state.contactShown
+                    ContactForm query: @proxyValueLink().value, onContact: onContact
+
+    toggleContact: ->
+        @setState contactShown: not @state.contactshown

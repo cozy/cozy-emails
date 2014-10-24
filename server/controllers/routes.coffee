@@ -2,6 +2,7 @@
 
 index     = require './index'
 accounts  = require './accounts'
+activity  = require './activity'
 mailboxes = require './mailboxes'
 messages  = require './messages'
 providers = require './providers'
@@ -18,6 +19,8 @@ module.exports =
     'settings':
         put: settings.change
 
+    'activity':
+        post: activity.create
 
     'account':
         post: accounts.create

@@ -28,9 +28,9 @@ class AccountStore extends Store
 
         .toOrderedMap()
 
-    _selectedAccount = null
+    _selectedAccount   = null
     _newAccountWaiting = false
-    _newAccountError = null
+    _newAccountError   = null
 
 
     ###
@@ -44,13 +44,15 @@ class AccountStore extends Store
             _accounts = _accounts.set accountID, account
             _selectedAccount = _accounts.get accountID
             _newAccountWaiting = false
+            _newAccountError   = null
             @emit 'change'
 
         handle ActionTypes.ADD_ACCOUNT, (account) ->
             account = AccountTranslator.toImmutable account
             _accounts = _accounts.set account.get('id'), account
-            _selectedAccount = account
+            _selectedAccount   = account
             _newAccountWaiting = false
+            _newAccountError   = null
             @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (accountID) ->

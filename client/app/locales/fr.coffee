@@ -196,3 +196,6 @@ module.exports =
       "toast hide"      : "Masquer les alertes"
       "toast show"      : "Afficher les alertes"
       "toast close all" : "Fermer toutes les alertes"
+
+      # Contacts
+      "contact form placeholder" : "contact name"
