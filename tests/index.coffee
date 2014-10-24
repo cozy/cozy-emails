@@ -6,6 +6,8 @@ client = helpers.getClient()
 Account = require '../server/models/account'
 Mailbox = require '../server/models/mailbox'
 
+require './units/mailbox_flattening'
+
 describe "Accounts Tests", ->
 
     before helpers.cleanDB

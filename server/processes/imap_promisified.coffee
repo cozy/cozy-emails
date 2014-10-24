@@ -4,6 +4,7 @@ Promise = require 'bluebird'
 {AccountConfigError} = require '../utils/errors'
 _ = require 'lodash'
 log = require('../utils/logging')(prefix: 'imap:promise')
+mailutils = require '../utils/jwz_tools'
 stream_to_buffer_array = require '../utils/stream_to_array'
 
 
@@ -128,22 +129,7 @@ module.exports = class ImapPromisified
     getBoxes: ->
         IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren']
         @_super.getBoxesPromised.apply @_super, arguments
-        .then (tree) ->
-            boxes = []
-            # recursively browse the imap box tree building pathStr and pathArr
-            do handleLevel = (children = tree, pathStr = '', pathArr = []) ->
-                for name, child of children
-                    subPathStr = pathStr + name + child.delimiter
-                    subPathArr = pathArr.concat name
-                    handleLevel child.children, subPathStr, subPathArr
-                    boxes.push
-                        label: name
-                        delimiter: child.delimiter
-                        path: pathStr + name
-                        tree: subPathArr
-                        attribs: _.difference child.attribs, IGNORE_ATTRIBUTES
-
-            return boxes
+        .then mailutils.mailutils.flattenMailboxTree
 
     # see imap.openBox
     # return a Promise of the box
