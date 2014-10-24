@@ -25,6 +25,14 @@ before_install:
     - mkdir log
     - npm install # do it now, DovecotTesting needs it
 
+script:
+    - npm run test
+    - cozy-fixtures clear Account && cozy-fixtures clear Message && cozy-fixtures clear Mailbox && cozy-fixtures load tests/fixtures
+    - forever start -o casper-server.log build/server.js
+    - sleep 5
+    - npm run client-test-travis
+
+
 after_failure:
     - cat cozy-data-system/forever-ds.log
     - cat cozy-data-system/log/test.log
