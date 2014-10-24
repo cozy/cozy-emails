@@ -43,11 +43,12 @@
     "lorem-ipsum": "1.0.1",
     "chai": "1.9.1",
     "simplesmtp": "0.3.33",
-    "dovecot-testing": "0.0.3"
+    "dovecot-testing": "0.0.3",
+    "coffee-script": "^1.8.0"
   },
   "scripts": {
     "test": "dovecot-testing setup && cake tests",
-    "client-test": "casperjs --dev test client/tests/casper/full",
+    "client-test": "cozy-fixtures clear Account && cozy-fixtures clear Message && cozy-fixtures clear Mailbox && cozy-fixtures load tests/fixtures && COZY_URL=http://localhost:9125/ casperjs test client/tests/casper/full",
     "start": "node build/server.js"
   },
   "cozy-permissions": {

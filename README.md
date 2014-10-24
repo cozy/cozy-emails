@@ -65,13 +65,17 @@ We've adopted IMAP naming conventions, which means:
 
 ### Frontend
 
-Test suite is based on CasperJS. So you need to additional tools to run it:
+Test suite is based on CasperJS. Test data are loaded by cozy-fixtures.So you
+need to additional tools to run it:
   
     sudo apt-get install phantomjs
     sudo npm install casperjs -g # version >= 1.1 is required.
+    sudo npm install cozy-fixtures -g
 
     cd client/tests/casper
     npm run-script client-test
+
+That last command set an environment variable `COZY_URL`. 
 
 ### Backend
 
@@ -95,12 +99,6 @@ To add mails to the test suite
 In order to run the tests, you must only have the Data System started.
 The tests wont pass if you already have an account in your data-system
 
-For frontend tests, you need a working [CasperJS](http://casperjs.org/) installation, and to set up some environment variables:
-* `COZY_URL`: base URL of the application, for example "http://localhost:9125/"
-
-Then go to the Cozy emails folder and:
-
-    COZY_URL="http://localhost:9125/" casperjs test client/tests/casper/full
 
 ### Mail Loader
 
