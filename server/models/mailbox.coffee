@@ -139,7 +139,7 @@ Mailbox::renameWithChildren = (newPath, newLabel) ->
     path = @path
 
     @getChildren()
-    .then (children) ->
+    .then (children) =>
 
         @label = newLabel
         @path = newPath

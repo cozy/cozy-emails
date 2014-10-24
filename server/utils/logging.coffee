@@ -17,7 +17,7 @@ module.exports = (options) ->
     prefix = if typeof options is 'string' then options
     else options.prefix
 
-    logger = (level) -> () ->
+    logger = (level) -> ->
         return null if level < LOG_LEVEL
         args = new Array arguments.length + 2
         args[0] = COLORS[level]

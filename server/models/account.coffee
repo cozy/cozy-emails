@@ -89,7 +89,7 @@ Account.createIfValid = (data) ->
         Mailbox.createPromised box
 
     # find special mailboxes
-    .then (boxes) =>
+    .then (boxes) ->
         account.imap_scanBoxesForSpecialUse boxes
 
     # in a detached chain, fetch the Account

@@ -51,7 +51,7 @@ module.exports = class ImapPromisified
         # wait connection as a promise
         @waitConnected = new Promise (resolve, reject) =>
             @_super.once 'ready', => resolve this
-            @_super.once 'error', (err) => reject err
+            @_super.once 'error', (err) -> reject err
             @_super.connect()
 
         # we time out the connection at 10s
@@ -207,7 +207,8 @@ module.exports = class ImapPromisified
                     msg.on 'body', (stream) ->
                         stream_to_buffer_array stream, (err, parts) ->
                             return log.error err if err
-                            header = Buffer.concat(parts).toString('utf8').trim()
+                            buffer = Buffer.concat(parts)
+                            header = buffer.toString('utf8').trim()
                             messageID = header.substring header.indexOf ':'
 
                 fetch.on 'end', -> resolve results

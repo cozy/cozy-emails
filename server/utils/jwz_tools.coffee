@@ -25,8 +25,9 @@ module.exports =
 
         # first level is only INBOX, with no siblings
         if Object.keys(tree).length is 1 and root = tree['INBOX']
-            path = 'INBOX' + root.delimiter
-            flattenMailboxTreeLevel boxes, root.children, path, [], root.delimiter
+            delimiter = root.delimiter
+            path = 'INBOX' + delimiter
+            flattenMailboxTreeLevel boxes, root.children, path, [], delimiter
         else
             flattenMailboxTreeLevel boxes, tree, '', [], '/'
         return boxes
@@ -42,7 +43,9 @@ flattenMailboxTreeLevel= (boxes, children, pathStr, pathArr, parentDelimiter) ->
         subPathStr = pathStr + name + delimiter
         subPathArr = pathArr.concat name
 
-        flattenMailboxTreeLevel boxes, child.children, subPathStr, subPathArr, delimiter
+        flattenMailboxTreeLevel boxes, child.children, subPathStr,
+                subPathArr, delimiter
+
         boxes.push
             label: name
             delimiter: delimiter

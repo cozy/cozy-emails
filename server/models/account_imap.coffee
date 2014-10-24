@@ -40,8 +40,9 @@ Account::imap_fetchMails = (limitByBox) ->
     reporter = null
     Mailbox.getBoxes @id
     .tap (boxes) =>
+        log.info "FETCHING ACCOUNT ", @label, ":", boxes.length, "BOXES"
         reporter = ImapReporter.accountFetch this, boxes.length
-    .serie (box) =>
+    .serie (box) ->
         box.imap_fetchMails limitByBox
         .catch (err) -> reporter.onError err
         .tap         -> reporter.addProgress 1

@@ -26,7 +26,6 @@ module.exports = Message = americano.getModel 'Message',
     priority: String         # message priority
     binary: (x) -> x         # cozy binaries
     attachments: (x) -> x    # array of message attachments objects
-    flags: (x) -> x          # array of message flags (Seen, Flagged, Draft)
 
 mailutils = require '../utils/jwz_tools'
 uuid = require 'uuid'
@@ -87,21 +86,9 @@ Message.countReadByMailbox = (mailboxID) ->
 # Public: get the uids present in a box in coz
 #
 # mailboxID - id of the mailbox to check
-# flag - get only UIDs with this flag
+# min, max - get only UIDs between min & max
 #
-# Returns a {Promise} for an array of [couchdID, messageUID]
-Message.getUIDs = (mailboxID, flag = null) ->
-
-    startkey = if flag then [mailboxID, flag]     else [mailboxID]
-    endkey =   if flag then [mailboxID, flag, {}] else [mailboxID, {}]
-
-    Message.rawRequestPromised 'byMailboxAndFlag',
-        startkey: startkey
-        endkey: endkey
-        reduce: false
-
-    .map (row) -> [row.id, row.value]
-
+# Returns a {Promise} for an map of {uid: [couchdID, flags]}
 Message.UIDsInRange = (mailboxID, min, max) ->
     result = {}
     Message.rawRequestPromised 'byMailboxAndUID',
@@ -219,7 +206,6 @@ Message.safeRemoveAllFromBox = (mailboxID, retries = 2) ->
         numPage: 0
 
     .map removeOne, concurrency: CONCURRENT_DESTROY
-
 
     .then (results) ->
         if results.length is 0 then return 'done'

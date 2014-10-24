@@ -7,7 +7,8 @@ log = require('../utils/logging')(prefix: 'mailbox:controller')
 
 # create a mailbox
 module.exports.create = (req, res, next) ->
-    log.info "Creating #{req.body.label} under #{req.body.parentID} in #{req.body.accountID}"
+    log.info "Creating #{req.body.label} under #{req.body.parentID}" +
+        " in #{req.body.accountID}"
 
     pAccount = Account.findPromised req.body.accountID
     pParent = if req.body.parentID then Mailbox.findPromised req.body.parentID

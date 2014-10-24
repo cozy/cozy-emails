@@ -185,8 +185,8 @@ module.exports = class ImapScheduler
             log.info "UIDVALIDITY", box.uidvalidity, err.newUidvalidity
             log.warn "UID VALIDITY HAS CHANGED, RECOVERING"
 
-            @doASAP (imap) =>
-                box.recoverChangedUIDValidity imap, @accountID
+            @doASAP (imap) ->
+                box.recoverChangedUIDValidity imap
             .then ->
                 box.updateAttributesPromised
                     uidvalidity: err.newUidvalidity

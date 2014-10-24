@@ -14,7 +14,11 @@ module.exports.create = (req, res, next) ->
     .catch AccountConfigError, (err) ->
         log.warn err.toString()
         log.warn err.stack.split("\n")[2]
-        res.send 400, {name: err.name, field: err.field, stack: err.stack, error: true}
+        res.send 400,
+            name: err.name
+            field: err.field
+            stack: err.stack
+            error: true
     .catch next
 
 # fetch an account by id, add it to the request

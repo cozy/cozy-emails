@@ -51,8 +51,7 @@ Mailbox::imap_refreshStep = (limitByBox, laststep) ->
             Message.UIDsInRange box.id, step.min, step.max
         ]
 
-    .spread (imapUIDs, cozyIds) =>
-
+    .spread (imapUIDs, cozyIds) ->
         ops =
             toFetch: []
             toRemove: []
@@ -100,8 +99,8 @@ Mailbox::imap_refreshStep = (limitByBox, laststep) ->
     .tap (ops) ->
         Promise.serie ops.toFetch, (msg) ->
             Message.byMessageId box.accountID, msg.mid
-            .then (existing) =>
-                if existing then existing.addToMailbox box.id, msg.uid
+            .then (existing) ->
+                if existing then existing.addToMailbox box, msg.uid
                 else box.imap_fetchOneMail msg.uid
             .catch (err) -> reporter.onError err
             .tap -> reporter.addProgress 1
@@ -119,7 +118,7 @@ Mailbox::imap_refreshStep = (limitByBox, laststep) ->
 
 
 Mailbox::imap_fetchOneMail = (uid) ->
-    @doLaterWithBox (imap) =>
+    @doLaterWithBox (imap) ->
         imap.fetchOneMail uid
 
     .then (mail) => Message.createFromImapMessage mail, this, uid
