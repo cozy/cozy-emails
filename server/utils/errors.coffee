@@ -1,6 +1,7 @@
 module.exports = utils = {}
 
-
+# Something is wrong with the account's config
+# field give more information about what's wrong
 utils.AccountConfigError = class AccountConfigError extends Error
     constructor: (field) ->
         @name = 'AccountConfigError'
@@ -11,21 +12,28 @@ utils.AccountConfigError = class AccountConfigError extends Error
         # Error.captureStackTrace this, arguments.callee
         return this
 
+# Utility exception to break of promises chain
 utils.Break = class Break extends Error
     constructor: ->
         @name = 'Break'
         @stack = ''
         return this
 
-
-utils.WrongConfigError = class WrongConfigError extends Error
-    constructor: (field) ->
-        @name = 'WrongConfigError'
-        @field = field
-        @message = "Wrong Imap config on field #{field}"
+# Attempted to do something the imap server doesn't like
+# Possible codes :
+#  - folder undeletable
+#  - folder forbidden
+#  - folder duplicate
+utils.ImapImpossible = class ImapImpossible extends Error
+    constructor: (code, originalErr) ->
+        @name = 'ImapImpossible'
+        @code = code
+        @original = originalErr
+        @message = originalErr.message
         Error.captureStackTrace this, arguments.callee
         return this
 
+# the box UIDvalidity has changed
 utils.UIDValidityChanged = class UIDValidityChanged extends Error
     constructor: (uidvalidity) ->
         @name = UIDValidityChanged

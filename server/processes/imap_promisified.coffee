@@ -18,6 +18,16 @@ MailParser::_parseHeaderLineWithParams = (value) ->
     _old1.call this, value.replace '" format=flowed', '"; format=flowed'
 
 
+# Error predicates
+folderForbidden = (err) ->
+    /Folder name (.*) is not allowed./.test err.message
+
+folderDuplicate = (err) ->
+    /Duplicate folder name/.test err.message
+
+folderUndeletable = (err) ->
+    /Internal folder cannot be deleted/.test err.message
+
 
 Promise.promisifyAll Imap.prototype, suffix: 'Promised'
 # Public: better Promisify of node-imap (due to event-based interface)
@@ -145,17 +155,50 @@ module.exports = class ImapPromisified
 
 
     # simple promisify
-    append    : -> @_super.appendPromised.apply @_super, arguments
-    search    : -> @_super.searchPromised.apply @_super, arguments
-    move      : -> @_super.movePromised.apply @_super, arguments
-    expunge   : -> @_super.expungePromised.apply @_super, arguments
-    copy      : -> @_super.copyPromised.apply @_super, arguments
-    setFlags  : -> @_super.setFlagsPromised.apply @_super, arguments
-    delFlags  : -> @_super.delFlagsPromised.apply @_super, arguments
-    addFlags  : -> @_super.addFlagsPromised.apply @_super, arguments
-    addBox    : -> @_super.addBoxPromised.apply @_super, arguments
-    delBox    : -> @_super.delBoxPromised.apply @_super, arguments
-    renameBox : -> @_super.renameBoxPromised.apply @_super, arguments
+    append    : ->
+        @_super.appendPromised.apply @_super, arguments
+
+    search    : ->
+        @_super.searchPromised.apply @_super, arguments
+
+    move      : ->
+        @_super.movePromised.apply @_super, arguments
+
+    expunge   : ->
+        @_super.expungePromised.apply @_super, arguments
+
+    copy      : ->
+        @_super.copyPromised.apply @_super, arguments
+
+    setFlags  : ->
+        @_super.setFlagsPromised.apply @_super, arguments
+
+    delFlags  : ->
+        @_super.delFlagsPromised.apply @_super, arguments
+
+    addFlags  : ->
+        @_super.addFlagsPromised.apply @_super, arguments
+
+    addBox    : ->
+        @_super.addBoxPromised.apply @_super, arguments
+        .catch folderForbidden, (err) ->
+            throw new ImapImpossible 'folder forbidden', err
+
+        .catch folderDuplicate, (err) ->
+            throw new ImapImpossible 'folder duplicate', err
+
+    delBox    : ->
+        @_super.delBoxPromised.apply @_super, arguments
+        .catch folderUndeletable, (err) ->
+            throw new ImapImpossible 'folder undeletable', err
+
+    renameBox : ->
+        @_super.renameBoxPromised.apply @_super, arguments
+        .catch folderForbidden, (err) ->
+            throw new ImapImpossible 'folder forbidden', err
+
+        .catch folderDuplicate, (err) ->
+            throw new ImapImpossible 'folder duplicate', err
 
     # fetch all message-id in this box
     # return a Promise for an object {uid1:messageid1, uid2:messageid2} ...
