@@ -169,7 +169,7 @@ module.exports.del = (req, res, next) ->
     Account.findPromised req.message.accountID
     .then (account) ->
         trashID = account.trashMailbox
-        throw new WrongConfigError 'need define trash' unless trashID
+        throw new AccountConfigError 'trashMailbox' unless trashID
 
         # build a patch that remove from all mailboxes and add to trash
         patch = Object.keys(req.message.mailboxIDs)
