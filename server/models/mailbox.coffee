@@ -2,10 +2,6 @@ americano = require 'americano-cozy'
 Promise = require 'bluebird'
 _ = require 'lodash'
 
-# Public: Mailbox
-# a {JugglingDBModel} for a mailbox (imap folder)
-class Mailbox # make biscotto happy
-
 module.exports = Mailbox = americano.getModel 'Mailbox',
     accountID: String        # Parent account
     label: String            # Human readable label
@@ -15,7 +11,6 @@ module.exports = Mailbox = americano.getModel 'Mailbox',
     uidvalidity: Number      # Imap UIDValidity
     persistentUIDs: Boolean  # Imap persistentUIDs
     attribs: (x) -> x        # [String] Attributes of this folder
-    children: (x) -> x       # [BLAMEJDB] children should not be saved
 
 Message = require './message'
 log = require('../utils/logging')(prefix: 'models:mailbox')
@@ -65,6 +60,17 @@ Mailbox.getBoxes = (accountID) ->
     .map (row) -> new Mailbox row.doc
     .filter (box) -> '\\Noselect' not in box.attribs
 
+# Public: get this mailbox's children mailboxes
+#
+# Returns a {Promise} for [{Mailbox}]
+Mailbox::getChildren = ->
+    Mailbox.rawRequestPromised 'treemap',
+        startkey: [accountID].concat @tree
+        endkey: [accountID].concat @tree, {}
+        include_docs: true
+
+    .map (row) -> new Mailbox row.doc
+
 
 # Public: build a tree of the mailboxes
 #
@@ -85,8 +91,7 @@ Mailbox.getClientTree = (accountID) ->
     .each (row) ->
         path = row.key[1..] # remove accountID
         # we keep a reference by path to easily find parent
-        box = byPath[path.join DELIMITER] =
-            _.pick row.doc, 'label', 'children', 'attribs'
+        box = byPath[path.join DELIMITER] = _.pick row.doc, 'label', 'attribs'
 
         box.id = row.id
         box.children = []
@@ -119,28 +124,58 @@ Mailbox.destroyByAccount = (accountID) ->
     .serie (row) ->
         new Mailbox(id: row.id).destroyPromised()
         # if one box fail to delete, we keep going
-        .catch (err) -> log.error "Fail to delete box", err.stack or err
+        .catch (err) ->
+            log.error "Fail to delete box", err.stack or err
 
 
-# Public: destroy a mailbox
-# remove all message from it
-# returns fast after destroying mailbox
+# rename this mailbox and its children
+#
+# newPath - the new path
+# newLabel - the new label
+#
+# Returns a {Promise} for updated box
+Mailbox::renameWithChildren = (newPath, newLabel) ->
+    depth = @tree.length - 1
+    path = @path
+
+    @getChildren()
+    .then (children) ->
+
+        @label = newLabel
+        @path = newPath
+        @tree[depth] = newLabel
+        @savePromised()
+        .then ->
+            Promise.serie children, (child) ->
+                child.path = child.path.replace path, newPath
+                child.tree[depth] = newLabel
+                child.savePromised()
+
+# Public: destroy a mailbox and sub-mailboxes
+# remove all message from it & its sub-mailboxes
+# returns fast after destroying mailbox & sub-mailboxes
 # in the background, proceeds to remove messages
 #
 # Returns a {Promise} for mailbox destroyed completion
 Mailbox::destroyAndRemoveAllMessages = ->
 
-    mailboxID = @id
+    destroyBox = (box) -> box.destroyPromised()
+    destroyMessages = (box) -> Message.safeRemoveAllFromBox box.id
 
-    mailboxDestroyed = @destroyPromised()
+    @getChildren()
+    .then (children) =>
+        mailboxesDestroyed = destroyBox this
+        .then -> Promise.serie children, destroyBox
 
-    # remove messages in the background (wont change the interface)
-    mailboxDestroyed.then -> Message.safeRemoveAllFromBox mailboxID
-    .catch (err) ->
-        log.error "Fail to remove messages from box", err.stack or err
+        # remove messages in the background (wont change the interface)
+        mailboxesDestroyed
+        .then => destroyMessages this
+        .then -> Promise.serie children, destroyMessages
+        .catch (err) ->
+            log.error "Fail to remove messages from box", err.stack or err
 
-    # returns fastly success or error for mailboxDestruction
-    return mailboxDestroyed
+        # returns fastly success or error for mailboxDestruction
+        return mailboxesDestroyed
 
 
 require './mailbox_imap'

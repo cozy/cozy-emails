@@ -22,43 +22,40 @@ module.exports.create = (req, res, next) ->
             path = req.body.label
             tree = [req.body.label]
 
-        mailbox = new Mailbox
+        # @TODO : probably better to get it from IMAP
+        mailbox =
             accountID: account.id
             label: req.body.label
             path: path
             tree: tree
-            delimiter: '/' #@TODO : this is probably not safe
+            delimiter: parent.delimiter
             attribs: []
-            children: []
 
-        account.imap_createBox mailbox.path
-        .then -> Mailbox.createPromised mailbox.toObject()
+        account.imap_createBox path
+        .then -> Mailbox.createPromised mailbox
         .return account
 
     .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send account
-    .catch (err) ->
-        log.error err
-        next err
+    .catch next
 
 
 # update a mailbox
 module.exports.update = (req, res, next) ->
     log.info "Updating #{req.params.mailboxID} to #{req.body.label}"
-    Mailbox.findPromised req.params.mailboxID
-    .then (box) ->
-        Account.findPromised box.accountID
-        .then (account) ->
-            parentPath = box.path.substring 0, box.path.lastIndexOf box.label
-            newPath = parentPath + req.body.label
 
-            account.imap_renameBox box.path, newPath
-            .then ->
-                box.label = req.body.label
-                box.path = newPath
-                box.tree[box.tree.length - 1] = req.body.label
-                box.savePromised()
-            .return account
+    pBox = Mailbox.findPromised req.params.mailboxID
+    pAccount = pBox.then (box) -> Account.findPromised box.accountID
+
+    Promise.join pBox, pAccount, (box, account) ->
+
+        path = box.path
+        parentPath = path.substring 0, path.lastIndexOf(box.label)
+        newPath = parentPath + req.body.label
+
+        account.imap_renameBox path, newPath
+        .then -> box.renameWithChildren newPath
+        .return account
 
     .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send account
@@ -67,13 +64,14 @@ module.exports.update = (req, res, next) ->
 # delete a mailbox
 module.exports.delete = (req, res, next) ->
     log.info "Deleting #{req.params.mailboxID}"
-    Mailbox.findPromised req.params.mailboxID
-    .then (box) ->
-        Account.findPromised box.accountID
-        .then (account) ->
-            account.imap_deleteBox box.path
-            .then -> box.destroyAndRemoveAllMessages()
-            .return account
+
+    pBox = Mailbox.findPromised req.params.mailboxID
+    pAccount = pBox.then (box) -> Account.findPromised box.accountID
+
+    Promise.join pBox, pAccount, (box, account) ->
+        account.imap_deleteBox box.path
+        .then -> box.destroyAndRemoveAllMessages()
+        .return account
 
     .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send account
