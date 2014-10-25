@@ -65,17 +65,15 @@ We've adopted IMAP naming conventions, which means:
 
 ### Frontend
 
-Test suite is based on CasperJS. Test data are loaded by cozy-fixtures.So you
-need to additional tools to run it:
+Test suite is based on CasperJS. Test data are loaded by cozy-fixtures. So,
+prior to run it, you
+need to install additional tools:
   
     sudo apt-get install phantomjs
     sudo npm install casperjs -g # version >= 1.1 is required.
     sudo npm install cozy-fixtures -g
 
-    cd client/tests/casper
     npm run-script client-test
-
-That last command set an environment variable `COZY_URL`. 
 
 ### Backend
 
