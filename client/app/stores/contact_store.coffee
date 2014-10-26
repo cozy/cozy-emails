@@ -20,13 +20,12 @@ class ContactStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.RECEIVE_RAW_CONTACT_RESULTS, (rawResults) ->
+            _results = Immutable.OrderedMap.empty()
             if rawResults?
                 _results = _results.withMutations (map) ->
                     rawResults.forEach (rawResult) ->
                         contact = Immutable.Map rawResult
                         map.set contact.get('address'), contact
-            else
-                _results = Immutable.OrderedMap.empty()
 
             @emit 'change'
 

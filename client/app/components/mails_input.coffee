@@ -1,5 +1,6 @@
 MessageUtils = require '../utils/message_utils'
 ContactForm = require './contact-form'
+Modal       = require './modal'
 {div, label, input, span} = React.DOM
 
 # Public: input to enter multiple mails
@@ -34,7 +35,7 @@ module.exports = MailsInput = React.createClass
     render: ->
         className = (@props.className or '') + ' form-group'
         classLabel = 'col-sm-2 col-sm-offset-0 control-label'
-        classInput = 'col-sm-8 input-group'
+        classInput = 'col-sm-8'
 
         onContact = (contact) =>
             val = @proxyValueLink()
@@ -47,20 +48,22 @@ module.exports = MailsInput = React.createClass
             label htmlFor: @props.id, className: classLabel,
                 @props.label
             div className: classInput,
-                input
-                    id: @props.id,
-                    className: 'form-control',
-                    ref: @props.ref,
-                    valueLink: @proxyValueLink(),
-                    type: 'text',
-                    placeholder: @props.placeholder
-                div
-                    className: 'input-group-addon btn btn-cozy',
-                    onClick: @toggleContact,
-                        span className: 'fa fa-search'
+                div className: 'input-group',
+                    input
+                        id: @props.id,
+                        className: 'form-control',
+                        ref: @props.ref,
+                        valueLink: @proxyValueLink(),
+                        type: 'text',
+                        placeholder: @props.placeholder
+                    div
+                        className: 'input-group-addon btn btn-cozy',
+                        onClick: @toggleContact,
+                            span className: 'fa fa-search'
 
                 if @state.contactShown
-                    ContactForm query: @proxyValueLink().value, onContact: onContact
+                    content     = ContactForm query: @proxyValueLink().value, onContact: onContact
+                    Modal {content}
 
     toggleContact: ->
         @setState contactShown: not @state.contactshown

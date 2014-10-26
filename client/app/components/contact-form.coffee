@@ -27,8 +27,8 @@ module.exports = React.createClass
     render: ->
         listClass = if @state.contacts.length > 0 then 'open' else ''
 
-        div null,
-            div className: 'col-sm-8 col-sm-offset-2',
+        div className: "contact-form",
+            div null,
                 div className: 'input-group',
                     input
                         className: 'form-control',
@@ -43,7 +43,7 @@ module.exports = React.createClass
                             span className: 'fa fa-search'
 
             div className: listClass,
-                ul className: "dropdown-menu",
+                ul className: "contact-list",
                     @state.contacts.map (contact, key) =>
                         @renderContact contact
                     .toJS()

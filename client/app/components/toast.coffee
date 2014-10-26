@@ -45,7 +45,11 @@ module.exports = Toast = React.createClass
             modalErrors = @state.modalErrors
             closeModal  = @closeModal
             closeLabel  = t 'app alert close'
-            modal = Modal {title, subtitle, modalErrors, closeModal, closeLabel}
+            content = React.DOM.pre
+                style: "max-height": "300px",
+                "word-wrap": "normal",
+                    @state.modalErrors.join "\n\n"
+            modal = Modal {title, subtitle, content, closeModal, closeLabel}
 
         div className: classes, role: "alert",
             if @state.modalErrors
