@@ -2,6 +2,7 @@
 SocketUtils = require '../utils/socketio_utils'
 AppDispatcher = require '../app_dispatcher'
 {ActionTypes, NotifyType} = require '../constants/app_constants'
+Modal = require './modal'
 
 classer = React.addons.classSet
 
@@ -25,23 +26,6 @@ module.exports = Toast = React.createClass
                 type: ActionTypes.RECEIVE_TASK_DELETE
                 value: @props.toast.id
 
-    renderErrorModal: ->
-        div className: "modal fade in", role: "dialog", style: display: 'block',
-            div className: "modal-dialog",
-                div className: "modal-content",
-                    div className: "modal-header",
-                        h4 className: "modal-title", t 'modal please contribute'
-                    div className: "modal-body",
-                        span null, t 'modal please report'
-                        pre style: "max-height": "300px", "word-wrap": "normal",
-                            @state.modalErrors.join "\n\n"
-                    div className: "modal-footer",
-                        button
-                            type: 'button',
-                            className: 'btn',
-                            onClick: @closeModal,
-                            t 'app alert close'
-
     render: ->
         toast = @props.toast
         hasErrors = toast.errors? and toast.errors.length
@@ -55,10 +39,17 @@ module.exports = Toast = React.createClass
             percent = parseInt(100 * toast.done / toast.total) + '%'
         if hasErrors
             showModal = @showModal.bind(this, toast.errors)
+        if @state.modalErrors
+            title       = t 'modal please contribute'
+            subtitle    = t 'modal please report'
+            modalErrors = @state.modalErrors
+            closeModal  = @closeModal
+            closeLabel  = t 'app alert close'
+            modal = Modal {title, subtitle, modalErrors, closeModal, closeLabel}
 
         div className: classes, role: "alert",
             if @state.modalErrors
-                @renderErrorModal()
+                modal
 
             if percent?
                 div className: "progress",
