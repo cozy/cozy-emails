@@ -13,7 +13,7 @@
 !function(e) {
     if ("object" == typeof exports && "undefined" != typeof module) module.exports = e(); else if ("function" == typeof define && define.amd) define([], e); else {
         var f;
-        "undefined" != typeof window ? f = window : "undefined" != typeof global ? f = global : "undefined" != typeof self && (f = self), 
+        "undefined" != typeof window ? f = window : "undefined" != typeof global ? f = global : "undefined" != typeof self && (f = self),
         f.Minislate = e();
     }
 }(function() {
@@ -1263,7 +1263,8 @@
                     return typeof filter === "function" ? _.filter(result, filter) : result;
                 };
                 api.dom.hasParents = function(node, parents) {
-                    while ([ document, document.body ].indexOf(node) === -1) {
+                    // node may be inside a documentFragment outside document, so we should also test null
+                    while ([ document, document.body ].indexOf(node) === -1 && node != null) {
                         if (parents.indexOf(node) !== -1) {
                             return true;
                         }
