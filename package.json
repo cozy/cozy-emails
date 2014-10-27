@@ -48,7 +48,7 @@
   },
   "scripts": {
     "test": "dovecot-testing setup && cake tests",
-    "client-test-travis": "COZY_URL=http://localhost:9125/ casperjs test client/tests/casper/full",
+    "client-test-travis": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/full",
     "client-test": "cozy-fixtures clear Account && cozy-fixtures clear Message && cozy-fixtures clear Mailbox && cozy-fixtures load tests/fixtures && COZY_URL=http://localhost:9125/ casperjs test client/tests/casper/full",
     "start": "node build/server.js"
   },
