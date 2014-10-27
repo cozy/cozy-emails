@@ -18,11 +18,13 @@ window.onload = ->
     window.cozyMails.setLocale locale
 
     # init plugins
-    PluginUtils = require("./utils/plugin_utils")
+    PluginUtils = require "./utils/plugin_utils"
     if not window.settings.plugins?
         window.settings.plugins = {}
     PluginUtils.merge window.settings.plugins
     PluginUtils.init()
+
+    window.cozyMails.setSetting 'plugins', window.settings.plugins
 
     # Flux initialization (must be called at the begining)
     AccountStore  = require './stores/account_store'
