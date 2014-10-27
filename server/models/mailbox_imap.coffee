@@ -132,7 +132,10 @@ Mailbox::imap_fetchOneMail = (uid) ->
 # Returns a {Promise} for the UID of the created mail
 Mailbox::imap_removeMail = (uid) ->
     @doASAPWithBox (imap) =>
-        imap.expunge uid, @path
+        imap.openBox @path
+        .then -> imap.addFlags uid, '\\Deleted'
+        .then -> imap.expunge uid
+        .then -> imap.closeBox()
 
 Mailbox::recoverChangedUIDValidity = (imap) ->
     box = this
@@ -153,7 +156,8 @@ Mailbox::recoverChangedUIDValidity = (imap) ->
                 mailboxIDs[box.id] = newUID
                 msg = new Message(row.doc)
                 msg.updateAttributesPromised {mailboxIDs}
-            .tap -> reporter.addProgress 1
             .catch (err) ->
                 reporter.onError err
                 throw err
+            .tap -> reporter.addProgress 1
+        .finally -> reporter.onDone()

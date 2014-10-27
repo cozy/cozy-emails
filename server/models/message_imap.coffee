@@ -58,6 +58,7 @@ Message::imap_applyChanges = (flagsOps, boxOps) ->
                 {path, uid} = boxIndex[boxid]
 
                 imap.openBox path
+                .then -> imap.addFlags uid, '\\Deleted'
                 .then -> imap.expunge uid
                 .then => delete @mailboxIDs[boxid]
                 .tap -> log.info "  DELETED #{path}:#{uid}"
