@@ -52,8 +52,8 @@ module.exports =
       "list sort subject"       : "Sujet"
 
       # Mail
-      "mail receivers"          : "À %{dest}"
-      "mail receivers cc"       : "Copie %{dest}"
+      "mail receivers"          : "À "
+      "mail receivers cc"       : "Copie "
       "mail action reply"       : "Répondre"
       "mail action reply all"   : "Répondre à tous"
       "mail action forward"     : "Transférer"
@@ -198,4 +198,6 @@ module.exports =
       "toast close all" : "Fermer toutes les alertes"
 
       # Contacts
-      "contact form placeholder" : "contact name"
+      "contact form placeholder" : "Nom"
+      "contact create success"   : "%{contact} a été ajouté(e) à vos contacts"
+      "contact create error"     : "L'ajout à votre carnet d'adresse a échoué : {error}"

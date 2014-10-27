@@ -51,8 +51,8 @@ module.exports =
       "list sort subject"       : "Subject"
 
       # Mail
-      "mail receivers"          : "To %{dest}"
-      "mail receivers cc"       : "Cc %{dest}"
+      "mail receivers"          : "To: "
+      "mail receivers cc"       : "Cc: "
       "mail action reply"       : "Reply"
       "mail action reply all"   : "Reply all"
       "mail action forward"     : "Forward"
@@ -194,3 +194,5 @@ module.exports =
 
       # Contacts
       "contact form placeholder" : "contact name"
+      "contact create success"   : "%{contact} has been added to your contacts"
+      "contact create error"     : "Error adding to your contacts : {error}"

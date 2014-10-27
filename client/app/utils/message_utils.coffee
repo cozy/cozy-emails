@@ -2,6 +2,18 @@
 
 module.exports = MessageUtils =
 
+    displayAddress: (address, full = false) ->
+        if full
+            if address.name? and address.name isnt ""
+                return "\"#{address.name}\" <#{address.address}>"
+            else
+                return "#{address.address}"
+        else
+            if address.name? and address.name isnt ""
+                return address.name
+            else
+                return address.address.split('@')[0]
+
     displayAddresses: (addresses, full = false) ->
         if not addresses?
             return ""
@@ -10,16 +22,7 @@ module.exports = MessageUtils =
         for item in addresses
             if not item?
                 break
-            if full
-                if item.name? and item.name isnt ""
-                    res.push "\"#{item.name}\" <#{item.address}>"
-                else
-                    res.push "#{item.address}"
-            else
-                if item.name? and item.name isnt ""
-                    res.push item.name
-                else
-                    res.push item.address.split('@')[0]
+            res.push(MessageUtils.displayAddress item, full)
         return res.join ", "
 
 
