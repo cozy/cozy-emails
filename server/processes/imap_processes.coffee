@@ -330,3 +330,25 @@ ImapProcess.applyMessageChanges = (msg, flagsOps, boxOps) ->
                         .then -> delete msg.mailboxIDs[boxid]
                         .tap ->
                             log.info "  DELETED #{path}:#{uid}"
+        else
+            # This is a test account
+            # ERROR CASES
+            for boxid in boxOps.addTo when not boxIndex[boxid]
+                throw new Error "the box ID=#{box} doesn't exists"
+
+            # step 1 - get the first box + UID
+            boxid = Object.keys(msg.mailboxIDs)[0]
+            uid = msg.mailboxIDs[boxid]
+
+            # step 2 - apply flags change
+            if flagsOps.add.length or flags.remove.length
+                msg.flags = _.union msg.flags, flagsOps.add
+                msg.flags = _.difference msg.flags, flagsOps.remove
+                log.info "  CHANGED FLAGS. RESULT = ", msg.flags
+
+            # step 3 - copy the message to its destinations
+            if boxOps.addTo
+                log.error "UNABLE to move messages inside TEST accounts"
+            # step 4 - remove the message from the box it shouldn't be in
+            if boxOps.removeFrom
+                log.error "UNABLE to delete messages inside TEST accounts"
