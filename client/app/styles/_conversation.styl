@@ -72,6 +72,33 @@
                 display flex
                 justify-content flex-start
                 align-items center
+            .header.row.compact
+                outline none
+                display flex
+                justify-content flex-start
+                align-items center
+                .participants
+                    margin 0 .5em
+                    overflow hidden
+                    text-overflow ellipsis
+                .title
+                    min-width 200px
+                    &:after
+                        content ' - '
+                .hour
+                    margin-left auto
+                        color darkcolor
+                .flags
+                    width 3em
+
+                .attach
+                .fav
+                    display: none
+
+            .header.row.compact.has-attachments .attach
+            .header.row.compact.is-fav .fav
+                  display inline
+                  padding 0 .5em
 
             .sender-avatar
                 display block
