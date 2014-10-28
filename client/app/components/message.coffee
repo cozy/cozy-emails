@@ -6,6 +6,7 @@ MessageUtils = require '../utils/message_utils'
 LayoutActionCreator       = require '../actions/layout_action_creator'
 ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
+ContactActionCreator      = require '../actions/contact_action_creator'
 RouterMixin = require '../mixins/router_mixin'
 
 FlagsConstants =
@@ -159,9 +160,14 @@ module.exports = React.createClass
                 div className: leftClass,
                     i className: 'sender-avatar fa fa-user'
                     div className: 'participants',
-                        span  className: 'sender', MessageUtils.displayAddresses(message.get('from'), true)
-                        span className: 'receivers', t "mail receivers", {dest: MessageUtils.displayAddresses(message.get('to'), true)}
-                        span className: 'receivers', t "mail receivers cc", {dest: MessageUtils.displayAddresses(message.get('cc'), true)}
+                        p className: 'sender',
+                            @renderAddress 'from'
+                        p className: 'receivers',
+                            span null, t "mail receivers"
+                            @renderAddress 'to'
+                        p className: 'receivers',
+                            span null, t "mail receivers cc"
+                            @renderAddress 'cc'
                     span className: 'hour', prepared.date
                 if hasAttachments
                     div className: 'col-md-4',
@@ -185,6 +191,22 @@ module.exports = React.createClass
 
             # Display Compose block
             @getComposeRender()
+
+    renderAddress: (field) ->
+        addresses = @props.message.get(field)
+        if not addresses?
+            return
+        addresses = addresses.map (address, key) =>
+            return {
+                value: address
+                addAddress: => @addAddress address
+            }
+        span null,
+            addresses.map (address, key) ->
+                span className: 'address', key: key,
+                    span null, MessageUtils.displayAddress(address.value, true)
+                    a className: 'address-add',
+                        i className: 'fa fa-plus', onClick: address.addAddress
 
     getComposeRender: ->
         if @state.composing
@@ -424,3 +446,5 @@ module.exports = React.createClass
         event.preventDefault()
         @setState messageDisplayImages: true
 
+    addAddress: (address) ->
+        ContactActionCreator.createContact address

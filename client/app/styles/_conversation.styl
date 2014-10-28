@@ -64,7 +64,6 @@
             .messageToolbox .tool-long
                 display none
 
-            span
             .preview
             .content
                 margin 0 5px
@@ -85,9 +84,6 @@
                 border 1px solid #aaa
 
             .participants
-                span
-                    display block
-
                 &.receivers
                     color mediumcolor
 
@@ -114,6 +110,21 @@
 
             .participants
                 color darkcolor
+
+                .address
+                    margin 0 .5em 0 0
+                    line-height 1.5em
+                    border 1px solid mediumcolor
+                    background-color lightcolor
+                    border-radius .25em
+                    padding .25em
+
+                    .address-add
+                        cursor pointer
+                        padding 2px
+                    .fa
+                        color mediumcolor-contrast
+
 
             .hour
                 margin-left auto
