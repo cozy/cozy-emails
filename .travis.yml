@@ -9,7 +9,7 @@ env:
 before_install:
     - git clone git://github.com/mycozycloud/cozy-data-system.git
     - cd cozy-data-system
-    - npm install forever coffee-script casperjs -g
+    - npm install forever coffee-script -g
     - npm install #data-system
     - pwd
     - NAME=data-system TOKEN=token forever start -o forever-ds.log build/server.js

@@ -181,6 +181,7 @@ module.exports =
 
       # Tasks
       "task account-fetch"         : 'Rafraichissement %{account}'
+      "task box-fetch"             : 'Rafraichissement %{box}'
       "task apply-diff-fetch"      : 'Téléchargement des messages du dossier
                                         %{box} de %{account}'
       "there were errors"          : '%{smart_count} erreur. ||||

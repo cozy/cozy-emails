@@ -178,6 +178,7 @@ module.exports =
 
       # Tasks
       "task account-fetch"         : 'Refreshing %{account}'
+      "task box-fetch"             : 'Refreshing %{box}'
       "task apply-diff-fetch"      : 'Fetching mails %{box} of %{account}'
       "there were errors"          : '%{smart_count} error. |||| %{smart_count}
                                         errors.'
