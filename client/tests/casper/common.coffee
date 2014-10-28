@@ -1,5 +1,5 @@
 require = patchRequire global.require
-utils   = require "/usr/local/lib/node_modules/casperjs/modules/utils.js"
+utils   = require "utils"
 system  = require "system"
 
 dev = false
