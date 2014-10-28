@@ -65,32 +65,28 @@ We've adopted IMAP naming conventions, which means:
 
 ### Frontend
 
-Test suite is based on CasperJS. Test data are loaded by cozy-fixtures.So you
-need to additional tools to run it:
+Test suite is based on CasperJS. Test data are loaded by cozy-fixtures. So,
+prior to run it, you
+need to install additional tools:
   
     sudo apt-get install phantomjs
     sudo npm install casperjs -g # version >= 1.1 is required.
     sudo npm install cozy-fixtures -g
 
-    cd client/tests/casper
     npm run-script client-test
-
-That last command set an environment variable `COZY_URL`. 
 
 ### Backend
 
 [![Build Status](https://travis-ci.org/cozy/cozy-emails.png?branch=master)](https://travis-ci.org/cozy/cozy-emails)
 
-Running tests requires first that you run the Dovecot Testing Vagrant VM first.
-For that you must clone the dovecot-testing respository then launch its script
+Running tests requires a Vagrant. Tests load a Dovecot instance in a Vagrant
+virtual machine.
 
-    coffee cli.coffee status
-
-Then type the following command into the Cozy Emails folder:
+Once done, type the following command into the Cozy Emails folder:
 
     cake tests
 
-To add mails to the test suite
+If you want to add mails to the test suite, type the following lines.
 
     cd node_modules/dovecot-testing
     npm link
