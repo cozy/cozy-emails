@@ -367,9 +367,9 @@ module.exports = React.createClass
         form className: 'form-horizontal',
 
             @renderError()
-            @_renderMailboxChoice 'account draft mailbox', "draftMailbox"
-            @_renderMailboxChoice 'account sent mailbox',  "sentMailbox"
-            @_renderMailboxChoice 'account trash mailbox', "trashMailbox"
+            @_renderMailboxChoice t('account draft mailbox'), "draftMailbox"
+            @_renderMailboxChoice t('account sent mailbox'),  "sentMailbox"
+            @_renderMailboxChoice t('account trash mailbox'), "trashMailbox"
 
             h4 null, t "account tab mailboxes"
             ul className: "list-unstyled boxes",
@@ -409,7 +409,7 @@ module.exports = React.createClass
             div className: "form-group #{box}",
                 label
                     className: 'col-sm-2 col-sm-offset-2 control-label',
-                    t labelText
+                    labelText
                 div className: 'col-sm-3',
                     MailboxList
                         allowUndefined: true

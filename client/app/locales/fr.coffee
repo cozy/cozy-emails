@@ -183,6 +183,8 @@ module.exports =
       "task diff"                  : 'Comparaison %{box} de %{account}'
       "task apply-diff-fetch"      : 'Téléchargement des messages du dossier
                                         %{box} de %{account}'
+      "task apply-diff-remove"     : 'Suppression des messages du dossier
+                                        %{box} de %{account}'
       "there were errors"          : '%{smart_count} erreur. ||||
                                         %{smart_count} erreurs.'
       "modal please report"        : "Merci de bien vouloir transmettre ces
