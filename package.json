@@ -67,6 +67,9 @@
     },
     "send mail": {
       "description": "Send emails to your contacts"
+    },
+    "Contact": {
+      "description": "Add contact from messages, send messages to contacts"
     }
   },
   "cozy-displayName": "Emails"

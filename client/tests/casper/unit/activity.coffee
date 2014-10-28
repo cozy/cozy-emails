@@ -5,6 +5,7 @@ nbContacts = 0
 casper.test.begin 'Test Activities', (test) ->
     init casper
     casper.start casper.cozy.startUrl + "test", ->
+        test.comment "Search all contacts"
         casper.evaluate ->
             Activity = require '../utils/activity_utils'
             options =
@@ -22,12 +23,16 @@ casper.test.begin 'Test Activities', (test) ->
             res = casper.getGlobal 'test1'
             test.assert res.result?, "Got contacts"
             test.assert (not res.error?), "No error"
-            test.assert Array.isArray(res.result), "Got contacts"
-            test.assert res.result[0].name?, "Contact name"
-            test.assert res.result[0].address?, "Contact name"
-            nbContacts = res.result.length
+            test.assert Array.isArray(res.result), "Got array of contacts"
+            test.assert res.result.length > 0, "Got contacts"
+            test.assert res.result[0].name?, "Contact has name"
+            test.assert res.result[0].address?, "Contact address"
+            for contact in res.result
+                if contact.address is 'test@test.org'
+                    nbContacts++
 
     casper.then ->
+        test.comment "Should return an error on wrong activity name"
         casper.evaluate ->
             Activity = require '../utils/activity_utils'
             options =
@@ -46,6 +51,7 @@ casper.test.begin 'Test Activities', (test) ->
             test.assert res.error?, "Error on wrong activity name"
 
     casper.then ->
+        test.comment "Should return an error on wrong activity type"
         casper.evaluate ->
             Activity = require '../utils/activity_utils'
             options =
@@ -64,6 +70,7 @@ casper.test.begin 'Test Activities', (test) ->
             test.assert res.error?, "Error on wrong activity type"
 
     casper.then ->
+        test.comment "Create contact"
         casper.evaluate ->
             Activity = require '../utils/activity_utils'
             options =
@@ -83,12 +90,14 @@ casper.test.begin 'Test Activities', (test) ->
             test.assert (not res.error?), "No error"
 
     casper.then ->
+        test.comment "Search for contact created"
         casper.evaluate ->
             Activity = require '../utils/activity_utils'
             options =
                 name: 'search'
                 data:
                     type: 'contact'
+                    query: 'Test'
             activity = new Activity options
             activity.onsuccess = ->
                 window.test5 = this
@@ -101,6 +110,51 @@ casper.test.begin 'Test Activities', (test) ->
             test.assert (not res.error?), "No error"
             test.assert Array.isArray(res.result), "Got contacts"
             test.assert res.result.length is (nbContacts + 1), "Contact added"
+
+            toDelete = []
+            for contact in res.result
+                test.assert contact.name is 'Test', "Name ok"
+                test.assert contact.address is 'test@test.org', "Address ok"
+                toDelete.push contact.id
+
+            test.comment "Delete #{toDelete.length} contact"
+            casper.evaluate (ids) ->
+                window.testDelete = []
+                del = (id) ->
+                    Activity = require '../utils/activity_utils'
+                    options =
+                        name: 'delete'
+                        data:
+                            type: 'contact'
+                            id: id
+                    activity = new Activity options
+                    activity.onsuccess = ->
+                        window.testDelete.push {error: @error, result: @result}
+                    activity.onerror = ->
+                        window.testDelete.push {error: @error, result: @result}
+                del id for id in ids
+            , {toDelete: toDelete}
+            casper.waitFor ->
+                return casper.getGlobal('testDelete').length is toDelete.length
+            , ->
+                casper.evaluate ->
+                    Activity = require '../utils/activity_utils'
+                    options =
+                        name: 'search'
+                        data:
+                            type: 'contact'
+                            query: 'Test'
+                    activity = new Activity options
+                    activity.onsuccess = ->
+                        window.test6 = this
+                    activity.onerror = ->
+                        window.test6 = this
+                casper.waitFor ->
+                    return casper.getGlobal 'test6'
+                , ->
+                    res = casper.getGlobal 'test6'
+                    test.assert res.result.length is 0, "Contact deleted"
+
     casper.run ->
         test.done()
 
