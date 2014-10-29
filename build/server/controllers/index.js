@@ -18,7 +18,7 @@ module.exports.main = function(req, res, next) {
     Settings.getInstance(), CozyInstance.getLocalePromised()["catch"](function(err) {
       return 'en';
     }), Account.requestPromised('all').map(function(account) {
-      return account.includeMailboxes();
+      return account.toObjectWithMailbox();
     }), ImapReporter.summary()
   ]).spread(function(settings, locale, accounts, tasks) {
     return "window.settings = " + (JSON.stringify(settings)) + "\nwindow.tasks = " + (JSON.stringify(tasks)) + ";\nwindow.locale = \"" + locale + "\";\nwindow.accounts = " + (JSON.stringify(accounts)) + ";";
@@ -49,7 +49,9 @@ module.exports.loadFixtures = function(req, res, next) {
 
 module.exports.refresh = function(req, res, next) {
   return Account.refreshAllAccounts().then(function() {
-    return res.send(200, 'done');
+    return res.send(200, {
+      refresh: 'done'
+    });
   })["catch"](next);
 };
 

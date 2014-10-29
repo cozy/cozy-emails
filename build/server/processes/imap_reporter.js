@@ -65,7 +65,9 @@ module.exports = ImapReporter = (function() {
     if (this.cooldown && !nocooldown) {
       return;
     }
-    io.emit('task.update', this.toObject());
+    if (io != null) {
+      io.emit('task.update', this.toObject());
+    }
     this.cooldown = true;
     return setTimeout(((function(_this) {
       return function() {
@@ -104,6 +106,7 @@ module.exports = ImapReporter = (function() {
   };
 
   ImapReporter.prototype.onError = function(err) {
+    log.error(err.stack);
     this.errors.push(err.stack);
     return this.sendtoclient();
   };
@@ -111,3 +114,27 @@ module.exports = ImapReporter = (function() {
   return ImapReporter;
 
 })();
+
+ImapReporter.accountFetch = function(account, boxesLength) {
+  return new ImapReporter({
+    total: boxesLength,
+    account: account.label,
+    code: 'account-fetch'
+  });
+};
+
+ImapReporter.boxFetch = function(box, total) {
+  return new ImapReporter({
+    total: total,
+    box: box.label,
+    code: 'box-fetch'
+  });
+};
+
+ImapReporter.recoverUIDValidty = function(box, total) {
+  return new ImapReporter({
+    total: total,
+    box: box.label,
+    code: 'recover-uidvalidity'
+  });
+};

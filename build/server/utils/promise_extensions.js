@@ -14,3 +14,13 @@ Promise.serie = function(array, fn) {
     concurrency: 1
   });
 };
+
+Promise.prototype.throwIfNull = function(errorMaker) {
+  return this.then(function(result) {
+    if (result != null) {
+      return result;
+    } else {
+      throw errorMaker();
+    }
+  });
+};
