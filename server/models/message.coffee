@@ -72,6 +72,7 @@ Message.UIDsInRange = (mailboxID, min, max) ->
         startkey: ['uid', mailboxID, min]
         endkey: ['uid', mailboxID, max]
         inclusive_end: true
+        reduce: false
 
     .map (row) ->
         uid = row.key[2]
@@ -184,11 +185,12 @@ Message.safeRemoveAllFromBox = (mailboxID, retries = 2) ->
         new Message(row.doc).removeFromMailbox(id: mailboxID)
 
     log.info "REMOVING ALL MESSAGES FROM #{mailboxID}"
-    Message.rawRequestPromised 'byMailboxAndUID',
+    Message.rawRequestPromised 'byMailboxRequest',
         limit: LIMIT_UPDATE
-        startkey: [mailboxID, 0]
-        endkey: [mailboxID, {}]
+        startkey: ['uid', mailboxID, 0]
+        endkey: ['uid', mailboxID, {}]
         include_docs: true
+        reduce: false
 
     .tap (results) -> log.info "  LOAD #{results.length} MESSAGES"
     .map removeOne, concurrency: CONCURRENT_DESTROY
