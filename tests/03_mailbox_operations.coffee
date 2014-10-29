@@ -5,7 +5,7 @@ describe 'Mailbox operations', ->
     it "When I get a mailbox", (done) ->
         client.get "/mailbox/#{store.inboxID}", (err, res, body) =>
             body.should.have.property 'count'
-            body.messages.should.have.lengthOf 3
+            body.messages.should.have.lengthOf 7
             body.messages[0].subject
                 .should.equal 'Re: First message of conversation'
             body.messages[1].subject
