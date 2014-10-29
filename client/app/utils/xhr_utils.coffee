@@ -29,8 +29,7 @@ module.exports =
 
 
     fetchMessagesByFolder: (mailboxID, numPage, callback) ->
-        numByPage = SettingsStore.get 'messagesPerPage'
-        request.get "mailbox/#{mailboxID}/page/#{numPage}/limit/#{numByPage}"
+        request.get "mailbox/#{mailboxID}"
         .set 'Accept', 'application/json'
         .end (res) ->
             if res.ok
