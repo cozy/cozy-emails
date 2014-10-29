@@ -73,7 +73,7 @@ Mailbox::imap_refreshStep = (limitByBox, laststep) ->
 
         return ops
 
-    .tap (ops) ->
+    .tap (ops) =>
 
         nbTasks = ops.toFetch.length +
                 ops.toRemove.length +
