@@ -34,7 +34,8 @@ module.exports.get = function(req, res, next) {
           server = {
             type: node.getAttribute('type'),
             hostname: getValue(node, 'hostname'),
-            port: getValue(node, 'port')
+            port: getValue(node, 'port'),
+            socketType: getValue(node, 'socketType')
           };
           return infos.push(server);
         };

@@ -44253,7 +44253,7 @@ window.plugins.minislate = {
 !function(e) {
     if ("object" == typeof exports && "undefined" != typeof module) module.exports = e(); else if ("function" == typeof define && define.amd) define([], e); else {
         var f;
-        "undefined" != typeof window ? f = window : "undefined" != typeof global ? f = global : "undefined" != typeof self && (f = self), 
+        "undefined" != typeof window ? f = window : "undefined" != typeof global ? f = global : "undefined" != typeof self && (f = self),
         f.Minislate = e();
     }
 }(function() {
@@ -45503,7 +45503,8 @@ window.plugins.minislate = {
                     return typeof filter === "function" ? _.filter(result, filter) : result;
                 };
                 api.dom.hasParents = function(node, parents) {
-                    while ([ document, document.body ].indexOf(node) === -1) {
+                    // node may be inside a documentFragment outside document, so we should also test null
+                    while ([ document, document.body ].indexOf(node) === -1 && node != null) {
                         if (parents.indexOf(node) !== -1) {
                             return true;
                         }
@@ -48676,13 +48677,14 @@ window.plugins.minislate = {
         } ]
     }, {}, [ 9 ])(9);
 });
+
 ;//jshint browser: true, strict: false
 if (typeof window.plugins !== "object") {
   window.plugins = {};
 }
 window.plugins.sample = {
   name: "Sample JS",
-  active: true,
+  active: false,
   onAdd: {
     /**
      * Should return true if plugin applies on added subtree
@@ -48710,7 +48712,7 @@ window.plugins.sample = {
    * Called when plugin is deactivated
    */
   onDeactivate: function () {
-    console.log('Plugin sample deactivated');
+    //console.log('Plugin sample deactivated');
   },
   listeners: {
     'VIEW_ACTION': function (params) {

@@ -8,13 +8,6 @@ Promise = require('bluebird');
 
 _ = require('lodash');
 
-Mailbox = (function() {
-  function Mailbox() {}
-
-  return Mailbox;
-
-})();
-
 module.exports = Mailbox = americano.getModel('Mailbox', {
   accountID: String,
   label: String,
@@ -26,9 +19,6 @@ module.exports = Mailbox = americano.getModel('Mailbox', {
   uidvalidity: Number,
   persistentUIDs: Boolean,
   attribs: function(x) {
-    return x;
-  },
-  children: function(x) {
     return x;
   }
 });
@@ -48,6 +38,35 @@ Mailbox.RFC6154 = {
   flaggedMailbox: '\\Flagged'
 };
 
+Mailbox.prototype.isInbox = function() {
+  return this.path === 'INBOX';
+};
+
+Mailbox.prototype.RFC6154use = function() {
+  var attribute, field, _ref;
+  _ref = Mailbox.RFC6154;
+  for (field in _ref) {
+    attribute = _ref[field];
+    if (__indexOf.call(this.attribs, attribute) >= 0) {
+      return field;
+    }
+  }
+};
+
+Mailbox.prototype.guessUse = function() {
+  var path;
+  path = this.path.toLowerCase();
+  if (0 === path.indexOf('sent')) {
+    return 'sentMailbox';
+  } else if (0 === path.indexOf('draft')) {
+    return 'draftMailbox';
+  } else if (0 === path.indexOf('flagged')) {
+    return 'flaggedMailbox';
+  } else if (0 === path.indexOf('trash')) {
+    return 'trashMailbox';
+  }
+};
+
 Mailbox.getBoxes = function(accountID) {
   return Mailbox.rawRequestPromised('treeMap', {
     startkey: [accountID],
@@ -60,24 +79,21 @@ Mailbox.getBoxes = function(accountID) {
   });
 };
 
-Mailbox.getTree = function(accountID, mapper) {
-  var DELIMITER, byPath, out, transform;
-  if (mapper == null) {
-    mapper = null;
-  }
+Mailbox.prototype.getChildren = function() {
+  return Mailbox.rawRequestPromised('treemap', {
+    startkey: [this.accountID].concat(this.tree, ''),
+    endkey: [this.accountID].concat(this.tree, {}),
+    include_docs: true
+  }).map(function(row) {
+    return new Mailbox(row.doc);
+  });
+};
+
+Mailbox.getClientTree = function(accountID) {
+  var DELIMITER, byPath, out;
   out = [];
   byPath = {};
   DELIMITER = '/|/';
-  transform = function(boxData) {
-    var box;
-    box = new Mailbox(boxData);
-    box.children = [];
-    if (mapper) {
-      return mapper(box);
-    } else {
-      return box;
-    }
-  };
   return Mailbox.rawRequestPromised('treeMap', {
     startkey: [accountID],
     endkey: [accountID, {}],
@@ -85,7 +101,9 @@ Mailbox.getTree = function(accountID, mapper) {
   }).each(function(row) {
     var box, parentPath, path;
     path = row.key.slice(1);
-    box = byPath[path.join(DELIMITER)] = transform(row.doc);
+    box = byPath[path.join(DELIMITER)] = _.pick(row.doc, 'label', 'attribs');
+    box.id = row.id;
+    box.children = [];
     if (path.length === 1) {
       return out.push(box);
     } else {
@@ -99,93 +117,66 @@ Mailbox.getTree = function(accountID, mapper) {
   })["return"](out);
 };
 
-Mailbox.getClientTree = function(accountID) {
-  var filter;
-  filter = function(box) {
-    return _.pick(box, 'id', 'label', 'children', 'attribs');
-  };
-  return Mailbox.getTree(accountID, filter);
-};
-
-Mailbox.createBoxesFromImapTree = function(accountID, boxes) {
-  var specialUses, specialUsesGuess, useRFC6154;
-  useRFC6154 = false;
-  specialUses = {};
-  specialUsesGuess = {};
-  return Promise.serie(boxes, function(box) {
-    box.accountID = accountID;
-    return Mailbox.createPromised(box).then(function(jdbBox) {
-      var attribute, field, path, _ref;
-      if (jdbBox.path === 'INBOX') {
-        specialUses['inboxMailbox'] = jdbBox.id;
-        return jdbBox;
-      }
-      _ref = Mailbox.RFC6154;
-      for (field in _ref) {
-        attribute = _ref[field];
-        if (__indexOf.call(jdbBox.attribs, attribute) >= 0) {
-          if (!useRFC6154) {
-            useRFC6154 = true;
-          }
-          specialUses[field] = jdbBox.id;
-        }
-      }
-      if (!useRFC6154) {
-        path = box.path.toLowerCase();
-        if (0 === path.indexOf('sent')) {
-          specialUsesGuess['sentMailbox'] = jdbBox.id;
-        } else if (0 === path.indexOf('draft')) {
-          specialUsesGuess['draftMailbox'] = jdbBox.id;
-        } else if (0 === path.indexOf('flagged')) {
-          specialUsesGuess['flaggedMailbox'] = jdbBox.id;
-        } else if (0 === path.indexOf('trash')) {
-          specialUsesGuess['trashMailbox'] = jdbBox.id;
-        }
-      }
-      return jdbBox;
+Mailbox.destroyByAccount = function(accountID) {
+  return Mailbox.rawRequestPromised('treemap', {
+    startkey: [accountID],
+    endkey: [accountID, {}]
+  }).serie(function(row) {
+    return new Mailbox({
+      id: row.id
+    }).destroyPromised()["catch"](function(err) {
+      return log.error("Fail to delete box", err.stack || err);
     });
-  }).then(function(boxes) {
-    var box, favorites, id, key, priorities, type, value, _i, _j, _len, _len1, _ref;
-    favorites = [];
-    priorities = ['inbox', 'all', 'sent', 'draft'];
-    if (!useRFC6154) {
-      for (key in specialUsesGuess) {
-        value = specialUsesGuess[key];
-        specialUses[key] = value;
-      }
-    }
-    for (_i = 0, _len = priorities.length; _i < _len; _i++) {
-      type = priorities[_i];
-      if (id = specialUses[type + 'Mailbox']) {
-        favorites.push(id);
-      }
-    }
-    for (_j = 0, _len1 = boxes.length; _j < _len1; _j++) {
-      box = boxes[_j];
-      if (favorites.length < 4) {
-        if ((_ref = box.id, __indexOf.call(favorites, _ref) < 0) && __indexOf.call(box.attribs, '\\NoSelect') < 0) {
-          favorites.push(box.id);
-        }
-      }
-    }
-    return favorites;
-  }).then(function(favorites) {
-    specialUses.favorites = favorites;
-    return specialUses;
   });
 };
 
-Mailbox.prototype.destroyEverything = function() {
-  var mailboxDestroyed, mailboxID;
-  mailboxID = this.id;
-  mailboxDestroyed = this.destroyPromised();
-  mailboxDestroyed.then(function() {
-    return Message.safeRemoveAllFromBox(mailboxID);
-  })["catch"](function(err) {
-    return log.error(err);
-  });
-  return mailboxDestroyed;
+Mailbox.prototype.renameWithChildren = function(newPath, newLabel) {
+  var depth, path;
+  depth = this.tree.length - 1;
+  path = this.path;
+  return this.getChildren().then((function(_this) {
+    return function(children) {
+      _this.label = newLabel;
+      _this.path = newPath;
+      _this.tree[depth] = newLabel;
+      return _this.savePromised().then(function() {
+        return Promise.serie(children, function(child) {
+          child.path = child.path.replace(path, newPath);
+          child.tree[depth] = newLabel;
+          return child.savePromised();
+        });
+      });
+    };
+  })(this));
 };
+
+Mailbox.prototype.destroyAndRemoveAllMessages = function() {
+  var destroyBox, destroyMessages;
+  destroyBox = function(box) {
+    return box.destroyPromised();
+  };
+  destroyMessages = function(box) {
+    return Message.safeRemoveAllFromBox(box.id);
+  };
+  return this.getChildren().then((function(_this) {
+    return function(children) {
+      var mailboxesDestroyed;
+      mailboxesDestroyed = destroyBox(_this).then(function() {
+        return Promise.serie(children, destroyBox);
+      });
+      mailboxesDestroyed.then(function() {
+        return destroyMessages(_this);
+      }).then(function() {
+        return Promise.serie(children, destroyMessages);
+      })["catch"](function(err) {
+        return log.error("Fail to remove messages from box", err.stack || err);
+      });
+      return mailboxesDestroyed;
+    };
+  })(this));
+};
+
+require('./mailbox_imap');
 
 require('bluebird').promisifyAll(Mailbox, {
   suffix: 'Promised'
