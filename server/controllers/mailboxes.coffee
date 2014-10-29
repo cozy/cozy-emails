@@ -53,13 +53,24 @@ module.exports.update = (req, res, next) ->
 
     Promise.join pBox, pAccount, (box, account) ->
 
-        path = box.path
-        parentPath = path.substring 0, path.lastIndexOf(box.label)
-        newPath = parentPath + req.body.label
+        if req.body.label
 
-        account.imap_renameBox path, newPath
-        .then -> box.renameWithChildren newPath
-        .return account
+            path = box.path
+            parentPath = path.substring 0, path.lastIndexOf(box.label)
+            newPath = parentPath + req.body.label
+
+            account.imap_renameBox path, newPath
+            .then -> box.renameWithChildren newPath
+            .return account
+
+        else if req.body.favorite?
+
+            favorites = _.without account.favorites, box.id
+            favorites.push box.id if req.body.favorite
+            account.favorites = favorites
+            account.savePromised()
+
+        else throw new BadRequest 'Unsuported request for mailbox update'
 
     .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send account
