@@ -29,6 +29,7 @@ module.exports = React.createClass
             active: false,
             composing: false
             composeAction: ''
+            headers: false
             messageDisplayHTML:   @props.settings.get 'messageDisplayHTML'
             messageDisplayImages: @props.settings.get 'messageDisplayImages'
         }
@@ -81,8 +82,12 @@ module.exports = React.createClass
             text = toMarkdown html
 
         return {
+            id         : message.get('id')
             attachments: message.get('attachments') or []
             flags      : message.get('flags') or []
+            from       : message.get('from')
+            to         : message.get('to')
+            cc         : message.get('cc')
             fullHeaders: fullHeaders
             text       : text
             html       : html
@@ -112,7 +117,6 @@ module.exports = React.createClass
 
         message  = @props.message
         prepared = @_prepareMessage()
-        hasAttachments = prepared.attachments.length
         messageDisplayHTML = @state.messageDisplayHTML
         if messageDisplayHTML and prepared.html
             parser = new DOMParser()
@@ -142,36 +146,10 @@ module.exports = React.createClass
         classes = classer
             message: true
             active: @state.active
-        leftClass = if hasAttachments then 'col-md-8' else 'col-md-12'
-
-        # display attachment
-        display = (file) ->
-            url = "/message/#{message.get 'id'}/attachments/#{file.name}"
-            window.open url
-
-        attachments = FilePicker
-            editable: false
-            value: prepared.attachments.map(MessageUtils.convertAttachments)
-            display: display
 
         li className: classes, key: @props.key, onClick: clickHandler, 'data-id': message.get('id'),
-            @getToolboxRender message.get('id'), prepared
-            div className: 'header row',
-                div className: leftClass,
-                    i className: 'sender-avatar fa fa-user'
-                    div className: 'participants',
-                        p className: 'sender',
-                            @renderAddress 'from'
-                        p className: 'receivers',
-                            span null, t "mail receivers"
-                            @renderAddress 'to'
-                        p className: 'receivers',
-                            span null, t "mail receivers cc"
-                            @renderAddress 'cc'
-                    span className: 'hour', prepared.date
-                if hasAttachments
-                    div className: 'col-md-4',
-                        attachments
+            @renderToolbox message.get('id'), prepared
+            @renderHeaders prepared
             div className: 'full-headers',
                 pre null, prepared.fullHeaders.join "\n"
             if messageDisplayHTML and prepared.html
@@ -190,7 +168,57 @@ module.exports = React.createClass
             div className: 'clearfix'
 
             # Display Compose block
-            @getComposeRender()
+            @renderCompose()
+
+    renderHeaders: (prepared) ->
+        hasAttachments = prepared.attachments.length
+        leftClass = if hasAttachments then 'col-md-8' else 'col-md-12'
+        flags     = prepared.flags
+        participants = """#{MessageUtils.displayAddresses prepared.from},
+            #{MessageUtils.displayAddresses prepared.to}
+            #{MessageUtils.displayAddresses prepared.cc}"""
+        # display attachment
+        display = (file) ->
+            url = "/message/#{prepared.id}/attachments/#{file.name}"
+            window.open url
+        attachments = FilePicker
+            editable: false
+            value: prepared.attachments.map(MessageUtils.convertAttachments)
+            display: display
+        classes = classer
+            'header': true
+            'row': true
+            'full': @state.headers
+            'compact': not @state.headers
+            'has-attachments': hasAttachments
+            'is-fav': flags.indexOf(MessageFlags.FLAGGED) isnt -1
+
+        if @state.headers
+            div className: classes,
+                div className: leftClass, onClick: @toggleHeaders,
+                    i className: 'sender-avatar fa fa-user'
+                    div className: 'participants',
+                        p className: 'sender',
+                            @renderAddress 'from'
+                        p className: 'receivers',
+                            span null, t "mail receivers"
+                            @renderAddress 'to'
+                        p className: 'receivers',
+                            span null, t "mail receivers cc"
+                            @renderAddress 'cc'
+                    span className: 'hour', prepared.date
+                if hasAttachments
+                    div className: 'col-md-4',
+                        attachments
+        else
+            div className: classes, onClick: @toggleHeaders,
+                i className: 'fa fa-user'
+                span className: 'participants', participants
+                span className: 'hour', prepared.date
+                span className: "flags",
+                    i className: 'attach fa fa-paperclip'
+                    i className: 'fav fa fa-star'
+
 
     renderAddress: (field) ->
         addresses = @props.message.get(field)
@@ -199,7 +227,10 @@ module.exports = React.createClass
         addresses = addresses.map (address, key) =>
             return {
                 value: address
-                addAddress: => @addAddress address
+                addAddress: (e) =>
+                    e.preventDefault()
+                    e.stopPropagation()
+                    @addAddress address
             }
         span null,
             addresses.map (address, key) ->
@@ -208,10 +239,10 @@ module.exports = React.createClass
                     a className: 'address-add',
                         i className: 'fa fa-plus', onClick: address.addAddress
 
-    getComposeRender: ->
+    renderCompose: ->
         if @state.composing
             Compose
-                inReplyTo       : @props.inReplyTo
+                inReplyTo       : @props.message
                 accounts        : @props.accounts
                 settings        : @props.settings
                 selectedAccount : @props.selectedAccount
@@ -221,7 +252,10 @@ module.exports = React.createClass
                     if not error?
                         @setState composing: false
 
-    getToolboxRender: (id, prepared) ->
+    renderToolbox: (id, prepared) ->
+
+        if @state.composing
+            return
 
         div className: 'messageToolbox',
             div className: 'btn-toolbar', role: 'toolbar',
@@ -267,7 +301,7 @@ module.exports = React.createClass
                             span className: 'caret'
                         ul className: 'dropdown-menu', role: 'menu',
                             @props.mailboxes.map (mailbox, key) =>
-                                @getMailboxRender mailbox, key
+                                @renderMailboxes mailbox, key
                             .toJS()
                     div className: 'btn-group btn-group-sm',
                         button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', t 'mail action more',
@@ -284,12 +318,12 @@ module.exports = React.createClass
                             li role: 'presentation', className: 'divider'
                             li role: 'presentation', t 'mail action conversation move'
                             @props.mailboxes.map (mailbox, key) =>
-                                @getMailboxRender mailbox, key, true
+                                @renderMailboxes mailbox, key, true
                             .toJS()
                             li role: 'presentation', className: 'divider'
 
 
-    getMailboxRender: (mailbox, key, conversation) ->
+    renderMailboxes: (mailbox, key, conversation) ->
         # Don't display current mailbox
         if mailbox.get('id') is @props.selectedMailboxID
             return
@@ -334,6 +368,9 @@ module.exports = React.createClass
 
     componentDidUpdate: ->
         @_initFrame()
+
+    toggleHeaders: (e) ->
+        @setState headers: not @state.headers
 
     onFold: (args) ->
         @setState active: not @state.active
