@@ -68,13 +68,13 @@ Message.getResultsAndCount = (mailboxID, params) ->
 # Returns a {Promise} for an map of {uid: [couchdID, flags]}
 Message.UIDsInRange = (mailboxID, min, max) ->
     result = {}
-    Message.rawRequestPromised 'byMailboxAndUID',
-        startkey: [mailboxID, min]
-        endkey: [mailboxID, max]
+    Message.rawRequestPromised 'byMailboxRequest',
+        startkey: ['uid', mailboxID, min]
+        endkey: ['uid', mailboxID, max]
         inclusive_end: true
 
     .map (row) ->
-        uid = row.key[1]
+        uid = row.key[2]
         result[uid] = [row.id, row.value]
 
     .then -> return result
