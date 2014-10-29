@@ -161,6 +161,8 @@ module.exports =
       "settings title"             : "Settings"
       "settings button save"       : "Save"
       "settings label mpp"         : "Messages per page"
+      "settings label refresh"     : "Check for new messages every…
+                                        (in minutes)"
       "settings plugins"           : "Add ons"
       "settings label composeInHTML"        : "Rich message editor"
       "settings label messageDisplayHTML"   : "Display message in HTML"
