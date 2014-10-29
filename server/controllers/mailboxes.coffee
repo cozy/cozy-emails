@@ -76,6 +76,7 @@ module.exports.delete = (req, res, next) ->
 
     Promise.join pBox, pAccount, (box, account) ->
         account.imap_deleteBox box.path
+        .then -> account.forgetBox box.id
         .then -> box.destroyAndRemoveAllMessages()
         .return account
 

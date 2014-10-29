@@ -115,18 +115,10 @@ Account::imap_deleteBox = (path) ->
     @doASAP (imap) -> imap.delBox path
 
 
-boxAttributes = [
-    'inboxMailbox'
-    'draftMailbox'
-    'sentMailbox'
-    'trashMailbox'
-    'junkMailbox'
-    'allMailbox'
-]
-
 Account::imap_scanBoxesForSpecialUse = (boxes) ->
     useRFC6154 = false
     inboxMailbox = null
+    boxAttributes = Object.keys Mailbox.RFC6154
 
     boxes.map (box) =>
         if box.isInbox()
