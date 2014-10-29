@@ -146,16 +146,12 @@ Mailbox::recoverChangedUIDValidity = (imap) ->
         reporter = ImapReporter.recoverUIDValidty box, uids.length
         Promise.serie uids, (newUID) ->
             messageID = mailutils.normalizeMessageID map[newUID]
-            Message.rawRequestPromised 'byMessageId',
-                key: [box.accountID, messageID]
-                include_docs: true
-            .get(0)
-            .then (row) ->
-                return unless row
-                mailboxIDs = row.doc.mailboxIDs
+            Message.byMessageId box.accountID, messageID
+            .then (message) ->
+                return unless message
+                mailboxIDs = message.mailboxIDs
                 mailboxIDs[box.id] = newUID
-                msg = new Message(row.doc)
-                msg.updateAttributesPromised {mailboxIDs}
+                message.updateAttributesPromised {mailboxIDs}
             .catch (err) ->
                 reporter.onError err
                 throw err

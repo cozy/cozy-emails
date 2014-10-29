@@ -29,6 +29,7 @@ module.exports = Message = americano.getModel 'Message',
 
 mailutils = require '../utils/jwz_tools'
 uuid = require 'uuid'
+_ = require 'lodash'
 log = require('../utils/logging')(prefix: 'models:message')
 Promise = require 'bluebird'
 Mailbox = require './mailbox'
@@ -37,53 +38,29 @@ Mailbox = require './mailbox'
 #
 # mailboxID - {String} the mailbox's ID
 # params - query's options
-#    :numByPage - number of message in one page
-#    :numPage - number of the page we want
 #
 # Returns {Promise} for an array of {Message}
-Message.getByMailboxAndDate = (mailboxID, params) ->
+Message.getResultsAndCount = (mailboxID, params) ->
+    {before, after, descending, sortField} = params
+    [before, after] = [after, before] if descending
     options =
-        startkey: [mailboxID, {}]
-        endkey: [mailboxID]
-        include_docs: true
-        descending: true
-        reduce: false
+        descending: descending
+        startkey: [sortField, mailboxID, before]
+        endkey: [sortField, mailboxID, after]
 
-    if params
-        options.limit = params.numByPage if params.numByPage
-        options.skip = params.numByPage * params.numPage if params.numPage
+    # console.log "GRAC", options
 
-    Message.rawRequestPromised 'byMailboxAndDate', options
-    .map (row) -> new Message(row.doc)
+    pCount = Message.rawRequestPromised 'byMailboxRequest',
+        _.extend {}, options, reduce: true, group_level: 2
 
-# Public: get the number of messages in a box
-#
-# mailboxID - {String} the mailbox's ID
-#
-# Returns {Promise} for the count
-Message.countByMailbox = (mailboxID) ->
-    Message.rawRequestPromised 'byMailboxAndDate',
-        startkey: [mailboxID]
-        endkey: [mailboxID, {}]
-        reduce: true
-        group_level: 1 # group by mailboxID
+    pResults = Message.rawRequestPromised 'byMailboxRequest',
+        _.extend {}, options, reduce: false, limit: 3, include_docs: true
+    .map (row) -> new Message row.doc
 
-    .then (result) -> result[0]?.value or 0
+    Promise.join pResults, pCount, (messages, count) ->
+        return {messages, count: count[0]?.value or 0}
 
-# Public: get the number of unread messages in a box
-#
-# mailboxID - {String} the mailbox's ID
-#
-# Returns {Promise} for the count
-Message.countReadByMailbox = (mailboxID) ->
-    Message.rawRequestPromised 'byMailboxAndFlag',
-        key: [mailboxID, '\\Seen']
-        reduce: true
-        group_level: 1
-
-    .then (result) -> result[0]?.value or 0
-
-# Public: get the uids present in a box in coz
+# Public: get the uids present in a box in cozy
 #
 # mailboxID - id of the mailbox to check
 # min, max - get only UIDs between min & max
@@ -110,8 +87,8 @@ Message.UIDsInRange = (mailboxID, min, max) ->
 # Returns a {Promise} for an array of {Message}
 Message.byMessageId = (accountID, messageID) ->
     messageID = mailutils.normalizeMessageID messageID
-    Message.rawRequestPromised 'byMessageId',
-        key: [accountID, messageID]
+    Message.rawRequestPromised 'dedupRequest',
+        key: [accountID, 'mid', messageID]
         include_docs: true
 
     .then (rows) ->
@@ -143,6 +120,8 @@ Message.destroyByID = (messageID, cb) ->
 # safeDestroy parameters (to be tweaked)
 # loads 200 ids in memory at once
 LIMIT_DESTROY = 200
+# loads 30 messages in memory at once
+LIMIT_UPDATE = 30
 # send 5 request to the DS in parallel
 CONCURRENT_DESTROY = 5
 
@@ -164,7 +143,7 @@ Message.safeDestroyByAccountID = (accountID, retries = 2) ->
         .delay 100 # let the DS breath
 
     # get LIMIT_DESTROY messages IDs in RAM
-    Message.rawRequestPromised 'treemap',
+    Message.rawRequestPromised 'dedupRequest',
         limit: LIMIT_DESTROY
         startkey: [accountID]
         endkey: [accountID, {}]
@@ -199,21 +178,28 @@ Message.safeDestroyByAccountID = (accountID, retries = 2) ->
 # Returns a {Promise} for task completion
 Message.safeRemoveAllFromBox = (mailboxID, retries = 2) ->
 
-    removeOne = (message) -> message.removeFromMailbox(id: mailboxID)
 
-    Message.getByMailboxAndDate mailboxID,
-        numByPage: 30
-        numPage: 0
 
+    removeOne = (row) ->
+        new Message(row.doc).removeFromMailbox(id: mailboxID)
+
+    log.info "REMOVING ALL MESSAGES FROM #{mailboxID}"
+    Message.rawRequestPromised 'byMailboxAndUID',
+        limit: LIMIT_UPDATE
+        startkey: [mailboxID, 0]
+        endkey: [mailboxID, {}]
+        include_docs: true
+
+    .tap (results) -> log.info "  LOAD #{results.length} MESSAGES"
     .map removeOne, concurrency: CONCURRENT_DESTROY
-
     .then (results) ->
-        if results.length is 0 then return 'done'
+        if results.length < LIMIT_UPDATE then return 'done'
 
         # we are not done, loop again, resetting the retries
         Message.safeRemoveAllFromBox mailboxID, 2
 
     , (err) ->
+        log.warn "ERROR ON MESSAGE REMOVAL", err.stack
         # random DS failure
         throw err unless retries > 0
         # wait a few seconds to let DS & Couch restore
@@ -240,9 +226,14 @@ Message::addToMailbox = (box, uid) ->
 #
 # Returns {Promise} for the updated {Message}
 Message::removeFromMailbox = (box, noDestroy = false) ->
-    delete @mailboxIDs[box.id]
-    if noDestroy or Object.keys(@mailboxIDs).length > 0 then @savePromised()
-    else @destroyPromised()
+    mailboxIDs = @mailboxIDs
+    delete mailboxIDs[box.id]
+
+    isOrphan = Object.keys(mailboxIDs).length is 0
+    console.log "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
+
+    if isOrphan and not noDestroy then @destroyPromised()
+    else @updateAttributesPromised {mailboxIDs}
 
 Message.removeFromMailbox = (id, box) ->
     Message.findPromised id
@@ -360,8 +351,8 @@ Message.findConversationIdByMessageIds = (mail) ->
     return null unless references.length
 
     # find all messages in references
-    Message.rawRequestPromised 'byMessageId',
-        keys: references.map (id) -> [mail.accountID, id]
+    Message.rawRequestPromised 'dedupRequest',
+        keys: references.map (id) -> [mail.accountID, 'mid', id]
 
     # and get a conversationID from them
     .then Message.pickConversationID
@@ -374,8 +365,8 @@ Message.findConversationIdBySubject = (mail) ->
     return null unless mail.normSubject?.length > 3
 
     # find all messages with same subject
-    Message.rawRequestPromised 'byNormSubject',
-        key: [mail.accountID, mail.normSubject]
+    Message.rawRequestPromised 'dedupRequest',
+        key: [mail.accountID, 'subject', mail.normSubject]
 
     # and get a conversationID from them
     .then Message.pickConversationID
