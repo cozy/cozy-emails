@@ -36,9 +36,25 @@ utils.ImapImpossible = class ImapImpossible extends Error
 # the box UIDvalidity has changed
 utils.UIDValidityChanged = class UIDValidityChanged extends Error
     constructor: (uidvalidity) ->
-        @name = UIDValidityChanged
+        @name = 'UIDValidityChanged'
         @newUidvalidity = uidvalidity
         @message = "UID Validty has changed"
+        Error.captureStackTrace this, arguments.callee
+        return this
+
+utils.NotFound = class NotFound extends Error
+    constructor: (msg) ->
+        @name = 'NotFound'
+        @status = 404
+        @message = "Not Found: " + msg
+        Error.captureStackTrace this, arguments.callee
+        return this
+
+utils.BadRequest = class BadRequest extends Error
+    constructor: (msg) ->
+        @name = 'BadRequest'
+        @status = 400
+        @message = 'Bad request : ' + msg
         Error.captureStackTrace this, arguments.callee
         return this
 

@@ -3,6 +3,7 @@ async = require 'async'
 Account = require '../models/account'
 Mailbox = require '../models/mailbox'
 Promise = require 'bluebird'
+{BadRequest, NotFound} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'mailbox:controller')
 
 # create a mailbox
@@ -46,6 +47,8 @@ module.exports.update = (req, res, next) ->
     log.info "Updating #{req.params.mailboxID} to #{req.body.label}"
 
     pBox = Mailbox.findPromised req.params.mailboxID
+    .throwIfNull -> new NotFound "Mailbox #{req.params.mailboxID}"
+
     pAccount = pBox.then (box) -> Account.findPromised box.accountID
 
     Promise.join pBox, pAccount, (box, account) ->
@@ -67,6 +70,8 @@ module.exports.delete = (req, res, next) ->
     log.info "Deleting #{req.params.mailboxID}"
 
     pBox = Mailbox.findPromised req.params.mailboxID
+    .throwIfNull -> new NotFound "Mailbox #{req.params.mailboxID}"
+
     pAccount = pBox.then (box) -> Account.findPromised box.accountID
 
     Promise.join pBox, pAccount, (box, account) ->

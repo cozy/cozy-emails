@@ -1,7 +1,7 @@
 Message     = require '../models/message'
 Account     = require '../models/account'
 Mailbox     = require '../models/mailbox'
-{HttpError, AccountConfigError} = require '../utils/errors'
+{NotFound, HttpError, AccountConfigError} = require '../utils/errors'
 Promise     = require 'bluebird'
 htmlToText  = require 'html-to-text'
 sanitizer   = require 'sanitizer'
@@ -47,9 +47,8 @@ module.exports.listByMailboxId = (req, res, next) ->
 # get a message and attach it to req.message
 module.exports.fetch = (req, res, next) ->
     Message.findPromised req.params.messageID
-    .then (message) ->
-        if message then req.message = message
-        else throw new HttpError 404, 'Not Found'
+    .throwIfNull -> new NotFound "Message #{req.params.messageID}"
+    .then (message) -> req.message = message
     .nodeify next
 
 # return a message's details
@@ -90,6 +89,7 @@ module.exports.send = (req, res, next) ->
 
     # find the account and draftBox
     Account.findPromised message.accountID
+    .throwIfNull -> new NotFound "Account #{message.accountID}"
     .then (account) ->
         Mailbox.findPromised account.draftMailbox
         .then (draftBox) -> return [account, draftBox]
@@ -167,6 +167,7 @@ module.exports.index = (req, res, next) ->
 module.exports.del = (req, res, next) ->
 
     Account.findPromised req.message.accountID
+    .throwIfNull -> new NotFound "Account #{req.message.accountID}"
     .then (account) ->
         trashID = account.trashMailbox
         throw new AccountConfigError 'trashMailbox' unless trashID
