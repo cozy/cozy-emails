@@ -1,17 +1,11 @@
 Contact = require '../models/contact'
-contacts = [
-    {name: "Claude Lambda"   , address: "claude.lambda@free.fr"},
-    {name: "Alex Lambda"     , address: "alex.lambda@free.fr"},
-    {name: "Dominique Lambda", address: "dominique.lambda@free.fr"},
-    {name: "Camille Guique"  , address: "camille@guique.net"},
-    {name: "Alix Guique"     , address: "alix@guique.net"},
-    {name: "Dany Guique"     , address: "dany@guique.net"},
-    {name: "Gwen Guique"     , address: "gwen@guique.net"}
-]
 ContactActivity =
     search: (data, cb) ->
         if data.query?
-            Contact.request 'byName', key: data.query, cb
+            params =
+                startkey: data.query
+                endkey:   data.query + "\uFFFF"
+            Contact.request 'byName',  params, cb
         else
             Contact.request 'all', cb
     create: (data, cb) ->
@@ -22,13 +16,10 @@ ContactActivity =
             ]
         Contact.create contact, cb
     delete: (data, cb) ->
-        console.log 'Request delete of ' + data
         Contact.find data.id, (err, contact) ->
             if err? or not contact?
                 cb err
             else
-                console.log "Deleting " + contact.id
-                console.log contact
                 contact.destroy cb
 
 module.exports.create = (req, res, next) ->
@@ -48,7 +39,11 @@ module.exports.create = (req, res, next) ->
                                     if dp.name is 'email'
                                         address = dp.value
                                 if address?
-                                    contacts.push {id: contact.id, name: contact.fn, address: address}
+                                    newContact =
+                                        id: contact.id
+                                        name: contact.fn
+                                        address: address
+                                    contacts.push newContact
 
                             res.send 201, result: contacts
                         else
