@@ -337,11 +337,12 @@ module.exports = React.createClass
         # - if images are not displayed, create the function to display them and resize the frame
         if @refs.content
             frame = @refs.content.getDOMNode()
-            doc = frame.contentDocument or frame.contentWindow.document
-            if doc?
-                s = document.createElement 'style'
-                doc.head.appendChild(s)
-                font = """
+            frame.addEventListener 'load', =>
+                doc = frame.contentDocument or frame.contentWindow.document
+                if doc?
+                    s = document.createElement 'style'
+                    doc.head.appendChild(s)
+                    font = """
 @font-face{
   font-family: 'Source Sans Pro';
   font-weight: 400;
@@ -353,15 +354,15 @@ module.exports = React.createClass
        url('../fonts/sourcesanspro/SourceSansPro-Regular.ttf') format('truetype');
 }
                 """
-                s.sheet.insertRule font, 0
-                s.sheet.insertRule "body { font-family: 'Source Sans Pro'; }", 1
-                s.sheet.insertRule "blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue;}", 2
-                doc.body.innerHTML = @_htmlContent
-                rect = doc.body.getBoundingClientRect()
-                frame.style.height = "#{rect.height + 40}px"
-            else
-                # try to display text only
-                @setState messageDisplayHTML: false
+                    s.sheet.insertRule font, 0
+                    s.sheet.insertRule "body { font-family: 'Source Sans Pro'; }", 1
+                    s.sheet.insertRule "blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue;}", 2
+                    doc.body.innerHTML = @_htmlContent
+                    rect = doc.body.getBoundingClientRect()
+                    frame.style.height = "#{rect.height + 40}px"
+                else
+                    # try to display text only
+                    @setState messageDisplayHTML: false
 
     componentDidMount: ->
         @_initFrame()
