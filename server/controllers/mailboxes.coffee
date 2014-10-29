@@ -60,7 +60,7 @@ module.exports.update = (req, res, next) ->
             newPath = parentPath + req.body.label
 
             account.imap_renameBox path, newPath
-            .then -> box.renameWithChildren newPath
+            .then -> box.renameWithChildren newPath, req.body.label
             .return account
 
         else if req.body.favorite?
