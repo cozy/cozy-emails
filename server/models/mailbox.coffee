@@ -164,13 +164,17 @@ Mailbox::destroyAndRemoveAllMessages = ->
 
     @getChildren()
     .then (children) =>
+        log.info "DESTROYING BOX #{@id} AND ITS #{children.length} CHILDREN"
         mailboxesDestroyed = destroyBox this
         .then -> Promise.serie children, destroyBox
+        .tap -> log.info "  BOXES DESTROYED"
 
         # remove messages in the background (wont change the interface)
         mailboxesDestroyed
         .then => destroyMessages this
+        .tap -> log.info "  THIS MESSAGES DESTROYED"
         .then -> Promise.serie children, destroyMessages
+        .tap -> log.info "  CHILDREN MESSAGES DESTROYED"
         .catch (err) ->
             log.error "Fail to remove messages from box", err.stack or err
 

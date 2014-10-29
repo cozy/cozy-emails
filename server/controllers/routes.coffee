@@ -39,11 +39,9 @@ module.exports =
         post: mailboxes.create
 
     'mailbox/:mailboxID':
+        get: messages.listByMailbox
         put: mailboxes.update
         delete: mailboxes.delete
-
-    'mailbox/:mailboxID/page/:numPage/limit/:numByPage':
-        get: [messages.listByMailboxId]
 
     'message':
         post: messages.send

@@ -7,47 +7,25 @@ module.exports =
     account:
         all: americano.defaultRequests.all
 
-
     mailbox:
-        all: americano.defaultRequests.all
         treeMap: (doc) ->
             emit [doc.accountID].concat(doc.tree), null
 
     message:
-        all: americano.defaultRequests.all
 
-        # this map has 3 usages
-        # - fetch mails of a mailbox between two dates
-        # - fetch mails count of a mailbox
-        byMailboxAndDate:
+        byMailboxRequest:
             reduce: '_count'
             map: (doc) ->
                 for boxid, uid of doc.mailboxIDs
-                    emit [boxid, doc.date], uid
+                    emit ['uid', boxid, uid], doc.flags
+                    emit ['date', boxid, doc.date], doc.flags
+                    emit ['subject', boxid, doc.subject], doc.flags
                 undefined # prevent coffeescript comprehension
-
-        byMailboxAndUID: (doc) ->
-            for boxid, uid of doc.mailboxIDs
-                emit [boxid, uid], doc.flags
-
-        # fastly find unread or flagged count
-        byMailboxAndFlag:
-            reduce: '_count'
-            map: (doc) ->
-                for boxid, uid of doc.mailboxIDs
-                    for flag in doc.flags
-                        emit [boxid, flag], uid
-                    undefined # prevent coffeescript comprehension
-                undefined # prevent coffeescript comprehension
-
 
         # this map is used to dedup by message-id
-        byMessageId: (doc) ->
+        dedupRequest: (doc) ->
             if doc.messageID
-                emit [doc.accountID, doc.messageID], doc.conversationID
+                emit [doc.accountID, 'mid', doc.messageID], doc.conversationID
 
-        # this map is used to find conversation by sujects
-        byNormSubject: (doc) ->
             if doc.normSubject
-                emit [doc.accountID, doc.normSubject], doc.conversationID
-
+                emit [doc.accountID, 'subject', doc.normSubject], doc.conversationID

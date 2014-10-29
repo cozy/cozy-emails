@@ -34,14 +34,16 @@ Message::imap_applyChanges = (flagsOps, boxOps) ->
         .then ->
             if flagsOps.add.length
                 imap.addFlags uid, flagsOps.add
+                log.info "ADDED FLAGS #{boxIndex[boxid].path}:#{uid}",
+                    flagsOps.add
         .then ->
             if flagsOps.remove.length
                 imap.delFlags uid, flagsOps.remove
+                log.info "DELETED FLAGS #{boxIndex[boxid].path}:#{uid}",
+                    flagsOps.add
         .then =>
             @flags = _.union @flags, flagsOps.add
             @flags = _.difference @flags, flagsOps.remove
-            log.info "  CHANGED FLAGS #{boxIndex[boxid].path}:#{uid}"
-            log.info "    RESULT = ", @flags
 
         # step 3 - copy the message to its destinations
         .then =>

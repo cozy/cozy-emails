@@ -10,3 +10,11 @@ Promise.serie = (array, fn) ->
     Promise.map array, fn, concurrency: 1
 
 
+#
+# Mailbox.findPromised req.params.mailboxID
+# .throwIfNull -> new HttpError 404, 'Mailbox not found'
+#
+Promise::throwIfNull = (errorMaker) ->
+    @then (result) ->
+        if result? then return result
+        else throw errorMaker()

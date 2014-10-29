@@ -1,6 +1,6 @@
 require = patchRequire global.require
 init    = require("../common").init
-utils   = require "/usr/local/lib/node_modules/casperjs/modules/utils.js"
+utils   = require "utils.js"
 
 deleteTestAccounts = ->
     casper.evaluate ->

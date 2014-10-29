@@ -50,9 +50,10 @@ Account.refreshAllAccounts = ->
         account.imap_fetchMails()
 
 
-# Public: include the mailboxes tree on this account instance
+# Public: get the account as POJO
+# including the client's mailboxes tree
 #
-# Returns {Promise} for the account itself
+# Returns {Promise} for the POJO
 Account::toObjectWithMailbox = ->
     Mailbox.getClientTree @id
     .then (mailboxes) =>
@@ -61,11 +62,14 @@ Account::toObjectWithMailbox = ->
         return rawObject
 
 # Public: fetch the mailbox tree of a new {Account}
-# if the fetch succeeds, create the account and mailbox in couch
+# if the fetch succeeds, create the account and mailboxes in couch
+# else throw an {AccountConfigError}
+# returns fast once the account and mailboxes has been created
+# in the background, proceeds to download mails
 #
 # data - account parameters
 #
-# Returns {Promise} promise for the created {Account}, boxes included
+# Returns {Promise} promise for the created {Account}
 Account.createIfValid = (data) ->
 
     account = new Account data
@@ -88,7 +92,7 @@ Account.createIfValid = (data) ->
         box.accountID = account.id
         Mailbox.createPromised box
 
-    # find special mailboxes
+    # find special mailboxes (sent, draft ...)
     .then (boxes) ->
         account.imap_scanBoxesForSpecialUse boxes
 
@@ -102,6 +106,27 @@ Account.createIfValid = (data) ->
 
     # returns once the account is ready (do not wait for mails)
     return pAccountReady
+
+
+# Public: remove a box from this account references
+# ie. favorites & special use attributes
+# used when deleting a box
+#
+# boxid - id of the box to forget
+#
+# Returns a {Promise} for the updated account
+Account::forgetBox = (boxid) ->
+    change = false
+    for attribute in Object.keys Mailbox.RFC6154 when @[attribute] is boxid
+        @[attribute] = null
+        change = true
+
+    if boxid in @favorites
+        @favorites = _.without @favorites, boxid
+        change = true
+
+    return if change then @savePromised()
+    else Promise.resolve this
 
 
 # Public: destroy an account and all messages within cozy

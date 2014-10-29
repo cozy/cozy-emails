@@ -3,6 +3,7 @@ async = require 'async'
 Account = require '../models/account'
 Mailbox = require '../models/mailbox'
 Promise = require 'bluebird'
+{BadRequest, NotFound} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'mailbox:controller')
 
 # create a mailbox
@@ -46,17 +47,30 @@ module.exports.update = (req, res, next) ->
     log.info "Updating #{req.params.mailboxID} to #{req.body.label}"
 
     pBox = Mailbox.findPromised req.params.mailboxID
+    .throwIfNull -> new NotFound "Mailbox #{req.params.mailboxID}"
+
     pAccount = pBox.then (box) -> Account.findPromised box.accountID
 
     Promise.join pBox, pAccount, (box, account) ->
 
-        path = box.path
-        parentPath = path.substring 0, path.lastIndexOf(box.label)
-        newPath = parentPath + req.body.label
+        if req.body.label
 
-        account.imap_renameBox path, newPath
-        .then -> box.renameWithChildren newPath
-        .return account
+            path = box.path
+            parentPath = path.substring 0, path.lastIndexOf(box.label)
+            newPath = parentPath + req.body.label
+
+            account.imap_renameBox path, newPath
+            .then -> box.renameWithChildren newPath
+            .return account
+
+        else if req.body.favorite?
+
+            favorites = _.without account.favorites, box.id
+            favorites.push box.id if req.body.favorite
+            account.favorites = favorites
+            account.savePromised()
+
+        else throw new BadRequest 'Unsuported request for mailbox update'
 
     .then (account) -> account.toObjectWithMailbox()
     .then (account) -> res.send account
@@ -67,10 +81,13 @@ module.exports.delete = (req, res, next) ->
     log.info "Deleting #{req.params.mailboxID}"
 
     pBox = Mailbox.findPromised req.params.mailboxID
+    .throwIfNull -> new NotFound "Mailbox #{req.params.mailboxID}"
+
     pAccount = pBox.then (box) -> Account.findPromised box.accountID
 
     Promise.join pBox, pAccount, (box, account) ->
         account.imap_deleteBox box.path
+        .then -> account.forgetBox box.id
         .then -> box.destroyAndRemoveAllMessages()
         .return account
 

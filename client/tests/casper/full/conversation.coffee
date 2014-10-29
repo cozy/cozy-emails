@@ -1,7 +1,7 @@
 require = patchRequire global.require
 init    = require("../common").init
-utils   = require "/usr/local/lib/node_modules/casperjs/modules/utils.js"
-x       = require('/usr/local/lib/node_modules/casperjs/modules/casper').selectXPath
+utils   = require "utils.js"
+x       = require('casper.js').selectXPath
 
 selectMessage = (account, box, subject, cb) ->
     accounts = casper.evaluate ->

@@ -1,10 +1,11 @@
 Message     = require '../models/message'
 Account     = require '../models/account'
 Mailbox     = require '../models/mailbox'
-{HttpError, AccountConfigError} = require '../utils/errors'
+{NotFound, HttpError, AccountConfigError} = require '../utils/errors'
 Promise     = require 'bluebird'
 htmlToText  = require 'html-to-text'
 sanitizer   = require 'sanitizer'
+_ = require 'lodash'
 
 htmlToTextOptions =
     tables: true
@@ -23,33 +24,49 @@ formatMessage = (message) ->
 
 # list messages from a mailbox
 # require numPage & numByPage params
-module.exports.listByMailboxId = (req, res, next) ->
+module.exports.listByMailbox = (req, res, next) ->
 
-    # @TODO : add query parameters for sort & pagination
-    options =
-        numPage: req.params.numPage - 1
-        numByPage: req.params.numByPage
+    req.query.sort ?= '-date'
 
-    Promise.all [
-        Message.getByMailboxAndDate req.params.mailboxID, options
-        Message.countByMailbox req.params.mailboxID
-        Message.countReadByMailbox req.params.mailboxID
-    ]
-    .spread (messages, count, read) ->
+    descending = req.query.sort.substring(0, 1)
+    if descending is '+' then descending = false
+    else if descending is '-' then descending = true
+    else return next new HttpError 400, "Unsuported sort order #{descending}"
+
+    sortField = req.query.sort.substring(1)
+    if sortField is 'date'
+        before = req.query.before or new Date(0).toISOString()
+        after = req.query.after or new Date().toISOString()
+        if new Date(before).toISOString() isnt before or
+           new Date(after).toISOString() isnt after
+            return next new HttpError 400,
+                "before & after should be a valid JS date.toISOString()"
+
+    else if sortField is 'subject'
+        before = decodeURIComponent(req.query.before) or ''
+        after = decodeURIComponent(req.query.after) or {}
+
+    else return next new HttpError 400, "Unsuported sort field #{sortField}"
+
+    Message.getResultsAndCount req.params.mailboxID,
+        sortField: sortField
+        descending: descending
+        before: before
+        after: after
+
+    .then (result) ->
         res.send 200,
             mailboxID: req.params.mailboxID
-            messages: messages.map formatMessage
-            count: count
-            unread: count - read
+            messages: result.messages?.map(formatMessage) or []
+            count: result.count
 
     .catch next
 
 # get a message and attach it to req.message
 module.exports.fetch = (req, res, next) ->
     Message.findPromised req.params.messageID
-    .then (message) ->
-        if message then req.message = message
-        else throw new HttpError 404, 'Not Found'
+    .throwIfNull -> new NotFound "Message #{req.params.messageID}"
+    .then (message) -> req.message = message
     .nodeify next
 
 # return a message's details
@@ -90,6 +107,7 @@ module.exports.send = (req, res, next) ->
 
     # find the account and draftBox
     Account.findPromised message.accountID
+    .throwIfNull -> new NotFound "Account #{message.accountID}"
     .then (account) ->
         Mailbox.findPromised account.draftMailbox
         .then (draftBox) -> return [account, draftBox]
@@ -167,6 +185,7 @@ module.exports.index = (req, res, next) ->
 module.exports.del = (req, res, next) ->
 
     Account.findPromised req.message.accountID
+    .throwIfNull -> new NotFound "Account #{req.message.accountID}"
     .then (account) ->
         trashID = account.trashMailbox
         throw new AccountConfigError 'trashMailbox' unless trashID
