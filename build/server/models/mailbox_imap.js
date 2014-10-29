@@ -100,13 +100,15 @@ Mailbox.prototype.imap_refreshStep = function(limitByBox, laststep) {
       }
     }
     return ops;
-  }).tap(function(ops) {
-    var nbTasks;
-    nbTasks = ops.toFetch.length + ops.toRemove.length + ops.flagsChange.length;
-    if (nbTasks > 0) {
-      return reporter = ImapReporter.boxFetch(this, nbTasks);
-    }
-  }).tap(function(ops) {
+  }).tap((function(_this) {
+    return function(ops) {
+      var nbTasks;
+      nbTasks = ops.toFetch.length + ops.toRemove.length + ops.flagsChange.length;
+      if (nbTasks > 0) {
+        return reporter = ImapReporter.boxFetch(_this, nbTasks);
+      }
+    };
+  })(this)).tap(function(ops) {
     return Promise.serie(ops.toRemove, function(id) {
       return Message.removeFromMailbox(id, box)["catch"](function(err) {
         return reporter.onError(err);

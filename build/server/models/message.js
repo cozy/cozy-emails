@@ -225,7 +225,7 @@ Message.prototype.removeFromMailbox = function(box, noDestroy) {
   mailboxIDs = this.mailboxIDs;
   delete mailboxIDs[box.id];
   isOrphan = Object.keys(mailboxIDs).length === 0;
-  console.log("REMOVING " + this.id + ", NOW ORPHAN = ", isOrphan);
+  log.info("REMOVING " + this.id + ", NOW ORPHAN = ", isOrphan);
   if (isOrphan && !noDestroy) {
     return this.destroyPromised();
   } else {

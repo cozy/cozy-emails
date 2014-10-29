@@ -7514,9 +7514,7 @@ module.exports = {
     });
   },
   fetchMessagesByFolder: function(mailboxID, numPage, callback) {
-    var numByPage;
-    numByPage = SettingsStore.get('messagesPerPage');
-    return request.get("mailbox/" + mailboxID + "/page/" + numPage + "/limit/" + numByPage).set('Accept', 'application/json').end(function(res) {
+    return request.get("mailbox/" + mailboxID).set('Accept', 'application/json').end(function(res) {
       if (res.ok) {
         return callback(null, res.body);
       } else {

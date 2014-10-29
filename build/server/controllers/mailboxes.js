@@ -63,7 +63,7 @@ module.exports.update = function(req, res, next) {
       parentPath = path.substring(0, path.lastIndexOf(box.label));
       newPath = parentPath + req.body.label;
       return account.imap_renameBox(path, newPath).then(function() {
-        return box.renameWithChildren(newPath);
+        return box.renameWithChildren(newPath, req.body.label);
       })["return"](account);
     } else if (req.body.favorite != null) {
       favorites = _.without(account.favorites, box.id);
