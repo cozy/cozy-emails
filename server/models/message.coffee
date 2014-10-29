@@ -232,7 +232,7 @@ Message::removeFromMailbox = (box, noDestroy = false) ->
     delete mailboxIDs[box.id]
 
     isOrphan = Object.keys(mailboxIDs).length is 0
-    console.log "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
+    log.info "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
 
     if isOrphan and not noDestroy then @destroyPromised()
     else @updateAttributesPromised {mailboxIDs}
