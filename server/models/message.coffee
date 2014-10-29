@@ -34,6 +34,8 @@ log = require('../utils/logging')(prefix: 'models:message')
 Promise = require 'bluebird'
 Mailbox = require './mailbox'
 
+
+MSGBYPAGE = 7
 # Public: get messages in a box, sorted by Date
 #
 # mailboxID - {String} the mailbox's ID
@@ -54,7 +56,11 @@ Message.getResultsAndCount = (mailboxID, params) ->
         _.extend {}, options, reduce: true, group_level: 2
 
     pResults = Message.rawRequestPromised 'byMailboxRequest',
-        _.extend {}, options, reduce: false, limit: 3, include_docs: true
+        _.extend {}, options,
+        reduce: false
+        include_docs: true
+        limit: MSGBYPAGE
+
     .map (row) -> new Message row.doc
 
     Promise.join pResults, pCount, (messages, count) ->
