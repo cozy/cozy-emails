@@ -43,24 +43,32 @@ MSGBYPAGE = 7
 #
 # Returns {Promise} for an array of {Message}
 Message.getResultsAndCount = (mailboxID, params) ->
-    {before, after, descending, sortField} = params
+    {before, after, descending, sortField, flag} = params
+
+    flag ?= null
+
     [before, after] = [after, before] if descending
     options =
         descending: descending
-        startkey: [sortField, mailboxID, before]
-        endkey: [sortField, mailboxID, after]
+        startkey: [sortField, mailboxID, flag, before]
+        endkey: [sortField, mailboxID, flag, after]
+        reduce: true
+        group_level: 2
 
-    # console.log "GRAC", options
 
-    pCount = Message.rawRequestPromised 'byMailboxRequest',
-        _.extend {}, options, reduce: true, group_level: 2
+    pCount = Message.rawRequestPromised 'byMailboxRequest', options
 
-    pResults = Message.rawRequestPromised 'byMailboxRequest',
-        _.extend {}, options,
-        reduce: false
-        include_docs: true
-        limit: MSGBYPAGE
+    # options for results
+    delete options.group_level
+    options.reduce = false
+    options.include_docs = true
+    options.limit =  MSGBYPAGE
 
+    if params.resultsAfter
+        options.startkey[3] = params.resultsAfter
+        options.skip = 1
+
+    pResults = Message.rawRequestPromised 'byMailboxRequest', options
     .map (row) -> new Message row.doc
 
     Promise.join pResults, pCount, (messages, count) ->

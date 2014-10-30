@@ -30,8 +30,16 @@ module.exports =
             map: (doc) ->
                 for boxid, uid of doc.mailboxIDs
                     emit ['uid', boxid, uid], doc.flags
-                    emit ['date', boxid, doc.date], doc.flags
-                    emit ['subject', boxid, doc.subject], doc.flags
+
+                    emit ['date', boxid, null, doc.date], null
+                    emit ['subject', boxid, null, doc.normSubject], null
+
+                    for xflag in ['\\Seen', '\\Flagged', '\\Answered']
+
+                        xflag = '!' + xflag if -1 is doc.flags.indexOf(xflag)
+
+                        emit ['date', boxid, xflag, doc.date], null
+                        emit ['subject', boxid, xflag, doc.normSubject], null
                 undefined # prevent coffeescript comprehension
 
         # this map is used to dedup by message-id
