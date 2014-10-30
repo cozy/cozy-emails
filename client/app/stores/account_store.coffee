@@ -104,11 +104,16 @@ class AccountStore extends Store
 
         account = _accounts.get(accountID) or @getDefault()
         mailboxes = account.get('mailboxes')
-        favorites = account.get('favorites')
-        defaultID = if favorites? then favorites[0]
+        mailbox = mailboxes.filter (mailbox) ->
+            return mailbox.get('label') is 'INBOX'
+        if mailbox.count() is 1
+            return mailbox.first()
+        else
+            favorites = account.get('favorites')
+            defaultID = if favorites? then favorites[0]
 
-        return if defaultID then mailboxes.get defaultID
-        else mailboxes.first()
+            return if defaultID then mailboxes.get defaultID
+            else mailboxes.first()
 
     getSelected: -> return _selectedAccount
 
