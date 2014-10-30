@@ -63,7 +63,6 @@ for i in [1..numberOfEmails] by 1
 
     mailboxObject = {}
     mailboxObject[mailbox] = mailboxUID[mailbox]
-    console.log mailbox
 
     subject = loremIpsum count: getRandom(5), units: 'words', random: randomWithSeed
     content = loremIpsum count: getRandom(10), units: 'paragraphs', random: randomWithSeed

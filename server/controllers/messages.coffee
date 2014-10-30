@@ -30,7 +30,6 @@ module.exports.listByMailbox = (req, res, next) ->
 
     sort = if req.query.sort then req.query.sort
     else '-date'
-    console.log sort
 
     descending = sort.substring(0, 1)
     if descending is '+' then descending = false
