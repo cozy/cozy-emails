@@ -14,6 +14,7 @@ doc
 results
 client/public
 client/bower_components
+tests/fixtures/samples/*
 
 node_modules
 npm-debug.log
