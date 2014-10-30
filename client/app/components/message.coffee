@@ -26,7 +26,7 @@ module.exports = React.createClass
 
     getInitialState: ->
         return {
-            active: false,
+            active: @props.active,
             composing: false
             composeAction: ''
             headers: false
@@ -142,48 +142,56 @@ module.exports = React.createClass
                 @_htmlContent = prepared.html
                 #htmluri = "data:text/html;charset=utf-8;base64,#{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
 
-        clickHandler = if @props.isLast then null else @onFold
-
         classes = classer
             message: true
             active: @state.active
 
-        li className: classes, key: @props.key, onClick: clickHandler, 'data-id': message.get('id'),
-            @renderToolbox message.get('id'), prepared
-            @renderHeaders prepared
-            div className: 'full-headers',
-                pre null, prepared.fullHeaders.join "\n"
-            if messageDisplayHTML and prepared.html
-                div null,
-                    if images.length > 0 and not @state.messageDisplayImages
-                        div
-                            className: "imagesWarning content-action",
-                            ref: "imagesWarning",
-                                span null, t 'message images warning'
-                                button
-                                    className: 'btn btn-default',
-                                    type: "button",
-                                    ref: 'imagesDisplay',
-                                    onClick: @displayImages,
-                                    t 'message images display'
-                    iframe
-                        className: 'content',
-                        ref: 'content',
-                        sandbox: 'allow-same-origin',
-                        allowTransparency: true,
-                        frameBorder: 0,
-                        name: "message-" + message.get('id'), ''
-            else
-                div null,
-                    #div className: "content-action",
-                    #    button className: 'btn btn-default', type: "button",
-                    #       onClick: @displayHTML, t 'message html display'
-                    div className: 'preview',
-                        p null, prepared.text
-            div className: 'clearfix'
+        if @state.active
+            li
+                className: classes,
+                key: @props.key,
+                'data-id': message.get('id'),
+                    @renderToolbox message.get('id'), prepared
+                    @renderHeaders prepared
+                    div className: 'full-headers',
+                        pre null, prepared.fullHeaders.join "\n"
+                    if messageDisplayHTML and prepared.html
+                        div null,
+                            if images.length > 0 and not @state.messageDisplayImages
+                                div
+                                    className: "imagesWarning content-action",
+                                    ref: "imagesWarning",
+                                        span null, t 'message images warning'
+                                        button
+                                            className: 'btn btn-default',
+                                            type: "button",
+                                            ref: 'imagesDisplay',
+                                            onClick: @displayImages,
+                                            t 'message images display'
+                            iframe
+                                className: 'content',
+                                ref: 'content',
+                                sandbox: 'allow-same-origin',
+                                allowTransparency: true,
+                                frameBorder: 0,
+                                name: "message-" + message.get('id'), ''
+                    else
+                        div null,
+                            #div className: "content-action",
+                            #    button className: 'btn btn-default', type: "button",
+                            #       onClick: @displayHTML, t 'message html display'
+                            div className: 'preview',
+                                p null, prepared.text
+                    div className: 'clearfix'
 
-            # Display Compose block
-            @renderCompose()
+                    # Display Compose block
+                    @renderCompose()
+        else
+            li
+                className: classes,
+                key: @props.key,
+                'data-id': message.get('id'),
+                    @renderHeaders prepared
 
     renderHeaders: (prepared) ->
         hasAttachments = prepared.attachments.length
@@ -208,6 +216,11 @@ module.exports = React.createClass
             'has-attachments': hasAttachments
             'is-fav': flags.indexOf(MessageFlags.FLAGGED) isnt -1
 
+        toggleActive = a className: "toggle-active", onClick: @toggleActive,
+            if @state.active
+                i className: 'fa fa-compress'
+            else
+                i className: 'fa fa-expand'
         if @state.headers
             div className: classes,
                 div className: leftClass, onClick: @toggleHeaders,
@@ -225,6 +238,7 @@ module.exports = React.createClass
                 if hasAttachments
                     div className: 'col-md-4',
                         attachments
+                toggleActive
         else
             div className: classes, onClick: @toggleHeaders,
                 i className: 'fa fa-user'
@@ -233,6 +247,7 @@ module.exports = React.createClass
                 span className: "flags",
                     i className: 'attach fa fa-paperclip'
                     i className: 'fav fa fa-star'
+                toggleActive
 
 
     renderAddress: (field) ->
@@ -395,10 +410,17 @@ module.exports = React.createClass
         @_initFrame()
 
     toggleHeaders: (e) ->
+        e.preventDefault()
+        e.stopPropagation()
         @setState headers: not @state.headers
 
-    onFold: (args) ->
-        @setState active: not @state.active
+    toggleActive: (e) ->
+        e.preventDefault()
+        e.stopPropagation()
+        if @state.active
+            @setState { active: false, headers: false }
+        else
+            @setState active: true
 
     onReply: (args) ->
         @setState composing: true

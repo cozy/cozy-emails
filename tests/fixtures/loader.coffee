@@ -18,7 +18,7 @@ fs.readdir sourceDir, (err, files) ->
             mailparser.end()
             mailparser.on "end", (mail) ->
                 id               = Math.floor(Math.random() * 1000)
-                mail._id         = "loaded_id_" + Date.now() + id
+                mail._id         = mail.messageId
                 mail.docType     = "Message"
                 mail.reads       = false
                 mail.mailboxIDs  = "dovecot-ID-folder1": id

@@ -110,12 +110,13 @@ module.exports = React.createClass
             ul className: 'thread list-unstyled',
                 for message, key in @props.conversation
                     isLast = key is @props.conversation.length - 1
-                    Message 
+                    Message
                         key: key
                         isLast: isLast
                         message: message
                         settings: @props.settings
-                        accounts: @props.accounts 
+                        accounts: @props.accounts
                         mailboxes: @props.mailboxes
                         selectedAccount: @props.selectedAccount
                         selectedMailboxID: @props.selectedMailboxID
+                        active: @props.message.get('id') is message.get('id')
