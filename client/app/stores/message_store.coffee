@@ -209,4 +209,12 @@ class MessageStore extends Store
 
         return conversation
 
+    getConversation: (conversationID) ->
+        conversation = []
+        _messages.filter (message) ->
+            return message.get('conversationID') is conversationID
+        .map (message) -> conversation.push message
+        .toJS()
+        return conversation
+
 module.exports = new MessageStore()

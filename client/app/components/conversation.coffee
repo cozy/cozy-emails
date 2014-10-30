@@ -19,6 +19,8 @@ module.exports = React.createClass
         settings          : React.PropTypes.object.isRequired
         accounts          : React.PropTypes.object.isRequired
 
+    ###
+    # @FIXME
     shouldComponentUpdate: (nextProps, nextState) ->
 
         comp = (a, b) ->
@@ -38,6 +40,7 @@ module.exports = React.createClass
             nextProps.layout isnt @props.layout
 
         return shouldUpdate
+    ###
 
     render: ->
         if not @props.message? or not @props.conversation
@@ -109,10 +112,8 @@ module.exports = React.createClass
 
             ul className: 'thread list-unstyled',
                 for message, key in @props.conversation
-                    isLast = key is @props.conversation.length - 1
                     Message
                         key: key
-                        isLast: isLast
                         message: message
                         settings: @props.settings
                         accounts: @props.accounts

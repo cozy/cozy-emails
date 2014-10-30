@@ -18,8 +18,17 @@ module.exports =
                 callback "Something went wrong -- #{res.body}"
 
 
-    fetchConversation: (emailID, callback) ->
+    fetchMessage: (emailID, callback) ->
         request.get "message/#{emailID}"
+        .set 'Accept', 'application/json'
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                callback "Something went wrong -- #{res.body}"
+
+    fetchConversation: (emailID, callback) ->
+        request.get "conversation/#{emailID}"
         .set 'Accept', 'application/json'
         .end (res) ->
             if res.ok

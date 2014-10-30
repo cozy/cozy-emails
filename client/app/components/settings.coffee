@@ -78,6 +78,7 @@ module.exports = React.createClass
                                     onClick: @handleChange,
                                         a role: "menuitem", t "settings lang fr"
 
+            @_renderOption 'displayConversation'
             @_renderOption 'composeInHTML'
             @_renderOption 'messageDisplayHTML'
             @_renderOption 'messageDisplayImages'
@@ -128,7 +129,7 @@ module.exports = React.createClass
                 @setState({settings: settings})
                 SettingsActionCreator.edit settings
                 SettingsActionCreator.setRefresh target.value
-            when 'composeInHTML', 'messageDisplayHTML', 'messageDisplayImages'
+            when 'composeInHTML', 'displayConversation', 'messageDisplayHTML', 'messageDisplayImages'
                 settings = @state.settings
                 settings[target.dataset.target] = target.checked
                 @setState({settings: settings})

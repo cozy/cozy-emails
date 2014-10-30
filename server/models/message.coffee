@@ -35,7 +35,7 @@ Promise = require 'bluebird'
 Mailbox = require './mailbox'
 
 
-MSGBYPAGE = 7
+MSGBYPAGE = 10
 # Public: get messages in a box, sorted by Date
 #
 # mailboxID - {String} the mailbox's ID
