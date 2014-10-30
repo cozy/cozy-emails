@@ -202,7 +202,8 @@ class MessageStore extends Store
         while idToLook = idsToLook.pop()
             conversation.push @getByID idToLook
             temp = _messages.filter (message) ->
-                return message.get('inReplyTo') is idToLook
+                inReply = message.get 'inReplyTo'
+                return Array.isArray(inReply) and inReply.indexOf(idToLook) isnt -1
             newIdsToLook = temp.map((item) -> item.get('id')).toArray()
             idsToLook = idsToLook.concat newIdsToLook
 
