@@ -127,7 +127,6 @@ module.exports = class ImapPromisified
     # see imap.getBoxes
     # change: return a Promise for an array of boxes
     getBoxes: ->
-        IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren']
         @_super.getBoxesPromised.apply @_super, arguments
         .then mailutils.flattenMailboxTree
 

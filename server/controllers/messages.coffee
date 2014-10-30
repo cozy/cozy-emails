@@ -2,6 +2,7 @@ Message     = require '../models/message'
 Account     = require '../models/account'
 Mailbox     = require '../models/mailbox'
 {NotFound, BadRequest, AccountConfigError} = require '../utils/errors'
+{MSGBYPAGE} = require '../utils/constants'
 Promise     = require 'bluebird'
 htmlToText  = require 'html-to-text'
 sanitizer   = require 'sanitizer'
@@ -83,7 +84,7 @@ module.exports.listByMailbox = (req, res, next) ->
     .then (result) ->
 
         messages = result.messages
-        if messages.length
+        if messages.length is MSGBYPAGE
             last = messages[messages.length - 1]
             pageAfter = if sortField is 'date' then last.date.toISOString()
             else last.normSubject

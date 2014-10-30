@@ -7,6 +7,7 @@ log = require('../utils/logging')('models:mailbox_imap')
 _ = require 'lodash'
 mailutils = require '../utils/jwz_tools'
 {Break} = require '../utils/errors'
+{FETCH_AT_ONCE} = require '../utils/constants'
 
 Mailbox::doASAPWithBox = (gen) ->
     ImapScheduler.instanceFor(@accountID)
@@ -21,7 +22,6 @@ Mailbox::imap_fetchMails = (limitByBox) ->
     @imap_refreshStep limitByBox
 
 
-FETCH_AT_ONCE = 1000
 Mailbox::imap_refreshStep = (limitByBox, laststep) ->
 
     step = null

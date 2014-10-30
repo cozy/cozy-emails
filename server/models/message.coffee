@@ -28,14 +28,14 @@ module.exports = Message = americano.getModel 'Message',
     attachments: (x) -> x    # array of message attachments objects
 
 mailutils = require '../utils/jwz_tools'
+CONSTANTS = require '../utils/constants'
+{MSGBYPAGE, LIMIT_DESTROY, LIMIT_UPDATE, CONCURRENT_DESTROY} = CONSTANTS
 uuid = require 'uuid'
 _ = require 'lodash'
 log = require('../utils/logging')(prefix: 'models:message')
 Promise = require 'bluebird'
 Mailbox = require './mailbox'
 
-
-MSGBYPAGE = 7
 # Public: get messages in a box, sorted by Date
 #
 # mailboxID - {String} the mailbox's ID
@@ -131,14 +131,6 @@ Message.byConversationId = (conversationID) ->
 Message.destroyByID = (messageID, cb) ->
     Message.adapter.destroy null, messageID, cb
 
-
-# safeDestroy parameters (to be tweaked)
-# loads 200 ids in memory at once
-LIMIT_DESTROY = 200
-# loads 30 messages in memory at once
-LIMIT_UPDATE = 30
-# send 5 request to the DS in parallel
-CONCURRENT_DESTROY = 5
 
 # Public: destroy all messages for an account
 # play it safe by limiting number of messages in RAM
