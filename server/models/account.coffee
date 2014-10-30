@@ -36,6 +36,7 @@ Promise     = require 'bluebird'
 Message     = require './message'
 {AccountConfigError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'models:account')
+_ = require 'lodash'
 
 Account::isTest = ->
     @accountType is 'TEST'
