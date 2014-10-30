@@ -19,7 +19,7 @@ exports.init = (casper) ->
     if dev
         casper.options.verbose = true
         casper.options.logLevel = 'debug'
-    casper.options.waitTimeout = 30000
+    casper.options.waitTimeout = 15000
     casper.options.timeout = 30000
     casper.options.viewportSize = {width: 1024, height: 768}
     casper.on 'exit', (res) ->

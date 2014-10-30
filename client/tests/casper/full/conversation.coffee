@@ -25,7 +25,16 @@ selectMessage = (account, box, subject, cb) ->
             casper.waitForSelector subjectSel, ->
                 casper.click subjectSel
                 casper.waitForSelector x("//h3[(contains(normalize-space(.), '#{subject}'))]"), ->
+                    casper.test.pass "Message #{subject} selected"
                     cb()
+                , ->
+                    casper.test.fail "Error displaying #{subject}"
+            , ->
+                casper.test.fail "No message with subject #{subject}"
+        , ->
+            casper.test.fail "Unable to go to mailbox #{box}"
+    , ->
+        casper.test.fail "Unable to go to account #{account}"
 
 casper.test.begin 'Test conversation', (test) ->
     init casper
@@ -37,7 +46,6 @@ casper.test.begin 'Test conversation', (test) ->
             window.cozyMails.setSetting 'messageDisplayImages', false
 
         selectMessage "DoveCot", "INBOX", "Test attachments", ->
-            test.pass "Message displayed"
             test.assertExist '.imagesWarning', "Images warning"
             test.assertExist 'iframe.content', "Message body"
             frameName = casper.getElementInfo("iframe.content").attributes.name
