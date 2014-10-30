@@ -165,6 +165,7 @@ module.exports =
                                         (in minutes)"
       "settings plugins"           : "Add ons"
       "settings label composeInHTML"        : "Rich message editor"
+      "settings label displayConversation"  : "Display conversations"
       "settings label messageDisplayHTML"   : "Display message in HTML"
       "settings label messageDisplayImages" : "Display images inside messages"
       "settings lang"             : "Language"

@@ -49,3 +49,7 @@ module.exports =
 
             if doc.normSubject
                 emit [doc.accountID, 'subject', doc.normSubject], doc.conversationID
+
+        byConversationId: (doc) ->
+            if doc.conversationID
+                emit doc.conversationID

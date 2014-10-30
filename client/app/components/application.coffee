@@ -202,7 +202,7 @@ module.exports = Application = React.createClass
                 mailboxID: mailboxID
                 layout: layout
                 openMessage: openMessage
-                messagesPerPage: numPerPage
+                settings: @state.settings
                 pageNum: pageNum
                 emptyListMessage: t 'list empty'
                 counterMessage: t 'list count', messagesCount
@@ -234,10 +234,15 @@ module.exports = Application = React.createClass
         #    return AccountConfig {layout, error, isWaiting}
 
         # -- Generates a conversation
-        else if panelInfo.action is 'message'
+        else if panelInfo.action is 'message' or
+                panelInfo.action is 'conversation'
 
             if messageID = panelInfo.parameters.messageID
-                message = MessageStore.getByID messageID
+                message      = MessageStore.getByID messageID
+            if conversationID = panelInfo.parameters.conversationID
+                conversation = MessageStore.getConversation conversationID
+            else
+                conversation = MessageStore.getMessagesByConversation messageID
 
             return Conversation
                 layout            : layout
@@ -246,8 +251,8 @@ module.exports = Application = React.createClass
                 mailboxes         : @state.mailboxes
                 selectedAccount   : @state.selectedAccount
                 selectedMailboxID : @state.selectedMailboxID
-                message           : MessageStore.getByID messageID
-                conversation      : MessageStore.getMessagesByConversation messageID
+                message           : message
+                conversation      : conversation
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
@@ -306,7 +311,7 @@ module.exports = Application = React.createClass
                 mailboxID: mailboxID
                 layout: layout
                 openMessage: openMessage
-                messagesPerPage: numPerPage
+                settings: @state.settings
                 pageNum: pageNum
                 emptyListMessage: t 'list search empty', query: @state.searchQuery
                 counterMessage: t 'list search count', results.count()

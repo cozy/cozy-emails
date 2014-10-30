@@ -247,6 +247,14 @@ module.exports.del = (req, res, next) ->
     .then -> res.send 200, req.message
     .catch next
 
+
+module.exports.conversationGet = (req, res, next) ->
+
+    Message.byConversationId req.params.conversationID
+    .then (messages) -> res.send 200, messages.map formatMessage
+
+    .catch next
+
 module.exports.conversationDelete = (req, res, next) ->
 
     # @TODO : Delete Conversation
@@ -256,7 +264,7 @@ module.exports.conversationDelete = (req, res, next) ->
 
 module.exports.conversationPatch = (req, res, next) ->
 
-    Message.byConversationID req.params.conversationID
+    Message.byConversationId req.params.conversationID
     .then (messages) ->
         # @TODO : be smarter : dont remove message from sent folder, ...
         Promise.serie messages, (msg) ->

@@ -37,7 +37,6 @@ module.exports = React.createClass
     propTypes:
         message           : React.PropTypes.object.isRequired
         key               : React.PropTypes.number.isRequired
-        isLast            : React.PropTypes.bool.isRequired
         selectedAccount   : React.PropTypes.object.isRequired
         selectedMailboxID : React.PropTypes.string.isRequired
         mailboxes         : React.PropTypes.object.isRequired
@@ -51,7 +50,6 @@ module.exports = React.createClass
             JSON.stringify(nextProps.message.toJSON()) is JSON.stringify(@props.message.toJSON()) and
             #Immutable.is(nextProps.message, @props.message) and
             Immutable.is(nextProps.key, @props.key) and
-            Immutable.is(nextProps.isLast, @props.isLast) and
             Immutable.is(nextProps.selectedAccount, @props.selectedAccount) and
             Immutable.is(nextProps.selectedMailbox, @props.selectedMailbox) and
             Immutable.is(nextProps.mailboxes, @props.mailboxes) and
@@ -97,9 +95,12 @@ module.exports = React.createClass
     componentWillMount: ->
         @_markRead @props.message
 
-    componentWillReceiveProps: ->
+    componentWillReceiveProps: (props) ->
         @_markRead @props.message
-        @setState @getInitialState()
+        state =
+            messageDisplayHTML:   props.settings.get 'messageDisplayHTML'
+            messageDisplayImages: props.settings.get 'messageDisplayImages'
+        @setState state
 
     _markRead: (message) ->
         # Hack to prevent infinite loop if server side mark as read fails
@@ -118,6 +119,7 @@ module.exports = React.createClass
         message  = @props.message
         prepared = @_prepareMessage()
         messageDisplayHTML = @state.messageDisplayHTML
+        images = []
         if messageDisplayHTML and prepared.html
             parser = new DOMParser()
             html = "<html><head></head><body>#{prepared.html}</body></html>"
@@ -134,8 +136,6 @@ module.exports = React.createClass
                     img.removeAttribute 'src'
                 images = doc.querySelectorAll 'IMG[src]'
                 hideImage img for img in images
-            else
-                images = []
             if doc?
                 @_htmlContent = doc.body.innerHTML
             else
@@ -266,8 +266,8 @@ module.exports = React.createClass
             addresses.map (address, key) ->
                 span className: 'address', key: key,
                     span null, MessageUtils.displayAddress(address.value, true)
-                    a className: 'address-add',
-                        i className: 'fa fa-plus', onClick: address.addAddress
+                    a className: 'address-add', onClick: address.addAddress,
+                        i className: 'fa fa-plus'
 
     renderCompose: ->
         if @state.composing

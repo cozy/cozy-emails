@@ -13,7 +13,7 @@ MessageList = React.createClass
 
     render: ->
         curPage = parseInt @props.pageNum, 10
-        nbPages = Math.ceil(@props.messagesCount / @props.messagesPerPage)
+        nbPages = Math.ceil(@props.messagesCount / @props.settings.get('messagesPerPage'))
         messages = @props.messages.map (message, key) =>
             isActive = @props.openMessage? and
                        @props.openMessage.get('id') is message.get('id')
@@ -46,10 +46,21 @@ MessageList = React.createClass
 
         isDraft = message.get('flags').indexOf(MessageFlags.DRAFT) isnt -1
 
+        if isDraft
+            action = 'edit'
+            id     = message.get 'id'
+        else
+            conversationID = message.get 'conversationID'
+            if conversationID and @props.settings.get('displayConversation')
+                action = 'conversation'
+                id     = [conversationID, message.get 'id']
+            else
+                action = 'message'
+                id     = message.get 'id'
         url = @buildUrl
             direction: 'second'
-            action: if isDraft then 'edit' else 'message'
-            parameters: message.get 'id'
+            action: action
+            parameters: id
 
         date = MessageUtils.formatDate message.get 'createdAt'
 

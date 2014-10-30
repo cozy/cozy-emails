@@ -32,6 +32,7 @@ module.exports =
         delete: [accounts.fetch, accounts.remove]
 
     'conversation/:conversationID':
+        get: [messages.conversationGet]
         delete: [messages.conversationDelete]
         patch: [messages.conversationPatch]
 
