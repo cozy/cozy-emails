@@ -120,10 +120,11 @@ module.exports = React.createClass
         messageDisplayHTML = @state.messageDisplayHTML
         if messageDisplayHTML and prepared.html
             parser = new DOMParser()
-            doc = parser.parseFromString "<html><head></head><body>#{prepared.html}</body></html>", "text/html"
+            html = "<html><head></head><body>#{prepared.html}</body></html>"
+            doc = parser.parseFromString html, "text/html"
             if not doc
                 doc = document.implementation.createHTMLDocument("")
-                doc.documentElement.innerHTML = "<html><head></head><body>#{prepared.html}</body></html>"
+                doc.documentElement.innerHTML = html
             if not doc
                 console.log "Unable to parse HTML content of message"
                 messageDisplayHTML = false
@@ -155,14 +156,28 @@ module.exports = React.createClass
             if messageDisplayHTML and prepared.html
                 div null,
                     if images.length > 0 and not @state.messageDisplayImages
-                        div className: "imagesWarning content-action", ref: "imagesWarning",
-                            span null, t 'message images warning'
-                            button className: 'btn btn-default', type: "button", ref: 'imagesDisplay', onClick: @displayImages, t 'message images display'
-                    iframe className: 'content', ref: 'content', sandbox: 'allow-same-origin', allowTransparency: true, frameBorder: 0, name: "message-" + message.get('id'), ''
+                        div
+                            className: "imagesWarning content-action",
+                            ref: "imagesWarning",
+                                span null, t 'message images warning'
+                                button
+                                    className: 'btn btn-default',
+                                    type: "button",
+                                    ref: 'imagesDisplay',
+                                    onClick: @displayImages,
+                                    t 'message images display'
+                    iframe
+                        className: 'content',
+                        ref: 'content',
+                        sandbox: 'allow-same-origin',
+                        allowTransparency: true,
+                        frameBorder: 0,
+                        name: "message-" + message.get('id'), ''
             else
                 div null,
                     #div className: "content-action",
-                    #    button className: 'btn btn-default', type: "button", onClick: @displayHTML, t 'message html display'
+                    #    button className: 'btn btn-default', type: "button",
+                    #       onClick: @displayHTML, t 'message html display'
                     div className: 'preview',
                         p null, prepared.text
             div className: 'clearfix'
@@ -330,14 +345,20 @@ module.exports = React.createClass
         pusher = ""
         pusher += "--" for j in [1..mailbox.get('depth')] by 1
         li role: 'presentation', key: key,
-            a role: 'menuitem', onClick: @onMove, 'data-value': key, 'data-conversation': conversation, "#{pusher}#{mailbox.get 'label'}"
+            a
+                role: 'menuitem',
+                onClick: @onMove,
+                'data-value': key,
+                'data-conversation': conversation,
+                "#{pusher}#{mailbox.get 'label'}"
 
     _initFrame: ->
         # - resize the frame to the height of its content
-        # - if images are not displayed, create the function to display them and resize the frame
+        # - if images are not displayed, create the function to display them
+        #   and resize the frame
         if @refs.content
             frame = @refs.content.getDOMNode()
-            frame.addEventListener 'load', =>
+            loadContent = =>
                 doc = frame.contentDocument or frame.contentWindow.document
                 if doc?
                     s = document.createElement 'style'
@@ -363,6 +384,9 @@ module.exports = React.createClass
                 else
                     # try to display text only
                     @setState messageDisplayHTML: false
+
+            frame.addEventListener 'load', loadContent
+            loadContent()
 
     componentDidMount: ->
         @_initFrame()
