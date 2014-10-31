@@ -15,9 +15,17 @@ module.exports = React.createClass
     render: ->
         div className: 'form-group pull-left',
             div className: 'input-group',
-                input className: 'form-control', type: 'text', placeholder: t('app search'), onKeyPress: @onKeyPress, ref: 'searchInput', defaultValue: @props.query
-                div className: 'input-group-addon btn btn-cozy', onClick: @onSubmit,
-                    span className: 'fa fa-search'
+                input
+                    className: 'form-control',
+                    type: 'text',
+                    placeholder: t('app search'),
+                    onKeyPress: @onKeyPress,
+                    ref: 'searchInput',
+                    defaultValue: @props.query
+                div
+                    className: 'input-group-addon btn btn-cozy',
+                    onClick: @onSubmit,
+                        span className: 'fa fa-search'
 
     onSubmit: ->
         query = encodeURIComponent @refs.searchInput.getDOMNode().value.trim()

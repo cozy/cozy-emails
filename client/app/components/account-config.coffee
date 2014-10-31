@@ -1,4 +1,5 @@
-{div, h3, h4, form, label, input, button, ul, li, a, span, i, fieldset, legend} =
+{div, h3, h4, form, label, input, button, ul, li, a, span, i,
+fieldset, legend} =
     React.DOM
 classer = React.addons.classSet
 
@@ -79,18 +80,20 @@ module.exports = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         if not Immutable.is(nextState, @state)
             return true
+
+        if not nextProps.selectedAccount?
+            should = nextProps.layout isnt @props.layout or
+                nextProps.error     isnt @props.error or
+                nextProps.isWaiting isnt @props.isWaiting
         else
-            if not nextProps.selectedAccount?
-                should = nextProps.layout isnt @props.layout or
-                    nextProps.error     isnt @props.error or
-                    nextProps.isWaiting isnt @props.isWaiting
-            else
-                should = nextProps.layout isnt @props.layout or
-                    nextProps.error     isnt @props.error or
-                    nextProps.isWaiting isnt @props.isWaiting or
-                    not Immutable.is(nextProps.selectedAccount, @props.selectedAccount) or
-                    not Immutable.is(nextProps.mailboxes, @props.mailboxes) or
-                    not Immutable.is(nextProps.favoriteMailboxes, @props.favoriteMailboxes)
+            should = nextProps.layout isnt @props.layout or
+                nextProps.error     isnt @props.error or
+                nextProps.isWaiting isnt @props.isWaiting or
+                not Immutable.is(nextProps.selectedAccount,
+                    @props.selectedAccount) or
+                not Immutable.is(nextProps.mailboxes, @props.mailboxes) or
+                not Immutable.is(nextProps.favoriteMailboxes,
+                    @props.favoriteMailboxes)
         return should
 
     render: ->
@@ -140,14 +143,17 @@ module.exports = React.createClass
         else buttonLabel = t "account add"
 
 
-        hasError = (field) =>
-            if @state.errors[field]?
-                return ' has-error'
-            else
-                return ''
+        hasError = (fields) =>
+            if not Array.isArray fields
+                fields = [ fields ]
+            errors = fields.some (field) => @state.errors[field]?
+            return if errors then ' has-error' else ''
+
         getError = (field) =>
             if @state.errors[field]?
-                div className: 'col-sm-5 col-sm-offset-2 control-label', @state.errors[field]
+                div
+                    className: 'col-sm-5 col-sm-offset-2 control-label',
+                    @state.errors[field]
 
         form className: 'form-horizontal',
             @renderError()
@@ -184,7 +190,7 @@ module.exports = React.createClass
                         onBlur: @validateForm
                 getError 'name'
 
-            div className: 'form-group' + hasError('login') + hasError('auth'),
+            div className: 'form-group' + hasError(['login', 'auth']),
                 label
                     htmlFor: 'mailbox-email-address',
                     className: 'col-sm-2 col-sm-offset-2 control-label',
@@ -201,7 +207,7 @@ module.exports = React.createClass
                         placeholder: t "account address placeholder"
                 getError 'login'
 
-            div className: 'form-group' + hasError('password') + hasError('auth'),
+            div className: 'form-group' + hasError(['password', 'auth']),
                 label
                     htmlFor: 'mailbox-password',
                     className: 'col-sm-2 col-sm-offset-2 control-label',
@@ -218,7 +224,8 @@ module.exports = React.createClass
 
             fieldset null,
                 legend null, t 'account sending server'
-                div className: 'form-group' + hasError('smtp') + hasError('smtpServer') + hasError('smtpPort'),
+                div className: 'form-group' +
+                        hasError(['smtp', 'smtpServer', 'smtpPort']),
                     label
                         htmlFor: 'mailbox-smtp-server',
                         className: 'col-sm-2 col-sm-offset-2 control-label',
@@ -260,7 +267,8 @@ module.exports = React.createClass
                             checkedLink: @linkState('smtpSSL'),
                             type: 'checkbox',
                             className: 'form-control'
-                            onClick: (ev) => @_onServerParam ev.target, 'smtp', 'ssl'
+                            onClick: (ev) =>
+                                @_onServerParam ev.target, 'smtp', 'ssl'
                     label
                         htmlFor: 'mailbox-smtp-tls',
                         className: 'col-sm-2 control-label',
@@ -272,7 +280,8 @@ module.exports = React.createClass
                             checkedLink: @linkState('smtpTLS'),
                             type: 'checkbox',
                             className: 'form-control'
-                            onClick: (ev) => @_onServerParam ev.target, 'smtp', 'tls'
+                            onClick: (ev) =>
+                                @_onServerParam ev.target, 'smtp', 'tls'
 
             div className: 'hidden',
                 label
@@ -290,7 +299,8 @@ module.exports = React.createClass
                 getError 'password'
             fieldset null,
                 legend null, t 'account receiving server'
-                div className: 'form-group' + hasError('imap') + hasError('imapServer') + hasError('imapPort'),
+                div className: 'form-group' +
+                        hasError(['imap', 'imapServer', 'imapPort']),
                     label
                         htmlFor: 'mailbox-imap-server',
                         className: 'col-sm-2 col-sm-offset-2 control-label',
@@ -332,7 +342,8 @@ module.exports = React.createClass
                             checkedLink: @linkState('imapSSL'),
                             type: 'checkbox',
                             className: 'form-control'
-                            onClick: (ev) => @_onServerParam ev.target, 'imap', 'ssl'
+                            onClick: (ev) =>
+                                @_onServerParam ev.target, 'imap', 'ssl'
                     label
                         htmlFor: 'mailbox-imap-tls',
                         className: 'col-sm-2 control-label',
@@ -344,7 +355,8 @@ module.exports = React.createClass
                             checkedLink: @linkState('imapTLS'),
                             type: 'checkbox',
                             className: 'form-control'
-                            onClick: (ev) => @_onServerParam ev.target, 'imap', 'tls'
+                            onClick: (ev) =>
+                                @_onServerParam ev.target, 'imap', 'tls'
 
             div className: 'form-group',
                 div className: 'col-sm-offset-2 col-sm-5 text-right',
@@ -361,7 +373,8 @@ module.exports = React.createClass
         favorites = @state.favoriteMailboxes
         if @state.mailboxes?
             mailboxes = @state.mailboxes.map (mailbox, key) =>
-                favorite = true if favorites? and favorites.get(mailbox.get('id'))
+                favorite = true if favorites? and
+                        favorites.get(mailbox.get('id'))
                 MailboxItem {accountID: @state.id, mailbox, favorite}
             .toJS()
         form className: 'form-horizontal',
@@ -533,7 +546,8 @@ module.exports = React.createClass
         login = @state.login#@refs.login.getDOMNode().value.trim()
 
         if login isnt @_lastDiscovered
-            AccountActionCreator.discover login.split('@')[1], (err, provider) =>
+            AccountActionCreator.discover login.split('@')[1],
+            (err, provider) =>
                 if not err?
                     infos = {}
                     getInfos = (server) ->

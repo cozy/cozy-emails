@@ -13,7 +13,8 @@ MessageList = React.createClass
 
     render: ->
         curPage = parseInt @props.pageNum, 10
-        nbPages = Math.ceil(@props.messagesCount / @props.settings.get('messagesPerPage'))
+        nbPages = Math.ceil(@props.messagesCount /
+            @props.settings.get('messagesPerPage'))
         messages = @props.messages.map (message, key) =>
             isActive = @props.openMessage? and
                        @props.openMessage.get('id') is message.get('id')

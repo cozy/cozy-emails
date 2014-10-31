@@ -40,13 +40,15 @@ LayoutActionCreator = require '../actions/layout_action_creator'
           and re-render accordingly
 
     About routing: it uses Backbone.Router as a source of truth for the layout.
-    (based on: https://medium.com/react-tutorials/react-backbone-router-c00be0cf1592)
+    (based on:
+        https://medium.com/react-tutorials/react-backbone-router-c00be0cf1592)
 ###
 module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SettingsStore, SearchStore, TasksStore]
+        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SettingsStore,
+            SearchStore, TasksStore]
         RouterMixin
     ]
 
@@ -75,7 +77,10 @@ module.exports = Application = React.createClass
             @buildUrl
                 direction: 'first'
                 action: 'account.mailbox.messages'
-                parameters: [@state.selectedAccount?.get('id'), mailbox.get('id')]
+                parameters: [
+                    @state.selectedAccount?.get('id'),
+                    mailbox.get('id')
+                ]
 
         # Actual layout
         div className: 'container-fluid',
@@ -132,7 +137,8 @@ module.exports = Application = React.createClass
             if previous? and first.action is 'account.config'
                 classes.firstPanel += ' moveFromTopRightCorner'
 
-            # (default) when full-width panel is shown after a two-panels structure
+            # (default) when full-width panel is shown after
+            # a two-panels structure
             else if previous? and previous.secondPanel
 
                 # if the full-width panel was on right right before, it expands
@@ -186,6 +192,7 @@ module.exports = Application = React.createClass
             numPerPage      = @state.settings.get 'messagesPerPage'
             firstOfPage     = ( pageNum - 1 ) * numPerPage
             lastOfPage      = ( pageNum * numPerPage )
+            messages  = MessageStore.getMessagesByMailbox mailboxID, firstOfPage, lastOfPage
 
             # gets the selected message if any
             openMessage = null
@@ -196,14 +203,14 @@ module.exports = Application = React.createClass
 
             messagesCount = MessageStore.getMessagesCounts().get mailboxID
             return MessageList
-                messages: MessageStore.getMessagesByMailbox mailboxID, firstOfPage, lastOfPage
+                messages:      messages
                 messagesCount: messagesCount
-                accountID: accountID
-                mailboxID: mailboxID
-                layout: layout
-                openMessage: openMessage
-                settings: @state.settings
-                pageNum: pageNum
+                accountID:     accountID
+                mailboxID:     mailboxID
+                layout:        layout
+                openMessage:   openMessage
+                settings:      @state.settings
+                pageNum:       pageNum
                 emptyListMessage: t 'list empty'
                 counterMessage: t 'list count', messagesCount
                 buildPaginationUrl: (numPage) =>
@@ -225,7 +232,8 @@ module.exports = Application = React.createClass
                     name: 'AccountConfigError'
                     field: 'nomailboxes'
 
-            return AccountConfig {layout, error, isWaiting, selectedAccount, mailboxes, favoriteMailboxes}
+            return AccountConfig {layout, error, isWaiting, selectedAccount,
+                mailboxes, favoriteMailboxes}
 
         # -- Generates a configuration window to create a new account
         #else if panelInfo.action is 'account.new'
@@ -302,19 +310,21 @@ module.exports = Application = React.createClass
             if otherPanelInfo?.action is 'message'
                 messageID = otherPanelInfo.parameters.messageID
                 openMessage = MessageStore.getByID messageID
+            emptyListMessage = t 'list search empty', query: @state.searchQuery
+            counterMessage   =  t 'list search count', results.count()
 
             results = SearchStore.getResults()
             return MessageList
-                messages: results
-                messagesCount: results.count()
-                accountID: accountID
-                mailboxID: mailboxID
-                layout: layout
-                openMessage: openMessage
-                settings: @state.settings
-                pageNum: pageNum
-                emptyListMessage: t 'list search empty', query: @state.searchQuery
-                counterMessage: t 'list search count', results.count()
+                messages:         results
+                messagesCount:    results.count()
+                accountID:        accountID
+                mailboxID:        mailboxID
+                layout:           layout
+                openMessage:      openMessage
+                settings:         @state.settings
+                pageNum:          pageNum
+                emptyListMessage: emptyListMessage
+                counterMessage:   counterMessage
                 buildPaginationUrl: (numPage) =>
                     @buildUrl
                         direction: 'first'

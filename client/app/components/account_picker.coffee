@@ -25,15 +25,27 @@ module.exports = React.createClass
 
     renderPicker:  ->
         accounts = @props.accounts
-        account = accounts.get @props.valueLink.value
+        account  = accounts.get @props.valueLink.value
+        value    = @props.valueLink.value
 
         div null,
-            button id: 'compose-from', className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown', null,
-                span ref: 'account', account.get 'label'
-                span className: 'caret'
+            button
+                id: 'compose-from',
+                className: 'btn btn-default dropdown-toggle',
+                type: 'button',
+                'data-toggle': 'dropdown',
+                null,
+                    span ref: 'account', account.get 'label'
+                    span className: 'caret'
             ul className: 'dropdown-menu', role: 'menu',
-                for key, account of accounts.toJS() when key isnt @props.valueLink.value
-                    li role: 'presentation', key: key, a role: 'menuitem', onClick: @onChange, 'data-value': key,
-                        account.label
+                for key, account of accounts.toJS() when key isnt value
+                    li
+                        role: 'presentation',
+                        key: key,
+                            a
+                                role: 'menuitem',
+                                onClick: @onChange,
+                                'data-value': key,
+                                account.label
 
 

@@ -16,13 +16,19 @@ module.exports = React.createClass
             selected = @props.mailboxes.get selectedId
         if @props.mailboxes.length > 0
             div className: 'dropdown pull-left',
-                button className: 'btn btn-default dropdown-toggle', type: 'button', 'data-toggle': 'dropdown',
+                button
+                    className: 'btn btn-default dropdown-toggle',
+                    type: 'button',
+                    'data-toggle': 'dropdown',
                     selected?.get('label') or t 'mailbox pick one'
-                    span className: 'caret', ''
+                        span className: 'caret', ''
                 ul className: 'dropdown-menu', role: 'menu',
                     if @props.allowUndefined and selected
-                        li role: 'presentation', key: null, onClick: @onChange.bind(this, null),
-                            a role: 'menuitem', t 'mailbox pick null'
+                        li
+                            role: 'presentation',
+                            key: null,
+                            onClick: @onChange.bind(this, null),
+                                a role: 'menuitem', t 'mailbox pick null'
 
                     @props.mailboxes.map (mailbox, key) =>
                         if mailbox.get('id') isnt selectedId
@@ -37,7 +43,8 @@ module.exports = React.createClass
         url = @props.getUrl?(mailbox)
         onChange = @onChange.bind(this, key)
 
-        # Mark nested levels with "--" because plain space just doesn't work for some reason
+        # Mark nested levels with "--" because plain space
+        # just doesn't work for some reason
         pusher = ""
         pusher += "--" for i in [1..mailbox.get('depth')] by 1
 

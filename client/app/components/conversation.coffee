@@ -25,7 +25,8 @@ module.exports = React.createClass
 
         comp = (a, b) ->
             if (a? and not b?) or (not a? and b?) then return false
-            if typeof b.toJSON isnt 'function' or typeof b.toJSON isnt 'function'
+            if typeof b.toJSON isnt 'function' or
+               typeof b.toJSON isnt 'function'
                 return JSON.stringify(a) is JSON.stringify(b)
             return JSON.stringify(a.toJSON()) is JSON.stringify(b.toJSON())
 
@@ -100,15 +101,21 @@ module.exports = React.createClass
             #        span className: 'close', 'x'
 
             h3 null,
-                a href: closeUrl, className: 'close-conversation hidden-xs hidden-sm',
-                    i className:'fa ' + closeIcon
+                a
+                    href: closeUrl,
+                    className: 'close-conversation hidden-xs hidden-sm',
+                        i className:'fa ' + closeIcon
                 @props.message.get 'subject'
                 if @props.layout isnt 'full'
-                    a href: expandUrl, className: 'expand hidden-xs hidden-sm',
-                        i className: 'fa fa-arrows-h'
+                    a
+                        href: expandUrl,
+                        className: 'expand hidden-xs hidden-sm',
+                            i className: 'fa fa-arrows-h'
                 else
-                    a href: collapseUrl, className: 'close-conversation pull-right',
-                        i className:'fa fa-compress'
+                    a
+                        href: collapseUrl,
+                        className: 'close-conversation pull-right',
+                            i className:'fa fa-compress'
 
             ul className: 'thread list-unstyled',
                 for message, key in @props.conversation
