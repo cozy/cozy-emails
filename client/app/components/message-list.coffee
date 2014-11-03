@@ -5,6 +5,7 @@ RouterMixin    = require '../mixins/router_mixin'
 MessageUtils   = require '../utils/message_utils'
 {MessageFlags, MessageFilter} = require '../constants/app_constants'
 LayoutActionCreator = require '../actions/layout_action_creator'
+MessageStore  = require '../stores/message_store'
 
 MessageList = React.createClass
     displayName: 'MessageList'
@@ -12,29 +13,30 @@ MessageList = React.createClass
     mixins: [RouterMixin]
 
     render: ->
-        curPage = parseInt @props.pageNum, 10
-        nbPages = Math.ceil(@props.messagesCount /
-            @props.settings.get('messagesPerPage'))
         messages = @props.messages.map (message, key) =>
             isActive = @props.openMessage? and
                        @props.openMessage.get('id') is message.get('id')
             # @TODO @FIXME Only display initial mail of a thread
             @getMessageRender message, key, isActive
         .toJS()
+        nbMessages = parseInt @props.counterMessage, 10
         div className: 'message-list',
             div className: 'message-list-actions',
-                MessagesQuickFilter {}
+                #MessagesQuickFilter {}
                 MessagesFilter {}
                 MessagesSort {}
             if @props.messages.count() is 0
                 p null, @props.emptyListMessage
             else
                 div null,
-                    @getPagerRender curPage, nbPages
                     p null, @props.counterMessage
                     ul className: 'list-unstyled',
                         messages
-                    @getPagerRender curPage, nbPages
+                    if @props.messages.count() < nbMessages
+                        p null,
+                            a
+                                href: @props.buildPaginationUrl(),
+                                t 'list next page'
 
     getMessageRender: (message, key, isActive) ->
         flags = message.get('flags')
@@ -77,41 +79,6 @@ MessageList = React.createClass
                     i className: 'attach fa fa-paperclip'
                     i className: 'fav fa fa-star'
 
-    getPagerRender: (curPage, nbPages) ->
-        if nbPages < 2
-            return
-        classFirst = if curPage is 1 then 'disabled' else ''
-        classLast  = if curPage is nbPages then 'disabled' else ''
-        if nbPages < 11
-            minPage = 1
-            maxPage = nbPages
-        else
-            minPage = if curPage < 5 then 1 else curPage - 2
-            maxPage = minPage + 4
-            if maxPage > nbPages
-                maxPage = nbPages
-
-        urlFirst = @props.buildPaginationUrl 1
-        urlLast = @props.buildPaginationUrl nbPages
-
-        div className: 'pagination-box',
-            ul className: 'pagination',
-                li className: classFirst,
-                    a href: urlFirst, '«'
-                if minPage > 1
-                    li className: 'disabled',
-                        a href: urlFirst, '…'
-                for j in [minPage..maxPage] by 1
-                    classCurr = if j is curPage then 'current' else ''
-                    urlCurr = @props.buildPaginationUrl j
-                    li className: classCurr, key: j,
-                        a href: urlCurr, j
-                if maxPage < nbPages
-                    li className: 'disabled',
-                        a href: urlFirst, '…'
-                li className: classLast,
-                    a href: urlLast, '»'
-
     getParticipants: (message) ->
         from = MessageUtils.displayAddresses(message.get 'from')
         to   = MessageUtils.displayAddresses(message.get('to')
@@ -136,6 +103,8 @@ MessagesQuickFilter = React.createClass
 
 MessagesFilter = React.createClass
     displayName: 'MessagesFilter'
+
+    mixins: [RouterMixin]
 
     render: ->
         div className: 'dropdown filter-dropdown',
@@ -167,8 +136,15 @@ MessagesFilter = React.createClass
     onFilter: (ev) ->
         LayoutActionCreator.filterMessages ev.target.dataset.filter
 
+        @redirect @buildUrl
+            direction: 'first'
+            action: 'account.mailbox.messages.full'
+            parameters: MessageStore.getParams()
+
 MessagesSort = React.createClass
     displayName: 'MessagesSort'
+
+    mixins: [RouterMixin]
 
     getInitialState: ->
         return {
@@ -205,5 +181,10 @@ MessagesSort = React.createClass
         LayoutActionCreator.sortMessages
             field: field
             order: order
+
+        @redirect @buildUrl
+            direction: 'first'
+            action: 'account.mailbox.messages.full'
+            parameters: MessageStore.getParams()
 
         @setState field: field, order: order

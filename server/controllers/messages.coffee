@@ -25,7 +25,6 @@ formatMessage = (message) ->
     return message
 
 # list messages from a mailbox
-# require numPage & numByPage params
 module.exports.listByMailbox = (req, res, next) ->
 
     sort = if req.query.sort then req.query.sort

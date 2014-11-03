@@ -79,8 +79,8 @@ module.exports =
 
     MessageFilter:
         'ALL'          : 'All'
-        'FLAGGED'      : 'Flagged'
-        'UNSEEN'       : 'Unseen'
+        'FLAGGED'      : 'flagged'
+        'UNSEEN'       : 'unseen'
 
     MailboxFlags:
         'DRAFT'   :  '\\Drafts'

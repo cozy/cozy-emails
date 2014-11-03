@@ -49,6 +49,7 @@ module.exports =
       "list sort"               : "Sort"
       "list sort date"          : "Date"
       "list sort subject"       : "Subject"
+      "list next page"          : "More messages"
 
       # Mail
       "mail receivers"          : "To: "

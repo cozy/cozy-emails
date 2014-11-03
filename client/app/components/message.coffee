@@ -513,12 +513,8 @@ module.exports = React.createClass
     displayNextMessage: ->
         @redirect
             direction: 'first'
-            action: 'account.mailbox.messages'
-            parameters: [
-                @props.selectedAccount.get('id'),
-                @props.selectedMailboxID,
-                1
-            ]
+            action: 'account.mailbox.messages.full'
+            parameters: @getParams()
             fullWidth: true
 
     onReply: (args) ->

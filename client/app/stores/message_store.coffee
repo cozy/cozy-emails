@@ -3,7 +3,8 @@ AppDispatcher = require '../app_dispatcher'
 
 AccountStore = require './account_store'
 
-{ActionTypes, MessageFlags, MessageFilter} = require '../constants/app_constants'
+{ActionTypes, MessageFlags, MessageFilter} =
+        require '../constants/app_constants'
 
 class MessageStore extends Store
 
@@ -14,7 +15,7 @@ class MessageStore extends Store
 
     _sortField   = 'date'
     _sortOrder   = 1
-    _filter      = MessageFilter.ALL
+    _filter      = '-'
     _quickFilter = ''
     __getSortFunction = (criteria) ->
         sortFunction = (message1, message2) ->
@@ -45,6 +46,7 @@ class MessageStore extends Store
 
     _counts       = Immutable.Map()
     _unreadCounts = Immutable.Map()
+    _params       = {}
 
 
     ###
@@ -78,9 +80,22 @@ class MessageStore extends Store
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
 
+            if messages.links?
+                if messages.links.next?
+                    _params = {}
+                    next   = decodeURIComponent(messages.links.next)
+                    url    = new URL('http://localhost' + next)
+                    url.search.substr(1).split('&').forEach (p) ->
+                        tmp = p.split '='
+                        if tmp[1] isnt ''
+                            _params[tmp[0]] = tmp[1]
+                    #if _params.flag is ''
+                    #    _params.flag = null#'all'
+
             if messages.count? and messages.mailboxID?
                 _counts = _counts.set messages.mailboxID, messages.count
-                _unreadCounts = _unreadCounts.set messages.mailboxID, messages.unread
+                _unreadCounts = _unreadCounts.set messages.mailboxID,
+                    messages.unread
                 messages = messages.messages.sort __sortFunction
 
             onReceiveRawMessage message, true for message in messages
@@ -113,18 +128,43 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.LIST_FILTER, (filter) ->
-            _filter = filter
-            @emit 'change'
+            handle ActionTypes.LIST_SORT, (sort) ->
+            _messages    = _messages.clear()
+            if _filter is filter
+                _filter = '-'
+            else
+                _filter = filter
+            _params =
+                after: '-'
+                flag: _filter
+                before: '-'
+                pageAfter: '-'
+                sort : _params.sort
 
         handle ActionTypes.LIST_QUICK_FILTER, (filter) ->
             _quickFilter = filter
             @emit 'change'
 
         handle ActionTypes.LIST_SORT, (sort) ->
-            _sortField = sort.field
-            _sortOrder = sort.order
-            @emit 'change'
-
+            _messages    = _messages.clear()
+            _sortField   = sort.field
+            currentField = _params.sort.substr(1)
+            currentOrder = _params.sort.substr(0, 1)
+            if currentField is sort.field
+                newOrder   = if currentOrder is '+' then '-' else '+'
+                _sortOrder = -1 * _sortOrder
+            else
+                _sortOrder = -1
+                if sort.field is 'date'
+                    newOrder   = '-'
+                else
+                    newOrder   = '+'
+            _params =
+                after: '-'
+                flag: _params.flag
+                before: '-'
+                pageAfter: '-'
+                sort : newOrder + sort.field
 
     ###
         Public API
@@ -142,11 +182,9 @@ class MessageStore extends Store
     *
     * @return {Array}
     ###
-    getMessagesByAccount: (accountID, first = null, last = null) ->
+    getMessagesByAccount: (accountID) ->
         sequence = _messages.filter (message) ->
             return message.get('account') is accountID
-        if first? and last?
-            sequence = sequence.slice first, last
 
         # sequences are lazy so we need .toOrderedMap() to actually execute it
         return sequence.toOrderedMap()
@@ -164,11 +202,12 @@ class MessageStore extends Store
     *
     * @return {Array}
     ###
-    getMessagesByMailbox: (mailboxID, first = null, last = null) ->
+    getMessagesByMailbox: (mailboxID) ->
         sequence = _messages.filter (message) ->
             return mailboxID in Object.keys message.get 'mailboxIDs'
         .sort(__getSortFunction _sortField)
 
+        ###
         if _filter isnt MessageFilter.ALL
             if _filter is MessageFilter.FLAGGED
                 filterFunction = (message) ->
@@ -183,9 +222,7 @@ class MessageStore extends Store
             re = new RegExp _quickFilter, 'i'
             sequence = sequence.filter (message) ->
                 return re.test(message.get 'subject')
-
-        if first? and last?
-            sequence = sequence.slice first, last
+        ###
 
         # sequences are lazy so we need .toOrderedMap() to actually execute it
         return sequence.toOrderedMap()
@@ -203,7 +240,8 @@ class MessageStore extends Store
             conversation.push @getByID idToLook
             temp = _messages.filter (message) ->
                 inReply = message.get 'inReplyTo'
-                return Array.isArray(inReply) and inReply.indexOf(idToLook) isnt -1
+                return Array.isArray(inReply) and
+                        inReply.indexOf(idToLook) isnt -1
             newIdsToLook = temp.map((item) -> item.get('id')).toArray()
             idsToLook = idsToLook.concat newIdsToLook
 
@@ -216,5 +254,7 @@ class MessageStore extends Store
         .map (message) -> conversation.push message
         .toJS()
         return conversation
+
+    getParams: -> return _params
 
 module.exports = new MessageStore()

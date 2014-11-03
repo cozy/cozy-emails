@@ -76,19 +76,25 @@ module.exports = LayoutActionCreator =
         # else go directly to first account
         else 'account.mailbox.messages'
 
-    showMessageList: (panelInfo, direction) ->
+    showMessageList: (panelInfo) ->
         LayoutActionCreator.hideReponsiveMenu()
 
-        {accountID, mailboxID, page} = panelInfo.parameters
+        {accountID, mailboxID} = panelInfo.parameters
         selectedAccount = AccountStore.getSelected()
         if not selectedAccount? or selectedAccount.get('id') isnt accountID
             AccountActionCreator.selectAccount accountID
 
-        XHRUtils.fetchMessagesByFolder mailboxID, page, (err, rawMessage) ->
+        query = {}
+        ['sort', 'after', 'before', 'flag', 'pageAfter'].forEach (param) ->
+            value = panelInfo.parameters[param]
+            if value? and value isnt ''
+                query[param] = value
+
+        XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMessages) ->
             if err?
                 LayoutActionCreator.alertError err
             else
-                MessageActionCreator.receiveRawMessages rawMessage
+                MessageActionCreator.receiveRawMessages rawMessages
 
     showMessage: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()

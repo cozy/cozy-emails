@@ -37,9 +37,13 @@ module.exports =
                 callback "Something went wrong -- #{res.body}"
 
 
-    fetchMessagesByFolder: (mailboxID, numPage, callback) ->
+    fetchMessagesByFolder: (mailboxID, query, callback) ->
+        for own key, val of query
+            if val is '-'
+                delete query[key]
         request.get "mailbox/#{mailboxID}"
         .set 'Accept', 'application/json'
+        .query query
         .end (res) ->
             if res.ok
                 callback null, res.body
