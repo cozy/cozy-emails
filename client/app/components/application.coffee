@@ -84,7 +84,7 @@ module.exports = Application = React.createClass
 
         keyFirst = 'left-panel-' + layout.firstPanel.action + '-' +
             Object.keys(layout.firstPanel.parameters).join('-')
-        if layout.secondPaenl?
+        if layout.secondPanel?
             keySecond = 'right-panel-' + layout.secondPanel.action + '-' +
                 Object.keys(layout.secondPanel.parameters).join('-')
         # Actual layout
@@ -128,8 +128,8 @@ module.exports = Application = React.createClass
                             div
                                 className: panelClasses.secondPanel,
                                 key: keySecond,
-                                    secondPanel @getPanelComponent
-                                        layout.secondPanel, 'second'
+                                    @getPanelComponent layout.secondPanel,
+                                        'second'
 
 
     # Panels CSS classes are a bit long so we get them from a this subfunction
