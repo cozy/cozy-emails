@@ -20,7 +20,7 @@ MessageList = React.createClass
             @getMessageRender message, key, isActive
         .toJS()
         nbMessages = parseInt @props.counterMessage, 10
-        div className: 'message-list',
+        div className: 'message-list', ref: 'list',
             div className: 'message-list-actions',
                 #MessagesQuickFilter {}
                 MessagesFilter {query: @props.query}
@@ -36,6 +36,7 @@ MessageList = React.createClass
                         p null,
                             a
                                 href: @props.buildPaginationUrl(),
+                                ref: 'nextPage',
                                 t 'list next page'
 
     getMessageRender: (message, key, isActive) ->
@@ -84,6 +85,38 @@ MessageList = React.createClass
         to   = MessageUtils.displayAddresses(message.get('to')
                 .concat(message.get('cc')))
         "#{from}, #{to}"
+
+
+    _initScroll: ->
+        if not @refs.nextPage?
+            return
+
+        isVisible = =>
+            next   = @refs.nextPage.getDOMNode()
+            rect   = next.getBoundingClientRect()
+            height = window.innerHeight or document.documentElement.clientHeight
+            width  = window.innerWidth  or document.documentElement.clientWidth
+            return rect.top >= 0 and
+                   rect.left >= 0 and
+                   rect.bottom <= height and
+                   rect.right <= width
+
+        scrollable = @refs.list.getDOMNode().parentNode
+
+        if not isVisible()
+            loadNext = =>
+                if isVisible()
+                    scrollable.removeEventListener 'scroll', loadNext
+                    @redirect @props.buildPaginationUrl()
+                else
+
+            scrollable.addEventListener 'scroll', loadNext
+
+    componentDidMount: ->
+        @_initScroll()
+
+    componentDidUpdate: ->
+        @_initScroll()
 
 module.exports = MessageList
 
