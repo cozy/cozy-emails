@@ -137,7 +137,7 @@ module.exports = Application = React.createClass
     getPanelClasses: (isFullWidth) ->
         previous = @props.router.previous
         layout   = @props.router.current
-        first     = layout.firstPanel
+        first    = layout.firstPanel
         second   = layout.secondPanel
 
         # Two cases: the layout has a full-width panel...
@@ -214,6 +214,7 @@ module.exports = Application = React.createClass
                     otherPanelInfo.parameters.messageID
 
             messagesCount = MessageStore.getMessagesCounts().get mailboxID
+            query = MessageStore.getParams()
             return MessageList
                 messages:      messages
                 messagesCount: messagesCount
@@ -222,13 +223,14 @@ module.exports = Application = React.createClass
                 layout:        layout
                 openMessage:   openMessage
                 settings:      @state.settings
+                query:         query
                 emptyListMessage: t 'list empty'
-                counterMessage: t 'list count', messagesCount
+                counterMessage:   t 'list count', messagesCount
                 buildPaginationUrl: =>
                     @buildUrl
                         direction: 'first'
                         action: 'account.mailbox.messages.full'
-                        parameters: MessageStore.getParams()
+                        parameters: query
 
         # -- Generates a configuration window for a given account
         else if panelInfo.action is 'account.config' or
@@ -321,8 +323,9 @@ module.exports = Application = React.createClass
                 openMessage = MessageStore.getByID messageID
             emptyListMessage = t 'list search empty', query: @state.searchQuery
             counterMessage   =  t 'list search count', results.count()
-
             results = SearchStore.getResults()
+            query   = MessageStore.getParams()
+
             return MessageList
                 messages:         results
                 messagesCount:    results.count()
@@ -333,11 +336,12 @@ module.exports = Application = React.createClass
                 settings:         @state.settings
                 emptyListMessage: emptyListMessage
                 counterMessage:   counterMessage
+                query:            query
                 buildPaginationUrl: (numPage) =>
                     @buildUrl
                         direction: 'first'
                         action: 'search'
-                        parameters: MessageStore.getParams()
+                        parameters: query
 
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else return div null, 'Unknown component'

@@ -78,7 +78,7 @@ module.exports =
         'DRAFT'        : '\\Draft'
 
     MessageFilter:
-        'ALL'          : 'All'
+        'ALL'          : 'all'
         'FLAGGED'      : 'flagged'
         'UNSEEN'       : 'unseen'
 

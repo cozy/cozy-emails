@@ -39,7 +39,7 @@ module.exports =
 
     fetchMessagesByFolder: (mailboxID, query, callback) ->
         for own key, val of query
-            if val is '-'
+            if val is '-' or val is 'all'
                 delete query[key]
         request.get "mailbox/#{mailboxID}"
         .set 'Accept', 'application/json'

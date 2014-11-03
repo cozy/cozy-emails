@@ -84,11 +84,13 @@ class MessageStore extends Store
                 if messages.links.next?
                     _params = {}
                     next   = decodeURIComponent(messages.links.next)
-                    url    = new URL('http://localhost' + next)
-                    url.search.substr(1).split('&').forEach (p) ->
+                    url    = 'http://localhost' + next
+                    url.split('?')[1].split('&').forEach (p) ->
                         tmp = p.split '='
                         if tmp[1] isnt ''
                             _params[tmp[0]] = tmp[1]
+                        else
+                            _params[tmp[0]] = '-'
                     #if _params.flag is ''
                     #    _params.flag = null#'all'
 
@@ -128,8 +130,7 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.LIST_FILTER, (filter) ->
-            handle ActionTypes.LIST_SORT, (sort) ->
-            _messages    = _messages.clear()
+            _messages  = _messages.clear()
             if _filter is filter
                 _filter = '-'
             else

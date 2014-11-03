@@ -23,8 +23,8 @@ MessageList = React.createClass
         div className: 'message-list',
             div className: 'message-list-actions',
                 #MessagesQuickFilter {}
-                MessagesFilter {}
-                MessagesSort {}
+                MessagesFilter {query: @props.query}
+                MessagesSort {query: @props.query}
             if @props.messages.count() is 0
                 p null, @props.emptyListMessage
             else
@@ -107,12 +107,17 @@ MessagesFilter = React.createClass
     mixins: [RouterMixin]
 
     render: ->
+        filter = @props.query.flag
+        if not filter? or filter is '-'
+            title = t 'list filter'
+        else
+            title = t 'list filter ' + filter
         div className: 'dropdown filter-dropdown',
             button
                 className: 'btn btn-default dropdown-toggle message-list-action'
                 type: 'button'
                 'data-toggle': 'dropdown'
-                t 'list filter'
+                title
                     span className: 'caret'
             ul
                 className: 'dropdown-menu',
@@ -146,19 +151,19 @@ MessagesSort = React.createClass
 
     mixins: [RouterMixin]
 
-    getInitialState: ->
-        return {
-            field: "date",
-            order: -1
-        }
-
     render: ->
+        sort = @props.query.sort
+        if not sort? or sort is '-'
+            title = t 'list sort'
+        else
+            sort  = sort.substr 1
+            title = t 'list sort ' + sort
         div className: 'dropdown sort-dropdown',
             button
                 className: 'btn btn-default dropdown-toggle message-list-action'
                 type: 'button'
                 'data-toggle': 'dropdown'
-                t 'list sort'
+                title
                     span className: 'caret'
             ul
                 className: 'dropdown-menu',
@@ -176,15 +181,11 @@ MessagesSort = React.createClass
 
     onSort: (ev) ->
         field = ev.target.dataset.sort
-        order = if field is @state.field then -1 * @state.order else 1
 
         LayoutActionCreator.sortMessages
             field: field
-            order: order
 
         @redirect @buildUrl
             direction: 'first'
             action: 'account.mailbox.messages.full'
             parameters: MessageStore.getParams()
-
-        @setState field: field, order: order
