@@ -131,4 +131,3 @@ module.exports = React.createClass
                         active: active
                         prevID: @props.prevID
                         nextID: @props.nextID
-                        senderAvatar: @props.senderAvatar if active

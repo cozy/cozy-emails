@@ -223,6 +223,7 @@ module.exports = React.createClass
             editable: false
             value: prepared.attachments.map(MessageUtils.convertAttachments)
             display: display
+        avatar = @props.message.get('getAvatar')()
         classes = classer
             'header': true
             'row': true
@@ -239,8 +240,8 @@ module.exports = React.createClass
         if @state.headers
             div className: classes,
                 div className: leftClass, onClick: @toggleHeaders,
-                    if @props.senderAvatar?
-                        img className: 'avatar', src: @props.senderAvatar
+                    if avatar
+                        img className: 'avatar', src: avatar
                     else
                         i className: 'sender-avatar fa fa-user'
                     div className: 'participants',
@@ -259,8 +260,8 @@ module.exports = React.createClass
                 toggleActive
         else
             div className: classes, onClick: @toggleHeaders,
-                if @props.senderAvatar?
-                    img className: 'avatar', src: @props.senderAvatar
+                if avatar
+                    img className: 'avatar', src: avatar
                 else
                     i className: 'sender-avatar fa fa-user'
                 span className: 'participants', participants

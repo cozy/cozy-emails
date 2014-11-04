@@ -1,4 +1,5 @@
 Store = require '../libs/flux/store/store'
+ContactStore  = require './contact_store'
 AppDispatcher = require '../app_dispatcher'
 
 AccountStore = require './account_store'
@@ -72,6 +73,10 @@ class MessageStore extends Store
 
             if not message.flags?
                 message.flags = []
+
+            message.getAvatar = ->
+                ContactStore.getAvatar message.get('from')[0].address
+
             # message loaded from fixtures for test purpose have a docType
             # that may cause some troubles
             delete message.docType

@@ -270,11 +270,6 @@ module.exports = Application = React.createClass
                 conversation = MessageStore.getMessagesByConversation messageID
             if message?
                 MessageStore.setCurrentID message.get('id')
-                try
-                    sender = message.get('from')[0].address
-                    senderAvatar = ContactStore.getAvatar sender
-                catch error
-                    console.log error
 
             return Conversation
                 layout            : layout
@@ -287,7 +282,6 @@ module.exports = Application = React.createClass
                 conversation      : conversation
                 prevID            : MessageStore.getPreviousMessage()
                 nextID            : MessageStore.getNextMessage()
-                senderAvatar      : senderAvatar
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
