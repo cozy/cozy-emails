@@ -26,6 +26,9 @@ class ContactStore extends Store
                     rawResults = [ rawResults ]
                 _results = _results.withMutations (map) ->
                     rawResults.forEach (rawResult) ->
+                        rawResult.datapoints.forEach (point) ->
+                            if point.name is 'email'
+                                rawResult.address = point.value
                         contact = Immutable.Map rawResult
                         map.set contact.get('address'), contact
 

@@ -55,7 +55,7 @@ module.exports = React.createClass
 
         li onClick: selectContact,
             a null,
-                "#{contact.get 'name'} <#{contact.get 'address'}>"
+                "#{contact.get 'fn'} <#{contact.get 'address'}>"
 
 
     onSubmit: ->
