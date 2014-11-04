@@ -227,6 +227,8 @@ module.exports = Application = React.createClass
                 emptyListMessage: t 'list empty'
                 counterMessage:   t 'list count', messagesCount
                 buildPaginationUrl: =>
+                    query.accountID = accountID
+                    query.mailboxID = mailboxID
                     @buildUrl
                         direction: 'first'
                         action: 'account.mailbox.messages.full'
