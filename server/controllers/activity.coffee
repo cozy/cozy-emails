@@ -1,13 +1,41 @@
 Contact = require '../models/contact'
+Promise = require 'bluebird'
 ContactActivity =
     search: (data, cb) ->
+        onData = (err, result) ->
+            if err?
+                cb err, result
+            else
+                pictures = []
+                result.forEach (contact) ->
+                    p = new Promise (resolve, reject) ->
+                        if contact._attachments?.picture
+                            stream = contact.getFile 'picture', (err) ->
+                                if err?
+                                    console.log err
+                            bufs = []
+                            stream.on 'data', (d) -> bufs.push d
+                            stream.on 'end', ->
+                                buf = Buffer.concat bufs
+                                avatar = "data:image/jpeg;base64," +
+                                    buf.toString('base64')
+                                contact.datapoints.push
+                                    name: 'avatar'
+                                    value: avatar
+                                resolve contact
+                        else
+                            resolve contact
+                    pictures.push p
+                Promise.all(pictures).then (res) ->
+                    cb err, res
+
         if data.query?
             params =
                 startkey: data.query
                 endkey:   data.query + "\uFFFF"
-            Contact.request 'byName',  params, cb
+            Contact.request 'byName',  params, onData
         else
-            Contact.request 'all', cb
+            Contact.request 'all', onData
     create: (data, cb) ->
         Contact.request 'byEmail', key: data.contact.address, (err, contacts) ->
             if err

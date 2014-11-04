@@ -1,4 +1,4 @@
-{div, ul, li, span, i, p, h3, a, button, pre, iframe} = React.DOM
+{div, ul, li, span, i, p, h3, a, button, pre, iframe, img} = React.DOM
 Compose      = require './compose'
 FilePicker   = require './file_picker'
 MessageUtils = require '../utils/message_utils'
@@ -239,7 +239,10 @@ module.exports = React.createClass
         if @state.headers
             div className: classes,
                 div className: leftClass, onClick: @toggleHeaders,
-                    i className: 'sender-avatar fa fa-user'
+                    if @props.senderAvatar?
+                        img className: 'avatar', src: @props.senderAvatar
+                    else
+                        i className: 'sender-avatar fa fa-user'
                     div className: 'participants',
                         p className: 'sender',
                             @renderAddress 'from'
@@ -256,7 +259,10 @@ module.exports = React.createClass
                 toggleActive
         else
             div className: classes, onClick: @toggleHeaders,
-                i className: 'fa fa-user'
+                if @props.senderAvatar?
+                    img className: 'avatar', src: @props.senderAvatar
+                else
+                    i className: 'sender-avatar fa fa-user'
                 span className: 'participants', participants
                 span className: 'hour', prepared.date
                 span className: "flags",

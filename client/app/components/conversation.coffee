@@ -119,6 +119,7 @@ module.exports = React.createClass
 
             ul className: 'thread list-unstyled',
                 for message, key in @props.conversation
+                    active = @props.message.get('id') is message.get('id')
                     Message
                         key: key
                         message: message
@@ -127,6 +128,7 @@ module.exports = React.createClass
                         mailboxes: @props.mailboxes
                         selectedAccount: @props.selectedAccount
                         selectedMailboxID: @props.selectedMailboxID
-                        active: @props.message.get('id') is message.get('id')
+                        active: active
                         prevID: @props.prevID
                         nextID: @props.nextID
+                        senderAvatar: @props.senderAvatar if active

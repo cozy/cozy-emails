@@ -22,11 +22,12 @@ StoreWatchMixin = require '../mixins/store_watch_mixin'
 
 # Flux stores
 AccountStore  = require '../stores/account_store'
+ContactStore  = require '../stores/contact_store'
 MessageStore  = require '../stores/message_store'
 LayoutStore   = require '../stores/layout_store'
 SettingsStore = require '../stores/settings_store'
 SearchStore   = require '../stores/search_store'
-TasksStore = require '../stores/tasks_store'
+TasksStore    = require '../stores/tasks_store'
 
 # Flux actions
 LayoutActionCreator = require '../actions/layout_action_creator'
@@ -47,8 +48,8 @@ module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SettingsStore,
-            SearchStore, TasksStore]
+        StoreWatchMixin [AccountStore, ContactStore, MessageStore, LayoutStore,
+        SettingsStore, SearchStore, TasksStore]
         RouterMixin
     ]
 
@@ -269,6 +270,11 @@ module.exports = Application = React.createClass
                 conversation = MessageStore.getMessagesByConversation messageID
             if message?
                 MessageStore.setCurrentID message.get('id')
+                try
+                    sender = message.get('from')[0].address
+                    senderAvatar = ContactStore.getAvatar sender
+                catch error
+                    console.log error
 
             return Conversation
                 layout            : layout
@@ -281,6 +287,7 @@ module.exports = Application = React.createClass
                 conversation      : conversation
                 prevID            : MessageStore.getPreviousMessage()
                 nextID            : MessageStore.getNextMessage()
+                senderAvatar      : senderAvatar
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
