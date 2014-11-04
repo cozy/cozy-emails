@@ -9,12 +9,19 @@ ContactActivity =
         else
             Contact.request 'all', cb
     create: (data, cb) ->
-        contact =
-            fn: data.contact.name
-            datapoints: [
-              name: "email", value: data.contact.address
-            ]
-        Contact.create contact, cb
+        Contact.request 'byEmail', key: data.contact.address, (err, contacts) ->
+            if err
+                cb err, null
+            else
+                if contacts.length is 0
+                    contact =
+                        fn: data.contact.name
+                        datapoints: [
+                          name: "email", value: data.contact.address
+                        ]
+                    Contact.create contact, cb
+                else
+                    cb null, contacts[0]
     delete: (data, cb) ->
         Contact.find data.id, (err, contact) ->
             if err? or not contact?
@@ -45,9 +52,9 @@ module.exports.create = (req, res, next) ->
                                         address: address
                                     contacts.push newContact
 
-                            res.send 201, result: contacts
+                            res.send 201, result: result
                         else
-                            res.send 200
+                            res.send 200, result: result
             else
                 res.send 400, {name: "Unknown activity name", error: true}
         else

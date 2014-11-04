@@ -22,6 +22,8 @@ class ContactStore extends Store
         handle ActionTypes.RECEIVE_RAW_CONTACT_RESULTS, (rawResults) ->
             _results = Immutable.OrderedMap.empty()
             if rawResults?
+                if not Array.isArray rawResults
+                    rawResults = [ rawResults ]
                 _results = _results.withMutations (map) ->
                     rawResults.forEach (rawResult) ->
                         contact = Immutable.Map rawResult
