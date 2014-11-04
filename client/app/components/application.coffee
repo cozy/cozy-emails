@@ -267,6 +267,8 @@ module.exports = Application = React.createClass
                 conversation = MessageStore.getConversation conversationID
             else
                 conversation = MessageStore.getMessagesByConversation messageID
+            if message?
+                MessageStore.setCurrentID message.get('id')
 
             return Conversation
                 layout            : layout
@@ -277,6 +279,8 @@ module.exports = Application = React.createClass
                 selectedMailboxID : @state.selectedMailboxID
                 message           : message
                 conversation      : conversation
+                prevID            : MessageStore.getPreviousMessage()
+                nextID            : MessageStore.getNextMessage()
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'

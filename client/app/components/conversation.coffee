@@ -128,3 +128,5 @@ module.exports = React.createClass
                         selectedAccount: @props.selectedAccount
                         selectedMailboxID: @props.selectedMailboxID
                         active: @props.message.get('id') is message.get('id')
+                        prevID: @props.prevID
+                        nextID: @props.nextID

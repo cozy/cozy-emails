@@ -197,6 +197,7 @@ module.exports = React.createClass
                             div className: 'preview',
                                 p null, prepared.text
                     div className: 'clearfix'
+                    @renderNavigation()
 
                     # Display Compose block
                     @renderCompose()
@@ -430,6 +431,42 @@ module.exports = React.createClass
                             .toJS()
                             li role: 'presentation', className: 'divider'
 
+    renderNavigation: ->
+
+        if @props.prevID?
+            prevUrl = @buildUrl
+                direction: 'second'
+                action: 'message'
+                parameters: @props.prevID
+            displayPrev = =>
+                @displayNextMessage @props.prevID
+        if @props.nextID?
+            nextUrl = @buildUrl
+                direction: 'second'
+                action: 'message'
+                parameters: @props.nextID
+            displayNext = =>
+                @displayNextMessage @props.nextID
+
+        div className: 'messageNavigation',
+            div className: 'btn-toolbar', role: 'toolbar',
+                div className: 'btn-group btn-group-sm btn-group-justified',
+                    if prevUrl?
+                        div className: 'btn-group btn-group-sm',
+                            button
+                                className: 'btn btn-default',
+                                type: 'button',
+                                onClick: displayPrev,
+                                    a href: prevUrl,
+                                        span className: 'fa fa-long-arrow-left'
+                    if nextUrl?
+                        div className: 'btn-group btn-group-sm',
+                            button
+                                className: 'btn btn-default',
+                                type: 'button',
+                                onClick: displayNext,
+                                    a href: nextUrl,
+                                        span className: 'fa fa-long-arrow-right'
 
     renderMailboxes: (mailbox, key, conversation) ->
         # Don't display current mailbox
@@ -510,12 +547,22 @@ module.exports = React.createClass
         else
             @setState active: true
 
-    displayNextMessage: ->
-        @redirect
-            direction: 'first'
-            action: 'account.mailbox.messages.full'
-            parameters: @getParams()
-            fullWidth: true
+    displayNextMessage: (next)->
+        if not next?
+            if @props.nextID?
+                next = @props.nextID
+            else next = @props.prevID
+        if next?
+            @redirect
+                direction: 'second'
+                action: 'message'
+                parameters: next
+        else
+            @redirect
+                direction: 'first'
+                action: 'account.mailbox.messages.full'
+                parameters: @getParams()
+                fullWidth: true
 
     onReply: (args) ->
         @setState composing: true

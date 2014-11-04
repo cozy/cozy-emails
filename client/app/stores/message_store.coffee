@@ -47,6 +47,8 @@ class MessageStore extends Store
     _counts       = Immutable.Map()
     _unreadCounts = Immutable.Map()
     _params       = {}
+    _currentMessages = null
+    _currentID       = null
 
 
     ###
@@ -226,7 +228,25 @@ class MessageStore extends Store
         ###
 
         # sequences are lazy so we need .toOrderedMap() to actually execute it
-        return sequence.toOrderedMap()
+        _currentMessages = sequence.toOrderedMap()
+        _currentID       = _currentMessages.first()?.get 'id'
+        return _currentMessages
+
+    setCurrentID: (messageID) ->
+        _currentID = messageID
+
+    getPreviousMessage: ->
+        keys = Object.keys _currentMessages.toJS()
+        idx = keys.indexOf _currentID
+        return if idx < 1 then null else keys[idx - 1]
+
+    getNextMessage: ->
+        keys = Object.keys _currentMessages.toJS()
+        idx = keys.indexOf _currentID
+        if idx is -1 or idx is (keys.length - 1)
+            return null
+        else
+            return keys[idx + 1]
 
     getMessagesCounts: ->
         return _counts
