@@ -13,7 +13,7 @@
   "main": "server.coffee",
   "dependencies": {
     "americano": "0.3.10",
-    "americano-cozy": "0.2.8",
+    "americano-cozy": "0.2.9",
     "printit": "0.1.3",
     "async": "0.9.0",
     "jade": "1.6.0",
