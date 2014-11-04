@@ -312,7 +312,7 @@ module.exports = Compose = React.createClass
             else
                 LayoutActionCreator.alertSuccess msgOk
                 @setState message
-                
+
                 if callback?
                     callback error
                 else if not isDraft

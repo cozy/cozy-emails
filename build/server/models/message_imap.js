@@ -50,17 +50,17 @@ Message.prototype.imap_applyChanges = function(flagsOps, boxOps) {
         uid = _this.mailboxIDs[boxid];
         return imap.openBox(boxIndex[boxid].path).then(function() {
           if (flagsOps.add.length) {
-            return imap.addFlags(uid, flagsOps.add);
+            imap.addFlags(uid, flagsOps.add);
+            return log.info("ADDED FLAGS " + boxIndex[boxid].path + ":" + uid, flagsOps.add);
           }
         }).then(function() {
           if (flagsOps.remove.length) {
-            return imap.delFlags(uid, flagsOps.remove);
+            imap.delFlags(uid, flagsOps.remove);
+            return log.info("DELETED FLAGS " + boxIndex[boxid].path + ":" + uid, flagsOps.add);
           }
         }).then(function() {
           _this.flags = _.union(_this.flags, flagsOps.add);
-          _this.flags = _.difference(_this.flags, flagsOps.remove);
-          log.info("  CHANGED FLAGS " + boxIndex[boxid].path + ":" + uid);
-          return log.info("    RESULT = ", _this.flags);
+          return _this.flags = _.difference(_this.flags, flagsOps.remove);
         }).then(function() {
           return Promise.serie(boxOps.addTo, function(destId) {
             return imap.copy(uid, boxIndex[destId].path).then(function(uidInDestination) {

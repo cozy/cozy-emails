@@ -19,6 +19,8 @@ mailutils = require('../utils/jwz_tools');
 
 Break = require('../utils/errors').Break;
 
+FETCH_AT_ONCE = require('../utils/constants').FETCH_AT_ONCE;
+
 Mailbox.prototype.doASAPWithBox = function(gen) {
   return ImapScheduler.instanceFor(this.accountID).then((function(_this) {
     return function(scheduler) {
@@ -38,8 +40,6 @@ Mailbox.prototype.doLaterWithBox = function(gen) {
 Mailbox.prototype.imap_fetchMails = function(limitByBox) {
   return this.imap_refreshStep(limitByBox);
 };
-
-FETCH_AT_ONCE = 1000;
 
 Mailbox.prototype.imap_refreshStep = function(limitByBox, laststep) {
   var box, reporter, step;
@@ -100,13 +100,15 @@ Mailbox.prototype.imap_refreshStep = function(limitByBox, laststep) {
       }
     }
     return ops;
-  }).tap(function(ops) {
-    var nbTasks;
-    nbTasks = ops.toFetch.length + ops.toRemove.length + ops.flagsChange.length;
-    if (nbTasks > 0) {
-      return reporter = ImapReporter.boxFetch(this, nbTasks);
-    }
-  }).tap(function(ops) {
+  }).tap((function(_this) {
+    return function(ops) {
+      var nbTasks;
+      nbTasks = ops.toFetch.length + ops.toRemove.length + ops.flagsChange.length;
+      if (nbTasks > 0) {
+        return reporter = ImapReporter.boxFetch(_this, nbTasks);
+      }
+    };
+  })(this)).tap(function(ops) {
     return Promise.serie(ops.toRemove, function(id) {
       return Message.removeFromMailbox(id, box)["catch"](function(err) {
         return reporter.onError(err);
@@ -193,18 +195,14 @@ Mailbox.prototype.recoverChangedUIDValidity = function(imap) {
     return Promise.serie(uids, function(newUID) {
       var messageID;
       messageID = mailutils.normalizeMessageID(map[newUID]);
-      return Message.rawRequestPromised('byMessageId', {
-        key: [box.accountID, messageID],
-        include_docs: true
-      }).get(0).then(function(row) {
-        var mailboxIDs, msg;
-        if (!row) {
+      return Message.byMessageId(box.accountID, messageID).then(function(message) {
+        var mailboxIDs;
+        if (!message) {
           return;
         }
-        mailboxIDs = row.doc.mailboxIDs;
+        mailboxIDs = message.mailboxIDs;
         mailboxIDs[box.id] = newUID;
-        msg = new Message(row.doc);
-        return msg.updateAttributesPromised({
+        return message.updateAttributesPromised({
           mailboxIDs: mailboxIDs
         });
       })["catch"](function(err) {

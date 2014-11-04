@@ -161,13 +161,20 @@ Mailbox.prototype.destroyAndRemoveAllMessages = function() {
   return this.getChildren().then((function(_this) {
     return function(children) {
       var mailboxesDestroyed;
+      log.info("DESTROYING BOX " + _this.id + " AND ITS " + children.length + " CHILDREN");
       mailboxesDestroyed = destroyBox(_this).then(function() {
         return Promise.serie(children, destroyBox);
+      }).tap(function() {
+        return log.info("  BOXES DESTROYED");
       });
       mailboxesDestroyed.then(function() {
         return destroyMessages(_this);
+      }).tap(function() {
+        return log.info("  THIS MESSAGES DESTROYED");
       }).then(function() {
         return Promise.serie(children, destroyMessages);
+      }).tap(function() {
+        return log.info("  CHILDREN MESSAGES DESTROYED");
       })["catch"](function(err) {
         return log.error("Fail to remove messages from box", err.stack || err);
       });

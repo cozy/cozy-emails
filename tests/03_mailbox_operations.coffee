@@ -1,19 +1,72 @@
 should = require('should')
+_ = require 'lodash'
+{MSGBYPAGE} = require '../server/utils/constants'
+
+describe 'Mailbox fetching', ->
+
+    inboxCount = 0
+    readCount = 0
+    flaggedCount = 0
+
+    testNextLinks = (first, iterator, callback) ->
+        [iterator, callback] = [null, iterator] unless callback
+        totalFound = 0
+        count = null
+        step = (link, callback) ->
+            client.get link, (err, res, body) ->
+                return callback err if err
+                body.messages.length.should.be.lessThan MSGBYPAGE + 1
+                count ?= body.count
+                totalFound += body.messages.length
+                iterator?(body.messages)
+                if body.links.next then step body.links.next, callback
+                else callback null
+
+        step first, ->
+            if totalFound is count then callback null, totalFound
+            else callback new Error 'total & count doesnt match'
+
+
+    it "When I follow the next links", (done) ->
+        testNextLinks "/mailbox/#{store.inboxID}",
+            (messages) ->
+                readCount += messages
+                            .filter (m) -> '\\Seen' in m.flags
+                            .length
+
+                flaggedCount += messages
+                            .filter (m) -> '\\Flagged' in m.flags
+                            .length
+
+            (err, total) ->
+                inboxCount = total
+                done err
+
+    it "When I get a mailbox (filter by flag)", (done) ->
+        testNextLinks "/mailbox/#{store.inboxID}?flag=seen", (err, total) ->
+                total.should.equal readCount
+                done()
+
+
+    it "When I get a mailbox (filter by not flag)", (done) ->
+        testNextLinks "/mailbox/#{store.inboxID}?flag=unseen", (err, total) ->
+                total.should.equal inboxCount - readCount
+                done()
+
+    it "When I get a mailbox (sorted by subject)", (done) ->
+        client.get "/mailbox/#{store.inboxID}?sort=%2Bsubject", (err, res, body) ->
+            body.should.have.property 'count', inboxCount
+            last = body.messages[0]
+            for i in [1..body.messages.length - 1] by 1
+                current = body.messages[i]
+                last.normSubject.should.be.lessThan current.normSubject
+                last = current
+
+            testNextLinks "/mailbox/#{store.inboxID}?sort=%2Bsubject", done
+
+
 
 describe 'Mailbox operations', ->
-
-    it "When I get a mailbox", (done) ->
-        client.get "/mailbox/#{store.inboxID}", (err, res, body) =>
-            body.should.have.property 'count'
-            body.messages.should.have.lengthOf 3
-            body.messages[0].subject
-                .should.equal 'Re: First message of conversation'
-            body.messages[1].subject
-                .should.equal 'Re: This is the first Message for a conversation'
-            body.messages[1].conversationID
-                .should.equal body.messages[1].conversationID
-            done()
-
 
     it "When I add a draft mailbox", (done) ->
         box =
@@ -36,13 +89,15 @@ describe 'Mailbox operations', ->
             accountID: store.accountID
             label: 'My Drafts'
 
-
         client.put "/mailbox/#{store.draftBoxID}", box, (err, res, body) =>
             res.statusCode.should.equal 200
             body.id.should.equal store.accountID
             body.should.have.property('mailboxes').with.lengthOf(5)
-            for box of body.mailboxes when box.id is store.draftBoxID
-                box.label.should.equal 'My Drafts'
+            draftBox = null
+            for box in body.mailboxes when box.id is store.draftBoxID
+                draftBox = box
+            should.exist draftBox
+            draftBox.label.should.equal 'My Drafts'
             store.accountState = body
             done()
 
@@ -60,9 +115,14 @@ describe 'Mailbox operations', ->
 
         box =
             accountID: store.accountID
-            favorite: false
+            favorite: true
             mailboxID: store.draftBoxID
 
-        done() #@TODO : finish this test
+        client.put "/mailbox/#{store.draftBoxID}", box, (err, res, body) =>
+            res.statusCode.should.equal 200
+            body.id.should.equal store.accountID
+            body.should.have.property('favorites').with.lengthOf 5
+            body.favorites.should.containEql store.draftBoxID
+            done()
 
 

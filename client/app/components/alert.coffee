@@ -16,8 +16,13 @@ module.exports = React.createClass
 
         div className: 'row',
             if alert.level?
-                div className: "alert #{levels[alert.level]} alert-dismissible", role: "alert",
-                    button type: "button", className: "close", "data-dismiss": "alert",
-                        span 'aria-hidden': "true", "×"
-                        span className: "sr-only", t "app alert close"
-                    strong> null, alert.message
+                div
+                    className: "alert #{levels[alert.level]} alert-dismissible",
+                    role: "alert",
+                        button
+                            type: "button",
+                            className: "close",
+                            "data-dismiss": "alert",
+                                span 'aria-hidden': "true", "×"
+                                span className: "sr-only", t "app alert close"
+                        strong null, alert.message

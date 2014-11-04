@@ -48706,7 +48706,7 @@ window.plugins.sample = {
    * Called when plugin is activated
    */
   onActivate: function () {
-    console.log('Plugin sample activated');
+    //console.log('Plugin sample activated');
   },
   /**
    * Called when plugin is deactivated

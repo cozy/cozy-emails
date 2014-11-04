@@ -76,24 +76,30 @@ module.exports = LayoutActionCreator =
         # else go directly to first account
         else 'account.mailbox.messages'
 
-    showMessageList: (panelInfo, direction) ->
+    showMessageList: (panelInfo) ->
         LayoutActionCreator.hideReponsiveMenu()
 
-        {accountID, mailboxID, page} = panelInfo.parameters
+        {accountID, mailboxID} = panelInfo.parameters
         selectedAccount = AccountStore.getSelected()
         if not selectedAccount? or selectedAccount.get('id') isnt accountID
             AccountActionCreator.selectAccount accountID
 
-        XHRUtils.fetchMessagesByFolder mailboxID, page, (err, rawMessage) ->
+        query = {}
+        ['sort', 'after', 'before', 'flag', 'pageAfter'].forEach (param) ->
+            value = panelInfo.parameters[param]
+            if value? and value isnt ''
+                query[param] = value
+
+        XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMessages) ->
             if err?
                 LayoutActionCreator.alertError err
             else
-                MessageActionCreator.receiveRawMessages rawMessage
+                MessageActionCreator.receiveRawMessages rawMessages
 
-    showConversation: (panelInfo, direction) ->
+    showMessage: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
         messageID = panelInfo.parameters.messageID
-        XHRUtils.fetchConversation messageID, (err, rawMessage) ->
+        XHRUtils.fetchMessage messageID, (err, rawMessage) ->
 
             if err?
                 LayoutActionCreator.alertError err
@@ -104,6 +110,21 @@ module.exports = LayoutActionCreator =
                 selectedAccount = AccountStore.getSelected()
                 if  not selectedAccount? and rawMessage?.mailbox
                     AccountActionCreator.selectAccount rawMessage.mailbox
+
+    showConversation: (panelInfo, direction) ->
+        LayoutActionCreator.hideReponsiveMenu()
+        messageID = panelInfo.parameters.conversationID
+        XHRUtils.fetchConversation messageID, (err, rawMessages) ->
+
+            if err?
+                LayoutActionCreator.alertError err
+            else
+                MessageActionCreator.receiveRawMessages rawMessages
+                # if there isn't a selected account (page loaded directly),
+                # select the message's account
+                selectedAccount = AccountStore.getSelected()
+                if  not selectedAccount? and rawMessages.length > 0
+                    AccountActionCreator.selectAccount rawMessages[0].mailbox
 
 
     showComposeNewMessage: (panelInfo, direction) ->
@@ -155,5 +176,7 @@ module.exports = LayoutActionCreator =
     refreshMessages: ->
         XHRUtils.refresh (results) ->
             if results is "done"
-                LayoutActionCreator.notify t('account refreshed'), autoclose: true
+                MessageActionCreator.receiveRawMessages null
+                LayoutActionCreator.notify t('account refreshed'),
+                    autoclose: true
 

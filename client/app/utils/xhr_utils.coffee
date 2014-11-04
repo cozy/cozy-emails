@@ -18,7 +18,7 @@ module.exports =
                 callback "Something went wrong -- #{res.body}"
 
 
-    fetchConversation: (emailID, callback) ->
+    fetchMessage: (emailID, callback) ->
         request.get "message/#{emailID}"
         .set 'Accept', 'application/json'
         .end (res) ->
@@ -27,11 +27,23 @@ module.exports =
             else
                 callback "Something went wrong -- #{res.body}"
 
-
-    fetchMessagesByFolder: (mailboxID, numPage, callback) ->
-        numByPage = SettingsStore.get 'messagesPerPage'
-        request.get "mailbox/#{mailboxID}/page/#{numPage}/limit/#{numByPage}"
+    fetchConversation: (emailID, callback) ->
+        request.get "conversation/#{emailID}"
         .set 'Accept', 'application/json'
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                callback "Something went wrong -- #{res.body}"
+
+
+    fetchMessagesByFolder: (mailboxID, query, callback) ->
+        for own key, val of query
+            if val is '-' or val is 'all'
+                delete query[key]
+        request.get "mailbox/#{mailboxID}"
+        .set 'Accept', 'application/json'
+        .query query
         .end (res) ->
             if res.ok
                 callback null, res.body

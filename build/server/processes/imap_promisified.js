@@ -132,8 +132,6 @@ module.exports = ImapPromisified = (function() {
   };
 
   ImapPromisified.prototype.getBoxes = function() {
-    var IGNORE_ATTRIBUTES;
-    IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren'];
     return this._super.getBoxesPromised.apply(this._super, arguments).then(mailutils.flattenMailboxTree);
   };
 

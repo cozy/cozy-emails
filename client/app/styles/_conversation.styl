@@ -72,6 +72,42 @@
                 display flex
                 justify-content flex-start
                 align-items center
+            .header.row.compact
+                outline none
+                display flex
+                justify-content flex-start
+                align-items center
+                .participants
+                    margin 0 .5em
+                    overflow hidden
+                    text-overflow ellipsis
+                .title
+                    min-width 200px
+                    &:after
+                        content ' - '
+                .hour
+                    margin-left auto
+                        color darkcolor
+                .flags
+                    width 3em
+
+                .attach
+                    display none
+                .fav
+                    color #FF0
+                    display none
+
+            .header.row.compact.has-attachments .attach
+            .header.row.compact.is-fav .fav
+                  display inline
+                  padding 0 .5em
+
+            .toggle-active
+                position relative
+                top 0
+                right 0
+                align-self flex-start
+                margin -5px 0
 
             .sender-avatar
                 display block
@@ -101,7 +137,7 @@
                 overflow hidden
                 white-space pre-line
                 text-overflow ellipsis
-                color mediumcolor // for ellipsis + p
+                color darkcolor // for ellipsis + p
                 font-family "Source Sans Pro"
 
                 p
@@ -114,16 +150,11 @@
                 .address
                     margin 0 .5em 0 0
                     line-height 1.5em
-                    border 1px solid mediumcolor
-                    background-color lightcolor
-                    border-radius .25em
                     padding .25em
 
                     .address-add
                         cursor pointer
                         padding 2px
-                    .fa
-                        color mediumcolor-contrast
 
 
             .hour

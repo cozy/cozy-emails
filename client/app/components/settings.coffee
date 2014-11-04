@@ -38,6 +38,21 @@ module.exports = React.createClass
                             step: 5,
                             className: 'form-control'
 
+                div className: 'form-group',
+                    label htmlFor: 'settings-refresh', className: classLabel,
+                        t "settings label refresh"
+                    div className: 'col-sm-3',
+                        input
+                            id: 'settings-refresh',
+                            value: @state.settings.refreshInterval,
+                            onChange: @handleChange,
+                            'data-target': 'refreshInterval',
+                            type: 'number',
+                            min: 1,
+                            max: 15,
+                            step: 1,
+                            className: 'form-control'
+
                 # Lang
                 div className: 'form-group',
                     label htmlFor: 'settings-mpp', className: classLabel,
@@ -63,6 +78,7 @@ module.exports = React.createClass
                                     onClick: @handleChange,
                                         a role: "menuitem", t "settings lang fr"
 
+            @_renderOption 'displayConversation'
             @_renderOption 'composeInHTML'
             @_renderOption 'messageDisplayHTML'
             @_renderOption 'messageDisplayImages'
@@ -107,7 +123,16 @@ module.exports = React.createClass
                 settings.messagesPerPage = target.value
                 @setState({settings: settings})
                 SettingsActionCreator.edit settings
-            when 'composeInHTML', 'messageDisplayHTML', 'messageDisplayImages'
+            when 'refreshInterval'
+                settings = @state.settings
+                settings.refreshInterval = target.value
+                @setState({settings: settings})
+                SettingsActionCreator.edit settings
+                SettingsActionCreator.setRefresh target.value
+            when 'composeInHTML'
+            ,    'displayConversation'
+            ,    'messageDisplayHTML'
+            ,    'messageDisplayImages'
                 settings = @state.settings
                 settings[target.dataset.target] = target.checked
                 @setState({settings: settings})

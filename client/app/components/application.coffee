@@ -40,13 +40,15 @@ LayoutActionCreator = require '../actions/layout_action_creator'
           and re-render accordingly
 
     About routing: it uses Backbone.Router as a source of truth for the layout.
-    (based on: https://medium.com/react-tutorials/react-backbone-router-c00be0cf1592)
+    (based on:
+        https://medium.com/react-tutorials/react-backbone-router-c00be0cf1592)
 ###
 module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SettingsStore, SearchStore, TasksStore]
+        StoreWatchMixin [AccountStore, MessageStore, LayoutStore, SettingsStore,
+            SearchStore, TasksStore]
         RouterMixin
     ]
 
@@ -75,8 +77,16 @@ module.exports = Application = React.createClass
             @buildUrl
                 direction: 'first'
                 action: 'account.mailbox.messages'
-                parameters: [@state.selectedAccount?.get('id'), mailbox.get('id')]
+                parameters: [
+                    @state.selectedAccount?.get('id'),
+                    mailbox.get('id')
+                ]
 
+        keyFirst = 'left-panel-' + layout.firstPanel.action + '-' +
+            Object.keys(layout.firstPanel.parameters).join('-')
+        if layout.secondPanel?
+            keySecond = 'right-panel-' + layout.secondPanel.action + '-' +
+                Object.keys(layout.secondPanel.parameters).join('-')
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
@@ -109,11 +119,17 @@ module.exports = Application = React.createClass
 
                     # Two layout modes: one full-width panel or two panels
                     div id: 'panels', className: 'row',
-                        div className: panelClasses.firstPanel, key: 'left-panel-' + layout.firstPanel.action + '-' + Object.keys(layout.firstPanel.parameters).join('-'),
-                            @getPanelComponent layout.firstPanel, firstPanelLayoutMode
+                        div
+                            className: panelClasses.firstPanel,
+                            key: keyFirst,
+                                @getPanelComponent layout.firstPanel,
+                                    firstPanelLayoutMode
                         if not isFullWidth and layout.secondPanel?
-                            div className: panelClasses.secondPanel, key: 'right-panel-' + layout.secondPanel.action + '-' + Object.keys(layout.secondPanel.parameters).join('-'),
-                                @getPanelComponent layout.secondPanel, 'second'
+                            div
+                                className: panelClasses.secondPanel,
+                                key: keySecond,
+                                    @getPanelComponent layout.secondPanel,
+                                        'second'
 
 
     # Panels CSS classes are a bit long so we get them from a this subfunction
@@ -121,7 +137,7 @@ module.exports = Application = React.createClass
     getPanelClasses: (isFullWidth) ->
         previous = @props.router.previous
         layout   = @props.router.current
-        first     = layout.firstPanel
+        first    = layout.firstPanel
         second   = layout.secondPanel
 
         # Two cases: the layout has a full-width panel...
@@ -132,12 +148,14 @@ module.exports = Application = React.createClass
             if previous? and first.action is 'account.config'
                 classes.firstPanel += ' moveFromTopRightCorner'
 
-            # (default) when full-width panel is shown after a two-panels structure
+            # (default) when full-width panel is shown after
+            # a two-panels structure
             else if previous? and previous.secondPanel
 
                 # if the full-width panel was on right right before, it expands
                 if previous.secondPanel.action is layout.firstPanel.action and
-                   _.difference(previous.secondPanel.parameters, layout.firstPanel.parameters).length is 0
+                   _.difference(previous.secondPanel.parameters,
+                        layout.firstPanel.parameters).length is 0
                     classes.firstPanel += ' expandFromRight'
 
             # (default) when full-width panel is shown after a full-width panel
@@ -160,7 +178,8 @@ module.exports = Application = React.createClass
 
                     # expanded second panel collapses
                     if previous.firstPanel.action is second.action and
-                       _.difference(previous.firstPanel.parameters, second.parameters).length is 0
+                       _.difference(previous.firstPanel.parameters,
+                            second.parameters).length is 0
                         classes.firstPanel += ' moveFromLeft'
                         classes.secondPanel += ' slide-in-from-left'
 
@@ -179,41 +198,45 @@ module.exports = Application = React.createClass
     getPanelComponent: (panelInfo, layout) ->
 
         # -- Generates a list of messages for a given account and mailbox
-        if panelInfo.action is 'account.mailbox.messages'
+        if panelInfo.action is 'account.mailbox.messages' or
+           panelInfo.action is 'account.mailbox.messages.full'
             accountID = panelInfo.parameters.accountID
             mailboxID = panelInfo.parameters.mailboxID
-            pageNum   = panelInfo.parameters.page ? 1
-            numPerPage      = @state.settings.get 'messagesPerPage'
-            firstOfPage     = ( pageNum - 1 ) * numPerPage
-            lastOfPage      = ( pageNum * numPerPage )
+            messages  = MessageStore.getMessagesByMailbox mailboxID
 
             # gets the selected message if any
             openMessage = null
-            direction = if layout is 'first' then 'secondPanel' else 'firstPanel'
+            direction = if layout is 'first' then 'secondPanel' \
+                else 'firstPanel'
             otherPanelInfo = @props.router.current[direction]
             if otherPanelInfo?.action is 'message'
-                openMessage = MessageStore.getByID otherPanelInfo.parameters.messageID
+                openMessage = MessageStore.getByID \
+                    otherPanelInfo.parameters.messageID
 
             messagesCount = MessageStore.getMessagesCounts().get mailboxID
+            query = MessageStore.getParams()
             return MessageList
-                messages: MessageStore.getMessagesByMailbox mailboxID, firstOfPage, lastOfPage
+                messages:      messages
                 messagesCount: messagesCount
-                accountID: accountID
-                mailboxID: mailboxID
-                layout: layout
-                openMessage: openMessage
-                messagesPerPage: numPerPage
-                pageNum: pageNum
+                accountID:     accountID
+                mailboxID:     mailboxID
+                layout:        layout
+                openMessage:   openMessage
+                settings:      @state.settings
+                query:         query
                 emptyListMessage: t 'list empty'
-                counterMessage: t 'list count', messagesCount
-                buildPaginationUrl: (numPage) =>
+                counterMessage:   t 'list count', messagesCount
+                buildPaginationUrl: =>
+                    query.accountID = accountID
+                    query.mailboxID = mailboxID
                     @buildUrl
                         direction: 'first'
-                        action: 'account.mailbox.messages'
-                        parameters: [accountID, mailboxID, numPage]
+                        action: 'account.mailbox.messages.full'
+                        parameters: query
 
         # -- Generates a configuration window for a given account
-        else if panelInfo.action is 'account.config' or panelInfo.action is 'account.new'
+        else if panelInfo.action is 'account.config' or
+                panelInfo.action is 'account.new'
             # don't use @state.selectedAccount
             selectedAccount   = AccountStore.getSelected()
             error             = AccountStore.getError()
@@ -225,7 +248,8 @@ module.exports = Application = React.createClass
                     name: 'AccountConfigError'
                     field: 'nomailboxes'
 
-            return AccountConfig {layout, error, isWaiting, selectedAccount, mailboxes, favoriteMailboxes}
+            return AccountConfig {layout, error, isWaiting, selectedAccount,
+                mailboxes, favoriteMailboxes}
 
         # -- Generates a configuration window to create a new account
         #else if panelInfo.action is 'account.new'
@@ -234,10 +258,15 @@ module.exports = Application = React.createClass
         #    return AccountConfig {layout, error, isWaiting}
 
         # -- Generates a conversation
-        else if panelInfo.action is 'message'
+        else if panelInfo.action is 'message' or
+                panelInfo.action is 'conversation'
 
             if messageID = panelInfo.parameters.messageID
-                message = MessageStore.getByID messageID
+                message      = MessageStore.getByID messageID
+            if conversationID = panelInfo.parameters.conversationID
+                conversation = MessageStore.getConversation conversationID
+            else
+                conversation = MessageStore.getMessagesByConversation messageID
 
             return Conversation
                 layout            : layout
@@ -246,8 +275,8 @@ module.exports = Application = React.createClass
                 mailboxes         : @state.mailboxes
                 selectedAccount   : @state.selectedAccount
                 selectedMailboxID : @state.selectedMailboxID
-                message           : MessageStore.getByID messageID
-                conversation      : MessageStore.getMessagesByConversation messageID
+                message           : message
+                conversation      : conversation
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
@@ -285,36 +314,36 @@ module.exports = Application = React.createClass
         else if panelInfo.action is 'search'
             accountID = null
             mailboxID = null
-            pageNum   = panelInfo.parameters.page
-            numPerPage      = @state.settings.get 'messagesPerPage'
-            firstOfPage     = ( pageNum - 1 ) * numPerPage
-            lastOfPage      = ( pageNum * numPerPage )
 
             # gets the selected message if any
             openMessage = null
-            direction = if layout is 'first' then 'secondPanel' else 'firstPanel'
+            direction = if layout is 'first' then 'secondPanel' \
+                        else 'firstPanel'
             otherPanelInfo = @props.router.current[direction]
             if otherPanelInfo?.action is 'message'
                 messageID = otherPanelInfo.parameters.messageID
                 openMessage = MessageStore.getByID messageID
-
+            emptyListMessage = t 'list search empty', query: @state.searchQuery
+            counterMessage   =  t 'list search count', results.count()
             results = SearchStore.getResults()
+            query   = MessageStore.getParams()
+
             return MessageList
-                messages: results
-                messagesCount: results.count()
-                accountID: accountID
-                mailboxID: mailboxID
-                layout: layout
-                openMessage: openMessage
-                messagesPerPage: numPerPage
-                pageNum: pageNum
-                emptyListMessage: t 'list search empty', query: @state.searchQuery
-                counterMessage: t 'list search count', results.count()
+                messages:         results
+                messagesCount:    results.count()
+                accountID:        accountID
+                mailboxID:        mailboxID
+                layout:           layout
+                openMessage:      openMessage
+                settings:         @state.settings
+                emptyListMessage: emptyListMessage
+                counterMessage:   counterMessage
+                query:            query
                 buildPaginationUrl: (numPage) =>
                     @buildUrl
                         direction: 'first'
                         action: 'search'
-                        parameters: [@state.searchQuery, numPage]
+                        parameters: query
 
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else return div null, 'Unknown component'
@@ -328,7 +357,8 @@ module.exports = Application = React.createClass
         selectedAccountID = selectedAccount?.get('id') or null
 
         firstPanelInfo = @props.router.current?.firstPanel
-        if firstPanelInfo?.action is 'account.mailbox.messages'
+        if firstPanelInfo?.action is 'account.mailbox.messages' or
+           firstPanelInfo?.action is 'account.mailbox.messages.full'
             selectedMailboxID = firstPanelInfo.parameters.mailboxID
         else
             selectedMailboxID = null

@@ -42,6 +42,8 @@ window.onload = ->
     Application = require './components/application'
     application = Application router: @router
     React.renderComponent application, document.body
+    SettingsActionCreator = require './actions/settings_action_creator/'
+    SettingsActionCreator.setRefresh window.settings.refreshInterval
 
     # Starts the application by initializing the router
     Backbone.history.start()

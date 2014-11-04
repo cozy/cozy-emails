@@ -42,7 +42,7 @@ module.exports = class ImapScheduler
         else Account.findPromised accountID
         pAccount.then (account) =>
 
-            scheduler = if account.isTest() then new TestScheduler()
+            scheduler = if (not account?) or account.isTest() then new TestScheduler()
             else new ImapScheduler account.makeImapConfig()
             @instances[accountID] = scheduler
             return scheduler

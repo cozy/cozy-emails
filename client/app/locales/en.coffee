@@ -49,6 +49,7 @@ module.exports =
       "list sort"               : "Sort"
       "list sort date"          : "Date"
       "list sort subject"       : "Subject"
+      "list next page"          : "More messages"
 
       # Mail
       "mail receivers"          : "To: "
@@ -161,8 +162,11 @@ module.exports =
       "settings title"             : "Settings"
       "settings button save"       : "Save"
       "settings label mpp"         : "Messages per page"
+      "settings label refresh"     : "Check for new messages every…
+                                        (in minutes)"
       "settings plugins"           : "Add ons"
       "settings label composeInHTML"        : "Rich message editor"
+      "settings label displayConversation"  : "Display conversations"
       "settings label messageDisplayHTML"   : "Display message in HTML"
       "settings label messageDisplayImages" : "Display images inside messages"
       "settings lang"             : "Language"
@@ -179,7 +183,8 @@ module.exports =
       # Tasks
       "task account-fetch"         : 'Refreshing %{account}'
       "task box-fetch"             : 'Refreshing %{box}'
-      "task apply-diff-fetch"      : 'Fetching mails %{box} of %{account}'
+      "task apply-diff-fetch"      : 'Fetching mails from %{box} of %{account}'
+      "task apply-diff-remove"     : 'Deleting mails from %{box} of %{account}'
       "there were errors"          : '%{smart_count} error. |||| %{smart_count}
                                         errors.'
       "modal please report"        : "Please transmit this information to cozy."

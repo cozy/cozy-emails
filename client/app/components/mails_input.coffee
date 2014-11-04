@@ -39,9 +39,13 @@ module.exports = MailsInput = React.createClass
 
         onContact = (contact) =>
             val = @proxyValueLink()
-            console.log @props.valueLink.value
-            current = if @props.valueLink.value.length > 0 then "#{val.value}, " else ""
-            val.requestChange "#{current}#{contact.get 'name'} <#{contact.get 'address'}>"
+            if @props.valueLink.value.length > 0
+                current = "#{val.value}, "
+            else
+                current = ""
+            name    = contact.get 'name'
+            address = contact.get 'address'
+            val.requestChange "#{current}#{name} <#{address}>"
             @setState contactShown: false
 
         div className: className,
@@ -62,7 +66,9 @@ module.exports = MailsInput = React.createClass
                             span className: 'fa fa-search'
 
                 if @state.contactShown
-                    content     = ContactForm query: @proxyValueLink().value, onContact: onContact
+                    content = ContactForm
+                        query: @proxyValueLink().value,
+                        onContact: onContact
                     Modal {content}
 
     toggleContact: ->

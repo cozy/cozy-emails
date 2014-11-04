@@ -1,6 +1,7 @@
-AppDispatcher        = require '../app_dispatcher'
-{ActionTypes}        = require '../constants/app_constants'
-XHRUtils             = require '../utils/xhr_utils'
+AppDispatcher = require '../app_dispatcher'
+{ActionTypes} = require '../constants/app_constants'
+XHRUtils      = require '../utils/xhr_utils'
+AccountStore  = require "../stores/account_store"
 
 
 module.exports =
@@ -24,8 +25,9 @@ module.exports =
             if callback?
                 callback error, message
 
-    delete: (message, account, callback) ->
+    delete: (message, callback) ->
         # Move message to Trash folder
+        account = AccountStore.getByID(message.get 'account')
         trash = account.get 'trashMailbox'
         if not trash?
             LayoutActionCreator  = require './layout_action_creator'
@@ -36,13 +38,13 @@ module.exports =
             delete msg.mailboxIDs[id] for id of msg.mailboxIDs
             msg.mailboxIDs[trash] = -1
             patches = jsonpatch.generate observer
-            XHRUtils.messagePatch message.get('id'), patches, (error, message) ->
-                if not error?
+            XHRUtils.messagePatch message.get('id'), patches, (err, message) ->
+                if not err?
                     AppDispatcher.handleViewAction
                         type: ActionTypes.MESSAGE_DELETE
                         value: message
                 if callback?
-                    callback error
+                    callback err
 
     move: (message, from, to, callback) ->
         msg = message.toObject()

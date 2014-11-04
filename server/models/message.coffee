@@ -28,6 +28,8 @@ module.exports = Message = americano.getModel 'Message',
     attachments: (x) -> x    # array of message attachments objects
 
 mailutils = require '../utils/jwz_tools'
+CONSTANTS = require '../utils/constants'
+{MSGBYPAGE, LIMIT_DESTROY, LIMIT_UPDATE, CONCURRENT_DESTROY} = CONSTANTS
 uuid = require 'uuid'
 _ = require 'lodash'
 log = require('../utils/logging')(prefix: 'models:message')
@@ -41,20 +43,32 @@ Mailbox = require './mailbox'
 #
 # Returns {Promise} for an array of {Message}
 Message.getResultsAndCount = (mailboxID, params) ->
-    {before, after, descending, sortField} = params
+    {before, after, descending, sortField, flag} = params
+
+    flag ?= null
+
     [before, after] = [after, before] if descending
     options =
         descending: descending
-        startkey: [sortField, mailboxID, before]
-        endkey: [sortField, mailboxID, after]
+        startkey: [sortField, mailboxID, flag, before]
+        endkey: [sortField, mailboxID, flag, after]
+        reduce: true
+        group_level: 2
 
-    # console.log "GRAC", options
 
-    pCount = Message.rawRequestPromised 'byMailboxRequest',
-        _.extend {}, options, reduce: true, group_level: 2
+    pCount = Message.rawRequestPromised 'byMailboxRequest', options
 
-    pResults = Message.rawRequestPromised 'byMailboxRequest',
-        _.extend {}, options, reduce: false, limit: 3, include_docs: true
+    # options for results
+    delete options.group_level
+    options.reduce = false
+    options.include_docs = true
+    options.limit =  MSGBYPAGE
+
+    if params.resultsAfter
+        options.startkey[3] = params.resultsAfter
+        options.skip = 1
+
+    pResults = Message.rawRequestPromised 'byMailboxRequest', options
     .map (row) -> new Message row.doc
 
     Promise.join pResults, pCount, (messages, count) ->
@@ -72,6 +86,7 @@ Message.UIDsInRange = (mailboxID, min, max) ->
         startkey: ['uid', mailboxID, min]
         endkey: ['uid', mailboxID, max]
         inclusive_end: true
+        reduce: false
 
     .map (row) ->
         uid = row.key[2]
@@ -116,14 +131,6 @@ Message.byConversationId = (conversationID) ->
 Message.destroyByID = (messageID, cb) ->
     Message.adapter.destroy null, messageID, cb
 
-
-# safeDestroy parameters (to be tweaked)
-# loads 200 ids in memory at once
-LIMIT_DESTROY = 200
-# loads 30 messages in memory at once
-LIMIT_UPDATE = 30
-# send 5 request to the DS in parallel
-CONCURRENT_DESTROY = 5
 
 # Public: destroy all messages for an account
 # play it safe by limiting number of messages in RAM
@@ -184,11 +191,12 @@ Message.safeRemoveAllFromBox = (mailboxID, retries = 2) ->
         new Message(row.doc).removeFromMailbox(id: mailboxID)
 
     log.info "REMOVING ALL MESSAGES FROM #{mailboxID}"
-    Message.rawRequestPromised 'byMailboxAndUID',
+    Message.rawRequestPromised 'byMailboxRequest',
         limit: LIMIT_UPDATE
-        startkey: [mailboxID, 0]
-        endkey: [mailboxID, {}]
+        startkey: ['uid', mailboxID, 0]
+        endkey: ['uid', mailboxID, {}]
         include_docs: true
+        reduce: false
 
     .tap (results) -> log.info "  LOAD #{results.length} MESSAGES"
     .map removeOne, concurrency: CONCURRENT_DESTROY
@@ -230,7 +238,7 @@ Message::removeFromMailbox = (box, noDestroy = false) ->
     delete mailboxIDs[box.id]
 
     isOrphan = Object.keys(mailboxIDs).length is 0
-    console.log "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
+    log.info "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
 
     if isOrphan and not noDestroy then @destroyPromised()
     else @updateAttributesPromised {mailboxIDs}

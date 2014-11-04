@@ -10,61 +10,70 @@ module.exports = {
   account: {
     all: americano.defaultRequests.all
   },
-  mailbox: {
+  contact: {
     all: americano.defaultRequests.all,
+    byName: function(doc) {
+      var dp, _i, _len, _ref, _results;
+      if ((doc.fn != null) && doc.fn.length > 0) {
+        emit(doc.fn, doc);
+      }
+      if (doc.n != null) {
+        emit(doc.n.split(';').join(' ').trim(), doc);
+      }
+      _ref = doc.datapoints;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        dp = _ref[_i];
+        if (dp.name === 'email') {
+          emit(dp.value, doc);
+          _results.push(emit(dp.value.split('@')[1], doc));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
+    }
+  },
+  mailbox: {
     treeMap: function(doc) {
       return emit([doc.accountID].concat(doc.tree), null);
     }
   },
   message: {
-    all: americano.defaultRequests.all,
-    byMailboxAndDate: {
+    byMailboxRequest: {
       reduce: '_count',
       map: function(doc) {
-        var boxid, uid, _ref;
+        var boxid, uid, xflag, _i, _len, _ref, _ref1;
         _ref = doc.mailboxIDs;
         for (boxid in _ref) {
           uid = _ref[boxid];
-          emit([boxid, doc.date], uid);
-        }
-        return void 0;
-      }
-    },
-    byMailboxAndUID: function(doc) {
-      var boxid, uid, _ref, _results;
-      _ref = doc.mailboxIDs;
-      _results = [];
-      for (boxid in _ref) {
-        uid = _ref[boxid];
-        _results.push(emit([boxid, uid], doc.flags));
-      }
-      return _results;
-    },
-    byMailboxAndFlag: {
-      reduce: '_count',
-      map: function(doc) {
-        var boxid, flag, uid, _i, _len, _ref, _ref1;
-        _ref = doc.mailboxIDs;
-        for (boxid in _ref) {
-          uid = _ref[boxid];
-          _ref1 = doc.flags;
+          emit(['uid', boxid, uid], doc.flags);
+          emit(['date', boxid, null, doc.date], null);
+          emit(['subject', boxid, null, doc.normSubject], null);
+          _ref1 = ['\\Seen', '\\Flagged', '\\Answered'];
           for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-            flag = _ref1[_i];
-            emit([boxid, flag], uid);
+            xflag = _ref1[_i];
+            if (-1 === doc.flags.indexOf(xflag)) {
+              xflag = '!' + xflag;
+            }
+            emit(['date', boxid, xflag, doc.date], null);
+            emit(['subject', boxid, xflag, doc.normSubject], null);
           }
-          void 0;
         }
         return void 0;
       }
     },
-    byMessageId: function(doc) {
+    dedupRequest: function(doc) {
       if (doc.messageID) {
-        return emit([doc.accountID, doc.messageID], doc.conversationID);
+        emit([doc.accountID, 'mid', doc.messageID], doc.conversationID);
+      }
+      if (doc.normSubject) {
+        return emit([doc.accountID, 'subject', doc.normSubject], doc.conversationID);
       }
     },
-    byNormSubject: function(doc) {
-      if (doc.normSubject) {
-        return emit([doc.accountID, doc.normSubject], doc.conversationID);
+    byConversationId: function(doc) {
+      if (doc.conversationID) {
+        return emit(doc.conversationID);
       }
     }
   }

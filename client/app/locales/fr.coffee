@@ -50,6 +50,7 @@ module.exports =
       "list sort"               : "Trier"
       "list sort date"          : "Date"
       "list sort subject"       : "Sujet"
+      "list next page"          : "Plus de messages"
 
       # Mail
       "mail receivers"          : "À "
@@ -126,7 +127,8 @@ module.exports =
       "mailbox title add cancel"    : "Annuler"
       "mailbox title favorite"      : "Dossier affiché"
       "mailbox title not favorite"  : "Dossier non affiché"
-      "config error auth"           : "Impossible de se connecter avec ces paramètres"
+      "config error auth"           : "Impossible de se connecter avec ces
+                                        paramètres"
       "config error imapPort"       : "Port du serveur IMAP invalide"
       "config error imapServer"     : "Serveur IMAP invalide"
       "config error imapTLS"        : "Erreur IMAP TLS"
@@ -164,8 +166,11 @@ module.exports =
       "settings title"             : "Paramètres"
       "settings button save"       : "Enregistrer"
       "settings label mpp"         : "Nombre de messages par page"
+      "settings label refresh"     : "Vérifier les nouveaux messages toutes
+                                        les… (en minutes)"
       "settings plugins"           : "Modules complémentaires"
       "settings label composeInHTML"        : "Éditeur riche"
+      "settings label displayConversation"  : "Afficher les conversations"
       "settings label messageDisplayHTML"   : "Afficher les messages en HTML"
       "settings label messageDisplayImages" : "Afficher les images"
       "settings lang"             : "Langue"
@@ -184,6 +189,8 @@ module.exports =
       "task box-fetch"             : 'Rafraichissement %{box}'
       "task apply-diff-fetch"      : 'Téléchargement des messages du dossier
                                         %{box} de %{account}'
+      "task apply-diff-remove"     : 'Suppression des messages du dossier
+                                        %{box} de %{account}'
       "there were errors"          : '%{smart_count} erreur. ||||
                                         %{smart_count} erreurs.'
       "modal please report"        : "Merci de bien vouloir transmettre ces
@@ -201,4 +208,5 @@ module.exports =
       # Contacts
       "contact form placeholder" : "Nom"
       "contact create success"   : "%{contact} a été ajouté(e) à vos contacts"
-      "contact create error"     : "L'ajout à votre carnet d'adresse a échoué : {error}"
+      "contact create error"     : "L'ajout à votre carnet d'adresse a
+                                        échoué : {error}"

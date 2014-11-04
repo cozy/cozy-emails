@@ -11,7 +11,7 @@ selectMessage = (account, box, subject, cb) ->
         return accounts
     id = accounts[account]
     casper.test.assert (typeof id is 'string'), "Account #{account} found"
-    casper.click "[data-reactid='#{id}']"
+    casper.click "[data-reactid='#{id}'] a"
     casper.waitForSelector "[data-reactid='#{id}'].active", ->
         mailboxes = casper.evaluate ->
             mailboxes = {}
@@ -25,7 +25,16 @@ selectMessage = (account, box, subject, cb) ->
             casper.waitForSelector subjectSel, ->
                 casper.click subjectSel
                 casper.waitForSelector x("//h3[(contains(normalize-space(.), '#{subject}'))]"), ->
+                    casper.test.pass "Message #{subject} selected"
                     cb()
+                , ->
+                    casper.test.fail "Error displaying #{subject}"
+            , ->
+                casper.test.fail "No message with subject #{subject}"
+        , ->
+            casper.test.fail "Unable to go to mailbox #{box}"
+    , ->
+        casper.test.fail "Unable to go to account #{account}"
 
 casper.test.begin 'Test conversation', (test) ->
     init casper
@@ -37,7 +46,6 @@ casper.test.begin 'Test conversation', (test) ->
             window.cozyMails.setSetting 'messageDisplayImages', false
 
         selectMessage "DoveCot", "INBOX", "Test attachments", ->
-            test.pass "Message displayed"
             test.assertExist '.imagesWarning', "Images warning"
             test.assertExist 'iframe.content', "Message body"
             frameName = casper.getElementInfo("iframe.content").attributes.name
@@ -54,6 +62,24 @@ casper.test.begin 'Test conversation', (test) ->
                 casper.page.switchToParentFrame()
 
     casper.then ->
+        test.comment "Header"
+        test.assertExists ".header.row.compact", "Compact header"
+        casper.click ".header.row.compact"
+        casper.waitForSelector ".header.row.full", ->
+            casper.click ".header.row.full .participants", ->
+            casper.waitForSelector ".header.row.compact", ->
+                casper.click ".header.row.compact", ->
+                casper.waitForSelector ".header.row.full", ->
+                    test.pass "Toggle between full and compact headers"
+
+    casper.then ->
+        test.comment "Add contact"
+        test.assertExist ".conversation .sender .address"
+        casper.click ".conversation .sender .address .address-add i"
+        casper.waitForText "has been added to your contacts", ->
+            test.pass "Contact added"
+
+    casper.then ->
         test.comment "Attachements"
         test.assertElementCount ".header.row ul.files > li", 9, "Number of attachments"
         test.assertExist "li.file-item > .mime.image", "Attachement file type image"
@@ -62,8 +88,10 @@ casper.test.begin 'Test conversation', (test) ->
         test.assertExist "li.file-item > .mime.text", "Attachement file type text"
         test.assertExist "li.file-item > .mime.word", "Attachement file type word"
         selectMessage "DoveCot", "INBOX", "Email fixture attachments gmail", ->
-            test.assertElementCount ".header.row ul.files > li", 1, "Number of attachments"
-            test.assertExist "li.file-item > .mime.image", "Attachement file type"
+            casper.click ".header.row.compact"
+            casper.waitForSelector ".header.row.full", ->
+                test.assertElementCount ".header.row ul.files > li", 1, "Number of attachments"
+                test.assertExist "li.file-item > .mime.image", "Attachement file type"
 
     casper.run ->
         test.done()

@@ -1,30 +1,53 @@
-contacts = [
-    {name: "Claude Lambda"   , address: "claude.lambda@free.fr"},
-    {name: "Alex Lambda"     , address: "alex.lambda@free.fr"},
-    {name: "Dominique Lambda", address: "dominique.lambda@free.fr"},
-    {name: "Camille Guique"  , address: "camille@guique.net"},
-    {name: "Alix Guique"     , address: "alix@guique.net"},
-    {name: "Dany Guique"     , address: "dany@guique.net"},
-    {name: "Gwen Guique"     , address: "gwen@guique.net"}
-]
-Contact =
-    search: (data) ->
+Contact = require '../models/contact'
+ContactActivity =
+    search: (data, cb) ->
         if data.query?
-            re = new RegExp(data.query, 'gi')
-            res = contacts.filter (contact) ->
-                return re.test(contact.name + contact.address)
-            return res
+            params =
+                startkey: data.query
+                endkey:   data.query + "\uFFFF"
+            Contact.request 'byName',  params, cb
         else
-            return contacts
-    create: (data) ->
-        contacts.push data.contact
-        return null
+            Contact.request 'all', cb
+    create: (data, cb) ->
+        contact =
+            fn: data.contact.name
+            datapoints: [
+              name: "email", value: data.contact.address
+            ]
+        Contact.create contact, cb
+    delete: (data, cb) ->
+        Contact.find data.id, (err, contact) ->
+            if err? or not contact?
+                cb err
+            else
+                contact.destroy cb
+
 module.exports.create = (req, res, next) ->
     activity = req.body
     switch activity.data.type
         when 'contact'
-            if Contact[activity.name]?
-                res.send 201, result: Contact[activity.name] activity.data
+            if ContactActivity[activity.name]?
+                ContactActivity[activity.name] activity.data, (err, result) ->
+                    if err?
+                        res.send 400, {name: err, error: true}
+                    else
+                        if result?
+                            contacts = []
+                            for contact in result
+                                address = null
+                                for dp in contact.datapoints
+                                    if dp.name is 'email'
+                                        address = dp.value
+                                if address?
+                                    newContact =
+                                        id: contact.id
+                                        name: contact.fn
+                                        address: address
+                                    contacts.push newContact
+
+                            res.send 201, result: contacts
+                        else
+                            res.send 200
             else
                 res.send 400, {name: "Unknown activity name", error: true}
         else

@@ -5,6 +5,7 @@ Mailbox = require '../models/mailbox'
 Promise = require 'bluebird'
 {BadRequest, NotFound} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'mailbox:controller')
+_ = require 'lodash'
 
 # create a mailbox
 module.exports.create = (req, res, next) ->
@@ -60,7 +61,7 @@ module.exports.update = (req, res, next) ->
             newPath = parentPath + req.body.label
 
             account.imap_renameBox path, newPath
-            .then -> box.renameWithChildren newPath
+            .then -> box.renameWithChildren newPath, req.body.label
             .return account
 
         else if req.body.favorite?

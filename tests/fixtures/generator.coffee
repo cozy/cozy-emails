@@ -16,7 +16,12 @@ for box in require './mailboxes.json'
 
 numberOfEmails = process.argv[2] or 100
 
-getRandom = (max) -> Math.round (Math.random() * max)
+seed = 0.42
+randomWithSeed = ->
+    seed = Math.sin(seed) * 10000;
+    return seed - Math.floor(seed);
+
+getRandom = (max) -> Math.round (randomWithSeed() * max)
 getRandomElmt = (array) -> array[getRandom(array.length - 1)]
 
 messages = []
@@ -58,10 +63,9 @@ for i in [1..numberOfEmails] by 1
 
     mailboxObject = {}
     mailboxObject[mailbox] = mailboxUID[mailbox]
-    console.log mailbox
 
-    subject = loremIpsum count: getRandom(5), units: 'words'
-    content = loremIpsum count: getRandom(10), units: 'paragraphs'
+    subject = loremIpsum count: getRandom(5), units: 'words', random: randomWithSeed
+    content = loremIpsum count: getRandom(10), units: 'paragraphs', random: randomWithSeed
 
     # simulate email thread
     if getRandom(10) > 3
@@ -74,18 +78,24 @@ for i in [1..numberOfEmails] by 1
     priority  = getRandomElmt priorities
 
     # random date this year before now
-    today = moment()
+    today = moment("2014-10-29T23:59:59Z")
     month = getRandom today.month()
     day = getRandom today.date()
     hour = getRandom today.hours()
     minute = getRandom today.minutes()
-    date = moment().months(month).days(day).hours(hour).minutes(minute)
+    date = moment().months(month).days(day).hours(hour).minutes(minute).second(0).millisecond(0)
+
+    flags = []
+    flags.push '\\Seen' if getRandom(10) > 5
+    flags.push '\\Answered' if getRandom(10) > 9
+    flags.push '\\Flagged' if getRandom(10) > 9
 
     messages.push
         "_id": "generated_id_#{i}"
         "docType": "Message",
         "date": date.toISOString(),
         "subject": subject,
+        "normSubject": subject,
         "from": [from]
         "to": to,
         "cc": cc,
@@ -99,7 +109,7 @@ for i in [1..numberOfEmails] by 1
         "mailboxIDs": mailboxObject,
         "accountID": account,
         "attachments": []
-        "flags": []
+        "flags": flags
         "conversationID": "conversation_id_#{i}"
 
 

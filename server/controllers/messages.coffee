@@ -1,11 +1,13 @@
 Message     = require '../models/message'
 Account     = require '../models/account'
 Mailbox     = require '../models/mailbox'
-{NotFound, HttpError, AccountConfigError} = require '../utils/errors'
+{NotFound, BadRequest, AccountConfigError} = require '../utils/errors'
+{MSGBYPAGE} = require '../utils/constants'
 Promise     = require 'bluebird'
 htmlToText  = require 'html-to-text'
 sanitizer   = require 'sanitizer'
 _ = require 'lodash'
+querystring = require 'querystring'
 
 htmlToTextOptions =
     tables: true
@@ -23,42 +25,84 @@ formatMessage = (message) ->
     return message
 
 # list messages from a mailbox
-# require numPage & numByPage params
 module.exports.listByMailbox = (req, res, next) ->
 
-    req.query.sort ?= '-date'
+    sort = if req.query.sort then req.query.sort
+    else '-date'
 
-    descending = req.query.sort.substring(0, 1)
+    descending = sort.substring(0, 1)
     if descending is '+' then descending = false
     else if descending is '-' then descending = true
-    else return next new HttpError 400, "Unsuported sort order #{descending}"
+    else return next new BadRequest "Unsuported sort order #{descending}"
 
-    sortField = req.query.sort.substring(1)
+    pageAfter = req.query.pageAfter
+    sortField = sort.substring(1)
+    before = req.query.before
+    after = req.query.after
     if sortField is 'date'
-        before = req.query.before or new Date(0).toISOString()
-        after = req.query.after or new Date().toISOString()
+        before ?= new Date(0).toISOString()
+        after ?= new Date().toISOString()
         if new Date(before).toISOString() isnt before or
            new Date(after).toISOString() isnt after
-            return next new HttpError 400,
-                "before & after should be a valid JS date.toISOString()"
+            return next new BadRequest "before & after should be a valid JS " +
+                "date.toISOString()"
 
     else if sortField is 'subject'
-        before = decodeURIComponent(req.query.before) or ''
-        after = decodeURIComponent(req.query.after) or {}
+        before = if before then decodeURIComponent(before) else ''
+        after = if after then decodeURIComponent(after) else {}
+        pageAfter = if pageAfter then decodeURIComponent pageAfter
 
-    else return next new HttpError 400, "Unsuported sort field #{sortField}"
+    else return next new BadRequest "Unsuported sort field #{sortField}"
 
-    Message.getResultsAndCount req.params.mailboxID,
+    FLAGS_CONVERT =
+        'seen'       : '\\Seen'
+        'unseen'     : '!\\Seen'
+        'flagged'    : '\\Flagged'
+        'unflagged'  : '!\\Flagged'
+        'answered'   : '\\Answered'
+        'unanswered' : '!\\Answered'
+
+    flagcode = req.query.flag
+    if flagcode
+        flag = FLAGS_CONVERT[flagcode]
+        return next new BadRequest "Unsuported flag filter" unless flag
+    else
+        flag = null
+
+    mailboxID = req.params.mailboxID
+
+    Message.getResultsAndCount mailboxID,
         sortField: sortField
         descending: descending
         before: before
         after: after
+        resultsAfter: pageAfter
+        flag: flag
 
     .then (result) ->
+
+        messages = result.messages
+        if messages.length is MSGBYPAGE
+            last = messages[messages.length - 1]
+            pageAfter = if sortField is 'date' then last.date.toISOString()
+            else last.normSubject
+
+            links = next: "/mailbox/#{mailboxID}?" + querystring.stringify
+                flag: flagcode
+                sort: sort
+                before: before
+                after: after
+                pageAfter: pageAfter
+
+        else
+            links = {}
+
+
         res.send 200,
-            mailboxID: req.params.mailboxID
+            mailboxID: mailboxID
             messages: result.messages?.map(formatMessage) or []
             count: result.count
+            links: links
 
     .catch next
 
@@ -162,7 +206,7 @@ module.exports.send = (req, res, next) ->
 module.exports.search = (req, res, next) ->
 
     if not req.params.query?
-        return next new HttpError 400, '`query` body field is mandatory'
+        return next new BadRequest '`query` body field is mandatory'
 
     # we add one temporary because the search doesn't return the
     # number of results so we can't paginate properly
@@ -202,6 +246,14 @@ module.exports.del = (req, res, next) ->
     .then -> res.send 200, req.message
     .catch next
 
+
+module.exports.conversationGet = (req, res, next) ->
+
+    Message.byConversationId req.params.conversationID
+    .then (messages) -> res.send 200, messages.map formatMessage
+
+    .catch next
+
 module.exports.conversationDelete = (req, res, next) ->
 
     # @TODO : Delete Conversation
@@ -211,7 +263,7 @@ module.exports.conversationDelete = (req, res, next) ->
 
 module.exports.conversationPatch = (req, res, next) ->
 
-    Message.byConversationID req.params.conversationID
+    Message.byConversationId req.params.conversationID
     .then (messages) ->
         # @TODO : be smarter : dont remove message from sent folder, ...
         Promise.serie messages, (msg) ->

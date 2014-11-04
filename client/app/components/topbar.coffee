@@ -68,7 +68,8 @@ module.exports = Topbar = React.createClass
                     i className: 'fa fa-bars pull-left'
                     t "app menu"
 
-            if layout.firstPanel.action is 'account.mailbox.messages'
+            if layout.firstPanel.action is 'account.mailbox.messages' or
+               layout.firstPanel.action is 'account.mailbox.messages'
                 div className: 'col-md-6 hidden-xs hidden-sm pull-left',
                     form className: 'form-inline col-md-12',
                         MailboxList
@@ -77,7 +78,8 @@ module.exports = Topbar = React.createClass
                             selectedMailbox: selectedMailboxID
                         SearchForm query: searchQuery
 
-            if layout.firstPanel.action is 'account.mailbox.messages'
+            if layout.firstPanel.action is 'account.mailbox.messages' or
+               layout.firstPanel.action is 'account.mailbox.messages'
                 div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
                     a onClick: @refresh, className: 'btn btn-cozy-contrast',
                         i className: 'fa fa-refresh'
