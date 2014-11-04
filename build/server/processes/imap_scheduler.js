@@ -40,7 +40,7 @@ module.exports = ImapScheduler = (function() {
     pAccount = account ? Promise.resolve(account) : Account.findPromised(accountID);
     return pAccount.then((function(_this) {
       return function(account) {
-        scheduler = account.isTest() ? new TestScheduler() : new ImapScheduler(account.makeImapConfig());
+        scheduler = (account == null) || account.isTest() ? new TestScheduler() : new ImapScheduler(account.makeImapConfig());
         _this.instances[accountID] = scheduler;
         return scheduler;
       };

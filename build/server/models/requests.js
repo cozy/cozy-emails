@@ -43,13 +43,22 @@ module.exports = {
     byMailboxRequest: {
       reduce: '_count',
       map: function(doc) {
-        var boxid, uid, _ref;
+        var boxid, uid, xflag, _i, _len, _ref, _ref1;
         _ref = doc.mailboxIDs;
         for (boxid in _ref) {
           uid = _ref[boxid];
           emit(['uid', boxid, uid], doc.flags);
-          emit(['date', boxid, doc.date], doc.flags);
-          emit(['subject', boxid, doc.subject], doc.flags);
+          emit(['date', boxid, null, doc.date], null);
+          emit(['subject', boxid, null, doc.normSubject], null);
+          _ref1 = ['\\Seen', '\\Flagged', '\\Answered'];
+          for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+            xflag = _ref1[_i];
+            if (-1 === doc.flags.indexOf(xflag)) {
+              xflag = '!' + xflag;
+            }
+            emit(['date', boxid, xflag, doc.date], null);
+            emit(['subject', boxid, xflag, doc.normSubject], null);
+          }
         }
         return void 0;
       }
@@ -60,6 +69,11 @@ module.exports = {
       }
       if (doc.normSubject) {
         return emit([doc.accountID, 'subject', doc.normSubject], doc.conversationID);
+      }
+    },
+    byConversationId: function(doc) {
+      if (doc.conversationID) {
+        return emit(doc.conversationID);
       }
     }
   }

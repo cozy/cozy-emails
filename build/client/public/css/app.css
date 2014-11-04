@@ -2351,6 +2351,15 @@ textarea:active {
   display: inline;
   padding: 0 0.5em;
 }
+.conversation .thread .message .toggle-active {
+  position: relative;
+  top: 0;
+  right: 0;
+  -webkit-align-self: flex-start;
+  align-self: flex-start;
+  -ms-flex-item-align: start;
+  margin: -5px 0;
+}
 .conversation .thread .message .sender-avatar {
   display: block;
   float: left;
@@ -2379,7 +2388,7 @@ textarea:active {
   white-space: pre-line;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
-  color: #bdbdbd;
+  color: #444;
   font-family: "Source Sans Pro";
 }
 .conversation .thread .message .preview p {
@@ -2392,18 +2401,11 @@ textarea:active {
 .conversation .thread .message .participants .address {
   margin: 0 0.5em 0 0;
   line-height: 1.5em;
-  border: 1px solid #bdbdbd;
-  background-color: #eee;
-  -webkit-border-radius: 0.25em;
-  border-radius: 0.25em;
   padding: 0.25em;
 }
 .conversation .thread .message .participants .address .address-add {
   cursor: pointer;
   padding: 2px;
-}
-.conversation .thread .message .participants .address .fa {
-  color: #428bca;
 }
 .conversation .thread .message .hour {
   margin-left: auto;

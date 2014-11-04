@@ -19,6 +19,8 @@ mailutils = require('../utils/jwz_tools');
 
 Break = require('../utils/errors').Break;
 
+FETCH_AT_ONCE = require('../utils/constants').FETCH_AT_ONCE;
+
 Mailbox.prototype.doASAPWithBox = function(gen) {
   return ImapScheduler.instanceFor(this.accountID).then((function(_this) {
     return function(scheduler) {
@@ -38,8 +40,6 @@ Mailbox.prototype.doLaterWithBox = function(gen) {
 Mailbox.prototype.imap_fetchMails = function(limitByBox) {
   return this.imap_refreshStep(limitByBox);
 };
-
-FETCH_AT_ONCE = 1000;
 
 Mailbox.prototype.imap_refreshStep = function(limitByBox, laststep) {
   var box, reporter, step;
