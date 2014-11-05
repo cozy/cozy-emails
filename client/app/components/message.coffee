@@ -122,8 +122,9 @@ module.exports = React.createClass
     prepareHTML: (prepared) ->
         messageDisplayHTML = true
         parser = new DOMParser()
-        html = "<html><head></head><body>#{prepared.html}</body></html>"
-        doc = parser.parseFromString html, "text/html"
+        html   = "<html><head></head><body>#{prepared.html}</body></html>"
+        doc    = parser.parseFromString html, "text/html"
+        images = []
         if not doc
             doc = document.implementation.createHTMLDocument("")
             doc.documentElement.innerHTML = html
@@ -142,15 +143,14 @@ module.exports = React.createClass
             @_htmlContent = prepared.html
             #htmluri = "data:text/html;charset=utf-8;base64,
             #      #{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
-        return messageDisplayHTML
+        return {messageDisplayHTML, images}
 
     render: ->
 
         message  = @props.message
         prepared = @_prepareMessage()
-        images = []
         if @state.messageDisplayHTML and prepared.html
-            messageDisplayHTML = @prepareHTML prepared
+            {messageDisplayHTML, images} = @prepareHTML prepared
 
         imagesWarning = images.length > 0 and not @state.messageDisplayImages
         classes = classer
@@ -167,7 +167,7 @@ module.exports = React.createClass
                     div className: 'full-headers',
                         pre null, prepared.fullHeaders.join "\n"
                     if messageDisplayHTML and prepared.html
-                        div null,
+                        div className: 'row',
                             if imagesWarning
                                 div
                                     className: "imagesWarning content-action",
@@ -312,7 +312,7 @@ module.exports = React.createClass
         isFlagged = prepared.flags.indexOf(FlagsConstants.FLAGGED) is -1
         isSeen    = prepared.flags.indexOf(FlagsConstants.SEEN) is -1
 
-        div className: 'messageToolbox',
+        div className: 'messageToolbox row',
             div className: 'btn-toolbar', role: 'toolbar',
                 div className: 'btn-group btn-group-sm btn-group-justified',
                     div className: 'btn-group btn-group-sm',

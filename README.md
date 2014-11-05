@@ -73,7 +73,7 @@ need to install additional tools:
     sudo npm install casperjs -g # version >= 1.1 is required.
     sudo npm install cozy-fixtures -g
 
-    npm run-script client-test
+    npm run-script load-fixtures && npm run-script client-test
 
 ### Backend
 

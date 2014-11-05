@@ -96,6 +96,8 @@ MessageList = React.createClass
             return
 
         isVisible = =>
+            if not @refs.nextPage?
+                return false
             next   = @refs.nextPage.getDOMNode()
             rect   = next.getBoundingClientRect()
             height = window.innerHeight or document.documentElement.clientHeight
