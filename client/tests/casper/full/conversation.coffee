@@ -71,21 +71,24 @@ casper.test.begin 'Test conversation', (test) ->
 
     casper.then ->
         test.comment "Header"
-        test.assertExists ".header.row.compact", "Compact header"
-        casper.click ".header.row.compact"
+        test.assertExists ".header.compact", "Compact header"
+        casper.click ".header.compact"
         casper.waitForSelector ".header.row.full", ->
             casper.click ".header.row.full .participants", ->
-            casper.waitForSelector ".header.row.compact", ->
-                casper.click ".header.row.compact", ->
+            casper.waitForSelector ".header.compact", ->
+                casper.click ".header.compact", ->
                 casper.waitForSelector ".header.row.full", ->
                     test.pass "Toggle between full and compact headers"
 
     casper.then ->
         test.comment "Add contact"
-        test.assertExist ".conversation .sender .address"
-        casper.click ".conversation .sender .address .address-add i"
-        casper.waitForText "has been added to your contacts", ->
-            test.pass "Contact added"
+        test.assertExist ".conversation .sender .address-item"
+        this.mouse.move ".conversation .sender .address-item"
+        casper.waitForSelector ".conversation .sender .tooltip", ->
+            test.pass "Tooltip displayed"
+            casper.click ".conversation .sender .tooltip .address-add i"
+            casper.waitForText "has been added to your contacts", ->
+                test.pass "Contact added"
 
     casper.then ->
         test.comment "Attachements"
@@ -96,7 +99,7 @@ casper.test.begin 'Test conversation', (test) ->
         test.assertExist "li.file-item > .mime.text", "Attachement file type text"
         test.assertExist "li.file-item > .mime.word", "Attachement file type word"
         selectMessage "DoveCot", "Test Folder", "Email fixture attachments gmail", ->
-            casper.click ".header.row.compact"
+            casper.click ".header.compact"
             casper.waitForSelector ".header.row.full", ->
                 test.assertElementCount ".header.row ul.files > li", 1, "Number of attachments"
                 test.assertExist "li.file-item > .mime.image", "Attachement file type"

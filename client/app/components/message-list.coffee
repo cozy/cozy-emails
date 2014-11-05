@@ -4,8 +4,10 @@ classer = React.addons.classSet
 RouterMixin    = require '../mixins/router_mixin'
 MessageUtils   = require '../utils/message_utils'
 {MessageFlags, MessageFilter} = require '../constants/app_constants'
-LayoutActionCreator = require '../actions/layout_action_creator'
-MessageStore  = require '../stores/message_store'
+LayoutActionCreator  = require '../actions/layout_action_creator'
+ContactActionCreator = require '../actions/contact_action_creator'
+MessageStore   = require '../stores/message_store'
+Participants   = require './participant'
 
 MessageList = React.createClass
     displayName: 'MessageList'
@@ -85,11 +87,15 @@ MessageList = React.createClass
                     i className: 'fav fa fa-star'
 
     getParticipants: (message) ->
-        from = MessageUtils.displayAddresses(message.get 'from')
-        to   = MessageUtils.displayAddresses(message.get('to')
-                .concat(message.get('cc')))
-        "#{from}, #{to}"
+        from = message.get 'from'
+        to   = message.get('to').concat(message.get('cc'))
+        span null,
+            Participants participants: from, onAdd: @addAddres
+            span null, ', '
+            Participants participants: to, onAdd: @addAddress
 
+    addAddress: (address) ->
+        ContactActionCreator.createContact address
 
     _initScroll: ->
         if not @refs.nextPage?

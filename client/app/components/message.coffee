@@ -8,6 +8,7 @@ ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 ContactActionCreator      = require '../actions/contact_action_creator'
 RouterMixin = require '../mixins/router_mixin'
+Participants  = require './participant'
 
 FlagsConstants =
     SEEN   : MessageFlags.SEEN
@@ -209,13 +210,18 @@ module.exports = React.createClass
                 'data-id': message.get('id'),
                     @renderHeaders prepared
 
+    getParticipants: (prepared) ->
+        from = prepared.from
+        to   = prepared.to.concat(prepared.cc)
+        span null,
+            Participants participants: from, onAdd: @addAddress
+            span null, ', '
+            Participants participants: to, onAdd: @addAddress
+
     renderHeaders: (prepared) ->
         hasAttachments = prepared.attachments.length
         leftClass = if hasAttachments then 'col-md-8' else 'col-md-12'
         flags     = prepared.flags
-        participants = """#{MessageUtils.displayAddresses prepared.from},
-            #{MessageUtils.displayAddresses prepared.to}
-            #{MessageUtils.displayAddresses prepared.cc}"""
         # display attachment
         display = (file) ->
             url = "/message/#{prepared.id}/attachments/#{file.name}"
@@ -227,7 +233,7 @@ module.exports = React.createClass
         avatar = @props.message.get('getAvatar')()
         classes = classer
             'header': true
-            'row': true
+            'row': @state.headers
             'full': @state.headers
             'compact': not @state.headers
             'has-attachments': hasAttachments
@@ -242,10 +248,10 @@ module.exports = React.createClass
             div className: classes,
                 div className: leftClass, onClick: @toggleHeaders,
                     if avatar
-                        img className: 'avatar', src: avatar
+                        img className: 'sender-avatar', src: avatar
                     else
                         i className: 'sender-avatar fa fa-user'
-                    div className: 'participants',
+                    div className: 'participants col-md-8',
                         p className: 'sender',
                             @renderAddress 'from'
                         p className: 'receivers',
@@ -262,10 +268,10 @@ module.exports = React.createClass
         else
             div className: classes, onClick: @toggleHeaders,
                 if avatar
-                    img className: 'avatar', src: avatar
+                    img className: 'sender-avatar', src: avatar
                 else
                     i className: 'sender-avatar fa fa-user'
-                span className: 'participants', participants
+                span className: 'participants', @getParticipants prepared
                 span className: 'hour', prepared.date
                 span className: "flags",
                     i className: 'attach fa fa-paperclip'
@@ -277,20 +283,8 @@ module.exports = React.createClass
         addresses = @props.message.get(field)
         if not addresses?
             return
-        addresses = addresses.map (address, key) =>
-            return {
-                value: address
-                addAddress: (e) =>
-                    e.preventDefault()
-                    e.stopPropagation()
-                    @addAddress address
-            }
-        span null,
-            addresses.map (address, key) ->
-                span className: 'address', key: key,
-                    span null, MessageUtils.displayAddress(address.value, true)
-                    a className: 'address-add', onClick: address.addAddress,
-                        i className: 'fa fa-plus'
+
+        Participants participants: addresses, onAdd: @addAddress
 
     renderCompose: ->
         if @state.composing

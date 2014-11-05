@@ -114,14 +114,23 @@
             .sender-avatar
                 display block
                 float left
-                padding 0 .5em
                 margin 0 .5em 0 0
                 font-size 2em
+                width 2em
+                height 2em
                 line-height 2em
                 color #aaa
                 border 1px solid #aaa
+            i.sender-avatar
+                padding 0 .5em
+
+            .header.row.compact
+                font-size 1em
+                width 1em
+                height 1em
 
             .participants
+                color: darkcolor
                 &.receivers
                     color mediumcolor
 
@@ -151,28 +160,10 @@
                     margin 0
                     display inline
 
-            .participants
-                color darkcolor
-
-                .address
-                    margin 0 .5em 0 0
-                    line-height 1.5em
-                    padding .25em
-
-                    .address-add
-                        cursor pointer
-                        padding 2px
-
 
             .hour
                 margin-left auto
                 color darkcolor
-
-            // placeholder until we have images
-            .fa-user
-                color #aaa
-                font-size 30px
-                border 1px solid #aaa
 
             &:hover:not(.active):not(:last-of-type)
                 background #f4f4f4
