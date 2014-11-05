@@ -32,6 +32,20 @@ module.exports = {
         }
       }
       return _results;
+    },
+    byEmail: function(doc) {
+      var dp, _i, _len, _ref, _results;
+      _ref = doc.datapoints;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        dp = _ref[_i];
+        if (dp.name === 'email') {
+          _results.push(emit(dp.value, doc));
+        } else {
+          _results.push(void 0);
+        }
+      }
+      return _results;
     }
   },
   mailbox: {

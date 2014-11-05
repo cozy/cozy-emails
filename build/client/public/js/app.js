@@ -1907,7 +1907,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/application", function(exports, require, module) {
-var AccountConfig, AccountStore, Alert, Application, Compose, Conversation, LayoutActionCreator, LayoutStore, MailboxList, Menu, MessageList, MessageStore, ReactCSSTransitionGroup, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, TasksStore, ToastContainer, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref;
+var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, LayoutActionCreator, LayoutStore, MailboxList, Menu, MessageList, MessageStore, ReactCSSTransitionGroup, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, TasksStore, ToastContainer, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref;
 
 _ref = React.DOM, body = _ref.body, div = _ref.div, p = _ref.p, form = _ref.form, i = _ref.i, input = _ref.input, span = _ref.span, a = _ref.a, button = _ref.button, strong = _ref.strong;
 
@@ -1943,6 +1943,8 @@ StoreWatchMixin = require('../mixins/store_watch_mixin');
 
 AccountStore = require('../stores/account_store');
 
+ContactStore = require('../stores/contact_store');
+
 MessageStore = require('../stores/message_store');
 
 LayoutStore = require('../stores/layout_store');
@@ -1971,7 +1973,7 @@ LayoutActionCreator = require('../actions/layout_action_creator');
 
 module.exports = Application = React.createClass({
   displayName: 'Application',
-  mixins: [StoreWatchMixin([AccountStore, MessageStore, LayoutStore, SettingsStore, SearchStore, TasksStore]), RouterMixin],
+  mixins: [StoreWatchMixin([AccountStore, ContactStore, MessageStore, LayoutStore, SettingsStore, SearchStore, TasksStore]), RouterMixin],
   render: function() {
     var alert, firstPanelLayoutMode, getUrl, isFullWidth, keyFirst, keySecond, layout, panelClasses, responsiveClasses;
     layout = this.props.router.current;
@@ -2143,6 +2145,9 @@ module.exports = Application = React.createClass({
       } else {
         conversation = MessageStore.getMessagesByConversation(messageID);
       }
+      if (message != null) {
+        MessageStore.setCurrentID(message.get('id'));
+      }
       return Conversation({
         layout: layout,
         settings: this.state.settings,
@@ -2151,7 +2156,9 @@ module.exports = Application = React.createClass({
         selectedAccount: this.state.selectedAccount,
         selectedMailboxID: this.state.selectedMailboxID,
         message: message,
-        conversation: conversation
+        conversation: conversation,
+        prevID: MessageStore.getPreviousMessage(),
+        nextID: MessageStore.getNextMessage()
       });
     } else if (panelInfo.action === 'compose') {
       return Compose({
@@ -2678,9 +2685,9 @@ module.exports = Compose = React.createClass({
 });
 
 ;require.register("components/contact-form", function(exports, require, module) {
-var ContactActionCreator, ContactStore, RouterMixin, StoreWatchMixin, a, classer, div, input, li, span, ul, _ref;
+var ContactActionCreator, ContactStore, RouterMixin, StoreWatchMixin, a, classer, div, i, img, input, li, span, ul, _ref;
 
-_ref = React.DOM, div = _ref.div, input = _ref.input, span = _ref.span, ul = _ref.ul, li = _ref.li, a = _ref.a;
+_ref = React.DOM, div = _ref.div, input = _ref.input, span = _ref.span, ul = _ref.ul, li = _ref.li, a = _ref.a, img = _ref.img, i = _ref.i;
 
 classer = React.addons.classSet;
 
@@ -2736,15 +2743,21 @@ module.exports = React.createClass({
     })(this)).toJS())));
   },
   renderContact: function(contact) {
-    var selectContact;
+    var avatar, selectContact;
     selectContact = (function(_this) {
       return function() {
         return _this.props.onContact(contact);
       };
     })(this);
+    avatar = contact.get('avatar');
     return li({
       onClick: selectContact
-    }, a(null, "" + (contact.get('name')) + " <" + (contact.get('address')) + ">"));
+    }, a(null, avatar != null ? img({
+      className: 'avatar',
+      src: avatar
+    }) : i({
+      className: 'avatar fa fa-user'
+    }), "" + (contact.get('fn')) + " <" + (contact.get('address')) + ">"));
   },
   onSubmit: function() {
     var query;
@@ -2812,7 +2825,7 @@ module.exports = React.createClass({
       return shouldUpdate
    */
   render: function() {
-    var closeIcon, closeUrl, collapseUrl, expandUrl, key, message, selectedAccountID;
+    var active, closeIcon, closeUrl, collapseUrl, expandUrl, key, message, selectedAccountID;
     if ((this.props.message == null) || !this.props.conversation) {
       return p(null, t("app loading"));
     }
@@ -2877,6 +2890,7 @@ module.exports = React.createClass({
       _results = [];
       for (key = _i = 0, _len = _ref1.length; _i < _len; key = ++_i) {
         message = _ref1[key];
+        active = this.props.message.get('id') === message.get('id');
         _results.push(Message({
           key: key,
           message: message,
@@ -2885,7 +2899,9 @@ module.exports = React.createClass({
           mailboxes: this.props.mailboxes,
           selectedAccount: this.props.selectedAccount,
           selectedMailboxID: this.props.selectedMailboxID,
-          active: this.props.message.get('id') === message.get('id')
+          active: active,
+          prevID: this.props.prevID,
+          nextID: this.props.nextID
         }));
       }
       return _results;
@@ -3281,7 +3297,7 @@ module.exports = MailsInput = React.createClass({
         } else {
           current = "";
         }
-        name = contact.get('name');
+        name = contact.get('fn');
         address = contact.get('address');
         val.requestChange("" + current + name + " <" + address + ">");
         return _this.setState({
@@ -3514,9 +3530,9 @@ module.exports = Menu = React.createClass({
 });
 
 ;require.register("components/message-list", function(exports, require, module) {
-var LayoutActionCreator, MessageFilter, MessageFlags, MessageList, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, RouterMixin, a, button, classer, div, i, input, li, p, span, ul, _ref, _ref1;
+var LayoutActionCreator, MessageFilter, MessageFlags, MessageList, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, RouterMixin, a, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
 
-_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p, button = _ref.button, input = _ref.input;
+_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p, button = _ref.button, input = _ref.input, img = _ref.img;
 
 classer = React.addons.classSet;
 
@@ -3560,7 +3576,7 @@ MessageList = React.createClass({
     }, t('list next page'))) : void 0));
   },
   getMessageRender: function(message, key, isActive) {
-    var action, classes, conversationID, date, flags, id, isDraft, url;
+    var action, avatar, classes, conversationID, date, flags, id, isDraft, url;
     flags = message.get('flags');
     classes = classer({
       read: message.get('isRead'),
@@ -3589,12 +3605,16 @@ MessageList = React.createClass({
       parameters: id
     });
     date = MessageUtils.formatDate(message.get('createdAt'));
+    avatar = message.get('getAvatar')();
     return li({
       className: 'message ' + classes,
       key: key
     }, a({
       href: url
-    }, i({
+    }, avatar != null ? img({
+      className: 'avatar',
+      src: avatar
+    }) : i({
       className: 'fa fa-user'
     }), span({
       className: 'participants'
@@ -3626,6 +3646,9 @@ MessageList = React.createClass({
     isVisible = (function(_this) {
       return function() {
         var height, next, rect, width;
+        if (_this.refs.nextPage == null) {
+          return false;
+        }
         next = _this.refs.nextPage.getDOMNode();
         rect = next.getBoundingClientRect();
         height = window.innerHeight || document.documentElement.clientHeight;
@@ -3774,9 +3797,9 @@ MessagesSort = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageFlags, MessageUtils, RouterMixin, a, button, classer, div, h3, i, iframe, li, p, pre, span, ul, _ref, _ref1;
+var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageFlags, MessageUtils, RouterMixin, a, button, classer, div, h3, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
 
-_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe;
+_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img;
 
 Compose = require('./compose');
 
@@ -3903,11 +3926,12 @@ module.exports = React.createClass({
     }
   },
   prepareHTML: function(prepared) {
-    var doc, hideImage, html, images, img, messageDisplayHTML, parser, _i, _len;
+    var doc, hideImage, html, images, messageDisplayHTML, parser, _i, _len;
     messageDisplayHTML = true;
     parser = new DOMParser();
     html = "<html><head></head><body>" + prepared.html + "</body></html>";
     doc = parser.parseFromString(html, "text/html");
+    images = [];
     if (!doc) {
       doc = document.implementation.createHTMLDocument("");
       doc.documentElement.innerHTML = html;
@@ -3932,15 +3956,17 @@ module.exports = React.createClass({
     } else {
       this._htmlContent = prepared.html;
     }
-    return messageDisplayHTML;
+    return {
+      messageDisplayHTML: messageDisplayHTML,
+      images: images
+    };
   },
   render: function() {
-    var classes, images, imagesWarning, message, messageDisplayHTML, prepared;
+    var classes, images, imagesWarning, message, messageDisplayHTML, prepared, _ref2;
     message = this.props.message;
     prepared = this._prepareMessage();
-    images = [];
     if (this.state.messageDisplayHTML && prepared.html) {
-      messageDisplayHTML = this.prepareHTML(prepared);
+      _ref2 = this.prepareHTML(prepared), messageDisplayHTML = _ref2.messageDisplayHTML, images = _ref2.images;
     }
     imagesWarning = images.length > 0 && !this.state.messageDisplayImages;
     classes = classer({
@@ -3954,7 +3980,9 @@ module.exports = React.createClass({
         'data-id': message.get('id')
       }, this.renderToolbox(message.get('id'), prepared), this.renderHeaders(prepared), div({
         className: 'full-headers'
-      }, pre(null, prepared.fullHeaders.join("\n"))), messageDisplayHTML && prepared.html ? div(null, imagesWarning ? div({
+      }, pre(null, prepared.fullHeaders.join("\n"))), messageDisplayHTML && prepared.html ? div({
+        className: 'row'
+      }, imagesWarning ? div({
         className: "imagesWarning content-action",
         ref: "imagesWarning"
       }, span(null, t('message images warning')), button({
@@ -3973,7 +4001,7 @@ module.exports = React.createClass({
         className: 'preview'
       }, p(null, prepared.text))), div({
         className: 'clearfix'
-      }), this.renderCompose());
+      }), this.renderNavigation(), this.renderCompose());
     } else {
       return li({
         className: classes,
@@ -3983,7 +4011,7 @@ module.exports = React.createClass({
     }
   },
   renderHeaders: function(prepared) {
-    var attachments, classes, display, flags, hasAttachments, leftClass, participants, toggleActive;
+    var attachments, avatar, classes, display, flags, hasAttachments, leftClass, participants, toggleActive;
     hasAttachments = prepared.attachments.length;
     leftClass = hasAttachments ? 'col-md-8' : 'col-md-12';
     flags = prepared.flags;
@@ -3998,6 +4026,7 @@ module.exports = React.createClass({
       value: prepared.attachments.map(MessageUtils.convertAttachments),
       display: display
     });
+    avatar = this.props.message.get('getAvatar')();
     classes = classer({
       'header': true,
       'row': true,
@@ -4020,7 +4049,10 @@ module.exports = React.createClass({
       }, div({
         className: leftClass,
         onClick: this.toggleHeaders
-      }, i({
+      }, avatar ? img({
+        className: 'avatar',
+        src: avatar
+      }) : i({
         className: 'sender-avatar fa fa-user'
       }), div({
         className: 'participants'
@@ -4039,8 +4071,11 @@ module.exports = React.createClass({
       return div({
         className: classes,
         onClick: this.toggleHeaders
-      }, i({
-        className: 'fa fa-user'
+      }, avatar ? img({
+        className: 'avatar',
+        src: avatar
+      }) : i({
+        className: 'sender-avatar fa fa-user'
       }), span({
         className: 'participants'
       }, participants), span({
@@ -4113,7 +4148,7 @@ module.exports = React.createClass({
     isFlagged = prepared.flags.indexOf(FlagsConstants.FLAGGED) === -1;
     isSeen = prepared.flags.indexOf(FlagsConstants.SEEN) === -1;
     return div({
-      className: 'messageToolbox'
+      className: 'messageToolbox row'
     }, div({
       className: 'btn-toolbar',
       role: 'toolbar'
@@ -4246,6 +4281,61 @@ module.exports = React.createClass({
       className: 'divider'
     }))))));
   },
+  renderNavigation: function() {
+    var displayNext, displayPrev, nextUrl, prevUrl;
+    if (this.props.prevID != null) {
+      prevUrl = this.buildUrl({
+        direction: 'second',
+        action: 'message',
+        parameters: this.props.prevID
+      });
+      displayPrev = (function(_this) {
+        return function() {
+          return _this.displayNextMessage(_this.props.prevID);
+        };
+      })(this);
+    }
+    if (this.props.nextID != null) {
+      nextUrl = this.buildUrl({
+        direction: 'second',
+        action: 'message',
+        parameters: this.props.nextID
+      });
+      displayNext = (function(_this) {
+        return function() {
+          return _this.displayNextMessage(_this.props.nextID);
+        };
+      })(this);
+    }
+    return div({
+      className: 'messageNavigation'
+    }, div({
+      className: 'btn-toolbar',
+      role: 'toolbar'
+    }, div({
+      className: 'btn-group btn-group-sm btn-group-justified'
+    }, prevUrl != null ? div({
+      className: 'btn-group btn-group-sm'
+    }, button({
+      className: 'btn btn-default',
+      type: 'button',
+      onClick: displayPrev
+    }, a({
+      href: prevUrl
+    }, span({
+      className: 'fa fa-long-arrow-left'
+    })))) : void 0, nextUrl != null ? div({
+      className: 'btn-group btn-group-sm'
+    }, button({
+      className: 'btn btn-default',
+      type: 'button',
+      onClick: displayNext
+    }, a({
+      href: nextUrl
+    }, span({
+      className: 'fa fa-long-arrow-right'
+    })))) : void 0)));
+  },
   renderMailboxes: function(mailbox, key, conversation) {
     var j, pusher, _i, _ref2;
     if (mailbox.get('id') === this.props.selectedMailboxID) {
@@ -4322,13 +4412,28 @@ module.exports = React.createClass({
       });
     }
   },
-  displayNextMessage: function() {
-    return this.redirect({
-      direction: 'first',
-      action: 'account.mailbox.messages.full',
-      parameters: this.getParams(),
-      fullWidth: true
-    });
+  displayNextMessage: function(next) {
+    if (next == null) {
+      if (this.props.nextID != null) {
+        next = this.props.nextID;
+      } else {
+        next = this.props.prevID;
+      }
+    }
+    if (next != null) {
+      return this.redirect({
+        direction: 'second',
+        action: 'message',
+        parameters: next
+      });
+    } else {
+      return this.redirect({
+        direction: 'first',
+        action: 'account.mailbox.messages.full',
+        parameters: this.getParams(),
+        fullWidth: true
+      });
+    }
   },
   onReply: function(args) {
     this.setState({
@@ -5186,7 +5291,7 @@ module.exports = {
 
 ;require.register("initialize", function(exports, require, module) {
 window.onload = function() {
-  var AccountStore, Application, LayoutStore, MessageStore, PluginUtils, Router, SearchStore, SettingsActionCreator, SettingsStore, application, locale;
+  var AccountStore, Application, ContactActionCreator, LayoutStore, MessageStore, PluginUtils, Router, SearchStore, SettingsActionCreator, SettingsStore, application, locale;
   window.__DEV__ = window.location.hostname === 'localhost';
   window.cozyMails = require('./utils/api_utils');
   if (window.settings == null) {
@@ -5217,183 +5322,10 @@ window.onload = function() {
   SettingsActionCreator = require('./actions/settings_action_creator/');
   SettingsActionCreator.setRefresh(window.settings.refreshInterval);
   Backbone.history.start();
-  return require('./utils/socketio_utils');
+  require('./utils/socketio_utils');
+  ContactActionCreator = require('./actions/contact_action_creator/');
+  return ContactActionCreator.searchContact();
 };
-});
-
-;require.register("libs/flux/dispatcher/Dispatcher", function(exports, require, module) {
-
-/*
-
-    -- Coffee port of Facebook's flux dispatcher. It was in ES6 and I haven't
-    been successful in adding a transpiler. --
-
-    Copyright (c) 2014, Facebook, Inc.
-    All rights reserved.
-
-    This source code is licensed under the BSD-style license found in the
-    LICENSE file in the root directory of this source tree. An additional grant
-    of patent rights can be found in the PATENTS file in the same directory.
- */
-var Dispatcher, invariant, _lastID, _prefix;
-
-invariant = require('../invariant');
-
-_lastID = 1;
-
-_prefix = 'ID_';
-
-module.exports = Dispatcher = Dispatcher = (function() {
-  function Dispatcher() {
-    this._callbacks = {};
-    this._isPending = {};
-    this._isHandled = {};
-    this._isDispatching = false;
-    this._pendingPayload = null;
-  }
-
-
-  /*
-      Registers a callback to be invoked with every dispatched payload.
-      Returns a token that can be used with `waitFor()`.
-  
-      @param {function} callback
-      @return {string}
-   */
-
-  Dispatcher.prototype.register = function(callback) {
-    var id;
-    id = _prefix + _lastID++;
-    this._callbacks[id] = callback;
-    return id;
-  };
-
-
-  /*
-      Removes a callback based on its token.
-  
-      @param {string} id
-   */
-
-  Dispatcher.prototype.unregister = function(id) {
-    var message;
-    message = 'Dispatcher.unregister(...): `%s` does not map to a ' + 'registered callback.';
-    invariant(this._callbacks[id], message, id);
-    return delete this._callbacks[id];
-  };
-
-
-  /*
-      Waits for the callbacks specified to be invoked before continuing
-      execution of the current callback. This method should only be used by a
-      callback in response to a dispatched payload.
-  
-      @param {array<string>} ids
-   */
-
-  Dispatcher.prototype.waitFor = function(ids) {
-    var id, ii, message, message2, _i, _ref, _results;
-    invariant(this._isDispatching, 'Dispatcher.waitFor(...): Must be invoked while dispatching.');
-    message = 'Dispatcher.waitFor(...): Circular dependency detected ' + 'while waiting for `%s`.';
-    message2 = 'Dispatcher.waitFor(...): `%s` does not map to a ' + 'registered callback.';
-    _results = [];
-    for (ii = _i = 0, _ref = ids.length - 1; _i <= _ref; ii = _i += 1) {
-      id = ids[ii];
-      if (this._isPending[id]) {
-        invariant(this._isHandled[id], message, id);
-        continue;
-      }
-      invariant(this._callbacks[id], message2, id);
-      _results.push(this._invokeCallback(id));
-    }
-    return _results;
-  };
-
-
-  /*
-      Dispatches a payload to all registered callbacks.
-  
-      @param {object} payload
-   */
-
-  Dispatcher.prototype.dispatch = function(payload) {
-    var id, message, _results;
-    message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + 'of a dispatch.';
-    invariant(!this._isDispatching, message);
-    this._startDispatching(payload);
-    try {
-      _results = [];
-      for (id in this._callbacks) {
-        if (this._isPending[id]) {
-          continue;
-        }
-        _results.push(this._invokeCallback(id));
-      }
-      return _results;
-    } finally {
-      this._stopDispatching();
-    }
-  };
-
-
-  /*
-      Is this Dispatcher currently dispatching.
-  
-      @return {boolean}
-   */
-
-  Dispatcher.prototype.isDispatching = function() {
-    return this._isDispatching;
-  };
-
-
-  /*
-      Call the callback stored with the given id. Also do some internal
-      bookkeeping.
-  
-      @param {string} id
-      @internal
-   */
-
-  Dispatcher.prototype._invokeCallback = function(id) {
-    this._isPending[id] = true;
-    this._callbacks[id](this._pendingPayload);
-    return this._isHandled[id] = true;
-  };
-
-
-  /*
-      Set up bookkeeping needed when dispatching.
-  
-      @param {object} payload
-      @internal
-   */
-
-  Dispatcher.prototype._startDispatching = function(payload) {
-    var id;
-    for (id in this._callbacks) {
-      this._isPending[id] = false;
-      this._isHandled[id] = false;
-    }
-    this._pendingPayload = payload;
-    return this._isDispatching = true;
-  };
-
-
-  /*
-      Clear bookkeeping used for dispatching.
-  
-      @internal
-   */
-
-  Dispatcher.prototype._stopDispatching = function() {
-    this._pendingPayload = null;
-    return this._isDispatching = false;
-  };
-
-  return Dispatcher;
-
-})();
 });
 
 ;require.register("libs/flux/dispatcher/dispatcher", function(exports, require, module) {
@@ -5625,63 +5557,6 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 };
 
 module.exports = invariant;
-});
-
-;require.register("libs/flux/store/Store", function(exports, require, module) {
-var AppDispatcher, Store,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-AppDispatcher = require('../../../app_dispatcher');
-
-module.exports = Store = (function(_super) {
-  var _addHandlers, _handlers, _nextUniqID, _processBinding;
-
-  __extends(Store, _super);
-
-  Store.prototype.uniqID = null;
-
-  _nextUniqID = 0;
-
-  _handlers = {};
-
-  _addHandlers = function(type, callback) {
-    if (_handlers[this.uniqID] == null) {
-      _handlers[this.uniqID] = {};
-    }
-    return _handlers[this.uniqID][type] = callback;
-  };
-
-  _processBinding = function() {
-    return this.dispatchToken = AppDispatcher.register((function(_this) {
-      return function(payload) {
-        var callback, type, value, _ref;
-        _ref = payload.action, type = _ref.type, value = _ref.value;
-        if ((callback = _handlers[_this.uniqID][type]) != null) {
-          return callback.call(_this, value);
-        }
-      };
-    })(this));
-  };
-
-  function Store() {
-    Store.__super__.constructor.call(this);
-    this.uniqID = _nextUniqID++;
-    this.__bindHandlers(_addHandlers.bind(this));
-    _processBinding.call(this);
-  }
-
-  Store.prototype.__bindHandlers = function(handle) {
-    var message;
-    if (__DEV__) {
-      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
-      throw new Error(message);
-    }
-  };
-
-  return Store;
-
-})(EventEmitter);
 });
 
 ;require.register("libs/flux/store/store", function(exports, require, module) {
@@ -6780,7 +6655,7 @@ ContactStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var _query, _results;
+  var _contacts, _query, _results;
 
   __extends(ContactStore, _super);
 
@@ -6789,6 +6664,8 @@ ContactStore = (function(_super) {
   }
 
   _query = "";
+
+  _contacts = Immutable.OrderedMap.empty();
 
   _results = Immutable.OrderedMap.empty();
 
@@ -6799,15 +6676,29 @@ ContactStore = (function(_super) {
 
   ContactStore.prototype.__bindHandlers = function(handle) {
     return handle(ActionTypes.RECEIVE_RAW_CONTACT_RESULTS, function(rawResults) {
+      var convert;
       _results = Immutable.OrderedMap.empty();
       if (rawResults != null) {
-        _results = _results.withMutations(function(map) {
+        if (!Array.isArray(rawResults)) {
+          rawResults = [rawResults];
+        }
+        convert = function(map) {
           return rawResults.forEach(function(rawResult) {
             var contact;
+            rawResult.datapoints.forEach(function(point) {
+              if (point.name === 'email') {
+                rawResult.address = point.value;
+              }
+              if (point.name === 'avatar') {
+                return rawResult.avatar = point.value;
+              }
+            });
             contact = Immutable.Map(rawResult);
             return map.set(contact.get('address'), contact);
           });
-        });
+        };
+        _results = _results.withMutations(convert);
+        _contacts = _contacts.withMutations(convert);
       }
       return this.emit('change');
     });
@@ -6824,6 +6715,11 @@ ContactStore = (function(_super) {
 
   ContactStore.prototype.getQuery = function() {
     return _query;
+  };
+
+  ContactStore.prototype.getAvatar = function(address) {
+    var _ref;
+    return (_ref = _contacts.get(address)) != null ? _ref.get('avatar') : void 0;
   };
 
   return ContactStore;
@@ -6908,12 +6804,14 @@ module.exports = new LayoutStore();
 });
 
 ;require.register("stores/message_store", function(exports, require, module) {
-var AccountStore, ActionTypes, AppDispatcher, MessageFilter, MessageFlags, MessageStore, Store, _ref,
+var AccountStore, ActionTypes, AppDispatcher, ContactStore, MessageFilter, MessageFlags, MessageStore, Store, _ref,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 Store = require('../libs/flux/store/store');
+
+ContactStore = require('./contact_store');
 
 AppDispatcher = require('../app_dispatcher');
 
@@ -6927,7 +6825,7 @@ MessageStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var __getSortFunction, __sortFunction, _counts, _filter, _messages, _params, _quickFilter, _sortField, _sortOrder, _unreadCounts;
+  var __getSortFunction, __sortFunction, _counts, _currentID, _currentMessages, _filter, _messages, _params, _quickFilter, _sortField, _sortOrder, _unreadCounts;
 
   __extends(MessageStore, _super);
 
@@ -6978,6 +6876,10 @@ MessageStore = (function(_super) {
 
   _params = {};
 
+  _currentMessages = null;
+
+  _currentID = null;
+
 
   /*
       Defines here the action handlers.
@@ -7003,6 +6905,9 @@ MessageStore = (function(_super) {
       if (message.flags == null) {
         message.flags = [];
       }
+      message.getAvatar = function() {
+        return ContactStore.getAvatar(message.get('from')[0].address);
+      };
       delete message.docType;
       message = Immutable.Map(message);
       _messages = _messages.set(message.get('id'), message);
@@ -7157,7 +7062,7 @@ MessageStore = (function(_super) {
    */
 
   MessageStore.prototype.getMessagesByMailbox = function(mailboxID) {
-    var sequence;
+    var sequence, _ref1;
     sequence = _messages.filter(function(message) {
       return __indexOf.call(Object.keys(message.get('mailboxIDs')), mailboxID) >= 0;
     }).sort(__getSortFunction(_sortField));
@@ -7178,7 +7083,35 @@ MessageStore = (function(_super) {
         sequence = sequence.filter (message) ->
             return re.test(message.get 'subject')
      */
-    return sequence.toOrderedMap();
+    _currentMessages = sequence.toOrderedMap();
+    _currentID = (_ref1 = _currentMessages.first()) != null ? _ref1.get('id') : void 0;
+    return _currentMessages;
+  };
+
+  MessageStore.prototype.setCurrentID = function(messageID) {
+    return _currentID = messageID;
+  };
+
+  MessageStore.prototype.getPreviousMessage = function() {
+    var idx, keys;
+    keys = Object.keys(_currentMessages.toJS());
+    idx = keys.indexOf(_currentID);
+    if (idx < 1) {
+      return null;
+    } else {
+      return keys[idx - 1];
+    }
+  };
+
+  MessageStore.prototype.getNextMessage = function() {
+    var idx, keys;
+    keys = Object.keys(_currentMessages.toJS());
+    idx = keys.indexOf(_currentID);
+    if (idx === -1 || idx === (keys.length - 1)) {
+      return null;
+    } else {
+      return keys[idx + 1];
+    }
   };
 
   MessageStore.prototype.getMessagesCounts = function() {

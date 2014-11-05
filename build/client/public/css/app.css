@@ -2106,7 +2106,7 @@ textarea:active {
 }
 #page-content #panels .panel {
   overflow-y: auto;
-  height: 85%;
+  height: 95%;
   position: absolute;
 }
 #page-content #panels .panel:first-of-type {
@@ -2262,7 +2262,8 @@ textarea:active {
   cursor: default;
 }
 .conversation .thread .message .messageToolbox {
-  margin: 1em auto;
+  margin-top: 1em;
+  margin-bottom: 1em;
   opacity: 0.3;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
   filter: alpha(opacity=30);
@@ -2375,6 +2376,11 @@ textarea:active {
 }
 .conversation .thread .message .content-action {
   background-color: #eee;
+  margin: 0.5em 0;
+  padding: 0.25em;
+}
+.conversation .thread .message .content-action button {
+  margin: 0 1em;
 }
 .conversation .thread .message .content {
   white-space: pre-line;
@@ -2679,17 +2685,23 @@ textarea:active {
   margin-left: auto;
   color: #444;
 }
-.message-list .fa-user {
+.message-list .fa-user,
+.message-list .avatar {
   color: #aaa;
-  font-size: 30px;
+  font-size: 2em;
   border: 1px solid #aaa;
+  width: 1em;
+  height: 1em;
+  text-align: center;
 }
-.message-list .fa-user:hover {
-  border-left: 5px solid #fe8800;
+.message-list .fa-user:hover,
+.message-list .avatar:hover {
+  border-left: 0.25em solid #fe8800;
   background: #f4f4f4;
 }
-.message-list .fa-user.active {
-  border-left: 5px solid #34a6ff;
+.message-list .fa-user.active,
+.message-list .avatar.active {
+  border-left: 0.25em solid #34a6ff;
 }
 .message-list .fav {
   color: #ff0;
@@ -2976,6 +2988,12 @@ textarea:active {
   color: #333;
   display: block;
   padding: 0.25em 0;
+}
+.contact-form .avatar {
+  font-size: 2em;
+  width: 1em;
+  height: 1em;
+  margin-right: 0.5em;
 }
 /*
   Open email tabs
