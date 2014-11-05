@@ -1,4 +1,5 @@
 Store = require '../libs/flux/store/store'
+ContactStore  = require './contact_store'
 AppDispatcher = require '../app_dispatcher'
 
 AccountStore = require './account_store'
@@ -47,6 +48,8 @@ class MessageStore extends Store
     _counts       = Immutable.Map()
     _unreadCounts = Immutable.Map()
     _params       = {}
+    _currentMessages = null
+    _currentID       = null
 
 
     ###
@@ -70,6 +73,10 @@ class MessageStore extends Store
 
             if not message.flags?
                 message.flags = []
+
+            message.getAvatar = ->
+                ContactStore.getAvatar message.get('from')[0].address
+
             # message loaded from fixtures for test purpose have a docType
             # that may cause some troubles
             delete message.docType
@@ -226,7 +233,25 @@ class MessageStore extends Store
         ###
 
         # sequences are lazy so we need .toOrderedMap() to actually execute it
-        return sequence.toOrderedMap()
+        _currentMessages = sequence.toOrderedMap()
+        _currentID       = _currentMessages.first()?.get 'id'
+        return _currentMessages
+
+    setCurrentID: (messageID) ->
+        _currentID = messageID
+
+    getPreviousMessage: ->
+        keys = Object.keys _currentMessages.toJS()
+        idx = keys.indexOf _currentID
+        return if idx < 1 then null else keys[idx - 1]
+
+    getNextMessage: ->
+        keys = Object.keys _currentMessages.toJS()
+        idx = keys.indexOf _currentID
+        if idx is -1 or idx is (keys.length - 1)
+            return null
+        else
+            return keys[idx + 1]
 
     getMessagesCounts: ->
         return _counts

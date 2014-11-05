@@ -11,8 +11,10 @@ class ContactStore extends Store
 
     _query = ""
 
-    # search results are a list of message
-    _results = Immutable.OrderedMap.empty()
+    # all known contacts
+    _contacts = Immutable.OrderedMap.empty()
+    # result of last search
+    _results  = Immutable.OrderedMap.empty()
 
     ###
         Defines here the action handlers.
@@ -22,10 +24,19 @@ class ContactStore extends Store
         handle ActionTypes.RECEIVE_RAW_CONTACT_RESULTS, (rawResults) ->
             _results = Immutable.OrderedMap.empty()
             if rawResults?
-                _results = _results.withMutations (map) ->
+                if not Array.isArray rawResults
+                    rawResults = [ rawResults ]
+                convert = (map) ->
                     rawResults.forEach (rawResult) ->
+                        rawResult.datapoints.forEach (point) ->
+                            if point.name is 'email'
+                                rawResult.address = point.value
+                            if point.name is 'avatar'
+                                rawResult.avatar = point.value
                         contact = Immutable.Map rawResult
                         map.set contact.get('address'), contact
+                _results  = _results.withMutations convert
+                _contacts = _contacts.withMutations convert
 
             @emit 'change'
 
@@ -36,6 +47,9 @@ class ContactStore extends Store
     getResults: -> return _results
 
     getQuery: -> return _query
+
+    getAvatar: (address) ->
+        return _contacts.get(address)?.get 'avatar'
 
 module.exports = new ContactStore()
 

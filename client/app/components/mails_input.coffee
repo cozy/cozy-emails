@@ -43,7 +43,7 @@ module.exports = MailsInput = React.createClass
                 current = "#{val.value}, "
             else
                 current = ""
-            name    = contact.get 'name'
+            name    = contact.get 'fn'
             address = contact.get 'address'
             val.requestChange "#{current}#{name} <#{address}>"
             @setState contactShown: false

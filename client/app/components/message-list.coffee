@@ -1,4 +1,4 @@
-{div, ul, li, a, span, i, p, button, input} = React.DOM
+{div, ul, li, a, span, i, p, button, input, img} = React.DOM
 classer = React.addons.classSet
 
 RouterMixin    = require '../mixins/router_mixin'
@@ -67,10 +67,14 @@ MessageList = React.createClass
             parameters: id
 
         date = MessageUtils.formatDate message.get 'createdAt'
+        avatar = message.get('getAvatar')()
 
         li className: 'message ' + classes, key: key,
             a href: url,
-                i className: 'fa fa-user'
+                if avatar?
+                    img className: 'avatar', src: avatar
+                else
+                    i className: 'fa fa-user'
                 span className: 'participants', @getParticipants message
                 div className: 'preview',
                     span className: 'title', message.get 'subject'
@@ -92,6 +96,8 @@ MessageList = React.createClass
             return
 
         isVisible = =>
+            if not @refs.nextPage?
+                return false
             next   = @refs.nextPage.getDOMNode()
             rect   = next.getBoundingClientRect()
             height = window.innerHeight or document.documentElement.clientHeight

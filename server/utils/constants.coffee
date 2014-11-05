@@ -1,5 +1,5 @@
 
-exports.MSGBYPAGE = 7
+exports.MSGBYPAGE = 30
 # safeDestroy parameters (to be tweaked)
 # loads 200 ids in memory at once
 exports.LIMIT_DESTROY = 200

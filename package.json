@@ -19,7 +19,6 @@
     "jade": "1.6.0",
     "node-polyglot": "0.4.1",
     "moment": "2.8.2",
-    "cozy-fixtures": "1.1.1",
     "bluebird": "2.3.2",
     "imap": "0.8.13",
     "uuid": "^1.4.2",
@@ -49,8 +48,9 @@
   },
   "scripts": {
     "test": "dovecot-testing setup && cake tests",
-    "client-test-travis": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/full",
-    "client-test": "cozy-fixtures clear Account && cozy-fixtures clear Message && cozy-fixtures clear Mailbox && cozy-fixtures load tests/fixtures && COZY_URL=http://localhost:9125/ casperjs test client/tests/casper/full",
+    "client-test-travis": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
+    "load-fixtures": "coffee tests/fixtures/generator.coffee 1000 && coffee tests/fixtures/loader.coffee && cozy-fixtures clear Account && cozy-fixtures clear Message && cozy-fixtures clear Mailbox && cozy-fixtures load tests/fixtures",
+    "client-test": "COZY_URL=http://localhost:9125/ casperjs test client/tests/casper/*/",
     "start": "node build/server.js"
   },
   "cozy-permissions": {

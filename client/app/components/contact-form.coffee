@@ -1,4 +1,4 @@
-{div, input, span, ul, li, a} = React.DOM
+{div, input, span, ul, li, a, img, i} = React.DOM
 classer = React.addons.classSet
 
 ContactActionCreator = require '../actions/contact_action_creator'
@@ -52,10 +52,17 @@ module.exports = React.createClass
     renderContact: (contact) ->
         selectContact = =>
             @props.onContact contact
+        avatar = contact.get 'avatar'
 
         li onClick: selectContact,
             a null,
-                "#{contact.get 'name'} <#{contact.get 'address'}>"
+                if avatar?
+                    img
+                        className: 'avatar'
+                        src: avatar
+                else
+                    i className: 'avatar fa fa-user'
+                "#{contact.get 'fn'} <#{contact.get 'address'}>"
 
 
     onSubmit: ->

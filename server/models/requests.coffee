@@ -18,6 +18,10 @@ module.exports =
                 if dp.name is 'email'
                     emit dp.value, doc
                     emit dp.value.split('@')[1], doc
+        byEmail: (doc) ->
+            for dp in doc.datapoints
+                if dp.name is 'email'
+                    emit dp.value, doc
 
     mailbox:
         treeMap: (doc) ->
@@ -48,7 +52,8 @@ module.exports =
                 emit [doc.accountID, 'mid', doc.messageID], doc.conversationID
 
             if doc.normSubject
-                emit [doc.accountID, 'subject', doc.normSubject], doc.conversationID
+                emit [doc.accountID, 'subject', doc.normSubject],
+                    doc.conversationID
 
         byConversationId: (doc) ->
             if doc.conversationID

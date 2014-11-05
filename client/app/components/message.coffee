@@ -1,4 +1,4 @@
-{div, ul, li, span, i, p, h3, a, button, pre, iframe} = React.DOM
+{div, ul, li, span, i, p, h3, a, button, pre, iframe, img} = React.DOM
 Compose      = require './compose'
 FilePicker   = require './file_picker'
 MessageUtils = require '../utils/message_utils'
@@ -122,8 +122,9 @@ module.exports = React.createClass
     prepareHTML: (prepared) ->
         messageDisplayHTML = true
         parser = new DOMParser()
-        html = "<html><head></head><body>#{prepared.html}</body></html>"
-        doc = parser.parseFromString html, "text/html"
+        html   = "<html><head></head><body>#{prepared.html}</body></html>"
+        doc    = parser.parseFromString html, "text/html"
+        images = []
         if not doc
             doc = document.implementation.createHTMLDocument("")
             doc.documentElement.innerHTML = html
@@ -142,15 +143,14 @@ module.exports = React.createClass
             @_htmlContent = prepared.html
             #htmluri = "data:text/html;charset=utf-8;base64,
             #      #{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
-        return messageDisplayHTML
+        return {messageDisplayHTML, images}
 
     render: ->
 
         message  = @props.message
         prepared = @_prepareMessage()
-        images = []
         if @state.messageDisplayHTML and prepared.html
-            messageDisplayHTML = @prepareHTML prepared
+            {messageDisplayHTML, images} = @prepareHTML prepared
 
         imagesWarning = images.length > 0 and not @state.messageDisplayImages
         classes = classer
@@ -167,7 +167,7 @@ module.exports = React.createClass
                     div className: 'full-headers',
                         pre null, prepared.fullHeaders.join "\n"
                     if messageDisplayHTML and prepared.html
-                        div null,
+                        div className: 'row',
                             if imagesWarning
                                 div
                                     className: "imagesWarning content-action",
@@ -197,6 +197,7 @@ module.exports = React.createClass
                             div className: 'preview',
                                 p null, prepared.text
                     div className: 'clearfix'
+                    @renderNavigation()
 
                     # Display Compose block
                     @renderCompose()
@@ -222,6 +223,7 @@ module.exports = React.createClass
             editable: false
             value: prepared.attachments.map(MessageUtils.convertAttachments)
             display: display
+        avatar = @props.message.get('getAvatar')()
         classes = classer
             'header': true
             'row': true
@@ -238,7 +240,10 @@ module.exports = React.createClass
         if @state.headers
             div className: classes,
                 div className: leftClass, onClick: @toggleHeaders,
-                    i className: 'sender-avatar fa fa-user'
+                    if avatar
+                        img className: 'avatar', src: avatar
+                    else
+                        i className: 'sender-avatar fa fa-user'
                     div className: 'participants',
                         p className: 'sender',
                             @renderAddress 'from'
@@ -255,7 +260,10 @@ module.exports = React.createClass
                 toggleActive
         else
             div className: classes, onClick: @toggleHeaders,
-                i className: 'fa fa-user'
+                if avatar
+                    img className: 'avatar', src: avatar
+                else
+                    i className: 'sender-avatar fa fa-user'
                 span className: 'participants', participants
                 span className: 'hour', prepared.date
                 span className: "flags",
@@ -304,7 +312,7 @@ module.exports = React.createClass
         isFlagged = prepared.flags.indexOf(FlagsConstants.FLAGGED) is -1
         isSeen    = prepared.flags.indexOf(FlagsConstants.SEEN) is -1
 
-        div className: 'messageToolbox',
+        div className: 'messageToolbox row',
             div className: 'btn-toolbar', role: 'toolbar',
                 div className: 'btn-group btn-group-sm btn-group-justified',
                     div className: 'btn-group btn-group-sm',
@@ -430,6 +438,42 @@ module.exports = React.createClass
                             .toJS()
                             li role: 'presentation', className: 'divider'
 
+    renderNavigation: ->
+
+        if @props.prevID?
+            prevUrl = @buildUrl
+                direction: 'second'
+                action: 'message'
+                parameters: @props.prevID
+            displayPrev = =>
+                @displayNextMessage @props.prevID
+        if @props.nextID?
+            nextUrl = @buildUrl
+                direction: 'second'
+                action: 'message'
+                parameters: @props.nextID
+            displayNext = =>
+                @displayNextMessage @props.nextID
+
+        div className: 'messageNavigation',
+            div className: 'btn-toolbar', role: 'toolbar',
+                div className: 'btn-group btn-group-sm btn-group-justified',
+                    if prevUrl?
+                        div className: 'btn-group btn-group-sm',
+                            button
+                                className: 'btn btn-default',
+                                type: 'button',
+                                onClick: displayPrev,
+                                    a href: prevUrl,
+                                        span className: 'fa fa-long-arrow-left'
+                    if nextUrl?
+                        div className: 'btn-group btn-group-sm',
+                            button
+                                className: 'btn btn-default',
+                                type: 'button',
+                                onClick: displayNext,
+                                    a href: nextUrl,
+                                        span className: 'fa fa-long-arrow-right'
 
     renderMailboxes: (mailbox, key, conversation) ->
         # Don't display current mailbox
@@ -510,12 +554,22 @@ module.exports = React.createClass
         else
             @setState active: true
 
-    displayNextMessage: ->
-        @redirect
-            direction: 'first'
-            action: 'account.mailbox.messages.full'
-            parameters: @getParams()
-            fullWidth: true
+    displayNextMessage: (next)->
+        if not next?
+            if @props.nextID?
+                next = @props.nextID
+            else next = @props.prevID
+        if next?
+            @redirect
+                direction: 'second'
+                action: 'message'
+                parameters: next
+        else
+            @redirect
+                direction: 'first'
+                action: 'account.mailbox.messages.full'
+                parameters: @getParams()
+                fullWidth: true
 
     onReply: (args) ->
         @setState composing: true

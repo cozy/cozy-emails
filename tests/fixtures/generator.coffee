@@ -12,14 +12,15 @@ accounts = require './accounts.json'
 mailboxes = {}
 for box in require './mailboxes.json'
     mailboxes[box.accountID] = [] unless mailboxes[box.accountID]?
-    mailboxes[box.accountID].push box
+    # test folder will only be used for loaded messages
+    mailboxes[box.accountID].push box unless box.label is "Test Folder"
 
 numberOfEmails = process.argv[2] or 100
 
 seed = 0.42
 randomWithSeed = ->
-    seed = Math.sin(seed) * 10000;
-    return seed - Math.floor(seed);
+    seed = Math.sin(seed) * 10000
+    return seed - Math.floor(seed)
 
 getRandom = (max) -> Math.round (randomWithSeed() * max)
 getRandomElmt = (array) -> array[getRandom(array.length - 1)]
@@ -83,12 +84,14 @@ for i in [1..numberOfEmails] by 1
     day = getRandom today.date()
     hour = getRandom today.hours()
     minute = getRandom today.minutes()
-    date = moment().months(month).days(day).hours(hour).minutes(minute).second(0).millisecond(0)
+    date = moment().months(month).days(day).hours(hour).minutes(minute)
+        .second(0).millisecond(0)
 
     flags = []
     flags.push '\\Seen' if getRandom(10) > 5
     flags.push '\\Answered' if getRandom(10) > 9
     flags.push '\\Flagged' if getRandom(10) > 9
+    htmlContent = content.split('\r\n').join('</div>\r\n<div>')
 
     messages.push
         "_id": "generated_id_#{i}"
@@ -103,7 +106,7 @@ for i in [1..numberOfEmails] by 1
         "references": references
         "replyTo": replyTo,
         "text": content,
-        "html": "<html><body><div>#{content.split('\r\n').join('</div>\r\n<div>')}</div></body></html>",
+        "html": "<html><body><div>#{htmlContent}</div></body></html>",
         "priority": priority,
         "reads": false,
         "mailboxIDs": mailboxObject,

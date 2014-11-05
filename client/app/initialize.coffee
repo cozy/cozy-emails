@@ -50,3 +50,8 @@ window.onload = ->
 
     # begin realtime
     require './utils/socketio_utils'
+
+    # Load addressbook
+    ContactActionCreator = require './actions/contact_action_creator/'
+    ContactActionCreator.searchContact()
+

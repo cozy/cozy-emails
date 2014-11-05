@@ -45,7 +45,7 @@ casper.test.begin 'Test conversation', (test) ->
             window.cozyMails.setSetting 'messageDisplayHTML', true
             window.cozyMails.setSetting 'messageDisplayImages', false
 
-        selectMessage "DoveCot", "INBOX", "Test attachments", ->
+        selectMessage "DoveCot", "Test Folder", "Test attachments", ->
             test.assertExist '.imagesWarning', "Images warning"
             test.assertExist 'iframe.content', "Message body"
             frameName = casper.getElementInfo("iframe.content").attributes.name
@@ -60,6 +60,14 @@ casper.test.begin 'Test conversation', (test) ->
                 displayed = re.test casper.page.frameContent
                 test.assert displayed, "Images displayed"
                 casper.page.switchToParentFrame()
+            , ->
+                # sometime we need to click twice ???
+                casper.click '.imagesWarning button'
+                casper.waitWhileSelector ".imagesWarning", ->
+                    casper.page.switchToChildFrame frameName
+                    displayed = re.test casper.page.frameContent
+                    test.assert displayed, "Images displayed"
+                    casper.page.switchToParentFrame()
 
     casper.then ->
         test.comment "Header"
@@ -87,7 +95,7 @@ casper.test.begin 'Test conversation', (test) ->
         test.assertExist "li.file-item > .mime.spreadsheet", "Attachement file type spreadsheet"
         test.assertExist "li.file-item > .mime.text", "Attachement file type text"
         test.assertExist "li.file-item > .mime.word", "Attachement file type word"
-        selectMessage "DoveCot", "INBOX", "Email fixture attachments gmail", ->
+        selectMessage "DoveCot", "Test Folder", "Email fixture attachments gmail", ->
             casper.click ".header.row.compact"
             casper.waitForSelector ".header.row.full", ->
                 test.assertElementCount ".header.row ul.files > li", 1, "Number of attachments"

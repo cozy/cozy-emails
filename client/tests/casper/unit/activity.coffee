@@ -62,8 +62,11 @@ casper.test.begin 'Test Activities', (test) ->
             test.assert (not res.error?), "No error"
             test.assert Array.isArray(res.result), "Got array of contacts"
             test.assert res.result.length > 0, "Got contacts"
-            test.assert res.result[0].name?, "Contact has name"
-            test.assert res.result[0].address?, "Contact address"
+            address = null
+            res.result[0].datapoints.forEach (point) ->
+                address = point.value if point.name is 'email'
+            test.assert res.result[0].fn?, "Contact has name"
+            test.assert address?, "Contact address"
             for contact in res.result
                 if /@cozytest/.test contact.address
                     nbContacts++
@@ -113,6 +116,17 @@ casper.test.begin 'Test Activities', (test) ->
             test.assert (not res.error?), "No error"
 
     casper.then ->
+        test.comment "Create contacts already in database"
+        options = getOptions 'search'
+        doActivity options, (res) ->
+            nb = res.length
+            options = contacts.map (e) -> getOptions 'create', 'contact', e
+            doActivity options, (res) ->
+                options = getOptions 'search'
+                doActivity options, (res) ->
+                    test.assert res.length is nb, "No duplicate inserted"
+
+    casper.then ->
         test.comment "Search by name for contacts created"
         options = getOptions 'search', 'query', 'Dr '
         doActivity options, (res) ->
@@ -123,7 +137,7 @@ casper.test.begin 'Test Activities', (test) ->
                 "Contact added"
 
             for contact in res.result
-                test.assert /^Dr /.test(contact.name), "Name ok"
+                test.assert /^Dr /.test(contact.fn), "Name ok"
 
     casper.then ->
         test.comment "Search by address for contacts created"
@@ -137,7 +151,10 @@ casper.test.begin 'Test Activities', (test) ->
 
             toDelete = []
             for contact in res.result
-                test.assert /cozytest/.test(contact.address), "Address ok"
+                address = null
+                res.result[0].datapoints.forEach (point) ->
+                    address = point.value if point.name is 'email'
+                test.assert /cozytest/.test(address), "Address ok"
                 toDelete.push contact.id
 
             test.comment "Delete #{toDelete.length} contact"

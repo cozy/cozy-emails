@@ -1,20 +1,55 @@
 Contact = require '../models/contact'
+Promise = require 'bluebird'
 ContactActivity =
     search: (data, cb) ->
+        onData = (err, result) ->
+            if err?
+                cb err, result
+            else
+                pictures = []
+                result.forEach (contact) ->
+                    p = new Promise (resolve, reject) ->
+                        if contact._attachments?.picture
+                            stream = contact.getFile 'picture', (err) ->
+                                if err?
+                                    console.log err
+                            bufs = []
+                            stream.on 'data', (d) -> bufs.push d
+                            stream.on 'end', ->
+                                buf = Buffer.concat bufs
+                                avatar = "data:image/jpeg;base64," +
+                                    buf.toString('base64')
+                                contact.datapoints.push
+                                    name: 'avatar'
+                                    value: avatar
+                                resolve contact
+                        else
+                            resolve contact
+                    pictures.push p
+                Promise.all(pictures).then (res) ->
+                    cb err, res
+
         if data.query?
             params =
                 startkey: data.query
                 endkey:   data.query + "\uFFFF"
-            Contact.request 'byName',  params, cb
+            Contact.request 'byName',  params, onData
         else
-            Contact.request 'all', cb
+            Contact.request 'all', onData
     create: (data, cb) ->
-        contact =
-            fn: data.contact.name
-            datapoints: [
-              name: "email", value: data.contact.address
-            ]
-        Contact.create contact, cb
+        Contact.request 'byEmail', key: data.contact.address, (err, contacts) ->
+            if err
+                cb err, null
+            else
+                if contacts.length is 0
+                    contact =
+                        fn: data.contact.name
+                        datapoints: [
+                          name: "email", value: data.contact.address
+                        ]
+                    Contact.create contact, cb
+                else
+                    cb null, contacts[0]
     delete: (data, cb) ->
         Contact.find data.id, (err, contact) ->
             if err? or not contact?
@@ -45,9 +80,9 @@ module.exports.create = (req, res, next) ->
                                         address: address
                                     contacts.push newContact
 
-                            res.send 201, result: contacts
+                            res.send 201, result: result
                         else
-                            res.send 200
+                            res.send 200, result: result
             else
                 res.send 400, {name: "Unknown activity name", error: true}
         else
