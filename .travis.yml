@@ -27,7 +27,7 @@ before_install:
 
 script:
     - npm run test
-    - cozy-fixtures clear Account && cozy-fixtures clear Message && cozy-fixtures clear Mailbox && cozy-fixtures load tests/fixtures
+    - npm run load-fixtures
     - forever start -o casper-server.log build/server.js
     - sleep 5
     - npm run client-test-travis
