@@ -66,10 +66,13 @@ module.exports = MailsInput = React.createClass
                             span className: 'fa fa-search'
 
                 if @state.contactShown
+                    title   = t 'contact form'
                     content = ContactForm
                         query: @proxyValueLink().value,
                         onContact: onContact
-                    Modal {content}
+                    closeModal  = @toggleContact
+                    closeLabel  = t 'app alert close'
+                    Modal {title, content, closeModal, closeLabel}
 
     toggleContact: ->
-        @setState contactShown: not @state.contactshown
+        @setState contactShown: not @state.contactShown

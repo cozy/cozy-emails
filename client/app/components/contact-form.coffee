@@ -21,11 +21,14 @@ module.exports = React.createClass
             contacts: ContactStore.getResults()
         }
 
+    componentWillMount: ->
+        @setState contacts: null
+
     componentWillReceiveProps: (props) ->
-        @setState query: props.query
+        @setState query: props.query, contacts: null
 
     render: ->
-        listClass = if @state.contacts.length > 0 then 'open' else ''
+        listClass = if @state.contacts?.length > 0 then 'open' else ''
 
         div className: "contact-form",
             div null,
@@ -42,11 +45,12 @@ module.exports = React.createClass
                         onClick: @onSubmit,
                             span className: 'fa fa-search'
 
-            div className: listClass,
-                ul className: "contact-list",
-                    @state.contacts.map (contact, key) =>
-                        @renderContact contact
-                    .toJS()
+            if @state.contacts?
+                div className: listClass,
+                    ul className: "contact-list",
+                        @state.contacts.map (contact, key) =>
+                            @renderContact contact
+                        .toJS()
 
 
     renderContact: (contact) ->

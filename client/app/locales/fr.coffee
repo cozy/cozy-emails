@@ -206,6 +206,7 @@ module.exports =
       "toast close all" : "Fermer toutes les alertes"
 
       # Contacts
+      "contact form"             : "Sélectionnez des contacts"
       "contact form placeholder" : "Nom"
       "contact create success"   : "%{contact} a été ajouté(e) à vos contacts"
       "contact create error"     : "L'ajout à votre carnet d'adresse a
