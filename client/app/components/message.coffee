@@ -151,8 +151,9 @@ module.exports = React.createClass
         prepared = @_prepareMessage()
         if @state.messageDisplayHTML and prepared.html
             {messageDisplayHTML, images} = @prepareHTML prepared
+            imagesWarning = images.length > 0 and
+                            not @state.messageDisplayImages
 
-        imagesWarning = images.length > 0 and not @state.messageDisplayImages
         classes = classer
             message: true
             active: @state.active
@@ -455,7 +456,7 @@ module.exports = React.createClass
             displayNext = =>
                 @displayNextMessage @props.nextID
 
-        div className: 'messageNavigation',
+        div className: 'messageNavigation row',
             div className: 'btn-toolbar', role: 'toolbar',
                 div className: 'btn-group btn-group-sm btn-group-justified',
                     if prevUrl?
