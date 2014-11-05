@@ -18,3 +18,7 @@ tests/fixtures/samples/*
 
 node_modules
 npm-debug.log
+last.html
+last.png
+tests/fixtures/messages_generated.json
+tests/fixtures/messages_loaded.json
