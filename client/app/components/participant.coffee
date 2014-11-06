@@ -25,7 +25,7 @@ Participant = React.createClass
             onAdd = (e) =>
                 e.preventDefault()
                 e.stopPropagation()
-                @props.onAdd @props.address.address
+                @props.onAdd @props.address
             addTooltip = (e) =>
                 if node.dataset.tooltip
                     return

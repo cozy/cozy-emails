@@ -37,19 +37,27 @@ ContactActivity =
         else
             Contact.request 'all', onData
     create: (data, cb) ->
-        Contact.request 'byEmail', key: data.contact.address, (err, contacts) ->
-            if err
-                cb err, null
-            else
-                if contacts.length is 0
-                    contact =
-                        fn: data.contact.name
-                        datapoints: [
-                          name: "email", value: data.contact.address
-                        ]
-                    Contact.create contact, cb
+        if data.contact?.address?
+            key = data.contact.address
+            Contact.request 'byEmail', key: key, (err, contacts) ->
+                if err
+                    cb err, null
                 else
-                    cb null, contacts[0]
+                    if contacts.length is 0
+                        contact =
+                            fn: data.contact.name
+                            datapoints: [
+                              name: "email", value: data.contact.address
+                            ]
+                        Contact.create contact, (err, result) ->
+                            if err?
+                                cb err, result
+                            else
+                                Contact.request 'byEmail', key: key, cb
+                    else
+                        cb null, contacts
+        else
+            cb "BAD FORMAT", null
     delete: (data, cb) ->
         Contact.find data.id, (err, contact) ->
             if err? or not contact?
@@ -66,23 +74,7 @@ module.exports.create = (req, res, next) ->
                     if err?
                         res.send 400, {name: err, error: true}
                     else
-                        if result?
-                            contacts = []
-                            for contact in result
-                                address = null
-                                for dp in contact.datapoints
-                                    if dp.name is 'email'
-                                        address = dp.value
-                                if address?
-                                    newContact =
-                                        id: contact.id
-                                        name: contact.fn
-                                        address: address
-                                    contacts.push newContact
-
-                            res.send 201, result: result
-                        else
-                            res.send 200, result: result
+                        res.send 200, result: result
             else
                 res.send 400, {name: "Unknown activity name", error: true}
         else

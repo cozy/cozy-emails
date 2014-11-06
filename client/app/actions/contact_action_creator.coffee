@@ -32,7 +32,9 @@ module.exports = ContactActionCreator =
             AppDispatcher.handleViewAction
                 type: ActionTypes.RECEIVE_RAW_CONTACT_RESULTS
                 value: @result
-            LayoutActionCreator.notify t('contact create success', {contact: contact.name or contact.address}), autoclose: true
+            msg = t('contact create success', {contact: @result[0].fn})
+            LayoutActionCreator.notify msg, autoclose: true
         activity.onerror = ->
-            LayoutActionCreator.notify t('contact create error', {error: @name}), autoclose: true
+            msg = t('contact create error', {error: @name})
+            LayoutActionCreator.notify msg, autoclose: true
 
