@@ -204,13 +204,13 @@ module.exports = Application = React.createClass
             messages  = MessageStore.getMessagesByMailbox mailboxID
 
             # gets the selected message if any
-            openMessage = null
+            openMessageID = null
             direction = if layout is 'first' then 'secondPanel' \
                 else 'firstPanel'
             otherPanelInfo = @props.router.current[direction]
-            if otherPanelInfo?.action is 'message'
-                openMessage = MessageStore.getByID \
-                    otherPanelInfo.parameters.messageID
+            if otherPanelInfo?.action is 'message' or
+                    otherPanelInfo?.action is 'conversation'
+                openMessageID = otherPanelInfo.parameters.messageID
 
             messagesCount = MessageStore.getMessagesCounts().get mailboxID
             query = MessageStore.getParams()
@@ -220,7 +220,7 @@ module.exports = Application = React.createClass
                 accountID:     accountID
                 mailboxID:     mailboxID
                 layout:        layout
-                openMessage:   openMessage
+                openMessageID: openMessageID
                 settings:      @state.settings
                 query:         query
                 emptyListMessage: t 'list empty'
@@ -260,13 +260,11 @@ module.exports = Application = React.createClass
         else if panelInfo.action is 'message' or
                 panelInfo.action is 'conversation'
 
-            if messageID = panelInfo.parameters.messageID
-                message      = MessageStore.getByID messageID
-            if conversationID = panelInfo.parameters.conversationID
-                conversation = MessageStore.getConversation conversationID
-            else
-                conversation = MessageStore.getMessagesByConversation messageID
+            messageID      = panelInfo.parameters.messageID
+            message        = MessageStore.getByID messageID
             if message?
+                conversationID = message.get 'conversationID'
+                conversation   = MessageStore.getConversation conversationID
                 MessageStore.setCurrentID message.get('id')
 
             return Conversation
@@ -319,13 +317,13 @@ module.exports = Application = React.createClass
             mailboxID = null
 
             # gets the selected message if any
-            openMessage = null
+            openMessageID = null
             direction = if layout is 'first' then 'secondPanel' \
                         else 'firstPanel'
             otherPanelInfo = @props.router.current[direction]
-            if otherPanelInfo?.action is 'message'
-                messageID = otherPanelInfo.parameters.messageID
-                openMessage = MessageStore.getByID messageID
+            if otherPanelInfo?.action is 'message' or
+                    otherPanelInfo?.action is 'conversation'
+                openMessageID = otherPanelInfo.parameters.messageID
             emptyListMessage = t 'list search empty', query: @state.searchQuery
             counterMessage   =  t 'list search count', results.count()
             results = SearchStore.getResults()
@@ -337,7 +335,7 @@ module.exports = Application = React.createClass
                 accountID:        accountID
                 mailboxID:        mailboxID
                 layout:           layout
-                openMessage:      openMessage
+                openMessageID:    openMessageID
                 settings:         @state.settings
                 emptyListMessage: emptyListMessage
                 counterMessage:   counterMessage

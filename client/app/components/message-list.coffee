@@ -16,9 +16,7 @@ MessageList = React.createClass
 
     render: ->
         messages = @props.messages.map (message, key) =>
-            isActive = @props.openMessage? and
-                       @props.openMessage.get('id') is message.get('id')
-            # @TODO @FIXME Only display initial mail of a thread
+            isActive = @props.openMessageID is message.get('id')
             @getMessageRender message, key, isActive
         .toJS()
         nbMessages = parseInt @props.counterMessage, 10
@@ -62,7 +60,7 @@ MessageList = React.createClass
             conversationID = message.get 'conversationID'
             if conversationID and @props.settings.get('displayConversation')
                 action = 'conversation'
-                id     = [conversationID, message.get 'id']
+                id     = message.get 'id'
             else
                 action = 'message'
                 id     = message.get 'id'

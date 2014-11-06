@@ -95,7 +95,6 @@ module.exports = LayoutActionCreator =
             if value? and value isnt ''
                 query[param] = value
                 if _cachedQuery[param] isnt value
-                    console.log param, query[param], _cachedQuery[param]
                     _cachedQuery[param] = value
                     cached = false
         _cachedQuery.mailboxID = mailboxID
@@ -130,8 +129,10 @@ module.exports = LayoutActionCreator =
 
     showConversation: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
-        messageID = panelInfo.parameters.conversationID
-        XHRUtils.fetchConversation messageID, (err, rawMessages) ->
+        messageID      = panelInfo.parameters.messageID
+        message        = MessageStore.getByID messageID
+        conversationID = message.get 'conversationID'
+        XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
 
             if err?
                 LayoutActionCreator.alertError err

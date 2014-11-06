@@ -28,7 +28,7 @@ module.exports = class Router extends PanelRouter
             pattern: 'message/:messageID'
             fluxAction: 'showMessage'
         'conversation':
-            pattern: 'conversation/:conversationID/:messageID'
+            pattern: 'conversation/:messageID'
             fluxAction: 'showConversation'
         'compose':
             pattern: 'compose'
