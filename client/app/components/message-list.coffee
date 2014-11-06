@@ -40,10 +40,13 @@ MessageList = React.createClass
                                 href: @props.buildPaginationUrl(),
                                 ref: 'nextPage',
                                 t 'list next page'
+                    else
+                        p null, t 'list end'
 
     getMessageRender: (message, key, isActive) ->
         flags = message.get('flags')
         classes = classer
+            message: true
             read: message.get 'isRead'
             active: isActive
             'unseen': flags.indexOf(MessageFlags.SEEN) is -1
@@ -71,7 +74,7 @@ MessageList = React.createClass
         date = MessageUtils.formatDate message.get 'createdAt'
         avatar = message.get('getAvatar')()
 
-        li className: 'message ' + classes, key: key,
+        li className: classes, key: key, 'data-message-id': message.get('id'),
             a href: url,
                 if avatar?
                     img className: 'avatar', src: avatar
@@ -108,10 +111,7 @@ MessageList = React.createClass
             rect   = next.getBoundingClientRect()
             height = window.innerHeight or document.documentElement.clientHeight
             width  = window.innerWidth  or document.documentElement.clientWidth
-            return rect.top >= 0 and
-                   rect.left >= 0 and
-                   rect.bottom <= height and
-                   rect.right <= width
+            return rect.bottom <= ( height + 40 )
 
         scrollable = @refs.list.getDOMNode().parentNode
 
