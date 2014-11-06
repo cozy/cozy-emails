@@ -83,11 +83,9 @@ module.exports = Application = React.createClass
                     mailbox.get('id')
                 ]
 
-        keyFirst = 'left-panel-' + layout.firstPanel.action + '-' +
-            Object.keys(layout.firstPanel.parameters).join('-')
+        keyFirst = 'left-panel-' + layout.firstPanel.action.split('.')[0]
         if layout.secondPanel?
-            keySecond = 'right-panel-' + layout.secondPanel.action + '-' +
-                Object.keys(layout.secondPanel.parameters).join('-')
+            keySecond = 'right-panel-' + layout.secondPanel.action.split('.')[0]
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
