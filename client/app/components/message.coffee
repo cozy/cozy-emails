@@ -272,6 +272,7 @@ module.exports = React.createClass
                 else
                     i className: 'sender-avatar fa fa-user'
                 span className: 'participants', @getParticipants prepared
+                span className: 'subject', @props.message.get 'subject'
                 span className: 'hour', prepared.date
                 span className: "flags",
                     i className: 'attach fa fa-paperclip'
