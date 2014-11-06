@@ -7,8 +7,10 @@ fs.readdir sourceDir, (err, files) ->
     if err?
         console.log err
         return
+    treated = 0
     files.forEach (file) ->
         fs.readFile sourceDir + file, (err, data) ->
+            tmp = []
             messages = data.toString().split(/^From /gm)
             messages.forEach (message) ->
                 message = 'From ' + message
@@ -32,8 +34,12 @@ fs.readdir sourceDir, (err, files) ->
                         mail.attachments = mail.attachments.map (m) ->
                             delete m.content
                             return m
-                    out.push mail
-                    console.log "Done with " + file
-                    if out.length is files.length
+                    tmp.push mail
+                    if tmp.length is messages.length
+                        console.log "Done with " + file
+                        treated++
+                        out = out.concat tmp
+                    if treated is files.length
                         output = __dirname + "/messages_loaded.json"
                         fs.writeFile output, JSON.stringify(out, null, "  ")
+                        console.log out.length
