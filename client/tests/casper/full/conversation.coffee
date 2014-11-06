@@ -3,7 +3,9 @@ init    = require("../common").init
 utils   = require "utils.js"
 x       = require('casper.js').selectXPath
 
-selectMessage = (account, box, subject, cb) ->
+selectMessage = (account, box, subject, messageID, cb) ->
+    if typeof messageID is 'function'
+        cb = messageID
     accounts = casper.evaluate ->
         accounts = {}
         Array.prototype.forEach.call document.querySelectorAll("#account-list > li"), (e) ->
@@ -21,7 +23,10 @@ selectMessage = (account, box, subject, cb) ->
         id = mailboxes[box]
         casper.click "[data-reactid='#{id}'] .item-label"
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
-            subjectSel = x "//span[(contains(normalize-space(.), '#{subject}'))]"
+            if typeof messageID is 'string'
+                subjectSel = "[data-message-id='#{messageID}'] a .preview"
+            else
+                subjectSel = x "//span[(contains(normalize-space(.), '#{subject}'))]"
             casper.waitForSelector subjectSel, ->
                 casper.click subjectSel
                 casper.waitForSelector x("//h3[(contains(normalize-space(.), '#{subject}'))]"), ->
@@ -44,6 +49,7 @@ casper.test.begin 'Test conversation', (test) ->
             window.cozyMails.setSetting 'messagesPerPage', 100
             window.cozyMails.setSetting 'messageDisplayHTML', true
             window.cozyMails.setSetting 'messageDisplayImages', false
+            window.cozyMails.setSetting 'displayConversation', true
 
         selectMessage "DoveCot", "Test Folder", "Test attachments", ->
             test.assertExist '.imagesWarning', "Images warning"
@@ -103,6 +109,47 @@ casper.test.begin 'Test conversation', (test) ->
             casper.waitForSelector ".header.row.full", ->
                 test.assertElementCount ".header.row ul.files > li", 1, "Number of attachments"
                 test.assertExist "li.file-item > .mime.image", "Attachement file type"
+
+    casper.then ->
+        test.comment "Message Thread"
+        messageID = '20141106092130.GF5642@mail.cozy.io'
+        selectMessage 'DoveCot', 'Test Folder', 'troll', messageID, ->
+            test.assertExists ".message.active[data-message-id='#{messageID}']", "Message active in list"
+            test.assertElementCount "ul.thread > li.message", 5, "Whole conversation displayed"
+            test.assertElementCount "ul.thread > li.message.active", 1, "Other messages compacted"
+            test.assertExists "ul.thread > li:nth-of-type(1) .messageToolbox", "Toolbox on current"
+            test.assertDoesntExist "ul.thread > li:nth-of-type(2) .messageToolbox", "No toolbox on compacted"
+            casper.click '.messageNavigation button.prev'
+            casper.waitForSelector x("//h3[(contains(normalize-space(.), 'Re: troll'))]"), ->
+                test.pass 'Next message selected'
+                test.assertElementCount "ul.thread > li.message", 5, "Whole conversation displayed"
+                test.assertElementCount "ul.thread > li.message.active", 1, "Other messages compacted"
+                test.assertExists "ul.thread > li:nth-of-type(2) .messageToolbox", "Toolbox on current"
+                test.assertDoesntExist "ul.thread > li:nth-of-type(1) .messageToolbox", "No toolbox on compacted"
+
+                ### random failures
+                casper.click 'ul.thread > li.message.active .toggle-active'
+                casper.waitWhileSelector 'ul.thread > li.message.active', ->
+                    test.pass 'Message folded'
+                    casper.click 'ul.thread > li:nth-of-type(3) .toggle-active'
+                    casper.waitForSelector 'ul.thread > li.message.active', ->
+                        test.assertExists "ul.thread > li:nth-of-type(2) .messageToolbox", "Message unfolded"
+                ###
+
+    casper.then ->
+        test.comment "Display flat"
+        casper.evaluate ->
+            window.cozyMails.setSetting 'displayConversation', false
+        casper.open casper.cozy.startUrl, ->
+            messageID = '20141106092130.GF5642@mail.cozy.io'
+            selectMessage 'DoveCot', 'Test Folder', 'troll', messageID, ->
+                test.assertExists ".message.active[data-message-id='#{messageID}']", "Message active in list"
+                test.assertElementCount "ul.thread > li.message", 1, "Only one message displayed"
+                test.assertExists "ul.thread > li:nth-of-type(1) .messageToolbox", "Toolbox on current"
+                casper.click '.messageNavigation button.prev'
+                casper.waitForSelector x("//h3[(contains(normalize-space(.), 'Re: troll'))]"), ->
+                    test.pass 'Next message selected'
+                    test.assertElementCount "ul.thread > li.message", 1, "Only one message displayed"
 
     casper.run ->
         test.done()
