@@ -2,6 +2,7 @@ XHRUtils = require '../utils/xhr_utils'
 
 AccountStore  = require '../stores/account_store'
 LayoutStore   = require '../stores/layout_store'
+MessageStore  = require '../stores/message_store'
 
 AppDispatcher = require '../app_dispatcher'
 
@@ -10,6 +11,8 @@ AppDispatcher = require '../app_dispatcher'
 AccountActionCreator = require './account_action_creator'
 MessageActionCreator = require './message_action_creator'
 SearchActionCreator = require './search_action_creator'
+
+_cachedQuery = {}
 
 module.exports = LayoutActionCreator =
 
@@ -85,32 +88,45 @@ module.exports = LayoutActionCreator =
         if not selectedAccount? or selectedAccount.get('id') isnt accountID
             AccountActionCreator.selectAccount accountID
 
+        cached = _cachedQuery.mailboxID is mailboxID
         query = {}
         ['sort', 'after', 'before', 'flag', 'pageAfter'].forEach (param) ->
             value = panelInfo.parameters[param]
             if value? and value isnt ''
                 query[param] = value
+                if _cachedQuery[param] isnt value
+                    console.log param, query[param], _cachedQuery[param]
+                    _cachedQuery[param] = value
+                    cached = false
+        _cachedQuery.mailboxID = mailboxID
 
-        XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMessages) ->
-            if err?
-                LayoutActionCreator.alertError err
-            else
-                MessageActionCreator.receiveRawMessages rawMessages
+        if not cached
+            XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMessages) ->
+                if err?
+                    LayoutActionCreator.alertError err
+                else
+                    MessageActionCreator.receiveRawMessages rawMessages
 
     showMessage: (panelInfo, direction) ->
+        onMessage = (msg) ->
+            # if there isn't a selected account (page loaded directly),
+            # select the message's account
+            selectedAccount = AccountStore.getSelected()
+            if  not selectedAccount? and msg?.mailbox
+                AccountActionCreator.selectAccount rawMessage.mailbox
         LayoutActionCreator.hideReponsiveMenu()
         messageID = panelInfo.parameters.messageID
-        XHRUtils.fetchMessage messageID, (err, rawMessage) ->
+        message = MessageStore.getByID messageID
+        if message?
+            onMessage message
+        else
+            XHRUtils.fetchMessage messageID, (err, rawMessage) ->
 
-            if err?
-                LayoutActionCreator.alertError err
-            else
-                MessageActionCreator.receiveRawMessage rawMessage
-                # if there isn't a selected account (page loaded directly),
-                # select the message's account
-                selectedAccount = AccountStore.getSelected()
-                if  not selectedAccount? and rawMessage?.mailbox
-                    AccountActionCreator.selectAccount rawMessage.mailbox
+                if err?
+                    LayoutActionCreator.alertError err
+                else
+                    MessageActionCreator.receiveRawMessage rawMessage
+                    onMessage rawMessage
 
     showConversation: (panelInfo, direction) ->
         LayoutActionCreator.hideReponsiveMenu()
