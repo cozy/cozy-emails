@@ -18,7 +18,7 @@ class MessageStore extends Store
     _sortOrder   = 1
     _filter      = '-'
     _quickFilter = ''
-    __getSortFunction = (criteria) ->
+    __getSortFunction = (criteria, order) ->
         sortFunction = (message1, message2) ->
             if typeof message1.get is 'function'
                 val1 = message1.get criteria
@@ -26,11 +26,11 @@ class MessageStore extends Store
             else
                 val1 = message1[criteria]
                 val2 = message2[criteria]
-            if val1 > val2 then return -1 * _sortOrder
-            else if val1 < val2 then return 1 * _sortOrder
+            if val1 > val2 then return -1 * order
+            else if val1 < val2 then return 1 * order
             else return 0
 
-    __sortFunction = __getSortFunction 'date'
+    __sortFunction = __getSortFunction 'date', 1
 
     # Creates an OrderedMap of messages
     _messages = Immutable.Sequence()
@@ -213,7 +213,7 @@ class MessageStore extends Store
     getMessagesByMailbox: (mailboxID) ->
         sequence = _messages.filter (message) ->
             return mailboxID in Object.keys message.get 'mailboxIDs'
-        .sort(__getSortFunction _sortField)
+        .sort(__getSortFunction _sortField, _sortOrder)
 
         ###
         if _filter isnt MessageFilter.ALL
@@ -271,7 +271,7 @@ class MessageStore extends Store
             newIdsToLook = temp.map((item) -> item.get('id')).toArray()
             idsToLook = idsToLook.concat newIdsToLook
 
-        return conversation
+        return conversation.sort(__getSortFunction 'date', -1)
 
     getConversation: (conversationID) ->
         conversation = []
@@ -279,7 +279,7 @@ class MessageStore extends Store
             return message.get('conversationID') is conversationID
         .map (message) -> conversation.push message
         .toJS()
-        return conversation
+        return conversation.sort(__getSortFunction 'date', -1)
 
     getParams: -> return _params
 
