@@ -436,20 +436,37 @@ module.exports = React.createClass
 
     renderNavigation: ->
 
+        conversationID = @props.message.get 'conversationID'
+
+        getParams = (id) =>
+            if conversationID and @props.settings.get('displayConversation')
+                return {
+                    action : 'conversation'
+                    id     : id
+                }
+            else
+                return {
+                    action : 'message'
+                    id     : id
+                }
         if @props.prevID?
-            prevUrl = @buildUrl
+            params = getParams @props.prevID
+            prev =
                 direction: 'second'
-                action: 'message'
-                parameters: @props.prevID
+                action: params.action
+                parameters: params.id
+            prevUrl =  @buildUrl prev
             displayPrev = =>
-                @displayNextMessage @props.prevID
+                @redirect prev
         if @props.nextID?
-            nextUrl = @buildUrl
+            params = getParams @props.nextID
+            next =
                 direction: 'second'
-                action: 'message'
-                parameters: @props.nextID
+                action: params.action
+                parameters: params.id
+            nextUrl = @buildUrl next
             displayNext = =>
-                @displayNextMessage @props.nextID
+                @redirect next
 
         div className: 'messageNavigation row',
             div className: 'btn-toolbar', role: 'toolbar',
@@ -457,7 +474,7 @@ module.exports = React.createClass
                     if prevUrl?
                         div className: 'btn-group btn-group-sm',
                             button
-                                className: 'btn btn-default',
+                                className: 'btn btn-default prev',
                                 type: 'button',
                                 onClick: displayPrev,
                                     a href: prevUrl,
@@ -465,7 +482,7 @@ module.exports = React.createClass
                     if nextUrl?
                         div className: 'btn-group btn-group-sm',
                             button
-                                className: 'btn btn-default',
+                                className: 'btn btn-default next',
                                 type: 'button',
                                 onClick: displayNext,
                                     a href: nextUrl,
