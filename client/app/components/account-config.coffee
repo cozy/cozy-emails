@@ -266,7 +266,6 @@ module.exports = React.createClass
                             name: 'mailbox-smtp-ssl',
                             checkedLink: @linkState('smtpSSL'),
                             type: 'checkbox',
-                            className: 'form-control'
                             onClick: (ev) =>
                                 @_onServerParam ev.target, 'smtp', 'ssl'
                     label
@@ -279,7 +278,6 @@ module.exports = React.createClass
                             name: 'mailbox-smtp-tls',
                             checkedLink: @linkState('smtpTLS'),
                             type: 'checkbox',
-                            className: 'form-control'
                             onClick: (ev) =>
                                 @_onServerParam ev.target, 'smtp', 'tls'
 
@@ -341,7 +339,6 @@ module.exports = React.createClass
                             name: 'mailbox-imap-ssl',
                             checkedLink: @linkState('imapSSL'),
                             type: 'checkbox',
-                            className: 'form-control'
                             onClick: (ev) =>
                                 @_onServerParam ev.target, 'imap', 'ssl'
                     label
@@ -354,7 +351,6 @@ module.exports = React.createClass
                             name: 'mailbox-imap-tls',
                             checkedLink: @linkState('imapTLS'),
                             type: 'checkbox',
-                            className: 'form-control'
                             onClick: (ev) =>
                                 @_onServerParam ev.target, 'imap', 'tls'
 

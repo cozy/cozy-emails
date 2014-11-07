@@ -95,8 +95,7 @@ module.exports = React.createClass
                                     onChange: @handleChange,
                                     'data-target': 'plugin',
                                     'data-plugin': pluginName,
-                                    type: 'checkbox',
-                                    className: 'form-control'
+                                    type: 'checkbox'
 
     _renderOption: (option) ->
         classLabel = 'col-sm-2 col-sm-offset-2 control-label'
@@ -112,8 +111,7 @@ module.exports = React.createClass
                         checked: @state.settings[option],
                         onChange: @handleChange,
                         'data-target': option,
-                        type: 'checkbox',
-                        className: 'form-control'
+                        type: 'checkbox'
 
     handleChange: (event) ->
         target = event.currentTarget
