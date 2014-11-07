@@ -33,6 +33,10 @@ module.exports = LayoutActionCreator =
                 level: level
                 message: message
 
+    alertHide: (level, message) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.HIDE_ALERT
+
     refresh: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.REFRESH
