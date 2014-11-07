@@ -149,18 +149,14 @@ class AccountStore extends Store
         else
             return mailboxes.first()
 
-    # Takes the 3 first mailboxes to show as "favorite".
-    # Skip the first 1, assumed to be the inbox
-    # Should be made configurable.
     getSelectedFavorites: ->
-
 
         mailboxes = @getSelectedMailboxes true
         ids = _selectedAccount?.get 'favorites'
 
         if ids?
             return mailboxes
-                .filter (box, key) -> key in ids[1..]
+                .filter (box, key) -> key in ids
                 .toOrderedMap()
         else
             return mailboxes

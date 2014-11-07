@@ -12,7 +12,8 @@ module.exports = Menu = React.createClass
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return nextState isnt @state or
+
+        should = nextState isnt @state or
            not Immutable.is(nextProps.accounts, @props.accounts) or
            not Immutable.is(nextProps.selectedAccount,
                 @props.selectedAccount) or
@@ -21,6 +22,8 @@ module.exports = Menu = React.createClass
            not Immutable.is(nextProps.favoriteMailboxes,
                 @props.favoriteMailboxes) or
            not Immutable.is(nextProps.unreadCounts, @props.unreadCounts)
+
+        return should
 
     render: ->
 
@@ -161,7 +164,7 @@ module.exports = Menu = React.createClass
             when '\\Sent' then 'fa-share-square-o'
             else 'fa-folder'
 
-        li className: selectedClass,
+        li className: selectedClass, 'data-mailbox-id': mailbox.get('id'),
             a href: mailboxUrl, className: 'menu-item', key: key,
                 # Something must be rethought about the icon
                 i className: 'fa ' + icon
