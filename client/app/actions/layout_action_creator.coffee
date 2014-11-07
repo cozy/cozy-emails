@@ -128,21 +128,33 @@ module.exports = LayoutActionCreator =
                     onMessage rawMessage
 
     showConversation: (panelInfo, direction) ->
+        onMessage = (msg) ->
+            # if there isn't a selected account (page loaded directly),
+            # select the message's account
+            selectedAccount = AccountStore.getSelected()
+            if  not selectedAccount? and msg?.mailbox
+                AccountActionCreator.selectAccount rawMessage.mailbox
         LayoutActionCreator.hideReponsiveMenu()
         messageID      = panelInfo.parameters.messageID
         message        = MessageStore.getByID messageID
-        conversationID = message.get 'conversationID'
-        XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
+        if message?
+            onMessage message
+            conversationID = message.get 'conversationID'
+            XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
 
-            if err?
-                LayoutActionCreator.alertError err
-            else
-                MessageActionCreator.receiveRawMessages rawMessages
-                # if there isn't a selected account (page loaded directly),
-                # select the message's account
-                selectedAccount = AccountStore.getSelected()
-                if  not selectedAccount? and rawMessages.length > 0
-                    AccountActionCreator.selectAccount rawMessages[0].mailbox
+                if err?
+                    LayoutActionCreator.alertError err
+                else
+                    MessageActionCreator.receiveRawMessages rawMessages
+                    onMessage rawMessages[0]
+        else
+            XHRUtils.fetchMessage messageID, (err, rawMessage) ->
+
+                if err?
+                    LayoutActionCreator.alertError err
+                else
+                    MessageActionCreator.receiveRawMessage rawMessage
+                    onMessage rawMessage
 
 
     showComposeNewMessage: (panelInfo, direction) ->

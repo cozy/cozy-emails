@@ -313,7 +313,7 @@ module.exports = React.createClass
                 div className: 'btn-group btn-group-sm btn-group-justified',
                     div className: 'btn-group btn-group-sm',
                         button
-                            className: 'btn btn-default',
+                            className: 'btn btn-default reply',
                             type: 'button',
                             onClick: @onReply,
                                 span
@@ -323,7 +323,7 @@ module.exports = React.createClass
                                     t 'mail action reply'
                     div className: 'btn-group btn-group-sm',
                         button
-                            className: 'btn btn-default',
+                            className: 'btn btn-default reply-all',
                             type: 'button',
                             onClick: @onReplyAll,
                                 span
@@ -333,7 +333,7 @@ module.exports = React.createClass
                                     t 'mail action reply all'
                     div className: 'btn-group btn-group-sm',
                         button
-                            className: 'btn btn-default',
+                            className: 'btn btn-default forward',
                             type: 'button',
                             onClick: @onForward,
                                 span
@@ -343,7 +343,7 @@ module.exports = React.createClass
                                     t 'mail action forward'
                     div className: 'btn-group btn-group-sm',
                         button
-                            className: 'btn btn-default',
+                            className: 'btn btn-default trash',
                             type: 'button',
                             onClick: @onDelete,
                                 span
@@ -585,16 +585,13 @@ module.exports = React.createClass
                 fullWidth: true
 
     onReply: (args) ->
-        @setState composing: true
-        @setState composeAction: ComposeActions.REPLY
+        @setState composing: true, composeAction: ComposeActions.REPLY
 
     onReplyAll: (args) ->
-        @setState composing: true
-        @setState composeAction: ComposeActions.REPLY_ALL
+        @setState composing: true, composeAction: ComposeActions.REPLY_ALL
 
     onForward: (args) ->
-        @setState composing: true
-        @setState composeAction: ComposeActions.FORWARD
+        @setState composing: true, composeAction: ComposeActions.FORWARD
 
     onDelete: (args) ->
         alertError   = LayoutActionCreator.alertError

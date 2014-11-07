@@ -3,44 +3,6 @@ init    = require("../common").init
 utils   = require "utils.js"
 x       = require('casper.js').selectXPath
 
-selectMessage = (account, box, subject, messageID, cb) ->
-    if typeof messageID is 'function'
-        cb = messageID
-    accounts = casper.evaluate ->
-        accounts = {}
-        Array.prototype.forEach.call document.querySelectorAll("#account-list > li"), (e) ->
-            accounts[e.querySelector('.item-label').textContent.trim()] = e.dataset.reactid
-        return accounts
-    id = accounts[account]
-    casper.test.assert (typeof id is 'string'), "Account #{account} found"
-    casper.click "[data-reactid='#{id}'] a"
-    casper.waitForSelector "[data-reactid='#{id}'].active", ->
-        mailboxes = casper.evaluate ->
-            mailboxes = {}
-            Array.prototype.forEach.call document.querySelectorAll("#account-list > li.active .mailbox-list > li"), (e) ->
-                mailboxes[e.querySelector('.item-label').textContent.trim()] = e.dataset.reactid
-            return mailboxes
-        id = mailboxes[box]
-        casper.click "[data-reactid='#{id}'] .item-label"
-        casper.waitForSelector "[data-reactid='#{id}'].active", ->
-            if typeof messageID is 'string'
-                subjectSel = "[data-message-id='#{messageID}'] a .preview"
-            else
-                subjectSel = x "//span[(contains(normalize-space(.), '#{subject}'))]"
-            casper.waitForSelector subjectSel, ->
-                casper.click subjectSel
-                casper.waitForSelector x("//h3[(contains(normalize-space(.), '#{subject}'))]"), ->
-                    casper.test.pass "Message #{subject} selected"
-                    cb()
-                , ->
-                    casper.test.fail "Error displaying #{subject}"
-            , ->
-                casper.test.fail "No message with subject #{subject}"
-        , ->
-            casper.test.fail "Unable to go to mailbox #{box}"
-    , ->
-        casper.test.fail "Unable to go to account #{account}"
-
 casper.test.begin 'Test conversation', (test) ->
     init casper
 
@@ -51,7 +13,7 @@ casper.test.begin 'Test conversation', (test) ->
             window.cozyMails.setSetting 'messageDisplayImages', false
             window.cozyMails.setSetting 'displayConversation', true
 
-        selectMessage "DoveCot", "Test Folder", "Test attachments", ->
+        casper.cozy.selectMessage "DoveCot", "Test Folder", "Test attachments", ->
             test.assertExist '.imagesWarning', "Images warning"
             test.assertExist 'iframe.content', "Message body"
             frameName = casper.getElementInfo("iframe.content").attributes.name
@@ -104,7 +66,7 @@ casper.test.begin 'Test conversation', (test) ->
         test.assertExist "li.file-item > .mime.spreadsheet", "Attachement file type spreadsheet"
         test.assertExist "li.file-item > .mime.text", "Attachement file type text"
         test.assertExist "li.file-item > .mime.word", "Attachement file type word"
-        selectMessage "DoveCot", "Test Folder", "Email fixture attachments gmail", ->
+        casper.cozy.selectMessage "DoveCot", "Test Folder", "Email fixture attachments gmail", ->
             casper.click ".header.compact"
             casper.waitForSelector ".header.row.full", ->
                 test.assertElementCount ".header.row ul.files > li", 1, "Number of attachments"
@@ -113,7 +75,7 @@ casper.test.begin 'Test conversation', (test) ->
     casper.then ->
         test.comment "Message Thread"
         messageID = '20141106092130.GF5642@mail.cozy.io'
-        selectMessage 'DoveCot', 'Test Folder', 'troll', messageID, ->
+        casper.cozy.selectMessage 'DoveCot', 'Test Folder', 'troll', messageID, ->
             test.assertExists ".message.active[data-message-id='#{messageID}']", "Message active in list"
             test.assertElementCount "ul.thread > li.message", 5, "Whole conversation displayed"
             test.assertElementCount "ul.thread > li.message.active", 1, "Other messages compacted"
@@ -142,7 +104,7 @@ casper.test.begin 'Test conversation', (test) ->
             window.cozyMails.setSetting 'displayConversation', false
         casper.open casper.cozy.startUrl, ->
             messageID = '20141106092130.GF5642@mail.cozy.io'
-            selectMessage 'DoveCot', 'Test Folder', 'troll', messageID, ->
+            casper.cozy.selectMessage 'DoveCot', 'Test Folder', 'troll', messageID, ->
                 test.assertExists ".message.active[data-message-id='#{messageID}']", "Message active in list"
                 test.assertElementCount "ul.thread > li.message", 1, "Only one message displayed"
                 test.assertExists "ul.thread > li:nth-of-type(1) .messageToolbox", "Toolbox on current"

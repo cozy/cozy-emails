@@ -52,6 +52,8 @@ module.exports = Compose = React.createClass
 
         classLabel = 'col-sm-2 col-sm-offset-0 control-label'
         classInput = 'col-sm-8'
+        classCc    = if @state.cc.length is 0 then '' else ' shown'
+        classBcc   = if @state.bcc.length is 0 then '' else ' shown'
 
         div id: 'email-compose',
             h3 null,
@@ -66,15 +68,30 @@ module.exports = Compose = React.createClass
                         i className:'fa fa-compress'
             form className: 'form-horizontal',
                 div className: 'form-group',
-                    label htmlFor: 'compose-from', className: classLabel, t "compose from"
+                    label
+                        htmlFor: 'compose-from',
+                        className: classLabel,
+                        t "compose from"
                     div className: classInput,
-                        div className: 'btn-toolbar compose-toggle', role: 'toolbar',
-                            div className: 'btn-group btn-group-sm',
-                                button className: 'btn btn-default', type: 'button', onClick: @onToggleCc,
-                                    span className: 'tool-long', t 'compose toggle cc'
-                            div className: 'btn-group btn-group-sm',
-                                button className: 'btn btn-default', type: 'button', onClick: @onToggleBcc,
-                                    span className: 'tool-long', t 'compose toggle bcc'
+                        div
+                            className: 'btn-toolbar compose-toggle',
+                            role: 'toolbar',
+                                div className: 'btn-group btn-group-sm',
+                                    button
+                                        className: 'btn btn-default compose-toggle-cc',
+                                        type: 'button',
+                                        onClick: @onToggleCc,
+                                            span
+                                                className: 'tool-long',
+                                                t 'compose toggle cc'
+                                div className: 'btn-group btn-group-sm',
+                                    button
+                                        className: 'btn btn-default compose-toggle-bcc',
+                                        type: 'button',
+                                        onClick: @onToggleBcc,
+                                            span
+                                                className: 'tool-long',
+                                                t 'compose toggle bcc'
 
                         AccountPicker
                             accounts: @props.accounts
@@ -89,14 +106,14 @@ module.exports = Compose = React.createClass
 
                 MailsInput
                     id: 'compose-cc'
-                    className: 'compose-cc'
+                    className: 'compose-cc' + classCc
                     valueLink: @linkState 'cc'
                     label: t 'compose cc'
                     placeholder: t 'compose cc help'
 
                 MailsInput
                     id: 'compose-bcc'
-                    className: 'compose-bcc'
+                    className: 'compose-bcc' + classBcc
                     valueLink: @linkState 'bcc'
                     label: t 'compose bcc'
                     placeholder: t 'compose bcc help'
@@ -109,6 +126,7 @@ module.exports = Compose = React.createClass
                     div className: classInput,
                         input
                             id: 'compose-subject',
+                            name: 'compose-subject',
                             ref: 'subject',
                             valueLink: @linkState('subject'),
                             type: 'text',
@@ -116,9 +134,18 @@ module.exports = Compose = React.createClass
                             placeholder: t "compose subject help"
                 div className: 'form-group',
                     if @state.composeInHTML
-                        div className: 'rt-editor form-control', ref: 'html', contentEditable: true, dangerouslySetInnerHTML: {__html: @linkState('html').value}
+                        div
+                            className: 'rt-editor form-control',
+                            ref: 'html',
+                            contentEditable: true,
+                            dangerouslySetInnerHTML: {
+                                __html: @linkState('html').value
+                            }
                     else
-                        textarea className: 'editor', ref: 'content', defaultValue: @linkState('body').value
+                        textarea
+                            className: 'editor',
+                            ref: 'content',
+                            defaultValue: @linkState('body').value
 
                 div className: 'attachements', FilePicker
                     editable: true
@@ -128,18 +155,31 @@ module.exports = Compose = React.createClass
                 div className: 'composeToolbox',
                     div className: 'btn-toolbar', role: 'toolbar',
                         div className: 'btn-group btn-group-lg',
-                            button className: 'btn btn-default', type: 'button', onClick: @onSend,
-                                span className: 'fa fa-send'
-                                span className: 'tool-long', t 'compose action send'
+                            button
+                                className: 'btn btn-default',
+                                type: 'button',
+                                onClick: @onSend,
+                                    span
+                                        className: 'fa fa-send'
+                                    span
+                                        className: 'tool-long',
+                                        t 'compose action send'
                         div className: 'btn-group btn-group-sm',
-                            button className: 'btn btn-default', type: 'button', onClick: @onDraft,
-                                span className: 'fa fa-save'
-                                span className: 'tool-long', t 'compose action draft'
+                            button
+                                className: 'btn btn-default',
+                                type: 'button', onClick: @onDraft,
+                                    span className: 'fa fa-save'
+                                    span className: 'tool-long',
+                                    t 'compose action draft'
                         if @props.message?
                             div className: 'btn-group btn-group-sm',
-                                button className: 'btn btn-default', type: 'button', onClick: @onDelete,
-                                    span className: 'fa fa-trash-o'
-                                    span className: 'tool-long', t 'compose action delete'
+                                button
+                                    className: 'btn btn-default',
+                                    type: 'button',
+                                    onClick: @onDelete,
+                                        span className: 'fa fa-trash-o'
+                                        span className: 'tool-long',
+                                        t 'compose action delete'
 
     componentDidMount: ->
         # scroll compose window into view
@@ -254,8 +294,8 @@ module.exports = Compose = React.createClass
 
         # new draft
         else
-            state = MessageUtils.makeReplyMessage @props.inReplyTo, @props.action
-            state.composeInHTML = @props.settings.get 'composeInHTML'
+            state = MessageUtils.makeReplyMessage @props.inReplyTo, @props.action,
+                @props.settings.get 'composeInHTML'
             state.accountID ?= @props.selectedAccount.get 'id'
 
         state.attachments ?= []

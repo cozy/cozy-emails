@@ -1,6 +1,7 @@
 require = patchRequire global.require
 utils   = require "utils"
 system  = require "system"
+x       = require('casper.js').selectXPath
 
 dev = false
 
@@ -9,6 +10,44 @@ if utils.cmpVersion("1.1", phantom.casperVersion) > 0
 
 casper.cozy =
     startUrl: system.env.COZY_URL
+
+casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
+    if typeof messageID is 'function'
+        cb = messageID
+    accounts = casper.evaluate ->
+        accounts = {}
+        Array.prototype.forEach.call document.querySelectorAll("#account-list > li"), (e) ->
+            accounts[e.querySelector('.item-label').textContent.trim()] = e.dataset.reactid
+        return accounts
+    id = accounts[account]
+    casper.test.assert (typeof id is 'string'), "Account #{account} found"
+    casper.click "[data-reactid='#{id}'] a"
+    casper.waitForSelector "[data-reactid='#{id}'].active", ->
+        mailboxes = casper.evaluate ->
+            mailboxes = {}
+            Array.prototype.forEach.call document.querySelectorAll("#account-list > li.active .mailbox-list > li"), (e) ->
+                mailboxes[e.querySelector('.item-label').textContent.trim()] = e.dataset.reactid
+            return mailboxes
+        id = mailboxes[box]
+        casper.click "[data-reactid='#{id}'] .item-label"
+        casper.waitForSelector "[data-reactid='#{id}'].active", ->
+            if typeof messageID is 'string'
+                subjectSel = "[data-message-id='#{messageID}'] a .preview"
+            else
+                subjectSel = x "//span[(contains(normalize-space(.), '#{subject}'))]"
+            casper.waitForSelector subjectSel, ->
+                casper.click subjectSel
+                casper.waitForSelector x("//h3[(contains(normalize-space(.), '#{subject}'))]"), ->
+                    casper.test.pass "Message #{subject} selected"
+                    cb()
+                , ->
+                    casper.test.fail "Error displaying #{subject}"
+            , ->
+                casper.test.fail "No message with subject #{subject}"
+        , ->
+            casper.test.fail "Unable to go to mailbox #{box}"
+    , ->
+        casper.test.fail "Unable to go to account #{account}"
 
 if not casper.cozy.startUrl?
     casper.die "Please set the base URL into COZY_URL environment variable"

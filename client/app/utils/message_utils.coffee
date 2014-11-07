@@ -33,8 +33,9 @@ module.exports = MessageUtils =
 
 
 
-    makeReplyMessage: (inReplyTo, action) ->
-        message = {}
+    makeReplyMessage: (inReplyTo, action, inHTML) ->
+        message =
+            composeInHTML: inHTML
 
         if inReplyTo
             message.accountID = inReplyTo.get 'accountID'
@@ -44,13 +45,13 @@ module.exports = MessageUtils =
             text = inReplyTo.get 'text'
             html = inReplyTo.get 'html'
 
-            if text and not html and state.composeInHTML
+            if text and not html and inHTML
                 html = markdown.toHTML text
 
-            if html and not text and not state.composeInHTML
+            if html and not text and not inHTML
                 text = toMarkdown html
 
-            message.inReplyTo = inReplyTo.get 'id'
+            message.inReplyTo  = inReplyTo.get 'id'
             message.references = inReplyTo.get('references') or []
             message.references = message.references.concat message.inReplyTo
 

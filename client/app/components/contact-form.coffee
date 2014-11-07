@@ -1,4 +1,4 @@
-{div, input, span, ul, li, a, img, i} = React.DOM
+{div, form, input, span, ul, li, a, img, i} = React.DOM
 classer = React.addons.classSet
 
 ContactActionCreator = require '../actions/contact_action_creator'
@@ -30,18 +30,18 @@ module.exports = React.createClass
     render: ->
         listClass = if @state.contacts?.length > 0 then 'open' else ''
 
-        div className: "contact-form",
+        form className: "contact-form",
             div null,
                 div className: 'input-group',
                     input
-                        className: 'form-control',
+                        className: 'form-control search-input',
                         type: 'text',
                         placeholder: t('contact form placeholder'),
                         onKeyDown: @onKeyDown,
                         ref: 'contactInput',
                         defaultValue: @state.query
                     div
-                        className: 'input-group-addon btn btn-cozy',
+                        className: 'input-group-addon btn btn-cozy search-btn',
                         onClick: @onSubmit,
                             span className: 'fa fa-search'
 

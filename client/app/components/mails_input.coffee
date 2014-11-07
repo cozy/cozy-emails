@@ -40,7 +40,7 @@ module.exports = MailsInput = React.createClass
         onContact = (contact) =>
             val = @proxyValueLink()
             if @props.valueLink.value.length > 0
-                current = "#{val.value}, "
+                current = "#{val.value},"
             else
                 current = ""
             name    = contact.get 'fn'
@@ -55,13 +55,14 @@ module.exports = MailsInput = React.createClass
                 div className: 'input-group',
                     input
                         id: @props.id,
+                        name: @props.id,
                         className: 'form-control',
                         ref: @props.ref,
                         valueLink: @proxyValueLink(),
                         type: 'text',
                         placeholder: @props.placeholder
                     div
-                        className: 'input-group-addon btn btn-cozy',
+                        className: 'input-group-addon btn btn-cozy contact',
                         onClick: @toggleContact,
                             span className: 'fa fa-search'
 
