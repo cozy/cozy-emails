@@ -189,6 +189,7 @@ FileItem = React.createClass
                 className: 'file-name',
                 target: '_blank',
                 onClick: @doDisplay,
+                href: file.url
                 file.name
         else
             name = span className: 'file-name', file.name

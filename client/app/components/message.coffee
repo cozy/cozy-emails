@@ -189,7 +189,7 @@ module.exports = React.createClass
                                 frameBorder: 0,
                                 name: "message-" + message.get('id'), ''
                     else
-                        div null,
+                        div className: 'row',
                             #div className: "content-action",
                             #    button
                             #       className: 'btn btn-default',
@@ -224,8 +224,7 @@ module.exports = React.createClass
         flags     = prepared.flags
         # display attachment
         display = (file) ->
-            url = "/message/#{prepared.id}/attachments/#{file.name}"
-            window.open url
+            window.open "/message/#{prepared.id}/attachments/#{file.name}"
         attachments = FilePicker
             editable: false
             value: prepared.attachments.map(MessageUtils.convertAttachments)
@@ -233,7 +232,7 @@ module.exports = React.createClass
         avatar = @props.message.get('getAvatar')()
         classes = classer
             'header': true
-            'row': @state.headers
+            'row': true
             'full': @state.headers
             'compact': not @state.headers
             'has-attachments': hasAttachments
@@ -251,16 +250,20 @@ module.exports = React.createClass
                         img className: 'sender-avatar', src: avatar
                     else
                         i className: 'sender-avatar fa fa-user'
-                    div className: 'participants col-md-8',
+                    div className: 'participants col-md-9',
                         p className: 'sender',
                             @renderAddress 'from'
                         p className: 'receivers',
                             span null, t "mail receivers"
                             @renderAddress 'to'
-                        p className: 'receivers',
-                            span null, t "mail receivers cc"
-                            @renderAddress 'cc'
-                    span className: 'hour', prepared.date
+                        if @props.message.get('cc')?length > 0
+                            p className: 'receivers',
+                                span null, t "mail receivers cc"
+                                @renderAddress 'cc'
+                        if hasAttachments
+                            span className: 'hour', prepared.date
+                    if not hasAttachments
+                        span className: 'hour', prepared.date
                 if hasAttachments
                     div className: 'col-md-4',
                         attachments
