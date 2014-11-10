@@ -1620,6 +1620,7 @@ body {
   width: 100%;
   padding: 0;
   margin: 0;
+  font-size: 100%;
 }
 body {
   text-rendering: optimizeLegibility;
@@ -2261,15 +2262,16 @@ textarea:active {
 .conversation .thread .message:last-of-type {
   cursor: default;
 }
-.conversation .thread .message .messageToolbox {
+.conversation .thread .message .messageToolbox,
+.conversation .thread .message .messageNavigation {
   margin-top: 1em;
   margin-bottom: 1em;
   opacity: 0.3;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
   filter: alpha(opacity=30);
 }
-.conversation .thread .message .messageToolbox:hover {
-  margin: 1em auto;
+.conversation .thread .message .messageToolbox:hover,
+.conversation .thread .message .messageNavigation:hover {
   opacity: 1;
   -ms-filter: none;
   filter: none;
@@ -2301,7 +2303,21 @@ textarea:active {
   -webkit-align-items: center;
   align-items: center;
 }
-.conversation .thread .message .header.row.compact {
+.conversation .thread .message .sender-avatar {
+  display: block;
+  float: left;
+  margin: 0 0.5em 0 0;
+  font-size: 2em;
+  width: 2em;
+  height: 2em;
+  line-height: 2em;
+  color: #aaa;
+  border: 1px solid #aaa;
+}
+.conversation .thread .message i.sender-avatar {
+  padding: 0 0.5em;
+}
+.conversation .thread .message .header.compact {
   outline: none;
   display: -webkit-box;
   display: -moz-box;
@@ -2322,33 +2338,37 @@ textarea:active {
   -webkit-align-items: center;
   align-items: center;
 }
-.conversation .thread .message .header.row.compact .participants {
+.conversation .thread .message .header.compact .participants,
+.conversation .thread .message .header.compact .subject {
   margin: 0 0.5em;
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
+  max-width: 33%;
 }
-.conversation .thread .message .header.row.compact .title {
-  min-width: 200px;
-}
-.conversation .thread .message .header.row.compact .title:after {
-  content: ' - ';
-}
-.conversation .thread .message .header.row.compact .hour margin-left auto {
+.conversation .thread .message .header.compact .hour {
+  margin-left: auto;
   color: #444;
 }
-.conversation .thread .message .header.row.compact .flags {
+.conversation .thread .message .header.compact .flags {
   width: 3em;
 }
-.conversation .thread .message .header.row.compact .attach {
+.conversation .thread .message .header.compact .attach {
   display: none;
 }
-.conversation .thread .message .header.row.compact .fav {
+.conversation .thread .message .header.compact .fav {
   color: #ff0;
   display: none;
 }
-.conversation .thread .message .header.row.compact.has-attachments .attach,
-.conversation .thread .message .header.row.compact.is-fav .fav {
+.conversation .thread .message .header.compact .sender-avatar {
+  font-size: 2em;
+  width: 1em;
+  height: 1em;
+  line-height: 1em;
+  padding: 0 2px;
+}
+.conversation .thread .message .header.compact.has-attachments .attach,
+.conversation .thread .message .header.compact.is-fav .fav {
   display: inline;
   padding: 0 0.5em;
 }
@@ -2361,15 +2381,8 @@ textarea:active {
   -ms-flex-item-align: start;
   margin: -5px 0;
 }
-.conversation .thread .message .sender-avatar {
-  display: block;
-  float: left;
-  padding: 0 0.5em;
-  margin: 0 0.5em 0 0;
-  font-size: 2em;
-  line-height: 2em;
-  color: #aaa;
-  border: 1px solid #aaa;
+.conversation .thread .message .participants {
+  color: #444;
 }
 .conversation .thread .message .participants.receivers {
   color: #bdbdbd;
@@ -2401,26 +2414,9 @@ textarea:active {
   margin: 0;
   display: inline;
 }
-.conversation .thread .message .participants {
-  color: #444;
-}
-.conversation .thread .message .participants .address {
-  margin: 0 0.5em 0 0;
-  line-height: 1.5em;
-  padding: 0.25em;
-}
-.conversation .thread .message .participants .address .address-add {
-  cursor: pointer;
-  padding: 2px;
-}
 .conversation .thread .message .hour {
   margin-left: auto;
   color: #444;
-}
-.conversation .thread .message .fa-user {
-  color: #aaa;
-  font-size: 30px;
-  border: 1px solid #aaa;
 }
 .conversation .thread .message:hover:not(.active):not(:last-of-type) {
   background: #f4f4f4;
@@ -2616,6 +2612,7 @@ textarea:active {
   border-left: 5px solid transparent;
   border-bottom: 1px solid #e4e4e4;
   cursor: pointer;
+  font-size: 0.8em;
 }
 .message-list .message a {
   display: block;
@@ -2640,9 +2637,8 @@ textarea:active {
   align-items: center;
   text-decoration: none;
 }
-.message-list .message span,
+.message-list .message .participants,
 .message-list .message .preview {
-  font-size: 13px;
   margin: 0 5px;
 }
 .message-list .message .preview {
@@ -2790,6 +2786,9 @@ textarea:active {
   -ms-transition-duration: 0.5s;
   transition-duration: 0.5s;
   pointer-events: none;
+}
+.toasts-container a {
+  cursor: pointer;
 }
 .toasts-container > * {
   pointer-events: auto;
@@ -3037,6 +3036,63 @@ textarea:active {
   border-radius: 0;
   border: none;
   border-bottom: 4px solid #34a6ff;
+}
+.address-list {
+  margin: 0;
+  padding: 0;
+}
+.address-list span {
+  margin: 0;
+  padding: 0;
+}
+.address-list .address-item {
+  margin: 0;
+  padding: 0;
+}
+.address-list .address-item span {
+  margin: 0;
+  padding: 0;
+}
+.tooltip {
+  background-color: #000;
+  color: #fff;
+  font-size: 1rem;
+  -webkit-border-radius: 0.25rem;
+  border-radius: 0.25rem;
+  text-align: center;
+  white-space: initial;
+}
+.tooltip a.address-add {
+  display: inline;
+}
+.tooltip .avatar {
+  color: #aaa;
+  font-size: 2em;
+  border: 1px solid #aaa;
+  width: 1em;
+  height: 1em;
+  text-align: center;
+}
+.tooltip.top {
+  padding: 0.25rem 0.5rem;
+}
+.tooltip.top .tooltip-arrow {
+  bottom: -4px;
+}
+.alert {
+  opacity: 1;
+  -ms-filter: none;
+  filter: none;
+}
+.alert.autoclose {
+  opacity: 0;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: alpha(opacity=0);
+  -webkit-transition: opacity 10s;
+  -moz-transition: opacity 10s;
+  -o-transition: opacity 10s;
+  -ms-transition: opacity 10s;
+  transition: opacity 10s;
 }
 /*
   EDITOR
