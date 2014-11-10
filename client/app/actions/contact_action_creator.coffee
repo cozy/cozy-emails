@@ -20,6 +20,11 @@ module.exports = ContactActionCreator =
         activity.onerror = ->
             console.log "KO", @error, @name
 
+    searchContactLocal: (query) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.CONTACT_LOCAL_SEARCH
+            value: query
+
     createContact: (contact) ->
         options =
             name: 'create'

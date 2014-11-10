@@ -17,15 +17,11 @@ module.exports = React.createClass
 
     getStateFromStores: ->
         return {
-            query: @props.query
             contacts: ContactStore.getResults()
         }
 
     componentWillMount: ->
         @setState contacts: null
-
-    componentWillReceiveProps: (props) ->
-        @setState query: props.query, contacts: null
 
     render: ->
         listClass = if @state.contacts?.length > 0 then 'open' else ''
@@ -39,7 +35,7 @@ module.exports = React.createClass
                         placeholder: t('contact form placeholder'),
                         onKeyDown: @onKeyDown,
                         ref: 'contactInput',
-                        defaultValue: @state.query
+                        defaultValue: @props.query
                     div
                         className: 'input-group-addon btn btn-cozy search-btn',
                         onClick: @onSubmit,
@@ -72,7 +68,7 @@ module.exports = React.createClass
     onSubmit: ->
         query = @refs.contactInput.getDOMNode().value.trim()
         if query.length > 2
-            ContactActionCreator.searchContact query
+            ContactActionCreator.searchContactLocal query
 
     onKeyDown: (evt) ->
         if evt.key is "Enter"

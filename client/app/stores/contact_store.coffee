@@ -33,6 +33,7 @@ class ContactStore extends Store
                                 rawResult.address = point.value
                             if point.name is 'avatar'
                                 rawResult.avatar = point.value
+                        delete rawResult.docType
                         contact = Immutable.Map rawResult
                         map.set contact.get('address'), contact
                 _results  = _results.withMutations convert
@@ -40,11 +41,25 @@ class ContactStore extends Store
 
             @emit 'change'
 
+        handle ActionTypes.CONTACT_LOCAL_SEARCH, (query) ->
+            query = query.toLowerCase()
+            re = new RegExp query, 'i'
+            _results = _contacts.filter (contact) ->
+                obj  = contact.toObject()
+                full = ''
+                Object.keys(obj).forEach (key) ->
+                    if typeof obj[key] is 'string'
+                        full += obj[key]
+                return re.test full
+            .toOrderedMap()
+
+            @emit 'change'
 
     ###
         Public API
     ###
-    getResults: -> return _results
+    getResults: ->
+        return _results
 
     getQuery: -> return _query
 
