@@ -204,9 +204,11 @@ FileItem = React.createClass
                     "#{(file.size / 1000).toFixed(2)}Ko"
 
     doDisplay: (e) ->
-        e.preventDefault
+        e.preventDefault()
+        e.stopPropagation()
         @props.display()
 
     doDelete: (e) ->
-        e.preventDefault
+        e.preventDefault()
+        e.stopPropagation()
         @props.delete()

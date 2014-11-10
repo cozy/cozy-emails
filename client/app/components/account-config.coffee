@@ -511,7 +511,7 @@ module.exports = React.createClass
 
 
     tabChange: (e) ->
-        e.preventDefault
+        e.preventDefault()
         @setState tab: e.target.dataset.target
 
 
