@@ -237,6 +237,9 @@ class MessageStore extends Store
         _currentID       = _currentMessages.first()?.get 'id'
         return _currentMessages
 
+    getCurrentID: (messageID) ->
+        return _currentID
+
     setCurrentID: (messageID) ->
         _currentID = messageID
 

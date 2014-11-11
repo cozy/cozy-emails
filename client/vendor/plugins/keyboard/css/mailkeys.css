@@ -1,0 +1,34 @@
+body, html {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+.mailkeys-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  width: 100%;
+  text-align: center;
+  background-color: black;
+  opacity: 1;
+}
+.mailkeys-container:before {
+  content: '';
+  display: inline-block;
+  height: 100%;
+  vertical-align: middle;
+  margin-right: -0.25em; /* Adjusts for spacing */
+}
+.mailkeys-help {
+  display: inline-block;
+  vertical-align: middle;
+  width: 20em;
+  max-width: 80%;
+  min-height: 50%;
+  max-height: 80%;
+  background-color: white;
+  border-radius: 2em;
+  text-align: left;
+  padding: 2em;
+}

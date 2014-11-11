@@ -42,3 +42,22 @@ module.exports =
             type: ActionTypes.SETTINGS_UPDATED
             value: settings
 
+    messageNavigate: (direction) ->
+        MessageStore  = require '../stores/message_store'
+        SettingsStore = require '../stores/settings_store'
+        if direction is 'prev'
+            nextID = MessageStore.getPreviousMessage()
+        else
+            nextID = MessageStore.getNextMessage()
+        if not nextID?
+            return
+        message = MessageStore.getByID MessageStore.getCurrentID()
+        conversationID = message.get 'conversationID'
+
+        if conversationID and SettingsStore.get('displayConversation')
+            action = 'conversation'
+        else
+            action = 'message'
+
+        url = window.router.buildUrl direction: 'second', action: action, parameters: nextID
+        window.router.navigate url, {trigger: true}
