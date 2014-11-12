@@ -67,7 +67,8 @@ casper.test.begin 'Test conversation', (test) ->
         test.assertExist "li.file-item > .mime.text", "Attachement file type text"
         test.assertExist "li.file-item > .mime.word", "Attachement file type word"
         casper.cozy.selectMessage "DoveCot", "Test Folder", "Email fixture attachments gmail", ->
-            casper.click ".header.compact"
+            if casper.exists '.header.compact'
+                casper.click ".header.compact"
             casper.waitForSelector ".header.row.full", ->
                 test.assertElementCount ".header.row ul.files > li", 1, "Number of attachments"
                 test.assertExist "li.file-item > .mime.image", "Attachement file type"
