@@ -346,7 +346,7 @@ Message.createFromImapMessage = (mail, box, uid) ->
             att.buffer ?= new Buffer 0
             att.buffer.path = encodeURI att.name
             jdbMessage.attachBinaryPromised att.buffer,
-                name: encodeURI att.name
+                name: att.name
 
 # Attempt to find the message conversationID from its references
 # return null if there is no usable references
