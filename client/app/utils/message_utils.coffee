@@ -109,6 +109,7 @@ module.exports = MessageUtils =
         return res.join "\n"
 
     getAttachmentType: (type) ->
+        return null unless type
         sub = type.split '/'
         switch sub[0]
             when 'audio', 'image', 'text', 'video'
