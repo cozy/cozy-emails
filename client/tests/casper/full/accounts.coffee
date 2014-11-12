@@ -28,7 +28,8 @@ casper.test.begin 'Test accounts', (test) ->
         casper.eachThen accounts, (response) ->
             account = response.data
             id = account.attributes['data-reactid']
-            casper.click "[data-reactid='#{id}']"
+            if not casper.exists ".active[data-reactid='#{id}']"
+                casper.click "[data-reactid='#{id}']"
             casper.waitForSelector ".active[data-reactid='#{id}']", ->
                 label = casper.getElementInfo "[data-reactid='#{id}'] .item-label"
                 test.pass "Account #{label.text} selected"
@@ -36,7 +37,7 @@ casper.test.begin 'Test accounts', (test) ->
                     casper.click ".message-list .message a"
                     casper.waitUntilVisible ".conversation"
             , ->
-                test.fail "Unable to select account #{account.text}"
+                test.fail "Unable to select account #{account.text} #{id}"
 
     casper.run ->
         test.done()
@@ -173,7 +174,8 @@ casper.test.begin 'Test accounts', (test) ->
         accountSel = "#account-list .menu-item.account"
         accounts = casper.getElementsInfo accountSel
         id = accounts[0].attributes['data-reactid']
-        casper.click "[data-reactid='#{id}']"
+        if not casper.exists ".active[data-reactid='#{id}']"
+            casper.click "[data-reactid='#{id}']"
         casper.waitForSelector ".active[data-reactid='#{id}']", ->
             casper.click '#quick-actions .mailbox-config'
             casper.waitForSelector '#mailbox-config', ->

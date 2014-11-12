@@ -46,7 +46,7 @@ class AccountStore extends Store
             _newAccountError   = null
             @emit 'change'
 
-        handle ActionTypes.ADD_ACCOUNT, (account) ->
+        handle ActionTypes.ADD_ACCOUNT, (rawAccount) ->
             onUpdate rawAccount
 
         handle ActionTypes.SELECT_ACCOUNT, (accountID) ->
