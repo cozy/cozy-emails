@@ -74,9 +74,6 @@ class MessageStore extends Store
             if not message.flags?
                 message.flags = []
 
-            message.getAvatar = ->
-                ContactStore.getAvatar message.get('from')[0].address
-
             # message loaded from fixtures for test purpose have a docType
             # that may cause some troubles
             delete message.docType
@@ -192,7 +189,7 @@ class MessageStore extends Store
     ###
     getMessagesByAccount: (accountID) ->
         sequence = _messages.filter (message) ->
-            return message.get('account') is accountID
+            return message.get('accountID') is accountID
 
         # sequences are lazy so we need .toOrderedMap() to actually execute it
         return sequence.toOrderedMap()
@@ -246,7 +243,7 @@ class MessageStore extends Store
     getPreviousMessage: ->
         keys = Object.keys _currentMessages.toJS()
         idx = keys.indexOf _currentID
-        return if idx < 1 then null else keys[idx - 1]
+        return if idx is -1 then null else keys[idx - 1]
 
     getNextMessage: ->
         keys = Object.keys _currentMessages.toJS()

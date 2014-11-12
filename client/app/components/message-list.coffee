@@ -69,8 +69,8 @@ MessageList = React.createClass
             action: action
             parameters: id
 
-        date = MessageUtils.formatDate message.get 'createdAt'
-        avatar = message.get('getAvatar')()
+        date   = MessageUtils.formatDate message.get 'createdAt'
+        avatar = MessageUtils.getAvatar message
 
         li className: classes, key: key, 'data-message-id': message.get('id'),
             a href: url,

@@ -229,7 +229,7 @@ module.exports = React.createClass
             editable: false
             value: prepared.attachments.map(MessageUtils.convertAttachments)
             display: display
-        avatar = @props.message.get('getAvatar')()
+        avatar = MessageUtils.getAvatar @props.message
         classes = classer
             'header': true
             'row': true
@@ -356,7 +356,7 @@ module.exports = React.createClass
                                     t 'mail action delete'
                     div className: 'btn-group btn-group-sm',
                         button
-                            className: 'btn btn-default dropdown-toggle',
+                            className: 'btn btn-default dropdown-toggle flags',
                             type: 'button',
                             'data-toggle': 'dropdown',
                             t 'mail action mark',
@@ -391,7 +391,7 @@ module.exports = React.createClass
                                         t 'mail mark nofav'
                     div className: 'btn-group btn-group-sm',
                         button
-                            className: 'btn btn-default dropdown-toggle',
+                            className: 'btn btn-default dropdown-toggle move',
                             type: 'button',
                             'data-toggle': 'dropdown',
                             t 'mail action move',
@@ -402,7 +402,7 @@ module.exports = React.createClass
                             .toJS()
                     div className: 'btn-group btn-group-sm',
                         button
-                            className: 'btn btn-default dropdown-toggle',
+                            className: 'btn btn-default dropdown-toggle more',
                             type: 'button',
                             'data-toggle': 'dropdown',
                             t 'mail action more',
@@ -584,7 +584,9 @@ module.exports = React.createClass
             @redirect
                 direction: 'first'
                 action: 'account.mailbox.messages.full'
-                parameters: @getParams()
+                parameters:
+                    accountID: @props.message.get 'accountID'
+                    mailboxID: @props.selectedMailboxID
                 fullWidth: true
 
     onReply: (args) ->
@@ -598,9 +600,10 @@ module.exports = React.createClass
 
     onDelete: (args) ->
         alertError   = LayoutActionCreator.alertError
-        allerSuccess = LayoutActionCreator.alertSuccess
-        if window.confirm(t 'mail confirm delete')
-            MessageActionCreator.delete @props.message, (error) =>
+        alertSuccess = LayoutActionCreator.alertSuccess
+        message      = @props.message
+        if window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
+            MessageActionCreator.delete message, (error) =>
                 if error?
                     alertError "#{t("message action delete ko")} #{error}"
                 else
@@ -613,7 +616,7 @@ module.exports = React.createClass
     onMove: (args) ->
         newbox = args.target.dataset.value
         alertError   = LayoutActionCreator.alertError
-        allerSuccess = LayoutActionCreator.alertSuccess
+        alertSuccess = LayoutActionCreator.alertSuccess
         if args.target.dataset.conversation?
             conversationID = @props.message.get('conversationID')
             ConversationActionCreator.move conversationID, newbox, (error) =>
@@ -635,7 +638,7 @@ module.exports = React.createClass
         flags = @props.message.get('flags').slice()
         flag = args.target.dataset.value
         alertError   = LayoutActionCreator.alertError
-        allerSuccess = LayoutActionCreator.alertSuccess
+        alertSuccess = LayoutActionCreator.alertSuccess
         switch flag
             when FlagsConstants.SEEN
                 flags.push MessageFlags.SEEN
@@ -655,7 +658,7 @@ module.exports = React.createClass
         id     = @props.message.get 'conversationID'
         action = args.target.dataset.action
         alertError   = LayoutActionCreator.alertError
-        allerSuccess = LayoutActionCreator.alertSuccess
+        alertSuccess = LayoutActionCreator.alertSuccess
         switch action
             when 'delete'
                 ConversationActionCreator.delete id, (error) ->
