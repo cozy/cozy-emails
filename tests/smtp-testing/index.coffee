@@ -25,3 +25,6 @@ SMTPTesting.init = (port, done) ->
         callback null, "ABC" + queueID++
 
     smtpServer.listen port, done
+
+unless module.parent
+    SMTPTesting.init 587, -> console.log arguments
