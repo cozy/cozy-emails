@@ -60,29 +60,43 @@ ContactActivity = {
     }
   },
   create: function(data, cb) {
-    return Contact.request('byEmail', {
-      key: data.contact.address
-    }, function(err, contacts) {
-      var contact;
-      if (err) {
-        return cb(err, null);
-      } else {
-        if (contacts.length === 0) {
-          contact = {
-            fn: data.contact.name,
-            datapoints: [
-              {
-                name: "email",
-                value: data.contact.address
-              }
-            ]
-          };
-          return Contact.create(contact, cb);
+    var key, _ref;
+    if (((_ref = data.contact) != null ? _ref.address : void 0) != null) {
+      key = data.contact.address;
+      return Contact.request('byEmail', {
+        key: key
+      }, function(err, contacts) {
+        var contact;
+        if (err) {
+          return cb(err, null);
         } else {
-          return cb(null, contacts[0]);
+          if (contacts.length === 0) {
+            contact = {
+              fn: data.contact.name,
+              datapoints: [
+                {
+                  name: "email",
+                  value: data.contact.address
+                }
+              ]
+            };
+            return Contact.create(contact, function(err, result) {
+              if (err != null) {
+                return cb(err, result);
+              } else {
+                return Contact.request('byEmail', {
+                  key: key
+                }, cb);
+              }
+            });
+          } else {
+            return cb(null, contacts);
+          }
         }
-      }
-    });
+      });
+    } else {
+      return cb("BAD FORMAT", null);
+    }
   },
   "delete": function(data, cb) {
     return Contact.find(data.id, function(err, contact) {
@@ -102,42 +116,15 @@ module.exports.create = function(req, res, next) {
     case 'contact':
       if (ContactActivity[activity.name] != null) {
         return ContactActivity[activity.name](activity.data, function(err, result) {
-          var address, contact, contacts, dp, newContact, _i, _j, _len, _len1, _ref;
           if (err != null) {
             return res.send(400, {
               name: err,
               error: true
             });
           } else {
-            if (result != null) {
-              contacts = [];
-              for (_i = 0, _len = result.length; _i < _len; _i++) {
-                contact = result[_i];
-                address = null;
-                _ref = contact.datapoints;
-                for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
-                  dp = _ref[_j];
-                  if (dp.name === 'email') {
-                    address = dp.value;
-                  }
-                }
-                if (address != null) {
-                  newContact = {
-                    id: contact.id,
-                    name: contact.fn,
-                    address: address
-                  };
-                  contacts.push(newContact);
-                }
-              }
-              return res.send(201, {
-                result: result
-              });
-            } else {
-              return res.send(200, {
-                result: result
-              });
-            }
+            return res.send(200, {
+              result: result
+            });
           }
         });
       } else {

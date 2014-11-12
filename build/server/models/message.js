@@ -346,7 +346,7 @@ Message.createFromImapMessage = function(mail, box, uid) {
       }
       att.buffer.path = encodeURI(att.name);
       return jdbMessage.attachBinaryPromised(att.buffer, {
-        name: encodeURI(att.name)
+        name: att.name
       });
     });
   });

@@ -70,6 +70,7 @@ Account.prototype.toObjectWithMailbox = function() {
     return function(mailboxes) {
       var rawObject;
       rawObject = _this.toObject();
+      rawObject.favorites = rawObject.favorites || [];
       rawObject.mailboxes = mailboxes;
       return rawObject;
     };
