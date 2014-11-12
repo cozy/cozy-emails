@@ -59,6 +59,7 @@ Account::toObjectWithMailbox = ->
     Mailbox.getClientTree @id
     .then (mailboxes) =>
         rawObject = @toObject()
+        rawObject.favorites = rawObject.favorites or []
         rawObject.mailboxes = mailboxes
         return rawObject
 
