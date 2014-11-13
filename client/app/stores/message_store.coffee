@@ -53,7 +53,6 @@ class MessageStore extends Store
 
 
     initFilters = ->
-        console.log "Init filters"
         _filter       = '-'
         _params       =
             sort: '+date'

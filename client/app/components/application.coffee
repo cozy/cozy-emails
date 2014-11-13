@@ -216,10 +216,10 @@ module.exports = Application = React.createClass
             query = MessageStore.getParams()
             query.accountID = accountID
             query.mailboxID = mailboxID
-            paginationUrl = @buildUrl
-                direction: 'first'
-                action: 'account.mailbox.messages.full'
-                parameters: query
+            #paginationUrl = @buildUrl
+            #    direction: 'first'
+            #    action: 'account.mailbox.messages.full'
+            #    parameters: query
             return MessageList
                 messages:      messages
                 messagesCount: messagesCount
@@ -231,7 +231,7 @@ module.exports = Application = React.createClass
                 query:         query
                 emptyListMessage: t 'list empty'
                 counterMessage:   t 'list count', messagesCount
-                paginationUrl: paginationUrl
+                #paginationUrl: paginationUrl
 
         # -- Generates a configuration window for a given account
         else if panelInfo.action is 'account.config' or
@@ -340,12 +340,6 @@ module.exports = Application = React.createClass
                 emptyListMessage: emptyListMessage
                 counterMessage:   counterMessage
                 query:            query
-                buildPaginationUrl: (numPage) =>
-                    @buildUrl
-                        direction: 'first'
-                        action: 'search'
-                        parameters: query
-
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else return div null, 'Unknown component'
 

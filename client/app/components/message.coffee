@@ -574,7 +574,7 @@ module.exports = React.createClass
         else
             @redirect
                 direction: 'first'
-                action: 'account.mailbox.messages.full'
+                action: 'account.mailbox.messages'
                 parameters:
                     accountID: @props.message.get 'accountID'
                     mailboxID: @props.selectedMailboxID
