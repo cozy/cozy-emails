@@ -90,7 +90,7 @@ module.exports = LayoutActionCreator =
         {accountID, mailboxID} = panelInfo.parameters
         selectedAccount = AccountStore.getSelected()
         if not selectedAccount? or selectedAccount.get('id') isnt accountID
-            AccountActionCreator.selectAccount accountID
+            AccountActionCreator.selectAccount accountID, mailboxID
 
         cached = _cachedQuery.mailboxID is mailboxID
         query = {}
@@ -115,8 +115,8 @@ module.exports = LayoutActionCreator =
             # if there isn't a selected account (page loaded directly),
             # select the message's account
             selectedAccount = AccountStore.getSelected()
-            if  not selectedAccount? and msg?.mailbox
-                AccountActionCreator.selectAccount rawMessage.mailbox
+            if  not selectedAccount? and msg?.accountID
+                AccountActionCreator.selectAccount msg.accountID
         LayoutActionCreator.hideReponsiveMenu()
         messageID = panelInfo.parameters.messageID
         message = MessageStore.getByID messageID
@@ -136,8 +136,8 @@ module.exports = LayoutActionCreator =
             # if there isn't a selected account (page loaded directly),
             # select the message's account
             selectedAccount = AccountStore.getSelected()
-            if  not selectedAccount? and msg?.mailbox
-                AccountActionCreator.selectAccount rawMessage.mailbox
+            if  not selectedAccount? and msg?.accountID
+                AccountActionCreator.selectAccount msg.accountID
         LayoutActionCreator.hideReponsiveMenu()
         messageID      = panelInfo.parameters.messageID
         message        = MessageStore.getByID messageID

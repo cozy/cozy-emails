@@ -54,10 +54,12 @@ module.exports = AccountActionCreator =
             type: ActionTypes.NEW_ACCOUNT_ERROR
             value: errorMessage
 
-    selectAccount: (accountID) ->
+    selectAccount: (accountID, mailboxID) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.SELECT_ACCOUNT
-            value: accountID
+            value:
+                accountID: accountID
+                mailboxID: mailboxID
 
     discover: (domain, callback) ->
         XHRUtils.accountDiscover domain, (err, infos) ->

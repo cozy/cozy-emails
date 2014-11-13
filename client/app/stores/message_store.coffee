@@ -16,8 +16,7 @@ class MessageStore extends Store
 
     _sortField   = 'date'
     _sortOrder   = 1
-    _filter      = '-'
-    _quickFilter = ''
+    #_quickFilter = ''
     __getSortFunction = (criteria, order) ->
         sortFunction = (message1, message2) ->
             if typeof message1.get is 'function'
@@ -47,10 +46,19 @@ class MessageStore extends Store
 
     _counts       = Immutable.Map()
     _unreadCounts = Immutable.Map()
-    _params       = {}
+    _filter       = null
+    _params       = null
     _currentMessages = null
     _currentID       = null
 
+
+    initFilters = ->
+        console.log "Init filters"
+        _filter       = '-'
+        _params       =
+            sort: '+date'
+
+    initFilters()
 
     ###
         Defines here the action handlers.
@@ -133,6 +141,9 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_FLAG, (message) ->
             @emit 'change'
 
+        handle ActionTypes.SELECT_ACCOUNT, () ->
+            initFilters()
+
         handle ActionTypes.LIST_FILTER, (filter) ->
             _messages  = _messages.clear()
             if _filter is filter
@@ -147,8 +158,8 @@ class MessageStore extends Store
                 sort : _params.sort
 
         handle ActionTypes.LIST_QUICK_FILTER, (filter) ->
-            _quickFilter = filter
-            @emit 'change'
+            #_quickFilter = filter
+            #@emit 'change'
 
         handle ActionTypes.LIST_SORT, (sort) ->
             _messages    = _messages.clear()

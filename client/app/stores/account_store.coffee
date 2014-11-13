@@ -29,6 +29,7 @@ class AccountStore extends Store
         .toOrderedMap()
 
     _selectedAccount   = null
+    _selectedMailbox   = null
     _newAccountWaiting = false
     _newAccountError   = null
 
@@ -49,11 +50,15 @@ class AccountStore extends Store
         handle ActionTypes.ADD_ACCOUNT, (rawAccount) ->
             onUpdate rawAccount
 
-        handle ActionTypes.SELECT_ACCOUNT, (accountID) ->
-            if accountID?
-                _selectedAccount = _accounts.get(accountID) or null
+        handle ActionTypes.SELECT_ACCOUNT, (value) ->
+            if value.accountID?
+                _selectedAccount = _accounts.get(value.accountID) or null
             else
                 _selectedAccount = null
+            if value.mailboxID?
+                _selectedMailbox = _selectedAccount?.get('mailboxes')?.get(value.mailboxID) or null
+            else
+                _selectedMailbox = null
             @emit 'change'
 
         handle ActionTypes.NEW_ACCOUNT_WAITING, (payload) ->
