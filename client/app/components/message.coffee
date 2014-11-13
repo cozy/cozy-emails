@@ -91,13 +91,13 @@ module.exports = React.createClass
         @_markRead @props.message
 
     componentWillReceiveProps: (props) ->
+        state =
+            active: props.active
         if props.message.get('id') isnt @props.message.get('id')
             @_markRead @props.message
-            state =
-                active:               props.active
-                messageDisplayHTML:   props.settings.get 'messageDisplayHTML'
-                messageDisplayImages: props.settings.get 'messageDisplayImages'
-            @setState state
+            state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
+            state.messageDisplayImages = props.settings.get 'messageDisplayImages'
+        @setState state
 
     _markRead: (message) ->
         # Hack to prevent infinite loop if server side mark as read fails
