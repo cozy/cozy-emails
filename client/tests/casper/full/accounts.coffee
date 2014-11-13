@@ -13,8 +13,6 @@ deleteTestAccounts = ->
         else
             console.log "No test account to delete"
 
-#casper.test.tearDown deleteTestAccounts
-
 casper.test.begin 'Test accounts', (test) ->
     init casper
 
@@ -185,4 +183,5 @@ casper.test.begin 'Test accounts', (test) ->
 
 
     casper.run ->
+        deleteTestAccounts()
         test.done()

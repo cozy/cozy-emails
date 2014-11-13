@@ -52,7 +52,7 @@ module.exports =
       "list sort"               : "Trier"
       "list sort date"          : "Date"
       "list sort subject"       : "Sujet"
-      "list next page"          : "Plus de messages"
+      "list next page"          : "Davantage de messages"
       "list end"                : "FIN"
 
       # Mail
@@ -73,7 +73,8 @@ module.exports =
       "mail mark nofav"         : "Normal"
       "mail mark read"          : "Lu"
       "mail mark unread"        : "Non lu"
-      "mail confirm delete"     : "Voulez-vous vraiment supprimer le message « %{subject} » ?"
+      "mail confirm delete"     : "Voulez-vous vraiment supprimer le message
+                                    « %{subject} » ?"
       "mail action conversation delete" : "Supprimer la conversation"
       "mail action conversation move"   : "Déplacer la conversation"
       "mail action conversation seen"   : "Marquer la conversation comme lue"

@@ -15,21 +15,31 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
     if typeof messageID is 'function'
         cb = messageID
     accounts = casper.evaluate ->
-        accounts = {}
-        Array.prototype.forEach.call document.querySelectorAll("#account-list > li"), (e) ->
-            accounts[e.querySelector('.item-label').textContent.trim()] = e.dataset.reactid
-        return accounts
+        getAccounts = ->
+            _accounts = {}
+            Array.prototype.forEach.call document.querySelectorAll("#account-list > li"), (e) ->
+                accountName = e.querySelector('.item-label').textContent.trim()
+                _accounts[accountName] = e.dataset.reactid
+            return _accounts
+        return getAccounts()
     id = accounts[account]
-    #casper.test.assert (typeof id is 'string'), "Account #{account} found"
+    if not id?
+        casper.test.fail "Unable to find account #{account}"
     if not casper.exists "[data-reactid='#{id}'].active"
         casper.click "[data-reactid='#{id}'] a"
     casper.waitForSelector "[data-reactid='#{id}'].active", ->
         mailboxes = casper.evaluate ->
-            mailboxes = {}
-            Array.prototype.forEach.call document.querySelectorAll("#account-list > li.active .mailbox-list > li"), (e) ->
-                mailboxes[e.querySelector('.item-label').textContent.trim()] = e.dataset.reactid
-            return mailboxes
+            getMailboxes = ->
+                mailboxes = {}
+                mailboxesSel = '#account-list > li.active .mailbox-list > li'
+                Array.prototype.forEach.call document.querySelectorAll(mailboxesSel), (e) ->
+                    mailboxName = e.querySelector('.item-label').textContent.trim()
+                    mailboxes[mailboxName] = e.dataset.reactid
+                return mailboxes
+            return getMailboxes()
         id = mailboxes[box]
+        if not id?
+            casper.test.fail "Unable to find mailbox #{box} in #{account}"
         casper.click "[data-reactid='#{id}'] .item-label"
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
             if typeof messageID is 'string'
@@ -80,13 +90,22 @@ exports.init = (casper) ->
         casper.echo "Error: " + msg, "ERROR"
         utils.dump trace.slice 0, 2
     casper.on "load.finished", ->
-        casper.evaluate ->
-            if not window.cozyMails? then return
-            # ensure locale is english
-            window.cozyMails.setLocale 'en', true
-            # hide toasts
-            document.querySelector(".toasts-container").classList.add 'hidden'
-            # deactivate all plugins
-            PluginUtils = require '../utils/plugin_utils'
-            for pluginName, pluginConf of window.plugins
-                PluginUtils.deactivate pluginName
+        accounts = casper.evaluate ->
+            if window.cozyMails?
+                # ensure locale is english
+                window.cozyMails.setLocale 'en', true
+                # hide toasts
+                document.querySelector(".toasts-container").classList.add 'hidden'
+                # deactivate all plugins
+                PluginUtils = require '../utils/plugin_utils'
+                for pluginName, pluginConf of window.plugins
+                    PluginUtils.deactivate pluginName
+            return window.accounts
+        if not accounts? or
+        not Array.isArray accounts or
+        not (accounts.some (a) -> return a.id is 'gmail-ID') or
+        not  (accounts.some (a) -> return a.id is 'dovecot-ID')
+            utils.dump accounts
+            casper.test.done()
+            casper.die("Fixtures not loaded, dying")
+
