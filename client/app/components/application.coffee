@@ -198,10 +198,23 @@ module.exports = Application = React.createClass
 
         # -- Generates a list of messages for a given account and mailbox
         if panelInfo.action is 'account.mailbox.messages' or
-           panelInfo.action is 'account.mailbox.messages.full'
-            accountID = panelInfo.parameters.accountID
-            mailboxID = panelInfo.parameters.mailboxID
-            messages  = MessageStore.getMessagesByMailbox mailboxID
+           panelInfo.action is 'account.mailbox.messages.full' or
+           panelInfo.action is 'search'
+
+            if panelInfo.action is 'search'
+                accountID = null
+                mailboxID = null
+                messages  = SearchStore.getResults()
+                messagesCount    = messages.count()
+                emptyListMessage = t 'list search empty', query: @state.searchQuery
+                counterMessage   = t 'list search count', messagesCount
+            else
+                accountID = panelInfo.parameters.accountID
+                mailboxID = panelInfo.parameters.mailboxID
+                messages  = MessageStore.getMessagesByMailbox mailboxID
+                messagesCount = MessageStore.getMessagesCounts().get mailboxID
+                emptyListMessage = t 'list empty'
+                counterMessage   = t 'list count', messagesCount
 
             # gets the selected message if any
             openMessageID = null
@@ -212,7 +225,6 @@ module.exports = Application = React.createClass
                     otherPanelInfo?.action is 'conversation'
                 openMessageID = otherPanelInfo.parameters.messageID
 
-            messagesCount = MessageStore.getMessagesCounts().get mailboxID
             query = MessageStore.getParams()
             query.accountID = accountID
             query.mailboxID = mailboxID
@@ -229,8 +241,8 @@ module.exports = Application = React.createClass
                 openMessageID: openMessageID
                 settings:      @state.settings
                 query:         query
-                emptyListMessage: t 'list empty'
-                counterMessage:   t 'list count', messagesCount
+                emptyListMessage: emptyListMessage
+                counterMessage:   counterMessage
                 #paginationUrl: paginationUrl
 
         # -- Generates a configuration window for a given account
@@ -311,35 +323,6 @@ module.exports = Application = React.createClass
             settings = @state.settings
             return Settings {settings}
 
-        # -- Generates a message list based on search result
-        else if panelInfo.action is 'search'
-            accountID = null
-            mailboxID = null
-
-            # gets the selected message if any
-            openMessageID = null
-            direction = if layout is 'first' then 'secondPanel' \
-                        else 'firstPanel'
-            otherPanelInfo = @props.router.current[direction]
-            if otherPanelInfo?.action is 'message' or
-                    otherPanelInfo?.action is 'conversation'
-                openMessageID = otherPanelInfo.parameters.messageID
-            emptyListMessage = t 'list search empty', query: @state.searchQuery
-            counterMessage   =  t 'list search count', results.count()
-            results = SearchStore.getResults()
-            query   = MessageStore.getParams()
-
-            return MessageList
-                messages:         results
-                messagesCount:    results.count()
-                accountID:        accountID
-                mailboxID:        mailboxID
-                layout:           layout
-                openMessageID:    openMessageID
-                settings:         @state.settings
-                emptyListMessage: emptyListMessage
-                counterMessage:   counterMessage
-                query:            query
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else return div null, 'Unknown component'
 

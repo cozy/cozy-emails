@@ -216,7 +216,8 @@ module.exports.search = (req, res, next) ->
         query: req.params.query
         numPage: req.params.numPage
         numByPage: numPageCheat
-    .then (messages) -> res.send 200, messages.map formatMessage
+    .then (messages) ->
+        res.send 200, messages.results.map formatMessage
     .catch next
 
 # Temporary routes for testing purpose
