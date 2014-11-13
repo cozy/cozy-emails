@@ -1,4 +1,5 @@
 {ComposeActions} = require '../constants/app_constants'
+ContactStore     = require '../stores/contact_store'
 
 module.exports = MessageUtils =
 
@@ -161,3 +162,6 @@ module.exports = MessageUtils =
         else
             formatter = 'hh:mm'
         return date.format formatter
+
+    getAvatar: (message) ->
+        return ContactStore.getAvatar message.get('from')[0].address

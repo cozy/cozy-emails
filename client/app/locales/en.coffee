@@ -7,6 +7,8 @@ module.exports =
       "app search"              : "Search…"
       "app alert close"         : "Close"
       "app unimplemented"       : "Not implemented yet"
+      "app error"               : "Argh, I'm unable to perform this action,
+                                    please try again"
 
       # Compose window
       "compose"                   : "Compose new email"
@@ -70,7 +72,7 @@ module.exports =
       "mail mark nofav"         : "Not important"
       "mail mark read"          : "Read"
       "mail mark unread"        : "Not read"
-      "mail confirm delete"     : "Do you really want to delete this message ?"
+      "mail confirm delete"     : "Do you really want to delete message “%{subject}” ?"
       "mail action conversation delete" : "Delete conversation"
       "mail action conversation move"   : "Move conversation"
       "mail action conversation seen"   : "Mark conversation as read"

@@ -25,8 +25,14 @@ module.exports = Menu = React.createClass
 
         return should
 
-    render: ->
+    getInitialState: ->
+        return displayActiveAccount: true
 
+    componentWillReceiveProps: (props) ->
+        if not Immutable.is(props.selectedAccount, @props.selectedAccount)
+            @setState displayActiveAccount: true
+
+    render: ->
 
         if @props.accounts.length
             selectedAccountUrl = @buildUrl
@@ -113,7 +119,7 @@ module.exports = Menu = React.createClass
         isSelected = (not @props.selectedAccount? and key is 0) \
                      or @props.selectedAccount?.get('id') is account.get('id')
 
-        accountClasses = classer active: isSelected
+        accountClasses = classer active: (isSelected and @state.displayActiveAccount)
         accountID = account.get 'id'
         defaultMailbox = AccountStore.getDefaultMailbox accountID
         unread = @props.unreadCounts.get defaultMailbox?.get 'id'
@@ -132,15 +138,24 @@ module.exports = Menu = React.createClass
                 parameters: [accountID]
                 fullWidth: true # /!\ Hide second panel when switching account
 
+        toggleActive = =>
+            if isSelected
+                @setState displayActiveAccount: not @state.displayActiveAccount
+            else
+                @setState displayActiveAccount: true
+
         li className: accountClasses, key: key,
-            a href: url, className: 'menu-item account ' + accountClasses,
-                i className: 'fa fa-inbox'
-                if unread > 0
-                    span className: 'badge', unread
-                span
-                    'data-account-id': key,
-                    className: 'item-label',
-                    account.get 'label'
+            a
+                href: url,
+                className: 'menu-item account ' + accountClasses,
+                onClick: toggleActive,
+                    i className: 'fa fa-inbox'
+                    if unread > 0
+                        span className: 'badge', unread
+                    span
+                        'data-account-id': key,
+                        className: 'item-label',
+                        account.get 'label'
 
             ul className: 'list-unstyled submenu mailbox-list',
                 @props.favoriteMailboxes?.map (mailbox, key) =>

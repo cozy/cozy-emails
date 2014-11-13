@@ -1,5 +1,13 @@
 AccountStore  = require '../stores/account_store'
+MessageStore  = require '../stores/message_store'
 LayoutActionCreator = require '../actions/layout_action_creator'
+
+onMessageList = ->
+    actions = [
+        "account.mailbox.messages",
+        "account.mailbox.messages.full"
+    ]
+    return router.current.firstPanel?.action in actions
 
 module.exports =
     getCurrentAccount: ->
@@ -42,16 +50,20 @@ module.exports =
             type: ActionTypes.SETTINGS_UPDATED
             value: settings
 
-    messageNavigate: (direction) ->
-        MessageStore  = require '../stores/message_store'
+    messageNavigate: (direction, nextID) ->
+        if not onMessageList()
+            return
         SettingsStore = require '../stores/settings_store'
-        if direction is 'prev'
-            nextID = MessageStore.getPreviousMessage()
-        else
-            nextID = MessageStore.getNextMessage()
+        if not nextID?
+            if direction is 'prev'
+                nextID = MessageStore.getPreviousMessage()
+            else
+                nextID = MessageStore.getNextMessage()
         if not nextID?
             return
         message = MessageStore.getByID MessageStore.getCurrentID()
+        if not message?
+            return
         conversationID = message.get 'conversationID'
 
         if conversationID and SettingsStore.get('displayConversation')
@@ -61,3 +73,21 @@ module.exports =
 
         url = window.router.buildUrl direction: 'second', action: action, parameters: nextID
         window.router.navigate url, {trigger: true}
+
+    messageDeleteCurrent: ->
+        if not onMessageList()
+            return
+        MessageActionCreator = require '../actions/message_action_creator'
+        alertError   = LayoutActionCreator.alertError
+        alertSuccess = LayoutActionCreator.alertSuccess
+        message = MessageStore.getByID MessageStore.getCurrentID()
+        if not message?
+            return
+        if window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
+            nextID = MessageStore.getNextMessage()
+            MessageActionCreator.delete message, (error) =>
+                if error?
+                    alertError "#{t("message action delete ko")} #{error}"
+                else
+                    alertSuccess t "message action delete ok"
+                    @messageNavigate(null, nextID)

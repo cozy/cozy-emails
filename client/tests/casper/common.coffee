@@ -20,8 +20,9 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
             accounts[e.querySelector('.item-label').textContent.trim()] = e.dataset.reactid
         return accounts
     id = accounts[account]
-    casper.test.assert (typeof id is 'string'), "Account #{account} found"
-    casper.click "[data-reactid='#{id}'] a"
+    #casper.test.assert (typeof id is 'string'), "Account #{account} found"
+    if not casper.exists "[data-reactid='#{id}'].active"
+        casper.click "[data-reactid='#{id}'] a"
     casper.waitForSelector "[data-reactid='#{id}'].active", ->
         mailboxes = casper.evaluate ->
             mailboxes = {}
@@ -33,13 +34,17 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
             if typeof messageID is 'string'
                 subjectSel = "[data-message-id='#{messageID}'] a .preview"
-            else
+            else if typeof subject is 'string'
                 subjectSel = x "//span[(contains(normalize-space(.), '#{subject}'))]"
+            else
+                subjectSel = 'li.message:nth-of-type(1) .title'
             casper.waitForSelector subjectSel, ->
+                if not (typeof subject is 'string')
+                    subject = casper.fetchText subjectSel
                 casper.click subjectSel
                 casper.waitForSelector x("//h3[(contains(normalize-space(.), '#{subject}'))]"), ->
-                    casper.test.pass "Message #{subject} selected"
-                    cb()
+                    #casper.test.pass "Message #{subject} selected"
+                    cb(subject)
                 , ->
                     casper.test.fail "Error displaying #{subject}"
             , ->

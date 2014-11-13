@@ -26,11 +26,15 @@ module.exports =
                 callback error, message
 
     delete: (message, callback) ->
+        LayoutActionCreator  = require './layout_action_creator'
         # Move message to Trash folder
-        account = AccountStore.getByID(message.get 'account')
+        account = AccountStore.getByID(message.get 'accountID')
+        if not account?
+            console.log "No account with id #{message.get 'accountID'} for message #{message.get 'id'}"
+            LayoutActionCreator.alertError t 'app error'
+            return
         trash = account.get 'trashMailbox'
         if not trash?
-            LayoutActionCreator  = require './layout_action_creator'
             LayoutActionCreator.alertError t 'message delete no trash'
         else
             msg = message.toObject()

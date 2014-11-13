@@ -44203,11 +44203,18 @@ if (typeof window.plugins !== "object") {
     window.cozyMails.messageNew();
   }
   function bindingHelp() {
-    var self = this,
-        container = document.createElement('div'),
-        help = document.createElement('dl');
+    var self, container, help;
+    container = document.getElementById('mailkeysHelp');
+    if (container) {
+      document.body.removeChild(container);
+      return;
+    }
+    self      = this;
+    container = document.createElement('div');
+    help      = document.createElement('dl');
+    container.id = 'mailkeysHelp';
     Object.keys(this._binding).forEach(function (key) {
-      help.innerHTML += "<dt>" + key + "</dt><dd>" + self._binding[key].name + "</dd>";
+      help.innerHTML += "<dt>" + key + "&nbsp;: </dt><dd>" + self._binding[key].name + "</dd>";
     });
     container.appendChild(help);
     container.classList.add('mailkeys-container');
@@ -44240,8 +44247,20 @@ if (typeof window.plugins !== "object") {
         name: "New message",
         action: bindingNew
       },
+      'd': {
+        name: "Delete message",
+        action: function () {window.cozyMails.messageDeleteCurrent(); }
+      },
+      'backspace': {
+        name: "Delete message",
+        action: function () {window.cozyMails.messageDeleteCurrent(); }
+      },
+      'del': {
+        name: "Delete message",
+        action: function () {window.cozyMails.messageDeleteCurrent(); }
+      },
       '?': {
-        name: "Display available bindings",
+        name: "Toggle display of available bindings",
         action: bindingHelp
       }
     },

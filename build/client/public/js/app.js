@@ -671,10 +671,15 @@ module.exports = {
   },
   "delete": function(message, callback) {
     var LayoutActionCreator, account, id, msg, observer, patches, trash;
-    account = AccountStore.getByID(message.get('account'));
+    LayoutActionCreator = require('./layout_action_creator');
+    account = AccountStore.getByID(message.get('accountID'));
+    if (account == null) {
+      console.log("No account with id " + (message.get('accountID')) + " for message " + (message.get('id')));
+      LayoutActionCreator.alertError(t('app error'));
+      return;
+    }
     trash = account.get('trashMailbox');
     if (trash == null) {
-      LayoutActionCreator = require('./layout_action_creator');
       return LayoutActionCreator.alertError(t('message delete no trash'));
     } else {
       msg = message.toObject();
@@ -3434,6 +3439,18 @@ module.exports = Menu = React.createClass({
     should = nextState !== this.state || !Immutable.is(nextProps.accounts, this.props.accounts) || !Immutable.is(nextProps.selectedAccount, this.props.selectedAccount) || !_.isEqual(nextProps.layout, this.props.layout) || nextProps.isResponsiveMenuShown !== this.props.isResponsiveMenuShown || !Immutable.is(nextProps.favoriteMailboxes, this.props.favoriteMailboxes) || !Immutable.is(nextProps.unreadCounts, this.props.unreadCounts);
     return should;
   },
+  getInitialState: function() {
+    return {
+      displayActiveAccount: true
+    };
+  },
+  componentWillReceiveProps: function(props) {
+    if (!Immutable.is(props.selectedAccount, this.props.selectedAccount)) {
+      return this.setState({
+        displayActiveAccount: true
+      });
+    }
+  },
   render: function() {
     var classes, composeClass, composeUrl, newMailboxClass, newMailboxUrl, selectedAccountUrl, settingsClass, settingsUrl, _ref1, _ref2, _ref3;
     if (this.props.accounts.length) {
@@ -3522,10 +3539,10 @@ module.exports = Menu = React.createClass({
     }, t('menu settings'))));
   },
   getAccountRender: function(account, key) {
-    var accountClasses, accountID, defaultMailbox, isSelected, unread, url, _ref1, _ref2;
+    var accountClasses, accountID, defaultMailbox, isSelected, toggleActive, unread, url, _ref1, _ref2;
     isSelected = ((this.props.selectedAccount == null) && key === 0) || ((_ref1 = this.props.selectedAccount) != null ? _ref1.get('id') : void 0) === account.get('id');
     accountClasses = classer({
-      active: isSelected
+      active: isSelected && this.state.displayActiveAccount
     });
     accountID = account.get('id');
     defaultMailbox = AccountStore.getDefaultMailbox(accountID);
@@ -3545,12 +3562,26 @@ module.exports = Menu = React.createClass({
         fullWidth: true
       });
     }
+    toggleActive = (function(_this) {
+      return function() {
+        if (isSelected) {
+          return _this.setState({
+            displayActiveAccount: !_this.state.displayActiveAccount
+          });
+        } else {
+          return _this.setState({
+            displayActiveAccount: true
+          });
+        }
+      };
+    })(this);
     return li({
       className: accountClasses,
       key: key
     }, a({
       href: url,
-      className: 'menu-item account ' + accountClasses
+      className: 'menu-item account ' + accountClasses,
+      onClick: toggleActive
     }, i({
       className: 'fa fa-inbox'
     }), unread > 0 ? span({
@@ -3687,7 +3718,7 @@ MessageList = React.createClass({
       parameters: id
     });
     date = MessageUtils.formatDate(message.get('createdAt'));
-    avatar = message.get('getAvatar')();
+    avatar = MessageUtils.getAvatar(message);
     return li({
       className: classes,
       key: key,
@@ -4131,7 +4162,7 @@ module.exports = React.createClass({
       value: prepared.attachments.map(MessageUtils.convertAttachments),
       display: display
     });
-    avatar = this.props.message.get('getAvatar')();
+    avatar = MessageUtils.getAvatar(this.props.message);
     classes = classer({
       'header': true,
       'row': true,
@@ -4287,7 +4318,7 @@ module.exports = React.createClass({
     }, t('mail action delete')))), div({
       className: 'btn-group btn-group-sm'
     }, button({
-      className: 'btn btn-default dropdown-toggle',
+      className: 'btn btn-default dropdown-toggle flags',
       type: 'button',
       'data-toggle': 'dropdown'
     }, t('mail action mark', span({
@@ -4314,7 +4345,7 @@ module.exports = React.createClass({
     }, t('mail mark nofav'))))), div({
       className: 'btn-group btn-group-sm'
     }, button({
-      className: 'btn btn-default dropdown-toggle',
+      className: 'btn btn-default dropdown-toggle move',
       type: 'button',
       'data-toggle': 'dropdown'
     }, t('mail action move', span({
@@ -4329,7 +4360,7 @@ module.exports = React.createClass({
     })(this)).toJS())), div({
       className: 'btn-group btn-group-sm'
     }, button({
-      className: 'btn btn-default dropdown-toggle',
+      className: 'btn btn-default dropdown-toggle more',
       type: 'button',
       'data-toggle': 'dropdown'
     }, t('mail action more', span({
@@ -4540,7 +4571,10 @@ module.exports = React.createClass({
       return this.redirect({
         direction: 'first',
         action: 'account.mailbox.messages.full',
-        parameters: this.getParams(),
+        parameters: {
+          accountID: this.props.message.get('accountID'),
+          mailboxID: this.props.selectedMailboxID
+        },
         fullWidth: true
       });
     }
@@ -4564,11 +4598,14 @@ module.exports = React.createClass({
     });
   },
   onDelete: function(args) {
-    var alertError, allerSuccess;
+    var alertError, alertSuccess, message;
     alertError = LayoutActionCreator.alertError;
-    allerSuccess = LayoutActionCreator.alertSuccess;
-    if (window.confirm(t('mail confirm delete'))) {
-      return MessageActionCreator["delete"](this.props.message, (function(_this) {
+    alertSuccess = LayoutActionCreator.alertSuccess;
+    message = this.props.message;
+    if (window.confirm(t('mail confirm delete', {
+      subject: message.get('subject')
+    }))) {
+      return MessageActionCreator["delete"](message, (function(_this) {
         return function(error) {
           if (error != null) {
             return alertError("" + (t("message action delete ko")) + " " + error);
@@ -4584,10 +4621,10 @@ module.exports = React.createClass({
     return LayoutActionCreator.alertWarning(t("app unimplemented"));
   },
   onMove: function(args) {
-    var alertError, allerSuccess, conversationID, newbox, oldbox;
+    var alertError, alertSuccess, conversationID, newbox, oldbox;
     newbox = args.target.dataset.value;
     alertError = LayoutActionCreator.alertError;
-    allerSuccess = LayoutActionCreator.alertSuccess;
+    alertSuccess = LayoutActionCreator.alertSuccess;
     if (args.target.dataset.conversation != null) {
       conversationID = this.props.message.get('conversationID');
       return ConversationActionCreator.move(conversationID, newbox, (function(_this) {
@@ -4615,11 +4652,11 @@ module.exports = React.createClass({
     }
   },
   onMark: function(args) {
-    var alertError, allerSuccess, flag, flags;
+    var alertError, alertSuccess, flag, flags;
     flags = this.props.message.get('flags').slice();
     flag = args.target.dataset.value;
     alertError = LayoutActionCreator.alertError;
-    allerSuccess = LayoutActionCreator.alertSuccess;
+    alertSuccess = LayoutActionCreator.alertSuccess;
     switch (flag) {
       case FlagsConstants.SEEN:
         flags.push(MessageFlags.SEEN);
@@ -4646,11 +4683,11 @@ module.exports = React.createClass({
     });
   },
   onConversation: function(args) {
-    var action, alertError, allerSuccess, id;
+    var action, alertError, alertSuccess, id;
     id = this.props.message.get('conversationID');
     action = args.target.dataset.action;
     alertError = LayoutActionCreator.alertError;
-    allerSuccess = LayoutActionCreator.alertSuccess;
+    alertSuccess = LayoutActionCreator.alertSuccess;
     switch (action) {
       case 'delete':
         return ConversationActionCreator["delete"](id, function(error) {
@@ -6149,6 +6186,7 @@ module.exports = {
   "app search": "Search…",
   "app alert close": "Close",
   "app unimplemented": "Not implemented yet",
+  "app error": "Argh, I'm unable to perform this action, please try again",
   "compose": "Compose new email",
   "compose default": 'Hello, how are you doing today ?',
   "compose from": "From",
@@ -6202,7 +6240,7 @@ module.exports = {
   "mail mark nofav": "Not important",
   "mail mark read": "Read",
   "mail mark unread": "Not read",
-  "mail confirm delete": "Do you really want to delete this message ?",
+  "mail confirm delete": "Do you really want to delete message “%{subject}” ?",
   "mail action conversation delete": "Delete conversation",
   "mail action conversation move": "Move conversation",
   "mail action conversation seen": "Mark conversation as read",
@@ -6323,6 +6361,7 @@ module.exports = {
   "app search": "Rechercher…",
   "app alert close": "Fermer",
   "app unimplemented": "Non implémenté",
+  "app error": "Oups, une erreur est survenue, veuillez ré-essayer",
   "compose": "Écrire un nouveau message",
   "compose default": "Bonjour, comment ça va ?",
   "compose from": "De",
@@ -6376,7 +6415,7 @@ module.exports = {
   "mail mark nofav": "Normal",
   "mail mark read": "Lu",
   "mail mark unread": "Non lu",
-  "mail confirm delete": "Voulez-vous vraiment supprimer ce message ?",
+  "mail confirm delete": "Voulez-vous vraiment supprimer le message « %{subject} » ?",
   "mail action conversation delete": "Supprimer la conversation",
   "mail action conversation move": "Déplacer la conversation",
   "mail action conversation seen": "Marquer la conversation comme lue",
@@ -6705,23 +6744,17 @@ AccountStore = (function(_super) {
     var onUpdate;
     onUpdate = (function(_this) {
       return function(rawAccount) {
-        var account, accountID;
-        accountID = rawAccount.id;
+        var account;
         account = AccountTranslator.toImmutable(rawAccount);
-        _accounts = _accounts.set(accountID, account);
-        _selectedAccount = _accounts.get(accountID);
+        _accounts = _accounts.set(account.get('id'), account);
+        _selectedAccount = account;
         _newAccountWaiting = false;
         _newAccountError = null;
         return _this.emit('change');
       };
     })(this);
-    handle(ActionTypes.ADD_ACCOUNT, function(account) {
-      account = AccountTranslator.toImmutable(account);
-      _accounts = _accounts.set(account.get('id'), account);
-      _selectedAccount = account;
-      _newAccountWaiting = false;
-      _newAccountError = null;
-      return this.emit('change');
+    handle(ActionTypes.ADD_ACCOUNT, function(rawAccount) {
+      return onUpdate(rawAccount);
     });
     handle(ActionTypes.SELECT_ACCOUNT, function(accountID) {
       if (accountID != null) {
@@ -7166,9 +7199,6 @@ MessageStore = (function(_super) {
       if (message.flags == null) {
         message.flags = [];
       }
-      message.getAvatar = function() {
-        return ContactStore.getAvatar(message.get('from')[0].address);
-      };
       delete message.docType;
       message = Immutable.Map(message);
       _messages = _messages.set(message.get('id'), message);
@@ -7302,7 +7332,7 @@ MessageStore = (function(_super) {
   MessageStore.prototype.getMessagesByAccount = function(accountID) {
     var sequence;
     sequence = _messages.filter(function(message) {
-      return message.get('account') === accountID;
+      return message.get('accountID') === accountID;
     });
     return sequence.toOrderedMap();
   };
@@ -7361,7 +7391,7 @@ MessageStore = (function(_super) {
     var idx, keys;
     keys = Object.keys(_currentMessages.toJS());
     idx = keys.indexOf(_currentID);
-    if (idx < 1) {
+    if (idx === -1) {
       return null;
     } else {
       return keys[idx - 1];
@@ -7644,11 +7674,20 @@ module.exports = ActivityUtils;
 });
 
 ;require.register("utils/api_utils", function(exports, require, module) {
-var AccountStore, LayoutActionCreator;
+var AccountStore, LayoutActionCreator, MessageStore, onMessageList,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 AccountStore = require('../stores/account_store');
 
+MessageStore = require('../stores/message_store');
+
 LayoutActionCreator = require('../actions/layout_action_creator');
+
+onMessageList = function() {
+  var actions, _ref, _ref1;
+  actions = ["account.mailbox.messages", "account.mailbox.messages.full"];
+  return _ref = (_ref1 = router.current.firstPanel) != null ? _ref1.action : void 0, __indexOf.call(actions, _ref) >= 0;
+};
 
 module.exports = {
   getCurrentAccount: function() {
@@ -7695,19 +7734,26 @@ module.exports = {
       value: settings
     });
   },
-  messageNavigate: function(direction) {
-    var MessageStore, SettingsStore, action, conversationID, message, nextID, url;
-    MessageStore = require('../stores/message_store');
+  messageNavigate: function(direction, nextID) {
+    var SettingsStore, action, conversationID, message, url;
+    if (!onMessageList()) {
+      return;
+    }
     SettingsStore = require('../stores/settings_store');
-    if (direction === 'prev') {
-      nextID = MessageStore.getPreviousMessage();
-    } else {
-      nextID = MessageStore.getNextMessage();
+    if (nextID == null) {
+      if (direction === 'prev') {
+        nextID = MessageStore.getPreviousMessage();
+      } else {
+        nextID = MessageStore.getNextMessage();
+      }
     }
     if (nextID == null) {
       return;
     }
     message = MessageStore.getByID(MessageStore.getCurrentID());
+    if (message == null) {
+      return;
+    }
     conversationID = message.get('conversationID');
     if (conversationID && SettingsStore.get('displayConversation')) {
       action = 'conversation';
@@ -7722,14 +7768,44 @@ module.exports = {
     return window.router.navigate(url, {
       trigger: true
     });
+  },
+  messageDeleteCurrent: function() {
+    var MessageActionCreator, alertError, alertSuccess, message, nextID;
+    if (!onMessageList()) {
+      return;
+    }
+    MessageActionCreator = require('../actions/message_action_creator');
+    alertError = LayoutActionCreator.alertError;
+    alertSuccess = LayoutActionCreator.alertSuccess;
+    message = MessageStore.getByID(MessageStore.getCurrentID());
+    if (message == null) {
+      return;
+    }
+    if (window.confirm(t('mail confirm delete', {
+      subject: message.get('subject')
+    }))) {
+      nextID = MessageStore.getNextMessage();
+      return MessageActionCreator["delete"](message, (function(_this) {
+        return function(error) {
+          if (error != null) {
+            return alertError("" + (t("message action delete ko")) + " " + error);
+          } else {
+            alertSuccess(t("message action delete ok"));
+            return _this.messageNavigate(null, nextID);
+          }
+        };
+      })(this));
+    }
   }
 };
 });
 
 ;require.register("utils/message_utils", function(exports, require, module) {
-var ComposeActions, MessageUtils;
+var ComposeActions, ContactStore, MessageUtils;
 
 ComposeActions = require('../constants/app_constants').ComposeActions;
+
+ContactStore = require('../stores/contact_store');
 
 module.exports = MessageUtils = {
   displayAddress: function(address, full) {
@@ -7926,6 +8002,9 @@ module.exports = MessageUtils = {
       formatter = 'hh:mm';
     }
     return date.format(formatter);
+  },
+  getAvatar: function(message) {
+    return ContactStore.getAvatar(message.get('from')[0].address);
   }
 };
 });
@@ -8166,11 +8245,40 @@ module.exports = {
 });
 
 ;require.register("utils/translators/account_translator", function(exports, require, module) {
-var toRawObject;
+var MailboxFlags, toRawObject,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+
+MailboxFlags = require('../../constants/app_constants').MailboxFlags;
 
 module.exports = {
   toImmutable: function(rawAccount) {
-    var _createImmutableMailboxes;
+    var checkAttribs, mailboxes, _createImmutableMailboxes;
+    if ((rawAccount.draftMailbox == null) || (rawAccount.sentMailbox == null) || (rawAccount.trashMailbox == null)) {
+      mailboxes = {};
+      checkAttribs = function(box) {
+        var _ref, _ref1, _ref2;
+        if (_ref = MailboxFlags.DRAFT, __indexOf.call(box.attribs, _ref) >= 0) {
+          mailboxes.draft = box.id;
+        }
+        if (_ref1 = MailboxFlags.SENT, __indexOf.call(box.attribs, _ref1) >= 0) {
+          mailboxes.sent = box.id;
+        }
+        if (_ref2 = MailboxFlags.TRASH, __indexOf.call(box.attribs, _ref2) >= 0) {
+          mailboxes.trash = box.id;
+        }
+        return box.children.forEach(checkAttribs);
+      };
+      rawAccount.mailboxes.forEach(checkAttribs);
+    }
+    if ((rawAccount.draftMailbox == null) && (mailboxes.draft != null)) {
+      rawAccount.draftMailbox = mailboxes.draft;
+    }
+    if ((rawAccount.sentMailbox == null) && (mailboxes.sent != null)) {
+      rawAccount.sentMailbox = mailboxes.sent;
+    }
+    if ((rawAccount.trashMailbox == null) && (mailboxes.trash != null)) {
+      rawAccount.trashMailbox = mailboxes.trash;
+    }
     _createImmutableMailboxes = function(children) {
       return Immutable.Sequence(children).mapKeys(function(_, mailbox) {
         return mailbox.id;
