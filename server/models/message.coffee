@@ -128,8 +128,10 @@ Message.byConversationId = (conversationID) ->
 # cb - {Function}(err) for task completion
 #
 # Returns {void}
-Message.destroyByID = (messageID, cb) ->
-    Message.adapter.destroy null, messageID, cb
+Message.destroyByID = (messageID) ->
+    # @TODO, this could be a single request
+    Message.findPromised messageID
+    .then (msg) -> msg.destroyPromised()
 
 
 # Public: destroy all messages for an account
@@ -146,7 +148,7 @@ Message.destroyByID = (messageID, cb) ->
 Message.safeDestroyByAccountID = (accountID, retries = 2) ->
 
     destroyOne = (row) ->
-        Message.destroyByIDPromised(row.id)
+        Message.destroyByID row.id
         .delay 100 # let the DS breath
 
     # get LIMIT_DESTROY messages IDs in RAM
