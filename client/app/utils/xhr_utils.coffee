@@ -15,8 +15,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
-
+                console.log "Error in changeSettings", settings, res.body?.error
+                callback t('app error')
 
     fetchMessage: (emailID, callback) ->
         request.get "message/#{emailID}"
@@ -25,7 +25,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
+                console.log "Error in fetchMessage", emailID, res.body?.error
+                callback t('app error')
 
     fetchConversation: (emailID, callback) ->
         request.get "conversation/#{emailID}"
@@ -34,7 +35,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
+                console.log "Error in fetchConversation", emailID, res.body?.error
+                callback t('app error')
 
 
     fetchMessagesByFolder: (mailboxID, query, callback) ->
@@ -48,7 +50,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
+                console.log "Error in fetchMessagesByFolder", res.body?.error
+                callback t('app error')
 
     mailboxCreate: (mailbox, callback) ->
         request.post "/mailbox"
@@ -58,7 +61,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
+                console.log "Error in mailboxCreate", mailbox, res.body?.error
+                callback t('app error')
 
     mailboxUpdate: (data, callback) ->
         request.put "/mailbox/#{data.mailboxID}"
@@ -68,7 +72,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
+                console.log "Error in mailboxUpdate", data, res.body?.error
+                callback t('app error')
 
     mailboxDelete: (data, callback) ->
         request.del "/mailbox/#{data.mailboxID}"
@@ -77,7 +82,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
+                console.log "Error in mailboxDelete", data, res.body?.error
+                callback t('app error')
 
     messageSend: (message, callback) ->
         request.post "/message"
@@ -87,7 +93,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
+                console.log "Error in messageSend", message, res.body?.error
+                callback t('app error')
 
     messageDelete: (messageId, callback) ->
         request.del "/message/#{messageId}"
@@ -96,7 +103,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
+                console.log "Error in messageDelete", messageId, res.body?.error
+                callback t('app error')
 
     messagePatch: (messageId, patch, callback) ->
         request.patch "/message/#{messageId}", patch
@@ -105,7 +113,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
+                console.log "Error in messagePatch", messageId, res.body?.error
+                callback t('app error')
 
     conversationDelete: (conversationId, callback) ->
         request.del "/conversation/#{conversationId}"
@@ -114,7 +123,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
+                console.log "Error in conversationDelete", conversationId, res.body?.error
+                callback t('app error')
 
     conversationPatch: (conversationId, patch, callback) ->
         request.patch "/conversation/#{conversationId}", patch
@@ -123,7 +133,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                callback "Something went wrong -- #{res.body}"
+                console.log "Error in conversationPatch", conversationId, res.body?.error
+                callback t('app error')
 
     createAccount: (account, callback) ->
 
@@ -136,6 +147,7 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
+                console.log "Error in createAccount", account, res.body?.error
                 callback res.body, null
 
     editAccount: (account, callback) ->
@@ -150,6 +162,7 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
+                console.log "Error in editAccount", account, res.body?.error
                 callback res.body, null
 
     removeAccount: (accountID) ->
@@ -176,6 +189,7 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
+                console.log "Error in search", res.body?.error
                 callback res.body, null
 
     refresh: (callback) ->
@@ -191,4 +205,5 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
+                console.log "Error in activityCreate", options, res.body?.error
                 callback res.body, null
