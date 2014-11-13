@@ -214,6 +214,12 @@ module.exports = Application = React.createClass
 
             messagesCount = MessageStore.getMessagesCounts().get mailboxID
             query = MessageStore.getParams()
+            query.accountID = accountID
+            query.mailboxID = mailboxID
+            paginationUrl = @buildUrl
+                direction: 'first'
+                action: 'account.mailbox.messages.full'
+                parameters: query
             return MessageList
                 messages:      messages
                 messagesCount: messagesCount
@@ -225,13 +231,7 @@ module.exports = Application = React.createClass
                 query:         query
                 emptyListMessage: t 'list empty'
                 counterMessage:   t 'list count', messagesCount
-                buildPaginationUrl: =>
-                    query.accountID = accountID
-                    query.mailboxID = mailboxID
-                    @buildUrl
-                        direction: 'first'
-                        action: 'account.mailbox.messages.full'
-                        parameters: query
+                paginationUrl: paginationUrl
 
         # -- Generates a configuration window for a given account
         else if panelInfo.action is 'account.config' or

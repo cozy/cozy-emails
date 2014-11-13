@@ -19,29 +19,14 @@ module.exports = React.createClass
         settings          : React.PropTypes.object.isRequired
         accounts          : React.PropTypes.object.isRequired
 
-    ###
-    # @FIXME
     shouldComponentUpdate: (nextProps, nextState) ->
-
-        comp = (a, b) ->
-            if (a? and not b?) or (not a? and b?) then return false
-            if typeof b.toJSON isnt 'function' or
-               typeof b.toJSON isnt 'function'
-                return JSON.stringify(a) is JSON.stringify(b)
-            return JSON.stringify(a.toJSON()) is JSON.stringify(b.toJSON())
-
-        shouldUpdate =
-            not comp nextProps.message, @props.message or
-            not comp nextProps.conversation, @props.conversation or
-            not comp nextProps.selectedAccount, @props.selectedAccount or
-            not comp nextProps.selectedMailbox, @props.selectedMailbox or
-            not comp nextProps.mailboxes, @props.mailboxes or
-            not comp nextProps.settings, @props.settings or
-            not comp nextProps.accounts, @props.accounts or
-            nextProps.layout isnt @props.layout
-
-        return shouldUpdate
-    ###
+        if not (Immutable.is(nextState, @state))
+            return true
+        else
+            props = Object.keys nextProps
+            different = props.some (key) =>
+                return not (Immutable.is(nextProps[key], @props[key]))
+            return different
 
     render: ->
         if not @props.message? or not @props.conversation

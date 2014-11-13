@@ -44,24 +44,14 @@ module.exports = React.createClass
         settings          : React.PropTypes.object.isRequired
         accounts          : React.PropTypes.object.isRequired
 
-    ###
-    # @FIXME
     shouldComponentUpdate: (nextProps, nextState) ->
-
-        same =
-            JSON.stringify(nextState) is JSON.stringify(@state) and
-            JSON.stringify(nextProps.message.toJSON()) is
-                JSON.stringify(@props.message.toJSON()) and
-            #Immutable.is(nextProps.message, @props.message) and
-            Immutable.is(nextProps.key, @props.key) and
-            Immutable.is(nextProps.selectedAccount, @props.selectedAccount) and
-            Immutable.is(nextProps.selectedMailbox, @props.selectedMailbox) and
-            Immutable.is(nextProps.mailboxes, @props.mailboxes) and
-            Immutable.is(nextProps.settings, @props.settings) and
-            Immutable.is(nextProps.accounts, @props.accounts)
-
-        return not same
-    ###
+        if not (Immutable.is(nextState, @state))
+            return true
+        else
+            props = Object.keys nextProps
+            different = props.some (key) =>
+                return not (Immutable.is(nextProps[key], @props[key]))
+            return different
 
     _prepareMessage: ->
         message = @props.message
@@ -101,12 +91,13 @@ module.exports = React.createClass
         @_markRead @props.message
 
     componentWillReceiveProps: (props) ->
-        @_markRead @props.message
-        state =
-            active:               props.active
-            messageDisplayHTML:   props.settings.get 'messageDisplayHTML'
-            messageDisplayImages: props.settings.get 'messageDisplayImages'
-        @setState state
+        if props.message.get('id') isnt @props.message.get('id')
+            @_markRead @props.message
+            state =
+                active:               props.active
+                messageDisplayHTML:   props.settings.get 'messageDisplayHTML'
+                messageDisplayImages: props.settings.get 'messageDisplayImages'
+            @setState state
 
     _markRead: (message) ->
         # Hack to prevent infinite loop if server side mark as read fails
