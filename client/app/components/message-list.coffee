@@ -29,11 +29,15 @@ MessageList = React.createClass
             @getMessageRender message, key, isActive
         .toJS()
         nbMessages = parseInt @props.counterMessage, 10
+        filterParams =
+            accountID: @props.accountID
+            mailboxID: @props.mailboxID
+            query:     @props.query
         div className: 'message-list', ref: 'list',
             div className: 'message-list-actions',
                 #MessagesQuickFilter {}
-                MessagesFilter {query: @props.query}
-                MessagesSort {query: @props.query}
+                MessagesFilter filterParams
+                MessagesSort filterParams
             if @props.messages.count() is 0
                 p null, @props.emptyListMessage
             else
@@ -44,7 +48,7 @@ MessageList = React.createClass
                     if @props.messages.count() < nbMessages
                         p null,
                             a
-                                href: @props.buildPaginationUrl(),
+                                href: @props.paginationUrl
                                 ref: 'nextPage',
                                 t 'list next page'
                     else
@@ -126,7 +130,7 @@ MessageList = React.createClass
             loadNext = =>
                 if isVisible()
                     scrollable.removeEventListener 'scroll', loadNext
-                    @redirect @props.buildPaginationUrl()
+                    @redirect @props.paginationUrl
                 else
 
             scrollable.addEventListener 'scroll', loadNext
@@ -193,10 +197,13 @@ MessagesFilter = React.createClass
     onFilter: (ev) ->
         LayoutActionCreator.filterMessages ev.target.dataset.filter
 
+        params = MessageStore.getParams()
+        params.accountID = @props.accountID
+        params.mailboxID = @props.mailboxID
         @redirect @buildUrl
             direction: 'first'
             action: 'account.mailbox.messages.full'
-            parameters: MessageStore.getParams()
+            parameters: params
 
 MessagesSort = React.createClass
     displayName: 'MessagesSort'
@@ -237,7 +244,10 @@ MessagesSort = React.createClass
         LayoutActionCreator.sortMessages
             field: field
 
+        params = MessageStore.getParams()
+        params.accountID = @props.accountID
+        params.mailboxID = @props.mailboxID
         @redirect @buildUrl
             direction: 'first'
             action: 'account.mailbox.messages.full'
-            parameters: MessageStore.getParams()
+            parameters: params
