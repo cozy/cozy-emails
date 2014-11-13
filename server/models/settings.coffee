@@ -3,6 +3,7 @@ Promise = require 'bluebird'
 
 module.exports = Settings = americano.getModel 'MailsSettings',
     messagesPerPage: Number
+    refreshInterval: Number
     displayConversation: Boolean
     composeInHTML: Boolean
     messageDisplayHTML: Boolean
@@ -16,7 +17,7 @@ Settings.getInstance = ->
     .get 0
     .then (settings) ->
         defaultSettings = new Settings
-            messagesPerPage: 5
+            messagesPerPage: 25
             displayConversation: false
             composeInHTML: true
             messageDisplayHTML: true
