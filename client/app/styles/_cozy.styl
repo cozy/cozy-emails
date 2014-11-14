@@ -15,21 +15,19 @@ a:hover
 input
 select
 textarea
+.form-control
     border 1px solid basecolor
     border-radius 0
     font-family styled
 
-input:hover
-select:hover
-textarea:hover
-    border 1px solid actioncolor
+    &:hover
+        border 1px solid actioncolor
 
-input:active
-select:active
-textarea:active
-    box-shadow none
+    &:focus
+    &:active
+        box-shadow none
 
-.modal-header
+input:hove.modal-header
     background-color bluegreen
     color white
     font-family styled
@@ -42,19 +40,6 @@ textarea:active
     font-family main
     min-height 10em
 
-    input
-    select
-        border 1px solid blue
-        border-radius 0
-        font-family styled
-
-        &:hover
-            border 1px solid orange
-
-        &:focus
-        &:active
-            border 1px solid blue
-            box-shadow none
 
 /*      COZY BUTTONS    */
 .btn
