@@ -64,6 +64,7 @@ module.exports = React.createClass
             closeUrl = @buildClosePanelUrl @props.layout
 
         closeIcon = if @props.layout is 'full' then 'fa-th-list' else 'fa-times'
+        inConversation = @props.conversation.length > 1
 
         div className: 'conversation',
 
@@ -106,13 +107,14 @@ module.exports = React.createClass
                 for message, key in @props.conversation
                     active = @props.message.get('id') is message.get('id')
                     Message
-                        key: key
-                        message: message
-                        settings: @props.settings
                         accounts: @props.accounts
+                        active: active
+                        inConversation: inConversation
+                        key: key
                         mailboxes: @props.mailboxes
+                        message: message
+                        nextID: @props.nextID
+                        prevID: @props.prevID
                         selectedAccount: @props.selectedAccount
                         selectedMailboxID: @props.selectedMailboxID
-                        active: active
-                        prevID: @props.prevID
-                        nextID: @props.nextID
+                        settings: @props.settings

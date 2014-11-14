@@ -36,13 +36,17 @@ module.exports = React.createClass
         }
 
     propTypes:
-        message           : React.PropTypes.object.isRequired
+        accounts          : React.PropTypes.object.isRequired
+        active            : React.PropTypes.bool
+        inConversation    : React.PropTypes.bool
         key               : React.PropTypes.number.isRequired
+        mailboxes         : React.PropTypes.object.isRequired
+        message           : React.PropTypes.object.isRequired
+        nextID            : React.PropTypes.string
+        prevID            : React.PropTypes.string
         selectedAccount   : React.PropTypes.object.isRequired
         selectedMailboxID : React.PropTypes.string.isRequired
-        mailboxes         : React.PropTypes.object.isRequired
         settings          : React.PropTypes.object.isRequired
-        accounts          : React.PropTypes.object.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
         if not (Immutable.is(nextState, @state))
@@ -258,7 +262,8 @@ module.exports = React.createClass
                 if hasAttachments
                     div className: 'col-md-4',
                         attachments
-                toggleActive
+                if @props.inConversation
+                    toggleActive
         else
             div className: classes, onClick: @toggleHeaders,
                 if avatar
@@ -271,7 +276,8 @@ module.exports = React.createClass
                 span className: "flags",
                     i className: 'attach fa fa-paperclip'
                     i className: 'fav fa fa-star'
-                toggleActive
+                if @props.inConversation
+                    toggleActive
 
 
     renderAddress: (field) ->
@@ -345,14 +351,65 @@ module.exports = React.createClass
                                 span
                                     className: 'tool-long',
                                     t 'mail action delete'
+                    #div className: 'btn-group btn-group-sm',
+                    #    button
+                    #        className: 'btn btn-default dropdown-toggle flags',
+                    #        type: 'button',
+                    #        'data-toggle': 'dropdown',
+                    #        t 'mail action mark',
+                    #            span className: 'caret'
+                    #    ul className: 'dropdown-menu', role: 'menu',
+                    #        if isSeen
+                    #            li null,
+                    #                a
+                    #                    role: 'menuitem',
+                    #                    onClick: @onMark,
+                    #                    'data-value': FlagsConstants.SEEN,
+                    #                    t 'mail mark read'
+                    #        else
+                    #            li null,
+                    #                a role: 'menuitem',
+                    #                onClick: @onMark,
+                    #                'data-value': FlagsConstants.UNSEEN,
+                    #                t 'mail mark unread'
+                    #        if isFlagged
+                    #            li null,
+                    #                a
+                    #                    role: 'menuitem',
+                    #                    onClick: @onMark,
+                    #                    'data-value': FlagsConstants.FLAGGED,
+                    #                    t 'mail mark fav'
+                    #        else
+                    #            li null,
+                    #                a
+                    #                    role: 'menuitem',
+                    #                    onClick: @onMark,
+                    #                    'data-value': FlagsConstants.NOFLAG,
+                    #                    t 'mail mark nofav'
                     div className: 'btn-group btn-group-sm',
                         button
-                            className: 'btn btn-default dropdown-toggle flags',
+                            className: 'btn btn-default dropdown-toggle move',
                             type: 'button',
                             'data-toggle': 'dropdown',
-                            t 'mail action mark',
+                            t 'mail action move',
                                 span className: 'caret'
-                        ul className: 'dropdown-menu', role: 'menu',
+                        ul
+                            className: 'dropdown-menu dropdown-menu-right',
+                            role: 'menu',
+                                @props.mailboxes.map (mailbox, key) =>
+                                    @renderMailboxes mailbox, key
+                                .toJS()
+                    div className: 'btn-group btn-group-sm',
+                        button
+                            className: 'btn btn-default dropdown-toggle more',
+                            type: 'button',
+                            'data-toggle': 'dropdown',
+                            t 'mail action more',
+                                span className: 'caret'
+                        ul className: 'dropdown-menu dropdown-menu-right', role: 'menu',
+                            li
+                                role: 'presentation',
+                                t 'mail action mark'
                             if isSeen
                                 li null,
                                     a
@@ -380,25 +437,7 @@ module.exports = React.createClass
                                         onClick: @onMark,
                                         'data-value': FlagsConstants.NOFLAG,
                                         t 'mail mark nofav'
-                    div className: 'btn-group btn-group-sm',
-                        button
-                            className: 'btn btn-default dropdown-toggle move',
-                            type: 'button',
-                            'data-toggle': 'dropdown',
-                            t 'mail action move',
-                                span className: 'caret'
-                        ul className: 'dropdown-menu', role: 'menu',
-                            @props.mailboxes.map (mailbox, key) =>
-                                @renderMailboxes mailbox, key
-                            .toJS()
-                    div className: 'btn-group btn-group-sm',
-                        button
-                            className: 'btn btn-default dropdown-toggle more',
-                            type: 'button',
-                            'data-toggle': 'dropdown',
-                            t 'mail action more',
-                                span className: 'caret'
-                        ul className: 'dropdown-menu', role: 'menu',
+                            li role: 'presentation', className: 'divider'
                             li role: 'presentation',
                                 a
                                     onClick: @onHeaders,
