@@ -55,7 +55,7 @@ module.exports.edit = (req, res, next) ->
 
     req.account.updateAttributesPromised changes
     .then (account) -> account.toObjectWithMailbox()
-    .then (account) -> res.send 200, req.account
+    .then (account) -> res.send 200, account
     .catch next
 
 # delete an account
