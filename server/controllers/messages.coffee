@@ -17,8 +17,18 @@ htmlToTextOptions =
 
 formatMessage = (message) ->
     if message.html?
-        message.html = sanitizer.sanitize message.html, (value) ->
-            value.toString()
+        message.html = sanitizer.sanitize message.html, (url) ->
+            if 0 is url.indexOf 'cid://'
+                cid = url.substring 6
+                attachment = message.attachments.filter (att) ->
+                    att.contentId is cid
+
+                if name = attachment?[0].name
+                    return "/message/#{message.id}/attachments/#{name}"
+                else
+                    return null
+
+            else return url
 
     if not message.text?
         message.text = htmlToText.fromString message.html, htmlToTextOptions
@@ -158,7 +168,7 @@ module.exports.send = (req, res, next) ->
 
     # find the account and draftBox
     pAccount = pMessage.then (message) ->
-    Account.findPromised message.accountID
+        Account.findPromised message.accountID
     .throwIfNull -> new NotFound "Account #{message.accountID}"
 
     Promise.join pAccount, pMessage, pFiles, (account, message, files) ->
@@ -189,7 +199,7 @@ module.exports.send = (req, res, next) ->
             if message.isDraft
                 if draftBox then Promise.resolve draftBox
                 else Mailbox.findPromised account.draftMailbox
-        else
+            else
                 Mailbox.findPromised account.sentBox
         .throwIfNull ->
             new NotFound "Acount #{message.accountID} sent or draft box"
@@ -227,16 +237,16 @@ module.exports.send = (req, res, next) ->
             message.attachments = message.attachments_backup
             message.text = message.content
             delete message.attachments_backup
-        message.mailboxIDs = {}
-        message.mailboxIDs[dest.id] = uidInDest
-        message.date = new Date().toISOString()
+            message.mailboxIDs = {}
+            message.mailboxIDs[dest.id] = uidInDest
+            message.date = new Date().toISOString()
 
-        if message.id
-            Message.findPromised message.id
+            if message.id
+                Message.findPromised message.id
                 .then (jdbMessage) ->
                     jdbMessage.updateAttributesPromised message
-        else
-            Message.createPromised message
+            else
+                Message.createPromised message
 
         # attach new binaries
         .tap (jdbMessage) ->
