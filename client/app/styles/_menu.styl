@@ -35,9 +35,9 @@
         display inline-block // used for non flexed elements (within .account-list)
         position relative // for badge positionning
         width 100%
-        padding 10px 5px
+        padding .75em .25em
         margin 0
-        font-size 14px
+        font-size 1em
         font-family styled
         color mediumcolor
         text-align center
@@ -51,7 +51,7 @@
 
         // icon
         i
-            font-size 25px
+            font-size 1.25em
 
         .item-label
             display block
@@ -61,11 +61,11 @@
 
         .badge
             position absolute
-            top 10px // equal to parent's padding-top
-            right 5px // equal to parent's padding-right
+            top .75em // equal to parent's padding-top
+            right .25em // equal to parent's padding-right
             background basecolor
-            font-size 9px
-            margin-left 5px
+            font-size .75em
+            margin-left .25em
             font-family Geneva // Cozy's fonts are not readable
 
         &:hover
@@ -83,15 +83,15 @@
 
                 // submenu icons
                 .menu-item i
-                  font-size 20px
+                  font-size 1.25em
 
-            border-left 5px solid transparent
+            border-left .25em solid transparent
 
             &:hover
-                border-left 5px solid #363a46 + 10%
+                border-left .25em solid #363a46 + 10%
 
             &.active
-                border-left 5px solid mediumcolor-contrast - 30%
+                border-left .25em solid mediumcolor-contrast - 30%
                 .menu-item
                     color #fff
 
@@ -100,7 +100,7 @@
 
     // New account action button
     .new-account-action
-        font-size 15px
+        font-size 1em
         opacity 0.5
 
         &:hover
