@@ -2,9 +2,10 @@ require = patchRequire global.require
 init = require("../common").init
 files = [
     {
-        name: "file1.txt"
-        size: 1234
-        type: "text/plain"
+        fileName: "file1.txt"
+        generatedFileName: "file1.txt"
+        length: 1234
+        contentType: "text/plain"
     }
 ]
 casper.test.begin 'Test file picker', 9, (test) ->
@@ -29,8 +30,11 @@ casper.test.begin 'Test file picker', 9, (test) ->
 
     casper.then ->
         casper.evaluate (files) ->
+            files = files.map (file) ->
+                Immutable.Map file
+            files = Immutable.Vector.from files
             window.__tests.rendered = false
-            window.__tests.fp.setProps({editable: false, value: files}, -> window.__tests.rendered = true)
+            window.__tests.fp.setProps({editable: false, value: Immutable.Map(files).toVector()}, -> window.__tests.rendered = true)
         , {files: files}
         casper.waitFor ->
             return casper.evaluate -> return window.__tests.rendered

@@ -165,9 +165,9 @@ FileItem = React.createClass
 
     propTypes:
         file: React.PropTypes.shape({
-            name: React.PropTypes.string
-            type: React.PropTypes.string
-            size: React.PropTypes.number
+            fileName: React.PropTypes.string
+            contentType: React.PropTypes.string
+            length: React.PropTypes.number
         }).isRequired
         editable: React.PropTypes.bool
         display:  React.PropTypes.func
@@ -183,7 +183,7 @@ FileItem = React.createClass
 
     render: ->
         file = @props.file
-        type = MessageUtils.getAttachmentType file.type
+        type = MessageUtils.getAttachmentType file.contentType
         icons =
             'archive'      : 'fa-file-archive-o'
             'audio'        : 'fa-file-audio-o'
