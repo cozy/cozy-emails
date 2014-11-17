@@ -145,12 +145,12 @@ module.exports = Compose = React.createClass
                         textarea
                             className: 'editor',
                             ref: 'content',
-                            defaultValue: @linkState('body').value
+                            defaultValue: @linkState('text').value
 
-                div className: 'attachements', FilePicker
-                    editable: true
-                    form: false
-                    valueLink: @linkState 'attachments'
+                div className: 'attachements',
+                    FilePicker
+                        editable: true
+                        valueLink: @linkState 'attachments'
 
                 div className: 'composeToolbox',
                     div className: 'btn-toolbar', role: 'toolbar',
@@ -291,6 +291,8 @@ module.exports = Compose = React.createClass
 
             # TODO : smarter ?
             state[key] = value for key, value of message.toJS()
+            # we want the immutable attachments
+            state.attachments = message.get 'attachments'
 
         # new draft
         else
@@ -298,9 +300,12 @@ module.exports = Compose = React.createClass
                 @props.settings.get 'composeInHTML'
             state.accountID ?= @props.selectedAccount.get 'id'
 
-        state.attachments ?= []
-
         return state
+
+    componentWillReceiveProps: (nextProps) ->
+        if nextProps.message isnt @props.message
+            @props.message = nextProps.message
+            @setState @getInitialState()
 
     onDraft: (args) ->
         @_doSend true
@@ -320,6 +325,7 @@ module.exports = Compose = React.createClass
             from.address += '@' + account.get('imapServer')
 
         message =
+            id          : @state.id
             accountID   : @state.accountID
             from        : [from]
             to          : @state.to
@@ -334,9 +340,9 @@ module.exports = Compose = React.createClass
 
         if @state.composeInHTML
             message.html    = this.refs.html.getDOMNode().innerHTML
-            message.content = toMarkdown(message.html)
+            message.text = toMarkdown(message.html)
         else
-            message.content = this.refs.content.getDOMNode().value.trim()
+            message.text = this.refs.content.getDOMNode().value.trim()
 
         callback = @props.callback
 
@@ -362,7 +368,7 @@ module.exports = Compose = React.createClass
 
     onDelete: (args) ->
         if window.confirm(t 'mail confirm delete')
-            MessageActionCreator.delete @props.message, @props.selectedAccount, (error) =>
+            MessageActionCreator.delete @props.message, (error) =>
                 if error?
                     LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
                 else

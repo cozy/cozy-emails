@@ -37,6 +37,7 @@ module.exports = MessageUtils =
     makeReplyMessage: (inReplyTo, action, inHTML) ->
         message =
             composeInHTML: inHTML
+            attachments: Immutable.Vector.empty()
 
         if inReplyTo
             message.accountID = inReplyTo.get 'accountID'
@@ -62,7 +63,7 @@ module.exports = MessageUtils =
                 message.cc = []
                 message.bcc = []
                 message.subject = "#{t 'compose reply prefix'}#{inReplyTo.get 'subject'}"
-                message.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
+                message.text = t('compose reply separator', {date: dateHuman, sender: sender}) +
                     @generateReplyText(text) + "\n"
                 message.html = """
                     <p><br /></p>
@@ -74,7 +75,7 @@ module.exports = MessageUtils =
                 message.cc = [].concat inReplyTo.get('to'), inReplyTo.get('cc')
                 message.bcc = []
                 message.subject = "#{t 'compose reply prefix'}#{inReplyTo.get 'subject'}"
-                message.body = t('compose reply separator', {date: dateHuman, sender: sender}) +
+                message.text = t('compose reply separator', {date: dateHuman, sender: sender}) +
                     @generateReplyText(text) + "\n"
                 message.html = """
                     <p><br /></p>
@@ -86,19 +87,18 @@ module.exports = MessageUtils =
                 message.cc = []
                 message.bcc = []
                 message.subject = "#{t 'compose forward prefix'}#{inReplyTo.get 'subject'}"
-                message.body = t('compose forward separator', {date: dateHuman, sender: sender}) + text
+                message.text = t('compose forward separator', {date: dateHuman, sender: sender}) + text
                 message.html = "<p>#{t('compose forward separator', {date: dateHuman, sender: sender})}</p>" + html
 
                 # Add original message attachments
-                attachments = inReplyTo.get 'attachments' or []
-                message.attachments = attachments.map @convertAttachments
+                message.attachments = inReplyTo.get 'attachments'
 
             when null
                 message.to      = []
                 message.cc      = []
                 message.bcc     = []
                 message.subject = ''
-                message.body    = t 'compose default'
+                message.text    = t 'compose default'
 
         return message
 
@@ -135,20 +135,6 @@ module.exports = MessageUtils =
 
                     when "pdf" then return sub[1]
                     when "gzip", "zip" then return 'archive'
-
-    # convert attachment to the format needed by the file picker
-    convertAttachments: (file) ->
-        name = file.generatedFileName
-        return {
-            name:               name
-            size:               file.length
-            type:               file.contentType
-            originalName:       file.fileName
-            contentDisposition: file.contentDisposition
-            contentId:          file.contentId
-            transferEncoding:   file.transferEncoding
-            url: "/message/#{file.messageId}/attachments/#{name}"
-        }
 
     formatDate: (date) ->
         if not date?

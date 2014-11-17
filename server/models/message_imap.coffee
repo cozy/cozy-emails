@@ -21,7 +21,7 @@ Message::imap_applyChanges = (flagsOps, boxOps) ->
     .then ->
         # ERROR CASES
         for boxid in boxOps.addTo when not boxIndex[boxid]
-            throw new Error "the box ID=#{box} doesn't exists"
+            throw new Error "the box ID=#{boxid} doesn't exists"
 
     .then => @doASAP (imap) =>
 

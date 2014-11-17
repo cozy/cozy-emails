@@ -97,7 +97,7 @@ MessageList = React.createClass
                 span className: 'participants', @getParticipants message
                 div className: 'preview',
                     span className: 'title', message.get 'subject'
-                    p null, message.get('text').substr(0, 100) + "…"
+                    p null, message.get('text')?.substr(0, 100) + "…"
                 span className: 'hour', date
                 span className: "flags",
                     i className: 'attach fa fa-paperclip'

@@ -86,10 +86,20 @@ module.exports =
                 callback t('app error')
 
     messageSend: (message, callback) ->
-        request.post "/message"
-        .send message
+        req = request.post "/message"
         .set 'Accept', 'application/json'
-        .end (res) ->
+
+        files = {}
+        message.attachments = message.attachments.map (file) ->
+            files[file.get('generatedFileName')] = file.get 'rawFileObject'
+            return file.remove 'rawFileObject'
+        .toJS()
+
+        req.field 'body', JSON.stringify message
+        for name, blob of files
+            req.attach name, blob
+
+        req.end (res) ->
             if res.ok
                 callback null, res.body
             else

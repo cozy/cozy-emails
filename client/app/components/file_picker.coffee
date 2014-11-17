@@ -2,6 +2,20 @@
 
 MessageUtils = require '../utils/message_utils'
 
+
+# file picker file format = mailparser result
+FileShape = React.PropTypes.shape
+    fileName           : React.PropTypes.string
+    length             : React.PropTypes.number
+    contentType        : React.PropTypes.string
+    generatedFileName  : React.PropTypes.string
+    contentDisposition : React.PropTypes.string
+    contentId          : React.PropTypes.string
+    transferEncoding   : React.PropTypes.string
+    # one or the other
+    rawFileObject      : React.PropTypes.object
+    url                : React.PropTypes.string
+
 ###
 # File picker
 #
@@ -17,52 +31,55 @@ FilePicker = React.createClass
 
     propTypes:
         editable: React.PropTypes.bool
-        form:     React.PropTypes.bool
         display:  React.PropTypes.func
-        value:    React.PropTypes.array
+        value:    React.PropTypes.instanceOf Immutable.Vector
         valueLink: React.PropTypes.shape
-            value: React.PropTypes.array
+            value: React.PropTypes.instanceOf Immutable.Vector
             requestChange: React.PropTypes.func
+
 
     getDefaultProps: ->
         editable: false
-        form: true
-        value: []
         valueLink:
-            value: []
+            value: Immutable.Vector.empty()
             requestChange: ->
 
     getInitialState: ->
-        files: @_convertFileList @props.value or @props.valueLink.value
+        files: @props.value or @props.valueLink.value
 
     componentWillReceiveProps: (props) ->
-        files = @_convertFileList props.value or props.valueLink.value
-        @setState files: files
+        @setState files: props.value or props.valueLink.value
+
+    addFiles: (files) ->
+        files = @state.files.concat(files).toVector()
+
+        @props.valueLink.requestChange files
+
+    deleteFile: (file) ->
+        files = @state.files.filter (f) ->
+            f.get('generatedFileName') isnt file.generatedFileName
+        .toVector()
+
+        @props.valueLink.requestChange files
+
+    displayFile: (file) ->
+        if file.url
+            window.open file.url
+        else if file.rawFileObject
+            window.open URL.createObjectURL file.rawFileObject
+        else console.log "broken file : ", file
 
     render: ->
-        files = @state.files.map (file) =>
-            doDelete = =>
-                updated = @state.files.filter (f) ->
-                    return f.name isnt file.name
-                @props.valueLink.requestChange updated
-                @setState {files: updated }
-            options =
-                key: file.name
-                file: file
-                editable: @props.editable
-                delete: doDelete
-
-            if @props.display?
-                options.display = =>
-                    @props.display file
-
-            FileItem options
-
-        container = if @props.form then form else div
-
-        container className: 'file-picker',
+        div className: 'file-picker',
             ul className: 'files list-unstyled',
-                files
+                @state.files.toJS().map (file) =>
+                    FileItem
+                        key: file.generatedFileName
+                        file: file
+                        editable: @props.editable
+                        delete: => @deleteFile file
+                        display: => @displayFile file
+
             if @props.editable
                 div null,
                     # triggering "click" won't work if file input is hidden
@@ -91,48 +108,45 @@ FilePicker = React.createClass
     handleFiles: (e) ->
         e.preventDefault()
         files = e.target.files or e.dataTransfer.files
-        currentFiles = @state.files
-        parsed = 0
+        @addFiles (@_fromDOM file for file in files)
 
-        # convert file content to data url to store it later in local storage
-        handle = (file) =>
-            reader = new FileReader()
-            reader.readAsDataURL(file)
-            reader.onloadend = (e) =>
-                txt = e.target.result
-                file.content = txt
-                currentFiles.push file
-                parsed++
-                if parsed is files.length
-                    @props.valueLink.requestChange currentFiles
-                    @setState {files: currentFiles }
-
-        handle file for file in @_convertFileList files
-
-
-    #
-    # "private" methods
-    #
-    _convertFileList: (files) ->
-        convert = (file) =>
-            if File.prototype.isPrototypeOf(file)
-                @_fromDOM file
-            return file
-
-        Array.prototype.map.call files, convert
-
+    # convert from DOM Files to file picker format
     _fromDOM: (file) ->
-        return {
-            name:               file.name
-            size:               file.size
-            type:               file.type
-            originalName:       null
+        idx = @state.files.filter (f) -> f.get('fileName') is file.name
+            .count()
+        name = file.name
+        if idx > 0
+            dotpos = file.name.indexOf '.'
+            name = name.substring(0, dotpos) + '-' + (idx + 1) +
+                name.substring(dotpos)
+
+        console.log file.name, idx, name
+
+        return Immutable.Map
+            fileName:           file.name
+            length:             file.size
+            contentType:        file.type
+            rawFileObject:      file
+            generatedFileName:  name
             contentDisposition: null
             contentId:          null
             transferEncoding:   null
             content:            null
             url:                null
-        }
+
+
+            # reader = new FileReader()
+            # reader.readAsDataURL(file)
+            # reader.onloadend = (e) =>
+            #     txt = e.target.result
+            #     file.content = txt
+            #     currentFiles.push file
+            #     parsed++
+            #     if parsed is files.length
+            #         @props.valueLink.requestChange currentFiles
+            #         @setState {files: currentFiles }
+
+
 
 
 module.exports = FilePicker
@@ -184,25 +198,20 @@ FileItem = React.createClass
             'word'         : 'fa-file-word-o'
         iconClass = icons[type] or 'fa-file-o'
 
-        if @props.display?
-            name = a
-                className: 'file-name',
-                target: '_blank',
-                onClick: @doDisplay,
-                href: file.url
-                file.name
-        else
-            name = span className: 'file-name', file.name
-
         li className: "file-item", key: file.name,
             i className: "mime #{type} fa #{iconClass}"
             if @props.editable
                 i className: "fa fa-times delete", onClick: @doDelete
-            name
+            a
+                className: 'file-name',
+                target: '_blank',
+                onClick: @doDisplay,
+                # href: file.url
+                file.generatedFileName
+
             div className: 'file-detail',
-                span
-                    'data-file-url': file.url,
-                    "#{(file.size / 1000).toFixed(2)}Ko"
+                span null,
+                    "#{(file.length / 1000).toFixed(2)}Ko"
 
     doDisplay: (e) ->
         e.preventDefault()

@@ -67,16 +67,16 @@ class MessageStore extends Store
         handle ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage = \
         (message, silent = false) ->
             # create or update
-            message.hasAttachments = Array.isArray(message.attachments) and \
-                                     message.attachments.length > 0
-            if not message.createdAt?
-                message.createdAt = message.date
             if not message.attachments?
                 message.attachments = []
+            if not message.createdAt?
+                message.createdAt = message.date
             # Add messageId to every attachment
+
+            message.hasAttachments = message.attachments.length > 0
             message.attachments = message.attachments.map (file) ->
-                file.messageId = message.id
-                return file
+                Immutable.Map file
+            message.attachments = Immutable.Vector.from message.attachments
 
             if not message.flags?
                 message.flags = []

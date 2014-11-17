@@ -80,7 +80,7 @@ module.exports = React.createClass
 
         return {
             id         : message.get('id')
-            attachments: message.get('attachments') or []
+            attachments: message.get('attachments')
             flags      : message.get('flags') or []
             from       : message.get('from')
             to         : message.get('to')
@@ -217,13 +217,6 @@ module.exports = React.createClass
         hasAttachments = prepared.attachments.length
         leftClass = if hasAttachments then 'col-md-8' else 'col-md-12'
         flags     = prepared.flags
-        # display attachment
-        display = (file) ->
-            window.open "/message/#{prepared.id}/attachments/#{file.name}"
-        attachments = FilePicker
-            editable: false
-            value: prepared.attachments.map(MessageUtils.convertAttachments)
-            display: display
         avatar = MessageUtils.getAvatar @props.message
         classes = classer
             'header': true
@@ -261,7 +254,9 @@ module.exports = React.createClass
                         span className: 'hour', prepared.date
                 if hasAttachments
                     div className: 'col-md-4',
-                        attachments
+                        FilePicker
+                            editable: false
+                            value: prepared.attachments
                 if @props.inConversation
                     toggleActive
         else

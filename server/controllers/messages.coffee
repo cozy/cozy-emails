@@ -3,6 +3,7 @@ Account     = require '../models/account'
 Mailbox     = require '../models/mailbox'
 {NotFound, BadRequest, AccountConfigError} = require '../utils/errors'
 {MSGBYPAGE} = require '../utils/constants'
+promisedForm = require '../utils/promise_form'
 Promise     = require 'bluebird'
 htmlToText  = require 'html-to-text'
 sanitizer   = require 'sanitizer'
@@ -22,7 +23,20 @@ formatMessage = (message) ->
     if not message.text?
         message.text = htmlToText.fromString message.html, htmlToTextOptions
 
+    message.attachments?.forEach (file) ->
+        file.url = "/message/#{message.id}/attachments/#{file.generatedFileName}"
+
     return message
+
+
+formatNodeMailerAttachment = (file, content) ->
+    Promise.resolve content
+    .then (content) ->
+        content            : content
+        filename           : file.fileName
+        cid                : file.contentId
+        contentType        : file.contentType
+        contentDisposition : file.contentDisposition
 
 # list messages from a mailbox
 module.exports.listByMailbox = (req, res, next) ->
@@ -134,69 +148,114 @@ module.exports.patch = (req, res, next) ->
     .then -> res.send 200, formatMessage req.message
     .catch next
 
-# send a message through the DS
+# send a message
 module.exports.send = (req, res, next) ->
 
-    # @TODO : if message was a draft, delete it from Draft folder
-    # @TODO : save draft into DS
-
-    message = req.body
-
-    # convert base64 attachments to buffer
-    message.attachments.map (attachment) ->
-        filename: attachment.filename
-        contents: new Buffer attachment.content.split(",")[1], 'base64'
-
-    # @TODO : save attachments in the DS
+    pForm = promisedForm req
+    pForm.tap -> console.log "Form parsed"
+    pMessage = pForm.get(0).then (fields) -> JSON.parse fields.body
+    pFiles = pForm.get(1)
 
     # find the account and draftBox
+    pAccount = pMessage.then (message) ->
     Account.findPromised message.accountID
     .throwIfNull -> new NotFound "Account #{message.accountID}"
-    .then (account) ->
-        Mailbox.findPromised account.draftMailbox
-        .then (draftBox) -> return [account, draftBox]
 
-    .spread (account, draftBox) ->
-
-        # remove the old version if necessary
-        removeOld = ->
-            uid = message.mailboxIDs?[draftBox?.id]
-            if uid then draftBox?.imap_removeMail uid
-            else Promise.resolve null
+    Promise.join pAccount, pMessage, pFiles, (account, message, files) ->
 
         message.flags = ['\\Seen']
+        message.flags.push '\\Draft' if message.isDraft
 
-        if message.isDraft
-            out = removeOld()
-            .then ->
-                unless draftBox
-                    throw new AccountConfigError('draftMailbox')
-
-                message.flags.push '\\Draft'
-                account.imap_createMail draftBox, message
-
+        # may be send first
+        pSMTPSend = if message.isDraft
+            Promise.resolve(null) # dont send draft
         else
-            # send before deleting draft
-            out = account.sendMessagePromised message
+            account.sendMessagePromised message
             .then (info) -> message.headers['message-id'] = info.messageId
-            .then -> removeOld()
-            .then -> Mailbox.findPromised account.sentMailbox
-            .then (sentBox) ->
-                account.imap_createMail sentBox, message
 
-        return out
 
-    # save the message
-    .spread (dest, uidInDest) ->
+        # then remove the draft (in IMAP)
+        pRemoveOldDraft = pSMTPSend.then ->
+            uid = message.mailboxIDs?[account.draftMailbox]
+            return null unless uid
+
+            Mailbox.findPromised account.draftMailbox
+            .throwIfNull ->
+                new NotFound "Account #{message.accountID} 's draftbox"
+            .tap (draftBox) -> draftBox.imap_removeMail uid
+
+        # find the box to create the message in (draft or sent)
+        pDestinationBox = pRemoveOldDraft.then (draftBox) ->
+            if message.isDraft
+                if draftBox then Promise.resolve draftBox
+                else Mailbox.findPromised account.draftMailbox
+        else
+                Mailbox.findPromised account.sentBox
+        .throwIfNull ->
+            new NotFound "Acount #{message.accountID} sent or draft box"
+
+        # some of the message attachments may already be in the DS
+        # some may be in multipart form
+        pResolveAttachments = pDestinationBox.tap ->
+            message.attachments_backup = message.attachments
+            message.content = message.text
+            Promise.serie message.attachments, (file) ->
+
+                # file in the DS, from a previous save of the draft
+                content = if file.url
+                    # content is a Promise for a Stream
+                    Message.findPromised message.id
+                    .throwIfNull -> new NotFound "Message #{message.id}"
+                    .then (msg) -> msg.getBinaryPromised file.generatedFileName
+
+                # file just uploaded, take the buffer from the multipart req
+                # content is a buffer
+                else
+                    files[file.generatedFileName].content
+
+                return formatNodeMailerAttachment file, content
+
+            .then (formatedAttachments) ->
+                message.attachments = formatedAttachments
+
+        # create the message on IMAP server
+        pImapCreated = pResolveAttachments.then (box) ->
+            account.imap_createMail box, message
+
+        # save the message in cozy
+        pCozyCreatedOrUpdated = pImapCreated.spread (dest, uidInDest) ->
+            message.attachments = message.attachments_backup
+            message.text = message.content
+            delete message.attachments_backup
         message.mailboxIDs = {}
         message.mailboxIDs[dest.id] = uidInDest
         message.date = new Date().toISOString()
 
         if message.id
             Message.findPromised message.id
-            .then (jdbMessage) -> jdbMessage.updateAttributesPromised message
+                .then (jdbMessage) ->
+                    jdbMessage.updateAttributesPromised message
         else
             Message.createPromised message
+
+        # attach new binaries
+        .tap (jdbMessage) ->
+            Promise.serie Object.keys(files), (name) ->
+                buffer = files[name].content
+                buffer.path = encodeURI name
+                jdbMessage.attachBinaryPromised buffer, name: name
+
+        # remove old binaries
+        .tap (jdbMessage) ->
+            jdbMessage.binary ?= {}
+            remainingAttachments = jdbMessage.attachments.map (file) ->
+                file.generatedFileName
+
+            Promise.serie Object.keys(jdbMessage.binary), (name) ->
+                unless name in remainingAttachments
+                    jdbMessage.removeBinaryPromised name
+
+
 
     .then (msg) -> res.send 200, msg
     .catch next
