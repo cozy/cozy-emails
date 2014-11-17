@@ -18,6 +18,7 @@ htmlToTextOptions =
 formatMessage = (message) ->
     if message.html?
         message.html = sanitizer.sanitize message.html, (url) ->
+            url = url.toString()
             if 0 is url.indexOf 'cid://'
                 cid = url.substring 6
                 attachment = message.attachments.filter (att) ->
@@ -28,7 +29,7 @@ formatMessage = (message) ->
                 else
                     return null
 
-            else return url
+            else return url.toString()
 
     if not message.text?
         message.text = htmlToText.fromString message.html, htmlToTextOptions
