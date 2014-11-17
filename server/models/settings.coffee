@@ -8,6 +8,7 @@ module.exports = Settings = americano.getModel 'MailsSettings',
     composeInHTML: Boolean
     messageDisplayHTML: Boolean
     messageDisplayImages: Boolean
+    messageConfirmDelete: Boolean
     lang: String
     plugins: (x) -> x
 
@@ -22,6 +23,7 @@ Settings.getInstance = ->
             composeInHTML: true
             messageDisplayHTML: true
             messageDisplayImages: false
+            messageConfirmDelete: true
             lang: 'en'
             refreshInterval: 5
             plugins: null

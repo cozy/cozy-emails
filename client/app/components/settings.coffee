@@ -85,6 +85,7 @@ module.exports = React.createClass
             @_renderOption 'composeInHTML'
             @_renderOption 'messageDisplayHTML'
             @_renderOption 'messageDisplayImages'
+            @_renderOption 'messageConfirmDelete'
 
             fieldset null,
                 legend null, t 'settings plugins'
@@ -134,6 +135,7 @@ module.exports = React.createClass
             ,    'displayConversation'
             ,    'messageDisplayHTML'
             ,    'messageDisplayImages'
+            ,    'messageConfirmDelete'
                 settings = @state.settings
                 settings[target.dataset.target] = target.checked
                 @setState({settings: settings})

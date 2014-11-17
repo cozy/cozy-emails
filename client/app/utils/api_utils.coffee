@@ -77,13 +77,15 @@ module.exports =
     messageDeleteCurrent: ->
         if not onMessageList()
             return
+        SettingsStore = require '../stores/settings_store'
         MessageActionCreator = require '../actions/message_action_creator'
         alertError   = LayoutActionCreator.alertError
         alertSuccess = LayoutActionCreator.alertSuccess
         message = MessageStore.getByID MessageStore.getCurrentID()
         if not message?
             return
-        if window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
+        if (not SettingsStore.get('messageConfirmDelete')) or
+        window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
             nextID = MessageStore.getNextMessage()
             MessageActionCreator.delete message, (error) =>
                 if error?
