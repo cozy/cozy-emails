@@ -20,7 +20,7 @@ helpers.getImapServerRawConnection = ->
         tlsOptions: rejectUnauthorized: false
 
 helpers.startApp = (host, port) -> (done) ->
-    @timeout 10000
+    @timeout 20000
     americano = require 'americano'
 
     americano.start name: 'template', host: host, port: port, (app, server) =>

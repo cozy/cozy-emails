@@ -75,7 +75,7 @@ describe 'Message actions', ->
             subject     : 'Wanted : dragon slayer'
             content     : 'Hi, I am a recruiter and ...'
 
-        client.post "/message", draft, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
             res.statusCode.should.equal 200
             body.should.have.property 'id'
             body.should.have.property 'mailboxIDs'
@@ -84,6 +84,9 @@ describe 'Message actions', ->
             store.draftStatus = body
             store.draftID = body.id
             done()
+
+        form = req.form()
+        form.append 'body', JSON.stringify draft
 
     it "When I create a second Draft", (done) ->
 
@@ -98,7 +101,7 @@ describe 'Message actions', ->
             subject     : 'Wanted : magician'
             content     : 'Hi, I am a recruiter and ...'
 
-        client.post "/message", draft, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
             res.statusCode.should.equal 200
             body.should.have.property 'id'
             body.should.have.property 'mailboxIDs'
@@ -107,13 +110,17 @@ describe 'Message actions', ->
             store.secondDraftID = body.id
             done()
 
+        form = req.form()
+        form.append 'body', JSON.stringify draft
+
     it "When I edit a Draft", (done) ->
 
         store.draftStatus.content = """
             Hi, I am a recruiter and we need you for epic quest'
         """
 
-        client.post "/message", store.draftStatus, (err, res, body) =>
+        req = client.post "/message", store.draftStatus, (err, res, body) =>
+            should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
             body.should.have.property 'mailboxIDs'
@@ -122,12 +129,87 @@ describe 'Message actions', ->
             store.draftStatus = body
             done()
 
+        form = req.form()
+        form.append 'body', JSON.stringify store.draftStatus
+
+    it "When I edit a Draft (add attachments)", (done) ->
+
+        store.draftStatus.attachments.push {
+            fileName:           'README.md'
+            length:             666
+            contentType:        'text/plain'
+            generatedFileName:  'README.md'
+        }
+        store.draftStatus.attachments.push {
+            fileName:           'README.md'
+            length:             666
+            contentType:        'text/plain'
+            generatedFileName:  'README-2.md'
+        }
+
+        req = client.post "/message", store.draftStatus, (err, res, body) =>
+            should.not.exist err
+            res.statusCode.should.equal 200
+            body.should.have.property 'id'
+            body.should.have.property 'mailboxIDs'
+            body.mailboxIDs.should.have.property store.draftBoxID
+            body.mailboxIDs[store.draftBoxID].should.equal 4 # UID
+            store.draftStatus = body
+            done()
+
+        form = req.form()
+        form.append 'body', JSON.stringify store.draftStatus
+        form.append 'README.md', fs.createReadStream __dirname + '../README.md'
+        form.append 'README-2.md', fs.createReadStream __dirname + '../README.md'
+
+    it "When I edit a Draft (add other attachment)", (done) ->
+
+        store.draftStatus.attachments.push {
+            fileName:           'README.md'
+            length:             666
+            contentType:        'text/plain'
+            generatedFileName:  'README-3.md'
+        }
+
+        req = client.post "/message", store.draftStatus, (err, res, body) =>
+            should.not.exist err
+            res.statusCode.should.equal 200
+            body.should.have.property 'id'
+            body.should.have.property 'mailboxIDs'
+            body.mailboxIDs.should.have.property store.draftBoxID
+            body.mailboxIDs[store.draftBoxID].should.equal 5 # UID
+            store.draftStatus = body
+            done()
+
+        form = req.form()
+        form.append 'body', JSON.stringify store.draftStatus
+        form.append 'README-3.md', fs.createReadStream __dirname + '../README.md'
+
+    it "When I edit a Draft (remove first attachment)", (done) ->
+
+        store.draftStatus.attachments = store.draftStatus.attachments.filter (file) ->
+            file.generatedFileName isnt 'README-2.md'
+
+        req = client.post "/message", store.draftStatus, (err, res, body) =>
+            should.not.exist err
+            res.statusCode.should.equal 200
+            body.should.have.property 'id'
+            body.should.have.property 'mailboxIDs'
+            body.mailboxIDs.should.have.property store.draftBoxID
+            body.mailboxIDs[store.draftBoxID].should.equal 6 # UID
+            store.draftStatus = body
+            done()
+
+        form = req.form()
+        form.append 'body', JSON.stringify store.draftStatus
+
 
     it "When I send this Draft", (done) ->
 
         store.draftStatus.isDraft = false
 
         client.post "/message", store.draftStatus, (err, res, body) =>
+            should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id', store.draftID
             body.should.have.property 'mailboxIDs'
