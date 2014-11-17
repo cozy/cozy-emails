@@ -202,8 +202,11 @@ module.exports =
                 console.log "Error in search", res.body?.error
                 callback res.body, null
 
-    refresh: (callback) ->
-        request.get "refresh"
+    refresh: (hard, callback) ->
+        url = if hard then "refresh?all=true"
+        else "refresh"
+
+        request.get url
         .end (res) ->
             callback(res.text)
 

@@ -48,7 +48,14 @@ module.exports.loadFixtures = (req, res, next) ->
             res.send 200, message: 'LOAD FIXTURES SUCCESS'
 
 module.exports.refresh = (req, res, next) ->
-    Account.refreshAllAccounts()
+    if req.query?.all
+        limit = undefined
+        onlyFavorites = false
+    else
+        limit = 1000
+        onlyFavorites = true
+
+    Account.refreshAllAccounts(limit, onlyFavorites)
     .then -> res.send 200, refresh: 'done'
     .catch next
 

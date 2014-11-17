@@ -36,12 +36,15 @@ Account::imap_getBoxes = ->
 # limitByBox - the maximum {Number} of message to fetch at once for each box
 #
 # Returns a {Promise} for task completion
-Account::imap_fetchMails = (limitByBox) ->
+Account::imap_fetchMails = (limitByBox, onlyFavorites = false) ->
     reporter = null
     Mailbox.getBoxes @id
     .tap (boxes) =>
         log.info "FETCHING ACCOUNT ", @label, ":", boxes.length, "BOXES"
         reporter = ImapReporter.accountFetch this, boxes.length
+
+    .filter (box) =>
+        box.id in @favorites or not onlyFavorites
     .serie (box) ->
         box.imap_fetchMails limitByBox
         .catch (err) -> reporter.onError err
