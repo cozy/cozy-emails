@@ -621,13 +621,16 @@ module.exports = React.createClass
         alertError   = LayoutActionCreator.alertError
         alertSuccess = LayoutActionCreator.alertSuccess
         message      = @props.message
+        if @props.nextID?
+            next = @props.nextID
+        else next = @props.prevID
         if window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
             MessageActionCreator.delete message, (error) =>
                 if error?
                     alertError "#{t("message action delete ko")} #{error}"
                 else
                     alertSuccess t "message action delete ok"
-                    @displayNextMessage()
+                    @displayNextMessage next
 
     onCopy: (args) ->
         LayoutActionCreator.alertWarning t "app unimplemented"
@@ -636,6 +639,9 @@ module.exports = React.createClass
         newbox = args.target.dataset.value
         alertError   = LayoutActionCreator.alertError
         alertSuccess = LayoutActionCreator.alertSuccess
+        if @props.nextID?
+            next = @props.nextID
+        else next = @props.prevID
         if args.target.dataset.conversation?
             conversationID = @props.message.get('conversationID')
             ConversationActionCreator.move conversationID, newbox, (error) =>
@@ -643,7 +649,7 @@ module.exports = React.createClass
                     alertError "#{t("conversation move ko")} #{error}"
                 else
                     alertSuccess t "conversation move ok"
-                    @displayNextMessage()
+                    @displayNextMessage next
         else
             oldbox = @props.selectedMailboxID
             MessageActionCreator.move @props.message, oldbox, newbox, (error) =>
@@ -651,7 +657,7 @@ module.exports = React.createClass
                     alertError "#{t("message action move ko")} #{error}"
                 else
                     alertSuccess t "message action move ok"
-                    @displayNextMessage()
+                    @displayNextMessage next
 
     onMark: (args) ->
         flags = @props.message.get('flags').slice()
