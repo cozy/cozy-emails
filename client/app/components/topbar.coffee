@@ -27,6 +27,9 @@ module.exports = Topbar = React.createClass
         event.preventDefault()
         LayoutActionCreator.refreshMessages()
 
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
     render: ->
 
         {layout, selectedAccount, selectedMailboxID, mailboxes, searchQuery} = @props

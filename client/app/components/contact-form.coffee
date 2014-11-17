@@ -23,6 +23,9 @@ module.exports = React.createClass
     componentWillMount: ->
         @setState contacts: null
 
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
     render: ->
         listClass = if @state.contacts?.length > 0 then 'open' else ''
 

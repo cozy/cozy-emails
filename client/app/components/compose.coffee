@@ -32,6 +32,9 @@ module.exports = Compose = React.createClass
         callback:        React.PropTypes.func
         settings:        React.PropTypes.object.isRequired
 
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
     render: ->
 
         return unless @props.accounts

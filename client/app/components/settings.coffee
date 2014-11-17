@@ -12,6 +12,9 @@ module.exports = React.createClass
         React.addons.LinkedStateMixin # two-way data binding
     ]
 
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
     render: ->
 
         classLabel = 'col-sm-2 col-sm-offset-2 control-label'

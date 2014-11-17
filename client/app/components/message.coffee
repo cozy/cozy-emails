@@ -49,13 +49,7 @@ module.exports = React.createClass
         settings          : React.PropTypes.object.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        if not (Immutable.is(nextState, @state))
-            return true
-        else
-            props = Object.keys nextProps
-            different = props.some (key) =>
-                return not (Immutable.is(nextProps[key], @props[key]))
-            return different
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
     _prepareMessage: ->
         message = @props.message

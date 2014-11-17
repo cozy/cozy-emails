@@ -78,23 +78,7 @@ module.exports = React.createClass
                 #type: 'string'
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        if not Immutable.is(nextState, @state)
-            return true
-
-        if not nextProps.selectedAccount?
-            should = nextProps.layout isnt @props.layout or
-                nextProps.error     isnt @props.error or
-                nextProps.isWaiting isnt @props.isWaiting
-        else
-            should = nextProps.layout isnt @props.layout or
-                nextProps.error     isnt @props.error or
-                nextProps.isWaiting isnt @props.isWaiting or
-                not Immutable.is(nextProps.selectedAccount,
-                    @props.selectedAccount) or
-                not Immutable.is(nextProps.mailboxes, @props.mailboxes) or
-                not Immutable.is(nextProps.favoriteMailboxes,
-                    @props.favoriteMailboxes)
-        return should
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
     render: ->
         if @state.id
