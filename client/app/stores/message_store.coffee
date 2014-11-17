@@ -59,35 +59,36 @@ class MessageStore extends Store
 
     initFilters()
 
+    onReceiveRawMessage = (message, silent = false) ->
+        # create or update
+        if not message.attachments?
+            message.attachments = []
+        if not message.createdAt?
+            message.createdAt = message.date
+        # Add messageId to every attachment
+
+        message.hasAttachments = message.attachments.length > 0
+        message.attachments = message.attachments.map (file) ->
+            Immutable.Map file
+        message.attachments = Immutable.Vector.from message.attachments
+
+        if not message.flags?
+            message.flags = []
+
+        # message loaded from fixtures for test purpose have a docType
+        # that may cause some troubles
+        delete message.docType
+        message = Immutable.Map message
+        _messages = _messages.set message.get('id'), message
+
+        @emit 'change' unless silent
+
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage = \
-        (message, silent = false) ->
-            # create or update
-            if not message.attachments?
-                message.attachments = []
-            if not message.createdAt?
-                message.createdAt = message.date
-            # Add messageId to every attachment
-
-            message.hasAttachments = message.attachments.length > 0
-            message.attachments = message.attachments.map (file) ->
-                Immutable.Map file
-            message.attachments = Immutable.Vector.from message.attachments
-
-            if not message.flags?
-                message.flags = []
-
-            # message loaded from fixtures for test purpose have a docType
-            # that may cause some troubles
-            delete message.docType
-            message = Immutable.Map message
-            _messages = _messages.set message.get('id'), message
-
-            @emit 'change' unless silent
+        handle ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
 
@@ -123,24 +124,18 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_SEND, (message) ->
-            # message should have been copied to Sent mailbox,
-            # so it seems reasonable to emit change
             onReceiveRawMessage message, true
-            @emit 'change'
 
         handle ActionTypes.MESSAGE_DELETE, (message) ->
-            # message should have been deleted from current mailbox
-            # and copied to trash
-            # so it seems reasonable to emit change
-            @emit 'change'
+            onReceiveRawMessage message, true
 
         handle ActionTypes.MESSAGE_BOXES, (message) ->
-            @emit 'change'
+            onReceiveRawMessage message, true
 
         handle ActionTypes.MESSAGE_FLAG, (message) ->
-            @emit 'change'
+            onReceiveRawMessage message, true
 
-        handle ActionTypes.SELECT_ACCOUNT, () ->
+        handle ActionTypes.SELECT_ACCOUNT, ->
             initFilters()
 
         handle ActionTypes.LIST_FILTER, (filter) ->
