@@ -50,7 +50,7 @@
   "scripts": {
     "test": "dovecot-testing setup && cake tests",
     "client-test-travis": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
-    "load-fixtures": "coffee tests/fixtures/generator.coffee 1000 && coffee tests/fixtures/loader.coffee && cozy-fixtures clear Account && cozy-fixtures clear Message && cozy-fixtures clear Mailbox && cozy-fixtures load tests/fixtures",
+    "load-fixtures": "coffee tests/fixtures/generator.coffee 1000 && coffee tests/fixtures/loader.coffee && cozy-fixtures load tests/fixtures",
     "client-test": "COZY_URL=http://localhost:9125/ casperjs test client/tests/casper/*/",
     "start": "node build/server.js"
   },
