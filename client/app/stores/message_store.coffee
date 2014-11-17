@@ -50,6 +50,7 @@ class MessageStore extends Store
     _params       = null
     _currentMessages = null
     _currentID       = null
+    _prevAction      = null
 
 
     initFilters = ->
@@ -63,6 +64,8 @@ class MessageStore extends Store
         # create or update
         if not message.attachments?
             message.attachments = []
+        if not message.date?
+            message.date = new Date().toISOString()
         if not message.createdAt?
             message.createdAt = message.date
         # Add messageId to every attachment
@@ -176,6 +179,9 @@ class MessageStore extends Store
                 pageAfter: '-'
                 sort : newOrder + sort.field
 
+        handle ActionTypes.MESSAGE_ACTION, (action) ->
+            _prevAction = action
+
     ###
         Public API
     ###
@@ -287,5 +293,7 @@ class MessageStore extends Store
         return conversation.sort(__getSortFunction 'date', -1)
 
     getParams: -> return _params
+
+    getPrevAction: -> return _prevAction
 
 module.exports = new MessageStore()

@@ -2,7 +2,8 @@ AppDispatcher = require '../app_dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 XHRUtils      = require '../utils/xhr_utils'
 AccountStore  = require "../stores/account_store"
-
+MessageStore  = require '../stores/message_store'
+LayoutActionCreator = require './layout_action_creator'
 
 module.exports =
 
@@ -26,7 +27,6 @@ module.exports =
                 callback error, message
 
     delete: (message, callback) ->
-        LayoutActionCreator  = require './layout_action_creator'
         # Move message to Trash folder
         account = AccountStore.getByID(message.get 'accountID')
         if not account?
@@ -38,6 +38,12 @@ module.exports =
             LayoutActionCreator.alertError t 'message delete no trash'
         else
             msg = message.toJSON()
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_ACTION
+                value:
+                    id: message.get 'id'
+                    from: Object.keys(msg.mailboxIDs)
+                    to: trash
             observer = jsonpatch.observe msg
             delete msg.mailboxIDs[id] for id of msg.mailboxIDs
             msg.mailboxIDs[trash] = -1
@@ -52,6 +58,12 @@ module.exports =
 
     move: (message, from, to, callback) ->
         msg = message.toJSON()
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_ACTION
+            value:
+                id: message.get 'id'
+                from: from
+                to: to
         observer = jsonpatch.observe msg
         delete msg.mailboxIDs[from]
         msg.mailboxIDs[to] = -1
@@ -63,6 +75,14 @@ module.exports =
                     value: message
             if callback?
                 callback error
+
+    undelete: ->
+        action = MessageStore.getPrevAction()
+        if action?
+            message = MessageStore.getByID action.id
+            @move message, action.to, action.from
+        else
+            LayoutActionCreator.alertError t 'message delete no trash'
 
     updateFlag: (message, flags, callback) ->
         msg = message.toJSON()

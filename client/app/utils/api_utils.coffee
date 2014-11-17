@@ -93,3 +93,8 @@ module.exports =
                 else
                     alertSuccess t "message action delete ok"
                     @messageNavigate(null, nextID)
+
+    messageUndo: ->
+        MessageActionCreator = require '../actions/message_action_creator'
+        MessageActionCreator.undelete()
+

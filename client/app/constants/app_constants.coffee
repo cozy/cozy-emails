@@ -21,6 +21,7 @@ module.exports =
         'MESSAGE_DELETE'            : 'MESSAGE_DELETE'
         'MESSAGE_BOXES'             : 'MESSAGE_BOXES'
         'MESSAGE_FLAG'              : 'MESSAGE_FLAG'
+        'MESSAGE_ACTION'            : 'MESSAGE_ACTION'
 
         # Search
         'SET_SEARCH_QUERY'          : 'SET_SEARCH_QUERY'

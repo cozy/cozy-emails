@@ -315,6 +315,9 @@ Message.createFromImapMessage = (mail, box, uid) ->
     mail.to ?= []
     mail.from ?= []
 
+    if not mail.date?
+        mail.date = new Date().toISOString()
+
     # we extract the attachments buffers
     # @TODO : directly create binaries ? (first step for streaming)
     attachments = []

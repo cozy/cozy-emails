@@ -64,6 +64,10 @@ if (typeof window.plugins !== "object") {
         name: "Delete message",
         action: function () {window.cozyMails.messageDeleteCurrent(); }
       },
+     'u': {
+        name: "Undelete message",
+        action: function () {window.cozyMails.messageUndo(); }
+      },
       '?': {
         name: "Toggle display of available bindings",
         action: bindingHelp

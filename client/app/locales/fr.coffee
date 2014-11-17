@@ -165,6 +165,7 @@ module.exports =
       "message images display"      : "Afficher les images"
       "message html display"        : "Afficher en HTML"
       "message delete no trash"     : "Choisissez d'abord un dossier Corbeille"
+      "message undelete error"      : "Impossible d'annuler l'action"
 
       # Settings
       "settings title"             : "Paramètres"
@@ -177,6 +178,8 @@ module.exports =
       "settings label displayConversation"  : "Afficher les conversations"
       "settings label messageDisplayHTML"   : "Afficher les messages en HTML"
       "settings label messageDisplayImages" : "Afficher les images"
+      "settings label messageConfirmDelete" : "Demander confirmation avant
+                                                de supprimer un message"
       "settings lang"             : "Langue"
       "settings lang en"          : "English"
       "settings lang fr"          : "Français"

@@ -160,6 +160,7 @@ module.exports =
       "message images display"      : "Display images"
       "message html display"        : "Display HTML"
       "message delete no trash"     : "Please select a Trash folder"
+      "message undelete error"      : "Undo not available"
 
       # Settings
       "settings title"             : "Settings"
@@ -172,6 +173,7 @@ module.exports =
       "settings label displayConversation"  : "Display conversations"
       "settings label messageDisplayHTML"   : "Display message in HTML"
       "settings label messageDisplayImages" : "Display images inside messages"
+      "settings label messageConfirmDelete" : "Confirm before deleting a message"
       "settings lang"             : "Language"
       "settings lang en"          : "English"
       "settings lang fr"          : "Français"
