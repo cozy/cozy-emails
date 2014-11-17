@@ -37,7 +37,7 @@ module.exports =
         if not trash?
             LayoutActionCreator.alertError t 'message delete no trash'
         else
-            msg = message.toObject()
+            msg = message.toJSON()
             observer = jsonpatch.observe msg
             delete msg.mailboxIDs[id] for id of msg.mailboxIDs
             msg.mailboxIDs[trash] = -1
@@ -51,7 +51,7 @@ module.exports =
                     callback err
 
     move: (message, from, to, callback) ->
-        msg = message.toObject()
+        msg = message.toJSON()
         observer = jsonpatch.observe msg
         delete msg.mailboxIDs[from]
         msg.mailboxIDs[to] = -1
@@ -65,7 +65,7 @@ module.exports =
                 callback error
 
     updateFlag: (message, flags, callback) ->
-        msg = message.toObject()
+        msg = message.toJSON()
         patches = jsonpatch.compare {flags: msg.flags}, {flags}
         XHRUtils.messagePatch message.get('id'), patches, (error, message) ->
             if not error?
