@@ -33,16 +33,17 @@ module.exports =
             reduce: '_count'
             map: (doc) ->
                 for boxid, uid of doc.mailboxIDs
+                    docDate = doc.date or (new Date()).toISOString()
                     emit ['uid', boxid, uid], doc.flags
 
-                    emit ['date', boxid, null, doc.date], null
+                    emit ['date', boxid, null, docDate], null
                     emit ['subject', boxid, null, doc.normSubject], null
 
                     for xflag in ['\\Seen', '\\Flagged', '\\Answered']
 
                         xflag = '!' + xflag if -1 is doc.flags.indexOf(xflag)
 
-                        emit ['date', boxid, xflag, doc.date], null
+                        emit ['date', boxid, xflag, docDate], null
                         emit ['subject', boxid, xflag, doc.normSubject], null
                 undefined # prevent coffeescript comprehension
 
