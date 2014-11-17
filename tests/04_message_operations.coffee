@@ -1,4 +1,6 @@
 should = require 'should'
+log = -> console.log.apply(console, arguments)
+fs = require 'fs'
 
 describe 'Message actions', ->
 
@@ -119,7 +121,8 @@ describe 'Message actions', ->
             Hi, I am a recruiter and we need you for epic quest'
         """
 
-        req = client.post "/message", store.draftStatus, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
+            console.log "FROM TEST", err?.stack
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -147,7 +150,7 @@ describe 'Message actions', ->
             generatedFileName:  'README-2.md'
         }
 
-        req = client.post "/message", store.draftStatus, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -159,8 +162,8 @@ describe 'Message actions', ->
 
         form = req.form()
         form.append 'body', JSON.stringify store.draftStatus
-        form.append 'README.md', fs.createReadStream __dirname + '../README.md'
-        form.append 'README-2.md', fs.createReadStream __dirname + '../README.md'
+        form.append 'README.md', fs.createReadStream __dirname + '/../README.md'
+        form.append 'README-2.md', fs.createReadStream __dirname + '/../README.md'
 
     it "When I edit a Draft (add other attachment)", (done) ->
 
@@ -171,7 +174,7 @@ describe 'Message actions', ->
             generatedFileName:  'README-3.md'
         }
 
-        req = client.post "/message", store.draftStatus, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -183,14 +186,14 @@ describe 'Message actions', ->
 
         form = req.form()
         form.append 'body', JSON.stringify store.draftStatus
-        form.append 'README-3.md', fs.createReadStream __dirname + '../README.md'
+        form.append 'README-3.md', fs.createReadStream __dirname + '/../README.md'
 
     it "When I edit a Draft (remove first attachment)", (done) ->
 
         store.draftStatus.attachments = store.draftStatus.attachments.filter (file) ->
             file.generatedFileName isnt 'README-2.md'
 
-        req = client.post "/message", store.draftStatus, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -208,7 +211,7 @@ describe 'Message actions', ->
 
         store.draftStatus.isDraft = false
 
-        client.post "/message", store.draftStatus, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id', store.draftID
@@ -218,3 +221,6 @@ describe 'Message actions', ->
 
             SMTPTesting.mailStore.should.have.lengthOf 1
             done()
+
+        form = req.form()
+        form.append 'body', JSON.stringify store.draftStatus

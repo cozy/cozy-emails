@@ -14,6 +14,7 @@ module.exports = (request) -> new Promise (resolve, reject) ->
 
     form.on 'part', (part) ->
         stream_to_buffer_array part, (err, bufs) ->
+            return reject err if err
             files[part.name] =
                 filename: part.filename
                 headers: part.headers
@@ -21,6 +22,8 @@ module.exports = (request) -> new Promise (resolve, reject) ->
 
         part.resume()
 
-    form.on 'error', reject
+    form.on 'error', (err) ->
+        console.log "FORM ERR", err
+        reject err
     form.on 'close', => resolve [fields, files]
     form.parse request

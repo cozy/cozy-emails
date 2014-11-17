@@ -9,7 +9,6 @@ module.exports = Mailbox = americano.getModel 'Mailbox',
     tree: (x) -> x           # Normalized path as Array
     delimiter: String        # delimiter between this box and its children
     uidvalidity: Number      # Imap UIDValidity
-    persistentUIDs: Boolean  # Imap persistentUIDs
     attribs: (x) -> x        # [String] Attributes of this folder
 
 Message = require './message'

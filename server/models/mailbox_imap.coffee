@@ -20,6 +20,9 @@ Mailbox::doLaterWithBox = (gen) ->
 
 Mailbox::imap_fetchMails = (limitByBox) ->
     @imap_refreshStep limitByBox
+    .then =>
+        changes = lastSync: new Date().toISOString()
+        @updateAttributesPromised changes
 
 
 Mailbox::imap_refreshStep = (limitByBox, laststep) ->
@@ -52,6 +55,9 @@ Mailbox::imap_refreshStep = (limitByBox, laststep) ->
         ]
 
     .spread (imapUIDs, cozyIds) ->
+        if box.label is 'Messages envoyés'
+            console.log "FOUND IN IMAP", imapUIDs
+            console.log "FOUND IN COZY", cozyIds
         ops =
             toFetch: []
             toRemove: []
@@ -115,6 +121,11 @@ Mailbox::imap_refreshStep = (limitByBox, laststep) ->
             if err instanceof Break then 'done'
             else throw err
     )
+
+Mailbox::imap_UIDByMessageID = (messageID) ->
+    @doLaterWithBox (imap) ->
+        imap.search ['HEADERS', 'MESSAGE-ID', messageID]
+    .then (uids) -> return uid[0]
 
 
 Mailbox::imap_fetchOneMail = (uid) ->
