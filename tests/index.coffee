@@ -69,9 +69,9 @@ describe "Server tests", ->
         delete global.client
 
     # SERVER TESTS
-    # require './00_index'
+    require './00_index'
     require './01_account_creation'
-    # require './02_account_synchro'
+    require './02_account_synchro'
     require './03_mailbox_operations'
     require './04_message_operations'
-    # require './05_mailbox_deletion'
+    require './05_mailbox_deletion'

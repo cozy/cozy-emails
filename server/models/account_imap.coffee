@@ -5,7 +5,6 @@ ImapReporter = require '../processes/imap_reporter'
 Promise = require 'bluebird'
 log = require('../utils/logging')(prefix: 'models:account_imap')
 Compiler    = require 'nodemailer/src/compiler'
-_ = require 'lodash'
 # functions of an account linked to imap
 
 
@@ -31,73 +30,26 @@ Account::doASAP = (gen) ->
 Account::imap_getBoxes = ->
     @doASAP (imap) -> imap.getBoxes()
 
-Account::testIMAPConnection = ->
-    @doASAP (imap) -> Promise.resolve 'OK'
-
-Account::imap_refreshBoxes = ->
-    account = this
-
-    # get cozy & imap boxes and store them in closure
-    Promise.join Mailbox.getBoxes(@id), @imap_getBoxes(),
-    (cozyBoxes, imapBoxes) ->
-        toFetch = []
-        toDestroy = []
-        # find new imap boxes
-        boxToAdd = imapBoxes.filter (box) ->
-            not _.findWhere(cozyBoxes, path: box.path)
-
-        # discrimate cozyBoxes to fetch and to remove
-        for cozyBox in cozyBoxes
-            if _.findWhere(imapBoxes, path: cozyBox.path)
-                toFetch.push cozyBox
-            else
-                toDestroy.push cozyBox
-
-        # create new boxes in cozy
-        Promise.serie boxToAdd, (box) ->
-            box.accountID = account.id
-            Mailbox.createPromised box
-            .then (createdCozyBox) -> toFetch.push createdCozyBox
-
-        .then -> return [toFetch, toDestroy]
-
-
 # Public: refresh one account
 # register a 'account-fetch' task in {ImapReporter}
 #
 # limitByBox - the maximum {Number} of message to fetch at once for each box
-# onlyFavorites - {Boolean} fetch messages only for favorite mailboxes
 #
 # Returns a {Promise} for task completion
 Account::imap_fetchMails = (limitByBox, onlyFavorites = false) ->
-    account = this
+    reporter = null
+    Mailbox.getBoxes @id
+    .tap (boxes) =>
+        log.info "FETCHING ACCOUNT ", @label, ":", boxes.length, "BOXES"
+        reporter = ImapReporter.accountFetch this, boxes.length
 
-    @imap_refreshBoxes()
-    .spread (toFetch, toDestroy) =>
-
-        if onlyFavorites
-            toFetch = toFetch.filter (box) -> box.id in account.favorites
-
-        log.info "FETCHING ACCOUNT ", @label, ":", toFetch.length, "BOXES"
-        log.info "   ", toDestroy.length, "BOXES TO DESTROY"
-        reporter = ImapReporter.accountFetch this, toFetch.length + 1
-
-        # fetch INBOX first
-        toFetch.sort (a, b) ->
-            return if a.label is 'INBOX' then 1
-            else return -1
-
-        Promise.serie toFetch, (box) ->
-            box.imap_fetchMails limitByBox
-            .catch (err) -> reporter.onError err
-            .tap         -> reporter.addProgress 1
-
-        # we remove deleted boxes after fetch, so moved boxes are fast-fetched
-        .then ->
-            Promise.serie toDestroy, (box) ->
-                box.destroyAndRemoveAllMessages()
-
-        .finally -> reporter.onDone()
+    .filter (box) =>
+        box.id in @favorites or not onlyFavorites
+    .serie (box) ->
+        box.imap_fetchMails limitByBox
+        .catch (err) -> reporter.onError err
+        .tap         -> reporter.addProgress 1
+    .finally -> reporter.onDone()
 
 # Public: create a mail in the given box
 # used for drafts

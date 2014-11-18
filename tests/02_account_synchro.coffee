@@ -1,5 +1,3 @@
-should = require 'should'
-
 describe 'Account Synchronizations', ->
 
     it "Get initialInboxCount", (done) ->
@@ -89,48 +87,3 @@ describe 'Account Synchronizations', ->
         .then (sentBox) ->
             sentBox.should.have.property 'uidvalidity', 1337
         .nodeify done
-
-    it "When the server add one mailbox", (done) ->
-        @timeout 10000
-        imap = helpers.getImapServerRawConnection()
-
-        imap.waitConnected
-        .then -> imap.addBox 'Yolo'
-        .then -> imap.end()
-        .nodeify done
-
-    it "And refresh the account", (done) ->
-        @timeout 10000
-        client.get "/refresh", done
-
-    it "Then the mailbox has been created", (done) ->
-        Mailbox = require '../server/models/mailbox'
-        Mailbox.getBoxes store.accountID
-        .then (boxes) ->
-            for box in boxes when box.path is 'Yolo'
-                store.yoloID = box.id
-
-            should.exist store.yoloID
-
-        .nodeify done
-
-    it "When the server remove one mailbox", (done) ->
-        @timeout 10000
-        imap = helpers.getImapServerRawConnection()
-
-        imap.waitConnected
-        .then -> imap.delBox 'Yolo'
-        .then -> imap.end()
-        .nodeify done
-
-    it "And refresh the account", (done) ->
-        @timeout 10000
-        client.get "/refresh", done
-
-    it "Then the mailbox has been deleted", (done) ->
-        Mailbox = require '../server/models/mailbox'
-        Mailbox.findPromised store.yoloID
-        .then (found) -> should.not.exist found
-        .catch (err) -> should.exist err
-        .nodeify done
-
