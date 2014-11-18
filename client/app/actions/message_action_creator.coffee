@@ -57,6 +57,8 @@ module.exports =
                     callback err
 
     move: (message, from, to, callback) ->
+        if typeof message is "string"
+            message = MessageStore.getByID message
         msg = message.toJSON()
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_ACTION

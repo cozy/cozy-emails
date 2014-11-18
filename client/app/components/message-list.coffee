@@ -82,20 +82,34 @@ MessageList = React.createClass
         date   = MessageUtils.formatDate message.get 'createdAt'
         avatar = MessageUtils.getAvatar message
 
-        li className: classes, key: key, 'data-message-id': message.get('id'),
-            a href: url,
-                if avatar?
-                    img className: 'avatar', src: avatar
-                else
-                    i className: 'fa fa-user'
-                span className: 'participants', @getParticipants message
-                div className: 'preview',
-                    span className: 'title', message.get 'subject'
-                    p null, message.get('text')?.substr(0, 100) + "…"
-                span className: 'hour', date
-                span className: "flags",
-                    i className: 'attach fa fa-paperclip'
-                    i className: 'fav fa fa-star'
+        li
+            className: classes,
+            key: key,
+            'data-message-id': message.get('id'),
+            draggable: true,
+            onDragStart: @onDragStart,
+                a href: url, 'data-message-id': message.get('id'),
+                    if avatar?
+                        img className: 'avatar', src: avatar
+                    else
+                        i className: 'fa fa-user'
+                    span className: 'participants', @getParticipants message
+                    div className: 'preview',
+                        span className: 'title', message.get 'subject'
+                        p null, message.get('text')?.substr(0, 100) + "…"
+                    span className: 'hour', date
+                    span className: "flags",
+                        i className: 'attach fa fa-paperclip'
+                        i className: 'fav fa fa-star'
+
+    onDragStart: (event) ->
+        event.stopPropagation()
+        data =
+            messageID: event.currentTarget.dataset.messageId
+            mailboxID: @props.mailboxID
+        event.dataTransfer.setData 'text', JSON.stringify(data)
+        event.dataTransfer.effectAllowed = 'move'
+        event.dataTransfer.dropEffect = 'move'
 
     getParticipants: (message) ->
         from = message.get 'from'

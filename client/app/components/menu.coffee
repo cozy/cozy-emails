@@ -2,9 +2,10 @@
 
 classer = React.addons.classSet
 
-RouterMixin = require '../mixins/router_mixin'
-
-AccountStore = require '../stores/account_store'
+RouterMixin          = require '../mixins/router_mixin'
+LayoutActionCreator  = require '../actions/layout_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
+AccountStore         = require '../stores/account_store'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
@@ -12,18 +13,7 @@ module.exports = Menu = React.createClass
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-
-        should = nextState isnt @state or
-           not Immutable.is(nextProps.accounts, @props.accounts) or
-           not Immutable.is(nextProps.selectedAccount,
-                @props.selectedAccount) or
-           not _.isEqual(nextProps.layout, @props.layout) or
-           nextProps.isResponsiveMenuShown isnt @props.isResponsiveMenuShown or
-           not Immutable.is(nextProps.favoriteMailboxes,
-                @props.favoriteMailboxes) or
-           not Immutable.is(nextProps.unreadCounts, @props.unreadCounts)
-
-        return should
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
     getInitialState: ->
         return displayActiveAccount: true
@@ -159,30 +149,73 @@ module.exports = Menu = React.createClass
 
             ul className: 'list-unstyled submenu mailbox-list',
                 @props.favoriteMailboxes?.map (mailbox, key) =>
-                    @getMailboxRender account, mailbox, key
+                    selectedMailboxID = @props.selectedMailboxID
+                    MenuMailboxItem { account, mailbox, key, selectedMailboxID }
                 .toJS()
 
-    getMailboxRender: (account, mailbox, key) ->
+
+MenuMailboxItem = React.createClass
+    displayName: 'MenuMailboxItem'
+
+    mixins: [RouterMixin]
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
+    getInitialState: ->
+        return target: false
+
+    render: ->
+        mailboxID = @props.mailbox.get 'id'
         mailboxUrl = @buildUrl
             direction: 'first'
             action: 'account.mailbox.messages'
-            parameters: [account.get('id'), mailbox.get('id')]
+            parameters: [@props.account.get('id'), mailboxID]
 
-        unread = @props.unreadCounts.get mailbox.get('id')
-        selectedClass = if mailbox.get('id') is @props.selectedMailboxID
-        then 'active'
-        else ''
-        specialUse = mailbox.get('attribs')?[0]
+        #unread = @props.unreadCounts.get mailbox.get('id')
+        classesParent = classer
+            active: mailboxID is @props.selectedMailboxID
+            target: @state.target
+        classesChild = classer
+            'menu-item': true
+            target: @state.target
+        specialUse = @props.mailbox.get('attribs')?[0]
         icon = switch specialUse
             when '\\All' then 'fa-archive'
             when '\\Drafts' then 'fa-edit'
             when '\\Sent' then 'fa-share-square-o'
             else 'fa-folder'
 
-        li className: selectedClass, 'data-mailbox-id': mailbox.get('id'),
-            a href: mailboxUrl, className: 'menu-item', key: key,
-                # Something must be rethought about the icon
-                i className: 'fa ' + icon
-                if unread and unread > 0
-                    span className: 'badge', unread
-                span className: 'item-label', mailbox.get 'label'
+        li className: classesParent, onDragEnter: @onDragEnter, onDragLeave: @onDragLeave,
+            a
+                href: mailboxUrl,
+                className: classesChild,
+                'data-mailbox-id': mailboxID,
+                onDragEnter: @onDragEnter,
+                onDragLeave: @onDragLeave,
+                onDragOver: @onDragOver,
+                onDrop: @onDrop,
+                key: @props.key,
+                    # Something must be rethought about the icon
+                    i className: 'fa ' + icon
+                    #if unread and unread > 0
+                    #    span className: 'badge', unread
+                    span className: 'item-label', @props.mailbox.get 'label'
+
+    onDragEnter: (e) ->
+        @setState target: true
+
+    onDragLeave: (e) ->
+        @setState target: false
+
+    onDragOver: (e) ->
+        e.preventDefault()
+
+    onDrop: (event) ->
+        {messageID, mailboxID} = JSON.parse(event.dataTransfer.getData 'text')
+        newID = event.currentTarget.dataset.mailboxId
+        MessageActionCreator.move messageID, mailboxID, newID, (error) ->
+            if error?
+                LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
+            else
+                LayoutActionCreator.alertSuccess t "message action move ok"
