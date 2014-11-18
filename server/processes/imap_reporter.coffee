@@ -58,10 +58,12 @@ module.exports = class ImapReporter
         io?.emit 'task.create', @toObject()
 
     sendtoclient: (nocooldown) ->
-        return if @cooldown and not nocooldown
-        io?.emit 'task.update', @toObject()
-        @cooldown = true
-        setTimeout (=> @cooldown = false) , 500
+        if @cooldown and not nocooldown
+            return true
+        else
+            io?.emit 'task.update', @toObject()
+            @cooldown = true
+            setTimeout (=> @cooldown = false) , 500
 
     toObject: =>
         {@id, @finished, @done, @total, @errors, @box, @account, @code}

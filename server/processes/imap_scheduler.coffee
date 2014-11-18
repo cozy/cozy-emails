@@ -224,47 +224,51 @@ module.exports = class ImapScheduler
     # Returns: {void}
     _dequeue: =>
 
-        # already working, ignore
-        return false if @pendingTask
+        result = true
+        isPending = @imap?.waitConnected.isPending() or @imap?.waitEnding?.isPending()
 
-        # connection in process
-        return false if @imap?.waitConnected.isPending()
-        return false if @imap?.waitEnding?.isPending()
+        # If a task is pending, there is nothing to do.
+        if @pendingTask or isPending
+            result = false
 
-        moreTasks = @tasks.length isnt 0
+        # Else if more tasks are wating, are wating
+        else
+            moreTasks = @tasks.length isnt 0
 
-        # nothing to do
-        if not moreTasks and not @imap
-            return false
+            # If there is no tasks and no imap connection, we do nothing.
+            if not moreTasks and not @imap
+                result = false
 
-        # we are done with current tasks
-        if @imap and not moreTasks
-            @closingTimer ?= setTimeout @closeConnection, 3000
-            return false
+            # If there is no tasks and imap connection, we just close the
+            # connection.
+            else if @imap and not moreTasks
+                @closingTimer ?= setTimeout @closeConnection, 3000
+                result = false
 
-        # a new task was added and we have closing timer
-        # stop it
-        if @closingTimer
-            clearTimeout @closingTimer
-            @closingTimer = null
+            # Else we connect to server and run task.
+            else
+                if @closingTimer
+                    clearTimeout @closingTimer
+                    @closingTimer = null
 
-        # we need a connection
-        if moreTasks and not @imap
-            @createNewConnection()
-            return false
+                if moreTasks and not @imap
+                    @createNewConnection()
+                    result = false
+                else
+                    # wne have a task and connection, lets get to work
+                    @pendingTask = @tasks.shift()
+                    result = Promise.resolve @pendingTask.generator(@imap)
 
-        # we have a task and connection, lets get to work
-        @pendingTask = @tasks.shift()
-        Promise.resolve @pendingTask.generator(@imap)
-        # if a task takes more than a minute
-        # assume its broken and nuke the socket
-        .timeout 120000
-        .catch Promise.TimeoutError, (err) =>
-            log.error "TASK GOT STUCKED"
-            @closeConnection true
-            throw err
-
-        .then @_resolvePending, @_rejectPending
+                    # if a task takes more than a minute
+                    # assume its broken and nuke the socket
+                    result
+                        .timeout 120000
+                        .catch Promise.TimeoutError, (err) =>
+                            log.error "TASK GOT STUCKED"
+                            @closeConnection true
+                            throw err
+                        .then @_resolvePending, @_rejectPending
+        result
 
 
 class TestScheduler

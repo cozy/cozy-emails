@@ -54,44 +54,45 @@ module.exports = class ImapPromisified
             @_super.once 'error', (err) -> reject err
             @_super.connect()
 
-        # we time out the connection at 10s
-        # if the port is wrong, the failure is too damn long
-        .timeout 10000, 'cant reach host'
-        .catch (err) =>
-            # if the know the type of error, clean it up for the user
+        @waitConnected
+            # we time out the connection at 10s
+            # if the port is wrong, the failure is too damn long
+            .timeout 10000, 'cant reach host'
+            .catch (err) =>
+                # if the know the type of error, clean it up for the user
 
-            if err.textCode is 'AUTHENTICATIONFAILED'
-                throw new AccountConfigError 'auth'
+                if err.textCode is 'AUTHENTICATIONFAILED'
+                    throw new AccountConfigError 'auth'
 
-            if err.code is 'ENOTFOUND' and err.syscall is 'getaddrinfo'
-                throw new AccountConfigError 'imapServer'
+                if err.code is 'ENOTFOUND' and err.syscall is 'getaddrinfo'
+                    throw new AccountConfigError 'imapServer'
 
-            if err instanceof Promise.TimeoutError
-                @_super.end()
-                throw new AccountConfigError 'imapPort'
+                if err instanceof Promise.TimeoutError
+                    @_super.end()
+                    throw new AccountConfigError 'imapPort'
 
-            if err.source is 'timeout-auth'
-                # @TODO : this can happen for other reason,
-                # we need to retry before throwing
-                throw new AccountConfigError 'imapTLS'
+                if err.source is 'timeout-auth'
+                    # @TODO : this can happen for other reason,
+                    # we need to retry before throwing
+                    throw new AccountConfigError 'imapTLS'
 
-            # unknown err
-            throw err
+                # unknown err
+                throw err
 
-        # once connection is resolved
-        .tap =>
-            @_super.once 'error', (err) ->
-                # an error happened while connection active
-                # @TODO : how do we handle this ?
-                log.error "ERROR ?", err
-            @_super.once 'close', (err) =>
-                # if we did not expect the ending
-                @closed = 'closed'
-                @onTerminated?(err) unless @waitEnding
-            @_super.once 'end', (err) =>
-                # if we did not expect the ending
-                @state = 'closed'
-                @onTerminated?(err) unless @waitEnding
+            # once connection is resolved
+            .tap =>
+                @_super.once 'error', (err) ->
+                    # an error happened while connection active
+                    # @TODO : how do we handle this ?
+                    log.error "ERROR ?", err
+                @_super.once 'close', (err) =>
+                    # if we did not expect the ending
+                    @closed = 'closed'
+                    @onTerminated?(err) unless @waitEnding
+                @_super.once 'end', (err) =>
+                    # if we did not expect the ending
+                    @state = 'closed'
+                    @onTerminated?(err) unless @waitEnding
 
     # end the connection
     # if hard == false, we attempt to logout
@@ -103,26 +104,27 @@ module.exports = class ImapPromisified
         # do not end the connection before it is started
         @waitEnding = @waitConnected
 
-        # if connection failed, waitEnding is resolved
-        .catch -> Promise.resolve('closed')
+        @waitEnding
+            # if connection failed, waitEnding is resolved
+            .catch -> Promise.resolve('closed')
 
-        # if connection succeeded, end it
-        .then =>
-            new Promise (resolve, reject) =>
-                if hard
-                    # nuke the socket
-                    @_super.destroy()
-                    return resolve 'closed'
-                else
-                    # do a logout before closing
-                    @_super.end()
+            # if connection succeeded, end it
+            .then =>
+                new Promise (resolve, reject) =>
+                    if hard
+                        # nuke the socket
+                        @_super.destroy()
+                        return resolve 'closed'
+                    else
+                        # do a logout before closing
+                        @_super.end()
 
-                @_super.once 'error', ->
-                    resolve new Error 'fail to logout'
-                @_super.once 'end', ->
-                    resolve 'closed'
-                @_super.once 'close', ->
-                    resolve 'closed'
+                    @_super.once 'error', ->
+                        resolve new Error 'fail to logout'
+                    @_super.once 'end', ->
+                        resolve 'closed'
+                    @_super.once 'close', ->
+                        resolve 'closed'
 
     # see imap.getBoxes
     # change: return a Promise for an array of boxes
