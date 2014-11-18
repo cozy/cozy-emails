@@ -581,7 +581,11 @@ module.exports = React.createClass
     toggleHeaders: (e) ->
         e.preventDefault()
         e.stopPropagation()
-        @setState headers: not @state.headers
+        state =
+            headers: not @state.headers
+        if @props.inConversation and not @state.active
+            state.active = true
+        @setState state
 
     toggleActive: (e) ->
         e.preventDefault()
