@@ -33,7 +33,6 @@ module.exports = React.createClass
             headers: false
             messageDisplayHTML:   @props.settings.get 'messageDisplayHTML'
             messageDisplayImages: @props.settings.get 'messageDisplayImages'
-            messageConfirmDelete: @props.settings.get 'messageConfirmMelete'
         }
 
     propTypes:
@@ -96,7 +95,6 @@ module.exports = React.createClass
             @_markRead @props.message
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
             state.messageDisplayImages = props.settings.get 'messageDisplayImages'
-            state.messageConfirmDelete = props.settings.get 'messageConfirmDelete'
         @setState state
 
     _markRead: (message) ->
@@ -630,7 +628,7 @@ module.exports = React.createClass
         if @props.nextID?
             next = @props.nextID
         else next = @props.prevID
-        if (not @state.messageConfirmDelete) or
+        if (not @props.settings.get('messageConfirmDelete')) or
         window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
             MessageActionCreator.delete message, (error) =>
                 if error?
