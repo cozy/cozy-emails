@@ -14,6 +14,8 @@ class TasksStore extends Store
     .map (message) -> Immutable.fromJS message
     .toOrderedMap()
 
+    _shown = true
+
     ###
         Defines here the action handlers.
     ###
@@ -28,8 +30,16 @@ class TasksStore extends Store
             _tasks = _tasks.remove taskid
             @emit 'change'
 
+        handle ActionTypes.TOASTS_SHOW, ->
+            _shown = true
+            @emit 'change'
+
+        handle ActionTypes.TOASTS_HIDE, ->
+            _shown = false
+            @emit 'change'
 
     getTasks: -> _tasks.toOrderedMap()
 
+    isShown: -> _shown
 
 module.exports = new TasksStore()

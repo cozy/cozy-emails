@@ -49,7 +49,7 @@ module.exports = Application = React.createClass
 
     mixins: [
         StoreWatchMixin [AccountStore, ContactStore, MessageStore, LayoutStore,
-        SettingsStore, SearchStore, TasksStore]
+        SettingsStore, SearchStore]
         RouterMixin
     ]
 
@@ -105,7 +105,7 @@ module.exports = Application = React.createClass
 
                     # Display feedback
                     Alert { alert }
-                    ToastContainer toasts: @state.toasts
+                    ToastContainer()
 
                     # The quick actions bar
                     Topbar
@@ -237,7 +237,6 @@ module.exports = Application = React.createClass
                 messagesCount: messagesCount
                 accountID:     accountID
                 mailboxID:     mailboxID
-                layout:        layout
                 openMessageID: openMessageID
                 settings:      @state.settings
                 query:         query
@@ -259,7 +258,7 @@ module.exports = Application = React.createClass
                     name: 'AccountConfigError'
                     field: 'nomailboxes'
 
-            return AccountConfig {layout, error, isWaiting, selectedAccount,
+            return AccountConfig {error, isWaiting, selectedAccount,
                 mailboxes, favoriteMailboxes}
 
         # -- Generates a configuration window to create a new account
@@ -346,7 +345,6 @@ module.exports = Application = React.createClass
             selectedAccount: selectedAccount
             isResponsiveMenuShown: LayoutStore.isMenuShown()
             alertMessage: LayoutStore.getAlert()
-            toasts: TasksStore.getTasks()
             mailboxes: AccountStore.getSelectedMailboxes true
             selectedMailboxID: selectedMailboxID
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID

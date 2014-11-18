@@ -112,6 +112,8 @@ module.exports =
       "account errors"              : "Some data are missing or invalid"
       "account type"                : "Account type"
       "account updated"             : "Account updated"
+      "account creation ok"         : "Yeah ! The account has been successfully
+        created. Now select the mailboxes you want to see in the menu"
       "account refreshed"           : "Account refreshed"
       "mailbox create ok"           : "Folder created"
       "mailbox create ko"           : "Error creating folder"
@@ -190,6 +192,7 @@ module.exports =
       "task box-fetch"             : 'Refreshing %{box}'
       "task apply-diff-fetch"      : 'Fetching mails from %{box} of %{account}'
       "task apply-diff-remove"     : 'Deleting mails from %{box} of %{account}'
+      "task recover-uidvalidity"   : 'Analysing'
       "there were errors"          : '%{smart_count} error. |||| %{smart_count}
                                         errors.'
       "modal please report"        : "Please transmit this information to cozy."

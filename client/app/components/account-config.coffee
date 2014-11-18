@@ -3,7 +3,7 @@ fieldset, legend} =
     React.DOM
 classer = React.addons.classSet
 
-MailboxList   = require './mailbox-list'
+MailboxList          = require './mailbox-list'
 AccountActionCreator = require '../actions/account_action_creator'
 RouterMixin = require '../mixins/router_mixin'
 LAC  = require '../actions/layout_action_creator'
@@ -351,11 +351,13 @@ module.exports = React.createClass
 
     renderMailboxes: ->
         favorites = @state.favoriteMailboxes
-        if @state.mailboxes?
+        if @state.mailboxes? and favorites?
             mailboxes = @state.mailboxes.map (mailbox, key) =>
-                favorite = true if favorites? and
-                        favorites.get(mailbox.get('id'))
-                MailboxItem {accountID: @state.id, mailbox, favorite}
+                try
+                    favorite = favorites.get(mailbox.get('id'))?
+                    MailboxItem {accountID: @state.id, mailbox, favorite}
+                catch error
+                    console.log error, favorites
             .toJS()
         form className: 'form-horizontal',
 
@@ -471,6 +473,7 @@ module.exports = React.createClass
                 init field for field in @_accountFields
                 state.newMailboxParent = null
                 state.tab = 'mailboxes'
+                LAC.alertSuccess t "account creation ok"
                 @setState state
 
 
@@ -676,7 +679,8 @@ module.exports = React.createClass
             state.imapSSL  = true
             state.imapTLS  = false
             state.accountType = 'IMAP'
-            state.newMailboxParent = null
+            state.newMailboxParent  = null
+            state.favoriteMailboxes = null
             state.tab = null
 
         return state

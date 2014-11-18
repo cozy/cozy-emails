@@ -56,6 +56,10 @@ module.exports =
         'LIST_QUICK_FILTER'         : 'LIST_QUICK_FILTER'
         'LIST_SORT'                 : 'LIST_SORT'
 
+        # Toasts
+        'TOASTS_SHOW'               : 'TOASTS_SHOW'
+        'TOASTS_HIDE'               : 'TOASTS_HIDE'
+
     PayloadSources:
         'VIEW_ACTION'   : 'VIEW_ACTION'
         'SERVER_ACTION' : 'SERVER_ACTION'

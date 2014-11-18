@@ -1,8 +1,11 @@
 {a, h4,  pre, div, button, span, strong, i} = React.DOM
-SocketUtils = require '../utils/socketio_utils'
-AppDispatcher = require '../app_dispatcher'
+SocketUtils     = require '../utils/socketio_utils'
+AppDispatcher   = require '../app_dispatcher'
+Modal           = require './modal'
+StoreWatchMixin = require '../mixins/store_watch_mixin'
+TasksStore      = require '../stores/tasks_store'
+LayoutActionCreator = require '../actions/layout_action_creator'
 {ActionTypes, NotifyType} = require '../constants/app_constants'
-Modal = require './modal'
 
 classer = React.addons.classSet
 
@@ -104,11 +107,18 @@ module.exports = Toast = React.createClass
 module.exports.Container = ToastContainer =  React.createClass
     displayName: 'ToastContainer'
 
-    getInitialState: ->
-        return hidden: false
+    mixins: [
+        StoreWatchMixin [TasksStore]
+    ]
+
+    getStateFromStores: ->
+        return {
+            toasts: TasksStore.getTasks()
+            hidden: not TasksStore.isShown()
+        }
 
     render: ->
-        toasts = @props.toasts.toJS?() or @props.toasts
+        toasts = @state.toasts.toJS?() or @state.toasts
 
         classes = classer
             'toasts-container': true
@@ -135,10 +145,13 @@ module.exports.Container = ToastContainer =  React.createClass
                         i className: 'fa fa-times'
 
     toggleHidden: ->
-        @setState hidden: not @state.hidden
+        if @state.hidden
+            LayoutActionCreator.toastsShow()
+        else
+            LayoutActionCreator.toastsHide()
 
     closeAll: ->
-        toasts = @props.toasts.toJS?() or @props.toasts
+        toasts = @state.toasts.toJS?() or @state.toasts
         close = (toast) ->
             if toast.type is NotifyType.SERVER
                 SocketUtils.acknowledgeTask toast.id
@@ -147,4 +160,4 @@ module.exports.Container = ToastContainer =  React.createClass
                     type: ActionTypes.RECEIVE_TASK_DELETE
                     value: toast.id
         close toast for id, toast of toasts
-        @props.toasts.clear()
+        @state.toasts.clear()

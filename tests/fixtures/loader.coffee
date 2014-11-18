@@ -11,7 +11,7 @@ fs.readdir sourceDir, (err, files) ->
     files.forEach (file) ->
         fs.readFile sourceDir + file, (err, data) ->
             tmp = []
-            messages = data.toString().split(/^From /gm)
+            messages = data.toString().split(/^From /gm).filter((e) -> return e isnt '')
             messages.forEach (message) ->
                 message = 'From ' + message
                 mailparser = new MailParser()

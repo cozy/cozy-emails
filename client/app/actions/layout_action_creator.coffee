@@ -214,3 +214,11 @@ module.exports = LayoutActionCreator =
                 LayoutActionCreator.notify t('account refreshed'),
                     autoclose: true
 
+    toastsShow: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.TOASTS_SHOW
+
+    toastsHide: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.TOASTS_HIDE
+
