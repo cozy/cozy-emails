@@ -44,11 +44,11 @@ Account::isTest = ->
 # Public: refresh all accounts
 #
 # Returns {Promise} for task completion
-Account.refreshAllAccounts = ->
+Account.refreshAllAccounts = (limit, onlyFavorites) ->
     Account.requestPromised 'all'
     .serie (account) ->
         return null if account.isTest()
-        account.imap_fetchMails()
+        account.imap_fetchMails(limit, onlyFavorites)
 
 
 # Public: get the account as POJO
@@ -76,33 +76,30 @@ Account.createIfValid = (data) ->
 
     account = new Account data
 
-    pBoxes = if account.isTest()
-        Promise.resolve []
+    pAccountCredentialsOK = if account.isTest()
+        Promise.resolve true
     else
         account.testSMTPConnection()
-        .then -> account.imap_getBoxes data
+        .then -> account.testIMAPConnection()
 
-    pAccountReady = pBoxes
-    # save now so we have an account id
-    .tap ->
+    pAccountReady = pAccountCredentialsOK
+    .then ->
         # should be account.save() but juggling
         Account.createPromised account
         .then (created) -> account = created
 
-    # save boxes, we need their IDs
-    .map (box) ->
-        box.accountID = account.id
-        Mailbox.createPromised box
-
+    .then -> account.imap_refreshBoxes()
     # find special mailboxes (sent, draft ...)
-    .then (boxes) ->
-        account.imap_scanBoxesForSpecialUse boxes
+    .spread (boxesToFetch, boxesToDestroy) ->
+        # disregard boxes toDestroy as there cant be any now
+        account.imap_scanBoxesForSpecialUse boxesToFetch
+
 
     # in a detached chain, fetch the Account
-    pAccountReady.then (account) ->
+    pAccountReady.then ->
         # first fetch 100 mails from each box
-        account.imap_fetchMails 100
-        # then fetch the rest
+        account.imap_refreshBoxes()
+        .then -> account.imap_fetchMails 100
         .then -> account.imap_fetchMails()
         .catch (err) -> log.error "FETCH MAIL FAILED", err.stack or err
 
