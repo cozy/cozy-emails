@@ -38,10 +38,8 @@ module.exports = class ImapScheduler
         if scheduler = @instances[accountID]
             return Promise.resolve scheduler
 
-        pAccount = if account then Promise.resolve account
-        else Account.findPromised accountID
-        pAccount.then (account) =>
-
+        Promise.resolve account or Account.findPromised accountID
+        .then (account) =>
             scheduler = if (not account?) or account.isTest() then new TestScheduler()
             else new ImapScheduler account.makeImapConfig()
             @instances[accountID] = scheduler
@@ -160,9 +158,6 @@ module.exports = class ImapScheduler
     # Returns a {Promise} for the return value of gen
     queueWithBox: (urgent, box, gen) ->
         @queue urgent, (imap) ->
-
-            uidvalidity = null
-
             imap.openBox box.path
             .then (imapbox) ->
                 unless imapbox.persistentUIDs
