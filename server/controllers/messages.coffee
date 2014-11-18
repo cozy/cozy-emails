@@ -17,14 +17,14 @@ htmlToTextOptions =
 
 formatMessage = (message) ->
     if message.html?
-        message.html = sanitizer.sanitize message.html, (url) ->
+        message.html = sanitizer.sanitize message.html.replace(/cid:/gim, 'cid;'), (url) ->
             url = url.toString()
-            if 0 is url.indexOf 'cid://'
-                cid = url.substring 6
+            if 0 is url.indexOf 'cid;'
+                cid = url.substring 4
                 attachment = message.attachments.filter (att) ->
                     att.contentId is cid
 
-                if name = attachment?[0].name
+                if name = attachment?[0].fileName
                     return "/message/#{message.id}/attachments/#{name}"
                 else
                     return null
