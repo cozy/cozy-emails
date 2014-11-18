@@ -111,6 +111,7 @@ describe 'Mailbox operations', ->
             body.should.have.property 'draftMailbox', store.draftBoxID
             done()
 
+
     it "When I set this box as a favorite", (done) ->
 
         box =
@@ -124,5 +125,3 @@ describe 'Mailbox operations', ->
             body.should.have.property('favorites').with.lengthOf 5
             body.favorites.should.containEql store.draftBoxID
             done()
-
-

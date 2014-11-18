@@ -6,6 +6,10 @@ SMTPTesting.mailStore = []
 SMTPTesting.lastConnection = {}
 queueID = 0
 
+# to be overidden
+SMTPTesting.onSecondMessage = (env, callback) ->
+    callback null
+
 SMTPTesting.init = (port, done) ->
 
     smtpServer = smtp.createServer
@@ -22,8 +26,13 @@ SMTPTesting.init = (port, done) ->
 
     smtpServer.on 'dataReady', (envelope, callback) ->
         SMTPTesting.mailStore.push envelope
-        callback null, "ABC" + queueID++
+        if queueID is 0
+            # just say ok
+            callback null, "ABC" + queueID++
 
+        else
+            SMTPTesting.onSecondMessage envelope, ->
+                callback null, "ABC" + queueID++
     smtpServer.listen port, done
 
 unless module.parent

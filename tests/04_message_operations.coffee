@@ -1,6 +1,9 @@
 should = require 'should'
+log = -> console.log.apply(console, arguments)
+fs = require 'fs'
 
 describe 'Message actions', ->
+
 
     it "Pick a message from the inbox", (done) ->
         client.get "/mailbox/#{store.inboxID}", (err, res, body) =>
@@ -107,7 +110,7 @@ describe 'Message actions', ->
             body.should.have.property 'mailboxIDs'
             body.mailboxIDs.should.have.property store.draftBoxID
             body.mailboxIDs[store.draftBoxID].should.equal 2 # UID
-            store.secondDraftID = body.id
+            store.secondDraftStatus = body
             done()
 
         form = req.form()
@@ -119,7 +122,8 @@ describe 'Message actions', ->
             Hi, I am a recruiter and we need you for epic quest'
         """
 
-        req = client.post "/message", store.draftStatus, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
+            console.log "FROM TEST", err?.stack
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -147,7 +151,7 @@ describe 'Message actions', ->
             generatedFileName:  'README-2.md'
         }
 
-        req = client.post "/message", store.draftStatus, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -159,8 +163,8 @@ describe 'Message actions', ->
 
         form = req.form()
         form.append 'body', JSON.stringify store.draftStatus
-        form.append 'README.md', fs.createReadStream __dirname + '../README.md'
-        form.append 'README-2.md', fs.createReadStream __dirname + '../README.md'
+        form.append 'README.md', fs.createReadStream __dirname + '/../README.md'
+        form.append 'README-2.md', fs.createReadStream __dirname + '/../README.md'
 
     it "When I edit a Draft (add other attachment)", (done) ->
 
@@ -171,7 +175,7 @@ describe 'Message actions', ->
             generatedFileName:  'README-3.md'
         }
 
-        req = client.post "/message", store.draftStatus, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -183,14 +187,14 @@ describe 'Message actions', ->
 
         form = req.form()
         form.append 'body', JSON.stringify store.draftStatus
-        form.append 'README-3.md', fs.createReadStream __dirname + '../README.md'
+        form.append 'README-3.md', fs.createReadStream __dirname + '/../README.md'
 
     it "When I edit a Draft (remove first attachment)", (done) ->
 
         store.draftStatus.attachments = store.draftStatus.attachments.filter (file) ->
             file.generatedFileName isnt 'README-2.md'
 
-        req = client.post "/message", store.draftStatus, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
@@ -204,11 +208,11 @@ describe 'Message actions', ->
         form.append 'body', JSON.stringify store.draftStatus
 
 
-    it "When I send this Draft", (done) ->
+    it "When I send the first Draft", (done) ->
 
         store.draftStatus.isDraft = false
 
-        client.post "/message", store.draftStatus, (err, res, body) =>
+        req = client.post "/message", null, (err, res, body) =>
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id', store.draftID
@@ -218,3 +222,37 @@ describe 'Message actions', ->
 
             SMTPTesting.mailStore.should.have.lengthOf 1
             done()
+
+        form = req.form()
+        form.append 'body', JSON.stringify store.draftStatus
+
+
+
+    it "If the server try to be smart, When I send the second Draft", (done) ->
+
+        # pretend GMail and add message sent via SMTP
+        # to IMAP send box
+        SMTPTesting.onSecondMessage = (env, callback) ->
+            imap = helpers.getImapServerRawConnection()
+            imap.waitConnected
+            .then -> imap.append env.body,
+                mailbox: 'Sent'
+                flags: ['\\Seen']
+            .then -> imap.end()
+            .nodeify callback
+
+        store.secondDraftStatus.isDraft = false
+
+        req = client.post "/message", null, (err, res, body) =>
+            should.not.exist err
+            res.statusCode.should.equal 200
+            body.should.have.property 'id', store.secondDraftStatus.id
+            body.should.have.property 'mailboxIDs'
+            body.mailboxIDs.should.have.property store.sentBoxID
+            body.mailboxIDs.should.not.have.property store.draftBoxID
+
+            SMTPTesting.mailStore.should.have.lengthOf 2
+            done()
+
+        form = req.form()
+        form.append 'body', JSON.stringify store.secondDraftStatus
