@@ -20,6 +20,9 @@ Mailbox::doLaterWithBox = (gen) ->
 
 Mailbox::imap_fetchMails = (limitByBox) ->
     @imap_refreshStep limitByBox
+    .then =>
+        changes = lastSync: new Date().toISOString()
+        @updateAttributesPromised changes
 
 
 Mailbox::imap_refreshStep = (limitByBox, laststep) ->
