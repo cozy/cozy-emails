@@ -117,6 +117,9 @@ module.exports =
       "account type"                : "Type de compte"
       "account updated"             : "Modification enregistrée"
       "account refreshed"           : "Actualisé"
+      "account creation ok"         : "Youpi, le compte a été créé !
+        Sélectionnez à présent les dossiers que vous voulez voir
+        apparaitre dans le menu"
       "mailbox create ok"           : "Dossier créé"
       "mailbox create ko"           : "Erreur de création du dossier"
       "mailbox update ok"           : "Dossier mis à jour"
@@ -198,6 +201,7 @@ module.exports =
                                         %{box} de %{account}'
       "task apply-diff-remove"     : 'Suppression des messages du dossier
                                         %{box} de %{account}'
+      "task recover-uidvalidity"   : 'Analyse du compte'
       "there were errors"          : '%{smart_count} erreur. ||||
                                         %{smart_count} erreurs.'
       "modal please report"        : "Merci de bien vouloir transmettre ces
