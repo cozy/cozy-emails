@@ -163,12 +163,12 @@ module.exports.patch = (req, res, next) ->
 # send a message
 module.exports.send = (req, res, next) ->
 
+    # extract message & attachments
     pForm = promisedForm req
-    pForm.tap -> console.log "Form parsed"
     pMessage = pForm.get(0).then (fields) -> JSON.parse fields.body
     pFiles = pForm.get(1)
 
-    # find the account and draftBox
+    # find the account
     pAccount = pMessage.then (message) ->
         Account.findPromised message.accountID
     .throwIfNull -> new NotFound "Account #{message.accountID}"
@@ -178,67 +178,85 @@ module.exports.send = (req, res, next) ->
         message.flags = ['\\Seen']
         message.flags.push '\\Draft' if message.isDraft
 
-        # may be send first
-        pSMTPSend = if message.isDraft
-            Promise.resolve(null) # dont send draft
-        else
-            account.sendMessagePromised message
-            .then (info) -> message.headers['message-id'] = info.messageId
+        # some of the message attachments may already be in the DS
+        # some may be in multipart form
+        Promise.serie message.attachments or [], (file) ->
 
+            # file in the DS, from a previous save of the draft
+            if file.url
+                # content is a Promise for a Stream
+                content = Message.findPromised message.id
+                .throwIfNull -> new NotFound "Message #{message.id}"
+                .then (msg) -> msg.getBinaryPromised file.generatedFileName
 
-        # then remove the draft (in IMAP)
-        pRemoveOldDraft = pSMTPSend.then ->
+            # file just uploaded, take the buffer from the multipart req
+            # content is a buffer
+            else if files[file.generatedFileName]
+                content = files[file.generatedFileName].content
+
+            else
+                throw new Error 'no attached files with name :' + file.generatedFileName;
+
+            return formatNodeMailerAttachment file, content
+
+        # format the message to nodemailer style
+        .then (formatedAttachments) ->
+            message.attachments_backup = message.attachments
+            message.attachments = formatedAttachments
+            message.content = message.text
+
+        # send the message first if it is not a draft
+        .then ->
+            unless message.isDraft
+                account.sendMessagePromised message
+                .then (info) ->
+                    message.headers['message-id'] = info.messageId
+        # remove the draft (in IMAP)
+        .then ->
             uid = message.mailboxIDs?[account.draftMailbox]
             return null unless uid
 
             Mailbox.findPromised account.draftMailbox
             .throwIfNull ->
-                new NotFound "Account #{message.accountID} 's draftbox"
+                new NotFound "Account #{message.accountID} 's draft box"
             .tap (draftBox) -> draftBox.imap_removeMail uid
-
+            # return draftBox if it was used
         # find the box to create the message in (draft or sent)
-        pDestinationBox = pRemoveOldDraft.then (draftBox) ->
+        # check if the message has already been created (Gmail)
+        # if so use its ID
+        # else create the message on IMAP server
+        .then (draftBox) ->
             if message.isDraft
-                if draftBox then Promise.resolve draftBox
-                else Mailbox.findPromised account.draftMailbox
-            else
-                Mailbox.findPromised account.sentBox
-        .throwIfNull ->
-            new NotFound "Acount #{message.accountID} sent or draft box"
 
-        # some of the message attachments may already be in the DS
-        # some may be in multipart form
-        pResolveAttachments = pDestinationBox.tap ->
-            message.attachments_backup = message.attachments
-            message.content = message.text
-            Promise.serie message.attachments, (file) ->
+                # ensure we have the draftBox Object
+                draftBox ?= Mailbox.findPromised account.draftMailbox
+                .throwIfNull ->
+                    new NotFound "Acount #{message.accountID} draft box"
 
-                # file in the DS, from a previous save of the draft
-                content = if file.url
-                    # content is a Promise for a Stream
-                    Message.findPromised message.id
-                    .throwIfNull -> new NotFound "Message #{message.id}"
-                    .then (msg) -> msg.getBinaryPromised file.generatedFileName
+                Promise.resolve draftBox
+                .then (draftBox) ->
+                    account.imap_createMail draftBox, message
 
-                # file just uploaded, take the buffer from the multipart req
-                # content is a buffer
-                else
-                    files[file.generatedFileName].content
+            else # sent
 
-                return formatNodeMailerAttachment file, content
+                Mailbox.findPromised account.sentMailbox
+                .throwIfNull ->
+                    new NotFound "Acount #{message.accountID} sent box"
 
-            .then (formatedAttachments) ->
-                message.attachments = formatedAttachments
+                .then (sentBox) ->
 
-        # create the message on IMAP server
-        pImapCreated = pResolveAttachments.then (box) ->
-            account.imap_createMail box, message
+                    # check if message already created by IMAP/SMTP (gmail)
+                    sentBox.imap_UIDByMessageID message.headers['message-id']
+                    .then (uid) ->
+                        if uid then return [sentBox, uid]
+                        else account.imap_createMail sentBox, message
 
         # save the message in cozy
-        pCozyCreatedOrUpdated = pImapCreated.spread (dest, uidInDest) ->
+        .spread (dest, uidInDest) ->
             message.attachments = message.attachments_backup
             message.text = message.content
             delete message.attachments_backup
+            delete message.content
             message.mailboxIDs = {}
             message.mailboxIDs[dest.id] = uidInDest
             message.date = new Date().toISOString()
@@ -246,6 +264,8 @@ module.exports.send = (req, res, next) ->
             if message.id
                 Message.findPromised message.id
                 .then (jdbMessage) ->
+                    # prevent overiding of binary
+                    message.binary = jdbMessage.binary
                     jdbMessage.updateAttributesPromised message
             else
                 Message.createPromised message
@@ -267,9 +287,8 @@ module.exports.send = (req, res, next) ->
                 unless name in remainingAttachments
                     jdbMessage.removeBinaryPromised name
 
-
-
-    .then (msg) -> res.send 200, msg
+    .then (message) ->
+        res.send 200, formatMessage message
     .catch next
 
 

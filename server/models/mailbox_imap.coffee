@@ -119,6 +119,11 @@ Mailbox::imap_refreshStep = (limitByBox, laststep) ->
             else throw err
     )
 
+Mailbox::imap_UIDByMessageID = (messageID) ->
+    @doLaterWithBox (imap) ->
+        imap.search [['HEADER', 'MESSAGE-ID', messageID]]
+    .then (uids) -> return uids[0]
+
 
 Mailbox::imap_fetchOneMail = (uid) ->
     @doLaterWithBox (imap) ->
