@@ -59,6 +59,8 @@ module.exports = LayoutActionCreator =
         if options?
             task.autoclose = options.autoclose
             task.errors    = options.errors
+            task.finished  = options.finished
+            task.actions   = options.actions
         AppDispatcher.handleViewAction
             type: ActionTypes.RECEIVE_TASK_UPDATE
             value: task
