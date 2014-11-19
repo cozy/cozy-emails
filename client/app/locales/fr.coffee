@@ -169,6 +169,8 @@ module.exports =
       "message images display"      : "Afficher les images"
       "message html display"        : "Afficher en HTML"
       "message delete no trash"     : "Choisissez d'abord un dossier Corbeille"
+      "message undelete"            : "Annuler la suppression"
+      "message undelete ok"         : "Message restauré"
       "message undelete error"      : "Impossible d'annuler l'action"
 
       # Settings

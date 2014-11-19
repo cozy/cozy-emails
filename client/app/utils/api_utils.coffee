@@ -107,7 +107,6 @@ module.exports =
                 if error?
                     alertError "#{t("message action delete ko")} #{error}"
                 else
-                    alertSuccess t "message action delete ok"
                     @messageNavigate(null, nextID)
 
     messageUndo: ->

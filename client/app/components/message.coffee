@@ -637,7 +637,6 @@ module.exports = React.createClass
                 if error?
                     alertError "#{t("message action delete ko")} #{error}"
                 else
-                    alertSuccess t "message action delete ok"
                     @displayNextMessage next
 
     onCopy: (args) ->

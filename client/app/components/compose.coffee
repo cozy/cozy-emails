@@ -375,7 +375,6 @@ module.exports = Compose = React.createClass
                 if error?
                     LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
                 else
-                    LayoutActionCreator.alertSuccess t "message action delete ok"
                     @redirect
                         direction: 'first'
                         action: 'account.mailbox.messages'
