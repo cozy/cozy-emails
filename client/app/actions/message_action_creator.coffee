@@ -96,3 +96,8 @@ module.exports =
                     value: message
             if callback?
                 callback error
+
+    setCurrent: (messageID) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_CURRENT
+            value: messageID

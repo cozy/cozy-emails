@@ -6,6 +6,7 @@ MessageUtils   = require '../utils/message_utils'
 {MessageFlags, MessageFilter} = require '../constants/app_constants'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 ContactActionCreator = require '../actions/contact_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
 MessageStore   = require '../stores/message_store'
 Participants   = require './participant'
 
@@ -19,7 +20,7 @@ MessageList = React.createClass
 
     render: ->
         messages = @props.messages.map (message, key) =>
-            isActive = @props.openMessageID is message.get('id')
+            isActive = @props.messageID is message.get('id')
             @getMessageRender message, key, isActive
         .toJS()
         nbMessages = parseInt @props.counterMessage, 10
@@ -88,19 +89,32 @@ MessageList = React.createClass
             'data-message-id': message.get('id'),
             draggable: true,
             onDragStart: @onDragStart,
-                a href: url, 'data-message-id': message.get('id'),
-                    if avatar?
-                        img className: 'avatar', src: avatar
-                    else
-                        i className: 'fa fa-user'
-                    span className: 'participants', @getParticipants message
-                    div className: 'preview',
-                        span className: 'title', message.get 'subject'
-                        p null, message.get('text')?.substr(0, 100) + "…"
-                    span className: 'hour', date
-                    span className: "flags",
-                        i className: 'attach fa fa-paperclip'
-                        i className: 'fav fa fa-star'
+                a
+                    href: url,
+                    'data-message-id': message.get('id'),
+                    onClick: @onMessageClick,
+                    onDoubleClick: @onMessageDblClick,
+                        if avatar?
+                            img className: 'avatar', src: avatar
+                        else
+                            i className: 'fa fa-user'
+                        span className: 'participants', @getParticipants message
+                        div className: 'preview',
+                            span className: 'title', message.get 'subject'
+                            p null, message.get('text')?.substr(0, 100) + "…"
+                        span className: 'hour', date
+                        span className: "flags",
+                            i className: 'attach fa fa-paperclip'
+                            i className: 'fav fa fa-star'
+
+    onMessageClick: (event) ->
+        if not @props.settings.get('displayPreview')
+            event.preventDefault()
+            MessageActionCreator.setCurrent event.currentTarget.dataset.messageId
+
+    onMessageDblClick: (event) ->
+        url = event.currentTarget.href.split('#')[1]
+        window.router.navigate url, {trigger: true}
 
     onDragStart: (event) ->
         event.stopPropagation()
@@ -126,20 +140,23 @@ MessageList = React.createClass
         if not @refs.nextPage?
             return
 
-        isVisible = =>
-            if not @refs.nextPage?
-                return false
-            next   = @refs.nextPage.getDOMNode()
-            rect   = next.getBoundingClientRect()
+        isVisible = (node, before) ->
+            margin = if before then 40 else 0
+            rect   = node.getBoundingClientRect()
             height = window.innerHeight or document.documentElement.clientHeight
             width  = window.innerWidth  or document.documentElement.clientWidth
-            return rect.bottom <= ( height + 40 )
+            return rect.bottom <= ( height + 0 ) and rect.top >= 0
 
         scrollable = @refs.list.getDOMNode().parentNode
+        nextNode   = @refs.nextPage.getDOMNode()
 
-        if not isVisible()
+        active = document.querySelector("[data-message-id='#{@props.messageID}']")
+        if active? and not isVisible(active)
+            active.scrollIntoView()
+
+        if not isVisible(nextNode, true)
             loadNext = =>
-                if isVisible()
+                if isVisible(nextNode, true)
                     scrollable.removeEventListener 'scroll', loadNext
                     LayoutActionCreator.showMessageList parameters: @props.query
                     #@redirect @props.paginationUrl

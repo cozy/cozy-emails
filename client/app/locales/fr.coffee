@@ -179,6 +179,7 @@ module.exports =
       "settings plugins"           : "Modules complémentaires"
       "settings label composeInHTML"        : "Éditeur riche"
       "settings label displayConversation"  : "Afficher les conversations"
+      "settings label displayPreview"       : "Prévisualiser les messages"
       "settings label messageDisplayHTML"   : "Afficher les messages en HTML"
       "settings label messageDisplayImages" : "Afficher les images"
       "settings label messageConfirmDelete" : "Demander confirmation avant

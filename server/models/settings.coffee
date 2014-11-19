@@ -5,6 +5,7 @@ module.exports = Settings = americano.getModel 'MailsSettings',
     messagesPerPage: Number
     refreshInterval: Number
     displayConversation: Boolean
+    displayPreview: Boolean
     composeInHTML: Boolean
     messageDisplayHTML: Boolean
     messageDisplayImages: Boolean
@@ -20,6 +21,7 @@ Settings.getInstance = ->
         defaultSettings = new Settings
             messagesPerPage: 25
             displayConversation: false
+            displayPreview: true
             composeInHTML: true
             messageDisplayHTML: true
             messageDisplayImages: false

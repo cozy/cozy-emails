@@ -1,5 +1,6 @@
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
+SettingsStore = require '../stores/settings_store'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
 onMessageList = ->
@@ -41,7 +42,6 @@ module.exports =
 
     # warning: don't update setting value server side
     setSetting: (key, value) ->
-        SettingsStore = require '../stores/settings_store'
         AppDispatcher = require '../app_dispatcher'
         {ActionTypes} = require '../constants/app_constants'
         settings = SettingsStore.get().toJS()
@@ -53,7 +53,6 @@ module.exports =
     messageNavigate: (direction, nextID) ->
         if not onMessageList()
             return
-        SettingsStore = require '../stores/settings_store'
         if not nextID?
             if direction is 'prev'
                 nextID = MessageStore.getPreviousMessage()
@@ -61,23 +60,40 @@ module.exports =
                 nextID = MessageStore.getNextMessage()
         if not nextID?
             return
-        message = MessageStore.getByID MessageStore.getCurrentID()
-        if not message?
-            return
-        conversationID = message.get 'conversationID'
 
-        if conversationID and SettingsStore.get('displayConversation')
-            action = 'conversation'
+        if SettingsStore.get('displayPreview')
+            @messageDisplay nextID
         else
-            action = 'message'
+            MessageActionCreator = require '../actions/message_action_creator'
+            MessageActionCreator.setCurrent nextID
 
-        url = window.router.buildUrl direction: 'second', action: action, parameters: nextID
+    messageDisplay: (messageID) ->
+        if not messageID
+            messageID = MessageStore.getCurrentID()
+        action = 'message'
+        if SettingsStore.get('displayConversation')
+            message = MessageStore.getByID messageID
+            if not message?
+                return
+            conversationID = message.get 'conversationID'
+
+            if conversationID
+                action = 'conversation'
+
+        url = window.router.buildUrl direction: 'second', action: action, parameters: messageID
         window.router.navigate url, {trigger: true}
+
+    messageClose: ->
+        closeUrl = window.router.buildUrl
+            direction: 'first'
+            action: 'account.mailbox.messages'
+            parameters: AccountStore.getSelected().get 'id'
+            fullWidth: true
+        window.router.navigate closeUrl, {trigger: true}
 
     messageDeleteCurrent: ->
         if not onMessageList()
             return
-        SettingsStore = require '../stores/settings_store'
         MessageActionCreator = require '../actions/message_action_creator'
         alertError   = LayoutActionCreator.alertError
         alertSuccess = LayoutActionCreator.alertSuccess

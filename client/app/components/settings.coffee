@@ -86,6 +86,7 @@ module.exports = React.createClass
             @_renderOption 'messageDisplayHTML'
             @_renderOption 'messageDisplayImages'
             @_renderOption 'messageConfirmDelete'
+            @_renderOption 'displayPreview'
 
             fieldset null,
                 legend null, t 'settings plugins'
@@ -136,6 +137,7 @@ module.exports = React.createClass
             ,    'messageDisplayHTML'
             ,    'messageDisplayImages'
             ,    'messageConfirmDelete'
+            ,    'displayPreview'
                 settings = @state.settings
                 settings[target.dataset.target] = target.checked
                 @setState({settings: settings})

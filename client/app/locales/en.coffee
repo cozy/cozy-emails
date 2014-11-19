@@ -173,6 +173,7 @@ module.exports =
       "settings plugins"           : "Add ons"
       "settings label composeInHTML"        : "Rich message editor"
       "settings label displayConversation"  : "Display conversations"
+      "settings label displayPreview"       : "Display message preview"
       "settings label messageDisplayHTML"   : "Display message in HTML"
       "settings label messageDisplayImages" : "Display images inside messages"
       "settings label messageConfirmDelete" : "Confirm before deleting a message"

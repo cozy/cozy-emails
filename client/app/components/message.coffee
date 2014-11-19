@@ -525,6 +525,9 @@ module.exports = React.createClass
                 "#{pusher}#{mailbox.get 'label'}"
 
     _initFrame: ->
+        panel = document.querySelector "#panels > .panel:nth-of-type(2)"
+        if panel?
+            panel.scrollTop = 0
         # - resize the frame to the height of its content
         # - if images are not displayed, create the function to display them
         #   and resize the frame
