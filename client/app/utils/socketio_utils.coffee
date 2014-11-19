@@ -1,12 +1,12 @@
 TaskStore = require '../stores/tasks_store'
 AppDispatcher = require '../app_dispatcher'
-{ActionTypes} = require '../constants/app_constants'
+{ActionTypes, NotifyType} = require '../constants/app_constants'
 url = window.location.origin
 pathToSocketIO = "#{window.location.pathname}socket.io"
 socket = io.connect url, path: pathToSocketIO
 
 dispatchTaskUpdate = (task) ->
-    task.type = 'SERVER'
+    task.type = NotifyType.SERVER
     AppDispatcher.handleServerAction
         type: ActionTypes.RECEIVE_TASK_UPDATE
         value: task
