@@ -51,6 +51,7 @@ module.exports =
       "list sort"               : "Sort"
       "list sort date"          : "Date"
       "list sort subject"       : "Subject"
+      "list option compact"     : "Compacte"
       "list next page"          : "More messages"
       "list end"                : "This is the end of the road"
 

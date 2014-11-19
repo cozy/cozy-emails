@@ -29,7 +29,7 @@
     .message
         padding .25em
         border-left .25em solid transparent
-        border-bottom 1px solid #e4e4e4
+        //border-bottom 1px solid #e4e4e4
         cursor pointer
         font-size 0.8em
 
@@ -82,8 +82,11 @@
       .fa-user
       .avatar
         color #aaa
+        background-color white
         font-size 2em
-        border 1px solid #aaa
+        //border 1px solid #aaa
+        border-radius 50%
+        box-shadow 0 0 3px #BBB
         width 1em
         height 1em
         text-align center
@@ -102,8 +105,11 @@
       .attach
         display none
 
-    .message.active
+    .message:nth-child(2n+1)
        background-color lightcolor
+       background linear-gradient(to bottom, #fff 0%, lightcolor 15%, lightcolor 85%, #fff 100%)
+    .message.active
+       background mediumcolor
 
     .message.unseen
       font-weight bold
@@ -131,3 +137,9 @@
         clear both
         margin-top 1em
 
+.message-list.compact
+    .message
+        padding 1px 0
+    .fa-user
+    .avatar
+        display none

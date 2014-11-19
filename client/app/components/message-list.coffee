@@ -18,6 +18,9 @@ MessageList = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
+    getInitialState: ->
+        return compact: false
+
     render: ->
         messages = @props.messages.map (message, key) =>
             isActive = @props.messageID is message.get('id')
@@ -30,11 +33,21 @@ MessageList = React.createClass
             query:     @props.query
         nextPage = =>
             LayoutActionCreator.showMessageList parameters: @props.query
-        div className: 'message-list', ref: 'list',
+        classList = classer
+            compact: @state.compact
+        classCompact = classer
+            active: @state.compact
+        div className: 'message-list ' + classList, ref: 'list',
             div className: 'message-list-actions',
                 #MessagesQuickFilter {}
                 MessagesFilter filterParams
                 MessagesSort filterParams
+                div className: 'message-list-options',
+                    button
+                        type: "button"
+                        className: "btn btn-default " + classCompact
+                        onClick: @toggleCompact
+                        t 'list option compact'
             if @props.messages.count() is 0
                 p null, @props.emptyListMessage
             else
@@ -135,6 +148,9 @@ MessageList = React.createClass
 
     addAddress: (address) ->
         ContactActionCreator.createContact address
+
+    toggleCompact: ->
+        @setState compact: not @state.compact
 
     _initScroll: ->
         if not @refs.nextPage?
