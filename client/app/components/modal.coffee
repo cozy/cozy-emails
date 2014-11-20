@@ -10,6 +10,12 @@ module.exports = Modal = React.createClass
                     React.DOM.div className: "modal-content",
                         if @props.title?
                             React.DOM.div className: "modal-header",
+                                if @props.closeLabel?
+                                    React.DOM.button
+                                        type: 'button',
+                                        className: 'close',
+                                        onClick: @props.closeModal,
+                                            React.DOM.i className: 'fa fa-times'
                                 React.DOM.h4
                                     className: "modal-title",
                                     @props.title
