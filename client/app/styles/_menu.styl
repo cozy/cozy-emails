@@ -97,6 +97,12 @@
 
                 .submenu
                     display block
+            a.menu-item *
+                // this is needed for dragenter and dragleave events to work
+                pointer-events none
+            &.target
+                border 1px dashed white
+
 
     // New account action button
     .new-account-action

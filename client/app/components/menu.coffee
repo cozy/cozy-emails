@@ -186,7 +186,7 @@ MenuMailboxItem = React.createClass
             when '\\Sent' then 'fa-share-square-o'
             else 'fa-folder'
 
-        li className: classesParent, onDragEnter: @onDragEnter, onDragLeave: @onDragLeave,
+        li className: classesParent,
             a
                 href: mailboxUrl,
                 className: classesChild,
@@ -203,10 +203,12 @@ MenuMailboxItem = React.createClass
                     span className: 'item-label', @props.mailbox.get 'label'
 
     onDragEnter: (e) ->
-        @setState target: true
+        if not @state.target
+            @setState target: true
 
     onDragLeave: (e) ->
-        @setState target: false
+        if @state.target
+            @setState target: false
 
     onDragOver: (e) ->
         e.preventDefault()
