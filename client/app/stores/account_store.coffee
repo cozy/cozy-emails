@@ -34,6 +34,8 @@ class AccountStore extends Store
     _newAccountError   = null
 
 
+    _setCurrentAccount: (account) ->
+        _selectedAccount = account
     ###
         Defines here the action handlers.
     ###
@@ -42,7 +44,7 @@ class AccountStore extends Store
         onUpdate = (rawAccount) =>
             account = AccountTranslator.toImmutable rawAccount
             _accounts = _accounts.set account.get('id'), account
-            _selectedAccount   = account
+            @_setCurrentAccount account
             _newAccountWaiting = false
             _newAccountError   = null
             @emit 'change'
@@ -52,9 +54,9 @@ class AccountStore extends Store
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
             if value.accountID?
-                _selectedAccount = _accounts.get(value.accountID) or null
+                @_setCurrentAccount(_accounts.get(value.accountID) or null)
             else
-                _selectedAccount = null
+                @_setCurrentAccount(null)
             if value.mailboxID?
                 _selectedMailbox = _selectedAccount?.get('mailboxes')?.get(value.mailboxID) or null
             else
@@ -84,7 +86,7 @@ class AccountStore extends Store
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
             _accounts = _accounts.delete accountID
-            _selectedAccount = @getDefault()
+            @_setCurrentAccount @getDefault()
             @emit 'change'
 
     ###

@@ -416,17 +416,17 @@ module.exports = React.createClass
                             @setState newState, =>
                                 @onSubmit()
 
-    componentDidMount: ->
+    _afterMount: ->
         # On error, scroll to message
         node = document.querySelector("#mailbox-config .alert")
         if node?
             node.scrollIntoView()
 
+    componentDidMount: ->
+        @_afterMount()
+
     componentDidUpdate: ->
-        # On error, scroll to message
-        node = document.querySelector("#mailbox-config .alert")
-        if node?
-            node.scrollIntoView()
+        @_afterMount()
 
     doValidate: ->
         accountValue = {}

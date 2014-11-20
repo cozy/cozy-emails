@@ -152,41 +152,44 @@ MessageList = React.createClass
     toggleCompact: ->
         @setState compact: not @state.compact
 
+    _isVisible: (node, before) ->
+        margin = if before then 40 else 0
+        rect   = node.getBoundingClientRect()
+        height = window.innerHeight or document.documentElement.clientHeight
+        width  = window.innerWidth  or document.documentElement.clientWidth
+        return rect.bottom <= ( height + 0 ) and rect.top >= 0
+
+    _loadNext: =>
+        if isVisible(@refs.nextPage.getDOMNode(), true)
+            scrollable.removeEventListener 'scroll', loadNext
+            LayoutActionCreator.showMessageList parameters: @props.query
+            #@redirect @props.paginationUrl
+
     _initScroll: ->
         if not @refs.nextPage?
             return
 
-        isVisible = (node, before) ->
-            margin = if before then 40 else 0
-            rect   = node.getBoundingClientRect()
-            height = window.innerHeight or document.documentElement.clientHeight
-            width  = window.innerWidth  or document.documentElement.clientWidth
-            return rect.bottom <= ( height + 0 ) and rect.top >= 0
-
-        scrollable = @refs.list.getDOMNode().parentNode
-        nextNode   = @refs.nextPage.getDOMNode()
-
+        # scroll current message into view
         active = document.querySelector("[data-message-id='#{@props.messageID}']")
-        if active? and not isVisible(active)
+        if active? and not @_isVisible(active)
             active.scrollIntoView()
 
-        if not isVisible(nextNode, true)
-            loadNext = =>
-                if isVisible(nextNode, true)
-                    scrollable.removeEventListener 'scroll', loadNext
-                    LayoutActionCreator.showMessageList parameters: @props.query
-                    #@redirect @props.paginationUrl
-                else
-
-            setTimeout ->
-                scrollable.addEventListener 'scroll', loadNext
-            , 0
+        # listen to scroll events
+        scrollable = @refs.list.getDOMNode().parentNode
+        setTimeout ->
+            scrollable.removeEventListener 'scroll', @_loadNext
+            scrollable.addEventListener 'scroll', @_loadNext
+        , 0
 
     componentDidMount: ->
         @_initScroll()
 
     componentDidUpdate: ->
         @_initScroll()
+
+    componentWillUnmount: ->
+        scrollable = @refs.list.getDOMNode().parentNode
+        scrollable.removeEventListener 'scroll', @_loadNext
 
 module.exports = MessageList
 
