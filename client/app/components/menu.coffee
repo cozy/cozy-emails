@@ -141,9 +141,9 @@ module.exports = Menu = React.createClass
         .toJS()
         title    = t "menu mailbox total", nbTotal
         if nbUnread > 0
-            title += ' ' + t "menu mailbox unread", nbUnread
+            title += t "menu mailbox unread", nbUnread
         if nbNew > 0
-            title += ' ' + t "menu mailbox new", nbNew
+            title += t "menu mailbox new", nbNew
 
         accountClasses = classer
             active: (isSelected and @state.displayActiveAccount)
@@ -156,6 +156,7 @@ module.exports = Menu = React.createClass
                 onClick: toggleActive,
                 title: title,
                 'data-toggle': 'tooltip',
+                'data-placement' : 'right',
                     i className: 'fa fa-inbox'
                     if nbUnread and nbUnread > 0
                         span className: 'badge', nbUnread
@@ -169,6 +170,15 @@ module.exports = Menu = React.createClass
                     selectedMailboxID = @props.selectedMailboxID
                     MenuMailboxItem { account, mailbox, key, selectedMailboxID }
                 .toJS()
+
+    _initTooltips: ->
+        jQuery('#account-list [data-toggle="tooltip"]').tooltip()
+
+    componentDidMount: ->
+        @_initTooltips()
+
+    componentDidUpdate: ->
+        @_initTooltips()
 
 
 MenuMailboxItem = React.createClass
@@ -194,9 +204,9 @@ MenuMailboxItem = React.createClass
         nbNew    = @props.mailbox.get('nbNew') or 0
         title    = t "menu mailbox total", nbTotal
         if nbUnread > 0
-            title += ' ' + t "menu mailbox unread", nbUnread
+            title += t "menu mailbox unread", nbUnread
         if nbNew > 0
-            title += ' ' + t "menu mailbox new", nbNew
+            title += t "menu mailbox new", nbNew
 
         classesParent = classer
             active: mailboxID is @props.selectedMailboxID
@@ -223,6 +233,7 @@ MenuMailboxItem = React.createClass
                 onDrop: @onDrop,
                 title: title,
                 'data-toggle': 'tooltip',
+                'data-placement' : 'right',
                 key: @props.key,
                     # Something must be rethought about the icon
                     i className: 'fa ' + icon
