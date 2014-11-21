@@ -165,6 +165,15 @@ class ImapPool
             log.debug @id, "_deQueue/needaccount"
             return @_getAccount()
 
+        if @account.isTest()
+            log.debug @id, "_deQueue/test"
+            if moreTasks
+                task = @tasks.pop()
+                task.callback? null
+                process.nextTick @_deQueue
+
+            return
+
         if moreTasks
             log.debug @id, "_deQueue/hasTask"
             if @closingTimer

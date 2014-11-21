@@ -542,7 +542,7 @@ Message.pickConversationID = (rows, callback) ->
         callback null, pickedConversationID
 
 Message::toClientObject = ->
-    log.debug "toClientObject"
+    # log.debug "toClientObject"
     raw = @toObject()
 
     raw.attachments?.forEach (file) ->
