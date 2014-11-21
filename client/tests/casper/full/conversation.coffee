@@ -12,6 +12,7 @@ casper.test.begin 'Test conversation', (test) ->
             window.cozyMails.setSetting 'messageDisplayHTML', true
             window.cozyMails.setSetting 'messageDisplayImages', false
             window.cozyMails.setSetting 'displayConversation', true
+            window.cozyMails.setSetting 'displayConversation', true
 
         casper.cozy.selectMessage "DoveCot", "Test Folder", "Test attachments", ->
             test.assertExist '.imagesWarning', "Images warning"

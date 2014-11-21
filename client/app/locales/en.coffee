@@ -51,6 +51,7 @@ module.exports =
       "list sort"               : "Sort"
       "list sort date"          : "Date"
       "list sort subject"       : "Subject"
+      "list option compact"     : "Compacte"
       "list next page"          : "More messages"
       "list end"                : "This is the end of the road"
 
@@ -162,6 +163,8 @@ module.exports =
       "message images display"      : "Display images"
       "message html display"        : "Display HTML"
       "message delete no trash"     : "Please select a Trash folder"
+      "message undelete"            : "Undo message deletion"
+      "message undelete ok"         : "Message undeleted"
       "message undelete error"      : "Undo not available"
 
       # Settings
@@ -173,6 +176,7 @@ module.exports =
       "settings plugins"           : "Add ons"
       "settings label composeInHTML"        : "Rich message editor"
       "settings label displayConversation"  : "Display conversations"
+      "settings label displayPreview"       : "Display message preview"
       "settings label messageDisplayHTML"   : "Display message in HTML"
       "settings label messageDisplayImages" : "Display images inside messages"
       "settings label messageConfirmDelete" : "Confirm before deleting a message"

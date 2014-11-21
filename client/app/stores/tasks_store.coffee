@@ -1,6 +1,6 @@
 Store = require '../libs/flux/store/store'
 
-{ActionTypes} = require '../constants/app_constants'
+{ActionTypes, NotifyType} = require '../constants/app_constants'
 
 class TasksStore extends Store
 
@@ -11,7 +11,10 @@ class TasksStore extends Store
     _tasks = Immutable.Sequence window.tasks
     # sets task ID as index
     .mapKeys (_, task) -> return task.id
-    .map (message) -> Immutable.fromJS message
+    .map (task) ->
+        if not task.type?
+            task.type = NotifyType.SERVER
+        Immutable.fromJS task
     .toOrderedMap()
 
     _shown = true

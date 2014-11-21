@@ -6,6 +6,7 @@ MessageUtils   = require '../utils/message_utils'
 {MessageFlags, MessageFilter} = require '../constants/app_constants'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 ContactActionCreator = require '../actions/contact_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
 MessageStore   = require '../stores/message_store'
 Participants   = require './participant'
 
@@ -17,9 +18,12 @@ MessageList = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
+    getInitialState: ->
+        return compact: false
+
     render: ->
         messages = @props.messages.map (message, key) =>
-            isActive = @props.openMessageID is message.get('id')
+            isActive = @props.messageID is message.get('id')
             @getMessageRender message, key, isActive
         .toJS()
         nbMessages = parseInt @props.counterMessage, 10
@@ -29,11 +33,21 @@ MessageList = React.createClass
             query:     @props.query
         nextPage = =>
             LayoutActionCreator.showMessageList parameters: @props.query
-        div className: 'message-list', ref: 'list',
+        classList = classer
+            compact: @state.compact
+        classCompact = classer
+            active: @state.compact
+        div className: 'message-list ' + classList, ref: 'list',
             div className: 'message-list-actions',
                 #MessagesQuickFilter {}
                 MessagesFilter filterParams
                 MessagesSort filterParams
+                div className: 'message-list-options',
+                    button
+                        type: "button"
+                        className: "btn btn-default " + classCompact
+                        onClick: @toggleCompact
+                        t 'list option compact'
             if @props.messages.count() is 0
                 p null, @props.emptyListMessage
             else
@@ -82,20 +96,47 @@ MessageList = React.createClass
         date   = MessageUtils.formatDate message.get 'createdAt'
         avatar = MessageUtils.getAvatar message
 
-        li className: classes, key: key, 'data-message-id': message.get('id'),
-            a href: url,
-                if avatar?
-                    img className: 'avatar', src: avatar
-                else
-                    i className: 'fa fa-user'
-                span className: 'participants', @getParticipants message
-                div className: 'preview',
-                    span className: 'title', message.get 'subject'
-                    p null, message.get('text')?.substr(0, 100) + "…"
-                span className: 'hour', date
-                span className: "flags",
-                    i className: 'attach fa fa-paperclip'
-                    i className: 'fav fa fa-star'
+        li
+            className: classes,
+            key: key,
+            'data-message-id': message.get('id'),
+            draggable: true,
+            onDragStart: @onDragStart,
+                a
+                    href: url,
+                    'data-message-id': message.get('id'),
+                    onClick: @onMessageClick,
+                    onDoubleClick: @onMessageDblClick,
+                        if avatar?
+                            img className: 'avatar', src: avatar
+                        else
+                            i className: 'fa fa-user'
+                        span className: 'participants', @getParticipants message
+                        div className: 'preview',
+                            span className: 'title', message.get 'subject'
+                            p null, message.get('text')?.substr(0, 100) + "…"
+                        span className: 'hour', date
+                        span className: "flags",
+                            i className: 'attach fa fa-paperclip'
+                            i className: 'fav fa fa-star'
+
+    onMessageClick: (event) ->
+        if not @props.settings.get('displayPreview')
+            event.preventDefault()
+            MessageActionCreator.setCurrent event.currentTarget.dataset.messageId
+
+    onMessageDblClick: (event) ->
+        url = event.currentTarget.href.split('#')[1]
+        window.router.navigate url, {trigger: true}
+
+    onDragStart: (event) ->
+        event.stopPropagation()
+        data =
+            messageID: event.currentTarget.dataset.messageId
+            mailboxID: @props.mailboxID
+        event.dataTransfer.setData 'text', JSON.stringify(data)
+        event.dataTransfer.effectAllowed = 'move'
+        event.dataTransfer.dropEffect = 'move'
 
     getParticipants: (message) ->
         from = message.get 'from'
@@ -108,38 +149,47 @@ MessageList = React.createClass
     addAddress: (address) ->
         ContactActionCreator.createContact address
 
+    toggleCompact: ->
+        @setState compact: not @state.compact
+
+    _isVisible: (node, before) ->
+        margin = if before then 40 else 0
+        rect   = node.getBoundingClientRect()
+        height = window.innerHeight or document.documentElement.clientHeight
+        width  = window.innerWidth  or document.documentElement.clientWidth
+        return rect.bottom <= ( height + 0 ) and rect.top >= 0
+
+    _loadNext: =>
+        if isVisible(@refs.nextPage.getDOMNode(), true)
+            scrollable.removeEventListener 'scroll', loadNext
+            LayoutActionCreator.showMessageList parameters: @props.query
+            #@redirect @props.paginationUrl
+
     _initScroll: ->
         if not @refs.nextPage?
             return
 
-        isVisible = =>
-            if not @refs.nextPage?
-                return false
-            next   = @refs.nextPage.getDOMNode()
-            rect   = next.getBoundingClientRect()
-            height = window.innerHeight or document.documentElement.clientHeight
-            width  = window.innerWidth  or document.documentElement.clientWidth
-            return rect.bottom <= ( height + 40 )
+        # scroll current message into view
+        active = document.querySelector("[data-message-id='#{@props.messageID}']")
+        if active? and not @_isVisible(active)
+            active.scrollIntoView()
 
+        # listen to scroll events
         scrollable = @refs.list.getDOMNode().parentNode
-
-        if not isVisible()
-            loadNext = =>
-                if isVisible()
-                    scrollable.removeEventListener 'scroll', loadNext
-                    LayoutActionCreator.showMessageList parameters: @props.query
-                    #@redirect @props.paginationUrl
-                else
-
-            setTimeout ->
-                scrollable.addEventListener 'scroll', loadNext
-            , 0
+        setTimeout ->
+            scrollable.removeEventListener 'scroll', @_loadNext
+            scrollable.addEventListener 'scroll', @_loadNext
+        , 0
 
     componentDidMount: ->
         @_initScroll()
 
     componentDidUpdate: ->
         @_initScroll()
+
+    componentWillUnmount: ->
+        scrollable = @refs.list.getDOMNode().parentNode
+        scrollable.removeEventListener 'scroll', @_loadNext
 
 module.exports = MessageList
 

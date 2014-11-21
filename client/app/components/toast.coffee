@@ -82,6 +82,16 @@ module.exports = Toast = React.createClass
                         span 'aria-hidden': "true", "×"
                         span className: "sr-only", t "app alert close"
 
+            if toast.actions?
+                div className: 'toast-actions',
+                    toast.actions.map (action, id) ->
+                        button
+                            className: "btn btn-default btn-xs",
+                            type: "button",
+                            key: id
+                            onClick: action.onClick,
+                            action.label
+
             if hasErrors
                 a onClick: showModal,
                     t 'there were errors', smart_count: toast.errors.length
@@ -127,7 +137,7 @@ module.exports.Container = ToastContainer =  React.createClass
 
         div className: classes,
             Toast {toast, key: id} for id, toast of toasts
-            div className: 'alert alert-success toast toast-actions',
+            div className: 'alert alert-success toast toasts-actions',
                 span
                     className: "toast-action hide-action",
                     title: t 'toast hide'

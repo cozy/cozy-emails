@@ -182,6 +182,13 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_ACTION, (action) ->
             _prevAction = action
 
+        handle ActionTypes.MESSAGE_CURRENT, (messageID) ->
+            @setCurrentID messageID
+            @emit 'change'
+
+        handle ActionTypes.SELECT_ACCOUNT, (value) ->
+            @setCurrentID null
+
     ###
         Public API
     ###
@@ -242,7 +249,8 @@ class MessageStore extends Store
 
         # sequences are lazy so we need .toOrderedMap() to actually execute it
         _currentMessages = sequence.toOrderedMap()
-        _currentID       = _currentMessages.first()?.get 'id'
+        if not _currentID?
+            @setCurrentID _currentMessages.first()?.get 'id'
         return _currentMessages
 
     getCurrentID: (messageID) ->

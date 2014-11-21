@@ -32,6 +32,14 @@ if (typeof window.plugins !== "object") {
   }
   root.mailkeys = {
     _binding: {
+      'enter': {
+        name: "Display current message",
+        action: function () {window.cozyMails.messageDisplay(); }
+      },
+      'x': {
+        name: "Close current message",
+        action: function () {window.cozyMails.messageClose(); }
+      },
       'j': {
         name: "Next Message",
         action: function () {window.cozyMails.messageNavigate('next'); }
@@ -47,6 +55,29 @@ if (typeof window.plugins !== "object") {
       'up': {
         name: "Previous Message",
         action: function () {window.cozyMails.messageNavigate('prev'); }
+      },
+      'pagedown': {
+        name: 'Scroll message down',
+        action: function () {
+            var panel = document.querySelector("#panels > .panel:nth-of-type(2)");
+            if (panel) {
+                panel.scrollTop += panel.clientHeight * 0.8;
+            }
+        }
+      },
+      'pageup': {
+        name: 'Scroll message up',
+        action: function () {
+            var panel = document.querySelector("#panels > .panel:nth-of-type(2)");
+            if (panel) {
+                panel.scrollTop -= panel.clientHeight * 0.8;
+            }
+        }
+      },
+      'pageDown': {
+        name: 'Scroll message up',
+        action: function () {
+        }
       },
       'n': {
         name: "New message",

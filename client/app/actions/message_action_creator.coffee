@@ -3,7 +3,6 @@ AppDispatcher = require '../app_dispatcher'
 XHRUtils      = require '../utils/xhr_utils'
 AccountStore  = require "../stores/account_store"
 MessageStore  = require '../stores/message_store'
-LayoutActionCreator = require './layout_action_creator'
 
 module.exports =
 
@@ -27,6 +26,7 @@ module.exports =
                 callback error, message
 
     delete: (message, callback) ->
+        LayoutActionCreator = require './layout_action_creator'
         # Move message to Trash folder
         account = AccountStore.getByID(message.get 'accountID')
         if not account?
@@ -48,15 +48,25 @@ module.exports =
             delete msg.mailboxIDs[id] for id of msg.mailboxIDs
             msg.mailboxIDs[trash] = -1
             patches = jsonpatch.generate observer
-            XHRUtils.messagePatch message.get('id'), patches, (err, message) ->
+            XHRUtils.messagePatch message.get('id'), patches, (err, message) =>
                 if not err?
                     AppDispatcher.handleViewAction
                         type: ActionTypes.MESSAGE_DELETE
-                        value: message
+                        value: msg
+                options =
+                    autoclose: true,
+                    actions: [
+                        label: t 'message undelete'
+                        onClick: => @undelete()
+                    ]
+                LayoutActionCreator.notify t('message action delete ok'), options
+
                 if callback?
                     callback err
 
     move: (message, from, to, callback) ->
+        if typeof message is "string"
+            message = MessageStore.getByID message
         msg = message.toJSON()
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_ACTION
@@ -72,17 +82,20 @@ module.exports =
             if not error?
                 AppDispatcher.handleViewAction
                     type: ActionTypes.RECEIVE_RAW_MESSAGE
-                    value: message
+                    value: msg
             if callback?
                 callback error
 
     undelete: ->
+        LayoutActionCreator = require './layout_action_creator'
         action = MessageStore.getPrevAction()
         if action?
             message = MessageStore.getByID action.id
-            @move message, action.to, action.from
+            @move message, action.to, action.from, (err) ->
+                if not err?
+                    LayoutActionCreator.notify t('message undelete ok')
         else
-            LayoutActionCreator.alertError t 'message delete no trash'
+            LayoutActionCreator.alertError t 'message undelete error'
 
     updateFlag: (message, flags, callback) ->
         msg = message.toJSON()
@@ -94,3 +107,8 @@ module.exports =
                     value: message
             if callback?
                 callback error
+
+    setCurrent: (messageID) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_CURRENT
+            value: messageID

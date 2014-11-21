@@ -22,6 +22,7 @@ module.exports =
         'MESSAGE_BOXES'             : 'MESSAGE_BOXES'
         'MESSAGE_FLAG'              : 'MESSAGE_FLAG'
         'MESSAGE_ACTION'            : 'MESSAGE_ACTION'
+        'MESSAGE_CURRENT'           : 'MESSAGE_CURRENT'
 
         # Search
         'SET_SEARCH_QUERY'          : 'SET_SEARCH_QUERY'

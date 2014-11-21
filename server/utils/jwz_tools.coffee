@@ -33,20 +33,18 @@ module.exports =
             flattenMailboxTreeLevel boxes, tree, '', [], '/'
         return boxes
 
-    sanitizeHTML: (html) ->
-        sanitizer.sanitize html, (url) ->
+    sanitizeHTML: (html, attachments) ->
+        sanitizer.sanitize html.replace(/cid:/gim, 'cid;'), (url) ->
             url = url.toString()
-            if 0 is url.indexOf 'cid://'
-                cid = url.substring 6
-                attachment = message.attachments.filter (att) ->
+            if 0 is url.indexOf 'cid;'
+                cid = url.substring 4
+                attachment = attachments.filter (att) ->
                     att.contentId is cid
 
-                if name = attachment?[0].name
+                if name = attachment[0]?.fileName
                     return "/message/#{message.id}/attachments/#{name}"
                 else
                     return null
-
-            else return url.toString()
 
 
 # recursively browse the imap box tree building pathStr and pathArr

@@ -39,9 +39,6 @@ Mailbox = require './mailbox'
 ImapPool = require '../imap/pool'
 sanitizer = require 'sanitizer'
 htmlToText  = require 'html-to-text'
-htmlToTextOptions =
-    tables: true
-    wordwrap: 80
 
 # Public: get messages in a box, sorted by Date
 #
@@ -547,14 +544,17 @@ Message.pickConversationID = (rows, callback) ->
 Message::toClientObject = ->
     log.debug "toClientObject"
     raw = @toObject()
-    if raw.html?
-        raw.html = mailutils.sanitizeHTML sanitizer.sanitize raw.html
-
-    if not raw.text?
-        raw.text = htmlToText.fromString raw.html, htmlToTextOptions
 
     raw.attachments?.forEach (file) ->
         file.url = "/message/#{raw.id}/attachments/#{file.generatedFileName}"
+
+    if raw.html?
+        raw.html = mailutils.sanitizeHTML raw.html, raw.attachments
+
+    if not raw.text?
+        raw.text = htmlToText.fromString raw.html,
+            tables: true
+            wordwrap: 80
 
     return raw
 

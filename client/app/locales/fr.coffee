@@ -52,6 +52,7 @@ module.exports =
       "list sort"               : "Trier"
       "list sort date"          : "Date"
       "list sort subject"       : "Sujet"
+      "list option compact"     : "Compact"
       "list next page"          : "Davantage de messages"
       "list end"                : "FIN"
 
@@ -168,6 +169,8 @@ module.exports =
       "message images display"      : "Afficher les images"
       "message html display"        : "Afficher en HTML"
       "message delete no trash"     : "Choisissez d'abord un dossier Corbeille"
+      "message undelete"            : "Annuler la suppression"
+      "message undelete ok"         : "Message restauré"
       "message undelete error"      : "Impossible d'annuler l'action"
 
       # Settings
@@ -179,6 +182,7 @@ module.exports =
       "settings plugins"           : "Modules complémentaires"
       "settings label composeInHTML"        : "Éditeur riche"
       "settings label displayConversation"  : "Afficher les conversations"
+      "settings label displayPreview"       : "Prévisualiser les messages"
       "settings label messageDisplayHTML"   : "Afficher les messages en HTML"
       "settings label messageDisplayImages" : "Afficher les images"
       "settings label messageConfirmDelete" : "Demander confirmation avant

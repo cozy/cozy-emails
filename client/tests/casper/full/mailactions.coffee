@@ -12,6 +12,7 @@ casper.test.begin 'Test Message Actions', (test) ->
             window.cozyMails.setSetting 'messageDisplayHTML', true
             window.cozyMails.setSetting 'messageDisplayImages', false
             window.cozyMails.setSetting 'displayConversation', true
+            window.cozyMails.setSetting 'displayPreview', true
             window.cozyMails.setSetting 'messageConfirmDelete', true
 
     casper.then ->
