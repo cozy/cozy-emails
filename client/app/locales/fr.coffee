@@ -138,6 +138,9 @@ module.exports =
       "mailbox title add cancel"    : "Annuler"
       "mailbox title favorite"      : "Dossier affiché"
       "mailbox title not favorite"  : "Dossier non affiché"
+      "mailbox title total"         : "Total"
+      "mailbox title unread"        : "Non lus"
+      "mailbox title new"           : "Nouveaux"
       "config error auth"           : "Impossible de se connecter avec ces
                                         paramètres"
       "config error imapPort"       : "Port du serveur IMAP invalide"
