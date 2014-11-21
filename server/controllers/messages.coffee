@@ -184,7 +184,6 @@ contentToBuffer = (req, attachment, callback) ->
     # file in the DS, from a previous save of the draft
     # cache it and pass around
     if attachment.url
-        log.debug "D"
         stream = req.message.getBinary filename, (err) ->
             log.error "Attachment streaming error", err if err
 
@@ -195,7 +194,6 @@ contentToBuffer = (req, attachment, callback) ->
     # file just uploaded, take the buffer from the multipart req
     # content is a buffer
     else if req.files[filename]
-        log.debug "E"
         callback null, req.files[filename].content
 
     else
@@ -227,9 +225,7 @@ module.exports.send = (req, res, next) ->
     steps.push (cb) ->
         log.debug "gathering attachments"
         async.mapSeries message.attachments, (attachment, cbMap) ->
-            log.debug "A"
             contentToBuffer req, attachment, (err, content) ->
-                log.debug "B"
                 return cbMap err if err
                 return cbMap null,
                     content            : content
@@ -239,7 +235,6 @@ module.exports.send = (req, res, next) ->
                     contentDisposition : attachment.contentDispositioncontentToBuffer
 
         , (err, cacheds) ->
-            log.debug "C"
             return cb err if err
             message.attachments = cacheds
             cb()
