@@ -152,7 +152,7 @@ class ImapPool
     _giveUp: (err) ->
         log.debug @id, "giveup", err
         delete @account
-        while task = @waitingOperations.pop()
+        while task = @tasks.pop()
             task.callback err
 
     _deQueue: =>
