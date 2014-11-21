@@ -3,12 +3,18 @@ classer = React.addons.classSet
 
 RouterMixin    = require '../mixins/router_mixin'
 MessageUtils   = require '../utils/message_utils'
-{MessageFlags, MessageFilter} = require '../constants/app_constants'
+{MessageFlags, MessageFilter, FlagsConstants} = require '../constants/app_constants'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 ContactActionCreator = require '../actions/contact_action_creator'
+ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 MessageStore   = require '../stores/message_store'
 Participants   = require './participant'
+ToolboxActions = require './toolbox_actions'
+ToolboxMove    = require './toolbox_move'
+
+alertError   = LayoutActionCreator.alertError
+alertSuccess = LayoutActionCreator.alertSuccess
 
 MessageList = React.createClass
     displayName: 'MessageList'
@@ -25,6 +31,11 @@ MessageList = React.createClass
             compact: false
             edited: false
         }
+
+    componentWillReceiveProps: (props) ->
+        if props.mailboxID isnt @props.mailboxID
+            @setState edited: false
+            @_selected = {}
 
     render: ->
         messages = @props.messages.map (message, key) =>
@@ -63,21 +74,31 @@ MessageList = React.createClass
                 MessagesSort filterParams
                 div className: 'btn-toolbar', role: 'toolbar',
                     div className: 'btn-group',
-                        div className: 'btn-group message-list-option',
+                        div className: 'btn-group btn-group-sm message-list-option',
                             button
                                 type: "button"
                                 className: "btn btn-default " + classEdited
                                 onClick: @toggleEdited,
                                     i className: 'fa fa-pencil'
                         if @state.edited
-                            div className: 'btn-group message-list-option',
+                            div className: 'btn-group btn-group-sm message-list-option',
                                 button
                                     className: 'btn btn-default trash',
                                     type: 'button',
                                     onClick: @onDelete,
                                         span
                                             className: 'fa fa-trash-o'
-                        div className: 'btn-group message-list-option',
+                        if @state.edited
+                            ToolboxMove
+                                mailboxes: @props.mailboxes
+                                onMove: @onMove
+                        if @state.edited
+                            ToolboxActions
+                                mailboxes: @props.mailboxes
+                                onMark: @onMark
+                                onConversation: @onConversation
+                                onHeaders: @onHeaders
+                        div className: 'btn-group btn-group-sm message-list-option',
                             button
                                 type: "button"
                                 className: "btn btn-default " + classCompact
@@ -108,7 +129,6 @@ MessageList = React.createClass
         @setState edited: not @state.edited
 
     onDelete: ->
-        alertError   = LayoutActionCreator.alertError
         selected = Object.keys @_selected
         if selected.length is 0
             alertError t 'list mass no message'
@@ -118,6 +138,71 @@ MessageList = React.createClass
                     MessageActionCreator.delete id, (error) ->
                         if error?
                             alertError "#{t("message action delete ko")} #{error}"
+
+    onMove: (args) ->
+        selected = Object.keys @_selected
+        if selected.length is 0
+            alertError t 'list mass no message'
+        else
+            newbox = args.target.dataset.value
+            if args.target.dataset.conversation?
+                selected.forEach (id) =>
+                    message = @props.messages.get id
+                    conversationID = message.get('conversationID')
+                    ConversationActionCreator.move conversationID, newbox, (error) ->
+                        if error?
+                            alertError "#{t("conversation move ko")} #{error}"
+            else
+                selected.forEach (id) =>
+                    message = @props.messages.get id
+                    MessageActionCreator.move message, @props.mailboxID, newbox, (error) ->
+                        if error?
+                            alertError "#{t("message action move ko")} #{error}"
+
+    onMark: (args) ->
+        selected = Object.keys @_selected
+        if selected.length is 0
+            alertError t 'list mass no message'
+        else
+            flag = args.target.dataset.value
+            selected.forEach (id) =>
+                message = @props.messages.get id
+                flags = message.get('flags').slice()
+                switch flag
+                    when FlagsConstants.SEEN
+                        flags.push MessageFlags.SEEN
+                    when FlagsConstants.UNSEEN
+                        flags = flags.filter (e) -> return e isnt FlagsConstants.SEEN
+                    when FlagsConstants.FLAGGED
+                        flags.push MessageFlags.FLAGGED
+                    when FlagsConstants.NOFLAG
+                        flags = flags.filter (e) -> return e isnt FlagsConstants.FLAGGED
+                MessageActionCreator.updateFlag message, flags, (error) ->
+                    if error?
+                        alertError "#{t("message action mark ko")} #{error}"
+
+    onConversation: (args) ->
+        selected = Object.keys @_selected
+        if selected.length is 0
+            alertError t 'list mass no message'
+        else
+            selected.forEach (id) =>
+                message = @props.messages.get id
+                conversationID = message.get 'conversationID'
+                action = args.target.dataset.action
+                switch action
+                    when 'delete'
+                        ConversationActionCreator.delete conversationID(error) ->
+                            if error?
+                                alertError "#{t("conversation delete ko")} #{error}"
+                    when 'seen'
+                        ConversationActionCreator.seen conversationID(error) ->
+                            if error?
+                                alertError "#{t("conversation seen ok ")} #{error}"
+                    when 'unseen'
+                        ConversationActionCreator.unseen conversationID(error) ->
+                            if error?
+                                alertError "#{t("conversation unseen ok")} #{error}"
 
     _isVisible: (node, before) ->
         margin = if before then 40 else 0

@@ -97,3 +97,9 @@ module.exports =
         'ALL'     :  '\\All'
         'SPAM'    :  '\\Junk'
         'FLAGGED' :  '\\Flagged'
+
+    FlagsConstants:
+        SEEN   : '\\Seen'
+        UNSEEN : 'Unseen'
+        FLAGGED: '\\Flagged'
+        NOFLAG : 'Noflag'

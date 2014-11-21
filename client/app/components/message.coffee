@@ -1,20 +1,16 @@
 {div, ul, li, span, i, p, h3, a, button, pre, iframe, img} = React.DOM
-Compose      = require './compose'
-FilePicker   = require './file_picker'
+Compose        = require './compose'
+FilePicker     = require './file_picker'
+ToolboxActions = require './toolbox_actions'
+ToolboxMove    = require './toolbox_move'
 MessageUtils = require '../utils/message_utils'
-{ComposeActions, MessageFlags} = require '../constants/app_constants'
+{ComposeActions, MessageFlags, FlagsConstants} = require '../constants/app_constants'
 LayoutActionCreator       = require '../actions/layout_action_creator'
 ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 ContactActionCreator      = require '../actions/contact_action_creator'
 RouterMixin = require '../mixins/router_mixin'
 Participants  = require './participant'
-
-FlagsConstants =
-    SEEN   : MessageFlags.SEEN
-    UNSEEN : "Unseen"
-    FLAGGED: MessageFlags.FLAGGED
-    NOFLAG : "Noflag"
 
 classer = React.addons.classSet
 
@@ -375,86 +371,17 @@ module.exports = React.createClass
                     #                    onClick: @onMark,
                     #                    'data-value': FlagsConstants.NOFLAG,
                     #                    t 'mail mark nofav'
-                    div className: 'btn-group btn-group-sm',
-                        button
-                            className: 'btn btn-default dropdown-toggle move',
-                            type: 'button',
-                            'data-toggle': 'dropdown',
-                            t 'mail action move',
-                                span className: 'caret'
-                        ul
-                            className: 'dropdown-menu dropdown-menu-right',
-                            role: 'menu',
-                                @props.mailboxes.map (mailbox, key) =>
-                                    @renderMailboxes mailbox, key
-                                .toJS()
-                    div className: 'btn-group btn-group-sm',
-                        button
-                            className: 'btn btn-default dropdown-toggle more',
-                            type: 'button',
-                            'data-toggle': 'dropdown',
-                            t 'mail action more',
-                                span className: 'caret'
-                        ul className: 'dropdown-menu dropdown-menu-right', role: 'menu',
-                            li
-                                role: 'presentation',
-                                t 'mail action mark'
-                            if isSeen
-                                li null,
-                                    a
-                                        role: 'menuitem',
-                                        onClick: @onMark,
-                                        'data-value': FlagsConstants.SEEN,
-                                        t 'mail mark read'
-                            else
-                                li null,
-                                    a role: 'menuitem',
-                                    onClick: @onMark,
-                                    'data-value': FlagsConstants.UNSEEN,
-                                    t 'mail mark unread'
-                            if isFlagged
-                                li null,
-                                    a
-                                        role: 'menuitem',
-                                        onClick: @onMark,
-                                        'data-value': FlagsConstants.FLAGGED,
-                                        t 'mail mark fav'
-                            else
-                                li null,
-                                    a
-                                        role: 'menuitem',
-                                        onClick: @onMark,
-                                        'data-value': FlagsConstants.NOFLAG,
-                                        t 'mail mark nofav'
-                            li role: 'presentation', className: 'divider'
-                            li role: 'presentation',
-                                a
-                                    onClick: @onHeaders,
-                                    'data-message-id': id,
-                                    t 'mail action headers'
-                            li role: 'presentation',
-                                a
-                                    onClick: @onConversation,
-                                    'data-action' : 'delete',
-                                    t 'mail action conversation delete'
-                            li role: 'presentation',
-                                a
-                                    onClick: @onConversation,
-                                    'data-action' : 'seen',
-                                    t 'mail action conversation seen'
-                            li role: 'presentation',
-                                a
-                                    onClick: @onConversation,
-                                    'data-action' : 'unseen',
-                                    t 'mail action conversation unseen'
-                            li role: 'presentation', className: 'divider'
-                            li
-                                role: 'presentation',
-                                t 'mail action conversation move'
-                            @props.mailboxes.map (mailbox, key) =>
-                                @renderMailboxes mailbox, key, true
-                            .toJS()
-                            li role: 'presentation', className: 'divider'
+                    ToolboxMove
+                        mailboxes: @props.mailboxes
+                        onMove: @onMove
+                    ToolboxActions
+                        mailboxes: @props.mailboxes
+                        isSeen: isSeen
+                        isFlagged: isFlagged
+                        messageID: id
+                        onMark: @onMark
+                        onConversation: @onConversation
+                        onHeaders: @onHeaders
 
     renderNavigation: ->
 
@@ -509,20 +436,6 @@ module.exports = React.createClass
                                 onClick: displayNext,
                                     a href: nextUrl,
                                         span className: 'fa fa-long-arrow-right'
-
-    renderMailboxes: (mailbox, key, conversation) ->
-        # Don't display current mailbox
-        if mailbox.get('id') is @props.selectedMailboxID
-            return
-        pusher = ""
-        pusher += "--" for j in [1..mailbox.get('depth')] by 1
-        li role: 'presentation', key: key,
-            a
-                role: 'menuitem',
-                onClick: @onMove,
-                'data-value': key,
-                'data-conversation': conversation,
-                "#{pusher}#{mailbox.get 'label'}"
 
     _initFrame: ->
         panel = document.querySelector "#panels > .panel:nth-of-type(2)"

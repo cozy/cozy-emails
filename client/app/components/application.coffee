@@ -235,6 +235,7 @@ module.exports = Application = React.createClass
                 accountID:     accountID
                 mailboxID:     mailboxID
                 messageID:     messageID
+                mailboxes:     @state.mailboxes
                 settings:      @state.settings
                 query:         query
                 emptyListMessage: emptyListMessage
