@@ -122,7 +122,7 @@ module.exports.listByMailbox = (req, res, next) ->
         if messages.length is MSGBYPAGE
             last = messages[messages.length - 1]
             lastDate = last.date or new Date()
-            pageAfter = if sortField is 'date' then lastDate.toISOString()
+            pageAfter = if req.sortField is 'date' then lastDate.toISOString()
             else last.normSubject
 
             links = next: "/mailbox/#{mailboxID}?" + querystring.stringify
