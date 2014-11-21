@@ -93,6 +93,7 @@ module.exports.listByMailboxOptions = (req, res, next) ->
     req.sortField = sortField
     req.descending = descending
     req.before = before
+    req.sort = sort
     req.after = after
     req.pageAfter = pageAfter
     req.flag = flag
@@ -126,11 +127,11 @@ module.exports.listByMailbox = (req, res, next) ->
             else last.normSubject
 
             links = next: "/mailbox/#{mailboxID}?" + querystring.stringify
-                flag: flagcode
-                sort: sort
-                before: before
-                after: after
-                pageAfter: pageAfter
+                flag: req.flagcode
+                sort: req.sort
+                before: req.before
+                after: req.after
+                pageAfter: req.pageAfter
 
         else
             links = {}
