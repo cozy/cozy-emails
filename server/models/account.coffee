@@ -163,7 +163,8 @@ Account::imap_getBoxes = (callback) ->
     log.debug "getBoxes"
     @doASAP (imap, cb) ->
         imap.getBoxesArray cb
-    , callback
+    , (err, boxes) ->
+        return callback err, boxes or []
 
 Account::imap_refreshBoxes = (callback) ->
     log.debug "imap_refreshBoxes"
