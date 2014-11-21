@@ -33,9 +33,9 @@ module.exports =
         delete: [accounts.fetch, accounts.remove]
 
     'conversation/:conversationID':
-        get: [messages.conversationGet]
-        delete: [messages.conversationDelete]
-        patch: [messages.conversationPatch]
+        get: [messages.fetchConversation, messages.conversationGet]
+        delete: [messages.fetchConversation, messages.conversationDelete]
+        patch: [messages.fetchConversation, messages.conversationPatch]
 
     'mailbox':
         post: [accounts.fetch,
