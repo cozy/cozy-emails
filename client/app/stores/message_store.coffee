@@ -44,8 +44,6 @@ class MessageStore extends Store
         .map (message) -> Immutable.fromJS message
         .toOrderedMap()
 
-    _counts       = Immutable.Map()
-    _unreadCounts = Immutable.Map()
     _filter       = null
     _params       = null
     _currentMessages = null
@@ -110,9 +108,6 @@ class MessageStore extends Store
                     #    _params.flag = null#'all'
 
             if messages.count? and messages.mailboxID?
-                _counts = _counts.set messages.mailboxID, messages.count
-                _unreadCounts = _unreadCounts.set messages.mailboxID,
-                    messages.unread
                 messages = messages.messages.sort __sortFunction
 
             onReceiveRawMessage message, true for message in messages
@@ -271,12 +266,6 @@ class MessageStore extends Store
             return null
         else
             return keys[idx + 1]
-
-    getMessagesCounts: ->
-        return _counts
-
-    getUnreadMessagesCounts:  ->
-        return _unreadCounts
 
     getMessagesByConversation: (messageID) ->
         idsToLook = [messageID]

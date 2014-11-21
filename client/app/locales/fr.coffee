@@ -36,6 +36,9 @@ module.exports =
       "menu compose"            : "Nouveau"
       "menu account new"        : "Ajouter un compte"
       "menu settings"           : "Paramètres"
+      "menu mailbox total"      : "%{smart_count} message |||| %{smart_count} messages "
+      "menu mailbox unread"     : " dont %{smart_count} non lu |||| dont %{smart_count} non lus "
+      "menu mailbox new"        : " et %{smart_count} nouveaux |||| et %{smart_count} nouveaux "
 
       # List
       "list empty"              : "Pas d'email dans cette boîte.."
