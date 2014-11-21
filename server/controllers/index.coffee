@@ -10,7 +10,7 @@ fixtures = require 'cozy-fixtures'
 module.exports.main = (req, res, next) ->
 
     async.parallel [
-        Settings.getInstance
+        Settings.get
         CozyInstance.getLocale
         Account.clientList
     ], (err, results) ->

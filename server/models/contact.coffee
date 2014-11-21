@@ -1,6 +1,7 @@
 americano = require 'americano-cozy'
 async = require 'async'
 stream_to_buffer_array = require '../utils/stream_to_array'
+log = require('../utils/logging')(prefix: 'models:contact')
 
 module.exports = Contact = americano.getModel 'Contact',
     id            : String
@@ -28,12 +29,23 @@ Contact::includePicture = (callback) ->
 
 # @TODO try Couchdb ?attachments=true
 Contact.requestWithPictures = (name, options, callback) ->
+    log.info "requestWithPictures"
     Contact.request name, options, (err, contacts) ->
-        async.mapSeries contacts, (contact, cb)  ->
-            contact.includePicture cb
-        , callback
+        outids = []
+        out = []
+        async.eachSeries contacts, (contact, cb)  ->
+            return cb null if contact.id in outids
+            contact.includePicture (err, contactWIthPicture) ->
+                return cb err if err
+                outids.push contact.id
+                out.push contactWIthPicture
+                cb null
+
+        , (err) ->
+            callback err, out
 
 Contact.createNoDuplicate = (data, callback) ->
+    log.info "createNoDuplicate"
     key = data.address
     Contact.request 'byEmail',
         key: data.address
@@ -49,6 +61,5 @@ Contact.createNoDuplicate = (data, callback) ->
             ]
 
         Contact.create contact, (err, created) ->
-            console.log "C", err, created
             return callback err if err
             Contact.request 'byEmail', key: key, callback

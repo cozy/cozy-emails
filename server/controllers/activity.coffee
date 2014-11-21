@@ -36,11 +36,10 @@ ContactActivity =
             request = 'all'
             params = {}
 
-        Contact.requestWithPictures request,  params, callback
+        Contact.requestWithPictures request, params, callback
 
 
     create: (data, callback) ->
-        console.log data
         if data.contact?.address?
             Contact.createNoDuplicate data.contact, callback
         else
