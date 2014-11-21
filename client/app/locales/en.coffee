@@ -57,6 +57,8 @@ module.exports =
       "list option compact"     : "Compacte"
       "list next page"          : "More messages"
       "list end"                : "This is the end of the road"
+      "list mass no message"    : "No message selected"
+      "list delete confirm"     : "Do you really want to delete %{nb} messages ?"
 
       # Mail
       "mail receivers"          : "To: "
@@ -150,7 +152,7 @@ module.exports =
       "message action sent ko"      : "Error sending message: "
       "message action draft ok"     : "Message saved"
       "message action draft ko"     : "Error saving message: "
-      "message action delete ok"    : "Message deleted"
+      "message action delete ok"    : "Message “%{subject}” deleted"
       "message action delete ko"    : "Error deleting message: "
       "message action move ok"      : "Message moved"
       "message action move ko"      : "Error moving message: "

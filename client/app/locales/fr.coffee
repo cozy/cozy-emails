@@ -58,6 +58,8 @@ module.exports =
       "list option compact"     : "Compact"
       "list next page"          : "Davantage de messages"
       "list end"                : "FIN"
+      "list mass no message"    : "Aucun message sélectionné"
+      "list delete confirm"     : "Voulez-vous vraiment supprimer %{nb} messages ?"
 
       # Mail
       "mail receivers"          : "À "
@@ -156,7 +158,7 @@ module.exports =
       "message action sent ko"      : "Une erreur est survenue : "
       "message action draft ok"     : "Message sauvegardé !"
       "message action draft ko"     : "Une erreur est survenue : "
-      "message action delete ok"    : "Message supprimé"
+      "message action delete ok"    : "Message « %{subject} » supprimé"
       "message action delete ko"    : "Impossible de supprimer le message : "
       "message action move ok"      : "Message déplacé"
       "message action move ko"      : "Le déplacement a échoué"

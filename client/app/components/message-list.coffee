@@ -13,18 +13,34 @@ Participants   = require './participant'
 MessageList = React.createClass
     displayName: 'MessageList'
 
+    _selected: {}
+
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
     getInitialState: ->
-        return compact: false
+        return {
+            compact: false
+            edited: false
+        }
 
     render: ->
         messages = @props.messages.map (message, key) =>
-            isActive = @props.messageID is message.get('id')
-            @getMessageRender message, key, isActive
+            id = message.get('id')
+            isActive = @props.messageID is id
+            MessageItem
+                message: message,
+                key: key,
+                isActive: isActive,
+                edited: @state.edited,
+                settings: @props.settings
+                onSelect: (val) =>
+                    if val
+                        @_selected[id] = val
+                    else
+                        delete @_selected[id]
         .toJS()
         nbMessages = parseInt @props.counterMessage, 10
         filterParams =
@@ -35,19 +51,38 @@ MessageList = React.createClass
             LayoutActionCreator.showMessageList parameters: @props.query
         classList = classer
             compact: @state.compact
+            edited: @state.edited
         classCompact = classer
             active: @state.compact
+        classEdited = classer
+            active: @state.edited
         div className: 'message-list ' + classList, ref: 'list',
             div className: 'message-list-actions',
                 #MessagesQuickFilter {}
                 MessagesFilter filterParams
                 MessagesSort filterParams
-                div className: 'message-list-options',
-                    button
-                        type: "button"
-                        className: "btn btn-default " + classCompact
-                        onClick: @toggleCompact
-                        t 'list option compact'
+                div className: 'btn-toolbar', role: 'toolbar',
+                    div className: 'btn-group',
+                        div className: 'btn-group message-list-option',
+                            button
+                                type: "button"
+                                className: "btn btn-default " + classEdited
+                                onClick: @toggleEdited,
+                                    i className: 'fa fa-pencil'
+                        if @state.edited
+                            div className: 'btn-group message-list-option',
+                                button
+                                    className: 'btn btn-default trash',
+                                    type: 'button',
+                                    onClick: @onDelete,
+                                        span
+                                            className: 'fa fa-trash-o'
+                        div className: 'btn-group message-list-option',
+                            button
+                                type: "button"
+                                className: "btn btn-default " + classCompact
+                                onClick: @toggleCompact
+                                t 'list option compact'
             if @props.messages.count() is 0
                 p null, @props.emptyListMessage
             else
@@ -65,92 +100,24 @@ MessageList = React.createClass
                     else
                         p null, t 'list end'
 
-    getMessageRender: (message, key, isActive) ->
-        flags = message.get('flags')
-        classes = classer
-            message: true
-            read: message.get 'isRead'
-            active: isActive
-            'unseen': flags.indexOf(MessageFlags.SEEN) is -1
-            'has-attachments': message.get 'hasAttachments'
-            'is-fav': flags.indexOf(MessageFlags.FLAGGED) isnt -1
-
-        isDraft = message.get('flags').indexOf(MessageFlags.DRAFT) isnt -1
-
-        if isDraft
-            action = 'edit'
-            id     = message.get 'id'
-        else
-            conversationID = message.get 'conversationID'
-            if conversationID and @props.settings.get('displayConversation')
-                action = 'conversation'
-                id     = message.get 'id'
-            else
-                action = 'message'
-                id     = message.get 'id'
-        url = @buildUrl
-            direction: 'second'
-            action: action
-            parameters: id
-
-        date   = MessageUtils.formatDate message.get 'createdAt'
-        avatar = MessageUtils.getAvatar message
-
-        li
-            className: classes,
-            key: key,
-            'data-message-id': message.get('id'),
-            draggable: true,
-            onDragStart: @onDragStart,
-                a
-                    href: url,
-                    'data-message-id': message.get('id'),
-                    onClick: @onMessageClick,
-                    onDoubleClick: @onMessageDblClick,
-                        if avatar?
-                            img className: 'avatar', src: avatar
-                        else
-                            i className: 'fa fa-user'
-                        span className: 'participants', @getParticipants message
-                        div className: 'preview',
-                            span className: 'title', message.get 'subject'
-                            p null, message.get('text')?.substr(0, 100) + "…"
-                        span className: 'hour', date
-                        span className: "flags",
-                            i className: 'attach fa fa-paperclip'
-                            i className: 'fav fa fa-star'
-
-    onMessageClick: (event) ->
-        if not @props.settings.get('displayPreview')
-            event.preventDefault()
-            MessageActionCreator.setCurrent event.currentTarget.dataset.messageId
-
-    onMessageDblClick: (event) ->
-        url = event.currentTarget.href.split('#')[1]
-        window.router.navigate url, {trigger: true}
-
-    onDragStart: (event) ->
-        event.stopPropagation()
-        data =
-            messageID: event.currentTarget.dataset.messageId
-            mailboxID: @props.mailboxID
-        event.dataTransfer.setData 'text', JSON.stringify(data)
-        event.dataTransfer.effectAllowed = 'move'
-        event.dataTransfer.dropEffect = 'move'
-
-    getParticipants: (message) ->
-        from = message.get 'from'
-        to   = message.get('to').concat(message.get('cc'))
-        span null,
-            Participants participants: from, onAdd: @addAddres
-            span null, ', '
-            Participants participants: to, onAdd: @addAddress
-
-    addAddress: (address) ->
-        ContactActionCreator.createContact address
 
     toggleCompact: ->
         @setState compact: not @state.compact
+
+    toggleEdited: ->
+        @setState edited: not @state.edited
+
+    onDelete: ->
+        alertError   = LayoutActionCreator.alertError
+        selected = Object.keys @_selected
+        if selected.length is 0
+            alertError t 'list mass no message'
+        else
+            if window.confirm(t 'list delete confirm', nb: selected.length)
+                selected.forEach (id) ->
+                    MessageActionCreator.delete id, (error) ->
+                        if error?
+                            alertError "#{t("message action delete ko")} #{error}"
 
     _isVisible: (node, before) ->
         margin = if before then 40 else 0
@@ -192,6 +159,120 @@ MessageList = React.createClass
         scrollable.removeEventListener 'scroll', @_loadNext
 
 module.exports = MessageList
+
+MessageItem = React.createClass
+    displayName: 'MessagesItem'
+
+    mixins: [RouterMixin]
+
+    getInitialState: ->
+        return {
+            selected: @props.message.get('selected') is true
+        }
+
+    render: ->
+        message = @props.message
+        flags = message.get('flags')
+        classes = classer
+            message: true
+            read: message.get 'isRead'
+            active: @props.isActive
+            'unseen': flags.indexOf(MessageFlags.SEEN) is -1
+            'has-attachments': message.get 'hasAttachments'
+            'is-fav': flags.indexOf(MessageFlags.FLAGGED) isnt -1
+
+        isDraft = message.get('flags').indexOf(MessageFlags.DRAFT) isnt -1
+
+        if isDraft
+            action = 'edit'
+            id     = message.get 'id'
+        else
+            conversationID = message.get 'conversationID'
+            if conversationID and @props.settings.get('displayConversation')
+                action = 'conversation'
+                id     = message.get 'id'
+            else
+                action = 'message'
+                id     = message.get 'id'
+        if not @props.edited
+            url = @buildUrl
+                direction: 'second'
+                action: action
+                parameters: id
+            tag = a
+        else
+            tag = span
+
+        date   = MessageUtils.formatDate message.get 'createdAt'
+        avatar = MessageUtils.getAvatar message
+
+        li
+            className: classes,
+            key: @props.key,
+            'data-message-id': message.get('id'),
+            draggable: not @props.edited,
+            onDragStart: @onDragStart,
+                tag
+                    href: url,
+                    'data-message-id': message.get('id'),
+                    onClick: @onMessageClick,
+                    onDoubleClick: @onMessageDblClick,
+                        if @props.edited
+                            input
+                                className: 'avatar',
+                                type: 'checkbox',
+                                checked: @state.selected
+                                onChange: @onSelect
+                        else
+                            if avatar?
+                                img className: 'avatar', src: avatar
+                            else
+                                i className: 'fa fa-user'
+                        span className: 'participants', @getParticipants message
+                        div className: 'preview',
+                            span className: 'title', message.get 'subject'
+                            p null, message.get('text')?.substr(0, 100) + "…"
+                        span className: 'hour', date
+                        span className: "flags",
+                            i className: 'attach fa fa-paperclip'
+                            i className: 'fav fa fa-star'
+
+    onSelect: (e) ->
+        @props.onSelect(not @state.selected)
+        @setState selected: not @state.selected
+
+    onMessageClick: (event) ->
+        if @props.edited
+            @onSelect(event)
+        else
+            if not @props.settings.get('displayPreview')
+                event.preventDefault()
+                MessageActionCreator.setCurrent event.currentTarget.dataset.messageId
+
+    onMessageDblClick: (event) ->
+        if not @props.edited
+            url = event.currentTarget.href.split('#')[1]
+            window.router.navigate url, {trigger: true}
+
+    onDragStart: (event) ->
+        event.stopPropagation()
+        data =
+            messageID: event.currentTarget.dataset.messageId
+            mailboxID: @props.mailboxID
+        event.dataTransfer.setData 'text', JSON.stringify(data)
+        event.dataTransfer.effectAllowed = 'move'
+        event.dataTransfer.dropEffect = 'move'
+
+    getParticipants: (message) ->
+        from = message.get 'from'
+        to   = message.get('to').concat(message.get('cc'))
+        span null,
+            Participants participants: from, onAdd: @addAddres
+            span null, ', '
+            Participants participants: to, onAdd: @addAddress
+
+    addAddress: (address) ->
+        ContactActionCreator.createContact address
 
 MessagesQuickFilter = React.createClass
     displayName: 'MessagesQuickFilter'

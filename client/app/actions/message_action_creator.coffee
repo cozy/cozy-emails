@@ -26,6 +26,8 @@ module.exports =
                 callback error, message
 
     delete: (message, callback) ->
+        if typeof message is "string"
+            message = MessageStore.getByID message
         LayoutActionCreator = require './layout_action_creator'
         # Move message to Trash folder
         account = AccountStore.getByID(message.get 'accountID')
@@ -59,7 +61,7 @@ module.exports =
                         label: t 'message undelete'
                         onClick: => @undelete()
                     ]
-                LayoutActionCreator.notify t('message action delete ok'), options
+                LayoutActionCreator.notify t('message action delete ok', subject: msg.subject), options
 
                 if callback?
                     callback err
