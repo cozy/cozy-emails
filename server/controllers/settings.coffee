@@ -2,12 +2,12 @@ Settings = require '../models/settings'
 
 module.exports =
 
-    change: (req, res, next) ->
-        Settings.getInstance (err, settings) ->
+    get: (req, res, next) ->
+        Settings.get (err, settings) ->
             return next err if err
+            res.send settings
 
-            for key, value of req.body
-                settings[key] = value
-
-            settings.save (err) ->
-                res.send settings
+    change: (req, res, next) ->
+        Settings.set req.body, (err, updated) ->
+            return next err if err
+            res.send updated

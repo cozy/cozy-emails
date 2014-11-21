@@ -17,6 +17,7 @@ module.exports =
     'refresh': get: index.refresh
 
     'settings':
+        get: settings.get
         put: settings.change
 
     'activity':

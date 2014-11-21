@@ -29,6 +29,10 @@ describe "Server tests", ->
             @timeout 120000
             fixtures.removeDocumentsOf 'mailbox', done
 
+        before (done) ->
+            @timeout 120000
+            fixtures.removeDocumentsOf 'mailssettings', done
+
     # setup test IMAP server
     unless process.env.SKIP_DOVECOT
         before DovecotTesting.setupEnvironment
@@ -71,9 +75,10 @@ describe "Server tests", ->
         delete global.client
 
     # SERVER TESTS
-    require './00_index'
-    require './01_account_creation'
-    require './02_account_synchro'
-    require './03_mailbox_operations'
-    require './04_message_operations'
-    require './05_mailbox_deletion'
+    # require './00_index'
+    # require './01_account_creation'
+    # require './02_account_synchro'
+    # require './03_mailbox_operations'
+    # require './04_message_operations'
+    # require './05_mailbox_deletion'
+    require './06_settings'
