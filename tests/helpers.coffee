@@ -4,13 +4,16 @@
 fixtures = require 'cozy-fixtures'
 {exec} = require 'child_process'
 DovecotTesting = require 'dovecot-testing'
+Imap = require 'imap'
+_ = require 'lodash'
 
 module.exports = helpers = {}
 
 helpers.app = null
 
-helpers.getImapServerRawConnection = ->
-    Imap = require '../server/processes/imap_promisified'
+helpers.getImapServerRawConnection = (done, operation) ->
+
+    next = _.once done
     imap = new Imap
         user: "testuser"
         password: "applesauce"
@@ -18,6 +21,11 @@ helpers.getImapServerRawConnection = ->
         port: 993
         tls: true
         tlsOptions: rejectUnauthorized: false
+    imap.on 'ready', operation.bind imap
+    imap.on 'error', (err) -> next err
+    imap.on 'close', (err) ->
+        if err then next err else next null
+    imap.connect()
 
 helpers.startApp = (host, port) -> (done) ->
     @timeout 20000

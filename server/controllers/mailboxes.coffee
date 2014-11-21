@@ -2,96 +2,80 @@ async = require 'async'
 
 Account = require '../models/account'
 Mailbox = require '../models/mailbox'
-Promise = require 'bluebird'
 {BadRequest, NotFound} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'mailbox:controller')
 _ = require 'lodash'
+async = require 'async'
+
+module.exports.fetch = (req, res, next) ->
+    id = req.params.mailboxID
+    Mailbox.find req.params.mailboxID, (err, mailbox) ->
+        return next err if err
+        req.mailbox = mailbox
+        next()
+
+module.exports.fetchParent = (req, res, next) ->
+    return async.nextTick next unless req.body.parentID
+
+    Mailbox.find req.body.parentID, (err, mailbox) ->
+        return next err if err
+        req.parentMailbox = mailbox
+        next()
 
 # create a mailbox
 module.exports.create = (req, res, next) ->
     log.info "Creating #{req.body.label} under #{req.body.parentID}" +
         " in #{req.body.accountID}"
 
-    pAccount = Account.findPromised req.body.accountID
-    pParent = if req.body.parentID then Mailbox.findPromised req.body.parentID
-    else Promise.resolve null
+    account = req.account
+    parent = req.parentMailbox
+    label = req.body.label
 
-
-    Promise.join pAccount, pParent, (account, parent) ->
-        if parent
-            path = parent.path + parent.delimiter + req.body.label
-            tree = parent.tree.concat req.body.label
-        else
-            path = req.body.label
-            tree = [req.body.label]
-
-        # @TODO : probably better to get it from IMAP
-        mailbox =
-            accountID: account.id
-            label: req.body.label
-            path: path
-            tree: tree
-            delimiter: parent?.delimiter or '/'
-            attribs: []
-
-        account.imap_createBox path
-        .then -> Mailbox.createPromised mailbox
-        .return account
-
-    .then (account) -> account.toObjectWithMailbox()
-    .then (account) -> res.send account
-    .catch next
+    Mailbox.imapcozy_create account, parent, label, (err) ->
+        return next err if err
+        res.account = account
+        next()
 
 
 # update a mailbox
 module.exports.update = (req, res, next) ->
     log.info "Updating #{req.params.mailboxID} to #{req.body.label}"
 
-    pBox = Mailbox.findPromised req.params.mailboxID
-    .throwIfNull -> new NotFound "Mailbox #{req.params.mailboxID}"
+    account = req.account
+    mailbox = req.mailbox
 
-    pAccount = pBox.then (box) -> Account.findPromised box.accountID
 
-    Promise.join pBox, pAccount, (box, account) ->
+    if req.body.label
 
-        if req.body.label
+        path = mailbox.path
+        parentPath = path.substring 0, path.lastIndexOf(mailbox.label)
+        newPath = parentPath + req.body.label
 
-            path = box.path
-            parentPath = path.substring 0, path.lastIndexOf(box.label)
-            newPath = parentPath + req.body.label
+        mailbox.imapcozy_rename req.body.label, newPath, (err, updated) ->
+            return next err if err
+            res.account = account
+            next null
 
-            account.imap_renameBox path, newPath
-            .then -> box.renameWithChildren newPath, req.body.label
-            .return account
 
-        else if req.body.favorite?
+    else if req.body.favorite?
 
-            favorites = _.without account.favorites, box.id
-            favorites.push box.id if req.body.favorite
-            account.favorites = favorites
-            account.savePromised()
+        favorites = _.without account.favorites, mailbox.id
+        favorites.push mailbox.id if req.body.favorite
 
-        else throw new BadRequest 'Unsuported request for mailbox update'
+        account.updateAttributes {favorites}, (err, updated) ->
+            return next err if err
+            res.account = updated
+            next null
 
-    .then (account) -> account.toObjectWithMailbox()
-    .then (account) -> res.send account
-    .catch next
+    else next new BadRequest 'Unsuported request for mailbox update'
 
 # delete a mailbox
 module.exports.delete = (req, res, next) ->
     log.info "Deleting #{req.params.mailboxID}"
 
-    pBox = Mailbox.findPromised req.params.mailboxID
-    .throwIfNull -> new NotFound "Mailbox #{req.params.mailboxID}"
+    account = req.account
 
-    pAccount = pBox.then (box) -> Account.findPromised box.accountID
-
-    Promise.join pBox, pAccount, (box, account) ->
-        account.imap_deleteBox box.path
-        .then -> account.forgetBox box.id
-        .then -> box.destroyAndRemoveAllMessages()
-        .return account
-
-    .then (account) -> account.toObjectWithMailbox()
-    .then (account) -> res.send account
-    .catch next
+    req.mailbox.imapcozy_delete account, (err) ->
+        return next err if err
+        res.account = account
+        next null

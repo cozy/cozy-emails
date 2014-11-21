@@ -1,33 +1,31 @@
 Contact = require '../models/contact'
-Promise = require 'bluebird'
+async = require 'async'
+log = require('../utils/logging')(prefix: 'controllers:activity')
+
 ContactActivity =
-    search: (data, cb) ->
+    search: (data, callback) ->
         onData = (err, result) ->
             if err?
-                cb err, result
+                callback err, result
             else
-                pictures = []
-                result.forEach (contact) ->
-                    p = new Promise (resolve, reject) ->
-                        if contact._attachments?.picture
-                            stream = contact.getFile 'picture', (err) ->
-                                if err?
-                                    console.log err
-                            bufs = []
-                            stream.on 'data', (d) -> bufs.push d
-                            stream.on 'end', ->
-                                buf = Buffer.concat bufs
-                                avatar = "data:image/jpeg;base64," +
-                                    buf.toString('base64')
-                                contact.datapoints.push
-                                    name: 'avatar'
-                                    value: avatar
-                                resolve contact
-                        else
-                            resolve contact
-                    pictures.push p
-                Promise.all(pictures).then (res) ->
-                    cb err, res
+                async.eachSeries result, (contact, cb) ->
+
+                    if contact._attachments?.picture
+                        stream = contact.getFile 'picture', (err) ->
+                            log.error err if err?
+                        bufs = []
+                        stream.on 'data', (d) -> bufs.push d
+                        stream.on 'end', ->
+                            buf = Buffer.concat bufs
+                            avatar = "data:image/jpeg;base64," +
+                                buf.toString('base64')
+                            contact.datapoints.push
+                                name: 'avatar'
+                                value: avatar
+                            cb null, contact
+                    else
+                        cb null, contact
+                , callback
 
         if data.query?
             params =

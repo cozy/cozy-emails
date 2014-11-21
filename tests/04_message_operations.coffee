@@ -22,14 +22,11 @@ describe 'Message actions', ->
             done()
 
     it "The flags has been changed on the server", (done) ->
-        imap = helpers.getImapServerRawConnection()
-        imap.waitConnected
-        .then -> imap.openBox 'INBOX'
-        .then => imap.fetchOneMail store.uid
-        .then (msg) -> msg.flags.should.containEql '\\Seen'
-        .then -> imap.end()
-        .nodeify done
-
+        imap = helpers.getImapServerRawConnection done, ->
+            @openBox 'INBOX', =>
+                @fetchOneMail store.uid, (err, msg) =>
+                    msg.flags.should.containEql '\\Seen'
+                    @end()
 
     it "When I send a request to copy and move (more add)", (done) ->
         path = "/message/#{store.latestInboxMessageId}"
@@ -233,13 +230,9 @@ describe 'Message actions', ->
         # pretend GMail and add message sent via SMTP
         # to IMAP send box
         SMTPTesting.onSecondMessage = (env, callback) ->
-            imap = helpers.getImapServerRawConnection()
-            imap.waitConnected
-            .then -> imap.append env.body,
-                mailbox: 'Sent'
-                flags: ['\\Seen']
-            .then -> imap.end()
-            .nodeify callback
+            imap = helpers.getImapServerRawConnection callback, ->
+                @append env.body, mailbox: 'Sent', flags: ['\\Seen'], ->
+                    @end()
 
         store.secondDraftStatus.isDraft = false
 

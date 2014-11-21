@@ -1,4 +1,5 @@
 module.exports = utils = {}
+americano = require 'americano'
 
 # Something is wrong with the account's config
 # field give more information about what's wrong
@@ -58,6 +59,15 @@ utils.BadRequest = class BadRequest extends Error
         Error.captureStackTrace this, arguments.callee
         return this
 
+utils.TimeoutError = class TimeoutError extends Error
+    constructor: (msg) ->
+        @name = 'BadRequest'
+        @status = 400
+        @message = 'Bad request : ' + msg
+        Error.captureStackTrace this, arguments.callee
+        return this
+
+
 utils.HttpError = (status, msg) ->
     if msg instanceof Error
         msg.status = status
@@ -69,3 +79,26 @@ utils.HttpError = (status, msg) ->
         this.status = status
         this.message = msg
         this.name = 'HttpError'
+
+
+
+
+
+
+log = require('../utils/logging')(prefix: 'errorhandler')
+baseHandler = americano.errorHandler()
+utils.errorHandler = (err, req, res, next) ->
+    log.debug "ERROR HANDLER CALLED", err
+
+    if err instanceof utils.AccountConfigError
+        res.send 400,
+            name: err.name
+            field: err.field
+            stack: err.stack
+            error: true
+
+
+    # pass it down the line to errorhandler module
+    else
+        log.error err
+        baseHandler err, req, res

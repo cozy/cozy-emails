@@ -1,11 +1,10 @@
 path = require 'path'
 americano = require 'americano'
-ImapReporter = require './processes/imap_reporter'
 Account = require './models/account'
+ImapReporter = require './imap/reporter'
+log = require('./utils/logging')(prefix: 'config')
 
-require './utils/promise_extensions'
-if process.env.NODE_ENV isnt 'production'
-    require('bluebird').longStackTraces()
+{errorHandler} = require './utils/errors'
 
 config =
     common:
@@ -21,9 +20,10 @@ config =
 
         afterStart: (app, server) ->
             # move it here needed after express 4.4
-            app.use americano.errorHandler()
+            app.use errorHandler
             ImapReporter.initSocketIO app, server
-            Account.refreshAllAccounts()
+            Account.refreshAllAccounts null, false, ->
+                log.info "REFRESHING DONE"
 
 
     development: [

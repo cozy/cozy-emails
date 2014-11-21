@@ -18,7 +18,7 @@ module.exports = (options) ->
     else options.prefix
 
     logger = (level) -> ->
-        return null if level < LOG_LEVEL
+        return null if level < LOG_LEVEL or prefix is 'imap:raw'
         args = new Array arguments.length + 2
         args[0] = COLORS[level]
         args[1] = prefix

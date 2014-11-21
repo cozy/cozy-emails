@@ -106,16 +106,6 @@ module.exports =
                 console.log "Error in messageSend", message, res.body?.error
                 callback t('app error')
 
-    messageDelete: (messageId, callback) ->
-        request.del "/message/#{messageId}"
-        .set 'Accept', 'application/json'
-        .end (res) ->
-            if res.ok
-                callback null, res.body
-            else
-                console.log "Error in messageDelete", messageId, res.body?.error
-                callback t('app error')
-
     messagePatch: (messageId, patch, callback) ->
         request.patch "/message/#{messageId}", patch
         .set 'Accept', 'application/json'

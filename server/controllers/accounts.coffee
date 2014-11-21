@@ -3,45 +3,58 @@ Account = require '../models/account'
 {AccountConfigError, HttpError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'accounts:controller')
 
+
+
+
+# fetch an account by id, add it to the request
+module.exports.fetch = (req, res, next) ->
+    id = req.params.accountID or
+         req.body.accountID or
+         req.mailbox.accountID or
+         req.message.accountID
+
+    Account.find id, (err, found) ->
+        return next new HttpError 404, err if err
+        return next new NotFound "Acccount #{id}" unless found
+        req.account = found
+        next()
+
+module.exports.format = (req, res, next) ->
+    log.info "FORMATTING ACCOUNT"
+    res.account.toClientObject (err, formated) ->
+        log.info "SENDING ACCOUNT"
+        return next err if err
+        res.send formated
+
+module.exports.formatList = (req, res, next) ->
+    async.map res.accounts, (account, callback) ->
+        account.toClientObject callback
+
+    , (err, formateds) ->
+        return next err if err
+        res.send formateds
+
 # create an account
 # and lauch fetching of this account mails
 module.exports.create = (req, res, next) ->
     # @TODO : validate req.body
     data = req.body
-    Account.createIfValid data
-    .then (account) -> account.toObjectWithMailbox()
-    .then (account) -> res.send 201, account
-    .catch AccountConfigError, (err) ->
-        log.warn err.toString()
-        log.warn err.stack.split("\n")[2]
-        res.send 400,
-            name: err.name
-            field: err.field
-            stack: err.stack
-            error: true
-    .catch next
+    Account.createIfValid data, (err, created) ->
+        return next err if err
+        res.account = created
+        next()
+        # in the background, start fetching mails
+        res.account.imap_fetchMailsTwoSteps (err) ->
+            log.error "FETCH MAIL FAILED", err.stack or err if err
 
-# fetch an account by id, add it to the request
-module.exports.fetch = (req, res, next) ->
-    Account.findPromised req.params.accountID
-    .then (account) ->
-        if account then req.account = account
-        else throw new HttpError 404, 'Not Found'
-    .nodeify next
 
 # fetch the list of all Accounts
 # include the account mailbox tree
 module.exports.list = (req, res, next) ->
-    Account.requestPromised 'all'
-    .map (account) -> account.toObjectWithMailbox()
-    .then (accounts) -> res.send 200, accounts
-    .catch next
-
-# get an account with its mailboxes
-module.exports.details = (req, res, next) ->
-    req.account.toObjectWithMailbox()
-    .then -> res.send 200, req.account
-    .catch next
+    Account.request 'all', (err, founds) ->
+        return next err if err
+        res.accounts = founds
+        next()
 
 # change an account
 module.exports.edit = (req, res, next) ->
@@ -53,14 +66,13 @@ module.exports.edit = (req, res, next) ->
         'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
         'draftMailbox', 'sentMailbox', 'trashMailbox'
 
-    req.account.updateAttributesPromised changes
-    .then (account) -> account.toObjectWithMailbox()
-    .then (account) -> res.send 200, account
-    .catch next
+    req.account.updateAttributes changes, (err, updated) ->
+        res.account = updated
+        next err
 
 # delete an account
 module.exports.remove = (req, res, next) ->
     # @TODO, handle clean up of boxes & mails
-    req.account.destroyEverything()
-    .then -> res.send 204
-    .catch next
+    req.account.destroyEverything (err) ->
+        return next err if err
+        res.send 204

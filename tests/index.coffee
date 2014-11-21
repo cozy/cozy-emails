@@ -19,13 +19,15 @@ describe "Server tests", ->
     unless process.env.SKIP_FIXTURES
         before (done) ->
             @timeout 120000
-            fixtures.load
-                removeBeforeLoad: true
-                dirPath: __dirname + '/fixtures/'
-                silent: false
-                callback: ->
-                    console.log "Loaded fixtures"
-                    done()
+            fixtures.removeDocumentsOf 'account', done
+
+        before (done) ->
+            @timeout 120000
+            fixtures.removeDocumentsOf 'message', done
+
+        before (done) ->
+            @timeout 120000
+            fixtures.removeDocumentsOf 'mailbox', done
 
     # setup test IMAP server
     unless process.env.SKIP_DOVECOT

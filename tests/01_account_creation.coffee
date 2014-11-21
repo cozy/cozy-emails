@@ -4,7 +4,7 @@ describe 'Account creation', ->
         @timeout 12000
         account = store.accountDefinition
         client.post '/account', account, (err, res, body) =>
-            res.statusCode.should.equal 201
+            res.statusCode.should.equal 200
             body.should.have.property('mailboxes').with.lengthOf(4)
 
             expectedBoxes =

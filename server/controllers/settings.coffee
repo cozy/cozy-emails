@@ -3,11 +3,11 @@ Settings = require '../models/settings'
 module.exports =
 
     change: (req, res, next) ->
-        Settings.getInstance()
-        .then (settings) ->
+        Settings.getInstance (err, settings) ->
+            return next err if err
+
             for key, value of req.body
                 settings[key] = value
 
-            settings.savePromised()
-        .then (updated) -> res.send updated
-        .catch next
+            settings.save (err) ->
+                res.send settings

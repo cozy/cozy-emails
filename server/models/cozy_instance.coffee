@@ -24,7 +24,5 @@ CozyInstance.getURL = (callback) ->
 
 CozyInstance.getLocale = (callback) ->
     CozyInstance.first (err, instance) ->
-        callback err, instance?.locale or 'en'
-
-
-require('bluebird').promisifyAll CozyInstance, suffix: 'Promised'
+        # ignore err and default to 'en'
+        callback null, instance?.locale or 'en'

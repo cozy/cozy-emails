@@ -1,4 +1,5 @@
 _ = require 'lodash'
+sanitizer   = require 'sanitizer'
 REGEXP =
     hasReOrFwD: /^(Re|Fwd)/i
     subject: /(?:(?:Re|Fwd)(?:\[[\d+]\])?\s?:\s?)*(.*)/i
@@ -31,6 +32,21 @@ module.exports =
         else
             flattenMailboxTreeLevel boxes, tree, '', [], '/'
         return boxes
+
+    sanitizeHTML: (html) ->
+        sanitizer.sanitize html, (url) ->
+            url = url.toString()
+            if 0 is url.indexOf 'cid://'
+                cid = url.substring 6
+                attachment = message.attachments.filter (att) ->
+                    att.contentId is cid
+
+                if name = attachment?[0].name
+                    return "/message/#{message.id}/attachments/#{name}"
+                else
+                    return null
+
+            else return url.toString()
 
 
 # recursively browse the imap box tree building pathStr and pathArr

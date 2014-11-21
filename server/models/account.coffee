@@ -1,9 +1,5 @@
 americano = require 'americano-cozy'
 
-# Public: Account
-# a {JugglingDBModel} for an account
-class Account # make biscotto happy
-
 module.exports = Account = americano.getModel 'Account',
     label: String               # human readable label for the account
     name: String                # user name to put in sent mails
@@ -30,38 +26,37 @@ module.exports = Account = americano.getModel 'Account',
 
 # There is a circular dependency between ImapProcess & Account
 # node handle if we require after module.exports definition
-nodemailer  = require 'nodemailer'
 Mailbox     = require './mailbox'
-Promise     = require 'bluebird'
 Message     = require './message'
+Compiler    = require 'nodemailer/src/compiler'
+ImapPool = require '../imap/pool'
+ImapReporter = require '../imap/reporter'
 {AccountConfigError} = require '../utils/errors'
+nodemailer  = require 'nodemailer'
+SMTPConnection = require 'nodemailer/node_modules/' +
+    'nodemailer-smtp-transport/node_modules/smtp-connection'
 log = require('../utils/logging')(prefix: 'models:account')
 _ = require 'lodash'
+async = require 'async'
+
+
+Account::doASAP = (operation, callback) ->
+    ImapPool.get(@id or @).doASAP operation, callback
 
 Account::isTest = ->
     @accountType is 'TEST'
 
 # Public: refresh all accounts
 #
-# Returns {Promise} for task completion
-Account.refreshAllAccounts = (limit, onlyFavorites) ->
-    Account.requestPromised 'all'
-    .serie (account) ->
-        return null if account.isTest()
-        account.imap_fetchMails(limit, onlyFavorites)
+Account.refreshAllAccounts = (limit, onlyFavorites, callback) ->
+    Account.request 'all', (err, accounts) ->
+        return callback err if err
+        async.eachSeries accounts, (account, cb) ->
+            log.debug "refreshing account #{account.label}"
+            return cb null if account.isTest()
+            account.imap_fetchMails limit, onlyFavorites, cb
+        , callback
 
-
-# Public: get the account as POJO
-# including the client's mailboxes tree
-#
-# Returns {Promise} for the POJO
-Account::toObjectWithMailbox = ->
-    Mailbox.getClientTree @id
-    .then (mailboxes) =>
-        rawObject = @toObject()
-        rawObject.favorites = rawObject.favorites or []
-        rawObject.mailboxes = mailboxes
-        return rawObject
 
 # Public: fetch the mailbox tree of a new {Account}
 # if the fetch succeeds, create the account and mailboxes in couch
@@ -71,40 +66,44 @@ Account::toObjectWithMailbox = ->
 #
 # data - account parameters
 #
-# Returns {Promise} promise for the created {Account}
-Account.createIfValid = (data) ->
+# Returns  {Account}
+Account.createIfValid = (data, callback) ->
 
     account = new Account data
+    toFetch = null
 
-    pAccountCredentialsOK = if account.isTest()
-        Promise.resolve true
-    else
-        account.testSMTPConnection()
-        .then -> account.testIMAPConnection()
+    async.series [
+        (cb) ->
+            log.debug "create#testConnections"
+            account.testConnections cb
 
-    pAccountReady = pAccountCredentialsOK
-    .then ->
-        # should be account.save() but juggling
-        Account.createPromised account
-        .then (created) -> account = created
+        (cb) ->
+            log.debug "create#cozy"
+            Account.create account, (err, created) ->
+                return cb err if err
+                account = created
+                cb null
+        (cb) ->
+            log.debug "create#refreshBoxes"
+            account.imap_refreshBoxes (err, boxes) ->
+                return cb err if err
+                toFetch = boxes
+                cb null
 
-    .then -> account.imap_refreshBoxes()
-    # find special mailboxes (sent, draft ...)
-    .spread (boxesToFetch, boxesToDestroy) ->
-        # disregard boxes toDestroy as there cant be any now
-        account.imap_scanBoxesForSpecialUse boxesToFetch
+        (cb) ->
+            log.debug "create#scan"
+            account.imap_scanBoxesForSpecialUse toFetch, cb
+    ], (err) ->
+        return callback err if err
+        callback null, account
 
-
-    # in a detached chain, fetch the Account
-    pAccountReady.then ->
-        # first fetch 100 mails from each box
-        account.imap_refreshBoxes()
-        .then -> account.imap_fetchMails 100
-        .then -> account.imap_fetchMails()
-        .catch (err) -> log.error "FETCH MAIL FAILED", err.stack or err
-
-    # returns once the account is ready (do not wait for mails)
-    return pAccountReady
+Account::testConnections = (callback) ->
+    return callback null if @isTest()
+    @testSMTPConnection (err) =>
+        return callback err if err
+        ImapPool.test this, (err) ->
+            return callback err if err
+            callback null
 
 
 # Public: remove a box from this account references
@@ -113,19 +112,19 @@ Account.createIfValid = (data) ->
 #
 # boxid - id of the box to forget
 #
-# Returns a {Promise} for the updated account
-Account::forgetBox = (boxid) ->
-    change = false
+# Returns a the updated account
+Account::forgetBox = (boxid, callback) ->
+    changes = {}
     for attribute in Object.keys Mailbox.RFC6154 when @[attribute] is boxid
-        @[attribute] = null
-        change = true
+        changes[attribute] = null
 
     if boxid in @favorites
-        @favorites = _.without @favorites, boxid
-        change = true
+        changes.favorites = _.without @favorites, boxid
 
-    return if change then @savePromised()
-    else Promise.resolve this
+    if Object.keys(changes).length
+        @updateAttributes changes, callback
+    else
+        callback null
 
 
 # Public: destroy an account and all messages within cozy
@@ -133,22 +132,273 @@ Account::forgetBox = (boxid) ->
 # returns fast after destroying account
 # in the background, proceeds to erase all boxes & message
 #
-# Returns a {Promise} for account destroyed completion
-Account::destroyEverything = ->
-    accountDestroyed = @destroyPromised()
+# Returns a completion
+Account::destroyEverything = (callback) ->
+    async.series [
+        (cb) => @destroy cb
+        (cb) => Mailbox.destroyByAccount @id, cb
+        (cb) => Message.safeDestroyByAccountID @id, cb
+    ], callback
 
-    accountID = @id
+Account::toClientObject = (callback) ->
+    rawObject = @toObject()
 
-    # this runs in the background
-    accountDestroyed
-    .then -> Mailbox.destroyByAccount accountID
-    .then -> Message.safeDestroyByAccountID accountID
+    Mailbox.getClientTree @id, (err, mailboxes) ->
+        return callback err if err
+        rawObject.favorites ?= []
+        rawObject.mailboxes = mailboxes
+        callback null, rawObject
 
-    # return as soon as the account is destroyed
-    # (the interface will be correct)
-    return accountDestroyed
+Account.clientList = (callback) ->
+    Account.request 'all', (err, accounts) ->
+        return callback err if err
+        async.map accounts, (account, cb) ->
+            account.toClientObject cb
+        , callback
 
-require './account_imap'
-require './account_smtp'
-Promise.promisifyAll Account, suffix: 'Promised'
-Promise.promisifyAll Account::, suffix: 'Promised'
+
+# static function, we have 1 ImapScheduler by Account
+
+Account::imap_getBoxes = (callback) ->
+    log.debug "getBoxes"
+    @doASAP (imap, cb) ->
+        imap.getBoxesArray cb
+    , callback
+
+Account::imap_refreshBoxes = (callback) ->
+    log.debug "imap_refreshBoxes"
+    account = this
+
+    async.parallel [
+        (cb) => Mailbox.getBoxes @id, cb
+        (cb) => @imap_getBoxes cb
+    ], (err, results) ->
+        log.debug "refreshBoxes#results", results
+        return callback err if err
+        [cozyBoxes, imapBoxes] = results
+
+        toFetch = []
+        toDestroy = []
+        # find new imap boxes
+        boxToAdd = imapBoxes.filter (box) ->
+            not _.findWhere(cozyBoxes, path: box.path)
+
+        # discrimate cozyBoxes to fetch and to remove
+        for cozyBox in cozyBoxes
+            if _.findWhere(imapBoxes, path: cozyBox.path)
+                toFetch.push cozyBox
+            else
+                toDestroy.push cozyBox
+
+        log.debug "refreshBoxes#results2"
+
+
+        async.eachSeries boxToAdd, (box, cb) ->
+            log.debug "refreshBoxes#creating", box.label
+            box.accountID = account.id
+            Mailbox.create box, (err, created) ->
+                return cb err if err
+                toFetch.push created
+                cb null
+        , (err) ->
+            return callback err if err
+            callback null, toFetch, toDestroy
+
+
+# Public: refresh one account
+# register a 'account-fetch' task in {ImapReporter}
+#
+# limitByBox - the maximum {Number} of message to fetch at once for each box
+# onlyFavorites - {Boolean} fetch messages only for favorite mailboxes
+#
+# Returns a task completion
+Account::imap_fetchMails = (limitByBox, onlyFavorites = false, callback) ->
+    log.debug "account#imap_fetchMails", limitByBox, onlyFavorites
+    account = this
+
+    @imap_refreshBoxes (err, toFetch, toDestroy) ->
+
+        if onlyFavorites
+            toFetch = toFetch.filter (box) -> box.id in account.favorites
+
+        log.info "FETCHING ACCOUNT ", @label, ":", toFetch.length, "BOXES"
+        log.info "   ", toDestroy.length, "BOXES TO DESTROY"
+        reporter = ImapReporter.accountFetch this, toFetch.length + 1
+
+        # fetch INBOX first
+        toFetch.sort (a, b) ->
+            return if a.label is 'INBOX' then 1
+            else return -1
+
+        async.eachSeries toFetch, (box, cb) ->
+            box.imap_fetchMails limitByBox, (err) ->
+                # dont interrupt the loop if one fail
+                reporter.onError err if err
+                reporter.addProgress 1
+                cb null
+
+        , (err) ->
+            return callback err if err
+            log.debug "account#imap_fetchMails#DONE"
+
+            async.eachSeries toDestroy, (box, cb) ->
+                box.destroyAndRemoveAllMessages cb
+
+            , (err) ->
+                reporter.onDone()
+                callback null
+
+Account::imap_fetchMailsTwoSteps = (callback) ->
+    log.debug "account#imap_fetchMails2Steps"
+    @imap_fetchMails 100, true, (err) =>
+        return callback err if err
+        @imap_fetchMails null, false, (err) ->
+            return callback err if err
+            callback null
+
+# Public: create a mail in the given box
+# used for drafts
+#
+# box - the {Mailbox} to create mail into
+# message - a {Message} to create
+#
+# Returns a the box & UID of the created mail
+Account::imap_createMail = (box, message, callback) ->
+
+    # compile the message to text
+    # @todo, promisfy somewhere else
+
+    mailbuilder = new Compiler(message).compile()
+    mailbuilder.build (err, buffer) =>
+        return callback err if err
+
+        @doASAP (imap, cb) ->
+            imap.append buffer,
+                mailbox: box.path
+                flags: message.flags
+            , cb
+
+        , (err, uid) ->
+            return callback err if err
+            callback null, uid
+
+# Public: remove a mail in the given box
+# used for drafts
+#
+# account - the {Account} to delete mail from
+# box - the {Mailbox} to delete mail from
+# mail - a {Message} to create
+#
+# Returns a the UID of the created mail
+
+
+Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
+    useRFC6154 = false
+    inboxMailbox = null
+    boxAttributes = Object.keys Mailbox.RFC6154
+
+    boxes.map (box) =>
+        if box.isInbox()
+            # save it in scope, so we dont erase it
+            inboxMailbox = box.id
+
+        else if type = box.RFC6154use()
+            unless useRFC6154
+                useRFC6154 = true
+                # remove previous guesses
+                for attribute in boxAttributes
+                    @[attribute] = null
+            log.debug 'found', type
+            @[type] = box.id
+
+        # do not attempt fuzzy match if the server uses RFC6154
+        else if not useRFC6154 and type = box.guessUse()
+            log.debug 'found', type, 'guess'
+            @[type] = box.id
+
+        return box
+
+    # pick the default 4 favorites box
+    priorities = [
+        'inboxMailbox', 'allMailbox',
+        'sentMailbox', 'draftMailbox'
+    ]
+
+    @inboxMailbox = inboxMailbox
+    @favorites = []
+
+    # see if we have some of the priorities box
+    for type in priorities when id = @[type]
+        @favorites.push id
+
+    # if we dont have our 4 favorites, pick at random
+    for box in boxes when @favorites.length < 4
+        if box.id not in @favorites and '\\NoSelect' not in box.attribs
+            @favorites.push box.id
+
+    @save callback
+
+
+# Public: send a message using this account SMTP config
+#
+# message - a raw message
+# callback - a (err, info) callback with the following parameters
+#            :err
+#            :info the nodemailer's info
+#
+# Returns void
+Account::sendMessage = (message, callback) ->
+    return callback null, messageId: 66 if @isTest()
+    transport = nodemailer.createTransport
+        port: @smtpPort
+        host: @smtpServer
+        secure: @smtpSSL
+        ignoreTLS: not @smtpTLS
+        tls: rejectUnauthorized: false
+        auth:
+            user: @login
+            pass: @password
+
+    transport.sendMail message, callback
+
+
+# Private: check smtp credentials
+# used in createIfValid
+# throws AccountConfigError
+#
+# Returns a if the credentials are corrects
+Account::testSMTPConnection = (callback) ->
+    return callback null if @isTest()
+
+    reject = _.once callback
+
+
+    connection = new SMTPConnection
+        port: @smtpPort
+        host: @smtpServer
+        secure: @smtpSSL
+        ignoreTLS: not @smtpTLS
+        tls: rejectUnauthorized: false
+
+    auth =
+        user: @login
+        pass: @password
+
+    connection.once 'error', (err) ->
+        log.warn "SMTP CONNECTION ERROR", err
+        reject new AccountConfigError 'smtpServer'
+
+    # in case of wrong port, the connection takes forever to emit error
+    timeout = setTimeout ->
+        reject new AccountConfigError 'smtpPort'
+        connection.close()
+    , 10000
+
+    connection.connect (err) ->
+        return reject new AccountConfigError 'smtpServer' if err
+        clearTimeout timeout
+
+        connection.login auth, (err) ->
+            if err then reject new AccountConfigError 'auth'
+            else callback null
+            connection.close()

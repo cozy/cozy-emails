@@ -2,7 +2,7 @@ should = require 'should'
 
 describe 'Account Synchronizations', ->
 
-    it "Get initialInboxCount", (done) ->
+    it "Get initial Inbox count", (done) ->
         client.get "/mailbox/#{store.inboxID}", (err, res, body) =>
             body.should.have.property 'count'
             store.initialInboxCount = body.count
@@ -10,14 +10,16 @@ describe 'Account Synchronizations', ->
 
     it "When I move a message on the IMAP server", (done) ->
         @timeout 10000
-        imap = helpers.getImapServerRawConnection()
-
-        imap.waitConnected
-        .then -> imap.openBox 'INBOX'
-        .then -> imap.move '8', 'Test Folder'
-        .then -> imap.closeBox()
-        .then -> imap.end()
-        .nodeify done
+        console.log "A"
+        imap = helpers.getImapServerRawConnection done, ->
+            console.log "B"
+            @openBox 'INBOX', =>
+                console.log "C"
+                @move '8', 'Test Folder', =>
+                    console.log "D"
+                    @closeBox =>
+                        console.log "E"
+                        @end()
 
     it "And refresh the account", (done) ->
         @timeout 10000
@@ -33,13 +35,10 @@ describe 'Account Synchronizations', ->
 
     it "When I copy a message on the IMAP server", (done) ->
         @timeout 10000
-        imap = helpers.getImapServerRawConnection()
-
-        imap.waitConnected
-        .then -> imap.openBox 'INBOX'
-        .then -> imap.copy '9', 'Test Folder'
-        .then -> imap.end()
-        .nodeify done
+        imap = helpers.getImapServerRawConnection done, ->
+            @openBox 'INBOX', =>
+                @copy '9', 'Test Folder', =>
+                    @end()
 
     it "And refresh the account", (done) ->
         @timeout 10000
@@ -54,13 +53,11 @@ describe 'Account Synchronizations', ->
 
     it "When I read a message on the IMAP server", (done) ->
         @timeout 10000
-        imap = helpers.getImapServerRawConnection()
 
-        imap.waitConnected
-        .then -> imap.openBox 'INBOX'
-        .then -> imap.addFlags '10', ['\\Seen']
-        .then -> imap.end()
-        .nodeify done
+        imap = helpers.getImapServerRawConnection done, ->
+            @openBox 'INBOX', =>
+                @addFlags '10', ['\\Seen'], =>
+                    @end()
 
     it "And refresh the account", (done) ->
         @timeout 10000
@@ -68,12 +65,11 @@ describe 'Account Synchronizations', ->
 
     it "Message have been mark as read in cozy", (done) ->
         Message = require '../server/models/message'
-        Message.UIDsInRange store.inboxID, 10, 10
-        .then (msg) ->
+        Message.UIDsInRange store.inboxID, 10, 10, (err, msg) ->
+            return done err if err
             flags = msg[10][1]
             flags.should.containEql '\\Seen'
-
-        .nodeify done
+            done null
 
     it "When the server changes one UIDValidity", (done) ->
         @timeout 10000
@@ -85,19 +81,16 @@ describe 'Account Synchronizations', ->
 
     it "Then the mailbox has been updated", (done) ->
         Mailbox = require '../server/models/mailbox'
-        Mailbox.findPromised store.sentBoxID
-        .then (sentBox) ->
+        Mailbox.find store.sentBoxID, (err, sentBox) ->
+            return done err if err
             sentBox.should.have.property 'uidvalidity', 1337
-        .nodeify done
+            done null
 
     it "When the server add one mailbox", (done) ->
         @timeout 10000
-        imap = helpers.getImapServerRawConnection()
-
-        imap.waitConnected
-        .then -> imap.addBox 'Yolo'
-        .then -> imap.end()
-        .nodeify done
+        helpers.getImapServerRawConnection done, ->
+            @addBox 'Yolo', =>
+                @end()
 
     it "And refresh the account", (done) ->
         @timeout 10000
@@ -105,23 +98,19 @@ describe 'Account Synchronizations', ->
 
     it "Then the mailbox has been created", (done) ->
         Mailbox = require '../server/models/mailbox'
-        Mailbox.getBoxes store.accountID
-        .then (boxes) ->
+        Mailbox.getBoxes store.accountID, (err, boxes) ->
+            return done err if err
             for box in boxes when box.path is 'Yolo'
                 store.yoloID = box.id
 
             should.exist store.yoloID
-
-        .nodeify done
+            done null
 
     it "When the server remove one mailbox", (done) ->
         @timeout 10000
-        imap = helpers.getImapServerRawConnection()
-
-        imap.waitConnected
-        .then -> imap.delBox 'Yolo'
-        .then -> imap.end()
-        .nodeify done
+        helpers.getImapServerRawConnection done, ->
+            @delBox 'Yolo', =>
+                @end()
 
     it "And refresh the account", (done) ->
         @timeout 10000
@@ -129,8 +118,7 @@ describe 'Account Synchronizations', ->
 
     it "Then the mailbox has been deleted", (done) ->
         Mailbox = require '../server/models/mailbox'
-        Mailbox.findPromised store.yoloID
-        .then (found) -> should.not.exist found
-        .catch (err) -> should.exist err
-        .nodeify done
+        Mailbox.find store.yoloID, (err, found) ->
+            should.not.exist found
+            done()
 

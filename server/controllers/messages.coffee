@@ -3,55 +3,50 @@ Account     = require '../models/account'
 Mailbox     = require '../models/mailbox'
 {NotFound, BadRequest, AccountConfigError} = require '../utils/errors'
 {MSGBYPAGE} = require '../utils/constants'
-promisedForm = require '../utils/promise_form'
-Promise     = require 'bluebird'
-htmlToText  = require 'html-to-text'
-sanitizer   = require 'sanitizer'
 _ = require 'lodash'
+async = require 'async'
 querystring = require 'querystring'
+multiparty = require 'multiparty'
+stream_to_buffer_array = require '../utils/stream_to_array'
+messageUtils = require '../utils/jwz_tools'
+log = require('../utils/logging')(prefix: 'controllers:mesage')
 
-htmlToTextOptions =
-    tables: true
-    wordwrap: 80
+# get a message and attach it to req.message
+module.exports.fetch = (req, res, next) ->
+
+    id = req.params.messageID or req.body.id
+
+    Message.find id, (err, found) ->
+        return next err if err
+        return next new NotFound "Message #{id}" unless found
+        req.message = found
+        next()
+
+module.exports.fetchMaybe = (req, res, next) ->
+
+    id = req.body.id
+    if id then module.exports.fetch req, res, next
+    else next()
+
+# return a message's details
+module.exports.details = (req, res, next) ->
+    res.send 200, req.message.toClientObject()
+
+module.exports.attachment = (req, res, next) ->
+    stream = req.message.getBinary req.params.attachment, (err) ->
+        return next err if err
+
+    stream.on 'error', next
+    stream.pipe res
+
+# patch a message
+module.exports.patch = (req, res, next) ->
+    req.message.applyPatchOperations req.body, (err, updated) ->
+        return next err if err
+        res.send updated.toClientObject()
 
 
-formatMessage = (message) ->
-    if message.html?
-        message.html = sanitizer.sanitize message.html, (url) ->
-            url = url.toString()
-            if 0 is url.indexOf 'cid://'
-                cid = url.substring 6
-                attachment = message.attachments.filter (att) ->
-                    att.contentId is cid
-
-                if name = attachment?[0].name
-                    return "/message/#{message.id}/attachments/#{name}"
-                else
-                    return null
-
-            else return url.toString()
-
-    if not message.text?
-        message.text = htmlToText.fromString message.html, htmlToTextOptions
-
-    message.attachments?.forEach (file) ->
-        file.url = "/message/#{message.id}/attachments/#{file.generatedFileName}"
-
-    return message
-
-
-formatNodeMailerAttachment = (file, content) ->
-    Promise.resolve content
-    .then (content) ->
-        content            : content
-        filename           : file.fileName
-        cid                : file.contentId
-        contentType        : file.contentType
-        contentDisposition : file.contentDisposition
-
-# list messages from a mailbox
-module.exports.listByMailbox = (req, res, next) ->
-
+module.exports.listByMailboxOptions = (req, res, next) ->
     sort = if req.query.sort then req.query.sort
     else '-date'
 
@@ -77,7 +72,8 @@ module.exports.listByMailbox = (req, res, next) ->
         after = if after then decodeURIComponent(after) else {}
         pageAfter = if pageAfter then decodeURIComponent pageAfter
 
-    else return next new BadRequest "Unsuported sort field #{sortField}"
+    else
+        return next new BadRequest "Unsuported sort field #{sortField}"
 
     FLAGS_CONVERT =
         'seen'       : '\\Seen'
@@ -89,22 +85,38 @@ module.exports.listByMailbox = (req, res, next) ->
 
     flagcode = req.query.flag
     if flagcode
-        flag = FLAGS_CONVERT[flagcode]
-        return next new BadRequest "Unsuported flag filter" unless flag
+        unless flag = FLAGS_CONVERT[flagcode]
+            return next new BadRequest "Unsuported flag filter"
     else
         flag = null
+
+    req.sortField = sortField
+    req.descending = descending
+    req.before = before
+    req.after = after
+    req.pageAfter = pageAfter
+    req.flag = flag
+    next()
+
+
+# list messages from a mailbox
+# req.query possible
+# sort = [+/-][date/subject]
+# flag in [seen, unseen, flagged, unflagged, answerred, unanswered]
+module.exports.listByMailbox = (req, res, next) ->
 
     mailboxID = req.params.mailboxID
 
     Message.getResultsAndCount mailboxID,
-        sortField: sortField
-        descending: descending
-        before: before
-        after: after
-        resultsAfter: pageAfter
-        flag: flag
+        sortField    : req.sortField
+        descending   : req.descending
+        before       : req.before
+        after        : req.after
+        resultsAfter : req.pageAfter
+        flag         : req.flag
 
-    .then (result) ->
+    , (err, result) ->
+        return next err if err
 
         messages = result.messages
         if messages.length is MSGBYPAGE
@@ -123,243 +135,247 @@ module.exports.listByMailbox = (req, res, next) ->
         else
             links = {}
 
+        result.messages ?= []
+        result.messages.map (msg) -> msg.toClientObject()
 
         res.send 200,
             mailboxID: mailboxID
-            messages: result.messages?.map(formatMessage) or []
+            messages:  result.messages
             count: result.count
             links: links
 
-    .catch next
 
-# get a message and attach it to req.message
-module.exports.fetch = (req, res, next) ->
-    Message.findPromised req.params.messageID
-    .throwIfNull -> new NotFound "Message #{req.params.messageID}"
-    .then (message) -> req.message = message
-    .nodeify next
 
-# return a message's details
-module.exports.details = (req, res, next) ->
 
-    # @TODO : fetch message's status
-    # @TODO : fetch whole conversation ?
+module.exports.parseSendForm = (req, res, next) ->
+    form = new multiparty.Form(autoFields: true)
 
-    res.send 200, formatMessage req.message
+    nextonce = _.once next #this may be parano
+    fields = {}
+    files = {}
 
-module.exports.attachment = (req, res, next) ->
-    stream = req.message.getBinary req.params.attachment, (err) ->
-        return next err if err
+    form.on 'field', (name, value) ->
+        fields[name] = value
 
-    stream.on 'error', next
-    stream.pipe res
+    form.on 'part', (part) ->
+        stream_to_buffer_array part, (err, bufs) ->
+            return nextonce err if err
 
-# patch e message
-module.exports.patch = (req, res, next) ->
-    req.message.applyPatchOperations req.body
-    .then -> res.send 200, formatMessage req.message
-    .catch next
+            files[part.name] =
+                filename: part.filename
+                headers: part.headers
+                content: Buffer.concat bufs
+
+        part.resume()
+
+    form.on 'error', (err) ->
+        nextonce err
+    form.on 'close', ->
+        req.body = JSON.parse fields.body
+        req.files = files
+        next()
+    form.parse req
+
+
+
+contentToBuffer = (req, attachment, callback) ->
+    filename = attachment.generatedFileName
+
+    # file in the DS, from a previous save of the draft
+    # cache it and pass around
+    if attachment.url
+        log.debug "D"
+        stream = req.message.getBinary filename, (err) ->
+            log.error "Attachment streaming error", err if err
+
+        stream_to_buffer_array stream, (err, buffers) ->
+            return callback err if err
+            callback null, Buffer.concat buffers
+
+    # file just uploaded, take the buffer from the multipart req
+    # content is a buffer
+    else if req.files[filename]
+        log.debug "E"
+        callback null, req.files[filename].content
+
+    else
+        callback new BadRequest 'Attachment #{filename} unknown'
 
 # send a message
+# at some point in the future, we might want to merge it with above
+# to allow streaming of upload
 module.exports.send = (req, res, next) ->
+    log.debug "send"
 
-    # extract message & attachments
-    pForm = promisedForm req
-    pMessage = pForm.get(0).then (fields) -> JSON.parse fields.body
-    pFiles = pForm.get(1)
+    message = req.body
+    account = req.account
+    files = req.files
 
-    # find the account
-    pAccount = pMessage.then (message) ->
-        Account.findPromised message.accountID
-    .throwIfNull -> new NotFound "Account #{message.accountID}"
+    message.attachments ?= []
+    message.flags = ['\\Seen']
+    if message.isDraft
+        message.flags.push '\\Draft'
 
-    Promise.join pAccount, pMessage, pFiles, (account, message, files) ->
+    message.content = message.text
+    message.attachments_backup = message.attachments
 
-        message.flags = ['\\Seen']
-        message.flags.push '\\Draft' if message.isDraft
+    previousUID = message.mailboxIDs?[account.draftMailbox]
 
-        # some of the message attachments may already be in the DS
-        # some may be in multipart form
-        Promise.serie message.attachments or [], (file) ->
+    steps = []
 
-            # file in the DS, from a previous save of the draft
-            if file.url
-                # content is a Promise for a Stream
-                content = Message.findPromised message.id
-                .throwIfNull -> new NotFound "Message #{message.id}"
-                .then (msg) -> msg.getBinaryPromised file.generatedFileName
 
-            # file just uploaded, take the buffer from the multipart req
-            # content is a buffer
-            else if files[file.generatedFileName]
-                content = files[file.generatedFileName].content
+    steps.push (cb) ->
+        log.debug "gathering attachments"
+        async.mapSeries message.attachments, (attachment, cbMap) ->
+            log.debug "A"
+            contentToBuffer req, attachment, (err, content) ->
+                log.debug "B"
+                return cbMap err if err
+                return cbMap null,
+                    content            : content
+                    filename           : attachment.fileName
+                    cid                : attachment.contentId
+                    contentType        : attachment.contentType
+                    contentDisposition : attachment.contentDispositioncontentToBuffer
 
+        , (err, cacheds) ->
+            log.debug "C"
+            return cb err if err
+            message.attachments = cacheds
+            cb()
+
+    draftBox = null
+    sentBox = null
+    destination = null
+    jdbMessage = null
+    uidInDest = null
+
+    unless message.isDraft
+        # Send the message first
+        steps.push (cb) ->
+            log.debug "send#sending"
+            account.sendMessage message, (err, info) ->
+                return cb err if err
+                message.headers['message-id'] = info.messageId
+                cb null
+
+        #  Get the sent box
+        steps.push (cb) ->
+            log.debug "send#getsentbox"
+            id = account.sentMailbox
+            Mailbox.find id, (err, box) ->
+                return cb err if err
+                unless box
+                    return cb new NotFound "Account #{account.id} sentbox #{id}"
+                sentBox = box
+                cb()
+
+    # If we will need the draftbox
+    if previousUID or message.isDraft
+        steps.push (cb) ->
+            log.debug "send#getdraftbox"
+            id = account.draftMailbox
+            Mailbox.find id, (err, box) ->
+                return cb err if err
+                unless box
+                    return cb new NotFound "Account #{account.id} draftbox #{id}"
+                draftBox = box
+                cb()
+
+    # Remove the message from draft (imap)
+    if previousUID
+        steps.push (cb) ->
+            log.debug "send#remove_old"
+            draftBox.imap_removeMail previousUID, cb
+
+
+    # Add the message to draft or sent folder (imap)
+    if message.isDraft
+        steps.push (cb) ->
+            log.debug "send#add_to_draft"
+            account.imap_createMail draftBox, message, (err, uid) ->
+                return cb err if err
+                destination = draftBox
+                uidInDest = uid
+                cb null
+
+
+    else
+        log.debug "send#add_to_sent"
+        steps.push (cb) ->
+            # check if message already created by IMAP/SMTP (gmail)
+            sentBox.imap_createMailNoDuplicate account, message, (err, uid) ->
+                return cb err if err
+                destination = sentBox
+                uidInDest = uid
+                cb null
+
+    steps.push (cb) ->
+        log.debug "send#cozy_create"
+        message.attachments = message.attachments_backup
+        message.text = message.content
+        delete message.attachments_backup
+        delete message.content
+        message.mailboxIDs = {}
+        message.mailboxIDs[destination.id] = uidInDest
+        message.date = new Date().toISOString()
+
+        Message.updateOrCreate message, (err, updated) ->
+            return cb err if err
+            jdbMessage = updated
+            cb null
+
+    steps.push (cb) ->
+        log.debug "send#attaching"
+        async.eachSeries Object.keys(files), (name, cbLoop) ->
+            buffer = files[name].content
+            buffer.path = encodeURI name
+            jdbMessage.attachBinary buffer, name: name, cbLoop
+        , cb
+
+    steps.push (cb) ->
+        log.debug "send#removeBinary"
+        jdbMessage.binary ?= {}
+        remainingAttachments = jdbMessage.attachments.map (file) ->
+            file.generatedFileName
+
+        async.eachSeries Object.keys(jdbMessage.binary), (name, cbLoop) ->
+            if name in remainingAttachments
+                cbLoop null
             else
-                throw new Error 'no attached files with name :' + file.generatedFileName;
-
-            return formatNodeMailerAttachment file, content
-
-        # format the message to nodemailer style
-        .then (formatedAttachments) ->
-            message.attachments_backup = message.attachments
-            message.attachments = formatedAttachments
-            message.content = message.text
-
-        # send the message first if it is not a draft
-        .then ->
-            unless message.isDraft
-                account.sendMessagePromised message
-                .then (info) ->
-                    message.headers['message-id'] = info.messageId
-        # remove the draft (in IMAP)
-        .then ->
-            uid = message.mailboxIDs?[account.draftMailbox]
-            return null unless uid
-
-            Mailbox.findPromised account.draftMailbox
-            .throwIfNull ->
-                new NotFound "Account #{message.accountID} 's draft box"
-            .tap (draftBox) -> draftBox.imap_removeMail uid
-            # return draftBox if it was used
-        # find the box to create the message in (draft or sent)
-        # check if the message has already been created (Gmail)
-        # if so use its ID
-        # else create the message on IMAP server
-        .then (draftBox) ->
-            if message.isDraft
-
-                # ensure we have the draftBox Object
-                draftBox ?= Mailbox.findPromised account.draftMailbox
-                .throwIfNull ->
-                    new NotFound "Acount #{message.accountID} draft box"
-
-                Promise.resolve draftBox
-                .then (draftBox) ->
-                    account.imap_createMail draftBox, message
-
-            else # sent
-
-                Mailbox.findPromised account.sentMailbox
-                .throwIfNull ->
-                    new NotFound "Acount #{message.accountID} sent box"
-
-                .then (sentBox) ->
-
-                    # check if message already created by IMAP/SMTP (gmail)
-                    sentBox.imap_UIDByMessageID message.headers['message-id']
-                    .then (uid) ->
-                        if uid then return [sentBox, uid]
-                        else account.imap_createMail sentBox, message
-
-        # save the message in cozy
-        .spread (dest, uidInDest) ->
-            message.attachments = message.attachments_backup
-            message.text = message.content
-            delete message.attachments_backup
-            delete message.content
-            message.mailboxIDs = {}
-            message.mailboxIDs[dest.id] = uidInDest
-            message.date = new Date().toISOString()
-
-            if message.id
-                Message.findPromised message.id
-                .then (jdbMessage) ->
-                    # prevent overiding of binary
-                    message.binary = jdbMessage.binary
-                    jdbMessage.updateAttributesPromised message
-            else
-                Message.createPromised message
-
-        # attach new binaries
-        .tap (jdbMessage) ->
-            Promise.serie Object.keys(files), (name) ->
-                buffer = files[name].content
-                buffer.path = encodeURI name
-                jdbMessage.attachBinaryPromised buffer, name: name
-
-        # remove old binaries
-        .tap (jdbMessage) ->
-            jdbMessage.binary ?= {}
-            remainingAttachments = jdbMessage.attachments.map (file) ->
-                file.generatedFileName
-
-            Promise.serie Object.keys(jdbMessage.binary), (name) ->
-                unless name in remainingAttachments
-                    jdbMessage.removeBinaryPromised name
-
-    .then (message) ->
-        res.send 200, formatMessage message
-    .catch next
+                jdbMessage.removeBinary name, cbLoop
+        , cb
 
 
-# search in the messages using the indexer
-module.exports.search = (req, res, next) ->
+    async.series steps, (err) ->
+        return next err if err
+        return next new Error('Server error') unless jdbMessage
+        res.send 200, jdbMessage.toClientObject()
 
-    if not req.params.query?
-        return next new BadRequest '`query` body field is mandatory'
 
-    # we add one temporary because the search doesn't return the
-    # number of results so we can't paginate properly
-    numPageCheat = parseInt(req.params.numPage) *
-                    parseInt(req.params.numByPage) + 1
-    Message.searchPromised
-        query: req.params.query
-        numPage: req.params.numPage
-        numByPage: numPageCheat
-    .then (messages) ->
-        res.send 200, messages.results.map formatMessage
-    .catch next
+module.exports.fetchConversation = (req, res, next) ->
+    Message.byConversationId req.params.conversationID, (err, messages) ->
+        return next err if err
 
-# Temporary routes for testing purpose
-module.exports.index = (req, res, next) ->
-    Message.requestPromised 'all', {}
-    .map (message) -> messages.indexPromised ['subject', 'text']
-    .then -> res.send 200, 'Indexation OK'
-    .catch next
-
-module.exports.del = (req, res, next) ->
-
-    Account.findPromised req.message.accountID
-    .throwIfNull -> new NotFound "Account #{req.message.accountID}"
-    .then (account) ->
-        trashID = account.trashMailbox
-        throw new AccountConfigError 'trashMailbox' unless trashID
-
-        # build a patch that remove from all mailboxes and add to trash
-        patch = Object.keys(req.message.mailboxIDs)
-        .filter (boxid) -> boxid isnt trashID
-        .map (boxid) -> op: 'remove', path: "/mailboxIDs/#{boxid}"
-
-        patch.push op: 'add', path: "/mailboxIDs/#{trashID}"
-
-        req.message.applyPatchOperations patch
-
-    .then -> res.send 200, req.message
-    .catch next
-
+        req.conversation = messages
+        next()
 
 module.exports.conversationGet = (req, res, next) ->
-
-    Message.byConversationId req.params.conversationID
-    .then (messages) -> res.send 200, messages.map formatMessage
-
-    .catch next
+    res.send 200, req.conversation.map (msg) -> msg.toClientObject()
 
 module.exports.conversationDelete = (req, res, next) ->
 
     # @TODO : Delete Conversation
-
     res.send 200, []
 
 
 module.exports.conversationPatch = (req, res, next) ->
 
-    Message.byConversationId req.params.conversationID
-    .then (messages) ->
-        # @TODO : be smarter : dont remove message from sent folder, ...
-        Promise.serie messages, (msg) ->
-            msg.applyPatchOperations req.body
+    patch = req.body
 
-        .then -> res.send 200, messages
+    async.eachSeries req.conversation, (message, cb) ->
+        message.applyPatchOperations patch, cb
 
-    .catch next
+    , (err, messages) ->
+        return next err if err
+        res.send 200, messages

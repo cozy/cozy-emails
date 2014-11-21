@@ -23,12 +23,12 @@ module.exports =
         post: activity.create
 
     'account':
-        post: accounts.create
-        get: accounts.list
+        post: [accounts.create, accounts.format]
+        get: [accounts.list, accounts.formatList]
 
     'account/:accountID':
-        get: [accounts.fetch, accounts.details]
-        put: [accounts.fetch, accounts.edit]
+        get: [accounts.fetch, accounts.format]
+        put: [accounts.fetch, accounts.edit, accounts.format]
         delete: [accounts.fetch, accounts.remove]
 
     'conversation/:conversationID':
@@ -37,32 +37,40 @@ module.exports =
         patch: [messages.conversationPatch]
 
     'mailbox':
-        post: mailboxes.create
+        post: [accounts.fetch,
+            mailboxes.fetchParent,
+            mailboxes.create,
+            accounts.format]
 
     'mailbox/:mailboxID':
-        get: messages.listByMailbox
-        put: mailboxes.update
-        delete: mailboxes.delete
+        get: [messages.listByMailboxOptions,
+              messages.listByMailbox]
+
+        put: [mailboxes.fetch,
+              accounts.fetch,
+              mailboxes.update,
+              accounts.format]
+
+        delete: [mailboxes.fetch,
+            accounts.fetch,
+            mailboxes.delete,
+            accounts.format]
 
     'message':
-        post: messages.send
+        post: [messages.parseSendForm,
+               accounts.fetch,
+               messages.fetchMaybe,
+               messages.send]
 
     'message/:messageID':
         get: [messages.fetch, messages.details]
         patch: [messages.fetch, messages.patch]
-        'delete': messages.del
 
     'message/:messageID/attachments/:attachment':
         get: [messages.fetch, messages.attachment]
 
-    'search/:query/page/:numPage/limit/:numByPage':
-        get: messages.search
-
     'provider/:domain':
         get: providers.get
-
-    # temporary routes for testing purpose
-    'messages/index': get: messages.index
 
     'load-fixtures':
         get: index.loadFixtures

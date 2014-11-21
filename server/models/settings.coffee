@@ -1,5 +1,5 @@
 americano = require 'americano-cozy'
-Promise = require 'bluebird'
+_ = require 'lodash'
 
 module.exports = Settings = americano.getModel 'MailsSettings',
     messagesPerPage: Number
@@ -12,29 +12,20 @@ module.exports = Settings = americano.getModel 'MailsSettings',
     lang: String
     plugins: (x) -> x
 
+defaultSettings =
+    messagesPerPage: 25
+    displayConversation: false
+    composeInHTML: true
+    messageDisplayHTML: true
+    messageDisplayImages: false
+    messageConfirmDelete: true
+    lang: 'en'
+    refreshInterval: 5
+    plugins: null
 
-Settings.getInstance = ->
-    Settings.requestPromised 'all'
-    .get 0
-    .then (settings) ->
-        defaultSettings = new Settings
-            messagesPerPage: 25
-            displayConversation: false
-            composeInHTML: true
-            messageDisplayHTML: true
-            messageDisplayImages: false
-            messageConfirmDelete: true
-            lang: 'en'
-            refreshInterval: 5
-            plugins: null
-        if not settings?
-            return defaultSettings
-        else
-            # merge settings with default
-            for own key, value of defaultSettings
-                if not settings[key]?
-                    settings[key] = value
-            return settings
-
-Promise.promisifyAll Settings, suffix: 'Promised'
-Promise.promisifyAll Settings::, suffix: 'Promised'
+Settings.getInstance = (callback) ->
+    Settings.request 'all', (err, settings) ->
+        return callback err if err
+        settings = settings?[0]?.toObject()
+        settings = _.extend {}, defaultSettings, settings
+        callback null, settings
