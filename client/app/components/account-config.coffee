@@ -368,28 +368,29 @@ module.exports = React.createClass
 
             h4 null, t "account tab mailboxes"
             ul className: "list-unstyled boxes container",
-                li className: 'row box title', key: 'title',
-                    span
-                        className: "col-xs-1",
-                        ''
-                    span
-                        className: "col-xs-1",
-                        ''
-                    span
-                        className: "col-xs-6",
-                        ''
-                    span
-                        className: "col-xs-1",
-                        ''
-                    span
-                        className: "col-xs-1 text-center",
-                        t 'mailbox title total'
-                    span
-                        className: "col-xs-1 text-center",
-                        t 'mailbox title unread'
-                    span
-                        className: "col-xs-1 text-center",
-                        t 'mailbox title new'
+                if mailboxes?
+                    li className: 'row box title', key: 'title',
+                        span
+                            className: "col-xs-1",
+                            ''
+                        span
+                            className: "col-xs-1",
+                            ''
+                        span
+                            className: "col-xs-6",
+                            ''
+                        span
+                            className: "col-xs-1",
+                            ''
+                        span
+                            className: "col-xs-1 text-center",
+                            t 'mailbox title total'
+                        span
+                            className: "col-xs-1 text-center",
+                            t 'mailbox title unread'
+                        span
+                            className: "col-xs-1 text-center",
+                            t 'mailbox title new'
                 mailboxes
                 li className: "row box edited", key: 'new',
                     span
@@ -737,6 +738,8 @@ MailboxItem = React.createClass
         nbNew    = @props.mailbox.get('nbNew') or 0
         classItem = classer
             'row': true
+            'box': true
+            'box-item': true
             edited: @state.edited
         if @state.edited
             li className: classItem, key: key,

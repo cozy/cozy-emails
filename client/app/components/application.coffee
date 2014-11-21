@@ -213,7 +213,7 @@ module.exports = Application = React.createClass
                 account   = AccountStore.getByID accountID
                 mailbox   = account.get('mailboxes').get mailboxID
                 messages  = MessageStore.getMessagesByMailbox mailboxID
-                messagesCount = mailbox.get('nbTotal') or 0
+                messagesCount = mailbox?.get('nbTotal') or 0
                 emptyListMessage = t 'list empty'
                 counterMessage   = t 'list count', messagesCount
 
