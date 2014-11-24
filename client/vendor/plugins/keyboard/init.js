@@ -40,6 +40,10 @@ if (typeof window.plugins !== "object") {
         name: "Close current message",
         action: function () {window.cozyMails.messageClose(); }
       },
+      'esc': {
+        name: "Close current message",
+        action: function () {window.cozyMails.messageClose(); }
+      },
       'j': {
         name: "Next Message",
         action: function () {window.cozyMails.messageNavigate('next'); }
@@ -56,7 +60,7 @@ if (typeof window.plugins !== "object") {
         name: "Previous Message",
         action: function () {window.cozyMails.messageNavigate('prev'); }
       },
-      'pagedown': {
+      'ctrl+down': {
         name: 'Scroll message down',
         action: function () {
             var panel = document.querySelector("#panels > .panel:nth-of-type(2)");
@@ -65,7 +69,7 @@ if (typeof window.plugins !== "object") {
             }
         }
       },
-      'pageup': {
+      'ctrl+up': {
         name: 'Scroll message up',
         action: function () {
             var panel = document.querySelector("#panels > .panel:nth-of-type(2)");
