@@ -16,7 +16,7 @@ Contact::includePicture = (callback) ->
     if @_attachments?.picture
         stream = @getFile 'picture', (err) ->
             log.error "Contact #{contact.id} getting picture", err if err?
-        stream_to_buffer_array stream (err, parts) =>
+        stream_to_buffer_array stream, (err, parts) =>
             return callback err if err
             base64 = Buffer.concat(parts).toString('base64')
             avatar = "data:image/jpeg;base64," + base64
