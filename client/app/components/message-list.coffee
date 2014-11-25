@@ -352,7 +352,7 @@ MessageItem = React.createClass
         from = message.get 'from'
         to   = message.get('to').concat(message.get('cc'))
         span null,
-            Participants participants: from, onAdd: @addAddres
+            Participants participants: from, onAdd: @addAddress
             span null, ', '
             Participants participants: to, onAdd: @addAddress
 
