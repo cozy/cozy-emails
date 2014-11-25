@@ -1628,7 +1628,7 @@ body {
 body,
 input {
   color: #a9a9a9;
-  font: 300 16px main, Geneva, Verdana, "Lucida Sans", "Lucida Grande", "Lucida Sans Unicode", sans-serif;
+  font: 300 1em main, Geneva, Verdana, "Lucida Sans", "Lucida Grande", "Lucida Sans Unicode", sans-serif;
   line-height: 1.2;
 }
 h2 {
@@ -1645,7 +1645,7 @@ a:visited:hover {
 }
 .form-horizontal .radio-inline,
 .form-horizontal .checkbox-inline {
-  padding-top: 9px;
+  padding-top: 0.66em;
 }
 @font-face {
   font-family: styled;
@@ -1663,20 +1663,29 @@ a:hover {
 }
 input,
 select,
-textarea {
+textarea,
+.form-control {
   border: 1px solid #34a6ff;
   -webkit-border-radius: 0;
   border-radius: 0;
   font-family: styled;
+  color: #333;
+  height: 2em;
 }
 input:hover,
 select:hover,
-textarea:hover {
+textarea:hover,
+.form-control:hover {
   border: 1px solid #fe8800;
 }
+input:focus,
+select:focus,
+textarea:focus,
+.form-control:focus,
 input:active,
 select:active,
-textarea:active {
+textarea:active,
+.form-control:active {
   -webkit-box-shadow: none;
   box-shadow: none;
 }
@@ -1684,33 +1693,14 @@ textarea:active {
   background-color: #34a6bb;
   color: #fff;
   font-family: styled;
-  font-size: 26px;
-  padding: 20px;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
+  font-size: 1.75em;
+  padding: 1em;
+  border-top-left-radius: 0.25em;
+  border-top-right-radius: 0.25em;
 }
 .modal-body {
   font-family: main;
   min-height: 10em;
-}
-.modal-body input,
-.modal-body select {
-  border: 1px solid #00f;
-  -webkit-border-radius: 0;
-  border-radius: 0;
-  font-family: styled;
-}
-.modal-body input:hover,
-.modal-body select:hover {
-  border: 1px solid #ffa500;
-}
-.modal-body input:focus,
-.modal-body select:focus,
-.modal-body input:active,
-.modal-body select:active {
-  border: 1px solid #00f;
-  -webkit-box-shadow: none;
-  box-shadow: none;
 }
 .btn {
   position: relative;
@@ -2091,7 +2081,7 @@ textarea:active {
   transform: translate(33%);
 }
 #page-content #quick-actions {
-  margin: 15px 0;
+  margin: 1em 0;
 }
 #page-content #panels {
   -webkit-box-flex: 1;
@@ -2173,7 +2163,7 @@ textarea:active {
 #mailbox-config h3 {
   color: #444;
   margin-top: 0;
-  padding-bottom: 10px;
+  padding-bottom: 0.75em;
   border-bottom: 1px solid #f4f4f4;
 }
 #mailbox-config .nav-tabs {
@@ -2183,32 +2173,23 @@ textarea:active {
   cursor: pointer;
 }
 #mailbox-config button {
-  margin-left: 5px;
+  margin-left: 0.25em;
 }
-#mailbox-config .boxes .box {
-  display: -webkit-box;
-  display: -moz-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: box;
-  display: flex;
+#mailbox-config .boxes {
+  max-width: 40em;
+  margin-left: 0;
+}
+#mailbox-config .boxes .row {
   height: 2em;
-  -webkit-box-align: center;
-  -moz-box-align: center;
-  -o-box-align: center;
-  -ms-flex-align: center;
-  -webkit-align-items: center;
-  align-items: center;
 }
-#mailbox-config .boxes .box.edited {
+#mailbox-config .boxes .row > * {
+  padding: 0;
+}
+#mailbox-config .boxes .row.edited {
   height: 2.5em;
 }
 #mailbox-config .boxes .box-action {
-  width: 2em;
   cursor: pointer;
-}
-#mailbox-config .boxes .box-label {
-  width: 20em;
 }
 .conversation.enable {
   display: block;
@@ -2216,12 +2197,12 @@ textarea:active {
 .conversation h3 {
   color: #444;
   margin-top: 0;
-  padding-bottom: 10px;
+  padding-bottom: 0.5em;
 }
 .conversation h3 .close-conversation {
   cursor: pointer;
-  font-size: 20px;
-  margin-right: 15px;
+  font-size: 1.25em;
+  margin-right: 1em;
 }
 .conversation h3 .expand {
   float: right;
@@ -2239,10 +2220,10 @@ textarea:active {
   border-top: 1px solid #f4f4f4;
 }
 .conversation .thread .message {
-  padding: 5px 15px;
+  padding: 0 1rem;
   border-bottom: 1px solid #e4e4e4;
   cursor: pointer;
-  font-size: 13px;
+  font-size: 0.75em;
   background: #f4f4f4;
 }
 .conversation .thread .message.active,
@@ -2262,11 +2243,14 @@ textarea:active {
 }
 .conversation .thread .message .messageToolbox,
 .conversation .thread .message .messageNavigation {
-  margin-top: 1em;
   margin-bottom: 1em;
   opacity: 0.3;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
   filter: alpha(opacity=30);
+}
+.conversation .thread .message .messageToolbox .btn-toolbar,
+.conversation .thread .message .messageNavigation .btn-toolbar {
+  margin-right: 0.25em;
 }
 .conversation .thread .message .messageToolbox:hover,
 .conversation .thread .message .messageNavigation:hover {
@@ -2347,11 +2331,12 @@ textarea:active {
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
-  max-width: 33%;
+  max-width: 50%;
 }
 .conversation .thread .message .header.compact .hour {
   margin-left: auto;
   color: #444;
+  white-space: pre;
 }
 .conversation .thread .message .header.compact .flags {
   width: 3em;
@@ -2382,7 +2367,12 @@ textarea:active {
   -webkit-align-self: flex-start;
   align-self: flex-start;
   -ms-flex-item-align: start;
-  margin: -5px 0;
+  margin: 0;
+  padding: 0.25em;
+  background-color: #fff;
+  border-style: solid;
+  border-color: #bdbdbd;
+  border-width: 0 0 1px 1px;
 }
 .conversation .thread .message .participants {
   color: #444;
@@ -2405,7 +2395,7 @@ textarea:active {
   width: 100%;
 }
 .conversation .thread .message .preview {
-  margin-top: 15px;
+  margin-top: 1em;
   overflow: hidden;
   white-space: pre-line;
   -o-text-overflow: ellipsis;
@@ -2420,6 +2410,7 @@ textarea:active {
 .conversation .thread .message .hour {
   margin-left: auto;
   color: #444;
+  white-space: pre;
 }
 .conversation .thread .message:hover:not(.active):not(:last-of-type) {
   background: #f4f4f4;
@@ -2511,9 +2502,9 @@ textarea:active {
   display: inline-block;
   position: relative;
   width: 100%;
-  padding: 10px 5px;
+  padding: 0.75em 0.25em;
   margin: 0;
-  font-size: 14px;
+  font-size: 1em;
   font-family: styled;
   color: #bdbdbd;
   text-align: center;
@@ -2526,7 +2517,7 @@ textarea:active {
   vertical-align: middle;
 }
 #menu .menu-item i {
-  font-size: 25px;
+  font-size: 1.25em;
 }
 #menu .menu-item .item-label {
   display: block;
@@ -2537,11 +2528,11 @@ textarea:active {
 }
 #menu .menu-item .badge {
   position: absolute;
-  top: 10px;
-  right: 5px;
+  top: 0.75em;
+  right: 0.25em;
   background: #34a6ff;
-  font-size: 9px;
-  margin-left: 5px;
+  font-size: 0.75em;
+  margin-left: 0.25em;
   font-family: Geneva;
 }
 #menu .menu-item:hover,
@@ -2549,21 +2540,25 @@ textarea:active {
   background: #474c5c;
   color: #fff;
 }
+#menu .menu-item.news .badge {
+  color: #f00;
+  background: #ff0;
+}
 #menu #account-list li {
-  border-left: 5px solid transparent;
+  border-left: 0.25em solid transparent;
 }
 #menu #account-list li .submenu {
   display: none;
   background: #3e4351;
 }
 #menu #account-list li .submenu .menu-item i {
-  font-size: 20px;
+  font-size: 1.25em;
 }
 #menu #account-list li:hover {
-  border-left: 5px solid #474c5c;
+  border-left: 0.25em solid #474c5c;
 }
 #menu #account-list li.active {
-  border-left: 5px solid #296293;
+  border-left: 0.25em solid #296293;
 }
 #menu #account-list li.active .menu-item {
   color: #fff;
@@ -2571,8 +2566,14 @@ textarea:active {
 #menu #account-list li.active .submenu {
   display: block;
 }
+#menu #account-list li a.menu-item * {
+  pointer-events: none;
+}
+#menu #account-list li.target {
+  border: 1px dashed #fff;
+}
 #menu .new-account-action {
-  font-size: 15px;
+  font-size: 1em;
   opacity: 0.5;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
   filter: alpha(opacity=50);
@@ -2610,13 +2611,13 @@ textarea:active {
   font-weight: bold;
 }
 .message-list .message {
-  padding: 5px;
-  border-left: 5px solid transparent;
-  border-bottom: 1px solid #e4e4e4;
+  padding: 0.25em;
+  border-left: 0.25em solid transparent;
   cursor: pointer;
   font-size: 0.8em;
 }
-.message-list .message a {
+.message-list .message > a,
+.message-list .message > span {
   display: block;
   outline: none;
   display: -webkit-box;
@@ -2641,7 +2642,7 @@ textarea:active {
 }
 .message-list .message .participants,
 .message-list .message .preview {
-  margin: 0 5px;
+  margin: 0 0.25em;
 }
 .message-list .message .preview {
   -webkit-box-flex: 1;
@@ -2651,7 +2652,7 @@ textarea:active {
   -webkit-flex: 1;
   -ms-flex: 1;
   flex: 1;
-  margin: 0 10px 0 auto;
+  margin: 0 0.75em 0 auto;
   overflow: hidden;
   white-space: nowrap;
   -o-text-overflow: ellipsis;
@@ -2683,22 +2684,28 @@ textarea:active {
   margin-left: auto;
   color: #444;
 }
-.message-list .fa-user,
-.message-list .avatar {
+.message-list .message .fa-user,
+.message-list .message .avatar {
+  margin: 0;
   color: #aaa;
+  background-color: #fff;
   font-size: 2em;
-  border: 1px solid #aaa;
+  -webkit-border-radius: 50%;
+  border-radius: 50%;
+  -webkit-box-shadow: 0 0 3px #bbb;
+  box-shadow: 0 0 3px #bbb;
   width: 1em;
   height: 1em;
   text-align: center;
 }
-.message-list .fa-user:hover,
-.message-list .avatar:hover {
+.message-list .message > a:hover .fa-user,
+.message-list .message > a:focus .fa-user,
+.message-list .message > a:hover .avatar,
+.message-list .message > a:focus .avatar {
   border-left: 0.25em solid #fe8800;
   background: #f4f4f4;
 }
-.message-list .fa-user.active,
-.message-list .avatar.active {
+.message-list .message.active {
   border-left: 0.25em solid #34a6ff;
 }
 .message-list .fav {
@@ -2708,24 +2715,32 @@ textarea:active {
 .message-list .attach {
   display: none;
 }
-.message.active {
+.message-list .message:nth-child(2n+1) {
   background-color: #eee;
+  background: -webkit-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
+  background: -moz-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
+  background: -o-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
+  background: -ms-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
+  background: linear-gradient(to bottom, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
 }
-.message.unseen {
+.message-list .message.active {
+  background: #bdbdbd;
+}
+.message-list .message.unseen {
   font-weight: bold;
 }
-.message .flags {
+.message-list .message .flags {
   width: 3em;
 }
-.message.has-attachments .attach {
+.message-list .message.has-attachments .attach {
   display: inline;
   padding: 0 0.5em;
 }
-.message.is-fav .fav {
+.message-list .message.is-fav .fav {
   display: inline;
   padding: 0 0.5em;
 }
-.message-list-actions {
+.message-list .message-list-actions {
   display: -webkit-box;
   display: -moz-box;
   display: -webkit-flex;
@@ -2745,24 +2760,29 @@ textarea:active {
   -webkit-align-items: left;
   align-items: left;
 }
-.message-list-actions .message-list-action {
+.message-list .message-list-actions .message-list-action {
   margin: 0 1em 0 0;
 }
-.message-list-actions + * {
+.message-list .message-list-actions + * {
   clear: both;
   margin-top: 1em;
 }
+.message-list.compact .message {
+  padding: 1px 0;
+}
+.message-list.compact .fa-user,
+.message-list.compact .avatar {
+  display: none;
+}
 #quick-actions .responsive-handler {
   color: #333;
-  font-size: 25px;
+  font-size: 1.75em;
   text-decoration: none;
   cursor: pointer;
 }
-#quick-actions .fa-bars {
-  font-size: 35px;
-}
+#quick-actions .fa-bars,
 #quick-actions .fa-chevron-left {
-  font-size: 30px;
+  font-size: 2em;
 }
 #quick-actions form {
   padding-left: 0;
@@ -2830,6 +2850,9 @@ textarea:active {
   z-index: 1;
 }
 .toasts-container .toast-actions {
+  padding: 0.25em;
+}
+.toasts-container .toasts-actions {
   display: none;
 }
 .toasts-container .message {
@@ -2851,7 +2874,7 @@ textarea:active {
 .toasts-container.action-hidden {
   top: 100%;
 }
-.toasts-container.has-toasts .toast-actions {
+.toasts-container.has-toasts .toasts-actions {
   display: block;
   position: absolute;
   bottom: -0.5em;
@@ -2860,16 +2883,16 @@ textarea:active {
   -webkit-border-radius: 0.25em 0.25em 0 0;
   border-radius: 0.25em 0.25em 0 0;
 }
-.toasts-container.has-toasts .toast-actions .toast-action {
+.toasts-container.has-toasts .toasts-actions .toast-action {
   cursor: pointer;
 }
-.toasts-container.has-toasts .toast-actions .hide-action {
+.toasts-container.has-toasts .toasts-actions .hide-action {
   display: inherit;
 }
-.toasts-container.has-toasts .toast-actions .close-action {
+.toasts-container.has-toasts .toasts-actions .close-action {
   display: inherit;
 }
-.toasts-container.has-toasts .toast-actions .show-action {
+.toasts-container.has-toasts .toasts-actions .show-action {
   display: none;
 }
 .toasts-container.action-hidden.has-toasts .toast-actions .hide-action {
@@ -2907,7 +2930,7 @@ textarea:active {
 }
 #quick-actions form .form-group {
   max-width: 70%;
-  padding-left: 10px;
+  padding-left: 0.75em;
 }
 /*
   Contextual actions
@@ -2952,15 +2975,15 @@ textarea:active {
   color: #34a6ff;
 }
 #email-compose a.close-email {
-  margin-right: 15px;
+  margin-right: 1em;
 }
 #email-compose a.expand {
   float: right;
-  font-size: 25px;
+  font-size: 2em;
 }
 #email-compose .editor {
   border: 1px solid #444;
-  min-height: 250px;
+  min-height: 16em;
   width: 100%;
   text-align: left;
   color: #000;
@@ -2983,7 +3006,7 @@ textarea:active {
   background-color: #fff;
   list-style: outside none none;
   margin: 2px 0 0;
-  padding: 5px 0;
+  padding: 0.25em 0;
 }
 .contact-form .contact-list > li > a {
   color: #333;
@@ -3003,14 +3026,14 @@ textarea:active {
 */
 .conversation .nav {
   display: block;
-  margin-bottom: 30px;
+  margin-bottom: 2em;
   overflow: auto;
 }
 .conversation .nav li {
   position: relative;
 }
 .conversation .nav li:not(.active) {
-  max-width: 150px;
+  max-width: 2em;
 }
 .conversation .nav li:not(.active) a {
   color: #bdbdbd;
@@ -3037,7 +3060,7 @@ textarea:active {
   -webkit-border-radius: 0;
   border-radius: 0;
   border: none;
-  border-bottom: 4px solid #34a6ff;
+  border-bottom: 0.25em solid #34a6ff;
 }
 .address-list {
   margin: 0;
@@ -3106,7 +3129,7 @@ textarea:active {
   height: auto;
 }
 .rt-editor blockquote {
-  border-left: 3px solid #00f;
+  border-left: 0.25em solid #00f;
   padding-left: 0.5em;
   margin: 0;
 }
