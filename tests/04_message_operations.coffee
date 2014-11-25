@@ -120,7 +120,6 @@ describe 'Message actions', ->
         """
 
         req = client.post "/message", null, (err, res, body) =>
-            console.log "FROM TEST", err?.stack
             should.not.exist err
             res.statusCode.should.equal 200
             body.should.have.property 'id'
