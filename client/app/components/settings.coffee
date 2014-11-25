@@ -74,6 +74,31 @@ module.exports = React.createClass
                                     onClick: @handleChange,
                                         a role: "menuitem", t "settings lang fr"
 
+                # List style
+                div className: 'form-group',
+                    label htmlFor: 'settings-mpp', className: classLabel,
+                        t "settings label listStyle"
+                    div className: 'col-sm-3',
+                        div className: "dropdown",
+                            button
+                                className: "btn btn-default dropdown-toggle"
+                                type: "button"
+                                "data-toggle": "dropdown",
+                                t "settings label listStyle #{@state.settings.listStyle or 'default'}"
+                            ul className: "dropdown-menu", role: "menu",
+                                li
+                                    role: "presentation",
+                                    'data-target': 'listStyle',
+                                    'data-style': 'default',
+                                    onClick: @handleChange,
+                                        a role: "menuitem", t "settings label listStyle default"
+                                li
+                                    role: "presentation",
+                                    'data-target': 'listStyle',
+                                    'data-style': 'compact',
+                                    onClick: @handleChange,
+                                        a role: "menuitem", t "settings label listStyle compact"
+
             @_renderOption 'displayConversation'
             @_renderOption 'composeInHTML'
             @_renderOption 'messageDisplayHTML'
@@ -146,6 +171,11 @@ module.exports = React.createClass
                 settings.lang = lang
                 @setState({settings: settings})
                 ApiUtils.setLocale lang, true
+                SettingsActionCreator.edit settings
+            when 'listStyle'
+                settings = @state.settings
+                settings.listStyle = target.dataset.style
+                @setState({settings: settings})
                 SettingsActionCreator.edit settings
             when 'plugin'
                 name = target.dataset.plugin

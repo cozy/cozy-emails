@@ -11,6 +11,7 @@ module.exports = Settings = americano.getModel 'MailsSettings',
     messageDisplayImages: Boolean
     messageConfirmDelete: Boolean
     lang: String
+    listStyle: String
     plugins: (x) -> x
 
 
@@ -27,6 +28,7 @@ Settings.getInstance = ->
             messageDisplayImages: false
             messageConfirmDelete: true
             lang: 'en'
+            listStyle: 'default'
             refreshInterval: 5
             plugins: null
         if not settings?
