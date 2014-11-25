@@ -224,7 +224,7 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites = false, callback) ->
 
         log.info "FETCHING ACCOUNT ", @label, ":", toFetch.length, "BOXES"
         log.info "   ", toDestroy.length, "BOXES TO DESTROY"
-        reporter = ImapReporter.accountFetch this, toFetch.length + 1
+        reporter = ImapReporter.accountFetch account, toFetch.length + 1
 
         # fetch INBOX first
         toFetch.sort (a, b) ->
