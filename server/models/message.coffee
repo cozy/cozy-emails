@@ -205,7 +205,7 @@ Message.safeDestroyByAccountID = (accountID, callback, retries = 2) ->
         , (err) ->
 
             if err and retries > 0
-                log.info "DS has crashed ? waiting 4s before try again", err
+                log.warn "DS has crashed ? waiting 4s before try again", err
                 setTimeout ->
                     retries = retries - 1
                     Message.safeDestroyByAccountID accountID, callback, retries
@@ -297,7 +297,7 @@ Message::removeFromMailbox = (box, noDestroy = false, callback) ->
     delete mailboxIDs[box.id]
 
     isOrphan = Object.keys(mailboxIDs).length is 0
-    log.info "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
+    log.debug "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
 
     if isOrphan and not noDestroy then @destroy callback
     else @updateAttributes {mailboxIDs}, callback
