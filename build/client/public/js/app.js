@@ -4243,7 +4243,7 @@ MessageItem = React.createClass({
     to = message.get('to').concat(message.get('cc'));
     return span(null, Participants({
       participants: from,
-      onAdd: this.addAddres
+      onAdd: this.addAddress
     }), span(null, ', '), Participants({
       participants: to,
       onAdd: this.addAddress

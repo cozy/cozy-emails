@@ -52,6 +52,10 @@ Mailbox.prototype.isInbox = function() {
   return this.path === 'INBOX';
 };
 
+Mailbox.prototype.isSelectable = function() {
+  return __indexOf.call(this.attribs || [], '\\Noselect') < 0;
+};
+
 Mailbox.prototype.RFC6154use = function() {
   var attribute, field, _ref;
   _ref = Mailbox.RFC6154;
@@ -370,7 +374,7 @@ Mailbox.prototype.getDiff = function(laststep, limit, callback) {
       ], cbRelease);
     };
   })(this), function(err, results) {
-    var cozyIds, cozyMessage, flagsChange, id, imapMessage, imapUIDs, toFetch, toRemove, uid;
+    var cozyFlags, cozyIds, cozyMessage, flagsChange, id, imapFlags, imapMessage, imapUIDs, toFetch, toRemove, uid;
     log.debug("diff#results");
     if (err) {
       return callback(err);
@@ -385,11 +389,13 @@ Mailbox.prototype.getDiff = function(laststep, limit, callback) {
     for (uid in imapUIDs) {
       imapMessage = imapUIDs[uid];
       if (cozyMessage = cozyIds[uid]) {
-        if (_.xor(imapMessage[1], cozyMessage[1]).length) {
+        imapFlags = imapMessage[1];
+        cozyFlags = cozyMessage[1];
+        if (_.xor(imapFlags, cozyFlags).length) {
           id = cozyMessage[0];
           flagsChange.push({
             id: id,
-            flags: imapMessage[1]
+            flags: imapFlags
           });
         }
       } else {

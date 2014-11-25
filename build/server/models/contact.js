@@ -29,12 +29,14 @@ module.exports = Contact = americano.getModel('Contact', {
 Contact.prototype.includePicture = function(callback) {
   var stream, _ref;
   if ((_ref = this._attachments) != null ? _ref.picture : void 0) {
-    stream = this.getFile('picture', function(err) {
-      if (err != null) {
-        return log.error("Contact " + contact.id + " getting picture", err);
-      }
-    });
-    return stream_to_buffer_array(stream((function(_this) {
+    stream = this.getFile('picture', (function(_this) {
+      return function(err) {
+        if (err != null) {
+          return log.error("Contact " + _this.id + " getting picture", err);
+        }
+      };
+    })(this));
+    return stream_to_buffer_array(stream, (function(_this) {
       return function(err, parts) {
         var avatar, base64;
         if (err) {
@@ -42,13 +44,16 @@ Contact.prototype.includePicture = function(callback) {
         }
         base64 = Buffer.concat(parts).toString('base64');
         avatar = "data:image/jpeg;base64," + base64;
+        if (_this.datapoints == null) {
+          _this.datapoints = [];
+        }
         _this.datapoints.push({
           name: 'avatar',
           value: avatar
         });
         return callback(null, _this);
       };
-    })(this)));
+    })(this));
   } else {
     return callback(null, this);
   }

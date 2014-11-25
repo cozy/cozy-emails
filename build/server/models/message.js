@@ -152,8 +152,10 @@ Message.fetchOrUpdate = function(box, mid, uid, callback) {
     if (err) {
       return callback(err);
     }
-    if (existing) {
+    if (existing && !existing.isInMailbox(box)) {
       return existing.addToMailbox(box, uid, callback);
+    } else if (existing) {
+      return callback(null);
     } else {
       return box.imap_fetchOneMail(uid, callback);
     }
@@ -292,12 +294,16 @@ Message.safeRemoveAllFromBox = function(mailboxID, callback, retries) {
 
 Message.prototype.addToMailbox = function(box, uid, callback) {
   var mailboxIDs;
-  log.info("MAIL " + box.path + ":" + uid + " ADDED TO BOX", this);
+  log.info("MAIL " + box.path + ":" + uid + " ADDED TO BOX");
   mailboxIDs = this.mailboxIDs || {};
   mailboxIDs[box.id] = uid;
   return this.updateAttributes({
     mailboxIDs: mailboxIDs
   }, callback);
+};
+
+Message.prototype.isInMailbox = function(box) {
+  return this.mailboxIDs[box.id] != null;
 };
 
 Message.prototype.removeFromMailbox = function(box, noDestroy, callback) {
@@ -565,6 +571,9 @@ Message.findConversationId = function(mail, callback) {
     return Message.rawRequest('dedupRequest', {
       keys: keys
     }, function(err, rows) {
+      if (err) {
+        return callback(err);
+      }
       return Message.pickConversationID(rows, callback);
     });
   } else if (((_ref = mail.normSubject) != null ? _ref.length : void 0) > 3) {
@@ -572,6 +581,9 @@ Message.findConversationId = function(mail, callback) {
     return Message.rawRequest('dedupRequest', {
       key: key
     }, function(err, rows) {
+      if (err) {
+        return callback(err);
+      }
       return Message.pickConversationID(rows, callback);
     });
   } else {

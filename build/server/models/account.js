@@ -279,9 +279,12 @@ Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback
         return _ref = box.id, __indexOf.call(account.favorites, _ref) >= 0;
       });
     }
+    toFetch = toFetch.filter(function(box) {
+      return box.isSelectable();
+    });
     log.info("FETCHING ACCOUNT ", this.label, ":", toFetch.length, "BOXES");
     log.info("   ", toDestroy.length, "BOXES TO DESTROY");
-    reporter = ImapReporter.accountFetch(this, toFetch.length + 1);
+    reporter = ImapReporter.accountFetch(account, toFetch.length + 1);
     toFetch.sort(function(a, b) {
       if (a.label === 'INBOX') {
         return 1;
@@ -391,7 +394,7 @@ Account.prototype.imap_scanBoxesForSpecialUse = function(boxes, callback) {
   for (_j = 0, _len1 = boxes.length; _j < _len1; _j++) {
     box = boxes[_j];
     if (this.favorites.length < 4) {
-      if ((_ref = box.id, __indexOf.call(this.favorites, _ref) < 0) && __indexOf.call(box.attribs, '\\NoSelect') < 0) {
+      if ((_ref = box.id, __indexOf.call(this.favorites, _ref) < 0) && box.isSelectable()) {
         this.favorites.push(box.id);
       }
     }

@@ -63,17 +63,18 @@ module.exports = ImapReporter = (function() {
 
   ImapReporter.prototype.sendtoclient = function(nocooldown) {
     if (this.cooldown && !nocooldown) {
-      return;
+      return true;
+    } else {
+      if (io != null) {
+        io.emit('task.update', this.toObject());
+      }
+      this.cooldown = true;
+      return setTimeout(((function(_this) {
+        return function() {
+          return _this.cooldown = false;
+        };
+      })(this)), 500);
     }
-    if (io != null) {
-      io.emit('task.update', this.toObject());
-    }
-    this.cooldown = true;
-    return setTimeout(((function(_this) {
-      return function() {
-        return _this.cooldown = false;
-      };
-    })(this)), 500);
   };
 
   ImapReporter.prototype.toObject = function() {

@@ -170,7 +170,7 @@ Account::imap_refreshBoxes = (callback) ->
     log.debug "imap_refreshBoxes"
     account = this
 
-    async.parallel [
+    async.series [
         (cb) => Mailbox.getBoxes @id, cb
         (cb) => @imap_getBoxes cb
     ], (err, results) ->

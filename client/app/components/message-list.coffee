@@ -28,7 +28,6 @@ MessageList = React.createClass
 
     getInitialState: ->
         return {
-            compact: false
             edited: false
         }
 
@@ -38,6 +37,7 @@ MessageList = React.createClass
             @_selected = {}
 
     render: ->
+        compact = @props.settings.get('listStyle') is 'compact'
         messages = @props.messages.map (message, key) =>
             id = message.get('id')
             isActive = @props.messageID is id
@@ -46,7 +46,7 @@ MessageList = React.createClass
                 key: key,
                 isActive: isActive,
                 edited: @state.edited,
-                settings: @props.settings
+                settings: @props.settings,
                 onSelect: (val) =>
                     if val
                         @_selected[id] = val
@@ -61,10 +61,10 @@ MessageList = React.createClass
         nextPage = =>
             LayoutActionCreator.showMessageList parameters: @props.query
         classList = classer
-            compact: @state.compact
+            compact: compact
             edited: @state.edited
         classCompact = classer
-            active: @state.compact
+            active: compact
         classEdited = classer
             active: @state.edited
         div className: 'message-list ' + classList, ref: 'list',
@@ -98,12 +98,6 @@ MessageList = React.createClass
                                 onMark: @onMark
                                 onConversation: @onConversation
                                 onHeaders: @onHeaders
-                        div className: 'btn-group btn-group-sm message-list-option',
-                            button
-                                type: "button"
-                                className: "btn btn-default " + classCompact
-                                onClick: @toggleCompact
-                                t 'list option compact'
             if @props.messages.count() is 0
                 p null, @props.emptyListMessage
             else
@@ -121,9 +115,6 @@ MessageList = React.createClass
                     else
                         p null, t 'list end'
 
-
-    toggleCompact: ->
-        @setState compact: not @state.compact
 
     toggleEdited: ->
         @setState edited: not @state.edited
@@ -288,8 +279,9 @@ MessageItem = React.createClass
         else
             tag = span
 
-        date   = MessageUtils.formatDate message.get 'createdAt'
-        avatar = MessageUtils.getAvatar message
+        compact = @props.settings.get('listStyle') is 'compact'
+        date    = MessageUtils.formatDate message.get('createdAt'), compact
+        avatar  = MessageUtils.getAvatar message
 
         li
             className: classes,
@@ -352,7 +344,7 @@ MessageItem = React.createClass
         from = message.get 'from'
         to   = message.get('to').concat(message.get('cc'))
         span null,
-            Participants participants: from, onAdd: @addAddres
+            Participants participants: from, onAdd: @addAddress
             span null, ', '
             Participants participants: to, onAdd: @addAddress
 

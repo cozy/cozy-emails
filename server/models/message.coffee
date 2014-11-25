@@ -72,7 +72,7 @@ Message.getResultsAndCount = (mailboxID, params, callback) ->
         optionsResults.startkey[3] = params.resultsAfter
         optionsResults.skip = 1
 
-    async.parallel [
+    async.series [
         (cb) -> Message.rawRequest 'byMailboxRequest', optionsCount, cb
         (cb) -> Message.rawRequest 'byMailboxRequest', optionsResults, cb
     ], (err, results) ->
@@ -197,14 +197,19 @@ Message.safeDestroyByAccountID = (accountID, callback, retries = 2) ->
         log.info "destroying", rows.length, "messages"
 
         async.eachLimit rows, CONCURRENT_DESTROY, (row, cb) ->
-            new Message(id: row.id).destroy cb
+            new Message(id: row.id).destroy (err) ->
+                if err?.message is "Document not found"
+                    cb null
+                else
+                    cb err
         , (err) ->
 
             if err and retries > 0
                 log.info "DS has crashed ? waiting 4s before try again", err
-                async.delay 4000, ->
+                setTimeout ->
                     retries = retries - 1
                     Message.safeDestroyByAccountID accountID, callback, retries
+                , 4000
 
             else if err
                 return callback err
@@ -584,3 +589,6 @@ Message.recoverChangedUID = (box, messageID, newUID, callback) ->
         mailboxIDs = message.mailboxIDs
         mailboxIDs[box.id] = newUID
         message.updateAttributes {mailboxIDs}, callback
+
+Message.removeAccountOrphans = ->
+    Message.rawRequest

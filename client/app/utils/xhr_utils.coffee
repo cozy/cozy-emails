@@ -198,7 +198,7 @@ module.exports =
 
         request.get url
         .end (res) ->
-            callback(res.text)
+            callback?(res.text)
 
     activityCreate: (options, callback) ->
         request.post "/activity"
