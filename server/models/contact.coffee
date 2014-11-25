@@ -14,12 +14,13 @@ module.exports = Contact = americano.getModel 'Contact',
 
 Contact::includePicture = (callback) ->
     if @_attachments?.picture
-        stream = @getFile 'picture', (err) ->
-            log.error "Contact #{contact.id} getting picture", err if err?
+        stream = @getFile 'picture', (err) =>
+            log.error "Contact #{@id} getting picture", err if err?
         stream_to_buffer_array stream, (err, parts) =>
             return callback err if err
             base64 = Buffer.concat(parts).toString('base64')
             avatar = "data:image/jpeg;base64," + base64
+            @datapoints ?= []
             @datapoints.push
                 name: 'avatar'
                 value: avatar
