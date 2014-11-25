@@ -251,10 +251,11 @@ Message.safeRemoveAllFromBox = (mailboxID, callback, retries = 2) ->
         , (err) ->
 
             if err and retries > 0
-                log.info "DS has crashed ? waiting 4s before try again", err
-                async.delay 4000, ->
+                log.warn "DS has crashed ? waiting 4s before try again", err
+                setTimeout ->
                     retries = retries - 1
                     Message.safeRemoveAllFromBox mailboxID, callback, retries
+                , 4000
 
             else if err
                 return callback err
