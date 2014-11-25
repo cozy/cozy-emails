@@ -9,6 +9,7 @@ ContactActionCreator = require '../actions/contact_action_creator'
 ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 MessageStore   = require '../stores/message_store'
+MailboxList    = require './mailbox-list'
 Participants   = require './participant'
 ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'
@@ -62,6 +63,19 @@ MessageList = React.createClass
             query:     @props.query
         nextPage = =>
             LayoutActionCreator.showMessageList parameters: @props.query
+
+        getMailboxUrl = (mailbox) =>
+            @buildUrl
+                direction: 'first'
+                action: 'account.mailbox.messages'
+                parameters: [@props.accountID, mailbox.get('id')]
+
+        configMailboxUrl = @buildUrl
+            direction: 'first'
+            action: 'account.config'
+            parameters: @props.accountID
+            fullWidth: true
+
         classList = classer
             compact: compact
             edited: @state.edited
@@ -72,16 +86,46 @@ MessageList = React.createClass
         div className: 'message-list ' + classList, ref: 'list',
             div className: 'message-list-actions',
                 #MessagesQuickFilter {}
-                MessagesFilter filterParams
-                MessagesSort filterParams
                 div className: 'btn-toolbar', role: 'toolbar',
                     div className: 'btn-group',
+                        # Toggle edit
                         div className: 'btn-group btn-group-sm message-list-option',
                             button
                                 type: "button"
                                 className: "btn btn-default " + classEdited
                                 onClick: @toggleEdited,
-                                    i className: 'fa fa-pencil'
+                                    i className: 'fa fa-square-o'
+                        # mailbox-list
+                        if not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                MailboxList
+                                    getUrl: getMailboxUrl
+                                    mailboxes: @props.mailboxes
+                                    selectedMailbox: @props.mailboxID
+                        # filters
+                        if not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                MessagesFilter filterParams
+                        # sort
+                        if not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                MessagesSort filterParams
+                        # refresh
+                        if not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                button
+                                    className: 'btn btn-default trash',
+                                    type: 'button',
+                                    onClick: @refresh,
+                                        span
+                                            className: 'fa fa-refresh'
+                        # config
+                        if not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                a
+                                    href: configMailboxUrl
+                                    className: 'btn btn-default',
+                                    i className: 'fa fa-cog'
                         if @state.edited
                             div className: 'btn-group btn-group-sm message-list-option',
                                 button
@@ -120,6 +164,10 @@ MessageList = React.createClass
                     else
                         p null, t 'list end'
 
+
+    refresh: (event) ->
+        event.preventDefault()
+        LayoutActionCreator.refreshMessages()
 
     toggleEdited: ->
         @setState edited: not @state.edited
@@ -300,7 +348,7 @@ MessageItem = React.createClass
                     onDoubleClick: @onMessageDblClick,
                         if @props.edited
                             input
-                                className: 'avatar',
+                                className: 'select',
                                 type: 'checkbox',
                                 checked: @state.selected
                                 onChange: @onSelect
@@ -377,10 +425,10 @@ MessagesFilter = React.createClass
     render: ->
         filter = @props.query.flag
         if not filter? or filter is '-'
-            title = t 'list filter'
+            title = i className: 'fa fa-filter'
         else
             title = t 'list filter ' + filter
-        div className: 'dropdown filter-dropdown',
+        div className: 'btn-group btn-group-sm dropdown filter-dropdown',
             button
                 className: 'btn btn-default dropdown-toggle message-list-action'
                 type: 'button'
@@ -430,7 +478,7 @@ MessagesSort = React.createClass
         else
             sort  = sort.substr 1
             title = t 'list sort ' + sort
-        div className: 'dropdown sort-dropdown',
+        div className: 'btn-group btn-group-sm dropdown sort-dropdown',
             button
                 className: 'btn btn-default dropdown-toggle message-list-action'
                 type: 'button'
