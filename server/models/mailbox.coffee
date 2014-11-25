@@ -31,6 +31,8 @@ Mailbox.RFC6154 =
     flaggedMailbox: '\\Flagged'
 
 Mailbox::isInbox = -> @path is 'INBOX'
+Mailbox::isSelectable = ->
+    '\\Noselect' not in (@attribs or [])
 
 Mailbox::RFC6154use = ->
     for field, attribute of Mailbox.RFC6154

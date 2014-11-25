@@ -222,6 +222,8 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites = false, callback) ->
         if onlyFavorites
             toFetch = toFetch.filter (box) -> box.id in account.favorites
 
+        toFetch = toFetch.filter (box) -> box.isSelectable()
+
         log.info "FETCHING ACCOUNT ", @label, ":", toFetch.length, "BOXES"
         log.info "   ", toDestroy.length, "BOXES TO DESTROY"
         reporter = ImapReporter.accountFetch account, toFetch.length + 1
@@ -334,7 +336,7 @@ Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
 
     # if we dont have our 4 favorites, pick at random
     for box in boxes when @favorites.length < 4
-        if box.id not in @favorites and '\\NoSelect' not in box.attribs
+        if box.id not in @favorites and box.isSelectable()
             @favorites.push box.id
 
     @save callback
