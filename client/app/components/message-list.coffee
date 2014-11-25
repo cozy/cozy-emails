@@ -29,9 +29,11 @@ MessageList = React.createClass
     getInitialState: ->
         return {
             edited: false
+            loading: false
         }
 
     componentWillReceiveProps: (props) ->
+        @setState loading: false
         if props.mailboxID isnt @props.mailboxID
             @setState edited: false
             @_selected = {}
@@ -106,12 +108,15 @@ MessageList = React.createClass
                     ul className: 'list-unstyled',
                         messages
                     if @props.messages.count() < nbMessages
-                        p null,
-                            a
-                                #href: @props.paginationUrl
-                                onClick: nextPage,
-                                ref: 'nextPage',
-                                t 'list next page'
+                        p className: 'text-center',
+                            if @state.loading
+                                i className: "fa fa-refresh fa-spin"
+                            else
+                                a
+                                    #href: @props.paginationUrl
+                                    onClick: nextPage,
+                                    ref: 'nextPage',
+                                    t 'list next page'
                     else
                         p null, t 'list end'
 
@@ -202,11 +207,10 @@ MessageList = React.createClass
         width  = window.innerWidth  or document.documentElement.clientWidth
         return rect.bottom <= ( height + 0 ) and rect.top >= 0
 
-    _loadNext: =>
-        if isVisible(@refs.nextPage.getDOMNode(), true)
-            scrollable.removeEventListener 'scroll', loadNext
+    _loadNext: ->
+        if @refs.nextPage? and @_isVisible(@refs.nextPage.getDOMNode(), true)
+            @setState loading: true
             LayoutActionCreator.showMessageList parameters: @props.query
-            #@redirect @props.paginationUrl
 
     _initScroll: ->
         if not @refs.nextPage?
@@ -219,7 +223,7 @@ MessageList = React.createClass
 
         # listen to scroll events
         scrollable = @refs.list.getDOMNode().parentNode
-        setTimeout ->
+        setTimeout =>
             scrollable.removeEventListener 'scroll', @_loadNext
             scrollable.addEventListener 'scroll', @_loadNext
         , 0
