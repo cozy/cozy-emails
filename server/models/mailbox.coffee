@@ -328,10 +328,13 @@ Mailbox::getDiff = (laststep, limit, callback) ->
         flagsChange = []
 
         for uid, imapMessage of imapUIDs
-            if cozyMessage = cozyIds[uid] # this message is already in cozy
-                if _.xor(imapMessage[1], cozyMessage[1]).length
+            if cozyMessage = cozyIds[uid]
+                # this message is already in cozy, compare flags
+                imapFlags = imapMessage[1]
+                cozyFlags = cozyMessage[1]
+                if _.xor(imapFlags, cozyFlags).length
                     id = cozyMessage[0]
-                    flagsChange.push id: id, flags: imapMessage[1]
+                    flagsChange.push id: id, flags: imapFlags
 
             else # this message isnt in this box in cozy
                 # add it to be fetched
