@@ -8,13 +8,6 @@ ApiUtils = require '../utils/api_utils'
 module.exports = React.createClass
     displayName: 'Settings'
 
-    mixins: [
-        React.addons.LinkedStateMixin # two-way data binding
-    ]
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
-
     render: ->
 
         classLabel = 'col-sm-2 col-sm-offset-2 control-label'
@@ -93,9 +86,13 @@ module.exports = React.createClass
                 for own pluginName, pluginConf of @state.settings.plugins
                     form className: 'form-horizontal', key: pluginName,
                         div className: 'form-group',
-                            label className: classLabel, pluginConf.name
+                            label
+                                className: classLabel,
+                                htmlFor: 'settings-plugin-' + pluginName,
+                                pluginConf.name
                             div className: 'col-sm-3',
                                 input
+                                    id: 'settings-plugin-' + pluginName,
                                     checked: pluginConf.active,
                                     onChange: @handleChange,
                                     'data-target': 'plugin',
@@ -119,6 +116,7 @@ module.exports = React.createClass
                         type: 'checkbox'
 
     handleChange: (event) ->
+        event.preventDefault()
         target = event.currentTarget
         switch target.dataset.target
             when 'messagesPerPage'
@@ -157,7 +155,7 @@ module.exports = React.createClass
                 else
                     PluginUtils.deactivate name
                 for own pluginName, pluginConf of settings.plugins
-                    pluginConf.active = window.plugins[pluginName].active
+                    settings.plugins[pluginName].active = window.plugins[pluginName].active
                 @setState({settings: settings})
                 SettingsActionCreator.edit settings
 
