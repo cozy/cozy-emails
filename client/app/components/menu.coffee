@@ -13,7 +13,8 @@ module.exports = Menu = React.createClass
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+               not(_.isEqual(nextProps, @props))
 
     getInitialState: ->
         return displayActiveAccount: true
@@ -187,7 +188,8 @@ MenuMailboxItem = React.createClass
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+               not(_.isEqual(nextProps, @props))
 
     getInitialState: ->
         return target: false
@@ -255,6 +257,7 @@ MenuMailboxItem = React.createClass
     onDrop: (event) ->
         {messageID, mailboxID} = JSON.parse(event.dataTransfer.getData 'text')
         newID = event.currentTarget.dataset.mailboxId
+        @setState target: false
         MessageActionCreator.move messageID, mailboxID, newID, (error) ->
             if error?
                 LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
