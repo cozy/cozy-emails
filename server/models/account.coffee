@@ -63,12 +63,12 @@ Account.refreshAllAccounts = (limit, onlyFavorites, callback) ->
 Account.removeOrphansAndRefresh = (limitByBox, onlyFavorites, callback) ->
     Account.request 'all', (err, accounts) ->
         return callback err if err
-        existingAccounts = accounts.map (account) -> account.id
-        Mailbox.removeOrphans existingAccounts, (err, existingMailboxIDs) ->
+        existingAccountIDs = accounts.map (account) -> account.id
+        Mailbox.removeOrphans existingAccountIDs, (err, existingMailboxIDs) ->
             return callback err if err
             Message.removeOrphans existingMailboxIDs, (err) ->
                 return callback err if err
-                Account.refreshAccounts existingAccounts, limitByBox,
+                Account.refreshAccounts accounts, limitByBox,
                                                     onlyFavorites, callback
 
 Account.refreshAccounts = (accounts, limitByBox, onlyFavorites, callback) ->
@@ -76,7 +76,7 @@ Account.refreshAccounts = (accounts, limitByBox, onlyFavorites, callback) ->
             log.debug "refreshing account #{account.label}"
             return cb null if account.isTest()
             return cb null if account.isRefreshing()
-            account.imap_fetchMails limit, onlyFavorites, cb
+            account.imap_fetchMails limitByBox, onlyFavorites, cb
         , callback
 
 
@@ -238,7 +238,7 @@ Account::imap_refreshBoxes = (callback) ->
 Account::imap_fetchMails = (limitByBox, onlyFavorites = false, callback) ->
     log.debug "account#imap_fetchMails", limitByBox, onlyFavorites
     account = this
-    @setRefreshing true
+    account.setRefreshing true
 
     @imap_refreshBoxes (err, toFetch, toDestroy) ->
 
@@ -271,7 +271,7 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites = false, callback) ->
                 box.destroyAndRemoveAllMessages cb
 
             , (err) ->
-                @setRefreshing false
+                account.setRefreshing false
                 reporter.onDone()
                 callback null
 

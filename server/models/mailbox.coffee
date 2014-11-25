@@ -320,7 +320,7 @@ Mailbox::getDiff = (laststep, limit, callback) ->
         log.debug "diff#results"
         return callback err if err
         return callback null, null unless results
-        [imapUIDs, cozyIds] = results
+        [cozyIds, imapUIDs] = results
 
 
         toFetch = []
