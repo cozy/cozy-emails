@@ -290,7 +290,7 @@ Message::isInMailbox = (box) ->
 # Returns void
 Message::removeFromMailbox = (box, noDestroy = false, callback) ->
     log.debug ".removeFromMailbox", @id, box.label
-    noDestroy = callback unless callback
+    callback = noDestroy unless callback
 
     mailboxIDs = @mailboxIDs
     delete mailboxIDs[box.id]
@@ -316,6 +316,29 @@ Message.applyFlagsChanges = (id, flags, callback) ->
     Message.find id, (err, message) ->
         return callback err if err
         message.updateAttributes {flags}, callback
+
+
+Message.removeOrphans = (existings, callback) ->
+    log.debug "removeOrphans"
+    Message.rawRequest 'byMailboxRequest',
+        reduce: true
+        group_level: 2
+        startkey: ['uid', '']
+        endkey: ['uid', "\uFFFF"]
+    , (err, rows) ->
+        return callback err if err
+
+        async.eachSeries rows, (row, cb) ->
+            mailboxID = row.key[1]
+            if mailboxID in existings
+                cb null
+            else
+                log.debug "removeOrphans - found orphan", row.id
+                Message.safeRemoveAllFromBox mailboxID, (err) ->
+                    log.error 'failed to remove message', row.id, err if err
+                    cb null
+
+        , callback
 
 
 # Public: apply a json-patch to the message in both cozy & imap

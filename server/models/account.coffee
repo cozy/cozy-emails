@@ -57,7 +57,22 @@ Account::setRefreshing = (value) ->
 Account.refreshAllAccounts = (limit, onlyFavorites, callback) ->
     Account.request 'all', (err, accounts) ->
         return callback err if err
-        async.eachSeries accounts, (account, cb) ->
+        Account.refreshAccounts accounts, callback
+
+
+Account.removeOrphansAndRefresh = (limitByBox, onlyFavorites, callback) ->
+    Account.request 'all', (err, accounts) ->
+        return callback err if err
+        existingAccounts = accounts.map (account) -> account.id
+        Mailbox.removeOrphans existingAccounts, (err, existingMailboxIDs) ->
+            return callback err if err
+            Message.removeOrphans existingMailboxIDs, (err) ->
+                return callback err if err
+                Account.refreshAccounts existingAccounts, limitByBox,
+                                                    onlyFavorites, callback
+
+Account.refreshAccounts = (accounts, limitByBox, onlyFavorites, callback) ->
+    async.eachSeries accounts, (account, cb) ->
             log.debug "refreshing account #{account.label}"
             return cb null if account.isTest()
             return cb null if account.isRefreshing()

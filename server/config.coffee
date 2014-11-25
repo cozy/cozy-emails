@@ -22,9 +22,9 @@ config =
             # move it here needed after express 4.4
             app.use errorHandler
             ImapReporter.initSocketIO app, server
-            Account.refreshAllAccounts null, false, ->
-                log.info "REFRESHING DONE"
 
+            Account.removeOrphansAndRefresh null, false, ->
+                log.info "initial refresh completed"
 
     development: [
         americano.logger 'dev'

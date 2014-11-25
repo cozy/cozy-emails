@@ -464,6 +464,27 @@ Mailbox::recoverChangedUIDValidity = (imap, callback) ->
                 callback null
 
 
+Mailbox.removeOrphans = (existings, callback) ->
+    log.debug "removeOrphans"
+    Mailbox.rawRequest 'treemap', (err, rows) ->
+        return callback err if err
+
+        boxes = []
+
+        async.eachSeries rows, (row, cb) ->
+            accountID = row.key[0]
+            if accountID in existings
+                boxes.push row.id
+                cb null
+            else
+                log.debug "removeOrphans - found orphan", row.id
+                new Mailbox(id: row.id).destroy (err) ->
+                    log.error 'failed to delete box', row.id
+                    cb null
+
+        , (err) ->
+            callback err, boxes
+
 
 Mailbox::doASAP = (operation, callback) ->
     ImapPool.get(@accountID).doASAP operation, callback
