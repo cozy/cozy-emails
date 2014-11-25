@@ -99,7 +99,6 @@ module.exports = Application = React.createClass
                     isResponsiveMenuShown: @state.isResponsiveMenuShown
                     layout: @props.router.current
                     favoriteMailboxes: @state.favoriteMailboxes
-                    unreadCounts: @state.unreadCounts
 
                 div id: 'page-content', className: responsiveClasses,
 
@@ -211,8 +210,10 @@ module.exports = Application = React.createClass
             else
                 accountID = panelInfo.parameters.accountID
                 mailboxID = panelInfo.parameters.mailboxID
+                account   = AccountStore.getByID accountID
+                mailbox   = account.get('mailboxes').get mailboxID
                 messages  = MessageStore.getMessagesByMailbox mailboxID
-                messagesCount = MessageStore.getMessagesCounts().get mailboxID
+                messagesCount = mailbox?.get('nbTotal') or 0
                 emptyListMessage = t 'list empty'
                 counterMessage   = t 'list count', messagesCount
 
@@ -234,6 +235,7 @@ module.exports = Application = React.createClass
                 accountID:     accountID
                 mailboxID:     mailboxID
                 messageID:     messageID
+                mailboxes:     @state.mailboxes
                 settings:      @state.settings
                 query:         query
                 emptyListMessage: emptyListMessage
@@ -345,7 +347,6 @@ module.exports = Application = React.createClass
             selectedMailboxID: selectedMailboxID
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
-            unreadCounts: MessageStore.getUnreadMessagesCounts()
             searchQuery: SearchStore.getQuery()
             settings: SettingsStore.get()
             plugins: window.plugins

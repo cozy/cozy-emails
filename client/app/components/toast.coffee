@@ -170,4 +170,4 @@ module.exports.Container = ToastContainer =  React.createClass
                     type: ActionTypes.RECEIVE_TASK_DELETE
                     value: toast.id
         close toast for id, toast of toasts
-        @state.toasts.clear()
+        @setState toasts: @state.toasts.clear()

@@ -34,6 +34,10 @@ module.exports =
                 .map (mailbox) ->
                     children = mailbox.children
                     mailbox.children = _createImmutableMailboxes children
+                    # @TODO remove this polyfill
+                    mailbox.nbTotal  = Math.floor(Math.random() * 100)
+                    mailbox.nbUnread = Math.floor(Math.random() * 10)
+                    mailbox.nbNew    = Math.floor(Math.random() * 2)
                     return Immutable.Map mailbox
                 .toOrderedMap()
 

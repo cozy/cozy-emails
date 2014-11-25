@@ -73,6 +73,11 @@
             background #363a46 + 10%
             color #fff
 
+        &.news
+            .badge
+                color red
+                background yellow
+
     // Account list
     #account-list
         li
@@ -97,6 +102,12 @@
 
                 .submenu
                     display block
+            a.menu-item *
+                // this is needed for dragenter and dragleave events to work
+                pointer-events none
+            &.target
+                border 1px dashed white
+
 
     // New account action button
     .new-account-action

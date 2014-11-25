@@ -33,6 +33,7 @@ window.plugins.gallery = {
         gal.appendChild(a);
         if (elmt.parentNode.querySelectorAll("[data-gallery]").length === 0) {
           icon = document.createElement('a');
+          icon.style.paddingLeft = '.5em';
           icon.innerHTML = "<i class='fa fa-eye' data-gallery></i>";
           icon.addEventListener('click', function () {
             var event = document.createEvent("MouseEvent");

@@ -36,6 +36,9 @@ module.exports =
       "menu compose"            : "Nouveau"
       "menu account new"        : "Ajouter un compte"
       "menu settings"           : "Paramètres"
+      "menu mailbox total"      : "%{smart_count} message |||| %{smart_count} messages "
+      "menu mailbox unread"     : " dont %{smart_count} non lu |||| dont %{smart_count} non lus "
+      "menu mailbox new"        : " et %{smart_count} nouveaux |||| et %{smart_count} nouveaux "
 
       # List
       "list empty"              : "Pas d'email dans cette boîte.."
@@ -55,6 +58,8 @@ module.exports =
       "list option compact"     : "Compact"
       "list next page"          : "Davantage de messages"
       "list end"                : "FIN"
+      "list mass no message"    : "Aucun message sélectionné"
+      "list delete confirm"     : "Voulez-vous vraiment supprimer %{nb} messages ?"
 
       # Mail
       "mail receivers"          : "À "
@@ -135,6 +140,9 @@ module.exports =
       "mailbox title add cancel"    : "Annuler"
       "mailbox title favorite"      : "Dossier affiché"
       "mailbox title not favorite"  : "Dossier non affiché"
+      "mailbox title total"         : "Total"
+      "mailbox title unread"        : "Non lus"
+      "mailbox title new"           : "Nouveaux"
       "config error auth"           : "Impossible de se connecter avec ces
                                         paramètres"
       "config error imapPort"       : "Port du serveur IMAP invalide"
@@ -150,7 +158,7 @@ module.exports =
       "message action sent ko"      : "Une erreur est survenue : "
       "message action draft ok"     : "Message sauvegardé !"
       "message action draft ko"     : "Une erreur est survenue : "
-      "message action delete ok"    : "Message supprimé"
+      "message action delete ok"    : "Message « %{subject} » supprimé"
       "message action delete ko"    : "Impossible de supprimer le message : "
       "message action move ok"      : "Message déplacé"
       "message action move ko"      : "Le déplacement a échoué"

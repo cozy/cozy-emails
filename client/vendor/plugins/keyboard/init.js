@@ -34,49 +34,71 @@ if (typeof window.plugins !== "object") {
     _binding: {
       'enter': {
         name: "Display current message",
-        action: function () {window.cozyMails.messageDisplay(); }
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageDisplay();
+        }
       },
       'x': {
         name: "Close current message",
-        action: function () {window.cozyMails.messageClose(); }
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageClose();
+        }
+      },
+      'esc': {
+        name: "Close current message",
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageClose();
+        }
       },
       'j': {
         name: "Next Message",
-        action: function () {window.cozyMails.messageNavigate('next'); }
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageNavigate('next');
+        }
       },
       'down': {
         name: "Next Message",
-        action: function () {window.cozyMails.messageNavigate('next'); }
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageNavigate('next');
+        }
       },
       'k': {
         name: "Previous Message",
-        action: function () {window.cozyMails.messageNavigate('prev'); }
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageNavigate('prev');
+        }
       },
       'up': {
         name: "Previous Message",
-        action: function () {window.cozyMails.messageNavigate('prev'); }
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageNavigate('prev');
+        }
       },
-      'pagedown': {
+      'ctrl+down': {
         name: 'Scroll message down',
-        action: function () {
-            var panel = document.querySelector("#panels > .panel:nth-of-type(2)");
-            if (panel) {
-                panel.scrollTop += panel.clientHeight * 0.8;
-            }
+        action: function (e) {
+          e.preventDefault();
+          var panel = document.querySelector("#panels > .panel:nth-of-type(2)");
+          if (panel) {
+            panel.scrollTop += panel.clientHeight * 0.8;
+          }
         }
       },
-      'pageup': {
+      'ctrl+up': {
         name: 'Scroll message up',
-        action: function () {
-            var panel = document.querySelector("#panels > .panel:nth-of-type(2)");
-            if (panel) {
-                panel.scrollTop -= panel.clientHeight * 0.8;
-            }
-        }
-      },
-      'pageDown': {
-        name: 'Scroll message up',
-        action: function () {
+        action: function (e) {
+          e.preventDefault();
+          var panel = document.querySelector("#panels > .panel:nth-of-type(2)");
+          if (panel) {
+            panel.scrollTop -= panel.clientHeight * 0.8;
+          }
         }
       },
       'n': {
@@ -85,19 +107,39 @@ if (typeof window.plugins !== "object") {
       },
       'd': {
         name: "Delete message",
-        action: function () {window.cozyMails.messageDeleteCurrent(); }
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageDeleteCurrent();
+        }
+      },
+      'ctrl+z': {
+        name: 'Undelete message',
+        action: function (e) {
+          e.preventDefault();
+          var MessageActionCreator = window.require('actions/message_action_creator');
+          MessageActionCreator.undelete();
+        }
       },
       'backspace': {
         name: "Delete message",
-        action: function () {window.cozyMails.messageDeleteCurrent(); }
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageDeleteCurrent();
+        }
       },
       'del': {
         name: "Delete message",
-        action: function () {window.cozyMails.messageDeleteCurrent(); }
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageDeleteCurrent();
+        }
       },
-     'u': {
+      'u': {
         name: "Undelete message",
-        action: function () {window.cozyMails.messageUndo(); }
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageUndo();
+        }
       },
       '?': {
         name: "Toggle display of available bindings",

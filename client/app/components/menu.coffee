@@ -13,7 +13,8 @@ module.exports = Menu = React.createClass
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+               not(_.isEqual(nextProps, @props))
 
     getInitialState: ->
         return displayActiveAccount: true
@@ -109,10 +110,8 @@ module.exports = Menu = React.createClass
         isSelected = (not @props.selectedAccount? and key is 0) \
                      or @props.selectedAccount?.get('id') is account.get('id')
 
-        accountClasses = classer active: (isSelected and @state.displayActiveAccount)
         accountID = account.get 'id'
         defaultMailbox = AccountStore.getDefaultMailbox accountID
-        unread = @props.unreadCounts.get defaultMailbox?.get 'id'
 
         if defaultMailbox?
             url = @buildUrl
@@ -133,15 +132,35 @@ module.exports = Menu = React.createClass
                 @setState displayActiveAccount: not @state.displayActiveAccount
             else
                 @setState displayActiveAccount: true
+        nbTotal  = 0
+        nbUnread = 0
+        nbNew    = 0
+        account.get('mailboxes').map (mailbox) ->
+            nbTotal  += mailbox.get('nbTotal') or 0
+            nbUnread += mailbox.get('nbUnread') or 0
+            nbNew    += mailbox.get('nbNew') or 0
+        .toJS()
+        title    = t "menu mailbox total", nbTotal
+        if nbUnread > 0
+            title += t "menu mailbox unread", nbUnread
+        if nbNew > 0
+            title += t "menu mailbox new", nbNew
+
+        accountClasses = classer
+            active: (isSelected and @state.displayActiveAccount)
+            news: nbNew > 0
 
         li className: accountClasses, key: key,
             a
                 href: url,
                 className: 'menu-item account ' + accountClasses,
                 onClick: toggleActive,
+                title: title,
+                'data-toggle': 'tooltip',
+                'data-placement' : 'right',
                     i className: 'fa fa-inbox'
-                    if unread > 0
-                        span className: 'badge', unread
+                    if nbUnread and nbUnread > 0
+                        span className: 'badge', nbUnread
                     span
                         'data-account-id': key,
                         className: 'item-label',
@@ -153,6 +172,15 @@ module.exports = Menu = React.createClass
                     MenuMailboxItem { account, mailbox, key, selectedMailboxID }
                 .toJS()
 
+    _initTooltips: ->
+        jQuery('#account-list [data-toggle="tooltip"]').tooltip()
+
+    componentDidMount: ->
+        @_initTooltips()
+
+    componentDidUpdate: ->
+        @_initTooltips()
+
 
 MenuMailboxItem = React.createClass
     displayName: 'MenuMailboxItem'
@@ -160,7 +188,8 @@ MenuMailboxItem = React.createClass
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+               not(_.isEqual(nextProps, @props))
 
     getInitialState: ->
         return target: false
@@ -172,13 +201,22 @@ MenuMailboxItem = React.createClass
             action: 'account.mailbox.messages'
             parameters: [@props.account.get('id'), mailboxID]
 
-        #unread = @props.unreadCounts.get mailbox.get('id')
+        nbTotal  = @props.mailbox.get('nbTotal') or 0
+        nbUnread = @props.mailbox.get('nbUnread') or 0
+        nbNew    = @props.mailbox.get('nbNew') or 0
+        title    = t "menu mailbox total", nbTotal
+        if nbUnread > 0
+            title += t "menu mailbox unread", nbUnread
+        if nbNew > 0
+            title += t "menu mailbox new", nbNew
+
         classesParent = classer
             active: mailboxID is @props.selectedMailboxID
             target: @state.target
         classesChild = classer
             'menu-item': true
             target: @state.target
+            news: nbNew > 0
         specialUse = @props.mailbox.get('attribs')?[0]
         icon = switch specialUse
             when '\\All' then 'fa-archive'
@@ -186,7 +224,7 @@ MenuMailboxItem = React.createClass
             when '\\Sent' then 'fa-share-square-o'
             else 'fa-folder'
 
-        li className: classesParent, onDragEnter: @onDragEnter, onDragLeave: @onDragLeave,
+        li className: classesParent,
             a
                 href: mailboxUrl,
                 className: classesChild,
@@ -195,18 +233,23 @@ MenuMailboxItem = React.createClass
                 onDragLeave: @onDragLeave,
                 onDragOver: @onDragOver,
                 onDrop: @onDrop,
+                title: title,
+                'data-toggle': 'tooltip',
+                'data-placement' : 'right',
                 key: @props.key,
                     # Something must be rethought about the icon
                     i className: 'fa ' + icon
-                    #if unread and unread > 0
-                    #    span className: 'badge', unread
+                    if nbUnread and nbUnread > 0
+                        span className: 'badge', nbUnread
                     span className: 'item-label', @props.mailbox.get 'label'
 
     onDragEnter: (e) ->
-        @setState target: true
+        if not @state.target
+            @setState target: true
 
     onDragLeave: (e) ->
-        @setState target: false
+        if @state.target
+            @setState target: false
 
     onDragOver: (e) ->
         e.preventDefault()
@@ -214,6 +257,7 @@ MenuMailboxItem = React.createClass
     onDrop: (event) ->
         {messageID, mailboxID} = JSON.parse(event.dataTransfer.getData 'text')
         newID = event.currentTarget.dataset.mailboxId
+        @setState target: false
         MessageActionCreator.move messageID, mailboxID, newID, (error) ->
             if error?
                 LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"

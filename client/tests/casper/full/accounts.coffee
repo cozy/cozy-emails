@@ -156,7 +156,7 @@ casper.test.begin 'Create account', (test) ->
                 test.assertDoesntExist ".form-group.draftMailbox .dropdown", "No draft folder"
                 test.assertDoesntExist ".form-group.sentMailbox .dropdown",  "No sent folder"
                 test.assertDoesntExist ".form-group.trashMailbox .dropdown", "No trash folder"
-                test.assertElementCount "ul.boxes > li", 1, "No boxes"
+                test.assertElementCount "ul.boxes > li.box-item", 0, "No boxes"
 
 
     casper.then ->

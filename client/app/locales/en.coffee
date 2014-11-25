@@ -36,6 +36,9 @@ module.exports =
       "menu compose"            : "Compose"
       "menu account new"        : "New Mailbox"
       "menu settings"           : "Parameters"
+      "menu mailbox total"      : "%{smart_count} message|||| %{smart_count} messages"
+      "menu mailbox unread"     : ", %{smart_count} unread message ||||, %{smart_count} unread messages "
+      "menu mailbox new"        : " and %{smart_count} new message|||| and %{smart_count} new messages "
 
       # List
       "list empty"              : "No email in this box."
@@ -54,6 +57,8 @@ module.exports =
       "list option compact"     : "Compacte"
       "list next page"          : "More messages"
       "list end"                : "This is the end of the road"
+      "list mass no message"    : "No message selected"
+      "list delete confirm"     : "Do you really want to delete %{nb} messages ?"
 
       # Mail
       "mail receivers"          : "To: "
@@ -130,6 +135,9 @@ module.exports =
       "mailbox title add cancel"    : "Cancel"
       "mailbox title favorite"      : "Folder is displayed"
       "mailbox title not favorite"  : "Folder not displayed"
+      "mailbox title total"         : "Total"
+      "mailbox title unread"        : "Unread"
+      "mailbox title new"           : "New"
       "config error auth"           : "Wrong connection parameters"
       "config error imapPort"       : "Wrong IMAP port"
       "config error imapServer"     : "Wrong IMAP server"
@@ -144,7 +152,7 @@ module.exports =
       "message action sent ko"      : "Error sending message: "
       "message action draft ok"     : "Message saved"
       "message action draft ko"     : "Error saving message: "
-      "message action delete ok"    : "Message deleted"
+      "message action delete ok"    : "Message “%{subject}” deleted"
       "message action delete ko"    : "Error deleting message: "
       "message action move ok"      : "Message moved"
       "message action move ko"      : "Error moving message: "

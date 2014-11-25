@@ -367,37 +367,59 @@ module.exports = React.createClass
             @_renderMailboxChoice t('account trash mailbox'), "trashMailbox"
 
             h4 null, t "account tab mailboxes"
-            ul className: "list-unstyled boxes",
+            ul className: "list-unstyled boxes container",
+                if mailboxes?
+                    li className: 'row box title', key: 'title',
+                        span
+                            className: "col-xs-1",
+                            ''
+                        span
+                            className: "col-xs-1",
+                            ''
+                        span
+                            className: "col-xs-6",
+                            ''
+                        span
+                            className: "col-xs-1",
+                            ''
+                        span
+                            className: "col-xs-1 text-center",
+                            t 'mailbox title total'
+                        span
+                            className: "col-xs-1 text-center",
+                            t 'mailbox title unread'
+                        span
+                            className: "col-xs-1 text-center",
+                            t 'mailbox title new'
                 mailboxes
-                li null,
-                    div className: "box edited",
-                        span
-                            className: "box-action add"
-                            onClick: @addMailbox
-                            title: t("mailbox title add"),
-                                i className: 'fa fa-plus'
-                        span
-                            className: "box-action cancel"
-                            onClick: @undoMailbox
-                            title: t("mailbox title add cancel"),
-                                i className: 'fa fa-undo'
-                        div null,
-                            input
-                                id: 'newmailbox',
-                                ref: 'newmailbox',
-                                type: 'text',
-                                className: 'form-control',
-                                placeholder: t "account newmailbox placeholder"
-                        label
-                            className: 'col-sm-1 control-label',
-                            t "account newmailbox parent"
-                        div className: 'col-sm-1',
-                            MailboxList
-                                allowUndefined: true
-                                mailboxes: @state.mailboxes
-                                selectedMailbox: @state.newMailboxParent
-                                onChange: (mailbox) =>
-                                    @setState newMailboxParent: mailbox
+                li className: "row box edited", key: 'new',
+                    span
+                        className: "col-xs-1 box-action add"
+                        onClick: @addMailbox
+                        title: t("mailbox title add"),
+                            i className: 'fa fa-plus'
+                    span
+                        className: "col-xs-1 box-action cancel"
+                        onClick: @undoMailbox
+                        title: t("mailbox title add cancel"),
+                            i className: 'fa fa-undo'
+                    div className: 'col-xs-6',
+                        input
+                            id: 'newmailbox',
+                            ref: 'newmailbox',
+                            type: 'text',
+                            className: 'form-control',
+                            placeholder: t "account newmailbox placeholder"
+                    label
+                        className: 'col-xs-2 text-center control-label',
+                        t "account newmailbox parent"
+                    div className: 'col-xs-2 text-center',
+                        MailboxList
+                            allowUndefined: true
+                            mailboxes: @state.mailboxes
+                            selectedMailbox: @state.newMailboxParent
+                            onChange: (mailbox) =>
+                                @setState newMailboxParent: mailbox
 
     _renderMailboxChoice: (labelText, box) ->
         if @state.id?
@@ -711,45 +733,61 @@ MailboxItem = React.createClass
         else
             favoriteClass = "fa fa-eye-slash"
             favoriteTitle = t "mailbox title not favorite"
-        li className: 'box-item', key: key,
-            if @state.edited
-                div className: "box edited",
-                    span
-                        className: "box-action save"
-                        onClick: @updateMailbox
-                        title: t("mailbox title edit save"),
-                            i className: 'fa fa-check'
-                    span
-                        className: "box-action cancel"
-                        onClick: @undoMailbox
-                        title: t("mailbox title edit cancel"),
-                            i className: 'fa fa-undo'
-                    input
-                        className: "box-label form-control"
-                        ref: 'label',
-                        defaultValue: @props.mailbox.get 'label'
-                        type: 'text'
-            else
-                div className: "box",
-                    span
-                        className: "box-action edit",
-                        onClick: @editMailbox,
-                        title: t("mailbox title edit"),
-                            i className: 'fa fa-pencil'
-                    span
-                        className: "box-action delete",
-                        onClick: @deleteMailbox,
-                        title: t("mailbox title delete"),
-                            i className: 'fa fa-trash-o'
-                    span
-                        className: "box-label",
-                        onClick: @editMailbox,
-                        "#{pusher}#{@props.mailbox.get 'label'}"
-                    span
-                        className: "box-action favorite",
-                        title: favoriteTitle
-                        onClick: @toggleFavorite,
-                            i className: favoriteClass
+        nbTotal  = @props.mailbox.get('nbTotal') or 0
+        nbUnread = @props.mailbox.get('nbUnread') or 0
+        nbNew    = @props.mailbox.get('nbNew') or 0
+        classItem = classer
+            'row': true
+            'box': true
+            'box-item': true
+            edited: @state.edited
+        if @state.edited
+            li className: classItem, key: key,
+                span
+                    className: "col-xs-1 box-action save"
+                    onClick: @updateMailbox
+                    title: t("mailbox title edit save"),
+                        i className: 'fa fa-check'
+                span
+                    className: "col-xs-1 box-action cancel"
+                    onClick: @undoMailbox
+                    title: t("mailbox title edit cancel"),
+                        i className: 'fa fa-undo'
+                input
+                    className: "col-xs-6 box-label"
+                    ref: 'label',
+                    defaultValue: @props.mailbox.get 'label'
+                    type: 'text'
+        else
+            li className: classItem, key: key,
+                span
+                    className: "col-xs-1 box-action edit",
+                    onClick: @editMailbox,
+                    title: t("mailbox title edit"),
+                        i className: 'fa fa-pencil'
+                span
+                    className: "col-xs-1 box-action delete",
+                    onClick: @deleteMailbox,
+                    title: t("mailbox title delete"),
+                        i className: 'fa fa-trash-o'
+                span
+                    className: "col-xs-6 box-label",
+                    onClick: @editMailbox,
+                    "#{pusher}#{@props.mailbox.get 'label'}"
+                span
+                    className: "col-xs-1 box-action favorite",
+                    title: favoriteTitle
+                    onClick: @toggleFavorite,
+                        i className: favoriteClass
+                span
+                    className: "col-xs-1 text-center box-count box-total",
+                    nbTotal
+                span
+                    className: "col-xs-1 text-center box-count box-unread",
+                    nbUnread
+                span
+                    className: "col-xs-1 text-center box-count box-new",
+                    nbNew
 
     editMailbox: (e) ->
         e.preventDefault()

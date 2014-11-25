@@ -33,7 +33,8 @@
         cursor pointer
         font-size 0.8em
 
-        a
+        > a
+        > span
           display block
           outline none
 
@@ -78,22 +79,26 @@
             margin-left auto
             color darkcolor
 
-      // placeholder until we have images
-      .fa-user
-      .avatar
-        color #aaa
-        background-color white
-        font-size 2em
-        //border 1px solid #aaa
-        border-radius 50%
-        box-shadow 0 0 3px #BBB
-        width 1em
-        height 1em
-        text-align center
+        // placeholder until we have images
+        .fa-user
+        .avatar
+            margin 0
+            color #aaa
+            background-color white
+            font-size 2em
+            //border 1px solid #aaa
+            border-radius 50%
+            box-shadow 0 0 3px #BBB
+            width 1em
+            height 1em
+            text-align center
 
-        &:hover
-          border-left .25em solid actioncolor
-          background #f4f4f4
+        > a:hover
+        > a:focus
+            .fa-user
+            .avatar
+                border-left .25em solid actioncolor
+                background #f4f4f4
 
         &.active
           border-left .25em solid basecolor

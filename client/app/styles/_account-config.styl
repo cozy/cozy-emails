@@ -21,15 +21,14 @@
         margin-left .25em
 
     .boxes
-        .box
-            display flex
+        max-width 40em
+        margin-left 0
+        .row
             height 2em
-            align-items center
-        .box.edited
+            > *
+                padding 0
+        .row.edited
             height 2.5em
         .box-action
-            width 2em
             cursor pointer
-        .box-label
-            width 20em
 
