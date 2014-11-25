@@ -41,10 +41,16 @@ async = require 'async'
 
 
 Account::doASAP = (operation, callback) ->
-    ImapPool.get(@id or @).doASAP operation, callback
+    ImapPool.get(@id).doASAP operation, callback
 
 Account::isTest = ->
     @accountType is 'TEST'
+
+Account::isRefreshing = ->
+    ImapPool.get(@id).isRefreshing
+
+Account::setRefreshing = (value) ->
+    ImapPool.get(@id).isRefreshing = value
 
 # Public: refresh all accounts
 #
@@ -54,6 +60,7 @@ Account.refreshAllAccounts = (limit, onlyFavorites, callback) ->
         async.eachSeries accounts, (account, cb) ->
             log.debug "refreshing account #{account.label}"
             return cb null if account.isTest()
+            return cb null if account.isRefreshing()
             account.imap_fetchMails limit, onlyFavorites, cb
         , callback
 
@@ -216,6 +223,7 @@ Account::imap_refreshBoxes = (callback) ->
 Account::imap_fetchMails = (limitByBox, onlyFavorites = false, callback) ->
     log.debug "account#imap_fetchMails", limitByBox, onlyFavorites
     account = this
+    @setRefreshing true
 
     @imap_refreshBoxes (err, toFetch, toDestroy) ->
 
@@ -248,6 +256,7 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites = false, callback) ->
                 box.destroyAndRemoveAllMessages cb
 
             , (err) ->
+                @setRefreshing false
                 reporter.onDone()
                 callback null
 
