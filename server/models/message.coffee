@@ -197,7 +197,11 @@ Message.safeDestroyByAccountID = (accountID, callback, retries = 2) ->
         log.info "destroying", rows.length, "messages"
 
         async.eachLimit rows, CONCURRENT_DESTROY, (row, cb) ->
-            new Message(id: row.id).destroy cb
+            new Message(id: row.id).destroy (err) ->
+                if err?.message is "Document not found"
+                    cb null
+                else
+                    cb err
         , (err) ->
 
             if err and retries > 0
