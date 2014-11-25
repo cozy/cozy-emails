@@ -241,7 +241,8 @@ class ImapPool
             log.debug @id, "begin wrapped task"
 
             imap.openBox cozybox.path, (err, imapbox) =>
-                log.debug @id, "wrapped box opened"
+                log.debug @id, "wrapped box opened", err
+                return callback err if err
 
                 unless imapbox.persistentUIDs
                     return callback new Error 'UNPERSISTENT UID'
