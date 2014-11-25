@@ -101,8 +101,14 @@ Message.updateOrCreate = (message, callback) ->
 Message.fetchOrUpdate = (box, mid, uid, callback) ->
     Message.byMessageId box.accountID, mid, (err, existing) ->
         return callback err if err
-        if existing
+        if existing and not existing.isInMailbox box
             existing.addToMailbox box, uid, callback
+        else if existing
+            # this is the weird case when a message is in the box
+            # under two different UIDs
+            # @TODO : maybe mark the message to handle modification of
+            # such messages
+            return callback null
         else
             box.imap_fetchOneMail uid, callback
 
@@ -265,6 +271,9 @@ Message::addToMailbox = (box, uid, callback) ->
     mailboxIDs = @mailboxIDs or {}
     mailboxIDs[box.id] = uid
     @updateAttributes {mailboxIDs}, callback
+
+Message::isInMailbox = (box) ->
+    return @mailboxIDs[box.id]?
 
 # Public: remove a message from a mailbox in the cozy
 # if the message becomes an orphan, we destroy it
