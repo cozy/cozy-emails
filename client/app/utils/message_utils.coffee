@@ -136,7 +136,7 @@ module.exports = MessageUtils =
                     when "pdf" then return sub[1]
                     when "gzip", "zip" then return 'archive'
 
-    formatDate: (date) ->
+    formatDate: (date, compact) ->
         if not date?
             return
         today = moment()
@@ -144,7 +144,10 @@ module.exports = MessageUtils =
         if date.isBefore today, 'year'
             formatter = 'DD/MM/YYYY'
         else if date.isBefore today, 'day'
-            formatter = 'DD MMMM'
+            if compact? and compact
+                formatter = 'L'
+            else
+                formatter = 'DD MMMM'
         else
             formatter = 'hh:mm'
         return date.format formatter

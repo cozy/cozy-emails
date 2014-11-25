@@ -13,6 +13,7 @@ module.exports = Settings = americano.getModel 'MailsSettings',
     messageDisplayImages : type : Boolean, default : false
     messageConfirmDelete : type : Boolean, default : true
     lang                 : type : String,  default : 'en'
+    listStyle            : type : String,  default : 'default'
     plugins              : type : Any,     default : null
 
 Settings.getInstance = (callback) ->
