@@ -311,9 +311,9 @@ Mailbox::getDiff = (laststep, limit, callback) ->
 
         log.info "IMAP REFRESH", box.label, "UID #{step.min}:#{step.max}"
 
-        async.parallel [
-            (cb) -> imap.fetchMetadata step.min, step.max, cb
+        async.series [
             (cb) -> Message.UIDsInRange box.id, step.min, step.max, cb
+            (cb) -> imap.fetchMetadata step.min, step.max, cb
         ], cbRelease
 
     ,  (err, results) ->

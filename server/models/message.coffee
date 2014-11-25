@@ -72,7 +72,7 @@ Message.getResultsAndCount = (mailboxID, params, callback) ->
         optionsResults.startkey[3] = params.resultsAfter
         optionsResults.skip = 1
 
-    async.parallel [
+    async.series [
         (cb) -> Message.rawRequest 'byMailboxRequest', optionsCount, cb
         (cb) -> Message.rawRequest 'byMailboxRequest', optionsResults, cb
     ], (err, results) ->
@@ -589,3 +589,6 @@ Message.recoverChangedUID = (box, messageID, newUID, callback) ->
         mailboxIDs = message.mailboxIDs
         mailboxIDs[box.id] = newUID
         message.updateAttributes {mailboxIDs}, callback
+
+Message.removeAccountOrphans = ->
+    Message.rawRequest
