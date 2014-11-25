@@ -247,7 +247,7 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites = false, callback) ->
 
         toFetch = toFetch.filter (box) -> box.isSelectable()
 
-        log.info "FETCHING ACCOUNT ", @label, ":", toFetch.length, "BOXES"
+        log.info "FETCHING ACCOUNT #{account.label} : #{toFetch.length} BOXES"
         log.info "   ", toDestroy.length, "BOXES TO DESTROY"
         reporter = ImapReporter.accountFetch account, toFetch.length + 1
 

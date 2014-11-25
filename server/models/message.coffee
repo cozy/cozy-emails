@@ -99,17 +99,21 @@ Message.updateOrCreate = (message, callback) ->
         Message.create message, callback
 
 Message.fetchOrUpdate = (box, mid, uid, callback) ->
+    log.debug "fetchOrUpdate", box.id, mid, uid
     Message.byMessageId box.accountID, mid, (err, existing) ->
         return callback err if err
         if existing and not existing.isInMailbox box
+            log.debug "        add"
             existing.addToMailbox box, uid, callback
         else if existing
+            log.debug "        evil twin, ignore"
             # this is the weird case when a message is in the box
             # under two different UIDs
             # @TODO : maybe mark the message to handle modification of
             # such messages
             return callback null
         else
+            log.debug "        fetch"
             box.imap_fetchOneMail uid, callback
 
 # Public: get the uids present in a box in cozy
@@ -571,7 +575,7 @@ Message.pickConversationID = (rows, callback) ->
     # we update all messages to the new conversationID
     async.eachSeries rows, (row, cb) ->
         Message.find row.id, (err, message) ->
-            log.warn "Cant get message #{row.id}, ignoring"
+            log.warn "Cant get message #{row.id}, ignoring" if err
             if err or message.conversationID is pickedConversationID
                 cb null
             else

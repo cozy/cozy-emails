@@ -98,8 +98,6 @@ Mailbox.getBoxes = (accountID, callback) ->
         return callback err if err
         rows = rows.map (row) ->
             new Mailbox row.doc
-        rows = rows.filter (box) ->
-            '\\Noselect' not in box.attribs
 
         callback null, rows
 
