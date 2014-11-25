@@ -261,7 +261,7 @@ Message.safeRemoveAllFromBox = (mailboxID, callback, retries = 2) ->
 #
 # Returns void
 Message::addToMailbox = (box, uid, callback) ->
-    log.info "MAIL #{box.path}:#{uid} ADDED TO BOX", @
+    log.info "MAIL #{box.path}:#{uid} ADDED TO BOX"
     mailboxIDs = @mailboxIDs or {}
     mailboxIDs[box.id] = uid
     @updateAttributes {mailboxIDs}, callback
