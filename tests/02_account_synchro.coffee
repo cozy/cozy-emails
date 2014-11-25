@@ -10,15 +10,10 @@ describe 'Account Synchronizations', ->
 
     it "When I move a message on the IMAP server", (done) ->
         @timeout 10000
-        console.log "A"
         imap = helpers.getImapServerRawConnection done, ->
-            console.log "B"
             @openBox 'INBOX', =>
-                console.log "C"
                 @move '8', 'Test Folder', =>
-                    console.log "D"
                     @closeBox =>
-                        console.log "E"
                         @end()
 
     it "And refresh the account", (done) ->

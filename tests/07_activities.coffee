@@ -2,7 +2,7 @@ should = require 'should'
 log = -> console.log.apply(console, arguments)
 fs = require 'fs'
 
-describe 'Message actions', ->
+describe 'Activity testing', ->
 
     it "Search bob", (done) ->
         searchBobActivity =
@@ -41,7 +41,6 @@ describe 'Message actions', ->
 
         client.post "/activity", createContactActivity, (err, res, body) =>
             should.not.exist err
-            console.log body
             res.statusCode.should.equal 200
             body.result.should.be.instanceof(Array).and.have.lengthOf 1
             store.bobID = body.result[0].id
