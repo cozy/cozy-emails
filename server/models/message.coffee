@@ -114,7 +114,9 @@ Message.fetchOrUpdate = (box, mid, uid, callback) ->
             return callback null
         else
             log.debug "        fetch"
-            box.imap_fetchOneMail uid, callback
+            setTimeout ->
+                box.imap_fetchOneMail uid, callback
+            , 50
 
 # Public: get the uids present in a box in cozy
 #

@@ -1,6 +1,6 @@
 _ = require 'lodash'
 Account = require '../models/account'
-{AccountConfigError, HttpError} = require '../utils/errors'
+{AccountConfigError, HttpError, NotFound} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'accounts:controller')
 
 
@@ -27,7 +27,7 @@ module.exports.format = (req, res, next) ->
         res.send formated
 
 module.exports.formatList = (req, res, next) ->
-    async.map res.accounts, (account, callback) ->
+    async.mapSeries res.accounts, (account, callback) ->
         account.toClientObject callback
 
     , (err, formateds) ->
