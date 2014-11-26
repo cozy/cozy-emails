@@ -109,7 +109,7 @@ Imap::fetchMetadata = (min, max, callback) ->
     log.debug "imap#fetchMetadata", min, max
 
     @search [['UID', "#{min}:#{max}"]], (err, uids) ->
-        log.debug "imap#fetchMetadata#results", err, uids
+        log.debug "imap#fetchMetadata#results", err, uids?.length
         return callback err if err
         return callback null, {} unless uids.length
         uids.sort().reverse()

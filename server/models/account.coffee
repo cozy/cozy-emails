@@ -57,7 +57,7 @@ Account::setRefreshing = (value) ->
 Account.refreshAllAccounts = (limit, onlyFavorites, callback) ->
     Account.request 'all', (err, accounts) ->
         return callback err if err
-        Account.refreshAccounts accounts, callback
+        Account.refreshAccounts accounts, limit, onlyFavorites, callback
 
 
 Account.removeOrphansAndRefresh = (limitByBox, onlyFavorites, callback) ->
@@ -235,10 +235,12 @@ Account::imap_refreshBoxes = (callback) ->
 # onlyFavorites - {Boolean} fetch messages only for favorite mailboxes
 #
 # Returns a task completion
-Account::imap_fetchMails = (limitByBox, onlyFavorites = false, callback) ->
+Account::imap_fetchMails = (limitByBox, onlyFavorites, callback) ->
     log.debug "account#imap_fetchMails", limitByBox, onlyFavorites
     account = this
     account.setRefreshing true
+
+    onlyFavorites ?= false
 
     @imap_refreshBoxes (err, toFetch, toDestroy) ->
 
@@ -253,8 +255,8 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites = false, callback) ->
 
         # fetch INBOX first
         toFetch.sort (a, b) ->
-            return if a.label is 'INBOX' then 1
-            else return -1
+            return if a.label is 'INBOX' then -1
+            else return 1
 
         async.eachSeries toFetch, (box, cb) ->
             box.imap_fetchMails limitByBox, (err) ->
