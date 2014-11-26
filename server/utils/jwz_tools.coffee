@@ -33,16 +33,16 @@ module.exports =
             flattenMailboxTreeLevel boxes, tree, '', [], '/'
         return boxes
 
-    sanitizeHTML: (html, attachments) ->
+    sanitizeHTML: (html, messageId, attachments) ->
         sanitizer.sanitize html.replace(/cid:/gim, 'cid;'), (url) ->
             url = url.toString()
             if 0 is url.indexOf 'cid;'
                 cid = url.substring 4
-                attachment = attachments.filter (att) ->
-                    att.contentId is cid
+                attachment = attachments.filter (att) -> att.contentId is cid
+                name = attachment[0]?.fileName
 
-                if name = attachment[0]?.fileName
-                    return "/message/#{message.id}/attachments/#{name}"
+                if name
+                    return "/message/#{messageId}/attachments/#{name}"
                 else
                     return null
 

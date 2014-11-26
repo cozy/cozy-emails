@@ -17,7 +17,7 @@ async = require 'async'
 mailutils = require '../utils/jwz_tools'
 ImapPool = require '../imap/pool'
 ImapReporter = require '../imap/reporter'
-{Break} = require '../utils/errors'
+{Break, NotFound} = require '../utils/errors'
 {FETCH_AT_ONCE} = require '../utils/constants'
 
 
@@ -73,13 +73,6 @@ Mailbox.imapcozy_create = (account, parent, label, callback) ->
     , (err) ->
         return callback err if err
         Mailbox.create mailbox, callback
-
-Mailbox.findSafe = (callback) ->
-    Mailbox.find id, (err, box) ->
-        return callback err if err
-        return callback new NotFound "Account #{account.id} draftbox #{id}"
-        draftBox = box
-        callback()
 
 
 # Public: find selectable mailbox for an account ID
@@ -326,7 +319,8 @@ Mailbox::getDiff = (laststep, limit, callback) ->
         flagsChange = []
 
         for uid, imapMessage of imapUIDs
-            if cozyMessage = cozyIds[uid]
+            cozyMessage = cozyIds[uid]
+            if cozyMessage
                 # this message is already in cozy, compare flags
                 imapFlags = imapMessage[1]
                 cozyFlags = cozyMessage[1]
@@ -414,7 +408,7 @@ Mailbox::imap_createMailNoDuplicate = (account, message, callback) ->
     messageID = message.headers['message-id']
     mailbox = this
     @imap_UIDByMessageID messageID, (err, uid) ->
-        return cb err if err
+        return callback err if err
         return callback null, uid if uid
         account.imap_createMail mailbox, message, callback
 

@@ -4,6 +4,7 @@ stream_to_buffer_array = require '../utils/stream_to_array'
 async = require 'async'
 log = require('../utils/logging')(prefix: 'imap:extensions')
 mailutils = require '../utils/jwz_tools'
+{ImapImpossible} = require '../utils/errors'
 
 # Error predicates
 folderForbidden = (err) ->
@@ -88,7 +89,7 @@ Imap::fetchBoxMessageIds = (callback) ->
         fetch.on 'message', (msg) ->
             uid = null
             messageID = null
-            msg.on 'error', (err) -> result.error = err
+            msg.on 'error', (err) -> results.error = err
             msg.on 'attributes', (attrs) -> uid = attrs.uid
             msg.on 'end', -> results[uid] = messageID
             msg.on 'body', (stream) ->
@@ -119,7 +120,7 @@ Imap::fetchMetadata = (min, max, callback) ->
             uid = null # message uid
             flags = null # message flags
             mid = null # message id
-            msg.on 'error', (err) -> result.error = err
+            msg.on 'error', (err) -> results.error = err
             msg.on 'end', -> results[uid] = [ mid, flags ]
             msg.on 'attributes', (attrs) ->
                 {flags, uid} = attrs

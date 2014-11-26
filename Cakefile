@@ -82,6 +82,18 @@ task "lint", "Run coffeelint on source files", ->
         exec command, (err, stdout, stderr) ->
             console.log stdout
 
+
+task "lint2", "Run coffee-jshint on source files", ->
+    lintFiles = walk './server'
+    do step = ->
+        file = lintFiles.pop()
+        return null unless file
+        cmd = 'coffee-jshint -o node ' + file
+        console.log cmd
+        exec cmd, (err, stdout, stderr) ->
+            console.log stdout, stderr
+            step()
+
 task 'build', 'Build CoffeeScript to Javascript', ->
     logger.options.prefix = 'cake:build'
     logger.info "Start compilation..."

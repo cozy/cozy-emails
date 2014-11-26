@@ -1,4 +1,4 @@
-{AccountConfigError, TimeoutError} = require '../utils/errors'
+{NotFound, AccountConfigError, TimeoutError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'imap:pool')
 rawImapLog = require('../utils/logging')(prefix: 'imap:raw')
 Account = require '../models/account'
@@ -61,8 +61,8 @@ class ImapPool
     _getAccount: ->
         log.debug @id, "getAccount"
         Account.find @accountID, (err, account) =>
-            return _fatal err if err
-            return _fatal new NotFound "Account #{@accountID}" unless account
+            return @_fatal err if err
+            return @_fatal new NotFound "Account #{@accountID}" unless account
             @account = account
             @_deQueue()
 
@@ -133,7 +133,8 @@ class ImapPool
 
     _onActiveClose: (connection, err) ->
         log.error "active connection closed", err.stack
-        if task = @pending[connection.connectionID]
+        task = @pending[connection.connectionID]
+        if task
             delete @pending[connection.connectionID]
             task.callback? err or new Error 'connection was closed'
             task.callback = null
@@ -143,17 +144,21 @@ class ImapPool
     _closeConnections: =>
         log.debug @id, "closeConnections"
         @closingTimer = null
-        while connection = @connections.pop()
+        connection = @connections.pop()
+        while connection
             connection.expectedClosing = true
             connection.end()
+            connection = @connections.pop()
 
         @freeConnections = []
 
     _giveUp: (err) ->
         log.debug @id, "giveup", err
         delete @account
-        while task = @tasks.pop()
+        task = @tasks.pop()
+        while task
             task.callback err
+            task = @tasks.pop()
 
     _deQueue: =>
         log.debug @id, "_deQueue"

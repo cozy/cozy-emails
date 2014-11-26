@@ -325,11 +325,12 @@ Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
     boxAttributes = Object.keys Mailbox.RFC6154
 
     boxes.map (box) =>
+        type = box.RFC6154use()
         if box.isInbox()
             # save it in scope, so we dont erase it
             inboxMailbox = box.id
 
-        else if type = box.RFC6154use()
+        else if type
             unless useRFC6154
                 useRFC6154 = true
                 # remove previous guesses
@@ -355,8 +356,10 @@ Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
     @favorites = []
 
     # see if we have some of the priorities box
-    for type in priorities when id = @[type]
-        @favorites.push id
+    for type in priorities
+        id = @[type]
+        if id
+            @favorites.push id
 
     # if we dont have our 4 favorites, pick at random
     for box in boxes when @favorites.length < 4

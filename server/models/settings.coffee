@@ -19,7 +19,8 @@ module.exports = Settings = americano.getModel 'MailsSettings',
 Settings.getInstance = (callback) ->
     Settings.request 'all', (err, settings) ->
         return callback err if err
-        if existing = settings?[0]
+        existing = settings?[0]
+        if existing
             callback null, existing
         else
             callback null, new Settings()

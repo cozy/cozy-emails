@@ -88,11 +88,14 @@ Message.updateOrCreate = (message, callback) ->
     if message.id
         Message.find message.id, (err, existing) ->
             log.debug "update"
-            return cb err if err
-            return cb new NotFound "Message #{message.id}" unless existing
-            # prevent overiding of binary
-            message.binary = existing.binary
-            existing.updateAttributes message, callback
+            if err
+                callback err
+            else if not existing
+                callback new NotFound "Message #{message.id}"
+            else
+                # prevent overiding of binary
+                message.binary = existing.binary
+                existing.updateAttributes message, callback
 
     else
         log.debug "create"
@@ -593,7 +596,7 @@ Message::toClientObject = ->
         file.url = "/message/#{raw.id}/attachments/#{file.generatedFileName}"
 
     if raw.html?
-        raw.html = mailutils.sanitizeHTML raw.html, raw.attachments
+        raw.html = mailutils.sanitizeHTML raw.html, raw.id, raw.attachments
 
     if not raw.text?
         raw.text = htmlToText.fromString raw.html,
