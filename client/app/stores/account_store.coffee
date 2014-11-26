@@ -104,6 +104,8 @@ class AccountStore extends Store
     getDefaultMailbox: (accountID) ->
 
         account = _accounts.get(accountID) or @getDefault()
+        return null unless account
+
         mailboxes = account.get('mailboxes')
         mailbox = mailboxes.filter (mailbox) ->
             return mailbox.get('label') is 'INBOX'
