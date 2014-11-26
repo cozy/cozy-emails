@@ -18,8 +18,9 @@ textarea
 .form-control
     border 1px solid basecolor
     border-radius 0
-    font-family styled
+    font-family main
     color #333
+    font-size: 16px
     height 2em
 
     &:hover
@@ -78,5 +79,22 @@ textarea
       background-color actioncolor
       border-color actioncolor
 
+.btn.btn-cozy-non-default
+    color basecolor
+
+    &:hover
+        text-decoration underline
+        color actioncolor
+
 .hidden
   display none
+
+.btn.btn-danger
+    text-shadow: none
+    font-weight: normal
+    border: 0
+
+    &:active
+    &:focus
+        border: 0
+        outline: 0

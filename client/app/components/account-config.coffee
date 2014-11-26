@@ -228,11 +228,12 @@ module.exports = React.createClass
                             className: 'form-control',
                             placeholder: 'smtp.provider.tld'
                             onBlur: @validateForm
+                div className: 'form-group',
                     label
                         htmlFor: 'mailbox-smtp-port',
-                        className: 'col-sm-1 control-label',
+                        className: 'col-sm-2 col-sm-offset-2 control-label',
                         t 'account port'
-                    div className: 'col-sm-1',
+                    div className: 'col-sm-3',
                         input
                             id: 'mailbox-smtp-port',
                             name: 'mailbox-smtp-port',
@@ -243,13 +244,13 @@ module.exports = React.createClass
                             onInput: => @setState(smtpManualPort: true)
                     getError 'smtpServer'
                     getError 'smtpPort'
-                div className: 'form-group',
 
+                div className: 'form-group',
                     label
                         htmlFor: 'mailbox-smtp-ssl',
-                        className: 'col-sm-4 control-label',
+                        className: 'col-sm-2 col-sm-offset-2 control-label',
                         t 'account SSL'
-                    div className: 'col-sm-1',
+                    div className: 'col-sm-3',
                         input
                             id: 'mailbox-smtp-ssl',
                             name: 'mailbox-smtp-ssl',
@@ -257,11 +258,12 @@ module.exports = React.createClass
                             type: 'checkbox',
                             onClick: (ev) =>
                                 @_onServerParam ev.target, 'smtp', 'ssl'
+                div className: 'form-group',
                     label
                         htmlFor: 'mailbox-smtp-tls',
-                        className: 'col-sm-2 control-label',
+                        className: 'col-sm-2 col-sm-offset-2 control-label',
                         t 'account TLS'
-                    div className: 'col-sm-1',
+                    div className: 'col-sm-3',
                         input
                             id: 'mailbox-smtp-tls',
                             name: 'mailbox-smtp-tls',
@@ -301,11 +303,12 @@ module.exports = React.createClass
                             className: 'form-control',
                             placeholder: 'imap.provider.tld'
                             onBlur: @validateForm
+                div className: 'form-group',
                     label
                         htmlFor: 'mailbox-imap-port',
-                        className: 'col-sm-1 control-label',
+                        className: 'col-sm-2 col-sm-offset-2 control-label',
                         'Port'
-                    div className: 'col-sm-1',
+                    div className: 'col-sm-3',
                         input
                             id: 'mailbox-imap-port',
                             name: 'mailbox-imap-port',
@@ -316,13 +319,13 @@ module.exports = React.createClass
                             onInput: => @setState(imapManualPort: true)
                     getError 'imapServer'
                     getError 'imapPort'
-                div className: 'form-group',
 
+                div className: 'form-group',
                     label
                         htmlFor: 'mailbox-imap-ssl',
-                        className: 'col-sm-4 control-label',
+                        className: 'col-sm-2 col-sm-offset-2 control-label',
                         t 'account SSL'
-                    div className: 'col-sm-1',
+                    div className: 'col-sm-3',
                         input
                             id: 'mailbox-imap-ssl',
                             name: 'mailbox-imap-ssl',
@@ -330,11 +333,12 @@ module.exports = React.createClass
                             type: 'checkbox',
                             onClick: (ev) =>
                                 @_onServerParam ev.target, 'imap', 'ssl'
+                div className: 'form-group',
                     label
                         htmlFor: 'mailbox-imap-tls',
-                        className: 'col-sm-2 control-label',
+                        className: 'col-sm-2 col-sm-offset-2 control-label',
                         t 'account TLS'
-                    div className: 'col-sm-1',
+                    div className: 'col-sm-3',
                         input
                             id: 'mailbox-imap-tls',
                             name: 'mailbox-imap-tls',
@@ -343,20 +347,19 @@ module.exports = React.createClass
                             onClick: (ev) =>
                                 @_onServerParam ev.target, 'imap', 'tls'
 
-            div className: 'form-group',
-                div className: 'col-sm-offset-2 col-sm-5 text-right btn-group',
-                    if @state.id?
-                        button
-                            className: 'btn btn-default',
-                            onClick: @onRemove,
-                            t "account remove"
+            div className: '',
+                div className: 'col-sm-offset-4',
                     button
                         className: 'btn btn-cozy',
                         onClick: @onSubmit, buttonLabel
-                    a
-                        href: cancelUrl,
-                        className: 'btn btn-default',
-                        t 'app cancel'
+                if @state.id?
+                    fieldset null,
+                        legend null, t 'danger zone'
+                        div className: 'col-sm-offset-4',
+                            button
+                                className: 'btn btn-default btn-danger btn-remove',
+                                onClick: @onRemove,
+                                t "account remove"
 
     renderMailboxes: ->
         favorites = @state.favoriteMailboxes
@@ -375,8 +378,8 @@ module.exports = React.createClass
             @_renderMailboxChoice t('account sent mailbox'),  "sentMailbox"
             @_renderMailboxChoice t('account trash mailbox'), "trashMailbox"
 
-            h4 null, t "account tab mailboxes"
-            ul className: "list-unstyled boxes container",
+            h4 className: 'config-title', t "account tab mailboxes"
+            ul className: "folder-list list-unstyled boxes container",
                 if mailboxes?
                     li className: 'row box title', key: 'title',
                         span

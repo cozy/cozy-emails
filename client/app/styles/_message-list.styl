@@ -77,7 +77,7 @@
                 content ' - '
 
         .hour
-            margin-left auto
+            mrgin-left auto
             color darkcolor
 
         // placeholder until we have images
@@ -113,7 +113,7 @@
        background-color lightcolor
        background linear-gradient(to bottom, #fff 0%, lightcolor 15%, lightcolor 85%, #fff 100%)
     .message.active
-       background mediumcolor
+       background lightblue
 
     .message.unseen
       font-weight bold
@@ -148,9 +148,16 @@
     .avatar
         display none
 
+.message
+    .fa-paperclip
+        display none
+
+    .fa-star
+        display none
 
 .message:hover
     border-left .25em solid actioncolor
+    background lightorange
 
 .message.active
     border-left .25em solid basecolor
