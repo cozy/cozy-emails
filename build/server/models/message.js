@@ -162,7 +162,9 @@ Message.fetchOrUpdate = function(box, mid, uid, callback) {
       return callback(null);
     } else {
       log.debug("        fetch");
-      return box.imap_fetchOneMail(uid, callback);
+      return setTimeout(function() {
+        return box.imap_fetchOneMail(uid, callback);
+      }, 50);
     }
   });
 };
@@ -658,6 +660,9 @@ Message.pickConversationID = function(rows, callback) {
     conversationID: pickedConversationID
   };
   return async.eachSeries(rows, function(row, cb) {
+    if (row.value === pickedConversationID) {
+      return cb(null);
+    }
     return Message.find(row.id, function(err, message) {
       if (err) {
         log.warn("Cant get message " + row.id + ", ignoring");

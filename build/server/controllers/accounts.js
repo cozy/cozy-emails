@@ -5,7 +5,7 @@ _ = require('lodash');
 
 Account = require('../models/account');
 
-_ref = require('../utils/errors'), AccountConfigError = _ref.AccountConfigError, HttpError = _ref.HttpError;
+_ref = require('../utils/errors'), AccountConfigError = _ref.AccountConfigError, HttpError = _ref.HttpError, NotFound = _ref.NotFound;
 
 log = require('../utils/logging')({
   prefix: 'accounts:controller'
@@ -42,7 +42,7 @@ module.exports.format = function(req, res, next) {
 };
 
 module.exports.formatList = function(req, res, next) {
-  return async.map(res.accounts, function(account, callback) {
+  return async.mapSeries(res.accounts, function(account, callback) {
     return account.toClientObject(callback);
   }, function(err, formateds) {
     if (err) {

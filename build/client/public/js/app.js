@@ -2304,7 +2304,7 @@ module.exports = Application = React.createClass({
       selectedAccount = AccountStore.getSelected();
       error = AccountStore.getError();
       isWaiting = AccountStore.isWaiting();
-      mailboxes = AccountStore.getSelectedMailboxes(true);
+      mailboxes = AccountStore.getSelectedMailboxes();
       favoriteMailboxes = this.state.favoriteMailboxes;
       if (selectedAccount && !error && mailboxes.length === 0) {
         error = {
@@ -2388,7 +2388,7 @@ module.exports = Application = React.createClass({
       selectedAccount: selectedAccount,
       isResponsiveMenuShown: LayoutStore.isMenuShown(),
       alertMessage: LayoutStore.getAlert(),
-      mailboxes: AccountStore.getSelectedMailboxes(true),
+      mailboxes: AccountStore.getSelectedMailboxes(),
       selectedMailboxID: selectedMailboxID,
       selectedMailbox: AccountStore.getSelectedMailbox(selectedMailboxID),
       favoriteMailboxes: AccountStore.getSelectedFavorites(),
@@ -7520,6 +7520,9 @@ AccountStore = (function(_super) {
   AccountStore.prototype.getDefaultMailbox = function(accountID) {
     var account, defaultID, favorites, mailbox, mailboxes;
     account = _accounts.get(accountID) || this.getDefault();
+    if (!account) {
+      return null;
+    }
     mailboxes = account.get('mailboxes');
     mailbox = mailboxes.filter(function(mailbox) {
       return mailbox.get('label') === 'INBOX';
@@ -7541,38 +7544,19 @@ AccountStore = (function(_super) {
     return _selectedAccount;
   };
 
-  AccountStore.prototype.getSelectedMailboxes = function(flatten) {
-    var emptyMap, getFlattenMailboxes, rawMailboxesTree;
-    if (flatten == null) {
-      flatten = false;
-    }
+  AccountStore.prototype.getSelectedMailboxes = function() {
+    var result;
     if (_selectedAccount == null) {
       return Immutable.OrderedMap.empty();
     }
-    if (flatten) {
-      rawMailboxesTree = _selectedAccount.get('mailboxes').toJS();
-      getFlattenMailboxes = function(childrenMailboxes, depth) {
-        var children, id, mailbox, rawMailbox, result;
-        if (depth == null) {
-          depth = 0;
-        }
-        result = Immutable.OrderedMap();
-        for (id in childrenMailboxes) {
-          rawMailbox = childrenMailboxes[id];
-          children = rawMailbox.children;
-          delete rawMailbox.children;
-          mailbox = Immutable.Map(rawMailbox);
-          mailbox = mailbox.set('depth', depth);
-          result = result.set(mailbox.get('id'), mailbox);
-          result = result.merge(getFlattenMailboxes(children, depth + 1));
-        }
-        return result.toOrderedMap();
-      };
-      return getFlattenMailboxes(rawMailboxesTree).toOrderedMap();
-    } else {
-      emptyMap = Immutable.OrderedMap.empty();
-      return (_selectedAccount != null ? _selectedAccount.get('mailboxes') : void 0) || emptyMap;
-    }
+    result = Immutable.OrderedMap();
+    _selectedAccount.get('mailboxes').forEach(function(data) {
+      var mailbox;
+      mailbox = Immutable.Map(data);
+      result = result.set(mailbox.get('id'), mailbox);
+      return true;
+    });
+    return result;
   };
 
   AccountStore.prototype.getSelectedMailbox = function(selectedID) {
@@ -7587,7 +7571,7 @@ AccountStore = (function(_super) {
 
   AccountStore.prototype.getSelectedFavorites = function() {
     var ids, mailboxes;
-    mailboxes = this.getSelectedMailboxes(true);
+    mailboxes = this.getSelectedMailboxes();
     ids = _selectedAccount != null ? _selectedAccount.get('favorites') : void 0;
     if (ids != null) {
       return mailboxes.filter(function(box, key) {
@@ -8429,7 +8413,7 @@ module.exports = {
     return AccountStore.getSelected();
   },
   getCurrentMailbox: function() {
-    return AccountStore.getSelectedMailboxes(true);
+    return AccountStore.getSelectedMailboxes();
   },
   messageNew: function() {
     return router.navigate('compose/', {
@@ -9004,7 +8988,7 @@ MailboxFlags = require('../../constants/app_constants').MailboxFlags;
 
 module.exports = {
   toImmutable: function(rawAccount) {
-    var checkAttribs, mailboxes, _createImmutableMailboxes;
+    var box, checkAttribs, mailbox, mailboxes, _i, _len, _ref;
     if ((rawAccount.draftMailbox == null) || (rawAccount.sentMailbox == null) || (rawAccount.trashMailbox == null)) {
       mailboxes = {};
       checkAttribs = function(box) {
@@ -9031,19 +9015,18 @@ module.exports = {
     if ((rawAccount.trashMailbox == null) && (mailboxes.trash != null)) {
       rawAccount.trashMailbox = mailboxes.trash;
     }
-    _createImmutableMailboxes = function(children) {
-      return Immutable.Sequence(children).mapKeys(function(_, mailbox) {
-        return mailbox.id;
-      }).map(function(mailbox) {
-        children = mailbox.children;
-        mailbox.children = _createImmutableMailboxes(children);
-        mailbox.nbTotal = Math.floor(Math.random() * 100);
-        mailbox.nbUnread = Math.floor(Math.random() * 10);
-        mailbox.nbNew = Math.floor(Math.random() * 2);
-        return Immutable.Map(mailbox);
-      }).toOrderedMap();
-    };
-    rawAccount.mailboxes = _createImmutableMailboxes(rawAccount.mailboxes);
+    mailboxes = Immutable.OrderedMap();
+    _ref = rawAccount.mailboxes;
+    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+      mailbox = _ref[_i];
+      mailbox.nbTotal = -1;
+      mailbox.nbUnread = -1;
+      mailbox.nbNew = -1;
+      mailbox.depth = mailbox.tree.length - 1;
+      box = Immutable.Map(mailbox);
+      mailboxes = mailboxes.set(mailbox.id, box);
+    }
+    rawAccount.mailboxes = mailboxes;
     return Immutable.Map(rawAccount);
   },
   toRawObject: toRawObject = function(account) {

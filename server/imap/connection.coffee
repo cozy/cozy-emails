@@ -178,4 +178,3 @@ Imap::deleteMessageInBox = (path, uid, callback) ->
     ], callback
 
 module.exports = Imap
->>>>>>> 53972285788597e4db1e656bbb9c34d6848fdf32

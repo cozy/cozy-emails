@@ -212,14 +212,21 @@ Account.prototype.destroyEverything = function(callback) {
 Account.prototype.toClientObject = function(callback) {
   var rawObject;
   rawObject = this.toObject();
-  return Mailbox.getClientTree(this.id, function(err, mailboxes) {
-    if (err) {
-      return callback(err);
-    }
-    if (rawObject.favorites == null) {
-      rawObject.favorites = [];
-    }
-    rawObject.mailboxes = mailboxes;
+  if (rawObject.favorites == null) {
+    rawObject.favorites = [];
+  }
+  return Mailbox.rawRequest('treeMap', {
+    startkey: [this.id],
+    endkey: [this.id, {}],
+    include_docs: true
+  }, function(err, rows) {
+    rawObject.mailboxes = rows.map(function(row) {
+      var _base;
+      if ((_base = row.doc).id == null) {
+        _base.id = row.id;
+      }
+      return _.pick(row.doc, 'id', 'label', 'attribs', 'tree');
+    });
     return callback(null, rawObject);
   });
 };

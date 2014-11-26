@@ -140,42 +140,6 @@ Mailbox.prototype.getSelfAndChildren = function(callback) {
   });
 };
 
-Mailbox.getClientTree = function(accountID, callback) {
-  var DELIMITER;
-  DELIMITER = '/|/';
-  return Mailbox.rawRequest('treeMap', {
-    startkey: [accountID],
-    endkey: [accountID, {}],
-    include_docs: true
-  }, function(err, rows) {
-    var byPath, out;
-    if (err) {
-      return callback(err);
-    }
-    out = [];
-    byPath = {};
-    rows.forEach(function(row) {
-      var box, parentPath, path;
-      path = row.key.slice(1);
-      box = _.pick(row.doc, 'label', 'attribs');
-      byPath[path.join(DELIMITER)] = box;
-      box.id = row.id;
-      box.children = [];
-      if (path.length === 1) {
-        return out.push(box);
-      } else {
-        parentPath = path.slice(0, -1).join(DELIMITER);
-        if (byPath[parentPath] != null) {
-          return byPath[parentPath].children.push(box);
-        } else {
-          return log.error("NO MAILBOX of path " + parentPath + " in " + accountID);
-        }
-      }
-    });
-    return callback(null, out);
-  });
-};
-
 Mailbox.destroyByAccount = function(accountID, callback) {
   return Mailbox.rawRequest('treemap', {
     startkey: [accountID],
