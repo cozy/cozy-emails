@@ -28,6 +28,14 @@ module.exports =
         if Object.keys(tree).length is 1 and root = tree['INBOX']
             delimiter = root.delimiter
             path = 'INBOX' + delimiter
+
+            boxes.push
+                label: 'INBOX'
+                delimiter: delimiter
+                path: 'INBOX'
+                tree: ['INBOX']
+                attribs: _.difference root.attribs, IGNORE_ATTRIBUTES
+
             flattenMailboxTreeLevel boxes, root.children, path, [], delimiter
         else
             flattenMailboxTreeLevel boxes, tree, '', [], '/'
