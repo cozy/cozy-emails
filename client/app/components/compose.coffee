@@ -51,6 +51,11 @@ module.exports = Compose = React.createClass
             secondPanel:
                 action: 'compose'
 
+        cancelUrl = @buildUrl
+            direction: 'first'
+            action: 'default'
+            fullWidth: true
+
         closeUrl = @buildClosePanelUrl @props.layout
 
         classLabel = 'col-sm-2 col-sm-offset-0 control-label'
@@ -159,7 +164,7 @@ module.exports = Compose = React.createClass
                     div className: 'btn-toolbar', role: 'toolbar',
                         div className: 'btn-group btn-group-lg',
                             button
-                                className: 'btn btn-default',
+                                className: 'btn btn-cozy',
                                 type: 'button',
                                 onClick: @onSend,
                                     span
@@ -167,15 +172,13 @@ module.exports = Compose = React.createClass
                                     span
                                         className: 'tool-long',
                                         t 'compose action send'
-                        div className: 'btn-group btn-group-sm',
                             button
                                 className: 'btn btn-default',
                                 type: 'button', onClick: @onDraft,
                                     span className: 'fa fa-save'
                                     span className: 'tool-long',
                                     t 'compose action draft'
-                        if @props.message?
-                            div className: 'btn-group btn-group-sm',
+                            if @props.message?
                                 button
                                     className: 'btn btn-default',
                                     type: 'button',
@@ -183,11 +186,14 @@ module.exports = Compose = React.createClass
                                         span className: 'fa fa-trash-o'
                                         span className: 'tool-long',
                                         t 'compose action delete'
+                            a
+                                href: cancelUrl,
+                                className: 'btn btn-default',
+                                t 'app cancel'
 
-    componentDidMount: ->
+    _initCompose: ->
         # scroll compose window into view
-        node = @getDOMNode()
-        node.scrollIntoView()
+        @getDOMNode().scrollIntoView()
         if @state.composeInHTML
             # Some DOM manipulation when replying inside the message.
             # When inserting a new line, we must close all blockquotes,
@@ -284,6 +290,12 @@ module.exports = Compose = React.createClass
 
                     , 0
             )
+
+    componentDidMount: ->
+        @_initCompose()
+
+    componentDidUpdate: ->
+        @_initCompose()
 
     getInitialState: (forceDefault) ->
 
