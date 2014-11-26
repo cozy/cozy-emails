@@ -28,20 +28,16 @@ module.exports =
             rawAccount.trashMailbox = mailboxes.trash
 
         # Recursively creates Immutable OrderedMap of mailboxes
-        _createImmutableMailboxes = (children) ->
-            Immutable.Sequence children
-                .mapKeys (_, mailbox) -> mailbox.id
-                .map (mailbox) ->
-                    children = mailbox.children
-                    mailbox.children = _createImmutableMailboxes children
-                    # @TODO remove this polyfill
-                    mailbox.nbTotal  = Math.floor(Math.random() * 100)
-                    mailbox.nbUnread = Math.floor(Math.random() * 10)
-                    mailbox.nbNew    = Math.floor(Math.random() * 2)
-                    return Immutable.Map mailbox
-                .toOrderedMap()
+        mailboxes = Immutable.OrderedMap()
+        for mailbox in rawAccount.mailboxes
+            mailbox.nbTotal  = -1
+            mailbox.nbUnread = -1
+            mailbox.nbNew    = -1
+            mailbox.depth = mailbox.tree.length - 1
+            box = Immutable.Map mailbox
+            mailboxes = mailboxes.set mailbox.id, box
 
-        rawAccount.mailboxes = _createImmutableMailboxes rawAccount.mailboxes
+        rawAccount.mailboxes = mailboxes
         return Immutable.Map rawAccount
 
 

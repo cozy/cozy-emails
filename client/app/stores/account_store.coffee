@@ -118,30 +118,18 @@ class AccountStore extends Store
 
     getSelected: -> return _selectedAccount
 
-    getSelectedMailboxes: (flatten = false) ->
+    getSelectedMailboxes: ->
 
         return Immutable.OrderedMap.empty() unless _selectedAccount?
 
-        if flatten
-            rawMailboxesTree = _selectedAccount.get('mailboxes').toJS()
-            # @FIXME Should be done with iterator when they are fixed
-            getFlattenMailboxes = (childrenMailboxes, depth = 0) ->
-                result = Immutable.OrderedMap()
-                for id, rawMailbox of childrenMailboxes
-                    children = rawMailbox.children
-                    delete rawMailbox.children
-                    mailbox = Immutable.Map rawMailbox
-                    # we add a depth indicator for display
-                    mailbox = mailbox.set 'depth', depth
-                    result = result.set mailbox.get('id'), mailbox
-                    result = result.merge getFlattenMailboxes children, \
-                                                                    (depth + 1)
-                return result.toOrderedMap()
+        result = Immutable.OrderedMap()
+        _selectedAccount.get('mailboxes').forEach (data) ->
+            mailbox = Immutable.Map data
+            result = result.set mailbox.get('id'), mailbox
+            return true
 
-            return getFlattenMailboxes(rawMailboxesTree).toOrderedMap()
-        else
-            emptyMap = Immutable.OrderedMap.empty()
-            return _selectedAccount?.get('mailboxes') or emptyMap
+        return result
+
 
     getSelectedMailbox: (selectedID) ->
         mailboxes = @getSelectedMailboxes()
@@ -152,7 +140,7 @@ class AccountStore extends Store
 
     getSelectedFavorites: ->
 
-        mailboxes = @getSelectedMailboxes true
+        mailboxes = @getSelectedMailboxes()
         ids = _selectedAccount?.get 'favorites'
 
         if ids?
@@ -166,5 +154,6 @@ class AccountStore extends Store
     getError: -> return _newAccountError
 
     isWaiting: -> return _newAccountWaiting
+
 
 module.exports = new AccountStore()

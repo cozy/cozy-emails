@@ -110,51 +110,6 @@ Mailbox::getSelfAndChildren = (callback) ->
         callback null, rows
 
 
-# Public: build a tree of the mailboxes
-#
-# accountID - id of the account
-#
-# Returns  the tree
-Mailbox.getClientTree = (accountID, callback) ->
-
-    DELIMITER = '/|/'
-
-    Mailbox.rawRequest 'treeMap',
-        startkey: [accountID]
-        endkey: [accountID, {}]
-        include_docs: true
-
-    , (err, rows) ->
-        return callback err if err
-
-        out = []
-        byPath = {}
-
-        rows.forEach (row) ->
-            path = row.key[1..] # remove accountID
-            # we keep a reference by path to easily find parent
-            box = _.pick row.doc, 'label', 'attribs'
-            byPath[path.join DELIMITER] = box
-
-            box.id = row.id
-            box.children = []
-
-            if path.length is 1 # first level box
-                out.push box
-            else
-                # this is a submailbox,  we find its parent
-                # by path and append it
-                parentPath = path[0..-2].join DELIMITER
-                if byPath[parentPath]?
-                    byPath[parentPath].children.push box
-                else
-                    # this should never happen
-                    log.error "NO MAILBOX of path #{parentPath} in #{accountID}"
-
-
-        callback null, out
-
-
 # Public: destroy mailboxes by their account ID
 #
 # accountID - id of the account to destroy mailboxes from

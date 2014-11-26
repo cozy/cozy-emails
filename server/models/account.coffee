@@ -164,11 +164,17 @@ Account::destroyEverything = (callback) ->
 
 Account::toClientObject = (callback) ->
     rawObject = @toObject()
+    rawObject.favorites ?= []
 
-    Mailbox.getClientTree @id, (err, mailboxes) ->
-        return callback err if err
-        rawObject.favorites ?= []
-        rawObject.mailboxes = mailboxes
+    Mailbox.rawRequest 'treeMap',
+        startkey: [@id]
+        endkey: [@id, {}]
+        include_docs: true
+    , (err, rows) ->
+        rawObject.mailboxes = rows.map (row) ->
+            row.doc.id ?= row.id
+            _.pick row.doc, 'id', 'label', 'attribs', 'tree'
+
         callback null, rawObject
 
 Account.clientList = (callback) ->
