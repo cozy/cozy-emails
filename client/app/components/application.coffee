@@ -6,7 +6,6 @@ Topbar        = require './topbar'
 ToastContainer = require('./toast').Container
 Compose       = require './compose'
 Conversation  = require './conversation'
-MailboxList   = require './mailbox-list'
 Menu          = require './menu'
 MessageList   = require './message-list'
 Settings      = require './settings'
@@ -107,13 +106,13 @@ module.exports = Application = React.createClass
                     ToastContainer()
 
                     # The quick actions bar
-                    Topbar
-                        layout: @props.router.current
-                        mailboxes: @state.mailboxes
-                        selectedAccount: @state.selectedAccount
-                        selectedMailboxID: @state.selectedMailboxID
-                        searchQuery: @state.searchQuery
-                        isResponsiveMenuShown: @state.isResponsiveMenuShown
+                    #Topbar
+                    #    layout: @props.router.current
+                    #    mailboxes: @state.mailboxes
+                    #    selectedAccount: @state.selectedAccount
+                    #    selectedMailboxID: @state.selectedMailboxID
+                    #    searchQuery: @state.searchQuery
+                    #    isResponsiveMenuShown: @state.isResponsiveMenuShown
 
                     # Two layout modes: one full-width panel or two panels
                     div id: 'panels', className: 'row',
