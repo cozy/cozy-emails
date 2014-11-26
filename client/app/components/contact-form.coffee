@@ -18,6 +18,7 @@ module.exports = React.createClass
     getStateFromStores: ->
         return {
             contacts: ContactStore.getResults()
+            selected: 0
         }
 
     componentWillMount: ->
@@ -28,6 +29,8 @@ module.exports = React.createClass
 
     render: ->
         listClass = if @state.contacts?.length > 0 then 'open' else ''
+        current = 0
+        console.log @state.selected
 
         form className: "contact-form",
             div null,
@@ -48,16 +51,21 @@ module.exports = React.createClass
                 div className: listClass,
                     ul className: "contact-list",
                         @state.contacts.map (contact, key) =>
-                            @renderContact contact
+                            selected = current is @state.selected
+                            current++
+                            @renderContact contact, selected
                         .toJS()
 
 
-    renderContact: (contact) ->
+    renderContact: (contact, selected) ->
         selectContact = =>
             @props.onContact contact
         avatar = contact.get 'avatar'
 
-        li onClick: selectContact,
+        classes = classer
+            selected: selected
+
+        li className: classes, onClick: selectContact,
             a null,
                 if avatar?
                     img
@@ -74,7 +82,21 @@ module.exports = React.createClass
             ContactActionCreator.searchContactLocal query
 
     onKeyDown: (evt) ->
-        if evt.key is "Enter"
-            @onSubmit()
-            evt.preventDefault()
-            return false
+        switch evt.key
+            when "Tab"
+                @onSubmit()
+                evt.preventDefault()
+                return false
+            when "Enter"
+                if @state.contacts?.count() > 0
+                    @props.onContact
+                    contact = @state.contacts.slice(@state.selected).first()
+                    @props.onContact contact
+                else
+                    @onSubmit()
+                evt.preventDefault()
+                return false
+            when "ArrowUp"
+                @setState selected: if @state.selected is 0 then @state.contacts.count() - 1 else @state.selected - 1
+            when "ArrowDown"
+                @setState selected: if @state.selected is (@state.contacts.count() - 1) then 0 else @state.selected + 1

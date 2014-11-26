@@ -79,9 +79,6 @@
         color #444
         margin-top 0
 
-    a
-        color basecolor
-
     a.close-email
         margin-right 1em
 
@@ -89,8 +86,6 @@
         float right
         font-size 2em
 
-
-#email-compose
   .editor
     border 1px solid #444
     min-height 16em
@@ -123,6 +118,10 @@
       color #333
       display block
       padding .25em 0
+    & > li.selected
+      background basecolor
+    & > li.selected > a
+      color white
 
    .avatar
        font-size 2em
