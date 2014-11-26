@@ -30,9 +30,6 @@ module.exports =
         # Recursively creates Immutable OrderedMap of mailboxes
         mailboxes = Immutable.OrderedMap()
         for mailbox in rawAccount.mailboxes
-            mailbox.nbTotal  = -1
-            mailbox.nbUnread = -1
-            mailbox.nbNew    = -1
             mailbox.depth = mailbox.tree.length - 1
             box = Immutable.Map mailbox
             mailboxes = mailboxes.set mailbox.id, box

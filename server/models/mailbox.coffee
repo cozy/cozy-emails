@@ -318,9 +318,8 @@ Mailbox::applyToFetch = (toFetch, reporter, callback) ->
     box = this
     async.eachSeries toFetch, (msg, cb) ->
         Message.fetchOrUpdate box, msg.mid, msg.uid, (err) ->
-            if err
-                reporter.onError err if err
-                reporter.addProgress 1
+            reporter.onError err if err
+            reporter.addProgress 1
             # dont stop
             cb null
     , callback
@@ -431,6 +430,25 @@ Mailbox.removeOrphans = (existings, callback) ->
 
         , (err) ->
             callback err, boxes
+
+Mailbox.getCounts = (callback) ->
+    Message.rawRequest 'byMailboxRequest',
+        startkey: ['date', ""]
+        endkey: ['date', {}]
+        reduce: true
+        group_level: 3
+    , (err, rows) ->
+        return callback err if err
+        result = {}
+        rows.forEach (row) ->
+            [DATEFLAG, boxID, flag] = row.key
+            result[boxID] ?= {unread: 0, total: 0}
+            if flag is "!\\Seen"
+                result[boxID].unread = row.value
+            else if flag is null
+                result[boxID].total = row.value
+
+        callback null, result
 
 
 Mailbox::doASAP = (operation, callback) ->

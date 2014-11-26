@@ -171,11 +171,21 @@ Account::toClientObject = (callback) ->
         endkey: [@id, {}]
         include_docs: true
     , (err, rows) ->
+        return callback err if err
         rawObject.mailboxes = rows.map (row) ->
             row.doc.id ?= row.id
             _.pick row.doc, 'id', 'label', 'attribs', 'tree'
 
-        callback null, rawObject
+        Mailbox.getCounts (err, counts) ->
+            return callback err if err
+            console.log counts
+            for box in rawObject.mailboxes
+                count = counts[box.id] or {total: 0, unread: 0}
+                box.nbTotal  = count.total
+                box.nbUnread = count.unread
+                box.nbNew    = -1
+
+            callback null, rawObject
 
 Account.clientList = (callback) ->
     Account.request 'all', (err, accounts) ->
