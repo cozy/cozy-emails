@@ -1,4 +1,4 @@
-{div, ul, li, span, i, p, h3, a, button, pre, iframe, img} = React.DOM
+{div, ul, li, span, i, p, a, button, pre, iframe, img} = React.DOM
 Compose        = require './compose'
 FilePicker     = require './file_picker'
 ToolboxActions = require './toolbox_actions'
@@ -214,14 +214,15 @@ module.exports = React.createClass
             'has-attachments': hasAttachments
             'is-fav': flags.indexOf(MessageFlags.FLAGGED) isnt -1
 
-        toggleActive = a className: "toggle-active", onClick: @toggleActive,
-            if @state.active
-                i className: 'fa fa-compress'
-            else
-                i className: 'fa fa-expand'
+        #toggleActive = a className: "toggle-active", onClick: @toggleActive,
+        #    if @state.active
+        #        i className: 'fa fa-compress'
+        #    else
+        #        i className: 'fa fa-expand'
         if @state.headers
-            div className: classes,
-                div className: leftClass, onClick: @toggleHeaders,
+            # detailed headers
+            div className: classes, onClick: @toggleActive,
+                div className: leftClass,
                     if avatar
                         img className: 'sender-avatar', src: avatar
                     else
@@ -229,6 +230,9 @@ module.exports = React.createClass
                     div className: 'participants col-md-9',
                         p className: 'sender',
                             @renderAddress 'from'
+                            i
+                                className: 'toggle-headers fa fa-toggle-up'
+                                onClick: @toggleHeaders
                         p className: 'receivers',
                             span null, t "mail receivers"
                             @renderAddress 'to'
@@ -245,22 +249,27 @@ module.exports = React.createClass
                         FilePicker
                             editable: false
                             value: prepared.attachments
-                if @props.inConversation
-                    toggleActive
+                #if @props.inConversation
+                #    toggleActive
         else
-            div className: classes, onClick: @toggleHeaders,
+            # compact headers
+            div className: classes, onClick: @toggleActive,
                 if avatar
                     img className: 'sender-avatar', src: avatar
                 else
                     i className: 'sender-avatar fa fa-user'
                 span className: 'participants', @getParticipants prepared
-                span className: 'subject', @props.message.get 'subject'
+                if @state.active
+                    i
+                        className: 'toggle-headers fa fa-toggle-down'
+                        onClick: @toggleHeaders
+                #span className: 'subject', @props.message.get 'subject'
                 span className: 'hour', prepared.date
                 span className: "flags",
                     i className: 'attach fa fa-paperclip'
                     i className: 'fav fa fa-star'
-                if @props.inConversation
-                    toggleActive
+                #if @props.inConversation
+                #    toggleActive
 
 
     renderAddress: (field) ->
@@ -437,7 +446,7 @@ module.exports = React.createClass
 
     _initFrame: ->
         panel = document.querySelector "#panels > .panel:nth-of-type(2)"
-        if panel?
+        if panel? and not @state.composing
             panel.scrollTop = 0
         # - resize the frame to the height of its content
         # - if images are not displayed, create the function to display them
@@ -500,12 +509,13 @@ module.exports = React.createClass
         @setState state
 
     toggleActive: (e) ->
-        e.preventDefault()
-        e.stopPropagation()
-        if @state.active
-            @setState { active: false, headers: false }
-        else
-            @setState active: true
+        if @props.inConversation
+            e.preventDefault()
+            e.stopPropagation()
+            if @state.active
+                @setState { active: false, headers: false }
+            else
+                @setState { active: true, headers: false }
 
     displayNextMessage: (next)->
         if not next?

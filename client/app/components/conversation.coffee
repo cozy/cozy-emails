@@ -20,7 +20,8 @@ module.exports = React.createClass
         accounts          : React.PropTypes.object.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+               not(_.isEqual(nextProps, @props))
 
     render: ->
         if not @props.message? or not @props.conversation
@@ -81,9 +82,10 @@ module.exports = React.createClass
             #        span className: 'close', 'x'
 
             h3 null,
+                @props.message.get 'subject'
                 a
                     href: closeUrl,
-                    className: 'close-conversation hidden-xs hidden-sm',
+                    className: 'expand close-conversation hidden-xs hidden-sm',
                         i className:'fa ' + closeIcon
                 if @props.layout isnt 'full'
                     a
