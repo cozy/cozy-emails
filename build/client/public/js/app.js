@@ -2101,7 +2101,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/application", function(exports, require, module) {
-var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, LayoutActionCreator, LayoutStore, MailboxList, Menu, MessageList, MessageStore, ReactCSSTransitionGroup, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, TasksStore, ToastContainer, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref;
+var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, LayoutActionCreator, LayoutStore, Menu, MessageList, MessageStore, ReactCSSTransitionGroup, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, TasksStore, ToastContainer, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref;
 
 _ref = React.DOM, body = _ref.body, div = _ref.div, p = _ref.p, form = _ref.form, i = _ref.i, input = _ref.input, span = _ref.span, a = _ref.a, button = _ref.button, strong = _ref.strong;
 
@@ -2116,8 +2116,6 @@ ToastContainer = require('./toast').Container;
 Compose = require('./compose');
 
 Conversation = require('./conversation');
-
-MailboxList = require('./mailbox-list');
 
 Menu = require('./menu');
 
@@ -2212,14 +2210,7 @@ module.exports = Application = React.createClass({
       className: responsiveClasses
     }, Alert({
       alert: alert
-    }), ToastContainer(), Topbar({
-      layout: this.props.router.current,
-      mailboxes: this.state.mailboxes,
-      selectedAccount: this.state.selectedAccount,
-      selectedMailboxID: this.state.selectedMailboxID,
-      searchQuery: this.state.searchQuery,
-      isResponsiveMenuShown: this.state.isResponsiveMenuShown
-    }), div({
+    }), ToastContainer(), div({
       id: 'panels',
       className: 'row'
     }, div({
@@ -2748,7 +2739,7 @@ module.exports = Compose = React.createClass({
     return this._doSend(false);
   },
   _doSend: function(isDraft) {
-    var account, callback, from, message;
+    var account, callback, from, message, node;
     account = this.props.accounts.get(this.state.accountID);
     from = {
       name: (account != null ? account.get('name') : void 0) || void 0,
@@ -2771,11 +2762,16 @@ module.exports = Compose = React.createClass({
     if (this.props.message != null) {
       message.mailboxIDs = this.props.message.get('mailboxIDs');
     }
+    node = this.refs.html.getDOMNode();
     if (this.state.composeInHTML) {
-      message.html = this.refs.html.getDOMNode().innerHTML;
-      message.text = toMarkdown(message.html);
+      message.html = node.innerHTML;
+      try {
+        message.text = toMarkdown(message.html);
+      } catch (_error) {
+        message.text = node.textContent || node.innerText;
+      }
     } else {
-      message.text = this.refs.content.getDOMNode().value.trim();
+      message.text = node.value.trim();
     }
     callback = this.props.callback;
     return MessageActionCreator.send(message, (function(_this) {
@@ -3324,7 +3320,7 @@ module.exports = React.createClass({
     }
     if (this.props.mailboxes.length > 0) {
       return div({
-        className: 'dropdown pull-left'
+        className: 'btn-group btn-group-sm dropdown pull-left'
       }, button({
         className: 'btn btn-default dropdown-toggle',
         type: 'button',
@@ -3802,7 +3798,7 @@ MenuMailboxItem = React.createClass({
 });
 
 ;require.register("components/message-list", function(exports, require, module) {
-var ContactActionCreator, ConversationActionCreator, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, ToolboxActions, ToolboxMove, a, alertError, alertSuccess, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
+var ContactActionCreator, ConversationActionCreator, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, ToolboxActions, ToolboxMove, a, alertError, alertSuccess, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p, button = _ref.button, input = _ref.input, img = _ref.img;
 
@@ -3823,6 +3819,8 @@ ConversationActionCreator = require('../actions/conversation_action_creator');
 MessageActionCreator = require('../actions/message_action_creator');
 
 MessageStore = require('../stores/message_store');
+
+MailboxList = require('./mailbox-list');
 
 Participants = require('./participant');
 
@@ -3859,7 +3857,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var classCompact, classEdited, classList, compact, filterParams, messages, nbMessages, nextPage;
+    var classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, messages, nbMessages, nextPage;
     compact = this.props.settings.get('listStyle') === 'compact';
     messages = this.props.messages.map((function(_this) {
       return function(message, key) {
@@ -3895,6 +3893,21 @@ MessageList = React.createClass({
         });
       };
     })(this);
+    getMailboxUrl = (function(_this) {
+      return function(mailbox) {
+        return _this.buildUrl({
+          direction: 'first',
+          action: 'account.mailbox.messages',
+          parameters: [_this.props.accountID, mailbox.get('id')]
+        });
+      };
+    })(this);
+    configMailboxUrl = this.buildUrl({
+      direction: 'first',
+      action: 'account.config',
+      parameters: this.props.accountID,
+      fullWidth: true
+    });
     classList = classer({
       compact: compact,
       edited: this.state.edited
@@ -3910,7 +3923,7 @@ MessageList = React.createClass({
       ref: 'list'
     }, div({
       className: 'message-list-actions'
-    }, MessagesFilter(filterParams), MessagesSort(filterParams), div({
+    }, div({
       className: 'btn-toolbar',
       role: 'toolbar'
     }, div({
@@ -3922,8 +3935,33 @@ MessageList = React.createClass({
       className: "btn btn-default " + classEdited,
       onClick: this.toggleEdited
     }, i({
-      className: 'fa fa-pencil'
-    }))), this.state.edited ? div({
+      className: 'fa fa-square-o'
+    }))), !this.state.edited ? div({
+      className: 'btn-group btn-group-sm message-list-option'
+    }, MailboxList({
+      getUrl: getMailboxUrl,
+      mailboxes: this.props.mailboxes,
+      selectedMailbox: this.props.mailboxID
+    })) : void 0, !this.state.edited ? div({
+      className: 'btn-group btn-group-sm message-list-option'
+    }, MessagesFilter(filterParams)) : void 0, !this.state.edited ? div({
+      className: 'btn-group btn-group-sm message-list-option'
+    }, MessagesSort(filterParams)) : void 0, !this.state.edited ? div({
+      className: 'btn-group btn-group-sm message-list-option'
+    }, button({
+      className: 'btn btn-default trash',
+      type: 'button',
+      onClick: this.refresh
+    }, span({
+      className: 'fa fa-refresh'
+    }))) : void 0, !this.state.edited ? div({
+      className: 'btn-group btn-group-sm message-list-option'
+    }, a({
+      href: configMailboxUrl,
+      className: 'btn btn-default'
+    }, i({
+      className: 'fa fa-cog'
+    }))) : void 0, this.state.edited ? div({
       className: 'btn-group btn-group-sm message-list-option'
     }, button({
       className: 'btn btn-default trash',
@@ -3949,6 +3987,10 @@ MessageList = React.createClass({
       onClick: nextPage,
       ref: 'nextPage'
     }, t('list next page'))) : p(null, t('list end'))));
+  },
+  refresh: function(event) {
+    event.preventDefault();
+    return LayoutActionCreator.refreshMessages();
   },
   toggleEdited: function() {
     return this.setState({
@@ -4192,7 +4234,7 @@ MessageItem = React.createClass({
       onClick: this.onMessageClick,
       onDoubleClick: this.onMessageDblClick
     }, this.props.edited ? input({
-      className: 'avatar',
+      className: 'select',
       type: 'checkbox',
       checked: this.state.selected,
       onChange: this.onSelect
@@ -4293,12 +4335,14 @@ MessagesFilter = React.createClass({
     var filter, title;
     filter = this.props.query.flag;
     if ((filter == null) || filter === '-') {
-      title = t('list filter');
+      title = i({
+        className: 'fa fa-filter'
+      });
     } else {
       title = t('list filter ' + filter);
     }
     return div({
-      className: 'dropdown filter-dropdown'
+      className: 'btn-group btn-group-sm dropdown filter-dropdown'
     }, button({
       className: 'btn btn-default dropdown-toggle message-list-action',
       type: 'button',
@@ -4350,7 +4394,7 @@ MessagesSort = React.createClass({
       title = t('list sort ' + sort);
     }
     return div({
-      className: 'dropdown sort-dropdown'
+      className: 'btn-group btn-group-sm dropdown sort-dropdown'
     }, button({
       className: 'btn btn-default dropdown-toggle message-list-action',
       type: 'button',
@@ -6788,6 +6832,7 @@ module.exports = Router = (function(_super) {
 module.exports = {
   "app loading": "Loading…",
   "app back": "Back",
+  "app cancel": "Cancel",
   "app menu": "Menu",
   "app search": "Search…",
   "app alert close": "Close",
@@ -6982,6 +7027,7 @@ module.exports = {
 module.exports = {
   "app loading": "Chargement…",
   "app back": "Retour",
+  "app cancel": "Annuler",
   "app menu": "Menu",
   "app search": "Rechercher…",
   "app alert close": "Fermer",
