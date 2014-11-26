@@ -2243,9 +2243,6 @@ textarea:active,
 #mailbox-config .folder-list .row.box.edited .btn .caret {
   margin: 10px 0 0 10px;
 }
-.conversation {
-  padding-top: 2em;
-}
 .conversation.enable {
   display: block;
 }
@@ -2253,9 +2250,6 @@ textarea:active,
   color: #444;
   margin-top: 0;
   padding-bottom: 0.5em;
-}
-.conversation h3 span {
-  margin-top: 2em;
 }
 .conversation h3 .close-conversation {
   display: none;
@@ -2273,6 +2267,10 @@ textarea:active,
 .conversation h3 .expand:hover,
 .conversation h3 .close-conversation:hover {
   color: #fe8800;
+}
+.conversation .message-title {
+  margin-top: 0.5em;
+  line-height: 1.4em;
 }
 .conversation .thread {
   padding: 0;
@@ -2443,12 +2441,16 @@ textarea:active,
   color: #bdbdbd;
 }
 .conversation .thread .message .content-action {
-  background-color: #eee;
+  background-color: #f4f4f4;
   margin: 0.5em 0;
-  padding: 0.25em;
+  padding: 0.5em;
+  color: #333;
 }
 .conversation .thread .message .content-action button {
   margin: 0 1em;
+}
+.conversation .thread .message .subject {
+  display: none;
 }
 .conversation .thread .message .content {
   white-space: pre-line;

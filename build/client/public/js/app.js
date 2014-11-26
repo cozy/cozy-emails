@@ -3032,7 +3032,7 @@ module.exports = React.createClass({
       className: 'close-conversation hidden-xs hidden-sm'
     }, i({
       className: 'fa ' + closeIcon
-    })), this.props.message.get('subject'), this.props.layout !== 'full' ? a({
+    })), this.props.layout !== 'full' ? a({
       href: expandUrl,
       className: 'expand hidden-xs hidden-sm'
     }, i({
@@ -3042,7 +3042,9 @@ module.exports = React.createClass({
       className: 'close-conversation pull-right'
     }, i({
       className: 'fa fa-compress'
-    }))), ul({
+    }))), h3({
+      className: 'message-title'
+    }, this.props.message.get('subject')), ul({
       className: 'thread list-unstyled'
     }, (function() {
       var _i, _len, _ref1, _results;
@@ -4610,9 +4612,9 @@ module.exports = React.createClass({
         className: classes,
         key: this.props.key,
         'data-id': message.get('id')
-      }, this.renderToolbox(message.get('id'), prepared), this.renderHeaders(prepared), div({
+      }, this.renderHeaders(prepared), div({
         className: 'full-headers'
-      }, pre(null, prepared.fullHeaders.join("\n"))), messageDisplayHTML && prepared.html ? div({
+      }, pre(null, prepared.fullHeaders.join("\n"))), this.renderToolbox(message.get('id'), prepared), this.renderNavigation(), this.renderCompose(), messageDisplayHTML && prepared.html ? div({
         className: 'row'
       }, imagesWarning ? div({
         className: "imagesWarning content-action",
@@ -4635,7 +4637,7 @@ module.exports = React.createClass({
         className: 'preview'
       }, p(null, prepared.text))), div({
         className: 'clearfix'
-      }), this.renderNavigation(), this.renderCompose());
+      }));
     } else {
       return li({
         className: classes,

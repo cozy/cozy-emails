@@ -6,8 +6,6 @@
 
 .conversation
 
-    padding-top 2em
-
     &.enable
         display block
 
@@ -15,9 +13,6 @@
         color #444
         margin-top 0
         padding-bottom .5em
-
-        span
-            margin-top 2em
 
         .close-conversation
             display none
@@ -33,6 +28,11 @@
             color basecolor
             &:hover
                 color actioncolor
+
+    .message-title
+        margin-top 0.5em
+        line-height 1.4em
+
 
     .thread
         padding 0
@@ -152,12 +152,16 @@
                     color mediumcolor
 
             .content-action
-                background-color lightcolor
+                background-color lightred
                 margin .5em 0
-                padding .25em
+                padding 0.5em
+                color #333
 
                 button
                     margin 0 1em
+
+            .subject
+                display none
 
             .content
                 white-space pre-line

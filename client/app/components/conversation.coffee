@@ -85,7 +85,6 @@ module.exports = React.createClass
                     href: closeUrl,
                     className: 'close-conversation hidden-xs hidden-sm',
                         i className:'fa ' + closeIcon
-                @props.message.get 'subject'
                 if @props.layout isnt 'full'
                     a
                         href: expandUrl,
@@ -96,6 +95,8 @@ module.exports = React.createClass
                         href: collapseUrl,
                         className: 'close-conversation pull-right',
                             i className:'fa fa-compress'
+            h3 className: 'message-title',
+                @props.message.get 'subject'
 
             ul className: 'thread list-unstyled',
                 for message, key in @props.conversation

@@ -149,10 +149,12 @@ module.exports = React.createClass
                 className: classes,
                 key: @props.key,
                 'data-id': message.get('id'),
-                    @renderToolbox message.get('id'), prepared
                     @renderHeaders prepared
                     div className: 'full-headers',
                         pre null, prepared.fullHeaders.join "\n"
+                    @renderToolbox message.get('id'), prepared
+                    @renderNavigation()
+                    @renderCompose()
                     if messageDisplayHTML and prepared.html
                         div className: 'row',
                             if imagesWarning
@@ -184,10 +186,6 @@ module.exports = React.createClass
                             div className: 'preview',
                                 p null, prepared.text
                     div className: 'clearfix'
-                    @renderNavigation()
-
-                    # Display Compose block
-                    @renderCompose()
         else
             li
                 className: classes,
