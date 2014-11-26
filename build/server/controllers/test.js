@@ -8,7 +8,7 @@ Account = require('../models/account');
 CozyInstance = require('../models/cozy_instance');
 
 module.exports.main = function(req, res, next) {
-  return async.parallel([
+  return async.series([
     function(cb) {
       return CozyInstance.getLocale(cb);
     }, function(cb) {

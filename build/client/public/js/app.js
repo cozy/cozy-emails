@@ -1081,7 +1081,7 @@ module.exports = React.createClass({
     }
   },
   renderMain: function() {
-    var buttonLabel, getError, hasError;
+    var buttonLabel, cancelUrl, getError, hasError;
     if (this.props.isWaiting) {
       buttonLabel = 'Saving...';
     } else if (this.props.selectedAccount != null) {
@@ -1114,6 +1114,11 @@ module.exports = React.createClass({
         }
       };
     })(this);
+    cancelUrl = this.buildUrl({
+      direction: 'first',
+      action: 'default',
+      fullWidth: true
+    });
     return form({
       className: 'form-horizontal'
     }, this.renderError(), div({
@@ -1325,14 +1330,17 @@ module.exports = React.createClass({
     })))), div({
       className: 'form-group'
     }, div({
-      className: 'col-sm-offset-2 col-sm-5 text-right'
+      className: 'col-sm-offset-2 col-sm-5 text-right btn-group'
     }, this.state.id != null ? button({
-      className: 'btn btn-cozy',
+      className: 'btn btn-default',
       onClick: this.onRemove
     }, t("account remove")) : void 0, button({
       className: 'btn btn-cozy',
       onClick: this.onSubmit
-    }, buttonLabel))));
+    }, buttonLabel), a({
+      href: cancelUrl,
+      className: 'btn btn-default'
+    }, t('app cancel')))));
   },
   renderMailboxes: function() {
     var favorites, mailboxes;
@@ -2453,7 +2461,7 @@ module.exports = Compose = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var classBcc, classCc, classInput, classLabel, closeUrl, collapseUrl, expandUrl;
+    var cancelUrl, classBcc, classCc, classInput, classLabel, closeUrl, collapseUrl, expandUrl;
     if (!this.props.accounts) {
       return;
     }
@@ -2470,6 +2478,11 @@ module.exports = Compose = React.createClass({
       secondPanel: {
         action: 'compose'
       }
+    });
+    cancelUrl = this.buildUrl({
+      direction: 'first',
+      action: 'default',
+      fullWidth: true
     });
     closeUrl = this.buildClosePanelUrl(this.props.layout);
     classLabel = 'col-sm-2 col-sm-offset-0 control-label';
@@ -2582,16 +2595,14 @@ module.exports = Compose = React.createClass({
     }, div({
       className: 'btn-group btn-group-lg'
     }, button({
-      className: 'btn btn-default',
+      className: 'btn btn-cozy',
       type: 'button',
       onClick: this.onSend
     }, span({
       className: 'fa fa-send'
     }), span({
       className: 'tool-long'
-    }, t('compose action send')))), div({
-      className: 'btn-group btn-group-sm'
-    }, button({
+    }, t('compose action send'))), button({
       className: 'btn btn-default',
       type: 'button',
       onClick: this.onDraft
@@ -2599,9 +2610,7 @@ module.exports = Compose = React.createClass({
       className: 'fa fa-save'
     }), span({
       className: 'tool-long'
-    }, t('compose action draft')))), this.props.message != null ? div({
-      className: 'btn-group btn-group-sm'
-    }, button({
+    }, t('compose action draft'))), this.props.message != null ? button({
       className: 'btn btn-default',
       type: 'button',
       onClick: this.onDelete
@@ -2609,12 +2618,13 @@ module.exports = Compose = React.createClass({
       className: 'fa fa-trash-o'
     }), span({
       className: 'tool-long'
-    }, t('compose action delete')))) : void 0))));
+    }, t('compose action delete'))) : void 0, a({
+      href: cancelUrl,
+      className: 'btn btn-default'
+    }, t('app cancel')))))));
   },
-  componentDidMount: function() {
-    var node;
-    node = this.getDOMNode();
-    node.scrollIntoView();
+  _initCompose: function() {
+    this.getDOMNode().scrollIntoView();
     if (this.state.composeInHTML) {
       return jQuery('#email-compose .rt-editor').on('keypress', function(e) {
         if (e.keyCode === 13) {
@@ -2698,6 +2708,12 @@ module.exports = Compose = React.createClass({
         }
       });
     }
+  },
+  componentDidMount: function() {
+    return this._initCompose();
+  },
+  componentDidUpdate: function() {
+    return this._initCompose();
   },
   getInitialState: function(forceDefault) {
     var key, message, state, value, _ref1;
@@ -3827,11 +3843,14 @@ MessageList = React.createClass({
   },
   getInitialState: function() {
     return {
-      compact: false,
-      edited: false
+      edited: false,
+      loading: false
     };
   },
   componentWillReceiveProps: function(props) {
+    this.setState({
+      loading: false
+    });
     if (props.mailboxID !== this.props.mailboxID) {
       this.setState({
         edited: false
@@ -3840,7 +3859,8 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var classCompact, classEdited, classList, filterParams, messages, nbMessages, nextPage;
+    var classCompact, classEdited, classList, compact, filterParams, messages, nbMessages, nextPage;
+    compact = this.props.settings.get('listStyle') === 'compact';
     messages = this.props.messages.map((function(_this) {
       return function(message, key) {
         var id, isActive;
@@ -3876,11 +3896,11 @@ MessageList = React.createClass({
       };
     })(this);
     classList = classer({
-      compact: this.state.compact,
+      compact: compact,
       edited: this.state.edited
     });
     classCompact = classer({
-      active: this.state.compact
+      active: compact
     });
     classEdited = classer({
       active: this.state.edited
@@ -3919,23 +3939,16 @@ MessageList = React.createClass({
       onMark: this.onMark,
       onConversation: this.onConversation,
       onHeaders: this.onHeaders
-    }) : void 0, div({
-      className: 'btn-group btn-group-sm message-list-option'
-    }, button({
-      type: "button",
-      className: "btn btn-default " + classCompact,
-      onClick: this.toggleCompact
-    }, t('list option compact')))))), this.props.messages.count() === 0 ? p(null, this.props.emptyListMessage) : div(null, p(null, this.props.counterMessage), ul({
+    }) : void 0))), this.props.messages.count() === 0 ? p(null, this.props.emptyListMessage) : div(null, p(null, this.props.counterMessage), ul({
       className: 'list-unstyled'
-    }, messages), this.props.messages.count() < nbMessages ? p(null, a({
+    }, messages), this.props.messages.count() < nbMessages ? p({
+      className: 'text-center'
+    }, this.state.loading ? i({
+      className: "fa fa-refresh fa-spin"
+    }) : a({
       onClick: nextPage,
       ref: 'nextPage'
     }, t('list next page'))) : p(null, t('list end'))));
-  },
-  toggleCompact: function() {
-    return this.setState({
-      compact: !this.state.compact
-    });
   },
   toggleEdited: function() {
     return this.setState({
@@ -4078,16 +4091,16 @@ MessageList = React.createClass({
     width = window.innerWidth || document.documentElement.clientWidth;
     return rect.bottom <= (height + 0) && rect.top >= 0;
   },
-  _loadNext: (function(_this) {
-    return function() {
-      if (isVisible(_this.refs.nextPage.getDOMNode(), true)) {
-        scrollable.removeEventListener('scroll', loadNext);
-        return LayoutActionCreator.showMessageList({
-          parameters: _this.props.query
-        });
-      }
-    };
-  })(this),
+  _loadNext: function() {
+    if ((this.refs.nextPage != null) && this._isVisible(this.refs.nextPage.getDOMNode(), true)) {
+      this.setState({
+        loading: true
+      });
+      return LayoutActionCreator.showMessageList({
+        parameters: this.props.query
+      });
+    }
+  },
   _initScroll: function() {
     var active, scrollable;
     if (this.refs.nextPage == null) {
@@ -4098,10 +4111,12 @@ MessageList = React.createClass({
       active.scrollIntoView();
     }
     scrollable = this.refs.list.getDOMNode().parentNode;
-    return setTimeout(function() {
-      scrollable.removeEventListener('scroll', this._loadNext);
-      return scrollable.addEventListener('scroll', this._loadNext);
-    }, 0);
+    return setTimeout((function(_this) {
+      return function() {
+        scrollable.removeEventListener('scroll', _this._loadNext);
+        return scrollable.addEventListener('scroll', _this._loadNext);
+      };
+    })(this), 0);
   },
   componentDidMount: function() {
     return this._initScroll();
@@ -4127,7 +4142,7 @@ MessageItem = React.createClass({
     };
   },
   render: function() {
-    var action, avatar, classes, conversationID, date, flags, id, isDraft, message, tag, url, _ref2;
+    var action, avatar, classes, compact, conversationID, date, flags, id, isDraft, message, tag, url, _ref2;
     message = this.props.message;
     flags = message.get('flags');
     classes = classer({
@@ -4162,7 +4177,8 @@ MessageItem = React.createClass({
     } else {
       tag = span;
     }
-    date = MessageUtils.formatDate(message.get('createdAt'));
+    compact = this.props.settings.get('listStyle') === 'compact';
+    date = MessageUtils.formatDate(message.get('createdAt'), compact);
     avatar = MessageUtils.getAvatar(message);
     return li({
       className: classes,
@@ -5337,10 +5353,6 @@ ApiUtils = require('../utils/api_utils');
 
 module.exports = React.createClass({
   displayName: 'Settings',
-  mixins: [React.addons.LinkedStateMixin],
-  shouldComponentUpdate: function(nextProps, nextState) {
-    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
-  },
   render: function() {
     var classLabel, pluginConf, pluginName;
     classLabel = 'col-sm-2 col-sm-offset-2 control-label';
@@ -5416,7 +5428,37 @@ module.exports = React.createClass({
       onClick: this.handleChange
     }, a({
       role: "menuitem"
-    }, t("settings lang fr")))))))), this._renderOption('displayConversation'), this._renderOption('composeInHTML'), this._renderOption('messageDisplayHTML'), this._renderOption('messageDisplayImages'), this._renderOption('messageConfirmDelete'), this._renderOption('displayPreview'), fieldset(null, legend(null, t('settings plugins')), (function() {
+    }, t("settings lang fr"))))))), div({
+      className: 'form-group'
+    }, label({
+      htmlFor: 'settings-mpp',
+      className: classLabel
+    }, t("settings label listStyle")), div({
+      className: 'col-sm-3'
+    }, div({
+      className: "dropdown"
+    }, button({
+      className: "btn btn-default dropdown-toggle",
+      type: "button",
+      "data-toggle": "dropdown"
+    }, t("settings label listStyle " + (this.state.settings.listStyle || 'default'))), ul({
+      className: "dropdown-menu",
+      role: "menu"
+    }, li({
+      role: "presentation",
+      'data-target': 'listStyle',
+      'data-style': 'default',
+      onClick: this.handleChange
+    }, a({
+      role: "menuitem"
+    }, t("settings label listStyle default"))), li({
+      role: "presentation",
+      'data-target': 'listStyle',
+      'data-style': 'compact',
+      onClick: this.handleChange
+    }, a({
+      role: "menuitem"
+    }, t("settings label listStyle compact")))))))), this._renderOption('displayConversation'), this._renderOption('composeInHTML'), this._renderOption('messageDisplayHTML'), this._renderOption('messageDisplayImages'), this._renderOption('messageConfirmDelete'), this._renderOption('displayPreview'), fieldset(null, legend(null, t('settings plugins')), (function() {
       var _ref1, _results;
       _ref1 = this.state.settings.plugins;
       _results = [];
@@ -5429,10 +5471,12 @@ module.exports = React.createClass({
         }, div({
           className: 'form-group'
         }, label({
-          className: classLabel
+          className: classLabel,
+          htmlFor: 'settings-plugin-' + pluginName
         }, pluginConf.name), div({
           className: 'col-sm-3'
         }, input({
+          id: 'settings-plugin-' + pluginName,
           checked: pluginConf.active,
           onChange: this.handleChange,
           'data-target': 'plugin',
@@ -5465,6 +5509,7 @@ module.exports = React.createClass({
   },
   handleChange: function(event) {
     var lang, name, pluginConf, pluginName, settings, target, _ref1;
+    event.preventDefault();
     target = event.currentTarget;
     switch (target.dataset.target) {
       case 'messagesPerPage':
@@ -5503,6 +5548,13 @@ module.exports = React.createClass({
         });
         ApiUtils.setLocale(lang, true);
         return SettingsActionCreator.edit(settings);
+      case 'listStyle':
+        settings = this.state.settings;
+        settings.listStyle = target.dataset.style;
+        this.setState({
+          settings: settings
+        });
+        return SettingsActionCreator.edit(settings);
       case 'plugin':
         name = target.dataset.plugin;
         settings = this.state.settings;
@@ -5515,7 +5567,7 @@ module.exports = React.createClass({
         for (pluginName in _ref1) {
           if (!__hasProp.call(_ref1, pluginName)) continue;
           pluginConf = _ref1[pluginName];
-          pluginConf.active = window.plugins[pluginName].active;
+          settings.plugins[pluginName].active = window.plugins[pluginName].active;
         }
         this.setState({
           settings: settings
@@ -6898,6 +6950,9 @@ module.exports = {
   "settings label messageDisplayHTML": "Display message in HTML",
   "settings label messageDisplayImages": "Display images inside messages",
   "settings label messageConfirmDelete": "Confirm before deleting a message",
+  "settings label listStyle": "Message list style",
+  "settings label listStyle default": "Normal",
+  "settings label listStyle compact": "Compact",
   "settings lang": "Language",
   "settings lang en": "English",
   "settings lang fr": "Français",
@@ -7089,6 +7144,9 @@ module.exports = {
   "settings label messageDisplayHTML": "Afficher les messages en HTML",
   "settings label messageDisplayImages": "Afficher les images",
   "settings label messageConfirmDelete": "Demander confirmation avant de supprimer un message",
+  "settings label listStyle": "Affichage de la liste des messages",
+  "settings label listStyle default": "Normal",
+  "settings label listStyle compact": "Compact",
   "settings lang": "Langue",
   "settings lang en": "English",
   "settings lang fr": "Français",
@@ -8631,7 +8689,7 @@ module.exports = MessageUtils = {
         }
     }
   },
-  formatDate: function(date) {
+  formatDate: function(date, compact) {
     var formatter, today;
     if (date == null) {
       return;
@@ -8641,7 +8699,11 @@ module.exports = MessageUtils = {
     if (date.isBefore(today, 'year')) {
       formatter = 'DD/MM/YYYY';
     } else if (date.isBefore(today, 'day')) {
-      formatter = 'DD MMMM';
+      if ((compact != null) && compact) {
+        formatter = 'L';
+      } else {
+        formatter = 'DD MMMM';
+      }
     } else {
       formatter = 'hh:mm';
     }
@@ -9159,7 +9221,7 @@ module.exports = {
     var url;
     url = hard ? "refresh?all=true" : "refresh";
     return request.get(url).end(function(res) {
-      return callback(res.text);
+      return typeof callback === "function" ? callback(res.text) : void 0;
     });
   },
   activityCreate: function(options, callback) {
