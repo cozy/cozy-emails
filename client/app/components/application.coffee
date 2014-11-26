@@ -210,11 +210,18 @@ module.exports = Application = React.createClass
                 accountID = panelInfo.parameters.accountID
                 mailboxID = panelInfo.parameters.mailboxID
                 account   = AccountStore.getByID accountID
-                mailbox   = account.get('mailboxes').get mailboxID
-                messages  = MessageStore.getMessagesByMailbox mailboxID
-                messagesCount = mailbox?.get('nbTotal') or 0
-                emptyListMessage = t 'list empty'
-                counterMessage   = t 'list count', messagesCount
+                if account?
+                    mailbox   = account.get('mailboxes').get mailboxID
+                    messages  = MessageStore.getMessagesByMailbox mailboxID
+                    messagesCount = mailbox?.get('nbTotal') or 0
+                    emptyListMessage = t 'list empty'
+                    counterMessage   = t 'list count', messagesCount
+                else
+                    @redirect
+                        direction: "first"
+                        action: "default"
+                    return
+
 
             # gets the selected message if any
             messageID = MessageStore.getCurrentID()

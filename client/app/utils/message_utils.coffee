@@ -153,4 +153,7 @@ module.exports = MessageUtils =
         return date.format formatter
 
     getAvatar: (message) ->
-        return ContactStore.getAvatar message.get('from')[0].address
+        if message.get('from')[0]?
+            return ContactStore.getAvatar message.get('from')[0].address
+        else
+            return null

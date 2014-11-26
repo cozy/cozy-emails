@@ -94,7 +94,8 @@ class AccountStore extends Store
     ###
     getAll: -> return _accounts
 
-    getByID: (accountID) -> return _accounts.get accountID
+    getByID: (accountID) ->
+        return _accounts.get accountID
 
     getByLabel: (label) ->
         _accounts.find (account) -> account.get('label') is label

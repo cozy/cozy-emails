@@ -96,20 +96,21 @@ MessageList = React.createClass
                                 onClick: @toggleEdited,
                                     i className: 'fa fa-square-o'
                         # mailbox-list
-                        if not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option',
-                                MailboxList
-                                    getUrl: getMailboxUrl
-                                    mailboxes: @props.mailboxes
-                                    selectedMailbox: @props.mailboxID
+                        #if not @state.edited
+                            #div className: 'btn-group btn-group-sm message-list-option',
+                                #MailboxList
+                                    #getUrl: getMailboxUrl
+                                    #mailboxes: @props.mailboxes
+                                    #selectedMailbox: @props.mailboxID
                         # filters
-                        if not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option',
-                                MessagesFilter filterParams
-                        # sort
-                        if not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option',
-                                MessagesSort filterParams
+                        #if not @state.edited
+                            #div className: 'btn-group btn-group-sm message-list-option',
+                                #MessagesFilter filterParams
+                        ## sort
+                        #if not @state.edited
+                            #div className: 'btn-group btn-group-sm message-list-option',
+                                #MessagesSort filterParams
+                                #
                         # refresh
                         if not @state.edited
                             div className: 'btn-group btn-group-sm message-list-option',
@@ -148,7 +149,7 @@ MessageList = React.createClass
                 p null, @props.emptyListMessage
             else
                 div null,
-                    p null, @props.counterMessage
+                    #p null, @props.counterMessage
                     ul className: 'list-unstyled',
                         messages
                     if @props.messages.count() < nbMessages
