@@ -577,6 +577,7 @@ Message.pickConversationID = (rows, callback) ->
 
     # we update all messages to the new conversationID
     async.eachSeries rows, (row, cb) ->
+        return cb null if row.value is pickedConversationID
         Message.find row.id, (err, message) ->
             log.warn "Cant get message #{row.id}, ignoring" if err
             if err or message.conversationID is pickedConversationID
