@@ -24,7 +24,7 @@ folderUndeletable = (err) ->
 # SENT FROM : some php script (probably very specific)
 # @TODO : PR to mailparser to be more lenient in parsing headers ?
 _old1 = MailParser::_parseHeaderLineWithParams
-ailParser::_parseHeaderLineWithParams = (value) ->
+MailParser::_parseHeaderLineWithParams = (value) ->
     _old1.call this, value.replace '" format=flowed', '"; format=flowed'
 
 
