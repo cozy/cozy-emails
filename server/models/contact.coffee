@@ -34,16 +34,19 @@ Contact.requestWithPictures = (name, options, callback) ->
     Contact.request name, options, (err, contacts) ->
         outids = []
         out = []
-        async.eachSeries contacts, (contact, cb)  ->
-            return cb null if contact.id in outids
-            contact.includePicture (err, contactWIthPicture) ->
-                return cb err if err
-                outids.push contact.id
-                out.push contactWIthPicture
-                cb null
+        if contacts?
+            async.eachSeries contacts, (contact, cb)  ->
+                return cb null if contact.id in outids
+                contact.includePicture (err, contactWIthPicture) ->
+                    return cb err if err
+                    outids.push contact.id
+                    out.push contactWIthPicture
+                    cb null
 
-        , (err) ->
-            callback err, out
+            , (err) ->
+                callback err, out
+        else
+            callback null, []
 
 Contact.createNoDuplicate = (data, callback) ->
     log.info "createNoDuplicate"
