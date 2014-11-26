@@ -4,6 +4,7 @@ stream_to_buffer_array = require '../utils/stream_to_array'
 async = require 'async'
 log = require('../utils/logging')(prefix: 'imap:extensions')
 mailutils = require '../utils/jwz_tools'
+{ImapImpossible} = require '../utils/errors'
 
 # Error predicates
 folderForbidden = (err) ->
@@ -23,7 +24,7 @@ folderUndeletable = (err) ->
 # SENT FROM : some php script (probably very specific)
 # @TODO : PR to mailparser to be more lenient in parsing headers ?
 _old1 = MailParser::_parseHeaderLineWithParams
-MailParser::_parseHeaderLineWithParams = (value) ->
+ailParser::_parseHeaderLineWithParams = (value) ->
     _old1.call this, value.replace '" format=flowed', '"; format=flowed'
 
 
@@ -88,7 +89,7 @@ Imap::fetchBoxMessageIds = (callback) ->
         fetch.on 'message', (msg) ->
             uid = null
             messageID = null
-            msg.on 'error', (err) -> result.error = err
+            msg.on 'error', (err) -> results.error = err
             msg.on 'attributes', (attrs) -> uid = attrs.uid
             msg.on 'end', -> results[uid] = messageID
             msg.on 'body', (stream) ->
@@ -133,6 +134,31 @@ Imap::fetchMetadata = (min, max, callback) ->
             fetch.on 'end', -> callback null, results
     else
         callback new Error 'Wrong parameters'
+
+    @search [['UID', "#{min}:#{max}"]], (err, uids) ->
+        log.debug "imap#fetchMetadata#results", err, uids?.length
+        return callback err if err
+        return callback null, {} unless uids.length
+        uids.sort().reverse()
+        results = {}
+        fetch = @fetch uids, bodies: 'HEADER.FIELDS (MESSAGE-ID)'
+        fetch.on 'error', callback
+        fetch.on 'message', (msg) ->
+            uid = null # message uid
+            flags = null # message flags
+            mid = null # message id
+            msg.on 'error', (err) -> results.error = err
+            msg.on 'end', -> results[uid] = [ mid, flags ]
+            msg.on 'attributes', (attrs) ->
+                {flags, uid} = attrs
+            msg.on 'body', (stream) ->
+                stream_to_buffer_array stream, (err, parts) ->
+                    return callback err if err
+                    header = Buffer.concat(parts).toString('utf8').trim()
+                    mid = header.substring header.indexOf(':') + 1
+
+        fetch.on 'end', -> callback null, results
+
 
 # fetch one mail by its UID from the currently open mailbox
 # return a promise for the mailparser result

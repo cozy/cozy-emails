@@ -18,7 +18,7 @@ log = require('../utils/logging')({
 fixtures = require('cozy-fixtures');
 
 module.exports.main = function(req, res, next) {
-  return async.parallel([Settings.get, CozyInstance.getLocale, Account.clientList], function(err, results) {
+  return async.series([Settings.get, CozyInstance.getLocale, Account.clientList], function(err, results) {
     var accounts, imports, locale, settings, tasks;
     tasks = ImapReporter.summary();
     if (err) {

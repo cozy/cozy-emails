@@ -54,11 +54,19 @@ _ = require('lodash');
 async = require('async');
 
 Account.prototype.doASAP = function(operation, callback) {
-  return ImapPool.get(this.id || this).doASAP(operation, callback);
+  return ImapPool.get(this.id).doASAP(operation, callback);
 };
 
 Account.prototype.isTest = function() {
   return this.accountType === 'TEST';
+};
+
+Account.prototype.isRefreshing = function() {
+  return ImapPool.get(this.id).isRefreshing;
+};
+
+Account.prototype.setRefreshing = function(value) {
+  return ImapPool.get(this.id).isRefreshing = value;
 };
 
 Account.refreshAllAccounts = function(limit, onlyFavorites, callback) {
@@ -66,14 +74,44 @@ Account.refreshAllAccounts = function(limit, onlyFavorites, callback) {
     if (err) {
       return callback(err);
     }
-    return async.eachSeries(accounts, function(account, cb) {
-      log.debug("refreshing account " + account.label);
-      if (account.isTest()) {
-        return cb(null);
-      }
-      return account.imap_fetchMails(limit, onlyFavorites, cb);
-    }, callback);
+    return Account.refreshAccounts(accounts, limit, onlyFavorites, callback);
   });
+};
+
+Account.removeOrphansAndRefresh = function(limitByBox, onlyFavorites, callback) {
+  return Account.request('all', function(err, accounts) {
+    var existingAccountIDs;
+    if (err) {
+      return callback(err);
+    }
+    existingAccountIDs = accounts.map(function(account) {
+      return account.id;
+    });
+    return Mailbox.removeOrphans(existingAccountIDs, function(err, existingMailboxIDs) {
+      if (err) {
+        return callback(err);
+      }
+      return Message.removeOrphans(existingMailboxIDs, function(err) {
+        if (err) {
+          return callback(err);
+        }
+        return Account.refreshAccounts(accounts, limitByBox, onlyFavorites, callback);
+      });
+    });
+  });
+};
+
+Account.refreshAccounts = function(accounts, limitByBox, onlyFavorites, callback) {
+  return async.eachSeries(accounts, function(account, cb) {
+    log.debug("refreshing account " + account.label);
+    if (account.isTest()) {
+      return cb(null);
+    }
+    if (account.isRefreshing()) {
+      return cb(null);
+    }
+    return account.imap_fetchMails(limitByBox, onlyFavorites, cb);
+  }, callback);
 };
 
 Account.createIfValid = function(data, callback) {
@@ -210,7 +248,7 @@ Account.prototype.imap_refreshBoxes = function(callback) {
   var account;
   log.debug("imap_refreshBoxes");
   account = this;
-  return async.parallel([
+  return async.series([
     (function(_this) {
       return function(cb) {
         return Mailbox.getBoxes(_this.id, cb);
@@ -266,11 +304,12 @@ Account.prototype.imap_refreshBoxes = function(callback) {
 
 Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback) {
   var account;
+  log.debug("account#imap_fetchMails", limitByBox, onlyFavorites);
+  account = this;
+  account.setRefreshing(true);
   if (onlyFavorites == null) {
     onlyFavorites = false;
   }
-  log.debug("account#imap_fetchMails", limitByBox, onlyFavorites);
-  account = this;
   return this.imap_refreshBoxes(function(err, toFetch, toDestroy) {
     var reporter;
     if (onlyFavorites) {
@@ -282,14 +321,14 @@ Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback
     toFetch = toFetch.filter(function(box) {
       return box.isSelectable();
     });
-    log.info("FETCHING ACCOUNT ", this.label, ":", toFetch.length, "BOXES");
+    log.info("FETCHING ACCOUNT " + account.label + " : " + toFetch.length + " BOXES");
     log.info("   ", toDestroy.length, "BOXES TO DESTROY");
     reporter = ImapReporter.accountFetch(account, toFetch.length + 1);
     toFetch.sort(function(a, b) {
       if (a.label === 'INBOX') {
-        return 1;
-      } else {
         return -1;
+      } else {
+        return 1;
       }
     });
     return async.eachSeries(toFetch, function(box, cb) {
@@ -308,6 +347,7 @@ Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback
       return async.eachSeries(toDestroy, function(box, cb) {
         return box.destroyAndRemoveAllMessages(cb);
       }, function(err) {
+        account.setRefreshing(false);
         reporter.onDone();
         return callback(null);
       });
@@ -363,9 +403,10 @@ Account.prototype.imap_scanBoxesForSpecialUse = function(boxes, callback) {
   boxes.map((function(_this) {
     return function(box) {
       var attribute, type, _i, _len;
+      type = box.RFC6154use();
       if (box.isInbox()) {
         inboxMailbox = box.id;
-      } else if (type = box.RFC6154use()) {
+      } else if (type) {
         if (!useRFC6154) {
           useRFC6154 = true;
           for (_i = 0, _len = boxAttributes.length; _i < _len; _i++) {
@@ -387,7 +428,8 @@ Account.prototype.imap_scanBoxesForSpecialUse = function(boxes, callback) {
   this.favorites = [];
   for (_i = 0, _len = priorities.length; _i < _len; _i++) {
     type = priorities[_i];
-    if (id = this[type]) {
+    id = this[type];
+    if (id) {
       this.favorites.push(id);
     }
   }

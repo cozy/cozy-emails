@@ -3,6 +3,7 @@ module.exports =
       # Application
       "app loading"             : "Loading…"
       "app back"                : "Back"
+      "app cancel"              : "Cancel"
       "app menu"                : "Menu"
       "app search"              : "Search…"
       "app alert close"         : "Close"

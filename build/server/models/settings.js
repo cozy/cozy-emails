@@ -46,6 +46,10 @@ module.exports = Settings = americano.getModel('MailsSettings', {
     type: String,
     "default": 'en'
   },
+  listStyle: {
+    type: String,
+    "default": 'default'
+  },
   plugins: {
     type: Any,
     "default": null
@@ -58,7 +62,8 @@ Settings.getInstance = function(callback) {
     if (err) {
       return callback(err);
     }
-    if (existing = settings != null ? settings[0] : void 0) {
+    existing = settings != null ? settings[0] : void 0;
+    if (existing) {
       return callback(null, existing);
     } else {
       return callback(null, new Settings());

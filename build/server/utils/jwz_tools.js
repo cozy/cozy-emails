@@ -53,7 +53,7 @@ module.exports = {
     }
     return boxes;
   },
-  sanitizeHTML: function(html, attachments) {
+  sanitizeHTML: function(html, messageId, attachments) {
     return sanitizer.sanitize(html.replace(/cid:/gim, 'cid;'), function(url) {
       var attachment, cid, name, _ref;
       url = url.toString();
@@ -62,8 +62,9 @@ module.exports = {
         attachment = attachments.filter(function(att) {
           return att.contentId === cid;
         });
-        if (name = (_ref = attachment[0]) != null ? _ref.fileName : void 0) {
-          return "/message/" + message.id + "/attachments/" + name;
+        name = (_ref = attachment[0]) != null ? _ref.fileName : void 0;
+        if (name) {
+          return "/message/" + messageId + "/attachments/" + name;
         } else {
           return null;
         }

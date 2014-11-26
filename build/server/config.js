@@ -29,8 +29,8 @@ config = {
     afterStart: function(app, server) {
       app.use(errorHandler);
       ImapReporter.initSocketIO(app, server);
-      return Account.refreshAllAccounts(null, false, function() {
-        return log.info("REFRESHING DONE");
+      return Account.removeOrphansAndRefresh(null, false, function() {
+        return log.info("initial refresh completed");
       });
     }
   },

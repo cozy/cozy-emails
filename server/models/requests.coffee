@@ -1,4 +1,5 @@
 americano = require 'americano'
+emit = null # jslint
 
 module.exports =
     settings:

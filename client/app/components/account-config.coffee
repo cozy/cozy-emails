@@ -139,6 +139,11 @@ module.exports = React.createClass
                     className: 'col-sm-5 col-sm-offset-2 control-label',
                     @state.errors[field]
 
+        cancelUrl = @buildUrl
+            direction: 'first'
+            action: 'default'
+            fullWidth: true
+
         form className: 'form-horizontal',
             @renderError()
             div className: 'form-group' + hasError('label'),
@@ -339,15 +344,19 @@ module.exports = React.createClass
                                 @_onServerParam ev.target, 'imap', 'tls'
 
             div className: 'form-group',
-                div className: 'col-sm-offset-2 col-sm-5 text-right',
+                div className: 'col-sm-offset-2 col-sm-5 text-right btn-group',
                     if @state.id?
                         button
-                            className: 'btn btn-cozy',
+                            className: 'btn btn-default',
                             onClick: @onRemove,
                             t "account remove"
                     button
                         className: 'btn btn-cozy',
                         onClick: @onSubmit, buttonLabel
+                    a
+                        href: cancelUrl,
+                        className: 'btn btn-default',
+                        t 'app cancel'
 
     renderMailboxes: ->
         favorites = @state.favoriteMailboxes
