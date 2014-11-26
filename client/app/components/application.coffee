@@ -248,7 +248,7 @@ module.exports = Application = React.createClass
             selectedAccount   = AccountStore.getSelected()
             error             = AccountStore.getError()
             isWaiting         = AccountStore.isWaiting()
-            mailboxes         = AccountStore.getSelectedMailboxes true
+            mailboxes         = AccountStore.getSelectedMailboxes()
             favoriteMailboxes = @state.favoriteMailboxes
             if selectedAccount and not error and mailboxes.length is 0
                 error =
@@ -342,7 +342,7 @@ module.exports = Application = React.createClass
             selectedAccount: selectedAccount
             isResponsiveMenuShown: LayoutStore.isMenuShown()
             alertMessage: LayoutStore.getAlert()
-            mailboxes: AccountStore.getSelectedMailboxes true
+            mailboxes: AccountStore.getSelectedMailboxes()
             selectedMailboxID: selectedMailboxID
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()

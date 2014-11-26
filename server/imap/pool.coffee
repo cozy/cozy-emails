@@ -192,7 +192,6 @@ class ImapPool
 
                 @pending[imap.connectionID] = task
 
-
                 task.operation imap, (err) =>
 
                     args = (arg for arg in arguments)
@@ -282,6 +281,7 @@ class ImapPool
 
                         else
                             callback null, arg1, arg2, arg3
+
 
 
     doASAP: (operation, callback) ->

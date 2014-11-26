@@ -15,7 +15,7 @@ module.exports =
         AccountStore.getSelected()
 
     getCurrentMailbox: ->
-        AccountStore.getSelectedMailboxes true
+        AccountStore.getSelectedMailboxes()
 
     messageNew: ->
         router.navigate('compose/', {trigger: true})
