@@ -21,7 +21,8 @@ Participant = React.createClass
     # on mouse over
     tooltip: ->
         if @refs.participant?
-            node = @refs.participant.getDOMNode()
+            node  = @refs.participant.getDOMNode()
+            delay = null
             onAdd = (e) =>
                 e.preventDefault()
                 e.stopPropagation()
@@ -55,11 +56,24 @@ Participant = React.createClass
                     """
                 options =
                     template: template
-                    delay: { show: 1000, hide: 1000 }
+                    trigger: 'manual'
                     container: "[data-reactid='#{node.dataset.reactid}']"
                 jQuery(node).tooltip(options).tooltip('show')
+                tooltipNode = jQuery(node).data('bs.tooltip').tip()[0]
+                rect = tooltipNode.getBoundingClientRect()
+                mask = document.createElement 'div'
+                mask.classList.add 'tooltip-mask'
+                mask.style.top    = (rect.top - 2) + 'px'
+                mask.style.left   = (rect.left - 2) + 'px'
+                mask.style.height = (rect.height + 16) + 'px'
+                mask.style.width  = (rect.width  + 4) + 'px'
+                document.body.appendChild mask
+                mask.addEventListener 'mouseout', (e) ->
+                    if not ( rect.left < e.pageX < rect.right) or
+                       not ( rect.top  < e.pageY < rect.bottom)
+                        mask.parentNode.removeChild mask
+                        removeTooltip()
                 if @props.onAdd?
-                    tooltipNode = jQuery(node).data('bs.tooltip').tip()[0]
                     addNode = tooltipNode.querySelector('.address-add')
                     addNode.addEventListener 'mouseover', ->
                     addNode.addEventListener 'click', onAdd
@@ -70,8 +84,12 @@ Participant = React.createClass
                 delete node.dataset.tooltip
                 jQuery(node).tooltip('destroy')
 
-            node.addEventListener 'mouseover', addTooltip
-            node.parentNode.addEventListener 'mouseout', removeTooltip, false
+            node.addEventListener 'mouseover', ->
+                delay = setTimeout ->
+                    addTooltip()
+                , 1000
+            node.addEventListener 'mouseout', ->
+                clearTimeout delay
 
     componentDidMount: ->
         @tooltip()
