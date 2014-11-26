@@ -65,22 +65,26 @@ Contact.requestWithPictures = function(name, options, callback) {
     var out, outids;
     outids = [];
     out = [];
-    return async.eachSeries(contacts, function(contact, cb) {
-      var _ref;
-      if (_ref = contact.id, __indexOf.call(outids, _ref) >= 0) {
-        return cb(null);
-      }
-      return contact.includePicture(function(err, contactWIthPicture) {
-        if (err) {
-          return cb(err);
+    if (contacts != null) {
+      return async.eachSeries(contacts, function(contact, cb) {
+        var _ref;
+        if (_ref = contact.id, __indexOf.call(outids, _ref) >= 0) {
+          return cb(null);
         }
-        outids.push(contact.id);
-        out.push(contactWIthPicture);
-        return cb(null);
+        return contact.includePicture(function(err, contactWIthPicture) {
+          if (err) {
+            return cb(err);
+          }
+          outids.push(contact.id);
+          out.push(contactWIthPicture);
+          return cb(null);
+        });
+      }, function(err) {
+        return callback(err, out);
       });
-    }, function(err) {
-      return callback(err, out);
-    });
+    } else {
+      return callback(null, []);
+    }
   });
 };
 

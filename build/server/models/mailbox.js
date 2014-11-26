@@ -405,11 +405,9 @@ Mailbox.prototype.applyToFetch = function(toFetch, reporter, callback) {
   return async.eachSeries(toFetch, function(msg, cb) {
     return Message.fetchOrUpdate(box, msg.mid, msg.uid, function(err) {
       if (err) {
-        if (err) {
-          reporter.onError(err);
-        }
-        reporter.addProgress(1);
+        reporter.onError(err);
       }
+      reporter.addProgress(1);
       return cb(null);
     });
   }, callback);
@@ -560,6 +558,37 @@ Mailbox.removeOrphans = function(existings, callback) {
     }, function(err) {
       return callback(err, boxes);
     });
+  });
+};
+
+Mailbox.getCounts = function(callback) {
+  return Message.rawRequest('byMailboxRequest', {
+    startkey: ['date', ""],
+    endkey: ['date', {}],
+    reduce: true,
+    group_level: 3
+  }, function(err, rows) {
+    var result;
+    if (err) {
+      return callback(err);
+    }
+    result = {};
+    rows.forEach(function(row) {
+      var DATEFLAG, boxID, flag, _ref1;
+      _ref1 = row.key, DATEFLAG = _ref1[0], boxID = _ref1[1], flag = _ref1[2];
+      if (result[boxID] == null) {
+        result[boxID] = {
+          unread: 0,
+          total: 0
+        };
+      }
+      if (flag === "!\\Seen") {
+        return result[boxID].unread = row.value;
+      } else if (flag === null) {
+        return result[boxID].total = row.value;
+      }
+    });
+    return callback(null, result);
   });
 };
 

@@ -1196,11 +1196,13 @@ module.exports = React.createClass({
       className: 'form-control',
       placeholder: 'smtp.provider.tld',
       onBlur: this.validateForm
-    })), label({
+    }))), div({
+      className: 'form-group'
+    }, label({
       htmlFor: 'mailbox-smtp-port',
-      className: 'col-sm-1 control-label'
+      className: 'col-sm-2 col-sm-offset-2 control-label'
     }, t('account port')), div({
-      className: 'col-sm-1'
+      className: 'col-sm-3'
     }, input({
       id: 'mailbox-smtp-port',
       name: 'mailbox-smtp-port',
@@ -1219,9 +1221,9 @@ module.exports = React.createClass({
       className: 'form-group'
     }, label({
       htmlFor: 'mailbox-smtp-ssl',
-      className: 'col-sm-4 control-label'
+      className: 'col-sm-2 col-sm-offset-2 control-label'
     }, t('account SSL')), div({
-      className: 'col-sm-1'
+      className: 'col-sm-3'
     }, input({
       id: 'mailbox-smtp-ssl',
       name: 'mailbox-smtp-ssl',
@@ -1232,11 +1234,13 @@ module.exports = React.createClass({
           return _this._onServerParam(ev.target, 'smtp', 'ssl');
         };
       })(this)
-    })), label({
+    }))), div({
+      className: 'form-group'
+    }, label({
       htmlFor: 'mailbox-smtp-tls',
-      className: 'col-sm-2 control-label'
+      className: 'col-sm-2 col-sm-offset-2 control-label'
     }, t('account TLS')), div({
-      className: 'col-sm-1'
+      className: 'col-sm-3'
     }, input({
       id: 'mailbox-smtp-tls',
       name: 'mailbox-smtp-tls',
@@ -1276,11 +1280,13 @@ module.exports = React.createClass({
       className: 'form-control',
       placeholder: 'imap.provider.tld',
       onBlur: this.validateForm
-    })), label({
+    }))), div({
+      className: 'form-group'
+    }, label({
       htmlFor: 'mailbox-imap-port',
-      className: 'col-sm-1 control-label'
+      className: 'col-sm-2 col-sm-offset-2 control-label'
     }, 'Port'), div({
-      className: 'col-sm-1'
+      className: 'col-sm-3'
     }, input({
       id: 'mailbox-imap-port',
       name: 'mailbox-imap-port',
@@ -1299,9 +1305,9 @@ module.exports = React.createClass({
       className: 'form-group'
     }, label({
       htmlFor: 'mailbox-imap-ssl',
-      className: 'col-sm-4 control-label'
+      className: 'col-sm-2 col-sm-offset-2 control-label'
     }, t('account SSL')), div({
-      className: 'col-sm-1'
+      className: 'col-sm-3'
     }, input({
       id: 'mailbox-imap-ssl',
       name: 'mailbox-imap-ssl',
@@ -1312,11 +1318,13 @@ module.exports = React.createClass({
           return _this._onServerParam(ev.target, 'imap', 'ssl');
         };
       })(this)
-    })), label({
+    }))), div({
+      className: 'form-group'
+    }, label({
       htmlFor: 'mailbox-imap-tls',
-      className: 'col-sm-2 control-label'
+      className: 'col-sm-2 col-sm-offset-2 control-label'
     }, t('account TLS')), div({
-      className: 'col-sm-1'
+      className: 'col-sm-3'
     }, input({
       id: 'mailbox-imap-tls',
       name: 'mailbox-imap-tls',
@@ -1328,19 +1336,18 @@ module.exports = React.createClass({
         };
       })(this)
     })))), div({
-      className: 'form-group'
+      className: ''
     }, div({
-      className: 'col-sm-offset-2 col-sm-5 text-right btn-group'
-    }, this.state.id != null ? button({
-      className: 'btn btn-default',
-      onClick: this.onRemove
-    }, t("account remove")) : void 0, button({
+      className: 'col-sm-offset-4'
+    }, button({
       className: 'btn btn-cozy',
       onClick: this.onSubmit
-    }, buttonLabel), a({
-      href: cancelUrl,
-      className: 'btn btn-default'
-    }, t('app cancel')))));
+    }, buttonLabel)), this.state.id != null ? fieldset(null, legend(null, t('danger zone')), div({
+      className: 'col-sm-offset-4'
+    }, button({
+      className: 'btn btn-default btn-danger btn-remove',
+      onClick: this.onRemove
+    }, t("account remove")))) : void 0));
   },
   renderMailboxes: function() {
     var favorites, mailboxes;
@@ -1365,8 +1372,10 @@ module.exports = React.createClass({
     }
     return form({
       className: 'form-horizontal'
-    }, this.renderError(), this._renderMailboxChoice(t('account draft mailbox'), "draftMailbox"), this._renderMailboxChoice(t('account sent mailbox'), "sentMailbox"), this._renderMailboxChoice(t('account trash mailbox'), "trashMailbox"), h4(null, t("account tab mailboxes")), ul({
-      className: "list-unstyled boxes container"
+    }, this.renderError(), this._renderMailboxChoice(t('account draft mailbox'), "draftMailbox"), this._renderMailboxChoice(t('account sent mailbox'), "sentMailbox"), this._renderMailboxChoice(t('account trash mailbox'), "trashMailbox"), h4({
+      className: 'config-title'
+    }, t("account tab mailboxes")), ul({
+      className: "folder-list list-unstyled boxes container"
     }, mailboxes != null ? li({
       className: 'row box title',
       key: 'title'
@@ -2277,11 +2286,19 @@ module.exports = Application = React.createClass({
         accountID = panelInfo.parameters.accountID;
         mailboxID = panelInfo.parameters.mailboxID;
         account = AccountStore.getByID(accountID);
-        mailbox = account.get('mailboxes').get(mailboxID);
-        messages = MessageStore.getMessagesByMailbox(mailboxID);
-        messagesCount = (mailbox != null ? mailbox.get('nbTotal') : void 0) || 0;
-        emptyListMessage = t('list empty');
-        counterMessage = t('list count', messagesCount);
+        if (account != null) {
+          mailbox = account.get('mailboxes').get(mailboxID);
+          messages = MessageStore.getMessagesByMailbox(mailboxID);
+          messagesCount = (mailbox != null ? mailbox.get('nbTotal') : void 0) || 0;
+          emptyListMessage = t('list empty');
+          counterMessage = t('list count', messagesCount);
+        } else {
+          this.redirect({
+            direction: "first",
+            action: "default"
+          });
+          return;
+        }
       }
       messageID = MessageStore.getCurrentID();
       direction = layout === 'first' ? 'secondPanel' : 'firstPanel';
@@ -3938,16 +3955,6 @@ MessageList = React.createClass({
       className: 'fa fa-square-o'
     }))), !this.state.edited ? div({
       className: 'btn-group btn-group-sm message-list-option'
-    }, MailboxList({
-      getUrl: getMailboxUrl,
-      mailboxes: this.props.mailboxes,
-      selectedMailbox: this.props.mailboxID
-    })) : void 0, !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option'
-    }, MessagesFilter(filterParams)) : void 0, !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option'
-    }, MessagesSort(filterParams)) : void 0, !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option'
     }, button({
       className: 'btn btn-default trash',
       type: 'button',
@@ -3977,7 +3984,7 @@ MessageList = React.createClass({
       onMark: this.onMark,
       onConversation: this.onConversation,
       onHeaders: this.onHeaders
-    }) : void 0))), this.props.messages.count() === 0 ? p(null, this.props.emptyListMessage) : div(null, p(null, this.props.counterMessage), ul({
+    }) : void 0))), this.props.messages.count() === 0 ? p(null, this.props.emptyListMessage) : div(null, ul({
       className: 'list-unstyled'
     }, messages), this.props.messages.count() < nbMessages ? p({
       className: 'text-center'
@@ -6249,6 +6256,181 @@ window.onload = function() {
 };
 });
 
+;require.register("libs/flux/dispatcher/Dispatcher", function(exports, require, module) {
+
+/*
+
+    -- Coffee port of Facebook's flux dispatcher. It was in ES6 and I haven't
+    been successful in adding a transpiler. --
+
+    Copyright (c) 2014, Facebook, Inc.
+    All rights reserved.
+
+    This source code is licensed under the BSD-style license found in the
+    LICENSE file in the root directory of this source tree. An additional grant
+    of patent rights can be found in the PATENTS file in the same directory.
+ */
+var Dispatcher, invariant, _lastID, _prefix;
+
+invariant = require('../invariant');
+
+_lastID = 1;
+
+_prefix = 'ID_';
+
+module.exports = Dispatcher = Dispatcher = (function() {
+  function Dispatcher() {
+    this._callbacks = {};
+    this._isPending = {};
+    this._isHandled = {};
+    this._isDispatching = false;
+    this._pendingPayload = null;
+  }
+
+
+  /*
+      Registers a callback to be invoked with every dispatched payload.
+      Returns a token that can be used with `waitFor()`.
+  
+      @param {function} callback
+      @return {string}
+   */
+
+  Dispatcher.prototype.register = function(callback) {
+    var id;
+    id = _prefix + _lastID++;
+    this._callbacks[id] = callback;
+    return id;
+  };
+
+
+  /*
+      Removes a callback based on its token.
+  
+      @param {string} id
+   */
+
+  Dispatcher.prototype.unregister = function(id) {
+    var message;
+    message = 'Dispatcher.unregister(...): `%s` does not map to a ' + 'registered callback.';
+    invariant(this._callbacks[id], message, id);
+    return delete this._callbacks[id];
+  };
+
+
+  /*
+      Waits for the callbacks specified to be invoked before continuing
+      execution of the current callback. This method should only be used by a
+      callback in response to a dispatched payload.
+  
+      @param {array<string>} ids
+   */
+
+  Dispatcher.prototype.waitFor = function(ids) {
+    var id, ii, message, message2, _i, _ref, _results;
+    invariant(this._isDispatching, 'Dispatcher.waitFor(...): Must be invoked while dispatching.');
+    message = 'Dispatcher.waitFor(...): Circular dependency detected ' + 'while waiting for `%s`.';
+    message2 = 'Dispatcher.waitFor(...): `%s` does not map to a ' + 'registered callback.';
+    _results = [];
+    for (ii = _i = 0, _ref = ids.length - 1; _i <= _ref; ii = _i += 1) {
+      id = ids[ii];
+      if (this._isPending[id]) {
+        invariant(this._isHandled[id], message, id);
+        continue;
+      }
+      invariant(this._callbacks[id], message2, id);
+      _results.push(this._invokeCallback(id));
+    }
+    return _results;
+  };
+
+
+  /*
+      Dispatches a payload to all registered callbacks.
+  
+      @param {object} payload
+   */
+
+  Dispatcher.prototype.dispatch = function(payload) {
+    var id, message, _results;
+    message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + 'of a dispatch.';
+    invariant(!this._isDispatching, message);
+    this._startDispatching(payload);
+    try {
+      _results = [];
+      for (id in this._callbacks) {
+        if (this._isPending[id]) {
+          continue;
+        }
+        _results.push(this._invokeCallback(id));
+      }
+      return _results;
+    } finally {
+      this._stopDispatching();
+    }
+  };
+
+
+  /*
+      Is this Dispatcher currently dispatching.
+  
+      @return {boolean}
+   */
+
+  Dispatcher.prototype.isDispatching = function() {
+    return this._isDispatching;
+  };
+
+
+  /*
+      Call the callback stored with the given id. Also do some internal
+      bookkeeping.
+  
+      @param {string} id
+      @internal
+   */
+
+  Dispatcher.prototype._invokeCallback = function(id) {
+    this._isPending[id] = true;
+    this._callbacks[id](this._pendingPayload);
+    return this._isHandled[id] = true;
+  };
+
+
+  /*
+      Set up bookkeeping needed when dispatching.
+  
+      @param {object} payload
+      @internal
+   */
+
+  Dispatcher.prototype._startDispatching = function(payload) {
+    var id;
+    for (id in this._callbacks) {
+      this._isPending[id] = false;
+      this._isHandled[id] = false;
+    }
+    this._pendingPayload = payload;
+    return this._isDispatching = true;
+  };
+
+
+  /*
+      Clear bookkeeping used for dispatching.
+  
+      @internal
+   */
+
+  Dispatcher.prototype._stopDispatching = function() {
+    this._pendingPayload = null;
+    return this._isDispatching = false;
+  };
+
+  return Dispatcher;
+
+})();
+});
+
 ;require.register("libs/flux/dispatcher/dispatcher", function(exports, require, module) {
 
 /*
@@ -6478,6 +6660,63 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 };
 
 module.exports = invariant;
+});
+
+;require.register("libs/flux/store/Store", function(exports, require, module) {
+var AppDispatcher, Store,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+AppDispatcher = require('../../../app_dispatcher');
+
+module.exports = Store = (function(_super) {
+  var _addHandlers, _handlers, _nextUniqID, _processBinding;
+
+  __extends(Store, _super);
+
+  Store.prototype.uniqID = null;
+
+  _nextUniqID = 0;
+
+  _handlers = {};
+
+  _addHandlers = function(type, callback) {
+    if (_handlers[this.uniqID] == null) {
+      _handlers[this.uniqID] = {};
+    }
+    return _handlers[this.uniqID][type] = callback;
+  };
+
+  _processBinding = function() {
+    return this.dispatchToken = AppDispatcher.register((function(_this) {
+      return function(payload) {
+        var callback, type, value, _ref;
+        _ref = payload.action, type = _ref.type, value = _ref.value;
+        if ((callback = _handlers[_this.uniqID][type]) != null) {
+          return callback.call(_this, value);
+        }
+      };
+    })(this));
+  };
+
+  function Store() {
+    Store.__super__.constructor.call(this);
+    this.uniqID = _nextUniqID++;
+    this.__bindHandlers(_addHandlers.bind(this));
+    _processBinding.call(this);
+  }
+
+  Store.prototype.__bindHandlers = function(handle) {
+    var message;
+    if (__DEV__) {
+      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
+      throw new Error(message);
+    }
+  };
+
+  return Store;
+
+})(EventEmitter);
 });
 
 ;require.register("libs/flux/store/store", function(exports, require, module) {
@@ -8740,7 +8979,11 @@ module.exports = MessageUtils = {
     return date.format(formatter);
   },
   getAvatar: function(message) {
-    return ContactStore.getAvatar(message.get('from')[0].address);
+    if (message.get('from')[0] != null) {
+      return ContactStore.getAvatar(message.get('from')[0].address);
+    } else {
+      return null;
+    }
   }
 };
 });
@@ -9019,9 +9262,6 @@ module.exports = {
     _ref = rawAccount.mailboxes;
     for (_i = 0, _len = _ref.length; _i < _len; _i++) {
       mailbox = _ref[_i];
-      mailbox.nbTotal = -1;
-      mailbox.nbUnread = -1;
-      mailbox.nbNew = -1;
       mailbox.depth = mailbox.tree.length - 1;
       box = Immutable.Map(mailbox);
       mailboxes = mailboxes.set(mailbox.id, box);

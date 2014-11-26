@@ -1643,6 +1643,14 @@ a:hover,
 a:visited:hover {
   text-decoration: underline;
 }
+label {
+  color: #333;
+  font-weight: normal;
+  font-size: 14px;
+}
+input {
+  color: #333;
+}
 .form-horizontal .radio-inline,
 .form-horizontal .checkbox-inline {
   padding-top: 0.66em;
@@ -1668,8 +1676,9 @@ textarea,
   border: 1px solid #34a6ff;
   -webkit-border-radius: 0;
   border-radius: 0;
-  font-family: styled;
+  font-family: main;
   color: #333;
+  font-size: 16px;
   height: 2em;
 }
 input:hover,
@@ -1736,8 +1745,25 @@ textarea:active,
   background-color: #fe8800;
   border-color: #fe8800;
 }
+.btn.btn-cozy-non-default {
+  color: #34a6ff;
+}
+.btn.btn-cozy-non-default:hover {
+  text-decoration: underline;
+  color: #fe8800;
+}
 .hidden {
   display: none;
+}
+.btn.btn-danger {
+  text-shadow: none;
+  font-weight: normal;
+  border: 0;
+}
+.btn.btn-danger:active,
+.btn.btn-danger:focus {
+  border: 0;
+  outline: 0;
 }
 @-moz-keyframes fadeIn {
   from {
@@ -2192,6 +2218,34 @@ textarea:active,
 #mailbox-config .boxes .box-action {
   cursor: pointer;
 }
+#mailbox-config .config-title {
+  margin-bottom: 2em;
+  border-bottom: 1px solid #ddd;
+  color: #333;
+  font-size: 1.3em;
+}
+#mailbox-config .folder-list {
+  margin-left: 1em;
+  color: #333;
+}
+#mailbox-config .folder-list .row.box.edited {
+  margin-top: 1em;
+}
+#mailbox-config .folder-list .row.box.edited span {
+  padding: 0.5em 0;
+}
+#mailbox-config .folder-list .row.box.edited label {
+  padding: 0.5em 1em;
+}
+#mailbox-config .folder-list .row.box.edited .btn {
+  margin: 0 0.5em;
+}
+#mailbox-config .folder-list .row.box.edited .btn .caret {
+  margin: 10px 0 0 10px;
+}
+.conversation {
+  padding-top: 2em;
+}
 .conversation.enable {
   display: block;
 }
@@ -2200,7 +2254,11 @@ textarea:active,
   margin-top: 0;
   padding-bottom: 0.5em;
 }
+.conversation h3 span {
+  margin-top: 2em;
+}
 .conversation h3 .close-conversation {
+  display: none;
   cursor: pointer;
   font-size: 1.25em;
   margin-right: 1em;
@@ -2221,11 +2279,14 @@ textarea:active,
   border-top: 1px solid #f4f4f4;
 }
 .conversation .thread .message {
+  border-left: 0;
   padding: 0 1rem;
-  border-bottom: 1px solid #e4e4e4;
   cursor: pointer;
   font-size: 0.75em;
   background: #f4f4f4;
+}
+.conversation .thread .message:hover {
+  border-left: 0;
 }
 .conversation .thread .message.active,
 .conversation .thread .message:last-of-type {
@@ -2529,12 +2590,12 @@ textarea:active,
 }
 #menu .menu-item .badge {
   position: absolute;
-  top: 0.75em;
-  right: 0.25em;
+  top: 0.4em;
+  right: 0.5em;
   background: #34a6ff;
-  font-size: 0.75em;
+  font-size: 0.9em;
   margin-left: 0.25em;
-  font-family: Geneva;
+  font-family: main;
 }
 #menu .menu-item:hover,
 #menu .menu-item.active {
@@ -2612,7 +2673,7 @@ textarea:active,
   font-weight: bold;
 }
 .message-list .message {
-  padding: 0.25em;
+  padding: 0.5em 0.25em;
   border-left: 0.25em solid transparent;
   cursor: pointer;
   font-size: 0.8em;
@@ -2643,7 +2704,7 @@ textarea:active,
 }
 .message-list .message .participants,
 .message-list .message .preview {
-  margin: 0 0.25em;
+  margin: 0.25em 2em 0 1em;
 }
 .message-list .message .preview {
   -webkit-box-flex: 1;
@@ -2676,18 +2737,20 @@ textarea:active,
   text-overflow: ellipsis;
 }
 .message-list .message .title {
+  margin-top: 0.25em;
   min-width: 200px;
 }
 .message-list .message .title:after {
   content: ' - ';
 }
 .message-list .message .hour {
-  margin-left: auto;
+  mrgin-left: auto;
   color: #444;
 }
 .message-list .message .fa-user,
 .message-list .message .avatar {
   margin: 0;
+  margin-left: 0.25em;
   color: #aaa;
   background-color: #fff;
   font-size: 2em;
@@ -2699,24 +2762,14 @@ textarea:active,
   height: 1em;
   text-align: center;
 }
-.message-list .message > a:hover .fa-user,
-.message-list .message > a:focus .fa-user,
-.message-list .message > a:hover .avatar,
-.message-list .message > a:focus .avatar {
-  border-left: 0.25em solid #fe8800;
-  background: #f4f4f4;
-}
-.message-list .message.active {
-  border-left: 0.25em solid #34a6ff;
-}
-.message-list .fav {
+.fav {
   color: #ff0;
   display: none;
 }
-.message-list .attach {
+.attach {
   display: none;
 }
-.message-list .message:nth-child(2n+1) {
+.message:nth-child(2n+1) {
   background-color: #eee;
   background: -webkit-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
   background: -moz-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
@@ -2724,24 +2777,24 @@ textarea:active,
   background: -ms-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
   background: linear-gradient(to bottom, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
 }
-.message-list .message.active {
-  background: #bdbdbd;
+.message.active {
+  background: #cbe4fb;
 }
-.message-list .message.unseen {
+.message.unseen {
   font-weight: bold;
 }
-.message-list .message .flags {
+.message .flags {
   width: 3em;
 }
-.message-list .message.has-attachments .attach {
+.message.has-attachments .attach {
   display: inline;
   padding: 0 0.5em;
 }
-.message-list .message.is-fav .fav {
+.message.is-fav .fav {
   display: inline;
   padding: 0 0.5em;
 }
-.message-list .message-list-actions {
+.message-list-actions {
   display: -webkit-box;
   display: -moz-box;
   display: -webkit-flex;
@@ -2761,10 +2814,10 @@ textarea:active,
   -webkit-align-items: left;
   align-items: left;
 }
-.message-list .message-list-actions .message-list-action {
+.message-list-actions .message-list-action {
   margin: 0 1em 0 0;
 }
-.message-list .message-list-actions + * {
+.message-list-actions + * {
   clear: both;
   margin-top: 1em;
 }
@@ -2774,6 +2827,22 @@ textarea:active,
 .message-list.compact .fa-user,
 .message-list.compact .avatar {
   display: none;
+}
+.message .fa-paperclip {
+  display: none;
+}
+.message .fa-star {
+  display: none;
+}
+.message:hover {
+  border-left: 0.25em solid #fe8800;
+  background: #ffc47f;
+}
+.message.active {
+  border-left: 0.25em solid #34a6ff;
+}
+.message.active:hover {
+  border-left: 0.25em solid #fe8800;
 }
 #quick-actions .responsive-handler {
   color: #333;

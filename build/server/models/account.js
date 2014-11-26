@@ -220,6 +220,9 @@ Account.prototype.toClientObject = function(callback) {
     endkey: [this.id, {}],
     include_docs: true
   }, function(err, rows) {
+    if (err) {
+      return callback(err);
+    }
     rawObject.mailboxes = rows.map(function(row) {
       var _base;
       if ((_base = row.doc).id == null) {
@@ -227,7 +230,25 @@ Account.prototype.toClientObject = function(callback) {
       }
       return _.pick(row.doc, 'id', 'label', 'attribs', 'tree');
     });
-    return callback(null, rawObject);
+    return Mailbox.getCounts(function(err, counts) {
+      var box, count, _i, _len, _ref;
+      if (err) {
+        return callback(err);
+      }
+      console.log(counts);
+      _ref = rawObject.mailboxes;
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        box = _ref[_i];
+        count = counts[box.id] || {
+          total: 0,
+          unread: 0
+        };
+        box.nbTotal = count.total;
+        box.nbUnread = count.unread;
+        box.nbNew = -1;
+      }
+      return callback(null, rawObject);
+    });
   });
 };
 
