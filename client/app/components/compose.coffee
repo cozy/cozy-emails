@@ -353,11 +353,15 @@ module.exports = Compose = React.createClass
         if @props.message?
             message.mailboxIDs = @props.message.get 'mailboxIDs'
 
+        node = @refs.html.getDOMNode()
         if @state.composeInHTML
-            message.html    = this.refs.html.getDOMNode().innerHTML
-            message.text = toMarkdown(message.html)
+            message.html    = node.innerHTML
+            try
+                message.text = toMarkdown(message.html)
+            catch
+                message.text = node.textContent or node.innerText
         else
-            message.text = this.refs.content.getDOMNode().value.trim()
+            message.text = node.value.trim()
 
         callback = @props.callback
 
