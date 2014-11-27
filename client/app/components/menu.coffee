@@ -128,10 +128,10 @@ module.exports = Menu = React.createClass
                 fullWidth: true # /!\ Hide second panel when switching account
 
         toggleActive = =>
-            if isSelected
-                @setState displayActiveAccount: not @state.displayActiveAccount
-            else
-                @setState displayActiveAccount: true
+            #if isSelected
+                #@setState displayActiveAccount: not @state.displayActiveAccount
+            #else
+            @setState displayActiveAccount: true
         nbTotal  = 0
         nbUnread = 0
         nbNew    = 0
