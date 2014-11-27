@@ -111,9 +111,6 @@ ImapPool = (function() {
       tls: (this.account.imapSSL == null) || this.account.imapSSL,
       tlsOptions: {
         rejectUnauthorized: false
-      },
-      debug: function(content) {
-        return rawImapLog.debug(content);
       }
     };
     imap = new Imap(options);

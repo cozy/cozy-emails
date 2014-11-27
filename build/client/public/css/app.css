@@ -2208,12 +2208,12 @@ textarea:active,
   margin-left: 0;
 }
 #mailbox-config .boxes .row {
-  height: 2em;
+  height: 2.2em;
 }
 #mailbox-config .boxes .row > * {
   padding: 0;
 }
-#mailbox-config .boxes .row.edited {
+#mailbox-config .boxes .row.new {
   height: 2.5em;
 }
 #mailbox-config .boxes .box-action {
@@ -2229,20 +2229,49 @@ textarea:active,
   margin-left: 1em;
   color: #333;
 }
-#mailbox-config .folder-list .row.box.edited {
+#mailbox-config .folder-list .box-new {
+  display: none;
+}
+#mailbox-config .folder-list .row.box.title span:last-child {
+  display: none;
+}
+#mailbox-config .folder-list .row.box.new {
   margin-top: 1em;
 }
-#mailbox-config .folder-list .row.box.edited span {
+#mailbox-config .folder-list .row.box.new span {
   padding: 0.5em 0;
 }
-#mailbox-config .folder-list .row.box.edited label {
-  padding: 0.5em 1em;
-}
-#mailbox-config .folder-list .row.box.edited .btn {
+#mailbox-config .folder-list .row.box.new .btn {
   margin: 0 0.5em;
 }
-#mailbox-config .folder-list .row.box.edited .btn .caret {
-  margin: 10px 0 0 10px;
+#mailbox-config .folder-list .row.box.new .btn .caret {
+  margin: 10px 0 0 8px;
+}
+#mailbox-config .folder-list .row.box.edited {
+  margin-top: 0;
+}
+#mailbox-config .folder-list .row.box.edited span {
+  padding: 0.1em 0;
+}
+#mailbox-config .folder-list .row.box.edited label,
+#mailbox-config .folder-list .row.box.new label {
+  padding: 0.8em 1em;
+}
+#mailbox-config .folder-list .row.box.edited input:focus,
+#mailbox-config .folder-list .row.box.new input:focus,
+#mailbox-config .folder-list .row.box.edited input:active,
+#mailbox-config .folder-list .row.box.new input:active {
+  border: 0;
+  outline: 0;
+}
+#mailbox-config .folder-list .dropdown ul li a {
+  text-align: left;
+}
+#mailbox-config .caret {
+  margin-left: 8px;
+}
+#mailbox-config .presentation {
+  test-align: left;
 }
 .conversation.enable {
   display: block;
@@ -2594,6 +2623,29 @@ textarea:active,
 #menu .new-account-action {
   margin-top: auto;
 }
+#menu .progress-thin {
+  height: 2px;
+  width: 100%;
+  position: absolute;
+  margin: 0px;
+  bottom: 0px;
+  left: 0px;
+}
+#menu .progress-thin .progress-bar {
+  background-color: #ffa500;
+  background-image: none;
+}
+#menu .refresh-error {
+  font-size: 14px;
+  display: block;
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  color: #ffa500;
+}
+#menu .refresh-error:hover {
+  color: #f00;
+}
 #menu .menu-item {
   display: inline-block;
   position: relative;
@@ -2665,6 +2717,9 @@ textarea:active,
 #menu #account-list li a.menu-item * {
   pointer-events: none;
 }
+#menu #account-list li a.menu-item *.refresh-error {
+  pointer-events: auto;
+}
 #menu #account-list li.target {
   border: 1px dashed #fff;
 }
@@ -2707,7 +2762,7 @@ textarea:active,
   font-weight: bold;
 }
 .message-list .message {
-  padding: 0.5em 0.25em;
+  padding: 0.75em 0.25em;
   border-left: 0.25em solid transparent;
   cursor: pointer;
   font-size: 0.8em;
@@ -2736,6 +2791,12 @@ textarea:active,
   align-items: center;
   text-decoration: none;
 }
+.message-list .message input[type="checkbox"] {
+  width: auto;
+  margin-left: 0.25em;
+  margin-right: 0.25em;
+  cursor: pointer;
+}
 .message-list .message .participants,
 .message-list .message .preview {
   margin: 0.25em 2em 0 1em;
@@ -2748,7 +2809,7 @@ textarea:active,
   -webkit-flex: 1;
   -ms-flex: 1;
   flex: 1;
-  margin: 0 0.75em 0 auto;
+  margin: 0.25em 0.75em 0 auto;
   overflow: hidden;
   white-space: nowrap;
   -o-text-overflow: ellipsis;
@@ -2785,26 +2846,24 @@ textarea:active,
 .message-list .message .avatar,
 .message-list .message .select {
   margin: 0;
-  margin-left: 0.25em;
+  margin: -0.25em 0;
   color: #aaa;
-  background-color: #fff;
   font-size: 2em;
-  -webkit-border-radius: 50%;
-  border-radius: 50%;
-  -webkit-box-shadow: 0 0 3px #bbb;
-  box-shadow: 0 0 3px #bbb;
   width: 1em;
   height: 1em;
   text-align: center;
 }
-.fav {
+.message-list .message .select {
+  display: none;
+}
+.message-list .fav {
   color: #ff0;
   display: none;
 }
-.attach {
+.message-list .attach {
   display: none;
 }
-.message:nth-child(2n+1) {
+.message-list .message:nth-child(2n+1) {
   background-color: #eee;
   background: -webkit-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
   background: -moz-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
@@ -2812,24 +2871,39 @@ textarea:active,
   background: -ms-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
   background: linear-gradient(to bottom, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
 }
-.message.active {
+.message-list .message.active {
   background: #cbe4fb;
+  border-left: 0.25em solid #34a6ff;
 }
-.message.unseen {
+.message-list .message.unseen {
   font-weight: bold;
 }
-.message .flags {
+.message-list .message .flags {
   width: 3em;
 }
-.message.has-attachments .attach {
+.message-list .message.has-attachments .attach {
   display: inline;
   padding: 0 0.5em;
 }
-.message.is-fav .fav {
+.message-list .message.is-fav .fav {
   display: inline;
   padding: 0 0.5em;
 }
-.message-list-actions {
+.message-list .message:hover {
+  border-left: 0.25em solid #fe8800;
+  background: #ffc47f;
+}
+.message-list .message:hover .select,
+.message-list .message.edited .select {
+  display: inherit;
+}
+.message-list .message:hover .avatar,
+.message-list .message.edited .avatar,
+.message-list .message:hover .fa-user,
+.message-list .message.edited .fa-user {
+  display: none;
+}
+.message-list .message-list-actions {
   display: -webkit-box;
   display: -moz-box;
   display: -webkit-flex;
@@ -2849,7 +2923,7 @@ textarea:active,
   -webkit-align-items: left;
   align-items: left;
 }
-.message-list-actions + * {
+.message-list .message-list-actions + * {
   clear: both;
   margin-top: 1em;
 }
@@ -2860,6 +2934,44 @@ textarea:active,
 .message-list.compact .avatar {
   display: none;
 }
+.message-list-option:first-child {
+  display: none;
+}
+.message-list-option .btn.btn-default {
+  font-size: 1em;
+  -webkit-transition: color 0.2s ease;
+  -moz-transition: color 0.2s ease;
+  -o-transition: color 0.2s ease;
+  -ms-transition: color 0.2s ease;
+  transition: color 0.2s ease;
+  background: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border: 0;
+  color: #34a6ff;
+}
+.message-list-option .btn.btn-default:hover {
+  color: #fe8800;
+}
+.message-list-actions .btn.btn-default.dropdown-toggle.move,
+.message-list-actions .btn.btn-default.dropdown-toggle.more {
+  font-size: 1em;
+  -webkit-transition: color 0.2s ease;
+  -moz-transition: color 0.2s ease;
+  -o-transition: color 0.2s ease;
+  -ms-transition: color 0.2s ease;
+  transition: color 0.2s ease;
+  background: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border: 0;
+  color: #34a6ff;
+}
+.message-list-actions .btn.btn-default.dropdown-toggle.move:hover,
+.message-list-actions .btn.btn-default.dropdown-toggle.more:hover {
+  font-size: 1.25em;
+  color: #fe8800;
+}
 .message .fa-paperclip {
   display: none;
 }
@@ -2867,14 +2979,7 @@ textarea:active,
   display: none;
 }
 .message:hover {
-  border-left: 0.25em solid #fe8800;
   background: #ffc47f;
-}
-.message.active {
-  border-left: 0.25em solid #34a6ff;
-}
-.message.active:hover {
-  border-left: 0.25em solid #fe8800;
 }
 .message.active .select {
   height: auto;

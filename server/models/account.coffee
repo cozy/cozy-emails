@@ -178,7 +178,6 @@ Account::toClientObject = (callback) ->
 
         Mailbox.getCounts (err, counts) ->
             return callback err if err
-            console.log counts
             for box in rawObject.mailboxes
                 count = counts[box.id] or {total: 0, unread: 0}
                 box.nbTotal  = count.total

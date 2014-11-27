@@ -1,3 +1,4 @@
+util = require 'util'
 
 COLORS = [
     '\x1B[32mDBUG\x1B[39m'
@@ -11,6 +12,13 @@ else if process.env.NODE_ENV is 'test' then 3
 else if process.env.NODE_ENV is 'production' then 1
 else 0
 
+lastLogs = new Array(15)
+index = -1
+
+addToLastLogs = ->
+    index = (index + 1) % 15
+    lastLogs[index] = util.format.apply this, arguments
+
 
 module.exports = (options) ->
 
@@ -18,12 +26,17 @@ module.exports = (options) ->
     else options.prefix
 
     logger = (level) -> ->
-        return null if level < LOG_LEVEL or prefix is 'imap:raw'
+
+
         args = new Array arguments.length + 2
         args[0] = COLORS[level]
         args[1] = prefix
         for arg, i in arguments
             args[i+2] = arg
+
+
+        addToLastLogs.apply null, args
+        return null if level < LOG_LEVEL
 
         console.log.apply console, args
 
@@ -32,3 +45,6 @@ module.exports = (options) ->
         info: logger 1
         warn: logger 2
         error: logger 3
+
+module.exports.getLasts = ->
+    return lastLogs.join("\n")

@@ -30,6 +30,28 @@
         Styles
     */
 
+    .progress-thin
+        height 2px
+        width 100%
+        position absolute
+        margin 0px
+        bottom 0px
+        left 0px
+        .progress-bar
+            background-color orange
+            background-image none
+
+    .refresh-error
+        font-size 14px
+        display block
+        position absolute
+        right 5px
+        bottom 5px
+        color: orange
+
+    .refresh-error:hover
+        color: red
+
     // Clickable menu elements
     .menu-item
         display inline-block // used for non flexed elements (within .account-list)
@@ -105,6 +127,9 @@
             a.menu-item *
                 // this is needed for dragenter and dragleave events to work
                 pointer-events none
+
+                &.refresh-error
+                    pointer-events auto
             &.target
                 border 1px dashed white
 

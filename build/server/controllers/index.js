@@ -17,14 +17,14 @@ log = require('../utils/logging')({
 
 module.exports.main = function(req, res, next) {
   return async.series([Settings.get, CozyInstance.getLocale, Account.clientList], function(err, results) {
-    var accounts, imports, locale, settings, tasks;
-    tasks = ImapReporter.summary();
+    var accounts, imports, locale, refreshes, settings;
+    refreshes = ImapReporter.summary();
     if (err) {
       log.error(err.stack);
-      imports = "console.log(\"" + err + "\");\nwindow.locale = \"en\"\nwindow.tasks = []\nwindow.accounts = []";
+      imports = "console.log(\"" + err + "\");\nwindow.locale = \"en\"\nwindow.refreshes = []\nwindow.accounts = []";
     } else {
       settings = results[0], locale = results[1], accounts = results[2];
-      imports = "window.settings = " + (JSON.stringify(settings)) + "\nwindow.tasks = " + (JSON.stringify(tasks)) + ";\nwindow.locale = \"" + locale + "\";\nwindow.accounts = " + (JSON.stringify(accounts)) + ";";
+      imports = "window.settings = " + (JSON.stringify(settings)) + "\nwindow.refreshes = " + (JSON.stringify(refreshes)) + ";\nwindow.locale = \"" + locale + "\";\nwindow.accounts = " + (JSON.stringify(accounts)) + ";";
     }
     return res.render('index.jade', {
       imports: imports
@@ -73,6 +73,6 @@ module.exports.refresh = function(req, res, next) {
   });
 };
 
-module.exports.tasks = function(req, res, next) {
+module.exports.refreshes = function(req, res, next) {
   return res.send(200, ImapReporter.summary());
 };

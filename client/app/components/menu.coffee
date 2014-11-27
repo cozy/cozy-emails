@@ -6,6 +6,8 @@ RouterMixin          = require '../mixins/router_mixin'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 AccountStore         = require '../stores/account_store'
+Modal = require './modal'
+ThinProgress = require './thin_progress'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
@@ -17,11 +19,19 @@ module.exports = Menu = React.createClass
                not(_.isEqual(nextProps, @props))
 
     getInitialState: ->
-        return displayActiveAccount: true
+        displayActiveAccount: true
+        modalErrors: null
 
     componentWillReceiveProps: (props) ->
         if not Immutable.is(props.selectedAccount, @props.selectedAccount)
             @setState displayActiveAccount: true
+
+
+    displayErrors: (refreshee) ->
+        @setState modalErrors: refreshee.get 'errors'
+
+    hideErrors: ->
+        @setState modalErrors: null
 
     render: ->
 
@@ -73,11 +83,27 @@ module.exports = Menu = React.createClass
                 action: 'settings'
                 fullWidth: true
 
+        if @state.modalErrors
+            title       = t 'modal please contribute'
+            subtitle    = t 'modal please report'
+            modalErrors = @state.modalErrors
+            closeModal  = @hideErrors
+            closeLabel  = t 'app alert close'
+            content = React.DOM.pre
+                style: "max-height": "300px",
+                "word-wrap": "normal",
+                    @state.modalErrors.join "\n\n"
+            modal = Modal {title, subtitle, content, closeModal, closeLabel}
+        else
+            modal = null
         classes = classer
             'hidden-xs hidden-sm': not @props.isResponsiveMenuShown
             'col-xs-4 col-md-1': true
 
         div id: 'menu', className: classes,
+
+            modal
+
             unless @props.accounts.length is 0
                 a
                     href: composeUrl,
@@ -104,7 +130,7 @@ module.exports = Menu = React.createClass
                     span className: 'item-label', t 'menu settings'
 
 
-    # renders a single mailbox and its submenu
+    # renders a single account and its submenu
     getAccountRender: (account, key) ->
 
         isSelected = (not @props.selectedAccount? and key is 0) \
@@ -112,6 +138,7 @@ module.exports = Menu = React.createClass
 
         accountID = account.get 'id'
         defaultMailbox = AccountStore.getDefaultMailbox accountID
+        refreshes = @props.refreshes
 
         if defaultMailbox?
             url = @buildUrl
@@ -132,45 +159,34 @@ module.exports = Menu = React.createClass
                 #@setState displayActiveAccount: not @state.displayActiveAccount
             #else
             @setState displayActiveAccount: true
-        nbTotal  = 0
-        nbUnread = 0
-        nbNew    = 0
-        account.get('mailboxes').map (mailbox) ->
-            nbTotal  += mailbox.get('nbTotal') or 0
-            nbUnread += mailbox.get('nbUnread') or 0
-            nbNew    += mailbox.get('nbNew') or 0
-        .toJS()
-        title    = t "menu mailbox total", nbTotal
-        if nbUnread > 0
-            title += t "menu mailbox unread", nbUnread
-        if nbNew > 0
-            title += t "menu mailbox new", nbNew
 
         accountClasses = classer
             active: (isSelected and @state.displayActiveAccount)
-            news: nbNew > 0
 
         li className: accountClasses, key: key,
             a
                 href: url,
                 className: 'menu-item account ' + accountClasses,
                 onClick: toggleActive,
-                title: title,
                 'data-toggle': 'tooltip',
                 'data-delay': '10000',
                 'data-placement' : 'right',
                     i className: 'fa fa-inbox'
-                    if nbUnread and nbUnread > 0
-                        span className: 'badge', nbUnread
                     span
                         'data-account-id': key,
                         className: 'item-label',
                         account.get 'label'
 
+                if progress = refreshes.get accountID
+                    if progress.get('errors').length
+                        span className: 'refresh-error',
+                            i className: 'fa warning', onClick: @displayErrors.bind null, progress
+                    ThinProgress done: progress.get('done'), total: progress.get('total')
+
             ul className: 'list-unstyled submenu mailbox-list',
                 @props.favoriteMailboxes?.map (mailbox, key) =>
                     selectedMailboxID = @props.selectedMailboxID
-                    MenuMailboxItem { account, mailbox, key, selectedMailboxID }
+                    MenuMailboxItem { account, mailbox, key, selectedMailboxID, refreshes, displayErrors: @displayErrors}
                 .toJS()
 
     _initTooltips: ->
@@ -225,6 +241,9 @@ MenuMailboxItem = React.createClass
             when '\\Sent' then 'fa-share-square-o'
             else 'fa-folder'
 
+        progress = @props.refreshes.get mailboxID
+        displayError = @props.displayErrors.bind null, progress
+
         li className: classesParent,
             a
                 href: mailboxUrl,
@@ -243,6 +262,13 @@ MenuMailboxItem = React.createClass
                     if nbUnread and nbUnread > 0
                         span className: 'badge', nbUnread
                     span className: 'item-label', @props.mailbox.get 'label'
+
+                if progress
+                    ThinProgress done: progress.get('done'), total: progress.get('total')
+
+                if progress?.get('errors').length
+                    span className: 'refresh-error', onClick: displayError,
+                        i className: 'fa fa-warning', null
 
     onDragEnter: (e) ->
         if not @state.target

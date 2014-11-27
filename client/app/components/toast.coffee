@@ -3,9 +3,9 @@ SocketUtils     = require '../utils/socketio_utils'
 AppDispatcher   = require '../app_dispatcher'
 Modal           = require './modal'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
-TasksStore      = require '../stores/tasks_store'
+LayoutStore      = require '../stores/layout_store'
 LayoutActionCreator = require '../actions/layout_action_creator'
-{ActionTypes, NotifyType} = require '../constants/app_constants'
+{ActionTypes} = require '../constants/app_constants'
 
 classer = React.addons.classSet
 
@@ -22,12 +22,9 @@ module.exports = Toast = React.createClass
         @setState modalErrors: errors
 
     acknowledge: ->
-        if @props.toast.type is NotifyType.SERVER
-            SocketUtils.acknowledgeTask @props.toast.id
-        else
-            AppDispatcher.handleViewAction
-                type: ActionTypes.RECEIVE_TASK_DELETE
-                value: @props.toast.id
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RECEIVE_TASK_DELETE
+            value: @props.toast.id
 
     render: ->
         toast = @props.toast
@@ -118,13 +115,13 @@ module.exports.Container = ToastContainer =  React.createClass
     displayName: 'ToastContainer'
 
     mixins: [
-        StoreWatchMixin [TasksStore]
+        StoreWatchMixin [LayoutStore]
     ]
 
     getStateFromStores: ->
         return {
-            toasts: TasksStore.getTasks()
-            hidden: not TasksStore.isShown()
+            toasts: LayoutStore.getTasks()
+            hidden: not LayoutStore.isShown()
         }
 
     render: ->

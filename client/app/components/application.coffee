@@ -26,7 +26,7 @@ MessageStore  = require '../stores/message_store'
 LayoutStore   = require '../stores/layout_store'
 SettingsStore = require '../stores/settings_store'
 SearchStore   = require '../stores/search_store'
-TasksStore    = require '../stores/tasks_store'
+RefreshesStore = require '../stores/refreshes_store'
 
 # Flux actions
 LayoutActionCreator = require '../actions/layout_action_creator'
@@ -48,7 +48,7 @@ module.exports = Application = React.createClass
 
     mixins: [
         StoreWatchMixin [AccountStore, ContactStore, MessageStore, LayoutStore,
-        SettingsStore, SearchStore]
+        SettingsStore, SearchStore, RefreshesStore]
         RouterMixin
     ]
 
@@ -93,6 +93,7 @@ module.exports = Application = React.createClass
                 # is always the same.
                 Menu
                     accounts: @state.accounts
+                    refreshes: @state.refreshes
                     selectedAccount: @state.selectedAccount
                     selectedMailboxID: @state.selectedMailboxID
                     isResponsiveMenuShown: @state.isResponsiveMenuShown
@@ -357,6 +358,7 @@ module.exports = Application = React.createClass
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
             searchQuery: SearchStore.getQuery()
+            refreshes: RefreshesStore.getRefreshing()
             settings: SettingsStore.get()
             plugins: window.plugins
         }

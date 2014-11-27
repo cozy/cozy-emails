@@ -14,7 +14,7 @@ module.exports.main = (req, res, next) ->
         Account.clientList
     ], (err, results) ->
 
-        tasks = ImapReporter.summary()
+        refreshes = ImapReporter.summary()
 
         if err
             log.error err.stack
@@ -22,14 +22,14 @@ module.exports.main = (req, res, next) ->
             imports = """
                 console.log("#{err}");
                 window.locale = "en"
-                window.tasks = []
+                window.refreshes = []
                 window.accounts = []
             """
         else
             [settings, locale, accounts] = results
             imports = """
                 window.settings = #{JSON.stringify settings}
-                window.tasks = #{JSON.stringify tasks};
+                window.refreshes = #{JSON.stringify refreshes};
                 window.locale = "#{locale}";
                 window.accounts = #{JSON.stringify accounts};
             """
@@ -61,5 +61,5 @@ module.exports.refresh = (req, res, next) ->
         return next err if err
         res.send 200, refresh: 'done'
 
-module.exports.tasks = (req, res, next) ->
+module.exports.refreshes = (req, res, next) ->
     res.send 200, ImapReporter.summary()
