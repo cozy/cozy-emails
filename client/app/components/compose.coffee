@@ -84,27 +84,20 @@ module.exports = Compose = React.createClass
                         div
                             className: 'btn-toolbar compose-toggle',
                             role: 'toolbar',
-                                div className: 'btn-group btn-group-sm',
-                                    button
-                                        className: 'btn btn-default compose-toggle-cc',
-                                        type: 'button',
+                                div null
+                                    a
+                                        className: 'compose-toggle-cc',
                                         onClick: @onToggleCc,
-                                            span
-                                                className: 'tool-long',
-                                                t 'compose toggle cc'
-                                div className: 'btn-group btn-group-sm',
-                                    button
-                                        className: 'btn btn-default compose-toggle-bcc',
-                                        type: 'button',
+                                        t 'compose toggle cc'
+                                    a
+                                        className: 'compose-toggle-bcc',
                                         onClick: @onToggleBcc,
-                                            span
-                                                className: 'tool-long',
-                                                t 'compose toggle bcc'
+                                        t 'compose toggle bcc'
 
                         AccountPicker
                             accounts: @props.accounts
                             valueLink: @linkState 'accountID'
-
+                            type: 'address'
 
                 MailsInput
                     id: 'compose-to'
@@ -169,23 +162,19 @@ module.exports = Compose = React.createClass
                                 onClick: @onSend,
                                     span
                                         className: 'fa fa-send'
-                                    span
-                                        className: 'tool-long',
-                                        t 'compose action send'
+                                    span null, t 'compose action send'
                             button
                                 className: 'btn btn-default',
                                 type: 'button', onClick: @onDraft,
                                     span className: 'fa fa-save'
-                                    span className: 'tool-long',
-                                    t 'compose action draft'
+                                    span null, t 'compose action draft'
                             if @props.message?
                                 button
                                     className: 'btn btn-default',
                                     type: 'button',
                                     onClick: @onDelete,
                                         span className: 'fa fa-trash-o'
-                                        span className: 'tool-long',
-                                        t 'compose action delete'
+                                        span null, t 'compose action delete'
                             a
                                 href: cancelUrl,
                                 className: 'btn btn-default',
