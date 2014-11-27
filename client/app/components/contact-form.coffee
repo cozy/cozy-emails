@@ -16,8 +16,9 @@ module.exports = React.createClass
     ]
 
     getStateFromStores: ->
+        query = @refs.contactInput?.getDOMNode().value.trim()
         return {
-            contacts: ContactStore.getResults()
+            contacts: if query?.length > 2 then ContactStore.getResults() else null
             selected: 0
         }
 
@@ -30,7 +31,6 @@ module.exports = React.createClass
     render: ->
         listClass = if @state.contacts?.length > 0 then 'open' else ''
         current = 0
-        console.log @state.selected
 
         form className: "contact-form",
             div null,
