@@ -278,10 +278,13 @@ module.exports = Application = React.createClass
 
             messageID      = panelInfo.parameters.messageID
             message        = MessageStore.getByID messageID
+            selectedMailboxID = @state.selectedMailboxID
             if message?
                 conversationID = message.get 'conversationID'
                 conversation   = MessageStore.getConversation conversationID
                 MessageStore.setCurrentID message.get('id')
+                if not selectedMailboxID?
+                    selectedMailboxID = Object.keys(message.get('mailboxIDs'))[0]
 
             return Conversation
                 layout            : layout
@@ -289,7 +292,7 @@ module.exports = Application = React.createClass
                 accounts          : @state.accounts
                 mailboxes         : @state.mailboxes
                 selectedAccount   : @state.selectedAccount
-                selectedMailboxID : @state.selectedMailboxID
+                selectedMailboxID : selectedMailboxID
                 message           : message
                 conversation      : conversation
                 prevID            : MessageStore.getPreviousMessage()

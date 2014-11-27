@@ -109,8 +109,8 @@ class AccountStore extends Store
 
         mailboxes = account.get('mailboxes')
         mailbox = mailboxes.filter (mailbox) ->
-            return mailbox.get('label') is 'INBOX'
-        if mailbox.count() is 1
+            return mailbox.get('label').toLowerCase() is 'inbox'
+        if mailbox.count() isnt 0
             return mailbox.first()
         else
             favorites = account.get('favorites')

@@ -532,7 +532,7 @@ Message.prototype.imap_applyChanges = function(newflags, newmailboxIDs, boxOps, 
 
 Message.createFromImapMessage = function(mail, box, uid, callback) {
   var attachments, messageID;
-  log.debug("createFromImapMessage");
+  log.info("createFromImapMessage", box.label, uid);
   mail.accountID = box.accountID;
   mail.mailboxIDs = {};
   mail.mailboxIDs[box._id] = uid;

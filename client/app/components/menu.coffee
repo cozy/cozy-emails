@@ -169,6 +169,7 @@ module.exports = Menu = React.createClass
                 className: 'menu-item account ' + accountClasses,
                 onClick: toggleActive,
                 'data-toggle': 'tooltip',
+                'data-delay': '10000',
                 'data-placement' : 'right',
                     i className: 'fa fa-inbox'
                     span
@@ -189,7 +190,7 @@ module.exports = Menu = React.createClass
                 .toJS()
 
     _initTooltips: ->
-        jQuery('#account-list [data-toggle="tooltip"]').tooltip()
+        #jQuery('#account-list [data-toggle="tooltip"]').tooltip()
 
     componentDidMount: ->
         @_initTooltips()

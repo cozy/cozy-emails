@@ -14,7 +14,7 @@ module.exports = React.createClass
         conversation      : React.PropTypes.array
         selectedAccount   : React.PropTypes.object.isRequired
         layout            : React.PropTypes.string.isRequired
-        selectedMailboxID : React.PropTypes.string.isRequired
+        selectedMailboxID : React.PropTypes.string
         mailboxes         : React.PropTypes.object.isRequired
         settings          : React.PropTypes.object.isRequired
         accounts          : React.PropTypes.object.isRequired
@@ -81,22 +81,19 @@ module.exports = React.createClass
             #        a href: '#', 'Responsive Cozy Emails'
             #        span className: 'close', 'x'
 
+            if @props.layout isnt 'full'
+                a
+                    href: expandUrl,
+                    className: 'expand hidden-xs hidden-sm',
+                        i className: 'fa fa-arrows-h'
+            else
+                a
+                    href: collapseUrl,
+                    className: 'compress',
+                        i className:'fa fa-compress'
+
             h3 className: 'message-title',
                 @props.message.get 'subject'
-                a
-                    href: closeUrl,
-                    className: 'expand close-conversation hidden-xs hidden-sm',
-                        i className:'fa ' + closeIcon
-                if @props.layout isnt 'full'
-                    a
-                        href: expandUrl,
-                        className: 'expand hidden-xs hidden-sm',
-                            i className: 'fa fa-arrows-h'
-                else
-                    a
-                        href: collapseUrl,
-                        className: 'close-conversation pull-right',
-                            i className:'fa fa-compress'
 
             ul className: 'thread list-unstyled',
                 for message, key in @props.conversation

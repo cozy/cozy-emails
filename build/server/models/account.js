@@ -235,7 +235,6 @@ Account.prototype.toClientObject = function(callback) {
       if (err) {
         return callback(err);
       }
-      console.log(counts);
       _ref = rawObject.mailboxes;
       for (_i = 0, _len = _ref.length; _i < _len; _i++) {
         box = _ref[_i];

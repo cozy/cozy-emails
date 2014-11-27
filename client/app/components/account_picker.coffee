@@ -48,7 +48,6 @@ module.exports = React.createClass
                     @renderAccount(key, account)
 
     renderAccount: (key, account) ->
-        console.log account
         if @props.type is 'address'
             label = "\"#{account.name or account.label}\" <#{account.login}>"
         else

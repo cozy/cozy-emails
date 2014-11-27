@@ -380,7 +380,7 @@ module.exports = {
 });
 
 ;require.register("actions/layout_action_creator", function(exports, require, module) {
-var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageStore, NotifyType, SearchActionCreator, XHRUtils, _cachedQuery, _ref;
+var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageStore, SearchActionCreator, XHRUtils, _cachedQuery, _ref;
 
 XHRUtils = require('../utils/xhr_utils');
 
@@ -392,7 +392,7 @@ MessageStore = require('../stores/message_store');
 
 AppDispatcher = require('../app_dispatcher');
 
-_ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, AlertLevel = _ref.AlertLevel, NotifyType = _ref.NotifyType;
+_ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, AlertLevel = _ref.AlertLevel;
 
 AccountActionCreator = require('./account_action_creator');
 
@@ -451,7 +451,6 @@ module.exports = LayoutActionCreator = {
     var task;
     task = {
       id: Date.now(),
-      type: NotifyType.CLIENT,
       finished: true,
       message: message
     };
@@ -1121,7 +1120,7 @@ module.exports = React.createClass({
     });
     return form({
       className: 'form-horizontal'
-    }, this.renderError(), div({
+    }, this.renderError(), fieldset(null, legend(null, t('account identifiers'))), div({
       className: 'form-group' + hasError('label')
     }, label({
       htmlFor: 'mailbox-label',
@@ -1335,14 +1334,14 @@ module.exports = React.createClass({
           return _this._onServerParam(ev.target, 'imap', 'tls');
         };
       })(this)
-    })))), div({
+    })))), fieldset(null, legend(null, t('account actions'))), div({
       className: ''
     }, div({
       className: 'col-sm-offset-4'
     }, button({
       className: 'btn btn-cozy',
       onClick: this.onSubmit
-    }, buttonLabel)), this.state.id != null ? fieldset(null, legend(null, t('danger zone')), div({
+    }, buttonLabel)), this.state.id != null ? fieldset(null, legend(null, t('account danger zone')), div({
       className: 'col-sm-offset-4'
     }, button({
       className: 'btn btn-default btn-danger btn-remove',
@@ -1394,7 +1393,7 @@ module.exports = React.createClass({
     }, t('mailbox title unread')), span({
       className: "col-xs-1 text-center"
     }, t('mailbox title new'))) : void 0, mailboxes, li({
-      className: "row box edited",
+      className: "row box new",
       key: 'new'
     }, span({
       className: "col-xs-1 box-action add",
@@ -1415,7 +1414,8 @@ module.exports = React.createClass({
       ref: 'newmailbox',
       type: 'text',
       className: 'form-control',
-      placeholder: t("account newmailbox placeholder")
+      placeholder: t("account newmailbox placeholder"),
+      onKeyDown: this.onKeyDown
     })), label({
       className: 'col-xs-2 text-center control-label'
     }, t("account newmailbox parent")), div({
@@ -1432,6 +1432,12 @@ module.exports = React.createClass({
         };
       })(this)
     })))));
+  },
+  onKeyDown: function(evt) {
+    switch (evt.key) {
+      case "Enter":
+        return this.addMailbox();
+    }
   },
   _renderMailboxChoice: function(labelText, box) {
     if (this.state.id != null) {
@@ -1582,7 +1588,9 @@ module.exports = React.createClass({
   },
   addMailbox: function(event) {
     var mailbox;
-    event.preventDefault();
+    if (event != null) {
+      event.preventDefault();
+    }
     mailbox = {
       label: this.refs.newmailbox.getDOMNode().value.trim(),
       accountID: this.state.id,
@@ -1880,7 +1888,8 @@ MailboxItem = React.createClass({
         className: "col-xs-6 box-label",
         ref: 'label',
         defaultValue: this.props.mailbox.get('label'),
-        type: 'text'
+        type: 'text',
+        onKeyDown: this.onKeyDown
       }));
     } else {
       return li({
@@ -1916,6 +1925,12 @@ MailboxItem = React.createClass({
       }, nbNew));
     }
   },
+  onKeyDown: function(evt) {
+    switch (evt.key) {
+      case "Enter":
+        return this.updateMailbox();
+    }
+  },
   editMailbox: function(e) {
     e.preventDefault();
     return this.setState({
@@ -1930,7 +1945,9 @@ MailboxItem = React.createClass({
   },
   updateMailbox: function(e) {
     var mailbox;
-    e.preventDefault();
+    if (e != null) {
+      e.preventDefault();
+    }
     mailbox = {
       label: this.refs.label.getDOMNode().value.trim(),
       mailboxID: this.props.mailbox.get('id'),
@@ -2045,7 +2062,6 @@ module.exports = React.createClass({
   },
   renderAccount: function(key, account) {
     var label;
-    console.log(account);
     if (this.props.type === 'address') {
       label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
     } else {
@@ -2123,7 +2139,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/application", function(exports, require, module) {
-var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, LayoutActionCreator, LayoutStore, Menu, MessageList, MessageStore, ReactCSSTransitionGroup, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, TasksStore, ToastContainer, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref;
+var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, LayoutActionCreator, LayoutStore, Menu, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, ToastContainer, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref;
 
 _ref = React.DOM, body = _ref.body, div = _ref.div, p = _ref.p, form = _ref.form, i = _ref.i, input = _ref.input, span = _ref.span, a = _ref.a, button = _ref.button, strong = _ref.strong;
 
@@ -2167,7 +2183,7 @@ SettingsStore = require('../stores/settings_store');
 
 SearchStore = require('../stores/search_store');
 
-TasksStore = require('../stores/tasks_store');
+RefreshesStore = require('../stores/refreshes_store');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
@@ -2187,7 +2203,7 @@ LayoutActionCreator = require('../actions/layout_action_creator');
 
 module.exports = Application = React.createClass({
   displayName: 'Application',
-  mixins: [StoreWatchMixin([AccountStore, ContactStore, MessageStore, LayoutStore, SettingsStore, SearchStore]), RouterMixin],
+  mixins: [StoreWatchMixin([AccountStore, ContactStore, MessageStore, LayoutStore, SettingsStore, SearchStore, RefreshesStore]), RouterMixin],
   render: function() {
     var alert, firstPanelLayoutMode, getUrl, isFullWidth, keyFirst, keySecond, layout, panelClasses, responsiveClasses;
     layout = this.props.router.current;
@@ -2222,6 +2238,7 @@ module.exports = Application = React.createClass({
       className: 'row'
     }, Menu({
       accounts: this.state.accounts,
+      refreshes: this.state.refreshes,
       selectedAccount: this.state.selectedAccount,
       selectedMailboxID: this.state.selectedMailboxID,
       isResponsiveMenuShown: this.state.isResponsiveMenuShown,
@@ -2284,7 +2301,7 @@ module.exports = Application = React.createClass({
     return classes;
   },
   getPanelComponent: function(panelInfo, layout) {
-    var account, accountID, conversation, conversationID, counterMessage, direction, emptyListMessage, error, favoriteMailboxes, isWaiting, mailbox, mailboxID, mailboxes, message, messageID, messages, messagesCount, query, selectedAccount, settings;
+    var account, accountID, conversation, conversationID, counterMessage, direction, emptyListMessage, error, favoriteMailboxes, isWaiting, mailbox, mailboxID, mailboxes, message, messageID, messages, messagesCount, query, selectedAccount, selectedMailboxID, settings;
     if (panelInfo.action === 'account.mailbox.messages' || panelInfo.action === 'account.mailbox.messages.full' || panelInfo.action === 'search') {
       if (panelInfo.action === 'search') {
         accountID = null;
@@ -2352,10 +2369,14 @@ module.exports = Application = React.createClass({
     } else if (panelInfo.action === 'message' || panelInfo.action === 'conversation') {
       messageID = panelInfo.parameters.messageID;
       message = MessageStore.getByID(messageID);
+      selectedMailboxID = this.state.selectedMailboxID;
       if (message != null) {
         conversationID = message.get('conversationID');
         conversation = MessageStore.getConversation(conversationID);
         MessageStore.setCurrentID(message.get('id'));
+        if (selectedMailboxID == null) {
+          selectedMailboxID = Object.keys(message.get('mailboxIDs'))[0];
+        }
       }
       return Conversation({
         layout: layout,
@@ -2363,7 +2384,7 @@ module.exports = Application = React.createClass({
         accounts: this.state.accounts,
         mailboxes: this.state.mailboxes,
         selectedAccount: this.state.selectedAccount,
-        selectedMailboxID: this.state.selectedMailboxID,
+        selectedMailboxID: selectedMailboxID,
         message: message,
         conversation: conversation,
         prevID: MessageStore.getPreviousMessage(),
@@ -2423,6 +2444,7 @@ module.exports = Application = React.createClass({
       selectedMailbox: AccountStore.getSelectedMailbox(selectedMailboxID),
       favoriteMailboxes: AccountStore.getSelectedFavorites(),
       searchQuery: SearchStore.getQuery(),
+      refreshes: RefreshesStore.getRefreshing(),
       settings: SettingsStore.get(),
       plugins: window.plugins
     };
@@ -3004,7 +3026,7 @@ module.exports = React.createClass({
     conversation: React.PropTypes.array,
     selectedAccount: React.PropTypes.object.isRequired,
     layout: React.PropTypes.string.isRequired,
-    selectedMailboxID: React.PropTypes.string.isRequired,
+    selectedMailboxID: React.PropTypes.string,
     mailboxes: React.PropTypes.object.isRequired,
     settings: React.PropTypes.object.isRequired,
     accounts: React.PropTypes.object.isRequired
@@ -3056,22 +3078,17 @@ module.exports = React.createClass({
     inConversation = this.props.conversation.length > 1;
     return div({
       className: 'conversation'
-    }, h3(null, this.props.message.get('subject'), a({
-      href: closeUrl,
-      className: 'expand close-conversation hidden-xs hidden-sm'
-    }, i({
-      className: 'fa ' + closeIcon
-    })), this.props.layout !== 'full' ? a({
+    }, this.props.layout !== 'full' ? a({
       href: expandUrl,
       className: 'expand hidden-xs hidden-sm'
     }, i({
       className: 'fa fa-arrows-h'
     })) : a({
       href: collapseUrl,
-      className: 'close-conversation pull-right'
+      className: 'compress'
     }, i({
       className: 'fa fa-compress'
-    }))), h3({
+    })), h3({
       className: 'message-title'
     }, this.props.message.get('subject')), ul({
       className: 'thread list-unstyled'
@@ -3611,7 +3628,7 @@ module.exports = MailsInput = React.createClass({
 });
 
 ;require.register("components/menu", function(exports, require, module) {
-var AccountStore, LayoutActionCreator, Menu, MenuMailboxItem, MessageActionCreator, RouterMixin, a, classer, div, i, li, span, ul, _ref;
+var AccountStore, LayoutActionCreator, Menu, MenuMailboxItem, MessageActionCreator, Modal, RouterMixin, ThinProgress, a, classer, div, i, li, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i;
 
@@ -3625,6 +3642,10 @@ MessageActionCreator = require('../actions/message_action_creator');
 
 AccountStore = require('../stores/account_store');
 
+Modal = require('./modal');
+
+ThinProgress = require('./thin_progress');
+
 module.exports = Menu = React.createClass({
   displayName: 'Menu',
   mixins: [RouterMixin],
@@ -3633,7 +3654,8 @@ module.exports = Menu = React.createClass({
   },
   getInitialState: function() {
     return {
-      displayActiveAccount: true
+      displayActiveAccount: true,
+      modalErrors: null
     };
   },
   componentWillReceiveProps: function(props) {
@@ -3643,8 +3665,18 @@ module.exports = Menu = React.createClass({
       });
     }
   },
+  displayErrors: function(refreshee) {
+    return this.setState({
+      modalErrors: refreshee.get('errors')
+    });
+  },
+  hideErrors: function() {
+    return this.setState({
+      modalErrors: null
+    });
+  },
   render: function() {
-    var classes, composeClass, composeUrl, newMailboxClass, newMailboxUrl, selectedAccountUrl, settingsClass, settingsUrl, _ref1, _ref2, _ref3;
+    var classes, closeLabel, closeModal, composeClass, composeUrl, content, modal, modalErrors, newMailboxClass, newMailboxUrl, selectedAccountUrl, settingsClass, settingsUrl, subtitle, title, _ref1, _ref2, _ref3;
     if (this.props.accounts.length) {
       selectedAccountUrl = this.buildUrl({
         direction: 'first',
@@ -3693,6 +3725,28 @@ module.exports = Menu = React.createClass({
         fullWidth: true
       });
     }
+    if (this.state.modalErrors) {
+      title = t('modal please contribute');
+      subtitle = t('modal please report');
+      modalErrors = this.state.modalErrors;
+      closeModal = this.hideErrors;
+      closeLabel = t('app alert close');
+      content = React.DOM.pre({
+        style: {
+          "max-height": "300px",
+          "word-wrap": "normal"
+        }
+      }, this.state.modalErrors.join("\n\n"));
+      modal = Modal({
+        title: title,
+        subtitle: subtitle,
+        content: content,
+        closeModal: closeModal,
+        closeLabel: closeLabel
+      });
+    } else {
+      modal = null;
+    }
     classes = classer({
       'hidden-xs hidden-sm': !this.props.isResponsiveMenuShown,
       'col-xs-4 col-md-1': true
@@ -3700,7 +3754,7 @@ module.exports = Menu = React.createClass({
     return div({
       id: 'menu',
       className: classes
-    }, this.props.accounts.length !== 0 ? a({
+    }, modal, this.props.accounts.length !== 0 ? a({
       href: composeUrl,
       className: 'menu-item compose-action ' + composeClass
     }, i({
@@ -3731,10 +3785,11 @@ module.exports = Menu = React.createClass({
     }, t('menu settings'))));
   },
   getAccountRender: function(account, key) {
-    var accountClasses, accountID, defaultMailbox, isSelected, nbNew, nbTotal, nbUnread, title, toggleActive, url, _ref1, _ref2;
+    var accountClasses, accountID, defaultMailbox, isSelected, progress, refreshes, toggleActive, url, _ref1, _ref2;
     isSelected = ((this.props.selectedAccount == null) && key === 0) || ((_ref1 = this.props.selectedAccount) != null ? _ref1.get('id') : void 0) === account.get('id');
     accountID = account.get('id');
     defaultMailbox = AccountStore.getDefaultMailbox(accountID);
+    refreshes = this.props.refreshes;
     if (defaultMailbox != null) {
       url = this.buildUrl({
         direction: 'first',
@@ -3763,24 +3818,8 @@ module.exports = Menu = React.createClass({
         }
       };
     })(this);
-    nbTotal = 0;
-    nbUnread = 0;
-    nbNew = 0;
-    account.get('mailboxes').map(function(mailbox) {
-      nbTotal += mailbox.get('nbTotal') || 0;
-      nbUnread += mailbox.get('nbUnread') || 0;
-      return nbNew += mailbox.get('nbNew') || 0;
-    }).toJS();
-    title = t("menu mailbox total", nbTotal);
-    if (nbUnread > 0) {
-      title += t("menu mailbox unread", nbUnread);
-    }
-    if (nbNew > 0) {
-      title += t("menu mailbox new", nbNew);
-    }
     accountClasses = classer({
-      active: isSelected && this.state.displayActiveAccount,
-      news: nbNew > 0
+      active: isSelected && this.state.displayActiveAccount
     });
     return li({
       className: accountClasses,
@@ -3789,17 +3828,23 @@ module.exports = Menu = React.createClass({
       href: url,
       className: 'menu-item account ' + accountClasses,
       onClick: toggleActive,
-      title: title,
       'data-toggle': 'tooltip',
+      'data-delay': '10000',
       'data-placement': 'right'
     }, i({
       className: 'fa fa-inbox'
-    }), nbUnread && nbUnread > 0 ? span({
-      className: 'badge'
-    }, nbUnread) : void 0, span({
+    }), span({
       'data-account-id': key,
       className: 'item-label'
-    }, account.get('label'))), ul({
+    }, account.get('label')), (progress = refreshes.get(accountID)) ? (progress.get('errors').length ? span({
+      className: 'refresh-error'
+    }, i({
+      className: 'fa warning',
+      onClick: this.displayErrors.bind(null, progress)
+    })) : void 0, ThinProgress({
+      done: progress.get('done'),
+      total: progress.get('total')
+    })) : void 0), ul({
       className: 'list-unstyled submenu mailbox-list'
     }, (_ref2 = this.props.favoriteMailboxes) != null ? _ref2.map((function(_this) {
       return function(mailbox, key) {
@@ -3809,14 +3854,14 @@ module.exports = Menu = React.createClass({
           account: account,
           mailbox: mailbox,
           key: key,
-          selectedMailboxID: selectedMailboxID
+          selectedMailboxID: selectedMailboxID,
+          refreshes: refreshes,
+          displayErrors: _this.displayErrors
         });
       };
     })(this)).toJS() : void 0));
   },
-  _initTooltips: function() {
-    return jQuery('#account-list [data-toggle="tooltip"]').tooltip();
-  },
+  _initTooltips: function() {},
   componentDidMount: function() {
     return this._initTooltips();
   },
@@ -3837,7 +3882,7 @@ MenuMailboxItem = React.createClass({
     };
   },
   render: function() {
-    var classesChild, classesParent, icon, mailboxID, mailboxUrl, nbNew, nbTotal, nbUnread, specialUse, title, _ref1;
+    var classesChild, classesParent, displayError, icon, mailboxID, mailboxUrl, nbNew, nbTotal, nbUnread, progress, specialUse, title, _ref1;
     mailboxID = this.props.mailbox.get('id');
     mailboxUrl = this.buildUrl({
       direction: 'first',
@@ -3876,6 +3921,8 @@ MenuMailboxItem = React.createClass({
           return 'fa-folder';
       }
     })();
+    progress = this.props.refreshes.get(mailboxID);
+    displayError = this.props.displayErrors.bind(null, progress);
     return li({
       className: classesParent
     }, a({
@@ -3896,7 +3943,15 @@ MenuMailboxItem = React.createClass({
       className: 'badge'
     }, nbUnread) : void 0, span({
       className: 'item-label'
-    }, this.props.mailbox.get('label'))));
+    }, this.props.mailbox.get('label')), progress ? ThinProgress({
+      done: progress.get('done'),
+      total: progress.get('total')
+    }) : void 0, (progress != null ? progress.get('errors').length : void 0) ? span({
+      className: 'refresh-error',
+      onClick: displayError
+    }, i({
+      className: 'fa fa-warning'
+    }, null)) : void 0));
   },
   onDragEnter: function(e) {
     if (!this.state.target) {
@@ -4008,9 +4063,18 @@ MessageList = React.createClass({
           settings: _this.props.settings,
           onSelect: function(val) {
             if (val) {
-              return _this._selected[id] = val;
+              _this._selected[id] = val;
             } else {
-              return delete _this._selected[id];
+              delete _this._selected[id];
+            }
+            if (Object.keys(_this._selected).length > 0) {
+              return _this.setState({
+                edited: true
+              });
+            } else {
+              return _this.setState({
+                edited: false
+              });
             }
           }
         });
@@ -4097,12 +4161,14 @@ MessageList = React.createClass({
       className: 'fa fa-trash-o'
     }))) : void 0, this.state.edited ? ToolboxMove({
       mailboxes: this.props.mailboxes,
-      onMove: this.onMove
+      onMove: this.onMove,
+      direction: 'left'
     }) : void 0, this.state.edited ? ToolboxActions({
       mailboxes: this.props.mailboxes,
       onMark: this.onMark,
       onConversation: this.onConversation,
-      onHeaders: this.onHeaders
+      onHeaders: this.onHeaders,
+      direction: 'left'
     }) : void 0))), this.props.messages.count() === 0 ? p(null, this.props.emptyListMessage) : div(null, ul({
       className: 'list-unstyled'
     }, messages), this.props.messages.count() < nbMessages ? p({
@@ -4318,6 +4384,7 @@ MessageItem = React.createClass({
       message: true,
       read: message.get('isRead'),
       active: this.props.isActive,
+      edited: this.props.edited,
       'unseen': flags.indexOf(MessageFlags.SEEN) === -1,
       'has-attachments': message.get('hasAttachments'),
       'is-fav': flags.indexOf(MessageFlags.FLAGGED) !== -1
@@ -4360,12 +4427,12 @@ MessageItem = React.createClass({
       'data-message-id': message.get('id'),
       onClick: this.onMessageClick,
       onDoubleClick: this.onMessageDblClick
-    }, this.props.edited ? input({
+    }, input({
       className: 'select',
       type: 'checkbox',
       checked: this.state.selected,
       onChange: this.onSelect
-    }) : avatar != null ? img({
+    }), avatar != null ? img({
       className: 'avatar',
       src: avatar
     }) : i({
@@ -4989,7 +5056,8 @@ module.exports = React.createClass({
       className: 'tool-long'
     }, t('mail action delete')))), ToolboxMove({
       mailboxes: this.props.mailboxes,
-      onMove: this.onMove
+      onMove: this.onMove,
+      direction: 'right'
     }), ToolboxActions({
       mailboxes: this.props.mailboxes,
       isSeen: isSeen,
@@ -4997,7 +5065,8 @@ module.exports = React.createClass({
       messageID: id,
       onMark: this.onMark,
       onConversation: this.onConversation,
-      onHeaders: this.onHeaders
+      onHeaders: this.onHeaders,
+      direction: 'right'
     }), nextUrl != null ? div({
       className: 'btn-group btn-group-sm'
     }, button({
@@ -5763,8 +5832,30 @@ module.exports = React.createClass({
 });
 });
 
+;require.register("components/thin_progress", function(exports, require, module) {
+var ThinProgress, div;
+
+div = React.DOM.div;
+
+module.exports = ThinProgress = React.createClass({
+  displayName: 'ThinProgress',
+  render: function() {
+    var percent;
+    percent = 100 * (this.props.done / this.props.total) + '%';
+    return div({
+      className: "progress progress-thin"
+    }, div({
+      className: 'progress-bar',
+      style: {
+        width: percent
+      }
+    }));
+  }
+});
+});
+
 ;require.register("components/toast", function(exports, require, module) {
-var ActionTypes, AppDispatcher, LayoutActionCreator, Modal, NotifyType, SocketUtils, StoreWatchMixin, TasksStore, Toast, ToastContainer, a, button, classer, div, h4, i, pre, span, strong, _ref, _ref1;
+var ActionTypes, AppDispatcher, LayoutActionCreator, LayoutStore, Modal, SocketUtils, StoreWatchMixin, Toast, ToastContainer, a, button, classer, div, h4, i, pre, span, strong, _ref;
 
 _ref = React.DOM, a = _ref.a, h4 = _ref.h4, pre = _ref.pre, div = _ref.div, button = _ref.button, span = _ref.span, strong = _ref.strong, i = _ref.i;
 
@@ -5776,11 +5867,11 @@ Modal = require('./modal');
 
 StoreWatchMixin = require('../mixins/store_watch_mixin');
 
-TasksStore = require('../stores/tasks_store');
+LayoutStore = require('../stores/layout_store');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
-_ref1 = require('../constants/app_constants'), ActionTypes = _ref1.ActionTypes, NotifyType = _ref1.NotifyType;
+ActionTypes = require('../constants/app_constants').ActionTypes;
 
 classer = React.addons.classSet;
 
@@ -5802,14 +5893,10 @@ module.exports = Toast = React.createClass({
     });
   },
   acknowledge: function() {
-    if (this.props.toast.type === NotifyType.SERVER) {
-      return SocketUtils.acknowledgeTask(this.props.toast.id);
-    } else {
-      return AppDispatcher.handleViewAction({
-        type: ActionTypes.RECEIVE_TASK_DELETE,
-        value: this.props.toast.id
-      });
-    }
+    return AppDispatcher.handleViewAction({
+      type: ActionTypes.RECEIVE_TASK_DELETE,
+      value: this.props.toast.id
+    });
   },
   render: function() {
     var classes, closeLabel, closeModal, content, hasErrors, modal, modalErrors, percent, showModal, subtitle, title, toast;
@@ -5917,11 +6004,11 @@ module.exports = Toast = React.createClass({
 
 module.exports.Container = ToastContainer = React.createClass({
   displayName: 'ToastContainer',
-  mixins: [StoreWatchMixin([TasksStore])],
+  mixins: [StoreWatchMixin([LayoutStore])],
   getStateFromStores: function() {
     return {
-      toasts: TasksStore.getTasks(),
-      hidden: !TasksStore.isShown()
+      toasts: LayoutStore.getTasks(),
+      hidden: !LayoutStore.isShown()
     };
   },
   render: function() {
@@ -6008,6 +6095,8 @@ _ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags
 module.exports = ToolboxActions = React.createClass({
   displayName: 'ToolboxActions',
   render: function() {
+    var direction;
+    direction = this.props.direction === 'right' ? 'right' : 'left';
     return div({
       className: 'btn-group btn-group-sm'
     }, button({
@@ -6017,7 +6106,7 @@ module.exports = ToolboxActions = React.createClass({
     }, t('mail action more', span({
       className: 'caret'
     }))), ul({
-      className: 'dropdown-menu dropdown-menu-right',
+      className: 'dropdown-menu dropdown-menu-' + direction,
       role: 'menu'
     }, li({
       role: 'presentation'
@@ -6108,6 +6197,8 @@ ConversationActionCreator = require('../actions/conversation_action_creator');
 module.exports = ToolboxMove = React.createClass({
   displayName: 'ToolboxMove',
   render: function() {
+    var direction;
+    direction = this.props.direction === 'right' ? 'right' : 'left';
     return div({
       className: 'btn-group btn-group-sm'
     }, button({
@@ -6117,7 +6208,7 @@ module.exports = ToolboxMove = React.createClass({
     }, t('mail action move', span({
       className: 'caret'
     }))), ul({
-      className: 'dropdown-menu dropdown-menu-right',
+      className: 'dropdown-menu dropdown-menu-' + direction,
       role: 'menu'
     }, this.props.mailboxes.map((function(_this) {
       return function(mailbox, key) {
@@ -6266,6 +6357,7 @@ module.exports = {
     'NEW_ACCOUNT_WAITING': 'NEW_ACCOUNT_WAITING',
     'NEW_ACCOUNT_ERROR': 'NEW_ACCOUNT_ERROR',
     'MAILBOX_ADD': 'MAILBOX_ADD',
+    'MAILBOX_CREATE': 'MAILBOX_CREATE',
     'MAILBOX_UPDATE': 'MAILBOX_UPDATE',
     'MAILBOX_DELETE': 'MAILBOX_DELETE',
     'RECEIVE_RAW_MESSAGE': 'RECEIVE_RAW_MESSAGE',
@@ -6292,6 +6384,8 @@ module.exports = {
     'SETTINGS_UPDATED': 'SETTINGS_UPDATED',
     'RECEIVE_TASK_UPDATE': 'RECEIVE_TASK_UPDATE',
     'RECEIVE_TASK_DELETE': 'RECEIVE_TASK_DELETE',
+    'RECEIVE_REFRESH_UPDATE': 'RECEIVE_REFRESH_UPDATE',
+    'RECEIVE_REFRESH_DELETE': 'RECEIVE_REFRESH_DELETE',
     'LIST_FILTER': 'LIST_FILTER',
     'LIST_QUICK_FILTER': 'LIST_QUICK_FILTER',
     'LIST_SORT': 'LIST_SORT',
@@ -6312,10 +6406,6 @@ module.exports = {
     'INFO': 'INFO',
     'WARNING': 'WARNING',
     'ERROR': 'ERROR'
-  },
-  NotifyType: {
-    'SERVER': 'SERVER',
-    'CLIENT': 'CLIENT'
   },
   MessageFlags: {
     'FLAGGED': '\\Flagged',
@@ -6381,181 +6471,6 @@ window.onload = function() {
   ContactActionCreator = require('./actions/contact_action_creator/');
   return ContactActionCreator.searchContact();
 };
-});
-
-;require.register("libs/flux/dispatcher/Dispatcher", function(exports, require, module) {
-
-/*
-
-    -- Coffee port of Facebook's flux dispatcher. It was in ES6 and I haven't
-    been successful in adding a transpiler. --
-
-    Copyright (c) 2014, Facebook, Inc.
-    All rights reserved.
-
-    This source code is licensed under the BSD-style license found in the
-    LICENSE file in the root directory of this source tree. An additional grant
-    of patent rights can be found in the PATENTS file in the same directory.
- */
-var Dispatcher, invariant, _lastID, _prefix;
-
-invariant = require('../invariant');
-
-_lastID = 1;
-
-_prefix = 'ID_';
-
-module.exports = Dispatcher = Dispatcher = (function() {
-  function Dispatcher() {
-    this._callbacks = {};
-    this._isPending = {};
-    this._isHandled = {};
-    this._isDispatching = false;
-    this._pendingPayload = null;
-  }
-
-
-  /*
-      Registers a callback to be invoked with every dispatched payload.
-      Returns a token that can be used with `waitFor()`.
-  
-      @param {function} callback
-      @return {string}
-   */
-
-  Dispatcher.prototype.register = function(callback) {
-    var id;
-    id = _prefix + _lastID++;
-    this._callbacks[id] = callback;
-    return id;
-  };
-
-
-  /*
-      Removes a callback based on its token.
-  
-      @param {string} id
-   */
-
-  Dispatcher.prototype.unregister = function(id) {
-    var message;
-    message = 'Dispatcher.unregister(...): `%s` does not map to a ' + 'registered callback.';
-    invariant(this._callbacks[id], message, id);
-    return delete this._callbacks[id];
-  };
-
-
-  /*
-      Waits for the callbacks specified to be invoked before continuing
-      execution of the current callback. This method should only be used by a
-      callback in response to a dispatched payload.
-  
-      @param {array<string>} ids
-   */
-
-  Dispatcher.prototype.waitFor = function(ids) {
-    var id, ii, message, message2, _i, _ref, _results;
-    invariant(this._isDispatching, 'Dispatcher.waitFor(...): Must be invoked while dispatching.');
-    message = 'Dispatcher.waitFor(...): Circular dependency detected ' + 'while waiting for `%s`.';
-    message2 = 'Dispatcher.waitFor(...): `%s` does not map to a ' + 'registered callback.';
-    _results = [];
-    for (ii = _i = 0, _ref = ids.length - 1; _i <= _ref; ii = _i += 1) {
-      id = ids[ii];
-      if (this._isPending[id]) {
-        invariant(this._isHandled[id], message, id);
-        continue;
-      }
-      invariant(this._callbacks[id], message2, id);
-      _results.push(this._invokeCallback(id));
-    }
-    return _results;
-  };
-
-
-  /*
-      Dispatches a payload to all registered callbacks.
-  
-      @param {object} payload
-   */
-
-  Dispatcher.prototype.dispatch = function(payload) {
-    var id, message, _results;
-    message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + 'of a dispatch.';
-    invariant(!this._isDispatching, message);
-    this._startDispatching(payload);
-    try {
-      _results = [];
-      for (id in this._callbacks) {
-        if (this._isPending[id]) {
-          continue;
-        }
-        _results.push(this._invokeCallback(id));
-      }
-      return _results;
-    } finally {
-      this._stopDispatching();
-    }
-  };
-
-
-  /*
-      Is this Dispatcher currently dispatching.
-  
-      @return {boolean}
-   */
-
-  Dispatcher.prototype.isDispatching = function() {
-    return this._isDispatching;
-  };
-
-
-  /*
-      Call the callback stored with the given id. Also do some internal
-      bookkeeping.
-  
-      @param {string} id
-      @internal
-   */
-
-  Dispatcher.prototype._invokeCallback = function(id) {
-    this._isPending[id] = true;
-    this._callbacks[id](this._pendingPayload);
-    return this._isHandled[id] = true;
-  };
-
-
-  /*
-      Set up bookkeeping needed when dispatching.
-  
-      @param {object} payload
-      @internal
-   */
-
-  Dispatcher.prototype._startDispatching = function(payload) {
-    var id;
-    for (id in this._callbacks) {
-      this._isPending[id] = false;
-      this._isHandled[id] = false;
-    }
-    this._pendingPayload = payload;
-    return this._isDispatching = true;
-  };
-
-
-  /*
-      Clear bookkeeping used for dispatching.
-  
-      @internal
-   */
-
-  Dispatcher.prototype._stopDispatching = function() {
-    this._pendingPayload = null;
-    return this._isDispatching = false;
-  };
-
-  return Dispatcher;
-
-})();
 });
 
 ;require.register("libs/flux/dispatcher/dispatcher", function(exports, require, module) {
@@ -6787,63 +6702,6 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 };
 
 module.exports = invariant;
-});
-
-;require.register("libs/flux/store/Store", function(exports, require, module) {
-var AppDispatcher, Store,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-AppDispatcher = require('../../../app_dispatcher');
-
-module.exports = Store = (function(_super) {
-  var _addHandlers, _handlers, _nextUniqID, _processBinding;
-
-  __extends(Store, _super);
-
-  Store.prototype.uniqID = null;
-
-  _nextUniqID = 0;
-
-  _handlers = {};
-
-  _addHandlers = function(type, callback) {
-    if (_handlers[this.uniqID] == null) {
-      _handlers[this.uniqID] = {};
-    }
-    return _handlers[this.uniqID][type] = callback;
-  };
-
-  _processBinding = function() {
-    return this.dispatchToken = AppDispatcher.register((function(_this) {
-      return function(payload) {
-        var callback, type, value, _ref;
-        _ref = payload.action, type = _ref.type, value = _ref.value;
-        if ((callback = _handlers[_this.uniqID][type]) != null) {
-          return callback.call(_this, value);
-        }
-      };
-    })(this));
-  };
-
-  function Store() {
-    Store.__super__.constructor.call(this);
-    this.uniqID = _nextUniqID++;
-    this.__bindHandlers(_addHandlers.bind(this));
-    _processBinding.call(this);
-  }
-
-  Store.prototype.__bindHandlers = function(handle) {
-    var message;
-    if (__DEV__) {
-      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
-      throw new Error(message);
-    }
-  };
-
-  return Store;
-
-})(EventEmitter);
 });
 
 ;require.register("libs/flux/store/store", function(exports, require, module) {
@@ -7292,7 +7150,7 @@ module.exports = {
   "account mailboxes": "Folders",
   "account newmailbox label": "New Folder",
   "account newmailbox placeholder": "Name",
-  "account newmailbox parent": "Parent",
+  "account newmailbox parent": "Parent:",
   "account confirm delbox": "Do you really want to delete this box and everything in it ?",
   "account tab account": "Account",
   "account tab mailboxes": "Folders",
@@ -7301,6 +7159,9 @@ module.exports = {
   "account updated": "Account updated",
   "account creation ok": "Yeah ! The account has been successfully created. Now select the mailboxes you want to see in the menu",
   "account refreshed": "Account refreshed",
+  "account identifiers": "Identification",
+  "account actions": "Actions",
+  "account danger zone": "Danger Zone",
   "mailbox create ok": "Folder created",
   "mailbox create ko": "Error creating folder",
   "mailbox update ok": "Folder updated",
@@ -7496,6 +7357,9 @@ module.exports = {
   "account updated": "Modification enregistrée",
   "account refreshed": "Actualisé",
   "account creation ok": "Youpi, le compte a été créé ! Sélectionnez à présent les dossiers que vous voulez voir apparaitre dans le menu",
+  "account identifiers": "Identification",
+  "account danger zone": "Zone de danger",
+  "account actions": "Actions",
   "mailbox create ok": "Dossier créé",
   "mailbox create ko": "Erreur de création du dossier",
   "mailbox update ok": "Dossier mis à jour",
@@ -7891,9 +7755,9 @@ AccountStore = (function(_super) {
     }
     mailboxes = account.get('mailboxes');
     mailbox = mailboxes.filter(function(mailbox) {
-      return mailbox.get('label') === 'INBOX';
+      return mailbox.get('label').toLowerCase() === 'inbox';
     });
-    if (mailbox.count() === 1) {
+    if (mailbox.count() !== 0) {
       return mailbox.first();
     } else {
       favorites = account.get('favorites');
@@ -8085,7 +7949,7 @@ LayoutStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var _alert, _responsiveMenuShown;
+  var _alert, _responsiveMenuShown, _shown, _tasks;
 
   __extends(LayoutStore, _super);
 
@@ -8099,6 +7963,10 @@ LayoutStore = (function(_super) {
     level: null,
     message: null
   };
+
+  _tasks = Immutable.OrderedMap();
+
+  _shown = true;
 
 
   /*
@@ -8124,7 +7992,26 @@ LayoutStore = (function(_super) {
       _alert.message = null;
       return this.emit('change');
     });
-    return handle(ActionTypes.REFRESH, function() {
+    handle(ActionTypes.REFRESH, function() {
+      return this.emit('change');
+    });
+    handle(ActionTypes.RECEIVE_TASK_UPDATE, function(task) {
+      var id;
+      task = Immutable.Map(task);
+      id = task.get('id');
+      _tasks = _tasks.set(id, task).toOrderedMap();
+      return this.emit('change');
+    });
+    handle(ActionTypes.RECEIVE_TASK_DELETE, function(taskid) {
+      _tasks = _tasks.remove(taskid).toOrderedMap();
+      return this.emit('change');
+    });
+    handle(ActionTypes.TOASTS_SHOW, function() {
+      _shown = true;
+      return this.emit('change');
+    });
+    return handle(ActionTypes.TOASTS_HIDE, function() {
+      _shown = false;
       return this.emit('change');
     });
   };
@@ -8140,6 +8027,14 @@ LayoutStore = (function(_super) {
 
   LayoutStore.prototype.getAlert = function() {
     return _alert;
+  };
+
+  LayoutStore.prototype.getTasks = function() {
+    return _tasks;
+  };
+
+  LayoutStore.prototype.isShown = function() {
+    return _shown;
   };
 
   return LayoutStore;
@@ -8216,7 +8111,7 @@ MessageStore = (function(_super) {
 
   _params = null;
 
-  _currentMessages = null;
+  _currentMessages = Immutable.Sequence();
 
   _currentID = null;
 
@@ -8524,6 +8419,67 @@ MessageStore = (function(_super) {
 module.exports = new MessageStore();
 });
 
+;require.register("stores/refreshes_store", function(exports, require, module) {
+var ActionTypes, RefreshesStore, Store,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+Store = require('../libs/flux/store/store');
+
+ActionTypes = require('../constants/app_constants').ActionTypes;
+
+RefreshesStore = (function(_super) {
+
+  /*
+      Initialization.
+      Defines private variables here.
+   */
+  var _refreshes;
+
+  __extends(RefreshesStore, _super);
+
+  function RefreshesStore() {
+    return RefreshesStore.__super__.constructor.apply(this, arguments);
+  }
+
+  _refreshes = Immutable.Sequence(window.refreshes).mapKeys(function(_, refresh) {
+    return refresh.objectID;
+  }).map(function(refresh) {
+    return Immutable.fromJS(refresh);
+  }).toOrderedMap();
+
+
+  /*
+      Defines here the action handlers.
+   */
+
+  RefreshesStore.prototype.__bindHandlers = function(handle) {
+    handle(ActionTypes.RECEIVE_REFRESH_UPDATE, function(refresh) {
+      var id;
+      refresh = Immutable.Map(refresh);
+      id = refresh.get('objectID');
+      _refreshes = _refreshes.set(id, refresh).toOrderedMap();
+      return this.emit('change');
+    });
+    return handle(ActionTypes.RECEIVE_REFRESH_DELETE, function(refreshID) {
+      _refreshes = _refreshes.filter(function(refresh) {
+        return refresh.get('id') !== refreshID;
+      }).toOrderedMap();
+      return this.emit('change');
+    });
+  };
+
+  RefreshesStore.prototype.getRefreshing = function() {
+    return _refreshes;
+  };
+
+  return RefreshesStore;
+
+})(Store);
+
+module.exports = new RefreshesStore();
+});
+
 ;require.register("stores/search_store", function(exports, require, module) {
 var ActionTypes, SearchStore, Store,
   __hasProp = {}.hasOwnProperty,
@@ -8661,80 +8617,6 @@ SettingsStore = (function(_super) {
 module.exports = new SettingsStore();
 });
 
-;require.register("stores/tasks_store", function(exports, require, module) {
-var ActionTypes, NotifyType, Store, TasksStore, _ref,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-Store = require('../libs/flux/store/store');
-
-_ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, NotifyType = _ref.NotifyType;
-
-TasksStore = (function(_super) {
-
-  /*
-      Initialization.
-      Defines private variables here.
-   */
-  var _shown, _tasks;
-
-  __extends(TasksStore, _super);
-
-  function TasksStore() {
-    return TasksStore.__super__.constructor.apply(this, arguments);
-  }
-
-  _tasks = Immutable.Sequence(window.tasks).mapKeys(function(_, task) {
-    return task.id;
-  }).map(function(task) {
-    if (task.type == null) {
-      task.type = NotifyType.SERVER;
-    }
-    return Immutable.fromJS(task);
-  }).toOrderedMap();
-
-  _shown = true;
-
-
-  /*
-      Defines here the action handlers.
-   */
-
-  TasksStore.prototype.__bindHandlers = function(handle) {
-    handle(ActionTypes.RECEIVE_TASK_UPDATE, function(task) {
-      task = Immutable.Map(task);
-      _tasks = _tasks.set(task.get('id'), task);
-      return this.emit('change');
-    });
-    handle(ActionTypes.RECEIVE_TASK_DELETE, function(taskid) {
-      _tasks = _tasks.remove(taskid);
-      return this.emit('change');
-    });
-    handle(ActionTypes.TOASTS_SHOW, function() {
-      _shown = true;
-      return this.emit('change');
-    });
-    return handle(ActionTypes.TOASTS_HIDE, function() {
-      _shown = false;
-      return this.emit('change');
-    });
-  };
-
-  TasksStore.prototype.getTasks = function() {
-    return _tasks.toOrderedMap();
-  };
-
-  TasksStore.prototype.isShown = function() {
-    return _shown;
-  };
-
-  return TasksStore;
-
-})(Store);
-
-module.exports = new TasksStore();
-});
-
 ;require.register("utils/activity_utils", function(exports, require, module) {
 var ActivityUtils, XHRUtils;
 
@@ -8780,6 +8662,16 @@ module.exports = {
   },
   getCurrentMailbox: function() {
     return AccountStore.getSelectedMailboxes();
+  },
+  getCurrentActions: function() {
+    var res;
+    res = [];
+    Object.keys(router.current).forEach(function(panel) {
+      if (router.current[panel] != null) {
+        return res.push(router.current[panel].action);
+      }
+    });
+    return res;
   },
   messageNew: function() {
     return router.navigate('compose/', {
@@ -9098,10 +8990,10 @@ module.exports = MessageUtils = {
       if ((compact != null) && compact) {
         formatter = 'L';
       } else {
-        formatter = 'DD MMMM';
+        formatter = 'MMM DD';
       }
     } else {
-      formatter = 'hh:mm';
+      formatter = 'HH:mm';
     }
     return date.format(formatter);
   },
@@ -9306,13 +9198,11 @@ module.exports = {
 });
 
 ;require.register("utils/socketio_utils", function(exports, require, module) {
-var ActionTypes, AppDispatcher, NotifyType, TaskStore, dispatchTaskDelete, dispatchTaskUpdate, pathToSocketIO, socket, url, _ref;
-
-TaskStore = require('../stores/tasks_store');
+var ActionTypes, AppDispatcher, dispatchTaskDelete, dispatchTaskUpdate, pathToSocketIO, socket, url;
 
 AppDispatcher = require('../app_dispatcher');
 
-_ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, NotifyType = _ref.NotifyType;
+ActionTypes = require('../constants/app_constants').ActionTypes;
 
 url = window.location.origin;
 
@@ -9323,28 +9213,27 @@ socket = io.connect(url, {
 });
 
 dispatchTaskUpdate = function(task) {
-  task.type = NotifyType.SERVER;
   return AppDispatcher.handleServerAction({
-    type: ActionTypes.RECEIVE_TASK_UPDATE,
+    type: ActionTypes.RECEIVE_REFRESH_UPDATE,
     value: task
   });
 };
 
 dispatchTaskDelete = function(taskid) {
   return AppDispatcher.handleServerAction({
-    type: ActionTypes.RECEIVE_TASK_DELETE,
+    type: ActionTypes.RECEIVE_REFRESH_DELETE,
     value: taskid
   });
 };
 
-socket.on('task.create', dispatchTaskUpdate);
+socket.on('refresh.create', dispatchTaskUpdate);
 
-socket.on('task.update', dispatchTaskUpdate);
+socket.on('refresh.update', dispatchTaskUpdate);
 
-socket.on('task.delete', dispatchTaskDelete);
+socket.on('refresh.delete', dispatchTaskDelete);
 
 module.exports = {
-  acknowledgeTask: function(taskid) {
+  acknowledgeRefresh: function(taskid) {
     return socket.emit('mark_ack', taskid);
   }
 };

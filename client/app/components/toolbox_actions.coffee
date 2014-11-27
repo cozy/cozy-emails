@@ -5,6 +5,7 @@ module.exports = ToolboxActions = React.createClass
     displayName: 'ToolboxActions'
 
     render: ->
+        direction = if @props.direction is 'right' then 'right' else 'left'
         div className: 'btn-group btn-group-sm',
             button
                 className: 'btn btn-default dropdown-toggle more',
@@ -12,7 +13,7 @@ module.exports = ToolboxActions = React.createClass
                 'data-toggle': 'dropdown',
                 t 'mail action more',
                     span className: 'caret'
-            ul className: 'dropdown-menu dropdown-menu-right', role: 'menu',
+            ul className: 'dropdown-menu dropdown-menu-' + direction, role: 'menu',
                 li
                     role: 'presentation',
                     t 'mail action mark'

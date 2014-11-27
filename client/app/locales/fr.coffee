@@ -127,6 +127,9 @@ module.exports =
       "account creation ok"         : "Youpi, le compte a été créé !
         Sélectionnez à présent les dossiers que vous voulez voir
         apparaitre dans le menu"
+      "account identifiers"         : "Identification"
+      "account danger zone"         : "Zone de danger"
+      "account actions"             : "Actions"
       "mailbox create ok"           : "Dossier créé"
       "mailbox create ko"           : "Erreur de création du dossier"
       "mailbox update ok"           : "Dossier mis à jour"

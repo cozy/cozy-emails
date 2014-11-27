@@ -147,9 +147,9 @@ module.exports = MessageUtils =
             if compact? and compact
                 formatter = 'L'
             else
-                formatter = 'DD MMMM'
+                formatter = 'MMM DD'
         else
-            formatter = 'hh:mm'
+            formatter = 'HH:mm'
         return date.format formatter
 
     getAvatar: (message) ->

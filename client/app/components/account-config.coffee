@@ -146,6 +146,8 @@ module.exports = React.createClass
 
         form className: 'form-horizontal',
             @renderError()
+            fieldset null,
+                legend null, t 'account identifiers'
             div className: 'form-group' + hasError('label'),
 
                 label
@@ -347,6 +349,8 @@ module.exports = React.createClass
                             onClick: (ev) =>
                                 @_onServerParam ev.target, 'imap', 'tls'
 
+            fieldset null,
+                legend null, t 'account actions'
             div className: '',
                 div className: 'col-sm-offset-4',
                     button
@@ -354,7 +358,7 @@ module.exports = React.createClass
                         onClick: @onSubmit, buttonLabel
                 if @state.id?
                     fieldset null,
-                        legend null, t 'danger zone'
+                        legend null, t 'account danger zone'
                         div className: 'col-sm-offset-4',
                             button
                                 className: 'btn btn-default btn-danger btn-remove',
@@ -404,7 +408,7 @@ module.exports = React.createClass
                             className: "col-xs-1 text-center",
                             t 'mailbox title new'
                 mailboxes
-                li className: "row box edited", key: 'new',
+                li className: "row box new", key: 'new',
                     span
                         className: "col-xs-1 box-action add"
                         onClick: @addMailbox
@@ -422,6 +426,7 @@ module.exports = React.createClass
                             type: 'text',
                             className: 'form-control',
                             placeholder: t "account newmailbox placeholder"
+                            onKeyDown: @onKeyDown
                     label
                         className: 'col-xs-2 text-center control-label',
                         t "account newmailbox parent"
@@ -432,6 +437,11 @@ module.exports = React.createClass
                             selectedMailbox: @state.newMailboxParent
                             onChange: (mailbox) =>
                                 @setState newMailboxParent: mailbox
+
+    onKeyDown: (evt) ->
+        switch evt.key
+            when "Enter"
+                @addMailbox()
 
     _renderMailboxChoice: (labelText, box) ->
         if @state.id?
@@ -537,7 +547,7 @@ module.exports = React.createClass
 
 
     addMailbox: (event) ->
-        event.preventDefault()
+        event?.preventDefault()
 
         mailbox =
             label: @refs.newmailbox.getDOMNode().value.trim()
@@ -770,6 +780,7 @@ MailboxItem = React.createClass
                     ref: 'label',
                     defaultValue: @props.mailbox.get 'label'
                     type: 'text'
+                    onKeyDown: @onKeyDown,
         else
             li className: classItem, key: key,
                 span
@@ -801,6 +812,11 @@ MailboxItem = React.createClass
                     className: "col-xs-1 text-center box-count box-new",
                     nbNew
 
+    onKeyDown: (evt) ->
+        switch evt.key
+            when "Enter"
+                @updateMailbox()
+
     editMailbox: (e) ->
         e.preventDefault()
         @setState edited: true
@@ -810,7 +826,7 @@ MailboxItem = React.createClass
         @setState edited: false
 
     updateMailbox: (e) ->
-        e.preventDefault()
+        e?.preventDefault()
 
         mailbox =
             label: @refs.label.getDOMNode().value.trim()
