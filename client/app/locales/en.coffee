@@ -13,7 +13,7 @@ module.exports =
 
       # Compose window
       "compose"                   : "Compose new email"
-      "compose default"           : 'Hello, how are you doing today ?'
+      "compose default"           : 'Hello, how are you doing today?'
       "compose from"              : "From"
       "compose to"                : "To"
       "compose to help"           : "Recipients list"
@@ -51,15 +51,15 @@ module.exports =
       "list filter"             : "Filter"
       "list filter all"         : "All"
       "list filter unseen"      : "Unseen"
-      "list filter flagged"     : "Importants"
+      "list filter flagged"     : "Important"
       "list sort"               : "Sort"
       "list sort date"          : "Date"
       "list sort subject"       : "Subject"
-      "list option compact"     : "Compacte"
+      "list option compact"     : "Compact"
       "list next page"          : "More messages"
       "list end"                : "This is the end of the road"
       "list mass no message"    : "No message selected"
-      "list delete confirm"     : "Do you really want to delete %{nb} messages ?"
+      "list delete confirm"     : "Do you really want to delete %{nb} messages?"
 
       # Mail
       "mail receivers"          : "To: "
@@ -78,12 +78,12 @@ module.exports =
       "mail mark fav"           : "Important"
       "mail mark nofav"         : "Not important"
       "mail mark read"          : "Read"
-      "mail mark unread"        : "Not read"
-      "mail confirm delete"     : "Do you really want to delete message “%{subject}” ?"
+      "mail mark unread"        : "Unread"
+      "mail confirm delete"     : "Do you really want to delete message “%{subject}”?"
       "mail action conversation delete" : "Delete conversation"
       "mail action conversation move"   : "Move conversation"
       "mail action conversation seen"   : "Mark conversation as read"
-      "mail action conversation unseen" : "Mark conversation as not read"
+      "mail action conversation unseen" : "Mark conversation as unread"
 
       # Account
       "account new"                 : "New account"
@@ -113,13 +113,13 @@ module.exports =
       "account newmailbox placeholder" : "Name"
       "account newmailbox parent"   : "Parent:"
       "account confirm delbox"      : "Do you really want to delete this box
-                                        and everything in it ?"
+                                        and everything in it?"
       "account tab account"         : "Account"
       "account tab mailboxes"       : "Folders"
       "account errors"              : "Some data are missing or invalid"
       "account type"                : "Account type"
       "account updated"             : "Account updated"
-      "account creation ok"         : "Yeah ! The account has been successfully
+      "account creation ok"         : "Yeah! The account has been successfully
         created. Now select the mailboxes you want to see in the menu"
       "account refreshed"           : "Account refreshed"
       "account identifiers"         : "Identification"
@@ -149,7 +149,7 @@ module.exports =
       "config error smtpPort"       : "Wrong SMTP Port"
       "config error smtpServer"     : "Wrong SMTP Server"
       "config error nomailboxes"    : "No folder in this account, please create
-                                        some"
+                                        one"
 
       # Message Action
       "message action sent ok"      : "Message sent"
