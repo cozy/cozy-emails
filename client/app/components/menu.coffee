@@ -132,35 +132,18 @@ module.exports = Menu = React.createClass
                 @setState displayActiveAccount: not @state.displayActiveAccount
             else
                 @setState displayActiveAccount: true
-        nbTotal  = 0
-        nbUnread = 0
-        nbNew    = 0
-        account.get('mailboxes').map (mailbox) ->
-            nbTotal  += mailbox.get('nbTotal') or 0
-            nbUnread += mailbox.get('nbUnread') or 0
-            nbNew    += mailbox.get('nbNew') or 0
-        .toJS()
-        title    = t "menu mailbox total", nbTotal
-        if nbUnread > 0
-            title += t "menu mailbox unread", nbUnread
-        if nbNew > 0
-            title += t "menu mailbox new", nbNew
 
         accountClasses = classer
             active: (isSelected and @state.displayActiveAccount)
-            news: nbNew > 0
 
         li className: accountClasses, key: key,
             a
                 href: url,
                 className: 'menu-item account ' + accountClasses,
                 onClick: toggleActive,
-                title: title,
                 'data-toggle': 'tooltip',
                 'data-placement' : 'right',
                     i className: 'fa fa-inbox'
-                    if nbUnread and nbUnread > 0
-                        span className: 'badge', nbUnread
                     span
                         'data-account-id': key,
                         className: 'item-label',
