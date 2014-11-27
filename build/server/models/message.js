@@ -487,7 +487,12 @@ Message.prototype.imap_applyChanges = function(newflags, newmailboxIDs, boxOps, 
           function(cb) {
             return imap.openBox(boxIndex[firstboxid].path, cb);
           }, function(cb) {
-            return imap.setFlags(firstuid, newflags, cb);
+            try {
+              return imap.setFlags(firstuid, newflags, cb);
+            } catch (_error) {
+              err = _error;
+              return cb(err);
+            }
           }, function(cb) {
             var paths;
             paths = boxOps.addTo.map(function(destId) {

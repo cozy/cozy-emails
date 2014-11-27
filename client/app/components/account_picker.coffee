@@ -27,25 +27,40 @@ module.exports = React.createClass
         accounts = @props.accounts
         account  = accounts.get @props.valueLink.value
         value    = @props.valueLink.value
+        if @props.type is 'address'
+            label = "\"#{account.get('name') or account.get('label')}\" <#{account.get 'login'}>"
+        else
+            label = account.label
 
         div null,
-            button
-                id: 'compose-from',
-                className: 'btn btn-default dropdown-toggle',
-                type: 'button',
+            span
+                className: 'compose-from dropdown-toggle',
                 'data-toggle': 'dropdown',
-                null,
-                    span ref: 'account', account.get 'label'
+            #button
+            #    id: 'compose-from',
+            #    className: 'btn btn-default dropdown-toggle',
+            #    type: 'button',
+            #    'data-toggle': 'dropdown',
+                    span ref: 'account', label
                     span className: 'caret'
             ul className: 'dropdown-menu', role: 'menu',
                 for key, account of accounts.toJS() when key isnt value
-                    li
-                        role: 'presentation',
-                        key: key,
-                            a
-                                role: 'menuitem',
-                                onClick: @onChange,
-                                'data-value': key,
-                                account.label
+                    @renderAccount(key, account)
+
+    renderAccount: (key, account) ->
+        console.log account
+        if @props.type is 'address'
+            label = "\"#{account.name or account.label}\" <#{account.login}>"
+        else
+            label = account.label
+
+        li
+            role: 'presentation',
+            key: key,
+                a
+                    role: 'menuitem',
+                    onClick: @onChange,
+                    'data-value': key,
+                    label
 
 

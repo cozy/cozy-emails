@@ -2011,18 +2011,21 @@ module.exports = React.createClass({
     }, account.get('label'));
   },
   renderPicker: function() {
-    var account, accounts, key, value;
+    var account, accounts, key, label, value;
     accounts = this.props.accounts;
     account = accounts.get(this.props.valueLink.value);
     value = this.props.valueLink.value;
-    return div(null, button({
-      id: 'compose-from',
-      className: 'btn btn-default dropdown-toggle',
-      type: 'button',
+    if (this.props.type === 'address') {
+      label = "\"" + (account.get('name') || account.get('label')) + "\" <" + (account.get('login')) + ">";
+    } else {
+      label = account.label;
+    }
+    return div(null, span({
+      className: 'compose-from dropdown-toggle',
       'data-toggle': 'dropdown'
-    }, null, span({
+    }, span({
       ref: 'account'
-    }, account.get('label')), span({
+    }, label), span({
       className: 'caret'
     })), ul({
       className: 'dropdown-menu',
@@ -2034,18 +2037,28 @@ module.exports = React.createClass({
       for (key in _ref1) {
         account = _ref1[key];
         if (key !== value) {
-          _results.push(li({
-            role: 'presentation',
-            key: key
-          }, a({
-            role: 'menuitem',
-            onClick: this.onChange,
-            'data-value': key
-          }, account.label)));
+          _results.push(this.renderAccount(key, account));
         }
       }
       return _results;
     }).call(this)));
+  },
+  renderAccount: function(key, account) {
+    var label;
+    console.log(account);
+    if (this.props.type === 'address') {
+      label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
+    } else {
+      label = account.label;
+    }
+    return li({
+      role: 'presentation',
+      key: key
+    }, a({
+      role: 'menuitem',
+      onClick: this.onChange,
+      'data-value': key
+    }, label));
   }
 });
 });
@@ -2526,25 +2539,16 @@ module.exports = Compose = React.createClass({
     }, div({
       className: 'btn-toolbar compose-toggle',
       role: 'toolbar'
-    }, div({
-      className: 'btn-group btn-group-sm'
-    }, button({
-      className: 'btn btn-default compose-toggle-cc',
-      type: 'button',
+    }, div(null), a({
+      className: 'compose-toggle-cc',
       onClick: this.onToggleCc
-    }, span({
-      className: 'tool-long'
-    }, t('compose toggle cc')))), div({
-      className: 'btn-group btn-group-sm'
-    }, button({
-      className: 'btn btn-default compose-toggle-bcc',
-      type: 'button',
+    }, t('compose toggle cc')), a({
+      className: 'compose-toggle-bcc',
       onClick: this.onToggleBcc
-    }, span({
-      className: 'tool-long'
-    }, t('compose toggle bcc'))))), AccountPicker({
+    }, t('compose toggle bcc'))), AccountPicker({
       accounts: this.props.accounts,
-      valueLink: this.linkState('accountID')
+      valueLink: this.linkState('accountID'),
+      type: 'address'
     }))), MailsInput({
       id: 'compose-to',
       valueLink: this.linkState('to'),
@@ -2608,25 +2612,19 @@ module.exports = Compose = React.createClass({
       onClick: this.onSend
     }, span({
       className: 'fa fa-send'
-    }), span({
-      className: 'tool-long'
-    }, t('compose action send'))), button({
+    }), span(null, t('compose action send'))), button({
       className: 'btn btn-default',
       type: 'button',
       onClick: this.onDraft
     }, span({
       className: 'fa fa-save'
-    }), span({
-      className: 'tool-long'
-    }, t('compose action draft'))), this.props.message != null ? button({
+    }), span(null, t('compose action draft'))), this.props.message != null ? button({
       className: 'btn btn-default',
       type: 'button',
       onClick: this.onDelete
     }, span({
       className: 'fa fa-trash-o'
-    }), span({
-      className: 'tool-long'
-    }, t('compose action delete'))) : void 0, a({
+    }), span(null, t('compose action delete'))) : void 0, a({
       href: cancelUrl,
       className: 'btn btn-default'
     }, t('app cancel')))))));
@@ -2881,8 +2879,11 @@ module.exports = React.createClass({
   displayName: 'ContactForm',
   mixins: [StoreWatchMixin([ContactStore]), RouterMixin],
   getStateFromStores: function() {
+    var query, _ref1;
+    query = (_ref1 = this.refs.contactInput) != null ? _ref1.getDOMNode().value.trim() : void 0;
     return {
-      contacts: ContactStore.getResults()
+      contacts: (query != null ? query.length : void 0) > 2 ? ContactStore.getResults() : null,
+      selected: 0
     };
   },
   componentWillMount: function() {
@@ -2894,8 +2895,9 @@ module.exports = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var listClass, _ref1;
+    var current, listClass, _ref1;
     listClass = ((_ref1 = this.state.contacts) != null ? _ref1.length : void 0) > 0 ? 'open' : '';
+    current = 0;
     return form({
       className: "contact-form"
     }, div(null, div({
@@ -2918,19 +2920,26 @@ module.exports = React.createClass({
       className: "contact-list"
     }, this.state.contacts.map((function(_this) {
       return function(contact, key) {
-        return _this.renderContact(contact);
+        var selected;
+        selected = current === _this.state.selected;
+        current++;
+        return _this.renderContact(contact, selected);
       };
     })(this)).toJS())) : void 0);
   },
-  renderContact: function(contact) {
-    var avatar, selectContact;
+  renderContact: function(contact, selected) {
+    var avatar, classes, selectContact;
     selectContact = (function(_this) {
       return function() {
         return _this.props.onContact(contact);
       };
     })(this);
     avatar = contact.get('avatar');
+    classes = classer({
+      selected: selected
+    });
     return li({
+      className: classes,
       onClick: selectContact
     }, a(null, avatar != null ? img({
       className: 'avatar',
@@ -2947,10 +2956,30 @@ module.exports = React.createClass({
     }
   },
   onKeyDown: function(evt) {
-    if (evt.key === "Enter") {
-      this.onSubmit();
-      evt.preventDefault();
-      return false;
+    var contact, _ref1;
+    switch (evt.key) {
+      case "Tab":
+        this.onSubmit();
+        evt.preventDefault();
+        return false;
+      case "Enter":
+        if (((_ref1 = this.state.contacts) != null ? _ref1.count() : void 0) > 0) {
+          this.props.onContact;
+          contact = this.state.contacts.slice(this.state.selected).first();
+          this.props.onContact(contact);
+        } else {
+          this.onSubmit();
+        }
+        evt.preventDefault();
+        return false;
+      case "ArrowUp":
+        return this.setState({
+          selected: this.state.selected === 0 ? this.state.contacts.count() - 1 : this.state.selected - 1
+        });
+      case "ArrowDown":
+        return this.setState({
+          selected: this.state.selected === (this.state.contacts.count() - 1) ? 0 : this.state.selected + 1
+        });
     }
   }
 });
@@ -3027,9 +3056,9 @@ module.exports = React.createClass({
     inConversation = this.props.conversation.length > 1;
     return div({
       className: 'conversation'
-    }, h3(null, a({
+    }, h3(null, this.props.message.get('subject'), a({
       href: closeUrl,
-      className: 'close-conversation hidden-xs hidden-sm'
+      className: 'expand close-conversation hidden-xs hidden-sm'
     }, i({
       className: 'fa ' + closeIcon
     })), this.props.layout !== 'full' ? a({
@@ -3389,7 +3418,9 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/mails_input", function(exports, require, module) {
-var ContactForm, MailsInput, MessageUtils, Modal, div, input, label, span, _ref;
+var ContactActionCreator, ContactForm, ContactStore, MailsInput, MessageUtils, Modal, StoreWatchMixin, a, classer, div, i, img, input, label, li, span, ul, _ref;
+
+_ref = React.DOM, div = _ref.div, label = _ref.label, input = _ref.input, span = _ref.span, ul = _ref.ul, li = _ref.li, a = _ref.a, img = _ref.img, i = _ref.i;
 
 MessageUtils = require('../utils/message_utils');
 
@@ -3397,15 +3428,34 @@ ContactForm = require('./contact-form');
 
 Modal = require('./modal');
 
-_ref = React.DOM, div = _ref.div, label = _ref.label, input = _ref.input, span = _ref.span;
+StoreWatchMixin = require('../mixins/store_watch_mixin');
+
+ContactStore = require('../stores/contact_store');
+
+ContactActionCreator = require('../actions/contact_action_creator');
+
+classer = React.addons.classSet;
 
 module.exports = MailsInput = React.createClass({
   displayName: 'MailsInput',
-  mixins: [React.addons.LinkedStateMixin],
-  getInitialState: function() {
+  mixins: [React.addons.LinkedStateMixin, StoreWatchMixin([ContactStore])],
+  getStateFromStores: function() {
+    var query, _ref1;
+    query = (_ref1 = this.refs.contactInput) != null ? _ref1.getDOMNode().value.trim() : void 0;
     return {
-      contactShown: false
+      contacts: (query != null ? query.length : void 0) > 2 ? ContactStore.getResults() : null,
+      selected: 0,
+      open: false
     };
+  },
+  componentWillMount: function() {
+    return this.setState({
+      contacts: null,
+      open: false
+    });
+  },
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   proxyValueLink: function() {
     return {
@@ -3422,7 +3472,7 @@ module.exports = MailsInput = React.createClass({
               };
             } else {
               return {
-                address: tupple
+                address: tupple.trim()
               };
             }
           });
@@ -3432,62 +3482,129 @@ module.exports = MailsInput = React.createClass({
     };
   },
   render: function() {
-    var classInput, classLabel, className, closeLabel, closeModal, content, onContact, title;
+    var classLabel, className, current, listClass, _ref1;
     className = (this.props.className || '') + ' form-group';
     classLabel = 'col-sm-2 col-sm-offset-0 control-label';
-    classInput = 'col-sm-8';
-    onContact = (function(_this) {
-      return function(contact) {
-        var address, current, name, val;
-        val = _this.proxyValueLink();
-        if (_this.props.valueLink.value.length > 0) {
-          current = "" + val.value + ",";
-        } else {
-          current = "";
-        }
-        name = contact.get('fn');
-        address = contact.get('address');
-        val.requestChange("" + current + name + " <" + address + ">");
-        return _this.setState({
-          contactShown: false
-        });
-      };
-    })(this);
+    listClass = classer({
+      'contact-form': true,
+      open: this.state.open && ((_ref1 = this.state.contacts) != null ? _ref1.length : void 0) > 0
+    });
+    current = 0;
     return div({
       className: className
     }, label({
       htmlFor: this.props.id,
       className: classLabel
     }, this.props.label), div({
-      className: classInput
-    }, div({
-      className: 'input-group'
+      className: 'col-sm-8 input-group contact-group dropdown ' + listClass
     }, input({
       id: this.props.id,
       name: this.props.id,
       className: 'form-control',
-      ref: this.props.ref,
+      onKeyDown: this.onKeyDown,
+      ref: 'contactInput',
       valueLink: this.proxyValueLink(),
       type: 'text',
       placeholder: this.props.placeholder
     }), div({
       className: 'input-group-addon btn btn-cozy contact',
-      onClick: this.toggleContact
+      onClick: this.onQuery
     }, span({
       className: 'fa fa-search'
-    }))), this.state.contactShown ? (title = t('contact form'), content = ContactForm({
-      query: this.proxyValueLink().value,
-      onContact: onContact
-    }), closeModal = this.toggleContact, closeLabel = t('app alert close'), Modal({
-      title: title,
-      content: content,
-      closeModal: closeModal,
-      closeLabel: closeLabel
-    })) : void 0));
+    })), this.state.contacts != null ? ul({
+      className: "dropdown-menu contact-list"
+    }, this.state.contacts.map((function(_this) {
+      return function(contact, key) {
+        var selected;
+        selected = current === _this.state.selected;
+        current++;
+        return _this.renderContact(contact, selected);
+      };
+    })(this)).toJS()) : void 0));
   },
-  toggleContact: function() {
+  renderContact: function(contact, selected) {
+    var avatar, classes, selectContact;
+    selectContact = (function(_this) {
+      return function() {
+        return _this.onContact(contact);
+      };
+    })(this);
+    avatar = contact.get('avatar');
+    classes = classer({
+      selected: selected
+    });
+    return li({
+      className: classes,
+      onClick: selectContact
+    }, a(null, avatar != null ? img({
+      className: 'avatar',
+      src: avatar
+    }) : i({
+      className: 'avatar fa fa-user'
+    }), "" + (contact.get('fn')) + " <" + (contact.get('address')) + ">"));
+  },
+  onQuery: function() {
+    var query;
+    query = this.refs.contactInput.getDOMNode().value.split(',').pop().trim();
+    if (query.length > 2) {
+      ContactActionCreator.searchContactLocal(query);
+      this.setState({
+        open: true
+      });
+      return true;
+    } else {
+      return false;
+    }
+  },
+  onKeyDown: function(evt) {
+    var contact, node, _ref1;
+    switch (evt.key) {
+      case "Tab":
+        if (this.onQuery()) {
+          evt.preventDefault();
+          return false;
+        }
+        break;
+      case "Enter":
+        if (((_ref1 = this.state.contacts) != null ? _ref1.count() : void 0) > 0) {
+          this.onContact;
+          contact = this.state.contacts.slice(this.state.selected).first();
+          this.onContact(contact);
+        } else {
+          this.onQuery();
+        }
+        evt.preventDefault();
+        return false;
+      case "ArrowUp":
+        return this.setState({
+          selected: this.state.selected === 0 ? this.state.contacts.count() - 1 : this.state.selected - 1
+        });
+      case "ArrowDown":
+        return this.setState({
+          selected: this.state.selected === (this.state.contacts.count() - 1) ? 0 : this.state.selected + 1
+        });
+      case "Backspace":
+        node = this.refs.contactInput.getDOMNode();
+        return node.value = node.value.trim();
+    }
+  },
+  onContact: function(contact) {
+    var address, current, name, val;
+    val = this.proxyValueLink();
+    if (this.props.valueLink.value.length > 0) {
+      current = val.value.split(',').slice(0, -1).join(',');
+    } else {
+      current = "";
+    }
+    if (current.trim() !== '') {
+      current += ',';
+    }
+    name = contact.get('fn');
+    address = contact.get('address');
+    val.requestChange("" + current + name + " <" + address + ">,");
     return this.setState({
-      contactShown: !this.state.contactShown
+      contacts: null,
+      open: false
     });
   }
 });
@@ -3993,6 +4110,7 @@ MessageList = React.createClass({
     }, this.state.loading ? i({
       className: "fa fa-refresh fa-spin"
     }) : a({
+      className: 'more-messages',
       onClick: nextPage,
       ref: 'nextPage'
     }, t('list next page'))) : p(null, t('list end'))));
@@ -4442,9 +4560,9 @@ MessagesSort = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageFlags, MessageUtils, Participants, RouterMixin, ToolboxActions, ToolboxMove, a, button, classer, div, h3, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
+var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageFlags, MessageUtils, Participants, RouterMixin, ToolboxActions, ToolboxMove, a, button, classer, div, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
 
-_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img;
+_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img;
 
 Compose = require('./compose');
 
@@ -4614,7 +4732,7 @@ module.exports = React.createClass({
         'data-id': message.get('id')
       }, this.renderHeaders(prepared), div({
         className: 'full-headers'
-      }, pre(null, prepared.fullHeaders.join("\n"))), this.renderToolbox(message.get('id'), prepared), this.renderNavigation(), this.renderCompose(), messageDisplayHTML && prepared.html ? div({
+      }, pre(null, prepared.fullHeaders.join("\n"))), this.renderToolbox(message.get('id'), prepared), this.renderCompose(), messageDisplayHTML && prepared.html ? div({
         className: 'row'
       }, imagesWarning ? div({
         className: "imagesWarning content-action",
@@ -4659,7 +4777,7 @@ module.exports = React.createClass({
     }));
   },
   renderHeaders: function(prepared) {
-    var avatar, classes, flags, hasAttachments, leftClass, toggleActive, _base;
+    var avatar, classes, flags, hasAttachments, leftClass, _base;
     hasAttachments = prepared.attachments.length;
     leftClass = hasAttachments ? 'col-md-8' : 'col-md-12';
     flags = prepared.flags;
@@ -4672,20 +4790,12 @@ module.exports = React.createClass({
       'has-attachments': hasAttachments,
       'is-fav': flags.indexOf(MessageFlags.FLAGGED) !== -1
     });
-    toggleActive = a({
-      className: "toggle-active",
-      onClick: this.toggleActive
-    }, this.state.active ? i({
-      className: 'fa fa-compress'
-    }) : i({
-      className: 'fa fa-expand'
-    }));
     if (this.state.headers) {
       return div({
-        className: classes
+        className: classes,
+        onClick: this.toggleActive
       }, div({
-        className: leftClass,
-        onClick: this.toggleHeaders
+        className: leftClass
       }, avatar ? img({
         className: 'sender-avatar',
         src: avatar
@@ -4695,7 +4805,10 @@ module.exports = React.createClass({
         className: 'participants col-md-9'
       }, p({
         className: 'sender'
-      }, this.renderAddress('from')), p({
+      }, this.renderAddress('from'), i({
+        className: 'toggle-headers fa fa-toggle-up',
+        onClick: this.toggleHeaders
+      })), p({
         className: 'receivers'
       }, span(null, t("mail receivers")), this.renderAddress('to')), (typeof (_base = this.props.message.get('cc')) === "function" ? _base(length > 0) : void 0) ? p({
         className: 'receivers'
@@ -4708,11 +4821,11 @@ module.exports = React.createClass({
       }, FilePicker({
         editable: false,
         value: prepared.attachments
-      })) : void 0, this.props.inConversation ? toggleActive : void 0);
+      })) : void 0);
     } else {
       return div({
         className: classes,
-        onClick: this.toggleHeaders
+        onClick: this.toggleActive
       }, avatar ? img({
         className: 'sender-avatar',
         src: avatar
@@ -4720,9 +4833,10 @@ module.exports = React.createClass({
         className: 'sender-avatar fa fa-user'
       }), span({
         className: 'participants'
-      }, this.getParticipants(prepared)), span({
-        className: 'subject'
-      }, this.props.message.get('subject')), span({
+      }, this.getParticipants(prepared)), this.state.active ? i({
+        className: 'toggle-headers fa fa-toggle-down',
+        onClick: this.toggleHeaders
+      }) : void 0, span({
         className: 'hour'
       }, prepared.date), span({
         className: "flags"
@@ -4730,7 +4844,7 @@ module.exports = React.createClass({
         className: 'attach fa fa-paperclip'
       }), i({
         className: 'fav fa fa-star'
-      })), this.props.inConversation ? toggleActive : void 0);
+      })));
     }
   },
   renderAddress: function(field) {
@@ -4766,12 +4880,56 @@ module.exports = React.createClass({
     }
   },
   renderToolbox: function(id, prepared) {
-    var isFlagged, isSeen;
+    var conversationID, displayNext, displayPrev, getParams, isFlagged, isSeen, next, nextUrl, params, prev, prevUrl;
     if (this.state.composing) {
       return;
     }
     isFlagged = prepared.flags.indexOf(FlagsConstants.FLAGGED) === -1;
     isSeen = prepared.flags.indexOf(FlagsConstants.SEEN) === -1;
+    conversationID = this.props.message.get('conversationID');
+    getParams = (function(_this) {
+      return function(id) {
+        if (conversationID && _this.props.settings.get('displayConversation')) {
+          return {
+            action: 'conversation',
+            id: id
+          };
+        } else {
+          return {
+            action: 'message',
+            id: id
+          };
+        }
+      };
+    })(this);
+    if (this.props.prevID != null) {
+      params = getParams(this.props.prevID);
+      prev = {
+        direction: 'second',
+        action: params.action,
+        parameters: params.id
+      };
+      prevUrl = this.buildUrl(prev);
+      displayPrev = (function(_this) {
+        return function() {
+          return _this.redirect(prev);
+        };
+      })(this);
+    }
+    if (this.props.nextID != null) {
+      params = getParams(this.props.nextID);
+      next = {
+        direction: 'second',
+        action: params.action,
+        parameters: params.id
+      };
+      nextUrl = this.buildUrl(next);
+      displayNext = (function(_this) {
+        return function() {
+          return _this.redirect(next);
+        };
+      })(this);
+    }
     return div({
       className: 'messageToolbox row'
     }, div({
@@ -4779,7 +4937,17 @@ module.exports = React.createClass({
       role: 'toolbar'
     }, div({
       className: 'btn-group btn-group-sm btn-group-justified'
-    }, div({
+    }, prevUrl != null ? div({
+      className: 'btn-group btn-group-sm'
+    }, button({
+      className: 'btn btn-default prev',
+      type: 'button',
+      onClick: displayPrev
+    }, a({
+      href: prevUrl
+    }, span({
+      className: 'fa fa-long-arrow-left'
+    })))) : void 0, div({
       className: 'btn-group btn-group-sm'
     }, button({
       className: 'btn btn-default reply',
@@ -4830,75 +4998,10 @@ module.exports = React.createClass({
       onMark: this.onMark,
       onConversation: this.onConversation,
       onHeaders: this.onHeaders
-    }))));
-  },
-  renderNavigation: function() {
-    var conversationID, displayNext, displayPrev, getParams, next, nextUrl, params, prev, prevUrl;
-    conversationID = this.props.message.get('conversationID');
-    getParams = (function(_this) {
-      return function(id) {
-        if (conversationID && _this.props.settings.get('displayConversation')) {
-          return {
-            action: 'conversation',
-            id: id
-          };
-        } else {
-          return {
-            action: 'message',
-            id: id
-          };
-        }
-      };
-    })(this);
-    if (this.props.prevID != null) {
-      params = getParams(this.props.prevID);
-      prev = {
-        direction: 'second',
-        action: params.action,
-        parameters: params.id
-      };
-      prevUrl = this.buildUrl(prev);
-      displayPrev = (function(_this) {
-        return function() {
-          return _this.redirect(prev);
-        };
-      })(this);
-    }
-    if (this.props.nextID != null) {
-      params = getParams(this.props.nextID);
-      next = {
-        direction: 'second',
-        action: params.action,
-        parameters: params.id
-      };
-      nextUrl = this.buildUrl(next);
-      displayNext = (function(_this) {
-        return function() {
-          return _this.redirect(next);
-        };
-      })(this);
-    }
-    return div({
-      className: 'messageNavigation row'
-    }, div({
-      className: 'btn-toolbar',
-      role: 'toolbar'
-    }, div({
-      className: 'btn-group btn-group-sm btn-group-justified'
-    }, prevUrl != null ? div({
+    }), nextUrl != null ? div({
       className: 'btn-group btn-group-sm'
     }, button({
-      className: 'btn btn-default prev',
-      type: 'button',
-      onClick: displayPrev
-    }, a({
-      href: prevUrl
-    }, span({
-      className: 'fa fa-long-arrow-left'
-    })))) : void 0, nextUrl != null ? div({
-      className: 'btn-group btn-group-sm'
-    }, button({
-      className: 'btn btn-default next',
+      className: 'btn btn-default',
       type: 'button',
       onClick: displayNext
     }, a({
@@ -4910,7 +5013,7 @@ module.exports = React.createClass({
   _initFrame: function() {
     var frame, loadContent, panel;
     panel = document.querySelector("#panels > .panel:nth-of-type(2)");
-    if (panel != null) {
+    if ((panel != null) && !this.state.composing) {
       panel.scrollTop = 0;
     }
     if (this.refs.content) {
@@ -4960,17 +5063,20 @@ module.exports = React.createClass({
     return this.setState(state);
   },
   toggleActive: function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    if (this.state.active) {
-      return this.setState({
-        active: false,
-        headers: false
-      });
-    } else {
-      return this.setState({
-        active: true
-      });
+    if (this.props.inConversation) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.state.active) {
+        return this.setState({
+          active: false,
+          headers: false
+        });
+      } else {
+        return this.setState({
+          active: true,
+          headers: false
+        });
+      }
     }
   },
   displayNextMessage: function(next) {
@@ -5232,9 +5338,10 @@ Participant = React.createClass({
     }
   },
   tooltip: function() {
-    var addTooltip, node, onAdd, removeTooltip;
+    var addTooltip, delay, node, onAdd, removeTooltip;
     if (this.refs.participant != null) {
       node = this.refs.participant.getDOMNode();
+      delay = null;
       onAdd = (function(_this) {
         return function(e) {
           e.preventDefault();
@@ -5244,7 +5351,7 @@ Participant = React.createClass({
       })(this);
       addTooltip = (function(_this) {
         return function(e) {
-          var add, addNode, avatar, image, options, template, tooltipNode;
+          var add, addNode, avatar, image, mask, options, rect, template, tooltipNode;
           if (node.dataset.tooltip) {
             return;
           }
@@ -5263,15 +5370,27 @@ Participant = React.createClass({
           template = "<div class=\"tooltip\" role=\"tooltip\">\n    <div class=\"tooltip-arrow\"></div>\n    <div>\n        " + image + "\n        " + _this.props.address.address + "\n        " + add + "\n    </div>\n</div>'";
           options = {
             template: template,
-            delay: {
-              show: 1000,
-              hide: 1000
-            },
+            trigger: 'manual',
             container: "[data-reactid='" + node.dataset.reactid + "']"
           };
           jQuery(node).tooltip(options).tooltip('show');
+          tooltipNode = jQuery(node).data('bs.tooltip').tip()[0];
+          rect = tooltipNode.getBoundingClientRect();
+          mask = document.createElement('div');
+          mask.classList.add('tooltip-mask');
+          mask.style.top = (rect.top - 2) + 'px';
+          mask.style.left = (rect.left - 2) + 'px';
+          mask.style.height = (rect.height + 16) + 'px';
+          mask.style.width = (rect.width + 4) + 'px';
+          document.body.appendChild(mask);
+          mask.addEventListener('mouseout', function(e) {
+            var _ref1, _ref2;
+            if (!((rect.left < (_ref1 = e.pageX) && _ref1 < rect.right)) || !((rect.top < (_ref2 = e.pageY) && _ref2 < rect.bottom))) {
+              mask.parentNode.removeChild(mask);
+              return removeTooltip();
+            }
+          });
           if (_this.props.onAdd != null) {
-            tooltipNode = jQuery(node).data('bs.tooltip').tip()[0];
             addNode = tooltipNode.querySelector('.address-add');
             addNode.addEventListener('mouseover', function() {});
             return addNode.addEventListener('click', onAdd);
@@ -5287,8 +5406,14 @@ Participant = React.createClass({
         delete node.dataset.tooltip;
         return jQuery(node).tooltip('destroy');
       };
-      node.addEventListener('mouseover', addTooltip);
-      return node.parentNode.addEventListener('mouseout', removeTooltip, false);
+      node.addEventListener('mouseover', function() {
+        return delay = setTimeout(function() {
+          return addTooltip();
+        }, 1000);
+      });
+      return node.addEventListener('mouseout', function() {
+        return clearTimeout(delay);
+      });
     }
   },
   componentDidMount: function() {
@@ -6258,181 +6383,6 @@ window.onload = function() {
 };
 });
 
-;require.register("libs/flux/dispatcher/Dispatcher", function(exports, require, module) {
-
-/*
-
-    -- Coffee port of Facebook's flux dispatcher. It was in ES6 and I haven't
-    been successful in adding a transpiler. --
-
-    Copyright (c) 2014, Facebook, Inc.
-    All rights reserved.
-
-    This source code is licensed under the BSD-style license found in the
-    LICENSE file in the root directory of this source tree. An additional grant
-    of patent rights can be found in the PATENTS file in the same directory.
- */
-var Dispatcher, invariant, _lastID, _prefix;
-
-invariant = require('../invariant');
-
-_lastID = 1;
-
-_prefix = 'ID_';
-
-module.exports = Dispatcher = Dispatcher = (function() {
-  function Dispatcher() {
-    this._callbacks = {};
-    this._isPending = {};
-    this._isHandled = {};
-    this._isDispatching = false;
-    this._pendingPayload = null;
-  }
-
-
-  /*
-      Registers a callback to be invoked with every dispatched payload.
-      Returns a token that can be used with `waitFor()`.
-  
-      @param {function} callback
-      @return {string}
-   */
-
-  Dispatcher.prototype.register = function(callback) {
-    var id;
-    id = _prefix + _lastID++;
-    this._callbacks[id] = callback;
-    return id;
-  };
-
-
-  /*
-      Removes a callback based on its token.
-  
-      @param {string} id
-   */
-
-  Dispatcher.prototype.unregister = function(id) {
-    var message;
-    message = 'Dispatcher.unregister(...): `%s` does not map to a ' + 'registered callback.';
-    invariant(this._callbacks[id], message, id);
-    return delete this._callbacks[id];
-  };
-
-
-  /*
-      Waits for the callbacks specified to be invoked before continuing
-      execution of the current callback. This method should only be used by a
-      callback in response to a dispatched payload.
-  
-      @param {array<string>} ids
-   */
-
-  Dispatcher.prototype.waitFor = function(ids) {
-    var id, ii, message, message2, _i, _ref, _results;
-    invariant(this._isDispatching, 'Dispatcher.waitFor(...): Must be invoked while dispatching.');
-    message = 'Dispatcher.waitFor(...): Circular dependency detected ' + 'while waiting for `%s`.';
-    message2 = 'Dispatcher.waitFor(...): `%s` does not map to a ' + 'registered callback.';
-    _results = [];
-    for (ii = _i = 0, _ref = ids.length - 1; _i <= _ref; ii = _i += 1) {
-      id = ids[ii];
-      if (this._isPending[id]) {
-        invariant(this._isHandled[id], message, id);
-        continue;
-      }
-      invariant(this._callbacks[id], message2, id);
-      _results.push(this._invokeCallback(id));
-    }
-    return _results;
-  };
-
-
-  /*
-      Dispatches a payload to all registered callbacks.
-  
-      @param {object} payload
-   */
-
-  Dispatcher.prototype.dispatch = function(payload) {
-    var id, message, _results;
-    message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + 'of a dispatch.';
-    invariant(!this._isDispatching, message);
-    this._startDispatching(payload);
-    try {
-      _results = [];
-      for (id in this._callbacks) {
-        if (this._isPending[id]) {
-          continue;
-        }
-        _results.push(this._invokeCallback(id));
-      }
-      return _results;
-    } finally {
-      this._stopDispatching();
-    }
-  };
-
-
-  /*
-      Is this Dispatcher currently dispatching.
-  
-      @return {boolean}
-   */
-
-  Dispatcher.prototype.isDispatching = function() {
-    return this._isDispatching;
-  };
-
-
-  /*
-      Call the callback stored with the given id. Also do some internal
-      bookkeeping.
-  
-      @param {string} id
-      @internal
-   */
-
-  Dispatcher.prototype._invokeCallback = function(id) {
-    this._isPending[id] = true;
-    this._callbacks[id](this._pendingPayload);
-    return this._isHandled[id] = true;
-  };
-
-
-  /*
-      Set up bookkeeping needed when dispatching.
-  
-      @param {object} payload
-      @internal
-   */
-
-  Dispatcher.prototype._startDispatching = function(payload) {
-    var id;
-    for (id in this._callbacks) {
-      this._isPending[id] = false;
-      this._isHandled[id] = false;
-    }
-    this._pendingPayload = payload;
-    return this._isDispatching = true;
-  };
-
-
-  /*
-      Clear bookkeeping used for dispatching.
-  
-      @internal
-   */
-
-  Dispatcher.prototype._stopDispatching = function() {
-    this._pendingPayload = null;
-    return this._isDispatching = false;
-  };
-
-  return Dispatcher;
-
-})();
-});
-
 ;require.register("libs/flux/dispatcher/dispatcher", function(exports, require, module) {
 
 /*
@@ -6662,63 +6612,6 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 };
 
 module.exports = invariant;
-});
-
-;require.register("libs/flux/store/Store", function(exports, require, module) {
-var AppDispatcher, Store,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-AppDispatcher = require('../../../app_dispatcher');
-
-module.exports = Store = (function(_super) {
-  var _addHandlers, _handlers, _nextUniqID, _processBinding;
-
-  __extends(Store, _super);
-
-  Store.prototype.uniqID = null;
-
-  _nextUniqID = 0;
-
-  _handlers = {};
-
-  _addHandlers = function(type, callback) {
-    if (_handlers[this.uniqID] == null) {
-      _handlers[this.uniqID] = {};
-    }
-    return _handlers[this.uniqID][type] = callback;
-  };
-
-  _processBinding = function() {
-    return this.dispatchToken = AppDispatcher.register((function(_this) {
-      return function(payload) {
-        var callback, type, value, _ref;
-        _ref = payload.action, type = _ref.type, value = _ref.value;
-        if ((callback = _handlers[_this.uniqID][type]) != null) {
-          return callback.call(_this, value);
-        }
-      };
-    })(this));
-  };
-
-  function Store() {
-    Store.__super__.constructor.call(this);
-    this.uniqID = _nextUniqID++;
-    this.__bindHandlers(_addHandlers.bind(this));
-    _processBinding.call(this);
-  }
-
-  Store.prototype.__bindHandlers = function(handle) {
-    var message;
-    if (__DEV__) {
-      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
-      throw new Error(message);
-    }
-  };
-
-  return Store;
-
-})(EventEmitter);
 });
 
 ;require.register("libs/flux/store/store", function(exports, require, module) {
@@ -9237,7 +9130,7 @@ module.exports = {
     if ((rawAccount.draftMailbox == null) || (rawAccount.sentMailbox == null) || (rawAccount.trashMailbox == null)) {
       mailboxes = {};
       checkAttribs = function(box) {
-        var _ref, _ref1, _ref2;
+        var _ref, _ref1, _ref2, _ref3;
         if (_ref = MailboxFlags.DRAFT, __indexOf.call(box.attribs, _ref) >= 0) {
           mailboxes.draft = box.id;
         }
@@ -9247,7 +9140,7 @@ module.exports = {
         if (_ref2 = MailboxFlags.TRASH, __indexOf.call(box.attribs, _ref2) >= 0) {
           mailboxes.trash = box.id;
         }
-        return box.children.forEach(checkAttribs);
+        return (_ref3 = box.children) != null ? _ref3.forEach(checkAttribs) : void 0;
       };
       rawAccount.mailboxes.forEach(checkAttribs);
     }

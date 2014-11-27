@@ -361,7 +361,8 @@ Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback
     });
     return async.eachSeries(toFetch, function(box, cb) {
       return box.imap_fetchMails(limitByBox, function(err) {
-        if (err) {
+        var _ref;
+        if (err && -1 === ((_ref = err.message) != null ? _ref.indexOf("Mailbox doesn't exist") : void 0)) {
           reporter.onError(err);
         }
         reporter.addProgress(1);

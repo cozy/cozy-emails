@@ -79,9 +79,6 @@
         color #444
         margin-top 0
 
-    a
-        color basecolor
-
     a.close-email
         margin-right 1em
 
@@ -89,20 +86,27 @@
         float right
         font-size 2em
 
-
-#email-compose
-  .editor
+  .editor,
+  .rt-editor
     border 1px solid #444
     min-height 16em
-    width 100%
+    height auto
     text-align left
     color black
 
   .attachements
       margin 1em 0
 
+  .input-group.contact-group
+      padding 0 15px // pixels because we override Bootstrap
   .compose-toggle
     float right
+    a
+        padding 0 1em
+
+  .compose-from
+    line-height 2em
+    color darkcolor
 
   .compose-cc,
   .compose-bcc
@@ -114,6 +118,7 @@
 
 .contact-form
   .contact-list
+    left 1em
     background-color #fff
     list-style outside none none
     margin 2px 0 0
@@ -123,6 +128,10 @@
       color #333
       display block
       padding .25em 0
+    & > li.selected
+      background basecolor
+    & > li.selected > a
+      color white
 
    .avatar
        font-size 2em
@@ -207,6 +216,10 @@
     .tooltip-arrow
         bottom -4px
 
+.tooltip-mask
+    position absolute
+    background transparent
+
 .alert
     opacity 1
 
@@ -220,9 +233,6 @@
 */
 
 .rt-editor
-
-    min-height 4em
-    height auto
 
     blockquote
         border-left .25em solid blue

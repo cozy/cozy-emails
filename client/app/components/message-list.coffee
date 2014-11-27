@@ -159,6 +159,7 @@ MessageList = React.createClass
                             else
                                 a
                                     #href: @props.paginationUrl
+                                    className: 'more-messages'
                                     onClick: nextPage,
                                     ref: 'nextPage',
                                     t 'list next page'

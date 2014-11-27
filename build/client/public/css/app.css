@@ -2125,7 +2125,7 @@ textarea:active,
   overflow-y: auto;
   height: 100%;
   margin: 0;
-  padding: 0 1em;
+  padding: 1em 1em 0 1em;
   position: absolute;
 }
 #page-content #panels .panel:first-of-type {
@@ -2255,10 +2255,10 @@ textarea:active,
 .conversation h3 .close-conversation {
   display: none;
   cursor: pointer;
-  font-size: 1.25em;
-  margin-right: 1em;
+  margin-left: 1em;
 }
 .conversation h3 .expand {
+  font-size: 0.75em;
   float: right;
 }
 .conversation h3 .expand,
@@ -2303,13 +2303,9 @@ textarea:active,
 .conversation .thread .message:last-of-type {
   cursor: default;
 }
-.conversation .thread .message .messageToolbox,
-.conversation .thread .message .messageNavigation {
-  margin-bottom: 1em;
-}
 .conversation .thread .message .messageToolbox .btn-toolbar,
 .conversation .thread .message .messageNavigation .btn-toolbar {
-  margin-right: 0.25em;
+  margin-right: 0.5em;
 }
 .conversation .thread .message .messageToolbox {
   margin-top: 2em;
@@ -2348,7 +2344,7 @@ textarea:active,
 }
 .conversation .thread .message .preview,
 .conversation .thread .message .content {
-  margin: 0 0.25em;
+  margin: 0.5em 0.25em;
   padding: 0.5em;
   border: 1px solid #eee;
   -webkit-border-radius: 2px;
@@ -2367,6 +2363,7 @@ textarea:active,
   display: -ms-flexbox;
   display: box;
   display: flex;
+  padding: 0 0.25em;
   -webkit-box-pack: start;
   -moz-box-pack: start;
   -o-box-pack: start;
@@ -2394,6 +2391,11 @@ textarea:active,
 }
 .conversation .thread .message i.sender-avatar {
   padding: 0 0.5em;
+}
+.conversation .thread .message .toggle-headers {
+  padding: 0 1em;
+  color: #bdbdbd;
+  cursor: pointer;
 }
 .conversation .thread .message .header.compact {
   outline: none;
@@ -2490,7 +2492,6 @@ textarea:active,
   width: 100%;
 }
 .conversation .thread .message .preview {
-  margin-top: 1em;
   overflow: hidden;
   white-space: pre-line;
   -o-text-overflow: ellipsis;
@@ -2781,7 +2782,8 @@ textarea:active,
   color: #444;
 }
 .message-list .message .fa-user,
-.message-list .message .avatar {
+.message-list .message .avatar,
+.message-list .message .select {
   margin: 0;
   margin-left: 0.25em;
   color: #aaa;
@@ -2847,9 +2849,6 @@ textarea:active,
   -webkit-align-items: left;
   align-items: left;
 }
-.message-list-actions .message-list-action {
-  margin: 0 1em 0 0;
-}
 .message-list-actions + * {
   clear: both;
   margin-top: 1em;
@@ -2876,6 +2875,14 @@ textarea:active,
 }
 .message.active:hover {
   border-left: 0.25em solid #fe8800;
+}
+.message.active .select {
+  height: auto;
+  margin: 0;
+  padding: 0;
+}
+.more-messages {
+  cursor: pointer;
 }
 #quick-actions .responsive-handler {
   color: #333;
@@ -3074,9 +3081,6 @@ textarea:active,
   color: #444;
   margin-top: 0;
 }
-#email-compose a {
-  color: #34a6ff;
-}
 #email-compose a.close-email {
   margin-right: 1em;
 }
@@ -3084,28 +3088,40 @@ textarea:active,
   float: right;
   font-size: 2em;
 }
-#email-compose .editor {
+.editor,
+.rt-editor {
   border: 1px solid #444;
   min-height: 16em;
-  width: 100%;
+  height: auto;
   text-align: left;
   color: #000;
 }
-#email-compose .attachements {
+.attachements {
   margin: 1em 0;
 }
-#email-compose .compose-toggle {
+.input-group.contact-group {
+  padding: 0 15px;
+}
+.compose-toggle {
   float: right;
 }
-#email-compose .compose-cc,
-#email-compose .compose-bcc {
+.compose-toggle a {
+  padding: 0 1em;
+}
+.compose-from {
+  line-height: 2em;
+  color: #444;
+}
+.compose-cc,
+.compose-bcc {
   display: none;
 }
-#email-compose .compose-cc.shown,
-#email-compose .compose-bcc.shown {
+.compose-cc.shown,
+.compose-bcc.shown {
   display: inherit;
 }
 .contact-form .contact-list {
+  left: 1em;
   background-color: #fff;
   list-style: outside none none;
   margin: 2px 0 0;
@@ -3115,6 +3131,12 @@ textarea:active,
   color: #333;
   display: block;
   padding: 0.25em 0;
+}
+.contact-form .contact-list > li.selected {
+  background: #34a6ff;
+}
+.contact-form .contact-list > li.selected > a {
+  color: #fff;
 }
 .contact-form .avatar {
   font-size: 2em;
@@ -3207,6 +3229,10 @@ textarea:active,
 .tooltip.top .tooltip-arrow {
   bottom: -4px;
 }
+.tooltip-mask {
+  position: absolute;
+  background: transparent;
+}
 .alert {
   opacity: 1;
   -ms-filter: none;
@@ -3227,10 +3253,6 @@ textarea:active,
 
   --
 */
-.rt-editor {
-  min-height: 4em;
-  height: auto;
-}
 .rt-editor blockquote {
   border-left: 0.25em solid #00f;
   padding-left: 0.5em;

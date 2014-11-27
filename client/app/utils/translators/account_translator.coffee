@@ -17,7 +17,7 @@ module.exports =
                     mailboxes.sent = box.id
                 if MailboxFlags.TRASH in box.attribs
                     mailboxes.trash = box.id
-                box.children.forEach checkAttribs
+                box.children?.forEach checkAttribs
             rawAccount.mailboxes.forEach checkAttribs
 
         if not rawAccount.draftMailbox? and mailboxes.draft?

@@ -97,6 +97,9 @@ Imap.prototype.fetchBoxMessageIds = function(callback) {
       if (err) {
         return callback(err);
       }
+      if (uids.length === 0) {
+        return callback(null, []);
+      }
       fetch = _this.fetch(uids, {
         bodies: 'HEADER.FIELDS (MESSAGE-ID)'
       });
