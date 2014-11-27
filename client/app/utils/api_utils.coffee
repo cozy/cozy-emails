@@ -17,6 +17,13 @@ module.exports =
     getCurrentMailbox: ->
         AccountStore.getSelectedMailboxes()
 
+    getCurrentActions: ->
+        res = []
+        Object.keys(router.current).forEach (panel) ->
+            if router.current[panel]?
+                res.push router.current[panel].action
+        return res
+
     messageNew: ->
         router.navigate('compose/', {trigger: true})
 

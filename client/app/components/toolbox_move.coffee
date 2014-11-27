@@ -5,6 +5,7 @@ module.exports = ToolboxMove = React.createClass
     displayName: 'ToolboxMove'
 
     render: ->
+        direction = if @props.direction is 'right' then 'right' else 'left'
         div className: 'btn-group btn-group-sm',
             button
                 className: 'btn btn-default dropdown-toggle move',
@@ -13,7 +14,7 @@ module.exports = ToolboxMove = React.createClass
                 t 'mail action move',
                     span className: 'caret'
             ul
-                className: 'dropdown-menu dropdown-menu-right',
+                className: 'dropdown-menu dropdown-menu-' + direction,
                 role: 'menu',
                     @props.mailboxes.map (mailbox, key) =>
                         @renderMailboxes mailbox, key

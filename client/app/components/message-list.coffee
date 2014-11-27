@@ -144,12 +144,14 @@ MessageList = React.createClass
                             ToolboxMove
                                 mailboxes: @props.mailboxes
                                 onMove: @onMove
+                                direction: 'left'
                         if @state.edited
                             ToolboxActions
                                 mailboxes: @props.mailboxes
                                 onMark: @onMark
                                 onConversation: @onConversation
                                 onHeaders: @onHeaders
+                                direction: 'left'
             if @props.messages.count() is 0
                 p null, @props.emptyListMessage
             else

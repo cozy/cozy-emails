@@ -14,7 +14,7 @@ module.exports = React.createClass
         conversation      : React.PropTypes.array
         selectedAccount   : React.PropTypes.object.isRequired
         layout            : React.PropTypes.string.isRequired
-        selectedMailboxID : React.PropTypes.string.isRequired
+        selectedMailboxID : React.PropTypes.string
         mailboxes         : React.PropTypes.object.isRequired
         settings          : React.PropTypes.object.isRequired
         accounts          : React.PropTypes.object.isRequired
@@ -85,7 +85,7 @@ module.exports = React.createClass
                 @props.message.get 'subject'
                 a
                     href: closeUrl,
-                    className: 'expand close-conversation hidden-xs hidden-sm',
+                    className: 'close-conversation hidden-xs hidden-sm',
                         i className:'fa ' + closeIcon
                 if @props.layout isnt 'full'
                     a
@@ -95,10 +95,8 @@ module.exports = React.createClass
                 else
                     a
                         href: collapseUrl,
-                        className: 'close-conversation pull-right',
+                        className: 'collapse in pull-right',
                             i className:'fa fa-compress'
-            h3 className: 'message-title',
-                @props.message.get 'subject'
 
             ul className: 'thread list-unstyled',
                 for message, key in @props.conversation
