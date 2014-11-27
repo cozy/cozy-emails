@@ -2123,8 +2123,9 @@ textarea:active,
 }
 #page-content #panels .panel {
   overflow-y: auto;
-  height: 95%;
-  margin-top: 1em;
+  height: 100%;
+  margin: 0;
+  padding: 0 1em;
   position: absolute;
 }
 #page-content #panels .panel:first-of-type {
@@ -2288,7 +2289,8 @@ textarea:active,
 }
 .conversation .thread .message.active,
 .conversation .thread .message:last-of-type {
-  background: #fafafa;
+  background: #fff;
+  border: 0;
 }
 .conversation .thread .message.active .preview,
 .conversation .thread .message:last-of-type .preview {
@@ -2304,19 +2306,42 @@ textarea:active,
 .conversation .thread .message .messageToolbox,
 .conversation .thread .message .messageNavigation {
   margin-bottom: 1em;
-  opacity: 0.3;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
-  filter: alpha(opacity=30);
 }
 .conversation .thread .message .messageToolbox .btn-toolbar,
 .conversation .thread .message .messageNavigation .btn-toolbar {
   margin-right: 0.25em;
 }
-.conversation .thread .message .messageToolbox:hover,
-.conversation .thread .message .messageNavigation:hover {
-  opacity: 1;
-  -ms-filter: none;
-  filter: none;
+.conversation .thread .message .messageToolbox {
+  margin-top: 2em;
+}
+.conversation .thread .message .messageToolbox .btn.btn-default {
+  background: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border: 0;
+  color: #34a6ff;
+}
+.conversation .thread .message .messageToolbox .btn.btn-default:hover {
+  color: #fe8800;
+}
+.conversation .thread .message .messageNavigation {
+  margin-bottom: 0;
+}
+.conversation .thread .message .messageNavigation .btn.btn-default {
+  background: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+  border: 0;
+  color: #34a6ff;
+}
+.conversation .thread .message .messageNavigation .btn.btn-default:hover {
+  color: #fe8800;
+}
+.conversation .thread .message .messageNavigation .btn.btn-default.prev {
+  text-align: left;
+}
+.conversation .thread .message .messageNavigation .btn.btn-default.next {
+  text-align: right;
 }
 .conversation .thread .message .messageToolbox .tool-long {
   display: none;
@@ -2330,7 +2355,12 @@ textarea:active,
   border-radius: 2px;
   background-color: #fff;
 }
+.conversation .thread .message .preview body,
+.conversation .thread .message .content body {
+  font-family: main;
+}
 .conversation .thread .message .header {
+  padding: 1em;
   display: -webkit-box;
   display: -moz-box;
   display: -webkit-flex;
@@ -2349,6 +2379,7 @@ textarea:active,
   -ms-flex-align: center;
   -webkit-align-items: center;
   align-items: center;
+  font-size: 14px;
 }
 .conversation .thread .message .sender-avatar {
   display: block;
@@ -2454,7 +2485,7 @@ textarea:active,
 }
 .conversation .thread .message .content {
   white-space: pre-line;
-  margin: 1em 0 0 0;
+  margin: 0 0 0 0;
   display: none;
   width: 100%;
 }
