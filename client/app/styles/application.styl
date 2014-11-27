@@ -86,16 +86,19 @@
         float right
         font-size 2em
 
-  .editor
+  .editor,
+  .rt-editor
     border 1px solid #444
     min-height 16em
-    width 100%
+    height auto
     text-align left
     color black
 
   .attachements
       margin 1em 0
 
+  .input-group.contact-group
+      padding 0 15px // pixels because we override Bootstrap
   .compose-toggle
     float right
 
@@ -109,6 +112,7 @@
 
 .contact-form
   .contact-list
+    left 1em
     background-color #fff
     list-style outside none none
     margin 2px 0 0
@@ -223,9 +227,6 @@
 */
 
 .rt-editor
-
-    min-height 4em
-    height auto
 
     blockquote
         border-left .25em solid blue
