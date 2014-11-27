@@ -2301,13 +2301,13 @@ textarea:active,
 .conversation .message-title {
   margin-top: 0.5em;
   line-height: 1.4em;
+  border: 0;
 }
 .conversation .thread {
   padding: 0;
-  border-top: 1px solid #f4f4f4;
 }
 .conversation .thread .message {
-  border-left: 0;
+  border: 0;
   padding: 0 1rem;
   cursor: pointer;
   font-size: 0.75em;
@@ -2335,6 +2335,9 @@ textarea:active,
 .conversation .thread .message .messageToolbox .btn-toolbar,
 .conversation .thread .message .messageNavigation .btn-toolbar {
   margin-right: 0.5em;
+  padding-top: 1em;
+  margin-bottom: 2em;
+  border-top: 1px solid #ccc;
 }
 .conversation .thread .message .messageToolbox {
   margin-top: 2em;
@@ -2375,9 +2378,7 @@ textarea:active,
 .conversation .thread .message .content {
   margin: 0.5em 0.25em;
   padding: 0.5em;
-  border: 1px solid #eee;
-  -webkit-border-radius: 2px;
-  border-radius: 2px;
+  border: 0;
   background-color: #fff;
 }
 .conversation .thread .message .preview body,
@@ -2385,7 +2386,6 @@ textarea:active,
   font-family: main;
 }
 .conversation .thread .message .header {
-  padding: 1em;
   display: -webkit-box;
   display: -moz-box;
   display: -webkit-flex;
@@ -2406,6 +2406,7 @@ textarea:active,
   -webkit-align-items: center;
   align-items: center;
   font-size: 14px;
+  border: 0;
 }
 .conversation .thread .message .sender-avatar {
   display: block;
@@ -2416,7 +2417,6 @@ textarea:active,
   height: 2em;
   line-height: 2em;
   color: #aaa;
-  border: 1px solid #aaa;
 }
 .conversation .thread .message i.sender-avatar {
   padding: 0 0.5em;
@@ -2865,11 +2865,6 @@ textarea:active,
 }
 .message-list .message:nth-child(2n+1) {
   background-color: #eee;
-  background: -webkit-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
-  background: -moz-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
-  background: -o-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
-  background: -ms-linear-gradient(top, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
-  background: linear-gradient(to bottom, #fff 0%, #eee 15%, #eee 85%, #fff 100%);
 }
 .message-list .message.active {
   background: #cbe4fb;
@@ -2931,8 +2926,13 @@ textarea:active,
   padding: 1px 0;
 }
 .message-list.compact .fa-user,
-.message-list.compact .avatar {
-  display: none;
+.message-list.compact .avatar,
+.message-list.compact .select {
+  font-size: 1.5em;
+  margin: 0;
+  width: 1em;
+  height: 1.1em;
+  margin: -0.1em 0;
 }
 .message-list-option:first-child {
   display: none;
@@ -2969,7 +2969,6 @@ textarea:active,
 }
 .message-list-actions .btn.btn-default.dropdown-toggle.move:hover,
 .message-list-actions .btn.btn-default.dropdown-toggle.more:hover {
-  font-size: 1.25em;
   color: #fe8800;
 }
 .message .fa-paperclip {
