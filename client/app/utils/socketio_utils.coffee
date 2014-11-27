@@ -1,26 +1,24 @@
-TaskStore = require '../stores/tasks_store'
 AppDispatcher = require '../app_dispatcher'
-{ActionTypes, NotifyType} = require '../constants/app_constants'
+{ActionTypes} = require '../constants/app_constants'
 url = window.location.origin
 pathToSocketIO = "#{window.location.pathname}socket.io"
 socket = io.connect url, path: pathToSocketIO
 
 dispatchTaskUpdate = (task) ->
-    task.type = NotifyType.SERVER
     AppDispatcher.handleServerAction
-        type: ActionTypes.RECEIVE_TASK_UPDATE
+        type: ActionTypes.RECEIVE_REFRESH_UPDATE
         value: task
 
 dispatchTaskDelete = (taskid) ->
     AppDispatcher.handleServerAction
-        type: ActionTypes.RECEIVE_TASK_DELETE
+        type: ActionTypes.RECEIVE_REFRESH_DELETE
         value: taskid
 
-socket.on 'task.create', dispatchTaskUpdate
-socket.on 'task.update', dispatchTaskUpdate
-socket.on 'task.delete', dispatchTaskDelete
+socket.on 'refresh.create', dispatchTaskUpdate
+socket.on 'refresh.update', dispatchTaskUpdate
+socket.on 'refresh.delete', dispatchTaskDelete
 
 module.exports =
 
-    acknowledgeTask: (taskid) ->
+    acknowledgeRefresh: (taskid) ->
         socket.emit 'mark_ack', taskid

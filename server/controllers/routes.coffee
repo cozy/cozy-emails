@@ -13,7 +13,7 @@ module.exports =
 
     '': get: index.main
 
-    'tasks': get: index.tasks
+    'refreshes': get: index.refreshes
     'refresh': get: index.refresh
 
     'settings':

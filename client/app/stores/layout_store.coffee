@@ -13,6 +13,10 @@ class LayoutStore extends Store
         level: null
         message: null
 
+    _tasks = Immutable.OrderedMap()
+
+    _shown = true
+
 
     ###
         Defines here the action handlers.
@@ -40,11 +44,33 @@ class LayoutStore extends Store
         handle ActionTypes.REFRESH, ->
             @emit 'change'
 
+        handle ActionTypes.RECEIVE_TASK_UPDATE, (task) ->
+            task = Immutable.Map task
+            id = task.get('id')
+            _tasks = _tasks.set(id, task).toOrderedMap()
+            @emit 'change'
+
+        handle ActionTypes.RECEIVE_TASK_DELETE, (taskid) ->
+            _tasks = _tasks.remove(taskid).toOrderedMap()
+            @emit 'change'
+
+        handle ActionTypes.TOASTS_SHOW, ->
+            _shown = true
+            @emit 'change'
+
+        handle ActionTypes.TOASTS_HIDE, ->
+            _shown = false
+            @emit 'change'
+
     ###
         Public API
     ###
     isMenuShown: -> return _responsiveMenuShown
 
     getAlert: -> return _alert
+
+    getTasks: -> return _tasks
+
+    isShown: -> return _shown
 
 module.exports = new LayoutStore()

@@ -6,7 +6,7 @@ MessageStore  = require '../stores/message_store'
 
 AppDispatcher = require '../app_dispatcher'
 
-{ActionTypes, AlertLevel, NotifyType} = require '../constants/app_constants'
+{ActionTypes, AlertLevel} = require '../constants/app_constants'
 
 AccountActionCreator = require './account_action_creator'
 MessageActionCreator = require './message_action_creator'
@@ -53,7 +53,6 @@ module.exports = LayoutActionCreator =
     notify: (message, options) ->
         task =
             id: Date.now()
-            type: NotifyType.CLIENT
             finished: true
             message: message
         if options?

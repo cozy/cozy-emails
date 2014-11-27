@@ -76,10 +76,6 @@ module.exports =
         'WARNING'      : 'WARNING'
         'ERROR'        : 'ERROR'
 
-    NotifyType:
-        'SERVER' : 'SERVER'
-        'CLIENT' : 'CLIENT'
-
     MessageFlags:
         'FLAGGED'      : '\\Flagged'
         'SEEN'         : '\\Seen'

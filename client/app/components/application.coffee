@@ -26,7 +26,6 @@ MessageStore  = require '../stores/message_store'
 LayoutStore   = require '../stores/layout_store'
 SettingsStore = require '../stores/settings_store'
 SearchStore   = require '../stores/search_store'
-TasksStore    = require '../stores/tasks_store'
 
 # Flux actions
 LayoutActionCreator = require '../actions/layout_action_creator'

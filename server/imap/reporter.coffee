@@ -41,7 +41,7 @@ module.exports = class ImapReporter
     @acknowledge = (id) ->
         if id and ImapReporter.userTasks[id]?.finished
             delete ImapReporter.userTasks[id]
-            io?.emit 'task.delete', id
+            io?.emit 'refresh.delete', id
 
     # INSTANCE
     constructor: (options) ->
@@ -52,16 +52,17 @@ module.exports = class ImapReporter
         @total = options.total
         @box = options.box
         @account = options.account
+        @objectID = options.objectID
         @code = options.code
 
         ImapReporter.userTasks[@id] = this
-        io?.emit 'task.create', @toObject()
+        io?.emit 'refresh.create', @toObject()
 
     sendtoclient: (nocooldown) ->
         if @cooldown and not nocooldown
             return true
         else
-            io?.emit 'task.update', @toObject()
+            io?.emit 'refresh.update', @toObject()
             @cooldown = true
             setTimeout (=> @cooldown = false) , 500
 
@@ -72,6 +73,10 @@ module.exports = class ImapReporter
         @finished = true
         @done = @total
         @sendtoclient(true)
+        unless @errors
+            setTimeout =>
+                ImapReporter.acknowledge @id
+            , 3000
 
     onProgress: (done) ->
         @done = done
@@ -82,8 +87,8 @@ module.exports = class ImapReporter
         @sendtoclient()
 
     onError: (err) ->
+        @errors.push log.getLasts() + "\n" + err.stack
         log.error err.stack
-        @errors.push err.stack
         @sendtoclient()
 
 
@@ -91,12 +96,14 @@ ImapReporter.accountFetch = (account, boxesLength) ->
     return new ImapReporter
         total: boxesLength
         account: account.label
+        objectID: account.id
         code: 'account-fetch'
 
 ImapReporter.boxFetch = (box, total) ->
     return new ImapReporter
         total: total
         box: box.label
+        objectID: box.id
         code: 'box-fetch'
 
 ImapReporter.recoverUIDValidty = (box, total) ->
