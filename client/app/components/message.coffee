@@ -387,6 +387,7 @@ module.exports = React.createClass
                     ToolboxMove
                         mailboxes: @props.mailboxes
                         onMove: @onMove
+                        direction: 'right'
                     ToolboxActions
                         mailboxes: @props.mailboxes
                         isSeen: isSeen
@@ -395,6 +396,7 @@ module.exports = React.createClass
                         onMark: @onMark
                         onConversation: @onConversation
                         onHeaders: @onHeaders
+                        direction: 'right'
                     if nextUrl?
                         div className: 'btn-group btn-group-sm',
                             button

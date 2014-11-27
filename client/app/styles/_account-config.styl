@@ -24,10 +24,10 @@
         max-width 40em
         margin-left 0
         .row
-            height 2em
+            height 2.2em
             > *
                 padding 0
-        .row.edited
+        .row.new
             height 2.5em
         .box-action
             cursor pointer
@@ -49,15 +49,11 @@
             span:last-child
                 display none
                 
-
-        .row.box.edited
+        .row.box.new
             margin-top 1em
 
             span
                 padding 0.5em 0
-
-            label
-                padding 0.8em 1em
 
             .btn
                 margin 0 0.5em
@@ -65,5 +61,30 @@
                 .caret
                     margin 10px 0 0 8px
 
+        .row.box.edited
+            margin-top 0
+
+            span
+                padding 0.1em 0
+
+        .row.box.edited
+        .row.box.new
+            label
+                padding 0.8em 1em
+
+            input:focus
+            input:active
+                border: 0
+                outline: 0
+
+        .dropdown
+            ul
+                li
+                    a
+                        text-align left
+
     .caret
         margin-left 8px
+
+    .presentation
+        test-align left

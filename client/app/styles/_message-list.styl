@@ -27,9 +27,8 @@
         font-weight bold
 
     .message
-        padding 0.5em .25em
+        padding 0.75em .25em
         border-left .25em solid transparent
-        //border-bottom 1px solid #e4e4e4
         cursor pointer
         font-size 0.8em
 
@@ -45,13 +44,19 @@
 
           text-decoration none
 
+        input[type="checkbox"]
+            width auto
+            margin-left 0.25em
+            margin-right 0.25em
+            cursor pointer
+
         .participants
         .preview
             margin 0.25em 2em 0 1em
 
         .preview
             flex 1
-            margin 0 .75em 0 auto
+            margin 0.25em .75em 0 auto
             overflow hidden
             white-space nowrap
             text-overflow ellipsis
@@ -85,23 +90,15 @@
         .avatar
         .select
             margin 0
-            margin-left: 0.25em
+            margin: -.25em 0
             color #aaa
-            background-color white
             font-size 2em
-            //border 1px solid #aaa
-            border-radius 50%
-            box-shadow 0 0 3px #BBB
             width 1em
             height 1em
             text-align center
 
-        //> a:hover
-        //> a:focus
-            //.fa-user
-            //.avatar
-                //border-left .25em solid actioncolor
-                //background #f4f4f4
+        .select
+            display none
 
       .fav
         color yellow
@@ -115,6 +112,7 @@
        background linear-gradient(to bottom, #fff 0%, lightcolor 15%, lightcolor 85%, #fff 100%)
     .message.active
        background lightblue
+       border-left .25em solid basecolor
 
     .message.unseen
       font-weight bold
@@ -130,6 +128,17 @@
       display inline
       padding 0 .5em
 
+    .message:hover
+       border-left .25em solid actioncolor
+       background lightorange
+
+    .message:hover
+    .message.edited
+        .select
+            display inherit
+        .avatar
+        .fa-user
+            display none
     .message-list-actions
       display flex
       justify-content flex-start
@@ -149,6 +158,39 @@
     .avatar
         display none
 
+.message-list-option:first-child
+    display none
+
+.message-list-option
+
+    .btn.btn-default
+        font-size: 1em
+        transition: color 0.2s ease
+        background: none
+        box-shadow: none
+        border: 0
+        color: basecolor
+
+    .btn.btn-default:hover
+        color: actioncolor
+
+.message-list-actions
+
+    .btn.btn-default.dropdown-toggle.move
+    .btn.btn-default.dropdown-toggle.more
+        font-size: 1em
+        transition: color 0.2s ease
+        background: none
+        box-shadow: none
+        border: 0
+        color: basecolor
+
+    .btn.btn-default.dropdown-toggle.move:hover
+    .btn.btn-default.dropdown-toggle.more:hover
+        font-size: 1.25em
+        color: actioncolor
+
+
 .message
     .fa-paperclip
         display none
@@ -157,14 +199,9 @@
         display none
 
 .message:hover
-    border-left .25em solid actioncolor
     background lightorange
 
 .message.active
-    border-left .25em solid basecolor
-
-    &:hover
-        border-left .25em solid actioncolor
 
     .select
         height auto

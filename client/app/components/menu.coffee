@@ -157,6 +157,7 @@ module.exports = Menu = React.createClass
                 onClick: toggleActive,
                 title: title,
                 'data-toggle': 'tooltip',
+                'data-delay': '10000',
                 'data-placement' : 'right',
                     i className: 'fa fa-inbox'
                     if nbUnread and nbUnread > 0
@@ -173,7 +174,7 @@ module.exports = Menu = React.createClass
                 .toJS()
 
     _initTooltips: ->
-        jQuery('#account-list [data-toggle="tooltip"]').tooltip()
+        #jQuery('#account-list [data-toggle="tooltip"]').tooltip()
 
     componentDidMount: ->
         @_initTooltips()

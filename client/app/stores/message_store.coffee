@@ -46,7 +46,7 @@ class MessageStore extends Store
 
     _filter       = null
     _params       = null
-    _currentMessages = null
+    _currentMessages = Immutable.Sequence()
     _currentID       = null
     _prevAction      = null
 
