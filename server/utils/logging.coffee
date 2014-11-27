@@ -34,9 +34,9 @@ module.exports = (options) ->
         for arg, i in arguments
             args[i+2] = arg
 
-        addToLastLogs args
 
-        return null if level < LOG_LEVEL or prefix is 'imap:raw'
+        addToLastLogs.apply null, args
+        return null if level < LOG_LEVEL
 
         console.log.apply console, args
 

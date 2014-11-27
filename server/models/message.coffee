@@ -461,7 +461,7 @@ Message::imap_applyChanges = (newflags, newmailboxIDs, boxOps, callback) ->
 #
 # Returns void
 Message.createFromImapMessage = (mail, box, uid, callback) ->
-    log.debug "createFromImapMessage"
+    log.info "createFromImapMessage", box.label, uid
 
     # we store the box & account id
     mail.accountID = box.accountID

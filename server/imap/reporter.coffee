@@ -1,7 +1,8 @@
 _ = require 'lodash'
 uuid = require 'uuid'
 ioServer = require 'socket.io'
-log = require('../utils/logging')('imap:reporter')
+Logger = require('../utils/logging')
+log = Logger('imap:reporter')
 
 # user visible tasks, those are not the same than the IMAP tasks
 # example : the userTask fetch mailbox X
@@ -67,13 +68,13 @@ module.exports = class ImapReporter
             setTimeout (=> @cooldown = false) , 500
 
     toObject: =>
-        {@id, @finished, @done, @total, @errors, @box, @account, @code}
+        {@id, @finished, @done, @total, @errors, @box, @account, @code, @objectID}
 
     onDone: ->
         @finished = true
         @done = @total
         @sendtoclient(true)
-        unless @errors
+        unless @errors.length
             setTimeout =>
                 ImapReporter.acknowledge @id
             , 3000
@@ -87,7 +88,7 @@ module.exports = class ImapReporter
         @sendtoclient()
 
     onError: (err) ->
-        @errors.push log.getLasts() + "\n" + err.stack
+        @errors.push Logger.getLasts() + "\n" + err.stack
         log.error err.stack
         @sendtoclient()
 

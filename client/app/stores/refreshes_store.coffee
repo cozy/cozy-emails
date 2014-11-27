@@ -9,10 +9,9 @@ class RefreshesStore extends Store
         Defines private variables here.
     ###
     _refreshes = Immutable.Sequence window.refreshes
-    # sets task ID as index
-    .mapKeys (_, task) -> return task.id
-    .map (task) ->
-        Immutable.fromJS task
+    # sets objectID as index
+    .mapKeys (_, refresh) -> return refresh.objectID
+    .map (refresh) -> Immutable.fromJS refresh
     .toOrderedMap()
 
     ###
@@ -20,21 +19,18 @@ class RefreshesStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RECEIVE_REFRESH_UPDATE, (task) ->
-            task = Immutable.Map task
-            id = task.get('id')
-            _tasks = _tasks.set(id, task).toOrderedMap()
+        handle ActionTypes.RECEIVE_REFRESH_UPDATE, (refresh) ->
+            refresh = Immutable.Map refresh
+            id = refresh.get('objectID')
+            _refreshes = _refreshes.set(id, refresh).toOrderedMap()
             @emit 'change'
 
-        handle ActionTypes.RECEIVE_REFRESH_DELETE, (taskid) ->
-            _tasks = _tasks.remove(taskid).toOrderedMap()
+        handle ActionTypes.RECEIVE_REFRESH_DELETE, (refreshID) ->
+            _refreshes = _refreshes.filter (refresh) ->
+                refresh.get('id') isnt refreshID
+            .toOrderedMap()
             @emit 'change'
 
-    getRefreshing: ->
-        refreshes = {}
-        _tasks.forEach (task) ->
-            refreshes[task.get('objectID')] = task
-
-        return refreshes
+    getRefreshing: -> _refreshes
 
 module.exports = new RefreshesStore()

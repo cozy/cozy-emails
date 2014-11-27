@@ -11,6 +11,7 @@ module.exports =
 
         # Mailbox
         'MAILBOX_ADD'               : 'MAILBOX_ADD'
+        'MAILBOX_CREATE'            : 'MAILBOX_CREATE'
         'MAILBOX_UPDATE'            : 'MAILBOX_UPDATE'
         'MAILBOX_DELETE'            : 'MAILBOX_DELETE'
 
@@ -51,6 +52,10 @@ module.exports =
         # Tasks
         'RECEIVE_TASK_UPDATE'       : 'RECEIVE_TASK_UPDATE'
         'RECEIVE_TASK_DELETE'       : 'RECEIVE_TASK_DELETE'
+
+        # Refreshes
+        'RECEIVE_REFRESH_UPDATE'       : 'RECEIVE_REFRESH_UPDATE'
+        'RECEIVE_REFRESH_DELETE'       : 'RECEIVE_REFRESH_DELETE'
 
         # List
         'LIST_FILTER'               : 'LIST_FILTER'
