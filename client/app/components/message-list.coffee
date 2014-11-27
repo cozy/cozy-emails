@@ -346,33 +346,35 @@ MessageItem = React.createClass
         avatar  = MessageUtils.getAvatar message
 
         li
-            className: classes,
-            key: @props.key,
-            'data-message-id': message.get('id'),
-            draggable: not @props.edited,
-            onDragStart: @onDragStart,
-                tag
-                    href: url,
-                    'data-message-id': message.get('id'),
-                    onClick: @onMessageClick,
-                    onDoubleClick: @onMessageDblClick,
-                        input
-                            className: 'select',
-                            type: 'checkbox',
-                            checked: @state.selected
-                            onChange: @onSelect
-                        if avatar?
-                            img className: 'avatar', src: avatar
-                        else
-                            i className: 'fa fa-user'
-                        span className: 'participants', @getParticipants message
-                        div className: 'preview',
-                            span className: 'title', message.get 'subject'
-                            p null, message.get('text')?.substr(0, 100) + "…"
-                        span className: 'hour', date
-                        span className: "flags",
-                            i className: 'attach fa fa-paperclip'
-                            i className: 'fav fa fa-star'
+            className: classes
+            key: @props.key
+            'data-message-id': message.get('id')
+            draggable: not @props.edited
+            onClick: @onMessageClick
+            onDragStart: @onDragStart
+        ,
+            tag
+                href: url,
+                'data-message-id': message.get('id'),
+                onClick: @onMessageClick,
+                onDoubleClick: @onMessageDblClick,
+                    input
+                        className: 'select',
+                        type: 'checkbox',
+                        checked: @state.selected
+                        onChange: @onSelect
+                    if avatar?
+                        img className: 'avatar', src: avatar
+                    else
+                        i className: 'fa fa-user'
+                    span className: 'participants', @getParticipants message
+                    div className: 'preview',
+                        span className: 'title', message.get 'subject'
+                        p null, message.get('text')?.substr(0, 100) + "…"
+                    span className: 'hour', date
+                    span className: "flags",
+                        i className: 'attach fa fa-paperclip'
+                        i className: 'fav fa fa-star'
 
     onSelect: (e) ->
         @props.onSelect(not @state.selected)
@@ -380,7 +382,7 @@ MessageItem = React.createClass
 
     onMessageClick: (event) ->
         if @props.edited
-            @onSelect(event)
+            @onSelect event
         else
             if not @props.settings.get('displayPreview')
                 event.preventDefault()
