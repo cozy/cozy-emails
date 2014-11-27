@@ -423,7 +423,10 @@ Message::imap_applyChanges = (newflags, newmailboxIDs, boxOps, callback) ->
                 # step 1 - open one box at random
                 (cb) -> imap.openBox boxIndex[firstboxid].path, cb
                 # step 2 - change flags to newflags
-                (cb) -> imap.setFlags firstuid, newflags, cb
+                (cb) ->
+                    # cant reproduce case, prevent crashing
+                    try imap.setFlags firstuid, newflags, cb
+                    catch err then cb err
                 # step 3 - copy the message to all addTo
                 (cb) ->
                     paths = boxOps.addTo.map (destId) ->
