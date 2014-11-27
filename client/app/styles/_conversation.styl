@@ -32,14 +32,14 @@
     .message-title
         margin-top 0.5em
         line-height 1.4em
+        border 0
 
 
     .thread
         padding 0
-        border-top 1px solid #f4f4f4
 
         .message
-            border-left: 0
+            border 0
             padding 0 1rem
             cursor pointer
             font-size .75em
@@ -66,6 +66,9 @@
 
                 .btn-toolbar
                   margin-right .5em
+                  padding-top 1em
+                  margin-bottom 2em
+                  border-top 1px solid #CCC
 
             .messageToolbox
                 margin-top 2em
@@ -104,20 +107,20 @@
             .content
                 margin .5em .25em
                 padding .5em
-                border 1px solid lightcolor
-                border-radius 2px
+                border 0
                 background-color white
 
                 body
                     font-family main
 
             .header
-                padding 1em
                 display flex
                 padding 0 .25em
                 justify-content flex-start
                 align-items center
                 font-size 14px
+                border 0
+                    
             .sender-avatar
                 display block
                 float left
@@ -127,7 +130,6 @@
                 height 2em
                 line-height 2em
                 color #aaa
-                border 1px solid #aaa
             i.sender-avatar
                 padding 0 .5em
             .toggle-headers
