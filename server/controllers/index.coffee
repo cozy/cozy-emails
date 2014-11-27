@@ -5,7 +5,6 @@ Settings = require '../models/settings'
 async = require 'async'
 log = require('../utils/logging')(prefix: 'controllers:index')
 
-fixtures = require 'cozy-fixtures'
 
 module.exports.main = (req, res, next) ->
 
@@ -39,6 +38,9 @@ module.exports.main = (req, res, next) ->
 
 
 module.exports.loadFixtures = (req, res, next) ->
+    try fixtures = require 'cozy-fixtures'
+    catch e then return next new Error 'only in tests'
+
     fixtures.load
         silent: true,
         callback: (err) ->
