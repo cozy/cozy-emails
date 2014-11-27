@@ -153,7 +153,6 @@ module.exports = React.createClass
                     div className: 'full-headers',
                         pre null, prepared.fullHeaders.join "\n"
                     @renderToolbox message.get('id'), prepared
-                    @renderNavigation()
                     @renderCompose()
                     if messageDisplayHTML and prepared.html
                         div className: 'row',
@@ -291,9 +290,51 @@ module.exports = React.createClass
         isFlagged = prepared.flags.indexOf(FlagsConstants.FLAGGED) is -1
         isSeen    = prepared.flags.indexOf(FlagsConstants.SEEN) is -1
 
+
+        conversationID = @props.message.get 'conversationID'
+
+        getParams = (id) =>
+            if conversationID and @props.settings.get('displayConversation')
+                return {
+                    action : 'conversation'
+                    id     : id
+                }
+            else
+                return {
+                    action : 'message'
+                    id     : id
+                }
+        if @props.prevID?
+            params = getParams @props.prevID
+            prev =
+                direction: 'second'
+                action: params.action
+                parameters: params.id
+            prevUrl =  @buildUrl prev
+            displayPrev = =>
+                @redirect prev
+        if @props.nextID?
+            params = getParams @props.nextID
+            next =
+                direction: 'second'
+                action: params.action
+                parameters: params.id
+            nextUrl = @buildUrl next
+            displayNext = =>
+                @redirect next
+
+
         div className: 'messageToolbox row',
             div className: 'btn-toolbar', role: 'toolbar',
                 div className: 'btn-group btn-group-sm btn-group-justified',
+                    if prevUrl?
+                        div className: 'btn-group btn-group-sm',
+                            button
+                                className: 'btn btn-default prev',
+                                type: 'button',
+                                onClick: displayPrev,
+                                    a href: prevUrl,
+                                        span className: 'fa fa-long-arrow-left'
                     div className: 'btn-group btn-group-sm',
                         button
                             className: 'btn btn-default reply',
@@ -334,41 +375,6 @@ module.exports = React.createClass
                                 span
                                     className: 'tool-long',
                                     t 'mail action delete'
-                    #div className: 'btn-group btn-group-sm',
-                    #    button
-                    #        className: 'btn btn-default dropdown-toggle flags',
-                    #        type: 'button',
-                    #        'data-toggle': 'dropdown',
-                    #        t 'mail action mark',
-                    #            span className: 'caret'
-                    #    ul className: 'dropdown-menu', role: 'menu',
-                    #        if isSeen
-                    #            li null,
-                    #                a
-                    #                    role: 'menuitem',
-                    #                    onClick: @onMark,
-                    #                    'data-value': FlagsConstants.SEEN,
-                    #                    t 'mail mark read'
-                    #        else
-                    #            li null,
-                    #                a role: 'menuitem',
-                    #                onClick: @onMark,
-                    #                'data-value': FlagsConstants.UNSEEN,
-                    #                t 'mail mark unread'
-                    #        if isFlagged
-                    #            li null,
-                    #                a
-                    #                    role: 'menuitem',
-                    #                    onClick: @onMark,
-                    #                    'data-value': FlagsConstants.FLAGGED,
-                    #                    t 'mail mark fav'
-                    #        else
-                    #            li null,
-                    #                a
-                    #                    role: 'menuitem',
-                    #                    onClick: @onMark,
-                    #                    'data-value': FlagsConstants.NOFLAG,
-                    #                    t 'mail mark nofav'
                     ToolboxMove
                         mailboxes: @props.mailboxes
                         onMove: @onMove
@@ -380,60 +386,15 @@ module.exports = React.createClass
                         onMark: @onMark
                         onConversation: @onConversation
                         onHeaders: @onHeaders
-
-    renderNavigation: ->
-
-        conversationID = @props.message.get 'conversationID'
-
-        getParams = (id) =>
-            if conversationID and @props.settings.get('displayConversation')
-                return {
-                    action : 'conversation'
-                    id     : id
-                }
-            else
-                return {
-                    action : 'message'
-                    id     : id
-                }
-        if @props.prevID?
-            params = getParams @props.prevID
-            prev =
-                direction: 'second'
-                action: params.action
-                parameters: params.id
-            prevUrl =  @buildUrl prev
-            displayPrev = =>
-                @redirect prev
-        if @props.nextID?
-            params = getParams @props.nextID
-            next =
-                direction: 'second'
-                action: params.action
-                parameters: params.id
-            nextUrl = @buildUrl next
-            displayNext = =>
-                @redirect next
-
-        div className: 'messageNavigation row',
-            div className: 'btn-toolbar', role: 'toolbar',
-                div className: 'btn-group btn-group-sm btn-group-justified',
-                    if prevUrl?
-                        div className: 'btn-group btn-group-sm',
-                            button
-                                className: 'btn btn-default prev',
-                                type: 'button',
-                                onClick: displayPrev,
-                                    a href: prevUrl,
-                                        span className: 'fa fa-long-arrow-left'
                     if nextUrl?
                         div className: 'btn-group btn-group-sm',
                             button
-                                className: 'btn btn-default next',
+                                className: 'btn btn-default',
                                 type: 'button',
                                 onClick: displayNext,
                                     a href: nextUrl,
                                         span className: 'fa fa-long-arrow-right'
+
 
     _initFrame: ->
         panel = document.querySelector "#panels > .panel:nth-of-type(2)"

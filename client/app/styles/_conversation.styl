@@ -21,6 +21,7 @@
             margin-right 1em
 
         .expand
+            font-size 0.75em
             float right
 
         .expand
@@ -50,7 +51,8 @@
 
             &.active
             &:last-of-type
-                background #fafafa
+                background white
+                border 0
 
                 .preview
                     display block
@@ -63,14 +65,39 @@
             .messageToolbox
             .messageNavigation
                 margin-bottom 1em
-                opacity .3
 
                 .btn-toolbar
                   margin-right .25em
 
-            .messageToolbox:hover
-            .messageNavigation:hover
-                opacity 1
+            .messageToolbox
+                margin-top 2em
+                .btn.btn-default
+                    background none
+                    box-shadow none
+                    border 0
+                    color basecolor
+
+                    &:hover
+                        color actioncolor
+
+
+            .messageNavigation
+                margin-bottom 0
+
+                .btn.btn-default
+                    background none
+                    box-shadow none
+                    border 0
+                    color basecolor
+
+                    &:hover
+                        color actioncolor
+
+                .btn.btn-default.prev
+                    text-align left
+
+                .btn.btn-default.next
+                    text-align right
 
             .messageToolbox .tool-long
                 display none
@@ -83,10 +110,15 @@
                 border-radius 2px
                 background-color white
 
+                body
+                    font-family main
+
             .header
+                padding 1em
                 display flex
                 justify-content flex-start
                 align-items center
+                font-size 14px
             .sender-avatar
                 display block
                 float left
@@ -165,7 +197,7 @@
 
             .content
                 white-space pre-line
-                margin 1em 0 0 0
+                margin 0 0 0 0
                 display none
                 width 100%
 
