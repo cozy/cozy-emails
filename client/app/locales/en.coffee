@@ -111,7 +111,7 @@ module.exports =
       "account mailboxes"           : "Folders"
       "account newmailbox label"    : "New Folder"
       "account newmailbox placeholder" : "Name"
-      "account newmailbox parent"   : "Parent"
+      "account newmailbox parent"   : "Parent:"
       "account confirm delbox"      : "Do you really want to delete this box
                                         and everything in it ?"
       "account tab account"         : "Account"
@@ -122,6 +122,9 @@ module.exports =
       "account creation ok"         : "Yeah ! The account has been successfully
         created. Now select the mailboxes you want to see in the menu"
       "account refreshed"           : "Account refreshed"
+      "account identifiers"         : "Identification"
+      "account actions"             : "Actions"
+      "account danger zone"         : "Danger Zone"
       "mailbox create ok"           : "Folder created"
       "mailbox create ko"           : "Error creating folder"
       "mailbox update ok"           : "Folder updated"

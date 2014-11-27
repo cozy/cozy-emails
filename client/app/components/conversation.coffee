@@ -81,22 +81,17 @@ module.exports = React.createClass
             #        a href: '#', 'Responsive Cozy Emails'
             #        span className: 'close', 'x'
 
-            h3 null,
-                @props.message.get 'subject'
+            if @props.layout isnt 'full'
                 a
-                    href: closeUrl,
-                    className: 'expand close-conversation hidden-xs hidden-sm',
-                        i className:'fa ' + closeIcon
-                if @props.layout isnt 'full'
-                    a
-                        href: expandUrl,
-                        className: 'expand hidden-xs hidden-sm',
-                            i className: 'fa fa-arrows-h'
-                else
-                    a
-                        href: collapseUrl,
-                        className: 'close-conversation pull-right',
-                            i className:'fa fa-compress'
+                    href: expandUrl,
+                    className: 'expand hidden-xs hidden-sm',
+                        i className: 'fa fa-arrows-h'
+            else
+                a
+                    href: collapseUrl,
+                    className: 'compress',
+                        i className:'fa fa-compress'
+
             h3 className: 'message-title',
                 @props.message.get 'subject'
 

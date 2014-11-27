@@ -146,6 +146,8 @@ module.exports = React.createClass
 
         form className: 'form-horizontal',
             @renderError()
+            fieldset null,
+                legend null, t 'account identifiers'
             div className: 'form-group' + hasError('label'),
 
                 label
@@ -347,6 +349,8 @@ module.exports = React.createClass
                             onClick: (ev) =>
                                 @_onServerParam ev.target, 'imap', 'tls'
 
+            fieldset null,
+                legend null, t 'account actions'
             div className: '',
                 div className: 'col-sm-offset-4',
                     button
@@ -354,7 +358,7 @@ module.exports = React.createClass
                         onClick: @onSubmit, buttonLabel
                 if @state.id?
                     fieldset null,
-                        legend null, t 'danger zone'
+                        legend null, t 'account danger zone'
                         div className: 'col-sm-offset-4',
                             button
                                 className: 'btn btn-default btn-danger btn-remove',
