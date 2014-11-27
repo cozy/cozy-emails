@@ -83,6 +83,7 @@ Imap::fetchBoxMessageIds = (callback) ->
     @search [['ALL']], (err, uids) =>
         log.debug "imap#fetchBoxMessageIds#result", uids
         return callback err if err
+        return callback null, [] if uids.length is 0
 
         fetch = @fetch uids, bodies: 'HEADER.FIELDS (MESSAGE-ID)'
         fetch.on 'error', (err) -> callback err
