@@ -161,7 +161,7 @@ module.exports.listByMailbox = function(req, res, next) {
           sort: req.sort,
           before: req.before,
           after: req.after,
-          pageAfter: req.pageAfter
+          pageAfter: pageAfter
         })
       };
     } else {
