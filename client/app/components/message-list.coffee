@@ -55,6 +55,11 @@ MessageList = React.createClass
                         @_selected[id] = val
                     else
                         delete @_selected[id]
+                    if Object.keys(@_selected).length > 0
+                        @setState edited: true
+                    else
+                        @setState edited: false
+
         .toJS()
         nbMessages = parseInt @props.counterMessage, 10
         filterParams =
@@ -307,6 +312,7 @@ MessageItem = React.createClass
             message: true
             read: message.get 'isRead'
             active: @props.isActive
+            edited: @props.edited
             'unseen': flags.indexOf(MessageFlags.SEEN) is -1
             'has-attachments': message.get 'hasAttachments'
             'is-fav': flags.indexOf(MessageFlags.FLAGGED) isnt -1
@@ -348,17 +354,15 @@ MessageItem = React.createClass
                     'data-message-id': message.get('id'),
                     onClick: @onMessageClick,
                     onDoubleClick: @onMessageDblClick,
-                        if @props.edited
-                            input
-                                className: 'select',
-                                type: 'checkbox',
-                                checked: @state.selected
-                                onChange: @onSelect
+                        input
+                            className: 'select',
+                            type: 'checkbox',
+                            checked: @state.selected
+                            onChange: @onSelect
+                        if avatar?
+                            img className: 'avatar', src: avatar
                         else
-                            if avatar?
-                                img className: 'avatar', src: avatar
-                            else
-                                i className: 'fa fa-user'
+                            i className: 'fa fa-user'
                         span className: 'participants', @getParticipants message
                         div className: 'preview',
                             span className: 'title', message.get 'subject'

@@ -85,17 +85,15 @@
         .avatar
         .select
             margin 0
-            margin-left: 0.25em
+            margin: -.25em 0
             color #aaa
-            background-color white
             font-size 2em
-            //border 1px solid #aaa
-            border-radius 50%
-            box-shadow 0 0 3px #BBB
             width 1em
             height 1em
             text-align center
 
+        .select
+            display none
         //> a:hover
         //> a:focus
             //.fa-user
@@ -130,6 +128,13 @@
       display inline
       padding 0 .5em
 
+    .message:hover
+    .message.edited
+        .select
+            display inherit
+        .avatar
+        .fa-user
+            display none
     .message-list-actions
       display flex
       justify-content flex-start
@@ -157,14 +162,9 @@
         display none
 
 .message:hover
-    border-left .25em solid actioncolor
     background lightorange
 
 .message.active
-    border-left .25em solid basecolor
-
-    &:hover
-        border-left .25em solid actioncolor
 
     .select
         height auto
