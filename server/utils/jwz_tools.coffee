@@ -53,6 +53,8 @@ module.exports =
                     return "/message/#{messageId}/attachments/#{name}"
                 else
                     return null
+            else
+                return url
 
 
 # recursively browse the imap box tree building pathStr and pathArr
