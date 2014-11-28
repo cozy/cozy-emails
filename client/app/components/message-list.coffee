@@ -274,9 +274,11 @@ MessageList = React.createClass
             return
 
         # scroll current message into view
-        active = document.querySelector("[data-message-id='#{@props.messageID}']")
-        if active? and not @_isVisible(active)
-            active.scrollIntoView()
+        if @state.messageID isnt @props.messageID
+            active = document.querySelector("[data-message-id='#{@props.messageID}']")
+            if active? and not @_isVisible(active)
+                active.scrollIntoView()
+            @setState messageID: @props.messageID
 
         # listen to scroll events
         scrollable = @refs.list.getDOMNode().parentNode
