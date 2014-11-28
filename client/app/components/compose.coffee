@@ -282,6 +282,20 @@ module.exports = Compose = React.createClass
 
                     , 0
             )
+        else
+            # Text message
+            node = @refs.content.getDOMNode()
+            rect = node.getBoundingClientRect()
+            node.scrollTop = node.scrollHeight - rect.height
+
+            if (typeof node.selectionStart is "number")
+                node.selectionStart = node.selectionEnd = node.value.length
+            else if (typeof node.createTextRange isnt "undefined")
+                node.focus()
+                range = node.createTextRange()
+                range.collapse(false)
+                range.select()
+            node.focus()
 
     componentDidMount: ->
         @_initCompose()

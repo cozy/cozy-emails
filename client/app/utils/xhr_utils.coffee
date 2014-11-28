@@ -201,7 +201,7 @@ module.exports =
             callback?(res.text)
 
     activityCreate: (options, callback) ->
-        request.post "/activity"
+        request.post "activity"
         .send options
         .set 'Accept', 'application/json'
         .end (res) ->
