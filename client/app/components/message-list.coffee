@@ -191,6 +191,8 @@ MessageList = React.createClass
                     MessageActionCreator.delete id, (error) ->
                         if error?
                             alertError "#{t("message action delete ko")} #{error}"
+                        else
+                            window.cozyMails.messageNavigate()
 
     onMove: (args) ->
         selected = Object.keys @_selected
@@ -205,12 +207,16 @@ MessageList = React.createClass
                     ConversationActionCreator.move conversationID, newbox, (error) ->
                         if error?
                             alertError "#{t("conversation move ko")} #{error}"
+                        else
+                            window.cozyMails.messageNavigate()
             else
                 selected.forEach (id) =>
                     message = @props.messages.get id
                     MessageActionCreator.move message, @props.mailboxID, newbox, (error) ->
                         if error?
                             alertError "#{t("message action move ko")} #{error}"
+                        else
+                            window.cozyMails.messageNavigate()
 
     onMark: (args) ->
         selected = Object.keys @_selected
