@@ -103,7 +103,7 @@ module.exports = Compose = React.createClass
                     id: 'compose-to'
                     valueLink: @linkState 'to'
                     label: t 'compose to'
-                    placeholder: t 'compose to help'
+                    ref: 'to'
 
                 MailsInput
                     id: 'compose-cc'
@@ -355,39 +355,51 @@ module.exports = Compose = React.createClass
             isDraft     : isDraft
             attachments : @state.attachments
 
-        if @props.message?
-            message.mailboxIDs = @props.message.get 'mailboxIDs'
+        valid = true
+        if not isDraft
+            if @state.to.length is 0 and @state.cc.length is 0 and @state.bcc.length is 0
+                valid = false
+                LayoutActionCreator.alertError t "compose error no dest"
+                document.getElementById('compose-to').focus()
+            else if @state.subject is ''
+                valid = false
+                LayoutActionCreator.alertError t "compose error no subject"
+                @refs.subject.getDOMNode().focus()
 
-        node = @refs.html.getDOMNode()
-        if @state.composeInHTML
-            message.html    = node.innerHTML
-            try
-                message.text = toMarkdown(message.html)
-            catch
-                message.text = node.textContent or node.innerText
-        else
-            message.text = node.value.trim()
+        if valid
+            if @props.message?
+                message.mailboxIDs = @props.message.get 'mailboxIDs'
 
-        callback = @props.callback
-
-        MessageActionCreator.send message, (error, message) =>
-            if isDraft
-                msgKo = t "message action draft ko"
-                msgOk = t "message action draft ok"
+            node = @refs.html.getDOMNode()
+            if @state.composeInHTML
+                message.html    = node.innerHTML
+                try
+                    message.text = toMarkdown(message.html)
+                catch
+                    message.text = node.textContent or node.innerText
             else
-                msgKo = t "message action sent ko"
-                msgOk = t "message action sent ok"
-            if error?
-                LayoutActionCreator.alertError "#{msgKo} :  error"
-            else
-                LayoutActionCreator.alertSuccess msgOk
-                @setState message
+                message.text = node.value.trim()
 
-                if callback?
-                    callback error
-                else if not isDraft
-                    # mail sent close the pane
-                    @redirect @buildClosePanelUrl @props.layout
+            callback = @props.callback
+
+            MessageActionCreator.send message, (error, message) =>
+                if isDraft
+                    msgKo = t "message action draft ko"
+                    msgOk = t "message action draft ok"
+                else
+                    msgKo = t "message action sent ko"
+                    msgOk = t "message action sent ok"
+                if error?
+                    LayoutActionCreator.alertError "#{msgKo} :  error"
+                else
+                    LayoutActionCreator.alertSuccess msgOk
+                    @setState message
+
+                    if callback?
+                        callback error
+                    else if not isDraft
+                        # mail sent close the pane
+                        @redirect @buildClosePanelUrl @props.layout
 
 
     onDelete: (args) ->

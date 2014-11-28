@@ -453,7 +453,7 @@ module.exports = React.createClass
                         s.sheet.insertRule rule, idx
                     doc.body.innerHTML = @_htmlContent
                     rect = doc.body.getBoundingClientRect()
-                    frame.style.height = "#{rect.height + 40}px"
+                    frame.style.height = "#{rect.height + 60}px"
                 else
                     # try to display text only
                     @setState messageDisplayHTML: false

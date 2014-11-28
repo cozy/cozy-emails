@@ -32,6 +32,8 @@ module.exports =
       "compose action delete"     : "Supprimer le brouillon"
       "compose toggle cc"         : "Copie à"
       "compose toggle bcc"        : "Copie cachée à"
+      "compose error no dest"     : "Vous n'avez pas saisi de destinataires"
+      "compose error no subject"  : "Vous n'avez pas saisi de sujet"
 
       # Menu
       "menu compose"            : "Nouveau"
