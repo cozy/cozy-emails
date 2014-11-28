@@ -63,17 +63,16 @@ module.exports = Compose = React.createClass
         classCc    = if @state.cc.length is 0 then '' else ' shown'
         classBcc   = if @state.bcc.length is 0 then '' else ' shown'
 
+
         div id: 'email-compose',
+            if @props.layout isnt 'full'
+                a href: expandUrl, className: 'expand pull-right',
+                    i className: 'fa fa-arrows-h'
+            else
+                a href: collapseUrl, className: 'close-email pull-right',
+                    i className:'fa fa-compress'
             h3 null,
-                a href: closeUrl, className: 'close-email hidden-xs hidden-sm',
-                    i className:'fa fa-times'
                 t 'compose'
-                if @props.layout isnt 'full'
-                    a href: expandUrl, className: 'expand hidden-xs hidden-sm',
-                        i className: 'fa fa-arrows-h'
-                else
-                    a href: collapseUrl, className: 'close-email pull-right',
-                        i className:'fa fa-compress'
             form className: '',
                 div className: 'form-group',
                     label
