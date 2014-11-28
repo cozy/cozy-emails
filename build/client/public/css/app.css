@@ -2310,7 +2310,6 @@ textarea:active,
   border: 0;
   padding: 0 1rem;
   cursor: pointer;
-  font-size: 0.75em;
   background: #f4f4f4;
 }
 .conversation .thread .message:hover {
@@ -2832,13 +2831,13 @@ textarea:active,
   font-weight: bold;
 }
 .message-list .message {
-  padding: 0.75em 0.25em;
   border-left: 0.25em solid transparent;
   cursor: pointer;
   font-size: 0.8em;
 }
 .message-list .message > a,
 .message-list .message > span {
+  padding: 0.75em 0.25em;
   display: block;
   outline: none;
   display: -webkit-box;
@@ -2863,8 +2862,7 @@ textarea:active,
 }
 .message-list .message input[type="checkbox"] {
   width: auto;
-  margin-left: 0.25em;
-  margin-right: 0.25em;
+  margin-left: 0.3em;
   cursor: pointer;
 }
 .message-list .message .participants,
@@ -2968,6 +2966,10 @@ textarea:active,
 .message-list .message.edited .fa-user {
   display: none;
 }
+.message-list .message:hover .participants,
+.message-list .message.edited .participants {
+  margin-left: 1.4em;
+}
 .message-list .message-list-actions {
   display: -webkit-box;
   display: -moz-box;
@@ -2992,7 +2994,8 @@ textarea:active,
   clear: both;
   margin-top: 1em;
 }
-.message-list.compact .message {
+.message-list.compact .message > a,
+.message-list.compact .message > span {
   padding: 1px 0;
 }
 .message-list.compact .fa-user,
@@ -3254,10 +3257,11 @@ textarea:active,
 #email-compose h3 {
   color: #444;
   margin-top: 0;
+  padding-top: 1em;
   margin-bottom: 2em;
 }
 #email-compose a.close-email {
-  margin-right: 1em;
+  margin-right: 0;
 }
 #email-compose a.expand {
   float: right;
@@ -3286,9 +3290,32 @@ textarea:active,
 .compose-toggle a {
   padding: 0 1em;
 }
+#compose-to {
+  width: 90%;
+  max-width: 750px;
+  display: inline;
+}
+#compose-cc {
+  width: 90%;
+  max-width: 750px;
+  display: inline;
+}
+#compose-bcc {
+  width: 90%;
+  max-width: 750px;
+  display: inline;
+}
+.contact {
+  display: inline;
+  width: 10%;
+}
 .compose-from {
   line-height: 2em;
   color: #444;
+  cursor: pointer;
+}
+.compose-from .caret {
+  margin-left: 0.5em;
 }
 .compose-cc,
 .compose-bcc {
@@ -3297,12 +3324,6 @@ textarea:active,
 .compose-cc.shown,
 .compose-bcc.shown {
   display: inherit;
-}
-.compose-from {
-  cursor: pointer;
-}
-.compose-from .caret {
-  margin-left: 0.5em;
 }
 .contact-form .contact-list {
   left: 1em;
@@ -3458,8 +3479,24 @@ textarea:active,
 
   --
 */
+#email-compose {
+  width: 100%;
+  max-width: 800px;
+}
+.compose-label {
+  display: block;
+  width: 100%;
+}
+.file-picker .dropzone {
+  width: 100%;
+}
+.file-picker .dropzone span,
+.file-picker .dropzone input {
+  width: 100%;
+}
 .rt-editor {
   border: 1px solid #34a6ff;
+  width: 100%;
 }
 .rt-editor:hover {
   border: 1px solid #fe8800;

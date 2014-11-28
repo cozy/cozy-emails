@@ -2528,20 +2528,15 @@ module.exports = Compose = React.createClass({
       fullWidth: true
     });
     closeUrl = this.buildClosePanelUrl(this.props.layout);
-    classLabel = 'col-sm-2 col-sm-offset-0 control-label';
-    classInput = 'col-sm-6';
+    classLabel = 'compose-label';
+    classInput = 'compose-input';
     classCc = this.state.cc.length === 0 ? '' : ' shown';
     classBcc = this.state.bcc.length === 0 ? '' : ' shown';
     return div({
       id: 'email-compose'
-    }, h3(null, a({
-      href: closeUrl,
-      className: 'close-email hidden-xs hidden-sm'
-    }, i({
-      className: 'fa fa-times'
-    })), t('compose'), this.props.layout !== 'full' ? a({
+    }, this.props.layout !== 'full' ? a({
       href: expandUrl,
-      className: 'expand hidden-xs hidden-sm'
+      className: 'expand pull-right'
     }, i({
       className: 'fa fa-arrows-h'
     })) : a({
@@ -2549,8 +2544,8 @@ module.exports = Compose = React.createClass({
       className: 'close-email pull-right'
     }, i({
       className: 'fa fa-compress'
-    }))), form({
-      className: 'form-horizontal'
+    })), h3(null, t('compose')), form({
+      className: ''
     }, div({
       className: 'form-group'
     }, label({
@@ -2571,11 +2566,13 @@ module.exports = Compose = React.createClass({
       accounts: this.props.accounts,
       valueLink: this.linkState('accountID'),
       type: 'address'
-    }))), MailsInput({
+    }))), div({
+      className: 'clearfix'
+    }, null), MailsInput({
       id: 'compose-to',
       valueLink: this.linkState('to'),
       label: t('compose to'),
-      placeholder: t('compose to help')
+      ref: 'to'
     }), MailsInput({
       id: 'compose-cc',
       className: 'compose-cc' + classCc,
@@ -2604,28 +2601,31 @@ module.exports = Compose = React.createClass({
       className: 'form-control',
       placeholder: t("compose subject help")
     }))), div({
-      className: 'form-group'
-    }, this.state.composeInHTML ? div({
-      className: 'form-group'
-    }, div({
-      className: 'rt-editor col-sm-7 col-sm-offset-1',
+      className: ''
+    }, label({
+      htmlFor: 'compose-subject',
+      className: classLabel
+    }, t("content")), this.state.composeInHTML ? div({
+      className: 'rt-editor form-control',
       ref: 'html',
       contentEditable: true,
+      onKeyDown: this.onKeyDown,
       dangerouslySetInnerHTML: {
         __html: this.linkState('html').value
       }
-    })) : textarea({
+    }) : textarea({
       className: 'editor',
       ref: 'content',
+      onKeyDown: this.onKeyDown,
       defaultValue: this.linkState('text').value
     })), div({
       className: 'attachements'
     }, FilePicker({
-      className: 'col-sm-offset-5',
+      className: '',
       editable: true,
       valueLink: this.linkState('attachments')
     })), div({
-      className: 'composeToolbox col-sm-offset-4 col-sm-4'
+      className: 'composeToolbox'
     }, div({
       className: 'btn-toolbar',
       role: 'toolbar'
@@ -2795,7 +2795,7 @@ module.exports = Compose = React.createClass({
     return this._doSend(false);
   },
   _doSend: function(isDraft) {
-    var account, callback, from, message, node;
+    var account, callback, from, message, node, valid;
     account = this.props.accounts.get(this.state.accountID);
     from = {
       name: (account != null ? account.get('name') : void 0) || void 0,
@@ -2815,44 +2815,58 @@ module.exports = Compose = React.createClass({
       isDraft: isDraft,
       attachments: this.state.attachments
     };
-    if (this.props.message != null) {
-      message.mailboxIDs = this.props.message.get('mailboxIDs');
-    }
-    node = this.refs.html.getDOMNode();
-    if (this.state.composeInHTML) {
-      message.html = node.innerHTML;
-      try {
-        message.text = toMarkdown(message.html);
-      } catch (_error) {
-        message.text = node.textContent || node.innerText;
+    valid = true;
+    if (!isDraft) {
+      if (this.state.to.length === 0 && this.state.cc.length === 0 && this.state.bcc.length === 0) {
+        valid = false;
+        LayoutActionCreator.alertError(t("compose error no dest"));
+        document.getElementById('compose-to').focus();
+      } else if (this.state.subject === '') {
+        valid = false;
+        LayoutActionCreator.alertError(t("compose error no subject"));
+        this.refs.subject.getDOMNode().focus();
       }
-    } else {
-      message.text = node.value.trim();
     }
-    callback = this.props.callback;
-    return MessageActionCreator.send(message, (function(_this) {
-      return function(error, message) {
-        var msgKo, msgOk;
-        if (isDraft) {
-          msgKo = t("message action draft ko");
-          msgOk = t("message action draft ok");
-        } else {
-          msgKo = t("message action sent ko");
-          msgOk = t("message action sent ok");
+    if (valid) {
+      if (this.props.message != null) {
+        message.mailboxIDs = this.props.message.get('mailboxIDs');
+      }
+      node = this.refs.html.getDOMNode();
+      if (this.state.composeInHTML) {
+        message.html = node.innerHTML;
+        try {
+          message.text = toMarkdown(message.html);
+        } catch (_error) {
+          message.text = node.textContent || node.innerText;
         }
-        if (error != null) {
-          return LayoutActionCreator.alertError("" + msgKo + " :  error");
-        } else {
-          LayoutActionCreator.alertSuccess(msgOk);
-          _this.setState(message);
-          if (callback != null) {
-            return callback(error);
-          } else if (!isDraft) {
-            return _this.redirect(_this.buildClosePanelUrl(_this.props.layout));
+      } else {
+        message.text = node.value.trim();
+      }
+      callback = this.props.callback;
+      return MessageActionCreator.send(message, (function(_this) {
+        return function(error, message) {
+          var msgKo, msgOk;
+          if (isDraft) {
+            msgKo = t("message action draft ko");
+            msgOk = t("message action draft ok");
+          } else {
+            msgKo = t("message action sent ko");
+            msgOk = t("message action sent ok");
           }
-        }
-      };
-    })(this));
+          if (error != null) {
+            return LayoutActionCreator.alertError("" + msgKo + " :  error");
+          } else {
+            LayoutActionCreator.alertSuccess(msgOk);
+            _this.setState(message);
+            if (callback != null) {
+              return callback(error);
+            } else if (!isDraft) {
+              return _this.redirect(_this.buildClosePanelUrl(_this.props.layout));
+            }
+          }
+        };
+      })(this));
+    }
   },
   onDelete: function(args) {
     if (window.confirm(t('mail confirm delete'))) {
@@ -2897,6 +2911,11 @@ module.exports = Compose = React.createClass({
       _results.push(toggle(e));
     }
     return _results;
+  },
+  onKeyDown: function(evt) {
+    if (evt.ctrlKey && evt.key === 'Enter') {
+      return this.onSend();
+    }
   }
 });
 });
@@ -3525,7 +3544,7 @@ module.exports = MailsInput = React.createClass({
   render: function() {
     var classLabel, className, current, listClass, _ref1;
     className = (this.props.className || '') + ' form-group';
-    classLabel = 'col-sm-2 col-sm-offset-0 control-label';
+    classLabel = 'compose-label control-label';
     listClass = classer({
       'contact-form': true,
       open: this.state.open && ((_ref1 = this.state.contacts) != null ? _ref1.length : void 0) > 0
@@ -3537,11 +3556,11 @@ module.exports = MailsInput = React.createClass({
       htmlFor: this.props.id,
       className: classLabel
     }, this.props.label), div({
-      className: 'col-sm-6 input-group contact-group dropdown ' + listClass
+      className: 'contact-group dropdown ' + listClass
     }, input({
       id: this.props.id,
       name: this.props.id,
-      className: 'form-control',
+      className: 'form-control compose-input',
       onKeyDown: this.onKeyDown,
       ref: 'contactInput',
       valueLink: this.proxyValueLink(),
@@ -3627,6 +3646,11 @@ module.exports = MailsInput = React.createClass({
       case "Backspace":
         node = this.refs.contactInput.getDOMNode();
         return node.value = node.value.trim();
+      case "Escape":
+        return this.setState({
+          contacts: null,
+          open: false
+        });
     }
   },
   onContact: function(contact) {
@@ -4221,6 +4245,8 @@ MessageList = React.createClass({
           return MessageActionCreator["delete"](id, function(error) {
             if (error != null) {
               return alertError("" + (t("message action delete ko")) + " " + error);
+            } else {
+              return window.cozyMails.messageNavigate();
             }
           });
         });
@@ -4243,6 +4269,8 @@ MessageList = React.createClass({
             return ConversationActionCreator.move(conversationID, newbox, function(error) {
               if (error != null) {
                 return alertError("" + (t("conversation move ko")) + " " + error);
+              } else {
+                return window.cozyMails.messageNavigate();
               }
             });
           };
@@ -4255,6 +4283,8 @@ MessageList = React.createClass({
             return MessageActionCreator.move(message, _this.props.mailboxID, newbox, function(error) {
               if (error != null) {
                 return alertError("" + (t("message action move ko")) + " " + error);
+              } else {
+                return window.cozyMails.messageNavigate();
               }
             });
           };
@@ -4769,7 +4799,7 @@ module.exports = React.createClass({
     }
   },
   prepareHTML: function(prepared) {
-    var doc, hideImage, html, images, messageDisplayHTML, parser, _i, _len;
+    var doc, hideImage, html, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
     messageDisplayHTML = true;
     parser = new DOMParser();
     html = "<html><head></head><body>" + prepared.html + "</body></html>";
@@ -4792,6 +4822,11 @@ module.exports = React.createClass({
       for (_i = 0, _len = images.length; _i < _len; _i++) {
         img = images[_i];
         hideImage(img);
+      }
+      _ref2 = doc.querySelectorAll('a[href]');
+      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+        link = _ref2[_j];
+        link.target = '_blank';
       }
     }
     if (doc != null) {
@@ -5125,7 +5160,7 @@ module.exports = React.createClass({
             });
             doc.body.innerHTML = _this._htmlContent;
             rect = doc.body.getBoundingClientRect();
-            return frame.style.height = "" + (rect.height + 40) + "px";
+            return frame.style.height = "" + (rect.height + 60) + "px";
           } else {
             return _this.setState({
               messageDisplayHTML: false
@@ -7338,6 +7373,8 @@ module.exports = {
   "compose action delete": "Delete draft",
   "compose toggle cc": "Cc",
   "compose toggle bcc": "Bcc",
+  "compose error no dest": "You can not send a message to nobody",
+  "compose error no subject": "Please set a subject",
   "menu compose": "Compose",
   "menu account new": "New Mailbox",
   "menu settings": "Parameters",
@@ -7536,6 +7573,8 @@ module.exports = {
   "compose action delete": "Supprimer le brouillon",
   "compose toggle cc": "Copie à",
   "compose toggle bcc": "Copie cachée à",
+  "compose error no dest": "Vous n'avez pas saisi de destinataires",
+  "compose error no subject": "Vous n'avez pas saisi de sujet",
   "menu compose": "Nouveau",
   "menu account new": "Ajouter un compte",
   "menu settings": "Paramètres",
