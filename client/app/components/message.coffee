@@ -421,7 +421,7 @@ module.exports = React.createClass
                 if doc?
                     s = document.createElement 'style'
                     doc.head.appendChild(s)
-                    font = "../fonts/sourcesanspro/SourceSansPro-Regular"
+                    font = "./fonts/sourcesanspro/SourceSansPro-Regular"
                     rules = [
                         """
                         @font-face{
