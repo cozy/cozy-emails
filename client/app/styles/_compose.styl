@@ -1,0 +1,54 @@
+/*
+  new email window
+*/
+#email-compose
+
+    &.enable
+        display block
+
+    &.col-md-6
+    &.col-md-12
+        transition width 0.2s ease-out
+
+    h3
+        color #444
+        margin-top 0
+
+    a.close-email
+        margin-right 1em
+
+    a.expand
+        float right
+        font-size 2em
+
+  .editor,
+  .rt-editor
+    border 1px solid #444
+    min-height 16em
+    height auto
+    width 100%
+    text-align left
+    color black
+
+  .attachements
+      margin 1em 0
+
+  .input-group.contact-group
+      padding 0 15px // pixels because we override Bootstrap
+  .compose-toggle
+    float right
+    a
+        padding 0 1em
+
+  .compose-from
+    line-height 2em
+    color darkcolor
+
+  .compose-cc,
+  .compose-bcc
+    display none
+
+  .compose-cc.shown,
+  .compose-bcc.shown
+    display inherit
+
