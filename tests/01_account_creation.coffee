@@ -37,7 +37,7 @@ describe 'Account creation', ->
         @timeout 30000
         lastFinished = false
         checkIfDone = ->
-            client.get "/tasks", (err, res, body) ->
+            client.get "/refreshes", (err, res, body) ->
                 finished = not body.some (task) -> not task.finished
                 if finished and lastFinished then return done()
 
@@ -46,8 +46,8 @@ describe 'Account creation', ->
 
         setTimeout checkIfDone, 1000
 
-    it "When I query the /tasks, they are all finished", (done) ->
-        client.get "/tasks", (err, res, body) =>
+    it "When I query the /refreshes, they are all finished", (done) ->
+        client.get "/refreshes", (err, res, body) =>
             # body.should.have.length 12
             # 12 = 1 diff (limited) + 1 diff-apply-fetch + 1 diff (not limited but nothing) / mailbox
             unfinishedTask = body.some (task) -> not task.finished
