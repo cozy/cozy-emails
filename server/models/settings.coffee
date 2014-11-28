@@ -33,5 +33,4 @@ Settings.get = (callback) ->
 Settings.set = (changes, callback) ->
     Settings.getInstance (err, instance) ->
         return callback err if err
-        instance[key] = value for key, value of changes
-        instance.save callback
+        instance.updateAttributes changes, callback

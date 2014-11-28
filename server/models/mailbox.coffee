@@ -20,6 +20,8 @@ ImapReporter = require '../imap/reporter'
 {Break, NotFound} = require '../utils/errors'
 {FETCH_AT_ONCE} = require '../utils/constants'
 
+require('../utils/socket_handler').wrapModel Mailbox, 'mailbox'
+
 
 # map of account's attributes -> RFC6154 special use box attributes
 Mailbox.RFC6154 =
@@ -186,11 +188,13 @@ Mailbox::renameWithChildren = (newLabel, newPath, callback) ->
 
         async.eachSeries boxes, (box, cb) ->
             log.debug "imapcozy_rename#box", box
-            box.path = box.path.replace path, newPath
-            box.tree[depth] = newLabel
-            box.label = newLabel if box.tree.length is depth + 1
-            log.debug "imapcozy_rename#boxafter", box
-            box.save cb
+            changes = {}
+            changes.path = box.path.replace path, newPath
+            changes.tree = (item for item in box.tree)
+            changes.tree[depth] = newLabel
+            if box.tree.length is depth + 1 # self
+                changes.label = newLabel
+            box.updateAttributes changes, cb
         , callback
 
 # Public: destroy a mailbox and sub-mailboxes
@@ -316,6 +320,7 @@ Mailbox::applyFlagsChanges = (flagsChange, reporter, callback) ->
 Mailbox::applyToFetch = (toFetch, reporter, callback) ->
     log.debug "applyFetch", toFetch.length
     box = this
+    toFetch.reverse()
     async.eachSeries toFetch, (msg, cb) ->
         Message.fetchOrUpdate box, msg.mid, msg.uid, (err) ->
             reporter.onError err if err

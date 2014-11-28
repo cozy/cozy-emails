@@ -1,4 +1,5 @@
 XHRUtils = require '../utils/xhr_utils'
+SocketUtils = require '../utils/socketio_utils'
 
 AccountStore  = require '../stores/account_store'
 LayoutStore   = require '../stores/layout_store'

@@ -3,6 +3,7 @@ ContactStore  = require './contact_store'
 AppDispatcher = require '../app_dispatcher'
 
 AccountStore = require './account_store'
+SocketUtils = require '../utils/socketio_utils'
 
 {ActionTypes, MessageFlags, MessageFilter} =
         require '../constants/app_constants'
@@ -93,19 +94,20 @@ class MessageStore extends Store
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
 
+            SocketUtils.changeRealtimeScope messages.mailboxID
+
             if messages.links?
                 if messages.links.next?
                     _params = {}
                     next   = decodeURIComponent(messages.links.next)
                     url    = 'http://localhost' + next
                     url.split('?')[1].split('&').forEach (p) ->
-                        tmp = p.split '='
-                        if tmp[1] isnt ''
-                            _params[tmp[0]] = tmp[1]
-                        else
-                            _params[tmp[0]] = '-'
-                    #if _params.flag is ''
-                    #    _params.flag = null#'all'
+                        [key, value] = p.split '='
+                        value = '-' if value is ''
+                        _params[key] = value
+
+                SocketUtils.changeRealtimeScope messages.mailboxID,
+                    _params.pageAfter
 
             if messages.count? and messages.mailboxID?
                 messages = messages.messages.sort __sortFunction
@@ -183,6 +185,10 @@ class MessageStore extends Store
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
             @setCurrentID null
+
+        handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
+            _messages = _messages.remove id
+            @emit 'change'
 
     ###
         Public API

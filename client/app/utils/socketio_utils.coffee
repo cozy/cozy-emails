@@ -4,21 +4,24 @@ url = window.location.origin
 pathToSocketIO = "#{window.location.pathname}socket.io"
 socket = io.connect url, path: pathToSocketIO
 
-dispatchTaskUpdate = (task) ->
+dispatchAs = (action) -> (content) ->
     AppDispatcher.handleServerAction
-        type: ActionTypes.RECEIVE_REFRESH_UPDATE
-        value: task
+        type: action
+        value: content
 
-dispatchTaskDelete = (taskid) ->
-    AppDispatcher.handleServerAction
-        type: ActionTypes.RECEIVE_REFRESH_DELETE
-        value: taskid
+socket.on 'refresh.create', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
+socket.on 'refresh.update', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
+socket.on 'refresh.delete', dispatchAs ActionTypes.RECEIVE_REFRESH_DELETE
 
-socket.on 'refresh.create', dispatchTaskUpdate
-socket.on 'refresh.update', dispatchTaskUpdate
-socket.on 'refresh.delete', dispatchTaskDelete
+socket.on 'message.create', dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE
+socket.on 'message.update', dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE
+socket.on 'message.delete', dispatchAs ActionTypes.RECEIVE_MESSAGE_DELETE
 
-module.exports =
+exports.acknowledgeRefresh = (taskid) ->
+    socket.emit 'mark_ack', taskid
 
-    acknowledgeRefresh: (taskid) ->
-        socket.emit 'mark_ack', taskid
+
+exports.changeRealtimeScope = (boxid, date) ->
+    socket.emit 'change_scope',
+        mailboxID: boxid
+        before: date

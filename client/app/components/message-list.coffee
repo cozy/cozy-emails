@@ -3,6 +3,7 @@ classer = React.addons.classSet
 
 RouterMixin    = require '../mixins/router_mixin'
 MessageUtils   = require '../utils/message_utils'
+SocketUtils    = require '../utils/socketio_utils'
 {MessageFlags, MessageFilter, FlagsConstants} = require '../constants/app_constants'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 ContactActionCreator = require '../actions/contact_action_creator'
@@ -171,7 +172,7 @@ MessageList = React.createClass
                                     ref: 'nextPage',
                                     t 'list next page'
                     else
-                        p null, t 'list end'
+                        p ref: 'listEnd', t 'list end'
 
 
     refresh: (event) ->
@@ -275,6 +276,13 @@ MessageList = React.createClass
             @setState loading: true
             LayoutActionCreator.showMessageList parameters: @props.query
 
+    _handleRealtimeGrowth: ->
+        nbMessages = parseInt @props.counterMessage, 10
+        if nbMessages < @props.messages.count() and @refs.listEnd? and
+        not @_isVisible(@refs.listEnd.getDOMNode(), true)
+            lastdate = @props.messages.last().get('date')
+            SocketUtils.changeRealtimeScope @props.mailboxID, lastdate
+
     _initScroll: ->
         if not @refs.nextPage?
             return
@@ -298,6 +306,8 @@ MessageList = React.createClass
 
     componentDidUpdate: ->
         @_initScroll()
+
+        @_handleRealtimeGrowth()
 
     componentWillUnmount: ->
         scrollable = @refs.list.getDOMNode().parentNode

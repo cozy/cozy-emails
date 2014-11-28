@@ -39,6 +39,8 @@ Mailbox = require './mailbox'
 ImapPool = require '../imap/pool'
 htmlToText  = require 'html-to-text'
 
+require('../utils/socket_handler').wrapModel Message, 'message'
+
 # Public: get messages in a box, sorted by Date
 #
 # mailboxID - {String} the mailbox's ID

@@ -32,10 +32,8 @@ module.exports = class ImapReporter
         for id, task of ImapReporter.userTasks
             task.toObject()
 
-    @initSocketIO = (app, server) ->
-        app.io = io = ioServer server
-        io.on 'connection', (sock) ->
-            sock.on 'mark_ack', ImapReporter.acknowledge
+    @setIOReference = (ioref) ->
+        io = ioref
 
     # when the user click OK on a finished task
     # we remove it from the userTasks

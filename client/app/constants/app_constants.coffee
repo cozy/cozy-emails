@@ -24,6 +24,7 @@ module.exports =
         'MESSAGE_FLAG'              : 'MESSAGE_FLAG'
         'MESSAGE_ACTION'            : 'MESSAGE_ACTION'
         'MESSAGE_CURRENT'           : 'MESSAGE_CURRENT'
+        'RECEIVE_MESSAGE_DELETE'    : 'RECEIVE_MESSAGE_DELETE'
 
         # Search
         'SET_SEARCH_QUERY'          : 'SET_SEARCH_QUERY'

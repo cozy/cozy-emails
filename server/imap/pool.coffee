@@ -261,8 +261,8 @@ class ImapPool
                     # we got a problem, recover
                     # @TODO : this can be long, prevent timeout
                     cozybox.recoverChangedUIDValidity imap, (err) ->
-                        cozybox.uidvalidity = newUidvalidity
-                        cozybox.save (err) ->
+                        changes = uidvalidity: newUidvalidity
+                        cozybox.updateAttributes changes, (err) ->
                             # we have recovered, try again
                             wrapped imap, callback
 

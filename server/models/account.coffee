@@ -38,6 +38,7 @@ SMTPConnection = require 'nodemailer/node_modules/' +
 log = require('../utils/logging')(prefix: 'models:account')
 _ = require 'lodash'
 async = require 'async'
+require('../utils/socket_handler').wrapModel Account, 'account'
 
 
 Account::doASAP = (operation, callback) ->
@@ -258,6 +259,7 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, callback) ->
     onlyFavorites ?= false
 
     @imap_refreshBoxes (err, toFetch, toDestroy) ->
+        return callback err if err
 
         if onlyFavorites
             toFetch = toFetch.filter (box) -> box.id in account.favorites
@@ -345,6 +347,8 @@ Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
     inboxMailbox = null
     boxAttributes = Object.keys Mailbox.RFC6154
 
+    changes = {}
+
     boxes.map (box) =>
         type = box.RFC6154use()
         if box.isInbox()
@@ -356,14 +360,14 @@ Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
                 useRFC6154 = true
                 # remove previous guesses
                 for attribute in boxAttributes
-                    @[attribute] = null
+                    changes[attribute] = null
             log.debug 'found', type
-            @[type] = box.id
+            changes[type] = box.id
 
         # do not attempt fuzzy match if the server uses RFC6154
         else if not useRFC6154 and type = box.guessUse()
             log.debug 'found', type, 'guess'
-            @[type] = box.id
+            changes[type] = box.id
 
         return box
 
@@ -373,21 +377,21 @@ Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
         'sentMailbox', 'draftMailbox'
     ]
 
-    @inboxMailbox = inboxMailbox
-    @favorites = []
+    changes.inboxMailbox = inboxMailbox
+    changes.favorites = []
 
     # see if we have some of the priorities box
     for type in priorities
-        id = @[type]
+        id = changes[type]
         if id
-            @favorites.push id
+            changes.favorites.push id
 
     # if we dont have our 4 favorites, pick at random
-    for box in boxes when @favorites.length < 4
-        if box.id not in @favorites and box.isSelectable()
-            @favorites.push box.id
+    for box in boxes when changes.favorites.length < 4
+        if box.id not in changesfavorites and box.isSelectable()
+            changes.favorites.push box.id
 
-    @save callback
+    @updateAttributes changes, callback
 
 
 # Public: send a message using this account SMTP config
