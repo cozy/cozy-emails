@@ -2352,6 +2352,9 @@ textarea:active,
 .conversation .thread .message .messageToolbox .btn.btn-default:hover {
   color: #fe8800;
 }
+.conversation .thread .message .messageToolbox .btn.btn-default.reply {
+  color: #5c5;
+}
 .conversation .thread .message .messageNavigation {
   margin-bottom: 0;
 }
@@ -2546,6 +2549,68 @@ textarea:active,
 .conversation .with-headers .full-headers {
   display: block;
 }
+.conversation #email-compose {
+  margin-top: 2em;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  border-top: 1px solid #ccc;
+  border-bottom: 1px solid #ccc;
+}
+#email-compose.enable {
+  display: block;
+}
+#email-compose.col-md-6,
+#email-compose.col-md-12 {
+  -webkit-transition: width 0.2s ease-out;
+  -moz-transition: width 0.2s ease-out;
+  -o-transition: width 0.2s ease-out;
+  -ms-transition: width 0.2s ease-out;
+  transition: width 0.2s ease-out;
+}
+#email-compose h3 {
+  color: #444;
+  margin-top: 0;
+}
+#email-compose a.close-email {
+  margin-right: 1em;
+}
+#email-compose a.expand {
+  float: right;
+  font-size: 2em;
+}
+.editor,
+.rt-editor {
+  border: 1px solid #444;
+  min-height: 16em;
+  height: auto;
+  width: 100%;
+  text-align: left;
+  color: #000;
+}
+.attachements {
+  margin: 1em 0;
+}
+.input-group.contact-group {
+  padding: 0 15px;
+}
+.compose-toggle {
+  float: right;
+}
+.compose-toggle a {
+  padding: 0 1em;
+}
+.compose-from {
+  line-height: 2em;
+  color: #444;
+}
+.compose-cc,
+.compose-bcc {
+  display: none;
+}
+.compose-cc.shown,
+.compose-bcc.shown {
+  display: inherit;
+}
 .file-picker .files {
   max-height: 5em;
 }
@@ -2579,6 +2644,11 @@ textarea:active,
   width: 20em;
   height: 2em;
   border: 2px #00f dashed;
+  border-color: #34a6ff;
+  cursor: pointer;
+}
+.file-picker .dropzone:hover {
+  border-color: #fe8800;
 }
 .file-picker .dropzone i {
   padding: 0.5em;
@@ -3228,6 +3298,12 @@ textarea:active,
 .compose-bcc.shown {
   display: inherit;
 }
+.compose-from {
+  cursor: pointer;
+}
+.compose-from .caret {
+  margin-left: 0.5em;
+}
 .contact-form .contact-list {
   left: 1em;
   background-color: #fff;
@@ -3355,6 +3431,27 @@ textarea:active,
   -o-transition: opacity 10s;
   -ms-transition: opacity 10s;
   transition: opacity 10s;
+}
+.compose-toggle-cc,
+.compose-toggle-bcc {
+  cursor: pointer;
+}
+.composeToolbox {
+  text-align: right;
+}
+.composeToolbox .fa {
+  margin-right: 1em;
+}
+.composeToolbox .btn {
+  margin-left: 1em;
+}
+.composeToolbox .btn.btn-cozy:first-child {
+  background-color: #5c5;
+  border-color: #5c5;
+}
+.composeToolbox .btn.btn-cozy:first-child:hover {
+  background-color: #fe8800;
+  border-color: #fe8800;
 }
 /*
   EDITOR

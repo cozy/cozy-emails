@@ -255,4 +255,12 @@ Imap.prototype.deleteMessageInBox = function(path, uid, callback) {
   ], callback);
 };
 
+Imap.prototype.setFlagsSafe = function(uid, oldflags, newflags, callback) {
+  if (newflags.length === 0) {
+    return this.delFlags(uid, oldflags, callback);
+  } else {
+    return this.setFlags(uid, newflags, callback);
+  }
+};
+
 module.exports = Imap;

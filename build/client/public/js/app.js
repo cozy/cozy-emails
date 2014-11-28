@@ -2621,15 +2621,16 @@ module.exports = Compose = React.createClass({
     })), div({
       className: 'attachements'
     }, FilePicker({
+      className: 'col-sm-offset-5',
       editable: true,
       valueLink: this.linkState('attachments')
     })), div({
-      className: 'composeToolbox'
+      className: 'composeToolbox col-sm-offset-4 col-sm-4'
     }, div({
       className: 'btn-toolbar',
       role: 'toolbar'
     }, div({
-      className: 'btn-group btn-group-lg'
+      className: ''
     }, button({
       className: 'btn btn-cozy',
       type: 'button',
@@ -2637,23 +2638,26 @@ module.exports = Compose = React.createClass({
     }, span({
       className: 'fa fa-send'
     }), span(null, t('compose action send'))), button({
-      className: 'btn btn-default',
+      className: 'btn btn-cozy',
       type: 'button',
       onClick: this.onDraft
     }, span({
       className: 'fa fa-save'
     }), span(null, t('compose action draft'))), this.props.message != null ? button({
-      className: 'btn btn-default',
+      className: 'btn btn-cozy-non-default',
       type: 'button',
       onClick: this.onDelete
     }, span({
       className: 'fa fa-trash-o'
     }), span(null, t('compose action delete'))) : void 0, a({
       href: cancelUrl,
-      className: 'btn btn-default'
-    }, t('app cancel')))))));
+      className: 'btn btn-cozy-non-default'
+    }, t('app cancel'))))), div({
+      className: 'clearfix'
+    }, null)));
   },
   _initCompose: function() {
+    var node, range, rect;
     this.getDOMNode().scrollIntoView();
     if (this.state.composeInHTML) {
       return jQuery('#email-compose .rt-editor').on('keypress', function(e) {
@@ -2737,6 +2741,19 @@ module.exports = Compose = React.createClass({
           }, 0);
         }
       });
+    } else {
+      node = this.refs.content.getDOMNode();
+      rect = node.getBoundingClientRect();
+      node.scrollTop = node.scrollHeight - rect.height;
+      if (typeof node.selectionStart === "number") {
+        node.selectionStart = node.selectionEnd = node.value.length;
+      } else if (typeof node.createTextRange !== "undefined") {
+        node.focus();
+        range = node.createTextRange();
+        range.collapse(false);
+        range.select();
+      }
+      return node.focus();
     }
   },
   componentDidMount: function() {
@@ -3202,8 +3219,13 @@ FilePicker = React.createClass({
     }
   },
   render: function() {
+    var className;
+    className = 'file-picker';
+    if (this.props.className) {
+      className += " " + this.props.className;
+    }
     return div({
-      className: 'file-picker'
+      className: className
     }, ul({
       className: 'files list-unstyled'
     }, this.state.files.toJS().map((function(_this) {
@@ -4337,9 +4359,14 @@ MessageList = React.createClass({
     if (this.refs.nextPage == null) {
       return;
     }
-    active = document.querySelector("[data-message-id='" + this.props.messageID + "']");
-    if ((active != null) && !this._isVisible(active)) {
-      active.scrollIntoView();
+    if (this.state.messageID !== this.props.messageID) {
+      active = document.querySelector("[data-message-id='" + this.props.messageID + "']");
+      if ((active != null) && !this._isVisible(active)) {
+        active.scrollIntoView();
+      }
+      this.setState({
+        messageID: this.props.messageID
+      });
     }
     scrollable = this.refs.list.getDOMNode().parentNode;
     return setTimeout((function(_this) {
@@ -5091,8 +5118,8 @@ module.exports = React.createClass({
           if (doc != null) {
             s = document.createElement('style');
             doc.head.appendChild(s);
-            font = "../fonts/sourcesanspro/SourceSansPro-Regular";
-            rules = ["@font-face{\n  font-family: 'Source Sans Pro';\n  font-weight: 400;\n  font-style: normal;\n  font-stretch: normal;\n  src: url('" + font + ".eot') format('embedded-opentype'),\n       url('" + font + ".otf.woff') format('woff'),\n       url('" + font + ".otf') format('opentype'),\n       url('" + font + ".ttf') format('truetype');\n}", "body { font-family: 'Source Sans Pro'; }", "blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue; }"];
+            font = "./fonts/sourcesanspro/SourceSansPro-Regular";
+            rules = ["@font-face{\n  font-family: 'Source Sans Pro';\n  font-weight: 400;\n  font-style: normal;\n  font-stretch: normal;\n  src: url('" + font + ".eot') format('embedded-opentype'),\n       url('" + font + ".otf.woff') format('woff'),\n       url('" + font + ".otf') format('opentype'),\n       url('" + font + ".ttf') format('truetype');\n}", "body { font-family: 'Source Sans Pro'; }", "blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue; color: blue; }", "blockquote blockquote { border-color: red !important; color: red; }", "blockquote blockquote blockquote { border-color: green !important; color: green; }", "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }", "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }"];
             rules.forEach(function(rule, idx) {
               return s.sheet.insertRule(rule, idx);
             });
@@ -7587,7 +7614,7 @@ module.exports = {
   "account refreshed": "Actualisé",
   "account creation ok": "Youpi, le compte a été créé ! Sélectionnez à présent les dossiers que vous voulez voir apparaitre dans le menu",
   "account identifiers": "Identification",
-  "account danger zone": "Zone de danger",
+  "account danger zone": "Zone dangereuse",
   "account actions": "Actions",
   "mailbox create ok": "Dossier créé",
   "mailbox create ko": "Erreur de création du dossier",
@@ -9739,7 +9766,7 @@ module.exports = {
     });
   },
   activityCreate: function(options, callback) {
-    return request.post("/activity").send(options).set('Accept', 'application/json').end(function(res) {
+    return request.post("activity").send(options).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);

@@ -459,7 +459,9 @@ Message.prototype.applyPatchOperations = function(patch, callback) {
 };
 
 Message.prototype.imap_applyChanges = function(newflags, newmailboxIDs, boxOps, callback) {
+  var oldflags;
   log.debug(".applyChanges", newflags, newmailboxIDs);
+  oldflags = this.flags;
   return Mailbox.getBoxes(this.accountID, (function(_this) {
     return function(err, boxes) {
       var box, boxIndex, boxid, firstboxid, firstuid, uid, _i, _j, _len, _len1, _ref;
@@ -487,12 +489,7 @@ Message.prototype.imap_applyChanges = function(newflags, newmailboxIDs, boxOps, 
           function(cb) {
             return imap.openBox(boxIndex[firstboxid].path, cb);
           }, function(cb) {
-            try {
-              return imap.setFlags(firstuid, newflags, cb);
-            } catch (_error) {
-              err = _error;
-              return cb(err);
-            }
+            return imap.setFlagsSafe(firstuid, oldflags, newflags, cb);
           }, function(cb) {
             var paths;
             paths = boxOps.addTo.map(function(destId) {
