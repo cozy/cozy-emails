@@ -19,7 +19,12 @@ if (typeof window.plugins !== "object") {
     help      = document.createElement('dl');
     container.id = 'mailkeysHelp';
     Object.keys(this._binding).forEach(function (key) {
-      help.innerHTML += "<dt>" + key + "&nbsp;: </dt><dd>" + self._binding[key].name + "</dd>";
+      var binding = self._binding[key],
+          name = [key];
+      if (Array.isArray(binding.alias)) {
+        name = name.concat(binding.alias);
+      }
+      help.innerHTML += "<dt>" + name.join(', ') + "&nbsp;: </dt><dd>" + binding.name + "</dd>";
     });
     container.appendChild(help);
     container.classList.add('mailkeys-container');
@@ -39,15 +44,9 @@ if (typeof window.plugins !== "object") {
           window.cozyMails.messageDisplay();
         }
       },
-      'x': {
-        name: "Close current message",
-        action: function (e) {
-          e.preventDefault();
-          window.cozyMails.messageClose();
-        }
-      },
       'esc': {
         name: "Close current message",
+        alias: ['x'],
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageClose();
@@ -55,13 +54,7 @@ if (typeof window.plugins !== "object") {
       },
       'j': {
         name: "Next Message",
-        action: function (e) {
-          e.preventDefault();
-          window.cozyMails.messageNavigate('next');
-        }
-      },
-      'down': {
-        name: "Next Message",
+        alias: ['down', 'right'],
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageNavigate('next');
@@ -69,13 +62,7 @@ if (typeof window.plugins !== "object") {
       },
       'k': {
         name: "Previous Message",
-        action: function (e) {
-          e.preventDefault();
-          window.cozyMails.messageNavigate('prev');
-        }
-      },
-      'up': {
-        name: "Previous Message",
+        alias: ['up', 'left'],
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageNavigate('prev');
@@ -107,6 +94,7 @@ if (typeof window.plugins !== "object") {
       },
       'd': {
         name: "Delete message",
+        alias: ['backspace', 'del'],
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageDeleteCurrent();
@@ -114,31 +102,11 @@ if (typeof window.plugins !== "object") {
       },
       'ctrl+z': {
         name: 'Undelete message',
+        alias: ['u'],
         action: function (e) {
           e.preventDefault();
           var MessageActionCreator = window.require('actions/message_action_creator');
           MessageActionCreator.undelete();
-        }
-      },
-      'backspace': {
-        name: "Delete message",
-        action: function (e) {
-          e.preventDefault();
-          window.cozyMails.messageDeleteCurrent();
-        }
-      },
-      'del': {
-        name: "Delete message",
-        action: function (e) {
-          e.preventDefault();
-          window.cozyMails.messageDeleteCurrent();
-        }
-      },
-      'u': {
-        name: "Undelete message",
-        action: function (e) {
-          e.preventDefault();
-          window.cozyMails.messageUndo();
         }
       },
       '?': {
@@ -171,7 +139,13 @@ if (typeof window.plugins !== "object") {
     onActivate: function () {
       var self = this;
       Object.keys(this._binding).forEach(function (key) {
-        Mousetrap.bind(key, self._binding[key].action.bind(self));
+        var binding = self._binding[key];
+        Mousetrap.bind(key, binding.action.bind(self));
+        if (Array.isArray(binding.alias)) {
+          binding.alias.forEach(function (alias) {
+            Mousetrap.bind(alias, binding.action.bind(self));
+          });
+        }
       });
     },
     /**
