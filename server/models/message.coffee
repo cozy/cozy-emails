@@ -390,14 +390,14 @@ Message::applyPatchOperations = (patch, callback) ->
             newflags[index] = operation.value
 
     # applyMessageChanges will perform operation in IMAP
-    # and store results in the message (this)
-    # wee need to save afterward
     @imap_applyChanges newflags, newmailboxIDs, boxOps, (err, changes) =>
         return callback err if err
         @updateAttributes changes, callback
 
 Message::imap_applyChanges = (newflags, newmailboxIDs, boxOps, callback) ->
     log.debug ".applyChanges", newflags, newmailboxIDs
+
+    oldflags = @flags
 
     Mailbox.getBoxes @accountID, (err, boxes) =>
 
@@ -424,9 +424,7 @@ Message::imap_applyChanges = (newflags, newmailboxIDs, boxOps, callback) ->
                 (cb) -> imap.openBox boxIndex[firstboxid].path, cb
                 # step 2 - change flags to newflags
                 (cb) ->
-                    # cant reproduce case, prevent crashing
-                    try imap.setFlags firstuid, newflags, cb
-                    catch err then cb err
+                    imap.setFlagsSafe firstuid, oldflags, newflags, cb
                 # step 3 - copy the message to all addTo
                 (cb) ->
                     paths = boxOps.addTo.map (destId) ->

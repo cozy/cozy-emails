@@ -178,4 +178,14 @@ Imap::deleteMessageInBox = (path, uid, callback) ->
         (cb) => @expunge uid, cb
     ], callback
 
+# node-imap fail to setFlags []
+# handle this case differently
+# @TODO follow node-imap#437
+Imap::setFlagsSafe = (uid, oldflags, newflags, callback) ->
+    if newflags.length is 0
+        imap.delFlags uid, oldflags, callback
+    else
+        imap.setFlags uid, newflags, callback
+
+
 module.exports = Imap
