@@ -132,6 +132,8 @@ module.exports = MailsInput = React.createClass
                 # hack needed because proxyValueLink prevent deleting empty contact
                 node = @refs.contactInput.getDOMNode()
                 node.value = node.value.trim()
+            when "Escape"
+                @setState contacts: null, open: false
 
 
     onContact: (contact) ->
