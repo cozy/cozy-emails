@@ -15,12 +15,12 @@ describe 'mailutils.flattenMailboxTree various kind of tree', ->
     it 'flatten "Gmail>OVH" tree', ->
 
         boxes = mailutils.flattenMailboxTree ARBO2
-        boxes.should.have.lengthOf 14
-        boxes[0].should.have.property 'path', 'INBOX.perso'
+        boxes.should.have.lengthOf 15
+        boxes[1].should.have.property 'path', 'INBOX.perso'
         # the root INBOX is discarded
-        boxes[0].should.have.property 'label', 'perso'
-        boxes[0].should.have.property('tree').with.lengthOf 1
-        boxes[2].should.have.property 'path', 'INBOX.[Gmail].Important'
+        boxes[1].should.have.property 'label', 'perso'
+        boxes[1].should.have.property('tree').with.lengthOf 1
+        boxes[3].should.have.property 'path', 'INBOX.[Gmail].Important'
 
     it 'flatten "Gmail" tree', ->
 
