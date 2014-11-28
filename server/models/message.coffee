@@ -363,6 +363,7 @@ Message::applyPatchOperations = (patch, callback) ->
     # copy the fields
     newmailboxIDs = {}
     newmailboxIDs[boxid] = uid for boxid, uid of @mailboxIDs
+    newflags = (flag for flag in @flags)
 
     # scan the patch and change the fields
     boxOps = {addTo: [], removeFrom: []}
@@ -376,25 +377,30 @@ Message::applyPatchOperations = (patch, callback) ->
             delete newmailboxIDs[boxid]
         else throw new Error 'modifying UID is not possible'
 
-    # copy flags
-    newflags = (flag for flag in @flags)
+    flagsOps = {add: [], remove: []}
     for operation in patch when operation.path.indexOf('/flags/') is 0
         index = parseInt operation.path.substring 7
         if operation.op is 'add'
-            newflags.push operation.value
+            flagsOps.add.push operation.value
 
         else if operation.op is 'remove'
-            newflags.splice index, 1
+            flagsOps.remove.push operation.value
 
         else if operation.op is 'replace'
-            newflags[index] = operation.value
+            flagsOps.remove.push @flags[index]
+            flagsOps.add.push operation.value
+
+    # create the newflags
+    newflags = @flags
+    newflags = _.difference newflags, flagsOps.remove
+    newflags = _.union newflags, flagsOps.add
 
     # applyMessageChanges will perform operation in IMAP
-    @imap_applyChanges newflags, newmailboxIDs, boxOps, (err, changes) =>
+    @imap_applyChanges newflags, flagsOps, newmailboxIDs, boxOps, (err, changes) =>
         return callback err if err
         @updateAttributes changes, callback
 
-Message::imap_applyChanges = (newflags, newmailboxIDs, boxOps, callback) ->
+Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, boxOps, callback) ->
     log.debug ".applyChanges", newflags, newmailboxIDs
 
     oldflags = @flags
@@ -422,9 +428,18 @@ Message::imap_applyChanges = (newflags, newmailboxIDs, boxOps, callback) ->
 
                 # step 1 - open one box at random
                 (cb) -> imap.openBox boxIndex[firstboxid].path, cb
-                # step 2 - change flags to newflags
+                # step 2a - remove flags
                 (cb) ->
-                    imap.setFlagsSafe firstuid, oldflags, newflags, cb
+                    if flagsOps.remove.length
+                        imap.delFlags firstuid, flagsOps.remove, cb
+                    else
+                        cb null
+                # step 2b - add flags
+                (cb) ->
+                    if flagsOps.add.length
+                        imap.addFlags firstuid, flagsOps.add, cb
+                    else
+                        cb null
                 # step 3 - copy the message to all addTo
                 (cb) ->
                     paths = boxOps.addTo.map (destId) ->
