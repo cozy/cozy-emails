@@ -139,6 +139,7 @@ module.exports = Compose = React.createClass
                             className: 'rt-editor form-control',
                             ref: 'html',
                             contentEditable: true,
+                            onKeyDown: @onKeyDown,
                             dangerouslySetInnerHTML: {
                                 __html: @linkState('html').value
                             }
@@ -146,6 +147,7 @@ module.exports = Compose = React.createClass
                         textarea
                             className: 'editor',
                             ref: 'content',
+                            onKeyDown: @onKeyDown,
                             defaultValue: @linkState('text').value
 
                 div className: 'attachements',
@@ -406,3 +408,7 @@ module.exports = Compose = React.createClass
     onToggleBcc: (e) ->
         toggle = (e) -> e.classList.toggle 'shown'
         toggle e for e in @getDOMNode().querySelectorAll '.compose-bcc'
+
+    onKeyDown: (evt) ->
+        if evt.ctrlKey and evt.key is 'Enter'
+            @onSend()
