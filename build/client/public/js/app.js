@@ -2529,7 +2529,7 @@ module.exports = Compose = React.createClass({
     });
     closeUrl = this.buildClosePanelUrl(this.props.layout);
     classLabel = 'col-sm-2 col-sm-offset-0 control-label';
-    classInput = 'col-sm-8';
+    classInput = 'col-sm-6';
     classCc = this.state.cc.length === 0 ? '' : ' shown';
     classBcc = this.state.bcc.length === 0 ? '' : ' shown';
     return div({
@@ -2606,13 +2606,15 @@ module.exports = Compose = React.createClass({
     }))), div({
       className: 'form-group'
     }, this.state.composeInHTML ? div({
-      className: 'rt-editor form-control',
+      className: 'form-group'
+    }, div({
+      className: 'rt-editor col-sm-7 col-sm-offset-1',
       ref: 'html',
       contentEditable: true,
       dangerouslySetInnerHTML: {
         __html: this.linkState('html').value
       }
-    }) : textarea({
+    })) : textarea({
       className: 'editor',
       ref: 'content',
       defaultValue: this.linkState('text').value
@@ -3513,7 +3515,7 @@ module.exports = MailsInput = React.createClass({
       htmlFor: this.props.id,
       className: classLabel
     }, this.props.label), div({
-      className: 'col-sm-8 input-group contact-group dropdown ' + listClass
+      className: 'col-sm-6 input-group contact-group dropdown ' + listClass
     }, input({
       id: this.props.id,
       name: this.props.id,
@@ -7290,7 +7292,7 @@ module.exports = {
   "app unimplemented": "Not implemented yet",
   "app error": "Argh, I'm unable to perform this action, please try again",
   "compose": "Compose new email",
-  "compose default": 'Hello, how are you doing today ?',
+  "compose default": 'Hello, how are you doing today?',
   "compose from": "From",
   "compose to": "To",
   "compose to help": "Recipients list",
@@ -7322,15 +7324,15 @@ module.exports = {
   "list filter": "Filter",
   "list filter all": "All",
   "list filter unseen": "Unseen",
-  "list filter flagged": "Importants",
+  "list filter flagged": "Important",
   "list sort": "Sort",
   "list sort date": "Date",
   "list sort subject": "Subject",
-  "list option compact": "Compacte",
+  "list option compact": "Compact",
   "list next page": "More messages",
   "list end": "This is the end of the road",
   "list mass no message": "No message selected",
-  "list delete confirm": "Do you really want to delete %{nb} messages ?",
+  "list delete confirm": "Do you really want to delete %{nb} messages?",
   "mail receivers": "To: ",
   "mail receivers cc": "Cc: ",
   "mail action reply": "Reply",
@@ -7347,12 +7349,12 @@ module.exports = {
   "mail mark fav": "Important",
   "mail mark nofav": "Not important",
   "mail mark read": "Read",
-  "mail mark unread": "Not read",
-  "mail confirm delete": "Do you really want to delete message “%{subject}” ?",
+  "mail mark unread": "Unread",
+  "mail confirm delete": "Do you really want to delete message “%{subject}”?",
   "mail action conversation delete": "Delete conversation",
   "mail action conversation move": "Move conversation",
   "mail action conversation seen": "Mark conversation as read",
-  "mail action conversation unseen": "Mark conversation as not read",
+  "mail action conversation unseen": "Mark conversation as unread",
   "account new": "New account",
   "account edit": "Edit account",
   "account add": "Add",
@@ -7378,13 +7380,13 @@ module.exports = {
   "account newmailbox label": "New Folder",
   "account newmailbox placeholder": "Name",
   "account newmailbox parent": "Parent:",
-  "account confirm delbox": "Do you really want to delete this box and everything in it ?",
+  "account confirm delbox": "Do you really want to delete this box and everything in it?",
   "account tab account": "Account",
   "account tab mailboxes": "Folders",
   "account errors": "Some data are missing or invalid",
   "account type": "Account type",
   "account updated": "Account updated",
-  "account creation ok": "Yeah ! The account has been successfully created. Now select the mailboxes you want to see in the menu",
+  "account creation ok": "Yeah! The account has been successfully created. Now select the mailboxes you want to see in the menu",
   "account refreshed": "Account refreshed",
   "account identifiers": "Identification",
   "account actions": "Actions",
@@ -7412,7 +7414,7 @@ module.exports = {
   "config error imapTLS": "Wrong IMAP TLS",
   "config error smtpPort": "Wrong SMTP Port",
   "config error smtpServer": "Wrong SMTP Server",
-  "config error nomailboxes": "No folder in this account, please create some",
+  "config error nomailboxes": "No folder in this account, please create one",
   "message action sent ok": "Message sent",
   "message action sent ko": "Error sending message: ",
   "message action draft ok": "Message saved",

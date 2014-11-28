@@ -68,6 +68,7 @@
 */
 #email-compose
 
+
     &.enable
         display block
 
@@ -78,13 +79,17 @@
     h3
         color #444
         margin-top 0
+        margin-bottom 2em
 
     a.close-email
         margin-right 1em
 
     a.expand
         float right
-        font-size 2em
+        font-size 1em
+
+    .fa-times
+        display none
 
   .editor,
   .rt-editor
@@ -98,11 +103,13 @@
       margin 1em 0
 
   .input-group.contact-group
-      padding 0 15px // pixels because we override Bootstrap
+      padding 0 15px
+
   .compose-toggle
     float right
+
     a
-        padding 0 1em
+      padding 0 1em
 
   .compose-from
     line-height 2em
@@ -115,6 +122,7 @@
   .compose-cc.shown,
   .compose-bcc.shown
     display inherit
+
 
 .contact-form
   .contact-list
@@ -226,6 +234,29 @@
 .alert.autoclose
     opacity 0
     transition opacity 10s
+
+.compose-toggle-cc
+.compose-toggle-bcc
+    cursor pointer
+
+.composeToolbox
+    text-align right
+
+    .fa
+        margin-right 1em
+
+    .btn
+        margin-left 1em
+
+    .btn.btn-cozy:first-child
+        background-color contrastcolor
+        border-color contrastcolor
+
+        &:hover
+            background-color actioncolor
+            border-color actioncolor
+
+
 /*
   EDITOR
 
@@ -233,6 +264,16 @@
 */
 
 .rt-editor
+    border 1px solid basecolor
+
+    &:hover
+        border 1px solid actioncolor
+
+    &:active
+    &:focus
+        border 0
+        outline 0
+        border 1px solid actioncolor
 
     blockquote
         border-left .25em solid blue
@@ -242,3 +283,4 @@
     div
     p
         margin .5em 0
+

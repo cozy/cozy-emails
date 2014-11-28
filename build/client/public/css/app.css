@@ -3184,13 +3184,17 @@ textarea:active,
 #email-compose h3 {
   color: #444;
   margin-top: 0;
+  margin-bottom: 2em;
 }
 #email-compose a.close-email {
   margin-right: 1em;
 }
 #email-compose a.expand {
   float: right;
-  font-size: 2em;
+  font-size: 1em;
+}
+#email-compose .fa-times {
+  display: none;
 }
 .editor,
 .rt-editor {
@@ -3357,6 +3361,18 @@ textarea:active,
 
   --
 */
+.rt-editor {
+  border: 1px solid #34a6ff;
+}
+.rt-editor:hover {
+  border: 1px solid #fe8800;
+}
+.rt-editor:active,
+.rt-editor:focus {
+  border: 0;
+  outline: 0;
+  border: 1px solid #fe8800;
+}
 .rt-editor blockquote {
   border-left: 0.25em solid #00f;
   padding-left: 0.5em;

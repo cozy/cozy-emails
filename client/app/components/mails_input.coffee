@@ -59,7 +59,7 @@ module.exports = MailsInput = React.createClass
         div className: className,
             label htmlFor: @props.id, className: classLabel,
                 @props.label
-            div className: 'col-sm-8 input-group contact-group dropdown ' + listClass,
+            div className: 'col-sm-6 input-group contact-group dropdown ' + listClass,
                 input
                     id: @props.id,
                     name: @props.id,

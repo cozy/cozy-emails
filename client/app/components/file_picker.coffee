@@ -70,7 +70,9 @@ FilePicker = React.createClass
         else console.log "broken file : ", file
 
     render: ->
-        div className: 'file-picker',
+        className = 'file-picker'
+        className += " #{@props.className}" if @props.className
+        div className: className,
             ul className: 'files list-unstyled',
                 @state.files.toJS().map (file) =>
                     FileItem

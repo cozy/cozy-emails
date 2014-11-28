@@ -59,7 +59,7 @@ module.exports = Compose = React.createClass
         closeUrl = @buildClosePanelUrl @props.layout
 
         classLabel = 'col-sm-2 col-sm-offset-0 control-label'
-        classInput = 'col-sm-8'
+        classInput = 'col-sm-6'
         classCc    = if @state.cc.length is 0 then '' else ' shown'
         classBcc   = if @state.bcc.length is 0 then '' else ' shown'
 
@@ -135,13 +135,14 @@ module.exports = Compose = React.createClass
                             placeholder: t "compose subject help"
                 div className: 'form-group',
                     if @state.composeInHTML
-                        div
-                            className: 'rt-editor form-control',
-                            ref: 'html',
-                            contentEditable: true,
-                            dangerouslySetInnerHTML: {
-                                __html: @linkState('html').value
-                            }
+                        div className: 'form-group',
+                            div
+                                className: 'rt-editor col-sm-7 col-sm-offset-1',
+                                ref: 'html',
+                                contentEditable: true,
+                                dangerouslySetInnerHTML: {
+                                    __html: @linkState('html').value
+                                }
                     else
                         textarea
                             className: 'editor',
@@ -150,12 +151,13 @@ module.exports = Compose = React.createClass
 
                 div className: 'attachements',
                     FilePicker
+                        className: 'col-sm-offset-5'
                         editable: true
                         valueLink: @linkState 'attachments'
 
-                div className: 'composeToolbox',
+                div className: 'composeToolbox col-sm-offset-4 col-sm-4',
                     div className: 'btn-toolbar', role: 'toolbar',
-                        div className: 'btn-group btn-group-lg',
+                        div className: '',
                             button
                                 className: 'btn btn-cozy',
                                 type: 'button',
@@ -164,21 +166,22 @@ module.exports = Compose = React.createClass
                                         className: 'fa fa-send'
                                     span null, t 'compose action send'
                             button
-                                className: 'btn btn-default',
+                                className: 'btn btn-cozy',
                                 type: 'button', onClick: @onDraft,
                                     span className: 'fa fa-save'
                                     span null, t 'compose action draft'
                             if @props.message?
                                 button
-                                    className: 'btn btn-default',
+                                    className: 'btn btn-cozy-non-default',
                                     type: 'button',
                                     onClick: @onDelete,
                                         span className: 'fa fa-trash-o'
                                         span null, t 'compose action delete'
                             a
                                 href: cancelUrl,
-                                className: 'btn btn-default',
+                                className: 'btn btn-cozy-non-default',
                                 t 'app cancel'
+                div className: 'clearfix', null
 
     _initCompose: ->
         # scroll compose window into view
