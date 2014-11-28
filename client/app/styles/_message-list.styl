@@ -27,11 +27,12 @@
         font-weight bold
 
     .message
-        padding 0.75em .25em
         border-left .25em solid transparent
         cursor pointer
         font-size 0.8em
 
+        > a
+          padding 0.75em .25em
         > a
         > span
           display block
@@ -47,7 +48,6 @@
         input[type="checkbox"]
             width auto
             margin-left 0.25em
-            margin-right 0.25em
             cursor pointer
 
         .participants
@@ -152,7 +152,7 @@
         margin-top 1em
 
 .message-list.compact
-    .message
+    .message > a
         padding 1px 0
     .fa-user
     .avatar
