@@ -442,7 +442,12 @@ module.exports = React.createClass
                             margin-left: .5em;
                             padding-left: .5em;
                             border-left: 2px solid blue;
-                        }"
+                            color: blue;
+                        }",
+                        "blockquote blockquote { border-color: red !important; color: red; }",
+                        "blockquote blockquote blockquote { border-color: green !important; color: green; }",
+                        "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }",
+                        "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }",
                     ]
                     rules.forEach (rule, idx) ->
                         s.sheet.insertRule rule, idx
