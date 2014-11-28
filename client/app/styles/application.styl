@@ -115,7 +115,10 @@
   .compose-from
     line-height 2em
     color darkcolor
+    cursor pointer
 
+    .caret
+        margin-left 0.5em
   .compose-cc,
   .compose-bcc
     display none
@@ -123,12 +126,6 @@
   .compose-cc.shown,
   .compose-bcc.shown
     display inherit
-
-  .compose-from
-      cursor pointer
-
-      .caret
-          margin-left 0.5em
 
 
 .contact-form
@@ -270,8 +267,26 @@
   --
 */
 
+
+#email-compose
+    width 100%
+    max-width 800px
+
+.compose-label
+  display block
+  width 100%
+
+.file-picker
+    .dropzone
+        width 100%
+
+        span
+        input
+            width 100%
+
 .rt-editor
     border 1px solid basecolor
+    width 100%
 
     &:hover
         border 1px solid actioncolor
@@ -290,4 +305,3 @@
     div
     p
         margin .5em 0
-

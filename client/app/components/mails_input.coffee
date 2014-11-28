@@ -50,7 +50,7 @@ module.exports = MailsInput = React.createClass
 
     render: ->
         className  = (@props.className or '') + ' form-group'
-        classLabel = 'col-sm-2 col-sm-offset-0 control-label'
+        classLabel = 'compose-label control-label'
         listClass  = classer
             'contact-form': true
             open: @state.open and @state.contacts?.length > 0
@@ -59,11 +59,11 @@ module.exports = MailsInput = React.createClass
         div className: className,
             label htmlFor: @props.id, className: classLabel,
                 @props.label
-            div className: 'col-sm-6 input-group contact-group dropdown ' + listClass,
+            div className: 'contact-group dropdown ' + listClass,
                 input
                     id: @props.id,
                     name: @props.id,
-                    className: 'form-control',
+                    className: 'form-control compose-input',
                     onKeyDown: @onKeyDown,
                     ref: 'contactInput'
                     valueLink: @proxyValueLink(),

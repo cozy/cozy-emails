@@ -58,8 +58,8 @@ module.exports = Compose = React.createClass
 
         closeUrl = @buildClosePanelUrl @props.layout
 
-        classLabel = 'col-sm-2 col-sm-offset-0 control-label'
-        classInput = 'col-sm-6'
+        classLabel = 'compose-label'
+        classInput = 'compose-input'
         classCc    = if @state.cc.length is 0 then '' else ' shown'
         classBcc   = if @state.bcc.length is 0 then '' else ' shown'
 
@@ -74,7 +74,7 @@ module.exports = Compose = React.createClass
                 else
                     a href: collapseUrl, className: 'close-email pull-right',
                         i className:'fa fa-compress'
-            form className: 'form-horizontal',
+            form className: '',
                 div className: 'form-group',
                     label
                         htmlFor: 'compose-from',
@@ -98,6 +98,7 @@ module.exports = Compose = React.createClass
                             accounts: @props.accounts
                             valueLink: @linkState 'accountID'
                             type: 'address'
+                div className: 'clearfix', null
 
                 MailsInput
                     id: 'compose-to'
@@ -133,11 +134,15 @@ module.exports = Compose = React.createClass
                             type: 'text',
                             className: 'form-control',
                             placeholder: t "compose subject help"
-                div className: 'form-group',
+                div className: '',
+                    label
+                        htmlFor: 'compose-subject',
+                        className: classLabel,
+                        t "content"
                     if @state.composeInHTML
                         div className: 'form-group',
                             div
-                                className: 'rt-editor col-sm-7 col-sm-offset-1',
+                                className: 'rt-editor',
                                 ref: 'html',
                                 contentEditable: true,
                                 dangerouslySetInnerHTML: {
@@ -151,11 +156,11 @@ module.exports = Compose = React.createClass
 
                 div className: 'attachements',
                     FilePicker
-                        className: 'col-sm-offset-5'
+                        className: ''
                         editable: true
                         valueLink: @linkState 'attachments'
 
-                div className: 'composeToolbox col-sm-offset-4 col-sm-4',
+                div className: 'composeToolbox',
                     div className: 'btn-toolbar', role: 'toolbar',
                         div className: '',
                             button
