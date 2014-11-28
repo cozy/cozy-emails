@@ -37,7 +37,6 @@ async = require 'async'
 log = require('../utils/logging')(prefix: 'models:message')
 Mailbox = require './mailbox'
 ImapPool = require '../imap/pool'
-sanitizer = require 'sanitizer'
 htmlToText  = require 'html-to-text'
 
 # Public: get messages in a box, sorted by Date

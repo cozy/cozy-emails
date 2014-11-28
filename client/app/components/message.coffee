@@ -123,6 +123,8 @@ module.exports = React.createClass
                 img.removeAttribute 'src'
             images = doc.querySelectorAll 'IMG[src]'
             hideImage img for img in images
+            for link in doc.querySelectorAll 'a[href]'
+                link.target = '_blank'
         if doc?
             @_htmlContent = doc.body.innerHTML
         else
@@ -453,7 +455,7 @@ module.exports = React.createClass
                         s.sheet.insertRule rule, idx
                     doc.body.innerHTML = @_htmlContent
                     rect = doc.body.getBoundingClientRect()
-                    frame.style.height = "#{rect.height + 40}px"
+                    frame.style.height = "#{rect.height + 60}px"
                 else
                     # try to display text only
                     @setState messageDisplayHTML: false
