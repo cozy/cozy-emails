@@ -54,7 +54,7 @@ module.exports =
                 callback t('app error')
 
     mailboxCreate: (mailbox, callback) ->
-        request.post "/mailbox"
+        request.post "mailbox"
         .send mailbox
         .set 'Accept', 'application/json'
         .end (res) ->
@@ -65,7 +65,7 @@ module.exports =
                 callback t('app error')
 
     mailboxUpdate: (data, callback) ->
-        request.put "/mailbox/#{data.mailboxID}"
+        request.put "mailbox/#{data.mailboxID}"
         .send data
         .set 'Accept', 'application/json'
         .end (res) ->
@@ -76,7 +76,7 @@ module.exports =
                 callback t('app error')
 
     mailboxDelete: (data, callback) ->
-        request.del "/mailbox/#{data.mailboxID}"
+        request.del "mailbox/#{data.mailboxID}"
         .set 'Accept', 'application/json'
         .end (res) ->
             if res.ok
@@ -86,7 +86,7 @@ module.exports =
                 callback t('app error')
 
     messageSend: (message, callback) ->
-        req = request.post "/message"
+        req = request.post "message"
         .set 'Accept', 'application/json'
 
         files = {}
@@ -107,7 +107,7 @@ module.exports =
                 callback t('app error')
 
     messagePatch: (messageId, patch, callback) ->
-        request.patch "/message/#{messageId}", patch
+        request.patch "message/#{messageId}", patch
         .set 'Accept', 'application/json'
         .end (res) ->
             if res.ok
@@ -117,7 +117,7 @@ module.exports =
                 callback t('app error')
 
     conversationDelete: (conversationId, callback) ->
-        request.del "/conversation/#{conversationId}"
+        request.del "conversation/#{conversationId}"
         .set 'Accept', 'application/json'
         .end (res) ->
             if res.ok
@@ -127,7 +127,7 @@ module.exports =
                 callback t('app error')
 
     conversationPatch: (conversationId, patch, callback) ->
-        request.patch "/conversation/#{conversationId}", patch
+        request.patch "conversation/#{conversationId}", patch
         .set 'Accept', 'application/json'
         .end (res) ->
             if res.ok
