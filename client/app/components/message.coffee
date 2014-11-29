@@ -118,11 +118,11 @@ module.exports = React.createClass
             console.log "Unable to parse HTML content of message"
             messageDisplayHTML = false
         if doc and not @state.messageDisplayImages
-            hideImage = (img) ->
-                img.dataset.src = img.getAttribute 'src'
-                img.removeAttribute 'src'
+            hideImage = (image) ->
+                image.dataset.src = image.getAttribute 'src'
+                image.removeAttribute 'src'
             images = doc.querySelectorAll 'IMG[src]'
-            hideImage img for img in images
+            hideImage image for image in images
             for link in doc.querySelectorAll 'a[href]'
                 link.target = '_blank'
         if doc?
