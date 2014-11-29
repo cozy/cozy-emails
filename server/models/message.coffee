@@ -408,6 +408,8 @@ Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, boxOps, callbac
 
     Mailbox.getBoxes @accountID, (err, boxes) =>
 
+        return callback err if err
+
 
         boxIndex = {}
         for box in boxes
@@ -416,7 +418,7 @@ Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, boxOps, callbac
 
         # ERROR CASES
         for boxid in boxOps.addTo when not boxIndex[boxid]
-            throw new Error "the box ID=#{boxid} doesn't exists"
+            return callback new Error "the box ID=#{boxid} doesn't exists"
 
         firstboxid = Object.keys(@mailboxIDs)[0]
         firstuid = @mailboxIDs[firstboxid]

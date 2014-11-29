@@ -36,7 +36,7 @@ module.exports =
             LayoutActionCreator.alertError t 'app error'
             return
         trash = account.get 'trashMailbox'
-        if not trash?
+        if not trash? or trash is ''
             LayoutActionCreator.alertError t 'message delete no trash'
         else
             msg = message.toJSON()
