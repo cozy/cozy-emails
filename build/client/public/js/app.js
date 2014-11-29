@@ -9659,7 +9659,7 @@ module.exports = {
     });
   },
   mailboxCreate: function(mailbox, callback) {
-    return request.post("/mailbox").send(mailbox).set('Accept', 'application/json').end(function(res) {
+    return request.post("mailbox").send(mailbox).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);
@@ -9670,7 +9670,7 @@ module.exports = {
     });
   },
   mailboxUpdate: function(data, callback) {
-    return request.put("/mailbox/" + data.mailboxID).send(data).set('Accept', 'application/json').end(function(res) {
+    return request.put("mailbox/" + data.mailboxID).send(data).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);
@@ -9681,7 +9681,7 @@ module.exports = {
     });
   },
   mailboxDelete: function(data, callback) {
-    return request.del("/mailbox/" + data.mailboxID).set('Accept', 'application/json').end(function(res) {
+    return request.del("mailbox/" + data.mailboxID).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);
@@ -9693,7 +9693,7 @@ module.exports = {
   },
   messageSend: function(message, callback) {
     var blob, files, name, req;
-    req = request.post("/message").set('Accept', 'application/json');
+    req = request.post("message").set('Accept', 'application/json');
     files = {};
     message.attachments = message.attachments.map(function(file) {
       files[file.get('generatedFileName')] = file.get('rawFileObject');
@@ -9715,7 +9715,7 @@ module.exports = {
     });
   },
   messagePatch: function(messageId, patch, callback) {
-    return request.patch("/message/" + messageId, patch).set('Accept', 'application/json').end(function(res) {
+    return request.patch("message/" + messageId, patch).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);
@@ -9726,7 +9726,7 @@ module.exports = {
     });
   },
   conversationDelete: function(conversationId, callback) {
-    return request.del("/conversation/" + conversationId).set('Accept', 'application/json').end(function(res) {
+    return request.del("conversation/" + conversationId).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);
@@ -9737,7 +9737,7 @@ module.exports = {
     });
   },
   conversationPatch: function(conversationId, patch, callback) {
-    return request.patch("/conversation/" + conversationId, patch).set('Accept', 'application/json').end(function(res) {
+    return request.patch("conversation/" + conversationId, patch).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);
