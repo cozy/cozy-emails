@@ -53,6 +53,8 @@ _ = require('lodash');
 
 async = require('async');
 
+require('../utils/socket_handler').wrapModel(Account, 'account');
+
 Account.prototype.doASAP = function(operation, callback) {
   return ImapPool.get(this.id).doASAP(operation, callback);
 };
@@ -339,6 +341,9 @@ Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback
   }
   return this.imap_refreshBoxes(function(err, toFetch, toDestroy) {
     var reporter;
+    if (err) {
+      return callback(err);
+    }
     if (onlyFavorites) {
       toFetch = toFetch.filter(function(box) {
         var _ref;
@@ -424,10 +429,11 @@ Account.prototype.imap_createMail = function(box, message, callback) {
 };
 
 Account.prototype.imap_scanBoxesForSpecialUse = function(boxes, callback) {
-  var box, boxAttributes, id, inboxMailbox, priorities, type, useRFC6154, _i, _j, _len, _len1, _ref;
+  var box, boxAttributes, changes, id, inboxMailbox, priorities, type, useRFC6154, _i, _j, _len, _len1, _ref;
   useRFC6154 = false;
   inboxMailbox = null;
   boxAttributes = Object.keys(Mailbox.RFC6154);
+  changes = {};
   boxes.map((function(_this) {
     return function(box) {
       var attribute, type, _i, _len;
@@ -439,37 +445,37 @@ Account.prototype.imap_scanBoxesForSpecialUse = function(boxes, callback) {
           useRFC6154 = true;
           for (_i = 0, _len = boxAttributes.length; _i < _len; _i++) {
             attribute = boxAttributes[_i];
-            _this[attribute] = null;
+            changes[attribute] = null;
           }
         }
         log.debug('found', type);
-        _this[type] = box.id;
+        changes[type] = box.id;
       } else if (!useRFC6154 && (type = box.guessUse())) {
         log.debug('found', type, 'guess');
-        _this[type] = box.id;
+        changes[type] = box.id;
       }
       return box;
     };
   })(this));
   priorities = ['inboxMailbox', 'allMailbox', 'sentMailbox', 'draftMailbox'];
-  this.inboxMailbox = inboxMailbox;
-  this.favorites = [];
+  changes.inboxMailbox = inboxMailbox;
+  changes.favorites = [];
   for (_i = 0, _len = priorities.length; _i < _len; _i++) {
     type = priorities[_i];
-    id = this[type];
+    id = changes[type];
     if (id) {
-      this.favorites.push(id);
+      changes.favorites.push(id);
     }
   }
   for (_j = 0, _len1 = boxes.length; _j < _len1; _j++) {
     box = boxes[_j];
-    if (this.favorites.length < 4) {
-      if ((_ref = box.id, __indexOf.call(this.favorites, _ref) < 0) && box.isSelectable()) {
-        this.favorites.push(box.id);
+    if (changes.favorites.length < 4) {
+      if ((_ref = box.id, __indexOf.call(changesfavorites, _ref) < 0) && box.isSelectable()) {
+        changes.favorites.push(box.id);
       }
     }
   }
-  return this.save(callback);
+  return this.updateAttributes(changes, callback);
 };
 
 Account.prototype.sendMessage = function(message, callback) {

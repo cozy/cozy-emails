@@ -76,6 +76,8 @@ ImapPool = require('../imap/pool');
 
 htmlToText = require('html-to-text');
 
+require('../utils/socket_handler').wrapModel(Message, 'message');
+
 Message.getResultsAndCount = function(mailboxID, params, callback) {
   var after, before, descending, flag, optionsCount, optionsResults, sortField, _ref;
   before = params.before, after = params.after, descending = params.descending, sortField = params.sortField, flag = params.flag;
@@ -471,6 +473,9 @@ Message.prototype.imap_applyChanges = function(newflags, flagsOps, newmailboxIDs
   return Mailbox.getBoxes(this.accountID, (function(_this) {
     return function(err, boxes) {
       var box, boxIndex, boxid, firstboxid, firstuid, uid, _i, _j, _len, _len1, _ref;
+      if (err) {
+        return callback(err);
+      }
       boxIndex = {};
       for (_i = 0, _len = boxes.length; _i < _len; _i++) {
         box = boxes[_i];
@@ -484,7 +489,7 @@ Message.prototype.imap_applyChanges = function(newflags, flagsOps, newmailboxIDs
       for (_j = 0, _len1 = _ref.length; _j < _len1; _j++) {
         boxid = _ref[_j];
         if (!boxIndex[boxid]) {
-          throw new Error("the box ID=" + boxid + " doesn't exists");
+          return callback(new Error("the box ID=" + boxid + " doesn't exists"));
         }
       }
       firstboxid = Object.keys(_this.mailboxIDs)[0];

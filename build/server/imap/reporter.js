@@ -32,11 +32,8 @@ module.exports = ImapReporter = (function() {
     return _results;
   };
 
-  ImapReporter.initSocketIO = function(app, server) {
-    app.io = io = ioServer(server);
-    return io.on('connection', function(sock) {
-      return sock.on('mark_ack', ImapReporter.acknowledge);
-    });
+  ImapReporter.setIOReference = function(ioref) {
+    return io = ioref;
   };
 
   ImapReporter.acknowledge = function(id) {

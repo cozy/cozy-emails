@@ -79,14 +79,9 @@ Settings.get = function(callback) {
 
 Settings.set = function(changes, callback) {
   return Settings.getInstance(function(err, instance) {
-    var key, value;
     if (err) {
       return callback(err);
     }
-    for (key in changes) {
-      value = changes[key];
-      instance[key] = value;
-    }
-    return instance.save(callback);
+    return instance.updateAttributes(changes, callback);
   });
 };

@@ -75,6 +75,8 @@ module.exports = {
         } else {
           return null;
         }
+      } else {
+        return url;
       }
     });
   }

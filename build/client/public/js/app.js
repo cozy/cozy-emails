@@ -380,9 +380,11 @@ module.exports = {
 });
 
 ;require.register("actions/layout_action_creator", function(exports, require, module) {
-var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageStore, SearchActionCreator, XHRUtils, _cachedQuery, _ref;
+var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageStore, SearchActionCreator, SocketUtils, XHRUtils, _cachedQuery, _ref;
 
 XHRUtils = require('../utils/xhr_utils');
+
+SocketUtils = require('../utils/socketio_utils');
 
 AccountStore = require('../stores/account_store');
 
@@ -698,7 +700,7 @@ module.exports = {
       return;
     }
     trash = account.get('trashMailbox');
-    if (trash == null) {
+    if ((trash == null) || trash === '') {
       return LayoutActionCreator.alertError(t('message delete no trash'));
     } else {
       msg = message.toJSON();
@@ -4031,7 +4033,7 @@ MenuMailboxItem = React.createClass({
 });
 
 ;require.register("components/message-list", function(exports, require, module) {
-var ContactActionCreator, ConversationActionCreator, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, ToolboxActions, ToolboxMove, a, alertError, alertSuccess, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
+var ContactActionCreator, ConversationActionCreator, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, ToolboxActions, ToolboxMove, a, alertError, alertSuccess, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p, button = _ref.button, input = _ref.input, img = _ref.img;
 
@@ -4040,6 +4042,8 @@ classer = React.addons.classSet;
 RouterMixin = require('../mixins/router_mixin');
 
 MessageUtils = require('../utils/message_utils');
+
+SocketUtils = require('../utils/socketio_utils');
 
 _ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, MessageFilter = _ref1.MessageFilter, FlagsConstants = _ref1.FlagsConstants;
 
@@ -4221,7 +4225,9 @@ MessageList = React.createClass({
       className: 'more-messages',
       onClick: nextPage,
       ref: 'nextPage'
-    }, t('list next page'))) : p(null, t('list end'))));
+    }, t('list next page'))) : p({
+      ref: 'listEnd'
+    }, t('list end'))));
   },
   refresh: function(event) {
     event.preventDefault();
@@ -4384,6 +4390,14 @@ MessageList = React.createClass({
       });
     }
   },
+  _handleRealtimeGrowth: function() {
+    var lastdate, nbMessages;
+    nbMessages = parseInt(this.props.counterMessage, 10);
+    if (nbMessages < this.props.messages.count() && (this.refs.listEnd != null) && !this._isVisible(this.refs.listEnd.getDOMNode(), true)) {
+      lastdate = this.props.messages.last().get('date');
+      return SocketUtils.changeRealtimeScope(this.props.mailboxID, lastdate);
+    }
+  },
   _initScroll: function() {
     var active, scrollable;
     if (this.refs.nextPage == null) {
@@ -4410,7 +4424,8 @@ MessageList = React.createClass({
     return this._initScroll();
   },
   componentDidUpdate: function() {
-    return this._initScroll();
+    this._initScroll();
+    return this._handleRealtimeGrowth();
   },
   componentWillUnmount: function() {
     var scrollable;
@@ -4799,7 +4814,7 @@ module.exports = React.createClass({
     }
   },
   prepareHTML: function(prepared) {
-    var doc, hideImage, html, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
+    var doc, hideImage, html, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
     messageDisplayHTML = true;
     parser = new DOMParser();
     html = "<html><head></head><body>" + prepared.html + "</body></html>";
@@ -4814,14 +4829,14 @@ module.exports = React.createClass({
       messageDisplayHTML = false;
     }
     if (doc && !this.state.messageDisplayImages) {
-      hideImage = function(img) {
-        img.dataset.src = img.getAttribute('src');
-        return img.removeAttribute('src');
+      hideImage = function(image) {
+        image.dataset.src = image.getAttribute('src');
+        return image.removeAttribute('src');
       };
       images = doc.querySelectorAll('IMG[src]');
       for (_i = 0, _len = images.length; _i < _len; _i++) {
-        img = images[_i];
-        hideImage(img);
+        image = images[_i];
+        hideImage(image);
       }
       _ref2 = doc.querySelectorAll('a[href]');
       for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
@@ -6427,6 +6442,7 @@ module.exports = {
     'MESSAGE_FLAG': 'MESSAGE_FLAG',
     'MESSAGE_ACTION': 'MESSAGE_ACTION',
     'MESSAGE_CURRENT': 'MESSAGE_CURRENT',
+    'RECEIVE_MESSAGE_DELETE': 'RECEIVE_MESSAGE_DELETE',
     'SET_SEARCH_QUERY': 'SET_SEARCH_QUERY',
     'RECEIVE_RAW_SEARCH_RESULTS': 'RECEIVE_RAW_SEARCH_RESULTS',
     'CLEAR_SEARCH_RESULTS': 'CLEAR_SEARCH_RESULTS',
@@ -6444,6 +6460,7 @@ module.exports = {
     'RECEIVE_TASK_UPDATE': 'RECEIVE_TASK_UPDATE',
     'RECEIVE_TASK_DELETE': 'RECEIVE_TASK_DELETE',
     'RECEIVE_REFRESH_UPDATE': 'RECEIVE_REFRESH_UPDATE',
+    'RECEIVE_REFRESH_STATUS': 'RECEIVE_REFRESH_STATUS',
     'RECEIVE_REFRESH_DELETE': 'RECEIVE_REFRESH_DELETE',
     'LIST_FILTER': 'LIST_FILTER',
     'LIST_QUICK_FILTER': 'LIST_QUICK_FILTER',
@@ -8340,7 +8357,7 @@ module.exports = new LayoutStore();
 });
 
 ;require.register("stores/message_store", function(exports, require, module) {
-var AccountStore, ActionTypes, AppDispatcher, ContactStore, MessageFilter, MessageFlags, MessageStore, Store, _ref,
+var AccountStore, ActionTypes, AppDispatcher, ContactStore, MessageFilter, MessageFlags, MessageStore, SocketUtils, Store, _ref,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -8352,6 +8369,8 @@ ContactStore = require('./contact_store');
 AppDispatcher = require('../app_dispatcher');
 
 AccountStore = require('./account_store');
+
+SocketUtils = require('../utils/socketio_utils');
 
 _ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, MessageFlags = _ref.MessageFlags, MessageFilter = _ref.MessageFilter;
 
@@ -8459,21 +8478,22 @@ MessageStore = (function(_super) {
     handle(ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage);
     handle(ActionTypes.RECEIVE_RAW_MESSAGES, function(messages) {
       var message, next, url, _i, _len;
+      SocketUtils.changeRealtimeScope(messages.mailboxID);
       if (messages.links != null) {
         if (messages.links.next != null) {
           _params = {};
           next = decodeURIComponent(messages.links.next);
           url = 'http://localhost' + next;
           url.split('?')[1].split('&').forEach(function(p) {
-            var tmp;
-            tmp = p.split('=');
-            if (tmp[1] !== '') {
-              return _params[tmp[0]] = tmp[1];
-            } else {
-              return _params[tmp[0]] = '-';
+            var key, value, _ref1;
+            _ref1 = p.split('='), key = _ref1[0], value = _ref1[1];
+            if (value === '') {
+              value = '-';
             }
+            return _params[key] = value;
           });
         }
+        SocketUtils.changeRealtimeScope(messages.mailboxID, _params.pageAfter);
       }
       if ((messages.count != null) && (messages.mailboxID != null)) {
         messages = messages.messages.sort(__sortFunction);
@@ -8558,8 +8578,12 @@ MessageStore = (function(_super) {
       this.setCurrentID(messageID);
       return this.emit('change');
     });
-    return handle(ActionTypes.SELECT_ACCOUNT, function(value) {
+    handle(ActionTypes.SELECT_ACCOUNT, function(value) {
       return this.setCurrentID(null);
+    });
+    return handle(ActionTypes.RECEIVE_MESSAGE_DELETE, function(id) {
+      _messages = _messages.remove(id);
+      return this.emit('change');
     });
   };
 
@@ -8715,13 +8739,21 @@ module.exports = new MessageStore();
 });
 
 ;require.register("stores/refreshes_store", function(exports, require, module) {
-var ActionTypes, RefreshesStore, Store,
+var ActionTypes, RefreshesStore, Store, refreshesToImmutable,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 Store = require('../libs/flux/store/store');
 
 ActionTypes = require('../constants/app_constants').ActionTypes;
+
+refreshesToImmutable = function(refreshes) {
+  return Immutable.Sequence(refreshes).mapKeys(function(_, refresh) {
+    return refresh.objectID;
+  }).map(function(refresh) {
+    return Immutable.fromJS(refresh);
+  }).toOrderedMap();
+};
 
 RefreshesStore = (function(_super) {
 
@@ -8737,11 +8769,7 @@ RefreshesStore = (function(_super) {
     return RefreshesStore.__super__.constructor.apply(this, arguments);
   }
 
-  _refreshes = Immutable.Sequence(window.refreshes).mapKeys(function(_, refresh) {
-    return refresh.objectID;
-  }).map(function(refresh) {
-    return Immutable.fromJS(refresh);
-  }).toOrderedMap();
+  _refreshes = refreshesToImmutable(window.refreshes || []);
 
 
   /*
@@ -8749,6 +8777,9 @@ RefreshesStore = (function(_super) {
    */
 
   RefreshesStore.prototype.__bindHandlers = function(handle) {
+    handle(ActionTypes.RECEIVE_REFRESH_STATUS, function(refreshes) {
+      return _refreshes = refreshesToImmutable(refreshes);
+    });
     handle(ActionTypes.RECEIVE_REFRESH_UPDATE, function(refresh) {
       var id;
       refresh = Immutable.Map(refresh);
@@ -9493,7 +9524,7 @@ module.exports = {
 });
 
 ;require.register("utils/socketio_utils", function(exports, require, module) {
-var ActionTypes, AppDispatcher, dispatchTaskDelete, dispatchTaskUpdate, pathToSocketIO, socket, url;
+var ActionTypes, AppDispatcher, dispatchAs, pathToSocketIO, socket, url;
 
 AppDispatcher = require('../app_dispatcher');
 
@@ -9507,30 +9538,38 @@ socket = io.connect(url, {
   path: pathToSocketIO
 });
 
-dispatchTaskUpdate = function(task) {
-  return AppDispatcher.handleServerAction({
-    type: ActionTypes.RECEIVE_REFRESH_UPDATE,
-    value: task
-  });
+dispatchAs = function(action) {
+  return function(content) {
+    return AppDispatcher.handleServerAction({
+      type: action,
+      value: content
+    });
+  };
 };
 
-dispatchTaskDelete = function(taskid) {
-  return AppDispatcher.handleServerAction({
-    type: ActionTypes.RECEIVE_REFRESH_DELETE,
-    value: taskid
-  });
+socket.on('refresh.status', dispatchAs(ActionTypes.RECEIVE_REFRESH_STATUS));
+
+socket.on('refresh.create', dispatchAs(ActionTypes.RECEIVE_REFRESH_UPDATE));
+
+socket.on('refresh.update', dispatchAs(ActionTypes.RECEIVE_REFRESH_UPDATE));
+
+socket.on('refresh.delete', dispatchAs(ActionTypes.RECEIVE_REFRESH_DELETE));
+
+socket.on('message.create', dispatchAs(ActionTypes.RECEIVE_RAW_MESSAGE));
+
+socket.on('message.update', dispatchAs(ActionTypes.RECEIVE_RAW_MESSAGE));
+
+socket.on('message.delete', dispatchAs(ActionTypes.RECEIVE_MESSAGE_DELETE));
+
+exports.acknowledgeRefresh = function(taskid) {
+  return socket.emit('mark_ack', taskid);
 };
 
-socket.on('refresh.create', dispatchTaskUpdate);
-
-socket.on('refresh.update', dispatchTaskUpdate);
-
-socket.on('refresh.delete', dispatchTaskDelete);
-
-module.exports = {
-  acknowledgeRefresh: function(taskid) {
-    return socket.emit('mark_ack', taskid);
-  }
+exports.changeRealtimeScope = function(boxid, date) {
+  return socket.emit('change_scope', {
+    mailboxID: boxid,
+    before: date
+  });
 };
 });
 

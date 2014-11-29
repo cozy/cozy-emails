@@ -39,6 +39,8 @@ _ref = require('../utils/errors'), Break = _ref.Break, NotFound = _ref.NotFound;
 
 FETCH_AT_ONCE = require('../utils/constants').FETCH_AT_ONCE;
 
+require('../utils/socket_handler').wrapModel(Mailbox, 'mailbox');
+
 Mailbox.RFC6154 = {
   draftMailbox: '\\Drafts',
   sentMailbox: '\\Sent',
@@ -228,14 +230,25 @@ Mailbox.prototype.renameWithChildren = function(newLabel, newPath, callback) {
       return callback(err);
     }
     return async.eachSeries(boxes, function(box, cb) {
+      var changes, item;
       log.debug("imapcozy_rename#box", box);
-      box.path = box.path.replace(path, newPath);
-      box.tree[depth] = newLabel;
+      changes = {};
+      changes.path = box.path.replace(path, newPath);
+      changes.tree = (function() {
+        var _i, _len, _ref1, _results;
+        _ref1 = box.tree;
+        _results = [];
+        for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+          item = _ref1[_i];
+          _results.push(item);
+        }
+        return _results;
+      })();
+      changes.tree[depth] = newLabel;
       if (box.tree.length === depth + 1) {
-        box.label = newLabel;
+        changes.label = newLabel;
       }
-      log.debug("imapcozy_rename#boxafter", box);
-      return box.save(cb);
+      return box.updateAttributes(changes, cb);
     }, callback);
   });
 };
@@ -402,6 +415,7 @@ Mailbox.prototype.applyToFetch = function(toFetch, reporter, callback) {
   var box;
   log.debug("applyFetch", toFetch.length);
   box = this;
+  toFetch.reverse();
   return async.eachSeries(toFetch, function(msg, cb) {
     return Message.fetchOrUpdate(box, msg.mid, msg.uid, function(err) {
       if (err) {

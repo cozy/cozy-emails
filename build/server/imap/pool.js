@@ -309,8 +309,11 @@ ImapPool = (function() {
           if (oldUidvalidity && oldUidvalidity !== newUidvalidity) {
             log.error("uidvalidity has changed");
             return cozybox.recoverChangedUIDValidity(imap, function(err) {
-              cozybox.uidvalidity = newUidvalidity;
-              return cozybox.save(function(err) {
+              var changes;
+              changes = {
+                uidvalidity: newUidvalidity
+              };
+              return cozybox.updateAttributes(changes, function(err) {
                 return wrapped(imap, callback);
               });
             });
