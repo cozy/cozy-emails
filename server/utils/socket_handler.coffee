@@ -61,6 +61,10 @@ inScope = (socket, data) ->
 
 handleNewClient = (socket) =>
     log.debug 'handleNewClient', socket.id
+
+    # update the client refreshes status
+    socket.emit 'refreshes.status', ImapReporter.summary()
+
     socket.on 'mark_ack', ImapReporter.acknowledge
     socket.on 'change_scope', (scope) ->
         updateClientScope socket, scope
@@ -77,5 +81,6 @@ updateClientScope = (socket, scope) ->
 forgetClient = (socket) ->
     log.debug "forgetClient", socket.id
     index = sockets.indexOf socket
-    sockets = sockets.splice index, 1
+    if index isnt -1
+        sockets = sockets.splice index, 1
 

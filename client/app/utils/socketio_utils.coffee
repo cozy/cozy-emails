@@ -9,6 +9,7 @@ dispatchAs = (action) -> (content) ->
         type: action
         value: content
 
+socket.on 'refresh.status', dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
 socket.on 'refresh.create', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
 socket.on 'refresh.update', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
 socket.on 'refresh.delete', dispatchAs ActionTypes.RECEIVE_REFRESH_DELETE

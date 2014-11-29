@@ -56,6 +56,7 @@ module.exports =
 
         # Refreshes
         'RECEIVE_REFRESH_UPDATE'       : 'RECEIVE_REFRESH_UPDATE'
+        'RECEIVE_REFRESH_STATUS'       : 'RECEIVE_REFRESH_STATUS'
         'RECEIVE_REFRESH_DELETE'       : 'RECEIVE_REFRESH_DELETE'
 
         # List
