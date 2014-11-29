@@ -1,6 +1,5 @@
 _ = require 'lodash'
-sanitizeHtml = require 'sanitize-html'
-
+sanitizer   = require 'sanitizer'
 REGEXP =
     hasReOrFwD: /^(Re|Fwd)/i
     subject: /(?:(?:Re|Fwd)(?:\[[\d+]\])?\s?:\s?)*(.*)/i
@@ -43,7 +42,7 @@ module.exports =
         return boxes
 
     sanitizeHTML: (html, messageId, attachments) ->
-        html = html.replace /cid:/gim, 'cid;', (url) ->
+        sanitizer.sanitize html.replace(/cid:/gim, 'cid;'), (url) ->
             url = url.toString()
             if 0 is url.indexOf 'cid;'
                 cid = url.substring 4
@@ -56,21 +55,6 @@ module.exports =
                     return null
             else
                 return url
-
-        console.log "##### BEFORE"
-
-        html = sanitizeHtml html,
-            allowedTags: sanitizeHtml.defaults.allowedTags.concat [
-                'img'
-                'head'
-                'link'
-                'meta'
-            ]
-            allowedClasses: false
-        console.log "##### after"
-        console.log html
-
-        html
 
 
 # recursively browse the imap box tree building pathStr and pathArr
