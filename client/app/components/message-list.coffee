@@ -373,6 +373,7 @@ MessageItem = React.createClass
         ,
             tag
                 href: url,
+                className: 'wrapper'
                 'data-message-id': message.get('id'),
                 onClick: @onMessageClick,
                 onDoubleClick: @onMessageDblClick,

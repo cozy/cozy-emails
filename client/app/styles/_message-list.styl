@@ -33,7 +33,7 @@
 
         > a
         > span
-          padding 0.75em .25em
+          padding 0 .25em
           display block
           outline none
 
@@ -47,8 +47,7 @@
         input[type="checkbox"]
             height auto
             width auto
-            margin-left 0.3em
-            margin 0 .5em
+            margin 0 0.3em 0 0.5em
             cursor pointer
 
         .participants
@@ -91,11 +90,11 @@
         .avatar
         .select
             margin 0
-            margin: -.5em 0
             color #aaa
             font-size 2em
             width 1.5em
             height 1.5em
+            padding-top 0.25em
             text-align center
 
         .select
@@ -115,6 +114,10 @@
        background lightblue
        border-left .25em solid basecolor
 
+        a
+        span
+          padding 0.75em .25em
+
     .message.unseen
       font-weight bold
 
@@ -132,6 +135,15 @@
     .message:hover
        border-left .25em solid actioncolor
        background lightorange
+
+       a
+          padding 0.75em .25em
+
+    .message.edited
+       span.wrapper
+           margin 0 
+           padding .8em .25em .75em .25em
+        
 
     .message:hover
     .message.edited
