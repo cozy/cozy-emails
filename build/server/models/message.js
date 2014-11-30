@@ -396,7 +396,7 @@ Message.removeOrphans = function(existings, callback) {
 };
 
 Message.prototype.applyPatchOperations = function(patch, callback) {
-  var boxOps, boxid, flag, flagsOps, index, newflags, newmailboxIDs, operation, uid, _i, _j, _len, _len1, _ref;
+  var boxOps, boxid, flagsOps, index, newflags, newmailboxIDs, operation, uid, _i, _j, _len, _len1, _ref;
   log.debug(".applyPatchOperations", patch);
   newmailboxIDs = {};
   _ref = this.mailboxIDs;
@@ -404,16 +404,6 @@ Message.prototype.applyPatchOperations = function(patch, callback) {
     uid = _ref[boxid];
     newmailboxIDs[boxid] = uid;
   }
-  newflags = (function() {
-    var _i, _len, _ref1, _results;
-    _ref1 = this.flags;
-    _results = [];
-    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-      flag = _ref1[_i];
-      _results.push(flag);
-    }
-    return _results;
-  }).call(this);
   boxOps = {
     addTo: [],
     removeFrom: []
@@ -447,7 +437,7 @@ Message.prototype.applyPatchOperations = function(patch, callback) {
     if (operation.op === 'add') {
       flagsOps.add.push(operation.value);
     } else if (operation.op === 'remove') {
-      flagsOps.remove.push(operation.value);
+      flagsOps.remove.push(this.flags[index]);
     } else if (operation.op === 'replace') {
       flagsOps.remove.push(this.flags[index]);
       flagsOps.add.push(operation.value);
@@ -501,12 +491,14 @@ Message.prototype.imap_applyChanges = function(newflags, flagsOps, newmailboxIDs
             return imap.openBox(boxIndex[firstboxid].path, cb);
           }, function(cb) {
             if (flagsOps.remove.length) {
+              log.debug("REMOVING FLAGS", flagsOps.remove);
               return imap.delFlags(firstuid, flagsOps.remove, cb);
             } else {
               return cb(null);
             }
           }, function(cb) {
             if (flagsOps.add.length) {
+              log.debug("ADDING FLAGS", flagsOps.add);
               return imap.addFlags(firstuid, flagsOps.add, cb);
             } else {
               return cb(null);

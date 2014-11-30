@@ -20,15 +20,17 @@ SocketHandler.setup = function(app, server) {
   return io.on('connection', handleNewClient);
 };
 
-SocketHandler.notify = function(type, data) {
+SocketHandler.notify = function(type, data, olddata) {
   var socket, _i, _len, _results;
   log.info("notify", type, data.toString());
   if (type === 'message.update' || type === 'message.create') {
     _results = [];
     for (_i = 0, _len = sockets.length; _i < _len; _i++) {
       socket = sockets[_i];
-      if (inScope(socket, data)) {
+      if (inScope(socket, data) || (olddata && inScope(socket, olddata))) {
         _results.push(socket.emit(type, data));
+      } else {
+        _results.push(void 0);
       }
     }
     return _results;
@@ -42,28 +44,35 @@ SocketHandler.wrapModel = function(Model, docType) {
   _oldCreate = Model.create;
   Model.create = function(data, callback) {
     return _oldCreate.call(Model, data, function(err, created) {
+      var raw;
       if (!err) {
-        SocketHandler.notify("" + docType + ".create", created);
+        raw = created.toObject();
+        SocketHandler.notify("" + docType + ".create", raw);
       }
       return callback(err, created);
     });
   };
   _oldUpdateAttributes = Model.prototype.updateAttributes;
   Model.prototype.updateAttributes = function(data, callback) {
+    var old;
+    old = this.toObject();
     return _oldUpdateAttributes.call(this, data, function(err, updated) {
+      var raw;
       if (!err) {
-        SocketHandler.notify("" + docType + ".update", updated);
+        raw = updated.toObject();
+        SocketHandler.notify("" + docType + ".update", raw, old);
       }
       return callback(err, updated);
     });
   };
   _oldDestroy = Model.prototype.destroy;
   return Model.prototype.destroy = function(callback) {
-    var id;
-    id = this.id;
+    var id, old;
+    old = this.toObject();
+    id = old.id;
     return _oldDestroy.call(this, function(err) {
       if (!err) {
-        SocketHandler.notify("" + docType + ".delete", id);
+        SocketHandler.notify("" + docType + ".delete", id, old);
       }
       return callback(err);
     });
@@ -72,7 +81,6 @@ SocketHandler.wrapModel = function(Model, docType) {
 
 inScope = function(socket, data) {
   var _ref;
-  log.info("inscope", socket.scope_mailboxID, Object.keys(data.mailboxIDs));
   return (_ref = socket.scope_mailboxID, __indexOf.call(Object.keys(data.mailboxIDs), _ref) >= 0) && socket.scope_before < data.date;
 };
 

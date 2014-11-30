@@ -21,7 +21,7 @@ SocketHandler.notify = (type, data, olddata) ->
         # client current's view
         for socket in sockets
             if inScope(socket, data) or (olddata and inScope(socket, olddata))
-            socket.emit type, data
+                socket.emit type, data
 
     else
         io?.emit type, data
