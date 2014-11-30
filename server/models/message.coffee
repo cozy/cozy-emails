@@ -10,6 +10,7 @@ module.exports = Message = americano.getModel 'Message',
     normSubject: String      # normalized subject (no Re: ...)
     conversationID: String   # all message in thread have same conversationID
     mailboxIDs: (x) -> x     # mailboxes as an hash {boxID:uid, boxID2:uid2}
+    hasTwin: (x) -> x        # [String] mailboxIDs where this message has twin
     flags: (x) -> x          # [String] flags of the message
     headers: (x) -> x        # hash of the message headers
     from: (x) -> x           # array of {name, address}
@@ -110,17 +111,22 @@ Message.fetchOrUpdate = (box, mid, uid, callback) ->
             log.debug "        add"
             existing.addToMailbox box, uid, callback
         else if existing
-            log.debug "        evil twin, ignore"
             # this is the weird case when a message is in the box
             # under two different UIDs
-            # @TODO : maybe mark the message to handle modification of
-            # such messages
-            return callback null
+            log.debug "        twin"
+            existing.markTwin box, uid, callback
         else
             log.debug "        fetch"
             setTimeout ->
                 box.imap_fetchOneMail uid, callback
             , 50
+
+Message::markTwin = (box, uid, callback) ->
+    hasTwin = @hasTwin or []
+    return callback null unless box.id in hasTwin
+    hasTwin.push box.id
+    @updateAttributes changes: {hasTwin}, callback
+
 
 # Public: get the uids present in a box in cozy
 #
