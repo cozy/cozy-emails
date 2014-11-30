@@ -13,13 +13,14 @@ SocketHandler.setup = (app, server) ->
     io.on 'connection', handleNewClient
 
 
-SocketHandler.notify = (type, data) ->
+SocketHandler.notify = (type, data, olddata) ->
     log.info "notify", type, data.toString()
     if type in ['message.update', 'message.create']
         # we cant just spam the client with all
         # message events, check if the message is in
         # client current's view
-        for socket in sockets when inScope socket, data
+        for socket in sockets
+            if inScope(socket, data) or (olddata and inScope(socket, olddata))
             socket.emit type, data
 
     else
@@ -34,28 +35,32 @@ SocketHandler.wrapModel = (Model, docType) ->
     Model.create = (data, callback) ->
         _oldCreate.call Model, data, (err, created) ->
             unless err
-                SocketHandler.notify "#{docType}.create", created
+                raw = created.toObject()
+                SocketHandler.notify "#{docType}.create", raw
             callback err, created
 
     _oldUpdateAttributes = Model::updateAttributes
     Model::updateAttributes = (data, callback) ->
+        old = @toObject()
         _oldUpdateAttributes.call this, data, (err, updated) ->
             unless err
-                SocketHandler.notify "#{docType}.update", updated
+                raw = updated.toObject()
+                SocketHandler.notify "#{docType}.update", raw, old
             callback err, updated
 
     _oldDestroy = Model::destroy
     Model::destroy = (callback) ->
-        id = @id
+        old = @toObject()
+        id = old.id
         _oldDestroy.call this, (err) ->
             unless err
-                SocketHandler.notify "#{docType}.delete", id
+                SocketHandler.notify "#{docType}.delete", id, old
             callback err
 
 
 
 inScope = (socket, data) ->
-    log.info "inscope", socket.scope_mailboxID, Object.keys data.mailboxIDs
+    # log.info "inscope", socket.scope_mailboxID, Object.keys data.mailboxIDs
     (socket.scope_mailboxID in Object.keys data.mailboxIDs) and
     socket.scope_before < data.date
 
