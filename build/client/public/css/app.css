@@ -2837,7 +2837,7 @@ textarea:active,
 }
 .message-list .message > a,
 .message-list .message > span {
-  padding: 0.75em 0.25em;
+  padding: 0 0.25em;
   display: block;
   outline: none;
   display: -webkit-box;
@@ -2863,8 +2863,7 @@ textarea:active,
 .message-list .message input[type="checkbox"] {
   height: auto;
   width: auto;
-  margin-left: 0.3em;
-  margin: 0 0.5em;
+  margin: 0 0.3em 0 0.5em;
   cursor: pointer;
 }
 .message-list .message .participants,
@@ -2916,11 +2915,11 @@ textarea:active,
 .message-list .message .avatar,
 .message-list .message .select {
   margin: 0;
-  margin: -0.5em 0;
   color: #aaa;
   font-size: 2em;
   width: 1.5em;
   height: 1.5em;
+  padding-top: 0.25em;
   text-align: center;
 }
 .message-list .message .select {
@@ -2938,7 +2937,10 @@ textarea:active,
 }
 .message-list .message.active {
   background: #cbe4fb;
-  border-left: 0.25em solid #34a6ff;
+}
+.message-list .message.active border-left .25em solid basecolor a,
+.message-list .message.active border-left .25em solid basecolor span {
+  padding: 0.75em 0.25em;
 }
 .message-list .message.unseen {
   font-weight: bold;
@@ -2957,6 +2959,13 @@ textarea:active,
 .message-list .message:hover {
   border-left: 0.25em solid #fe8800;
   background: #ffc47f;
+}
+.message-list .message:hover a {
+  padding: 0.75em 0.25em;
+}
+.message-list .message.edited span.wrapper {
+  margin: 0;
+  padding: 0.8em 0.25em 0.75em 0.25em;
 }
 .message-list .message:hover .select,
 .message-list .message.edited .select {
