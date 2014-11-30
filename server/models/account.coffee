@@ -277,13 +277,13 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, callback) ->
 
         async.eachSeries toFetch, (box, cb) ->
             box.imap_fetchMails limitByBox, (err) ->
-                # dont interrupt the loop if one fail
                 # @TODO : Figure out how to distinguish a mailbox that
                 # is not selectable but not marked as such. In the meantime
-                # dont pop the error the client
+                # dont pop the error to the client
                 if err and -1 is err.message?.indexOf "Mailbox doesn't exist"
                     reporter.onError err
                 reporter.addProgress 1
+                # dont interrupt the loop if one fail
                 cb null
 
         , (err) ->

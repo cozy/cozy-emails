@@ -105,7 +105,7 @@ Message.updateOrCreate = (message, callback) ->
 
 Message.fetchOrUpdate = (box, mid, uid, callback) ->
     log.debug "fetchOrUpdate", box.id, mid, uid
-    Message.byMessageId box.accountID, mid, (err, existing) ->
+    Message.byMessageID box.accountID, mid, (err, existing) ->
         return callback err if err
         if existing and not existing.isInMailbox box
             log.debug "        add"
@@ -157,7 +157,7 @@ Message.UIDsInRange = (mailboxID, min, max, callback) ->
 # callback - Function(err, [{Message}])
 #
 # Returns void
-Message.byMessageId = (accountID, messageID, callback) ->
+Message.byMessageID = (accountID, messageID, callback) ->
     messageID = mailutils.normalizeMessageID messageID
     Message.rawRequest 'dedupRequest',
         key: [accountID, 'mid', messageID]
@@ -177,7 +177,7 @@ Message.byMessageId = (accountID, messageID, callback) ->
 # callback - Function(err, [{Message}]
 #
 # Returns void
-Message.byConversationId = (conversationID, callback) ->
+Message.byConversationID = (conversationID, callback) ->
     Message.rawRequest 'byConversationId',
         key: conversationID
         include_docs: true
@@ -452,14 +452,14 @@ Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, boxOps, callbac
                         cb null
                 # step 3 - copy the message to all addTo
                 (cb) ->
-                    paths = boxOps.addTo.map (destId) ->
-                        boxIndex[destId].path
+                    paths = boxOps.addTo.map (destID) ->
+                        boxIndex[destID].path
 
                     imap.multicopy firstuid, paths, (err, uids) ->
                         return callback err if err
                         for i in [0..uids.length - 1] by 1
-                            destId = boxOps.addTo[i]
-                            newmailboxIDs[destId] = uids[i]
+                            destID = boxOps.addTo[i]
+                            newmailboxIDs[destID] = uids[i]
                         cb null
                 # step 4 - remove the message from all removeFrom
                 (cb) ->
@@ -520,7 +520,7 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
     # pick a method to find the conversation id
     # if there is a x-gm-thrid, use it
     # else find the thread using References or Subject
-    Message.findConversationId mail, (err, conversationID) ->
+    Message.findConversationID mail, (err, conversationID) ->
         return callback err if err
         mail.conversationID = conversationID
         Message.create mail, (err, jdbMessage) ->
@@ -541,8 +541,8 @@ Message::storeAttachments = (attachments, callback) ->
 
     , callback
 
-Message.findConversationId = (mail, callback) ->
-    log.debug "findConversationId"
+Message.findConversationID = (mail, callback) ->
+    log.debug "findConversationID"
     if mail.headers['x-gm-thrid']
         return callback null, mail.headers['x-gm-thrid']
 
@@ -641,7 +641,7 @@ Message::doASAP = (operation, callback) ->
 
 Message.recoverChangedUID = (box, messageID, newUID, callback) ->
     log.debug "recoverChangedUID"
-    Message.byMessageId box.accountID, messageID, (err, message) ->
+    Message.byMessageID box.accountID, messageID, (err, message) ->
         return callback err if err
         # no need to recover if the message doesnt exist
         return callback null unless message

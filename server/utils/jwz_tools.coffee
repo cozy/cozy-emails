@@ -4,7 +4,7 @@ sanitizeHtml = require 'sanitize-html'
 REGEXP =
     hasReOrFwD: /^(Re|Fwd)/i
     subject: /(?:(?:Re|Fwd)(?:\[[\d+]\])?\s?:\s?)*(.*)/i
-    messageId: /<([^<>]+)>/
+    messageID: /<([^<>]+)>/
 
 IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren']
 
@@ -18,8 +18,8 @@ module.exports =
         match = subject.match REGEXP.subject
         return if match then match[1] else false
 
-    normalizeMessageID: (messageId) ->
-        match = messageId.match REGEXP.messageId
+    normalizeMessageID: (messageID) ->
+        match = messageID.match REGEXP.messageID
         return if match then match[1] else null
 
     flattenMailboxTree: (tree) ->
@@ -42,7 +42,7 @@ module.exports =
             flattenMailboxTreeLevel boxes, tree, '', [], '/'
         return boxes
 
-    sanitizeHTML: (html, messageId, attachments) ->
+    sanitizeHTML: (html, messageID, attachments) ->
         html = html.replace /cid:/gim, 'cid;', (url) ->
             url = url.toString()
             if 0 is url.indexOf 'cid;'
@@ -51,7 +51,7 @@ module.exports =
                 name = attachment[0]?.fileName
 
                 if name
-                    return "/message/#{messageId}/attachments/#{name}"
+                    return "/message/#{messageID}/attachments/#{name}"
                 else
                     return null
             else

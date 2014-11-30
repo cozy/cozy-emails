@@ -350,7 +350,7 @@ module.exports.send = (req, res, next) ->
 
 
 module.exports.fetchConversation = (req, res, next) ->
-    Message.byConversationId req.params.conversationID, (err, messages) ->
+    Message.byConversationID req.params.conversationID, (err, messages) ->
         return next err if err
 
         req.conversation = messages
