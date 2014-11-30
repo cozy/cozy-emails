@@ -364,7 +364,6 @@ Message::applyPatchOperations = (patch, callback) ->
     # copy the fields
     newmailboxIDs = {}
     newmailboxIDs[boxid] = uid for boxid, uid of @mailboxIDs
-    newflags = (flag for flag in @flags)
 
     # scan the patch and change the fields
     boxOps = {addTo: [], removeFrom: []}
@@ -385,7 +384,7 @@ Message::applyPatchOperations = (patch, callback) ->
             flagsOps.add.push operation.value
 
         else if operation.op is 'remove'
-            flagsOps.remove.push operation.value
+            flagsOps.remove.push @flags[index]
 
         else if operation.op is 'replace'
             flagsOps.remove.push @flags[index]
@@ -434,12 +433,14 @@ Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, boxOps, callbac
                 # step 2a - remove flags
                 (cb) ->
                     if flagsOps.remove.length
+                        log.debug "REMOVING FLAGS", flagsOps.remove
                         imap.delFlags firstuid, flagsOps.remove, cb
                     else
                         cb null
                 # step 2b - add flags
                 (cb) ->
                     if flagsOps.add.length
+                        log.debug "ADDING FLAGS", flagsOps.add
                         imap.addFlags firstuid, flagsOps.add, cb
                     else
                         cb null
