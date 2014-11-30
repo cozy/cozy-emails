@@ -32,7 +32,8 @@
     "xmldom": "0.1.19",
     "sanitizer": "0.1.2",
     "html-to-text": "0.1.0",
-    "multiparty": "4.0.0"
+    "multiparty": "4.0.0",
+    "sanitize-html": "^1.4.3"
   },
   "devDependencies": {
     "should": "4.0.4",
