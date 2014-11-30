@@ -94,7 +94,8 @@ class MessageStore extends Store
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
 
-            SocketUtils.changeRealtimeScope messages.mailboxID
+            if messages.mailboxID
+                SocketUtils.changeRealtimeScope messages.mailboxID
 
             if messages.links?
                 if messages.links.next?

@@ -9,6 +9,11 @@ dispatchAs = (action) -> (content) ->
         type: action
         value: content
 
+scope = {}
+setServerScope = ->
+    socket.emit 'change_scope', scope
+
+
 socket.on 'refresh.status', dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
 socket.on 'refresh.create', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
 socket.on 'refresh.update', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
@@ -18,11 +23,19 @@ socket.on 'message.create', dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE
 socket.on 'message.update', dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE
 socket.on 'message.delete', dispatchAs ActionTypes.RECEIVE_MESSAGE_DELETE
 
+socket.on 'mailbox.update', dispatchAs ActionTypes.RECEIVE_MAILBOX_UPDATE
+
+socket.on 'connect', ->
+    setServerScope()
+socket.on 'reconnect', ->
+    setServerScope()
+
 exports.acknowledgeRefresh = (taskid) ->
     socket.emit 'mark_ack', taskid
 
 
 exports.changeRealtimeScope = (boxid, date) ->
-    socket.emit 'change_scope',
+    scope =
         mailboxID: boxid
         before: date
+    setServerScope()

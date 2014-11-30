@@ -436,13 +436,18 @@ Mailbox.removeOrphans = (existings, callback) ->
         , (err) ->
             callback err, boxes
 
-Mailbox.getCounts = (callback) ->
-    Message.rawRequest 'byMailboxRequest',
+Mailbox.getCounts = (mailboxID, callback) ->
+    options = if mailboxID
+        startkey: ['date', mailboxID]
+        endkey: ['date', mailboxID, {}]
+    else
         startkey: ['date', ""]
         endkey: ['date', {}]
-        reduce: true
-        group_level: 3
-    , (err, rows) ->
+
+    options.reduce = true
+    options.group_level = 3
+
+    Message.rawRequest 'byMailboxRequest', options, (err, rows) ->
         return callback err if err
         result = {}
         rows.forEach (row) ->

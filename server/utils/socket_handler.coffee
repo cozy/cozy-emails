@@ -1,6 +1,7 @@
 ImapReporter = require '../imap/reporter'
 log = require('../utils/logging')('sockethandler')
 ioServer = require 'socket.io'
+Mailbox = require '../models/mailbox'
 
 io = null
 sockets = []
@@ -22,6 +23,16 @@ SocketHandler.notify = (type, data, olddata) ->
         for socket in sockets
             if inScope(socket, data) or (olddata and inScope(socket, olddata))
                 socket.emit type, data
+
+    else if type is 'mailbox.update'
+        # include the mailbox counts
+        Mailbox.getCounts data.id, (err, results) ->
+            console.log results, data.id, data
+            if thisbox = results[data.id]
+                {total, unread} = thisbox
+                data.nbTotal = total
+                data.nbUnread = unread
+            io?.emit type, data
 
     else
         io?.emit type, data

@@ -153,7 +153,7 @@ module.exports =
     editAccount: (account, callback) ->
 
         # TODO: validation & sanitization
-        rawAccount = AccountTranslator.toRawObject account
+        rawAccount = account.toJS()
 
         request.put "account/#{rawAccount.id}"
         .send rawAccount
