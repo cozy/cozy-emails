@@ -61,8 +61,12 @@ module.exports =
             allowedTags: sanitizeHtml.defaults.allowedTags.concat [
                 'img'
                 'head'
-                'link'
                 'meta'
+            ]
+            allowedAttributes: sanitizeHtml.defaults.allowedTags.concat [
+                'style'
+                'class'
+                'background'
             ]
             allowedClasses: false
         html
