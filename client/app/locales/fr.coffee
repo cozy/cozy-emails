@@ -195,6 +195,7 @@ module.exports =
                                         les… (en minutes)"
       "settings plugins"           : "Modules complémentaires"
       "settings label composeInHTML"        : "Éditeur riche"
+      "settings label composeOnTop"         : "Répondre au dessus du message"
       "settings label displayConversation"  : "Afficher les conversations"
       "settings label displayPreview"       : "Prévisualiser les messages"
       "settings label messageDisplayHTML"   : "Afficher les messages en HTML"

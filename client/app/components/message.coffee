@@ -421,39 +421,41 @@ module.exports = React.createClass
             loadContent = =>
                 doc = frame.contentDocument or frame.contentWindow.document
                 if doc?
-                    s = document.createElement 'style'
-                    doc.head.appendChild(s)
-                    font = "./fonts/sourcesanspro/SourceSansPro-Regular"
-                    rules = [
-                        """
-                        @font-face{
-                          font-family: 'Source Sans Pro';
-                          font-weight: 400;
-                          font-style: normal;
-                          font-stretch: normal;
-                          src: url('#{font}.eot') format('embedded-opentype'),
-                               url('#{font}.otf.woff') format('woff'),
-                               url('#{font}.otf') format('opentype'),
-                               url('#{font}.ttf') format('truetype');
-                        }
-                        """,
-                        "body {
-                            font-family: 'Source Sans Pro';
-                        }",
-                        "blockquote {
-                            margin-left: .5em;
-                            padding-left: .5em;
-                            border-left: 2px solid blue;
-                            color: blue;
-                        }",
-                        "blockquote blockquote { border-color: red !important; color: red; }",
-                        "blockquote blockquote blockquote { border-color: green !important; color: green; }",
-                        "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }",
-                        "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }",
-                    ]
-                    rules.forEach (rule, idx) ->
-                        s.sheet.insertRule rule, idx
-                    doc.body.innerHTML = @_htmlContent
+                    if not doc.getElementById 'cozystyle'
+                        s = document.createElement 'style'
+                        s.id = "cozystyle"
+                        doc.head.appendChild(s)
+                        font = "./fonts/sourcesanspro/SourceSansPro-Regular"
+                        rules = [
+                            """
+                            @font-face{
+                              font-family: 'Source Sans Pro';
+                              font-weight: 400;
+                              font-style: normal;
+                              font-stretch: normal;
+                              src: url('#{font}.eot') format('embedded-opentype'),
+                                   url('#{font}.otf.woff') format('woff'),
+                                   url('#{font}.otf') format('opentype'),
+                                   url('#{font}.ttf') format('truetype');
+                            }
+                            """,
+                            "body {
+                                font-family: 'Source Sans Pro';
+                            }",
+                            "blockquote {
+                                margin-left: .5em;
+                                padding-left: .5em;
+                                border-left: 2px solid blue;
+                                color: blue;
+                            }",
+                            "blockquote blockquote { border-color: red !important; color: red; }",
+                            "blockquote blockquote blockquote { border-color: green !important; color: green; }",
+                            "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }",
+                            "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }",
+                        ]
+                        rules.forEach (rule, idx) ->
+                            s.sheet.insertRule rule, idx
+                        doc.body.innerHTML = @_htmlContent
                     rect = doc.body.getBoundingClientRect()
                     frame.style.height = "#{rect.height + 60}px"
                 else

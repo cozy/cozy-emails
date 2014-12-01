@@ -137,11 +137,14 @@ module.exports.listByMailbox = (req, res, next) ->
             links = {}
 
         result.messages ?= []
+<<<<<<< HEAD
         result.messages = result.messages.map (msg) -> msg.toClientObject()
+=======
+>>>>>>> 9e6d2c1ab2b726006dfdacd7217ca7e7329fdf87
 
         res.send 200,
             mailboxID: mailboxID
-            messages:  result.messages
+            messages: result.messages.map (msg) -> msg.toClientObject()
             count: result.count
             links: links
 

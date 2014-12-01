@@ -189,6 +189,7 @@ module.exports =
                                         (in minutes)"
       "settings plugins"           : "Add ons"
       "settings label composeInHTML"        : "Rich message editor"
+      "settings label composeOnTop"         : "Reply on top of message"
       "settings label displayConversation"  : "Display conversations"
       "settings label displayPreview"       : "Display message preview"
       "settings label messageDisplayHTML"   : "Display message in HTML"

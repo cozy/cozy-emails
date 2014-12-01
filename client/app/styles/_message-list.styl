@@ -146,7 +146,6 @@
        span.wrapper
            margin 0 
            padding .8em .25em .75em .25em
-        
 
     .message:hover
     .message.edited
@@ -172,17 +171,22 @@
         margin-top 1em
 
 .message-list.compact
-    .message > a
-    .message > span
+    .message a.wrapper
+    .message span.wrapper
         padding 1px 0
     .fa-user
     .avatar
     .select
         font-size 1.5em
-        margin 0
         width 1em
         height 1.1em
         margin -.1em 0
+        padding-top 0.1em
+    input[type="checkbox"]
+        height auto
+        width auto
+        margin 0 -0.2em 0 0.2em
+        cursor pointer
 
 .message-list-option:first-child
     display none

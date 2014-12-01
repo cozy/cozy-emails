@@ -63,7 +63,6 @@ module.exports = Compose = React.createClass
         classCc    = if @state.cc.length is 0 then '' else ' shown'
         classBcc   = if @state.bcc.length is 0 then '' else ' shown'
 
-
         div id: 'email-compose',
             if @props.layout isnt 'full'
                 a href: expandUrl, className: 'expand pull-right',
@@ -192,6 +191,24 @@ module.exports = Compose = React.createClass
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
         if @state.composeInHTML
+            if Array.isArray(@state.to) and @state.to.length > 0 and @state.subject isnt ''
+                node = @refs.html.getDOMNode()
+                jQuery(node).focus()
+                if not @props.settings.get 'composeOnTop'
+                    node = node.lastChild
+                    if node?
+                        # move cursor to the bottom
+                        node.scrollIntoView(false)
+                        node.innerHTML = "<br \>"
+                        s = window.getSelection()
+                        r = document.createRange()
+                        r.selectNodeContents(node)
+                        s.removeAllRanges()
+                        s.addRange(r)
+                        document.execCommand('delete', false, null)
+            else
+                document.getElementById('compose-to').focus()
+
             # Some DOM manipulation when replying inside the message.
             # When inserting a new line, we must close all blockquotes,
             # insert a blank line and then open again blockquotes
@@ -289,24 +306,27 @@ module.exports = Compose = React.createClass
             )
         else
             # Text message
-            node = @refs.content.getDOMNode()
-            rect = node.getBoundingClientRect()
-            node.scrollTop = node.scrollHeight - rect.height
-
-            if (typeof node.selectionStart is "number")
-                node.selectionStart = node.selectionEnd = node.value.length
-            else if (typeof node.createTextRange isnt "undefined")
+            if Array.isArray(@state.to) and @state.to.length > 0 and @state.subject isnt ''
+                node = @refs.content.getDOMNode()
+                if not @props.settings.get 'composeOnTop'
+                    rect = node.getBoundingClientRect()
+                    node.scrollTop = node.scrollHeight - rect.height
+                    if (typeof node.selectionStart is "number")
+                        node.selectionStart = node.selectionEnd = node.value.length
+                    else if (typeof node.createTextRange isnt "undefined")
+                        node.focus()
+                        range = node.createTextRange()
+                        range.collapse(false)
+                        range.select()
                 node.focus()
-                range = node.createTextRange()
-                range.collapse(false)
-                range.select()
-            node.focus()
+            else
+                document.getElementById('compose-to').focus()
 
     componentDidMount: ->
         @_initCompose()
 
-    componentDidUpdate: ->
-        @_initCompose()
+    #componentDidUpdate: ->
+    #    @_initCompose()
 
     getInitialState: (forceDefault) ->
 

@@ -12,6 +12,7 @@ describe "settings changes", ->
             body.should.have.property 'displayConversation'  , true
             body.should.have.property 'displayPreview'       , true
             body.should.have.property 'composeInHTML'        , true
+            body.should.have.property 'composeOnTop'         , false
             body.should.have.property 'messageDisplayHTML'   , true
             body.should.have.property 'messageDisplayImages' , false
             body.should.have.property 'messageConfirmDelete' , true
@@ -35,6 +36,7 @@ describe "settings changes", ->
             body.should.have.property 'displayConversation'  , true
             body.should.have.property 'displayPreview'       , true
             body.should.have.property 'composeInHTML'        , true
+            body.should.have.property 'composeOnTop'         , false
             body.should.have.property 'messageDisplayHTML'   , false
             body.should.have.property 'messageDisplayImages' , false
             body.should.have.property 'messageConfirmDelete' , true
@@ -53,6 +55,7 @@ describe "settings changes", ->
             body.should.have.property 'displayConversation'  , true
             body.should.have.property 'displayPreview'       , true
             body.should.have.property 'composeInHTML'        , true
+            body.should.have.property 'composeOnTop'         , false
             body.should.have.property 'messageDisplayHTML'   , false
             body.should.have.property 'messageDisplayImages' , false
             body.should.have.property 'messageConfirmDelete' , true

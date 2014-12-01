@@ -101,6 +101,7 @@ module.exports = React.createClass
 
             @_renderOption 'displayConversation'
             @_renderOption 'composeInHTML'
+            @_renderOption 'composeOnTop'
             @_renderOption 'messageDisplayHTML'
             @_renderOption 'messageDisplayImages'
             @_renderOption 'messageConfirmDelete'
@@ -156,6 +157,7 @@ module.exports = React.createClass
                 SettingsActionCreator.edit settings
                 SettingsActionCreator.setRefresh target.value
             when 'composeInHTML'
+            ,    'composeOnTop'
             ,    'displayConversation'
             ,    'messageDisplayHTML'
             ,    'messageDisplayImages'
