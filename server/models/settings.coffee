@@ -9,6 +9,7 @@ module.exports = Settings = americano.getModel 'MailsSettings',
     displayConversation  : type : Boolean, default : true
     displayPreview       : type : Boolean, default : true
     composeInHTML        : type : Boolean, default : true
+    composeOnTop         : type : Boolean, default : false
     messageDisplayHTML   : type : Boolean, default : true
     messageDisplayImages : type : Boolean, default : false
     messageConfirmDelete : type : Boolean, default : true

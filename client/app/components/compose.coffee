@@ -194,17 +194,18 @@ module.exports = Compose = React.createClass
             if Array.isArray(@state.to) and @state.to.length > 0 and @state.subject isnt ''
                 node = @refs.html.getDOMNode()
                 jQuery(node).focus()
-                node = node.lastChild
-                if node?
-                    # move cursor to the bottom
-                    node.scrollIntoView(false)
-                    node.innerHTML = "<br \>"
-                    s = window.getSelection()
-                    r = document.createRange()
-                    r.selectNodeContents(node)
-                    s.removeAllRanges()
-                    s.addRange(r)
-                    document.execCommand('delete', false, null)
+                if not @props.settings.get 'composeOnTop'
+                    node = node.lastChild
+                    if node?
+                        # move cursor to the bottom
+                        node.scrollIntoView(false)
+                        node.innerHTML = "<br \>"
+                        s = window.getSelection()
+                        r = document.createRange()
+                        r.selectNodeContents(node)
+                        s.removeAllRanges()
+                        s.addRange(r)
+                        document.execCommand('delete', false, null)
             else
                 document.getElementById('compose-to').focus()
 
@@ -307,15 +308,16 @@ module.exports = Compose = React.createClass
             # Text message
             if Array.isArray(@state.to) and @state.to.length > 0 and @state.subject isnt ''
                 node = @refs.content.getDOMNode()
-                rect = node.getBoundingClientRect()
-                node.scrollTop = node.scrollHeight - rect.height
-                if (typeof node.selectionStart is "number")
-                    node.selectionStart = node.selectionEnd = node.value.length
-                else if (typeof node.createTextRange isnt "undefined")
-                    node.focus()
-                    range = node.createTextRange()
-                    range.collapse(false)
-                    range.select()
+                if not @props.settings.get 'composeOnTop'
+                    rect = node.getBoundingClientRect()
+                    node.scrollTop = node.scrollHeight - rect.height
+                    if (typeof node.selectionStart is "number")
+                        node.selectionStart = node.selectionEnd = node.value.length
+                    else if (typeof node.createTextRange isnt "undefined")
+                        node.focus()
+                        range = node.createTextRange()
+                        range.collapse(false)
+                        range.select()
                 node.focus()
             else
                 document.getElementById('compose-to').focus()
