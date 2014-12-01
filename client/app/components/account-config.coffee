@@ -86,29 +86,41 @@ module.exports = React.createClass
         else
             titleLabel = t "account new"
 
-        classes = {}
-        ['account', 'mailboxes'].map (e) =>
-            classes[e] = classer active: @state.tab is e
+
+        tabAccountClass = tabMailboxClass = ''
+        tabAccountUrl = tabMailboxUrl = null
+
+        if not @props.tab or @props.tab is 'account'
+            tabAccountClass = 'active'
+            tabMailboxUrl = @buildUrl
+                direction: 'first'
+                action: 'account.config'
+                parameters: [@state.id, 'mailboxes']
+
+        else
+            tabMailboxClass = 'active'
+            tabAccountUrl = @buildUrl
+                direction: 'first'
+                action: 'account.config'
+                parameters: [@state.id, 'account']
 
         div id: 'mailbox-config',
             h3 className: null, titleLabel
 
-            if @state.tab?
+            if @props.tab?
                 ul className: "nav nav-tabs", role: "tablist",
-                    li className: classes['account'],
+                    li className: tabAccountClass,
                         a
-                            'data-target': 'account'
-                            onClick: @tabChange,
+                            href: tabAccountUrl
                             t "account tab account"
-                    li className: classes['mailboxes'],
+                    li className: tabMailboxClass,
                         a
-                            'data-target': 'mailboxes'
-                            onClick: @tabChange,
+                            href: tabMailboxUrl
                             t "account tab mailboxes"
 
-            if not @state.tab or @state.tab is 'account'
+            if not @props.tab or @props.tab is 'account'
                 @renderMain()
-            if @state.tab is 'mailboxes'
+            else
                 @renderMailboxes()
 
     renderError: ->
@@ -509,23 +521,19 @@ module.exports = React.createClass
         {accountValue, valid} = @doValidate()
 
         if valid.valid
-            @setState errors: {}
-            afterCreation = (account) =>
-                state = {}
-                init = (field) ->
-                    state[field] = account.get field
-                init field for field in @_accountFields
-                state.newMailboxParent = null
-                state.tab = 'mailboxes'
-                LAC.alertSuccess t "account creation ok"
-                @setState state
-
-
             if @state.id?
-                AccountActionCreator.edit accountValue,
-                    @state.id
+                AccountActionCreator.edit accountValue, @state.id
             else
-                AccountActionCreator.create accountValue, afterCreation
+                LAC.alertSuccess t "account creation ok"
+                AccountActionCreator.create accountValue, (account) =>
+                    @redirect
+                        direction: 'first'
+                        action: 'account.config'
+                        parameters: [
+                            account.get 'id'
+                            'mailboxes'
+                        ]
+                        fullWidth: true
         else
             errors = {}
             setError = (error) ->
@@ -539,11 +547,6 @@ module.exports = React.createClass
 
         if window.confirm(t 'account remove confirm')
             AccountActionCreator.remove @state.id
-
-
-    tabChange: (e) ->
-        e.preventDefault()
-        @setState tab: e.target.dataset.target
 
 
     addMailbox: (event) ->
@@ -677,22 +680,15 @@ module.exports = React.createClass
         @setState infos
 
     componentWillReceiveProps: (props) ->
-
-
         # prevents the form from changing during submission
-        if not props.isWaiting
-            # display the account values
-            if not props.selectedAccount? or
-            @state.id isnt props.selectedAccount.get 'id'
-                tab = "account"
-            else
-                tab = @state.tab
-            @setState @_accountToState(tab, props)
+        if props.selectedAccount and not props.isWaiting
+
+            @setState @_accountToState props
 
     getInitialState: ->
-        return @_accountToState("account")
+        return @_accountToState null
 
-    _accountToState: (tab, props)->
+    _accountToState: (props)->
         state =
             errors: {}
         if props?
@@ -702,15 +698,16 @@ module.exports = React.createClass
                     field = props.error.field
                     state.errors[field] = t 'config error ' + field
         if account?
-            init = (field) ->
+            for field in @_accountFields
                 state[field] = account.get field
-            init field for field in @_accountFields
             state.newMailboxParent = null
-            state.tab = tab
             state.mailboxes         = props.mailboxes
             state.favoriteMailboxes = props.favoriteMailboxes
             if state.mailboxes.length is 0
-                state.tab = 'mailboxes'
+                @redirect
+                    direction: 'first'
+                    action: 'account.config'
+                    parameters: [@state.id, 'mailboxes']
         else if Object.keys(state.errors).length is 0
             init = (field) ->
                 state[field] = ''
@@ -725,7 +722,6 @@ module.exports = React.createClass
             state.accountType = 'IMAP'
             state.newMailboxParent  = null
             state.favoriteMailboxes = null
-            state.tab = null
 
         return state
 

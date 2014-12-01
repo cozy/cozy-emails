@@ -79,7 +79,7 @@ MessageList = React.createClass
         configMailboxUrl = @buildUrl
             direction: 'first'
             action: 'account.config'
-            parameters: @props.accountID
+            parameters: [@props.accountID, 'account']
             fullWidth: true
 
         classList = classer
