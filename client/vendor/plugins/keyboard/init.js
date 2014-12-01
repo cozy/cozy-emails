@@ -35,6 +35,26 @@ if (typeof window.plugins !== "object") {
       Mousetrap.unbind("esc");
     });
   }
+  function layoutResize(direction) {
+    if (direction !== 1 && direction !== -1) {
+      direction = 1;
+    }
+    var panels, w1;
+    panels = document.querySelectorAll('#panels > .panel');
+    function updateClass(panel, nb) {
+      var cl, res;
+      cl = Array.prototype.slice.call(panel.classList).filter(function (c) {
+        return c.substr(0, 6) === 'col-md';
+      })[0];
+      panel.classList.remove(cl);
+      res = (parseInt(cl.split('-')[2], 10) + nb);
+      panel.classList.add('col-md-' + res);
+      return res;
+    }
+    w1 = updateClass(panels[0], -1 * direction);
+    updateClass(panels[1], 1 * direction);
+    panels[1].style.left = (100 / 12 * w1) + '%';
+  }
   root.mailkeys = {
     _binding: {
       'enter': {
@@ -76,6 +96,20 @@ if (typeof window.plugins !== "object") {
           if (panel) {
             panel.scrollTop += panel.clientHeight * 0.8;
           }
+        }
+      },
+      'ctrl+left': {
+        name: 'Increase message layout width',
+        action: function (e) {
+          e.preventDefault();
+          layoutResize(1);
+        }
+      },
+      'ctrl+right': {
+        name: 'Decrease message layout width',
+        action: function (e) {
+          e.preventDefault();
+          layoutResize(-1);
         }
       },
       'ctrl+up': {
