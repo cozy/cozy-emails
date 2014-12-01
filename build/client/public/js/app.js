@@ -4508,6 +4508,8 @@ MessageItem = React.createClass({
       'data-message-id': message.get('id'),
       onClick: this.onMessageClick,
       onDoubleClick: this.onMessageDblClick
+    }, div({
+      className: 'avatar-wrapper'
     }, input({
       className: 'select',
       type: 'checkbox',
@@ -4518,7 +4520,7 @@ MessageItem = React.createClass({
       src: avatar
     }) : i({
       className: 'fa fa-user'
-    }), span({
+    })), span({
       className: 'participants'
     }, this.getParticipants(message)), div({
       className: 'preview'
