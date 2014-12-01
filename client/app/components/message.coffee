@@ -132,8 +132,8 @@ module.exports = React.createClass
                 image.removeAttribute 'src'
             images = doc.querySelectorAll 'IMG[src]'
             hideImage image for image in images
-            for link in doc.querySelectorAll 'a[href]'
-                link.target = '_blank'
+        for link in doc.querySelectorAll 'a[href]'
+            link.target = '_blank'
         if doc?
             @_htmlContent = doc.body.innerHTML
         else
@@ -181,7 +181,7 @@ module.exports = React.createClass
                             iframe
                                 className: 'content',
                                 ref: 'content',
-                                sandbox: 'allow-same-origin',
+                                sandbox: 'allow-same-origin allow-popups',
                                 allowTransparency: true,
                                 frameBorder: 0,
                                 name: "message-" + message.get('id'), ''
