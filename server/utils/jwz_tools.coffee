@@ -43,20 +43,6 @@ module.exports =
         return boxes
 
     sanitizeHTML: (html, messageId, attachments) ->
-        html = html.replace /cid:/gim, 'cid;', (url) ->
-            url = url.toString()
-            if 0 is url.indexOf 'cid;'
-                cid = url.substring 4
-                attachment = attachments.filter (att) -> att.contentId is cid
-                name = attachment[0]?.fileName
-
-                if name
-                    return "/message/#{messageId}/attachments/#{name}"
-                else
-                    return null
-            else
-                return url
-
         html = sanitizeHtml html,
             allowedTags: sanitizeHtml.defaults.allowedTags.concat [
                 'img'
@@ -65,6 +51,16 @@ module.exports =
                 'meta'
             ]
             allowedClasses: false
+            allowedSchemes: sanitizeHtml.defaults.allowedSchemes.concat ['cid']
+            transformTags:
+                'img': (tag, attribs) ->
+                    if attribs.src? and 0 is attribs.src.indexOf 'cid:'
+                        cid = attribs.src.substring 4
+                        attachment = attachments.filter (att) -> att.contentId is cid
+                        name = attachment[0]?.fileName
+                        if name?
+                            attribs.src = "/message/#{messageId}/attachments/#{name}"
+                    return {tagName: 'img', attribs: attribs}
         html
 
 
