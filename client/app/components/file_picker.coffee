@@ -208,7 +208,7 @@ FileItem = React.createClass
                 className: 'file-name',
                 target: '_blank',
                 onClick: @doDisplay,
-                # href: file.url
+                href: file.url
                 'data-file-url': file.url
                 file.generatedFileName
 
