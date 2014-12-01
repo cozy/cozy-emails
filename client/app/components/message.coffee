@@ -452,6 +452,9 @@ module.exports = React.createClass
                         "body {
                             font-family: 'Source Sans Pro';
                         }",
+                        "img {
+                            max-width: 100%;
+                        }",
                         "blockquote {
                             margin-left: .5em;
                             padding-left: .5em;
