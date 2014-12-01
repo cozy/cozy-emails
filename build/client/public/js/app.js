@@ -2659,9 +2659,28 @@ module.exports = Compose = React.createClass({
     }, null)));
   },
   _initCompose: function() {
-    var node, range, rect;
+    var node, r, range, rect, s;
     this.getDOMNode().scrollIntoView();
     if (this.state.composeInHTML) {
+      if (Array.isArray(this.state.to) && this.state.to.length > 0 && this.state.subject !== '') {
+        node = this.refs.html.getDOMNode();
+        jQuery(node).focus();
+        if (!this.props.settings.get('composeOnTop')) {
+          node = node.lastChild;
+          if (node != null) {
+            node.scrollIntoView(false);
+            node.innerHTML = "<br \>";
+            s = window.getSelection();
+            r = document.createRange();
+            r.selectNodeContents(node);
+            s.removeAllRanges();
+            s.addRange(r);
+            document.execCommand('delete', false, null);
+          }
+        }
+      } else {
+        document.getElementById('compose-to').focus();
+      }
       return jQuery('#email-compose .rt-editor').on('keypress', function(e) {
         if (e.keyCode === 13) {
           return setTimeout(function() {
@@ -2744,24 +2763,27 @@ module.exports = Compose = React.createClass({
         }
       });
     } else {
-      node = this.refs.content.getDOMNode();
-      rect = node.getBoundingClientRect();
-      node.scrollTop = node.scrollHeight - rect.height;
-      if (typeof node.selectionStart === "number") {
-        node.selectionStart = node.selectionEnd = node.value.length;
-      } else if (typeof node.createTextRange !== "undefined") {
-        node.focus();
-        range = node.createTextRange();
-        range.collapse(false);
-        range.select();
+      if (Array.isArray(this.state.to) && this.state.to.length > 0 && this.state.subject !== '') {
+        node = this.refs.content.getDOMNode();
+        if (!this.props.settings.get('composeOnTop')) {
+          rect = node.getBoundingClientRect();
+          node.scrollTop = node.scrollHeight - rect.height;
+          if (typeof node.selectionStart === "number") {
+            node.selectionStart = node.selectionEnd = node.value.length;
+          } else if (typeof node.createTextRange !== "undefined") {
+            node.focus();
+            range = node.createTextRange();
+            range.collapse(false);
+            range.select();
+          }
+        }
+        return node.focus();
+      } else {
+        return document.getElementById('compose-to').focus();
       }
-      return node.focus();
     }
   },
   componentDidMount: function() {
-    return this._initCompose();
-  },
-  componentDidUpdate: function() {
     return this._initCompose();
   },
   getInitialState: function(forceDefault) {
@@ -5167,14 +5189,17 @@ module.exports = React.createClass({
           var doc, font, rect, rules, s;
           doc = frame.contentDocument || frame.contentWindow.document;
           if (doc != null) {
-            s = document.createElement('style');
-            doc.head.appendChild(s);
-            font = "./fonts/sourcesanspro/SourceSansPro-Regular";
-            rules = ["@font-face{\n  font-family: 'Source Sans Pro';\n  font-weight: 400;\n  font-style: normal;\n  font-stretch: normal;\n  src: url('" + font + ".eot') format('embedded-opentype'),\n       url('" + font + ".otf.woff') format('woff'),\n       url('" + font + ".otf') format('opentype'),\n       url('" + font + ".ttf') format('truetype');\n}", "body { font-family: 'Source Sans Pro'; }", "blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue; color: blue; }", "blockquote blockquote { border-color: red !important; color: red; }", "blockquote blockquote blockquote { border-color: green !important; color: green; }", "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }", "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }"];
-            rules.forEach(function(rule, idx) {
-              return s.sheet.insertRule(rule, idx);
-            });
-            doc.body.innerHTML = _this._htmlContent;
+            if (!doc.getElementById('cozystyle')) {
+              s = document.createElement('style');
+              s.id = "cozystyle";
+              doc.head.appendChild(s);
+              font = "./fonts/sourcesanspro/SourceSansPro-Regular";
+              rules = ["@font-face{\n  font-family: 'Source Sans Pro';\n  font-weight: 400;\n  font-style: normal;\n  font-stretch: normal;\n  src: url('" + font + ".eot') format('embedded-opentype'),\n       url('" + font + ".otf.woff') format('woff'),\n       url('" + font + ".otf') format('opentype'),\n       url('" + font + ".ttf') format('truetype');\n}", "body { font-family: 'Source Sans Pro'; }", "blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue; color: blue; }", "blockquote blockquote { border-color: red !important; color: red; }", "blockquote blockquote blockquote { border-color: green !important; color: green; }", "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }", "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }"];
+              rules.forEach(function(rule, idx) {
+                return s.sheet.insertRule(rule, idx);
+              });
+              doc.body.innerHTML = _this._htmlContent;
+            }
             rect = doc.body.getBoundingClientRect();
             return frame.style.height = "" + (rect.height + 60) + "px";
           } else {
@@ -5780,7 +5805,7 @@ module.exports = React.createClass({
       onClick: this.handleChange
     }, a({
       role: "menuitem"
-    }, t("settings label listStyle compact")))))))), this._renderOption('displayConversation'), this._renderOption('composeInHTML'), this._renderOption('messageDisplayHTML'), this._renderOption('messageDisplayImages'), this._renderOption('messageConfirmDelete'), this._renderOption('displayPreview'), fieldset(null, legend(null, t('settings plugins')), (function() {
+    }, t("settings label listStyle compact")))))))), this._renderOption('displayConversation'), this._renderOption('composeInHTML'), this._renderOption('composeOnTop'), this._renderOption('messageDisplayHTML'), this._renderOption('messageDisplayImages'), this._renderOption('messageConfirmDelete'), this._renderOption('displayPreview'), fieldset(null, legend(null, t('settings plugins')), (function() {
       var _ref1, _results;
       _ref1 = this.state.settings.plugins;
       _results = [];
@@ -5850,6 +5875,7 @@ module.exports = React.createClass({
         SettingsActionCreator.edit(settings);
         return SettingsActionCreator.setRefresh(target.value);
       case 'composeInHTML':
+      case 'composeOnTop':
       case 'displayConversation':
       case 'messageDisplayHTML':
       case 'messageDisplayImages':
@@ -7361,206 +7387,6 @@ module.exports = Router = (function(_super) {
 })(Backbone.Router);
 });
 
-;require.register("locales/en", function(exports, require, module) {
-module.exports = {
-  "app loading": "Loading…",
-  "app back": "Back",
-  "app cancel": "Cancel",
-  "app menu": "Menu",
-  "app search": "Search…",
-  "app alert close": "Close",
-  "app unimplemented": "Not implemented yet",
-  "app error": "Argh, I'm unable to perform this action, please try again",
-  "compose": "Compose new email",
-  "compose default": 'Hello, how are you doing today?',
-  "compose from": "From",
-  "compose to": "To",
-  "compose to help": "Recipients list",
-  "compose cc": "Cc",
-  "compose cc help": "Copy list",
-  "compose bcc": "Bcc",
-  "compose bcc help": "Hidden copy list",
-  "compose subject": "Subject",
-  "compose subject help": "Message subject",
-  "compose reply prefix": "Re: ",
-  "compose reply separator": "\n\nOn %{date}, %{sender} wrote \n",
-  "compose forward prefix": "Fwd: ",
-  "compose forward separator": "\n\nOn %{date}, %{sender} wrote \n",
-  "compose action draft": "Save draft",
-  "compose action send": "Send",
-  "compose action delete": "Delete draft",
-  "compose toggle cc": "Cc",
-  "compose toggle bcc": "Bcc",
-  "compose error no dest": "You can not send a message to nobody",
-  "compose error no subject": "Please set a subject",
-  "menu compose": "Compose",
-  "menu account new": "New Mailbox",
-  "menu settings": "Parameters",
-  "menu mailbox total": "%{smart_count} message|||| %{smart_count} messages",
-  "menu mailbox unread": ", %{smart_count} unread message ||||, %{smart_count} unread messages ",
-  "menu mailbox new": " and %{smart_count} new message|||| and %{smart_count} new messages ",
-  "list empty": "No email in this box.",
-  "list search empty": "No result found for the query \"%{query}\".",
-  "list count": "%{smart_count} message in this box |||| %{smart_count} messages in this box",
-  "list search count": "%{smart_count} result found. |||| %{smart_count} results found.",
-  "list filter": "Filter",
-  "list filter all": "All",
-  "list filter unseen": "Unseen",
-  "list filter flagged": "Important",
-  "list sort": "Sort",
-  "list sort date": "Date",
-  "list sort subject": "Subject",
-  "list option compact": "Compact",
-  "list next page": "More messages",
-  "list end": "This is the end of the road",
-  "list mass no message": "No message selected",
-  "list delete confirm": "Do you really want to delete %{nb} messages?",
-  "mail receivers": "To: ",
-  "mail receivers cc": "Cc: ",
-  "mail action reply": "Reply",
-  "mail action reply all": "Reply all",
-  "mail action forward": "Forward",
-  "mail action delete": "Delete",
-  "mail action mark": "Mark as…",
-  "mail action copy": "Copy…",
-  "mail action move": "Move…",
-  "mail action more": "More…",
-  "mail action headers": "Headers",
-  "mail mark spam": "Spam",
-  "mail mark nospam": "No spam",
-  "mail mark fav": "Important",
-  "mail mark nofav": "Not important",
-  "mail mark read": "Read",
-  "mail mark unread": "Unread",
-  "mail confirm delete": "Do you really want to delete message “%{subject}”?",
-  "mail action conversation delete": "Delete conversation",
-  "mail action conversation move": "Move conversation",
-  "mail action conversation seen": "Mark conversation as read",
-  "mail action conversation unseen": "Mark conversation as unread",
-  "account new": "New account",
-  "account edit": "Edit account",
-  "account add": "Add",
-  "account save": "Save",
-  "account label": "Label",
-  "account name short": "A short mailbox name",
-  "account user name": "Your name",
-  "account user fullname": "Your name, as it will be displayed",
-  "account address": "Email address",
-  "account address placeholder": "Your email address",
-  "account password": "Password",
-  "account sending server": "Sending server",
-  "account receiving server": "IMAP server",
-  "account port": "Port",
-  "account SSL": "Use SSL",
-  "account TLS": "Use STARTTLS",
-  "account remove": "Remove",
-  "account remove confirm": "Do you really want to remove this account?",
-  "account draft mailbox": "Draft box",
-  "account sent mailbox": "Sent box",
-  "account trash mailbox": "Trash",
-  "account mailboxes": "Folders",
-  "account newmailbox label": "New Folder",
-  "account newmailbox placeholder": "Name",
-  "account newmailbox parent": "Parent:",
-  "account confirm delbox": "Do you really want to delete this box and everything in it?",
-  "account tab account": "Account",
-  "account tab mailboxes": "Folders",
-  "account errors": "Some data are missing or invalid",
-  "account type": "Account type",
-  "account updated": "Account updated",
-  "account creation ok": "Yeah! The account has been successfully created. Now select the mailboxes you want to see in the menu",
-  "account refreshed": "Account refreshed",
-  "account identifiers": "Identification",
-  "account actions": "Actions",
-  "account danger zone": "Danger Zone",
-  "mailbox create ok": "Folder created",
-  "mailbox create ko": "Error creating folder",
-  "mailbox update ok": "Folder updated",
-  "mailbox update ko": "Error updating folder",
-  "mailbox delete ok": "Folder deleted",
-  "mailbox delete ko": "Error deleting folder",
-  "mailbox title edit": "Rename folder",
-  "mailbox title delete": "Delete folder",
-  "mailbox title edit save": "Save",
-  "mailbox title edit cancel": "Cancel",
-  "mailbox title add": "Add new folder",
-  "mailbox title add cancel": "Cancel",
-  "mailbox title favorite": "Folder is displayed",
-  "mailbox title not favorite": "Folder not displayed",
-  "mailbox title total": "Total",
-  "mailbox title unread": "Unread",
-  "mailbox title new": "New",
-  "config error auth": "Wrong connection parameters",
-  "config error imapPort": "Wrong IMAP port",
-  "config error imapServer": "Wrong IMAP server",
-  "config error imapTLS": "Wrong IMAP TLS",
-  "config error smtpPort": "Wrong SMTP Port",
-  "config error smtpServer": "Wrong SMTP Server",
-  "config error nomailboxes": "No folder in this account, please create one",
-  "message action sent ok": "Message sent",
-  "message action sent ko": "Error sending message: ",
-  "message action draft ok": "Message saved",
-  "message action draft ko": "Error saving message: ",
-  "message action delete ok": "Message “%{subject}” deleted",
-  "message action delete ko": "Error deleting message: ",
-  "message action move ok": "Message moved",
-  "message action move ko": "Error moving message: ",
-  "message action mark ok": "Message marked",
-  "message action mark ko": "Error marking message: ",
-  "conversation move ok": "Conversation moved",
-  "conversation move ko": "Error moving conversation",
-  "conversation delete ok": "Conversation deleted",
-  "conversation delete ko": "Error deleting conversation",
-  "conversation seen ok": "Conversation marked as read",
-  "conversation seen ko": "Error",
-  "conversation unseen ok": "Conversation marked as unread",
-  "conversation unseen ko": "Error",
-  "message images warning": "Display of images inside message has been blocked",
-  "message images display": "Display images",
-  "message html display": "Display HTML",
-  "message delete no trash": "Please select a Trash folder",
-  "message undelete": "Undo message deletion",
-  "message undelete ok": "Message undeleted",
-  "message undelete error": "Undo not available",
-  "settings title": "Settings",
-  "settings button save": "Save",
-  "settings label mpp": "Messages per page",
-  "settings label refresh": "Check for new messages every… (in minutes)",
-  "settings plugins": "Add ons",
-  "settings label composeInHTML": "Rich message editor",
-  "settings label displayConversation": "Display conversations",
-  "settings label displayPreview": "Display message preview",
-  "settings label messageDisplayHTML": "Display message in HTML",
-  "settings label messageDisplayImages": "Display images inside messages",
-  "settings label messageConfirmDelete": "Confirm before deleting a message",
-  "settings label listStyle": "Message list style",
-  "settings label listStyle default": "Normal",
-  "settings label listStyle compact": "Compact",
-  "settings lang": "Language",
-  "settings lang en": "English",
-  "settings lang fr": "Français",
-  "picker drop here": "Drop files here",
-  "mailbox pick one": "Pick one",
-  "mailbox pick null": "No box for this",
-  "task account-fetch": 'Refreshing %{account}',
-  "task box-fetch": 'Refreshing %{box}',
-  "task apply-diff-fetch": 'Fetching mails from %{box} of %{account}',
-  "task apply-diff-remove": 'Deleting mails from %{box} of %{account}',
-  "task recover-uidvalidity": 'Analysing',
-  "there were errors": '%{smart_count} error. |||| %{smart_count} errors.',
-  "modal please report": "Please transmit this information to cozy.",
-  "modal please contribute": "Please contribute",
-  "validate must not be empty": "Mandatory field",
-  "toast hide": "Hide alerts",
-  "toast show": "Display alerts",
-  "toast close all": "Close all alerts",
-  "contact form": "Select contacts",
-  "contact form placeholder": "contact name",
-  "contact create success": "%{contact} has been added to your contacts",
-  "contact create error": "Error adding to your contacts : {error}"
-};
-});
-
 ;require.register("locales/fr", function(exports, require, module) {
 module.exports = {
   "app loading": "Chargement…",
@@ -7728,6 +7554,7 @@ module.exports = {
   "settings label refresh": "Vérifier les nouveaux messages toutes les… (en minutes)",
   "settings plugins": "Modules complémentaires",
   "settings label composeInHTML": "Éditeur riche",
+  "settings label composeOnTop": "Répondre au dessus du message",
   "settings label displayConversation": "Afficher les conversations",
   "settings label displayPreview": "Prévisualiser les messages",
   "settings label messageDisplayHTML": "Afficher les messages en HTML",
@@ -7940,7 +7767,7 @@ AccountStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var _accounts, _newAccountError, _newAccountWaiting, _selectedAccount, _selectedMailbox;
+  var getMailbox, setMailbox, _accounts, _newAccountError, _newAccountWaiting, _selectedAccount, _selectedMailbox;
 
   __extends(AccountStore, _super);
 
@@ -7969,6 +7796,30 @@ AccountStore = (function(_super) {
   _newAccountWaiting = false;
 
   _newAccountError = null;
+
+  getMailbox = function(accountID, boxID) {
+    var _ref;
+    return (_ref = _accounts.get(accountID)) != null ? _ref.get(boxID) : void 0;
+  };
+
+  setMailbox = function(accountID, boxID, boxData) {
+    var account, mailboxes, selectedAccountID, selectedMailboxID, _ref;
+    account = _accounts.get(accountID);
+    mailboxes = account.get('mailboxes');
+    mailboxes = mailboxes.map(function(box) {
+      if (box.get('id') === boxID) {
+        return AccountTranslator.mailboxToImmutable(boxData);
+      } else {
+        return box;
+      }
+    }).toOrderedMap();
+    account = account.set('mailboxes', mailboxes);
+    _accounts = _accounts.set(accountID, account);
+    selectedAccountID = _selectedAccount.get('id');
+    _selectedAccount = _accounts.get(selectedAccountID);
+    selectedMailboxID = _selectedMailbox.get('id');
+    return _selectedMailbox = _selectedAccount != null ? (_ref = _selectedAccount.get('mailboxes')) != null ? _ref.get(selectedMailboxID) : void 0 : void 0;
+  };
 
   AccountStore.prototype._setCurrentAccount = function(account) {
     return _selectedAccount = account;
@@ -8030,9 +7881,13 @@ AccountStore = (function(_super) {
     handle(ActionTypes.MAILBOX_DELETE, function(rawAccount) {
       return onUpdate(rawAccount);
     });
-    return handle(ActionTypes.REMOVE_ACCOUNT, function(accountID) {
+    handle(ActionTypes.REMOVE_ACCOUNT, function(accountID) {
       _accounts = _accounts["delete"](accountID);
       this._setCurrentAccount(this.getDefault());
+      return this.emit('change');
+    });
+    return handle(ActionTypes.RECEIVE_MAILBOX_UPDATE, function(boxData) {
+      setMailbox(boxData.accountID, boxData.id, boxData);
       return this.emit('change');
     });
   };
@@ -8479,7 +8334,9 @@ MessageStore = (function(_super) {
     handle(ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage);
     handle(ActionTypes.RECEIVE_RAW_MESSAGES, function(messages) {
       var message, next, url, _i, _len;
-      SocketUtils.changeRealtimeScope(messages.mailboxID);
+      if (messages.mailboxID) {
+        SocketUtils.changeRealtimeScope(messages.mailboxID);
+      }
       if (messages.links != null) {
         if (messages.links.next != null) {
           _params = {};
@@ -9220,7 +9077,7 @@ module.exports = MessageUtils = {
         message.html = "<p><br /></p>\n<p>" + (t('compose reply separator', {
           date: dateHuman,
           sender: sender
-        })) + "</p>\n<blockquote>" + html + "</blockquote>";
+        })) + "</p>\n<blockquote>" + html + "</blockquote>\n<p><br /></p><p><br /></p>";
         break;
       case ComposeActions.REPLY_ALL:
         message.to = this.getReplyToAddress(inReplyTo);
@@ -9525,7 +9382,7 @@ module.exports = {
 });
 
 ;require.register("utils/socketio_utils", function(exports, require, module) {
-var ActionTypes, AppDispatcher, dispatchAs, pathToSocketIO, socket, url;
+var ActionTypes, AppDispatcher, dispatchAs, pathToSocketIO, scope, setServerScope, socket, url;
 
 AppDispatcher = require('../app_dispatcher');
 
@@ -9548,6 +9405,12 @@ dispatchAs = function(action) {
   };
 };
 
+scope = {};
+
+setServerScope = function() {
+  return socket.emit('change_scope', scope);
+};
+
 socket.on('refresh.status', dispatchAs(ActionTypes.RECEIVE_REFRESH_STATUS));
 
 socket.on('refresh.create', dispatchAs(ActionTypes.RECEIVE_REFRESH_UPDATE));
@@ -9562,75 +9425,60 @@ socket.on('message.update', dispatchAs(ActionTypes.RECEIVE_RAW_MESSAGE));
 
 socket.on('message.delete', dispatchAs(ActionTypes.RECEIVE_MESSAGE_DELETE));
 
+socket.on('mailbox.update', dispatchAs(ActionTypes.RECEIVE_MAILBOX_UPDATE));
+
+socket.on('connect', function() {
+  return setServerScope();
+});
+
+socket.on('reconnect', function() {
+  return setServerScope();
+});
+
 exports.acknowledgeRefresh = function(taskid) {
   return socket.emit('mark_ack', taskid);
 };
 
 exports.changeRealtimeScope = function(boxid, date) {
-  return socket.emit('change_scope', {
+  scope = {
     mailboxID: boxid,
     before: date
-  });
+  };
+  return setServerScope();
 };
 });
 
 ;require.register("utils/translators/account_translator", function(exports, require, module) {
-var MailboxFlags, toRawObject,
+var AccountTranslator, MailboxFlags,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 MailboxFlags = require('../../constants/app_constants').MailboxFlags;
 
-module.exports = {
-  toImmutable: function(rawAccount) {
-    var box, checkAttribs, mailbox, mailboxes, _i, _len, _ref;
-    if ((rawAccount.draftMailbox == null) || (rawAccount.sentMailbox == null) || (rawAccount.trashMailbox == null)) {
-      mailboxes = {};
-      checkAttribs = function(box) {
-        var _ref, _ref1, _ref2, _ref3;
-        if (_ref = MailboxFlags.DRAFT, __indexOf.call(box.attribs, _ref) >= 0) {
-          mailboxes.draft = box.id;
-        }
-        if (_ref1 = MailboxFlags.SENT, __indexOf.call(box.attribs, _ref1) >= 0) {
-          mailboxes.sent = box.id;
-        }
-        if (_ref2 = MailboxFlags.TRASH, __indexOf.call(box.attribs, _ref2) >= 0) {
-          mailboxes.trash = box.id;
-        }
-        return (_ref3 = box.children) != null ? _ref3.forEach(checkAttribs) : void 0;
-      };
-      rawAccount.mailboxes.forEach(checkAttribs);
-    }
-    if ((rawAccount.draftMailbox == null) && (mailboxes.draft != null)) {
-      rawAccount.draftMailbox = mailboxes.draft;
-    }
-    if ((rawAccount.sentMailbox == null) && (mailboxes.sent != null)) {
-      rawAccount.sentMailbox = mailboxes.sent;
-    }
-    if ((rawAccount.trashMailbox == null) && (mailboxes.trash != null)) {
-      rawAccount.trashMailbox = mailboxes.trash;
-    }
-    mailboxes = Immutable.OrderedMap();
-    _ref = rawAccount.mailboxes;
-    for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-      mailbox = _ref[_i];
-      mailbox.depth = mailbox.tree.length - 1;
-      box = Immutable.Map(mailbox);
-      mailboxes = mailboxes.set(mailbox.id, box);
-    }
-    rawAccount.mailboxes = mailboxes;
-    return Immutable.Map(rawAccount);
+module.exports = AccountTranslator = {
+  mailboxToImmutable: function(raw) {
+    var box;
+    raw.depth = raw.tree.length - 1;
+    return box = Immutable.Map(raw);
   },
-  toRawObject: toRawObject = function(account) {
-    var mailboxes, _createRawObjectMailboxes;
-    _createRawObjectMailboxes = function(children) {
-      return children != null ? children.map(function(child) {
-        children = child.get('children');
-        return child.set('children', _createRawObjectMailboxes(children));
-      }).toVector() : void 0;
-    };
-    mailboxes = account.get('mailboxes');
-    account = account.set('mailboxes', _createRawObjectMailboxes(mailboxes));
-    return account.toJS();
+  toImmutable: function(raw) {
+    var mailboxes;
+    mailboxes = Immutable.Sequence(raw.mailboxes).mapKeys(function(_, box) {
+      return box.id;
+    }).map(function(box) {
+      var _ref, _ref1, _ref2;
+      if ((raw.draftMailbox == null) && (_ref = MailboxFlags.DRAFT, __indexOf.call(box.attribs, _ref) >= 0)) {
+        raw.draftMailbox = mailboxes.draft;
+      }
+      if ((raw.sentMailbox == null) && (_ref1 = MailboxFlags.SENT, __indexOf.call(box.attribs, _ref1) >= 0)) {
+        raw.sentMailbox = mailboxes.sent;
+      }
+      if ((raw.trashMailbox == null) && (_ref2 = MailboxFlags.TRASH, __indexOf.call(box.attribs, _ref2) >= 0)) {
+        raw.trashMailbox = mailboxes.trash;
+      }
+      return AccountTranslator.mailboxToImmutable(box);
+    }).toOrderedMap();
+    raw.mailboxes = mailboxes;
+    return Immutable.Map(raw);
   }
 };
 });
@@ -9800,7 +9648,7 @@ module.exports = {
   },
   editAccount: function(account, callback) {
     var rawAccount;
-    rawAccount = AccountTranslator.toRawObject(account);
+    rawAccount = account.toJS();
     return request.put("account/" + rawAccount.id).send(rawAccount).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {

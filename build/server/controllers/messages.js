@@ -170,12 +170,11 @@ module.exports.listByMailbox = function(req, res, next) {
     if (result.messages == null) {
       result.messages = [];
     }
-    result.messages.map(function(msg) {
-      return msg.toClientObject();
-    });
     return res.send(200, {
       mailboxID: mailboxID,
-      messages: result.messages,
+      messages: result.messages.map(function(msg) {
+        return msg.toClientObject();
+      }),
       count: result.count,
       links: links
     });
@@ -416,7 +415,7 @@ module.exports.send = function(req, res, next) {
 };
 
 module.exports.fetchConversation = function(req, res, next) {
-  return Message.byConversationId(req.params.conversationID, function(err, messages) {
+  return Message.byConversationID(req.params.conversationID, function(err, messages) {
     if (err) {
       return next(err);
     }

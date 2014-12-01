@@ -8,7 +8,7 @@ sanitizeHtml = require('sanitize-html');
 REGEXP = {
   hasReOrFwD: /^(Re|Fwd)/i,
   subject: /(?:(?:Re|Fwd)(?:\[[\d+]\])?\s?:\s?)*(.*)/i,
-  messageId: /<([^<>]+)>/
+  messageID: /<([^<>]+)>/
 };
 
 IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren'];
@@ -32,9 +32,9 @@ module.exports = {
       return false;
     }
   },
-  normalizeMessageID: function(messageId) {
+  normalizeMessageID: function(messageID) {
     var match;
-    match = messageId.match(REGEXP.messageId);
+    match = messageID.match(REGEXP.messageID);
     if (match) {
       return match[1];
     } else {
@@ -61,27 +61,30 @@ module.exports = {
     return boxes;
   },
   sanitizeHTML: function(html, messageId, attachments) {
-    html = html.replace(/cid:/gim, 'cid;', function(url) {
-      var attachment, cid, name, _ref;
-      url = url.toString();
-      if (0 === url.indexOf('cid;')) {
-        cid = url.substring(4);
-        attachment = attachments.filter(function(att) {
-          return att.contentId === cid;
-        });
-        name = (_ref = attachment[0]) != null ? _ref.fileName : void 0;
-        if (name) {
-          return "/message/" + messageId + "/attachments/" + name;
-        } else {
-          return null;
-        }
-      } else {
-        return url;
-      }
-    });
     html = sanitizeHtml(html, {
-      allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'head', 'link', 'meta']),
-      allowedClasses: false
+      allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'head', 'meta']),
+      allowedAttributes: sanitizeHtml.defaults.allowedTags.concat(['style', 'class', 'background']),
+      allowedClasses: false,
+      allowedSchemes: sanitizeHtml.defaults.allowedSchemes.concat(['cid']),
+      transformTags: {
+        'img': function(tag, attribs) {
+          var attachment, cid, name, _ref;
+          if ((attribs.src != null) && 0 === attribs.src.indexOf('cid:')) {
+            cid = attribs.src.substring(4);
+            attachment = attachments.filter(function(att) {
+              return att.contentId === cid;
+            });
+            name = (_ref = attachment[0]) != null ? _ref.fileName : void 0;
+            if (name != null) {
+              attribs.src = "/message/" + messageId + "/attachments/" + name;
+            }
+          }
+          return {
+            tagName: 'img',
+            attribs: attribs
+          };
+        }
+      }
     });
     return html;
   }

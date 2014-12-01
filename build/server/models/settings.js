@@ -30,6 +30,10 @@ module.exports = Settings = americano.getModel('MailsSettings', {
     type: Boolean,
     "default": true
   },
+  composeOnTop: {
+    type: Boolean,
+    "default": false
+  },
   messageDisplayHTML: {
     type: Boolean,
     "default": true

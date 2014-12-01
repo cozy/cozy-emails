@@ -2598,6 +2598,9 @@ textarea:active,
 .compose-toggle a {
   padding: 0 1em;
 }
+.compose-input {
+  position: relative;
+}
 .compose-from {
   line-height: 2em;
   color: #444;
@@ -3008,18 +3011,24 @@ textarea:active,
   clear: both;
   margin-top: 1em;
 }
-.message-list.compact .message > a,
-.message-list.compact .message > span {
+.message-list.compact .message a.wrapper,
+.message-list.compact .message span.wrapper {
   padding: 1px 0;
 }
 .message-list.compact .fa-user,
 .message-list.compact .avatar,
 .message-list.compact .select {
   font-size: 1.5em;
-  margin: 0;
   width: 1em;
   height: 1.1em;
   margin: -0.1em 0;
+  padding-top: 0.1em;
+}
+.message-list.compact input[type="checkbox"] {
+  height: auto;
+  width: auto;
+  margin: 0 -0.2em 0 0.2em;
+  cursor: pointer;
 }
 .message-list-option:first-child {
   display: none;

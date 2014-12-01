@@ -12,6 +12,9 @@ module.exports = Message = americano.getModel('Message', {
   mailboxIDs: function(x) {
     return x;
   },
+  hasTwin: function(x) {
+    return x;
+  },
   flags: function(x) {
     return x;
   },
@@ -150,7 +153,7 @@ Message.updateOrCreate = function(message, callback) {
 
 Message.fetchOrUpdate = function(box, mid, uid, callback) {
   log.debug("fetchOrUpdate", box.id, mid, uid);
-  return Message.byMessageId(box.accountID, mid, function(err, existing) {
+  return Message.byMessageID(box.accountID, mid, function(err, existing) {
     if (err) {
       return callback(err);
     }
@@ -158,8 +161,8 @@ Message.fetchOrUpdate = function(box, mid, uid, callback) {
       log.debug("        add");
       return existing.addToMailbox(box, uid, callback);
     } else if (existing) {
-      log.debug("        evil twin, ignore");
-      return callback(null);
+      log.debug("        twin");
+      return existing.markTwin(box, uid, callback);
     } else {
       log.debug("        fetch");
       return setTimeout(function() {
@@ -167,6 +170,20 @@ Message.fetchOrUpdate = function(box, mid, uid, callback) {
       }, 50);
     }
   });
+};
+
+Message.prototype.markTwin = function(box, uid, callback) {
+  var hasTwin, _ref;
+  hasTwin = this.hasTwin || [];
+  if (_ref = box.id, __indexOf.call(hasTwin, _ref) < 0) {
+    return callback(null);
+  }
+  hasTwin.push(box.id);
+  return this.updateAttributes({
+    changes: {
+      hasTwin: hasTwin
+    }
+  }, callback);
 };
 
 Message.UIDsInRange = function(mailboxID, min, max, callback) {
@@ -190,7 +207,7 @@ Message.UIDsInRange = function(mailboxID, min, max, callback) {
   });
 };
 
-Message.byMessageId = function(accountID, messageID, callback) {
+Message.byMessageID = function(accountID, messageID, callback) {
   messageID = mailutils.normalizeMessageID(messageID);
   return Message.rawRequest('dedupRequest', {
     key: [accountID, 'mid', messageID],
@@ -208,7 +225,7 @@ Message.byMessageId = function(accountID, messageID, callback) {
   });
 };
 
-Message.byConversationId = function(conversationID, callback) {
+Message.byConversationID = function(conversationID, callback) {
   return Message.rawRequest('byConversationId', {
     key: conversationID,
     include_docs: true
@@ -505,17 +522,17 @@ Message.prototype.imap_applyChanges = function(newflags, flagsOps, newmailboxIDs
             }
           }, function(cb) {
             var paths;
-            paths = boxOps.addTo.map(function(destId) {
-              return boxIndex[destId].path;
+            paths = boxOps.addTo.map(function(destID) {
+              return boxIndex[destID].path;
             });
             return imap.multicopy(firstuid, paths, function(err, uids) {
-              var destId, i, _k, _ref1;
+              var destID, i, _k, _ref1;
               if (err) {
                 return callback(err);
               }
               for (i = _k = 0, _ref1 = uids.length - 1; _k <= _ref1; i = _k += 1) {
-                destId = boxOps.addTo[i];
-                newmailboxIDs[destId] = uids[i];
+                destID = boxOps.addTo[i];
+                newmailboxIDs[destID] = uids[i];
               }
               return cb(null);
             });
@@ -581,7 +598,7 @@ Message.createFromImapMessage = function(mail, box, uid, callback) {
       };
     });
   }
-  return Message.findConversationId(mail, function(err, conversationID) {
+  return Message.findConversationID(mail, function(err, conversationID) {
     if (err) {
       return callback(err);
     }
@@ -610,9 +627,9 @@ Message.prototype.storeAttachments = function(attachments, callback) {
   })(this), callback);
 };
 
-Message.findConversationId = function(mail, callback) {
+Message.findConversationID = function(mail, callback) {
   var key, keys, references, _ref;
-  log.debug("findConversationId");
+  log.debug("findConversationID");
   if (mail.headers['x-gm-thrid']) {
     return callback(null, mail.headers['x-gm-thrid']);
   }
@@ -722,7 +739,7 @@ Message.prototype.doASAP = function(operation, callback) {
 
 Message.recoverChangedUID = function(box, messageID, newUID, callback) {
   log.debug("recoverChangedUID");
-  return Message.byMessageId(box.accountID, messageID, function(err, message) {
+  return Message.byMessageID(box.accountID, messageID, function(err, message) {
     var mailboxIDs;
     if (err) {
       return callback(err);

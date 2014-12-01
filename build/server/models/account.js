@@ -232,7 +232,7 @@ Account.prototype.toClientObject = function(callback) {
       }
       return _.pick(row.doc, 'id', 'label', 'attribs', 'tree');
     });
-    return Mailbox.getCounts(function(err, counts) {
+    return Mailbox.getCounts(null, function(err, counts) {
       var box, count, _i, _len, _ref;
       if (err) {
         return callback(err);

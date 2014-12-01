@@ -86,14 +86,14 @@ Imap.prototype.delBox2 = function(name, callback) {
   });
 };
 
-Imap.prototype.fetchBoxMessageIds = function(callback) {
+Imap.prototype.fetchBoxMessageIDs = function(callback) {
   var results;
-  log.debug("imap#fetchBoxMessageIds");
+  log.debug("imap#fetchBoxMessageIDs");
   results = {};
   return this.search([['ALL']], (function(_this) {
     return function(err, uids) {
       var fetch;
-      log.debug("imap#fetchBoxMessageIds#result", uids);
+      log.debug("imap#fetchBoxMessageIDs#result", uids);
       if (err) {
         return callback(err);
       }

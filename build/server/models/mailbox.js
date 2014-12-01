@@ -336,7 +336,7 @@ Mailbox.prototype.getDiff = function(laststep, limit, callback) {
       ], cbRelease);
     };
   })(this), function(err, results) {
-    var cozyFlags, cozyIds, cozyMessage, flagsChange, id, imapFlags, imapMessage, imapUIDs, toFetch, toRemove, uid;
+    var cozyFlags, cozyIDs, cozyMessage, flagsChange, id, imapFlags, imapMessage, imapUIDs, toFetch, toRemove, uid;
     log.debug("diff#results");
     if (err) {
       return callback(err);
@@ -344,13 +344,13 @@ Mailbox.prototype.getDiff = function(laststep, limit, callback) {
     if (!results) {
       return callback(null, null);
     }
-    cozyIds = results[0], imapUIDs = results[1];
+    cozyIDs = results[0], imapUIDs = results[1];
     toFetch = [];
     toRemove = [];
     flagsChange = [];
     for (uid in imapUIDs) {
       imapMessage = imapUIDs[uid];
-      cozyMessage = cozyIds[uid];
+      cozyMessage = cozyIDs[uid];
       if (cozyMessage) {
         imapFlags = imapMessage[1];
         cozyFlags = cozyMessage[1];
@@ -368,8 +368,8 @@ Mailbox.prototype.getDiff = function(laststep, limit, callback) {
         });
       }
     }
-    for (uid in cozyIds) {
-      cozyMessage = cozyIds[uid];
+    for (uid in cozyIDs) {
+      cozyMessage = cozyIDs[uid];
       if (!imapUIDs[uid]) {
         toRemove.push(id = cozyMessage[0]);
       }
@@ -524,7 +524,7 @@ Mailbox.prototype.recoverChangedUIDValidity = function(imap, callback) {
     if (err) {
       return callback(err);
     }
-    return imap.fetchBoxMessageIds(function(err, messages) {
+    return imap.fetchBoxMessageIDs(function(err, messages) {
       var reporter, uids;
       uids = Object.keys(messages);
       reporter = ImapReporter.recoverUIDValidty(box, uids.length);
@@ -575,13 +575,18 @@ Mailbox.removeOrphans = function(existings, callback) {
   });
 };
 
-Mailbox.getCounts = function(callback) {
-  return Message.rawRequest('byMailboxRequest', {
+Mailbox.getCounts = function(mailboxID, callback) {
+  var options;
+  options = mailboxID ? {
+    startkey: ['date', mailboxID],
+    endkey: ['date', mailboxID, {}]
+  } : {
     startkey: ['date', ""],
-    endkey: ['date', {}],
-    reduce: true,
-    group_level: 3
-  }, function(err, rows) {
+    endkey: ['date', {}]
+  };
+  options.reduce = true;
+  options.group_level = 3;
+  return Message.rawRequest('byMailboxRequest', options, function(err, rows) {
     var result;
     if (err) {
       return callback(err);
