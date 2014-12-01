@@ -3003,7 +3003,10 @@ textarea:active,
 }
 .message-list .message.edited span.wrapper {
   margin: 0;
-  padding: 0.8em 0.25em 0.75em 0.25em;
+  padding: 0em 0.25em 0em 0.25em;
+}
+.message-list .message.edited .participants {
+  margin-left: 1em;
 }
 .message-list .message.edited .select,
 .message-list .avatar-wrapper:hover .select {
@@ -3016,7 +3019,6 @@ textarea:active,
 .message-list .avatar-wrapper:hover .avatar {
   display: none;
 }
-.message-list .message.edited .participants,
 .message-list .avatar-wrapper:hover .participants {
   margin-left: 1.4em;
 }
