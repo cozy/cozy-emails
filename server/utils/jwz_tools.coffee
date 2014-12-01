@@ -43,17 +43,20 @@ module.exports =
         return boxes
 
     sanitizeHTML: (html, messageId, attachments) ->
+        allowedTags = sanitizeHtml.defaults.allowedTags.concat [
+            'img'
+            'head'
+            'meta'
+        ]
+        allowedAttributes = sanitizeHtml.defaults.allowedAttributes
+        allowedTags.forEach (tag) ->
+            if allowedAttributes[tag]?
+                allowedAttributes[tag] = allowedAttributes[tag].concat ['style', 'class', 'background']
+            else
+                allowedAttributes[tag] = ['style', 'class', 'background']
         html = sanitizeHtml html,
-            allowedTags: sanitizeHtml.defaults.allowedTags.concat [
-                'img'
-                'head'
-                'meta'
-            ]
-            allowedAttributes: sanitizeHtml.defaults.allowedTags.concat [
-                'style'
-                'class'
-                'background'
-            ]
+            allowedTags: allowedTags
+            allowedAttributes: allowedAttributes
             allowedClasses: false
             allowedSchemes: sanitizeHtml.defaults.allowedSchemes.concat ['cid']
             transformTags:
