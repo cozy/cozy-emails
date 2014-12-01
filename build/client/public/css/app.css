@@ -1655,6 +1655,9 @@ input {
 .form-horizontal .checkbox-inline {
   padding-top: 0.66em;
 }
+.dropdown-menu {
+  cursor: pointer;
+}
 @font-face {
   font-family: styled;
   src: url("/fonts/maven-pro-light-200.otf");
@@ -2347,12 +2350,20 @@ textarea:active,
   box-shadow: none;
   border: 0;
   color: #34a6ff;
+  -webkit-transition: color 0.3s ease;
+  -moz-transition: color 0.3s ease;
+  -o-transition: color 0.3s ease;
+  -ms-transition: color 0.3s ease;
+  transition: color 0.3s ease;
 }
 .conversation .thread .message .messageToolbox .btn.btn-default:hover {
   color: #fe8800;
 }
 .conversation .thread .message .messageToolbox .btn.btn-default.reply {
   color: #5c5;
+}
+.conversation .thread .message .messageToolbox .btn.btn-default.reply:hover {
+  color: #fe8800;
 }
 .conversation .thread .message .messageNavigation {
   margin-bottom: 0;
@@ -2363,6 +2374,11 @@ textarea:active,
   box-shadow: none;
   border: 0;
   color: #34a6ff;
+  -webkit-transition: color 0.3s ease;
+  -moz-transition: color 0.3s ease;
+  -o-transition: color 0.3s ease;
+  -ms-transition: color 0.3s ease;
+  transition: color 0.3s ease;
 }
 .conversation .thread .message .messageNavigation .btn.btn-default:hover {
   color: #fe8800;
@@ -2607,6 +2623,9 @@ textarea:active,
 .input-group.contact-group {
   padding: 0 15px;
 }
+.contact {
+  top: -1px;
+}
 .compose-toggle {
   float: right;
 }
@@ -2745,6 +2764,11 @@ textarea:active,
   text-align: center;
   vertical-align: middle;
   text-decoration: none;
+  -webkit-transition: background 0.3s ease;
+  -moz-transition: background 0.3s ease;
+  -o-transition: background 0.3s ease;
+  -ms-transition: background 0.3s ease;
+  transition: background 0.3s ease;
 }
 #menu .menu-item i,
 #menu .menu-item .item-label,

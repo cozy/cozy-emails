@@ -5190,17 +5190,17 @@ module.exports = React.createClass({
       frame = this.refs.content.getDOMNode();
       loadContent = (function(_this) {
         return function(e) {
-          var doc, font, rect, rules, s, _ref2;
+          var doc, font, rect, rules, styleEl, _ref2;
           doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
           if (doc != null) {
             frame.dataset.messageID = _this.props.message.get('id');
-            s = document.createElement('style');
-            s.id = "cozystyle";
-            doc.head.appendChild(s);
-            font = "./fonts/sourcesanspro/SourceSansPro-Regular";
+            styleEl = document.createElement('style');
+            styleEl.id = "cozystyle";
+            doc.head.appendChild(styleEl);
+            font = "../fonts/sourcesanspro/SourceSansPro-Regular";
             rules = ["@font-face{\n  font-family: 'Source Sans Pro';\n  font-weight: 400;\n  font-style: normal;\n  font-stretch: normal;\n  src: url('" + font + ".eot') format('embedded-opentype'),\n       url('" + font + ".otf.woff') format('woff'),\n       url('" + font + ".otf') format('opentype'),\n       url('" + font + ".ttf') format('truetype');\n}", "body { font-family: 'Source Sans Pro'; }", "img { max-width: 100%; }", "blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue; color: blue; }", "blockquote blockquote { border-color: red !important; color: red; }", "blockquote blockquote blockquote { border-color: green !important; color: green; }", "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }", "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }"];
             rules.forEach(function(rule, idx) {
-              return s.sheet.insertRule(rule, idx);
+              return styleEl.sheet.insertRule(rule, idx);
             });
             doc.body.innerHTML = _this._htmlContent;
             rect = doc.body.getBoundingClientRect();
