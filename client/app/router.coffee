@@ -6,7 +6,7 @@ module.exports = class Router extends PanelRouter
 
     patterns:
         'account.config':
-            pattern: 'account/:accountID/config'
+            pattern: 'account/:accountID/config/:tab'
             fluxAction: 'showConfigAccount'
         'account.new':
             pattern: 'account/new'
@@ -65,7 +65,9 @@ module.exports = class Router extends PanelRouter
                     sort:  "-"
             when 'account.config'
                 defaultAccount = AccountStore.getDefault()?.get 'id'
-                defaultParameters = accountID: defaultAccount
+                defaultParameters =
+                    accountID: defaultAccount
+                    tab: 'account'
             when 'search'
                 defaultParameters =
                     query: ""

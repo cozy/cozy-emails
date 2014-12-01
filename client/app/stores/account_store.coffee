@@ -51,12 +51,13 @@ class AccountStore extends Store
 
         account = account.set 'mailboxes', mailboxes
         _accounts = _accounts.set accountID, account
-        selectedAccountID = _selectedAccount.get 'id'
-        _selectedAccount = _accounts.get selectedAccountID
-        selectedMailboxID = _selectedMailbox.get 'id'
-        _selectedMailbox = _selectedAccount
-            ?.get('mailboxes')
-            ?.get(selectedMailboxID)
+
+        if selectedAccountID = _selectedAccount?.get 'id'
+            _selectedAccount = _accounts.get selectedAccountID
+            if selectedMailboxID = _selectedMailbox?.get 'id'
+                _selectedMailbox = _selectedAccount
+                    ?.get('mailboxes')
+                    ?.get(selectedMailboxID)
 
     _setCurrentAccount: (account) ->
         _selectedAccount = account
