@@ -1,52 +1,33 @@
 {MailboxFlags} = require '../../constants/app_constants'
 
-module.exports =
+module.exports = AccountTranslator =
+
+    mailboxToImmutable: (raw) ->
+        raw.depth = raw.tree.length - 1
+        box = Immutable.Map raw
 
     # Creates an immutable account from a raw account object
-    toImmutable: (rawAccount) ->
+    toImmutable: (raw) ->
 
-        # If needed, use mailboxes attribs to set draft, sent and trash
-        if not rawAccount.draftMailbox? or
-        not rawAccount.sentMailbox? or
-        not rawAccount.trashMailbox?
-            mailboxes = {}
-            checkAttribs = (box) ->
-                if MailboxFlags.DRAFT in box.attribs
-                    mailboxes.draft = box.id
-                if MailboxFlags.SENT in box.attribs
-                    mailboxes.sent = box.id
-                if MailboxFlags.TRASH in box.attribs
-                    mailboxes.trash = box.id
-                box.children?.forEach checkAttribs
-            rawAccount.mailboxes.forEach checkAttribs
+        # Creates Immutable OrderedMap of mailboxes
+        mailboxes = Immutable.Sequence raw.mailboxes
+            .mapKeys (_, box) -> box.id
+            .map (box) ->
+                # If needed, use mailboxes attribs to set draft, sent and trash
+                # @TODO, the server does it, remove this ?
+                if not raw.draftMailbox? and MailboxFlags.DRAFT in box.attribs
+                    raw.draftMailbox = mailboxes.draft
 
-        if not rawAccount.draftMailbox? and mailboxes.draft?
-            rawAccount.draftMailbox = mailboxes.draft
-        if not rawAccount.sentMailbox? and mailboxes.sent?
-            rawAccount.sentMailbox = mailboxes.sent
-        if not rawAccount.trashMailbox? and mailboxes.trash?
-            rawAccount.trashMailbox = mailboxes.trash
+                if not raw.sentMailbox? and MailboxFlags.SENT in box.attribs
+                    raw.sentMailbox = mailboxes.sent
 
-        # Recursively creates Immutable OrderedMap of mailboxes
-        mailboxes = Immutable.OrderedMap()
-        for mailbox in rawAccount.mailboxes
-            mailbox.depth = mailbox.tree.length - 1
-            box = Immutable.Map mailbox
-            mailboxes = mailboxes.set mailbox.id, box
+                if not raw.trashMailbox? and MailboxFlags.TRASH in box.attribs
+                    raw.trashMailbox = mailboxes.trash
 
-        rawAccount.mailboxes = mailboxes
-        return Immutable.Map rawAccount
+                return AccountTranslator.mailboxToImmutable box
+
+            .toOrderedMap()
 
 
-    toRawObject: toRawObject = (account) ->
-
-        _createRawObjectMailboxes = (children) ->
-            children?.map (child) ->
-                children = child.get 'children'
-                return child.set 'children', _createRawObjectMailboxes children
-            .toVector()
-
-        mailboxes = account.get 'mailboxes'
-        account = account.set 'mailboxes', _createRawObjectMailboxes mailboxes
-
-        return account.toJS()
+        raw.mailboxes = mailboxes
+        return Immutable.Map raw

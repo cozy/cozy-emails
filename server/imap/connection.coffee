@@ -77,11 +77,11 @@ Imap::delBox2 = (name, callback) ->
 
 # fetch all message-id in open box
 # return An object {uid1:messageid1, uid2:messageid2} ...
-Imap::fetchBoxMessageIds = (callback) ->
-    log.debug "imap#fetchBoxMessageIds"
+Imap::fetchBoxMessageIDs = (callback) ->
+    log.debug "imap#fetchBoxMessageIDs"
     results = {}
     @search [['ALL']], (err, uids) =>
-        log.debug "imap#fetchBoxMessageIds#result", uids
+        log.debug "imap#fetchBoxMessageIDs#result", uids
         return callback err if err
         return callback null, [] if uids.length is 0
 

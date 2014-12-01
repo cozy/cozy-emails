@@ -137,7 +137,7 @@ module.exports.listByMailbox = (req, res, next) ->
             links = {}
 
         result.messages ?= []
-        result.messages.map (msg) -> msg.toClientObject()
+        result.messages = result.messages.map (msg) -> msg.toClientObject()
 
         res.send 200,
             mailboxID: mailboxID
@@ -350,7 +350,7 @@ module.exports.send = (req, res, next) ->
 
 
 module.exports.fetchConversation = (req, res, next) ->
-    Message.byConversationId req.params.conversationID, (err, messages) ->
+    Message.byConversationID req.params.conversationID, (err, messages) ->
         return next err if err
 
         req.conversation = messages

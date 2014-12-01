@@ -34,6 +34,30 @@ class AccountStore extends Store
     _newAccountError   = null
 
 
+
+    getMailbox = (accountID, boxID) ->
+        _accounts.get(accountID)?.get(boxID)
+
+    setMailbox = (accountID, boxID, boxData) ->
+
+        account = _accounts.get(accountID)
+        mailboxes = account.get('mailboxes')
+        mailboxes = mailboxes.map (box) ->
+            if box.get('id') is boxID
+                AccountTranslator.mailboxToImmutable boxData
+            else
+                box
+        .toOrderedMap()
+
+        account = account.set 'mailboxes', mailboxes
+        _accounts = _accounts.set accountID, account
+        selectedAccountID = _selectedAccount.get 'id'
+        _selectedAccount = _accounts.get selectedAccountID
+        selectedMailboxID = _selectedMailbox.get 'id'
+        _selectedMailbox = _selectedAccount
+            ?.get('mailboxes')
+            ?.get(selectedMailboxID)
+
     _setCurrentAccount: (account) ->
         _selectedAccount = account
     ###
@@ -87,6 +111,10 @@ class AccountStore extends Store
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
             _accounts = _accounts.delete accountID
             @_setCurrentAccount @getDefault()
+            @emit 'change'
+
+        handle ActionTypes.RECEIVE_MAILBOX_UPDATE, (boxData) ->
+            setMailbox boxData.accountID, boxData.id, boxData
             @emit 'change'
 
     ###

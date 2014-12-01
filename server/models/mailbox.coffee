@@ -270,7 +270,7 @@ Mailbox::getDiff = (laststep, limit, callback) ->
         log.debug "diff#results"
         return callback err if err
         return callback null, null unless results
-        [cozyIds, imapUIDs] = results
+        [cozyIDs, imapUIDs] = results
 
 
         toFetch = []
@@ -278,7 +278,7 @@ Mailbox::getDiff = (laststep, limit, callback) ->
         flagsChange = []
 
         for uid, imapMessage of imapUIDs
-            cozyMessage = cozyIds[uid]
+            cozyMessage = cozyIDs[uid]
             if cozyMessage
                 # this message is already in cozy, compare flags
                 imapFlags = imapMessage[1]
@@ -291,7 +291,7 @@ Mailbox::getDiff = (laststep, limit, callback) ->
                 # add it to be fetched
                 toFetch.push {uid: parseInt(uid), mid: imapMessage[0]}
 
-        for uid, cozyMessage of cozyIds
+        for uid, cozyMessage of cozyIDs
             unless imapUIDs[uid]
                 toRemove.push id = cozyMessage[0]
 
@@ -400,7 +400,7 @@ Mailbox::recoverChangedUIDValidity = (imap, callback) ->
     imap.openBox @path, (err) ->
         return callback err if err
         # @TODO : split it by 1000
-        imap.fetchBoxMessageIds (err, messages) ->
+        imap.fetchBoxMessageIDs (err, messages) ->
             # messages is a map uid -> message-id
             uids = Object.keys(messages)
             reporter = ImapReporter.recoverUIDValidty box, uids.length
@@ -436,13 +436,18 @@ Mailbox.removeOrphans = (existings, callback) ->
         , (err) ->
             callback err, boxes
 
-Mailbox.getCounts = (callback) ->
-    Message.rawRequest 'byMailboxRequest',
+Mailbox.getCounts = (mailboxID, callback) ->
+    options = if mailboxID
+        startkey: ['date', mailboxID]
+        endkey: ['date', mailboxID, {}]
+    else
         startkey: ['date', ""]
         endkey: ['date', {}]
-        reduce: true
-        group_level: 3
-    , (err, rows) ->
+
+    options.reduce = true
+    options.group_level = 3
+
+    Message.rawRequest 'byMailboxRequest', options, (err, rows) ->
         return callback err if err
         result = {}
         rows.forEach (row) ->

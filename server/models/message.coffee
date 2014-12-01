@@ -10,6 +10,7 @@ module.exports = Message = americano.getModel 'Message',
     normSubject: String      # normalized subject (no Re: ...)
     conversationID: String   # all message in thread have same conversationID
     mailboxIDs: (x) -> x     # mailboxes as an hash {boxID:uid, boxID2:uid2}
+    hasTwin: (x) -> x        # [String] mailboxIDs where this message has twin
     flags: (x) -> x          # [String] flags of the message
     headers: (x) -> x        # hash of the message headers
     from: (x) -> x           # array of {name, address}
@@ -104,23 +105,28 @@ Message.updateOrCreate = (message, callback) ->
 
 Message.fetchOrUpdate = (box, mid, uid, callback) ->
     log.debug "fetchOrUpdate", box.id, mid, uid
-    Message.byMessageId box.accountID, mid, (err, existing) ->
+    Message.byMessageID box.accountID, mid, (err, existing) ->
         return callback err if err
         if existing and not existing.isInMailbox box
             log.debug "        add"
             existing.addToMailbox box, uid, callback
         else if existing
-            log.debug "        evil twin, ignore"
             # this is the weird case when a message is in the box
             # under two different UIDs
-            # @TODO : maybe mark the message to handle modification of
-            # such messages
-            return callback null
+            log.debug "        twin"
+            existing.markTwin box, uid, callback
         else
             log.debug "        fetch"
             setTimeout ->
                 box.imap_fetchOneMail uid, callback
             , 50
+
+Message::markTwin = (box, uid, callback) ->
+    hasTwin = @hasTwin or []
+    return callback null unless box.id in hasTwin
+    hasTwin.push box.id
+    @updateAttributes changes: {hasTwin}, callback
+
 
 # Public: get the uids present in a box in cozy
 #
@@ -151,7 +157,7 @@ Message.UIDsInRange = (mailboxID, min, max, callback) ->
 # callback - Function(err, [{Message}])
 #
 # Returns void
-Message.byMessageId = (accountID, messageID, callback) ->
+Message.byMessageID = (accountID, messageID, callback) ->
     messageID = mailutils.normalizeMessageID messageID
     Message.rawRequest 'dedupRequest',
         key: [accountID, 'mid', messageID]
@@ -171,7 +177,7 @@ Message.byMessageId = (accountID, messageID, callback) ->
 # callback - Function(err, [{Message}]
 #
 # Returns void
-Message.byConversationId = (conversationID, callback) ->
+Message.byConversationID = (conversationID, callback) ->
     Message.rawRequest 'byConversationId',
         key: conversationID
         include_docs: true
@@ -446,14 +452,14 @@ Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, boxOps, callbac
                         cb null
                 # step 3 - copy the message to all addTo
                 (cb) ->
-                    paths = boxOps.addTo.map (destId) ->
-                        boxIndex[destId].path
+                    paths = boxOps.addTo.map (destID) ->
+                        boxIndex[destID].path
 
                     imap.multicopy firstuid, paths, (err, uids) ->
                         return callback err if err
                         for i in [0..uids.length - 1] by 1
-                            destId = boxOps.addTo[i]
-                            newmailboxIDs[destId] = uids[i]
+                            destID = boxOps.addTo[i]
+                            newmailboxIDs[destID] = uids[i]
                         cb null
                 # step 4 - remove the message from all removeFrom
                 (cb) ->
@@ -514,7 +520,7 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
     # pick a method to find the conversation id
     # if there is a x-gm-thrid, use it
     # else find the thread using References or Subject
-    Message.findConversationId mail, (err, conversationID) ->
+    Message.findConversationID mail, (err, conversationID) ->
         return callback err if err
         mail.conversationID = conversationID
         Message.create mail, (err, jdbMessage) ->
@@ -535,8 +541,8 @@ Message::storeAttachments = (attachments, callback) ->
 
     , callback
 
-Message.findConversationId = (mail, callback) ->
-    log.debug "findConversationId"
+Message.findConversationID = (mail, callback) ->
+    log.debug "findConversationID"
     if mail.headers['x-gm-thrid']
         return callback null, mail.headers['x-gm-thrid']
 
@@ -635,7 +641,7 @@ Message::doASAP = (operation, callback) ->
 
 Message.recoverChangedUID = (box, messageID, newUID, callback) ->
     log.debug "recoverChangedUID"
-    Message.byMessageId box.accountID, messageID, (err, message) ->
+    Message.byMessageID box.accountID, messageID, (err, message) ->
         return callback err if err
         # no need to recover if the message doesnt exist
         return callback null unless message
