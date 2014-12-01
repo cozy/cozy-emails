@@ -27,7 +27,6 @@
         font-weight bold
 
     .message
-        border-left .25em solid transparent
         cursor pointer
         font-size 0.8em
 
@@ -115,7 +114,6 @@
        //background linear-gradient(to bottom, #fff 0%, lightcolor 15%, lightcolor 85%, #fff 100%)
     .message.active
        background lightblue
-       border-left .25em solid basecolor
 
         a
         span
@@ -136,22 +134,19 @@
       padding 0 .5em
 
     .message:hover
-       border-left .25em solid actioncolor
        background lightorange
-
-       a
-          padding 0.75em .25em
 
     .message.edited
        span.wrapper
            margin 0 
            padding .8em .25em .75em .25em
 
-    .message:hover
     .message.edited
+    .avatar-wrapper:hover
         .select
              display inherit
-        .avatar
+             margin 0.49em
+
         .fa-user
              display none
 
