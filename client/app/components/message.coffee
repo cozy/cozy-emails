@@ -432,10 +432,10 @@ module.exports = React.createClass
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
                     frame.dataset.messageID = @props.message.get('id')
-                    s = document.createElement 'style'
-                    s.id = "cozystyle"
-                    doc.head.appendChild(s)
-                    font = "./fonts/sourcesanspro/SourceSansPro-Regular"
+                    styleEl = document.createElement 'style'
+                    styleEl.id = "cozystyle"
+                    doc.head.appendChild styleEl
+                    font = "../fonts/sourcesanspro/SourceSansPro-Regular"
                     rules = [
                         """
                         @font-face{
@@ -467,7 +467,7 @@ module.exports = React.createClass
                         "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }",
                     ]
                     rules.forEach (rule, idx) ->
-                        s.sheet.insertRule rule, idx
+                        styleEl.sheet.insertRule rule, idx
                     doc.body.innerHTML = @_htmlContent
                     rect = doc.body.getBoundingClientRect()
                     frame.style.height = "#{rect.height + 60}px"
