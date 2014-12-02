@@ -22,6 +22,7 @@ module.exports =
       "compose bcc"               : "Bcc"
       "compose bcc help"          : "Hidden copy list"
       "compose subject"           : "Subject"
+      "compose content"           : "Content"
       "compose subject help"      : "Message subject"
       "compose reply prefix"      : "Re: "
       "compose reply separator"   : "\n\nOn %{date}, %{sender} wrote \n"
