@@ -594,6 +594,7 @@ MessageContent = React.createClass
         if @refs.content
             frame = @refs.content.getDOMNode()
             loadContent = (e) =>
+                step = 0
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
                     styleEl = document.createElement 'style'
@@ -634,11 +635,24 @@ MessageContent = React.createClass
                         styleEl.sheet.insertRule rule, idx
                     doc.body.innerHTML = @props.html
                     updateHeight = (e) ->
+                        if e?
+                            e.preventDefault()
+                            e.stopPropagation()
                         rect = doc.body.getBoundingClientRect()
                         frame.style.height = "#{rect.height + 60}px"
+                        step++
+                        # In Chrome, onresize loops
+                        if step > 10
+                            doc.body.onload = null
+                            frame.contentWindow.onresize = null
+                    frame.style.height = "32px"
                     updateHeight()
-                    doc.body.addEventListener 'load', updateHeight, true
-                    frame.contentWindow?.addEventListener 'resize', updateHeight, true
+                    doc.body.onload = updateHeight
+                    frame.contentWindow.onresize = updateHeight
+                    # In Chrome, addEventListener is forbidden by iframe sandboxing
+                    #doc.body.addEventListener 'load', updateHeight, true
+                    #frame.contentWindow?.addEventListener 'resize', updateHeight, true
+
                 else
                     # try to display text only
                     @setState messageDisplayHTML: false
