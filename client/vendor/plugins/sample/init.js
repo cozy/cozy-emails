@@ -12,6 +12,7 @@ window.plugins.sample = {
      * @param {DOMNode} root node of added subtree
      */
     condition: function (node) {
+      //return node.querySelector('iframe.content') !== null;
       return false;
     },
     /**
@@ -20,6 +21,26 @@ window.plugins.sample = {
      * @param {DOMNode} root node of added subtree
      */
     action: function (node) {
+      console.log('Add', node);
+    }
+  },
+  onDelete: {
+    /**
+     * Should return true if plugin applies on added subtree
+     *
+     * @param {DOMNode} root node of added subtree
+     */
+    condition: function (node) {
+      //return node.querySelector('iframe.content') !== null;
+      return false;
+    },
+    /**
+     * Perform action on added subtree
+     *
+     * @param {DOMNode} root node of added subtree
+     */
+    action: function (node) {
+      console.log('Del', node);
     }
   },
   /**
@@ -36,7 +57,7 @@ window.plugins.sample = {
   },
   listeners: {
     'VIEW_ACTION': function (params) {
-      console.log('Got View action', params.detail);
+      //console.log('Got View action', params.detail);
     }
   }
 };
