@@ -609,11 +609,19 @@ MessageContent = React.createClass
                         frame.style.height = "#{height + 60}px"
                         step++
                         # In Chrome, onresize loops
-                        setTimeout(updateHeight, 100) unless step > 20
+                        #setTimeout(updateHeight, 100) unless step > 20
+                        if step > 10
+
+                            doc.body.removeEventListener 'load'
+
+                            frame.contentWindow?.removeEventListener 'resize'
+
+
                     frame.style.height = "32px"
                     updateHeight()
                     doc.body.onload = updateHeight
-                    frame.contentWindow.onresize = updateHeight
+                    #frame.contentWindow.onresize = updateHeight
+                    window.onresize = updateHeight
                     # In Chrome, addEventListener is forbidden by iframe sandboxing
                     #doc.body.addEventListener 'load', updateHeight, true
                     #frame.contentWindow?.addEventListener 'resize', updateHeight, true
