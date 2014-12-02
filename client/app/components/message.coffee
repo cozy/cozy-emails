@@ -632,11 +632,12 @@ MessageContent = React.createClass
                     rules.forEach (rule, idx) ->
                         styleEl.sheet.insertRule rule, idx
                     doc.body.innerHTML = @props.html
-                    updateHeight = ->
+                    updateHeight = (e) ->
                         rect = doc.body.getBoundingClientRect()
-                        frame.style.height = "#{rect.height + 80}px"
+                        frame.style.height = "#{rect.height + 60}px"
                     updateHeight()
                     doc.body.addEventListener 'load', updateHeight, true
+                    frame.contentWindow?.addEventListener 'resize', updateHeight, true
                 else
                     # try to display text only
                     @setState messageDisplayHTML: false
