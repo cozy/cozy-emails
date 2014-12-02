@@ -61,13 +61,6 @@ module.exports = React.createClass
         text = message.get 'text'
         html = message.get 'html'
         urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
-        if text
-            rich = text.replace urls, '<a href="$1" target="_blank">$1</a>', 'gim'
-            rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>')
-            rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>')
-            rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>')
-            rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>')
-            rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim')
         # @TODO Do we want to convert text only messages to HTML ?
         # /!\ if messageDisplayHTML is set, this method should always return
         # a value fo html, otherwise the content of the email flashes
@@ -76,6 +69,14 @@ module.exports = React.createClass
 
         if html and not text and not @state.messageDisplayHTML
             text = toMarkdown html
+
+        if text
+            rich = text.replace urls, '<a href="$1" target="_blank">$1</a>', 'gim'
+            rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>')
+            rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>')
+            rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>')
+            rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>')
+            rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim')
 
         return {
             id         : message.get('id')
@@ -119,7 +120,9 @@ module.exports = React.createClass
     prepareHTML: (prepared) ->
         messageDisplayHTML = true
         parser = new DOMParser()
-        html   = "<html><head></head><body>#{prepared.html}</body></html>"
+        html   = """<html><head>
+                <link rel="stylesheet" href="./mail_stylesheet.css" />
+            </head><body>#{prepared.html}</body></html>"""
         doc    = parser.parseFromString html, "text/html"
         images = []
         if not doc
@@ -137,9 +140,10 @@ module.exports = React.createClass
         for link in doc.querySelectorAll 'a[href]'
             link.target = '_blank'
         if doc?
-            @_htmlContent = doc.body.innerHTML
+            @_htmlContent = doc.documentElement.innerHTML
         else
             @_htmlContent = prepared.html
+
             #htmluri = "data:text/html;charset=utf-8;base64,
             #      #{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
         return {messageDisplayHTML, images}
@@ -569,9 +573,8 @@ MessageContent = React.createClass
                     'data-message-id': @props.message.get 'id'
                     className: 'content',
                     ref: 'content',
-                    sandbox: 'allow-same-origin allow-popups',
                     allowTransparency: true,
-                    frameBorder: 0,
+                    frameBorder: 0
         else
             div className: 'row',
                 #div className: "content-action",
@@ -597,49 +600,12 @@ MessageContent = React.createClass
                 step = 0
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
-                    styleEl = document.createElement 'style'
-                    styleEl.id = "cozystyle"
-                    doc.head.appendChild styleEl
-                    font = "./fonts/sourcesanspro/SourceSansPro-Regular"
-                    rules = [
-                        """
-                        @font-face{
-                          font-family: 'Source Sans Pro';
-                          font-weight: 400;
-                          font-style: normal;
-                          font-stretch: normal;
-                          src: url('#{font}.eot') format('embedded-opentype'),
-                               url('#{font}.otf.woff') format('woff'),
-                               url('#{font}.otf') format('opentype'),
-                               url('#{font}.ttf') format('truetype');
-                        }
-                        """,
-                        "body {
-                            font-family: 'Source Sans Pro';
-                        }",
-                        "img {
-                            max-width: 100%;
-                        }",
-                        "blockquote {
-                            margin-left: .5em;
-                            padding-left: .5em;
-                            border-left: 2px solid blue;
-                            color: blue;
-                        }",
-                        "blockquote blockquote { border-color: red !important; color: red; }",
-                        "blockquote blockquote blockquote { border-color: green !important; color: green; }",
-                        "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }",
-                        "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }",
-                    ]
-                    rules.forEach (rule, idx) ->
-                        styleEl.sheet.insertRule rule, idx
                     doc.body.innerHTML = @props.html
                     updateHeight = (e) ->
-                        if e?
-                            e.preventDefault()
-                            e.stopPropagation()
-                        rect = doc.body.getBoundingClientRect()
-                        frame.style.height = "#{rect.height + 60}px"
+                        e?.preventDefault()
+                        e?.stopPropagation()
+                        height = doc.body.getBoundingClientRect().height
+                        frame.style.height = "#{height + 60}px"
                         step++
                         # In Chrome, onresize loops
                         if step > 10
@@ -658,6 +624,7 @@ MessageContent = React.createClass
                     @setState messageDisplayHTML: false
 
             if type is 'mount'
+                try loadContent()
                 frame.addEventListener 'load', loadContent
             else
                 loadContent()
