@@ -122,6 +122,7 @@ module.exports = React.createClass
         parser = new DOMParser()
         html   = """<html><head>
                 <link rel="stylesheet" href="./mail_stylesheet.css" />
+                <style>body { visibility: hidden; }</style>
             </head><body>#{prepared.html}</body></html>"""
         doc    = parser.parseFromString html, "text/html"
         images = []
@@ -600,7 +601,7 @@ MessageContent = React.createClass
                 step = 0
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
-                    doc.body.innerHTML = @props.html
+                    doc.documentElement.innerHTML = @props.html
                     updateHeight = (e) ->
                         e?.preventDefault()
                         e?.stopPropagation()
@@ -608,9 +609,7 @@ MessageContent = React.createClass
                         frame.style.height = "#{height + 60}px"
                         step++
                         # In Chrome, onresize loops
-                        if step > 10
-                            doc.body.onload = null
-                            frame.contentWindow.onresize = null
+                        setTimeout(updateHeight, 100) unless step > 20
                     frame.style.height = "32px"
                     updateHeight()
                     doc.body.onload = updateHeight
