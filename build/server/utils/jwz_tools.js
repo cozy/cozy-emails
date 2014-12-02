@@ -86,7 +86,7 @@ module.exports = {
             });
             name = (_ref = attachment[0]) != null ? _ref.fileName : void 0;
             if (name != null) {
-              attribs.src = "/message/" + messageId + "/attachments/" + name;
+              attribs.src = "message/" + messageId + "/attachments/" + name;
             }
           }
           return {
