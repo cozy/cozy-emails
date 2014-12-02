@@ -151,7 +151,7 @@ module.exports = Menu = React.createClass
             url = @buildUrl
                 direction: 'first'
                 action: 'account.config'
-                parameters: [accountID]
+                parameters: [accountID, 'account']
                 fullWidth: true # /!\ Hide second panel when switching account
 
         toggleActive = =>
