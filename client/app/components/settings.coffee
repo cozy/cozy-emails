@@ -19,35 +19,20 @@ module.exports = React.createClass
                 div className: 'error', @props.error
 
             form className: 'form-horizontal',
-                div className: 'form-group',
-                    label htmlFor: 'settings-mpp', className: classLabel,
-                        t "settings label mpp"
-                    div className: 'col-sm-3',
-                        input
-                            id: 'settings-mpp',
-                            value: @state.settings.messagesPerPage,
-                            onChange: @handleChange,
-                            'data-target': 'messagesPerPage',
-                            type: 'number',
-                            min: 5,
-                            max: 100,
-                            step: 5,
-                            className: 'form-control'
-
-                div className: 'form-group',
-                    label htmlFor: 'settings-refresh', className: classLabel,
-                        t "settings label refresh"
-                    div className: 'col-sm-3',
-                        input
-                            id: 'settings-refresh',
-                            value: @state.settings.refreshInterval,
-                            onChange: @handleChange,
-                            'data-target': 'refreshInterval',
-                            type: 'number',
-                            min: 1,
-                            max: 15,
-                            step: 1,
-                            className: 'form-control'
+                #div className: 'form-group',
+                #    label htmlFor: 'settings-mpp', className: classLabel,
+                #        t "settings label mpp"
+                #    div className: 'col-sm-3',
+                #        input
+                #            id: 'settings-mpp',
+                #            value: @state.settings.messagesPerPage,
+                #            onChange: @handleChange,
+                #            'data-target': 'messagesPerPage',
+                #            type: 'number',
+                #            min: 5,
+                #            max: 100,
+                #            step: 5,
+                #            className: 'form-control'
 
                 # Lang
                 div className: 'form-group',
@@ -145,17 +130,11 @@ module.exports = React.createClass
         event.preventDefault()
         target = event.currentTarget
         switch target.dataset.target
-            when 'messagesPerPage'
-                settings = @state.settings
-                settings.messagesPerPage = target.value
-                @setState({settings: settings})
-                SettingsActionCreator.edit settings
-            when 'refreshInterval'
-                settings = @state.settings
-                settings.refreshInterval = target.value
-                @setState({settings: settings})
-                SettingsActionCreator.edit settings
-                SettingsActionCreator.setRefresh target.value
+            #when 'messagesPerPage'
+            #    settings = @state.settings
+            #    settings.messagesPerPage = target.value
+            #    @setState({settings: settings})
+            #    SettingsActionCreator.edit settings
             when 'composeInHTML'
             ,    'composeOnTop'
             ,    'displayConversation'

@@ -8,7 +8,7 @@ casper.test.begin 'Test Message Actions', (test) ->
 
     casper.start casper.cozy.startUrl, ->
         casper.evaluate ->
-            window.cozyMails.setSetting 'messagesPerPage', 100
+            #window.cozyMails.setSetting 'messagesPerPage', 100
             window.cozyMails.setSetting 'messageDisplayHTML', true
             window.cozyMails.setSetting 'messageDisplayImages', false
             window.cozyMails.setSetting 'displayConversation', true

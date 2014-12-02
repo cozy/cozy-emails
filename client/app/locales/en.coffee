@@ -184,9 +184,7 @@ module.exports =
       # Settings
       "settings title"             : "Settings"
       "settings button save"       : "Save"
-      "settings label mpp"         : "Messages per page"
-      "settings label refresh"     : "Check for new messages every…
-                                        (in minutes)"
+      #"settings label mpp"         : "Messages per page"
       "settings plugins"           : "Add ons"
       "settings label composeInHTML"        : "Rich message editor"
       "settings label composeOnTop"         : "Reply on top of message"
@@ -201,6 +199,7 @@ module.exports =
       "settings lang"             : "Language"
       "settings lang en"          : "English"
       "settings lang fr"          : "Français"
+      "settings save error"       : "Unable to save settings, please try again"
 
       # File picker
       "picker drop here"           : "Drop files here"

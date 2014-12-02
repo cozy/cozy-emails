@@ -7,8 +7,7 @@ describe "settings changes", ->
         client.get "/settings", (err, res, body) =>
             res.statusCode.should.equal 200
 
-            body.should.have.property 'messagesPerPage'      , 25
-            body.should.have.property 'refreshInterval'      , 5
+            #body.should.have.property 'messagesPerPage'      , 25
             body.should.have.property 'displayConversation'  , true
             body.should.have.property 'displayPreview'       , true
             body.should.have.property 'composeInHTML'        , true
@@ -24,15 +23,14 @@ describe "settings changes", ->
     it "When I change some settings (first time)", (done) ->
 
         changes =
-            messagesPerPage: 20
+            #messagesPerPage: 20
             messageDisplayHTML: false
 
 
         client.put "/settings", changes, (err, res, body) =>
             res.statusCode.should.equal 200
 
-            body.should.have.property 'messagesPerPage'      , 20
-            body.should.have.property 'refreshInterval'      , 5
+            #body.should.have.property 'messagesPerPage'      , 20
             body.should.have.property 'displayConversation'  , true
             body.should.have.property 'displayPreview'       , true
             body.should.have.property 'composeInHTML'        , true
@@ -50,8 +48,7 @@ describe "settings changes", ->
         client.get "/settings", (err, res, body) =>
             res.statusCode.should.equal 200
 
-            body.should.have.property 'messagesPerPage'      , 20
-            body.should.have.property 'refreshInterval'      , 5
+            #body.should.have.property 'messagesPerPage'      , 20
             body.should.have.property 'displayConversation'  , true
             body.should.have.property 'displayPreview'       , true
             body.should.have.property 'composeInHTML'        , true

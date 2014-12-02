@@ -190,9 +190,7 @@ module.exports =
       # Settings
       "settings title"             : "Paramètres"
       "settings button save"       : "Enregistrer"
-      "settings label mpp"         : "Nombre de messages par page"
-      "settings label refresh"     : "Vérifier les nouveaux messages toutes
-                                        les… (en minutes)"
+      # "settings label mpp"         : "Nombre de messages par page"
       "settings plugins"           : "Modules complémentaires"
       "settings label composeInHTML"        : "Éditeur riche"
       "settings label composeOnTop"         : "Répondre au dessus du message"
@@ -208,6 +206,7 @@ module.exports =
       "settings lang"             : "Langue"
       "settings lang en"          : "English"
       "settings lang fr"          : "Français"
+      "settings save error"       : "Erreur d'enregistrement des paramètres, veuillez ré-essayer"
 
       # File picker
       "picker drop here"           : "Déposer les fichiers ici"

@@ -4,8 +4,7 @@ _ = require 'lodash'
 Any = (x) -> x
 
 module.exports = Settings = americano.getModel 'MailsSettings',
-    messagesPerPage      : type : Number,  default : 25
-    refreshInterval      : type : Number,  default : 5
+    #messagesPerPage      : type : Number,  default : 25
     displayConversation  : type : Boolean, default : true
     displayPreview       : type : Boolean, default : true
     composeInHTML        : type : Boolean, default : true
