@@ -5424,7 +5424,8 @@ MessageContent = React.createClass({
       frame = this.refs.content.getDOMNode();
       loadContent = (function(_this) {
         return function(e) {
-          var doc, font, rules, styleEl, updateHeight, _ref2, _ref3;
+          var doc, font, rules, step, styleEl, updateHeight, _ref2;
+          step = 0;
           doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
           if (doc != null) {
             styleEl = document.createElement('style');
@@ -5438,12 +5439,22 @@ MessageContent = React.createClass({
             doc.body.innerHTML = _this.props.html;
             updateHeight = function(e) {
               var rect;
+              if (e != null) {
+                e.preventDefault();
+                e.stopPropagation();
+              }
               rect = doc.body.getBoundingClientRect();
-              return frame.style.height = "" + (rect.height + 60) + "px";
+              frame.style.height = "" + (rect.height + 60) + "px";
+              step++;
+              if (step > 10) {
+                doc.body.onload = null;
+                return frame.contentWindow.onresize = null;
+              }
             };
+            frame.style.height = "32px";
             updateHeight();
-            doc.body.addEventListener('load', updateHeight, true);
-            return (_ref3 = frame.contentWindow) != null ? _ref3.addEventListener('resize', updateHeight, true) : void 0;
+            doc.body.onload = updateHeight;
+            return frame.contentWindow.onresize = updateHeight;
           } else {
             return _this.setState({
               messageDisplayHTML: false
