@@ -470,7 +470,7 @@ Account.prototype.imap_scanBoxesForSpecialUse = function(boxes, callback) {
   for (_j = 0, _len1 = boxes.length; _j < _len1; _j++) {
     box = boxes[_j];
     if (changes.favorites.length < 4) {
-      if ((_ref = box.id, __indexOf.call(changesfavorites, _ref) < 0) && box.isSelectable()) {
+      if ((_ref = box.id, __indexOf.call(changes.favorites, _ref) < 0) && box.isSelectable()) {
         changes.favorites.push(box.id);
       }
     }

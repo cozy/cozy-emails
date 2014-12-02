@@ -88,10 +88,10 @@ ImapPool = (function() {
     return Account.find(this.accountID, (function(_this) {
       return function(err, account) {
         if (err) {
-          return _this._fatal(err);
+          return _this._giveUp(err);
         }
         if (!account) {
-          return _this._fatal(new NotFound("Account " + _this.accountID));
+          return _this._giveUp(new NotFound("Account " + _this.accountID));
         }
         _this.account = account;
         return _this._deQueue();
