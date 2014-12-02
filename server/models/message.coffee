@@ -393,8 +393,9 @@ Message::applyPatchOperations = (patch, callback) ->
             flagsOps.remove.push @flags[index]
 
         else if operation.op is 'replace'
-            flagsOps.remove.push @flags[index]
-            flagsOps.add.push operation.value
+            if @flags[index] isnt operation.value
+                flagsOps.remove.push @flags[index]
+                flagsOps.add.push operation.value
 
     # create the newflags
     newflags = @flags
