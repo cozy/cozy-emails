@@ -2590,7 +2590,7 @@ module.exports = Compose = React.createClass({
     }, label({
       htmlFor: 'compose-subject',
       className: classLabel
-    }, t("content")), this.state.composeInHTML ? div({
+    }, t("compose content")), this.state.composeInHTML ? div({
       className: 'rt-editor form-control',
       ref: 'html',
       contentEditable: true,
@@ -4745,7 +4745,7 @@ module.exports = React.createClass({
       composeAction: '',
       headers: false,
       messageDisplayHTML: this.props.settings.get('messageDisplayHTML'),
-      messageDisplayImages: this.props.settings.get('messageDisplayImages')
+      messageDisplayImages: true
     };
   },
   propTypes: {
@@ -5431,7 +5431,7 @@ MessageContent = React.createClass({
           if (doc != null) {
             doc.documentElement.innerHTML = _this.props.html;
             updateHeight = function(e) {
-              var height;
+              var height, _ref3;
               if (e != null) {
                 e.preventDefault();
               }
@@ -5441,14 +5441,15 @@ MessageContent = React.createClass({
               height = doc.body.getBoundingClientRect().height;
               frame.style.height = "" + (height + 60) + "px";
               step++;
-              if (!(step > 20)) {
-                return setTimeout(updateHeight, 100);
+              if (step > 10) {
+                doc.body.removeEventListener('load');
+                return (_ref3 = frame.contentWindow) != null ? _ref3.removeEventListener('resize') : void 0;
               }
             };
             frame.style.height = "32px";
             updateHeight();
             doc.body.onload = updateHeight;
-            return frame.contentWindow.onresize = updateHeight;
+            return window.onresize = updateHeight;
           } else {
             return _this.setState({
               messageDisplayHTML: false
@@ -5474,9 +5475,10 @@ MessageContent = React.createClass({
   },
   displayImages: function(event) {
     event.preventDefault();
-    return this.setState({
+    this.setState({
       messageDisplayImages: true
     });
+    return this.render();
   },
   displayHTML: function(event) {
     event.preventDefault();
@@ -7401,6 +7403,7 @@ module.exports = {
   "compose bcc": "Bcc",
   "compose bcc help": "Hidden copy list",
   "compose subject": "Subject",
+  "compose content": "Content",
   "compose subject help": "Message subject",
   "compose reply prefix": "Re: ",
   "compose reply separator": "\n\nOn %{date}, %{sender} wrote \n",
@@ -7601,6 +7604,7 @@ module.exports = {
   "compose bcc": "Cci",
   "compose bcc help": "Liste des destinataires en copie cachée",
   "compose subject": "Objet",
+  "compose content": "Contenu",
   "compose subject help": "Objet du message",
   "compose reply prefix": "Re: ",
   "compose reply separator": "\n\nLe %{date}, %{sender} a écrit \n",
