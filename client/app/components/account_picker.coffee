@@ -20,7 +20,11 @@ module.exports = React.createClass
     renderNoChoice: ->
         account = @props.accounts.get @props.valueLink.value
 
-        p className: 'form-control-static col-sm-3', account.get 'label'
+        if @props.type is 'address'
+            label = "\"#{account.get('name') or account.get('label')}\" <#{account.get 'login'}>"
+        else
+            label = account.get 'label'
+        p className: 'form-control-static col-sm-6', label
 
 
     renderPicker:  ->
@@ -30,7 +34,7 @@ module.exports = React.createClass
         if @props.type is 'address'
             label = "\"#{account.get('name') or account.get('label')}\" <#{account.get 'login'}>"
         else
-            label = account.label
+            label = account.get 'label'
 
         div null,
             span
