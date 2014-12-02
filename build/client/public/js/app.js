@@ -1031,38 +1031,45 @@ module.exports = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var classes, titleLabel;
+    var tabAccountClass, tabAccountUrl, tabMailboxClass, tabMailboxUrl, titleLabel;
     if (this.state.id) {
       titleLabel = t("account edit");
     } else {
       titleLabel = t("account new");
     }
-    classes = {};
-    ['account', 'mailboxes'].map((function(_this) {
-      return function(e) {
-        return classes[e] = classer({
-          active: _this.state.tab === e
-        });
-      };
-    })(this));
+    tabAccountClass = tabMailboxClass = '';
+    tabAccountUrl = tabMailboxUrl = null;
+    if (!this.props.tab || this.props.tab === 'account') {
+      tabAccountClass = 'active';
+      tabMailboxUrl = this.buildUrl({
+        direction: 'first',
+        action: 'account.config',
+        parameters: [this.state.id, 'mailboxes']
+      });
+    } else {
+      tabMailboxClass = 'active';
+      tabAccountUrl = this.buildUrl({
+        direction: 'first',
+        action: 'account.config',
+        parameters: [this.state.id, 'account']
+      });
+    }
     return div({
       id: 'mailbox-config'
     }, h3({
       className: null
-    }, titleLabel), this.state.tab != null ? ul({
+    }, titleLabel), this.props.tab != null ? ul({
       className: "nav nav-tabs",
       role: "tablist"
     }, li({
-      className: classes['account']
+      className: tabAccountClass
     }, a({
-      'data-target': 'account',
-      onClick: this.tabChange
+      href: tabAccountUrl
     }, t("account tab account"))), li({
-      className: classes['mailboxes']
+      className: tabMailboxClass
     }, a({
-      'data-target': 'mailboxes',
-      onClick: this.tabChange
-    }, t("account tab mailboxes")))) : void 0, !this.state.tab || this.state.tab === 'account' ? this.renderMain() : void 0, this.state.tab === 'mailboxes' ? this.renderMailboxes() : void 0);
+      href: tabMailboxUrl
+    }, t("account tab mailboxes")))) : void 0, !this.props.tab || this.props.tab === 'account' ? this.renderMain() : this.renderMailboxes());
   },
   renderError: function() {
     var message;
@@ -1529,37 +1536,26 @@ module.exports = React.createClass({
     }
   },
   onSubmit: function(event) {
-    var accountValue, afterCreation, error, errors, setError, valid, _i, _len, _ref1, _ref2;
+    var accountValue, error, errors, setError, valid, _i, _len, _ref1, _ref2;
     if (event != null) {
       event.preventDefault();
     }
     _ref1 = this.doValidate(), accountValue = _ref1.accountValue, valid = _ref1.valid;
     if (valid.valid) {
-      this.setState({
-        errors: {}
-      });
-      afterCreation = (function(_this) {
-        return function(account) {
-          var field, init, state, _i, _len, _ref2;
-          state = {};
-          init = function(field) {
-            return state[field] = account.get(field);
-          };
-          _ref2 = _this._accountFields;
-          for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-            field = _ref2[_i];
-            init(field);
-          }
-          state.newMailboxParent = null;
-          state.tab = 'mailboxes';
-          LAC.alertSuccess(t("account creation ok"));
-          return _this.setState(state);
-        };
-      })(this);
       if (this.state.id != null) {
         return AccountActionCreator.edit(accountValue, this.state.id);
       } else {
-        return AccountActionCreator.create(accountValue, afterCreation);
+        return AccountActionCreator.create(accountValue, (function(_this) {
+          return function(account) {
+            LAC.alertSuccess(t("account creation ok"));
+            return _this.redirect({
+              direction: 'first',
+              action: 'account.config',
+              parameters: [account.get('id'), 'mailboxes'],
+              fullWidth: true
+            });
+          };
+        })(this));
       }
     } else {
       errors = {};
@@ -1581,12 +1577,6 @@ module.exports = React.createClass({
     if (window.confirm(t('account remove confirm'))) {
       return AccountActionCreator.remove(this.state.id);
     }
-  },
-  tabChange: function(e) {
-    e.preventDefault();
-    return this.setState({
-      tab: e.target.dataset.target
-    });
   },
   addMailbox: function(event) {
     var mailbox;
@@ -1762,20 +1752,14 @@ module.exports = React.createClass({
     return this.setState(infos);
   },
   componentWillReceiveProps: function(props) {
-    var tab;
-    if (!props.isWaiting) {
-      if ((props.selectedAccount == null) || this.state.id !== props.selectedAccount.get('id')) {
-        tab = "account";
-      } else {
-        tab = this.state.tab;
-      }
-      return this.setState(this._accountToState(tab, props));
+    if (props.selectedAccount && !props.isWaiting) {
+      return this.setState(this._accountToState(props));
     }
   },
   getInitialState: function() {
-    return this._accountToState("account");
+    return this._accountToState(null);
   },
-  _accountToState: function(tab, props) {
+  _accountToState: function(props) {
     var account, field, init, state, _i, _j, _len, _len1, _ref1, _ref2;
     state = {
       errors: {}
@@ -1790,20 +1774,20 @@ module.exports = React.createClass({
       }
     }
     if (account != null) {
-      init = function(field) {
-        return state[field] = account.get(field);
-      };
       _ref1 = this._accountFields;
       for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
         field = _ref1[_i];
-        init(field);
+        state[field] = account.get(field);
       }
       state.newMailboxParent = null;
-      state.tab = tab;
       state.mailboxes = props.mailboxes;
       state.favoriteMailboxes = props.favoriteMailboxes;
       if (state.mailboxes.length === 0) {
-        state.tab = 'mailboxes';
+        this.redirect({
+          direction: 'first',
+          action: 'account.config',
+          parameters: [this.state.id, 'mailboxes']
+        });
       }
     } else if (Object.keys(state.errors).length === 0) {
       init = function(field) {
@@ -1824,7 +1808,6 @@ module.exports = React.createClass({
       state.accountType = 'IMAP';
       state.newMailboxParent = null;
       state.favoriteMailboxes = null;
-      state.tab = null;
     }
     return state;
   }
@@ -2272,9 +2255,7 @@ module.exports = Application = React.createClass({
       classes = {
         firstPanel: 'panel col-xs-12 col-md-12'
       };
-      if ((previous != null) && first.action === 'account.config') {
-        classes.firstPanel += ' moveFromTopRightCorner';
-      } else if ((previous != null) && previous.secondPanel) {
+      if ((previous != null) && previous.secondPanel) {
         if (previous.secondPanel.action === layout.firstPanel.action && _.difference(previous.secondPanel.parameters, layout.firstPanel.parameters).length === 0) {
           classes.firstPanel += ' expandFromRight';
         }
@@ -2303,7 +2284,7 @@ module.exports = Application = React.createClass({
     return classes;
   },
   getPanelComponent: function(panelInfo, layout) {
-    var account, accountID, conversation, conversationID, counterMessage, direction, emptyListMessage, error, favoriteMailboxes, isWaiting, mailbox, mailboxID, mailboxes, message, messageID, messages, messagesCount, query, selectedAccount, selectedMailboxID, settings;
+    var account, accountID, conversation, conversationID, counterMessage, direction, emptyListMessage, error, favoriteMailboxes, isWaiting, mailbox, mailboxID, mailboxes, message, messageID, messages, messagesCount, query, selectedAccount, selectedMailboxID, settings, tab;
     if (panelInfo.action === 'account.mailbox.messages' || panelInfo.action === 'account.mailbox.messages.full' || panelInfo.action === 'search') {
       if (panelInfo.action === 'search') {
         accountID = null;
@@ -2349,12 +2330,13 @@ module.exports = Application = React.createClass({
         emptyListMessage: emptyListMessage,
         counterMessage: counterMessage
       });
-    } else if (panelInfo.action === 'account.config' || panelInfo.action === 'account.new') {
+    } else if (panelInfo.action === 'account.config') {
       selectedAccount = AccountStore.getSelected();
       error = AccountStore.getError();
       isWaiting = AccountStore.isWaiting();
       mailboxes = AccountStore.getSelectedMailboxes();
       favoriteMailboxes = this.state.favoriteMailboxes;
+      tab = panelInfo.parameters.tab;
       if (selectedAccount && !error && mailboxes.length === 0) {
         error = {
           name: 'AccountConfigError',
@@ -2366,7 +2348,13 @@ module.exports = Application = React.createClass({
         isWaiting: isWaiting,
         selectedAccount: selectedAccount,
         mailboxes: mailboxes,
-        favoriteMailboxes: favoriteMailboxes
+        favoriteMailboxes: favoriteMailboxes,
+        tab: tab
+      });
+    } else if (panelInfo.action === 'account.new') {
+      return AccountConfig({
+        error: AccountStore.getError(),
+        isWaiting: AccountStore.isWaiting()
       });
     } else if (panelInfo.action === 'message' || panelInfo.action === 'conversation') {
       messageID = panelInfo.parameters.messageID;
@@ -3412,6 +3400,7 @@ FileItem = React.createClass({
       className: 'file-name',
       target: '_blank',
       onClick: this.doDisplay,
+      href: file.url,
       'data-file-url': file.url
     }, file.generatedFileName), div({
       className: 'file-detail'
@@ -3873,7 +3862,7 @@ module.exports = Menu = React.createClass({
       url = this.buildUrl({
         direction: 'first',
         action: 'account.config',
-        parameters: [accountID],
+        parameters: [accountID, 'account'],
         fullWidth: true
       });
     }
@@ -4173,7 +4162,7 @@ MessageList = React.createClass({
     configMailboxUrl = this.buildUrl({
       direction: 'first',
       action: 'account.config',
-      parameters: this.props.accountID,
+      parameters: [this.props.accountID, 'account'],
       fullWidth: true
     });
     classList = classer({
@@ -4519,6 +4508,8 @@ MessageItem = React.createClass({
       'data-message-id': message.get('id'),
       onClick: this.onMessageClick,
       onDoubleClick: this.onMessageDblClick
+    }, div({
+      className: 'avatar-wrapper'
     }, input({
       className: 'select',
       type: 'checkbox',
@@ -4529,7 +4520,7 @@ MessageItem = React.createClass({
       src: avatar
     }) : i({
       className: 'fa fa-user'
-    }), span({
+    })), span({
       className: 'participants'
     }, this.getParticipants(message)), div({
       className: 'preview'
@@ -4779,7 +4770,7 @@ module.exports = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   _prepareMessage: function() {
-    var fullHeaders, html, key, message, text, value, _ref2;
+    var fullHeaders, html, key, message, rich, text, urls, value, _ref2;
     message = this.props.message;
     fullHeaders = [];
     _ref2 = message.get('headers');
@@ -4793,6 +4784,16 @@ module.exports = React.createClass({
     }
     text = message.get('text');
     html = message.get('html');
+    urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim;
+    rich = text.replace(urls, '<a href="$1" target="_blank">$1</a>', 'gim');
+    rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>');
+    rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>');
+    rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>');
+    rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>');
+    rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim');
+    if (text && !html && this.state.messageDisplayHTML) {
+      html = markdown.toHTML(text);
+    }
     if (html && !text && !this.state.messageDisplayHTML) {
       text = toMarkdown(html);
     }
@@ -4805,6 +4806,7 @@ module.exports = React.createClass({
       cc: message.get('cc'),
       fullHeaders: fullHeaders,
       text: text,
+      rich: rich,
       html: html,
       date: MessageUtils.formatDate(message.get('createdAt'))
     };
@@ -4861,11 +4863,11 @@ module.exports = React.createClass({
         image = images[_i];
         hideImage(image);
       }
-      _ref2 = doc.querySelectorAll('a[href]');
-      for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-        link = _ref2[_j];
-        link.target = '_blank';
-      }
+    }
+    _ref2 = doc.querySelectorAll('a[href]');
+    for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+      link = _ref2[_j];
+      link.target = '_blank';
     }
     if (doc != null) {
       this._htmlContent = doc.body.innerHTML;
@@ -4909,7 +4911,7 @@ module.exports = React.createClass({
       }, t('message images display'))) : void 0, iframe({
         className: 'content',
         ref: 'content',
-        sandbox: 'allow-same-origin',
+        sandbox: 'allow-same-origin allow-popups',
         allowTransparency: true,
         frameBorder: 0,
         name: "message-" + message.get('id')
@@ -4917,7 +4919,11 @@ module.exports = React.createClass({
         className: 'row'
       }, div({
         className: 'preview'
-      }, p(null, prepared.text))), div({
+      }, p({
+        dangerouslySetInnerHTML: {
+          __html: prepared.rich
+        }
+      }))), div({
         className: 'clearfix'
       }));
     } else {
@@ -5185,21 +5191,20 @@ module.exports = React.createClass({
     if (this.refs.content) {
       frame = this.refs.content.getDOMNode();
       loadContent = (function(_this) {
-        return function() {
-          var doc, font, rect, rules, s;
-          doc = frame.contentDocument || frame.contentWindow.document;
+        return function(e) {
+          var doc, font, rect, rules, styleEl, _ref2;
+          doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
           if (doc != null) {
-            if (!doc.getElementById('cozystyle')) {
-              s = document.createElement('style');
-              s.id = "cozystyle";
-              doc.head.appendChild(s);
-              font = "./fonts/sourcesanspro/SourceSansPro-Regular";
-              rules = ["@font-face{\n  font-family: 'Source Sans Pro';\n  font-weight: 400;\n  font-style: normal;\n  font-stretch: normal;\n  src: url('" + font + ".eot') format('embedded-opentype'),\n       url('" + font + ".otf.woff') format('woff'),\n       url('" + font + ".otf') format('opentype'),\n       url('" + font + ".ttf') format('truetype');\n}", "body { font-family: 'Source Sans Pro'; }", "blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue; color: blue; }", "blockquote blockquote { border-color: red !important; color: red; }", "blockquote blockquote blockquote { border-color: green !important; color: green; }", "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }", "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }"];
-              rules.forEach(function(rule, idx) {
-                return s.sheet.insertRule(rule, idx);
-              });
-              doc.body.innerHTML = _this._htmlContent;
-            }
+            frame.dataset.messageID = _this.props.message.get('id');
+            styleEl = document.createElement('style');
+            styleEl.id = "cozystyle";
+            doc.head.appendChild(styleEl);
+            font = "../fonts/sourcesanspro/SourceSansPro-Regular";
+            rules = ["@font-face{\n  font-family: 'Source Sans Pro';\n  font-weight: 400;\n  font-style: normal;\n  font-stretch: normal;\n  src: url('" + font + ".eot') format('embedded-opentype'),\n       url('" + font + ".otf.woff') format('woff'),\n       url('" + font + ".otf') format('opentype'),\n       url('" + font + ".ttf') format('truetype');\n}", "body { font-family: 'Source Sans Pro'; }", "img { max-width: 100%; }", "blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue; color: blue; }", "blockquote blockquote { border-color: red !important; color: red; }", "blockquote blockquote blockquote { border-color: green !important; color: green; }", "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }", "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }"];
+            rules.forEach(function(rule, idx) {
+              return styleEl.sheet.insertRule(rule, idx);
+            });
+            doc.body.innerHTML = _this._htmlContent;
             rect = doc.body.getBoundingClientRect();
             return frame.style.height = "" + (rect.height + 60) + "px";
           } else {
@@ -6400,7 +6405,7 @@ module.exports = Topbar = React.createClass({
         configMailboxUrl = this.buildUrl({
           direction: 'first',
           action: 'account.config',
-          parameters: selectedAccount.get('id'),
+          parameters: [selectedAccount.get('id'), 'account'],
           fullWidth: true
         });
       }
@@ -6574,181 +6579,6 @@ window.onload = function() {
   ContactActionCreator = require('./actions/contact_action_creator/');
   return ContactActionCreator.searchContact();
 };
-});
-
-;require.register("libs/flux/dispatcher/Dispatcher", function(exports, require, module) {
-
-/*
-
-    -- Coffee port of Facebook's flux dispatcher. It was in ES6 and I haven't
-    been successful in adding a transpiler. --
-
-    Copyright (c) 2014, Facebook, Inc.
-    All rights reserved.
-
-    This source code is licensed under the BSD-style license found in the
-    LICENSE file in the root directory of this source tree. An additional grant
-    of patent rights can be found in the PATENTS file in the same directory.
- */
-var Dispatcher, invariant, _lastID, _prefix;
-
-invariant = require('../invariant');
-
-_lastID = 1;
-
-_prefix = 'ID_';
-
-module.exports = Dispatcher = Dispatcher = (function() {
-  function Dispatcher() {
-    this._callbacks = {};
-    this._isPending = {};
-    this._isHandled = {};
-    this._isDispatching = false;
-    this._pendingPayload = null;
-  }
-
-
-  /*
-      Registers a callback to be invoked with every dispatched payload.
-      Returns a token that can be used with `waitFor()`.
-  
-      @param {function} callback
-      @return {string}
-   */
-
-  Dispatcher.prototype.register = function(callback) {
-    var id;
-    id = _prefix + _lastID++;
-    this._callbacks[id] = callback;
-    return id;
-  };
-
-
-  /*
-      Removes a callback based on its token.
-  
-      @param {string} id
-   */
-
-  Dispatcher.prototype.unregister = function(id) {
-    var message;
-    message = 'Dispatcher.unregister(...): `%s` does not map to a ' + 'registered callback.';
-    invariant(this._callbacks[id], message, id);
-    return delete this._callbacks[id];
-  };
-
-
-  /*
-      Waits for the callbacks specified to be invoked before continuing
-      execution of the current callback. This method should only be used by a
-      callback in response to a dispatched payload.
-  
-      @param {array<string>} ids
-   */
-
-  Dispatcher.prototype.waitFor = function(ids) {
-    var id, ii, message, message2, _i, _ref, _results;
-    invariant(this._isDispatching, 'Dispatcher.waitFor(...): Must be invoked while dispatching.');
-    message = 'Dispatcher.waitFor(...): Circular dependency detected ' + 'while waiting for `%s`.';
-    message2 = 'Dispatcher.waitFor(...): `%s` does not map to a ' + 'registered callback.';
-    _results = [];
-    for (ii = _i = 0, _ref = ids.length - 1; _i <= _ref; ii = _i += 1) {
-      id = ids[ii];
-      if (this._isPending[id]) {
-        invariant(this._isHandled[id], message, id);
-        continue;
-      }
-      invariant(this._callbacks[id], message2, id);
-      _results.push(this._invokeCallback(id));
-    }
-    return _results;
-  };
-
-
-  /*
-      Dispatches a payload to all registered callbacks.
-  
-      @param {object} payload
-   */
-
-  Dispatcher.prototype.dispatch = function(payload) {
-    var id, message, _results;
-    message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + 'of a dispatch.';
-    invariant(!this._isDispatching, message);
-    this._startDispatching(payload);
-    try {
-      _results = [];
-      for (id in this._callbacks) {
-        if (this._isPending[id]) {
-          continue;
-        }
-        _results.push(this._invokeCallback(id));
-      }
-      return _results;
-    } finally {
-      this._stopDispatching();
-    }
-  };
-
-
-  /*
-      Is this Dispatcher currently dispatching.
-  
-      @return {boolean}
-   */
-
-  Dispatcher.prototype.isDispatching = function() {
-    return this._isDispatching;
-  };
-
-
-  /*
-      Call the callback stored with the given id. Also do some internal
-      bookkeeping.
-  
-      @param {string} id
-      @internal
-   */
-
-  Dispatcher.prototype._invokeCallback = function(id) {
-    this._isPending[id] = true;
-    this._callbacks[id](this._pendingPayload);
-    return this._isHandled[id] = true;
-  };
-
-
-  /*
-      Set up bookkeeping needed when dispatching.
-  
-      @param {object} payload
-      @internal
-   */
-
-  Dispatcher.prototype._startDispatching = function(payload) {
-    var id;
-    for (id in this._callbacks) {
-      this._isPending[id] = false;
-      this._isHandled[id] = false;
-    }
-    this._pendingPayload = payload;
-    return this._isDispatching = true;
-  };
-
-
-  /*
-      Clear bookkeeping used for dispatching.
-  
-      @internal
-   */
-
-  Dispatcher.prototype._stopDispatching = function() {
-    this._pendingPayload = null;
-    return this._isDispatching = false;
-  };
-
-  return Dispatcher;
-
-})();
 });
 
 ;require.register("libs/flux/dispatcher/dispatcher", function(exports, require, module) {
@@ -6980,63 +6810,6 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 };
 
 module.exports = invariant;
-});
-
-;require.register("libs/flux/store/Store", function(exports, require, module) {
-var AppDispatcher, Store,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-AppDispatcher = require('../../../app_dispatcher');
-
-module.exports = Store = (function(_super) {
-  var _addHandlers, _handlers, _nextUniqID, _processBinding;
-
-  __extends(Store, _super);
-
-  Store.prototype.uniqID = null;
-
-  _nextUniqID = 0;
-
-  _handlers = {};
-
-  _addHandlers = function(type, callback) {
-    if (_handlers[this.uniqID] == null) {
-      _handlers[this.uniqID] = {};
-    }
-    return _handlers[this.uniqID][type] = callback;
-  };
-
-  _processBinding = function() {
-    return this.dispatchToken = AppDispatcher.register((function(_this) {
-      return function(payload) {
-        var callback, type, value, _ref;
-        _ref = payload.action, type = _ref.type, value = _ref.value;
-        if ((callback = _handlers[_this.uniqID][type]) != null) {
-          return callback.call(_this, value);
-        }
-      };
-    })(this));
-  };
-
-  function Store() {
-    Store.__super__.constructor.call(this);
-    this.uniqID = _nextUniqID++;
-    this.__bindHandlers(_addHandlers.bind(this));
-    _processBinding.call(this);
-  }
-
-  Store.prototype.__bindHandlers = function(handle) {
-    var message;
-    if (__DEV__) {
-      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
-      throw new Error(message);
-    }
-  };
-
-  return Store;
-
-})(EventEmitter);
 });
 
 ;require.register("libs/flux/store/store", function(exports, require, module) {
@@ -7861,7 +7634,7 @@ module.exports = Router = (function(_super) {
 
   Router.prototype.patterns = {
     'account.config': {
-      pattern: 'account/:accountID/config',
+      pattern: 'account/:accountID/config/:tab',
       fluxAction: 'showConfigAccount'
     },
     'account.new': {
@@ -7930,7 +7703,8 @@ module.exports = Router = (function(_super) {
       case 'account.config':
         defaultAccount = (_ref1 = AccountStore.getDefault()) != null ? _ref1.get('id') : void 0;
         defaultParameters = {
-          accountID: defaultAccount
+          accountID: defaultAccount,
+          tab: 'account'
         };
         break;
       case 'search':
@@ -8016,10 +7790,12 @@ AccountStore = (function(_super) {
     }).toOrderedMap();
     account = account.set('mailboxes', mailboxes);
     _accounts = _accounts.set(accountID, account);
-    selectedAccountID = _selectedAccount.get('id');
-    _selectedAccount = _accounts.get(selectedAccountID);
-    selectedMailboxID = _selectedMailbox.get('id');
-    return _selectedMailbox = _selectedAccount != null ? (_ref = _selectedAccount.get('mailboxes')) != null ? _ref.get(selectedMailboxID) : void 0 : void 0;
+    if (selectedAccountID = _selectedAccount != null ? _selectedAccount.get('id') : void 0) {
+      _selectedAccount = _accounts.get(selectedAccountID);
+      if (selectedMailboxID = _selectedMailbox != null ? _selectedMailbox.get('id') : void 0) {
+        return _selectedMailbox = _selectedAccount != null ? (_ref = _selectedAccount.get('mailboxes')) != null ? _ref.get(selectedMailboxID) : void 0 : void 0;
+      }
+    }
   };
 
   AccountStore.prototype._setCurrentAccount = function(account) {

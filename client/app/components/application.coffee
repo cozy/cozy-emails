@@ -142,13 +142,9 @@ module.exports = Application = React.createClass
         if isFullWidth
             classes = firstPanel: 'panel col-xs-12 col-md-12'
 
-            # custom case for mailbox.config action (top right cog button)
-            if previous? and first.action is 'account.config'
-                classes.firstPanel += ' moveFromTopRightCorner'
-
             # (default) when full-width panel is shown after
             # a two-panels structure
-            else if previous? and previous.secondPanel
+            if previous? and previous.secondPanel
 
                 # if the full-width panel was on right right before, it expands
                 if previous.secondPanel.action is layout.firstPanel.action and
@@ -250,21 +246,26 @@ module.exports = Application = React.createClass
                 #paginationUrl: paginationUrl
 
         # -- Generates a configuration window for a given account
-        else if panelInfo.action is 'account.config' or
-                panelInfo.action is 'account.new'
+        else if panelInfo.action is 'account.config'
             # don't use @state.selectedAccount
             selectedAccount   = AccountStore.getSelected()
             error             = AccountStore.getError()
             isWaiting         = AccountStore.isWaiting()
             mailboxes         = AccountStore.getSelectedMailboxes()
             favoriteMailboxes = @state.favoriteMailboxes
+            tab = panelInfo.parameters.tab
             if selectedAccount and not error and mailboxes.length is 0
                 error =
                     name: 'AccountConfigError'
                     field: 'nomailboxes'
 
             return AccountConfig {error, isWaiting, selectedAccount,
-                mailboxes, favoriteMailboxes}
+                mailboxes, favoriteMailboxes, tab}
+
+        else if panelInfo.action is 'account.new'
+            return AccountConfig
+                error: AccountStore.getError()
+                isWaiting: AccountStore.isWaiting()
 
         # -- Generates a configuration window to create a new account
         #else if panelInfo.action is 'account.new'

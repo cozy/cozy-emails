@@ -23,7 +23,7 @@ Settings.getInstance = (callback) ->
         if existing
             callback null, existing
         else
-            callback null, new Settings()
+            Settings.create {}, callback
 
 Settings.get = (callback) ->
     Settings.getInstance (err, instance) ->

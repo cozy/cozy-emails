@@ -61,9 +61,19 @@ module.exports = {
     return boxes;
   },
   sanitizeHTML: function(html, messageId, attachments) {
+    var allowedAttributes, allowedTags;
+    allowedTags = sanitizeHtml.defaults.allowedTags.concat(['img', 'head', 'meta']);
+    allowedAttributes = sanitizeHtml.defaults.allowedAttributes;
+    allowedTags.forEach(function(tag) {
+      if (allowedAttributes[tag] != null) {
+        return allowedAttributes[tag] = allowedAttributes[tag].concat(['style', 'class', 'background']);
+      } else {
+        return allowedAttributes[tag] = ['style', 'class', 'background'];
+      }
+    });
     html = sanitizeHtml(html, {
-      allowedTags: sanitizeHtml.defaults.allowedTags.concat(['img', 'head', 'meta']),
-      allowedAttributes: sanitizeHtml.defaults.allowedTags.concat(['style', 'class', 'background']),
+      allowedTags: allowedTags,
+      allowedAttributes: allowedAttributes,
       allowedClasses: false,
       allowedSchemes: sanitizeHtml.defaults.allowedSchemes.concat(['cid']),
       transformTags: {

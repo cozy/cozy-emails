@@ -1655,6 +1655,9 @@ input {
 .form-horizontal .checkbox-inline {
   padding-top: 0.66em;
 }
+.dropdown-menu {
+  cursor: pointer;
+}
 @font-face {
   font-family: styled;
   src: url("/fonts/maven-pro-light-200.otf");
@@ -2347,12 +2350,20 @@ textarea:active,
   box-shadow: none;
   border: 0;
   color: #34a6ff;
+  -webkit-transition: color 0.3s ease;
+  -moz-transition: color 0.3s ease;
+  -o-transition: color 0.3s ease;
+  -ms-transition: color 0.3s ease;
+  transition: color 0.3s ease;
 }
 .conversation .thread .message .messageToolbox .btn.btn-default:hover {
   color: #fe8800;
 }
 .conversation .thread .message .messageToolbox .btn.btn-default.reply {
   color: #5c5;
+}
+.conversation .thread .message .messageToolbox .btn.btn-default.reply:hover {
+  color: #fe8800;
 }
 .conversation .thread .message .messageNavigation {
   margin-bottom: 0;
@@ -2363,6 +2374,11 @@ textarea:active,
   box-shadow: none;
   border: 0;
   color: #34a6ff;
+  -webkit-transition: color 0.3s ease;
+  -moz-transition: color 0.3s ease;
+  -o-transition: color 0.3s ease;
+  -ms-transition: color 0.3s ease;
+  transition: color 0.3s ease;
 }
 .conversation .thread .message .messageNavigation .btn.btn-default:hover {
   color: #fe8800;
@@ -2530,6 +2546,21 @@ textarea:active,
   color: #444;
   font-family: "Source Sans Pro";
 }
+.conversation .thread .message .preview .quote1 {
+  color: #00f;
+}
+.conversation .thread .message .preview .quote2 {
+  color: #f00;
+}
+.conversation .thread .message .preview .quote3 {
+  color: #008000;
+}
+.conversation .thread .message .preview .quote4 {
+  color: #f0f;
+}
+.conversation .thread .message .preview .quote5 {
+  color: #00f;
+}
 .conversation .thread .message .preview p {
   margin: 0;
   display: inline;
@@ -2591,6 +2622,9 @@ textarea:active,
 }
 .input-group.contact-group {
   padding: 0 15px;
+}
+.contact {
+  top: -1px;
 }
 .compose-toggle {
   float: right;
@@ -2730,6 +2764,11 @@ textarea:active,
   text-align: center;
   vertical-align: middle;
   text-decoration: none;
+  -webkit-transition: background 0.3s ease;
+  -moz-transition: background 0.3s ease;
+  -o-transition: background 0.3s ease;
+  -ms-transition: background 0.3s ease;
+  transition: background 0.3s ease;
 }
 #menu .menu-item i,
 #menu .menu-item .item-label,
@@ -2834,9 +2873,9 @@ textarea:active,
   font-weight: bold;
 }
 .message-list .message {
-  border-left: 0.25em solid transparent;
   cursor: pointer;
   font-size: 0.8em;
+  border: 0;
 }
 .message-list .message > a,
 .message-list .message > span {
@@ -2911,7 +2950,7 @@ textarea:active,
   content: ' - ';
 }
 .message-list .message .hour {
-  mrgin-left: auto;
+  margin-left: auto;
   color: #444;
 }
 .message-list .message .fa-user,
@@ -2941,11 +2980,8 @@ textarea:active,
 .message-list .message:nth-child(2n+1) {
   background-color: #eee;
 }
-.message-list .message.active {
-  background: #cbe4fb;
-}
-.message-list .message.active border-left .25em solid basecolor a,
-.message-list .message.active border-left .25em solid basecolor span {
+.message-list .message.active background lightblue a,
+.message-list .message.active background lightblue span {
   padding: 0.75em 0.25em;
 }
 .message-list .message.unseen {
@@ -2963,28 +2999,27 @@ textarea:active,
   padding: 0 0.5em;
 }
 .message-list .message:hover {
-  border-left: 0.25em solid #fe8800;
   background: #ffc47f;
-}
-.message-list .message:hover a {
-  padding: 0.75em 0.25em;
 }
 .message-list .message.edited span.wrapper {
   margin: 0;
-  padding: 0.8em 0.25em 0.75em 0.25em;
+  padding: 0em 0.25em 0em 0.25em;
 }
-.message-list .message:hover .select,
-.message-list .message.edited .select {
+.message-list .message.edited .participants {
+  margin-left: 1em;
+}
+.message-list .message.edited .select,
+.message-list .avatar-wrapper:hover .select {
   display: inherit;
+  margin: 0.49em;
 }
-.message-list .message:hover .avatar,
+.message-list .message.edited .fa-user,
+.message-list .avatar-wrapper:hover .fa-user,
 .message-list .message.edited .avatar,
-.message-list .message:hover .fa-user,
-.message-list .message.edited .fa-user {
+.message-list .avatar-wrapper:hover .avatar {
   display: none;
 }
-.message-list .message:hover .participants,
-.message-list .message.edited .participants {
+.message-list .avatar-wrapper:hover .participants {
   margin-left: 1.4em;
 }
 .message-list .message-list-actions {

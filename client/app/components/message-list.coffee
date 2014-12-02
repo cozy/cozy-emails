@@ -79,7 +79,7 @@ MessageList = React.createClass
         configMailboxUrl = @buildUrl
             direction: 'first'
             action: 'account.config'
-            parameters: @props.accountID
+            parameters: [@props.accountID, 'account']
             fullWidth: true
 
         classList = classer
@@ -377,15 +377,17 @@ MessageItem = React.createClass
                 'data-message-id': message.get('id'),
                 onClick: @onMessageClick,
                 onDoubleClick: @onMessageDblClick,
-                    input
-                        className: 'select',
-                        type: 'checkbox',
-                        checked: @state.selected
-                        onChange: @onSelect
-                    if avatar?
-                        img className: 'avatar', src: avatar
-                    else
-                        i className: 'fa fa-user'
+                    div
+                        className: 'avatar-wrapper',
+                        input
+                            className: 'select',
+                            type: 'checkbox',
+                            checked: @state.selected
+                            onChange: @onSelect
+                        if avatar?
+                            img className: 'avatar', src: avatar
+                        else
+                            i className: 'fa fa-user'
                     span className: 'participants', @getParticipants message
                     div className: 'preview',
                         span className: 'title', message.get 'subject'

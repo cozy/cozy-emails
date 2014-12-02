@@ -56,7 +56,10 @@ module.exports = Topbar = React.createClass
                 configMailboxUrl = @buildUrl
                     direction: 'first'
                     action: 'account.config'
-                    parameters: selectedAccount.get 'id'
+                    parameters: [
+                        selectedAccount.get 'id'
+                        'account'
+                    ]
                     fullWidth: true
 
 

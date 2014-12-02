@@ -70,7 +70,7 @@ Settings.getInstance = function(callback) {
     if (existing) {
       return callback(null, existing);
     } else {
-      return callback(null, new Settings());
+      return Settings.create({}, callback);
     }
   });
 };

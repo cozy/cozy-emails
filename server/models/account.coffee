@@ -388,7 +388,7 @@ Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
 
     # if we dont have our 4 favorites, pick at random
     for box in boxes when changes.favorites.length < 4
-        if box.id not in changesfavorites and box.isSelectable()
+        if box.id not in changes.favorites and box.isSelectable()
             changes.favorites.push box.id
 
     @updateAttributes changes, callback
