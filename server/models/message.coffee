@@ -622,7 +622,7 @@ Message::toClientObject = ->
     raw = @toObject()
 
     raw.attachments?.forEach (file) ->
-        file.url = "/message/#{raw.id}/attachments/#{file.generatedFileName}"
+        file.url = "message/#{raw.id}/attachments/#{file.generatedFileName}"
 
     if raw.html?
         raw.html = mailutils.sanitizeHTML raw.html, raw.id, raw.attachments
