@@ -238,6 +238,7 @@ module.exports = Application = React.createClass
                 accountID:     accountID
                 mailboxID:     mailboxID
                 messageID:     messageID
+                contacts:      @state.contacts
                 mailboxes:     @state.mailboxes
                 settings:      @state.settings
                 query:         query
@@ -351,6 +352,7 @@ module.exports = Application = React.createClass
 
         return {
             accounts: AccountStore.getAll()
+            contacts: ContactStore.getContacts()
             selectedAccount: selectedAccount
             isResponsiveMenuShown: LayoutStore.isMenuShown()
             alertMessage: LayoutStore.getAlert()

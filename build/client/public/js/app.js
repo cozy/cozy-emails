@@ -2317,6 +2317,7 @@ module.exports = Application = React.createClass({
         accountID: accountID,
         mailboxID: mailboxID,
         messageID: messageID,
+        contacts: this.state.contacts,
         mailboxes: this.state.mailboxes,
         settings: this.state.settings,
         query: query,
@@ -2419,6 +2420,7 @@ module.exports = Application = React.createClass({
     }
     return {
       accounts: AccountStore.getAll(),
+      contacts: ContactStore.getContacts(),
       selectedAccount: selectedAccount,
       isResponsiveMenuShown: LayoutStore.isMenuShown(),
       alertMessage: LayoutStore.getAlert(),
@@ -8046,6 +8048,10 @@ ContactStore = (function(_super) {
 
   ContactStore.prototype.getResults = function() {
     return _results;
+  };
+
+  ContactStore.prototype.getContacts = function() {
+    return _contacts;
   };
 
   ContactStore.prototype.getQuery = function() {
