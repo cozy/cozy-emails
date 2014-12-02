@@ -61,12 +61,13 @@ module.exports = React.createClass
         text = message.get 'text'
         html = message.get 'html'
         urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
-        rich = text.replace urls, '<a href="$1" target="_blank">$1</a>', 'gim'
-        rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>')
-        rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>')
-        rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>')
-        rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>')
-        rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim')
+        if text
+            rich = text.replace urls, '<a href="$1" target="_blank">$1</a>', 'gim'
+            rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>')
+            rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>')
+            rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>')
+            rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>')
+            rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim')
         # @TODO Do we want to convert text only messages to HTML ?
         # /!\ if messageDisplayHTML is set, this method should always return
         # a value fo html, otherwise the content of the email flashes
