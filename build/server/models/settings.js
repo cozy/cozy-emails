@@ -10,14 +10,6 @@ Any = function(x) {
 };
 
 module.exports = Settings = americano.getModel('MailsSettings', {
-  messagesPerPage: {
-    type: Number,
-    "default": 25
-  },
-  refreshInterval: {
-    type: Number,
-    "default": 5
-  },
   displayConversation: {
     type: Boolean,
     "default": true

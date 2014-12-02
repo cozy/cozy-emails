@@ -859,7 +859,7 @@ module.exports = SearchActionCreator = {
 });
 
 ;require.register("actions/settings_action_creator", function(exports, require, module) {
-var ActionTypes, AppDispatcher, LayoutActionCreator, SettingsActionCreator, SettingsStore, XHRUtils, refreshInterval;
+var ActionTypes, AppDispatcher, LayoutActionCreator, SettingsActionCreator, SettingsStore, XHRUtils;
 
 XHRUtils = require('../utils/xhr_utils');
 
@@ -871,13 +871,11 @@ SettingsStore = require('../stores/settings_store');
 
 LayoutActionCreator = require('./layout_action_creator');
 
-refreshInterval = null;
-
 module.exports = SettingsActionCreator = {
   edit: function(inputValues) {
     return XHRUtils.changeSettings(inputValues, function(err, values) {
       if (err) {
-        return LayoutActionCreator.alertError(t('error cannot save') + err);
+        return LayoutActionCreator.alertError(t('settings save error') + err);
       } else {
         return AppDispatcher.handleViewAction({
           type: ActionTypes.SETTINGS_UPDATED,
@@ -885,16 +883,6 @@ module.exports = SettingsActionCreator = {
         });
       }
     });
-  },
-  setRefresh: function(value) {
-    if ((value != null) && value >= 1) {
-      if (refreshInterval != null) {
-        window.clearInterval(refreshInterval);
-      }
-      return refreshInterval = window.setInterval(function() {
-        return LayoutActionCreator.refreshMessages();
-      }, value * 60000);
-    }
   }
 };
 });
@@ -2006,11 +1994,16 @@ module.exports = React.createClass({
     return this.props.valueLink.requestChange(accountID);
   },
   renderNoChoice: function() {
-    var account;
+    var account, label;
     account = this.props.accounts.get(this.props.valueLink.value);
+    if (this.props.type === 'address') {
+      label = "\"" + (account.get('name') || account.get('label')) + "\" <" + (account.get('login')) + ">";
+    } else {
+      label = account.get('label');
+    }
     return p({
-      className: 'form-control-static col-sm-3'
-    }, account.get('label'));
+      className: 'form-control-static col-sm-6'
+    }, label);
   },
   renderPicker: function() {
     var account, accounts, key, label, value;
@@ -2020,7 +2013,7 @@ module.exports = React.createClass({
     if (this.props.type === 'address') {
       label = "\"" + (account.get('name') || account.get('label')) + "\" <" + (account.get('login')) + ">";
     } else {
-      label = account.label;
+      label = account.get('label');
     }
     return div(null, span({
       className: 'compose-from dropdown-toggle',
@@ -5721,40 +5714,6 @@ module.exports = React.createClass({
     }, label({
       htmlFor: 'settings-mpp',
       className: classLabel
-    }, t("settings label mpp")), div({
-      className: 'col-sm-3'
-    }, input({
-      id: 'settings-mpp',
-      value: this.state.settings.messagesPerPage,
-      onChange: this.handleChange,
-      'data-target': 'messagesPerPage',
-      type: 'number',
-      min: 5,
-      max: 100,
-      step: 5,
-      className: 'form-control'
-    }))), div({
-      className: 'form-group'
-    }, label({
-      htmlFor: 'settings-refresh',
-      className: classLabel
-    }, t("settings label refresh")), div({
-      className: 'col-sm-3'
-    }, input({
-      id: 'settings-refresh',
-      value: this.state.settings.refreshInterval,
-      onChange: this.handleChange,
-      'data-target': 'refreshInterval',
-      type: 'number',
-      min: 1,
-      max: 15,
-      step: 1,
-      className: 'form-control'
-    }))), div({
-      className: 'form-group'
-    }, label({
-      htmlFor: 'settings-mpp',
-      className: classLabel
     }, t("settings lang")), div({
       className: 'col-sm-3'
     }, div({
@@ -5864,21 +5823,6 @@ module.exports = React.createClass({
     event.preventDefault();
     target = event.currentTarget;
     switch (target.dataset.target) {
-      case 'messagesPerPage':
-        settings = this.state.settings;
-        settings.messagesPerPage = target.value;
-        this.setState({
-          settings: settings
-        });
-        return SettingsActionCreator.edit(settings);
-      case 'refreshInterval':
-        settings = this.state.settings;
-        settings.refreshInterval = target.value;
-        this.setState({
-          settings: settings
-        });
-        SettingsActionCreator.edit(settings);
-        return SettingsActionCreator.setRefresh(target.value);
       case 'composeInHTML':
       case 'composeOnTop':
       case 'displayConversation':
@@ -6573,12 +6517,186 @@ window.onload = function() {
   });
   React.renderComponent(application, document.body);
   SettingsActionCreator = require('./actions/settings_action_creator/');
-  SettingsActionCreator.setRefresh(window.settings.refreshInterval);
   Backbone.history.start();
   require('./utils/socketio_utils');
   ContactActionCreator = require('./actions/contact_action_creator/');
   return ContactActionCreator.searchContact();
 };
+});
+
+;require.register("libs/flux/dispatcher/Dispatcher", function(exports, require, module) {
+
+/*
+
+    -- Coffee port of Facebook's flux dispatcher. It was in ES6 and I haven't
+    been successful in adding a transpiler. --
+
+    Copyright (c) 2014, Facebook, Inc.
+    All rights reserved.
+
+    This source code is licensed under the BSD-style license found in the
+    LICENSE file in the root directory of this source tree. An additional grant
+    of patent rights can be found in the PATENTS file in the same directory.
+ */
+var Dispatcher, invariant, _lastID, _prefix;
+
+invariant = require('../invariant');
+
+_lastID = 1;
+
+_prefix = 'ID_';
+
+module.exports = Dispatcher = Dispatcher = (function() {
+  function Dispatcher() {
+    this._callbacks = {};
+    this._isPending = {};
+    this._isHandled = {};
+    this._isDispatching = false;
+    this._pendingPayload = null;
+  }
+
+
+  /*
+      Registers a callback to be invoked with every dispatched payload.
+      Returns a token that can be used with `waitFor()`.
+  
+      @param {function} callback
+      @return {string}
+   */
+
+  Dispatcher.prototype.register = function(callback) {
+    var id;
+    id = _prefix + _lastID++;
+    this._callbacks[id] = callback;
+    return id;
+  };
+
+
+  /*
+      Removes a callback based on its token.
+  
+      @param {string} id
+   */
+
+  Dispatcher.prototype.unregister = function(id) {
+    var message;
+    message = 'Dispatcher.unregister(...): `%s` does not map to a ' + 'registered callback.';
+    invariant(this._callbacks[id], message, id);
+    return delete this._callbacks[id];
+  };
+
+
+  /*
+      Waits for the callbacks specified to be invoked before continuing
+      execution of the current callback. This method should only be used by a
+      callback in response to a dispatched payload.
+  
+      @param {array<string>} ids
+   */
+
+  Dispatcher.prototype.waitFor = function(ids) {
+    var id, ii, message, message2, _i, _ref, _results;
+    invariant(this._isDispatching, 'Dispatcher.waitFor(...): Must be invoked while dispatching.');
+    message = 'Dispatcher.waitFor(...): Circular dependency detected ' + 'while waiting for `%s`.';
+    message2 = 'Dispatcher.waitFor(...): `%s` does not map to a ' + 'registered callback.';
+    _results = [];
+    for (ii = _i = 0, _ref = ids.length - 1; _i <= _ref; ii = _i += 1) {
+      id = ids[ii];
+      if (this._isPending[id]) {
+        invariant(this._isHandled[id], message, id);
+        continue;
+      }
+      invariant(this._callbacks[id], message2, id);
+      _results.push(this._invokeCallback(id));
+    }
+    return _results;
+  };
+
+
+  /*
+      Dispatches a payload to all registered callbacks.
+  
+      @param {object} payload
+   */
+
+  Dispatcher.prototype.dispatch = function(payload) {
+    var id, message, _results;
+    message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + 'of a dispatch.';
+    invariant(!this._isDispatching, message);
+    this._startDispatching(payload);
+    try {
+      _results = [];
+      for (id in this._callbacks) {
+        if (this._isPending[id]) {
+          continue;
+        }
+        _results.push(this._invokeCallback(id));
+      }
+      return _results;
+    } finally {
+      this._stopDispatching();
+    }
+  };
+
+
+  /*
+      Is this Dispatcher currently dispatching.
+  
+      @return {boolean}
+   */
+
+  Dispatcher.prototype.isDispatching = function() {
+    return this._isDispatching;
+  };
+
+
+  /*
+      Call the callback stored with the given id. Also do some internal
+      bookkeeping.
+  
+      @param {string} id
+      @internal
+   */
+
+  Dispatcher.prototype._invokeCallback = function(id) {
+    this._isPending[id] = true;
+    this._callbacks[id](this._pendingPayload);
+    return this._isHandled[id] = true;
+  };
+
+
+  /*
+      Set up bookkeeping needed when dispatching.
+  
+      @param {object} payload
+      @internal
+   */
+
+  Dispatcher.prototype._startDispatching = function(payload) {
+    var id;
+    for (id in this._callbacks) {
+      this._isPending[id] = false;
+      this._isHandled[id] = false;
+    }
+    this._pendingPayload = payload;
+    return this._isDispatching = true;
+  };
+
+
+  /*
+      Clear bookkeeping used for dispatching.
+  
+      @internal
+   */
+
+  Dispatcher.prototype._stopDispatching = function() {
+    this._pendingPayload = null;
+    return this._isDispatching = false;
+  };
+
+  return Dispatcher;
+
+})();
 });
 
 ;require.register("libs/flux/dispatcher/dispatcher", function(exports, require, module) {
@@ -6810,6 +6928,63 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 };
 
 module.exports = invariant;
+});
+
+;require.register("libs/flux/store/Store", function(exports, require, module) {
+var AppDispatcher, Store,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+AppDispatcher = require('../../../app_dispatcher');
+
+module.exports = Store = (function(_super) {
+  var _addHandlers, _handlers, _nextUniqID, _processBinding;
+
+  __extends(Store, _super);
+
+  Store.prototype.uniqID = null;
+
+  _nextUniqID = 0;
+
+  _handlers = {};
+
+  _addHandlers = function(type, callback) {
+    if (_handlers[this.uniqID] == null) {
+      _handlers[this.uniqID] = {};
+    }
+    return _handlers[this.uniqID][type] = callback;
+  };
+
+  _processBinding = function() {
+    return this.dispatchToken = AppDispatcher.register((function(_this) {
+      return function(payload) {
+        var callback, type, value, _ref;
+        _ref = payload.action, type = _ref.type, value = _ref.value;
+        if ((callback = _handlers[_this.uniqID][type]) != null) {
+          return callback.call(_this, value);
+        }
+      };
+    })(this));
+  };
+
+  function Store() {
+    Store.__super__.constructor.call(this);
+    this.uniqID = _nextUniqID++;
+    this.__bindHandlers(_addHandlers.bind(this));
+    _processBinding.call(this);
+  }
+
+  Store.prototype.__bindHandlers = function(handle) {
+    var message;
+    if (__DEV__) {
+      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
+      throw new Error(message);
+    }
+  };
+
+  return Store;
+
+})(EventEmitter);
 });
 
 ;require.register("libs/flux/store/store", function(exports, require, module) {
@@ -7323,8 +7498,6 @@ module.exports = {
   "message undelete error": "Undo not available",
   "settings title": "Settings",
   "settings button save": "Save",
-  "settings label mpp": "Messages per page",
-  "settings label refresh": "Check for new messages every… (in minutes)",
   "settings plugins": "Add ons",
   "settings label composeInHTML": "Rich message editor",
   "settings label composeOnTop": "Reply on top of message",
@@ -7339,6 +7512,7 @@ module.exports = {
   "settings lang": "Language",
   "settings lang en": "English",
   "settings lang fr": "Français",
+  "settings save error": "Unable to save settings, please try again",
   "picker drop here": "Drop files here",
   "mailbox pick one": "Pick one",
   "mailbox pick null": "No box for this",
@@ -7524,8 +7698,6 @@ module.exports = {
   "message undelete error": "Impossible d'annuler l'action",
   "settings title": "Paramètres",
   "settings button save": "Enregistrer",
-  "settings label mpp": "Nombre de messages par page",
-  "settings label refresh": "Vérifier les nouveaux messages toutes les… (en minutes)",
   "settings plugins": "Modules complémentaires",
   "settings label composeInHTML": "Éditeur riche",
   "settings label composeOnTop": "Répondre au dessus du message",
@@ -7540,6 +7712,7 @@ module.exports = {
   "settings lang": "Langue",
   "settings lang en": "English",
   "settings lang fr": "Français",
+  "settings save error": "Erreur d'enregistrement des paramètres, veuillez ré-essayer",
   "picker drop here": "Déposer les fichiers ici",
   "mailbox pick one": "Choisissez une boite",
   "mailbox pick null": "Pas de boite pour ça",
