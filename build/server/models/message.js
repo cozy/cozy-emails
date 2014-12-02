@@ -718,7 +718,7 @@ Message.prototype.toClientObject = function() {
   raw = this.toObject();
   if ((_ref = raw.attachments) != null) {
     _ref.forEach(function(file) {
-      return file.url = "/message/" + raw.id + "/attachments/" + file.generatedFileName;
+      return file.url = "message/" + raw.id + "/attachments/" + file.generatedFileName;
     });
   }
   if (raw.html != null) {
