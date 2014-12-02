@@ -4778,6 +4778,12 @@ module.exports = React.createClass({
     text = message.get('text');
     html = message.get('html');
     urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim;
+    if (text && !html && this.state.messageDisplayHTML) {
+      html = markdown.toHTML(text);
+    }
+    if (html && !text && !this.state.messageDisplayHTML) {
+      text = toMarkdown(html);
+    }
     if (text) {
       rich = text.replace(urls, '<a href="$1" target="_blank">$1</a>', 'gim');
       rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>');
@@ -4785,12 +4791,6 @@ module.exports = React.createClass({
       rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>');
       rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>');
       rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim');
-    }
-    if (text && !html && this.state.messageDisplayHTML) {
-      html = markdown.toHTML(text);
-    }
-    if (html && !text && !this.state.messageDisplayHTML) {
-      text = toMarkdown(html);
     }
     return {
       id: message.get('id'),
@@ -4838,7 +4838,7 @@ module.exports = React.createClass({
     var doc, hideImage, html, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
     messageDisplayHTML = true;
     parser = new DOMParser();
-    html = "<html><head></head><body>" + prepared.html + "</body></html>";
+    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n</head><body>" + prepared.html + "</body></html>";
     doc = parser.parseFromString(html, "text/html");
     images = [];
     if (!doc) {
@@ -4866,7 +4866,7 @@ module.exports = React.createClass({
       link.target = '_blank';
     }
     if (doc != null) {
-      this._htmlContent = doc.body.innerHTML;
+      this._htmlContent = doc.documentElement.innerHTML;
     } else {
       this._htmlContent = prepared.html;
     }
@@ -5398,7 +5398,6 @@ MessageContent = React.createClass({
         'data-message-id': this.props.message.get('id'),
         className: 'content',
         ref: 'content',
-        sandbox: 'allow-same-origin allow-popups',
         allowTransparency: true,
         frameBorder: 0
       }));
@@ -5424,27 +5423,21 @@ MessageContent = React.createClass({
       frame = this.refs.content.getDOMNode();
       loadContent = (function(_this) {
         return function(e) {
-          var doc, font, rules, step, styleEl, updateHeight, _ref2;
+          var doc, step, updateHeight, _ref2;
           step = 0;
           doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
           if (doc != null) {
-            styleEl = document.createElement('style');
-            styleEl.id = "cozystyle";
-            doc.head.appendChild(styleEl);
-            font = "./fonts/sourcesanspro/SourceSansPro-Regular";
-            rules = ["@font-face{\n  font-family: 'Source Sans Pro';\n  font-weight: 400;\n  font-style: normal;\n  font-stretch: normal;\n  src: url('" + font + ".eot') format('embedded-opentype'),\n       url('" + font + ".otf.woff') format('woff'),\n       url('" + font + ".otf') format('opentype'),\n       url('" + font + ".ttf') format('truetype');\n}", "body { font-family: 'Source Sans Pro'; }", "img { max-width: 100%; }", "blockquote { margin-left: .5em; padding-left: .5em; border-left: 2px solid blue; color: blue; }", "blockquote blockquote { border-color: red !important; color: red; }", "blockquote blockquote blockquote { border-color: green !important; color: green; }", "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }", "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }"];
-            rules.forEach(function(rule, idx) {
-              return styleEl.sheet.insertRule(rule, idx);
-            });
             doc.body.innerHTML = _this.props.html;
             updateHeight = function(e) {
-              var rect;
+              var height;
               if (e != null) {
                 e.preventDefault();
+              }
+              if (e != null) {
                 e.stopPropagation();
               }
-              rect = doc.body.getBoundingClientRect();
-              frame.style.height = "" + (rect.height + 60) + "px";
+              height = doc.body.getBoundingClientRect().height;
+              frame.style.height = "" + (height + 60) + "px";
               step++;
               if (step > 10) {
                 doc.body.onload = null;
@@ -5463,6 +5456,9 @@ MessageContent = React.createClass({
         };
       })(this);
       if (type === 'mount') {
+        try {
+          loadContent();
+        } catch (_error) {}
         return frame.addEventListener('load', loadContent);
       } else {
         return loadContent();
