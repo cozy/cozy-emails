@@ -96,6 +96,7 @@ module.exports = React.createClass
     componentWillReceiveProps: (props) ->
         state =
             active: props.active
+            composing: false
         if props.message.get('id') isnt @props.message.get('id')
             @_markRead @props.message
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
@@ -165,37 +166,14 @@ module.exports = React.createClass
                         pre null, prepared.fullHeaders.join "\n"
                     @renderToolbox message.get('id'), prepared
                     @renderCompose()
-                    if messageDisplayHTML and prepared.html
-                        div className: 'row',
-                            if imagesWarning
-                                div
-                                    className: "imagesWarning content-action",
-                                    ref: "imagesWarning",
-                                        span null, t 'message images warning'
-                                        button
-                                            className: 'btn btn-default',
-                                            type: "button",
-                                            ref: 'imagesDisplay',
-                                            onClick: @displayImages,
-                                            t 'message images display'
-                            iframe
-                                className: 'content',
-                                ref: 'content',
-                                sandbox: 'allow-same-origin allow-popups',
-                                allowTransparency: true,
-                                frameBorder: 0,
-                                name: "message-" + message.get('id'), ''
-                    else
-                        div className: 'row',
-                            #div className: "content-action",
-                            #    button
-                            #       className: 'btn btn-default',
-                            #       type: "button",
-                            #       onClick: @displayHTML,
-                            #       t 'message html display'
-                            div className: 'preview',
-                                p dangerouslySetInnerHTML: { __html: prepared.rich }
-                                #p null, prepared.text
+                    MessageContent
+                        message: message
+                        messageDisplayHTML: messageDisplayHTML
+                        html: @_htmlContent
+                        text: prepared.text
+                        rich: prepared.rich
+                        imagesWarning: imagesWarning
+                        composing: @state.composing
                     div className: 'clearfix'
         else
             li
@@ -419,71 +397,6 @@ module.exports = React.createClass
                                         span className: 'fa fa-long-arrow-right'
 
 
-    _initFrame: ->
-        panel = document.querySelector "#panels > .panel:nth-of-type(2)"
-        if panel? and not @state.composing
-            panel.scrollTop = 0
-        # - resize the frame to the height of its content
-        # - if images are not displayed, create the function to display them
-        #   and resize the frame
-        if @refs.content
-            frame = @refs.content.getDOMNode()
-            loadContent = (e) =>
-                doc = frame.contentDocument or frame.contentWindow?.document
-                if doc?
-                    frame.dataset.messageID = @props.message.get('id')
-                    styleEl = document.createElement 'style'
-                    styleEl.id = "cozystyle"
-                    doc.head.appendChild styleEl
-                    font = "../fonts/sourcesanspro/SourceSansPro-Regular"
-                    rules = [
-                        """
-                        @font-face{
-                          font-family: 'Source Sans Pro';
-                          font-weight: 400;
-                          font-style: normal;
-                          font-stretch: normal;
-                          src: url('#{font}.eot') format('embedded-opentype'),
-                               url('#{font}.otf.woff') format('woff'),
-                               url('#{font}.otf') format('opentype'),
-                               url('#{font}.ttf') format('truetype');
-                        }
-                        """,
-                        "body {
-                            font-family: 'Source Sans Pro';
-                        }",
-                        "img {
-                            max-width: 100%;
-                        }",
-                        "blockquote {
-                            margin-left: .5em;
-                            padding-left: .5em;
-                            border-left: 2px solid blue;
-                            color: blue;
-                        }",
-                        "blockquote blockquote { border-color: red !important; color: red; }",
-                        "blockquote blockquote blockquote { border-color: green !important; color: green; }",
-                        "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }",
-                        "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }",
-                    ]
-                    rules.forEach (rule, idx) ->
-                        styleEl.sheet.insertRule rule, idx
-                    doc.body.innerHTML = @_htmlContent
-                    rect = doc.body.getBoundingClientRect()
-                    frame.style.height = "#{rect.height + 60}px"
-                else
-                    # try to display text only
-                    @setState messageDisplayHTML: false
-
-            frame.addEventListener 'load', loadContent
-            loadContent()
-
-    componentDidMount: ->
-        @_initFrame()
-
-    componentDidUpdate: ->
-        @_initFrame()
-
     toggleHeaders: (e) ->
         e.preventDefault()
         e.stopPropagation()
@@ -623,13 +536,126 @@ module.exports = React.createClass
         document.querySelector(".conversation [data-id='#{messageId}']")
             .classList.toggle('with-headers')
 
-    displayHTML: (event) ->
-        event.preventDefault()
-        @setState messageDisplayHTML: true
+    addAddress: (address) ->
+        ContactActionCreator.createContact address
+
+MessageContent = React.createClass
+    displayName: 'MessageContent'
+
+    getInitialState: ->
+        return {
+            messageDisplayHTML: @props.messageDisplayHTML
+        }
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
+    render: ->
+        if @state.messageDisplayHTML and @props.html
+            div className: 'row',
+                if @props.imagesWarning
+                    div
+                        className: "imagesWarning content-action",
+                        ref: "imagesWarning",
+                            span null, t 'message images warning'
+                            button
+                                className: 'btn btn-default',
+                                type: "button",
+                                ref: 'imagesDisplay',
+                                onClick: @displayImages,
+                                t 'message images display'
+                iframe
+                    'data-message-id': @props.message.get 'id'
+                    className: 'content',
+                    ref: 'content',
+                    sandbox: 'allow-same-origin allow-popups',
+                    allowTransparency: true,
+                    frameBorder: 0,
+        else
+            div className: 'row',
+                #div className: "content-action",
+                #    button
+                #       className: 'btn btn-default',
+                #       type: "button",
+                #       onClick: @displayHTML,
+                #       t 'message html display'
+                div className: 'preview',
+                    p dangerouslySetInnerHTML: { __html: @props.rich }
+                    #p null, @props.text
+
+    _initFrame: (type) ->
+        panel = document.querySelector "#panels > .panel:nth-of-type(2)"
+        if panel? and not @props.composing
+            panel.scrollTop = 0
+        # - resize the frame to the height of its content
+        # - if images are not displayed, create the function to display them
+        #   and resize the frame
+        if @refs.content
+            frame = @refs.content.getDOMNode()
+            loadContent = (e) =>
+                doc = frame.contentDocument or frame.contentWindow?.document
+                if doc?
+                    styleEl = document.createElement 'style'
+                    styleEl.id = "cozystyle"
+                    doc.head.appendChild styleEl
+                    font = "../fonts/sourcesanspro/SourceSansPro-Regular"
+                    rules = [
+                        """
+                        @font-face{
+                          font-family: 'Source Sans Pro';
+                          font-weight: 400;
+                          font-style: normal;
+                          font-stretch: normal;
+                          src: url('#{font}.eot') format('embedded-opentype'),
+                               url('#{font}.otf.woff') format('woff'),
+                               url('#{font}.otf') format('opentype'),
+                               url('#{font}.ttf') format('truetype');
+                        }
+                        """,
+                        "body {
+                            font-family: 'Source Sans Pro';
+                        }",
+                        "img {
+                            max-width: 100%;
+                        }",
+                        "blockquote {
+                            margin-left: .5em;
+                            padding-left: .5em;
+                            border-left: 2px solid blue;
+                            color: blue;
+                        }",
+                        "blockquote blockquote { border-color: red !important; color: red; }",
+                        "blockquote blockquote blockquote { border-color: green !important; color: green; }",
+                        "blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }",
+                        "blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }",
+                    ]
+                    rules.forEach (rule, idx) ->
+                        styleEl.sheet.insertRule rule, idx
+                    doc.body.innerHTML = @props.html
+                    updateHeight = ->
+                        rect = doc.body.getBoundingClientRect()
+                        frame.style.height = "#{rect.height + 80}px"
+                    updateHeight()
+                    doc.body.addEventListener 'load', updateHeight, true
+                else
+                    # try to display text only
+                    @setState messageDisplayHTML: false
+
+            if type is 'mount'
+                frame.addEventListener 'load', loadContent
+            else
+                loadContent()
+
+    componentDidMount: ->
+        @_initFrame('mount')
+
+    componentDidUpdate: ->
+        @_initFrame('update')
 
     displayImages: (event) ->
         event.preventDefault()
         @setState messageDisplayImages: true
 
-    addAddress: (address) ->
-        ContactActionCreator.createContact address
+    displayHTML: (event) ->
+        event.preventDefault()
+        @setState messageDisplayHTML: true
