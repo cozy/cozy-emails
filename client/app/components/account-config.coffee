@@ -524,8 +524,8 @@ module.exports = React.createClass
             if @state.id?
                 AccountActionCreator.edit accountValue, @state.id
             else
-                LAC.alertSuccess t "account creation ok"
                 AccountActionCreator.create accountValue, (account) =>
+                    LAC.alertSuccess t "account creation ok"
                     @redirect
                         direction: 'first'
                         action: 'account.config'
