@@ -9,6 +9,7 @@
        url('./fonts/sourcesanspro/SourceSansPro-Regular.ttf') format('truetype');
 }
 body {
+    visibility: visible !important;
     font-family: 'Source Sans Pro';
 }
 img {

@@ -4838,7 +4838,7 @@ module.exports = React.createClass({
     var doc, hideImage, html, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
     messageDisplayHTML = true;
     parser = new DOMParser();
-    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n</head><body>" + prepared.html + "</body></html>";
+    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + prepared.html + "</body></html>";
     doc = parser.parseFromString(html, "text/html");
     images = [];
     if (!doc) {
@@ -5427,7 +5427,7 @@ MessageContent = React.createClass({
           step = 0;
           doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
           if (doc != null) {
-            doc.body.innerHTML = _this.props.html;
+            doc.documentElement.innerHTML = _this.props.html;
             updateHeight = function(e) {
               var height;
               if (e != null) {
@@ -5439,9 +5439,8 @@ MessageContent = React.createClass({
               height = doc.body.getBoundingClientRect().height;
               frame.style.height = "" + (height + 60) + "px";
               step++;
-              if (step > 10) {
-                doc.body.onload = null;
-                return frame.contentWindow.onresize = null;
+              if (!(step > 20)) {
+                return setTimeout(updateHeight, 100);
               }
             };
             frame.style.height = "32px";
