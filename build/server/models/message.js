@@ -456,8 +456,10 @@ Message.prototype.applyPatchOperations = function(patch, callback) {
     } else if (operation.op === 'remove') {
       flagsOps.remove.push(this.flags[index]);
     } else if (operation.op === 'replace') {
-      flagsOps.remove.push(this.flags[index]);
-      flagsOps.add.push(operation.value);
+      if (this.flags[index] !== operation.value) {
+        flagsOps.remove.push(this.flags[index]);
+        flagsOps.add.push(operation.value);
+      }
     }
   }
   newflags = this.flags;
