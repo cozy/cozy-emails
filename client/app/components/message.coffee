@@ -28,7 +28,7 @@ module.exports = React.createClass
             composeAction: ''
             headers: false
             messageDisplayHTML:   @props.settings.get 'messageDisplayHTML'
-            messageDisplayImages: @props.settings.get 'messageDisplayImages'
+            messageDisplayImages: true #@props.settings.get 'messageDisplayImages'
         }
 
     propTypes:
@@ -126,20 +126,25 @@ module.exports = React.createClass
             </head><body>#{prepared.html}</body></html>"""
         doc    = parser.parseFromString html, "text/html"
         images = []
+
         if not doc
             doc = document.implementation.createHTMLDocument("")
             doc.documentElement.innerHTML = html
+
         if not doc
             console.log "Unable to parse HTML content of message"
             messageDisplayHTML = false
+
         if doc and not @state.messageDisplayImages
             hideImage = (image) ->
                 image.dataset.src = image.getAttribute 'src'
                 image.removeAttribute 'src'
             images = doc.querySelectorAll 'IMG[src]'
             hideImage image for image in images
+
         for link in doc.querySelectorAll 'a[href]'
             link.target = '_blank'
+
         if doc?
             @_htmlContent = doc.documentElement.innerHTML
         else
@@ -153,6 +158,7 @@ module.exports = React.createClass
 
         message  = @props.message
         prepared = @_prepareMessage()
+
         if @state.messageDisplayHTML and prepared.html
             {messageDisplayHTML, images} = @prepareHTML prepared
             imagesWarning = images.length > 0 and
@@ -645,6 +651,7 @@ MessageContent = React.createClass
     displayImages: (event) ->
         event.preventDefault()
         @setState messageDisplayImages: true
+        @render()
 
     displayHTML: (event) ->
         event.preventDefault()
