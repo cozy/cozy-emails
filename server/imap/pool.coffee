@@ -61,8 +61,8 @@ class ImapPool
     _getAccount: ->
         log.debug @id, "getAccount"
         Account.find @accountID, (err, account) =>
-            return @_fatal err if err
-            return @_fatal new NotFound "Account #{@accountID}" unless account
+            return @_giveUp err if err
+            return @_giveUp new NotFound "Account #{@accountID}" unless account
             @account = account
             @_deQueue()
 
