@@ -48,8 +48,8 @@
                 border-left: 0
 
             &.active
-            &:last-of-type
                 background white
+                cursor default
                 border 0
 
                 .preview
@@ -57,8 +57,6 @@
                 .content
                     display block
 
-            &:last-of-type
-                cursor default
 
             .messageToolbox
             .messageNavigation
@@ -127,7 +125,7 @@
                 align-items center
                 font-size 14px
                 border 0
-                    
+
             .sender-avatar
                 display block
                 float left
@@ -241,7 +239,7 @@
                 color darkcolor
                 white-space pre
 
-            &:hover:not(.active):not(:last-of-type)
+            &:hover:not(.active)
                 background #f4f4f4
 
     .full-headers
