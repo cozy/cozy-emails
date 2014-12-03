@@ -1,6 +1,6 @@
 Store = require '../libs/flux/store/store'
 
-{ActionTypes} = require '../constants/app_constants'
+{ActionTypes, Dispositions} = require '../constants/app_constants'
 
 class LayoutStore extends Store
 
@@ -9,6 +9,7 @@ class LayoutStore extends Store
         Defines private variables here.
     ###
     _responsiveMenuShown = false
+    _disposition = Dispositions.VERTICAL
     _alert =
         level: null
         message: null
@@ -29,6 +30,10 @@ class LayoutStore extends Store
 
         handle ActionTypes.HIDE_MENU_RESPONSIVE, ->
             _responsiveMenuShown = false
+            @emit 'change'
+
+        handle ActionTypes.SET_DISPOSITION, (value) ->
+            _disposition = value.type
             @emit 'change'
 
         handle ActionTypes.DISPLAY_ALERT, (value) ->
@@ -66,6 +71,8 @@ class LayoutStore extends Store
         Public API
     ###
     isMenuShown: -> return _responsiveMenuShown
+
+    getDisposition: -> return _disposition
 
     getAlert: -> return _alert
 

@@ -6,8 +6,10 @@ RouterMixin          = require '../mixins/router_mixin'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 AccountStore         = require '../stores/account_store'
-Modal = require './modal'
-ThinProgress = require './thin_progress'
+Modal                = require './modal'
+ThinProgress         = require './thin_progress'
+
+{Dispositions} = require '../constants/app_constants'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
@@ -98,7 +100,10 @@ module.exports = Menu = React.createClass
             modal = null
         classes = classer
             'hidden-xs hidden-sm': not @props.isResponsiveMenuShown
-            'col-xs-4 col-md-1': true
+            'col-xs-4': true
+            'col-md-1': @props.disposition isnt Dispositions.THREE
+            'col-md-3': @props.disposition is Dispositions.THREE
+            'three': @props.disposition is Dispositions.THREE
 
         div id: 'menu', className: classes,
 
@@ -155,10 +160,13 @@ module.exports = Menu = React.createClass
                 fullWidth: true # /!\ Hide second panel when switching account
 
         toggleActive = =>
-            #if isSelected
-                #@setState displayActiveAccount: not @state.displayActiveAccount
-            #else
             @setState displayActiveAccount: true
+
+        toggleDisplay = =>
+            if isSelected
+                @setState displayActiveAccount: not @state.displayActiveAccount
+            else
+                @setState displayActiveAccount: true
 
         accountClasses = classer
             active: (isSelected and @state.displayActiveAccount)
@@ -168,6 +176,7 @@ module.exports = Menu = React.createClass
                 href: url,
                 className: 'menu-item account ' + accountClasses,
                 onClick: toggleActive,
+                onDoubleClick: toggleDisplay,
                 'data-toggle': 'tooltip',
                 'data-delay': '10000',
                 'data-placement' : 'right',
@@ -183,11 +192,12 @@ module.exports = Menu = React.createClass
                             i className: 'fa warning', onClick: @displayErrors.bind null, progress
                     ThinProgress done: progress.get('done'), total: progress.get('total')
 
-            ul className: 'list-unstyled submenu mailbox-list',
-                @props.favoriteMailboxes?.map (mailbox, key) =>
-                    selectedMailboxID = @props.selectedMailboxID
-                    MenuMailboxItem { account, mailbox, key, selectedMailboxID, refreshes, displayErrors: @displayErrors}
-                .toJS()
+            if isSelected
+                ul className: 'list-unstyled submenu mailbox-list',
+                    @props.mailboxes?.map (mailbox, key) =>
+                        selectedMailboxID = @props.selectedMailboxID
+                        MenuMailboxItem { account, mailbox, key, selectedMailboxID, refreshes, displayErrors: @displayErrors}
+                    .toJS()
 
     _initTooltips: ->
         #jQuery('#account-list [data-toggle="tooltip"]').tooltip()
@@ -244,6 +254,9 @@ MenuMailboxItem = React.createClass
         progress = @props.refreshes.get mailboxID
         displayError = @props.displayErrors.bind null, progress
 
+        pusher = ""
+        pusher += "   " for j in [1..@props.mailbox.get('depth')] by 1
+
         li className: classesParent,
             a
                 href: mailboxUrl,
@@ -261,7 +274,9 @@ MenuMailboxItem = React.createClass
                     i className: 'fa ' + icon
                     if nbUnread and nbUnread > 0
                         span className: 'badge', nbUnread
-                    span className: 'item-label', @props.mailbox.get 'label'
+                    span
+                        className: 'item-label',
+                        "#{pusher}#{@props.mailbox.get 'label'}"
 
                 if progress
                     ThinProgress done: progress.get('done'), total: progress.get('total')

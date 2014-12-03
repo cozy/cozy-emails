@@ -31,6 +31,8 @@ RefreshesStore = require '../stores/refreshes_store'
 # Flux actions
 LayoutActionCreator = require '../actions/layout_action_creator'
 
+{Dispositions} = require '../constants/app_constants'
+
 ###
     This component is the root of the React tree.
 
@@ -62,13 +64,19 @@ module.exports = Application = React.createClass
         isFullWidth = not layout.secondPanel?
 
         firstPanelLayoutMode = if isFullWidth then 'full' else 'first'
+        disposition = LayoutStore.getDisposition()
 
+        panelsClasses = classer
+            row: true
+            horizontal: disposition is Dispositions.HORIZONTAL
         # css classes are a bit long so we use a subfunction to get them
         panelClasses = @getPanelClasses isFullWidth
 
         # classes for page-content
         responsiveClasses = classer
-            'col-xs-12 col-md-11': true
+            'col-xs-12': true
+            'col-md-9':  disposition is Dispositions.THREE
+            'col-md-11': disposition isnt Dispositions.THREE
             'pushed': @state.isResponsiveMenuShown
 
         alert = @state.alertMessage
@@ -85,6 +93,12 @@ module.exports = Application = React.createClass
         keyFirst = 'left-panel-' + layout.firstPanel.action.split('.')[0]
         if layout.secondPanel?
             keySecond = 'right-panel-' + layout.secondPanel.action.split('.')[0]
+
+        if disposition is Dispositions.THREE
+            menuMailboxes = @state.mailboxes
+        else
+            menuMailboxes = @state.favoriteMailboxes
+
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
@@ -98,7 +112,8 @@ module.exports = Application = React.createClass
                     selectedMailboxID: @state.selectedMailboxID
                     isResponsiveMenuShown: @state.isResponsiveMenuShown
                     layout: @props.router.current
-                    favoriteMailboxes: @state.favoriteMailboxes
+                    mailboxes: menuMailboxes
+                    disposition: disposition
 
                 div id: 'page-content', className: responsiveClasses,
 
@@ -116,7 +131,7 @@ module.exports = Application = React.createClass
                     #    isResponsiveMenuShown: @state.isResponsiveMenuShown
 
                     # Two layout modes: one full-width panel or two panels
-                    div id: 'panels', className: 'row',
+                    div id: 'panels', className: panelsClasses,
                         div
                             className: panelClasses.firstPanel,
                             key: keyFirst,
@@ -159,9 +174,14 @@ module.exports = Application = React.createClass
 
         # ... or a two panels layout.
         else
-            classes =
-                firstPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm'
-                secondPanel: 'panel col-xs-12 col-md-6'
+            if LayoutStore.getDisposition() is Dispositions.HORIZONTAL
+                classes =
+                    firstPanel: 'panel col-xs-12 col-md-12 hidden-xs hidden-sm row-5'
+                    secondPanel: 'panel col-xs-12 col-md-12 row-5 row-offset-5'
+            else
+                classes =
+                    firstPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm row-10'
+                    secondPanel: 'panel col-xs-12 col-md-6 row-10'
 
             # we don't animate in the first render
             if previous?

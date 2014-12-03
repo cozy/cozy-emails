@@ -40,6 +40,7 @@ module.exports =
         # Layout
         'SHOW_MENU_RESPONSIVE'      : 'SHOW_MENU_RESPONSIVE'
         'HIDE_MENU_RESPONSIVE'      : 'HIDE_MENU_RESPONSIVE'
+        'SET_DISPOSITION'           : 'SET_DISPOSITION'
         'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
         'HIDE_ALERT'                : 'HIDE_ALERT'
         'REFRESH'                   : 'REFRESH'
@@ -106,3 +107,8 @@ module.exports =
         UNSEEN : 'Unseen'
         FLAGGED: '\\Flagged'
         NOFLAG : 'Noflag'
+
+    Dispositions:
+        HORIZONTAL: 'horizontal'
+        VERTICAL: 'vertical'
+        THREE: 'three'

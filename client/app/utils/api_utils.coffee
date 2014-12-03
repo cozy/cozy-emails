@@ -47,6 +47,9 @@ module.exports =
     getAccountByLabel: (label) ->
         return AccountStore.getByLabel label
 
+    getSetting: (key) ->
+        return SettingsStore.get().toJS()[key]
+
     # warning: don't update setting value server side
     setSetting: (key, value) ->
         AppDispatcher = require '../app_dispatcher'

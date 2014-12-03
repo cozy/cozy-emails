@@ -27,6 +27,13 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.HIDE_MENU_RESPONSIVE
             value: null
 
+    setDisposition: (type, value) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SET_DISPOSITION
+            value:
+                type: type
+                value: value
+
     alert: (level, message) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.DISPLAY_ALERT
