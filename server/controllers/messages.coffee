@@ -368,9 +368,12 @@ module.exports.conversationPatch = (req, res, next) ->
 
     patch = req.body
 
+    messages = []
     async.eachSeries req.conversation, (message, cb) ->
-        message.applyPatchOperations patch, cb
+        message.applyPatchOperations patch, (err, updated) ->
+            messages.push updated.toClientObject()
+            cb err
 
-    , (err, messages) ->
+    , (err) ->
         return next err if err
         res.send 200, messages
