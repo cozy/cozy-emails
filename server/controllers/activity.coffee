@@ -63,6 +63,9 @@ module.exports.create = (req, res, next) ->
                         res.send 200, result: result
             else
                 res.send 400, {name: "Unknown activity name", error: true}
+        when 'error'
+            log.error activity.data
+            res.send 200, null
         else
             res.send 400, {name: "Unknown activity data type", error: true}
 
