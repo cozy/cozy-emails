@@ -42,6 +42,8 @@ module.exports =
       "menu mailbox total"      : "%{smart_count} message |||| %{smart_count} messages "
       "menu mailbox unread"     : " dont %{smart_count} non lu |||| dont %{smart_count} non lus "
       "menu mailbox new"        : " et %{smart_count} nouveaux |||| et %{smart_count} nouveaux "
+      "menu favorites on"       : "Favorites"
+      "menu favorites off"      : "Toutes"
 
       # List
       "list empty"              : "Pas d'email dans cette boîte.."

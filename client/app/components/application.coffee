@@ -94,11 +94,6 @@ module.exports = Application = React.createClass
         if layout.secondPanel?
             keySecond = 'right-panel-' + layout.secondPanel.action.split('.')[0]
 
-        if disposition is Dispositions.THREE
-            menuMailboxes = @state.mailboxes
-        else
-            menuMailboxes = @state.favoriteMailboxes
-
         # Actual layout
         div className: 'container-fluid',
             div className: 'row',
@@ -112,7 +107,8 @@ module.exports = Application = React.createClass
                     selectedMailboxID: @state.selectedMailboxID
                     isResponsiveMenuShown: @state.isResponsiveMenuShown
                     layout: @props.router.current
-                    mailboxes: menuMailboxes
+                    mailboxes: @state.mailboxes
+                    favorites: @state.favoriteMailboxes
                     disposition: disposition
 
                 div id: 'page-content', className: responsiveClasses,

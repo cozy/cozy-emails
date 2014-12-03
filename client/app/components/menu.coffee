@@ -23,6 +23,7 @@ module.exports = Menu = React.createClass
     getInitialState: ->
         displayActiveAccount: true
         modalErrors: null
+        onlyFavorites: true
 
     componentWillReceiveProps: (props) ->
         if not Immutable.is(props.selectedAccount, @props.selectedAccount)
@@ -168,8 +169,21 @@ module.exports = Menu = React.createClass
             else
                 @setState displayActiveAccount: true
 
+        toggleFavorites = =>
+            @setState onlyFavorites: not @state.onlyFavorites
+
+
         accountClasses = classer
             active: (isSelected and @state.displayActiveAccount)
+
+        if @state.onlyFavorites
+            mailboxes = @props.favorites
+            icon = 'fa-toggle-down'
+            toggleFavoritesLabel = t 'menu favorites off'
+        else
+            mailboxes = @props.mailboxes
+            icon = 'fa-toggle-up'
+            toggleFavoritesLabel = t 'menu favorites on'
 
         li className: accountClasses, key: key,
             a
@@ -194,10 +208,20 @@ module.exports = Menu = React.createClass
 
             if isSelected
                 ul className: 'list-unstyled submenu mailbox-list',
-                    @props.mailboxes?.map (mailbox, key) =>
+                    mailboxes?.map (mailbox, key) =>
                         selectedMailboxID = @props.selectedMailboxID
                         MenuMailboxItem { account, mailbox, key, selectedMailboxID, refreshes, displayErrors: @displayErrors}
                     .toJS()
+                    li null,
+                        a
+                            className: 'menu-item',
+                            tabindex: 0,
+                            onClick: toggleFavorites,
+                            key: 'toggle',
+                                i className: 'fa ' + icon
+                                span
+                                    className: 'item-label',
+                                    toggleFavoritesLabel
 
     _initTooltips: ->
         #jQuery('#account-list [data-toggle="tooltip"]').tooltip()
