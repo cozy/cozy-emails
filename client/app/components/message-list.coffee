@@ -252,15 +252,15 @@ MessageList = React.createClass
                 action = args.target.dataset.action
                 switch action
                     when 'delete'
-                        ConversationActionCreator.delete conversationID(error) ->
+                        ConversationActionCreator.delete conversationID, (error) ->
                             if error?
                                 alertError "#{t("conversation delete ko")} #{error}"
                     when 'seen'
-                        ConversationActionCreator.seen conversationID(error) ->
+                        ConversationActionCreator.seen conversationID, (error) ->
                             if error?
                                 alertError "#{t("conversation seen ok ")} #{error}"
                     when 'unseen'
-                        ConversationActionCreator.unseen conversationID(error) ->
+                        ConversationActionCreator.unseen conversationID, (error) ->
                             if error?
                                 alertError "#{t("conversation unseen ok")} #{error}"
 
