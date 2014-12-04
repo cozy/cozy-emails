@@ -59,6 +59,16 @@ class AccountStore extends Store
                     ?.get('mailboxes')
                     ?.get(selectedMailboxID)
 
+    _mailboxSort = (mb1, mb2) ->
+        w1 = mb1.get 'weight'
+        w2 = mb2.get 'weight'
+        if w1 < w2 then return 1
+        else if w1 > w2 then return -1
+        else
+            if mb1.get 'label' < mb2.get 'label' then return 1
+            else if mb1.get 'label' > mb2.get 'label' then return 1
+            else return 0
+
     _setCurrentAccount: (account) ->
         _selectedAccount = account
     ###
@@ -150,12 +160,15 @@ class AccountStore extends Store
 
     getSelected: -> return _selectedAccount
 
-    getSelectedMailboxes: ->
+    getSelectedMailboxes: (sorted) ->
 
         return Immutable.OrderedMap.empty() unless _selectedAccount?
 
         result = Immutable.OrderedMap()
-        _selectedAccount.get('mailboxes').forEach (data) ->
+        mailboxes = _selectedAccount.get('mailboxes')
+        if sorted
+            mailboxes = mailboxes.sort _mailboxSort
+        mailboxes.forEach (data) ->
             mailbox = Immutable.Map data
             result = result.set mailbox.get('id'), mailbox
             return true
@@ -170,18 +183,23 @@ class AccountStore extends Store
         else
             return mailboxes.first()
 
-    getSelectedFavorites: ->
+    getSelectedFavorites: (sorted) ->
 
         mailboxes = @getSelectedMailboxes()
         ids = _selectedAccount?.get 'favorites'
 
         if ids?
-            return mailboxes
+            mb = mailboxes
                 .filter (box, key) -> key in ids
                 .toOrderedMap()
         else
-            return mailboxes
+            mb = mailboxes
                 .toOrderedMap()
+
+        if sorted
+            mb = mb.sort _mailboxSort
+
+        return mb
 
     getError: -> return _newAccountError
 

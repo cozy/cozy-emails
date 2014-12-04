@@ -107,8 +107,8 @@ module.exports = Application = React.createClass
                     selectedMailboxID: @state.selectedMailboxID
                     isResponsiveMenuShown: @state.isResponsiveMenuShown
                     layout: @props.router.current
-                    mailboxes: @state.mailboxes
-                    favorites: @state.favoriteMailboxes
+                    mailboxes: @state.mailboxesSorted
+                    favorites: @state.favoriteSorted
                     disposition: disposition
 
                 div id: 'page-content', className: responsiveClasses,
@@ -371,9 +371,11 @@ module.exports = Application = React.createClass
             isResponsiveMenuShown: LayoutStore.isMenuShown()
             alertMessage: LayoutStore.getAlert()
             mailboxes: AccountStore.getSelectedMailboxes()
+            mailboxesSorted: AccountStore.getSelectedMailboxes true
             selectedMailboxID: selectedMailboxID
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()
+            favoriteSorted: AccountStore.getSelectedFavorites true
             searchQuery: SearchStore.getQuery()
             refreshes: RefreshesStore.getRefreshing()
             settings: SettingsStore.get()

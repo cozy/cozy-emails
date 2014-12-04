@@ -744,7 +744,6 @@ MailboxItem = React.createClass
         pusher = ""
         pusher += "    " for j in [1..@props.mailbox.get('depth')] by 1
         key = @props.mailbox.get 'id'
-        "#{pusher}#{@props.mailbox.get 'label'}"
         if @state.favorite
             favoriteClass = "fa fa-eye"
             favoriteTitle = t "mailbox title favorite"

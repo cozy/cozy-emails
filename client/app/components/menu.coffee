@@ -215,7 +215,7 @@ module.exports = Menu = React.createClass
                     li null,
                         a
                             className: 'menu-item',
-                            tabindex: 0,
+                            tabIndex: 0,
                             onClick: toggleFavorites,
                             key: 'toggle',
                                 i className: 'fa ' + icon
