@@ -188,6 +188,11 @@ module.exports = Compose = React.createClass
                 div className: 'clearfix', null
 
     _initCompose: ->
+
+        if @_saveInterval
+            window.clearInterval @_saveInterval
+        @_saveInterval = window.setInterval @_autosave, 30000
+
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
         if @state.composeInHTML
@@ -224,6 +229,8 @@ module.exports = Compose = React.createClass
                               document.documentElement.msMatchesSelector
 
                         target = document.getSelection().anchorNode
+                        if !target?
+                            return
                         if matchesSelector? and not matchesSelector.call(target, '.rt-editor blockquote *')
                             # we are not inside a blockquote, nothing to do
                             return
@@ -328,6 +335,17 @@ module.exports = Compose = React.createClass
     #componentDidUpdate: ->
     #    @_initCompose()
 
+    componentWillUnmount: ->
+        if @_saveInterval
+            window.clearInterval @_saveInterval
+        if @state.isDraft and @state.id?
+            if not window.confirm(t 'compose confirm keep draft')
+                MessageActionCreator.delete @state.id, (error) =>
+                    if error?
+                        LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
+                    else
+                        LayoutActionCreator.notify t('compose draft deleted')
+
     getInitialState: (forceDefault) ->
 
         # edition of an existing draft
@@ -418,7 +436,7 @@ module.exports = Compose = React.createClass
                 if error?
                     LayoutActionCreator.alertError "#{msgKo} :  error"
                 else
-                    LayoutActionCreator.alertSuccess msgOk
+                    LayoutActionCreator.notify msgOk
                     @setState message
 
                     if callback?
@@ -427,6 +445,9 @@ module.exports = Compose = React.createClass
                         # mail sent close the pane
                         @redirect @buildClosePanelUrl @props.layout
 
+
+    _autosave: ->
+        @_doSend true
 
     onDelete: (args) ->
         if window.confirm(t 'mail confirm delete')
