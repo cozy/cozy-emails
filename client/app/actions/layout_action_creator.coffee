@@ -17,16 +17,6 @@ _cachedQuery = {}
 
 module.exports = LayoutActionCreator =
 
-    showReponsiveMenu: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SHOW_MENU_RESPONSIVE
-            value: null
-
-    hideReponsiveMenu: ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.HIDE_MENU_RESPONSIVE
-            value: null
-
     setDisposition: (type, value) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.SET_DISPOSITION
@@ -94,8 +84,6 @@ module.exports = LayoutActionCreator =
         else 'account.mailbox.messages'
 
     showMessageList: (panelInfo) ->
-        LayoutActionCreator.hideReponsiveMenu()
-
         {accountID, mailboxID} = panelInfo.parameters
         selectedAccount = AccountStore.getSelected()
         if not selectedAccount? or selectedAccount.get('id') isnt accountID
@@ -126,7 +114,6 @@ module.exports = LayoutActionCreator =
             selectedAccount = AccountStore.getSelected()
             if  not selectedAccount? and msg?.accountID
                 AccountActionCreator.selectAccount msg.accountID
-        LayoutActionCreator.hideReponsiveMenu()
         messageID = panelInfo.parameters.messageID
         message = MessageStore.getByID messageID
         if message?
@@ -147,7 +134,6 @@ module.exports = LayoutActionCreator =
             selectedAccount = AccountStore.getSelected()
             if  not selectedAccount? and msg?.accountID
                 AccountActionCreator.selectAccount msg.accountID
-        LayoutActionCreator.hideReponsiveMenu()
         messageID      = panelInfo.parameters.messageID
         message        = MessageStore.getByID messageID
         if message?
@@ -171,8 +157,6 @@ module.exports = LayoutActionCreator =
 
 
     showComposeNewMessage: (panelInfo, direction) ->
-        LayoutActionCreator.hideReponsiveMenu()
-
         # if there isn't a selected account (page loaded directly),
         # select the default account
         selectedAccount = AccountStore.getSelected()
@@ -182,8 +166,6 @@ module.exports = LayoutActionCreator =
 
     # Edit draft
     showComposeMessage: (panelInfo, direction) ->
-        LayoutActionCreator.hideReponsiveMenu()
-
         # if there isn't a selected account (page loaded directly),
         # select the default account
         selectedAccount = AccountStore.getSelected()
@@ -192,11 +174,9 @@ module.exports = LayoutActionCreator =
             AccountActionCreator.selectAccount defaultAccount.get 'id'
 
     showCreateAccount: (panelInfo, direction) ->
-        LayoutActionCreator.hideReponsiveMenu()
         AccountActionCreator.selectAccount null
 
     showConfigAccount: (panelInfo, direction) ->
-        LayoutActionCreator.hideReponsiveMenu()
         AccountActionCreator.selectAccount panelInfo.parameters.accountID
 
     showSearch: (panelInfo, direction) ->
@@ -213,7 +193,6 @@ module.exports = LayoutActionCreator =
                 SearchActionCreator.receiveRawSearchResults results
 
     showSettings: (panelInfo, direction) ->
-        LayoutActionCreator.hideReponsiveMenu()
 
 
     refreshMessages: ->

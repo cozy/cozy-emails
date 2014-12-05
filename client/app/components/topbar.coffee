@@ -15,14 +15,6 @@ module.exports = Topbar = React.createClass
 
     mixins: [RouterMixin]
 
-    # Toggle the menu in responsive mode
-    onResponsiveMenuClick: (event) ->
-        event.preventDefault()
-        if @props.isResponsiveMenuShown
-            LayoutActionCreator.hideReponsiveMenu()
-        else
-            LayoutActionCreator.showReponsiveMenu()
-
     refresh: (event) ->
         event.preventDefault()
         LayoutActionCreator.refreshMessages()
@@ -69,10 +61,6 @@ module.exports = Topbar = React.createClass
                 a href: responsiveBackUrl, className: 'responsive-handler hidden-md hidden-lg',
                     i className: 'fa fa-chevron-left hidden-md hidden-lg pull-left'
                     t "app back"
-            else
-                a onClick: @onResponsiveMenuClick, className: 'responsive-handler hidden-md hidden-lg',
-                    i className: 'fa fa-bars pull-left'
-                    t "app menu"
 
             if layout.firstPanel.action is 'account.mailbox.messages' or
                layout.firstPanel.action is 'account.mailbox.messages'

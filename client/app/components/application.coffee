@@ -110,6 +110,7 @@ module.exports = Application = React.createClass
                     mailboxes: @state.mailboxesSorted
                     favorites: @state.favoriteSorted
                     disposition: disposition
+                    toggleMenu: @toggleMenu
 
                 div id: 'page-content', className: responsiveClasses,
 
@@ -117,6 +118,9 @@ module.exports = Application = React.createClass
                     Alert { alert }
                     ToastContainer()
 
+                    a onClick: @toggleMenu, className: 'responsive-handler hidden-md hidden-lg',
+                        i className: 'fa fa-bars pull-left'
+                        t "app menu"
                     # The quick actions bar
                     #Topbar
                     #    layout: @props.router.current
@@ -368,7 +372,7 @@ module.exports = Application = React.createClass
         return {
             accounts: AccountStore.getAll()
             selectedAccount: selectedAccount
-            isResponsiveMenuShown: LayoutStore.isMenuShown()
+            isResponsiveMenuShown: false
             alertMessage: LayoutStore.getAlert()
             mailboxes: AccountStore.getSelectedMailboxes()
             mailboxesSorted: AccountStore.getSelectedMailboxes true
@@ -397,4 +401,8 @@ module.exports = Application = React.createClass
     # Stops listening to router changes
     componentWillUnmount: ->
         @props.router.off 'fluxRoute', @onRoute
+
+    # Toggle the menu in responsive mode
+    toggleMenu: (event) ->
+        @setState isResponsiveMenuShown: !@state.isResponsiveMenuShown
 

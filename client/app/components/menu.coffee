@@ -113,6 +113,7 @@ module.exports = Menu = React.createClass
             unless @props.accounts.length is 0
                 a
                     href: composeUrl,
+                    onClick: @_hideMenu
                     className: 'menu-item compose-action ' + composeClass,
                         i className: 'fa fa-edit'
                         span className: 'item-label', t 'menu compose'
@@ -125,12 +126,14 @@ module.exports = Menu = React.createClass
 
             a
                 href: newMailboxUrl,
+                onClick: @_hideMenu
                 className: 'menu-item new-account-action ' + newMailboxClass,
                     i className: 'fa fa-inbox'
                     span className: 'item-label', t 'menu account new'
 
             a
                 href: settingsUrl,
+                onClick: @_hideMenu
                 className: 'menu-item settings-action ' + settingsClass,
                     i className: 'fa fa-cog'
                     span className: 'item-label', t 'menu settings'
@@ -161,7 +164,9 @@ module.exports = Menu = React.createClass
                 fullWidth: true # /!\ Hide second panel when switching account
 
         toggleActive = =>
-            @setState displayActiveAccount: true
+            if not @state.displayActiveAccount
+                @setState displayActiveAccount: true
+            @_hideMenu()
 
         toggleDisplay = =>
             if isSelected
@@ -210,7 +215,7 @@ module.exports = Menu = React.createClass
                 ul className: 'list-unstyled submenu mailbox-list',
                     mailboxes?.map (mailbox, key) =>
                         selectedMailboxID = @props.selectedMailboxID
-                        MenuMailboxItem { account, mailbox, key, selectedMailboxID, refreshes, displayErrors: @displayErrors}
+                        MenuMailboxItem { account, mailbox, key, selectedMailboxID, refreshes, displayErrors: @displayErrors, hideMenu: @_hideMenu}
                     .toJS()
                     li null,
                         a
@@ -222,6 +227,10 @@ module.exports = Menu = React.createClass
                                 span
                                     className: 'item-label',
                                     toggleFavoritesLabel
+
+    _hideMenu: ->
+        if @props.isResponsiveMenuShown
+            @props.toggleMenu()
 
     _initTooltips: ->
         #jQuery('#account-list [data-toggle="tooltip"]').tooltip()
@@ -284,6 +293,7 @@ MenuMailboxItem = React.createClass
         li className: classesParent,
             a
                 href: mailboxUrl,
+                onClick: @props.hideMenu,
                 className: classesChild,
                 'data-mailbox-id': mailboxID,
                 onDragEnter: @onDragEnter,
