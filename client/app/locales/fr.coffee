@@ -35,6 +35,8 @@ module.exports =
       "compose toggle bcc"        : "Copie cachée à"
       "compose error no dest"     : "Vous n'avez pas saisi de destinataires"
       "compose error no subject"  : "Vous n'avez pas saisi de sujet"
+      "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?"
+      "compose draft deleted"     : "Brouillon supprimé"
 
       # Menu
       "menu compose"            : "Nouveau"

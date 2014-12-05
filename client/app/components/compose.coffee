@@ -426,6 +426,9 @@ module.exports = Compose = React.createClass
 
             callback = @props.callback
 
+            if not isDraft and @_saveInterval
+                window.clearInterval @_saveInterval
+
             MessageActionCreator.send message, (error, message) =>
                 if isDraft
                     msgKo = t "message action draft ko"
