@@ -35,6 +35,8 @@ module.exports =
       "compose toggle bcc"        : "Bcc"
       "compose error no dest"     : "You can not send a message to nobody"
       "compose error no subject"  : "Please set a subject"
+      "compose confirm keep draft": "Message not sent, keep the draft?"
+      "compose draft deleted"     : "Draft deleted"
 
       # Menu
       "menu compose"            : "Compose"
