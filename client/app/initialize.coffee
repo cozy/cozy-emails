@@ -1,7 +1,7 @@
 # Waits for the DOM to be ready
 # Send client side errors to server
-window.onerror = (msg, url, line) ->
-    console.log msg, url, line
+window.onerror = (msg, url, line, col, error) ->
+    console.error msg, url, line, col, error
     data =
         data:
             type: 'error'
@@ -9,6 +9,9 @@ window.onerror = (msg, url, line) ->
                 msg: msg
             url: url
             line: line
+            col: col
+            error: error.toString()
+            stack: error.stack
             href: window.location.href
     xhr = new XMLHttpRequest()
     xhr.open 'POST', 'activity', true
@@ -72,13 +75,13 @@ window.onload = ->
         ContactActionCreator.searchContact()
 
     catch e
+        console.error e
         # Send client side errors to server
         data =
             data:
                 type: 'error'
-                exception: e
+                exception: e.toString()
         xhr = new XMLHttpRequest()
         xhr.open 'POST', 'activity', true
         xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
         xhr.send JSON.stringify(data)
-
