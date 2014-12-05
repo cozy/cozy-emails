@@ -180,10 +180,10 @@ Account::toClientObject = (callback) ->
         Mailbox.getCounts null, (err, counts) ->
             return callback err if err
             for box in rawObject.mailboxes
-                count = counts[box.id] or {total: 0, unread: 0}
+                count = counts[box.id] or {total: 0, unread: 0, recent: 0}
                 box.nbTotal  = count.total
                 box.nbUnread = count.unread
-                box.nbNew    = -1
+                box.nbRecent = count.recent
 
             callback null, rawObject
 

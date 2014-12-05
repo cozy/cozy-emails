@@ -263,12 +263,12 @@ MenuMailboxItem = React.createClass
 
         nbTotal  = @props.mailbox.get('nbTotal') or 0
         nbUnread = @props.mailbox.get('nbUnread') or 0
-        nbNew    = @props.mailbox.get('nbNew') or 0
+        nbRecent = @props.mailbox.get('nbRecent') or 0
         title    = t "menu mailbox total", nbTotal
         if nbUnread > 0
             title += t "menu mailbox unread", nbUnread
-        if nbNew > 0
-            title += t "menu mailbox new", nbNew
+        if nbRecent > 0
+            title += t "menu mailbox new", nbRecent
 
         classesParent = classer
             active: mailboxID is @props.selectedMailboxID
@@ -276,7 +276,7 @@ MenuMailboxItem = React.createClass
         classesChild = classer
             'menu-item': true
             target: @state.target
-            news: nbNew > 0
+            news: nbRecent > 0
         specialUse = @props.mailbox.get('attribs')?[0]
         icon = switch specialUse
             when '\\All' then 'fa-archive'

@@ -752,7 +752,7 @@ MailboxItem = React.createClass
             favoriteTitle = t "mailbox title not favorite"
         nbTotal  = @props.mailbox.get('nbTotal') or 0
         nbUnread = @props.mailbox.get('nbUnread') or 0
-        nbNew    = @props.mailbox.get('nbNew') or 0
+        nbRecent = @props.mailbox.get('nbRecent') or 0
         classItem = classer
             'row': true
             'box': true
@@ -805,7 +805,7 @@ MailboxItem = React.createClass
                     nbUnread
                 span
                     className: "col-xs-1 text-center box-count box-new",
-                    nbNew
+                    nbRecent
 
     onKeyDown: (evt) ->
         switch evt.key

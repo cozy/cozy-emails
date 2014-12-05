@@ -452,7 +452,9 @@ Mailbox.getCounts = (mailboxID, callback) ->
         result = {}
         rows.forEach (row) ->
             [DATEFLAG, boxID, flag] = row.key
-            result[boxID] ?= {unread: 0, total: 0}
+            result[boxID] ?= {unread: 0, total: 0, recent: 0}
+            if flag is "!\\Recent"
+                result[boxID].recent = row.recent
             if flag is "!\\Seen"
                 result[boxID].unread = row.value
             else if flag is null
