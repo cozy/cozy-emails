@@ -29,9 +29,10 @@ SocketHandler.notify = (type, data, olddata) ->
         Mailbox.getCounts data.id, (err, results) ->
             console.log results, data.id, data
             if thisbox = results[data.id]
-                {total, unread} = thisbox
-                data.nbTotal = total
+                {total, unread, recent} = thisbox
+                data.nbTotal  = total
                 data.nbUnread = unread
+                data.nbRecent = recent
             io?.emit type, data
 
     else
