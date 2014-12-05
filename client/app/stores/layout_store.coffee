@@ -8,7 +8,6 @@ class LayoutStore extends Store
         Initialization.
         Defines private variables here.
     ###
-    _responsiveMenuShown = false
     _disposition = Dispositions.VERTICAL
     _alert =
         level: null
@@ -23,14 +22,6 @@ class LayoutStore extends Store
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
-
-        handle ActionTypes.SHOW_MENU_RESPONSIVE, ->
-            _responsiveMenuShown = true
-            @emit 'change'
-
-        handle ActionTypes.HIDE_MENU_RESPONSIVE, ->
-            _responsiveMenuShown = false
-            @emit 'change'
 
         handle ActionTypes.SET_DISPOSITION, (value) ->
             _disposition = value.type
@@ -70,8 +61,6 @@ class LayoutStore extends Store
     ###
         Public API
     ###
-    isMenuShown: -> return _responsiveMenuShown
-
     getDisposition: -> return _disposition
 
     getAlert: -> return _alert

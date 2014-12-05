@@ -38,8 +38,6 @@ module.exports =
         'CONTACT_LOCAL_SEARCH'       : 'CONTACT_LOCAL_SEARCH'
 
         # Layout
-        'SHOW_MENU_RESPONSIVE'      : 'SHOW_MENU_RESPONSIVE'
-        'HIDE_MENU_RESPONSIVE'      : 'HIDE_MENU_RESPONSIVE'
         'SET_DISPOSITION'           : 'SET_DISPOSITION'
         'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
         'HIDE_ALERT'                : 'HIDE_ALERT'
