@@ -3,6 +3,9 @@
 module.exports = AccountTranslator =
 
     mailboxToImmutable: (raw) ->
+
+        raw.depth = raw.tree.length - 1
+
         box = Immutable.Map raw
 
     # Creates an immutable account from a raw account object

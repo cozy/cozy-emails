@@ -44,6 +44,7 @@ class AccountStore extends Store
         mailboxes = account.get('mailboxes')
         mailboxes = mailboxes.map (box) ->
             if box.get('id') is boxID
+                boxData.weight = box.get 'weight'
                 AccountTranslator.mailboxToImmutable boxData
             else
                 box
