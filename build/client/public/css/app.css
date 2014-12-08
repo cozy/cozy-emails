@@ -2126,7 +2126,6 @@ textarea:active,
 }
 #page-content #panels .panel {
   overflow-y: auto;
-  height: 100%;
   margin: 0;
   padding: 1em 1em 0 1em;
   position: absolute;
@@ -2190,6 +2189,66 @@ textarea:active,
   -o-animation: moveFromLeft 0.3s ease-out;
   -ms-animation: moveFromLeft 0.3s ease-out;
   animation: moveFromLeft 0.3s ease-out;
+}
+#page-content #panels.horizontal .panel:nth-of-type(2) {
+  left: 0;
+}
+.row-1 {
+  height: 9%;
+}
+.row-2 {
+  height: 19%;
+}
+.row-3 {
+  height: 29%;
+}
+.row-4 {
+  height: 39%;
+}
+.row-5 {
+  height: 49%;
+}
+.row-6 {
+  height: 59%;
+}
+.row-7 {
+  height: 69%;
+}
+.row-8 {
+  height: 79%;
+}
+.row-9 {
+  height: 89%;
+}
+.row-10 {
+  height: 100%;
+}
+.row-offset-1 {
+  top: 10%;
+}
+.row-offset-2 {
+  top: 20%;
+}
+.row-offset-3 {
+  top: 30%;
+}
+.row-offset-4 {
+  top: 40%;
+}
+.row-offset-5 {
+  top: 50%;
+}
+.row-offset-6 {
+  top: 60%;
+}
+.row-offset-7 {
+  top: 70%;
+}
+.row-offset-8 {
+  top: 80%;
+}
+.row-offset-9 {
+  top: 90%;
 }
 #mailbox-config h3 {
   color: #444;
@@ -2798,15 +2857,23 @@ textarea:active,
   color: #f00;
   background: #ff0;
 }
+#menu.three .menu-item {
+  padding: 0.2em 0.5em;
+  text-align: left;
+}
+#menu.three i {
+  font-size: 1em;
+}
+#menu.three .item-label {
+  display: inline;
+  padding-left: 0.5em;
+}
 #menu #account-list li {
   border-left: 0.25em solid transparent;
 }
 #menu #account-list li .submenu {
   display: none;
   background: #3e4351;
-}
-#menu #account-list li .submenu .menu-item i {
-  font-size: 1.25em;
 }
 #menu #account-list li:hover {
   border-left: 0.25em solid #474c5c;
