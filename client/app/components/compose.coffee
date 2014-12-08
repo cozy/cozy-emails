@@ -136,7 +136,7 @@ module.exports = Compose = React.createClass
                     label
                         htmlFor: 'compose-subject',
                         className: classLabel,
-                        t "content"
+                        t "compose content"
                     if @state.composeInHTML
                         div
                             className: 'rt-editor form-control',
