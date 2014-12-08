@@ -600,7 +600,7 @@ MessageContent = React.createClass
                     styleEl = document.createElement 'style'
                     styleEl.id = "cozystyle"
                     doc.head.appendChild styleEl
-                    font = "../fonts/sourcesanspro/SourceSansPro-Regular"
+                    font = "./fonts/sourcesanspro/SourceSansPro-Regular"
                     rules = [
                         """
                         @font-face{
