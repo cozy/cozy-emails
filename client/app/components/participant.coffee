@@ -60,6 +60,8 @@ Participant = React.createClass
                     container: "[data-reactid='#{node.dataset.reactid}']"
                 jQuery(node).tooltip(options).tooltip('show')
                 tooltipNode = jQuery(node).data('bs.tooltip').tip()[0]
+                if parseInt(tooltipNode.style.left, 10) < 0
+                    tooltipNode.style.left = 0
                 rect = tooltipNode.getBoundingClientRect()
                 mask = document.createElement 'div'
                 mask.classList.add 'tooltip-mask'
