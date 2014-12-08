@@ -9,7 +9,7 @@ module.exports =
       "app alert close"         : "Fermer"
       "app unimplemented"       : "Non implémenté"
       "app error"               : "Oups, une erreur est survenue,
-                                    veuillez ré-essayer"
+                                    veuillez réessayer"
 
       # Compose window
       "compose"                   : "Écrire un nouveau message"

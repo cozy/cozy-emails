@@ -435,11 +435,15 @@ module.exports.conversationDelete = function(req, res, next) {
 };
 
 module.exports.conversationPatch = function(req, res, next) {
-  var patch;
+  var messages, patch;
   patch = req.body;
+  messages = [];
   return async.eachSeries(req.conversation, function(message, cb) {
-    return message.applyPatchOperations(patch, cb);
-  }, function(err, messages) {
+    return message.applyPatchOperations(patch, function(err, updated) {
+      messages.push(updated.toClientObject());
+      return cb(err);
+    });
+  }, function(err) {
     if (err) {
       return next(err);
     }

@@ -101,6 +101,9 @@ module.exports.create = function(req, res, next) {
         });
       }
       break;
+    case 'error':
+      log.error(activity.data);
+      return res.send(200, null);
     default:
       return res.send(400, {
         name: "Unknown activity data type",

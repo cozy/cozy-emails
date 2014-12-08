@@ -61,6 +61,9 @@ class ContactStore extends Store
     getResults: ->
         return _results
 
+    getContacts: ->
+        return _contacts
+
     getQuery: -> return _query
 
     getAvatar: (address) ->

@@ -1,0 +1,27 @@
+@font-face{
+  font-family: 'Source Sans Pro';
+  font-weight: 400;
+  font-style: normal;
+  font-stretch: normal;
+  src: url('./fonts/sourcesanspro/SourceSansPro-Regular.eot') format('embedded-opentype'),
+       url('./fonts/sourcesanspro/SourceSansPro-Regular.otf.woff') format('woff'),
+       url('./fonts/sourcesanspro/SourceSansPro-Regular.otf') format('opentype'),
+       url('./fonts/sourcesanspro/SourceSansPro-Regular.ttf') format('truetype');
+}
+body {
+    visibility: visible !important;
+    font-family: 'Source Sans Pro';
+}
+img {
+    max-width: 100%;
+}
+blockquote {
+    margin-left: .5em;
+    padding-left: .5em;
+    border-left: 2px solid blue;
+    color: blue;
+}
+blockquote blockquote { border-color: red !important; color: red; }
+blockquote blockquote blockquote { border-color: green !important; color: green; }
+blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }
+blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }
