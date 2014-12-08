@@ -52,10 +52,10 @@
 
         .participants
         .preview
+            flex 1
             margin 0.25em 2em 0 1em
 
         .preview
-            flex 1
             margin 0.25em .75em 0 auto
             overflow hidden
             white-space nowrap
@@ -181,9 +181,11 @@
         margin -.1em 0
         padding-top 0.1em
     input[type="checkbox"]
+    .message.edited .select
+    .avatar-wrapper:hover .select
         height auto
         width auto
-        margin 0 -0.2em 0 0.2em
+        margin 0 0.1em 0 0.2em
         cursor pointer
 
 .message-list-option:first-child
