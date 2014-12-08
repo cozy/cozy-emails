@@ -186,6 +186,8 @@ module.exports = React.createClass
                         rich: prepared.rich
                         imagesWarning: imagesWarning
                         composing: @state.composing
+                        displayImages: @displayImages
+                        displayHTML: @displayHTML
                     div className: 'clearfix'
         else
             li
@@ -551,6 +553,14 @@ module.exports = React.createClass
     addAddress: (address) ->
         ContactActionCreator.createContact address
 
+    displayImages: (event) ->
+        event.preventDefault()
+        @setState messageDisplayImages: true
+
+    displayHTML: (event) ->
+        event.preventDefault()
+        @setState messageDisplayHTML: true
+
 MessageContent = React.createClass
     displayName: 'MessageContent'
 
@@ -574,7 +584,7 @@ MessageContent = React.createClass
                                 className: 'btn btn-default',
                                 type: "button",
                                 ref: 'imagesDisplay',
-                                onClick: @displayImages,
+                                onClick: @props.displayImages,
                                 t 'message images display'
                 iframe
                     'data-message-id': @props.message.get 'id'
@@ -588,7 +598,7 @@ MessageContent = React.createClass
                 #    button
                 #       className: 'btn btn-default',
                 #       type: "button",
-                #       onClick: @displayHTML,
+                #       onClick: @props.displayHTML,
                 #       t 'message html display'
                 div className: 'preview',
                     p dangerouslySetInnerHTML: { __html: @props.rich }
@@ -603,14 +613,12 @@ MessageContent = React.createClass
         #   and resize the frame
         if @refs.content
             frame = @refs.content.getDOMNode()
+            doc = frame.contentDocument or frame.contentWindow?.document
             loadContent = (e) =>
-                step = 0
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
                     doc.documentElement.innerHTML = @props.html
                     updateHeight = (e) ->
-                        e?.preventDefault()
-                        e?.stopPropagation()
                         height = doc.body.getBoundingClientRect().height
                         frame.style.height = "#{height + 60}px"
                         step++
@@ -628,27 +636,19 @@ MessageContent = React.createClass
                     # In Chrome, addEventListener is forbidden by iframe sandboxing
                     #doc.body.addEventListener 'load', updateHeight, true
                     #frame.contentWindow?.addEventListener 'resize', updateHeight, true
-
                 else
                     # try to display text only
                     @setState messageDisplayHTML: false
 
-            if type is 'mount'
-                try loadContent()
+            if type is 'mount' and doc.readyState isnt 'complete'
                 frame.addEventListener 'load', loadContent
             else
                 loadContent()
+        else
+            console.warn "No ref.content"
 
     componentDidMount: ->
         @_initFrame('mount')
 
     componentDidUpdate: ->
         @_initFrame('update')
-
-    displayImages: (event) ->
-        event.preventDefault()
-        @setState messageDisplayImages: true
-
-    displayHTML: (event) ->
-        event.preventDefault()
-        @setState messageDisplayHTML: true
