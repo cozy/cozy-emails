@@ -16,32 +16,39 @@ class ContactStore extends Store
     # result of last search
     _results  = Immutable.OrderedMap.empty()
 
+    _import = (rawResults) ->
+        _results = Immutable.OrderedMap.empty()
+        if rawResults?
+            if not Array.isArray rawResults
+                rawResults = [ rawResults ]
+            convert = (map) ->
+                rawResults.forEach (rawResult) ->
+                    addresses = []
+                    rawResult.datapoints.forEach (point) ->
+                        if point.name is 'email'
+                            addresses.push point.value
+                        if point.name is 'avatar'
+                            rawResult.avatar = point.value
+                    delete rawResult.docType
+                    addresses.forEach (address) ->
+                        rawResult.address = address
+                        contact = Immutable.Map rawResult
+                        map.set address, contact
+            _results  = _results.withMutations convert
+            _contacts = _contacts.withMutations convert
+
+    _import window.contacts
+
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RECEIVE_RAW_CONTACT_RESULTS, (rawResults) ->
-            _results = Immutable.OrderedMap.empty()
-            if rawResults?
-                if not Array.isArray rawResults
-                    rawResults = [ rawResults ]
-                convert = (map) ->
-                    rawResults.forEach (rawResult) ->
-                        rawResult.datapoints.forEach (point) ->
-                            if point.name is 'email'
-                                rawResult.address = point.value
-                            if point.name is 'avatar'
-                                rawResult.avatar = point.value
-                        delete rawResult.docType
-                        contact = Immutable.Map rawResult
-                        map.set contact.get('address'), contact
-                _results  = _results.withMutations convert
-                _contacts = _contacts.withMutations convert
-
+        handle ActionTypes.RECEIVE_RAW_CONTACT_RESULTS, (rawResults) =>
+            _import rawResults
             @emit 'change'
 
-        handle ActionTypes.CONTACT_LOCAL_SEARCH, (query) ->
+        handle ActionTypes.CONTACT_LOCAL_SEARCH, (query) =>
             query = query.toLowerCase()
             re = new RegExp query, 'i'
             _results = _contacts.filter (contact) ->
@@ -60,9 +67,6 @@ class ContactStore extends Store
     ###
     getResults: ->
         return _results
-
-    getContacts: ->
-        return _contacts
 
     getQuery: -> return _query
 

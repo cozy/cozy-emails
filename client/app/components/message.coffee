@@ -617,6 +617,7 @@ MessageContent = React.createClass
             doc = frame.contentDocument or frame.contentWindow?.document
             step = 0
             loadContent = (e) =>
+                step = 0
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
                     doc.documentElement.innerHTML = @props.html
