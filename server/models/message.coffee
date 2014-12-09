@@ -565,6 +565,8 @@ Message.findConversationID = (mail, callback) ->
             Message.pickConversationID rows, callback
 
     # no references, try to find by subject
+    # @TODO : handle the unlikely case where we got a reply
+    # before the original message
     else if mail.normSubject?.length > 3 and isReplyOrForward
         key = [mail.accountID, 'subject', mail.normSubject]
         Message.rawRequest 'dedupRequest', {key}, (err, rows) ->
