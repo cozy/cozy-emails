@@ -9,7 +9,7 @@ AccountStore         = require '../stores/account_store'
 Modal                = require './modal'
 ThinProgress         = require './thin_progress'
 
-{Dispositions} = require '../constants/app_constants'
+{Dispositions, SpecialBoxIcons} = require '../constants/app_constants'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
@@ -277,12 +277,11 @@ MenuMailboxItem = React.createClass
             'menu-item': true
             target: @state.target
             news: nbRecent > 0
-        specialUse = @props.mailbox.get('attribs')?[0]
-        icon = switch specialUse
-            when '\\All' then 'fa-archive'
-            when '\\Drafts' then 'fa-edit'
-            when '\\Sent' then 'fa-share-square-o'
-            else 'fa-folder'
+
+        mailboxIcon = 'fa-folder'
+        for attrib, icon of SpecialBoxIcons
+            if @props.account.get(attrib) is mailboxID
+                mailboxIcon = icon
 
         progress = @props.refreshes.get mailboxID
         displayError = @props.displayErrors.bind null, progress
@@ -305,8 +304,8 @@ MenuMailboxItem = React.createClass
                 'data-placement' : 'right',
                 key: @props.key,
                     # Something must be rethought about the icon
-                    i className: 'fa ' + icon
-                    if nbUnread and nbUnread > 0
+                    i className: 'fa ' + mailboxIcon
+                    if not progress and nbUnread and nbUnread > 0
                         span className: 'badge', nbUnread
                     span
                         className: 'item-label',
