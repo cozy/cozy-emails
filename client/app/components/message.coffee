@@ -616,6 +616,7 @@ MessageContent = React.createClass
             frame = @refs.content.getDOMNode()
             doc = frame.contentDocument or frame.contentWindow?.document
             loadContent = (e) =>
+                step = 0
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
                     doc.documentElement.innerHTML = @props.html

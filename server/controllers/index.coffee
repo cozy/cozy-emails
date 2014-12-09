@@ -1,6 +1,7 @@
 CozyInstance = require '../models/cozy_instance'
 ImapReporter = require '../imap/reporter'
-Account = require '../models/account'
+Account  = require '../models/account'
+Contact  = require '../models/contact'
 Settings = require '../models/settings'
 async = require 'async'
 log = require('../utils/logging')(prefix: 'controllers:index')
@@ -12,6 +13,8 @@ module.exports.main = (req, res, next) ->
         Settings.get
         CozyInstance.getLocale
         Account.clientList
+        (callback) ->
+            Contact.requestWithPictures 'all', {}, callback
     ], (err, results) ->
 
         refreshes = ImapReporter.summary()
@@ -23,15 +26,17 @@ module.exports.main = (req, res, next) ->
                 console.log("#{err}");
                 window.locale = "en"
                 window.refreshes = []
-                window.accounts = []
+                window.accounts  = []
+                window.contacts  = []
             """
         else
-            [settings, locale, accounts] = results
+            [settings, locale, accounts, contacts] = results
             imports = """
-                window.settings = #{JSON.stringify settings}
+                window.settings  = #{JSON.stringify settings}
                 window.refreshes = #{JSON.stringify refreshes};
-                window.locale = "#{locale}";
-                window.accounts = #{JSON.stringify accounts};
+                window.locale    = "#{locale}";
+                window.accounts  = #{JSON.stringify accounts};
+                window.contacts  = #{JSON.stringify contacts};
             """
 
         res.render 'index.jade', {imports}

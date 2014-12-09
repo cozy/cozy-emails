@@ -48,10 +48,11 @@ window.onload = ->
 
         # Flux initialization (must be called at the begining)
         AccountStore  = require './stores/account_store'
+        ContactStore  = require './stores/contact_store'
         LayoutStore   = require './stores/layout_store'
         MessageStore  = require './stores/message_store'
-        SettingsStore = require './stores/settings_store'
         SearchStore   = require './stores/search_store'
+        SettingsStore = require './stores/settings_store'
 
         # Routing management
         Router = require './router'
@@ -69,10 +70,6 @@ window.onload = ->
 
         # begin realtime
         require './utils/socketio_utils'
-
-        # Load addressbook
-        ContactActionCreator = require './actions/contact_action_creator/'
-        ContactActionCreator.searchContact()
 
     catch e
         console.error e
