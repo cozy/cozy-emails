@@ -34,9 +34,6 @@ class AccountStore extends Store
     _newAccountError   = null
 
 
-
-    getMailbox = (accountID, boxID) ->
-        _accounts.get(accountID)?.get(boxID)
     _refreshSelected = ->
         if selectedAccountID = _selectedAccount?.get 'id'
             _selectedAccount = _accounts.get selectedAccountID
@@ -71,6 +68,24 @@ class AccountStore extends Store
             if mb1.get 'label' < mb2.get 'label' then return 1
             else if mb1.get 'label' > mb2.get 'label' then return 1
             else return 0
+
+    _applyMailboxDiff: (accountID, diff) ->
+        account = _accounts.get accountID
+        mailboxes = account.get('mailboxes')
+        updated = mailboxes.withMutations (map) ->
+            for boxid, deltas of diff when deltas.nbTotal + deltas.nbUnread
+                box = map.get boxid
+                box = box.merge
+                    nbTotal: box.get('nbTotal') + deltas.nbTotal
+                    nbUnread: box.get('nbUnread') + deltas.nbUnread
+                map.set boxid, box
+
+        unless updated is mailboxes
+            account = account.set 'mailboxes', updated
+            _accounts = _accounts.set accountID, account
+            _refreshSelected()
+            @emit 'change'
+
 
     _setCurrentAccount: (account) ->
         _selectedAccount = account
