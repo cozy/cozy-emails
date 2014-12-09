@@ -3129,9 +3129,6 @@ textarea:active,
   margin: 0 0.1em 0 0.2em;
   cursor: pointer;
 }
-.message-list-option:first-child {
-  display: none;
-}
 .message-list-option .btn.btn-default {
   font-size: 1em;
   -webkit-transition: color 0.2s ease;
@@ -3145,6 +3142,7 @@ textarea:active,
   border: 0;
   color: #34a6ff;
 }
+.message-list-option .btn.btn-default.shown,
 .message-list-option .btn.btn-default:hover {
   color: #fe8800;
 }
