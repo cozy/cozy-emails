@@ -37,6 +37,13 @@ class AccountStore extends Store
 
     getMailbox = (accountID, boxID) ->
         _accounts.get(accountID)?.get(boxID)
+    _refreshSelected = ->
+        if selectedAccountID = _selectedAccount?.get 'id'
+            _selectedAccount = _accounts.get selectedAccountID
+            if selectedMailboxID = _selectedMailbox?.get 'id'
+                _selectedMailbox = _selectedAccount
+                    ?.get('mailboxes')
+                    ?.get(selectedMailboxID)
 
     setMailbox = (accountID, boxID, boxData) ->
 
@@ -52,13 +59,8 @@ class AccountStore extends Store
 
         account = account.set 'mailboxes', mailboxes
         _accounts = _accounts.set accountID, account
+        _refreshSelected()
 
-        if selectedAccountID = _selectedAccount?.get 'id'
-            _selectedAccount = _accounts.get selectedAccountID
-            if selectedMailboxID = _selectedMailbox?.get 'id'
-                _selectedMailbox = _selectedAccount
-                    ?.get('mailboxes')
-                    ?.get(selectedMailboxID)
 
     _mailboxSort = (mb1, mb2) ->
         w1 = mb1.get 'weight'
