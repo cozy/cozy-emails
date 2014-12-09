@@ -32,6 +32,8 @@ MessageList = React.createClass
         return {
             edited: false
             loading: false
+            filterFlag: false
+            filterUnsead: false
         }
 
     componentWillReceiveProps: (props) ->
@@ -82,6 +84,28 @@ MessageList = React.createClass
             parameters: [@props.accountID, 'account']
             fullWidth: true
 
+        advanced = @props.settings.get('advanced')
+
+        toggleFilterFlag = =>
+            filter = if @state.filterFlag then MessageFilter.ALL else MessageFilter.FLAGGED
+            LayoutActionCreator.filterMessages filter
+            params = MessageStore.getParams()
+            params.accountID = @props.accountID
+            params.mailboxID = @props.mailboxID
+            LayoutActionCreator.showMessageList parameters: params
+
+            @setState filterFlag: not @state.filterFlag, filterUnseen: false
+
+        toggleFilterUnseen = =>
+            filter = if @state.filterUnseen then MessageFilter.ALL else MessageFilter.UNSEEN
+            LayoutActionCreator.filterMessages filter
+            params = MessageStore.getParams()
+            params.accountID = @props.accountID
+            params.mailboxID = @props.mailboxID
+            LayoutActionCreator.showMessageList parameters: params
+
+            @setState filterUnseen: not @state.filterUnseen, filterFlag: false
+
         classList = classer
             compact: compact
             edited: @state.edited
@@ -95,28 +119,43 @@ MessageList = React.createClass
                 div className: 'btn-toolbar', role: 'toolbar',
                     div className: 'btn-group',
                         # Toggle edit
-                        div className: 'btn-group btn-group-sm message-list-option',
-                            button
-                                type: "button"
-                                className: "btn btn-default " + classEdited
-                                onClick: @toggleEdited,
-                                    i className: 'fa fa-square-o'
+                        if advanced
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                button
+                                    type: "button"
+                                    className: "btn btn-default " + classEdited
+                                    onClick: @toggleEdited,
+                                        i className: 'fa fa-square-o'
                         # mailbox-list
-                        #if not @state.edited
-                            #div className: 'btn-group btn-group-sm message-list-option',
-                                #MailboxList
-                                    #getUrl: getMailboxUrl
-                                    #mailboxes: @props.mailboxes
-                                    #selectedMailbox: @props.mailboxID
+                        if advanced and not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                MailboxList
+                                    getUrl: getMailboxUrl
+                                    mailboxes: @props.mailboxes
+                                    selectedMailbox: @props.mailboxID
                         # filters
-                        #if not @state.edited
-                            #div className: 'btn-group btn-group-sm message-list-option',
-                                #MessagesFilter filterParams
+                        if not advanced and not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option ',
+                                button
+                                    onClick: toggleFilterUnseen
+                                    title: t 'list filter unseen title'
+                                    className: 'btn btn-default ' + if @state.filterUnseen then ' shown ' else '',
+                                    span className: 'fa fa-envelope'
+                        if not advanced and not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option ',
+                                button
+                                    onClick: toggleFilterFlag
+                                    title: t 'list filter flagged title'
+                                    className: 'btn btn-default ' + if @state.filterFlag then ' shown ' else '',
+                                    span className: 'fa fa-flag'
+                        if advanced and not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                MessagesFilter filterParams
                         ## sort
-                        #if not @state.edited
-                            #div className: 'btn-group btn-group-sm message-list-option',
-                                #MessagesSort filterParams
-                                #
+                        if advanced and not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                MessagesSort filterParams
+
                         # refresh
                         if not @state.edited
                             div className: 'btn-group btn-group-sm message-list-option',
