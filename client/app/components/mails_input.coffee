@@ -102,19 +102,17 @@ module.exports = MailsInput = React.createClass
 
     onQuery: ->
         query = @refs.contactInput.getDOMNode().value.split(',').pop().trim()
-        if query.length > 2
+        if query.length > 3
             ContactActionCreator.searchContactLocal query
             @setState open: true
             return true
         else
+            if @state.open
+                @setState contacts: null, open: false
             return false
 
     onKeyDown: (evt) ->
         switch evt.key
-            when "Tab"
-                if @onQuery()
-                    evt.preventDefault()
-                    return false
             when "Enter"
                 if @state.contacts?.count() > 0
                     @onContact
@@ -134,6 +132,11 @@ module.exports = MailsInput = React.createClass
                 node.value = node.value.trim()
             when "Escape"
                 @setState contacts: null, open: false
+            else
+                if (evt.key.toString().length is 1)
+                    if @onQuery()
+                        evt.preventDefault()
+                        return false
 
 
     onContact: (contact) ->
