@@ -59,7 +59,7 @@ class MessageStore extends Store
 
     initFilters()
 
-    onReceiveRawMessage = (message, silent = false) ->
+    onReceiveRawMessage = (message) ->
         # create or update
         if not message.attachments?
             message.attachments = []
@@ -83,14 +83,15 @@ class MessageStore extends Store
         message = Immutable.Map message
         _messages = _messages.set message.get('id'), message
 
-        @emit 'change' unless silent
 
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage
+        handle ActionTypes.RECEIVE_RAW_MESSAGE, (message) ->
+            onReceiveRawMessage message
+            @emit 'change'
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
 
@@ -113,7 +114,7 @@ class MessageStore extends Store
             if messages.count? and messages.mailboxID?
                 messages = messages.messages.sort __sortFunction
 
-            onReceiveRawMessage message, true for message in messages
+            onReceiveRawMessage message for message in messages
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
@@ -125,16 +126,16 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_SEND, (message) ->
-            onReceiveRawMessage message, true
+            onReceiveRawMessage message
 
         handle ActionTypes.MESSAGE_DELETE, (message) ->
-            onReceiveRawMessage message, true
+            onReceiveRawMessage message
 
         handle ActionTypes.MESSAGE_BOXES, (message) ->
-            onReceiveRawMessage message, true
+            onReceiveRawMessage message
 
         handle ActionTypes.MESSAGE_FLAG, (message) ->
-            onReceiveRawMessage message, true
+            onReceiveRawMessage message
 
         handle ActionTypes.SELECT_ACCOUNT, ->
             initFilters()
