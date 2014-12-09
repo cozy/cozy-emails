@@ -547,6 +547,8 @@ Message.findConversationID = (mail, callback) ->
     if mail.headers['x-gm-thrid']
         return callback null, mail.headers['x-gm-thrid']
 
+    # is reply or forward
+    isReplyOrForward = mailutils.isReplyOrForward mail.subject
 
     # try to find by references
     references = mail.references or []
@@ -563,16 +565,15 @@ Message.findConversationID = (mail, callback) ->
             Message.pickConversationID rows, callback
 
     # no references, try to find by subject
-    # @TODO, should only do this if subject start with variation of Re:
-    else if mail.normSubject?.length > 3
+    else if mail.normSubject?.length > 3 and isReplyOrForward
         key = [mail.accountID, 'subject', mail.normSubject]
         Message.rawRequest 'dedupRequest', {key}, (err, rows) ->
             return callback err if err
             Message.pickConversationID rows, callback
 
+    # give it a random uid
     else
         callback null, uuid.v4()
-        # give it a random uid
 
 
 
