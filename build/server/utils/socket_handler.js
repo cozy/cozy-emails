@@ -38,12 +38,13 @@ SocketHandler.notify = function(type, data, olddata) {
     return _results;
   } else if (type === 'mailbox.update') {
     return Mailbox.getCounts(data.id, function(err, results) {
-      var thisbox, total, unread;
+      var recent, thisbox, total, unread;
       console.log(results, data.id, data);
       if (thisbox = results[data.id]) {
-        total = thisbox.total, unread = thisbox.unread;
+        total = thisbox.total, unread = thisbox.unread, recent = thisbox.recent;
         data.nbTotal = total;
         data.nbUnread = unread;
+        data.nbRecent = recent;
       }
       return io != null ? io.emit(type, data) : void 0;
     });

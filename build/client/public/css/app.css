@@ -2126,6 +2126,7 @@ textarea:active,
 }
 #page-content #panels .panel {
   overflow-y: auto;
+  height: 100%;
   margin: 0;
   padding: 1em 1em 0 1em;
   position: absolute;
@@ -2972,9 +2973,6 @@ textarea:active,
 }
 .message-list .message .participants,
 .message-list .message .preview {
-  margin: 0.25em 2em 0 1em;
-}
-.message-list .message .preview {
   -webkit-box-flex: 1;
   -moz-box-flex: 1;
   -o-box-flex: 1;
@@ -2982,6 +2980,9 @@ textarea:active,
   -webkit-flex: 1;
   -ms-flex: 1;
   flex: 1;
+  margin: 0.25em 2em 0 1em;
+}
+.message-list .message .preview {
   margin: 0.25em 0.75em 0 auto;
   overflow: hidden;
   white-space: nowrap;
@@ -3120,10 +3121,12 @@ textarea:active,
   margin: -0.1em 0;
   padding-top: 0.1em;
 }
-.message-list.compact input[type="checkbox"] {
+.message-list.compact input[type="checkbox"],
+.message-list.compact .message.edited .select,
+.message-list.compact .avatar-wrapper:hover .select {
   height: auto;
   width: auto;
-  margin: 0 -0.2em 0 0.2em;
+  margin: 0 0.1em 0 0.2em;
   cursor: pointer;
 }
 .message-list-option:first-child {
@@ -3178,12 +3181,6 @@ textarea:active,
   padding: 0;
 }
 .more-messages {
-  cursor: pointer;
-}
-#quick-actions .responsive-handler {
-  color: #333;
-  font-size: 1.75em;
-  text-decoration: none;
   cursor: pointer;
 }
 #quick-actions .fa-bars,
@@ -3321,6 +3318,12 @@ textarea:active,
   Put styles here for scaffolding and testing out new features/stuff
   "Production-ready" components styles should live in a dedicated file
 */
+.responsive-handler {
+  color: #333;
+  font-size: 1.75em;
+  text-decoration: none;
+  cursor: pointer;
+}
 #quick-actions> div {
   padding: 0;
 }

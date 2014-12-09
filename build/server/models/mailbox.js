@@ -598,8 +598,12 @@ Mailbox.getCounts = function(mailboxID, callback) {
       if (result[boxID] == null) {
         result[boxID] = {
           unread: 0,
-          total: 0
+          total: 0,
+          recent: 0
         };
+      }
+      if (flag === "!\\Recent") {
+        result[boxID].recent = row.recent;
       }
       if (flag === "!\\Seen") {
         return result[boxID].unread = row.value;

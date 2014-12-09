@@ -405,18 +405,6 @@ SearchActionCreator = require('./search_action_creator');
 _cachedQuery = {};
 
 module.exports = LayoutActionCreator = {
-  showReponsiveMenu: function() {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.SHOW_MENU_RESPONSIVE,
-      value: null
-    });
-  },
-  hideReponsiveMenu: function() {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.HIDE_MENU_RESPONSIVE,
-      value: null
-    });
-  },
   setDisposition: function(type, value) {
     return AppDispatcher.handleViewAction({
       type: ActionTypes.SET_DISPOSITION,
@@ -503,7 +491,6 @@ module.exports = LayoutActionCreator = {
   },
   showMessageList: function(panelInfo) {
     var accountID, cached, mailboxID, query, selectedAccount, _ref1;
-    LayoutActionCreator.hideReponsiveMenu();
     _ref1 = panelInfo.parameters, accountID = _ref1.accountID, mailboxID = _ref1.mailboxID;
     selectedAccount = AccountStore.getSelected();
     if ((selectedAccount == null) || selectedAccount.get('id') !== accountID) {
@@ -542,7 +529,6 @@ module.exports = LayoutActionCreator = {
         return AccountActionCreator.selectAccount(msg.accountID);
       }
     };
-    LayoutActionCreator.hideReponsiveMenu();
     messageID = panelInfo.parameters.messageID;
     message = MessageStore.getByID(messageID);
     if (message != null) {
@@ -567,7 +553,6 @@ module.exports = LayoutActionCreator = {
         return AccountActionCreator.selectAccount(msg.accountID);
       }
     };
-    LayoutActionCreator.hideReponsiveMenu();
     messageID = panelInfo.parameters.messageID;
     message = MessageStore.getByID(messageID);
     if (message != null) {
@@ -594,7 +579,6 @@ module.exports = LayoutActionCreator = {
   },
   showComposeNewMessage: function(panelInfo, direction) {
     var defaultAccount, selectedAccount;
-    LayoutActionCreator.hideReponsiveMenu();
     selectedAccount = AccountStore.getSelected();
     if (selectedAccount == null) {
       defaultAccount = AccountStore.getDefault();
@@ -603,7 +587,6 @@ module.exports = LayoutActionCreator = {
   },
   showComposeMessage: function(panelInfo, direction) {
     var defaultAccount, selectedAccount;
-    LayoutActionCreator.hideReponsiveMenu();
     selectedAccount = AccountStore.getSelected();
     if (selectedAccount == null) {
       defaultAccount = AccountStore.getDefault();
@@ -611,11 +594,9 @@ module.exports = LayoutActionCreator = {
     }
   },
   showCreateAccount: function(panelInfo, direction) {
-    LayoutActionCreator.hideReponsiveMenu();
     return AccountActionCreator.selectAccount(null);
   },
   showConfigAccount: function(panelInfo, direction) {
-    LayoutActionCreator.hideReponsiveMenu();
     return AccountActionCreator.selectAccount(panelInfo.parameters.accountID);
   },
   showSearch: function(panelInfo, direction) {
@@ -631,9 +612,7 @@ module.exports = LayoutActionCreator = {
       }
     });
   },
-  showSettings: function(panelInfo, direction) {
-    return LayoutActionCreator.hideReponsiveMenu();
-  },
+  showSettings: function(panelInfo, direction) {},
   refreshMessages: function() {
     return XHRUtils.refresh(function(results) {
       if (results === "done") {
@@ -1827,7 +1806,7 @@ MailboxItem = React.createClass({
     };
   },
   render: function() {
-    var classItem, favoriteClass, favoriteTitle, j, key, nbNew, nbTotal, nbUnread, pusher, _i, _ref1;
+    var classItem, favoriteClass, favoriteTitle, j, key, nbRecent, nbTotal, nbUnread, pusher, _i, _ref1;
     pusher = "";
     for (j = _i = 1, _ref1 = this.props.mailbox.get('depth'); _i <= _ref1; j = _i += 1) {
       pusher += "    ";
@@ -1842,7 +1821,7 @@ MailboxItem = React.createClass({
     }
     nbTotal = this.props.mailbox.get('nbTotal') || 0;
     nbUnread = this.props.mailbox.get('nbUnread') || 0;
-    nbNew = this.props.mailbox.get('nbNew') || 0;
+    nbRecent = this.props.mailbox.get('nbRecent') || 0;
     classItem = classer({
       'row': true,
       'box': true,
@@ -1903,7 +1882,7 @@ MailboxItem = React.createClass({
         className: "col-xs-1 text-center box-count box-unread"
       }, nbUnread), span({
         className: "col-xs-1 text-center box-count box-new"
-      }, nbNew));
+      }, nbRecent));
     }
   },
   onKeyDown: function(evt) {
@@ -2240,13 +2219,19 @@ module.exports = Application = React.createClass({
       layout: this.props.router.current,
       mailboxes: this.state.mailboxesSorted,
       favorites: this.state.favoriteSorted,
-      disposition: disposition
+      disposition: disposition,
+      toggleMenu: this.toggleMenu
     }), div({
       id: 'page-content',
       className: responsiveClasses
     }, Alert({
       alert: alert
-    }), ToastContainer(), div({
+    }), ToastContainer(), a({
+      onClick: this.toggleMenu,
+      className: 'responsive-handler hidden-md hidden-lg'
+    }, i({
+      className: 'fa fa-bars pull-left'
+    }), t("app menu")), div({
       id: 'panels',
       className: panelsClasses
     }, div({
@@ -2448,7 +2433,7 @@ module.exports = Application = React.createClass({
       accounts: AccountStore.getAll(),
       contacts: ContactStore.getContacts(),
       selectedAccount: selectedAccount,
-      isResponsiveMenuShown: LayoutStore.isMenuShown(),
+      isResponsiveMenuShown: false,
       alertMessage: LayoutStore.getAlert(),
       mailboxes: AccountStore.getSelectedMailboxes(),
       mailboxesSorted: AccountStore.getSelectedMailboxes(true),
@@ -2474,6 +2459,11 @@ module.exports = Application = React.createClass({
   },
   componentWillUnmount: function() {
     return this.props.router.off('fluxRoute', this.onRoute);
+  },
+  toggleMenu: function(event) {
+    return this.setState({
+      isResponsiveMenuShown: !this.state.isResponsiveMenuShown
+    });
   }
 });
 });
@@ -2671,6 +2661,10 @@ module.exports = Compose = React.createClass({
   },
   _initCompose: function() {
     var node, r, range, rect, s;
+    if (this._saveInterval) {
+      window.clearInterval(this._saveInterval);
+    }
+    this._saveInterval = window.setInterval(this._autosave, 30000);
     this.getDOMNode().scrollIntoView();
     if (this.state.composeInHTML) {
       if (Array.isArray(this.state.to) && this.state.to.length > 0 && this.state.subject !== '') {
@@ -2698,6 +2692,9 @@ module.exports = Compose = React.createClass({
             var after, before, inserted, matchesSelector, parent, process, rangeAfter, rangeBefore, sel, target;
             matchesSelector = document.documentElement.matches || document.documentElement.matchesSelector || document.documentElement.webkitMatchesSelector || document.documentElement.mozMatchesSelector || document.documentElement.oMatchesSelector || document.documentElement.msMatchesSelector;
             target = document.getSelection().anchorNode;
+            if (target == null) {
+              return;
+            }
             if ((matchesSelector != null) && !matchesSelector.call(target, '.rt-editor blockquote *')) {
               return;
             }
@@ -2797,6 +2794,24 @@ module.exports = Compose = React.createClass({
   componentDidMount: function() {
     return this._initCompose();
   },
+  componentWillUnmount: function() {
+    if (this._saveInterval) {
+      window.clearInterval(this._saveInterval);
+    }
+    if (this.state.isDraft && (this.state.id != null)) {
+      if (!window.confirm(t('compose confirm keep draft'))) {
+        return MessageActionCreator["delete"](this.state.id, (function(_this) {
+          return function(error) {
+            if (error != null) {
+              return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
+            } else {
+              return LayoutActionCreator.notify(t('compose draft deleted'));
+            }
+          };
+        })(this));
+      }
+    }
+  },
   getInitialState: function(forceDefault) {
     var key, message, state, value, _ref1;
     if (message = this.props.message) {
@@ -2878,6 +2893,9 @@ module.exports = Compose = React.createClass({
         message.text = node.value.trim();
       }
       callback = this.props.callback;
+      if (!isDraft && this._saveInterval) {
+        window.clearInterval(this._saveInterval);
+      }
       return MessageActionCreator.send(message, (function(_this) {
         return function(error, message) {
           var msgKo, msgOk;
@@ -2891,7 +2909,7 @@ module.exports = Compose = React.createClass({
           if (error != null) {
             return LayoutActionCreator.alertError("" + msgKo + " :  error");
           } else {
-            LayoutActionCreator.alertSuccess(msgOk);
+            LayoutActionCreator.notify(msgOk);
             _this.setState(message);
             if (callback != null) {
               return callback(error);
@@ -2902,6 +2920,9 @@ module.exports = Compose = React.createClass({
         };
       })(this));
     }
+  },
+  _autosave: function() {
+    return this._doSend(true);
   },
   onDelete: function(args) {
     if (window.confirm(t('mail confirm delete'))) {
@@ -3846,6 +3867,7 @@ module.exports = Menu = React.createClass({
       className: classes
     }, modal, this.props.accounts.length !== 0 ? a({
       href: composeUrl,
+      onClick: this._hideMenu,
       className: 'menu-item compose-action ' + composeClass
     }, i({
       className: 'fa fa-edit'
@@ -3860,6 +3882,7 @@ module.exports = Menu = React.createClass({
       };
     })(this)).toJS()) : void 0, a({
       href: newMailboxUrl,
+      onClick: this._hideMenu,
       className: 'menu-item new-account-action ' + newMailboxClass
     }, i({
       className: 'fa fa-inbox'
@@ -3867,6 +3890,7 @@ module.exports = Menu = React.createClass({
       className: 'item-label'
     }, t('menu account new'))), a({
       href: settingsUrl,
+      onClick: this._hideMenu,
       className: 'menu-item settings-action ' + settingsClass
     }, i({
       className: 'fa fa-cog'
@@ -3897,9 +3921,12 @@ module.exports = Menu = React.createClass({
     }
     toggleActive = (function(_this) {
       return function() {
-        return _this.setState({
-          displayActiveAccount: true
-        });
+        if (!_this.state.displayActiveAccount) {
+          _this.setState({
+            displayActiveAccount: true
+          });
+        }
+        return _this._hideMenu();
       };
     })(this);
     toggleDisplay = (function(_this) {
@@ -3970,7 +3997,8 @@ module.exports = Menu = React.createClass({
           key: key,
           selectedMailboxID: selectedMailboxID,
           refreshes: refreshes,
-          displayErrors: _this.displayErrors
+          displayErrors: _this.displayErrors,
+          hideMenu: _this._hideMenu
         });
       };
     })(this)).toJS() : void 0, li(null, a({
@@ -3983,6 +4011,11 @@ module.exports = Menu = React.createClass({
     }), span({
       className: 'item-label'
     }, toggleFavoritesLabel)))) : void 0);
+  },
+  _hideMenu: function() {
+    if (this.props.isResponsiveMenuShown) {
+      return this.props.toggleMenu();
+    }
   },
   _initTooltips: function() {},
   componentDidMount: function() {
@@ -4005,7 +4038,7 @@ MenuMailboxItem = React.createClass({
     };
   },
   render: function() {
-    var classesChild, classesParent, displayError, icon, j, mailboxID, mailboxUrl, nbNew, nbTotal, nbUnread, progress, pusher, specialUse, title, _i, _ref1, _ref2;
+    var classesChild, classesParent, displayError, icon, j, mailboxID, mailboxUrl, nbRecent, nbTotal, nbUnread, progress, pusher, specialUse, title, _i, _ref1, _ref2;
     mailboxID = this.props.mailbox.get('id');
     mailboxUrl = this.buildUrl({
       direction: 'first',
@@ -4014,13 +4047,13 @@ MenuMailboxItem = React.createClass({
     });
     nbTotal = this.props.mailbox.get('nbTotal') || 0;
     nbUnread = this.props.mailbox.get('nbUnread') || 0;
-    nbNew = this.props.mailbox.get('nbNew') || 0;
+    nbRecent = this.props.mailbox.get('nbRecent') || 0;
     title = t("menu mailbox total", nbTotal);
     if (nbUnread > 0) {
       title += t("menu mailbox unread", nbUnread);
     }
-    if (nbNew > 0) {
-      title += t("menu mailbox new", nbNew);
+    if (nbRecent > 0) {
+      title += t("menu mailbox new", nbRecent);
     }
     classesParent = classer({
       active: mailboxID === this.props.selectedMailboxID,
@@ -4029,7 +4062,7 @@ MenuMailboxItem = React.createClass({
     classesChild = classer({
       'menu-item': true,
       target: this.state.target,
-      news: nbNew > 0
+      news: nbRecent > 0
     });
     specialUse = (_ref1 = this.props.mailbox.get('attribs')) != null ? _ref1[0] : void 0;
     icon = (function() {
@@ -4054,6 +4087,7 @@ MenuMailboxItem = React.createClass({
       className: classesParent
     }, a({
       href: mailboxUrl,
+      onClick: this.props.hideMenu,
       className: classesChild,
       'data-mailbox-id': mailboxID,
       onDragEnter: this.onDragEnter,
@@ -4980,7 +5014,9 @@ module.exports = React.createClass({
         text: prepared.text,
         rich: prepared.rich,
         imagesWarning: imagesWarning,
-        composing: this.state.composing
+        composing: this.state.composing,
+        displayImages: this.displayImages,
+        displayHTML: this.displayHTML
       }), div({
         className: 'clearfix'
       }));
@@ -5448,6 +5484,18 @@ module.exports = React.createClass({
   },
   addAddress: function(address) {
     return ContactActionCreator.createContact(address);
+  },
+  displayImages: function(event) {
+    event.preventDefault();
+    return this.setState({
+      messageDisplayImages: true
+    });
+  },
+  displayHTML: function(event) {
+    event.preventDefault();
+    return this.setState({
+      messageDisplayHTML: true
+    });
   }
 });
 
@@ -5472,12 +5520,13 @@ MessageContent = React.createClass({
         className: 'btn btn-default',
         type: "button",
         ref: 'imagesDisplay',
-        onClick: this.displayImages
+        onClick: this.props.displayImages
       }, t('message images display'))) : void 0, iframe({
         'data-message-id': this.props.message.get('id'),
         className: 'content',
         ref: 'content',
         allowTransparency: true,
+        sandbox: 'allow-same-origin allow-popups',
         frameBorder: 0
       }));
     } else {
@@ -5493,34 +5542,28 @@ MessageContent = React.createClass({
     }
   },
   _initFrame: function(type) {
-    var frame, loadContent, panel;
+    var doc, frame, loadContent, panel, _ref2;
     panel = document.querySelector("#panels > .panel:nth-of-type(2)");
     if ((panel != null) && !this.props.composing) {
       panel.scrollTop = 0;
     }
     if (this.refs.content) {
       frame = this.refs.content.getDOMNode();
+      doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
       loadContent = (function(_this) {
         return function(e) {
-          var doc, step, updateHeight, _ref2;
-          step = 0;
-          doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
+          var updateHeight, _ref3;
+          doc = frame.contentDocument || ((_ref3 = frame.contentWindow) != null ? _ref3.document : void 0);
           if (doc != null) {
             doc.documentElement.innerHTML = _this.props.html;
             updateHeight = function(e) {
-              var height, _ref3;
-              if (e != null) {
-                e.preventDefault();
-              }
-              if (e != null) {
-                e.stopPropagation();
-              }
+              var height, _ref4;
               height = doc.body.getBoundingClientRect().height;
               frame.style.height = "" + (height + 60) + "px";
               step++;
               if (step > 10) {
                 doc.body.removeEventListener('load');
-                return (_ref3 = frame.contentWindow) != null ? _ref3.removeEventListener('resize') : void 0;
+                return (_ref4 = frame.contentWindow) != null ? _ref4.removeEventListener('resize') : void 0;
               }
             };
             frame.style.height = "32px";
@@ -5534,14 +5577,13 @@ MessageContent = React.createClass({
           }
         };
       })(this);
-      if (type === 'mount') {
-        try {
-          loadContent();
-        } catch (_error) {}
+      if (type === 'mount' && doc.readyState !== 'complete') {
         return frame.addEventListener('load', loadContent);
       } else {
         return loadContent();
       }
+    } else {
+      return console.warn("No ref.content");
     }
   },
   componentDidMount: function() {
@@ -5549,18 +5591,6 @@ MessageContent = React.createClass({
   },
   componentDidUpdate: function() {
     return this._initFrame('update');
-  },
-  displayImages: function(event) {
-    event.preventDefault();
-    return this.setState({
-      messageDisplayImages: true
-    });
-  },
-  displayHTML: function(event) {
-    event.preventDefault();
-    return this.setState({
-      messageDisplayHTML: true
-    });
   }
 });
 });
@@ -5666,6 +5696,9 @@ Participant = React.createClass({
           };
           jQuery(node).tooltip(options).tooltip('show');
           tooltipNode = jQuery(node).data('bs.tooltip').tip()[0];
+          if (parseInt(tooltipNode.style.left, 10) < 0) {
+            tooltipNode.style.left = 0;
+          }
           rect = tooltipNode.getBoundingClientRect();
           mask = document.createElement('div');
           mask.classList.add('tooltip-mask');
@@ -6430,14 +6463,6 @@ ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 module.exports = Topbar = React.createClass({
   displayName: 'Topbar',
   mixins: [RouterMixin],
-  onResponsiveMenuClick: function(event) {
-    event.preventDefault();
-    if (this.props.isResponsiveMenuShown) {
-      return LayoutActionCreator.hideReponsiveMenu();
-    } else {
-      return LayoutActionCreator.showReponsiveMenu();
-    }
-  },
   refresh: function(event) {
     event.preventDefault();
     return LayoutActionCreator.refreshMessages();
@@ -6486,12 +6511,7 @@ module.exports = Topbar = React.createClass({
       className: 'responsive-handler hidden-md hidden-lg'
     }, i({
       className: 'fa fa-chevron-left hidden-md hidden-lg pull-left'
-    }), t("app back")) : a({
-      onClick: this.onResponsiveMenuClick,
-      className: 'responsive-handler hidden-md hidden-lg'
-    }, i({
-      className: 'fa fa-bars pull-left'
-    }), t("app menu")), layout.firstPanel.action === 'account.mailbox.messages' || layout.firstPanel.action === 'account.mailbox.messages' ? div({
+    }), t("app back")) : void 0, layout.firstPanel.action === 'account.mailbox.messages' || layout.firstPanel.action === 'account.mailbox.messages' ? div({
       className: 'col-md-6 hidden-xs hidden-sm pull-left'
     }, form({
       className: 'form-inline col-md-12'
@@ -6550,8 +6570,6 @@ module.exports = {
     'RECEIVE_RAW_CONTACT_RESULTS': 'RECEIVE_RAW_CONTACT_RESULTS',
     'CLEAR_CONTACT_RESULTS': 'CLEAR_CONTACT_RESULTS',
     'CONTACT_LOCAL_SEARCH': 'CONTACT_LOCAL_SEARCH',
-    'SHOW_MENU_RESPONSIVE': 'SHOW_MENU_RESPONSIVE',
-    'HIDE_MENU_RESPONSIVE': 'HIDE_MENU_RESPONSIVE',
     'SET_DISPOSITION': 'SET_DISPOSITION',
     'DISPLAY_ALERT': 'DISPLAY_ALERT',
     'HIDE_ALERT': 'HIDE_ALERT',
@@ -6617,9 +6635,9 @@ module.exports = {
 });
 
 ;require.register("initialize", function(exports, require, module) {
-window.onerror = function(msg, url, line) {
+window.onerror = function(msg, url, line, col, error) {
   var data, xhr;
-  console.log(msg, url, line);
+  console.error(msg, url, line, col, error);
   data = {
     data: {
       type: 'error',
@@ -6628,6 +6646,9 @@ window.onerror = function(msg, url, line) {
       },
       url: url,
       line: line,
+      col: col,
+      error: error.toString(),
+      stack: error.stack,
       href: window.location.href
     }
   };
@@ -6674,10 +6695,11 @@ window.onload = function() {
     return ContactActionCreator.searchContact();
   } catch (_error) {
     e = _error;
+    console.error(e);
     data = {
       data: {
         type: 'error',
-        exception: e
+        exception: e.toString()
       }
     };
     xhr = new XMLHttpRequest();
@@ -7300,6 +7322,8 @@ module.exports = {
   "compose toggle bcc": "Bcc",
   "compose error no dest": "You can not send a message to nobody",
   "compose error no subject": "Please set a subject",
+  "compose confirm keep draft": "Message not sent, keep the draft?",
+  "compose draft deleted": "Draft deleted",
   "menu compose": "Compose",
   "menu account new": "New Mailbox",
   "menu settings": "Parameters",
@@ -7503,6 +7527,8 @@ module.exports = {
   "compose toggle bcc": "Copie cachée à",
   "compose error no dest": "Vous n'avez pas saisi de destinataires",
   "compose error no subject": "Vous n'avez pas saisi de sujet",
+  "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?",
+  "compose draft deleted": "Brouillon supprimé",
   "menu compose": "Nouveau",
   "menu account new": "Ajouter un compte",
   "menu settings": "Paramètres",
@@ -7894,6 +7920,7 @@ AccountStore = (function(_super) {
     mailboxes = account.get('mailboxes');
     mailboxes = mailboxes.map(function(box) {
       if (box.get('id') === boxID) {
+        boxData.weight = box.get('weight');
         return AccountTranslator.mailboxToImmutable(boxData);
       } else {
         return box;
@@ -8236,15 +8263,13 @@ LayoutStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var _alert, _disposition, _responsiveMenuShown, _shown, _tasks;
+  var _alert, _disposition, _shown, _tasks;
 
   __extends(LayoutStore, _super);
 
   function LayoutStore() {
     return LayoutStore.__super__.constructor.apply(this, arguments);
   }
-
-  _responsiveMenuShown = false;
 
   _disposition = Dispositions.VERTICAL;
 
@@ -8263,14 +8288,6 @@ LayoutStore = (function(_super) {
    */
 
   LayoutStore.prototype.__bindHandlers = function(handle) {
-    handle(ActionTypes.SHOW_MENU_RESPONSIVE, function() {
-      _responsiveMenuShown = true;
-      return this.emit('change');
-    });
-    handle(ActionTypes.HIDE_MENU_RESPONSIVE, function() {
-      _responsiveMenuShown = false;
-      return this.emit('change');
-    });
     handle(ActionTypes.SET_DISPOSITION, function(value) {
       _disposition = value.type;
       return this.emit('change');
@@ -8313,10 +8330,6 @@ LayoutStore = (function(_super) {
   /*
       Public API
    */
-
-  LayoutStore.prototype.isMenuShown = function() {
-    return _responsiveMenuShown;
-  };
 
   LayoutStore.prototype.getDisposition = function() {
     return _disposition;
@@ -9589,6 +9602,7 @@ MailboxFlags = require('../../constants/app_constants').MailboxFlags;
 module.exports = AccountTranslator = {
   mailboxToImmutable: function(raw) {
     var box;
+    raw.depth = raw.tree.length - 1;
     return box = Immutable.Map(raw);
   },
   toImmutable: function(raw) {
