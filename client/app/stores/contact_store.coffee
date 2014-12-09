@@ -23,14 +23,17 @@ class ContactStore extends Store
                 rawResults = [ rawResults ]
             convert = (map) ->
                 rawResults.forEach (rawResult) ->
+                    addresses = []
                     rawResult.datapoints.forEach (point) ->
                         if point.name is 'email'
-                            rawResult.address = point.value
+                            addresses.push point.value
                         if point.name is 'avatar'
                             rawResult.avatar = point.value
                     delete rawResult.docType
-                    contact = Immutable.Map rawResult
-                    map.set contact.get('address'), contact
+                    addresses.forEach (address) ->
+                        rawResult.address = address
+                        contact = Immutable.Map rawResult
+                        map.set address, contact
             _results  = _results.withMutations convert
             _contacts = _contacts.withMutations convert
 
@@ -41,11 +44,11 @@ class ContactStore extends Store
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RECEIVE_RAW_CONTACT_RESULTS, (rawResults) ->
+        handle ActionTypes.RECEIVE_RAW_CONTACT_RESULTS, (rawResults) =>
             _import rawResults
             @emit 'change'
 
-        handle ActionTypes.CONTACT_LOCAL_SEARCH, (query) ->
+        handle ActionTypes.CONTACT_LOCAL_SEARCH, (query) =>
             query = query.toLowerCase()
             re = new RegExp query, 'i'
             _results = _contacts.filter (contact) ->
