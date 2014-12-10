@@ -629,7 +629,7 @@ Message::toClientObject = ->
         file.url = "message/#{raw.id}/attachments/#{file.generatedFileName}"
 
     if raw.html?
-        raw.html = mailutils.sanitizeHTML raw.html, raw.id, raw.attachments
+        raw.html = mailutils.sanitizeHTML raw.html, raw.id, raw.attachments or []
 
     if not raw.text?
         raw.text = htmlToText.fromString raw.html,

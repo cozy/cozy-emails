@@ -65,9 +65,10 @@ module.exports =
                         cid = attribs.src.substring 4
                         attachment = attachments.filter (att) ->
                             att.contentId is cid
-                        name = attachment[0]?.fileName
-                        if name?
+                        if name = attachment[0]?.fileName
                             attribs.src = "message/#{messageId}/attachments/#{name}"
+                        else
+                            attribs.src = ""
                     return {tagName: 'img', attribs: attribs}
         html
 
