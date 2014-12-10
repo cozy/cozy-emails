@@ -13,13 +13,15 @@
     h3
         color #444
         margin-top 0
+        padding-top 1em
+        margin-bottom 2em
 
     a.close-email
-        margin-right 1em
+        margin-right 0
 
     a.expand
         float right
-        font-size 2em
+        font-size 1em
 
   .editor,
   .rt-editor
@@ -41,8 +43,28 @@
 
   .compose-toggle
     float right
+
     a
-        padding 0 1em
+      padding 0 1em
+
+  #compose-to
+      width 90%
+      max-width 750px
+      display inline
+
+  #compose-cc
+      width 90%
+      max-width 750px
+      display inline
+
+  #compose-bcc
+      width 90%
+      max-width 750px
+      display inline
+
+  .contact
+      display inline
+      width 10%
 
   .compose-input
       position relative
@@ -50,7 +72,10 @@
   .compose-from
     line-height 2em
     color darkcolor
+    cursor pointer
 
+    .caret
+        margin-left 0.5em
   .compose-cc,
   .compose-bcc
     display none
