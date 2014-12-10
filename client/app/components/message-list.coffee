@@ -21,8 +21,6 @@ alertSuccess = LayoutActionCreator.alertSuccess
 MessageList = React.createClass
     displayName: 'MessageList'
 
-    _selected: {}
-
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -34,13 +32,22 @@ MessageList = React.createClass
             loading: false
             filterFlag: false
             filterUnsead: false
+            selected: {}
+            allSelected: false
         }
 
     componentWillReceiveProps: (props) ->
         @setState loading: false
         if props.mailboxID isnt @props.mailboxID
-            @setState edited: false
-            @_selected = {}
+            @setState allSelected: false, edited: false, selected: {}
+        else
+            selected = @state.selected
+            Object.keys(selected).forEach (id) ->
+                if not props.messages.get(id)
+                    delete selected[id]
+            @setState selected: selected
+            if Object.keys(selected).length is 0
+                @setState allSelected: false, edited: false
 
     render: ->
         compact = @props.settings.get('listStyle') is 'compact'
@@ -53,15 +60,17 @@ MessageList = React.createClass
                 isActive: isActive,
                 edited: @state.edited,
                 settings: @props.settings,
+                selected: @state.selected[id]?,
                 onSelect: (val) =>
+                    selected = _.clone @state.selected
                     if val
-                        @_selected[id] = val
+                        selected[id] = val
                     else
-                        delete @_selected[id]
-                    if Object.keys(@_selected).length > 0
-                        @setState edited: true
+                        delete selected[id]
+                    if Object.keys(selected).length > 0
+                        @setState edited: true, selected: selected
                     else
-                        @setState edited: false
+                        @setState allSelected: false, edited: false, selected: {}
 
         .toJS()
         nbMessages = parseInt @props.counterMessage, 10
@@ -84,7 +93,8 @@ MessageList = React.createClass
             parameters: [@props.accountID, 'account']
             fullWidth: true
 
-        advanced = @props.settings.get('advanced')
+        advanced   = @props.settings.get('advanced')
+        nbSelected = if Object.keys(@state.selected).length > 0 then null else true
 
         toggleFilterFlag = =>
             filter = if @state.filterFlag then MessageFilter.ALL else MessageFilter.FLAGGED
@@ -162,6 +172,7 @@ MessageList = React.createClass
                                 button
                                     className: 'btn btn-default trash',
                                     type: 'button',
+                                    disabled: null,
                                     onClick: @refresh,
                                         span
                                             className: 'fa fa-refresh'
@@ -175,8 +186,16 @@ MessageList = React.createClass
                         if @state.edited
                             div className: 'btn-group btn-group-sm message-list-option',
                                 button
+                                    type: "button"
+                                    className: "btn btn-default " + classEdited
+                                    onClick: @toggleAll,
+                                        i className: 'fa fa-square-o'
+                        if @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                button
                                     className: 'btn btn-default trash',
                                     type: 'button',
+                                    disabled: nbSelected
                                     onClick: @onDelete,
                                         span
                                             className: 'fa fa-trash-o'
@@ -219,10 +238,23 @@ MessageList = React.createClass
         LayoutActionCreator.refreshMessages()
 
     toggleEdited: ->
-        @setState edited: not @state.edited
+        if @state.edited
+            @setState allSelected: false, edited: false, selected: {}
+        else
+            @setState edited: true
+
+    toggleAll: ->
+        if @state.allSelected
+            @setState allSelected: false, edited: false, selected: {}
+        else
+            selected = {}
+            @props.messages.map (message, key) ->
+                selected[key] = true
+            .toJS()
+            @setState allSelected: true, edited: true, selected: selected
 
     onDelete: ->
-        selected = Object.keys @_selected
+        selected = Object.keys @state.selected
         if selected.length is 0
             alertError t 'list mass no message'
         else
@@ -235,7 +267,7 @@ MessageList = React.createClass
                             window.cozyMails.messageNavigate()
 
     onMove: (args) ->
-        selected = Object.keys @_selected
+        selected = Object.keys @state.selected
         if selected.length is 0
             alertError t 'list mass no message'
         else
@@ -259,7 +291,7 @@ MessageList = React.createClass
                             window.cozyMails.messageNavigate()
 
     onMark: (args) ->
-        selected = Object.keys @_selected
+        selected = Object.keys @state.selected
         if selected.length is 0
             alertError t 'list mass no message'
         else
@@ -281,7 +313,7 @@ MessageList = React.createClass
                         alertError "#{t("message action mark ko")} #{error}"
 
     onConversation: (args) ->
-        selected = Object.keys @_selected
+        selected = Object.keys @state.selected
         if selected.length is 0
             alertError t 'list mass no message'
         else
@@ -359,11 +391,6 @@ MessageItem = React.createClass
 
     mixins: [RouterMixin]
 
-    getInitialState: ->
-        return {
-            selected: @props.message.get('selected') is true
-        }
-
     render: ->
         message = @props.message
         flags = message.get('flags')
@@ -419,9 +446,10 @@ MessageItem = React.createClass
                     div
                         className: 'avatar-wrapper',
                         input
+                            ref: 'select'
                             className: 'select',
                             type: 'checkbox',
-                            checked: @state.selected
+                            checked: @props.selected,
                             onChange: @onSelect
                         if avatar?
                             img className: 'avatar', src: avatar
@@ -436,13 +464,30 @@ MessageItem = React.createClass
                         i className: 'attach fa fa-paperclip'
                         i className: 'fav fa fa-star'
 
+    _doCheck: ->
+        # please don't ask me why this **** react needs this
+        if @props.selected
+            setTimeout =>
+                @refs.select.getDOMNode().checked = true
+            , 50
+        else
+            setTimeout =>
+                @refs.select.getDOMNode().checked = false
+            , 50
+    componentDidMount: ->
+        @_doCheck()
+    componentDidUpdate: ->
+        @_doCheck()
     onSelect: (e) ->
-        @props.onSelect(not @state.selected)
-        @setState selected: not @state.selected
+        @props.onSelect(not @props.selected)
+        e.preventDefault()
+        e.stopPropagation()
 
     onMessageClick: (event) ->
         if @props.edited
-            @onSelect event
+            @props.onSelect(not @props.selected)
+            event.preventDefault()
+            event.stopPropagation()
         else
             if not @props.settings.get('displayPreview')
                 event.preventDefault()
