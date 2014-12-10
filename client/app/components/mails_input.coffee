@@ -134,9 +134,8 @@ module.exports = MailsInput = React.createClass
                 @setState contacts: null, open: false
             else
                 if (evt.key.toString().length is 1)
-                    if @onQuery()
-                        evt.preventDefault()
-                        return false
+                    @onQuery()
+                    return true
 
 
     onContact: (contact) ->

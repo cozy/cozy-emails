@@ -122,8 +122,6 @@ FilePicker = React.createClass
             name = name.substring(0, dotpos) + '-' + (idx + 1) +
                 name.substring(dotpos)
 
-        console.log file.name, idx, name
-
         return Immutable.Map
             fileName:           file.name
             length:             file.size
