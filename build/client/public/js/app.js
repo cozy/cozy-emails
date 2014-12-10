@@ -1813,10 +1813,10 @@ MailboxItem = React.createClass({
     }
     key = this.props.mailbox.get('id');
     if (this.state.favorite) {
-      favoriteClass = "fa fa-eye";
+      favoriteClass = "fa fa-eye mailbox-visi-yes";
       favoriteTitle = t("mailbox title favorite");
     } else {
-      favoriteClass = "fa fa-eye-slash";
+      favoriteClass = "fa fa-eye-slash mailbox-visi-no";
       favoriteTitle = t("mailbox title not favorite");
     }
     nbTotal = this.props.mailbox.get('nbTotal') || 0;
@@ -4143,6 +4143,10 @@ MenuMailboxItem = React.createClass({
     });
   }
 });
+});
+
+;require.register("components/message-list-item", function(exports, require, module) {
+
 });
 
 ;require.register("components/message-list", function(exports, require, module) {
