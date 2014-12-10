@@ -1,4 +1,4 @@
-{div, ul, li, span, i, p, a, button, pre, iframe, img} = React.DOM
+{div, ul, li, span, i, p, a, button, pre, iframe, img, h4} = React.DOM
 Compose        = require './compose'
 FilePicker     = require './file_picker'
 ToolboxActions = require './toolbox_actions'
@@ -188,6 +188,7 @@ module.exports = React.createClass
                         composing: @state.composing
                         displayImages: @displayImages
                         displayHTML: @displayHTML
+                    @renderAttachments prepared.attachments.toJS()
                     div className: 'clearfix'
         else
             li
@@ -410,6 +411,15 @@ module.exports = React.createClass
                                     a href: nextUrl,
                                         span className: 'fa fa-long-arrow-right'
 
+    renderAttachments: (attachments) ->
+        files = attachments.filter (file) -> return MessageUtils.getAttachmentType(file.contentType) is 'image'
+        if files.length is 0
+            return
+
+        div className: 'att-previews',
+            h4 null, t 'message preview title'
+            files.map (file) ->
+                AttachmentPreview file: file
 
     toggleHeaders: (e) ->
         e.preventDefault()
@@ -654,3 +664,30 @@ MessageContent = React.createClass
 
     componentDidUpdate: ->
         @_initFrame('update')
+
+AttachmentPreview = React.createClass
+    displayName: 'AttachmentPreview'
+
+    getInitialState: ->
+        return {
+            displayed: false
+        }
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
+    render: ->
+        toggleDisplay = =>
+            @setState displayed: not @state.displayed
+        span
+            className: 'att-preview'
+            key: @props.file.filename
+            if @state.displayed
+                img
+                    onClick: toggleDisplay
+                    src: @props.file.url
+            else
+                button
+                    className: 'btn btn-default btn-lg'
+                    onClick: toggleDisplay
+                    @props.file.fileName

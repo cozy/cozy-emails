@@ -187,6 +187,7 @@ module.exports =
       "message undelete"            : "Undo message deletion"
       "message undelete ok"         : "Message undeleted"
       "message undelete error"      : "Undo not available"
+      "message preview title"       : "View attachments"
 
       # Settings
       "settings title"             : "Settings"
