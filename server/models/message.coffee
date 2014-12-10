@@ -548,7 +548,7 @@ Message.findConversationID = (mail, callback) ->
         return callback null, mail.headers['x-gm-thrid']
 
     # is reply or forward
-    isReplyOrForward = mailutils.isReplyOrForward mail.subject
+    isReplyOrForward = mail.subject and mailutils.isReplyOrForward mail.subject
 
     # try to find by references
     references = mail.references or []
