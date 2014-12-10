@@ -745,10 +745,10 @@ MailboxItem = React.createClass
         pusher += "    " for j in [1..@props.mailbox.get('depth')] by 1
         key = @props.mailbox.get 'id'
         if @state.favorite
-            favoriteClass = "fa fa-eye"
+            favoriteClass = "fa fa-eye mailbox-visi-yes"
             favoriteTitle = t "mailbox title favorite"
         else
-            favoriteClass = "fa fa-eye-slash"
+            favoriteClass = "fa fa-eye-slash mailbox-visi-no"
             favoriteTitle = t "mailbox title not favorite"
         nbTotal  = @props.mailbox.get('nbTotal') or 0
         nbUnread = @props.mailbox.get('nbUnread') or 0
