@@ -635,7 +635,7 @@ Message.findConversationID = function(mail, callback) {
   if (mail.headers['x-gm-thrid']) {
     return callback(null, mail.headers['x-gm-thrid']);
   }
-  isReplyOrForward = mailutils.isReplyOrForward(mail.subject);
+  isReplyOrForward = mail.subject && mailutils.isReplyOrForward(mail.subject);
   references = mail.references || [];
   references.concat(mail.inReplyTo || []);
   references = references.map(mailutils.normalizeMessageID).filter(function(mid) {

@@ -2798,15 +2798,13 @@ module.exports = Compose = React.createClass({
     }
     if (this.state.isDraft && (this.state.id != null)) {
       if (!window.confirm(t('compose confirm keep draft'))) {
-        return MessageActionCreator["delete"](this.state.id, (function(_this) {
-          return function(error) {
-            if (error != null) {
-              return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
-            } else {
-              return LayoutActionCreator.notify(t('compose draft deleted'));
-            }
-          };
-        })(this));
+        return MessageActionCreator["delete"](this.state.id, function(error) {
+          if (error != null) {
+            return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
+          } else {
+            return LayoutActionCreator.notify(t('compose draft deleted'));
+          }
+        });
       }
     }
   },
@@ -2923,7 +2921,9 @@ module.exports = Compose = React.createClass({
     return this._doSend(true);
   },
   onDelete: function(args) {
-    if (window.confirm(t('mail confirm delete'))) {
+    if (window.confirm(t('mail confirm delete', {
+      subject: this.props.message.get('subject')
+    }))) {
       return MessageActionCreator["delete"](this.props.message, (function(_this) {
         return function(error) {
           if (error != null) {
@@ -3363,7 +3363,6 @@ FilePicker = React.createClass({
       dotpos = file.name.indexOf('.');
       name = name.substring(0, dotpos) + '-' + (idx + 1) + name.substring(dotpos);
     }
-    console.log(file.name, idx, name);
     return Immutable.Map({
       fileName: file.name,
       length: file.size,
@@ -3708,10 +3707,8 @@ module.exports = MailsInput = React.createClass({
         });
       default:
         if (evt.key.toString().length === 1) {
-          if (this.onQuery()) {
-            evt.preventDefault();
-            return false;
-          }
+          this.onQuery();
+          return true;
         }
     }
   },
@@ -9917,7 +9914,9 @@ module.exports = {
     req.field('body', JSON.stringify(message));
     for (name in files) {
       blob = files[name];
-      req.attach(name, blob);
+      if (blob != null) {
+        req.attach(name, blob);
+      }
     }
     return req.end(function(res) {
       var _ref;
