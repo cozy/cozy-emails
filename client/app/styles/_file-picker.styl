@@ -1,6 +1,8 @@
 .file-picker
   .files
     max-height 5em
+    overflow auto
+    position relative
 
     .file-item
       margin 0 0 .25em 0
@@ -17,10 +19,10 @@
 
       .delete
         position absolute
-        line-height 1.5em
-        font-size 1.5em
+        line-height 2em
+        font-size 1em
         right 2em
-        display none
+        cursor pointer
 
       &:hover .delete
         display inherit

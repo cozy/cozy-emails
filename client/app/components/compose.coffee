@@ -229,7 +229,7 @@ module.exports = Compose = React.createClass
                               document.documentElement.msMatchesSelector
 
                         target = document.getSelection().anchorNode
-                        if !target?
+                        if not target?
                             return
                         if matchesSelector? and not matchesSelector.call(target, '.rt-editor blockquote *')
                             # we are not inside a blockquote, nothing to do
@@ -340,7 +340,7 @@ module.exports = Compose = React.createClass
             window.clearInterval @_saveInterval
         if @state.isDraft and @state.id?
             if not window.confirm(t 'compose confirm keep draft')
-                MessageActionCreator.delete @state.id, (error) =>
+                MessageActionCreator.delete @state.id, (error) ->
                     if error?
                         LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
                     else
@@ -453,7 +453,7 @@ module.exports = Compose = React.createClass
         @_doSend true
 
     onDelete: (args) ->
-        if window.confirm(t 'mail confirm delete')
+        if window.confirm(t 'mail confirm delete', {subject: @props.message.get('subject')})
             MessageActionCreator.delete @props.message, (error) =>
                 if error?
                     LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
