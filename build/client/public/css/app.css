@@ -2126,6 +2126,7 @@ textarea:active,
 }
 #page-content #panels .panel {
   overflow-y: auto;
+  height: 100%;
   margin: 0;
   padding: 1em 1em 0 1em;
   position: absolute;
@@ -2654,13 +2655,15 @@ textarea:active,
 #email-compose h3 {
   color: #444;
   margin-top: 0;
+  padding-top: 1em;
+  margin-bottom: 2em;
 }
 #email-compose a.close-email {
-  margin-right: 1em;
+  margin-right: 0;
 }
 #email-compose a.expand {
   float: right;
-  font-size: 2em;
+  font-size: 1em;
 }
 .editor,
 .rt-editor {
@@ -2686,12 +2689,35 @@ textarea:active,
 .compose-toggle a {
   padding: 0 1em;
 }
+#compose-to {
+  width: 90%;
+  max-width: 750px;
+  display: inline;
+}
+#compose-cc {
+  width: 90%;
+  max-width: 750px;
+  display: inline;
+}
+#compose-bcc {
+  width: 90%;
+  max-width: 750px;
+  display: inline;
+}
+.contact {
+  display: inline;
+  width: 10%;
+}
 .compose-input {
   position: relative;
 }
 .compose-from {
   line-height: 2em;
   color: #444;
+  cursor: pointer;
+}
+.compose-from .caret {
+  margin-left: 0.5em;
 }
 .compose-cc,
 .compose-bcc {
@@ -2703,6 +2729,8 @@ textarea:active,
 }
 .file-picker .files {
   max-height: 5em;
+  overflow: auto;
+  position: relative;
 }
 .file-picker .files .file-item {
   margin: 0 0 0.25em 0;
@@ -2719,10 +2747,10 @@ textarea:active,
 }
 .file-picker .files .file-item .delete {
   position: absolute;
-  line-height: 1.5em;
-  font-size: 1.5em;
+  line-height: 2em;
+  font-size: 1em;
   right: 2em;
-  display: none;
+  cursor: pointer;
 }
 .file-picker .files .file-item:hover .delete {
   display: inherit;
@@ -2972,9 +3000,6 @@ textarea:active,
 }
 .message-list .message .participants,
 .message-list .message .preview {
-  margin: 0.25em 2em 0 1em;
-}
-.message-list .message .preview {
   -webkit-box-flex: 1;
   -moz-box-flex: 1;
   -o-box-flex: 1;
@@ -2982,6 +3007,9 @@ textarea:active,
   -webkit-flex: 1;
   -ms-flex: 1;
   flex: 1;
+  margin: 0.25em 2em 0 1em;
+}
+.message-list .message .preview {
   margin: 0.25em 0.75em 0 auto;
   overflow: hidden;
   white-space: nowrap;
@@ -3120,14 +3148,13 @@ textarea:active,
   margin: -0.1em 0;
   padding-top: 0.1em;
 }
-.message-list.compact input[type="checkbox"] {
+.message-list.compact input[type="checkbox"],
+.message-list.compact .message.edited .select,
+.message-list.compact .avatar-wrapper:hover .select {
   height: auto;
   width: auto;
-  margin: 0 -0.2em 0 0.2em;
+  margin: 0 0.1em 0 0.2em;
   cursor: pointer;
-}
-.message-list-option:first-child {
-  display: none;
 }
 .message-list-option .btn.btn-default {
   font-size: 1em;
@@ -3142,6 +3169,7 @@ textarea:active,
   border: 0;
   color: #34a6ff;
 }
+.message-list-option .btn.btn-default.shown,
 .message-list-option .btn.btn-default:hover {
   color: #fe8800;
 }
@@ -3178,12 +3206,6 @@ textarea:active,
   padding: 0;
 }
 .more-messages {
-  cursor: pointer;
-}
-#quick-actions .responsive-handler {
-  color: #333;
-  font-size: 1.75em;
-  text-decoration: none;
   cursor: pointer;
 }
 #quick-actions .fa-bars,
@@ -3321,6 +3343,12 @@ textarea:active,
   Put styles here for scaffolding and testing out new features/stuff
   "Production-ready" components styles should live in a dedicated file
 */
+.responsive-handler {
+  color: #333;
+  font-size: 1.75em;
+  text-decoration: none;
+  cursor: pointer;
+}
 #quick-actions> div {
   padding: 0;
 }
@@ -3358,91 +3386,6 @@ textarea:active,
   -o-animation: fadeIn 0.3s ease reverse;
   -ms-animation: fadeIn 0.3s ease reverse;
   animation: fadeIn 0.3s ease reverse;
-}
-/*
-  new email window
-*/
-#email-compose.enable {
-  display: block;
-}
-#email-compose.col-md-6,
-#email-compose.col-md-12 {
-  -webkit-transition: width 0.2s ease-out;
-  -moz-transition: width 0.2s ease-out;
-  -o-transition: width 0.2s ease-out;
-  -ms-transition: width 0.2s ease-out;
-  transition: width 0.2s ease-out;
-}
-#email-compose h3 {
-  color: #444;
-  margin-top: 0;
-  padding-top: 1em;
-  margin-bottom: 2em;
-}
-#email-compose a.close-email {
-  margin-right: 0;
-}
-#email-compose a.expand {
-  float: right;
-  font-size: 1em;
-}
-#email-compose .fa-times {
-  display: none;
-}
-.editor,
-.rt-editor {
-  border: 1px solid #444;
-  min-height: 16em;
-  height: auto;
-  text-align: left;
-  color: #000;
-}
-.attachements {
-  margin: 1em 0;
-}
-.input-group.contact-group {
-  padding: 0 15px;
-}
-.compose-toggle {
-  float: right;
-}
-.compose-toggle a {
-  padding: 0 1em;
-}
-#compose-to {
-  width: 90%;
-  max-width: 750px;
-  display: inline;
-}
-#compose-cc {
-  width: 90%;
-  max-width: 750px;
-  display: inline;
-}
-#compose-bcc {
-  width: 90%;
-  max-width: 750px;
-  display: inline;
-}
-.contact {
-  display: inline;
-  width: 10%;
-}
-.compose-from {
-  line-height: 2em;
-  color: #444;
-  cursor: pointer;
-}
-.compose-from .caret {
-  margin-left: 0.5em;
-}
-.compose-cc,
-.compose-bcc {
-  display: none;
-}
-.compose-cc.shown,
-.compose-bcc.shown {
-  display: inherit;
 }
 .contact-form .contact-list {
   left: 1em;

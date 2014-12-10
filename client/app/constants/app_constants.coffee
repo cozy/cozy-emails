@@ -110,3 +110,11 @@ module.exports =
         HORIZONTAL: 'horizontal'
         VERTICAL: 'vertical'
         THREE: 'three'
+
+    SpecialBoxIcons:
+        inboxMailbox: 'fa-inbox'
+        draftMailbox: 'fa-edit'
+        sentMailbox: 'fa-share-square-o'
+        trashMailbox: 'fa-trash'
+        junkMailbox: 'fa-exclamation'
+        allMailbox: 'fa-archive'

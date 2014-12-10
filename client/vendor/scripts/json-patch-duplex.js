@@ -1,5 +1,6 @@
 /*!
-* json-patch-duplex.js 0.4.1
+* https://github.com/Starcounter-Jack/Fast-JSON-Patch
+* json-patch-duplex.js 0.5.0
 * (c) 2013 Joachim Wester
 * MIT license
 */
@@ -290,6 +291,14 @@ var jsonpatch;
     }
     jsonpatch.unobserve = unobserve;
 
+    function deepClone(obj) {
+        if (typeof obj === "object") {
+            return JSON.parse(JSON.stringify(obj));
+        } else {
+            return obj;
+        }
+    }
+
     function observe(obj, callback) {
         var patches = [];
         var root = obj;
@@ -348,7 +357,7 @@ var jsonpatch;
         } else {
             observer = {};
 
-            mirror.value = JSON.parse(JSON.stringify(obj)); // Faster than ES5 clone - http://jsperf.com/deep-cloning-of-objects/5
+            mirror.value = deepClone(obj);
 
             if (callback) {
                 //callbacks.push(callback); this has no purpose
@@ -443,6 +452,9 @@ var jsonpatch;
                 }
             }
             _generate(mirror.value, observer.object, observer.patches, "");
+            if (observer.patches.length) {
+                apply(mirror.value, observer.patches);
+            }
         }
         var temp = observer.patches;
         if (temp.length > 0) {
@@ -472,13 +484,11 @@ var jsonpatch;
                 } else {
                     if (oldVal != newVal) {
                         changed = true;
-                        patches.push({ op: "replace", path: path + "/" + escapePathComponent(key), value: newVal });
-                        mirror[key] = newVal;
+                        patches.push({ op: "replace", path: path + "/" + escapePathComponent(key), value: deepClone(newVal) });
                     }
                 }
             } else {
                 patches.push({ op: "remove", path: path + "/" + escapePathComponent(key) });
-                delete mirror[key];
                 deleted = true; // property has been deleted
             }
         }
@@ -490,8 +500,7 @@ var jsonpatch;
         for (var t = 0; t < newKeys.length; t++) {
             var key = newKeys[t];
             if (!mirror.hasOwnProperty(key)) {
-                patches.push({ op: "add", path: path + "/" + escapePathComponent(key), value: obj[key] });
-                mirror[key] = JSON.parse(JSON.stringify(obj[key]));
+                patches.push({ op: "add", path: path + "/" + escapePathComponent(key), value: deepClone(obj[key]) });
             }
         }
     }

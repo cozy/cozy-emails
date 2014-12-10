@@ -630,11 +630,12 @@ Message.prototype.storeAttachments = function(attachments, callback) {
 };
 
 Message.findConversationID = function(mail, callback) {
-  var key, keys, references, _ref;
+  var isReplyOrForward, key, keys, references, _ref;
   log.debug("findConversationID");
   if (mail.headers['x-gm-thrid']) {
     return callback(null, mail.headers['x-gm-thrid']);
   }
+  isReplyOrForward = mail.subject && mailutils.isReplyOrForward(mail.subject);
   references = mail.references || [];
   references.concat(mail.inReplyTo || []);
   references = references.map(mailutils.normalizeMessageID).filter(function(mid) {
@@ -652,7 +653,7 @@ Message.findConversationID = function(mail, callback) {
       }
       return Message.pickConversationID(rows, callback);
     });
-  } else if (((_ref = mail.normSubject) != null ? _ref.length : void 0) > 3) {
+  } else if (((_ref = mail.normSubject) != null ? _ref.length : void 0) > 3 && isReplyOrForward) {
     key = [mail.accountID, 'subject', mail.normSubject];
     return Message.rawRequest('dedupRequest', {
       key: key

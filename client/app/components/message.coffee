@@ -625,6 +625,7 @@ MessageContent = React.createClass
         if @refs.content
             frame = @refs.content.getDOMNode()
             doc = frame.contentDocument or frame.contentWindow?.document
+            step = 0
             loadContent = (e) =>
                 step = 0
                 doc = frame.contentDocument or frame.contentWindow?.document

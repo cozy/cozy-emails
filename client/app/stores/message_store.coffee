@@ -59,7 +59,43 @@ class MessageStore extends Store
 
     initFilters()
 
-    onReceiveRawMessage = (message, silent = false) ->
+    computeMailboxDiff = (oldmsg, newmsg) ->
+        return {} unless oldmsg
+        changed = false
+
+        wasRead = MessageFlags.SEEN in oldmsg.get 'flags'
+        isRead = MessageFlags.SEEN in newmsg.get 'flags'
+        console.log "CMD", wasRead, isRead, oldmsg.get('flags')
+
+        oldboxes = Object.keys oldmsg.get 'mailboxIDs'
+        newboxes = Object.keys newmsg.get 'mailboxIDs'
+
+        out = {}
+        added = _.difference(newboxes, oldboxes)
+        added.forEach (boxid) ->
+            changed = true
+            out[boxid] = nbTotal: +1, nbUnread: if isRead then +1 else 0
+
+        removed = _.difference oldboxes, newboxes
+        removed.forEach (boxid) ->
+            changed = true
+            out[boxid] = nbTotal: -1, nbUnread: if wasRead then -1 else 0
+
+        stayed = _.intersection oldboxes, newboxes
+        deltaUnread = if wasRead and not isRead then +1
+        else if not wasRead and isRead then -1
+        else 0
+        stayed.forEach (boxid) ->
+            changed = true if deltaUnread isnt 0
+            out[boxid] = nbTotal: 0, nbUnread: deltaUnread
+
+        if changed
+            return out
+        else
+            return false
+
+
+    onReceiveRawMessage = (message) ->
         # create or update
         if not message.attachments?
             message.attachments = []
@@ -81,16 +117,20 @@ class MessageStore extends Store
         # that may cause some troubles
         delete message.docType
         message = Immutable.Map message
-        _messages = _messages.set message.get('id'), message
 
-        @emit 'change' unless silent
+        oldmsg = _messages.get message.get('id')
+        _messages = _messages.set message.get('id'), message
+        if diff = computeMailboxDiff(oldmsg, message)
+            AccountStore._applyMailboxDiff message.get('accountID'), diff
 
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RECEIVE_RAW_MESSAGE, onReceiveRawMessage
+        handle ActionTypes.RECEIVE_RAW_MESSAGE, (message) ->
+            onReceiveRawMessage message
+            @emit 'change'
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
 
@@ -113,7 +153,7 @@ class MessageStore extends Store
             if messages.count? and messages.mailboxID?
                 messages = messages.messages.sort __sortFunction
 
-            onReceiveRawMessage message, true for message in messages
+            onReceiveRawMessage message for message in messages
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
@@ -125,16 +165,16 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_SEND, (message) ->
-            onReceiveRawMessage message, true
+            onReceiveRawMessage message
 
         handle ActionTypes.MESSAGE_DELETE, (message) ->
-            onReceiveRawMessage message, true
+            onReceiveRawMessage message
 
         handle ActionTypes.MESSAGE_BOXES, (message) ->
-            onReceiveRawMessage message, true
+            onReceiveRawMessage message
 
         handle ActionTypes.MESSAGE_FLAG, (message) ->
-            onReceiveRawMessage message, true
+            onReceiveRawMessage message
 
         handle ActionTypes.SELECT_ACCOUNT, ->
             initFilters()

@@ -242,11 +242,12 @@ Account.prototype.toClientObject = function(callback) {
         box = _ref[_i];
         count = counts[box.id] || {
           total: 0,
-          unread: 0
+          unread: 0,
+          recent: 0
         };
         box.nbTotal = count.total;
         box.nbUnread = count.unread;
-        box.nbNew = -1;
+        box.nbRecent = count.recent;
       }
       return callback(null, rawObject);
     });
