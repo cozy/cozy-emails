@@ -97,7 +97,8 @@ module.exports =
 
         req.field 'body', JSON.stringify message
         for name, blob of files
-            req.attach name, blob
+            if blob?
+                req.attach name, blob
 
         req.end (res) ->
             if res.ok
