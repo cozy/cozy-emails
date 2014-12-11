@@ -75,10 +75,11 @@ class AccountStore extends Store
         updated = mailboxes.withMutations (map) ->
             for boxid, deltas of diff when deltas.nbTotal + deltas.nbUnread
                 box = map.get boxid
-                box = box.merge
-                    nbTotal: box.get('nbTotal') + deltas.nbTotal
-                    nbUnread: box.get('nbUnread') + deltas.nbUnread
-                map.set boxid, box
+                if box?
+                    box = box.merge
+                        nbTotal: box.get('nbTotal') + deltas.nbTotal
+                        nbUnread: box.get('nbUnread') + deltas.nbUnread
+                    map.set boxid, box
 
         unless updated is mailboxes
             account = account.set 'mailboxes', updated
