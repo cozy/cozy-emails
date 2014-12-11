@@ -30,7 +30,7 @@ window.onload = ->
         if not window.settings?
             window.settings = {}
         locale =
-            window.settings.lang or
+            #window.settings.lang or
             window.locale or
             window.navigator.language or
             "en"

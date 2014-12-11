@@ -35,29 +35,29 @@ module.exports = React.createClass
                 #            className: 'form-control'
 
                 # Lang
-                div className: 'form-group',
-                    label htmlFor: 'settings-mpp', className: classLabel,
-                        t "settings lang"
-                    div className: 'col-sm-3',
-                        div className: "dropdown",
-                            button
-                                className: "btn btn-default dropdown-toggle"
-                                type: "button"
-                                "data-toggle": "dropdown",
-                                t "settings lang #{@state.settings.lang}"
-                            ul className: "dropdown-menu", role: "menu",
-                                li
-                                    role: "presentation",
-                                    'data-target': 'lang',
-                                    'data-lang': 'en',
-                                    onClick: @handleChange,
-                                        a role: "menuitem", t "settings lang en"
-                                li
-                                    role: "presentation",
-                                    'data-target': 'lang',
-                                    'data-lang': 'fr',
-                                    onClick: @handleChange,
-                                        a role: "menuitem", t "settings lang fr"
+                #div className: 'form-group',
+                #    label htmlFor: 'settings-mpp', className: classLabel,
+                #        t "settings lang"
+                #    div className: 'col-sm-3',
+                #        div className: "dropdown",
+                #            button
+                #                className: "btn btn-default dropdown-toggle"
+                #                type: "button"
+                #                "data-toggle": "dropdown",
+                #                t "settings lang #{@state.settings.lang}"
+                #            ul className: "dropdown-menu", role: "menu",
+                #                li
+                #                    role: "presentation",
+                #                    'data-target': 'lang',
+                #                    'data-lang': 'en',
+                #                    onClick: @handleChange,
+                #                        a role: "menuitem", t "settings lang en"
+                #                li
+                #                    role: "presentation",
+                #                    'data-target': 'lang',
+                #                    'data-lang': 'fr',
+                #                    onClick: @handleChange,
+                #                        a role: "menuitem", t "settings lang fr"
 
                 # List style
                 div className: 'form-group',
@@ -146,13 +146,13 @@ module.exports = React.createClass
                 settings[target.dataset.target] = target.checked
                 @setState({settings: settings})
                 SettingsActionCreator.edit settings
-            when 'lang'
-                lang = target.dataset.lang
-                settings = @state.settings
-                settings.lang = lang
-                @setState({settings: settings})
-                ApiUtils.setLocale lang, true
-                SettingsActionCreator.edit settings
+            #when 'lang'
+            #    lang = target.dataset.lang
+            #    settings = @state.settings
+            #    settings.lang = lang
+            #    @setState({settings: settings})
+            #    ApiUtils.setLocale lang, true
+            #    SettingsActionCreator.edit settings
             when 'listStyle'
                 settings = @state.settings
                 settings.listStyle = target.dataset.style
