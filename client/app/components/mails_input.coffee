@@ -102,7 +102,7 @@ module.exports = MailsInput = React.createClass
 
     onQuery: ->
         query = @refs.contactInput.getDOMNode().value.split(',').pop().trim()
-        if query.length > 3
+        if query.length > 1
             ContactActionCreator.searchContactLocal query
             @setState open: true
             return true
