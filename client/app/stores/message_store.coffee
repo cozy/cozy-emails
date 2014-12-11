@@ -167,6 +167,11 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_FLAG, (message) ->
             onReceiveRawMessage message
 
+        handle ActionTypes.SELECT_ACCOUNT, (value) ->
+            _params.after     = '-'
+            _params.before    = '-'
+            _params.pageAfter = '-'
+
         handle ActionTypes.LIST_FILTER, (filter) ->
             _messages  = _messages.clear()
             if _filter is filter
