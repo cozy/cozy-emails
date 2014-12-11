@@ -198,8 +198,10 @@ class AccountStore extends Store
         mailboxes = @getSelectedMailboxes()
         if selectedID?
             return mailboxes.get selectedID
-        else
+        else if _selectedMailbox?
             return _selectedMailbox
+        else
+            return mailboxes.first()
 
     getSelectedFavorites: (sorted) ->
 

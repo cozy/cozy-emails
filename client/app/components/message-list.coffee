@@ -468,11 +468,11 @@ MessageItem = React.createClass
         # please don't ask me why this **** react needs this
         if @props.selected
             setTimeout =>
-                @refs.select.getDOMNode().checked = true
+                @refs.select?.getDOMNode().checked = true
             , 50
         else
             setTimeout =>
-                @refs.select.getDOMNode().checked = false
+                @refs.select?.getDOMNode().checked = false
             , 50
     componentDidMount: ->
         @_doCheck()

@@ -7,11 +7,11 @@ window.onerror = (msg, url, line, col, error) ->
             type: 'error'
             error:
                 msg: msg
+                full: error.toString()
+                stack: error.stack
             url: url
             line: line
             col: col
-            error: error.toString()
-            stack: error.stack
             href: window.location.href
     xhr = new XMLHttpRequest()
     xhr.open 'POST', 'activity', true

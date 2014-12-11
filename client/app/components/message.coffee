@@ -419,7 +419,7 @@ module.exports = React.createClass
         div className: 'att-previews',
             h4 null, t 'message preview title'
             files.map (file) ->
-                AttachmentPreview file: file
+                AttachmentPreview file: file, key: file.checksum
 
     toggleHeaders: (e) ->
         e.preventDefault()
@@ -638,7 +638,7 @@ MessageContent = React.createClass
                         # In Chrome, onresize loops
                         if step > 10
 
-                            doc.body.removeEventListener 'load'
+                            doc.body.removeEventListener 'load', loadContent
                             frame.contentWindow?.removeEventListener 'resize'
 
                     frame.style.height = "32px"
@@ -680,9 +680,10 @@ AttachmentPreview = React.createClass
     render: ->
         toggleDisplay = =>
             @setState displayed: not @state.displayed
+
         span
-            className: 'att-preview'
-            key: @props.file.filename
+            className: 'att-preview',
+            key: @props.key,
             if @state.displayed
                 img
                     onClick: toggleDisplay
