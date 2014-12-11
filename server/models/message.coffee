@@ -559,9 +559,10 @@ Message.findConversationID = (mail, callback) ->
 
     if references.length
         # find all messages in references
-        keys = references.map (id) -> [mail.accountID, 'mid', id]
+        keys = references.map (mid) -> [mail.accountID, 'mid', mid]
         Message.rawRequest 'dedupRequest', {keys}, (err, rows) ->
             return callback err if err
+            log.debug '   found = ',rows?.length
             Message.pickConversationID rows, callback
 
     # no references, try to find by subject

@@ -20,7 +20,7 @@ module.exports =
 
     normalizeMessageID: (messageID) ->
         match = messageID.match REGEXP.messageID
-        return if match then match[1] else null
+        return if match then match[1] else messageID
 
     flattenMailboxTree: (tree) ->
         boxes = []
