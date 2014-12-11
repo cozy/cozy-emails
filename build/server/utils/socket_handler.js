@@ -114,7 +114,7 @@ handleNewClient = (function(_this) {
 })(this);
 
 updateClientScope = function(socket, scope) {
-  log.warn('updateClientScope', socket.id, scope);
+  log.debug('updateClientScope', socket.id, scope);
   socket.scope_before = new Date(scope.before || 0);
   return socket.scope_mailboxID = scope.mailboxID;
 };

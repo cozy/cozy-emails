@@ -725,7 +725,7 @@ Message.prototype.toClientObject = function() {
     });
   }
   if (raw.html != null) {
-    raw.html = mailutils.sanitizeHTML(raw.html, raw.id, raw.attachments);
+    raw.html = mailutils.sanitizeHTML(raw.html, raw.id, raw.attachments || []);
   }
   if (raw.text == null) {
     raw.text = htmlToText.fromString(raw.html, {
