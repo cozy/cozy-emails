@@ -51,6 +51,9 @@ module.exports =
 
       # List
       "list empty"              : "Pas d'email dans cette boîte.."
+      "no flagged message"      : "Pas d'email important dans cette boîte."
+      "no unseen message"       : "Pas d'email non-lu dans cette boîte."
+      "no filter message"       : "Pas d'email pour ce filtre."
       "list fetching"           : "Chargement…"
       "list search empty"       : "Aucun résultat trouvé pour la requête
                                     \"%{query}\"."

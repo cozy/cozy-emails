@@ -31,7 +31,7 @@ RefreshesStore = require '../stores/refreshes_store'
 # Flux actions
 LayoutActionCreator = require '../actions/layout_action_creator'
 
-{Dispositions} = require '../constants/app_constants'
+{MessageFilter, Dispositions} = require '../constants/app_constants'
 
 ###
     This component is the root of the React tree.
@@ -232,7 +232,15 @@ module.exports = Application = React.createClass
                     mailbox   = account.get('mailboxes').get mailboxID
                     messages  = MessageStore.getMessagesByMailbox mailboxID
                     messagesCount = mailbox?.get('nbTotal') or 0
-                    emptyListMessage = t 'list empty'
+                    emptyListMessage = switch MessageStore.getCurrentFilter()
+                        when MessageFilter.FLAGGED
+                            t 'no flagged message'
+                        when MessageFilter.UNSEEN
+                            t 'no unseen message'
+                        when MessageFilter.ALL
+                            t 'list empty'
+                        else
+                            t 'no filter message'
                     counterMessage   = t 'list count', messagesCount
                 else
                     @redirect
