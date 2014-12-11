@@ -1743,8 +1743,25 @@ module.exports = React.createClass({
     return this.setState(infos);
   },
   componentWillReceiveProps: function(props) {
+    var errors, field;
     if (props.selectedAccount && !props.isWaiting) {
       return this.setState(this._accountToState(props));
+    } else {
+      if (props.error != null) {
+        if (props.error.name === 'AccountConfigError') {
+          errors = {};
+          field = props.error.field;
+          if (field === 'auth') {
+            errors['login'] = t('config error auth');
+            errors['password'] = t('config error auth');
+          } else {
+            errors[field] = t('config error ' + field);
+          }
+          return this.setState({
+            errors: errors
+          });
+        }
+      }
     }
   },
   getInitialState: function() {
@@ -1760,7 +1777,12 @@ module.exports = React.createClass({
       if (props.error != null) {
         if (props.error.name === 'AccountConfigError') {
           field = props.error.field;
-          state.errors[field] = t('config error ' + field);
+          if (field === 'auth') {
+            state.errors['login'] = t('config error auth');
+            state.errors['password'] = t('config error auth');
+          } else {
+            state.errors[field] = t('config error ' + field);
+          }
         }
       }
     }
@@ -2197,13 +2219,13 @@ module.exports = Application = React.createClass({
     disposition = LayoutStore.getDisposition();
     panelsClasses = classer({
       row: true,
-      horizontal: disposition === Dispositions.HORIZONTAL
+      horizontal: disposition.type === Dispositions.HORIZONTAL
     });
     panelClasses = this.getPanelClasses(isFullWidth);
     responsiveClasses = classer({
       'col-xs-12': true,
-      'col-md-9': disposition === Dispositions.THREE,
-      'col-md-11': disposition !== Dispositions.THREE,
+      'col-md-9': disposition.type === Dispositions.THREE,
+      'col-md-11': disposition.type !== Dispositions.THREE,
       'pushed': this.state.isResponsiveMenuShown
     });
     alert = this.state.alertMessage;
@@ -2258,14 +2280,14 @@ module.exports = Application = React.createClass({
     }, this.getPanelComponent(layout.secondPanel, 'second')) : void 0))));
   },
   getPanelClasses: function(isFullWidth) {
-    var classes, first, layout, previous, second, wasFullWidth;
+    var classes, disposition, first, layout, previous, second, wasFullWidth;
     previous = this.props.router.previous;
     layout = this.props.router.current;
     first = layout.firstPanel;
     second = layout.secondPanel;
     if (isFullWidth) {
       classes = {
-        firstPanel: 'panel col-xs-12 col-md-12'
+        firstPanel: 'panel col-xs-12 col-md-12 row-10'
       };
       if ((previous != null) && previous.secondPanel) {
         if (previous.secondPanel.action === layout.firstPanel.action && _.difference(previous.secondPanel.parameters, layout.firstPanel.parameters).length === 0) {
@@ -2275,15 +2297,16 @@ module.exports = Application = React.createClass({
         classes.firstPanel += ' moveFromLeft';
       }
     } else {
-      if (LayoutStore.getDisposition() === Dispositions.HORIZONTAL) {
+      disposition = LayoutStore.getDisposition();
+      if (disposition.type === Dispositions.HORIZONTAL) {
         classes = {
-          firstPanel: 'panel col-xs-12 col-md-12 hidden-xs hidden-sm row-5',
-          secondPanel: 'panel col-xs-12 col-md-12 row-5 row-offset-5'
+          firstPanel: "panel col-xs-12 col-md-12 hidden-xs hidden-sm row-" + disposition.height,
+          secondPanel: "panel col-xs-12 col-md-12 row-" + (10 - disposition.height) + " row-offset-" + disposition.height
         };
       } else {
         classes = {
-          firstPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm row-10',
-          secondPanel: 'panel col-xs-12 col-md-6 row-10'
+          firstPanel: "panel col-xs-12 col-md-" + disposition.width + " hidden-xs hidden-sm row-10",
+          secondPanel: "panel col-xs-12 col-md-" + (12 - disposition.width) + " col-offset-" + disposition.width + " row-10"
         };
       }
       if (previous != null) {
@@ -3888,9 +3911,9 @@ module.exports = Menu = React.createClass({
     classes = classer({
       'hidden-xs hidden-sm': !this.props.isResponsiveMenuShown,
       'col-xs-4': true,
-      'col-md-1': this.props.disposition !== Dispositions.THREE,
-      'col-md-3': this.props.disposition === Dispositions.THREE,
-      'three': this.props.disposition === Dispositions.THREE
+      'col-md-1': this.props.disposition.type !== Dispositions.THREE,
+      'col-md-3': this.props.disposition.type === Dispositions.THREE,
+      'three': this.props.disposition.type === Dispositions.THREE
     });
     return div({
       id: 'menu',
@@ -7951,13 +7974,15 @@ module.exports = StoreWatchMixin = function(stores) {
 });
 
 ;require.register("router", function(exports, require, module) {
-var AccountStore, PanelRouter, Router,
+var AccountStore, MessageStore, PanelRouter, Router,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 PanelRouter = require('./libs/panel_router');
 
 AccountStore = require('./stores/account_store');
+
+MessageStore = require('./stores/message_store');
 
 module.exports = Router = (function(_super) {
   __extends(Router, _super);
@@ -8024,15 +8049,9 @@ module.exports = Router = (function(_super) {
       case 'account.mailbox.messages.full':
         defaultAccountID = (_ref = AccountStore.getDefault()) != null ? _ref.get('id') : void 0;
         defaultMailbox = AccountStore.getDefaultMailbox(defaultAccountID);
-        defaultParameters = {
-          accountID: defaultAccountID,
-          after: "-",
-          before: "-",
-          flag: "-",
-          mailboxID: defaultMailbox != null ? defaultMailbox.get('id') : void 0,
-          pageAfter: "-",
-          sort: "-"
-        };
+        defaultParameters = MessageStore.getParams();
+        defaultParameters.accountID = defaultAccountID;
+        defaultParameters.mailboxID = defaultMailbox != null ? defaultMailbox.get('id') : void 0;
         break;
       case 'account.config':
         defaultAccount = (_ref1 = AccountStore.getDefault()) != null ? _ref1.get('id') : void 0;
@@ -8508,7 +8527,11 @@ LayoutStore = (function(_super) {
     return LayoutStore.__super__.constructor.apply(this, arguments);
   }
 
-  _disposition = Dispositions.VERTICAL;
+  _disposition = {
+    type: Dispositions.VERTICAL,
+    height: 5,
+    width: 6
+  };
 
   _alert = {
     level: null,
@@ -8525,8 +8548,15 @@ LayoutStore = (function(_super) {
    */
 
   LayoutStore.prototype.__bindHandlers = function(handle) {
-    handle(ActionTypes.SET_DISPOSITION, function(value) {
-      _disposition = value.type;
+    handle(ActionTypes.SET_DISPOSITION, function(disposition) {
+      _disposition.type = disposition.type;
+      if (_disposition.type === Dispositions.VERTICAL) {
+        _disposition.height = 5;
+        _disposition.width = disposition.value || _disposition.width;
+      } else if (_disposition.type === Dispositions.HORIZONTAL) {
+        _disposition.height = disposition.value || _disposition.height;
+        _disposition.width = 6;
+      }
       return this.emit('change');
     });
     handle(ActionTypes.DISPLAY_ALERT, function(value) {
@@ -8813,9 +8843,7 @@ MessageStore = (function(_super) {
     handle(ActionTypes.MESSAGE_FLAG, function(message) {
       return onReceiveRawMessage(message);
     });
-    handle(ActionTypes.SELECT_ACCOUNT, function() {
-      return initFilters();
-    });
+    handle(ActionTypes.SELECT_ACCOUNT, function() {});
     handle(ActionTypes.LIST_FILTER, function(filter) {
       _messages = _messages.clear();
       if (_filter === filter) {

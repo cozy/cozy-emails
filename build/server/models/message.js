@@ -642,8 +642,8 @@ Message.findConversationID = function(mail, callback) {
     return mid;
   });
   if (references.length) {
-    keys = references.map(function(id) {
-      return [mail.accountID, 'mid', id];
+    keys = references.map(function(mid) {
+      return [mail.accountID, 'mid', mid];
     });
     return Message.rawRequest('dedupRequest', {
       keys: keys
@@ -651,6 +651,7 @@ Message.findConversationID = function(mail, callback) {
       if (err) {
         return callback(err);
       }
+      log.debug('   found = ', rows != null ? rows.length : void 0);
       return Message.pickConversationID(rows, callback);
     });
   } else if (((_ref = mail.normSubject) != null ? _ref.length : void 0) > 3 && isReplyOrForward) {

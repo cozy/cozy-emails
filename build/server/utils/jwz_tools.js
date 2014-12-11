@@ -38,7 +38,7 @@ module.exports = {
     if (match) {
       return match[1];
     } else {
-      return null;
+      return messageID;
     }
   },
   flattenMailboxTree: function(tree) {
