@@ -938,9 +938,9 @@ module.exports = new AppDispatcher();
 });
 
 ;require.register("components/account-config", function(exports, require, module) {
-var AccountActionCreator, LAC, MailboxItem, MailboxList, RouterMixin, a, button, classer, div, fieldset, form, h3, h4, i, input, label, legend, li, span, ul, _ref;
+var AccountActionCreator, LAC, MailboxItem, MailboxList, RouterMixin, a, button, classer, div, fieldset, form, h3, h4, i, input, label, legend, li, p, span, ul, _ref;
 
-_ref = React.DOM, div = _ref.div, h3 = _ref.h3, h4 = _ref.h4, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, fieldset = _ref.fieldset, legend = _ref.legend;
+_ref = React.DOM, div = _ref.div, p = _ref.p, h3 = _ref.h3, h4 = _ref.h4, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, fieldset = _ref.fieldset, legend = _ref.legend;
 
 classer = React.addons.classSet;
 
@@ -1173,7 +1173,12 @@ module.exports = React.createClass({
       type: 'password',
       className: 'form-control',
       onBlur: this.validateForm
-    })), getError('password')), fieldset(null, legend(null, t('account sending server')), div({
+    })), getError('password')), this.state.displayGMAILSecurity ? fieldset(null, legend(null, t('gmail security tile')), p(null, t('gmail security body', {
+      login: this.state.login
+    })), p(null, a({
+      target: '_blank',
+      href: "https://www.google.com/settings/security/lesssecureapps"
+    }, t('gmail security link')))) : void 0, fieldset(null, legend(null, t('account sending server')), div({
       className: 'form-group' + hasError(['smtp', 'smtpServer', 'smtpPort'])
     }, label({
       htmlFor: 'mailbox-smtp-server',
@@ -1594,7 +1599,7 @@ module.exports = React.createClass({
     if (login !== this._lastDiscovered) {
       AccountActionCreator.discover(login.split('@')[1], (function(_this) {
         return function(err, provider) {
-          var getInfos, infos, server, _i, _len;
+          var getInfos, infos, isGmail, server, _i, _len;
           if (err == null) {
             infos = {};
             getInfos = function(server) {
@@ -1665,6 +1670,8 @@ module.exports = React.createClass({
                   infos.smtpTLS = false;
               }
             }
+            isGmail = infos.imapServer === 'imap.googlemail.com';
+            infos.displayGMAILSecurity = isGmail;
             _this.setState(infos);
             return _this.validateForm();
           }
@@ -2515,7 +2522,7 @@ module.exports = Compose = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var cancelUrl, classBcc, classCc, classInput, classLabel, closeUrl, collapseUrl, expandUrl;
+    var cancelUrl, classBcc, classCc, classInput, classLabel, closeUrl, collapseUrl, expandUrl, labelSend;
     if (!this.props.accounts) {
       return;
     }
@@ -2543,6 +2550,7 @@ module.exports = Compose = React.createClass({
     classInput = 'compose-input';
     classCc = this.state.cc.length === 0 ? '' : ' shown';
     classBcc = this.state.bcc.length === 0 ? '' : ' shown';
+    labelSend = this.state.sending ? t('compose action sending') : t('compose action send');
     return div({
       id: 'email-compose'
     }, this.props.layout !== 'full' ? a({
@@ -2645,10 +2653,11 @@ module.exports = Compose = React.createClass({
     }, button({
       className: 'btn btn-cozy',
       type: 'button',
+      disable: this.state.sending ? true : null,
       onClick: this.onSend
     }, span({
       className: 'fa fa-send'
-    }), span(null, t('compose action send'))), button({
+    }), span(null, labelSend)), button({
       className: 'btn btn-cozy',
       type: 'button',
       onClick: this.onDraft
@@ -2836,6 +2845,7 @@ module.exports = Compose = React.createClass({
         state.accountID = this.props.selectedAccount.get('id');
       }
     }
+    state.sending = false;
     return state;
   },
   componentWillReceiveProps: function(nextProps) {
@@ -2902,9 +2912,17 @@ module.exports = Compose = React.createClass({
       if (!isDraft && this._saveInterval) {
         window.clearInterval(this._saveInterval);
       }
+      if (!isDraft) {
+        this.setState({
+          sending: true
+        });
+      }
       return MessageActionCreator.send(message, (function(_this) {
         return function(error, message) {
           var msgKo, msgOk;
+          _this.setState({
+            sending: false
+          });
           if (isDraft) {
             msgKo = t("message action draft ko");
             msgOk = t("message action draft ok");
@@ -6065,36 +6083,6 @@ module.exports = React.createClass({
     }, label({
       htmlFor: 'settings-mpp',
       className: classLabel
-    }, t("settings lang")), div({
-      className: 'col-sm-3'
-    }, div({
-      className: "dropdown"
-    }, button({
-      className: "btn btn-default dropdown-toggle",
-      type: "button",
-      "data-toggle": "dropdown"
-    }, t("settings lang " + this.state.settings.lang)), ul({
-      className: "dropdown-menu",
-      role: "menu"
-    }, li({
-      role: "presentation",
-      'data-target': 'lang',
-      'data-lang': 'en',
-      onClick: this.handleChange
-    }, a({
-      role: "menuitem"
-    }, t("settings lang en"))), li({
-      role: "presentation",
-      'data-target': 'lang',
-      'data-lang': 'fr',
-      onClick: this.handleChange
-    }, a({
-      role: "menuitem"
-    }, t("settings lang fr"))))))), div({
-      className: 'form-group'
-    }, label({
-      htmlFor: 'settings-mpp',
-      className: classLabel
     }, t("settings label listStyle")), div({
       className: 'col-sm-3'
     }, div({
@@ -6170,7 +6158,7 @@ module.exports = React.createClass({
     }))));
   },
   handleChange: function(event) {
-    var lang, name, pluginConf, pluginName, settings, target, _ref1;
+    var name, pluginConf, pluginName, settings, target, _ref1;
     event.preventDefault();
     target = event.currentTarget;
     switch (target.dataset.target) {
@@ -6186,15 +6174,6 @@ module.exports = React.createClass({
         this.setState({
           settings: settings
         });
-        return SettingsActionCreator.edit(settings);
-      case 'lang':
-        lang = target.dataset.lang;
-        settings = this.state.settings;
-        settings.lang = lang;
-        this.setState({
-          settings: settings
-        });
-        ApiUtils.setLocale(lang, true);
         return SettingsActionCreator.edit(settings);
       case 'listStyle':
         settings = this.state.settings;
@@ -6869,7 +6848,7 @@ window.onload = function() {
     if (window.settings == null) {
       window.settings = {};
     }
-    locale = window.settings.lang || window.locale || window.navigator.language || "en";
+    locale = window.locale || window.navigator.language || "en";
     window.cozyMails.setLocale(locale);
     PluginUtils = require("./utils/plugin_utils");
     if (window.settings.plugins == null) {
@@ -7520,6 +7499,7 @@ module.exports = {
   "compose action draft": "Save draft",
   "compose action send": "Send",
   "compose action delete": "Delete draft",
+  "compose action sending": "Sending",
   "compose toggle cc": "Cc",
   "compose toggle bcc": "Bcc",
   "compose error no dest": "You can not send a message to nobody",
@@ -7591,7 +7571,7 @@ module.exports = {
   "account port": "Port",
   "account SSL": "Use SSL",
   "account TLS": "Use STARTTLS",
-  "account remove": "Remove",
+  "account remove": "Remove this account",
   "account remove confirm": "Do you really want to remove this account?",
   "account draft mailbox": "Draft box",
   "account sent mailbox": "Sent box",
@@ -7696,7 +7676,10 @@ module.exports = {
   "contact form": "Select contacts",
   "contact form placeholder": "contact name",
   "contact create success": "%{contact} has been added to your contacts",
-  "contact create error": "Error adding to your contacts : {error}"
+  "contact create error": "Error adding to your contacts : {error}",
+  "gmail security tile": "About Gmail security",
+  "gmail security body": "Gmail considers connection using username and password not safe.\nPlease click on the following link, make sure\nyou are connected with your %{login} account and enable access for\nless secure apps.",
+  "gmail security link": "Enable access for less secure apps."
 };
 });
 
@@ -7728,6 +7711,7 @@ module.exports = {
   "compose forward separator": "\n\nLe %{date}, %{sender} a écrit \n",
   "compose action draft": "Enregistrer le brouillon",
   "compose action send": "Envoyer",
+  "compose action sending": "Envoi…",
   "compose action delete": "Supprimer le brouillon",
   "compose toggle cc": "Copie à",
   "compose toggle bcc": "Copie cachée à",
@@ -7800,7 +7784,7 @@ module.exports = {
   "account port": "Port",
   "account SSL": "Utiliser SSL",
   "account TLS": "Utiliser STARTTLS",
-  "account remove": "Supprimer",
+  "account remove": "Supprimer ce compte",
   "account remove confirm": "Voulez-vous vraiment supprimer ce compte ?",
   "account draft mailbox": "Enregistrer les brouillons dans",
   "account sent mailbox": "Enregistrer les messages envoyés dans",
@@ -7905,7 +7889,10 @@ module.exports = {
   "contact form": "Sélectionnez des contacts",
   "contact form placeholder": "Nom",
   "contact create success": "%{contact} a été ajouté(e) à vos contacts",
-  "contact create error": "L'ajout à votre carnet d'adresse a échoué : {error}"
+  "contact create error": "L'ajout à votre carnet d'adresse a échoué : {error}",
+  "gmail security tile": "Sécurité Gmail",
+  "gmail security body": "Gmail considère les connection par nom d'utilisateur et mot de passe\nnon sécurisées. Veuillez cliquer sur le lien ci-dessous, assurez\nvous d'être connecté avec le compte %{login} et activer l'accès\npour les applications moins sécurisées.",
+  "gmail security link": "Activer l'accès pour les applications moins sécurisées"
 };
 });
 
