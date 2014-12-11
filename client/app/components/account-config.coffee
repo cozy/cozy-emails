@@ -1,4 +1,4 @@
-{div, h3, h4, form, label, input, button, ul, li, a, span, i,
+{div, p, h3, h4, form, label, input, button, ul, li, a, span, i,
 fieldset, legend} =
     React.DOM
 classer = React.addons.classSet
@@ -224,6 +224,16 @@ module.exports = React.createClass
                         className: 'form-control'
                         onBlur: @validateForm
                 getError 'password'
+
+            if @state.displayGMAILSecurity
+                fieldset null,
+                    legend null, t 'gmail security tile'
+                    p null, t 'gmail security body', login: @state.login
+                    p null,
+                        a
+                            target: '_blank',
+                            href: "https://www.google.com/settings/security/lesssecureapps"
+                            t 'gmail security link'
 
             fieldset null,
                 legend null, t 'account sending server'
@@ -631,6 +641,9 @@ module.exports = React.createClass
                             else
                                 infos.smtpSSL = false
                                 infos.smtpTLS = false
+                    isGmail = infos.imapServer is 'imap.googlemail.com'
+                    infos.displayGMAILSecurity = isGmail
+
                     @setState infos
                     @validateForm()
             @_lastDiscovered = login

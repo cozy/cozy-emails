@@ -241,3 +241,13 @@ module.exports =
       "contact form placeholder" : "contact name"
       "contact create success"   : "%{contact} has been added to your contacts"
       "contact create error"     : "Error adding to your contacts : {error}"
+
+      # GMail security
+      "gmail security tile": "About Gmail security"
+      "gmail security body": """
+            Gmail considers connection using username and password not safe.
+            Please click on the following link, make sure
+            you are connected with your %{login} account and enable access for
+            less secure apps.
+      """
+      "gmail security link": "Enable access for less secure apps."
