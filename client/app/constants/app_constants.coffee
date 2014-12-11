@@ -116,6 +116,6 @@ module.exports =
         inboxMailbox: 'fa-inbox'
         draftMailbox: 'fa-edit'
         sentMailbox: 'fa-share-square-o'
-        trashMailbox: 'fa-trash'
+        trashMailbox: 'fa-trash-o'
         junkMailbox: 'fa-exclamation'
         allMailbox: 'fa-archive'
