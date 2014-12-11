@@ -50,6 +50,7 @@ module.exports =
 
       # List
       "list empty"              : "Pas d'email dans cette boîte.."
+      "list fetching"           : "Chargement…"
       "list search empty"       : "Aucun résultat trouvé pour la requête
                                     \"%{query}\"."
       "list count"              : "%{smart_count} message dans cette boite ||||

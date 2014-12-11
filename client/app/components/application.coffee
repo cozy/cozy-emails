@@ -245,6 +245,8 @@ module.exports = Application = React.createClass
             direction = if layout is 'first' then 'secondPanel' \
                 else 'firstPanel'
 
+            fetching = MessageStore.isFetching()
+
             query = MessageStore.getParams()
             query.accountID = accountID
             query.mailboxID = mailboxID
@@ -260,6 +262,7 @@ module.exports = Application = React.createClass
                 messageID:     messageID
                 mailboxes:     @state.mailboxes
                 settings:      @state.settings
+                fetching:      fetching
                 query:         query
                 emptyListMessage: emptyListMessage
                 counterMessage:   counterMessage

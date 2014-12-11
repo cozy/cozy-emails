@@ -31,13 +31,11 @@ MessageList = React.createClass
     getInitialState: ->
         return {
             edited: false
-            loading: false
             filterFlag: false
             filterUnsead: false
         }
 
     componentWillReceiveProps: (props) ->
-        @setState loading: false
         if props.mailboxID isnt @props.mailboxID
             @setState edited: false
             @_selected = {}
@@ -193,7 +191,10 @@ MessageList = React.createClass
                                 onHeaders: @onHeaders
                                 direction: 'left'
             if @props.messages.count() is 0
-                p null, @props.emptyListMessage
+                if @props.fetching
+                    p null, t 'list fetching'
+                else
+                    p null, @props.emptyListMessage
             else
                 div null,
                     #p null, @props.counterMessage
@@ -201,7 +202,7 @@ MessageList = React.createClass
                         messages
                     if @props.messages.count() < nbMessages
                         p className: 'text-center',
-                            if @state.loading
+                            if @props.fetching
                                 i className: "fa fa-refresh fa-spin"
                             else
                                 a
@@ -312,7 +313,6 @@ MessageList = React.createClass
 
     _loadNext: ->
         if @refs.nextPage? and @_isVisible(@refs.nextPage.getDOMNode(), true)
-            @setState loading: true
             LayoutActionCreator.showMessageList parameters: @props.query
 
     _handleRealtimeGrowth: ->

@@ -16,6 +16,11 @@ module.exports =
             type: ActionTypes.RECEIVE_RAW_MESSAGE
             value: message
 
+    setFetching: (fetching) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SET_FETCHING
+            value: fetching
+
     send: (message, callback) ->
         XHRUtils.messageSend message, (error, message) ->
             if not error?

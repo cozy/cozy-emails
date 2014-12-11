@@ -47,6 +47,7 @@ class MessageStore extends Store
 
     _filter       = null
     _params       = null
+    _fetching     = false
     _currentMessages = Immutable.Sequence()
     _currentID       = null
     _prevAction      = null
@@ -65,7 +66,6 @@ class MessageStore extends Store
 
         wasRead = MessageFlags.SEEN in oldmsg.get 'flags'
         isRead = MessageFlags.SEEN in newmsg.get 'flags'
-        console.log "CMD", wasRead, isRead, oldmsg.get('flags')
 
         oldboxes = Object.keys oldmsg.get 'mailboxIDs'
         newboxes = Object.keys newmsg.get 'mailboxIDs'
@@ -231,6 +231,10 @@ class MessageStore extends Store
             _messages = _messages.remove id
             @emit 'change'
 
+        handle ActionTypes.SET_FETCHING, (fetching) ->
+            _fetching = fetching
+            @emit 'change'
+
     ###
         Public API
     ###
@@ -339,5 +343,7 @@ class MessageStore extends Store
     getParams: -> return _params
 
     getPrevAction: -> return _prevAction
+
+    isFetching: -> return _fetching
 
 module.exports = new MessageStore()
