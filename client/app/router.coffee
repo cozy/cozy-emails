@@ -1,6 +1,7 @@
 PanelRouter = require './libs/panel_router'
 
 AccountStore = require './stores/account_store'
+MessageStore = require './stores/message_store'
 
 module.exports = class Router extends PanelRouter
 
@@ -55,14 +56,9 @@ module.exports = class Router extends PanelRouter
             ,    'account.mailbox.messages.full'
                 defaultAccountID = AccountStore.getDefault()?.get 'id'
                 defaultMailbox = AccountStore.getDefaultMailbox defaultAccountID
-                defaultParameters =
-                    accountID: defaultAccountID
-                    after: "-"
-                    before: "-"
-                    flag:  "-"
-                    mailboxID: defaultMailbox?.get 'id'
-                    pageAfter: "-"
-                    sort:  "-"
+                defaultParameters = MessageStore.getParams()
+                defaultParameters.accountID = defaultAccountID
+                defaultParameters.mailboxID = defaultMailbox?.get 'id'
             when 'account.config'
                 defaultAccount = AccountStore.getDefault()?.get 'id'
                 defaultParameters =

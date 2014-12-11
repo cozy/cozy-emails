@@ -65,7 +65,6 @@ class MessageStore extends Store
 
         wasRead = MessageFlags.SEEN in oldmsg.get 'flags'
         isRead = MessageFlags.SEEN in newmsg.get 'flags'
-        console.log "CMD", wasRead, isRead, oldmsg.get('flags')
 
         oldboxes = Object.keys oldmsg.get 'mailboxIDs'
         newboxes = Object.keys newmsg.get 'mailboxIDs'
@@ -177,7 +176,7 @@ class MessageStore extends Store
             onReceiveRawMessage message
 
         handle ActionTypes.SELECT_ACCOUNT, ->
-            initFilters()
+            #initFilters()
 
         handle ActionTypes.LIST_FILTER, (filter) ->
             _messages  = _messages.clear()
