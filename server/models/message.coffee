@@ -559,9 +559,10 @@ Message.findConversationID = (mail, callback) ->
 
     if references.length
         # find all messages in references
-        keys = references.map (id) -> [mail.accountID, 'mid', id]
+        keys = references.map (mid) -> [mail.accountID, 'mid', mid]
         Message.rawRequest 'dedupRequest', {keys}, (err, rows) ->
             return callback err if err
+            log.debug '   found = ',rows?.length
             Message.pickConversationID rows, callback
 
     # no references, try to find by subject
@@ -629,7 +630,7 @@ Message::toClientObject = ->
         file.url = "message/#{raw.id}/attachments/#{file.generatedFileName}"
 
     if raw.html?
-        raw.html = mailutils.sanitizeHTML raw.html, raw.id, raw.attachments
+        raw.html = mailutils.sanitizeHTML raw.html, raw.id, raw.attachments or []
 
     if not raw.text?
         raw.text = htmlToText.fromString raw.html,

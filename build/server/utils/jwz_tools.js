@@ -38,7 +38,7 @@ module.exports = {
     if (match) {
       return match[1];
     } else {
-      return null;
+      return messageID;
     }
   },
   flattenMailboxTree: function(tree) {
@@ -84,9 +84,10 @@ module.exports = {
             attachment = attachments.filter(function(att) {
               return att.contentId === cid;
             });
-            name = (_ref = attachment[0]) != null ? _ref.fileName : void 0;
-            if (name != null) {
+            if (name = (_ref = attachment[0]) != null ? _ref.fileName : void 0) {
               attribs.src = "message/" + messageId + "/attachments/" + name;
+            } else {
+              attribs.src = "";
             }
           }
           return {

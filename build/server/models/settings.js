@@ -38,10 +38,6 @@ module.exports = Settings = americano.getModel('MailsSettings', {
     type: Boolean,
     "default": true
   },
-  lang: {
-    type: String,
-    "default": 'en'
-  },
   listStyle: {
     type: String,
     "default": 'default'

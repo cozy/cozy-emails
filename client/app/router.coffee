@@ -57,6 +57,7 @@ module.exports = class Router extends PanelRouter
                 defaultAccountID = AccountStore.getDefault()?.get 'id'
                 defaultMailbox = AccountStore.getDefaultMailbox defaultAccountID
                 defaultParameters = MessageStore.getParams()
+                defaultParameters.sort = '-'
             when 'account.config'
                 defaultAccount = AccountStore.getDefault()?.get 'id'
                 defaultParameters =

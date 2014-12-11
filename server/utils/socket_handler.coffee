@@ -91,7 +91,7 @@ handleNewClient = (socket) =>
     sockets.push socket
 
 updateClientScope = (socket, scope) ->
-    log.warn 'updateClientScope', socket.id, scope
+    log.debug 'updateClientScope', socket.id, scope
     socket.scope_before = new Date(scope.before or 0)
     socket.scope_mailboxID = scope.mailboxID
 

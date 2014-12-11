@@ -51,6 +51,10 @@ module.exports =
 
       # List
       "list empty"              : "No email in this box."
+      "no flagged message"        : "No flagged email in this box."
+      "no unseen message"         : "All emails have been read in this box"
+      "no filter message"       : "No email for this filter."
+      "list fetching"           : "Loading…"
       "list search empty"       : "No result found for the query \"%{query}\"."
       "list count"              : "%{smart_count} message in this
                                   box |||| %{smart_count} messages in this box"
@@ -241,3 +245,13 @@ module.exports =
       "contact form placeholder" : "contact name"
       "contact create success"   : "%{contact} has been added to your contacts"
       "contact create error"     : "Error adding to your contacts : {error}"
+
+      # GMail security
+      "gmail security tile": "About Gmail security"
+      "gmail security body": """
+            Gmail considers connection using username and password not safe.
+            Please click on the following link, make sure
+            you are connected with your %{login} account and enable access for
+            less secure apps.
+      """
+      "gmail security link": "Enable access for less secure apps."

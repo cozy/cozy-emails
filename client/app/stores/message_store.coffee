@@ -17,7 +17,6 @@ class MessageStore extends Store
 
     _sortField   = 'date'
     _sortOrder   = 1
-    #_quickFilter = ''
     __getSortFunction = (criteria, order) ->
         sortFunction = (message1, message2) ->
             if typeof message1.get is 'function'
@@ -45,19 +44,12 @@ class MessageStore extends Store
         .map (message) -> Immutable.fromJS message
         .toOrderedMap()
 
-    _filter       = null
-    _params       = null
+    _filter       = '-'
+    _params       = sort: '-date'
+    _fetching     = false
     _currentMessages = Immutable.Sequence()
     _currentID       = null
     _prevAction      = null
-
-
-    initFilters = ->
-        _filter       = '-'
-        _params       =
-            sort: '+date'
-
-    initFilters()
 
     computeMailboxDiff = (oldmsg, newmsg) ->
         return {} unless oldmsg
@@ -175,9 +167,6 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_FLAG, (message) ->
             onReceiveRawMessage message
 
-        handle ActionTypes.SELECT_ACCOUNT, ->
-            #initFilters()
-
         handle ActionTypes.LIST_FILTER, (filter) ->
             _messages  = _messages.clear()
             if _filter is filter
@@ -190,10 +179,6 @@ class MessageStore extends Store
                 before: '-'
                 pageAfter: '-'
                 sort : _params.sort
-
-        handle ActionTypes.LIST_QUICK_FILTER, (filter) ->
-            #_quickFilter = filter
-            #@emit 'change'
 
         handle ActionTypes.LIST_SORT, (sort) ->
             _messages    = _messages.clear()
@@ -228,6 +213,10 @@ class MessageStore extends Store
 
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
             _messages = _messages.remove id
+            @emit 'change'
+
+        handle ActionTypes.SET_FETCHING, (fetching) ->
+            _fetching = fetching
             @emit 'change'
 
     ###
@@ -270,23 +259,6 @@ class MessageStore extends Store
         sequence = _messages.filter (message) ->
             return mailboxID in Object.keys message.get 'mailboxIDs'
         .sort(__getSortFunction _sortField, _sortOrder)
-
-        ###
-        if _filter isnt MessageFilter.ALL
-            if _filter is MessageFilter.FLAGGED
-                filterFunction = (message) ->
-                    return MessageFlags.FLAGGED in message.get 'flags'
-            else if _filter is MessageFilter.UNSEEN
-                filterFunction = (message) ->
-                    return MessageFlags.SEEN not in message.get 'flags'
-        if filterFunction?
-            sequence = sequence.filter filterFunction
-
-        if _quickFilter isnt ''
-            re = new RegExp _quickFilter, 'i'
-            sequence = sequence.filter (message) ->
-                return re.test(message.get 'subject')
-        ###
 
         # sequences are lazy so we need .toOrderedMap() to actually execute it
         _currentMessages = sequence.toOrderedMap()
@@ -337,6 +309,10 @@ class MessageStore extends Store
 
     getParams: -> return _params
 
+    getCurrentFilter: -> return _filter
+
     getPrevAction: -> return _prevAction
+
+    isFetching: -> return _fetching
 
 module.exports = new MessageStore()

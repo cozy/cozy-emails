@@ -104,7 +104,9 @@ module.exports = LayoutActionCreator =
         _cachedQuery.mailboxID = mailboxID
 
         if not cached
+            MessageActionCreator.setFetching true
             XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMessages) ->
+                MessageActionCreator.setFetching false
                 if err?
                     LayoutActionCreator.alertError err
                 else
