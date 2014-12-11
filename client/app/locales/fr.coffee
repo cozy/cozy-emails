@@ -28,7 +28,7 @@ module.exports =
       "compose reply separator"   : "\n\nLe %{date}, %{sender} a écrit \n"
       "compose forward prefix"    : "Fwd: "
       "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n"
-      "compose action draft"      : "Enregistrer en tant que brouillon"
+      "compose action draft"      : "Enregistrer le brouillon"
       "compose action send"       : "Envoyer"
       "compose action delete"     : "Supprimer le brouillon"
       "compose toggle cc"         : "Copie à"
@@ -194,6 +194,7 @@ module.exports =
       "message undelete"            : "Annuler la suppression"
       "message undelete ok"         : "Message restauré"
       "message undelete error"      : "Impossible d'annuler l'action"
+      "message preview title"       : "Voir les pièces-jointes"
 
       # Settings
       "settings title"             : "Paramètres"
