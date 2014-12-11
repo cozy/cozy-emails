@@ -685,6 +685,18 @@ module.exports = React.createClass
 
             @setState @_accountToState props
 
+        else
+            if props.error?
+                if props.error.name is 'AccountConfigError'
+                    errors = {}
+                    field = props.error.field
+                    if field is 'auth'
+                        errors['login']    = t 'config error auth'
+                        errors['password'] = t 'config error auth'
+                    else
+                        errors[field] = t 'config error ' + field
+                    @setState errors: errors
+
     getInitialState: ->
         return @_accountToState null
 
@@ -696,7 +708,11 @@ module.exports = React.createClass
             if props.error?
                 if props.error.name is 'AccountConfigError'
                     field = props.error.field
-                    state.errors[field] = t 'config error ' + field
+                    if field is 'auth'
+                        state.errors['login']    = t 'config error auth'
+                        state.errors['password'] = t 'config error auth'
+                    else
+                        state.errors[field] = t 'config error ' + field
         if account?
             for field in @_accountFields
                 state[field] = account.get field
