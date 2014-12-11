@@ -8052,6 +8052,7 @@ module.exports = Router = (function(_super) {
         defaultParameters = MessageStore.getParams();
         defaultParameters.accountID = defaultAccountID;
         defaultParameters.mailboxID = defaultMailbox != null ? defaultMailbox.get('id') : void 0;
+        defaultParameters.sort = '-';
         break;
       case 'account.config':
         defaultAccount = (_ref1 = AccountStore.getDefault()) != null ? _ref1.get('id') : void 0;
