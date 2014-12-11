@@ -52,8 +52,14 @@
 
         .participants
         .preview
-            flex 1
             margin 0.25em 2em 0 1em
+        .participants
+            flex-grow 2
+        .preview
+            flex-grow 4
+            width 50%
+        .hour
+          flex-grow 1
 
         .preview
             margin 0.25em .75em 0 auto
@@ -69,7 +75,9 @@
                 display inline
 
         .participants
-            width 200px
+            width 12em
+            min-width 12em
+            max-width 12em
             color darkcolor
             white-space pre
             overflow hidden
