@@ -30,6 +30,7 @@ module.exports =
       "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n"
       "compose action draft"      : "Enregistrer le brouillon"
       "compose action send"       : "Envoyer"
+      "compose action sending"    : "Envoi…"
       "compose action delete"     : "Supprimer le brouillon"
       "compose toggle cc"         : "Copie à"
       "compose toggle bcc"        : "Copie cachée à"
@@ -114,7 +115,7 @@ module.exports =
       "account port"                : "Port"
       "account SSL"                 : "Utiliser SSL"
       "account TLS"                 : "Utiliser STARTTLS"
-      "account remove"              : "Supprimer"
+      "account remove"              : "Supprimer ce compte"
       "account remove confirm"      : "Voulez-vous vraiment supprimer
                                         ce compte ?"
       "account draft mailbox"       : "Enregistrer les brouillons dans"

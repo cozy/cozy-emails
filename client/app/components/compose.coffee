@@ -63,6 +63,8 @@ module.exports = Compose = React.createClass
         classCc    = if @state.cc.length is 0 then '' else ' shown'
         classBcc   = if @state.bcc.length is 0 then '' else ' shown'
 
+        labelSend = if @state.sending then t 'compose action sending' else t 'compose action send'
+
         div id: 'email-compose',
             if @props.layout isnt 'full'
                 a href: expandUrl, className: 'expand pull-right',
@@ -165,10 +167,11 @@ module.exports = Compose = React.createClass
                             button
                                 className: 'btn btn-cozy',
                                 type: 'button',
+                                disable: if @state.sending then true else null
                                 onClick: @onSend,
                                     span
                                         className: 'fa fa-send'
-                                    span null, t 'compose action send'
+                                    span null, labelSend
                             button
                                 className: 'btn btn-cozy',
                                 type: 'button', onClick: @onDraft,
@@ -364,6 +367,7 @@ module.exports = Compose = React.createClass
                 @props.settings.get 'composeInHTML'
             state.accountID ?= @props.selectedAccount.get 'id'
 
+        state.sending = false
         return state
 
     componentWillReceiveProps: (nextProps) ->
@@ -429,7 +433,11 @@ module.exports = Compose = React.createClass
             if not isDraft and @_saveInterval
                 window.clearInterval @_saveInterval
 
+            if not isDraft
+                @setState sending: true
+
             MessageActionCreator.send message, (error, message) =>
+                @setState sending: false
                 if isDraft
                     msgKo = t "message action draft ko"
                     msgOk = t "message action draft ok"

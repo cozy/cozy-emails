@@ -31,6 +31,7 @@ module.exports =
       "compose action draft"      : "Save draft"
       "compose action send"       : "Send"
       "compose action delete"     : "Delete draft"
+      "compose action sending"    : "Sending"
       "compose toggle cc"         : "Cc"
       "compose toggle bcc"        : "Bcc"
       "compose error no dest"     : "You can not send a message to nobody"
@@ -111,7 +112,7 @@ module.exports =
       "account port"                : "Port"
       "account SSL"                 : "Use SSL"
       "account TLS"                 : "Use STARTTLS"
-      "account remove"              : "Remove"
+      "account remove"              : "Remove this account"
       "account remove confirm"      : "Do you really want to remove this
                                         account?"
       "account draft mailbox"       : "Draft box"
