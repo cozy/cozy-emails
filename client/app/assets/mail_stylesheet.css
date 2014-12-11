@@ -12,6 +12,9 @@ body {
     visibility: visible !important;
     font-family: 'Source Sans Pro';
 }
+table {
+  width: 100%;
+}
 img {
     max-width: 100%;
 }
