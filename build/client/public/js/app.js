@@ -2141,7 +2141,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/application", function(exports, require, module) {
-var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, ToastContainer, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref;
+var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageFilter, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, ToastContainer, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref, _ref1;
 
 _ref = React.DOM, body = _ref.body, div = _ref.div, p = _ref.p, form = _ref.form, i = _ref.i, input = _ref.input, span = _ref.span, a = _ref.a, button = _ref.button, strong = _ref.strong;
 
@@ -2189,7 +2189,7 @@ RefreshesStore = require('../stores/refreshes_store');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
-Dispositions = require('../constants/app_constants').Dispositions;
+_ref1 = require('../constants/app_constants'), MessageFilter = _ref1.MessageFilter, Dispositions = _ref1.Dispositions;
 
 
 /*
@@ -2231,11 +2231,11 @@ module.exports = Application = React.createClass({
     alert = this.state.alertMessage;
     getUrl = (function(_this) {
       return function(mailbox) {
-        var _ref1;
+        var _ref2;
         return _this.buildUrl({
           direction: 'first',
           action: 'account.mailbox.messages',
-          parameters: [(_ref1 = _this.state.selectedAccount) != null ? _ref1.get('id') : void 0, mailbox.get('id')]
+          parameters: [(_ref2 = _this.state.selectedAccount) != null ? _ref2.get('id') : void 0, mailbox.get('id')]
         });
       };
     })(this);
@@ -2345,7 +2345,18 @@ module.exports = Application = React.createClass({
           mailbox = account.get('mailboxes').get(mailboxID);
           messages = MessageStore.getMessagesByMailbox(mailboxID);
           messagesCount = (mailbox != null ? mailbox.get('nbTotal') : void 0) || 0;
-          emptyListMessage = t('list empty');
+          emptyListMessage = (function() {
+            switch (MessageStore.getCurrentFilter()) {
+              case MessageFilter.FLAGGED:
+                return t('no flagged message');
+              case MessageFilter.UNSEEN:
+                return t('no unseen message');
+              case MessageFilter.ALL:
+                return t('list empty');
+              default:
+                return t('no filter message');
+            }
+          })();
           counterMessage = t('list count', messagesCount);
         } else {
           this.redirect({
@@ -2456,13 +2467,13 @@ module.exports = Application = React.createClass({
     }
   },
   getStateFromStores: function() {
-    var firstPanelInfo, selectedAccount, selectedAccountID, selectedMailboxID, _ref1;
+    var firstPanelInfo, selectedAccount, selectedAccountID, selectedMailboxID, _ref2;
     selectedAccount = AccountStore.getSelected();
     if (selectedAccount == null) {
       selectedAccount = AccountStore.getDefault();
     }
     selectedAccountID = (selectedAccount != null ? selectedAccount.get('id') : void 0) || null;
-    firstPanelInfo = (_ref1 = this.props.router.current) != null ? _ref1.firstPanel : void 0;
+    firstPanelInfo = (_ref2 = this.props.router.current) != null ? _ref2.firstPanel : void 0;
     if ((firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages' || (firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages.full') {
       selectedMailboxID = firstPanelInfo.parameters.mailboxID;
     } else {
@@ -6914,6 +6925,181 @@ window.onload = function() {
 };
 });
 
+;require.register("libs/flux/dispatcher/Dispatcher", function(exports, require, module) {
+
+/*
+
+    -- Coffee port of Facebook's flux dispatcher. It was in ES6 and I haven't
+    been successful in adding a transpiler. --
+
+    Copyright (c) 2014, Facebook, Inc.
+    All rights reserved.
+
+    This source code is licensed under the BSD-style license found in the
+    LICENSE file in the root directory of this source tree. An additional grant
+    of patent rights can be found in the PATENTS file in the same directory.
+ */
+var Dispatcher, invariant, _lastID, _prefix;
+
+invariant = require('../invariant');
+
+_lastID = 1;
+
+_prefix = 'ID_';
+
+module.exports = Dispatcher = Dispatcher = (function() {
+  function Dispatcher() {
+    this._callbacks = {};
+    this._isPending = {};
+    this._isHandled = {};
+    this._isDispatching = false;
+    this._pendingPayload = null;
+  }
+
+
+  /*
+      Registers a callback to be invoked with every dispatched payload.
+      Returns a token that can be used with `waitFor()`.
+  
+      @param {function} callback
+      @return {string}
+   */
+
+  Dispatcher.prototype.register = function(callback) {
+    var id;
+    id = _prefix + _lastID++;
+    this._callbacks[id] = callback;
+    return id;
+  };
+
+
+  /*
+      Removes a callback based on its token.
+  
+      @param {string} id
+   */
+
+  Dispatcher.prototype.unregister = function(id) {
+    var message;
+    message = 'Dispatcher.unregister(...): `%s` does not map to a ' + 'registered callback.';
+    invariant(this._callbacks[id], message, id);
+    return delete this._callbacks[id];
+  };
+
+
+  /*
+      Waits for the callbacks specified to be invoked before continuing
+      execution of the current callback. This method should only be used by a
+      callback in response to a dispatched payload.
+  
+      @param {array<string>} ids
+   */
+
+  Dispatcher.prototype.waitFor = function(ids) {
+    var id, ii, message, message2, _i, _ref, _results;
+    invariant(this._isDispatching, 'Dispatcher.waitFor(...): Must be invoked while dispatching.');
+    message = 'Dispatcher.waitFor(...): Circular dependency detected ' + 'while waiting for `%s`.';
+    message2 = 'Dispatcher.waitFor(...): `%s` does not map to a ' + 'registered callback.';
+    _results = [];
+    for (ii = _i = 0, _ref = ids.length - 1; _i <= _ref; ii = _i += 1) {
+      id = ids[ii];
+      if (this._isPending[id]) {
+        invariant(this._isHandled[id], message, id);
+        continue;
+      }
+      invariant(this._callbacks[id], message2, id);
+      _results.push(this._invokeCallback(id));
+    }
+    return _results;
+  };
+
+
+  /*
+      Dispatches a payload to all registered callbacks.
+  
+      @param {object} payload
+   */
+
+  Dispatcher.prototype.dispatch = function(payload) {
+    var id, message, _results;
+    message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + 'of a dispatch.';
+    invariant(!this._isDispatching, message);
+    this._startDispatching(payload);
+    try {
+      _results = [];
+      for (id in this._callbacks) {
+        if (this._isPending[id]) {
+          continue;
+        }
+        _results.push(this._invokeCallback(id));
+      }
+      return _results;
+    } finally {
+      this._stopDispatching();
+    }
+  };
+
+
+  /*
+      Is this Dispatcher currently dispatching.
+  
+      @return {boolean}
+   */
+
+  Dispatcher.prototype.isDispatching = function() {
+    return this._isDispatching;
+  };
+
+
+  /*
+      Call the callback stored with the given id. Also do some internal
+      bookkeeping.
+  
+      @param {string} id
+      @internal
+   */
+
+  Dispatcher.prototype._invokeCallback = function(id) {
+    this._isPending[id] = true;
+    this._callbacks[id](this._pendingPayload);
+    return this._isHandled[id] = true;
+  };
+
+
+  /*
+      Set up bookkeeping needed when dispatching.
+  
+      @param {object} payload
+      @internal
+   */
+
+  Dispatcher.prototype._startDispatching = function(payload) {
+    var id;
+    for (id in this._callbacks) {
+      this._isPending[id] = false;
+      this._isHandled[id] = false;
+    }
+    this._pendingPayload = payload;
+    return this._isDispatching = true;
+  };
+
+
+  /*
+      Clear bookkeeping used for dispatching.
+  
+      @internal
+   */
+
+  Dispatcher.prototype._stopDispatching = function() {
+    this._pendingPayload = null;
+    return this._isDispatching = false;
+  };
+
+  return Dispatcher;
+
+})();
+});
+
 ;require.register("libs/flux/dispatcher/dispatcher", function(exports, require, module) {
 
 /*
@@ -7143,6 +7329,63 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 };
 
 module.exports = invariant;
+});
+
+;require.register("libs/flux/store/Store", function(exports, require, module) {
+var AppDispatcher, Store,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+AppDispatcher = require('../../../app_dispatcher');
+
+module.exports = Store = (function(_super) {
+  var _addHandlers, _handlers, _nextUniqID, _processBinding;
+
+  __extends(Store, _super);
+
+  Store.prototype.uniqID = null;
+
+  _nextUniqID = 0;
+
+  _handlers = {};
+
+  _addHandlers = function(type, callback) {
+    if (_handlers[this.uniqID] == null) {
+      _handlers[this.uniqID] = {};
+    }
+    return _handlers[this.uniqID][type] = callback;
+  };
+
+  _processBinding = function() {
+    return this.dispatchToken = AppDispatcher.register((function(_this) {
+      return function(payload) {
+        var callback, type, value, _ref;
+        _ref = payload.action, type = _ref.type, value = _ref.value;
+        if ((callback = _handlers[_this.uniqID][type]) != null) {
+          return callback.call(_this, value);
+        }
+      };
+    })(this));
+  };
+
+  function Store() {
+    Store.__super__.constructor.call(this);
+    this.uniqID = _nextUniqID++;
+    this.__bindHandlers(_addHandlers.bind(this));
+    _processBinding.call(this);
+  }
+
+  Store.prototype.__bindHandlers = function(handle) {
+    var message;
+    if (__DEV__) {
+      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
+      throw new Error(message);
+    }
+  };
+
+  return Store;
+
+})(EventEmitter);
 });
 
 ;require.register("libs/flux/store/store", function(exports, require, module) {
@@ -7538,6 +7781,9 @@ module.exports = {
   "menu favorites on": "Favorites",
   "menu favorites off": "All",
   "list empty": "No email in this box.",
+  "no flagged message": "No flagged email in this box.",
+  "no unseen message": "All emails have been read in this box",
+  "no filter message": "No email for this filter.",
   "list fetching": "Loading…",
   "list search empty": "No result found for the query \"%{query}\".",
   "list count": "%{smart_count} message in this box |||| %{smart_count} messages in this box",
@@ -7751,6 +7997,9 @@ module.exports = {
   "menu favorites on": "Favorites",
   "menu favorites off": "Toutes",
   "list empty": "Pas d'email dans cette boîte..",
+  "no flagged message": "Pas d'email important dans cette boîte.",
+  "no unseen message": "Pas d'email non-lu dans cette boîte.",
+  "no filter message": "Pas d'email pour ce filtre.",
   "list fetching": "Chargement…",
   "list search empty": "Aucun résultat trouvé pour la requête \"%{query}\".",
   "list count": "%{smart_count} message dans cette boite |||| %{smart_count} messages dans cette boite",
@@ -8646,7 +8895,7 @@ MessageStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var computeMailboxDiff, initFilters, onReceiveRawMessage, __getSortFunction, __sortFunction, _currentID, _currentMessages, _fetching, _filter, _messages, _params, _prevAction, _sortField, _sortOrder;
+  var computeMailboxDiff, onReceiveRawMessage, __getSortFunction, __sortFunction, _currentID, _currentMessages, _fetching, _filter, _messages, _params, _prevAction, _sortField, _sortOrder;
 
   __extends(MessageStore, _super);
 
@@ -8687,9 +8936,11 @@ MessageStore = (function(_super) {
     return Immutable.fromJS(message);
   }).toOrderedMap();
 
-  _filter = null;
+  _filter = '-';
 
-  _params = null;
+  _params = {
+    sort: '-date'
+  };
 
   _fetching = false;
 
@@ -8698,15 +8949,6 @@ MessageStore = (function(_super) {
   _currentID = null;
 
   _prevAction = null;
-
-  initFilters = function() {
-    _filter = '-';
-    return _params = {
-      sort: '+date'
-    };
-  };
-
-  initFilters();
 
   computeMailboxDiff = function(oldmsg, newmsg) {
     var added, changed, deltaUnread, isRead, newboxes, oldboxes, out, removed, stayed, wasRead, _ref1, _ref2;
@@ -8844,7 +9086,6 @@ MessageStore = (function(_super) {
     handle(ActionTypes.MESSAGE_FLAG, function(message) {
       return onReceiveRawMessage(message);
     });
-    handle(ActionTypes.SELECT_ACCOUNT, function() {});
     handle(ActionTypes.LIST_FILTER, function(filter) {
       _messages = _messages.clear();
       if (_filter === filter) {
@@ -8860,7 +9101,6 @@ MessageStore = (function(_super) {
         sort: _params.sort
       };
     });
-    handle(ActionTypes.LIST_QUICK_FILTER, function(filter) {});
     handle(ActionTypes.LIST_SORT, function(sort) {
       var currentField, currentOrder, newOrder;
       _messages = _messages.clear();
@@ -8958,23 +9198,6 @@ MessageStore = (function(_super) {
     sequence = _messages.filter(function(message) {
       return __indexOf.call(Object.keys(message.get('mailboxIDs')), mailboxID) >= 0;
     }).sort(__getSortFunction(_sortField, _sortOrder));
-
-    /*
-    if _filter isnt MessageFilter.ALL
-        if _filter is MessageFilter.FLAGGED
-            filterFunction = (message) ->
-                return MessageFlags.FLAGGED in message.get 'flags'
-        else if _filter is MessageFilter.UNSEEN
-            filterFunction = (message) ->
-                return MessageFlags.SEEN not in message.get 'flags'
-    if filterFunction?
-        sequence = sequence.filter filterFunction
-    
-    if _quickFilter isnt ''
-        re = new RegExp _quickFilter, 'i'
-        sequence = sequence.filter (message) ->
-            return re.test(message.get 'subject')
-     */
     _currentMessages = sequence.toOrderedMap();
     if (_currentID == null) {
       this.setCurrentID((_ref1 = _currentMessages.first()) != null ? _ref1.get('id') : void 0);
@@ -9044,6 +9267,10 @@ MessageStore = (function(_super) {
 
   MessageStore.prototype.getParams = function() {
     return _params;
+  };
+
+  MessageStore.prototype.getCurrentFilter = function() {
+    return _filter;
   };
 
   MessageStore.prototype.getPrevAction = function() {
