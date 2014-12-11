@@ -86,7 +86,10 @@ module.exports = LayoutActionCreator =
     showMessageList: (panelInfo) ->
         {accountID, mailboxID} = panelInfo.parameters
         selectedAccount = AccountStore.getSelected()
-        if not selectedAccount? or selectedAccount.get('id') isnt accountID
+        selectedMailbox = AccountStore.getSelectedMailbox()
+        if not selectedAccount? or
+        selectedAccount.get('id') isnt accountID or
+        selectedMailbox.get('id') isnt mailboxID
             AccountActionCreator.selectAccount accountID, mailboxID
 
         cached = _cachedQuery.mailboxID is mailboxID

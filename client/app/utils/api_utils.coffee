@@ -71,11 +71,11 @@ module.exports =
         if not nextID?
             return
 
+        MessageActionCreator = require '../actions/message_action_creator'
+        MessageActionCreator.setCurrent nextID
+
         if SettingsStore.get('displayPreview')
             @messageDisplay nextID
-        else
-            MessageActionCreator = require '../actions/message_action_creator'
-            MessageActionCreator.setCurrent nextID
 
     messageDisplay: (messageID) ->
         if not messageID

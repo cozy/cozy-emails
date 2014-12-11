@@ -199,7 +199,7 @@ class AccountStore extends Store
         if selectedID?
             return mailboxes.get selectedID
         else
-            return mailboxes.first()
+            return _selectedMailbox
 
     getSelectedFavorites: (sorted) ->
 
