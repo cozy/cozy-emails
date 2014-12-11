@@ -1,5 +1,5 @@
 //jshint browser: true, strict: false
-/*global Mousetrap */
+/*global require, Mousetrap */
 if (typeof window.plugins !== "object") {
   window.plugins = {};
 }
@@ -35,10 +35,15 @@ if (typeof window.plugins !== "object") {
       Mousetrap.unbind("esc");
     });
   }
-  function layoutResize(direction) {
+  function layoutWidth(direction) {
     if (direction !== 1 && direction !== -1) {
       direction = 1;
     }
+    var layoutStore  = require('stores/layout_store'),
+        layoutAction = require('actions/layout_action_creator'),
+        disposition  = layoutStore.getDisposition();
+    layoutAction.setDisposition('vertical', disposition.width - direction);
+    /*
     var panels, w1;
     panels = document.querySelectorAll('#panels > .panel');
     function updateClass(panel, nb) {
@@ -54,6 +59,55 @@ if (typeof window.plugins !== "object") {
     w1 = updateClass(panels[0], -1 * direction);
     updateClass(panels[1], 1 * direction);
     panels[1].style.left = (100 / 12 * w1) + '%';
+    */
+  }
+  function layoutHeight(direction) {
+    if (direction !== 1 && direction !== -1) {
+      direction = 1;
+    }
+    var layoutStore  = require('stores/layout_store'),
+        layoutAction = require('actions/layout_action_creator'),
+        disposition  = layoutStore.getDisposition();
+    layoutAction.setDisposition('horizontal', disposition.height - direction);
+    /*
+    var panels;
+    panels = document.querySelectorAll('#panels > .panel');
+    function updateClass(panel, nb) {
+      var cl, res;
+      cl = Array.prototype.slice.call(panel.classList).filter(function (c) {
+        return c.substr(0, 4) === 'row-';
+      })[0];
+      panel.classList.remove(cl);
+      res = (parseInt(cl.split('-')[1], 10) + nb);
+      panel.classList.add('row-' + res);
+      cl = Array.prototype.slice.call(panel.classList).filter(function (c) {
+        return c.substr(0, 11) === 'row-offset-';
+      })[0];
+      if (cl) {
+        panel.classList.remove(cl);
+        res = (parseInt(cl.split('-')[2], 10) - nb);
+        panel.classList.add('row-offset-' + res);
+      }
+      return res;
+    }
+    var height = updateClass(panels[0], -1 * direction);
+    updateClass(panels[1], 1 * direction);
+    require('actions/layout_action_creator').setDisposition('vertical', height);
+    */
+  }
+  function menuNavigate() {
+    var links, prev, next;
+    links = Array.prototype.slice.call(document.querySelectorAll('#menu .mailbox-list a[href]'));
+    links.some(function (item, e) {
+      if (item.parentNode.classList.contains('active') && item.parentNode.parentNode.parentNode.classList.contains('active')) {
+        prev = links[e-1];
+        next = links[e+1];
+        return true;
+      } else {
+        return false;
+      }
+    });
+    return [prev, next];
   }
   root.mailkeys = {
     _binding: {
@@ -70,6 +124,36 @@ if (typeof window.plugins !== "object") {
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageClose();
+        }
+      },
+      'h': {
+        name: "Previous mailbox",
+        action: function (e) {
+          e.preventDefault();
+          var prev = menuNavigate()[0];
+          if (prev) {
+            window.location = prev.href;
+          } else {
+            prev = document.querySelector('#account-list > li.active').previousElementSibling.querySelector('a.account');
+            if (prev) {
+              window.location = prev.href;
+            }
+          }
+        }
+      },
+      'l': {
+        name: "Next mailbox",
+        action: function (e) {
+          e.preventDefault();
+          var next = menuNavigate()[1];
+          if (next) {
+            window.location = next.href;
+          } else {
+            next = document.querySelector('#account-list > li.active').nextElementSibling.querySelector('a.account');
+            if (next) {
+              window.location = next.href;
+            }
+          }
         }
       },
       'j': {
@@ -98,18 +182,54 @@ if (typeof window.plugins !== "object") {
           }
         }
       },
-      'ctrl+left': {
+      'alt+left': {
         name: 'Increase message layout width',
         action: function (e) {
           e.preventDefault();
-          layoutResize(1);
+          layoutWidth(1);
         }
       },
-      'ctrl+right': {
+      'alt+right': {
         name: 'Decrease message layout width',
         action: function (e) {
           e.preventDefault();
-          layoutResize(-1);
+          layoutWidth(-1);
+        }
+      },
+      'alt+up': {
+        name: 'Increase message layout height',
+        action: function (e) {
+          e.preventDefault();
+          layoutHeight(1);
+        }
+      },
+      'alt+down': {
+        name: 'Decrease message layout height',
+        action: function (e) {
+          e.preventDefault();
+          layoutHeight(-1);
+        }
+      },
+      'w': {
+        name: "Toggle layout",
+        action: function (e) {
+          e.preventDefault();
+          var layoutStore  = require('stores/layout_store'),
+              layoutAction = require('actions/layout_action_creator'),
+              disposition  = layoutStore.getDisposition();
+
+          switch (disposition.type) {
+          case 'horizontal':
+            layoutAction.setDisposition('three');
+            break;
+          case 'vertical':
+            layoutAction.setDisposition('horizontal');
+            break;
+          case 'three':
+            layoutAction.setDisposition('vertical');
+            break;
+          }
+
         }
       },
       'ctrl+up': {

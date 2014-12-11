@@ -102,9 +102,9 @@ module.exports = Menu = React.createClass
         classes = classer
             'hidden-xs hidden-sm': not @props.isResponsiveMenuShown
             'col-xs-4': true
-            'col-md-1': @props.disposition isnt Dispositions.THREE
-            'col-md-3': @props.disposition is Dispositions.THREE
-            'three': @props.disposition is Dispositions.THREE
+            'col-md-1': @props.disposition.type isnt Dispositions.THREE
+            'col-md-3': @props.disposition.type is Dispositions.THREE
+            'three': @props.disposition.type is Dispositions.THREE
 
         div id: 'menu', className: classes,
 
