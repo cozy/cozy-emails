@@ -68,15 +68,15 @@ module.exports = Application = React.createClass
 
         panelsClasses = classer
             row: true
-            horizontal: disposition is Dispositions.HORIZONTAL
+            horizontal: disposition.type is Dispositions.HORIZONTAL
         # css classes are a bit long so we use a subfunction to get them
         panelClasses = @getPanelClasses isFullWidth
 
         # classes for page-content
         responsiveClasses = classer
             'col-xs-12': true
-            'col-md-9':  disposition is Dispositions.THREE
-            'col-md-11': disposition isnt Dispositions.THREE
+            'col-md-9':  disposition.type is Dispositions.THREE
+            'col-md-11': disposition.type isnt Dispositions.THREE
             'pushed': @state.isResponsiveMenuShown
 
         alert = @state.alertMessage
@@ -155,7 +155,7 @@ module.exports = Application = React.createClass
 
         # Two cases: the layout has a full-width panel...
         if isFullWidth
-            classes = firstPanel: 'panel col-xs-12 col-md-12'
+            classes = firstPanel: 'panel col-xs-12 col-md-12 row-10'
 
             # (default) when full-width panel is shown after
             # a two-panels structure
@@ -174,14 +174,15 @@ module.exports = Application = React.createClass
 
         # ... or a two panels layout.
         else
-            if LayoutStore.getDisposition() is Dispositions.HORIZONTAL
+            disposition = LayoutStore.getDisposition()
+            if disposition.type is Dispositions.HORIZONTAL
                 classes =
-                    firstPanel: 'panel col-xs-12 col-md-12 hidden-xs hidden-sm row-5'
-                    secondPanel: 'panel col-xs-12 col-md-12 row-5 row-offset-5'
+                    firstPanel: "panel col-xs-12 col-md-12 hidden-xs hidden-sm row-#{disposition.height}"
+                    secondPanel: "panel col-xs-12 col-md-12 row-#{10 - disposition.height} row-offset-#{disposition.height}"
             else
                 classes =
-                    firstPanel: 'panel col-xs-12 col-md-6 hidden-xs hidden-sm row-10'
-                    secondPanel: 'panel col-xs-12 col-md-6 row-10'
+                    firstPanel: "panel col-xs-12 col-md-#{disposition.width} hidden-xs hidden-sm row-10"
+                    secondPanel: "panel col-xs-12 col-md-#{12 - disposition.width} col-offset-#{disposition.width} row-10"
 
             # we don't animate in the first render
             if previous?
@@ -407,5 +408,5 @@ module.exports = Application = React.createClass
 
     # Toggle the menu in responsive mode
     toggleMenu: (event) ->
-        @setState isResponsiveMenuShown: !@state.isResponsiveMenuShown
+        @setState isResponsiveMenuShown: not @state.isResponsiveMenuShown
 

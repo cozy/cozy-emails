@@ -177,7 +177,7 @@ class MessageStore extends Store
             onReceiveRawMessage message
 
         handle ActionTypes.SELECT_ACCOUNT, ->
-            initFilters()
+            #initFilters()
 
         handle ActionTypes.LIST_FILTER, (filter) ->
             _messages  = _messages.clear()
