@@ -155,7 +155,7 @@ MessageList = React.createClass
                                     onClick: toggleFilterFlag
                                     title: t 'list filter flagged title'
                                     className: 'btn btn-default ' + if @state.filterFlag then ' shown ' else '',
-                                    span className: 'fa fa-flag'
+                                    span className: 'fa fa-star'
                         if advanced and not @state.edited
                             div className: 'btn-group btn-group-sm message-list-option',
                                 MessagesFilter filterParams
@@ -219,7 +219,10 @@ MessageList = React.createClass
                     #p null, @props.counterMessage
                     ul className: 'list-unstyled',
                         messages
-                    if @props.messages.count() < nbMessages
+                    # If message list is filtered, we can't only rely on message count
+                    # So we assume that if query.pageAfter is null, there's no more
+                    # messages to display
+                    if @props.messages.count() < nbMessages and @props.query.pageAfter?
                         p className: 'text-center',
                             if @props.fetching
                                 i className: "fa fa-refresh fa-spin"

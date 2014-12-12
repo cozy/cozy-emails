@@ -90,13 +90,14 @@ module.exports.listByMailboxOptions = (req, res, next) ->
     else
         flag = null
 
-    req.sortField = sortField
+    req.sortField  = sortField
     req.descending = descending
-    req.before = before
-    req.sort = sort
-    req.after = after
-    req.pageAfter = pageAfter
-    req.flag = flag
+    req.before     = before
+    req.sort       = sort
+    req.after      = after
+    req.pageAfter  = pageAfter
+    req.flag       = flag
+    req.flagcode   = flagcode
     next()
 
 
