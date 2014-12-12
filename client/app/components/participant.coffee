@@ -31,11 +31,18 @@ Participant = React.createClass
                 if node.dataset.tooltip
                     return
                 node.dataset.tooltip = true
-                avatar = ContactStore.getAvatar @props.address.address
+                contact = ContactStore.getByAddress @props.address.address
+                avatar  = contact?.get 'avatar'
                 if avatar?
                     image = "<img class='avatar' src=#{avatar}>"
                 else
                     image = "<i class='avatar fa fa-user' />"
+                if contact?
+                    image = """
+                    <a href="#apps/contacts/contact/#{contact.get 'id'}" target="blank">
+                        #{image}
+                    </a>
+                    """
                 if @props.onAdd?
                     add = """
                     <a class='address-add'>
