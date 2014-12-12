@@ -200,7 +200,9 @@ module.exports = Compose = React.createClass
         @getDOMNode().scrollIntoView()
         if @state.composeInHTML
             if Array.isArray(@state.to) and @state.to.length > 0 and @state.subject isnt ''
-                node = @refs.html.getDOMNode()
+                node = @refs.html?.getDOMNode()
+                if not node?
+                    return
                 jQuery(node).focus()
                 if not @props.settings.get 'composeOnTop'
                     node = node.lastChild
@@ -341,13 +343,13 @@ module.exports = Compose = React.createClass
     componentWillUnmount: ->
         if @_saveInterval
             window.clearInterval @_saveInterval
-        if @state.isDraft and @state.id?
-            if not window.confirm(t 'compose confirm keep draft')
-                MessageActionCreator.delete @state.id, (error) ->
-                    if error?
-                        LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
-                    else
-                        LayoutActionCreator.notify t('compose draft deleted')
+        #if @state.isDraft and @state.id?
+        #    if not window.confirm(t 'compose confirm keep draft')
+        #        MessageActionCreator.delete @state.id, (error) ->
+        #            if error?
+        #                LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
+        #            else
+        #                LayoutActionCreator.notify t('compose draft deleted')
 
     getInitialState: (forceDefault) ->
 
@@ -416,17 +418,16 @@ module.exports = Compose = React.createClass
                 @refs.subject.getDOMNode().focus()
 
         if valid
-            node = @refs.html.getDOMNode()
-            if @state.composeInHTML
-                message.html    = node.innerHTML
-                try
-                    message.text = toMarkdown(message.html)
-                catch
-                    message.text = node.textContent or node.innerText
-            else
-                message.text = node.value.trim()
-
-            callback = @props.callback
+            node = @refs.html?.getDOMNode()
+            if node?
+                if @state.composeInHTML
+                    message.html = node.innerHTML
+                    try
+                        message.text = toMarkdown(message.html)
+                    catch
+                        message.text = node.textContent or node.innerText
+                else
+                    message.text = node.value.trim()
 
             if not isDraft and @_saveInterval
                 window.clearInterval @_saveInterval
@@ -448,12 +449,11 @@ module.exports = Compose = React.createClass
                     LayoutActionCreator.notify msgOk
                     @setState message
 
-                    if callback?
-                        callback error
-                    else if not isDraft
-                        # mail sent close the pane
-                        @redirect @buildClosePanelUrl @props.layout
-
+                    if not isDraft
+                        if @props.callback?
+                            @props.callback error
+                        else
+                            @redirect @buildClosePanelUrl @props.layout
 
     _autosave: ->
         @_doSend true
@@ -464,11 +464,15 @@ module.exports = Compose = React.createClass
                 if error?
                     LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
                 else
-                    @redirect
-                        direction: 'first'
-                        action: 'account.mailbox.messages'
-                        parameters: [@props.selectedAccount.get('id'), @props.selectedMailboxID, 1]
-                        fullWidth: true
+                    if @props.callback
+                        @props.callback()
+                    else
+                        @redirect
+                            direction: 'first'
+                            action: 'account.mailbox.messages'
+                            parameters: [@props.selectedAccount.get('id'), @props.selectedMailboxID, 1]
+                            fullWidth: true
+
     onToggleCc: (e) ->
         toggle = (e) -> e.classList.toggle 'shown'
         toggle e for e in @getDOMNode().querySelectorAll '.compose-cc'
