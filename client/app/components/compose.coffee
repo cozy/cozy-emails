@@ -395,6 +395,7 @@ module.exports = Compose = React.createClass
         message =
             id          : @state.id
             accountID   : @state.accountID
+            mailboxIDs  : @state.mailboxIDs
             from        : [from]
             to          : @state.to
             cc          : @state.cc
@@ -415,9 +416,6 @@ module.exports = Compose = React.createClass
                 @refs.subject.getDOMNode().focus()
 
         if valid
-            if @props.message?
-                message.mailboxIDs = @props.message.get 'mailboxIDs'
-
             node = @refs.html.getDOMNode()
             if @state.composeInHTML
                 message.html    = node.innerHTML
