@@ -54,7 +54,7 @@ class ContactStore extends Store
             _results = _contacts.filter (contact) ->
                 obj  = contact.toObject()
                 full = ''
-                Object.keys(obj).forEach (key) ->
+                ['address', 'fn'].forEach (key) ->
                     if typeof obj[key] is 'string'
                         full += obj[key]
                 return re.test full

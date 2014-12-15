@@ -2525,7 +2525,7 @@ module.exports = Application = React.createClass({
 });
 
 ;require.register("components/compose", function(exports, require, module) {
-var AccountPicker, Compose, ComposeActions, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, a, button, classer, div, form, h3, i, input, label, li, span, textarea, ul, _ref;
+var AccountPicker, Compose, ComposeActions, ComposeEditor, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, a, button, classer, div, form, h3, i, input, label, li, span, textarea, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label, button = _ref.button, span = _ref.span, ul = _ref.ul, li = _ref.li, input = _ref.input;
 
@@ -2564,7 +2564,7 @@ module.exports = Compose = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var classBcc, classCc, classInput, classLabel, closeUrl, collapseUrl, expandUrl, labelSend, onCancel;
+    var classBcc, classCc, classInput, classLabel, closeUrl, collapseUrl, expandUrl, focusEditor, labelSend, onCancel;
     if (!this.props.accounts) {
       return;
     }
@@ -2601,6 +2601,7 @@ module.exports = Compose = React.createClass({
     classCc = this.state.cc.length === 0 ? '' : ' shown';
     classBcc = this.state.bcc.length === 0 ? '' : ' shown';
     labelSend = this.state.sending ? t('compose action sending') : t('compose action send');
+    focusEditor = Array.isArray(this.state.to) && this.state.to.length > 0 && this.state.subject !== '';
     return div({
       id: 'email-compose'
     }, this.props.layout !== 'full' ? a({
@@ -2674,19 +2675,13 @@ module.exports = Compose = React.createClass({
     }, label({
       htmlFor: 'compose-subject',
       className: classLabel
-    }, t("compose content")), this.state.composeInHTML ? div({
-      className: 'rt-editor form-control',
-      ref: 'html',
-      contentEditable: true,
-      onKeyDown: this.onKeyDown,
-      dangerouslySetInnerHTML: {
-        __html: this.linkState('html').value
-      }
-    }) : textarea({
-      className: 'editor',
-      ref: 'content',
-      onKeyDown: this.onKeyDown,
-      defaultValue: this.linkState('text').value
+    }, t("compose content")), ComposeEditor({
+      html: this.linkState('html'),
+      text: this.linkState('text'),
+      settings: this.props.settings,
+      onSend: this.onSend,
+      composeInHTML: this.state.composeInHTML,
+      focus: focusEditor
     })), div({
       className: 'attachements'
     }, FilePicker({
@@ -2727,20 +2722,252 @@ module.exports = Compose = React.createClass({
     }, null)));
   },
   _initCompose: function() {
-    var node, r, range, rect, s, _ref1;
     if (this._saveInterval) {
       window.clearInterval(this._saveInterval);
     }
     this._saveInterval = window.setInterval(this._autosave, 30000);
     this.getDOMNode().scrollIntoView();
-    if (this.state.composeInHTML) {
-      if (Array.isArray(this.state.to) && this.state.to.length > 0 && this.state.subject !== '') {
+    if (!Array.isArray(this.state.to) || this.state.to.length === 0) {
+      return document.getElementById('compose-to').focus();
+    }
+  },
+  componentDidMount: function() {
+    return this._initCompose();
+  },
+  componentWillUnmount: function() {
+    if (this._saveInterval) {
+      return window.clearInterval(this._saveInterval);
+    }
+  },
+  getInitialState: function(forceDefault) {
+    var key, message, state, value, _ref1;
+    if (message = this.props.message) {
+      state = {
+        composeInHTML: message.get('html') != null
+      };
+      _ref1 = message.toJS();
+      for (key in _ref1) {
+        value = _ref1[key];
+        state[key] = value;
+      }
+      state.attachments = message.get('attachments');
+    } else {
+      state = MessageUtils.makeReplyMessage(this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
+      if (state.accountID == null) {
+        state.accountID = this.props.selectedAccount.get('id');
+      }
+    }
+    state.sending = false;
+    return state;
+  },
+  componentWillReceiveProps: function(nextProps) {
+    if (nextProps.message !== this.props.message) {
+      this.props.message = nextProps.message;
+      return this.setState(this.getInitialState());
+    }
+  },
+  onDraft: function(args) {
+    return this._doSend(true);
+  },
+  onSend: function(args) {
+    return this._doSend(false);
+  },
+  _doSend: function(isDraft) {
+    var account, from, message, valid;
+    account = this.props.accounts.get(this.state.accountID);
+    from = {
+      name: (account != null ? account.get('name') : void 0) || void 0,
+      address: account.get('login')
+    };
+    if (!~from.address.indexOf('@')) {
+      from.address += '@' + account.get('imapServer');
+    }
+    message = {
+      id: this.state.id,
+      accountID: this.state.accountID,
+      mailboxIDs: this.state.mailboxIDs,
+      from: [from],
+      to: this.state.to,
+      cc: this.state.cc,
+      bcc: this.state.bcc,
+      subject: this.state.subject,
+      isDraft: isDraft,
+      attachments: this.state.attachments
+    };
+    valid = true;
+    if (!isDraft) {
+      if (this.state.to.length === 0 && this.state.cc.length === 0 && this.state.bcc.length === 0) {
+        valid = false;
+        LayoutActionCreator.alertError(t("compose error no dest"));
+        document.getElementById('compose-to').focus();
+      } else if (this.state.subject === '') {
+        valid = false;
+        LayoutActionCreator.alertError(t("compose error no subject"));
+        this.refs.subject.getDOMNode().focus();
+      }
+    }
+    if (valid) {
+      if (this.state.composeInHTML) {
+        message.html = this.state.html;
+        try {
+          message.text = toMarkdown(message.html);
+        } catch (_error) {
+          message.text = typeof message.html === "function" ? message.html(replace(/<[^>]*>/gi, '')) : void 0;
+        }
+      } else {
+        message.text = state.text.trim();
+      }
+      if (!isDraft && this._saveInterval) {
+        window.clearInterval(this._saveInterval);
+      }
+      if (!isDraft) {
+        this.setState({
+          sending: true
+        });
+      }
+      return MessageActionCreator.send(message, (function(_this) {
+        return function(error, message) {
+          var msgKo, msgOk;
+          if (!isDraft) {
+            _this.setState({
+              sending: false
+            });
+          }
+          if (isDraft) {
+            msgKo = t("message action draft ko");
+            msgOk = t("message action draft ok");
+          } else {
+            msgKo = t("message action sent ko");
+            msgOk = t("message action sent ok");
+          }
+          if (error != null) {
+            return LayoutActionCreator.alertError("" + msgKo + " :  error");
+          } else {
+            LayoutActionCreator.notify(msgOk);
+            _this.setState(message);
+            if (!isDraft) {
+              if (_this.props.callback != null) {
+                return _this.props.callback(error);
+              } else {
+                return _this.redirect(_this.buildClosePanelUrl(_this.props.layout));
+              }
+            }
+          }
+        };
+      })(this));
+    }
+  },
+  _autosave: function() {
+    return this._doSend(true);
+  },
+  onDelete: function(args) {
+    if (window.confirm(t('mail confirm delete', {
+      subject: this.props.message.get('subject')
+    }))) {
+      return MessageActionCreator["delete"](this.props.message, (function(_this) {
+        return function(error) {
+          if (error != null) {
+            return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
+          } else {
+            if (_this.props.callback) {
+              return _this.props.callback();
+            } else {
+              return _this.redirect({
+                direction: 'first',
+                action: 'account.mailbox.messages',
+                parameters: [_this.props.selectedAccount.get('id'), _this.props.selectedMailboxID, 1],
+                fullWidth: true
+              });
+            }
+          }
+        };
+      })(this));
+    }
+  },
+  onToggleCc: function(e) {
+    var toggle, _i, _len, _ref1, _results;
+    toggle = function(e) {
+      return e.classList.toggle('shown');
+    };
+    _ref1 = this.getDOMNode().querySelectorAll('.compose-cc');
+    _results = [];
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      e = _ref1[_i];
+      _results.push(toggle(e));
+    }
+    return _results;
+  },
+  onToggleBcc: function(e) {
+    var toggle, _i, _len, _ref1, _results;
+    toggle = function(e) {
+      return e.classList.toggle('shown');
+    };
+    _ref1 = this.getDOMNode().querySelectorAll('.compose-bcc');
+    _results = [];
+    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+      e = _ref1[_i];
+      _results.push(toggle(e));
+    }
+    return _results;
+  }
+});
+
+ComposeEditor = React.createClass({
+  displayName: 'ComposeEditor',
+  mixins: [React.addons.LinkedStateMixin],
+  getInitialState: function() {
+    return {
+      html: this.props.html,
+      text: this.props.text
+    };
+  },
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+  },
+  render: function() {
+    var onHTMLChange, onTextChange;
+    onHTMLChange = (function(_this) {
+      return function(event) {
+        return _this.props.html.requestChange(_this.refs.html.getDOMNode().innerHTML);
+      };
+    })(this);
+    onTextChange = (function(_this) {
+      return function(event) {
+        return _this.props.text.requestChange(_this.refs.content.getDOMNode().value);
+      };
+    })(this);
+    if (this.props.composeInHTML) {
+      return div({
+        className: 'rt-editor form-control',
+        ref: 'html',
+        contentEditable: true,
+        onKeyDown: this.onKeyDown,
+        onInput: onHTMLChange,
+        dangerouslySetInnerHTML: {
+          __html: this.state.html.value
+        }
+      });
+    } else {
+      return textarea({
+        className: 'editor',
+        ref: 'content',
+        onKeyDown: this.onKeyDown,
+        onChange: onTextChange,
+        defaultValue: this.state.text.value
+      });
+    }
+  },
+  _initCompose: function() {
+    var node, r, range, rect, s, _ref1;
+    if (this.props.composeInHTML) {
+      if (this.props.focus) {
         node = (_ref1 = this.refs.html) != null ? _ref1.getDOMNode() : void 0;
         if (node == null) {
           return;
         }
         jQuery(node).focus();
         if (!this.props.settings.get('composeOnTop')) {
+          node.innerHTML += "<p><br /></p>";
           node = node.lastChild;
           if (node != null) {
             node.scrollIntoView(false);
@@ -2753,8 +2980,6 @@ module.exports = Compose = React.createClass({
             document.execCommand('delete', false, null);
           }
         }
-      } else {
-        document.getElementById('compose-to').focus();
       }
       return jQuery('#email-compose .rt-editor').on('keypress', function(e) {
         if (e.keyCode === 13) {
@@ -2841,7 +3066,7 @@ module.exports = Compose = React.createClass({
         }
       });
     } else {
-      if (Array.isArray(this.state.to) && this.state.to.length > 0 && this.state.subject !== '') {
+      if (this.props.focus) {
         node = this.refs.content.getDOMNode();
         if (!this.props.settings.get('composeOnTop')) {
           rect = node.getBoundingClientRect();
@@ -2856,194 +3081,15 @@ module.exports = Compose = React.createClass({
           }
         }
         return node.focus();
-      } else {
-        return document.getElementById('compose-to').focus();
       }
     }
   },
   componentDidMount: function() {
     return this._initCompose();
   },
-  componentWillUnmount: function() {
-    if (this._saveInterval) {
-      return window.clearInterval(this._saveInterval);
-    }
-  },
-  getInitialState: function(forceDefault) {
-    var key, message, state, value, _ref1;
-    if (message = this.props.message) {
-      state = {
-        composeInHTML: message.get('html') != null
-      };
-      _ref1 = message.toJS();
-      for (key in _ref1) {
-        value = _ref1[key];
-        state[key] = value;
-      }
-      state.attachments = message.get('attachments');
-    } else {
-      state = MessageUtils.makeReplyMessage(this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
-      if (state.accountID == null) {
-        state.accountID = this.props.selectedAccount.get('id');
-      }
-    }
-    state.sending = false;
-    return state;
-  },
-  componentWillReceiveProps: function(nextProps) {
-    if (nextProps.message !== this.props.message) {
-      this.props.message = nextProps.message;
-      return this.setState(this.getInitialState());
-    }
-  },
-  onDraft: function(args) {
-    return this._doSend(true);
-  },
-  onSend: function(args) {
-    return this._doSend(false);
-  },
-  _doSend: function(isDraft) {
-    var account, from, message, node, valid, _ref1;
-    account = this.props.accounts.get(this.state.accountID);
-    from = {
-      name: (account != null ? account.get('name') : void 0) || void 0,
-      address: account.get('login')
-    };
-    if (!~from.address.indexOf('@')) {
-      from.address += '@' + account.get('imapServer');
-    }
-    message = {
-      id: this.state.id,
-      accountID: this.state.accountID,
-      mailboxIDs: this.state.mailboxIDs,
-      from: [from],
-      to: this.state.to,
-      cc: this.state.cc,
-      bcc: this.state.bcc,
-      subject: this.state.subject,
-      isDraft: isDraft,
-      attachments: this.state.attachments
-    };
-    valid = true;
-    if (!isDraft) {
-      if (this.state.to.length === 0 && this.state.cc.length === 0 && this.state.bcc.length === 0) {
-        valid = false;
-        LayoutActionCreator.alertError(t("compose error no dest"));
-        document.getElementById('compose-to').focus();
-      } else if (this.state.subject === '') {
-        valid = false;
-        LayoutActionCreator.alertError(t("compose error no subject"));
-        this.refs.subject.getDOMNode().focus();
-      }
-    }
-    if (valid) {
-      node = (_ref1 = this.refs.html) != null ? _ref1.getDOMNode() : void 0;
-      if (node != null) {
-        if (this.state.composeInHTML) {
-          message.html = node.innerHTML;
-          try {
-            message.text = toMarkdown(message.html);
-          } catch (_error) {
-            message.text = node.textContent || node.innerText;
-          }
-        } else {
-          message.text = node.value.trim();
-        }
-      }
-      if (!isDraft && this._saveInterval) {
-        window.clearInterval(this._saveInterval);
-      }
-      if (!isDraft) {
-        this.setState({
-          sending: true
-        });
-      }
-      return MessageActionCreator.send(message, (function(_this) {
-        return function(error, message) {
-          var msgKo, msgOk;
-          _this.setState({
-            sending: false
-          });
-          if (isDraft) {
-            msgKo = t("message action draft ko");
-            msgOk = t("message action draft ok");
-          } else {
-            msgKo = t("message action sent ko");
-            msgOk = t("message action sent ok");
-          }
-          if (error != null) {
-            return LayoutActionCreator.alertError("" + msgKo + " :  error");
-          } else {
-            LayoutActionCreator.notify(msgOk);
-            _this.setState(message);
-            if (!isDraft) {
-              if (_this.props.callback != null) {
-                return _this.props.callback(error);
-              } else {
-                return _this.redirect(_this.buildClosePanelUrl(_this.props.layout));
-              }
-            }
-          }
-        };
-      })(this));
-    }
-  },
-  _autosave: function() {
-    return this._doSend(true);
-  },
-  onDelete: function(args) {
-    if (window.confirm(t('mail confirm delete', {
-      subject: this.props.message.get('subject')
-    }))) {
-      return MessageActionCreator["delete"](this.props.message, (function(_this) {
-        return function(error) {
-          if (error != null) {
-            return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
-          } else {
-            if (_this.props.callback) {
-              return _this.props.callback();
-            } else {
-              return _this.redirect({
-                direction: 'first',
-                action: 'account.mailbox.messages',
-                parameters: [_this.props.selectedAccount.get('id'), _this.props.selectedMailboxID, 1],
-                fullWidth: true
-              });
-            }
-          }
-        };
-      })(this));
-    }
-  },
-  onToggleCc: function(e) {
-    var toggle, _i, _len, _ref1, _results;
-    toggle = function(e) {
-      return e.classList.toggle('shown');
-    };
-    _ref1 = this.getDOMNode().querySelectorAll('.compose-cc');
-    _results = [];
-    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-      e = _ref1[_i];
-      _results.push(toggle(e));
-    }
-    return _results;
-  },
-  onToggleBcc: function(e) {
-    var toggle, _i, _len, _ref1, _results;
-    toggle = function(e) {
-      return e.classList.toggle('shown');
-    };
-    _ref1 = this.getDOMNode().querySelectorAll('.compose-bcc');
-    _results = [];
-    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-      e = _ref1[_i];
-      _results.push(toggle(e));
-    }
-    return _results;
-  },
   onKeyDown: function(evt) {
     if (evt.ctrlKey && evt.key === 'Enter') {
-      return this.onSend();
+      return this.props.onSend();
     }
   }
 });
@@ -3676,7 +3722,7 @@ module.exports = MailsInput = React.createClass({
     var query, _ref1;
     query = (_ref1 = this.refs.contactInput) != null ? _ref1.getDOMNode().value.trim() : void 0;
     return {
-      contacts: (query != null ? query.length : void 0) > 2 ? ContactStore.getResults() : null,
+      contacts: (query != null ? query.length : void 0) > 0 ? ContactStore.getResults() : null,
       selected: 0,
       open: false
     };
@@ -3776,10 +3822,13 @@ module.exports = MailsInput = React.createClass({
       className: 'avatar fa fa-user'
     }), "" + (contact.get('fn')) + " <" + (contact.get('address')) + ">"));
   },
-  onQuery: function() {
+  onQuery: function(char) {
     var query;
     query = this.refs.contactInput.getDOMNode().value.split(',').pop().trim();
-    if (query.length > 1) {
+    if (char != null) {
+      query += char;
+    }
+    if (query.length > 0) {
       ContactActionCreator.searchContactLocal(query);
       this.setState({
         open: true
@@ -3825,8 +3874,8 @@ module.exports = MailsInput = React.createClass({
           open: false
         });
       default:
-        if (evt.key.toString().length === 1) {
-          this.onQuery();
+        if ((evt.key != null) || evt.key.toString().length === 1) {
+          this.onQuery(String.fromCharCode(evt.which));
           return true;
         }
     }
@@ -5633,9 +5682,8 @@ module.exports = React.createClass({
     });
   },
   onDelete: function(args) {
-    var alertError, alertSuccess, message, next;
+    var alertError, message, next;
     alertError = LayoutActionCreator.alertError;
-    alertSuccess = LayoutActionCreator.alertSuccess;
     message = this.props.message;
     if (this.props.nextID != null) {
       next = this.props.nextID;
@@ -5657,10 +5705,9 @@ module.exports = React.createClass({
     return LayoutActionCreator.alertWarning(t("app unimplemented"));
   },
   onMove: function(args) {
-    var alertError, alertSuccess, conversationID, newbox, next, oldbox;
+    var alertError, conversationID, newbox, next, oldbox;
     newbox = args.target.dataset.value;
     alertError = LayoutActionCreator.alertError;
-    alertSuccess = LayoutActionCreator.alertSuccess;
     if (this.props.nextID != null) {
       next = this.props.nextID;
     } else {
@@ -5673,7 +5720,6 @@ module.exports = React.createClass({
           if (error != null) {
             return alertError("" + (t("conversation move ko")) + " " + error);
           } else {
-            alertSuccess(t("conversation move ok"));
             return _this.displayNextMessage(next);
           }
         };
@@ -5685,7 +5731,6 @@ module.exports = React.createClass({
           if (error != null) {
             return alertError("" + (t("message action move ko")) + " " + error);
           } else {
-            alertSuccess(t("message action move ok"));
             return _this.displayNextMessage(next);
           }
         };
@@ -5693,11 +5738,10 @@ module.exports = React.createClass({
     }
   },
   onMark: function(args) {
-    var alertError, alertSuccess, flag, flags;
+    var alertError, flag, flags;
     flags = this.props.message.get('flags').slice();
     flag = args.target.dataset.value;
     alertError = LayoutActionCreator.alertError;
-    alertSuccess = LayoutActionCreator.alertSuccess;
     switch (flag) {
       case FlagsConstants.SEEN:
         flags.push(MessageFlags.SEEN);
@@ -5718,40 +5762,31 @@ module.exports = React.createClass({
     return MessageActionCreator.updateFlag(this.props.message, flags, function(error) {
       if (error != null) {
         return alertError("" + (t("message action mark ko")) + " " + error);
-      } else {
-        return alertSuccess(t("message action mark ok"));
       }
     });
   },
   onConversation: function(args) {
-    var action, alertError, alertSuccess, id;
+    var action, alertError, id;
     id = this.props.message.get('conversationID');
     action = args.target.dataset.action;
     alertError = LayoutActionCreator.alertError;
-    alertSuccess = LayoutActionCreator.alertSuccess;
     switch (action) {
       case 'delete':
         return ConversationActionCreator["delete"](id, function(error) {
           if (error != null) {
             return alertError("" + (t("conversation delete ko")) + " " + error);
-          } else {
-            return alertSuccess(t("conversation delete ok"));
           }
         });
       case 'seen':
         return ConversationActionCreator.seen(id, function(error) {
           if (error != null) {
             return alertError("" + (t("conversation seen ok ")) + " " + error);
-          } else {
-            return alertSuccess(t("conversation seen ko "));
           }
         });
       case 'unseen':
         return ConversationActionCreator.unseen(id, function(error) {
           if (error != null) {
             return alertError("" + (t("conversation unseen ok")) + " " + error);
-          } else {
-            return alertSuccess(t("conversation unseen ko"));
           }
         });
     }
@@ -6924,30 +6959,34 @@ module.exports = {
 
 ;require.register("initialize", function(exports, require, module) {
 window.onerror = function(msg, url, line, col, error) {
-  var data, xhr;
+  var data, exception, xhr;
   console.error(msg, url, line, col, error);
-  data = {
-    data: {
-      type: 'error',
-      error: {
-        msg: msg,
-        full: error.toString(),
-        stack: error.stack
-      },
-      url: url,
-      line: line,
-      col: col,
-      href: window.location.href
-    }
-  };
-  xhr = new XMLHttpRequest();
-  xhr.open('POST', 'activity', true);
-  xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-  return xhr.send(JSON.stringify(data));
+  exception = (error != null ? error.toString() : void 0) || msg;
+  if (exception !== window.lastError) {
+    data = {
+      data: {
+        type: 'error',
+        error: {
+          msg: msg,
+          full: error.toString(),
+          stack: error.stack
+        },
+        url: url,
+        line: line,
+        col: col,
+        href: window.location.href
+      }
+    };
+    xhr = new XMLHttpRequest();
+    xhr.open('POST', 'activity', true);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.send(JSON.stringify(data));
+    return window.lastError = exception;
+  }
 };
 
 window.onload = function() {
-  var AccountStore, Application, ContactStore, LayoutStore, MessageStore, PluginUtils, Router, SearchStore, SettingsActionCreator, SettingsStore, application, data, e, locale, xhr;
+  var AccountStore, Application, ContactStore, LayoutStore, MessageStore, PluginUtils, Router, SearchStore, SettingsActionCreator, SettingsStore, application, data, e, exception, locale, xhr;
   try {
     window.__DEV__ = window.location.hostname === 'localhost';
     window.cozyMails = require('./utils/api_utils');
@@ -6983,16 +7022,20 @@ window.onload = function() {
   } catch (_error) {
     e = _error;
     console.error(e);
-    data = {
-      data: {
-        type: 'error',
-        exception: e.toString()
-      }
-    };
-    xhr = new XMLHttpRequest();
-    xhr.open('POST', 'activity', true);
-    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-    return xhr.send(JSON.stringify(data));
+    exception = e.toString();
+    if (exception !== window.lastError) {
+      data = {
+        data: {
+          type: 'error',
+          exception: exception
+        }
+      };
+      xhr = new XMLHttpRequest();
+      xhr.open('POST', 'activity', true);
+      xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+      xhr.send(JSON.stringify(data));
+      return window.lastError = exception;
+    }
   }
 };
 });
@@ -8565,7 +8608,7 @@ ContactStore = (function(_super) {
           var full, obj;
           obj = contact.toObject();
           full = '';
-          Object.keys(obj).forEach(function(key) {
+          ['address', 'fn'].forEach(function(key) {
             if (typeof obj[key] === 'string') {
               return full += obj[key];
             }
@@ -9482,13 +9525,12 @@ module.exports = {
     });
   },
   messageDeleteCurrent: function() {
-    var MessageActionCreator, alertError, alertSuccess, message, nextID;
+    var MessageActionCreator, alertError, message, nextID;
     if (!onMessageList()) {
       return;
     }
     MessageActionCreator = require('../actions/message_action_creator');
     alertError = LayoutActionCreator.alertError;
-    alertSuccess = LayoutActionCreator.alertSuccess;
     message = MessageStore.getByID(MessageStore.getCurrentID());
     if (message == null) {
       return;
@@ -9602,7 +9644,7 @@ module.exports = MessageUtils = {
         message.html = "<p><br /></p>\n<p>" + (t('compose reply separator', {
           date: dateHuman,
           sender: sender
-        })) + "</p>\n<blockquote>" + html + "</blockquote>\n<p><br /></p><p><br /></p>";
+        })) + "</p>\n<blockquote>" + html + "</blockquote>\n<p><br /></p>";
         break;
       case ComposeActions.REPLY_ALL:
         message.to = this.getReplyToAddress(inReplyTo);
@@ -9616,7 +9658,7 @@ module.exports = MessageUtils = {
         message.html = "<p><br /></p>\n<p>" + (t('compose reply separator', {
           date: dateHuman,
           sender: sender
-        })) + "</p>\n<blockquote>" + html + "</blockquote>";
+        })) + "</p>\n<blockquote>" + html + "</blockquote>\n<p><br /></p>";
         break;
       case ComposeActions.FORWARD:
         message.to = [];
