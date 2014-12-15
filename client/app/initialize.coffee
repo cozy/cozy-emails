@@ -2,21 +2,24 @@
 # Send client side errors to server
 window.onerror = (msg, url, line, col, error) ->
     console.error msg, url, line, col, error
-    data =
-        data:
-            type: 'error'
-            error:
-                msg: msg
-                full: error.toString()
-                stack: error.stack
-            url: url
-            line: line
-            col: col
-            href: window.location.href
-    xhr = new XMLHttpRequest()
-    xhr.open 'POST', 'activity', true
-    xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
-    xhr.send JSON.stringify(data)
+    exception = error?.toString() or msg
+    if exception isnt window.lastError
+        data =
+            data:
+                type: 'error'
+                error:
+                    msg: msg
+                    full: error.toString()
+                    stack: error.stack
+                url: url
+                line: line
+                col: col
+                href: window.location.href
+        xhr = new XMLHttpRequest()
+        xhr.open 'POST', 'activity', true
+        xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
+        xhr.send JSON.stringify(data)
+        window.lastError = exception
 
 window.onload = ->
 
@@ -73,12 +76,15 @@ window.onload = ->
 
     catch e
         console.error e
-        # Send client side errors to server
-        data =
-            data:
-                type: 'error'
-                exception: e.toString()
-        xhr = new XMLHttpRequest()
-        xhr.open 'POST', 'activity', true
-        xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
-        xhr.send JSON.stringify(data)
+        exception = e.toString()
+        if exception isnt window.lastError
+            # Send client side errors to server
+            data =
+                data:
+                    type: 'error'
+                    exception: exception
+            xhr = new XMLHttpRequest()
+            xhr.open 'POST', 'activity', true
+            xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
+            xhr.send JSON.stringify(data)
+            window.lastError = exception
