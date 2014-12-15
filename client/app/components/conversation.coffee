@@ -30,10 +30,6 @@ module.exports = React.createClass
     expand: ->
         @setState expanded: true
 
-    # componentWillReceiveProps: (nextProps) ->
-    #     if nextProps.conversation isnt @props.conversation
-    #         @setState expanded: false
-
     renderMessage: (key, message, active) ->
         console.log key, active
         Message
