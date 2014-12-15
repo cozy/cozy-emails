@@ -295,6 +295,8 @@ module.exports = React.createClass
                 callback: (error) =>
                     if not error?
                         @setState composing: false
+                onCancel: =>
+                    @setState composing: false
 
     renderToolbox: (id, prepared) ->
 

@@ -30,6 +30,7 @@ module.exports = Compose = React.createClass
         message:         React.PropTypes.object
         action:          React.PropTypes.string
         callback:        React.PropTypes.func
+        onCancel:        React.PropTypes.func
         settings:        React.PropTypes.object.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -51,10 +52,14 @@ module.exports = Compose = React.createClass
             secondPanel:
                 action: 'compose'
 
-        cancelUrl = @buildUrl
-            direction: 'first'
-            action: 'default'
-            fullWidth: true
+        onCancel = =>
+            if @props.onCancel?
+                @props.onCancel()
+            else
+                @redirect @buildUrl
+                    direction: 'first'
+                    action: 'default'
+                    fullWidth: true
 
         closeUrl = @buildClosePanelUrl @props.layout
 
@@ -184,8 +189,8 @@ module.exports = Compose = React.createClass
                                     onClick: @onDelete,
                                         span className: 'fa fa-trash-o'
                                         span null, t 'compose action delete'
-                            a
-                                href: cancelUrl,
+                            button
+                                onClick: onCancel
                                 className: 'btn btn-cozy-non-default',
                                 t 'app cancel'
                 div className: 'clearfix', null
