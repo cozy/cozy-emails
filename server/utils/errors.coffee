@@ -98,6 +98,10 @@ utils.errorHandler = (err, req, res, next) ->
             error: true
 
 
+    else if err.message is 'Request aborted'
+        log.warn "Request aborted"
+
+
     # pass it down the line to errorhandler module
     else
         log.error err
