@@ -107,13 +107,23 @@ module.exports =
     updateFlag: (message, flags, callback) ->
         msg = message.toJSON()
         patches = jsonpatch.compare {flags: msg.flags}, {flags}
-        XHRUtils.messagePatch message.get('id'), patches, (error, message) ->
+        XHRUtils.messagePatch message.get('id'), patches, (error, messageUpdated) ->
             if not error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.RECEIVE_RAW_MESSAGE
-                    value: message
+                if not _.isEqual(flags, messageUpdated.flags)
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.RECEIVE_RAW_MESSAGE
+                        value: messageUpdated
             if callback?
                 callback error
+
+        # dont wait for server response to display update
+        setTimeout ->
+            messageUpdated = message.toJS()
+            messageUpdated.flags = flags
+            AppDispatcher.handleViewAction
+                type: ActionTypes.RECEIVE_RAW_MESSAGE
+                value: messageUpdated
+        , 0
 
     setCurrent: (messageID) ->
         AppDispatcher.handleViewAction
