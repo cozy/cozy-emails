@@ -68,7 +68,8 @@ module.exports = Compose = React.createClass
         classCc    = if @state.cc.length is 0 then '' else ' shown'
         classBcc   = if @state.bcc.length is 0 then '' else ' shown'
 
-        labelSend = if @state.sending then t 'compose action sending' else t 'compose action send'
+        labelSend   = if @state.sending then t 'compose action sending' else t 'compose action send'
+        focusEditor = Array.isArray(@state.to) and @state.to.length > 0 and @state.subject isnt ''
 
         div id: 'email-compose',
             if @props.layout isnt 'full'
@@ -144,21 +145,13 @@ module.exports = Compose = React.createClass
                         htmlFor: 'compose-subject',
                         className: classLabel,
                         t "compose content"
-                    if @state.composeInHTML
-                        div
-                            className: 'rt-editor form-control',
-                            ref: 'html',
-                            contentEditable: true,
-                            onKeyDown: @onKeyDown,
-                            dangerouslySetInnerHTML: {
-                                __html: @linkState('html').value
-                            }
-                    else
-                        textarea
-                            className: 'editor',
-                            ref: 'content',
-                            onKeyDown: @onKeyDown,
-                            defaultValue: @linkState('text').value
+                    ComposeEditor
+                        html: @linkState('html')
+                        text: @linkState('text')
+                        settings: @props.settings
+                        onSend: @onSend
+                        composeInHTML: @state.composeInHTML
+                        focus: focusEditor
 
                 div className: 'attachements',
                     FilePicker
@@ -203,13 +196,207 @@ module.exports = Compose = React.createClass
 
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
-        if @state.composeInHTML
-            if Array.isArray(@state.to) and @state.to.length > 0 and @state.subject isnt ''
+
+        # Focus
+        if not Array.isArray(@state.to) or @state.to.length is 0
+            document.getElementById('compose-to').focus()
+
+    componentDidMount: ->
+        @_initCompose()
+
+    #componentDidUpdate: ->
+    #    @_initCompose()
+
+    componentWillUnmount: ->
+        if @_saveInterval
+            window.clearInterval @_saveInterval
+        #if @state.isDraft and @state.id?
+        #    if not window.confirm(t 'compose confirm keep draft')
+        #        MessageActionCreator.delete @state.id, (error) ->
+        #            if error?
+        #                LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
+        #            else
+        #                LayoutActionCreator.notify t('compose draft deleted')
+
+    getInitialState: (forceDefault) ->
+
+        # edition of an existing draft
+        if message = @props.message
+            state =
+                composeInHTML: message.get('html')?
+
+            # TODO : smarter ?
+            state[key] = value for key, value of message.toJS()
+            # we want the immutable attachments
+            state.attachments = message.get 'attachments'
+
+        # new draft
+        else
+            state = MessageUtils.makeReplyMessage @props.inReplyTo, @props.action,
+                @props.settings.get 'composeInHTML'
+            state.accountID ?= @props.selectedAccount.get 'id'
+
+        state.sending = false
+        return state
+
+    componentWillReceiveProps: (nextProps) ->
+        if nextProps.message isnt @props.message
+            @props.message = nextProps.message
+            @setState @getInitialState()
+
+    onDraft: (args) ->
+        @_doSend true
+
+    onSend: (args) ->
+        @_doSend false
+
+    _doSend: (isDraft) ->
+
+        account = @props.accounts.get @state.accountID
+
+        from =
+            name: account?.get('name') or undefined
+            address: account.get('login')
+
+        unless ~from.address.indexOf '@'
+            from.address += '@' + account.get('imapServer')
+
+        message =
+            id          : @state.id
+            accountID   : @state.accountID
+            mailboxIDs  : @state.mailboxIDs
+            from        : [from]
+            to          : @state.to
+            cc          : @state.cc
+            bcc         : @state.bcc
+            subject     : @state.subject
+            isDraft     : isDraft
+            attachments : @state.attachments
+
+        valid = true
+        if not isDraft
+            if @state.to.length is 0 and @state.cc.length is 0 and @state.bcc.length is 0
+                valid = false
+                LayoutActionCreator.alertError t "compose error no dest"
+                document.getElementById('compose-to').focus()
+            else if @state.subject is ''
+                valid = false
+                LayoutActionCreator.alertError t "compose error no subject"
+                @refs.subject.getDOMNode().focus()
+
+        if valid
+            if @state.composeInHTML
+                message.html = @state.html
+                try
+                    message.text = toMarkdown(message.html)
+                catch
+                    message.text = message.html?replace /<[^>]*>/gi, ''
+            else
+                message.text = state.text.trim()
+
+            if not isDraft and @_saveInterval
+                window.clearInterval @_saveInterval
+
+            if not isDraft
+                @setState sending: true
+
+            MessageActionCreator.send message, (error, message) =>
+                if not isDraft
+                    @setState sending: false
+                if isDraft
+                    msgKo = t "message action draft ko"
+                    msgOk = t "message action draft ok"
+                else
+                    msgKo = t "message action sent ko"
+                    msgOk = t "message action sent ok"
+                if error?
+                    LayoutActionCreator.alertError "#{msgKo} :  error"
+                else
+                    LayoutActionCreator.notify msgOk
+                    @setState message
+
+                    if not isDraft
+                        if @props.callback?
+                            @props.callback error
+                        else
+                            @redirect @buildClosePanelUrl @props.layout
+
+    _autosave: ->
+        @_doSend true
+
+    onDelete: (args) ->
+        if window.confirm(t 'mail confirm delete', {subject: @props.message.get('subject')})
+            MessageActionCreator.delete @props.message, (error) =>
+                if error?
+                    LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
+                else
+                    if @props.callback
+                        @props.callback()
+                    else
+                        @redirect
+                            direction: 'first'
+                            action: 'account.mailbox.messages'
+                            parameters: [@props.selectedAccount.get('id'), @props.selectedMailboxID, 1]
+                            fullWidth: true
+
+    onToggleCc: (e) ->
+        toggle = (e) -> e.classList.toggle 'shown'
+        toggle e for e in @getDOMNode().querySelectorAll '.compose-cc'
+
+    onToggleBcc: (e) ->
+        toggle = (e) -> e.classList.toggle 'shown'
+        toggle e for e in @getDOMNode().querySelectorAll '.compose-bcc'
+
+
+ComposeEditor = React.createClass
+    displayName: 'ComposeEditor'
+
+    mixins: [
+        React.addons.LinkedStateMixin # two-way data binding
+    ]
+
+    getInitialState: ->
+        return {
+            html: @props.html
+            text: @props.text
+        }
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
+    render: ->
+        onHTMLChange = (event) =>
+            @props.html.requestChange @refs.html.getDOMNode().innerHTML
+        onTextChange = (event) =>
+            @props.text.requestChange @refs.content.getDOMNode().value
+        if @props.composeInHTML
+            div
+                className: 'rt-editor form-control',
+                ref: 'html',
+                contentEditable: true,
+                onKeyDown: @onKeyDown,
+                onInput: onHTMLChange,
+                dangerouslySetInnerHTML: {
+                    __html: @state.html.value
+                }
+        else
+            textarea
+                className: 'editor',
+                ref: 'content',
+                onKeyDown: @onKeyDown,
+                onChange: onTextChange,
+                defaultValue: @state.text.value
+
+    _initCompose: ->
+
+        if @props.composeInHTML
+            if @props.focus
                 node = @refs.html?.getDOMNode()
                 if not node?
                     return
                 jQuery(node).focus()
                 if not @props.settings.get 'composeOnTop'
+                    node.innerHTML += "<p><br /></p>"
                     node = node.lastChild
                     if node?
                         # move cursor to the bottom
@@ -221,8 +408,6 @@ module.exports = Compose = React.createClass
                         s.removeAllRanges()
                         s.addRange(r)
                         document.execCommand('delete', false, null)
-            else
-                document.getElementById('compose-to').focus()
 
             # Some DOM manipulation when replying inside the message.
             # When inserting a new line, we must close all blockquotes,
@@ -323,7 +508,7 @@ module.exports = Compose = React.createClass
             )
         else
             # Text message
-            if Array.isArray(@state.to) and @state.to.length > 0 and @state.subject isnt ''
+            if @props.focus
                 node = @refs.content.getDOMNode()
                 if not @props.settings.get 'composeOnTop'
                     rect = node.getBoundingClientRect()
@@ -336,8 +521,6 @@ module.exports = Compose = React.createClass
                         range.collapse(false)
                         range.select()
                 node.focus()
-            else
-                document.getElementById('compose-to').focus()
 
     componentDidMount: ->
         @_initCompose()
@@ -345,147 +528,6 @@ module.exports = Compose = React.createClass
     #componentDidUpdate: ->
     #    @_initCompose()
 
-    componentWillUnmount: ->
-        if @_saveInterval
-            window.clearInterval @_saveInterval
-        #if @state.isDraft and @state.id?
-        #    if not window.confirm(t 'compose confirm keep draft')
-        #        MessageActionCreator.delete @state.id, (error) ->
-        #            if error?
-        #                LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
-        #            else
-        #                LayoutActionCreator.notify t('compose draft deleted')
-
-    getInitialState: (forceDefault) ->
-
-        # edition of an existing draft
-        if message = @props.message
-            state =
-                composeInHTML: message.get('html')?
-
-            # TODO : smarter ?
-            state[key] = value for key, value of message.toJS()
-            # we want the immutable attachments
-            state.attachments = message.get 'attachments'
-
-        # new draft
-        else
-            state = MessageUtils.makeReplyMessage @props.inReplyTo, @props.action,
-                @props.settings.get 'composeInHTML'
-            state.accountID ?= @props.selectedAccount.get 'id'
-
-        state.sending = false
-        return state
-
-    componentWillReceiveProps: (nextProps) ->
-        if nextProps.message isnt @props.message
-            @props.message = nextProps.message
-            @setState @getInitialState()
-
-    onDraft: (args) ->
-        @_doSend true
-
-    onSend: (args) ->
-        @_doSend false
-
-    _doSend: (isDraft) ->
-
-        account = @props.accounts.get @state.accountID
-
-        from =
-            name: account?.get('name') or undefined
-            address: account.get('login')
-
-        unless ~from.address.indexOf '@'
-            from.address += '@' + account.get('imapServer')
-
-        message =
-            id          : @state.id
-            accountID   : @state.accountID
-            mailboxIDs  : @state.mailboxIDs
-            from        : [from]
-            to          : @state.to
-            cc          : @state.cc
-            bcc         : @state.bcc
-            subject     : @state.subject
-            isDraft     : isDraft
-            attachments : @state.attachments
-
-        valid = true
-        if not isDraft
-            if @state.to.length is 0 and @state.cc.length is 0 and @state.bcc.length is 0
-                valid = false
-                LayoutActionCreator.alertError t "compose error no dest"
-                document.getElementById('compose-to').focus()
-            else if @state.subject is ''
-                valid = false
-                LayoutActionCreator.alertError t "compose error no subject"
-                @refs.subject.getDOMNode().focus()
-
-        if valid
-            node = @refs.html?.getDOMNode()
-            if node?
-                if @state.composeInHTML
-                    message.html = node.innerHTML
-                    try
-                        message.text = toMarkdown(message.html)
-                    catch
-                        message.text = node.textContent or node.innerText
-                else
-                    message.text = node.value.trim()
-
-            if not isDraft and @_saveInterval
-                window.clearInterval @_saveInterval
-
-            if not isDraft
-                @setState sending: true
-
-            MessageActionCreator.send message, (error, message) =>
-                @setState sending: false
-                if isDraft
-                    msgKo = t "message action draft ko"
-                    msgOk = t "message action draft ok"
-                else
-                    msgKo = t "message action sent ko"
-                    msgOk = t "message action sent ok"
-                if error?
-                    LayoutActionCreator.alertError "#{msgKo} :  error"
-                else
-                    LayoutActionCreator.notify msgOk
-                    @setState message
-
-                    if not isDraft
-                        if @props.callback?
-                            @props.callback error
-                        else
-                            @redirect @buildClosePanelUrl @props.layout
-
-    _autosave: ->
-        @_doSend true
-
-    onDelete: (args) ->
-        if window.confirm(t 'mail confirm delete', {subject: @props.message.get('subject')})
-            MessageActionCreator.delete @props.message, (error) =>
-                if error?
-                    LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
-                else
-                    if @props.callback
-                        @props.callback()
-                    else
-                        @redirect
-                            direction: 'first'
-                            action: 'account.mailbox.messages'
-                            parameters: [@props.selectedAccount.get('id'), @props.selectedMailboxID, 1]
-                            fullWidth: true
-
-    onToggleCc: (e) ->
-        toggle = (e) -> e.classList.toggle 'shown'
-        toggle e for e in @getDOMNode().querySelectorAll '.compose-cc'
-
-    onToggleBcc: (e) ->
-        toggle = (e) -> e.classList.toggle 'shown'
-        toggle e for e in @getDOMNode().querySelectorAll '.compose-bcc'
-
     onKeyDown: (evt) ->
         if evt.ctrlKey and evt.key is 'Enter'
-            @onSend()
+            @props.onSend()

@@ -69,7 +69,7 @@ module.exports = MessageUtils =
                     <p><br /></p>
                     <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
                     <blockquote>#{html}</blockquote>
-                    <p><br /></p><p><br /></p>
+                    <p><br /></p>
                     """
             when ComposeActions.REPLY_ALL
                 message.to = @getReplyToAddress inReplyTo
@@ -82,6 +82,7 @@ module.exports = MessageUtils =
                     <p><br /></p>
                     <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
                     <blockquote>#{html}</blockquote>
+                    <p><br /></p>
                     """
             when ComposeActions.FORWARD
                 message.to = []
