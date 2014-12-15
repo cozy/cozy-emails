@@ -161,7 +161,6 @@ class ImapPool
             task = @tasks.pop()
 
     _deQueue: =>
-        log.debug @id, "_deQueue"
         free = @freeConnections.length > 0
         full = @connections.length + @connecting >= @parallelism
         moreTasks = @tasks.length > 0
@@ -180,7 +179,6 @@ class ImapPool
             return
 
         if moreTasks
-            log.debug @id, "_deQueue/hasTask"
             if @closingTimer
                 log.debug @id, "_deQueue/stopTimer"
                 clearTimeout @closingTimer
