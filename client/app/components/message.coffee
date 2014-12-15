@@ -295,6 +295,8 @@ module.exports = React.createClass
                 callback: (error) =>
                     if not error?
                         @setState composing: false
+                onCancel: =>
+                    @setState composing: false
 
     renderToolbox: (id, prepared) ->
 
@@ -476,11 +478,10 @@ module.exports = React.createClass
         else next = @props.prevID
         if (not @props.settings.get('messageConfirmDelete')) or
         window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
-            MessageActionCreator.delete message, (error) =>
+            @displayNextMessage next
+            MessageActionCreator.delete message, (error) ->
                 if error?
                     alertError "#{t("message action delete ko")} #{error}"
-                else
-                    @displayNextMessage next
 
     onCopy: (args) ->
         LayoutActionCreator.alertWarning t "app unimplemented"

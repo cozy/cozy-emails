@@ -88,9 +88,12 @@ module.exports = {
         return emit([doc.accountID, 'subject', doc.normSubject], doc.conversationID);
       }
     },
-    byConversationId: function(doc) {
-      if (doc.conversationID) {
-        return emit(doc.conversationID);
+    byConversationId: {
+      reduce: '_count',
+      map: function(doc) {
+        if (doc.conversationID) {
+          return emit(doc.conversationID);
+        }
       }
     }
   }

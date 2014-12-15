@@ -70,6 +70,8 @@ class ContactStore extends Store
 
     getQuery: -> return _query
 
+    getByAddress: (address) -> return _contacts.get(address)
+
     getAvatar: (address) ->
         return _contacts.get(address)?.get 'avatar'
 

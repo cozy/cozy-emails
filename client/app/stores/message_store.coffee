@@ -132,9 +132,10 @@ class MessageStore extends Store
             if messages.mailboxID
                 SocketUtils.changeRealtimeScope messages.mailboxID
 
+            # reinit params here for pagination on filtered lists
+            _params = {}
             if messages.links?
                 if messages.links.next?
-                    _params = {}
                     next   = decodeURIComponent(messages.links.next)
                     url    = 'http://localhost' + next
                     url.split('?')[1].split('&').forEach (p) ->
@@ -174,11 +175,6 @@ class MessageStore extends Store
 
         handle ActionTypes.MESSAGE_FLAG, (message) ->
             onReceiveRawMessage message
-
-        handle ActionTypes.SELECT_ACCOUNT, (value) ->
-            _params.after     = '-'
-            _params.before    = '-'
-            _params.pageAfter = '-'
 
         handle ActionTypes.LIST_FILTER, (filter) ->
             _messages  = _messages.clear()
@@ -223,6 +219,9 @@ class MessageStore extends Store
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
             @setCurrentID null
+            _params.after     = '-'
+            _params.before    = '-'
+            _params.pageAfter = '-'
 
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
             _messages = _messages.remove id

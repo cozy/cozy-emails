@@ -113,11 +113,10 @@ module.exports =
         if (not SettingsStore.get('messageConfirmDelete')) or
         window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
             nextID = MessageStore.getNextMessage()
-            MessageActionCreator.delete message, (error) =>
+            @messageNavigate(null, nextID)
+            MessageActionCreator.delete message, (error) ->
                 if error?
                     alertError "#{t("message action delete ko")} #{error}"
-                else
-                    @messageNavigate(null, nextID)
 
     messageUndo: ->
         MessageActionCreator = require '../actions/message_action_creator'

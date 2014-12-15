@@ -208,7 +208,6 @@ ImapPool = (function() {
 
   ImapPool.prototype._deQueue = function() {
     var free, full, imap, moreTasks, task;
-    log.debug(this.id, "_deQueue");
     free = this.freeConnections.length > 0;
     full = this.connections.length + this.connecting >= this.parallelism;
     moreTasks = this.tasks.length > 0;
@@ -228,7 +227,6 @@ ImapPool = (function() {
       return;
     }
     if (moreTasks) {
-      log.debug(this.id, "_deQueue/hasTask");
       if (this.closingTimer) {
         log.debug(this.id, "_deQueue/stopTimer");
         clearTimeout(this.closingTimer);

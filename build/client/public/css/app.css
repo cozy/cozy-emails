@@ -2396,6 +2396,21 @@ textarea:active,
 .conversation h3 .close-conversation:hover {
   color: #fe8800;
 }
+.conversation .conversation-length-msg {
+  height: 2em;
+  line-height: 1.8em;
+  font-size: 1.2em;
+  background: #f4f4f4;
+  cursor: pointer;
+  border: 0;
+  padding: 0 1rem;
+}
+.conversation .conversation-length-msg a {
+  color: #000;
+}
+.conversation .conversation-length-msg:hover {
+  background-color: #ffa500;
+}
 .conversation .message-title {
   margin-top: 0.5em;
   line-height: 1.4em;
@@ -2562,6 +2577,7 @@ textarea:active,
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
   max-width: 50%;
+  max-height: 5em;
 }
 .conversation .thread .message .header.compact .hour {
   margin-left: auto;
@@ -3039,14 +3055,35 @@ textarea:active,
 }
 .message-list .message .participants,
 .message-list .message .preview {
+  margin: 0.25em 2em 0 1em;
+}
+.message-list .message .participants {
+  -webkit-box-flex: 2;
+  -moz-box-flex: 2;
+  -o-box-flex: 2;
+  -ms-box-flex: 2;
+  box-flex: 2;
+  -webkit-flex-grow: 2;
+  flex-grow: 2;
+}
+.message-list .message .preview {
+  -webkit-box-flex: 4;
+  -moz-box-flex: 4;
+  -o-box-flex: 4;
+  -ms-box-flex: 4;
+  box-flex: 4;
+  -webkit-flex-grow: 4;
+  flex-grow: 4;
+  width: 50%;
+}
+.message-list .message .hour {
   -webkit-box-flex: 1;
   -moz-box-flex: 1;
   -o-box-flex: 1;
+  -ms-box-flex: 1;
   box-flex: 1;
-  -webkit-flex: 1;
-  -ms-flex: 1;
-  flex: 1;
-  margin: 0.25em 2em 0 1em;
+  -webkit-flex-grow: 1;
+  flex-grow: 1;
 }
 .message-list .message .preview {
   margin: 0.25em 0.75em 0 auto;
@@ -3056,6 +3093,9 @@ textarea:active,
   text-overflow: ellipsis;
   color: #bdbdbd;
 }
+.message-list .message .preview .conversation-length {
+  margin-right: 5px;
+}
 .message-list .message .preview .title {
   color: #444;
 }
@@ -3064,7 +3104,9 @@ textarea:active,
   display: inline;
 }
 .message-list .message .participants {
-  width: 200px;
+  width: 12em;
+  min-width: 12em;
+  max-width: 12em;
   color: #444;
   white-space: pre;
   overflow: hidden;
@@ -3081,6 +3123,8 @@ textarea:active,
 .message-list .message .hour {
   margin-left: auto;
   color: #444;
+  text-align: right;
+  width: 6em;
 }
 .message-list .message .fa-user,
 .message-list .message .avatar,

@@ -132,6 +132,7 @@ module.exports.listByMailboxOptions = function(req, res, next) {
   req.after = after;
   req.pageAfter = pageAfter;
   req.flag = flag;
+  req.flagcode = flagcode;
   return next();
 };
 
@@ -170,14 +171,12 @@ module.exports.listByMailbox = function(req, res, next) {
     if (result.messages == null) {
       result.messages = [];
     }
-    return res.send(200, {
-      mailboxID: mailboxID,
-      messages: result.messages.map(function(msg) {
-        return msg.toClientObject();
-      }),
-      count: result.count,
-      links: links
+    result.mailboxID = mailboxID;
+    result.messages = result.messages.map(function(msg) {
+      return msg.toClientObject();
     });
+    result.links = links;
+    return res.send(200, result);
   });
 };
 
@@ -211,7 +210,7 @@ module.exports.parseSendForm = function(req, res, next) {
   form.on('close', function() {
     req.body = JSON.parse(fields.body);
     req.files = files;
-    return next();
+    return nextonce();
   });
   return form.parse(req);
 };

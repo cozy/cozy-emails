@@ -139,6 +139,8 @@ utils.errorHandler = function(err, req, res, next) {
       stack: err.stack,
       error: true
     });
+  } else if (err.message === 'Request aborted') {
+    return log.warn("Request aborted");
   } else {
     log.error(err);
     return baseHandler(err, req, res);

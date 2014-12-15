@@ -82,52 +82,81 @@ htmlToText = require('html-to-text');
 require('../utils/socket_handler').wrapModel(Message, 'message');
 
 Message.getResultsAndCount = function(mailboxID, params, callback) {
-  var after, before, descending, flag, optionsCount, optionsResults, sortField, _ref;
+  var _ref;
+  if (params.flag == null) {
+    params.flag = null;
+  }
+  if (params.descending) {
+    _ref = [params.after, params.before], params.before = _ref[0], params.after = _ref[1];
+  }
+  return async.series([
+    function(cb) {
+      return Message.getCount(mailboxID, params, cb);
+    }, function(cb) {
+      return Message.getResults(mailboxID, params, cb);
+    }
+  ], function(err, results) {
+    var conversationIDs, count, messages;
+    if (err) {
+      return callback(err);
+    }
+    count = results[0], messages = results[1];
+    conversationIDs = _.uniq(_.pluck(messages, 'conversationID'));
+    return Message.getConversationLengths(conversationIDs, function(err, lengths) {
+      var _ref1;
+      if (err) {
+        return callback(err);
+      }
+      return callback(null, {
+        messages: messages,
+        count: ((_ref1 = count[0]) != null ? _ref1.value : void 0) || 0,
+        conversationLengths: lengths
+      });
+    });
+  });
+};
+
+Message.getResults = function(mailboxID, params, callback) {
+  var after, before, descending, flag, skip, sortField;
   before = params.before, after = params.after, descending = params.descending, sortField = params.sortField, flag = params.flag;
-  if (flag == null) {
-    flag = null;
+  skip = 0;
+  if (params.resultsAfter) {
+    before = params.resultsAfter;
+    skip = 1;
   }
-  if (descending) {
-    _ref = [after, before], before = _ref[0], after = _ref[1];
-  }
-  optionsCount = {
+  return Message.rawRequest('byMailboxRequest', {
+    descending: descending,
+    startkey: [sortField, mailboxID, flag, before],
+    endkey: [sortField, mailboxID, flag, after],
+    reduce: false,
+    skipe: skip,
+    include_docs: true,
+    limit: MSGBYPAGE
+  }, function(err, rows) {
+    if (err) {
+      return callback(err);
+    }
+    return callback(null, rows.map(function(row) {
+      return new Message(row.doc);
+    }));
+  });
+};
+
+Message.getCount = function(mailboxID, params, callback) {
+  var after, before, descending, flag, sortField;
+  before = params.before, after = params.after, descending = params.descending, sortField = params.sortField, flag = params.flag;
+  return Message.rawRequest('byMailboxRequest', {
     descending: descending,
     startkey: [sortField, mailboxID, flag, before],
     endkey: [sortField, mailboxID, flag, after],
     reduce: true,
     group_level: 2
-  };
-  optionsResults = {
-    descending: descending,
-    startkey: [sortField, mailboxID, flag, before],
-    endkey: [sortField, mailboxID, flag, after],
-    reduce: false,
-    include_docs: true,
-    limit: MSGBYPAGE
-  };
-  if (params.resultsAfter) {
-    optionsResults.startkey[3] = params.resultsAfter;
-    optionsResults.skip = 1;
-  }
-  return async.series([
-    function(cb) {
-      return Message.rawRequest('byMailboxRequest', optionsCount, cb);
-    }, function(cb) {
-      return Message.rawRequest('byMailboxRequest', optionsResults, cb);
-    }
-  ], function(err, results) {
-    var count, messages, _ref1, _ref2;
+  }, function(err, rows) {
+    var _ref;
     if (err) {
       return callback(err);
     }
-    _ref1 = results, count = _ref1[0], results = _ref1[1];
-    messages = results.map(function(row) {
-      return new Message(row.doc);
-    });
-    return callback(null, {
-      messages: messages,
-      count: ((_ref2 = count[0]) != null ? _ref2.value : void 0) || 0
-    });
+    return callback(null, ((_ref = rows[0]) != null ? _ref.value : void 0) || 0);
   });
 };
 
@@ -225,9 +254,29 @@ Message.byMessageID = function(accountID, messageID, callback) {
   });
 };
 
+Message.getConversationLengths = function(conversationIDs, callback) {
+  return Message.rawRequest('byConversationID', {
+    keys: conversationIDs,
+    group: true,
+    reduce: true
+  }, function(err, rows) {
+    var out, row, _i, _len;
+    if (err) {
+      return callback(err);
+    }
+    out = {};
+    for (_i = 0, _len = rows.length; _i < _len; _i++) {
+      row = rows[_i];
+      out[row.key] = row.value;
+    }
+    return callback(null, out);
+  });
+};
+
 Message.byConversationID = function(conversationID, callback) {
   return Message.rawRequest('byConversationId', {
     key: conversationID,
+    reduce: false,
     include_docs: true
   }, function(err, rows) {
     var messages;
@@ -632,9 +681,6 @@ Message.prototype.storeAttachments = function(attachments, callback) {
 Message.findConversationID = function(mail, callback) {
   var isReplyOrForward, key, keys, references, _ref;
   log.debug("findConversationID");
-  if (mail.headers['x-gm-thrid']) {
-    return callback(null, mail.headers['x-gm-thrid']);
-  }
   isReplyOrForward = mail.subject && mailutils.isReplyOrForward(mail.subject);
   references = mail.references || [];
   references.concat(mail.inReplyTo || []);
