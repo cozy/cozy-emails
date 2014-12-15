@@ -24,7 +24,7 @@ module.exports = MailsInput = React.createClass
     getStateFromStores: ->
         query = @refs.contactInput?.getDOMNode().value.trim()
         return {
-            contacts: if query?.length > 2 then ContactStore.getResults() else null
+            contacts: if query?.length > 0 then ContactStore.getResults() else null
             selected: 0
             open: false
         }
@@ -100,9 +100,11 @@ module.exports = MailsInput = React.createClass
                     i className: 'avatar fa fa-user'
                 "#{contact.get 'fn'} <#{contact.get 'address'}>"
 
-    onQuery: ->
+    onQuery: (char) ->
         query = @refs.contactInput.getDOMNode().value.split(',').pop().trim()
-        if query.length > 1
+        if char?
+            query += char
+        if query.length > 0
             ContactActionCreator.searchContactLocal query
             @setState open: true
             return true
@@ -133,8 +135,8 @@ module.exports = MailsInput = React.createClass
             when "Escape"
                 @setState contacts: null, open: false
             else
-                if (evt.key.toString().length is 1)
-                    @onQuery()
+                if (evt.key? or evt.key.toString().length is 1)
+                    @onQuery(String.fromCharCode(evt.which))
                     return true
 
 
