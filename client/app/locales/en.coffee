@@ -98,6 +98,10 @@ module.exports =
       "mail action conversation move"   : "Move conversation"
       "mail action conversation seen"   : "Mark conversation as read"
       "mail action conversation unseen" : "Mark conversation as unread"
+      "mail conversation length": """
+            %{smart_count} message dans cette conversation. ||||
+            %{smart_count} messages dans cette conversation.
+      """
 
       # Account
       "account new"                 : "New account"

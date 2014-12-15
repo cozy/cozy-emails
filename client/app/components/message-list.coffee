@@ -51,9 +51,11 @@ MessageList = React.createClass
         compact = @props.settings.get('listStyle') is 'compact'
         messages = @props.messages.map (message, key) =>
             id = message.get('id')
+            cid = message.get('conversationID')
             isActive = @props.messageID is id
             MessageItem
                 message: message,
+                conversationLength: @props.conversationLengths.get(cid),
                 key: key,
                 isActive: isActive,
                 edited: @state.edited,
@@ -457,7 +459,11 @@ MessageItem = React.createClass
                             i className: 'fa fa-user'
                     span className: 'participants', @getParticipants message
                     div className: 'preview',
-                        span className: 'title', message.get 'subject'
+                        if @props.conversationLength > 1
+                            span className: 'badge conversation-length',
+                                @props.conversationLength
+                        span className: 'title',
+                            message.get 'subject'
                         p null, message.get('text')?.substr(0, 100) + "…"
                     span className: 'hour', date
                     span className: "flags",

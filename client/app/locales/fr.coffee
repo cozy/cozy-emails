@@ -101,6 +101,10 @@ module.exports =
       "mail action conversation seen"   : "Marquer la conversation comme lue"
       "mail action conversation unseen" : "Marquer la conversation comme
                                             non lue"
+      "mail conversation length": """
+            %{smart_count} message dans cette conversation. ||||
+            %{smart_count} messages dans cette conversation.
+      """
 
       # Account
       "account new"                 : "Nouveau compte"

@@ -3,6 +3,7 @@ Message = require './message'
 classer = React.addons.classSet
 
 RouterMixin = require '../mixins/router_mixin'
+{MessageFlags} = require '../constants/app_constants'
 
 module.exports = React.createClass
     displayName: 'Conversation'
@@ -11,7 +12,7 @@ module.exports = React.createClass
 
     propTypes:
         message           : React.PropTypes.object
-        conversation      : React.PropTypes.array
+        conversation      : React.PropTypes.object
         selectedAccount   : React.PropTypes.object.isRequired
         layout            : React.PropTypes.string.isRequired
         selectedMailboxID : React.PropTypes.string
@@ -22,6 +23,31 @@ module.exports = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
                not(_.isEqual(nextProps, @props))
+
+    getInitialState: ->
+        expanded: false
+
+    expand: ->
+        @setState expanded: true
+
+    # componentWillReceiveProps: (nextProps) ->
+    #     if nextProps.conversation isnt @props.conversation
+    #         @setState expanded: false
+
+    renderMessage: (key, message, active) ->
+        console.log key, active
+        Message
+            accounts: @props.accounts
+            active: active
+            inConversation: @props.conversation.length > 1
+            key: key
+            mailboxes: @props.mailboxes
+            message: message
+            nextID: @props.nextID
+            prevID: @props.prevID
+            selectedAccount: @props.selectedAccount
+            selectedMailboxID: @props.selectedMailboxID
+            settings: @props.settings
 
     render: ->
         if not @props.message? or not @props.conversation
@@ -37,9 +63,9 @@ module.exports = React.createClass
             try
                 selectedAccountID = @props.selectedAccount.get 'id'
             catch
-                selectedAccountID = @props.conversation[0].mailbox
+                selectedAccountID = @props.conversation.get(0).mailbox
         else
-            selectedAccountID = @props.conversation[0].mailbox
+            selectedAccountID = @props.conversation.get(0).mailbox
 
         collapseUrl = @buildUrl
             firstPanel:
@@ -47,7 +73,7 @@ module.exports = React.createClass
                 parameters: selectedAccountID
             secondPanel:
                 action: 'message'
-                parameters: @props.conversation[0].get 'id'
+                parameters: @props.conversation.get(0).get 'id'
 
         if @props.layout is 'full'
             closeUrl = @buildUrl
@@ -59,27 +85,23 @@ module.exports = React.createClass
             closeUrl = @buildClosePanelUrl @props.layout
 
         closeIcon = if @props.layout is 'full' then 'fa-th-list' else 'fa-times'
-        inConversation = @props.conversation.length > 1
+
+        otherMessages = {}
+        activeMessages = {}
+
+        @props.conversation.map (message, key) =>
+            if @props.message.get('id') is message.get('id') or
+                    MessageFlags.SEEN not in message.get('flags')
+
+                activeMessages[key] = message
+
+            else
+                otherMessages[key] = message
+
+        .toJS()
+
 
         div className: 'conversation',
-
-            # allows multiple email open but UI is not good enough
-            #ul className: 'nav nav-tabs nav-justified',
-            #    li className: 'active',
-            #        a href: '#', 'Responsive Cozy Emails'
-            #        span className: 'close', 'x'
-            #    li null,
-            #        a href: '#', 'Responsive Cozy Emails'
-            #        span className: 'close', 'x'
-            #    li null,
-            #        a href: '#', 'Responsive Cozy Emails'
-            #        span className: 'close', 'x'
-            #    li null,
-            #        a href: '#', 'Responsive Cozy Emails'
-            #        span className: 'close', 'x'
-            #    li null,
-            #        a href: '#', 'Responsive Cozy Emails'
-            #        span className: 'close', 'x'
 
             if @props.layout isnt 'full'
                 a
@@ -96,17 +118,16 @@ module.exports = React.createClass
                 @props.message.get 'subject'
 
             ul className: 'thread list-unstyled',
-                for message, key in @props.conversation
-                    active = @props.message.get('id') is message.get('id')
-                    Message
-                        accounts: @props.accounts
-                        active: active
-                        inConversation: inConversation
-                        key: key
-                        mailboxes: @props.mailboxes
-                        message: message
-                        nextID: @props.nextID
-                        prevID: @props.prevID
-                        selectedAccount: @props.selectedAccount
-                        selectedMailboxID: @props.selectedMailboxID
-                        settings: @props.settings
+
+                if @state.expanded
+                    for key, message of otherMessages
+                        @renderMessage key, message, false
+
+                else if @props.conversationLength > 1
+                    li className: 'conversation-length-msg',
+                        a onClick: @expand,
+                            t 'mail conversation length',
+                                smart_count: @props.conversationLength
+
+                for key, message of activeMessages
+                    @renderMessage key, message, true
