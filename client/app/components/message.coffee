@@ -471,7 +471,6 @@ module.exports = React.createClass
 
     onDelete: (args) ->
         alertError   = LayoutActionCreator.alertError
-        alertSuccess = LayoutActionCreator.alertSuccess
         message      = @props.message
         if @props.nextID?
             next = @props.nextID
@@ -489,7 +488,7 @@ module.exports = React.createClass
     onMove: (args) ->
         newbox = args.target.dataset.value
         alertError   = LayoutActionCreator.alertError
-        alertSuccess = LayoutActionCreator.alertSuccess
+        alertSuccess = LayoutActionCreator.notify
         if @props.nextID?
             next = @props.nextID
         else next = @props.prevID
@@ -514,7 +513,7 @@ module.exports = React.createClass
         flags = @props.message.get('flags').slice()
         flag = args.target.dataset.value
         alertError   = LayoutActionCreator.alertError
-        alertSuccess = LayoutActionCreator.alertSuccess
+        alertSuccess = LayoutActionCreator.notify
         switch flag
             when FlagsConstants.SEEN
                 flags.push MessageFlags.SEEN
@@ -534,7 +533,7 @@ module.exports = React.createClass
         id     = @props.message.get 'conversationID'
         action = args.target.dataset.action
         alertError   = LayoutActionCreator.alertError
-        alertSuccess = LayoutActionCreator.alertSuccess
+        alertSuccess = LayoutActionCreator.notify
         switch action
             when 'delete'
                 ConversationActionCreator.delete id, (error) ->
@@ -644,9 +643,10 @@ MessageContent = React.createClass
 
                     frame.style.height = "32px"
                     updateHeight()
+                    setTimeout updateHeight, 1000
                     doc.body.onload = updateHeight
                     #frame.contentWindow.onresize = updateHeight
-                    window.onresize = updateHeight
+                    #window.onresize = updateHeight
                     # In Chrome, addEventListener is forbidden by iframe sandboxing
                     #doc.body.addEventListener 'load', updateHeight, true
                     #frame.contentWindow?.addEventListener 'resize', updateHeight, true

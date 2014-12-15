@@ -180,7 +180,7 @@ module.exports =
       "message action delete ko"    : "Impossible de supprimer le message : "
       "message action move ok"      : "Message déplacé"
       "message action move ko"      : "Le déplacement a échoué"
-      "message action mark ok"      : "Ok"
+      "message action mark ok"      : "Le message a été mis à jour"
       "message action mark ko"      : "L'opération a échoué"
       "conversation move ok"        : "Conversation déplacée"
       "conversation move ko"        : "L'opération a échoué"
