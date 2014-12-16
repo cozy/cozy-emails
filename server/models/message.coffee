@@ -50,39 +50,61 @@ require('../utils/socket_handler').wrapModel Message, 'message'
 #
 # Returns void
 Message.getResultsAndCount = (mailboxID, params, callback) ->
+    params.flag ?= null
+    if params.descending
+        [params.before, params.after] = [params.after, params.before]
+
+    async.series [
+        (cb) -> Message.getCount mailboxID, params, cb
+        (cb) -> Message.getResults mailboxID, params, cb
+    ], (err, results) ->
+        return callback err if err
+        [count, messages] = results
+
+        conversationIDs = _.uniq _.pluck messages, 'conversationID'
+
+        Message.getConversationLengths conversationIDs, (err, lengths) ->
+            return callback err if err
+
+            callback null,
+                messages: messages
+                count: count[0]?.value or 0
+                conversationLengths: lengths
+
+Message.getResults = (mailboxID, params, callback) ->
     {before, after, descending, sortField, flag} = params
 
-    flag ?= null
+    skip = 0
 
-    [before, after] = [after, before] if descending
-    optionsCount =
+    if params.resultsAfter
+        before = params.resultsAfter
+        skip = 1
+
+    Message.rawRequest 'byMailboxRequest',
+        descending: descending
+        startkey: [sortField, mailboxID, flag, before]
+        endkey: [sortField, mailboxID, flag, after]
+        reduce: false
+        skipe: skip
+        include_docs: true
+        limit: MSGBYPAGE
+    , (err, rows) ->
+        return callback err if err
+        callback null, rows.map (row) -> new Message row.doc
+
+Message.getCount = (mailboxID, params, callback) ->
+    {before, after, descending, sortField, flag} = params
+
+    Message.rawRequest 'byMailboxRequest',
         descending: descending
         startkey: [sortField, mailboxID, flag, before]
         endkey: [sortField, mailboxID, flag, after]
         reduce: true
         group_level: 2
-
-    optionsResults =
-        descending: descending
-        startkey: [sortField, mailboxID, flag, before]
-        endkey: [sortField, mailboxID, flag, after]
-        reduce: false
-        include_docs: true
-        limit: MSGBYPAGE
-
-    if params.resultsAfter
-        optionsResults.startkey[3] = params.resultsAfter
-        optionsResults.skip = 1
-
-    async.series [
-        (cb) -> Message.rawRequest 'byMailboxRequest', optionsCount, cb
-        (cb) -> Message.rawRequest 'byMailboxRequest', optionsResults, cb
-    ], (err, results) ->
+    , (err, rows) ->
         return callback err if err
-        [count, results] = results
+        callback null, rows[0]?.value or 0
 
-        messages = results.map (row) -> new Message row.doc
-        callback null, {messages, count: count[0]?.value or 0}
 
 
 Message.updateOrCreate = (message, callback) ->
@@ -170,6 +192,28 @@ Message.byMessageID = (accountID, messageID, callback) ->
 
         callback null, message
 
+# Public: get lengths of multiple conversations
+#
+# conversationIDs - [String] id of the conversations
+#
+# callback - Function(err, {conversationID:count}
+#
+# Returns void
+Message.getConversationLengths = (conversationIDs, callback) ->
+
+    Message.rawRequest 'byConversationID',
+        keys: conversationIDs
+        group: true
+        reduce: true
+
+    , (err, rows) ->
+        return callback err if err
+        out = {}
+        out[row.key] = row.value for row in rows
+        callback null, out
+
+
+
 # Public: find messages by there conversation-id
 #
 # conversationID - id of the conversation to fetch
@@ -180,6 +224,7 @@ Message.byMessageID = (accountID, messageID, callback) ->
 Message.byConversationID = (conversationID, callback) ->
     Message.rawRequest 'byConversationId',
         key: conversationID
+        reduce: false
         include_docs: true
 
     , (err, rows) ->
@@ -544,8 +589,6 @@ Message::storeAttachments = (attachments, callback) ->
 
 Message.findConversationID = (mail, callback) ->
     log.debug "findConversationID"
-    if mail.headers['x-gm-thrid']
-        return callback null, mail.headers['x-gm-thrid']
 
     # is reply or forward
     isReplyOrForward = mail.subject and mailutils.isReplyOrForward mail.subject

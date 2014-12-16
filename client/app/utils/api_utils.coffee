@@ -106,7 +106,6 @@ module.exports =
             return
         MessageActionCreator = require '../actions/message_action_creator'
         alertError   = LayoutActionCreator.alertError
-        alertSuccess = LayoutActionCreator.alertSuccess
         message = MessageStore.getByID MessageStore.getCurrentID()
         if not message?
             return

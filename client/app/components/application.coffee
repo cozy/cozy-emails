@@ -255,6 +255,7 @@ module.exports = Application = React.createClass
                 else 'firstPanel'
 
             fetching = MessageStore.isFetching()
+            conversationLengths = MessageStore.getConversationsLength()
 
             query = MessageStore.getParams()
             query.accountID = accountID
@@ -273,6 +274,7 @@ module.exports = Application = React.createClass
                 settings:      @state.settings
                 fetching:      fetching
                 query:         query
+                conversationLengths: conversationLengths
                 emptyListMessage: emptyListMessage
                 counterMessage:   counterMessage
                 #paginationUrl: paginationUrl
@@ -314,12 +316,14 @@ module.exports = Application = React.createClass
             selectedMailboxID = @state.selectedMailboxID
             if message?
                 conversationID = message.get 'conversationID'
-                conversation   = MessageStore.getConversation conversationID
+                lengths = MessageStore.getConversationsLength()
+                conversationLength = lengths.get conversationID
+                conversation = MessageStore.getConversation conversationID
                 MessageStore.setCurrentID message.get('id')
-                if not selectedMailboxID?
-                    selectedMailboxID = Object.keys(message.get('mailboxIDs'))[0]
+                selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
 
             return Conversation
+                key: 'conversation-' + conversationID
                 layout            : layout
                 settings          : @state.settings
                 accounts          : @state.accounts
@@ -328,6 +332,7 @@ module.exports = Application = React.createClass
                 selectedMailboxID : selectedMailboxID
                 message           : message
                 conversation      : conversation
+                conversationLength: conversationLength
                 prevID            : MessageStore.getPreviousMessage()
                 nextID            : MessageStore.getNextMessage()
 

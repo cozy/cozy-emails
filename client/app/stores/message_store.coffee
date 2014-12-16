@@ -30,6 +30,7 @@ class MessageStore extends Store
             else return 0
 
     __sortFunction = __getSortFunction 'date', 1
+    reverseDateSort = __getSortFunction 'date', -1
 
     # Creates an OrderedMap of messages
     _messages = Immutable.Sequence()
@@ -48,6 +49,9 @@ class MessageStore extends Store
     _params       = sort: '-date'
     _fetching     = false
     _currentMessages = Immutable.Sequence()
+    _conversationLengths = Immutable.Map()
+    _conversationMemoize = null
+    _conversationMemoizeId = null
     _currentID       = null
     _prevAction      = null
 
@@ -142,17 +146,21 @@ class MessageStore extends Store
                 SocketUtils.changeRealtimeScope messages.mailboxID,
                     _params.pageAfter
 
+            if lengths = messages.conversationLengths
+                _conversationLengths = _conversationLengths.merge lengths
+
             if messages.count? and messages.mailboxID?
                 messages = messages.messages.sort __sortFunction
+
+
 
             onReceiveRawMessage message for message in messages
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]
-            messages = @getMessagesByAccount accountID
-            _messages = _messages.withMutations (map) ->
-                messages.forEach (message) -> map.remove message.get 'id'
+            _messages = _messages.filter (message) ->
+                message.get('accountID') isnt accountID
 
             @emit 'change'
 
@@ -230,25 +238,6 @@ class MessageStore extends Store
 
     getByID: (messageID) -> _messages.get(messageID) or null
 
-    ###*
-    * Get messages from account, with optional pagination
-    *
-    * @param {String} accountID
-    * @param {Number} first     index of first message
-    * @param {Number} last      index of last message
-    *
-    * @return {Array}
-    ###
-    getMessagesByAccount: (accountID) ->
-        sequence = _messages.filter (message) ->
-            return message.get('accountID') is accountID
-
-        # sequences are lazy so we need .toOrderedMap() to actually execute it
-        return sequence.toOrderedMap()
-
-
-    getMessagesCountByAccount: (accountID) ->
-        return @getMessagesByAccount(accountID).count()
 
     ###*
     * Get messages from mailbox, with optional pagination
@@ -260,8 +249,20 @@ class MessageStore extends Store
     * @return {Array}
     ###
     getMessagesByMailbox: (mailboxID) ->
+        conversationIDs = []
+
         sequence = _messages.filter (message) ->
-            return mailboxID in Object.keys message.get 'mailboxIDs'
+            mailboxes = Object.keys message.get 'mailboxIDs'
+            if mailboxID not in mailboxes
+                return false
+
+            # one message of each conversation
+            conversationID = message.get 'conversationID'
+            if conversationID in conversationIDs
+                return false
+            else
+                conversationIDs.push conversationID
+                return true
         .sort(__getSortFunction _sortField, _sortOrder)
 
         # sequences are lazy so we need .toOrderedMap() to actually execute it
@@ -289,27 +290,17 @@ class MessageStore extends Store
         else
             return keys[idx + 1]
 
-    getMessagesByConversation: (messageID) ->
-        idsToLook = [messageID]
-        conversation = []
-        while idToLook = idsToLook.pop()
-            conversation.push @getByID idToLook
-            temp = _messages.filter (message) ->
-                inReply = message.get 'inReplyTo'
-                return Array.isArray(inReply) and
-                        inReply.indexOf(idToLook) isnt -1
-            newIdsToLook = temp.map((item) -> item.get('id')).toArray()
-            idsToLook = idsToLook.concat newIdsToLook
-
-        return conversation.sort(__getSortFunction 'date', -1)
-
     getConversation: (conversationID) ->
-        conversation = []
-        _messages.filter (message) ->
-            return message.get('conversationID') is conversationID
-        .map (message) -> conversation.push message
-        .toJS()
-        return conversation.sort(__getSortFunction 'date', -1)
+        if conversationID isnt _conversationMemoizeId
+            _conversationMemoize = _messages
+                .filter (message) ->
+                    message.get('conversationID') is conversationID
+                .sort reverseDateSort
+                .toVector()
+
+        return _conversationMemoize
+
+    getConversationsLength: -> return _conversationLengths
 
     getParams: -> return _params
 
