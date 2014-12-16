@@ -229,7 +229,9 @@ module.exports = Compose = React.createClass
         # edition of an existing draft
         if message = @props.message
             state =
-                composeInHTML: message.get('html')?
+                composeInHTML: @props.settings.get 'composeInHTML'
+            if (not message.get('html')?) and message.get('text')
+                state.conposeInHTML = false
 
             # TODO : smarter ?
             state[key] = value for key, value of message.toJS()
