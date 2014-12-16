@@ -55,7 +55,7 @@ MessageList = React.createClass
             isActive = @props.messageID is id
             MessageItem
                 message: message,
-                conversationLength: @props.conversationLengths.get(cid),
+                conversationLength: @props.conversationLengths?.get(cid),
                 key: key,
                 isActive: isActive,
                 edited: @state.edited,

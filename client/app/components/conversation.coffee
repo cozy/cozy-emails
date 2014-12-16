@@ -31,7 +31,6 @@ module.exports = React.createClass
         @setState expanded: true
 
     renderMessage: (key, message, active) ->
-        console.log key, active
         Message
             accounts: @props.accounts
             active: active

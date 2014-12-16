@@ -242,28 +242,30 @@ class MessageStore extends Store
     ###*
     * Get messages from mailbox, with optional pagination
     *
-    * @param {String} mailboxID
-    * @param {Number} first     index of first message
-    * @param {Number} last      index of last message
+    * @param {String}  mailboxID
+    * @param {Boolean} conversation
     *
     * @return {Array}
     ###
-    getMessagesByMailbox: (mailboxID) ->
+    getMessagesByMailbox: (mailboxID, useConversations) ->
         conversationIDs = []
 
-        sequence = _messages.filter (message) ->
-            mailboxes = Object.keys message.get 'mailboxIDs'
-            if mailboxID not in mailboxes
-                return false
+        if useConversations
+            sequence = _messages.filter (message) ->
+                mailboxes = Object.keys message.get 'mailboxIDs'
+                if mailboxID not in mailboxes
+                    return false
 
-            # one message of each conversation
-            conversationID = message.get 'conversationID'
-            if conversationID in conversationIDs
-                return false
-            else
-                conversationIDs.push conversationID
-                return true
-        .sort(__getSortFunction _sortField, _sortOrder)
+                # one message of each conversation
+                conversationID = message.get 'conversationID'
+                if conversationID in conversationIDs
+                    return false
+                else
+                    conversationIDs.push conversationID
+                    return true
+            .sort(__getSortFunction _sortField, _sortOrder)
+        else
+            sequence = _messages.sort(__getSortFunction _sortField, _sortOrder)
 
         # sequences are lazy so we need .toOrderedMap() to actually execute it
         _currentMessages = sequence.toOrderedMap()
