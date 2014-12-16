@@ -46,6 +46,12 @@ class LayoutStore extends Store
             _alert.message = null
             @emit 'change'
 
+        # Hide alerts on mailbox / account change
+        handle ActionTypes.SELECT_ACCOUNT, (value) ->
+            _alert.level   = null
+            _alert.message = null
+            @emit 'change'
+
         handle ActionTypes.REFRESH, ->
             @emit 'change'
 
