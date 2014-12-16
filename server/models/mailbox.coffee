@@ -1,4 +1,4 @@
-americano = require 'americano-cozy'
+americano = require MODEL_MODULE
 
 module.exports = Mailbox = americano.getModel 'Mailbox',
     accountID: String        # Parent account

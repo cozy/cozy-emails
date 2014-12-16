@@ -1,4 +1,4 @@
-americano = require 'americano-cozy'
+americano = require MODEL_MODULE
 
 # Public: Message
 #

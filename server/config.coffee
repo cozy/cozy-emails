@@ -34,7 +34,7 @@ config =
     ]
 
     plugins: [
-        'americano-cozy'
+        MODEL_MODULE
     ]
 
 module.exports = config
