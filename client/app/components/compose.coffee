@@ -292,7 +292,7 @@ module.exports = Compose = React.createClass
                 catch
                     message.text = message.html?replace /<[^>]*>/gi, ''
             else
-                message.text = state.text.trim()
+                message.text = @state.text.trim()
 
             if not isDraft and @_saveInterval
                 window.clearInterval @_saveInterval
