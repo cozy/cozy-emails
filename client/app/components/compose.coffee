@@ -205,7 +205,9 @@ module.exports = Compose = React.createClass
 
         # Focus
         if not Array.isArray(@state.to) or @state.to.length is 0
-            document.getElementById('compose-to').focus()
+            setTimeout ->
+                document.getElementById('compose-to').focus()
+            , 0
 
     componentDidMount: ->
         @_initCompose()
@@ -287,11 +289,15 @@ module.exports = Compose = React.createClass
             if @state.to.length is 0 and @state.cc.length is 0 and @state.bcc.length is 0
                 valid = false
                 LayoutActionCreator.alertError t "compose error no dest"
-                document.getElementById('compose-to').focus()
+                setTimeout ->
+                    document.getElementById('compose-to').focus()
+                , 0
             else if @state.subject is ''
                 valid = false
                 LayoutActionCreator.alertError t "compose error no subject"
-                @refs.subject.getDOMNode().focus()
+                setTimeout ->
+                    @refs.subject.getDOMNode().focus()
+                , 0
 
         if valid
             if @state.composeInHTML
@@ -407,7 +413,9 @@ ComposeEditor = React.createClass
                 node = @refs.html?.getDOMNode()
                 if not node?
                     return
-                jQuery(node).focus()
+                setTimeout ->
+                    jQuery(node).focus()
+                , 0
                 if not @props.settings.get 'composeOnTop'
                     node.innerHTML += "<p><br /></p>"
                     node = node.lastChild
@@ -513,7 +521,9 @@ ComposeEditor = React.createClass
                             parent.parentNode.appendChild after
                         ###
 
-                        inserted.focus()
+                        setTimeout ->
+                            inserted.focus()
+                        , 0
                         sel = window.getSelection()
                         sel.collapse inserted, 0
 
@@ -529,11 +539,15 @@ ComposeEditor = React.createClass
                     if (typeof node.selectionStart is "number")
                         node.selectionStart = node.selectionEnd = node.value.length
                     else if (typeof node.createTextRange isnt "undefined")
-                        node.focus()
+                        setTimeout ->
+                            node.focus()
+                        , 0
                         range = node.createTextRange()
                         range.collapse(false)
                         range.select()
-                node.focus()
+                setTimeout ->
+                    node.focus()
+                , 0
 
     componentDidMount: ->
         @_initCompose()
