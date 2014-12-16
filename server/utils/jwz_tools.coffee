@@ -48,7 +48,13 @@ module.exports =
             'head'
             'meta'
         ]
-        safeAttributes = ['style', 'class', 'background', 'itemscope', 'itemtype', 'itemprop', 'content']
+        safeAttributes = [
+            'style', 'class', 'background',
+            # tables
+            'colspan', 'rowspan',
+            #microdata
+            'itemscope', 'itemtype', 'itemprop', 'content'
+        ]
         allowedAttributes = sanitizeHtml.defaults.allowedAttributes
         allowedTags.forEach (tag) ->
             if allowedAttributes[tag]?
