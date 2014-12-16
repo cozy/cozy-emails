@@ -167,13 +167,19 @@ module.exports = Compose = React.createClass
                                 type: 'button',
                                 disable: if @state.sending then true else null
                                 onClick: @onSend,
-                                    span
-                                        className: 'fa fa-send'
+                                    if @state.sending
+                                        span className: 'fa fa-refresh fa-spin'
+                                    else
+                                        span className: 'fa fa-send'
                                     span null, labelSend
                             button
                                 className: 'btn btn-cozy',
+                                disable: if @state.saving then true else null
                                 type: 'button', onClick: @onDraft,
-                                    span className: 'fa fa-save'
+                                    if @state.saving
+                                        span className: 'fa fa-refresh fa-spin'
+                                    else
+                                        span className: 'fa fa-save'
                                     span null, t 'compose action draft'
                             if @props.message?
                                 button
@@ -237,6 +243,7 @@ module.exports = Compose = React.createClass
             state.accountID ?= @props.selectedAccount.get 'id'
 
         state.sending = false
+        state.saving  = false
         return state
 
     componentWillReceiveProps: (nextProps) ->
@@ -297,11 +304,15 @@ module.exports = Compose = React.createClass
             if not isDraft and @_saveInterval
                 window.clearInterval @_saveInterval
 
-            if not isDraft
+            if isDraft
+                @setState saving: true
+            else
                 @setState sending: true
 
             MessageActionCreator.send message, (error, message) =>
-                if not isDraft
+                if isDraft
+                    @setState saving: false
+                else
                     @setState sending: false
                 if isDraft
                     msgKo = t "message action draft ko"
