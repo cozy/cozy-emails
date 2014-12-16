@@ -35,7 +35,7 @@ module.exports = React.createClass
         accounts          : React.PropTypes.object.isRequired
         active            : React.PropTypes.bool
         inConversation    : React.PropTypes.bool
-        key               : React.PropTypes.number.isRequired
+        key               : React.PropTypes.string.isRequired
         mailboxes         : React.PropTypes.object.isRequired
         message           : React.PropTypes.object.isRequired
         nextID            : React.PropTypes.string
@@ -65,7 +65,11 @@ module.exports = React.createClass
         # /!\ if messageDisplayHTML is set, this method should always return
         # a value fo html, otherwise the content of the email flashes
         if text and not html and @state.messageDisplayHTML
-            html = markdown.toHTML text
+            try
+                html = markdown.toHTML text
+            catch e
+                console.log "Error converting text message to Markdown: #{e}"
+                html = "<div class='text'>#{text}</div>" #markdown.toHTML text
 
         if html and not text and not @state.messageDisplayHTML
             text = toMarkdown html
@@ -163,6 +167,9 @@ module.exports = React.createClass
             {messageDisplayHTML, images} = @prepareHTML prepared
             imagesWarning = images.length > 0 and
                             not @state.messageDisplayImages
+        else
+            messageDisplayHTML = false
+            imagesWarning      = false
 
         classes = classer
             message: true
@@ -567,23 +574,21 @@ module.exports = React.createClass
         event.preventDefault()
         @setState messageDisplayImages: true
 
-    displayHTML: (event) ->
-        event.preventDefault()
-        @setState messageDisplayHTML: true
+    displayHTML: (value) ->
+        if not value?
+            value = true
+        @setState messageDisplayHTML: value
 
 MessageContent = React.createClass
     displayName: 'MessageContent'
-
-    getInitialState: ->
-        return {
-            messageDisplayHTML: @props.messageDisplayHTML
-        }
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
     render: ->
-        if @state.messageDisplayHTML and @props.html
+        displayHTML= =>
+            @props.displayHTML true
+        if @props.messageDisplayHTML and @props.html
             div className: 'row',
                 if @props.imagesWarning
                     div
@@ -622,7 +627,7 @@ MessageContent = React.createClass
         # - resize the frame to the height of its content
         # - if images are not displayed, create the function to display them
         #   and resize the frame
-        if @refs.content
+        if @props.messageDisplayHTML and @refs.content
             frame = @refs.content.getDOMNode()
             doc = frame.contentDocument or frame.contentWindow?.document
             step = 0
@@ -652,14 +657,12 @@ MessageContent = React.createClass
                     #frame.contentWindow?.addEventListener 'resize', updateHeight, true
                 else
                     # try to display text only
-                    @setState messageDisplayHTML: false
+                    @props.displayHTML false
 
             if type is 'mount' and doc.readyState isnt 'complete'
                 frame.addEventListener 'load', loadContent
             else
                 loadContent()
-        else
-            console.warn "No ref.content"
 
     componentDidMount: ->
         @_initFrame('mount')
