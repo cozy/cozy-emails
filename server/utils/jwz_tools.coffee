@@ -47,6 +47,7 @@ module.exports =
             'img'
             'head'
             'meta'
+            'link'
         ]
         safeAttributes = [
             'style', 'class', 'background',
@@ -61,6 +62,7 @@ module.exports =
                 allowedAttributes[tag] = allowedAttributes[tag].concat safeAttributes
             else
                 allowedAttributes[tag] = safeAttributes
+        allowedAttributes.link.push 'href'
         html = sanitizeHtml html,
             allowedTags: allowedTags
             allowedAttributes: allowedAttributes
