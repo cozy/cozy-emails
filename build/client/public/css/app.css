@@ -3074,7 +3074,7 @@ textarea:active,
   box-flex: 4;
   -webkit-flex-grow: 4;
   flex-grow: 4;
-  width: 50%;
+  width: 100%;
 }
 .message-list .message .hour {
   -webkit-box-flex: 1;
@@ -3329,9 +3329,38 @@ textarea:active,
   -ms-filter: none;
   filter: none;
 }
-.toasts-container .alert {
+.toasts-container .toast {
   margin-bottom: 0.5em;
   padding: 0.25em;
+  position: relative;
+}
+.toasts-container .toast.toast-enter {
+  top: 2000px;
+  opacity: 0.5;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+  filter: alpha(opacity=50);
+  -webkit-transition: top 0.5s ease-in;
+  -moz-transition: top 0.5s ease-in;
+  -o-transition: top 0.5s ease-in;
+  -ms-transition: top 0.5s ease-in;
+  transition: top 0.5s ease-in;
+}
+.toasts-container .toast.toast-enter-active {
+  top: 0;
+  opacity: 1;
+  -ms-filter: none;
+  filter: none;
+}
+.toasts-container .toast.toast-leave {
+  left: 0;
+  -webkit-transition: left 0.5s ease-in;
+  -moz-transition: left 0.5s ease-in;
+  -o-transition: left 0.5s ease-in;
+  -ms-transition: left 0.5s ease-in;
+  transition: left 0.5s ease-in;
+}
+.toasts-container .toast.toast-leave-active {
+  left: 500px;
 }
 .toasts-container .progress {
   display: inline-block;

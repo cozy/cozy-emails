@@ -61,14 +61,15 @@ module.exports = {
     return boxes;
   },
   sanitizeHTML: function(html, messageId, attachments) {
-    var allowedAttributes, allowedTags;
+    var allowedAttributes, allowedTags, safeAttributes;
     allowedTags = sanitizeHtml.defaults.allowedTags.concat(['img', 'head', 'meta']);
+    safeAttributes = ['style', 'class', 'background', 'itemscope', 'itemtype', 'itemprop', 'content'];
     allowedAttributes = sanitizeHtml.defaults.allowedAttributes;
     allowedTags.forEach(function(tag) {
       if (allowedAttributes[tag] != null) {
-        return allowedAttributes[tag] = allowedAttributes[tag].concat(['style', 'class', 'background']);
+        return allowedAttributes[tag] = allowedAttributes[tag].concat(safeAttributes);
       } else {
-        return allowedAttributes[tag] = ['style', 'class', 'background'];
+        return allowedAttributes[tag] = safeAttributes;
       }
     });
     html = sanitizeHtml(html, {
