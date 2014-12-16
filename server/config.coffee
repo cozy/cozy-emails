@@ -1,7 +1,5 @@
 path = require 'path'
 americano = require 'americano'
-Account = require './models/account'
-SocketHandler = require './utils/socket_handler'
 log = require('./utils/logging')(prefix: 'config')
 
 {errorHandler} = require './utils/errors'
@@ -21,7 +19,9 @@ config =
         afterStart: (app, server) ->
             # move it here needed after express 4.4
             app.use errorHandler
+            SocketHandler = require './utils/socket_handler'
             SocketHandler.setup app, server
+            Account = require './models/account'
             Account.removeOrphansAndRefresh null, false, ->
                 log.info "initial refresh completed"
 

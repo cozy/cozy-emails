@@ -58,7 +58,10 @@
     "client-test": "COZY_URL=http://localhost:9125/ casperjs test client/tests/casper/*/",
     "start": "node build/server.js",
     "standalone": "RUN_STANDALONE=true node build/server.js",
-    "prestandalone": "npm install americano-cozy-pouchdb@0.3.16",
+
+    "pouchdbinstalled": "(ls ./node_modules/americano-cozy-pouchdb/ > /dev/null)",
+    "installpouchdb": "npm_config_global=false npm install americano-cozy-pouchdb@0.3.16",
+    "prestandalone": "npm run pouchdbinstalled || npm run installpouchdb",
     "prepublish": "cd client && brunch b && cd .. && cake build"
   },
   "cozy-permissions": {
