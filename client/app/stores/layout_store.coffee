@@ -49,14 +49,23 @@ class LayoutStore extends Store
         handle ActionTypes.REFRESH, ->
             @emit 'change'
 
-        handle ActionTypes.RECEIVE_TASK_UPDATE, (task) ->
+        handle ActionTypes.CLEAR_TOASTS, ->
+            _tasks = Immutable.OrderedMap()
+            @emit 'change'
+
+        handle ActionTypes.RECEIVE_TASK_UPDATE, (task) =>
             task = Immutable.Map task
             id = task.get('id')
-            _tasks = _tasks.set(id, task).toOrderedMap()
+            _tasks = _tasks.set id, task
+            if task.get('autoclose')
+                remove = =>
+                    _tasks = _tasks.remove id
+                    @emit 'change'
+                setTimeout remove, 3000
             @emit 'change'
 
         handle ActionTypes.RECEIVE_TASK_DELETE, (taskid) ->
-            _tasks = _tasks.remove(taskid).toOrderedMap()
+            _tasks = _tasks.remove taskid
             @emit 'change'
 
         handle ActionTypes.TOASTS_SHOW, ->
@@ -74,7 +83,7 @@ class LayoutStore extends Store
 
     getAlert: -> return _alert
 
-    getTasks: -> return _tasks
+    getToasts: -> return _tasks
 
     isShown: -> return _shown
 

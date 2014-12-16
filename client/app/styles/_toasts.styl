@@ -16,9 +16,26 @@
         pointer-events auto
         opacity 1
 
-    .alert
+
+    .toast
+
         margin-bottom .5em
         padding .25em
+        position relative
+
+        &.toast-enter
+            top 2000px
+            opacity 0.5
+            transition top .5s ease-in
+        &.toast-enter-active
+            top 0
+            opacity 1
+        &.toast-leave
+            left 0
+            transition left .5s ease-in
+        &.toast-leave-active
+            left 500px
+
 
     .progress
         display inline-block

@@ -62,6 +62,11 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.RECEIVE_TASK_UPDATE
             value: task
 
+    clearToasts: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.CLEAR_TOASTS
+            value: null
+
     filterMessages: (filter) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.LIST_FILTER

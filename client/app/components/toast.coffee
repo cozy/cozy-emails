@@ -6,6 +6,7 @@ StoreWatchMixin = require '../mixins/store_watch_mixin'
 LayoutStore      = require '../stores/layout_store'
 LayoutActionCreator = require '../actions/layout_action_creator'
 {ActionTypes} = require '../constants/app_constants'
+{CSSTransitionGroup} = React.addons
 
 classer = React.addons.classSet
 
@@ -24,13 +25,24 @@ module.exports = Toast = React.createClass
     acknowledge: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.RECEIVE_TASK_DELETE
-            value: @props.toast.id
+            value: @props.toast.get('id')
+
+    renderModal: ->
+        title       = t 'modal please contribute'
+        subtitle    = t 'modal please report'
+        modalErrors = @state.modalErrors
+        closeModal  = @closeModal
+        closeLabel  = t 'app alert close'
+        content = React.DOM.pre
+            style: "max-height": "300px",
+            "word-wrap": "normal",
+                @state.modalErrors.join "\n\n"
+        Modal {title, subtitle, content, closeModal, closeLabel}
 
     render: ->
-        toast = @props.toast
+        toast = @props.toast.toJS()
         hasErrors = toast.errors? and toast.errors.length
         classes = classer
-            alert: true
             toast: true
             'alert-dismissible': toast.finished
             'alert-info': not hasErrors
@@ -39,21 +51,10 @@ module.exports = Toast = React.createClass
             percent = parseInt(100 * toast.done / toast.total) + '%'
         if hasErrors
             showModal = @showModal.bind(this, toast.errors)
-        if @state.modalErrors
-            title       = t 'modal please contribute'
-            subtitle    = t 'modal please report'
-            modalErrors = @state.modalErrors
-            closeModal  = @closeModal
-            closeLabel  = t 'app alert close'
-            content = React.DOM.pre
-                style: "max-height": "300px",
-                "word-wrap": "normal",
-                    @state.modalErrors.join "\n\n"
-            modal = Modal {title, subtitle, content, closeModal, closeLabel}
 
         div className: classes, role: "alert",
             if @state.modalErrors
-                modal
+                renderModal()
 
             if percent?
                 div className: "progress",
@@ -89,27 +90,6 @@ module.exports = Toast = React.createClass
                             onClick: action.onClick,
                             action.label
 
-            if hasErrors
-                a onClick: showModal,
-                    t 'there were errors', smart_count: toast.errors.length
-
-    componentDidMount: ->
-        @shouldAutoclose()
-
-    componentDidUpdate: ->
-        @shouldAutoclose()
-
-    shouldAutoclose: ->
-        hasErrors = @props.toast.errors? and @props.toast.errors.length
-        if @props.toast.autoclose or (@props.toast.finished and not hasErrors)
-            target = @getDOMNode()
-            if not target.classList.contains 'autoclose'
-                setTimeout ->
-                    target.classList.add 'autoclose'
-                , 1000
-                setTimeout =>
-                    @acknowledge()
-                , 10000
 
 module.exports.Container = ToastContainer =  React.createClass
     displayName: 'ToastContainer'
@@ -120,20 +100,23 @@ module.exports.Container = ToastContainer =  React.createClass
 
     getStateFromStores: ->
         return {
-            toasts: LayoutStore.getTasks()
+            toasts: LayoutStore.getToasts()
             hidden: not LayoutStore.isShown()
         }
 
     render: ->
-        toasts = @state.toasts.toJS?() or @state.toasts
+        toasts = @state.toasts.map (toast, id) ->
+            Toast {toast, key: id}
+        .toVector().toJS()
 
         classes = classer
             'toasts-container': true
             'action-hidden': @state.hidden
-            'has-toasts': Object.keys(toasts).length isnt 0
+            'has-toasts': toasts.length isnt 0
 
         div className: classes,
-            Toast {toast, key: id} for id, toast of toasts
+            CSSTransitionGroup transitionName: "toast",
+                toasts
             div className: 'alert alert-success toast toasts-actions',
                 span
                     className: "toast-action hide-action",
@@ -158,13 +141,4 @@ module.exports.Container = ToastContainer =  React.createClass
             LayoutActionCreator.toastsHide()
 
     closeAll: ->
-        toasts = @state.toasts.toJS?() or @state.toasts
-        close = (toast) ->
-            if toast.type is NotifyType.SERVER
-                SocketUtils.acknowledgeTask toast.id
-            else
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.RECEIVE_TASK_DELETE
-                    value: toast.id
-        close toast for id, toast of toasts
-        @setState toasts: @state.toasts.clear()
+        LayoutActionCreator.clearToasts()
