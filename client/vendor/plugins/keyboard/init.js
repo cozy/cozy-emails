@@ -114,8 +114,11 @@ if (typeof window.plugins !== "object") {
       'enter': {
         name: "Display current message",
         action: function (e) {
-          e.preventDefault();
-          window.cozyMails.messageDisplay();
+          if (window.cozyMails.getCurrentActions().indexOf('account.mailbox.messages') === 0 &&
+             ['INPUT', 'BUTTON'].indexOf(document.activeElement.tagName) === -1 ) {
+            e.preventDefault();
+            window.cozyMails.messageDisplay();
+          }
         }
       },
       'esc': {
