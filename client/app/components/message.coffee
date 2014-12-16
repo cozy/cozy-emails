@@ -488,6 +488,7 @@ module.exports = React.createClass
     onMove: (args) ->
         newbox = args.target.dataset.value
         alertError   = LayoutActionCreator.alertError
+        alertSuccess = LayoutActionCreator.notify
         if @props.nextID?
             next = @props.nextID
         else next = @props.prevID
@@ -497,6 +498,7 @@ module.exports = React.createClass
                 if error?
                     alertError "#{t("conversation move ko")} #{error}"
                 else
+                    alertSuccess t "conversation move ok"
                     @displayNextMessage next
         else
             oldbox = @props.selectedMailboxID
@@ -504,12 +506,14 @@ module.exports = React.createClass
                 if error?
                     alertError "#{t("message action move ko")} #{error}"
                 else
+                    alertSuccess t "message action move ok"
                     @displayNextMessage next
 
     onMark: (args) ->
         flags = @props.message.get('flags').slice()
         flag = args.target.dataset.value
         alertError   = LayoutActionCreator.alertError
+        alertSuccess = LayoutActionCreator.notify
         switch flag
             when FlagsConstants.SEEN
                 flags.push MessageFlags.SEEN
@@ -522,26 +526,33 @@ module.exports = React.createClass
         MessageActionCreator.updateFlag @props.message, flags, (error) ->
             if error?
                 alertError "#{t("message action mark ko")} #{error}"
+            else
+                alertSuccess t "message action mark ok"
 
     onConversation: (args) ->
         id     = @props.message.get 'conversationID'
         action = args.target.dataset.action
         alertError   = LayoutActionCreator.alertError
+        alertSuccess = LayoutActionCreator.notify
         switch action
             when 'delete'
                 ConversationActionCreator.delete id, (error) ->
                     if error?
                         alertError "#{t("conversation delete ko")} #{error}"
-
+                    else
+                        alertSuccess t "conversation delete ok"
             when 'seen'
                 ConversationActionCreator.seen id, (error) ->
                     if error?
-                        alertError "#{t("conversation seen ok ")} #{error}"
-
+                        alertError "#{t("conversation seen ko")} #{error}"
+                    else
+                        alertSuccess t "conversation seen ok"
             when 'unseen'
                 ConversationActionCreator.unseen id, (error) ->
                     if error?
-                        alertError "#{t("conversation unseen ok")} #{error}"
+                        alertError "#{t("conversation unseen ko")} #{error}"
+                    else
+                        alertSuccess t "conversation unseen ok"
 
     onHeaders: (event) ->
         event.preventDefault()
