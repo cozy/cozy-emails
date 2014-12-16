@@ -48,12 +48,13 @@ module.exports =
             'head'
             'meta'
         ]
+        safeAttributes = ['style', 'class', 'background', 'itemscope', 'itemtype', 'itemprop', 'content']
         allowedAttributes = sanitizeHtml.defaults.allowedAttributes
         allowedTags.forEach (tag) ->
             if allowedAttributes[tag]?
-                allowedAttributes[tag] = allowedAttributes[tag].concat ['style', 'class', 'background']
+                allowedAttributes[tag] = allowedAttributes[tag].concat safeAttributes
             else
-                allowedAttributes[tag] = ['style', 'class', 'background']
+                allowedAttributes[tag] = safeAttributes
         html = sanitizeHtml html,
             allowedTags: allowedTags
             allowedAttributes: allowedAttributes
