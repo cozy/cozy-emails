@@ -13,6 +13,8 @@ RouterMixin = require '../mixins/router_mixin'
 Participants  = require './participant'
 
 classer = React.addons.classSet
+alertError   = LayoutActionCreator.alertError
+alertSuccess = LayoutActionCreator.notify
 
 module.exports = React.createClass
     displayName: 'Message'
@@ -477,7 +479,6 @@ module.exports = React.createClass
         @setState composing: true, composeAction: ComposeActions.FORWARD
 
     onDelete: (args) ->
-        alertError   = LayoutActionCreator.alertError
         message      = @props.message
         if @props.nextID?
             next = @props.nextID
@@ -494,8 +495,6 @@ module.exports = React.createClass
 
     onMove: (args) ->
         newbox = args.target.dataset.value
-        alertError   = LayoutActionCreator.alertError
-        alertSuccess = LayoutActionCreator.notify
         if @props.nextID?
             next = @props.nextID
         else next = @props.prevID
@@ -519,8 +518,6 @@ module.exports = React.createClass
     onMark: (args) ->
         flags = @props.message.get('flags').slice()
         flag = args.target.dataset.value
-        alertError   = LayoutActionCreator.alertError
-        alertSuccess = LayoutActionCreator.notify
         switch flag
             when FlagsConstants.SEEN
                 flags.push MessageFlags.SEEN
@@ -539,8 +536,6 @@ module.exports = React.createClass
     onConversation: (args) ->
         id     = @props.message.get 'conversationID'
         action = args.target.dataset.action
-        alertError   = LayoutActionCreator.alertError
-        alertSuccess = LayoutActionCreator.notify
         switch action
             when 'delete'
                 ConversationActionCreator.delete id, (error) ->

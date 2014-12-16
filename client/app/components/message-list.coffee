@@ -16,7 +16,6 @@ ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'
 
 alertError   = LayoutActionCreator.alertError
-alertSuccess = LayoutActionCreator.alertSuccess
 
 MessageList = React.createClass
     displayName: 'MessageList'

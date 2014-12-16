@@ -337,4 +337,4 @@ MenuMailboxItem = React.createClass
             if error?
                 LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
             else
-                LayoutActionCreator.alertSuccess t "message action move ok"
+                LayoutActionCreator.notify t "message action move ok"
