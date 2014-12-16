@@ -2,7 +2,7 @@
 var Break, FETCH_AT_ONCE, ImapPool, ImapReporter, Mailbox, Message, NotFound, americano, async, computeNextStep, log, mailutils, _, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-americano = require('americano-cozy');
+americano = require(MODEL_MODULE);
 
 module.exports = Mailbox = americano.getModel('Mailbox', {
   accountID: String,

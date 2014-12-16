@@ -2,7 +2,7 @@
 var Contact, americano, async, log, stream_to_buffer_array,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-americano = require('americano-cozy');
+americano = require(MODEL_MODULE);
 
 async = require('async');
 
