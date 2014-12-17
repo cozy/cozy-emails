@@ -9126,13 +9126,13 @@ MessageStore = (function(_super) {
   MessageStore.prototype.getMessagesByMailbox = function(mailboxID, useConversations) {
     var conversationIDs, sequence, _ref1;
     conversationIDs = [];
-    if (useConversations) {
-      sequence = _messages.filter(function(message) {
-        var conversationID, mailboxes;
-        mailboxes = Object.keys(message.get('mailboxIDs'));
-        if (__indexOf.call(mailboxes, mailboxID) < 0) {
-          return false;
-        }
+    sequence = _messages.filter(function(message) {
+      var conversationID, mailboxes;
+      mailboxes = Object.keys(message.get('mailboxIDs'));
+      if (__indexOf.call(mailboxes, mailboxID) < 0) {
+        return false;
+      }
+      if (useConversations) {
         conversationID = message.get('conversationID');
         if (__indexOf.call(conversationIDs, conversationID) >= 0) {
           return false;
@@ -9140,10 +9140,10 @@ MessageStore = (function(_super) {
           conversationIDs.push(conversationID);
           return true;
         }
-      }).sort(__getSortFunction(_sortField, _sortOrder));
-    } else {
-      sequence = _messages.sort(__getSortFunction(_sortField, _sortOrder));
-    }
+      } else {
+        return true;
+      }
+    }).sort(__getSortFunction(_sortField, _sortOrder));
     _currentMessages = sequence.toOrderedMap();
     if (_currentID == null) {
       this.setCurrentID((_ref1 = _currentMessages.first()) != null ? _ref1.get('id') : void 0);
