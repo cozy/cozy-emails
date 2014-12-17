@@ -2,7 +2,7 @@
 var CONCURRENT_DESTROY, CONSTANTS, ImapPool, LIMIT_DESTROY, LIMIT_UPDATE, MSGBYPAGE, Mailbox, Message, NotFound, americano, async, htmlToText, log, mailutils, uuid, _,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-americano = require('americano-cozy');
+americano = require(MODEL_MODULE);
 
 module.exports = Message = americano.getModel('Message', {
   accountID: String,

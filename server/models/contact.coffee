@@ -1,4 +1,4 @@
-americano = require 'americano-cozy'
+americano = require MODEL_MODULE
 async = require 'async'
 stream_to_buffer_array = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'models:contact')

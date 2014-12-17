@@ -1,6 +1,6 @@
 {
   "name": "cozy-emails",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "engines": [
     "node = 0.8.x"
   ],
@@ -35,6 +35,9 @@
     "multiparty": "4.0.0",
     "sanitize-html": "^1.4.3"
   },
+  "standaloneDependencies": {
+    "americano-cozy-pouchdb": "see scripts.prestandalone"
+  },
   "devDependencies": {
     "should": "4.0.4",
     "mocha": "1.20.1",
@@ -53,7 +56,11 @@
     "client-test-travis": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
     "load-fixtures": "coffee tests/fixtures/generator.coffee 1000 && coffee tests/fixtures/loader.coffee && cozy-fixtures load tests/fixtures",
     "client-test": "COZY_URL=http://localhost:9125/ casperjs test client/tests/casper/*/",
-    "start": "node build/server.js"
+    "start": "node build/server.js",
+    "standalone": "RUN_STANDALONE=true node build/server.js",
+    "installpouchdb": "npm_config_global=false npm install americano-cozy-pouchdb@0.3.16",
+    "prestandalone": "(ls ./node_modules/americano-cozy-pouchdb/ > /dev/null) || npm run installpouchdb",
+    "prepublish": "cd client && brunch b && cd .. && cake build"
   },
   "cozy-permissions": {
     "Account": {

@@ -1,4 +1,4 @@
-americano = require 'americano-cozy'
+americano = require MODEL_MODULE
 
 module.exports = Account = americano.getModel 'Account',
     label: String               # human readable label for the account

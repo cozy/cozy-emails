@@ -1,4 +1,4 @@
-americano = require 'americano-cozy'
+americano = require MODEL_MODULE
 
 module.exports = Mailbox = americano.getModel 'Mailbox',
     accountID: String        # Parent account
@@ -417,7 +417,7 @@ Mailbox::recoverChangedUIDValidity = (imap, callback) ->
 
 Mailbox.removeOrphans = (existings, callback) ->
     log.debug "removeOrphans"
-    Mailbox.rawRequest 'treemap', (err, rows) ->
+    Mailbox.rawRequest 'treemap', {}, (err, rows) ->
         return callback err if err
 
         boxes = []
