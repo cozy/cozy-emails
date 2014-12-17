@@ -548,7 +548,7 @@ Mailbox.prototype.recoverChangedUIDValidity = function(imap, callback) {
 
 Mailbox.removeOrphans = function(existings, callback) {
   log.debug("removeOrphans");
-  return Mailbox.rawRequest('treemap', function(err, rows) {
+  return Mailbox.rawRequest('treemap', {}, function(err, rows) {
     var boxes;
     if (err) {
       return callback(err);
