@@ -62,8 +62,8 @@ module.exports = {
   },
   sanitizeHTML: function(html, messageId, attachments) {
     var allowedAttributes, allowedTags, safeAttributes;
-    allowedTags = sanitizeHtml.defaults.allowedTags.concat(['img', 'head', 'meta']);
-    safeAttributes = ['style', 'class', 'background', 'itemscope', 'itemtype', 'itemprop', 'content'];
+    allowedTags = sanitizeHtml.defaults.allowedTags.concat(['img', 'head', 'meta', 'link']);
+    safeAttributes = ['style', 'class', 'background', 'colspan', 'rowspan', 'itemscope', 'itemtype', 'itemprop', 'content'];
     allowedAttributes = sanitizeHtml.defaults.allowedAttributes;
     allowedTags.forEach(function(tag) {
       if (allowedAttributes[tag] != null) {
@@ -72,6 +72,7 @@ module.exports = {
         return allowedAttributes[tag] = safeAttributes;
       }
     });
+    allowedAttributes.link.push('href');
     html = sanitizeHtml(html, {
       allowedTags: allowedTags,
       allowedAttributes: allowedAttributes,

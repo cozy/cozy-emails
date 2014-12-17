@@ -47,14 +47,22 @@ module.exports =
             'img'
             'head'
             'meta'
+            'link'
         ]
-        safeAttributes = ['style', 'class', 'background', 'itemscope', 'itemtype', 'itemprop', 'content']
+        safeAttributes = [
+            'style', 'class', 'background',
+            # tables
+            'colspan', 'rowspan',
+            #microdata
+            'itemscope', 'itemtype', 'itemprop', 'content'
+        ]
         allowedAttributes = sanitizeHtml.defaults.allowedAttributes
         allowedTags.forEach (tag) ->
             if allowedAttributes[tag]?
                 allowedAttributes[tag] = allowedAttributes[tag].concat safeAttributes
             else
                 allowedAttributes[tag] = safeAttributes
+        allowedAttributes.link.push 'href'
         html = sanitizeHtml html,
             allowedTags: allowedTags
             allowedAttributes: allowedAttributes

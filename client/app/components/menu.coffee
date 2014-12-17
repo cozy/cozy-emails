@@ -336,3 +336,5 @@ MenuMailboxItem = React.createClass
         MessageActionCreator.move messageID, mailboxID, newID, (error) ->
             if error?
                 LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
+            else
+                LayoutActionCreator.notify t "message action move ok"

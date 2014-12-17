@@ -65,6 +65,7 @@ module.exports = MailsInput = React.createClass
                     name: @props.id,
                     className: 'form-control compose-input',
                     onKeyDown: @onKeyDown,
+                    onBlur: @onBlur,
                     ref: 'contactInput'
                     valueLink: @proxyValueLink(),
                     type: 'text',
@@ -132,6 +133,8 @@ module.exports = MailsInput = React.createClass
                 # hack needed because proxyValueLink prevent deleting empty contact
                 node = @refs.contactInput.getDOMNode()
                 node.value = node.value.trim()
+                if node.value.length < 2
+                    @setState open: false
             when "Escape"
                 @setState contacts: null, open: false
             else
@@ -139,6 +142,8 @@ module.exports = MailsInput = React.createClass
                     @onQuery(String.fromCharCode(evt.which))
                     return true
 
+    onBlur: ->
+        @setState open: false
 
     onContact: (contact) ->
         val = @proxyValueLink()

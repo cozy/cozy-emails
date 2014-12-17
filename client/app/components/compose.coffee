@@ -167,13 +167,19 @@ module.exports = Compose = React.createClass
                                 type: 'button',
                                 disable: if @state.sending then true else null
                                 onClick: @onSend,
-                                    span
-                                        className: 'fa fa-send'
+                                    if @state.sending
+                                        span className: 'fa fa-refresh fa-spin'
+                                    else
+                                        span className: 'fa fa-send'
                                     span null, labelSend
                             button
                                 className: 'btn btn-cozy',
+                                disable: if @state.saving then true else null
                                 type: 'button', onClick: @onDraft,
-                                    span className: 'fa fa-save'
+                                    if @state.saving
+                                        span className: 'fa fa-refresh fa-spin'
+                                    else
+                                        span className: 'fa fa-save'
                                     span null, t 'compose action draft'
                             if @props.message?
                                 button
@@ -199,7 +205,9 @@ module.exports = Compose = React.createClass
 
         # Focus
         if not Array.isArray(@state.to) or @state.to.length is 0
-            document.getElementById('compose-to').focus()
+            setTimeout ->
+                document.getElementById('compose-to').focus()
+            , 0
 
     componentDidMount: ->
         @_initCompose()
@@ -223,7 +231,9 @@ module.exports = Compose = React.createClass
         # edition of an existing draft
         if message = @props.message
             state =
-                composeInHTML: message.get('html')?
+                composeInHTML: @props.settings.get 'composeInHTML'
+            if (not message.get('html')?) and message.get('text')
+                state.conposeInHTML = false
 
             # TODO : smarter ?
             state[key] = value for key, value of message.toJS()
@@ -237,6 +247,7 @@ module.exports = Compose = React.createClass
             state.accountID ?= @props.selectedAccount.get 'id'
 
         state.sending = false
+        state.saving  = false
         return state
 
     componentWillReceiveProps: (nextProps) ->
@@ -278,11 +289,15 @@ module.exports = Compose = React.createClass
             if @state.to.length is 0 and @state.cc.length is 0 and @state.bcc.length is 0
                 valid = false
                 LayoutActionCreator.alertError t "compose error no dest"
-                document.getElementById('compose-to').focus()
+                setTimeout ->
+                    document.getElementById('compose-to').focus()
+                , 0
             else if @state.subject is ''
                 valid = false
                 LayoutActionCreator.alertError t "compose error no subject"
-                @refs.subject.getDOMNode().focus()
+                setTimeout ->
+                    @refs.subject.getDOMNode().focus()
+                , 0
 
         if valid
             if @state.composeInHTML
@@ -292,16 +307,20 @@ module.exports = Compose = React.createClass
                 catch
                     message.text = message.html?replace /<[^>]*>/gi, ''
             else
-                message.text = state.text.trim()
+                message.text = @state.text.trim()
 
             if not isDraft and @_saveInterval
                 window.clearInterval @_saveInterval
 
-            if not isDraft
+            if isDraft
+                @setState saving: true
+            else
                 @setState sending: true
 
             MessageActionCreator.send message, (error, message) =>
-                if not isDraft
+                if isDraft
+                    @setState saving: false
+                else
                     @setState sending: false
                 if isDraft
                     msgKo = t "message action draft ko"
@@ -394,7 +413,9 @@ ComposeEditor = React.createClass
                 node = @refs.html?.getDOMNode()
                 if not node?
                     return
-                jQuery(node).focus()
+                setTimeout ->
+                    jQuery(node).focus()
+                , 0
                 if not @props.settings.get 'composeOnTop'
                     node.innerHTML += "<p><br /></p>"
                     node = node.lastChild
@@ -500,7 +521,9 @@ ComposeEditor = React.createClass
                             parent.parentNode.appendChild after
                         ###
 
-                        inserted.focus()
+                        setTimeout ->
+                            inserted.focus()
+                        , 0
                         sel = window.getSelection()
                         sel.collapse inserted, 0
 
@@ -516,11 +539,15 @@ ComposeEditor = React.createClass
                     if (typeof node.selectionStart is "number")
                         node.selectionStart = node.selectionEnd = node.value.length
                     else if (typeof node.createTextRange isnt "undefined")
-                        node.focus()
+                        setTimeout ->
+                            node.focus()
+                        , 0
                         range = node.createTextRange()
                         range.collapse(false)
                         range.select()
-                node.focus()
+                setTimeout ->
+                    node.focus()
+                , 0
 
     componentDidMount: ->
         @_initCompose()

@@ -535,7 +535,7 @@ module.exports = React.createClass
                 AccountActionCreator.edit accountValue, @state.id
             else
                 AccountActionCreator.create accountValue, (account) =>
-                    LAC.alertSuccess t "account creation ok"
+                    LAC.notify t "account creation ok"
                     @redirect
                         direction: 'first'
                         action: 'account.config'
@@ -571,7 +571,7 @@ module.exports = React.createClass
             if error?
                 LAC.alertError "#{t("mailbox create ko")} #{error}"
             else
-                LAC.alertSuccess t "mailbox create ok"
+                LAC.notify t "mailbox create ok"
 
     undoMailbox: (event) ->
         event.preventDefault()
@@ -861,7 +861,7 @@ MailboxItem = React.createClass
             if error?
                 LAC.alertError "#{t("mailbox update ko")} #{error}"
             else
-                LAC.alertSuccess t "mailbox update ok"
+                LAC.notify t "mailbox update ok"
 
     toggleFavorite: (e) ->
 
@@ -874,7 +874,7 @@ MailboxItem = React.createClass
             if error?
                 LAC.alertError "#{t("mailbox update ko")} #{error}"
             else
-                LAC.alertSuccess t "mailbox update ok"
+                LAC.notify t "mailbox update ok"
 
         @setState favorite: not @state.favorite
 
@@ -890,4 +890,4 @@ MailboxItem = React.createClass
                 if error?
                     LAC.alertError "#{t("mailbox delete ko")} #{error}"
                 else
-                    LAC.alertSuccess t "mailbox delete ok"
+                    LAC.notify t "mailbox delete ok"

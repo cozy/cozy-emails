@@ -230,7 +230,7 @@ module.exports = Application = React.createClass
                 account   = AccountStore.getByID accountID
                 if account?
                     mailbox   = account.get('mailboxes').get mailboxID
-                    messages  = MessageStore.getMessagesByMailbox mailboxID
+                    messages  = MessageStore.getMessagesByMailbox mailboxID, @state.settings.get('displayConversation')
                     messagesCount = mailbox?.get('nbTotal') or 0
                     emptyListMessage = switch MessageStore.getCurrentFilter()
                         when MessageFilter.FLAGGED
@@ -255,7 +255,8 @@ module.exports = Application = React.createClass
                 else 'firstPanel'
 
             fetching = MessageStore.isFetching()
-            conversationLengths = MessageStore.getConversationsLength()
+            if @state.settings.get 'displayConversation'
+                conversationLengths = MessageStore.getConversationsLength()
 
             query = MessageStore.getParams()
             query.accountID = accountID
