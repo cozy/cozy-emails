@@ -250,12 +250,12 @@ class MessageStore extends Store
     getMessagesByMailbox: (mailboxID, useConversations) ->
         conversationIDs = []
 
-        if useConversations
-            sequence = _messages.filter (message) ->
-                mailboxes = Object.keys message.get 'mailboxIDs'
-                if mailboxID not in mailboxes
-                    return false
+        sequence = _messages.filter (message) ->
+            mailboxes = Object.keys message.get 'mailboxIDs'
+            if mailboxID not in mailboxes
+                return false
 
+            if useConversations
                 # one message of each conversation
                 conversationID = message.get 'conversationID'
                 if conversationID in conversationIDs
@@ -263,9 +263,9 @@ class MessageStore extends Store
                 else
                     conversationIDs.push conversationID
                     return true
-            .sort(__getSortFunction _sortField, _sortOrder)
-        else
-            sequence = _messages.sort(__getSortFunction _sortField, _sortOrder)
+            else
+                return true
+        .sort(__getSortFunction _sortField, _sortOrder)
 
         # sequences are lazy so we need .toOrderedMap() to actually execute it
         _currentMessages = sequence.toOrderedMap()
