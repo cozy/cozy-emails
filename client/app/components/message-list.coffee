@@ -264,12 +264,15 @@ MessageList = React.createClass
             alertError t 'list mass no message'
         else
             if window.confirm(t 'list delete confirm', nb: selected.length)
+                MessageActionCreator.delete selected
+                ###
                 selected.forEach (id) ->
                     MessageActionCreator.delete id, (error) ->
                         if error?
                             alertError "#{t("message action delete ko")} #{error}"
                         else
                             window.cozyMails.messageNavigate()
+                ###
 
     onMove: (args) ->
         selected = Object.keys @state.selected

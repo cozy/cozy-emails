@@ -691,64 +691,81 @@ module.exports = {
     });
   },
   "delete": function(message, callback) {
-    var LayoutActionCreator, account, id, msg, observer, patches, trash;
-    if (typeof message === "string") {
-      message = MessageStore.getByID(message);
-    }
+    var LayoutActionCreator, doDelete, mass;
     LayoutActionCreator = require('./layout_action_creator');
-    account = AccountStore.getByID(message.get('accountID'));
-    if (account == null) {
-      console.log("No account with id " + (message.get('accountID')) + " for message " + (message.get('id')));
-      LayoutActionCreator.alertError(t('app error'));
-      return;
-    }
-    trash = account.get('trashMailbox');
-    if ((trash == null) || trash === '') {
-      return LayoutActionCreator.alertError(t('message delete no trash'));
-    } else {
-      msg = message.toJSON();
-      AppDispatcher.handleViewAction({
-        type: ActionTypes.MESSAGE_ACTION,
-        value: {
-          id: message.get('id'),
-          from: Object.keys(msg.mailboxIDs),
-          to: trash
-        }
-      });
-      observer = jsonpatch.observe(msg);
-      for (id in msg.mailboxIDs) {
-        delete msg.mailboxIDs[id];
+    doDelete = function(message) {
+      var account, id, msg, observer, patches, trash;
+      if (typeof message === "string") {
+        message = MessageStore.getByID(message);
       }
-      msg.mailboxIDs[trash] = -1;
-      patches = jsonpatch.generate(observer);
-      return XHRUtils.messagePatch(message.get('id'), patches, (function(_this) {
-        return function(err, message) {
-          var options;
-          if (err == null) {
-            AppDispatcher.handleViewAction({
-              type: ActionTypes.MESSAGE_DELETE,
-              value: msg
-            });
+      account = AccountStore.getByID(message.get('accountID'));
+      if (account == null) {
+        console.log("No account with id " + (message.get('accountID')) + " for message " + (message.get('id')));
+        LayoutActionCreator.alertError(t('app error'));
+        return;
+      }
+      trash = account.get('trashMailbox');
+      if ((trash == null) || trash === '') {
+        return LayoutActionCreator.alertError(t('message delete no trash'));
+      } else {
+        msg = message.toJSON();
+        AppDispatcher.handleViewAction({
+          type: ActionTypes.MESSAGE_ACTION,
+          value: {
+            id: message.get('id'),
+            from: Object.keys(msg.mailboxIDs),
+            to: trash
           }
-          options = {
-            autoclose: true,
-            actions: [
-              {
-                label: t('message undelete'),
-                onClick: function() {
-                  return _this.undelete();
-                }
+        });
+        observer = jsonpatch.observe(msg);
+        for (id in msg.mailboxIDs) {
+          delete msg.mailboxIDs[id];
+        }
+        msg.mailboxIDs[trash] = -1;
+        patches = jsonpatch.generate(observer);
+        return XHRUtils.messagePatch(message.get('id'), patches, (function(_this) {
+          return function(err, message) {
+            var options;
+            if (err == null) {
+              AppDispatcher.handleViewAction({
+                type: ActionTypes.MESSAGE_DELETE,
+                value: msg
+              });
+            } else {
+              LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + err);
+            }
+            if (!mass) {
+              options = {
+                autoclose: true,
+                actions: [
+                  {
+                    label: t('message undelete'),
+                    onClick: function() {
+                      return _this.undelete();
+                    }
+                  }
+                ]
+              };
+              LayoutActionCreator.notify(t('message action delete ok', {
+                subject: msg.subject
+              }), options);
+              if (callback != null) {
+                return callback(err);
               }
-            ]
+            }
           };
-          LayoutActionCreator.notify(t('message action delete ok', {
-            subject: msg.subject
-          }), options);
-          if (callback != null) {
-            return callback(err);
-          }
-        };
-      })(this));
+        })(this));
+      }
+    };
+    if (Array.isArray(message)) {
+      mass = true;
+      message.forEach(doDelete);
+      if (callback != null) {
+        return callback();
+      }
+    } else {
+      mass = false;
+      return doDelete(message);
     }
   },
   move: function(message, from, to, callback) {
@@ -4712,15 +4729,16 @@ MessageList = React.createClass({
       if (window.confirm(t('list delete confirm', {
         nb: selected.length
       }))) {
-        return selected.forEach(function(id) {
-          return MessageActionCreator["delete"](id, function(error) {
-            if (error != null) {
-              return alertError("" + (t("message action delete ko")) + " " + error);
-            } else {
-              return window.cozyMails.messageNavigate();
-            }
-          });
-        });
+        return MessageActionCreator["delete"](selected);
+
+        /*
+        selected.forEach (id) ->
+            MessageActionCreator.delete id, (error) ->
+                if error?
+                    alertError "#{t("message action delete ko")} #{error}"
+                else
+                    window.cozyMails.messageNavigate()
+         */
       }
     }
   },

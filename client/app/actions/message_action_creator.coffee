@@ -31,45 +31,56 @@ module.exports =
                 callback error, message
 
     delete: (message, callback) ->
-        if typeof message is "string"
-            message = MessageStore.getByID message
         LayoutActionCreator = require './layout_action_creator'
-        # Move message to Trash folder
-        account = AccountStore.getByID(message.get 'accountID')
-        if not account?
-            console.log "No account with id #{message.get 'accountID'} for message #{message.get 'id'}"
-            LayoutActionCreator.alertError t 'app error'
-            return
-        trash = account.get 'trashMailbox'
-        if not trash? or trash is ''
-            LayoutActionCreator.alertError t 'message delete no trash'
+        doDelete = (message) ->
+            if typeof message is "string"
+                message = MessageStore.getByID message
+            # Move message to Trash folder
+            account = AccountStore.getByID(message.get 'accountID')
+            if not account?
+                console.log "No account with id #{message.get 'accountID'} for message #{message.get 'id'}"
+                LayoutActionCreator.alertError t 'app error'
+                return
+            trash = account.get 'trashMailbox'
+            if not trash? or trash is ''
+                LayoutActionCreator.alertError t 'message delete no trash'
+            else
+                msg = message.toJSON()
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_ACTION
+                    value:
+                        id: message.get 'id'
+                        from: Object.keys(msg.mailboxIDs)
+                        to: trash
+                observer = jsonpatch.observe msg
+                delete msg.mailboxIDs[id] for id of msg.mailboxIDs
+                msg.mailboxIDs[trash] = -1
+                patches = jsonpatch.generate observer
+                XHRUtils.messagePatch message.get('id'), patches, (err, message) =>
+                    if not err?
+                        AppDispatcher.handleViewAction
+                            type: ActionTypes.MESSAGE_DELETE
+                            value: msg
+                    else
+                        LayoutActionCreator.alertError "#{t("message action delete ko")} #{err}"
+                    if not mass
+                        options =
+                            autoclose: true,
+                            actions: [
+                                label: t 'message undelete'
+                                onClick: => @undelete()
+                            ]
+                        LayoutActionCreator.notify t('message action delete ok', subject: msg.subject), options
+                        if callback?
+                            callback err
+        if Array.isArray message
+            mass = true
+            message.forEach doDelete
+            if callback?
+                callback()
         else
-            msg = message.toJSON()
-            AppDispatcher.handleViewAction
-                type: ActionTypes.MESSAGE_ACTION
-                value:
-                    id: message.get 'id'
-                    from: Object.keys(msg.mailboxIDs)
-                    to: trash
-            observer = jsonpatch.observe msg
-            delete msg.mailboxIDs[id] for id of msg.mailboxIDs
-            msg.mailboxIDs[trash] = -1
-            patches = jsonpatch.generate observer
-            XHRUtils.messagePatch message.get('id'), patches, (err, message) =>
-                if not err?
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.MESSAGE_DELETE
-                        value: msg
-                options =
-                    autoclose: true,
-                    actions: [
-                        label: t 'message undelete'
-                        onClick: => @undelete()
-                    ]
-                LayoutActionCreator.notify t('message action delete ok', subject: msg.subject), options
-
-                if callback?
-                    callback err
+            mass = false
+            doDelete message
 
     move: (message, from, to, callback) ->
         if typeof message is "string"
