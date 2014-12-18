@@ -1,4 +1,3 @@
-Settings = require '../server/models/account'
 should = require 'should'
 
 describe "settings changes", ->
