@@ -66,7 +66,8 @@ module.exports = class ImapReporter
             setTimeout (=> @cooldown = false) , 500
 
     toObject: =>
-        {@id, @finished, @done, @total, @errors, @box, @account, @code, @objectID}
+        {@id, @finished, @done, @total, @errors,
+            @box, @account, @code, @objectID}
 
     onDone: ->
         @finished = true
