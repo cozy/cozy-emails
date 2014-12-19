@@ -45,19 +45,19 @@ casper.test.begin 'Create account', (test) ->
 
     casper.start casper.cozy.startUrl, ->
         values =
-            "account-type": "IMAP",
-            "mailbox-email-address": "test@cozytest.org",
-            "mailbox-imap-port": "993",
-            "mailbox-imap-server": "toto",
-            "mailbox-imap-ssl": true,
-            "mailbox-imap-tls": false,
+            "mailbox-accountType": "IMAP",
+            "mailbox-imapPort": "993",
+            "mailbox-imapSSL": true,
+            "mailbox-imapServer": "toto",
+            "mailbox-imapTLS": false,
             "mailbox-label": "Test Account",
+            "mailbox-login": "test@cozytest.org",
             "mailbox-name": "Test",
             "mailbox-password": "toto",
-            "mailbox-smtp-port": "465",
-            "mailbox-smtp-server": "toto",
-            "mailbox-smtp-ssl": true,
-            "mailbox-smtp-tls": false
+            "mailbox-smtpPort": "465",
+            "mailbox-smtpSSL": true,
+            "mailbox-smtpServer": "toto",
+            "mailbox-smtpTLS": false
 
         deleteTestAccounts()
         account = casper.evaluate ->
@@ -81,23 +81,22 @@ casper.test.begin 'Create account', (test) ->
                     test.assertElementCount ".form-group.has-error", 5, "Errors are underlined"
                     casper.fillSelectors 'form',
                         '#mailbox-name': values['mailbox-name']
-                        '#mailbox-email-address': values['mailbox-email-address']
+                        '#mailbox-login': values['mailbox-login']
                         '#mailbox-password': values['mailbox-password']
-                        '#mailbox-smtp-server': values['mailbox-smtp-server']
-                        '#mailbox-imap-server': values['mailbox-imap-server']
-                        '#account-type': values['account-type']
+                        '#mailbox-smtpServer': values['mailbox-smtpServer']
+                        '#mailbox-imapServer': values['mailbox-imapServer']
+                        '#maibox-accountType': values['account-type']
                     casper.click "#mailbox-config button"
-                    casper.waitWhileSelector "#mailbox-config .alert", ->
-                        casper.waitForSelector "#mailbox-config .alert", ->
-                            test.assertSelectorHasText "#mailbox-config button", "Add", "Wrong SMTP Server"
-                            test.assertEquals casper.getFormValues('form'), values, "Form not changed"
-                            test.assertDoesntExist ".has-error #mailbox-label", "No error on label"
-                            test.assertExist ".has-error #mailbox-smtp-server", "Error on SMTP"
-                            casper.fillSelectors 'form', '#account-type': 'TEST'
-                            casper.wait 500, ->
-                                casper.click "#mailbox-config button"
-                                casper.waitForSelector "#mailbox-config .nav-tabs", ->
-                                    test.pass 'No more errors ☺'
+                    casper.wait 500, ->
+                        test.assertSelectorHasText "#mailbox-config button", "Add", "Wrong SMTP Server"
+                        test.assertEquals casper.getFormValues('form'), values, "Form not changed"
+                        test.assertDoesntExist ".has-error #mailbox-label", "No error on label"
+                        test.assertExist ".has-error #mailbox-smtpServer", "Error on SMTP"
+                        casper.fillSelectors 'form', '#mailbox-accountType': 'TEST'
+                        casper.wait 500, ->
+                            casper.click "#mailbox-config button"
+                            casper.waitForSelector "#mailbox-config .nav-tabs", ->
+                                test.pass 'No more errors ☺'
 
     casper.then ->
         test.comment "Creating mailbox"
@@ -106,9 +105,9 @@ casper.test.begin 'Create account', (test) ->
         test.assertDoesntExist ".form-group.draftMailbox .dropdown", "No draft folder"
         test.assertDoesntExist ".form-group.sentMailbox .dropdown",  "No sent folder"
         test.assertDoesntExist ".form-group.trashMailbox .dropdown", "No trash folder"
-        test.assertElementCount "ul.boxes > li", 1, "No boxes"
+        test.assertElementCount "ul.boxes > li.box-item", 0, "No boxes"
         casper.fillSelectors 'form', '#newmailbox': name
-        casper.click '.box.edited .box-action.add i'
+        casper.click '.box-action.add i'
         casper.waitForSelector '.box-item', ->
             test.assertSelectorHasText ".box .box-label", name, "Box created"
             test.assertExist ".form-group.draftMailbox .dropdown", "Draft folder", "Draft dropdown"
@@ -152,7 +151,7 @@ casper.test.begin 'Create account', (test) ->
         , ->
             casper.echo "Alert received: " + confirm
             casper.waitWhileSelector "ul.boxes .box span.box-label", ->
-                test.assert (confirm is "Do you really want to delete this box and everything in it ?"), "Confirmation dialog"
+                test.assertEquals confirm, "Do you really want to delete this box and everything in it?", "Confirmation dialog"
                 test.assertDoesntExist ".form-group.draftMailbox .dropdown", "No draft folder"
                 test.assertDoesntExist ".form-group.sentMailbox .dropdown",  "No sent folder"
                 test.assertDoesntExist ".form-group.trashMailbox .dropdown", "No trash folder"
@@ -175,7 +174,7 @@ casper.test.begin 'Test accounts', (test) ->
         if not casper.exists ".active[data-reactid='#{id}']"
             casper.click "[data-reactid='#{id}']"
         casper.waitForSelector ".active[data-reactid='#{id}']", ->
-            casper.click '#quick-actions .mailbox-config'
+            casper.click '.message-list-actions .mailbox-config'
             casper.waitForSelector '#mailbox-config', ->
                 test.assertSelectorHasText "#mailbox-config h3", "Edit account"
                 test.assertSelectorHasText "#mailbox-config .nav-tabs .active", "Account", "Account tab is active"
