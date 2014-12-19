@@ -14,7 +14,6 @@ describe "settings changes", ->
             body.should.have.property 'messageDisplayHTML'   , true
             body.should.have.property 'messageDisplayImages' , false
             body.should.have.property 'messageConfirmDelete' , true
-            body.should.have.property 'lang'                 , 'en'
             body.should.have.property 'plugins'              , null
 
             done()
@@ -37,7 +36,6 @@ describe "settings changes", ->
             body.should.have.property 'messageDisplayHTML'   , false
             body.should.have.property 'messageDisplayImages' , false
             body.should.have.property 'messageConfirmDelete' , true
-            body.should.have.property 'lang'                 , 'en'
             body.should.have.property 'plugins'              , null
 
             done()
@@ -55,7 +53,6 @@ describe "settings changes", ->
             body.should.have.property 'messageDisplayHTML'   , false
             body.should.have.property 'messageDisplayImages' , false
             body.should.have.property 'messageConfirmDelete' , true
-            body.should.have.property 'lang'                 , 'en'
             body.should.have.property 'plugins'              , null
 
             done()
