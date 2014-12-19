@@ -28,7 +28,6 @@ SocketHandler.notify = (type, data, olddata) ->
     else if type is 'mailbox.update'
         # include the mailbox counts
         Mailbox.getCounts data.id, (err, results) ->
-            console.log results, data.id, data
             if results[data.id]
                 {total, unread, recent} = results[data.id]
                 data.nbTotal  = total

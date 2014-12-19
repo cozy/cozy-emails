@@ -103,13 +103,12 @@ Message.getResultsAndCount = function(mailboxID, params, callback) {
     count = results[0], messages = results[1];
     conversationIDs = _.uniq(_.pluck(messages, 'conversationID'));
     return Message.getConversationLengths(conversationIDs, function(err, lengths) {
-      var _ref1;
       if (err) {
         return callback(err);
       }
       return callback(null, {
         messages: messages,
-        count: ((_ref1 = count[0]) != null ? _ref1.value : void 0) || 0,
+        count: count,
         conversationLengths: lengths
       });
     });

@@ -41,7 +41,6 @@ SocketHandler.notify = function(type, data, olddata) {
   } else if (type === 'mailbox.update') {
     return Mailbox.getCounts(data.id, function(err, results) {
       var recent, total, unread, _ref;
-      console.log(results, data.id, data);
       if (results[data.id]) {
         _ref = results[data.id], total = _ref.total, unread = _ref.unread, recent = _ref.recent;
         data.nbTotal = total;
