@@ -70,24 +70,6 @@ SocketHandler.wrapModel = (Model, docType) ->
                 SocketHandler.notify "#{docType}.delete", id, old
             callback err
 
-    # should not be here
-    _oldRawRequest = Model.rawRequest
-    Model.rawRequest = (name, params, callback) ->
-        _oldRawRequest name, params, (err, result) ->
-            callback err, result?.rows or result
-
-
-    _oldAttachBinary = Model::attachBinary
-    Model::attachBinary = (path, data, callback) ->
-        # pouchdb-adapter dont understand buffer
-        if path instanceof Buffer
-            bufferStream = new stream.Transform()
-            bufferStream.push path
-            bufferStream.end()
-            path = bufferStream
-
-        _oldAttachBinary.call this, path, data, callback
-
 
 
 
