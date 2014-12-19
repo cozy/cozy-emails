@@ -1,7 +1,7 @@
 {
   "name": "webmail",
   "displayName": "Webmail",
-  "version": "0.6.4",
+  "version": "0.6.6",
   "engines": [
     "node = 0.10.x"
   ],
@@ -9,7 +9,10 @@
   "license": "AGPL v3",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cozy/cozy-emails.git"
+    "url": "https://github.com/cozy/webmail.git"
+  },
+  "bin": {
+    "webmail": "bin/webmail"
   },
   "main": "server.coffee",
   "dependencies": {
@@ -36,7 +39,8 @@
     "multiparty": "4.0.0",
     "sanitize-html": "^1.4.3",
     "americano-cozy-pouchdb": "0.3.18",
-    "path": "^0.4.9"
+    "path": "^0.4.9",
+    "path-extra": "^0.3.0"
   },
   "devDependencies": {
     "should": "4.0.4",

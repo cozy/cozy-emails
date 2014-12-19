@@ -28,9 +28,8 @@ SocketHandler.notify = (type, data, olddata) ->
     else if type is 'mailbox.update'
         # include the mailbox counts
         Mailbox.getCounts data.id, (err, results) ->
-            console.log results, data.id, data
-            if thisbox = results[data.id]
-                {total, unread, recent} = thisbox
+            if results[data.id]
+                {total, unread, recent} = results[data.id]
                 data.nbTotal  = total
                 data.nbUnread = unread
                 data.nbRecent = recent
@@ -70,24 +69,6 @@ SocketHandler.wrapModel = (Model, docType) ->
                 SocketHandler.notify "#{docType}.delete", id, old
             callback err
 
-    # should not be here
-    _oldRawRequest = Model.rawRequest
-    Model.rawRequest = (name, params, callback) ->
-        _oldRawRequest name, params, (err, result) ->
-            callback err, result?.rows or result
-
-
-    _oldAttachBinary = Model::attachBinary
-    Model::attachBinary = (path, data, callback) ->
-        # pouchdb-adapter dont understand buffer
-        if path instanceof Buffer
-            bufferStream = new stream.Transform()
-            bufferStream.push path
-            bufferStream.end()
-            path = bufferStream
-
-        _oldAttachBinary.call this, path, data, callback
-
 
 
 
@@ -96,7 +77,7 @@ inScope = (socket, data) ->
     (socket.scope_mailboxID in Object.keys data.mailboxIDs) and
     socket.scope_before < data.date
 
-handleNewClient = (socket) =>
+handleNewClient = (socket) ->
     log.debug 'handleNewClient', socket.id
 
     # update the client refreshes status

@@ -44,7 +44,8 @@ module.exports = {
   flattenMailboxTree: function(tree) {
     var boxes, delimiter, path, root;
     boxes = [];
-    if (Object.keys(tree).length === 1 && (root = tree['INBOX'])) {
+    if (Object.keys(tree).length === 1 && tree['INBOX']) {
+      root = tree['INBOX'];
       delimiter = root.delimiter;
       path = 'INBOX' + delimiter;
       boxes.push({
@@ -66,11 +67,9 @@ module.exports = {
     safeAttributes = ['style', 'class', 'background', 'colspan', 'rowspan', 'itemscope', 'itemtype', 'itemprop', 'content'];
     allowedAttributes = sanitizeHtml.defaults.allowedAttributes;
     allowedTags.forEach(function(tag) {
-      if (allowedAttributes[tag] != null) {
-        return allowedAttributes[tag] = allowedAttributes[tag].concat(safeAttributes);
-      } else {
-        return allowedAttributes[tag] = safeAttributes;
-      }
+      var exAllowed;
+      exAllowed = allowedAttributes[tag] || [];
+      return allowedAttributes[tag] = exAllowed.concat(safeAttributes);
     });
     allowedAttributes.link.push('href');
     html = sanitizeHtml(html, {
@@ -80,14 +79,16 @@ module.exports = {
       allowedSchemes: sanitizeHtml.defaults.allowedSchemes.concat(['cid']),
       transformTags: {
         'img': function(tag, attribs) {
-          var attachment, cid, name, _ref;
+          var attachment, cid, name, src, _ref, _ref1;
           if ((attribs.src != null) && 0 === attribs.src.indexOf('cid:')) {
             cid = attribs.src.substring(4);
             attachment = attachments.filter(function(att) {
               return att.contentId === cid;
             });
-            if (name = (_ref = attachment[0]) != null ? _ref.fileName : void 0) {
-              attribs.src = "message/" + messageId + "/attachments/" + name;
+            if ((_ref = attachment[0]) != null ? _ref.fileName : void 0) {
+              name = (_ref1 = attachment[0]) != null ? _ref1.fileName : void 0;
+              src = "message/" + messageId + "/attachments/" + name;
+              attribs.src = src;
             } else {
               attribs.src = "";
             }

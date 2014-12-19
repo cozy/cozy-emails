@@ -68,7 +68,7 @@ Message.getResultsAndCount = (mailboxID, params, callback) ->
 
             callback null,
                 messages: messages
-                count: count[0]?.value or 0
+                count: count
                 conversationLengths: lengths
 
 Message.getResults = (mailboxID, params, callback) ->
@@ -222,7 +222,7 @@ Message.getConversationLengths = (conversationIDs, callback) ->
 #
 # Returns void
 Message.byConversationID = (conversationID, callback) ->
-    Message.rawRequest 'byConversationId',
+    Message.rawRequest 'byConversationID',
         key: conversationID
         reduce: false
         include_docs: true
@@ -448,11 +448,13 @@ Message::applyPatchOperations = (patch, callback) ->
     newflags = _.union newflags, flagsOps.add
 
     # applyMessageChanges will perform operation in IMAP
-    @imap_applyChanges newflags, flagsOps, newmailboxIDs, boxOps, (err, changes) =>
+    @imap_applyChanges newflags, flagsOps, newmailboxIDs, \
+                                                    boxOps, (err, changes) =>
         return callback err if err
         @updateAttributes changes, callback
 
-Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, boxOps, callback) ->
+Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, \
+                                                        boxOps, callback) ->
     log.debug ".applyChanges", newflags, newmailboxIDs
 
     oldflags = @flags
@@ -673,7 +675,8 @@ Message::toClientObject = ->
         file.url = "message/#{raw.id}/attachments/#{file.generatedFileName}"
 
     if raw.html?
-        raw.html = mailutils.sanitizeHTML raw.html, raw.id, raw.attachments or []
+        attachments = raw.attachments or []
+        raw.html = mailutils.sanitizeHTML raw.html, raw.id, attachments
 
     if not raw.text?
         raw.text = htmlToText.fromString raw.html,

@@ -254,7 +254,7 @@ Mailbox::getDiff = (laststep, limit, callback) ->
     step = null
     box = this
 
-    @doLaterWithBox (imap, imapbox, cbRelease) =>
+    @doLaterWithBox (imap, imapbox, cbRelease) ->
 
         unless step = computeNextStep(laststep, imapbox.uidnext, limit)
             return cbRelease null

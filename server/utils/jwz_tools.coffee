@@ -26,7 +26,8 @@ module.exports =
         boxes = []
 
         # first level is only INBOX, with no siblings
-        if Object.keys(tree).length is 1 and root = tree['INBOX']
+        if Object.keys(tree).length is 1 and tree['INBOX']
+            root = tree['INBOX']
             delimiter = root.delimiter
             path = 'INBOX' + delimiter
 
@@ -58,10 +59,9 @@ module.exports =
         ]
         allowedAttributes = sanitizeHtml.defaults.allowedAttributes
         allowedTags.forEach (tag) ->
-            if allowedAttributes[tag]?
-                allowedAttributes[tag] = allowedAttributes[tag].concat safeAttributes
-            else
-                allowedAttributes[tag] = safeAttributes
+            exAllowed = allowedAttributes[tag] or []
+            allowedAttributes[tag] = exAllowed.concat safeAttributes
+
         allowedAttributes.link.push 'href'
         html = sanitizeHtml html,
             allowedTags: allowedTags
@@ -74,8 +74,10 @@ module.exports =
                         cid = attribs.src.substring 4
                         attachment = attachments.filter (att) ->
                             att.contentId is cid
-                        if name = attachment[0]?.fileName
-                            attribs.src = "message/#{messageId}/attachments/#{name}"
+                        if attachment[0]?.fileName
+                            name = attachment[0]?.fileName
+                            src = "message/#{messageId}/attachments/#{name}"
+                            attribs.src = src
                         else
                             attribs.src = ""
                     return {tagName: 'img', attribs: attribs}
