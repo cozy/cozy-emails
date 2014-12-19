@@ -67,9 +67,8 @@
     "lint2": "coffee-jshint -o node --globals MODEL_MODULE ./server/**/*.coffee",
     "start": "node build/server.js",
     "standalone": "RUN_STANDALONE=true node build/server.js",
-    "installpouchdb": "npm_config_global=false npm install americano-cozy-pouchdb@0.3.18",
-    "prestandalone": "(ls ./node_modules/americano-cozy-pouchdb/ > /dev/null) || npm run installpouchdb",
-    "prepublish": "(brunch > /dev/null) && npm run build || echo 'brunch is not available'"
+    "installpouchdb": "npm_config_global=false npm install americano-cozy-pouchdb@0.3.18 path-extra@0.3.0",
+    "prestandalone": "(ls ./node_modules/americano-cozy-pouchdb/ > /dev/null) || npm run installpouchdb"
   },
   "cozy-permissions": {
     "Account": {
