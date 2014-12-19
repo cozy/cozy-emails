@@ -15,8 +15,5 @@
   },
   "prefer_english_operator": {
     "level": "warn"
-  },
-  "missing_fat_arrows": {
-    "level": "warn"
   }
 }
