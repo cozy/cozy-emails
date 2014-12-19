@@ -1,6 +1,6 @@
 # [Cozy](http://cozy.io) Webmail
 
-Modern Email client based on Node.js and React.js.
+Modern Email Client Based on Node.js and React.js.
 
 ## Install
 
