@@ -56,11 +56,6 @@
     "coffee-script": "^1.8.0"
   },
   "scripts": {
-    "test": "dovecot-testing setup && cake tests",
-    "client-test-travis": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
-    "load-fixtures": "coffee tests/fixtures/generator.coffee 1000 && coffee tests/fixtures/loader.coffee && cozy-fixtures load tests/fixtures",
-    "client-test": "COZY_URL=http://localhost:9125/ casperjs test client/tests/casper/*/",
-    "start": "RUN_STANDALONE=true node build/server.js",
-    "prepublish": "(brunch > /dev/null/) && cd client && brunch b && cd .. && cake build || echo 'travis'"
+    "start": "RUN_STANDALONE=true node build/server.js"
   }
 }
