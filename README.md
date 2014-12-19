@@ -30,7 +30,7 @@ Main icon by [Elegant Themes](http://www.elegantthemes.com/blog/freebie-of-the-w
 
 ## License
 
-Cozy Emails is developed by Cozy Cloud and distributed under the MIT license.
+Webmail is developed by Cozy Cloud and distributed under the MIT license.
 
 
 ## Community
