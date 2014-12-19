@@ -36,7 +36,7 @@
     "multiparty": "4.0.0",
     "sanitize-html": "^1.4.3",
     "americano-cozy-pouchdb":
-  }
+  },
   "devDependencies": {
     "should": "4.0.4",
     "mocha": "1.20.1",
