@@ -273,7 +273,7 @@ Message.getConversationLengths = function(conversationIDs, callback) {
 };
 
 Message.byConversationID = function(conversationID, callback) {
-  return Message.rawRequest('byConversationId', {
+  return Message.rawRequest('byConversationID', {
     key: conversationID,
     reduce: false,
     include_docs: true

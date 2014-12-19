@@ -222,7 +222,7 @@ Message.getConversationLengths = (conversationIDs, callback) ->
 #
 # Returns void
 Message.byConversationID = (conversationID, callback) ->
-    Message.rawRequest 'byConversationId',
+    Message.rawRequest 'byConversationID',
         key: conversationID
         reduce: false
         include_docs: true
