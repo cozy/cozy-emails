@@ -1,11 +1,12 @@
 {
-  "name": "cozy-emails",
+  "name": "webmail",
+  "displayName": "Webmail",
   "version": "0.6.4",
   "engines": [
-    "node = 0.8.x"
+    "node = 0.10.x"
   ],
-  "description": "Emails client for Cozycloud",
-  "license": "MIT",
+  "description": "Emails Web Client based on Node.js and React.js",
+  "license": "AGPL v3",
   "repository": {
     "type": "git",
     "url": "https://github.com/cozy/cozy-emails.git"
@@ -33,11 +34,9 @@
     "sanitizer": "0.1.2",
     "html-to-text": "0.1.0",
     "multiparty": "4.0.0",
-    "sanitize-html": "^1.4.3"
-  },
-  "standaloneDependencies": {
-    "americano-cozy-pouchdb": "see scripts.prestandalone"
-  },
+    "sanitize-html": "^1.4.3",
+    "americano-cozy-pouchdb":
+  }
   "devDependencies": {
     "should": "4.0.4",
     "mocha": "1.20.1",
@@ -49,41 +48,15 @@
     "chai": "1.9.1",
     "simplesmtp": "0.3.33",
     "dovecot-testing": "0.0.3",
-    "coffee-script": "^1.8.0"
+    "coffee-script": "^1.8.0",
+    "americano-cozy-pouchdb": "0.3.16"
   },
   "scripts": {
     "test": "dovecot-testing setup && cake tests",
     "client-test-travis": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
     "load-fixtures": "coffee tests/fixtures/generator.coffee 1000 && coffee tests/fixtures/loader.coffee && cozy-fixtures load tests/fixtures",
     "client-test": "COZY_URL=http://localhost:9125/ casperjs test client/tests/casper/*/",
-    "start": "node build/server.js",
-    "standalone": "RUN_STANDALONE=true node build/server.js",
-    "installpouchdb": "npm_config_global=false npm install americano-cozy-pouchdb@0.3.16",
-    "prestandalone": "(ls ./node_modules/americano-cozy-pouchdb/ > /dev/null) || npm run installpouchdb",
+    "start": "RUN_STANDALONE=true node build/server.js",
     "prepublish": "(brunch > /dev/null/) && cd client && brunch b && cd .. && cake build || echo 'travis'"
-  },
-  "cozy-permissions": {
-    "Account": {
-      "description": "Manages your email Accounts"
-    },
-    "MailsSettings": {
-      "description": "Store email app settings"
-    },
-    "Mailbox": {
-      "description": "Manage your Imap Mailboxes"
-    },
-    "Message": {
-      "description": "Manages your emails"
-    },
-    "CozyInstance": {
-      "description": "Localize the application with your language"
-    },
-    "send mail": {
-      "description": "Send emails to your contacts"
-    },
-    "Contact": {
-      "description": "Add contact from messages, send messages to contacts"
-    }
-  },
-  "cozy-displayName": "Emails"
+  }
 }
