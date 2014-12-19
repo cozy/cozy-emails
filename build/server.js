@@ -3,11 +3,11 @@ var americano, application;
 
 americano = require('americano');
 
-application = module.exports = function(options, callback) {
+application = module.exports.start = function(options, callback) {
   if (options == null) {
     options = {};
   }
-  options.name = 'cozy-emails';
+  options.name = 'webmail';
   if (options.root == null) {
     options.root = __dirname;
   }
@@ -15,13 +15,9 @@ application = module.exports = function(options, callback) {
     options.port = process.env.PORT || 9125;
   }
   if (options.host == null) {
-    options.host = process.env.HOST || '127.0.0.1';
+    options.host = process.env.HOST || '0.0.0.0';
   }
-  if (options.db || options.dbName || process.env.RUN_STANDALONE) {
-    global.MODEL_MODULE = 'americano-cozy-pouchdb';
-  } else {
-    global.MODEL_MODULE = 'americano-cozy';
-  }
+  global.MODEL_MODULE = 'americano-cozy-pouchdb';
   if (callback == null) {
     callback = function() {};
   }

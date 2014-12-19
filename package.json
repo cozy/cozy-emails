@@ -35,7 +35,8 @@
     "html-to-text": "0.1.0",
     "multiparty": "4.0.0",
     "sanitize-html": "^1.4.3",
-    "americano-cozy-pouchdb":
+    "americano-cozy-pouchdb": "0.3.18",
+    "path": "^0.4.9"
   },
   "devDependencies": {
     "should": "4.0.4",
@@ -48,8 +49,7 @@
     "chai": "1.9.1",
     "simplesmtp": "0.3.33",
     "dovecot-testing": "0.0.3",
-    "coffee-script": "^1.8.0",
-    "americano-cozy-pouchdb": "0.3.16"
+    "coffee-script": "^1.8.0"
   },
   "scripts": {
     "test": "dovecot-testing setup && cake tests",

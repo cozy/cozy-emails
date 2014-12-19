@@ -1,20 +1,13 @@
-
-
-
 americano = require 'americano'
 
-application = module.exports = (options, callback) ->
+application = module.exports.start = (options, callback) ->
     options ?= {}
-    options.name = 'cozy-emails'
+    options.name = 'webmail'
     options.root ?= __dirname
     options.port ?= process.env.PORT or 9125
-    options.host ?= process.env.HOST or '127.0.0.1'
+    options.host ?= process.env.HOST or '0.0.0.0'
 
-    # dual support cozy & cozy-light/standalone
-    if options.db or options.dbName or process.env.RUN_STANDALONE
-        global.MODEL_MODULE = 'americano-cozy-pouchdb'
-    else
-        global.MODEL_MODULE = 'americano-cozy'
+    global.MODEL_MODULE = 'americano-cozy-pouchdb'
 
     callback ?= ->
 
