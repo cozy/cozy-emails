@@ -1,6 +1,6 @@
 {
   "name": "cozy-emails",
-  "version": "0.6.4",
+  "version": "0.6.5",
   "engines": [
     "node = 0.8.x"
   ],
@@ -56,19 +56,15 @@
     "test:server": "mocha tests/index.coffee --bail --reporter spec --compilers coffee:coffee-script/register --colors",
     "test:client": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
     "test:build": "USEJS=true npm run test:server",
-
     "fixtures": "npm run fixtures:generate && npm run fixtures:loader && npm run fixtures:load",
     "fixtures:generate": "coffee tests/fixtures/generator.coffee 1000",
     "fixtures:loader": "coffee tests/fixtures/loader.coffee",
     "fixtures:load": "cozy-fixtures load tests/fixtures",
-
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && brunch b",
     "build:server": "cake build",
-
     "lint": "coffeelint -f coffeelint.json ./server/**/*.coffee",
     "lint2": "coffee-jshint -o node --globals MODEL_MODULE ./server/**/*.coffee",
-
     "start": "node build/server.js",
     "standalone": "RUN_STANDALONE=true node build/server.js",
     "installpouchdb": "npm_config_global=false npm install americano-cozy-pouchdb@0.3.17",
