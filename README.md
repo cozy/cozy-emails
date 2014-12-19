@@ -18,6 +18,14 @@ Run Webmail with the command line, it will listen on the 9125 port:
 
     webmail
 
+## Next steps
+
+Here are the main features on which we want to focus after:
+
+* Quick filters
+* Search
+* Encryption
+
 ## Contribution
 
 
