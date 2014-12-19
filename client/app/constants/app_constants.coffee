@@ -25,6 +25,7 @@ module.exports =
         'MESSAGE_ACTION'            : 'MESSAGE_ACTION'
         'MESSAGE_CURRENT'           : 'MESSAGE_CURRENT'
         'RECEIVE_MESSAGE_DELETE'    : 'RECEIVE_MESSAGE_DELETE'
+        'RECEIVE_MAILBOX_UPDATE'    : 'RECEIVE_MAILBOX_UPDATE'
         'SET_FETCHING'              : 'SET_FETCHING'
 
         # Search

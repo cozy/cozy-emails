@@ -48,7 +48,11 @@ module.exports = MessageUtils =
             html = inReplyTo.get 'html'
 
             if text and not html and inHTML
-                html = markdown.toHTML text
+                try
+                    html = markdown.toHTML text
+                catch e
+                    console.log "Error converting text message to Markdown: #{e}"
+                    html = "<div class='text'>#{text}</div>" #markdown.toHTML text
 
             if html and not text and not inHTML
                 text = toMarkdown html

@@ -17,6 +17,11 @@ module.exports =
     getCurrentMailbox: ->
         AccountStore.getSelectedMailboxes()
 
+    getCurrentMessage: ->
+        messageID = MessageStore.getCurrentID()
+        message = MessageStore.getByID messageID
+        return message.toJS()
+
     getCurrentActions: ->
         res = []
         Object.keys(router.current).forEach (panel) ->
@@ -120,4 +125,29 @@ module.exports =
     messageUndo: ->
         MessageActionCreator = require '../actions/message_action_creator'
         MessageActionCreator.undelete()
+
+    simulateUpdate: ->
+
+        AppDispatcher = require '../app_dispatcher'
+        window.setInterval ->
+            content =
+                "accountID": AccountStore.getSelected().get('id'),
+                "id": AccountStore.getDefaultMailbox().get('id'),
+                "label": "INBOX",
+                "path": "INBOX",
+                "tree": ["INBOX"],
+                "delimiter": ".",
+                "uidvalidity": Date.now()
+                "attribs":[],
+                "docType": "Mailbox",
+                "lastSync": new Date().toISOString(),
+                "nbTotal": 467,
+                "nbUnread": 0,
+                "nbRecent": 0,
+                "weight": 1000,
+                "depth": 0
+            AppDispatcher.handleServerAction
+                type: 'RECEIVE_MAILBOX_UPDATE'
+                value: content
+        , 5000
 

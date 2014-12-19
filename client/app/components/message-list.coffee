@@ -124,7 +124,8 @@ MessageList = React.createClass
             active: @state.edited
         div className: 'message-list ' + classList, ref: 'list',
             div className: 'message-list-actions',
-                #MessagesQuickFilter {}
+                if advanced and not @state.edited
+                    MessagesQuickFilter {}
                 div className: 'btn-toolbar', role: 'toolbar',
                     div className: 'btn-group',
                         # Toggle edit
@@ -180,7 +181,7 @@ MessageList = React.createClass
                             div className: 'btn-group btn-group-sm message-list-option',
                                 a
                                     href: configMailboxUrl
-                                    className: 'btn btn-default',
+                                    className: 'btn btn-default mailbox-config',
                                     i className: 'fa fa-cog'
                         if @state.edited
                             div className: 'btn-group btn-group-sm message-list-option',
