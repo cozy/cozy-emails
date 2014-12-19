@@ -40,10 +40,10 @@ SocketHandler.notify = function(type, data, olddata) {
     return _results;
   } else if (type === 'mailbox.update') {
     return Mailbox.getCounts(data.id, function(err, results) {
-      var recent, thisbox, total, unread;
+      var recent, total, unread, _ref;
       console.log(results, data.id, data);
-      if (thisbox = results[data.id]) {
-        total = thisbox.total, unread = thisbox.unread, recent = thisbox.recent;
+      if (results[data.id]) {
+        _ref = results[data.id], total = _ref.total, unread = _ref.unread, recent = _ref.recent;
         data.nbTotal = total;
         data.nbUnread = unread;
         data.nbRecent = recent;
@@ -56,7 +56,7 @@ SocketHandler.notify = function(type, data, olddata) {
 };
 
 SocketHandler.wrapModel = function(Model, docType) {
-  var _oldAttachBinary, _oldCreate, _oldDestroy, _oldRawRequest, _oldUpdateAttributes;
+  var _oldCreate, _oldDestroy, _oldUpdateAttributes;
   _oldCreate = Model.create;
   Model.create = function(data, callback) {
     return _oldCreate.call(Model, data, function(err, created) {
@@ -82,7 +82,7 @@ SocketHandler.wrapModel = function(Model, docType) {
     });
   };
   _oldDestroy = Model.prototype.destroy;
-  Model.prototype.destroy = function(callback) {
+  return Model.prototype.destroy = function(callback) {
     var id, old;
     old = this.toObject();
     id = old.id;
@@ -93,23 +93,6 @@ SocketHandler.wrapModel = function(Model, docType) {
       return callback(err);
     });
   };
-  _oldRawRequest = Model.rawRequest;
-  Model.rawRequest = function(name, params, callback) {
-    return _oldRawRequest(name, params, function(err, result) {
-      return callback(err, (result != null ? result.rows : void 0) || result);
-    });
-  };
-  _oldAttachBinary = Model.prototype.attachBinary;
-  return Model.prototype.attachBinary = function(path, data, callback) {
-    var bufferStream;
-    if (path instanceof Buffer) {
-      bufferStream = new stream.Transform();
-      bufferStream.push(path);
-      bufferStream.end();
-      path = bufferStream;
-    }
-    return _oldAttachBinary.call(this, path, data, callback);
-  };
 };
 
 inScope = function(socket, data) {
@@ -117,20 +100,18 @@ inScope = function(socket, data) {
   return (_ref = socket.scope_mailboxID, __indexOf.call(Object.keys(data.mailboxIDs), _ref) >= 0) && socket.scope_before < data.date;
 };
 
-handleNewClient = (function(_this) {
-  return function(socket) {
-    log.debug('handleNewClient', socket.id);
-    socket.emit('refreshes.status', ImapReporter.summary());
-    socket.on('mark_ack', ImapReporter.acknowledge);
-    socket.on('change_scope', function(scope) {
-      return updateClientScope(socket, scope);
-    });
-    socket.on('disconnect', function() {
-      return forgetClient(socket);
-    });
-    return sockets.push(socket);
-  };
-})(this);
+handleNewClient = function(socket) {
+  log.debug('handleNewClient', socket.id);
+  socket.emit('refreshes.status', ImapReporter.summary());
+  socket.on('mark_ack', ImapReporter.acknowledge);
+  socket.on('change_scope', function(scope) {
+    return updateClientScope(socket, scope);
+  });
+  socket.on('disconnect', function() {
+    return forgetClient(socket);
+  });
+  return sockets.push(socket);
+};
 
 updateClientScope = function(socket, scope) {
   log.debug('updateClientScope', socket.id, scope);

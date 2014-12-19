@@ -764,7 +764,7 @@ Message.pickConversationID = function(rows, callback) {
 };
 
 Message.prototype.toClientObject = function() {
-  var raw, _ref;
+  var attachments, raw, _ref;
   raw = this.toObject();
   if ((_ref = raw.attachments) != null) {
     _ref.forEach(function(file) {
@@ -772,7 +772,8 @@ Message.prototype.toClientObject = function() {
     });
   }
   if (raw.html != null) {
-    raw.html = mailutils.sanitizeHTML(raw.html, raw.id, raw.attachments || []);
+    attachments = raw.attachments || [];
+    raw.html = mailutils.sanitizeHTML(raw.html, raw.id, attachments);
   }
   if (raw.text == null) {
     raw.text = htmlToText.fromString(raw.html, {

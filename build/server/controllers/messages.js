@@ -266,7 +266,7 @@ module.exports.send = function(req, res, next) {
           filename: attachment.fileName,
           cid: attachment.contentId,
           contentType: attachment.contentType,
-          contentDisposition: attachment.contentDispositioncontentToBuffer
+          contentDisposition: attachment.contentDisposition
         });
       });
     }, function(err, cacheds) {
@@ -302,7 +302,8 @@ module.exports.send = function(req, res, next) {
           return cb(err);
         }
         if (!box) {
-          return cb(new NotFound("Account " + account.id + " sentbox " + id));
+          err = new NotFound("Account " + account.id + " sentbox " + id);
+          return cb(err);
         }
         sentBox = box;
         return cb();
@@ -319,7 +320,8 @@ module.exports.send = function(req, res, next) {
           return cb(err);
         }
         if (!box) {
-          return cb(new NotFound("Account " + account.id + " draftbox " + id));
+          err = new NotFound("Account " + account.id + " draftbox " + id);
+          return cb(err);
         }
         draftBox = box;
         return cb();

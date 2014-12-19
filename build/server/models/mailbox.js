@@ -321,21 +321,19 @@ Mailbox.prototype.getDiff = function(laststep, limit, callback) {
   log.debug("diff", laststep, limit);
   step = null;
   box = this;
-  return this.doLaterWithBox((function(_this) {
-    return function(imap, imapbox, cbRelease) {
-      if (!(step = computeNextStep(laststep, imapbox.uidnext, limit))) {
-        return cbRelease(null);
+  return this.doLaterWithBox(function(imap, imapbox, cbRelease) {
+    if (!(step = computeNextStep(laststep, imapbox.uidnext, limit))) {
+      return cbRelease(null);
+    }
+    log.info("IMAP REFRESH", box.label, "UID " + step.min + ":" + step.max);
+    return async.series([
+      function(cb) {
+        return Message.UIDsInRange(box.id, step.min, step.max, cb);
+      }, function(cb) {
+        return imap.fetchMetadata(step.min, step.max, cb);
       }
-      log.info("IMAP REFRESH", box.label, "UID " + step.min + ":" + step.max);
-      return async.series([
-        function(cb) {
-          return Message.UIDsInRange(box.id, step.min, step.max, cb);
-        }, function(cb) {
-          return imap.fetchMetadata(step.min, step.max, cb);
-        }
-      ], cbRelease);
-    };
-  })(this), function(err, results) {
+    ], cbRelease);
+  }, function(err, results) {
     var cozyFlags, cozyIDs, cozyMessage, flagsChange, id, imapFlags, imapMessage, imapUIDs, toFetch, toRemove, uid;
     log.debug("diff#results");
     if (err) {
