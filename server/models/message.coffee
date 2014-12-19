@@ -68,7 +68,7 @@ Message.getResultsAndCount = (mailboxID, params, callback) ->
 
             callback null,
                 messages: messages
-                count: count[0]?.value or 0
+                count: count
                 conversationLengths: lengths
 
 Message.getResults = (mailboxID, params, callback) ->
