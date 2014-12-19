@@ -6,7 +6,7 @@
     "node = 0.10.x"
   ],
   "description": "Emails Web Client based on Node.js and React.js",
-  "license": "AGPL v3",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/cozy/webmail.git"
