@@ -39,6 +39,8 @@ window.onload = ->
             "en"
 
         window.cozyMails.setLocale locale
+        LayoutActionCreator = require './actions/layout_action_creator/'
+        LayoutActionCreator.setDisposition window.settings.layoutStyle
 
         # init plugins
         PluginUtils = require "./utils/plugin_utils"
@@ -66,7 +68,6 @@ window.onload = ->
         Application = require './components/application'
         application = Application router: @router
         React.renderComponent application, document.body
-        SettingsActionCreator = require './actions/settings_action_creator/'
 
         # Starts the application by initializing the router
         Backbone.history.start()

@@ -228,6 +228,10 @@ module.exports =
       "settings label messageDisplayImages" : "Afficher les images"
       "settings label messageConfirmDelete" : "Demander confirmation avant
                                                 de supprimer un message"
+      "settings label layoutStyle"            : "Affichage"
+      "settings label layoutStyle horizontal" : "Message sous la liste"
+      "settings label layoutStyle vertical"   : "Message à côté de la liste"
+      "settings label layoutStyle three"      : "Trois colonnes"
       "settings label listStyle"            : "Affichage de la liste des messages"
       "settings label listStyle default"    : "Normal"
       "settings label listStyle compact"    : "Compact"

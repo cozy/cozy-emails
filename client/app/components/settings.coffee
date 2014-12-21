@@ -1,9 +1,11 @@
 {div, h3, form, label, input, button, fieldset, legend, ul, li, a} = React.DOM
 classer = React.addons.classSet
 
+LayoutActionCreator   = require '../actions/layout_action_creator'
 SettingsActionCreator = require '../actions/settings_action_creator'
-PluginUtils = require '../utils/plugin_utils'
-ApiUtils = require '../utils/api_utils'
+PluginUtils    = require '../utils/plugin_utils'
+ApiUtils       = require '../utils/api_utils'
+{Dispositions} = require '../constants/app_constants'
 
 module.exports = React.createClass
     displayName: 'Settings'
@@ -59,13 +61,46 @@ module.exports = React.createClass
                 #                    onClick: @handleChange,
                 #                        a role: "menuitem", t "settings lang fr"
 
-                # List style
+                # Layout style
                 div className: 'form-group',
-                    label htmlFor: 'settings-mpp', className: classLabel,
+                    label htmlFor: 'settings-layoutStyle', className: classLabel,
                         t "settings label listStyle"
                     div className: 'col-sm-3',
                         div className: "dropdown",
                             button
+                                id: 'settings-layoutStyle'
+                                className: "btn btn-default dropdown-toggle"
+                                type: "button"
+                                "data-toggle": "dropdown",
+                                t "settings label layoutStyle #{@state.settings.layoutStyle or 'vertical'}"
+                            ul className: "dropdown-menu", role: "menu",
+                                li
+                                    role: "presentation",
+                                    'data-target': 'layoutStyle',
+                                    'data-style': Dispositions.VERTICAL,
+                                    onClick: @handleChange,
+                                        a role: "menuitem", t "settings label layoutStyle vertical"
+                                li
+                                    role: "presentation",
+                                    'data-target': 'layoutStyle',
+                                    'data-style': Dispositions.HORIZONTAL,
+                                    onClick: @handleChange,
+                                        a role: "menuitem", t "settings label layoutStyle horizontal"
+                                li
+                                    role: "presentation",
+                                    'data-target': 'layoutStyle',
+                                    'data-style': Dispositions.THREE,
+                                    onClick: @handleChange,
+                                        a role: "menuitem", t "settings label layoutStyle three"
+
+                # List style
+                div className: 'form-group',
+                    label htmlFor: 'settings-listStyle', className: classLabel,
+                        t "settings label listStyle"
+                    div className: 'col-sm-3',
+                        div className: "dropdown",
+                            button
+                                id: 'settings-listStyle'
                                 className: "btn btn-default dropdown-toggle"
                                 type: "button"
                                 "data-toggle": "dropdown",
@@ -153,6 +188,12 @@ module.exports = React.createClass
             #    @setState({settings: settings})
             #    ApiUtils.setLocale lang, true
             #    SettingsActionCreator.edit settings
+            when 'layoutStyle'
+                settings = @state.settings
+                settings.layoutStyle = target.dataset.style
+                LayoutActionCreator.setDisposition settings.layoutStyle
+                @setState({settings: settings})
+                SettingsActionCreator.edit settings
             when 'listStyle'
                 settings = @state.settings
                 settings.listStyle = target.dataset.style
