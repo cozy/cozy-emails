@@ -376,3 +376,10 @@ module.exports.conversationPatch = (req, res, next) ->
     , (err) ->
         return next err if err
         res.send 200, messages
+
+module.exports.raw = (req, res, next) ->
+    Mailbox.find req.params.mailboxID, (err, mailbox) ->
+        return next err if err
+        mailbox.doASAPWithBox (imap, imapbox, cb) ->
+            imap.fetchOneMailRaw req.params.messageID, (message) ->
+                res.send 200, message

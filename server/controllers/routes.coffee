@@ -77,3 +77,6 @@ module.exports =
         get: index.loadFixtures
 
     'test': get: test.main
+
+    'raw/:mailboxID/:messageID':
+        get: messages.raw

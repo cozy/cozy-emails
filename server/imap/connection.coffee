@@ -165,6 +165,33 @@ Imap::fetchOneMail = (uid, callback) ->
         unless messageReceived
             callback new Error 'fetch ended with no message'
 
+# fetch one mail by its UID from the currently open mailbox
+# return the raw message
+Imap::fetchOneMailRaw = (uid, callback) ->
+
+    messageReceived = false
+    fetch = @fetch [uid], size: true, bodies: ''
+    fetch.on 'message', (msg) ->
+        flags = []
+        messageReceived = true
+        msg.once 'error', callback
+        msg.on 'attributes', (attrs) ->
+            flags = attrs.flags
+            # for now, we dont use the msg attributes
+
+        msg.on 'body', (stream, info) ->
+            console.log info
+            buffer = ''
+            stream.on 'data', (chunk) ->
+                buffer += chunk.toString 'utf8'
+            stream.once 'end', ->
+                callback buffer
+
+    fetch.on 'error', callback
+    fetch.on 'end', ->
+        unless messageReceived
+            callback new Error 'fetch ended with no message'
+
 # copy one message to multiple boxes
 Imap::multicopy = (uid, paths, callback) ->
     async.mapSeries paths, (path, cb) =>
