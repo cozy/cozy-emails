@@ -126,6 +126,10 @@ module.exports =
         MessageActionCreator = require '../actions/message_action_creator'
         MessageActionCreator.undelete()
 
+    customEvent: (name, data) ->
+        domEvent = new CustomEvent name, detail: data
+        window.dispatchEvent domEvent
+
     simulateUpdate: ->
 
         AppDispatcher = require '../app_dispatcher'

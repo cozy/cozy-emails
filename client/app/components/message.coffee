@@ -631,6 +631,7 @@ MessageContent = React.createClass
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
                     doc.documentElement.innerHTML = @props.html
+                    window.cozyMails.customEvent "MESSAGE_LOADED", @props.message.toJS()
                     updateHeight = (e) ->
                         height = doc.body.getBoundingClientRect().height
                         frame.style.height = "#{height + 60}px"
@@ -658,6 +659,9 @@ MessageContent = React.createClass
                 frame.addEventListener 'load', loadContent
             else
                 loadContent()
+        else
+            window.cozyMails.customEvent "MESSAGE_LOADED", @props.message.toJS()
+
 
     componentDidMount: ->
         @_initFrame('mount')

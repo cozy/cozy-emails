@@ -14,8 +14,7 @@ class AppDispatcher extends Dispatcher
         @dispatch payload
 
         # create and dispatch a DOM event for plugins
-        domEvent = new CustomEvent PayloadSources.VIEW_ACTION, detail: action
-        window.dispatchEvent domEvent
+        window.cozyMails.customEvent PayloadSources.VIEW_ACTION, action
 
     handleServerAction: (action) ->
         payload =
@@ -25,8 +24,7 @@ class AppDispatcher extends Dispatcher
         @dispatch payload
 
         # create and dispatch a DOM event for plugins
-        domEvent = new CustomEvent PayloadSources.SERVER_ACTION, detail: action
-        window.dispatchEvent domEvent
+        window.cozyMails.customEvent PayloadSources.SERVER_ACTION, action
 
 
 module.exports = new AppDispatcher()
