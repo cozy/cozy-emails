@@ -1,4 +1,4 @@
-americano = require 'americano-cozy'
+americano = require MODEL_MODULE
 
 module.exports = CozyInstance = americano.getModel 'CozyInstance',
     id:     type: String

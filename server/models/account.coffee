@@ -1,4 +1,4 @@
-americano = require 'americano-cozy'
+americano = require MODEL_MODULE
 
 module.exports = Account = americano.getModel 'Account',
     label: String               # human readable label for the account
@@ -74,11 +74,11 @@ Account.removeOrphansAndRefresh = (limitByBox, onlyFavorites, callback) ->
 
 Account.refreshAccounts = (accounts, limitByBox, onlyFavorites, callback) ->
     async.eachSeries accounts, (account, cb) ->
-            log.debug "refreshing account #{account.label}"
-            return cb null if account.isTest()
-            return cb null if account.isRefreshing()
-            account.imap_fetchMails limitByBox, onlyFavorites, cb
-        , callback
+        log.debug "refreshing account #{account.label}"
+        return cb null if account.isTest()
+        return cb null if account.isRefreshing()
+        account.imap_fetchMails limitByBox, onlyFavorites, cb
+    , callback
 
 
 # Public: fetch the mailbox tree of a new {Account}
@@ -349,7 +349,7 @@ Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
 
     changes = {}
 
-    boxes.map (box) =>
+    boxes.map (box) ->
         type = box.RFC6154use()
         if box.isInbox()
             # save it in scope, so we dont erase it

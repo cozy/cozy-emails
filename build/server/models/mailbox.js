@@ -2,7 +2,7 @@
 var Break, FETCH_AT_ONCE, ImapPool, ImapReporter, Mailbox, Message, NotFound, americano, async, computeNextStep, log, mailutils, _, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-americano = require('americano-cozy');
+americano = require(MODEL_MODULE);
 
 module.exports = Mailbox = americano.getModel('Mailbox', {
   accountID: String,
@@ -321,21 +321,19 @@ Mailbox.prototype.getDiff = function(laststep, limit, callback) {
   log.debug("diff", laststep, limit);
   step = null;
   box = this;
-  return this.doLaterWithBox((function(_this) {
-    return function(imap, imapbox, cbRelease) {
-      if (!(step = computeNextStep(laststep, imapbox.uidnext, limit))) {
-        return cbRelease(null);
+  return this.doLaterWithBox(function(imap, imapbox, cbRelease) {
+    if (!(step = computeNextStep(laststep, imapbox.uidnext, limit))) {
+      return cbRelease(null);
+    }
+    log.info("IMAP REFRESH", box.label, "UID " + step.min + ":" + step.max);
+    return async.series([
+      function(cb) {
+        return Message.UIDsInRange(box.id, step.min, step.max, cb);
+      }, function(cb) {
+        return imap.fetchMetadata(step.min, step.max, cb);
       }
-      log.info("IMAP REFRESH", box.label, "UID " + step.min + ":" + step.max);
-      return async.series([
-        function(cb) {
-          return Message.UIDsInRange(box.id, step.min, step.max, cb);
-        }, function(cb) {
-          return imap.fetchMetadata(step.min, step.max, cb);
-        }
-      ], cbRelease);
-    };
-  })(this), function(err, results) {
+    ], cbRelease);
+  }, function(err, results) {
     var cozyFlags, cozyIDs, cozyMessage, flagsChange, id, imapFlags, imapMessage, imapUIDs, toFetch, toRemove, uid;
     log.debug("diff#results");
     if (err) {
@@ -548,7 +546,7 @@ Mailbox.prototype.recoverChangedUIDValidity = function(imap, callback) {
 
 Mailbox.removeOrphans = function(existings, callback) {
   log.debug("removeOrphans");
-  return Mailbox.rawRequest('treemap', function(err, rows) {
+  return Mailbox.rawRequest('treemap', {}, function(err, rows) {
     var boxes;
     if (err) {
       return callback(err);

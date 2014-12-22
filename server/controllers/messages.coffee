@@ -231,7 +231,7 @@ module.exports.send = (req, res, next) ->
                     filename           : attachment.fileName
                     cid                : attachment.contentId
                     contentType        : attachment.contentType
-                    contentDisposition : attachment.contentDispositioncontentToBuffer
+                    contentDisposition : attachment.contentDisposition
 
         , (err, cacheds) ->
             return cb err if err
@@ -260,7 +260,8 @@ module.exports.send = (req, res, next) ->
             Mailbox.find id, (err, box) ->
                 return cb err if err
                 unless box
-                    return cb new NotFound "Account #{account.id} sentbox #{id}"
+                    err = new NotFound "Account #{account.id} sentbox #{id}"
+                    return cb err
                 sentBox = box
                 cb()
 
@@ -272,7 +273,8 @@ module.exports.send = (req, res, next) ->
             Mailbox.find id, (err, box) ->
                 return cb err if err
                 unless box
-                    return cb new NotFound "Account #{account.id} draftbox #{id}"
+                    err = new NotFound "Account #{account.id} draftbox #{id}"
+                    return cb err
                 draftBox = box
                 cb()
 

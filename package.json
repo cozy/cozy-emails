@@ -1,6 +1,6 @@
 {
   "name": "cozy-emails",
-  "version": "0.6.0",
+  "version": "0.6.6",
   "engines": [
     "node = 0.8.x"
   ],
@@ -35,6 +35,9 @@
     "multiparty": "4.0.0",
     "sanitize-html": "^1.4.3"
   },
+  "standaloneDependencies": {
+    "americano-cozy-pouchdb": "see scripts.prestandalone"
+  },
   "devDependencies": {
     "should": "4.0.4",
     "mocha": "1.20.1",
@@ -49,11 +52,23 @@
     "coffee-script": "^1.8.0"
   },
   "scripts": {
-    "test": "dovecot-testing setup && cake tests",
-    "client-test-travis": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
-    "load-fixtures": "coffee tests/fixtures/generator.coffee 1000 && coffee tests/fixtures/loader.coffee && cozy-fixtures load tests/fixtures",
-    "client-test": "COZY_URL=http://localhost:9125/ casperjs test client/tests/casper/*/",
-    "start": "node build/server.js"
+    "test": "npm run test:server && npm run test:client",
+    "test:server": "mocha tests/index.coffee --bail --reporter spec --compilers coffee:coffee-script/register --colors",
+    "test:client": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
+    "test:build": "USEJS=true npm run test:server",
+    "fixtures": "npm run fixtures:generate && npm run fixtures:loader && npm run fixtures:load",
+    "fixtures:generate": "coffee tests/fixtures/generator.coffee 1000",
+    "fixtures:loader": "coffee tests/fixtures/loader.coffee",
+    "fixtures:load": "cozy-fixtures load tests/fixtures",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && brunch b",
+    "build:server": "cake build",
+    "lint": "coffeelint -f coffeelint.json ./server/**/*.coffee",
+    "lint2": "coffee-jshint -o node --globals MODEL_MODULE ./server/**/*.coffee",
+    "start": "node build/server.js",
+    "standalone": "RUN_STANDALONE=true node build/server.js",
+    "installpouchdb": "npm_config_global=false npm install americano-cozy-pouchdb@0.3.18 path-extra@0.3.0",
+    "prestandalone": "(ls ./node_modules/americano-cozy-pouchdb/ > /dev/null) || npm run installpouchdb"
   },
   "cozy-permissions": {
     "Account": {

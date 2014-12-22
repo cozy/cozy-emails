@@ -2,7 +2,7 @@
 var Account, AccountConfigError, Compiler, ImapPool, ImapReporter, Mailbox, Message, SMTPConnection, americano, async, log, nodemailer, _,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-americano = require('americano-cozy');
+americano = require(MODEL_MODULE);
 
 module.exports = Account = americano.getModel('Account', {
   label: String,
@@ -435,29 +435,27 @@ Account.prototype.imap_scanBoxesForSpecialUse = function(boxes, callback) {
   inboxMailbox = null;
   boxAttributes = Object.keys(Mailbox.RFC6154);
   changes = {};
-  boxes.map((function(_this) {
-    return function(box) {
-      var attribute, type, _i, _len;
-      type = box.RFC6154use();
-      if (box.isInbox()) {
-        inboxMailbox = box.id;
-      } else if (type) {
-        if (!useRFC6154) {
-          useRFC6154 = true;
-          for (_i = 0, _len = boxAttributes.length; _i < _len; _i++) {
-            attribute = boxAttributes[_i];
-            changes[attribute] = null;
-          }
+  boxes.map(function(box) {
+    var attribute, type, _i, _len;
+    type = box.RFC6154use();
+    if (box.isInbox()) {
+      inboxMailbox = box.id;
+    } else if (type) {
+      if (!useRFC6154) {
+        useRFC6154 = true;
+        for (_i = 0, _len = boxAttributes.length; _i < _len; _i++) {
+          attribute = boxAttributes[_i];
+          changes[attribute] = null;
         }
-        log.debug('found', type);
-        changes[type] = box.id;
-      } else if (!useRFC6154 && (type = box.guessUse())) {
-        log.debug('found', type, 'guess');
-        changes[type] = box.id;
       }
-      return box;
-    };
-  })(this));
+      log.debug('found', type);
+      changes[type] = box.id;
+    } else if (!useRFC6154 && (type = box.guessUse())) {
+      log.debug('found', type, 'guess');
+      changes[type] = box.id;
+    }
+    return box;
+  });
   priorities = ['inboxMailbox', 'allMailbox', 'sentMailbox', 'draftMailbox'];
   changes.inboxMailbox = inboxMailbox;
   changes.favorites = [];

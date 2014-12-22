@@ -54,6 +54,7 @@ module.exports =
         # Tasks
         'RECEIVE_TASK_UPDATE'       : 'RECEIVE_TASK_UPDATE'
         'RECEIVE_TASK_DELETE'       : 'RECEIVE_TASK_DELETE'
+        'CLEAR_TOASTS'              : 'CLEAR_TOASTS'
 
         # Refreshes
         'RECEIVE_REFRESH_UPDATE'       : 'RECEIVE_REFRESH_UPDATE'

@@ -464,6 +464,12 @@ module.exports = LayoutActionCreator = {
       value: task
     });
   },
+  clearToasts: function() {
+    return AppDispatcher.handleViewAction({
+      type: ActionTypes.CLEAR_TOASTS,
+      value: null
+    });
+  },
   filterMessages: function(filter) {
     return AppDispatcher.handleViewAction({
       type: ActionTypes.LIST_FILTER,
@@ -685,64 +691,81 @@ module.exports = {
     });
   },
   "delete": function(message, callback) {
-    var LayoutActionCreator, account, id, msg, observer, patches, trash;
-    if (typeof message === "string") {
-      message = MessageStore.getByID(message);
-    }
+    var LayoutActionCreator, doDelete, mass;
     LayoutActionCreator = require('./layout_action_creator');
-    account = AccountStore.getByID(message.get('accountID'));
-    if (account == null) {
-      console.log("No account with id " + (message.get('accountID')) + " for message " + (message.get('id')));
-      LayoutActionCreator.alertError(t('app error'));
-      return;
-    }
-    trash = account.get('trashMailbox');
-    if ((trash == null) || trash === '') {
-      return LayoutActionCreator.alertError(t('message delete no trash'));
-    } else {
-      msg = message.toJSON();
-      AppDispatcher.handleViewAction({
-        type: ActionTypes.MESSAGE_ACTION,
-        value: {
-          id: message.get('id'),
-          from: Object.keys(msg.mailboxIDs),
-          to: trash
-        }
-      });
-      observer = jsonpatch.observe(msg);
-      for (id in msg.mailboxIDs) {
-        delete msg.mailboxIDs[id];
+    doDelete = function(message) {
+      var account, id, msg, observer, patches, trash;
+      if (typeof message === "string") {
+        message = MessageStore.getByID(message);
       }
-      msg.mailboxIDs[trash] = -1;
-      patches = jsonpatch.generate(observer);
-      return XHRUtils.messagePatch(message.get('id'), patches, (function(_this) {
-        return function(err, message) {
-          var options;
-          if (err == null) {
-            AppDispatcher.handleViewAction({
-              type: ActionTypes.MESSAGE_DELETE,
-              value: msg
-            });
+      account = AccountStore.getByID(message.get('accountID'));
+      if (account == null) {
+        console.log("No account with id " + (message.get('accountID')) + " for message " + (message.get('id')));
+        LayoutActionCreator.alertError(t('app error'));
+        return;
+      }
+      trash = account.get('trashMailbox');
+      if ((trash == null) || trash === '') {
+        return LayoutActionCreator.alertError(t('message delete no trash'));
+      } else {
+        msg = message.toJSON();
+        AppDispatcher.handleViewAction({
+          type: ActionTypes.MESSAGE_ACTION,
+          value: {
+            id: message.get('id'),
+            from: Object.keys(msg.mailboxIDs),
+            to: trash
           }
-          options = {
-            autoclose: true,
-            actions: [
-              {
-                label: t('message undelete'),
-                onClick: function() {
-                  return _this.undelete();
-                }
+        });
+        observer = jsonpatch.observe(msg);
+        for (id in msg.mailboxIDs) {
+          delete msg.mailboxIDs[id];
+        }
+        msg.mailboxIDs[trash] = -1;
+        patches = jsonpatch.generate(observer);
+        return XHRUtils.messagePatch(message.get('id'), patches, (function(_this) {
+          return function(err, message) {
+            var options;
+            if (err == null) {
+              AppDispatcher.handleViewAction({
+                type: ActionTypes.MESSAGE_DELETE,
+                value: msg
+              });
+            } else {
+              LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + err);
+            }
+            if (!mass) {
+              options = {
+                autoclose: true,
+                actions: [
+                  {
+                    label: t('message undelete'),
+                    onClick: function() {
+                      return _this.undelete();
+                    }
+                  }
+                ]
+              };
+              LayoutActionCreator.notify(t('message action delete ok', {
+                subject: msg.subject
+              }), options);
+              if (callback != null) {
+                return callback(err);
               }
-            ]
+            }
           };
-          LayoutActionCreator.notify(t('message action delete ok', {
-            subject: msg.subject
-          }), options);
-          if (callback != null) {
-            return callback(err);
-          }
-        };
-      })(this));
+        })(this));
+      }
+    };
+    if (Array.isArray(message)) {
+      mass = true;
+      message.forEach(doDelete);
+      if (callback != null) {
+        return callback();
+      }
+    } else {
+      mass = false;
+      return doDelete(message);
     }
   },
   move: function(message, from, to, callback) {
@@ -798,17 +821,28 @@ module.exports = {
     }, {
       flags: flags
     });
-    return XHRUtils.messagePatch(message.get('id'), patches, function(error, message) {
+    XHRUtils.messagePatch(message.get('id'), patches, function(error, messageUpdated) {
       if (error == null) {
-        AppDispatcher.handleViewAction({
-          type: ActionTypes.RECEIVE_RAW_MESSAGE,
-          value: message
-        });
+        if (!_.isEqual(flags, messageUpdated.flags)) {
+          AppDispatcher.handleViewAction({
+            type: ActionTypes.RECEIVE_RAW_MESSAGE,
+            value: messageUpdated
+          });
+        }
       }
       if (callback != null) {
         return callback(error);
       }
     });
+    return setTimeout(function() {
+      var messageUpdated;
+      messageUpdated = message.toJS();
+      messageUpdated.flags = flags;
+      return AppDispatcher.handleViewAction({
+        type: ActionTypes.RECEIVE_RAW_MESSAGE,
+        value: messageUpdated
+      });
+    }, 0);
   },
   setCurrent: function(messageID) {
     return AppDispatcher.handleViewAction({
@@ -1537,7 +1571,7 @@ module.exports = React.createClass({
       } else {
         return AccountActionCreator.create(accountValue, (function(_this) {
           return function(account) {
-            LAC.alertSuccess(t("account creation ok"));
+            LAC.notify(t("account creation ok"));
             return _this.redirect({
               direction: 'first',
               action: 'account.config',
@@ -1582,7 +1616,7 @@ module.exports = React.createClass({
       if (error != null) {
         return LAC.alertError("" + (t("mailbox create ko")) + " " + error);
       } else {
-        return LAC.alertSuccess(t("mailbox create ok"));
+        return LAC.notify(t("mailbox create ok"));
       }
     });
   },
@@ -1955,7 +1989,7 @@ MailboxItem = React.createClass({
       if (error != null) {
         return LAC.alertError("" + (t("mailbox update ko")) + " " + error);
       } else {
-        return LAC.alertSuccess(t("mailbox update ok"));
+        return LAC.notify(t("mailbox update ok"));
       }
     });
   },
@@ -1970,7 +2004,7 @@ MailboxItem = React.createClass({
       if (error != null) {
         return LAC.alertError("" + (t("mailbox update ko")) + " " + error);
       } else {
-        return LAC.alertSuccess(t("mailbox update ok"));
+        return LAC.notify(t("mailbox update ok"));
       }
     });
     return this.setState({
@@ -1989,7 +2023,7 @@ MailboxItem = React.createClass({
         if (error != null) {
           return LAC.alertError("" + (t("mailbox delete ko")) + " " + error);
         } else {
-          return LAC.alertSuccess(t("mailbox delete ok"));
+          return LAC.notify(t("mailbox delete ok"));
         }
       });
     }
@@ -2344,7 +2378,7 @@ module.exports = Application = React.createClass({
         account = AccountStore.getByID(accountID);
         if (account != null) {
           mailbox = account.get('mailboxes').get(mailboxID);
-          messages = MessageStore.getMessagesByMailbox(mailboxID);
+          messages = MessageStore.getMessagesByMailbox(mailboxID, this.state.settings.get('displayConversation'));
           messagesCount = (mailbox != null ? mailbox.get('nbTotal') : void 0) || 0;
           emptyListMessage = (function() {
             switch (MessageStore.getCurrentFilter()) {
@@ -2370,7 +2404,9 @@ module.exports = Application = React.createClass({
       messageID = MessageStore.getCurrentID();
       direction = layout === 'first' ? 'secondPanel' : 'firstPanel';
       fetching = MessageStore.isFetching();
-      conversationLengths = MessageStore.getConversationsLength();
+      if (this.state.settings.get('displayConversation')) {
+        conversationLengths = MessageStore.getConversationsLength();
+      }
       query = MessageStore.getParams();
       query.accountID = accountID;
       query.mailboxID = mailboxID;
@@ -2700,13 +2736,18 @@ module.exports = Compose = React.createClass({
       type: 'button',
       disable: this.state.sending ? true : null,
       onClick: this.onSend
-    }, span({
+    }, this.state.sending ? span({
+      className: 'fa fa-refresh fa-spin'
+    }) : span({
       className: 'fa fa-send'
     }), span(null, labelSend)), button({
       className: 'btn btn-cozy',
+      disable: this.state.saving ? true : null,
       type: 'button',
       onClick: this.onDraft
-    }, span({
+    }, this.state.saving ? span({
+      className: 'fa fa-refresh fa-spin'
+    }) : span({
       className: 'fa fa-save'
     }), span(null, t('compose action draft'))), this.props.message != null ? button({
       className: 'btn btn-cozy-non-default',
@@ -2728,7 +2769,9 @@ module.exports = Compose = React.createClass({
     this._saveInterval = window.setInterval(this._autosave, 30000);
     this.getDOMNode().scrollIntoView();
     if (!Array.isArray(this.state.to) || this.state.to.length === 0) {
-      return document.getElementById('compose-to').focus();
+      return setTimeout(function() {
+        return document.getElementById('compose-to').focus();
+      }, 0);
     }
   },
   componentDidMount: function() {
@@ -2743,8 +2786,11 @@ module.exports = Compose = React.createClass({
     var key, message, state, value, _ref1;
     if (message = this.props.message) {
       state = {
-        composeInHTML: message.get('html') != null
+        composeInHTML: this.props.settings.get('composeInHTML')
       };
+      if ((message.get('html') == null) && message.get('text')) {
+        state.conposeInHTML = false;
+      }
       _ref1 = message.toJS();
       for (key in _ref1) {
         value = _ref1[key];
@@ -2758,6 +2804,7 @@ module.exports = Compose = React.createClass({
       }
     }
     state.sending = false;
+    state.saving = false;
     return state;
   },
   componentWillReceiveProps: function(nextProps) {
@@ -2799,11 +2846,15 @@ module.exports = Compose = React.createClass({
       if (this.state.to.length === 0 && this.state.cc.length === 0 && this.state.bcc.length === 0) {
         valid = false;
         LayoutActionCreator.alertError(t("compose error no dest"));
-        document.getElementById('compose-to').focus();
+        setTimeout(function() {
+          return document.getElementById('compose-to').focus();
+        }, 0);
       } else if (this.state.subject === '') {
         valid = false;
         LayoutActionCreator.alertError(t("compose error no subject"));
-        this.refs.subject.getDOMNode().focus();
+        setTimeout(function() {
+          return this.refs.subject.getDOMNode().focus();
+        }, 0);
       }
     }
     if (valid) {
@@ -2815,12 +2866,16 @@ module.exports = Compose = React.createClass({
           message.text = typeof message.html === "function" ? message.html(replace(/<[^>]*>/gi, '')) : void 0;
         }
       } else {
-        message.text = state.text.trim();
+        message.text = this.state.text.trim();
       }
       if (!isDraft && this._saveInterval) {
         window.clearInterval(this._saveInterval);
       }
-      if (!isDraft) {
+      if (isDraft) {
+        this.setState({
+          saving: true
+        });
+      } else {
         this.setState({
           sending: true
         });
@@ -2828,7 +2883,11 @@ module.exports = Compose = React.createClass({
       return MessageActionCreator.send(message, (function(_this) {
         return function(error, message) {
           var msgKo, msgOk;
-          if (!isDraft) {
+          if (isDraft) {
+            _this.setState({
+              saving: false
+            });
+          } else {
             _this.setState({
               sending: false
             });
@@ -2965,7 +3024,9 @@ ComposeEditor = React.createClass({
         if (node == null) {
           return;
         }
-        jQuery(node).focus();
+        setTimeout(function() {
+          return jQuery(node).focus();
+        }, 0);
         if (!this.props.settings.get('composeOnTop')) {
           node.innerHTML += "<p><br /></p>";
           node = node.lastChild;
@@ -3059,7 +3120,9 @@ ComposeEditor = React.createClass({
                 parent.parentNode.appendChild inserted
                 parent.parentNode.appendChild after
              */
-            inserted.focus();
+            setTimeout(function() {
+              return inserted.focus();
+            }, 0);
             sel = window.getSelection();
             return sel.collapse(inserted, 0);
           }, 0);
@@ -3074,13 +3137,17 @@ ComposeEditor = React.createClass({
           if (typeof node.selectionStart === "number") {
             node.selectionStart = node.selectionEnd = node.value.length;
           } else if (typeof node.createTextRange !== "undefined") {
-            node.focus();
+            setTimeout(function() {
+              return node.focus();
+            }, 0);
             range = node.createTextRange();
             range.collapse(false);
             range.select();
           }
         }
-        return node.focus();
+        return setTimeout(function() {
+          return node.focus();
+        }, 0);
       }
     }
   },
@@ -3261,7 +3328,6 @@ module.exports = React.createClass({
     });
   },
   renderMessage: function(key, message, active) {
-    console.log(key, active);
     return Message({
       accounts: this.props.accounts,
       active: active,
@@ -3781,6 +3847,7 @@ module.exports = MailsInput = React.createClass({
       name: this.props.id,
       className: 'form-control compose-input',
       onKeyDown: this.onKeyDown,
+      onBlur: this.onBlur,
       ref: 'contactInput',
       valueLink: this.proxyValueLink(),
       type: 'text',
@@ -3867,7 +3934,13 @@ module.exports = MailsInput = React.createClass({
         });
       case "Backspace":
         node = this.refs.contactInput.getDOMNode();
-        return node.value = node.value.trim();
+        node.value = node.value.trim();
+        if (node.value.length < 2) {
+          return this.setState({
+            open: false
+          });
+        }
+        break;
       case "Escape":
         return this.setState({
           contacts: null,
@@ -3879,6 +3952,11 @@ module.exports = MailsInput = React.createClass({
           return true;
         }
     }
+  },
+  onBlur: function() {
+    return this.setState({
+      open: false
+    });
   },
   onContact: function(contact) {
     var address, current, name, val;
@@ -4306,7 +4384,7 @@ MenuMailboxItem = React.createClass({
       if (error != null) {
         return LayoutActionCreator.alertError("" + (t("message action move ko")) + " " + error);
       } else {
-        return LayoutActionCreator.alertSuccess(t("message action move ok"));
+        return LayoutActionCreator.notify(t("message action move ok"));
       }
     });
   }
@@ -4314,7 +4392,7 @@ MenuMailboxItem = React.createClass({
 });
 
 ;require.register("components/message-list", function(exports, require, module) {
-var ContactActionCreator, ConversationActionCreator, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, ToolboxActions, ToolboxMove, a, alertError, alertSuccess, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
+var ContactActionCreator, ConversationActionCreator, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, ToolboxActions, ToolboxMove, a, alertError, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p, button = _ref.button, input = _ref.input, img = _ref.img;
 
@@ -4347,8 +4425,6 @@ ToolboxActions = require('./toolbox_actions');
 ToolboxMove = require('./toolbox_move');
 
 alertError = LayoutActionCreator.alertError;
-
-alertSuccess = LayoutActionCreator.alertSuccess;
 
 MessageList = React.createClass({
   displayName: 'MessageList',
@@ -4396,13 +4472,13 @@ MessageList = React.createClass({
     compact = this.props.settings.get('listStyle') === 'compact';
     messages = this.props.messages.map((function(_this) {
       return function(message, key) {
-        var cid, id, isActive;
+        var cid, id, isActive, _ref2;
         id = message.get('id');
         cid = message.get('conversationID');
         isActive = _this.props.messageID === id;
         return MessageItem({
           message: message,
-          conversationLength: _this.props.conversationLengths.get(cid),
+          conversationLength: (_ref2 = _this.props.conversationLengths) != null ? _ref2.get(cid) : void 0,
           key: key,
           isActive: isActive,
           edited: _this.state.edited,
@@ -4653,15 +4729,16 @@ MessageList = React.createClass({
       if (window.confirm(t('list delete confirm', {
         nb: selected.length
       }))) {
-        return selected.forEach(function(id) {
-          return MessageActionCreator["delete"](id, function(error) {
-            if (error != null) {
-              return alertError("" + (t("message action delete ko")) + " " + error);
-            } else {
-              return window.cozyMails.messageNavigate();
-            }
-          });
-        });
+        return MessageActionCreator["delete"](selected);
+
+        /*
+        selected.forEach (id) ->
+            MessageActionCreator.delete id, (error) ->
+                if error?
+                    alertError "#{t("message action delete ko")} #{error}"
+                else
+                    window.cozyMails.messageNavigate()
+         */
       }
     }
   },
@@ -5124,7 +5201,7 @@ MessagesSort = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var AttachmentPreview, Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageUtils, Participants, RouterMixin, ToolboxActions, ToolboxMove, a, button, classer, div, h4, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
+var AttachmentPreview, Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageUtils, Participants, RouterMixin, ToolboxActions, ToolboxMove, a, alertError, alertSuccess, button, classer, div, h4, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img, h4 = _ref.h4;
 
@@ -5154,6 +5231,10 @@ Participants = require('./participant');
 
 classer = React.addons.classSet;
 
+alertError = LayoutActionCreator.alertError;
+
+alertSuccess = LayoutActionCreator.notify;
+
 module.exports = React.createClass({
   displayName: 'Message',
   mixins: [RouterMixin],
@@ -5171,7 +5252,7 @@ module.exports = React.createClass({
     accounts: React.PropTypes.object.isRequired,
     active: React.PropTypes.bool,
     inConversation: React.PropTypes.bool,
-    key: React.PropTypes.number.isRequired,
+    key: React.PropTypes.string.isRequired,
     mailboxes: React.PropTypes.object.isRequired,
     message: React.PropTypes.object.isRequired,
     nextID: React.PropTypes.string,
@@ -5184,7 +5265,7 @@ module.exports = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   _prepareMessage: function() {
-    var fullHeaders, html, key, message, rich, text, urls, value, _ref2;
+    var e, fullHeaders, html, key, message, rich, text, urls, value, _ref2;
     message = this.props.message;
     fullHeaders = [];
     _ref2 = message.get('headers');
@@ -5200,7 +5281,13 @@ module.exports = React.createClass({
     html = message.get('html');
     urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim;
     if (text && !html && this.state.messageDisplayHTML) {
-      html = markdown.toHTML(text);
+      try {
+        html = markdown.toHTML(text);
+      } catch (_error) {
+        e = _error;
+        console.log("Error converting text message to Markdown: " + e);
+        html = "<div class='text'>" + text + "</div>";
+      }
     }
     if (html && !text && !this.state.messageDisplayHTML) {
       text = toMarkdown(html);
@@ -5303,6 +5390,9 @@ module.exports = React.createClass({
     if (this.state.messageDisplayHTML && prepared.html) {
       _ref2 = this.prepareHTML(prepared), messageDisplayHTML = _ref2.messageDisplayHTML, images = _ref2.images;
       imagesWarning = images.length > 0 && !this.state.messageDisplayImages;
+    } else {
+      messageDisplayHTML = false;
+      imagesWarning = false;
     }
     classes = classer({
       message: true,
@@ -5682,8 +5772,7 @@ module.exports = React.createClass({
     });
   },
   onDelete: function(args) {
-    var alertError, message, next;
-    alertError = LayoutActionCreator.alertError;
+    var message, next;
     message = this.props.message;
     if (this.props.nextID != null) {
       next = this.props.nextID;
@@ -5705,9 +5794,8 @@ module.exports = React.createClass({
     return LayoutActionCreator.alertWarning(t("app unimplemented"));
   },
   onMove: function(args) {
-    var alertError, conversationID, newbox, next, oldbox;
+    var conversationID, newbox, next, oldbox;
     newbox = args.target.dataset.value;
-    alertError = LayoutActionCreator.alertError;
     if (this.props.nextID != null) {
       next = this.props.nextID;
     } else {
@@ -5720,6 +5808,7 @@ module.exports = React.createClass({
           if (error != null) {
             return alertError("" + (t("conversation move ko")) + " " + error);
           } else {
+            alertSuccess(t("conversation move ok"));
             return _this.displayNextMessage(next);
           }
         };
@@ -5731,6 +5820,7 @@ module.exports = React.createClass({
           if (error != null) {
             return alertError("" + (t("message action move ko")) + " " + error);
           } else {
+            alertSuccess(t("message action move ok"));
             return _this.displayNextMessage(next);
           }
         };
@@ -5738,10 +5828,9 @@ module.exports = React.createClass({
     }
   },
   onMark: function(args) {
-    var alertError, flag, flags;
+    var flag, flags;
     flags = this.props.message.get('flags').slice();
     flag = args.target.dataset.value;
-    alertError = LayoutActionCreator.alertError;
     switch (flag) {
       case FlagsConstants.SEEN:
         flags.push(MessageFlags.SEEN);
@@ -5762,31 +5851,38 @@ module.exports = React.createClass({
     return MessageActionCreator.updateFlag(this.props.message, flags, function(error) {
       if (error != null) {
         return alertError("" + (t("message action mark ko")) + " " + error);
+      } else {
+        return alertSuccess(t("message action mark ok"));
       }
     });
   },
   onConversation: function(args) {
-    var action, alertError, id;
+    var action, id;
     id = this.props.message.get('conversationID');
     action = args.target.dataset.action;
-    alertError = LayoutActionCreator.alertError;
     switch (action) {
       case 'delete':
         return ConversationActionCreator["delete"](id, function(error) {
           if (error != null) {
             return alertError("" + (t("conversation delete ko")) + " " + error);
+          } else {
+            return alertSuccess(t("conversation delete ok"));
           }
         });
       case 'seen':
         return ConversationActionCreator.seen(id, function(error) {
           if (error != null) {
-            return alertError("" + (t("conversation seen ok ")) + " " + error);
+            return alertError("" + (t("conversation seen ko")) + " " + error);
+          } else {
+            return alertSuccess(t("conversation seen ok"));
           }
         });
       case 'unseen':
         return ConversationActionCreator.unseen(id, function(error) {
           if (error != null) {
-            return alertError("" + (t("conversation unseen ok")) + " " + error);
+            return alertError("" + (t("conversation unseen ko")) + " " + error);
+          } else {
+            return alertSuccess(t("conversation unseen ok"));
           }
         });
     }
@@ -5806,26 +5902,29 @@ module.exports = React.createClass({
       messageDisplayImages: true
     });
   },
-  displayHTML: function(event) {
-    event.preventDefault();
+  displayHTML: function(value) {
+    if (value == null) {
+      value = true;
+    }
     return this.setState({
-      messageDisplayHTML: true
+      messageDisplayHTML: value
     });
   }
 });
 
 MessageContent = React.createClass({
   displayName: 'MessageContent',
-  getInitialState: function() {
-    return {
-      messageDisplayHTML: this.props.messageDisplayHTML
-    };
-  },
   shouldComponentUpdate: function(nextProps, nextState) {
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    if (this.state.messageDisplayHTML && this.props.html) {
+    var displayHTML;
+    displayHTML = (function(_this) {
+      return function() {
+        return _this.props.displayHTML(true);
+      };
+    })(this);
+    if (this.props.messageDisplayHTML && this.props.html) {
       return div({
         className: 'row'
       }, this.props.imagesWarning ? div({
@@ -5862,7 +5961,7 @@ MessageContent = React.createClass({
     if ((panel != null) && !this.props.composing) {
       panel.scrollTop = 0;
     }
-    if (this.refs.content) {
+    if (this.props.messageDisplayHTML && this.refs.content) {
       frame = this.refs.content.getDOMNode();
       doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
       step = 0;
@@ -5885,12 +5984,10 @@ MessageContent = React.createClass({
             };
             frame.style.height = "32px";
             updateHeight();
-            doc.body.onload = updateHeight;
-            return window.onresize = updateHeight;
+            setTimeout(updateHeight, 1000);
+            return doc.body.onload = updateHeight;
           } else {
-            return _this.setState({
-              messageDisplayHTML: false
-            });
+            return _this.props.displayHTML(false);
           }
         };
       })(this);
@@ -5899,8 +5996,6 @@ MessageContent = React.createClass({
       } else {
         return loadContent();
       }
-    } else {
-      return console.warn("No ref.content");
     }
   },
   componentDidMount: function() {
@@ -6376,7 +6471,7 @@ module.exports = ThinProgress = React.createClass({
 });
 
 ;require.register("components/toast", function(exports, require, module) {
-var ActionTypes, AppDispatcher, LayoutActionCreator, LayoutStore, Modal, SocketUtils, StoreWatchMixin, Toast, ToastContainer, a, button, classer, div, h4, i, pre, span, strong, _ref;
+var ActionTypes, AppDispatcher, CSSTransitionGroup, LayoutActionCreator, LayoutStore, Modal, SocketUtils, StoreWatchMixin, Toast, ToastContainer, a, button, classer, div, h4, i, pre, span, strong, _ref;
 
 _ref = React.DOM, a = _ref.a, h4 = _ref.h4, pre = _ref.pre, div = _ref.div, button = _ref.button, span = _ref.span, strong = _ref.strong, i = _ref.i;
 
@@ -6393,6 +6488,8 @@ LayoutStore = require('../stores/layout_store');
 LayoutActionCreator = require('../actions/layout_action_creator');
 
 ActionTypes = require('../constants/app_constants').ActionTypes;
+
+CSSTransitionGroup = React.addons.CSSTransitionGroup;
 
 classer = React.addons.classSet;
 
@@ -6416,15 +6513,35 @@ module.exports = Toast = React.createClass({
   acknowledge: function() {
     return AppDispatcher.handleViewAction({
       type: ActionTypes.RECEIVE_TASK_DELETE,
-      value: this.props.toast.id
+      value: this.props.toast.get('id')
+    });
+  },
+  renderModal: function() {
+    var closeLabel, closeModal, content, modalErrors, subtitle, title;
+    title = t('modal please contribute');
+    subtitle = t('modal please report');
+    modalErrors = this.state.modalErrors;
+    closeModal = this.closeModal;
+    closeLabel = t('app alert close');
+    content = React.DOM.pre({
+      style: {
+        "max-height": "300px",
+        "word-wrap": "normal"
+      }
+    }, this.state.modalErrors.join("\n\n"));
+    return Modal({
+      title: title,
+      subtitle: subtitle,
+      content: content,
+      closeModal: closeModal,
+      closeLabel: closeLabel
     });
   },
   render: function() {
-    var classes, closeLabel, closeModal, content, hasErrors, modal, modalErrors, percent, showModal, subtitle, title, toast;
-    toast = this.props.toast;
+    var classes, hasErrors, percent, showModal, toast;
+    toast = this.props.toast.toJS();
     hasErrors = (toast.errors != null) && toast.errors.length;
     classes = classer({
-      alert: true,
       toast: true,
       'alert-dismissible': toast.finished,
       'alert-info': !hasErrors,
@@ -6436,30 +6553,10 @@ module.exports = Toast = React.createClass({
     if (hasErrors) {
       showModal = this.showModal.bind(this, toast.errors);
     }
-    if (this.state.modalErrors) {
-      title = t('modal please contribute');
-      subtitle = t('modal please report');
-      modalErrors = this.state.modalErrors;
-      closeModal = this.closeModal;
-      closeLabel = t('app alert close');
-      content = React.DOM.pre({
-        style: {
-          "max-height": "300px",
-          "word-wrap": "normal"
-        }
-      }, this.state.modalErrors.join("\n\n"));
-      modal = Modal({
-        title: title,
-        subtitle: subtitle,
-        content: content,
-        closeModal: closeModal,
-        closeLabel: closeLabel
-      });
-    }
     return div({
       className: classes,
       role: "alert"
-    }, this.state.modalErrors ? modal : void 0, percent != null ? div({
+    }, this.state.modalErrors ? renderModal() : void 0, percent != null ? div({
       className: "progress"
     }, div({
       className: 'progress-bar',
@@ -6492,34 +6589,7 @@ module.exports = Toast = React.createClass({
         key: id,
         onClick: action.onClick
       }, action.label);
-    })) : void 0, hasErrors ? a({
-      onClick: showModal
-    }, t('there were errors', {
-      smart_count: toast.errors.length
     })) : void 0);
-  },
-  componentDidMount: function() {
-    return this.shouldAutoclose();
-  },
-  componentDidUpdate: function() {
-    return this.shouldAutoclose();
-  },
-  shouldAutoclose: function() {
-    var hasErrors, target;
-    hasErrors = (this.props.toast.errors != null) && this.props.toast.errors.length;
-    if (this.props.toast.autoclose || (this.props.toast.finished && !hasErrors)) {
-      target = this.getDOMNode();
-      if (!target.classList.contains('autoclose')) {
-        setTimeout(function() {
-          return target.classList.add('autoclose');
-        }, 1000);
-        return setTimeout((function(_this) {
-          return function() {
-            return _this.acknowledge();
-          };
-        })(this), 10000);
-      }
-    }
   }
 });
 
@@ -6528,32 +6598,28 @@ module.exports.Container = ToastContainer = React.createClass({
   mixins: [StoreWatchMixin([LayoutStore])],
   getStateFromStores: function() {
     return {
-      toasts: LayoutStore.getTasks(),
+      toasts: LayoutStore.getToasts(),
       hidden: !LayoutStore.isShown()
     };
   },
   render: function() {
-    var classes, id, toast, toasts, _base;
-    toasts = (typeof (_base = this.state.toasts).toJS === "function" ? _base.toJS() : void 0) || this.state.toasts;
+    var classes, toasts;
+    toasts = this.state.toasts.map(function(toast, id) {
+      return Toast({
+        toast: toast,
+        key: id
+      });
+    }).toVector().toJS();
     classes = classer({
       'toasts-container': true,
       'action-hidden': this.state.hidden,
-      'has-toasts': Object.keys(toasts).length !== 0
+      'has-toasts': toasts.length !== 0
     });
     return div({
       className: classes
-    }, (function() {
-      var _results;
-      _results = [];
-      for (id in toasts) {
-        toast = toasts[id];
-        _results.push(Toast({
-          toast: toast,
-          key: id
-        }));
-      }
-      return _results;
-    })(), div({
+    }, CSSTransitionGroup({
+      transitionName: "toast"
+    }, toasts), div({
       className: 'alert alert-success toast toasts-actions'
     }, span({
       className: "toast-action hide-action",
@@ -6583,25 +6649,7 @@ module.exports.Container = ToastContainer = React.createClass({
     }
   },
   closeAll: function() {
-    var close, id, toast, toasts, _base;
-    toasts = (typeof (_base = this.state.toasts).toJS === "function" ? _base.toJS() : void 0) || this.state.toasts;
-    close = function(toast) {
-      if (toast.type === NotifyType.SERVER) {
-        return SocketUtils.acknowledgeTask(toast.id);
-      } else {
-        return AppDispatcher.handleViewAction({
-          type: ActionTypes.RECEIVE_TASK_DELETE,
-          value: toast.id
-        });
-      }
-    };
-    for (id in toasts) {
-      toast = toasts[id];
-      close(toast);
-    }
-    return this.setState({
-      toasts: this.state.toasts.clear()
-    });
+    return LayoutActionCreator.clearToasts();
   }
 });
 });
@@ -6893,6 +6941,7 @@ module.exports = {
     'SETTINGS_UPDATED': 'SETTINGS_UPDATED',
     'RECEIVE_TASK_UPDATE': 'RECEIVE_TASK_UPDATE',
     'RECEIVE_TASK_DELETE': 'RECEIVE_TASK_DELETE',
+    'CLEAR_TOASTS': 'CLEAR_TOASTS',
     'RECEIVE_REFRESH_UPDATE': 'RECEIVE_REFRESH_UPDATE',
     'RECEIVE_REFRESH_STATUS': 'RECEIVE_REFRESH_STATUS',
     'RECEIVE_REFRESH_DELETE': 'RECEIVE_REFRESH_DELETE',
@@ -7664,7 +7713,7 @@ module.exports = {
   "menu favorites on": "Favorites",
   "menu favorites off": "All",
   "list empty": "No email in this box.",
-  "no flagged message": "No flagged email in this box.",
+  "no flagged message": "No Important email in this box.",
   "no unseen message": "All emails have been read in this box",
   "no filter message": "No email for this filter.",
   "list fetching": "Loading…",
@@ -7676,7 +7725,7 @@ module.exports = {
   "list filter unseen": "Unseen",
   "list filter unseen title": "Show only unread messages",
   "list filter flagged": "Important",
-  "list filter flagged title": "Show only flagged messages",
+  "list filter flagged title": "Show only Important messages",
   "list sort": "Sort",
   "list sort date": "Date",
   "list sort subject": "Subject",
@@ -7993,7 +8042,7 @@ module.exports = {
   "message action delete ko": "Impossible de supprimer le message : ",
   "message action move ok": "Message déplacé",
   "message action move ko": "Le déplacement a échoué",
-  "message action mark ok": "Ok",
+  "message action mark ok": "Le message a été mis à jour",
   "message action mark ko": "L'opération a échoué",
   "conversation move ok": "Conversation déplacée",
   "conversation move ko": "L'opération a échoué",
@@ -8714,18 +8763,36 @@ LayoutStore = (function(_super) {
       _alert.message = null;
       return this.emit('change');
     });
+    handle(ActionTypes.SELECT_ACCOUNT, function(value) {
+      _alert.level = null;
+      _alert.message = null;
+      return this.emit('change');
+    });
     handle(ActionTypes.REFRESH, function() {
       return this.emit('change');
     });
-    handle(ActionTypes.RECEIVE_TASK_UPDATE, function(task) {
-      var id;
-      task = Immutable.Map(task);
-      id = task.get('id');
-      _tasks = _tasks.set(id, task).toOrderedMap();
+    handle(ActionTypes.CLEAR_TOASTS, function() {
+      _tasks = Immutable.OrderedMap();
       return this.emit('change');
     });
+    handle(ActionTypes.RECEIVE_TASK_UPDATE, (function(_this) {
+      return function(task) {
+        var id, remove;
+        task = Immutable.Map(task);
+        id = task.get('id');
+        _tasks = _tasks.set(id, task);
+        if (task.get('autoclose')) {
+          remove = function() {
+            _tasks = _tasks.remove(id);
+            return _this.emit('change');
+          };
+          setTimeout(remove, 3000);
+        }
+        return _this.emit('change');
+      };
+    })(this));
     handle(ActionTypes.RECEIVE_TASK_DELETE, function(taskid) {
-      _tasks = _tasks.remove(taskid).toOrderedMap();
+      _tasks = _tasks.remove(taskid);
       return this.emit('change');
     });
     handle(ActionTypes.TOASTS_SHOW, function() {
@@ -8751,7 +8818,7 @@ LayoutStore = (function(_super) {
     return _alert;
   };
 
-  LayoutStore.prototype.getTasks = function() {
+  LayoutStore.prototype.getToasts = function() {
     return _tasks;
   };
 
@@ -9068,14 +9135,13 @@ MessageStore = (function(_super) {
   /**
   * Get messages from mailbox, with optional pagination
   *
-  * @param {String} mailboxID
-  * @param {Number} first     index of first message
-  * @param {Number} last      index of last message
+  * @param {String}  mailboxID
+  * @param {Boolean} conversation
   *
   * @return {Array}
    */
 
-  MessageStore.prototype.getMessagesByMailbox = function(mailboxID) {
+  MessageStore.prototype.getMessagesByMailbox = function(mailboxID, useConversations) {
     var conversationIDs, sequence, _ref1;
     conversationIDs = [];
     sequence = _messages.filter(function(message) {
@@ -9084,11 +9150,15 @@ MessageStore = (function(_super) {
       if (__indexOf.call(mailboxes, mailboxID) < 0) {
         return false;
       }
-      conversationID = message.get('conversationID');
-      if (__indexOf.call(conversationIDs, conversationID) >= 0) {
-        return false;
+      if (useConversations) {
+        conversationID = message.get('conversationID');
+        if (__indexOf.call(conversationIDs, conversationID) >= 0) {
+          return false;
+        } else {
+          conversationIDs.push(conversationID);
+          return true;
+        }
       } else {
-        conversationIDs.push(conversationID);
         return true;
       }
     }).sort(__getSortFunction(_sortField, _sortOrder));

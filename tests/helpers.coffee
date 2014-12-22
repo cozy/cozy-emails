@@ -29,9 +29,14 @@ helpers.getImapServerRawConnection = (done, operation) ->
 
 helpers.startApp = (host, port) -> (done) ->
     @timeout 20000
-    americano = require 'americano'
+    appPath = if process.env.USEJS then '../build/server.js'
+    else '../server.coffee'
 
-    americano.start name: 'template', host: host, port: port, (app, server) =>
+    app = require appPath
+
+    options = {host, port, name:'emails-tests'}
+    app options, (err, app, server) =>
+        return done err if err
         @app = app
         @app.server = server
         done()

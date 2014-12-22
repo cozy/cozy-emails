@@ -3,15 +3,31 @@ var americano, application;
 
 americano = require('americano');
 
-application = module.exports = function(callback) {
-  var options;
-  options = {
-    name: 'cozy-emails',
-    root: __dirname,
-    port: process.env.PORT || 9125,
-    host: process.env.HOST || '127.0.0.1'
-  };
-  return americano.start(options);
+application = module.exports = function(options, callback) {
+  if (options == null) {
+    options = {};
+  }
+  options.name = 'cozy-emails';
+  if (options.root == null) {
+    options.root = __dirname;
+  }
+  if (options.port == null) {
+    options.port = process.env.PORT || 9125;
+  }
+  if (options.host == null) {
+    options.host = process.env.HOST || '127.0.0.1';
+  }
+  if (options.db || options.dbName || process.env.RUN_STANDALONE) {
+    global.MODEL_MODULE = 'americano-cozy-pouchdb';
+  } else {
+    global.MODEL_MODULE = 'americano-cozy';
+  }
+  if (callback == null) {
+    callback = function() {};
+  }
+  return americano.start(options, function(app, server) {
+    return callback(null, app, server);
+  });
 };
 
 if (!module.parent) {

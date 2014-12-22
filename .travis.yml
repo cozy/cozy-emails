@@ -27,7 +27,7 @@ before_install:
 
 script:
     - npm run test
-    - npm run load-fixtures
+    - npm run fixtures
     - forever start -o casper-server.log build/server.js
     - sleep 5
     - npm run client-test-travis

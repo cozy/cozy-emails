@@ -57,7 +57,7 @@ module.exports =
                 emit [doc.accountID, 'subject', doc.normSubject],
                     doc.conversationID
 
-        byConversationId:
+        byConversationID:
             reduce: '_count'
             map: (doc) ->
                 if doc.conversationID
