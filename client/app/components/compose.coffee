@@ -336,7 +336,7 @@ module.exports = Compose = React.createClass
                 if error?
                     LayoutActionCreator.alertError "#{msgKo} :  error"
                 else
-                    LayoutActionCreator.notify msgOk
+                    LayoutActionCreator.notify msgOk, autoclose: true
                     @setState message
 
                     if not isDraft
