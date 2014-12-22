@@ -52,7 +52,7 @@ module.exports = Toast = React.createClass
         if hasErrors
             showModal = @showModal.bind(this, toast.errors)
 
-        div className: classes, role: "alert",
+        div className: classes, role: "alert", key: @props.key,
             if @state.modalErrors
                 renderModal()
 
@@ -104,6 +104,9 @@ module.exports.Container = ToastContainer =  React.createClass
             hidden: not LayoutStore.isShown()
         }
 
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
     render: ->
         toasts = @state.toasts.map (toast, id) ->
             Toast {toast, key: id}
@@ -142,3 +145,15 @@ module.exports.Container = ToastContainer =  React.createClass
 
     closeAll: ->
         LayoutActionCreator.clearToasts()
+
+    _clearToasts: ->
+        setTimeout ->
+            Array.prototype.forEach.call document.querySelectorAll('.toast-enter'), (e) ->
+                e.classList.add 'hidden'
+        , 10000
+
+    componentDidMount: ->
+        @_clearToasts()
+
+    componentDidUpdate: ->
+        @_clearToasts()
