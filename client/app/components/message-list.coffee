@@ -124,8 +124,8 @@ MessageList = React.createClass
             active: @state.edited
         div className: 'message-list ' + classList, ref: 'list',
             div className: 'message-list-actions',
-                if advanced and not @state.edited
-                    MessagesQuickFilter {}
+                #if advanced and not @state.edited
+                #    MessagesQuickFilter {}
                 div className: 'btn-toolbar', role: 'toolbar',
                     div className: 'btn-group',
                         # Toggle edit

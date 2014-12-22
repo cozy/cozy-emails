@@ -12,10 +12,10 @@ onMessageList = ->
 
 module.exports =
     getCurrentAccount: ->
-        AccountStore.getSelected()
+        AccountStore.getSelected()?.toJS()
 
     getCurrentMailbox: ->
-        AccountStore.getSelectedMailboxes()
+        AccountStore.getSelectedMailbox()?.toJS()
 
     getCurrentMessage: ->
         messageID = MessageStore.getCurrentID()

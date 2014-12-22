@@ -25,7 +25,7 @@ module.exports = React.createClass
                not(_.isEqual(nextProps, @props))
 
     getInitialState: ->
-        expanded: false
+        expanded: not @props.settings.get('displayConversation')
 
     expand: ->
         @setState expanded: true

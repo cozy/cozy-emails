@@ -306,6 +306,11 @@ module.exports = Compose = React.createClass
                     message.text = toMarkdown(message.html)
                 catch
                     message.text = message.html?replace /<[^>]*>/gi, ''
+
+                # convert HTML entities
+                tmp = document.createElement 'div'
+                tmp.innerHTML = message.text
+                message.text = tmp.textContent
             else
                 message.text = @state.text.trim()
 

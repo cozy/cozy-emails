@@ -644,36 +644,35 @@ AccountConfigMailboxes = React.createClass
                             className: "col-xs-1 text-center",
                             t 'mailbox title new'
                 mailboxes
-                if mailboxes?
-                    li className: "row box new", key: 'new',
-                        span
-                            className: "col-xs-1 box-action add"
-                            onClick: @addMailbox
-                            title: t("mailbox title add"),
-                                i className: 'fa fa-plus'
-                        span
-                            className: "col-xs-1 box-action cancel"
-                            onClick: @undoMailbox
-                            title: t("mailbox title add cancel"),
-                                i className: 'fa fa-undo'
-                        div className: 'col-xs-6',
-                            input
-                                id: 'newmailbox',
-                                ref: 'newmailbox',
-                                type: 'text',
-                                className: 'form-control',
-                                placeholder: t "account newmailbox placeholder"
-                                onKeyDown: @onKeyDown
-                        label
-                            className: 'col-xs-2 text-center control-label',
-                            t "account newmailbox parent"
-                        div className: 'col-xs-2 text-center',
-                            MailboxList
-                                allowUndefined: true
-                                mailboxes: @state.mailboxes.value
-                                selectedMailbox: @state.newMailboxParent
-                                onChange: (mailbox) =>
-                                    @setState newMailboxParent: mailbox
+                li className: "row box new", key: 'new',
+                    span
+                        className: "col-xs-1 box-action add"
+                        onClick: @addMailbox
+                        title: t("mailbox title add"),
+                            i className: 'fa fa-plus'
+                    span
+                        className: "col-xs-1 box-action cancel"
+                        onClick: @undoMailbox
+                        title: t("mailbox title add cancel"),
+                            i className: 'fa fa-undo'
+                    div className: 'col-xs-6',
+                        input
+                            id: 'newmailbox',
+                            ref: 'newmailbox',
+                            type: 'text',
+                            className: 'form-control',
+                            placeholder: t "account newmailbox placeholder"
+                            onKeyDown: @onKeyDown
+                    label
+                        className: 'col-xs-2 text-center control-label',
+                        t "account newmailbox parent"
+                    div className: 'col-xs-2 text-center',
+                        MailboxList
+                            allowUndefined: true
+                            mailboxes: @state.mailboxes.value
+                            selectedMailbox: @state.newMailboxParent
+                            onChange: (mailbox) =>
+                                @setState newMailboxParent: mailbox
 
     renderError: ->
         if @props.error and @props.error.name is 'AccountConfigError'
