@@ -258,7 +258,7 @@ module.exports = Application = React.createClass
             if @state.settings.get 'displayConversation'
                 conversationLengths = MessageStore.getConversationsLength()
 
-            query = MessageStore.getParams()
+            query = _.clone(MessageStore.getParams())
             query.accountID = accountID
             query.mailboxID = mailboxID
             #paginationUrl = @buildUrl

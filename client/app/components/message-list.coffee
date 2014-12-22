@@ -95,22 +95,22 @@ MessageList = React.createClass
         advanced   = @props.settings.get('advanced')
         nbSelected = if Object.keys(@state.selected).length > 0 then null else true
 
-        toggleFilterFlag = =>
-            filter = if @state.filterFlag then MessageFilter.ALL else MessageFilter.FLAGGED
-            LayoutActionCreator.filterMessages filter
-            params = MessageStore.getParams()
+        showList = =>
+            params = _.clone(MessageStore.getParams())
             params.accountID = @props.accountID
             params.mailboxID = @props.mailboxID
             LayoutActionCreator.showMessageList parameters: params
 
+        toggleFilterFlag = =>
+            filter = if @state.filterFlag then MessageFilter.ALL else MessageFilter.FLAGGED
+            LayoutActionCreator.filterMessages filter
+            showList()
             @setState filterFlag: not @state.filterFlag, filterUnseen: false
 
         toggleFilterUnseen = =>
             filter = if @state.filterUnseen then MessageFilter.ALL else MessageFilter.UNSEEN
             LayoutActionCreator.filterMessages filter
-            params = MessageStore.getParams()
-            params.accountID = @props.accountID
-            params.mailboxID = @props.mailboxID
+            showList()
             LayoutActionCreator.showMessageList parameters: params
 
             @setState filterUnseen: not @state.filterUnseen, filterFlag: false
@@ -584,7 +584,7 @@ MessagesFilter = React.createClass
     onFilter: (ev) ->
         LayoutActionCreator.filterMessages ev.target.dataset.filter
 
-        params = MessageStore.getParams()
+        params = _.clone(MessageStore.getParams())
         params.accountID = @props.accountID
         params.mailboxID = @props.mailboxID
         LayoutActionCreator.showMessageList parameters: params
@@ -632,7 +632,7 @@ MessagesSort = React.createClass
         LayoutActionCreator.sortMessages
             field: field
 
-        params = MessageStore.getParams()
+        params = _.clone(MessageStore.getParams())
         params.accountID = @props.accountID
         params.mailboxID = @props.mailboxID
         LayoutActionCreator.showMessageList parameters: params
