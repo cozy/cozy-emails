@@ -202,7 +202,7 @@ module.exports =
       "message undelete"            : "Annuler la suppression"
       "message undelete ok"         : "Message restauré"
       "message undelete error"      : "Impossible d'annuler l'action"
-      "message preview title"       : "Voir les pièces-jointes"
+      "message preview title"       : "Voir les pièces jointes"
 
       # Settings
       "settings title"             : "Paramètres"
@@ -210,7 +210,7 @@ module.exports =
       # "settings label mpp"         : "Nombre de messages par page"
       "settings plugins"           : "Modules complémentaires"
       "settings label composeInHTML"        : "Éditeur riche"
-      "settings label composeOnTop"         : "Répondre au dessus du message"
+      "settings label composeOnTop"         : "Répondre au-dessus du message"
       "settings label displayConversation"  : "Afficher les conversations"
       "settings label displayPreview"       : "Prévisualiser les messages"
       "settings label messageDisplayHTML"   : "Afficher les messages en HTML"
@@ -223,18 +223,18 @@ module.exports =
       "settings lang"             : "Langue"
       "settings lang en"          : "English"
       "settings lang fr"          : "Français"
-      "settings save error"       : "Erreur d'enregistrement des paramètres, veuillez ré-essayer"
+      "settings save error"       : "Erreur d'enregistrement des paramètres, veuillez réessayer"
 
       # File picker
       "picker drop here"           : "Déposer les fichiers ici"
 
       # Mailbox List
-      "mailbox pick one"           : "Choisissez une boite"
-      "mailbox pick null"          : "Pas de boite pour ça"
+      "mailbox pick one"           : "Choisissez une boîte"
+      "mailbox pick null"          : "Pas de boîte pour ça"
 
       # Tasks
-      "task account-fetch"         : 'Rafraichissement %{account}'
-      "task box-fetch"             : 'Rafraichissement %{box}'
+      "task account-fetch"         : 'Rafraîchissement %{account}'
+      "task box-fetch"             : 'Rafraîchissement %{box}'
       "task apply-diff-fetch"      : 'Téléchargement des messages du dossier
                                         %{box} de %{account}'
       "task apply-diff-remove"     : 'Suppression des messages du dossier
@@ -258,15 +258,15 @@ module.exports =
       "contact form"             : "Sélectionnez des contacts"
       "contact form placeholder" : "Nom"
       "contact create success"   : "%{contact} a été ajouté(e) à vos contacts"
-      "contact create error"     : "L'ajout à votre carnet d'adresse a
+      "contact create error"     : "L'ajout à votre carnet d'adresses a
                                         échoué : {error}"
 
       # GMail security
       "gmail security tile": "Sécurité Gmail"
       "gmail security body": """
-            Gmail considère les connection par nom d'utilisateur et mot de passe
-            non sécurisées. Veuillez cliquer sur le lien ci-dessous, assurez
-            vous d'être connecté avec le compte %{login} et activer l'accès
+            Gmail considère les connexions par nom d'utilisateur et mot de passe
+            comme non sécurisées. Veuillez cliquer sur le lien ci-dessous, assurez-vous
+            d'être connecté avec le compte %{login} et activez l'accès
             pour les applications moins sécurisées.
       """
       "gmail security link": """
