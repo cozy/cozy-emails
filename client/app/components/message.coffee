@@ -408,7 +408,9 @@ module.exports = React.createClass
                         mailboxes: @props.mailboxes
                         isSeen: isSeen
                         isFlagged: isFlagged
+                        mailboxID: @props.selectedMailboxID
                         messageID: id
+                        message: @props.message
                         onMark: @onMark
                         onConversation: @onConversation
                         onHeaders: @onHeaders

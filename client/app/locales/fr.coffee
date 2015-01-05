@@ -88,6 +88,7 @@ module.exports =
       "mail action move"        : "Déplacer…"
       "mail action more"        : "Plus…"
       "mail action headers"     : "Entêtes"
+      "mail action raw"         : "Message brut"
       "mail mark spam"          : "Pourriel"
       "mail mark nospam"        : "Légitime"
       "mail mark fav"           : "Important"

@@ -382,6 +382,14 @@ module.exports.conversationPatch = (req, res, next) ->
 module.exports.raw = (req, res, next) ->
     Mailbox.find req.params.mailboxID, (err, mailbox) ->
         return next err if err
+        if not mailbox?
+            return next new Error 'Unknown mailbox'
         mailbox.doASAPWithBox (imap, imapbox, cb) ->
-            imap.fetchOneMailRaw req.params.messageID, (message) ->
-                res.send 200, message
+            try
+                imap.fetchOneMailRaw req.params.messageID, (message) ->
+                    cb()
+                    res.type 'text/plain'
+                    res.send 200, message
+            catch e
+                cb()
+                return next e
