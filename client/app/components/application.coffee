@@ -248,7 +248,6 @@ module.exports = Application = React.createClass
                         action: "default"
                     return
 
-
             # gets the selected message if any
             messageID = MessageStore.getCurrentID()
             direction = if layout is 'first' then 'secondPanel' \
@@ -410,7 +409,11 @@ module.exports = Application = React.createClass
         # Uses `forceUpdate` with the proper scope because React doesn't allow
         # to rebind its scope on the fly
         @onRoute = (params) =>
-            {firstPanelInfo, secondPanelInfo} = params
+            {firstPanel, secondPanel} = params
+            if firstPanel?
+                @checkAccount firstPanel.action
+            if secondPanel?
+                @checkAccount secondPanel.action
             @forceUpdate()
 
         @props.router.on 'fluxRoute', @onRoute

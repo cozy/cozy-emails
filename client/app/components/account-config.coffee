@@ -614,11 +614,12 @@ AccountConfigMailboxes = React.createClass
         form className: 'form-horizontal',
 
             @renderError()
+            h4 className: 'config-title', t "account special mailboxes"
             @_renderMailboxChoice t('account draft mailbox'), "draftMailbox"
             @_renderMailboxChoice t('account sent mailbox'),  "sentMailbox"
             @_renderMailboxChoice t('account trash mailbox'), "trashMailbox"
 
-            h4 className: 'config-title', t "account tab mailboxes"
+            h4 className: 'config-title', t "account mailboxes"
             ul className: "folder-list list-unstyled boxes container",
                 if mailboxes?
                     li className: 'row box title', key: 'title',
@@ -685,7 +686,8 @@ AccountConfigMailboxes = React.createClass
 
     _renderMailboxChoice: (labelText, box) ->
         if @state.id? and @state.mailboxes.value isnt ''
-            div className: "form-group #{box}",
+            errorClass = if @state[box].value? then '' else 'has-error'
+            div className: "form-group #{box} #{errorClass}",
                 label
                     className: 'col-sm-2 col-sm-offset-2 control-label',
                     labelText
