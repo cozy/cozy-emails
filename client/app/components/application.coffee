@@ -418,6 +418,31 @@ module.exports = Application = React.createClass
 
         @props.router.on 'fluxRoute', @onRoute
 
+    checkAccount: (action) ->
+        # "special" mailboxes must be set before accessing to the account
+        # otherwise, redirect to account config
+        account = @state.selectedAccount
+        if (account?)
+            if not account.get('draftMailbox')? or
+               not account.get('sentMailbox')? or
+               not account.get('trashMailbox')?
+
+                if action is 'account.mailbox.messages' or
+                   action is 'account.mailbox.messages.full' or
+                   action is 'search' or
+                   action is 'message' or
+                   action is 'conversation' or
+                   action is 'compose' or
+                   action is 'edit'
+                    @redirect
+                        direction: 'first'
+                        action: 'account.config'
+                        parameters: [
+                            account.get 'id'
+                            'mailboxes'
+                        ]
+                        fullWidth: true
+                    LayoutActionCreator.alertError t 'account no special mailboxes'
 
     # Stops listening to router changes
     componentWillUnmount: ->
