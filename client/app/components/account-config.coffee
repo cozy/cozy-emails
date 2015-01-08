@@ -211,13 +211,6 @@ module.exports = React.createClass
             setError error for error in valid.errors
             @setState errors: errors
 
-    onRemove: (event) ->
-        # prevents the page from reloading
-        event.preventDefault()
-
-        if window.confirm(t 'account remove confirm')
-            AccountActionCreator.remove @state.id
-
     componentWillReceiveProps: (props) ->
         # prevents the form from changing during submission
         if props.selectedAccount? and not props.isWaiting
@@ -457,6 +450,13 @@ AccountConfigMain = React.createClass
                                 className: 'btn btn-default btn-danger btn-remove',
                                 onClick: @onRemove,
                                 t "account remove"
+
+    onRemove: (event) ->
+        # prevents the page from reloading
+        event.preventDefault()
+
+        if window.confirm(t 'account remove confirm')
+            AccountActionCreator.remove @props.selectedAccount.get('id')
 
     renderError: ->
         if @props.error and @props.error.name is 'AccountConfigError'
