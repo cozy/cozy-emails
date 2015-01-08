@@ -111,8 +111,6 @@ MessageList = React.createClass
             filter = if @state.filterUnseen then MessageFilter.ALL else MessageFilter.UNSEEN
             LayoutActionCreator.filterMessages filter
             showList()
-            LayoutActionCreator.showMessageList parameters: params
-
             @setState filterUnseen: not @state.filterUnseen, filterFlag: false
 
         classList = classer
