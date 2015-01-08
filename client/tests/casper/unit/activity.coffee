@@ -29,7 +29,9 @@ doActivity = (options, cb) ->
     , options
     casper.waitFor ->
         return casper.getGlobal('testActivity').length is options.length
-    , -> cb(casper.getGlobal 'testActivity')
+    , ->
+        if cb?
+            cb(casper.getGlobal 'testActivity')
 
 getOptions = (name, key, value) ->
     options =
@@ -42,6 +44,15 @@ getOptions = (name, key, value) ->
 casper.test.begin 'Test Activities', (test) ->
     init casper
     casper.start casper.cozy.startUrl + "test", ->
+        # Some cleanup: delete previously created contacts
+        options = getOptions 'search', 'query', 'cozytest'
+        doActivity options, (res) ->
+            options = res.shift().result.map (contact) -> getOptions 'delete', 'id', contact.id
+            if options.length > 0
+                test.comment "Cleanup: Deleting #{options.length} contacts"
+            doActivity options
+
+    casper.then ->
         test.comment "Search all contacts"
         casper.evaluate ->
             Activity = require '../utils/activity_utils'
@@ -119,12 +130,12 @@ casper.test.begin 'Test Activities', (test) ->
         test.comment "Create contacts already in database"
         options = getOptions 'search'
         doActivity options, (res) ->
-            nb = res.length
+            nb = res[0].result.length
             options = contacts.map (e) -> getOptions 'create', 'contact', e
             doActivity options, (res) ->
                 options = getOptions 'search'
                 doActivity options, (res) ->
-                    test.assert res.length is nb, "No duplicate inserted"
+                    test.assert res[0].result.length is nb, "No duplicate inserted"
 
     casper.then ->
         test.comment "Search by name for contacts created"
