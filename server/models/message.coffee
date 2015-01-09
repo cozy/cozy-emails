@@ -541,6 +541,12 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
 
     # we store normalized versions of subject & messageID for threading
     messageID = mail.headers['message-id']
+
+    # reported bug : if a mail has two messageID, mailparser make it an array
+    # and it crashes the server
+    if messageID && messageID instanceof Array
+        messageID = messageID[0]
+
     mail.messageID = mailutils.normalizeMessageID messageID if messageID
     mail.normSubject = mailutils.normalizeSubject mail.subject if mail.subject
 
