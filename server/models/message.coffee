@@ -544,7 +544,7 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
 
     # reported bug : if a mail has two messageID, mailparser make it an array
     # and it crashes the server
-    if messageID && messageID instanceof Array
+    if messageID and messageID instanceof Array
         messageID = messageID[0]
 
     mail.messageID = mailutils.normalizeMessageID messageID if messageID
