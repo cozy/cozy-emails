@@ -53,42 +53,29 @@ casper.test.begin 'Test compose', (test) ->
             ContactActionCreator = require '../actions/contact_action_creator'
             ContactActionCreator.createContact name: 'Alice', address: 'alice@casper.cozy'
             ContactActionCreator.createContact name: 'Bob', address: 'bob@casper.cozy'
-        test.assertDoesntExist '.modal-dialog', 'No modal'
+        test.assertNotVisible '.contact-list', 'No contacts displayed'
+        casper.fillSelectors 'form',
+            '#compose-to': 'casper.cozy'
         casper.click '#compose-to + .btn-cozy'
-        casper.waitForSelector '.modal-dialog', ->
-            test.pass 'Modal displayed'
-            casper.click '.modal-footer .btn'
-            casper.waitWhileSelector '.modal-dialog', ->
-                test.pass 'Modal hidden'
-
-    casper.then ->
-        test.comment "Select contacts"
-        casper.click '#compose-to + .btn-cozy'
-        casper.waitForSelector '.modal-dialog', ->
-            test.assertDoesntExist '.contact-list', 'No contacts displayed'
-            casper.fillSelectors 'form',
-                '.search-input': 'casper.cozy'
-            casper.click '.contact-form .search-btn'
-            casper.waitForSelector '.contact-list', ->
-                test.assertExist '.contact-list li', "Some contacts found"
-                contact = casper.fetchText '.contact-list li:nth-of-type(1)'
-                test.assert /casper\.cozy/.test(contact), "Contact match"
-                casper.click '.contact-list li:nth-of-type(1) '
-                casper.waitWhileSelector '.modal-dialog', ->
-                    values = casper.getFormValues('#email-compose form')
-                    test.assert values["compose-to"] is contact, "Contact added"
-                    casper.click '#compose-to + .btn-cozy'
-                    casper.waitForSelector '.modal-dialog', ->
-                        test.assertDoesntExist '.contact-list', 'No contacts displayed'
-                        casper.fillSelectors 'form',
-                            '.search-input': 'casper.cozy'
-                        casper.click '.contact-form .search-btn'
-                        casper.waitForSelector '.contact-list', ->
-                            contact2 = casper.fetchText '.contact-list li:nth-of-type(2)'
-                            casper.click '.contact-list li:nth-of-type(2) '
-                            casper.waitWhileSelector '.modal-dialog', ->
-                                values = casper.getFormValues('#email-compose form')
-                                test.assertEqual values["compose-to"], "#{contact}, #{contact2}", "Contact added"
+        casper.waitUntilVisible '.contact-list', ->
+            test.assertExist '.contact-list li', "Some contacts found"
+            contact = casper.fetchText '.contact-list li:nth-of-type(1)'
+            test.assert /casper\.cozy/.test(contact), "Contact match"
+            casper.click '.contact-list li:nth-of-type(1) '
+            casper.waitWhileVisible '.contact-list', ->
+                values = casper.getFormValues('#email-compose form')
+                test.assert values["compose-to"] is "#{contact}, ", "Contact added"
+                casper.fillSelectors 'form',
+                    '#compose-to': "#{contact}, casper.cozy"
+                casper.click '#compose-to + .btn-cozy'
+                casper.waitUntilVisible '.contact-list', ->
+                    test.assertExist '.contact-list li', "Some contacts found"
+                    contact2 = casper.fetchText '.contact-list li:nth-of-type(1)'
+                    test.assert /casper\.cozy/.test(contact), "Contact match"
+                    casper.click '.contact-list li:nth-of-type(1) '
+                    casper.waitWhileVisible '.contact-list', ->
+                        values = casper.getFormValues('#email-compose form')
+                        test.assert values["compose-to"] is "#{contact}, #{contact2}, ", "Contact added"
 
     casper.run ->
         test.done()

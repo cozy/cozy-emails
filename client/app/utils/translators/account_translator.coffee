@@ -22,13 +22,13 @@ module.exports = AccountTranslator =
                 # If needed, use mailboxes attribs to set draft, sent and trash
                 # @TODO, the server does it, remove this ?
                 if not raw.draftMailbox? and MailboxFlags.DRAFT in box.attribs
-                    raw.draftMailbox = mailboxes.draft
+                    raw.draftMailbox = box.id
 
                 if not raw.sentMailbox? and MailboxFlags.SENT in box.attribs
-                    raw.sentMailbox = mailboxes.sent
+                    raw.sentMailbox = box.id
 
                 if not raw.trashMailbox? and MailboxFlags.TRASH in box.attribs
-                    raw.trashMailbox = mailboxes.trash
+                    raw.trashMailbox = box.id
 
                 box.depth = box.tree.length - 1
 

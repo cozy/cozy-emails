@@ -322,7 +322,7 @@ AccountConfigMain = React.createClass
             action: 'default'
             fullWidth: true
 
-        form className: 'form-horizontal',
+        form className: 'form-horizontal', method: 'POST',
             @renderError()
             fieldset null,
                 legend null, t 'account identifiers'

@@ -80,7 +80,7 @@ module.exports = Compose = React.createClass
                     i className:'fa fa-compress'
             h3 null,
                 t 'compose'
-            form className: '',
+            form className: 'form-compose',
                 div className: 'form-group',
                     label
                         htmlFor: 'compose-from',
@@ -163,7 +163,7 @@ module.exports = Compose = React.createClass
                     div className: 'btn-toolbar', role: 'toolbar',
                         div className: '',
                             button
-                                className: 'btn btn-cozy',
+                                className: 'btn btn-cozy btn-send',
                                 type: 'button',
                                 disable: if @state.sending then true else null
                                 onClick: @onSend,
@@ -173,7 +173,7 @@ module.exports = Compose = React.createClass
                                         span className: 'fa fa-send'
                                     span null, labelSend
                             button
-                                className: 'btn btn-cozy',
+                                className: 'btn btn-cozy btn-save',
                                 disable: if @state.saving then true else null
                                 type: 'button', onClick: @onDraft,
                                     if @state.saving
@@ -183,14 +183,14 @@ module.exports = Compose = React.createClass
                                     span null, t 'compose action draft'
                             if @props.message?
                                 button
-                                    className: 'btn btn-cozy-non-default',
+                                    className: 'btn btn-cozy-non-default btn-delete',
                                     type: 'button',
                                     onClick: @onDelete,
                                         span className: 'fa fa-trash-o'
                                         span null, t 'compose action delete'
                             button
                                 onClick: onCancel
-                                className: 'btn btn-cozy-non-default',
+                                className: 'btn btn-cozy-non-default btn-cancel',
                                 t 'app cancel'
                 div className: 'clearfix', null
 
@@ -295,7 +295,7 @@ module.exports = Compose = React.createClass
             else if @state.subject is ''
                 valid = false
                 LayoutActionCreator.alertError t "compose error no subject"
-                setTimeout ->
+                setTimeout =>
                     @refs.subject.getDOMNode().focus()
                 , 0
 

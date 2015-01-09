@@ -168,7 +168,7 @@ MessageList = React.createClass
                         if not @state.edited
                             div className: 'btn-group btn-group-sm message-list-option',
                                 button
-                                    className: 'btn btn-default trash',
+                                    className: 'btn btn-default',
                                     type: 'button',
                                     disabled: null,
                                     onClick: @refresh,

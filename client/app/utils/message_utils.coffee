@@ -26,13 +26,13 @@ module.exports = MessageUtils =
             res.push(MessageUtils.displayAddress item, full)
         return res.join ", "
 
-
     getReplyToAddress: (message) ->
         reply = message.get 'replyTo'
         from = message.get 'from'
-        return if reply?.length isnt 0 then reply else from
-
-
+        if (reply? and reply.length isnt 0)
+            return reply
+        else
+            return from
 
     makeReplyMessage: (inReplyTo, action, inHTML) ->
         message =
