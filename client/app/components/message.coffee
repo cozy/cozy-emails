@@ -249,7 +249,7 @@ module.exports = React.createClass
                         p className: 'receivers',
                             span null, t "mail receivers"
                             @renderAddress 'to'
-                        if @props.message.get('cc')?length > 0
+                        if @props.message.get('cc')?.length > 0
                             p className: 'receivers',
                                 span null, t "mail receivers cc"
                                 @renderAddress 'cc'
@@ -600,6 +600,7 @@ MessageContent = React.createClass
                                 t 'message images display'
                 iframe
                     'data-message-id': @props.message.get 'id'
+                    name: "frame-#{@props.message.get 'id'}"
                     className: 'content',
                     ref: 'content',
                     allowTransparency: true,

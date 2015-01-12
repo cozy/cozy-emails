@@ -142,6 +142,28 @@
         "attribs": [],
         "children": [],
         "delimiter": ".",
+        "_id": "dovecot-ID-draft",
+        "label": "Draft",
+        "path": "Draft",
+        "tree": ["Draft"]
+    },
+    {
+        "docType": "Mailbox",
+        "accountID": "dovecot-ID",
+        "attribs": [],
+        "children": [],
+        "delimiter": ".",
+        "_id": "dovecot-ID-trash",
+        "label": "Trash",
+        "path": "Trash",
+        "tree": ["Trash"]
+    },
+    {
+        "docType": "Mailbox",
+        "accountID": "dovecot-ID",
+        "attribs": [],
+        "children": [],
+        "delimiter": ".",
         "_id": "f5cbd722-c3f9-4f6e-73d0-c75ddf65a2f1",
         "label": "Test Folder",
         "path": "Test Folder",

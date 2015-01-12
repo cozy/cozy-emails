@@ -43,13 +43,13 @@ Mailbox::RFC6154use = ->
 
 Mailbox::guessUse = ->
     path = @path.toLowerCase()
-    if 0 is path.indexOf 'sent'
+    if /sent/i.test path
         return 'sentMailbox'
-    else if 0 is path.indexOf 'draft'
+    else if /draft/i.test path
         return 'draftMailbox'
-    else if 0 is path.indexOf 'flagged'
+    else if /flagged/i.test path
         return 'flaggedMailbox'
-    else if 0 is path.indexOf 'trash'
+    else if /trash/i.test path
         return 'trashMailbox'
     # @TODO add more
 

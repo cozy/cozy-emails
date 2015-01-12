@@ -332,16 +332,6 @@ Account::imap_createMail = (box, message, callback) ->
             return callback err if err
             callback null, uid
 
-# Public: remove a mail in the given box
-# used for drafts
-#
-# account - the {Account} to delete mail from
-# box - the {Mailbox} to delete mail from
-# mail - a {Message} to create
-#
-# Returns a the UID of the created mail
-
-
 Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
     useRFC6154 = false
     inboxMailbox = null

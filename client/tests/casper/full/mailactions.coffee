@@ -18,6 +18,7 @@ casper.test.begin 'Test Message Actions', (test) ->
     casper.then ->
         test.comment "Reply"
         casper.cozy.selectMessage "DoveCot", "Test Folder", "Re: troll", "20141106093513.GH5642@mail.cozy.io", ->
+            test.assertEquals casper.fetchText('.conversation li.message.active .participants'), 'contact, Me, You', 'Participants list'
             test.assertDoesntExist '#email-compose', "No compose form"
             casper.click '.messageToolbox button.reply'
             casper.waitForSelector '#email-compose', ->
@@ -25,10 +26,10 @@ casper.test.begin 'Test Message Actions', (test) ->
                 test.assertNotVisible '#compose-cc', 'Cc hidden'
                 test.assertNotVisible '#compose-bcc', 'Bcc hidden'
                 values = casper.getFormValues('#email-compose form')
-                test.assert values["compose-to"] is "you@cozycloud.cc", "Reply To"
-                test.assert values["compose-cc"] is "", "Reply Cc"
-                test.assert values["compose-bcc"] is "", "Reply Bcc"
-                test.assert values["compose-subject"] is "Re: Re: troll", "Reply Subject"
+                test.assertEquals values["compose-to"], "contact@cozycloud.cc", "Reply To"
+                test.assertEquals values["compose-cc"], "", "Reply Cc"
+                test.assertEquals values["compose-bcc"], "", "Reply Bcc"
+                test.assertEquals values["compose-subject"], "Re: Re: troll", "Reply Subject"
                 casper.click '.form-compose .btn-cancel'
                 casper.waitWhileSelector '#email-compose', ->
                     test.pass "Compose closed"
@@ -43,7 +44,7 @@ casper.test.begin 'Test Message Actions', (test) ->
                 test.assertVisible '#compose-cc', 'Cc visible'
                 test.assertNotVisible '#compose-bcc', 'Bcc hidden'
                 values = casper.getFormValues('#email-compose form')
-                test.assertEquals values["compose-to"], "you@cozycloud.cc", "Reply All To"
+                test.assertEquals values["compose-to"], "contact@cozycloud.cc", "Reply All To"
                 test.assertEquals values["compose-cc"], '"Me" <me@cozycloud.cc>, "You" <you@cozycloud.cc>', "Reply All Cc"
                 test.assertEquals values["compose-bcc"], "", "Reply All Bcc"
                 test.assertEquals values["compose-subject"], "Re: Re: troll", "Reply Subject"
