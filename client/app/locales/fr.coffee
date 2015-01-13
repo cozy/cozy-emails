@@ -223,6 +223,10 @@ module.exports =
       "settings button save"       : "Enregistrer"
       # "settings label mpp"         : "Nombre de messages par page"
       "settings plugins"           : "Modules complémentaires"
+      "settings plugin add"        : "Ajouter"
+      "settings plugin del"        : "Supprimer"
+      "settings plugin new name"   : "Nom du plugin"
+      "settings plugin new url"    : "Url du plugin"
       "settings label composeInHTML"        : "Éditeur riche"
       "settings label composeOnTop"         : "Répondre au-dessus du message"
       "settings label displayConversation"  : "Afficher les conversations"
@@ -290,3 +294,11 @@ module.exports =
       "gmail security link": """
             Activer l'accès pour les applications moins sécurisées
       """
+
+      # Plugins
+      'plugin name Gallery'            : 'Gallerie de pièces jointes'
+      'plugin name medium-editor'      : 'Éditeur Medium'
+      'plugin name MiniSlate'          : 'Éditeur MiniSlate'
+      'plugin name Sample JS'          : 'Example'
+      'plugin name Keyboard shortcuts' : 'Raccourcis clavier'
+      'plugin name VCard'              : 'Affichage de VCard'

@@ -1,4 +1,4 @@
-{div, h3, form, label, input, button, fieldset, legend, ul, li, a} = React.DOM
+{div, h3, form, label, input, button, fieldset, legend, ul, li, a, span, i} = React.DOM
 classer = React.addons.classSet
 
 LayoutActionCreator   = require '../actions/layout_action_creator'
@@ -14,7 +14,7 @@ module.exports = React.createClass
 
         classLabel = 'col-sm-2 col-sm-offset-2 control-label'
 
-        div id: 'mailbox-config',
+        div id: 'settings',
             h3 className: null, t "settings title"
 
             if @props.error
@@ -135,15 +135,46 @@ module.exports = React.createClass
                             label
                                 className: classLabel,
                                 htmlFor: 'settings-plugin-' + pluginName,
-                                pluginConf.name
+                                t('plugin name ' + pluginConf.name, {_: pluginConf.name})
                             div className: 'col-sm-3',
-                                input
-                                    id: 'settings-plugin-' + pluginName,
-                                    checked: pluginConf.active,
-                                    onChange: @handleChange,
-                                    'data-target': 'plugin',
-                                    'data-plugin': pluginName,
-                                    type: 'checkbox'
+                                if pluginConf.url?
+                                    span
+                                        className: 'clickable'
+                                        onClick: @pluginDel
+                                        'data-plugin': pluginName,
+                                        title: t("settings plugin del"),
+                                            i className: 'fa fa-trash-o'
+                                else
+                                    input
+                                        id: 'settings-plugin-' + pluginName,
+                                        checked: pluginConf.active,
+                                        onChange: @handleChange,
+                                        'data-target': 'plugin',
+                                        'data-plugin': pluginName,
+                                        type: 'checkbox'
+                form className: 'form-horizontal', key: pluginName,
+                    div className: 'form-group',
+                        div className: 'col-xs-4',
+                            input
+                                id: 'newpluginName',
+                                name: 'newpluginName',
+                                ref: 'newpluginName',
+                                type: 'text',
+                                className: 'form-control',
+                                placeholder: t "settings plugin new name"
+                        div className: 'col-xs-6',
+                            input
+                                id: 'newpluginUrl',
+                                name: 'newpluginUrl',
+                                ref: 'newpluginUrl',
+                                type: 'text',
+                                className: 'form-control',
+                                placeholder: t "settings plugin new url"
+                        span
+                            className: "col-xs-1 clickable"
+                            onClick: @pluginAdd
+                            title: t("settings plugin add"),
+                                i className: 'fa fa-plus'
 
     _renderOption: (option) ->
         classLabel = 'col-sm-2 col-sm-offset-2 control-label'
@@ -210,6 +241,28 @@ module.exports = React.createClass
                     settings.plugins[pluginName].active = window.plugins[pluginName].active
                 @setState({settings: settings})
                 SettingsActionCreator.edit settings
+
+    pluginAdd: ->
+        name = @refs.newpluginName.getDOMNode().value.trim()
+        url  = @refs.newpluginUrl.getDOMNode().value.trim()
+        PluginUtils.loadJS url, =>
+            settings = @state.settings
+            settings.plugins[name] =
+                name: name
+                active: true
+                url: url
+            @setState({settings: settings})
+            SettingsActionCreator.edit settings
+
+    pluginDel: (event) ->
+        event.preventDefault()
+        target = event.currentTarget
+        pluginName = target.dataset.plugin
+        settings = @state.settings
+        PluginUtils.deactivate pluginName
+        delete settings.plugins[pluginName]
+        @setState({settings: settings})
+        SettingsActionCreator.edit settings
 
     getInitialState: (forceDefault) ->
         settings = @props.settings.toObject()

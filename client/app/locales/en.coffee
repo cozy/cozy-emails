@@ -217,6 +217,11 @@ module.exports =
       "settings button save"       : "Save"
       #"settings label mpp"         : "Messages per page"
       "settings plugins"           : "Add ons"
+      "settings plugins"           : "Modules complémentaires"
+      "settings plugin add"        : "Add"
+      "settings plugin del"        : "Delete"
+      "settings plugin new name"   : "Plugin Name"
+      "settings plugin new url"    : "Plugin URL"
       "settings label composeInHTML"        : "Rich message editor"
       "settings label composeOnTop"         : "Reply on top of message"
       "settings label displayConversation"  : "Display conversations"
@@ -277,3 +282,11 @@ module.exports =
             less secure apps.
       """
       "gmail security link": "Enable access for less secure apps."
+
+      # Plugins
+      'plugin name Gallery'            : 'Attachments gallery'
+      'plugin name medium-editor'      : 'Medium editor'
+      'plugin name MiniSlate'          : 'MiniSlate editor'
+      'plugin name Sample JS'          : 'Sample'
+      'plugin name Keyboard shortcuts' : 'Keyboard shortcuts'
+      'plugin name VCard'              : 'Contacts VCards'
