@@ -10,7 +10,7 @@ casper.test.begin 'Test compose', (test) ->
         accountSel = "#account-list .menu-item.account .item-label"
         accounts = casper.getElementsInfo accountSel
         ids = accounts.map (e) -> return e.attributes['data-account-id']
-        casper.waitForSelector "#mailbox-config", ->
+        casper.waitForSelector "#settings", ->
             inHTML = casper.evaluate ->
                 return document.getElementById("settings-composeInHTML").checked
             doTest = ->
@@ -24,7 +24,7 @@ casper.test.begin 'Test compose', (test) ->
             casper.waitForSelector "#email-compose", ->
                 doTest()
                 casper.click "#menu .settings-action"
-                casper.waitForSelector "#mailbox-config", ->
+                casper.waitForSelector "#settings", ->
                     casper.click "#settings-composeInHTML"
                     inHTML = not inHTML
                     casper.wait 5000, ->
