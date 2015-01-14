@@ -246,6 +246,7 @@ module.exports = React.createClass
         name = @refs.newpluginName.getDOMNode().value.trim()
         url  = @refs.newpluginUrl.getDOMNode().value.trim()
         PluginUtils.loadJS url, =>
+            PluginUtils.activate name
             settings = @state.settings
             settings.plugins[name] =
                 name: name

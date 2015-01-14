@@ -49,18 +49,21 @@ module.exports =
             window.plugins = {}
 
         # Observe addition and deletion of plugins
-        if Object.observe?
-            Object.observe window.plugins, (changes) =>
-                changes.forEach (change) =>
-                    if change.type is 'add'
-                        @activate change.name
-                    else if change.type is 'delete'
-                        @deactivate change.name
+        #if Object.observe?
+        #    Object.observe window.plugins, (changes) =>
+        #        changes.forEach (change) =>
+        #            if change.type is 'add'
+        #                @activate change.name
+        #            else if change.type is 'delete'
+        #                @deactivate change.name
 
         # Init every plugins
-        for own pluginName, pluginConf of window.plugins
+        Object.keys(window.plugins).forEach (pluginName) =>
+            pluginConf = window.plugins[pluginName]
             if pluginConf.url?
-                @loadJS pluginConf.url
+                onLoad = =>
+                    @activate pluginName
+                @loadJS pluginConf.url, onLoad
             else
                 if pluginConf.active
                     @activate pluginName
