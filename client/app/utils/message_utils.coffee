@@ -71,7 +71,7 @@ module.exports = MessageUtils =
                     @generateReplyText(text) + "\n"
                 message.html = """
                     <p><br /></p>
-                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
+                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}<span class="originalToggle"> … </span></p>
                     <blockquote>#{html}</blockquote>
                     <p><br /></p>
                     """
@@ -84,7 +84,7 @@ module.exports = MessageUtils =
                     @generateReplyText(text) + "\n"
                 message.html = """
                     <p><br /></p>
-                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
+                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}<span class="originalToggle"> … </span></p>
                     <blockquote>#{html}</blockquote>
                     <p><br /></p>
                     """

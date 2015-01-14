@@ -525,6 +525,10 @@ ComposeEditor = React.createClass
 
                     , 0
             )
+            # Allow to hide original message
+            jQuery('#email-compose .rt-editor .originalToggle').on('click', ->
+                jQuery('#email-compose .rt-editor').toggleClass('folded')
+            )
         else
             # Text message
             if @props.focus
