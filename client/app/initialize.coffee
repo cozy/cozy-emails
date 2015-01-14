@@ -9,8 +9,8 @@ window.onerror = (msg, url, line, col, error) ->
                 type: 'error'
                 error:
                     msg: msg
-                    full: error.toString()
-                    stack: error.stack
+                    full: exception
+                    stack: error?.stack
                 url: url
                 line: line
                 col: col
