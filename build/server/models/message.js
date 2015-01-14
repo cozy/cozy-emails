@@ -614,6 +614,9 @@ Message.createFromImapMessage = function(mail, box, uid, callback) {
   mail.mailboxIDs = {};
   mail.mailboxIDs[box._id] = uid;
   messageID = mail.headers['message-id'];
+  if (messageID && messageID instanceof Array) {
+    messageID = messageID[0];
+  }
   if (messageID) {
     mail.messageID = mailutils.normalizeMessageID(messageID);
   }
