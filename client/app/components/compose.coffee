@@ -40,18 +40,6 @@ module.exports = Compose = React.createClass
 
         return unless @props.accounts
 
-        expandUrl = @buildUrl
-            direction: 'first'
-            action: 'compose'
-            fullWidth: true
-
-        collapseUrl = @buildUrl
-            firstPanel:
-                action: 'account.mailbox.messages'
-                parameters: @state.accountID
-            secondPanel:
-                action: 'compose'
-
         onCancel = =>
             if @props.onCancel?
                 @props.onCancel()
@@ -60,6 +48,9 @@ module.exports = Compose = React.createClass
                     direction: 'first'
                     action: 'default'
                     fullWidth: true
+
+        toggleFullscreen = ->
+            LayoutActionCreator.toggleFullscreen()
 
         closeUrl = @buildClosePanelUrl @props.layout
 
@@ -73,10 +64,10 @@ module.exports = Compose = React.createClass
 
         div id: 'email-compose',
             if @props.layout isnt 'full'
-                a href: expandUrl, className: 'expand pull-right',
+                a onClick: toggleFullscreen, className: 'expand pull-right clickable',
                     i className: 'fa fa-arrows-h'
             else
-                a href: collapseUrl, className: 'close-email pull-right',
+                a onClick: toggleFullscreen, className: 'close-email pull-right clickable',
                     i className:'fa fa-compress'
             h3 null,
                 t 'compose'

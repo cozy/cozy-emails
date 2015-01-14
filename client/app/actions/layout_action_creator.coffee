@@ -14,6 +14,7 @@ MessageActionCreator = require './message_action_creator'
 SearchActionCreator = require './search_action_creator'
 
 _cachedQuery = {}
+_cachedDisposition = null
 
 module.exports = LayoutActionCreator =
 
@@ -23,6 +24,21 @@ module.exports = LayoutActionCreator =
             value:
                 type: type
                 value: value
+
+    toggleFullscreen: ->
+        if _cachedDisposition?
+            AppDispatcher.handleViewAction
+                type: ActionTypes.SET_DISPOSITION
+                value:
+                    disposition: _cachedDisposition
+            _cachedDisposition = null
+        else
+            _cachedDisposition = _.clone LayoutStore.getDisposition()
+            AppDispatcher.handleViewAction
+                type: ActionTypes.SET_DISPOSITION
+                value:
+                    type: _cachedDisposition.type
+                    value: 0
 
     alert: (level, message) ->
         AppDispatcher.handleViewAction

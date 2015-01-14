@@ -100,8 +100,8 @@ if (typeof window.plugins !== "object") {
     links = Array.prototype.slice.call(document.querySelectorAll('#menu .mailbox-list a[href]'));
     links.some(function (item, e) {
       if (item.parentNode.classList.contains('active') && item.parentNode.parentNode.parentNode.classList.contains('active')) {
-        prev = links[e-1];
-        next = links[e+1];
+        prev = links[e - 1];
+        next = links[e + 1];
         return true;
       } else {
         return false;
@@ -115,7 +115,7 @@ if (typeof window.plugins !== "object") {
         name: "Display current message",
         action: function (e) {
           if (window.cozyMails.getCurrentActions().indexOf('account.mailbox.messages') === 0 &&
-             ['INPUT', 'BUTTON'].indexOf(document.activeElement.tagName) === -1 ) {
+             ['INPUT', 'BUTTON'].indexOf(document.activeElement.tagName) === -1) {
             e.preventDefault();
             window.cozyMails.messageDisplay();
           }
@@ -211,6 +211,13 @@ if (typeof window.plugins !== "object") {
         action: function (e) {
           e.preventDefault();
           layoutHeight(-1);
+        }
+      },
+      'f': {
+        name: "Toggle fullscreen",
+        action: function (e) {
+          e.preventDefault();
+          require('actions/layout_action_creator').toggleFullscreen();
         }
       },
       'w': {
