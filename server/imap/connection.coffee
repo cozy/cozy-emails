@@ -180,12 +180,9 @@ Imap::fetchOneMailRaw = (uid, callback) ->
             # for now, we dont use the msg attributes
 
         msg.on 'body', (stream, info) ->
-            console.log info
-            buffer = ''
-            stream.on 'data', (chunk) ->
-                buffer += chunk.toString 'utf8'
-            stream.once 'end', ->
-                callback buffer
+            stream_to_buffer_array stream, (err, parts) ->
+                return callback err if err
+                callback null, Buffer.concat(parts)
 
     fetch.on 'error', callback
     fetch.on 'end', ->

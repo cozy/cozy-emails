@@ -380,16 +380,15 @@ module.exports.conversationPatch = (req, res, next) ->
         res.send 200, messages
 
 module.exports.raw = (req, res, next) ->
-    Mailbox.find req.params.mailboxID, (err, mailbox) ->
-        return next err if err
-        if not mailbox?
-            return next new Error 'Unknown mailbox'
-        mailbox.doASAPWithBox (imap, imapbox, cb) ->
-            try
-                imap.fetchOneMailRaw req.params.messageID, (message) ->
-                    cb()
-                    res.type 'text/plain'
-                    res.send 200, message
-            catch e
+    req.mailbox.doASAPWithBox (imap, imapbox, cb) ->
+        try
+            imap.fetchOneMailRaw req.params.messageID, (err, message) ->
                 cb()
-                return next e
+                return next err if err
+                # should be message/rfc822 but text/plain allow to read the
+                # raw message in the browser
+                res.type 'text/plain'
+                res.send 200, message
+        catch e
+            cb()
+            return next e
