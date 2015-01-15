@@ -384,9 +384,13 @@ ComposeEditor = React.createClass
             @props.html.requestChange @refs.html.getDOMNode().innerHTML
         onTextChange = (event) =>
             @props.text.requestChange @refs.content.getDOMNode().value
+        if @props.settings.get 'composeOnTop'
+            folded = 'folded'
+        else
+            folded = ''
         if @props.composeInHTML
             div
-                className: 'rt-editor form-control',
+                className: "rt-editor form-control #{folded}",
                 ref: 'html',
                 contentEditable: true,
                 onKeyDown: @onKeyDown,
