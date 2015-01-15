@@ -27,6 +27,8 @@ LayoutStore   = require '../stores/layout_store'
 SettingsStore = require '../stores/settings_store'
 SearchStore   = require '../stores/search_store'
 RefreshesStore = require '../stores/refreshes_store'
+Stores = [AccountStore, ContactStore, MessageStore, LayoutStore,
+        SettingsStore, SearchStore, RefreshesStore]
 
 # Flux actions
 LayoutActionCreator = require '../actions/layout_action_creator'
@@ -49,8 +51,7 @@ module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [AccountStore, ContactStore, MessageStore, LayoutStore,
-        SettingsStore, SearchStore, RefreshesStore]
+        StoreWatchMixin Stores
         RouterMixin
     ]
 
@@ -444,8 +445,17 @@ module.exports = Application = React.createClass
                         fullWidth: true
                     LayoutActionCreator.alertError t 'account no special mailboxes'
 
-    # Stops listening to router changes
+    _notify: (title, options) ->
+        window.cozyMails.notify title, options
+
+    componentDidMount: ->
+        Stores.forEach (store) =>
+            store.on 'notify', @_notify
+
     componentWillUnmount: ->
+        Stores.forEach (store) =>
+            store.removeListener 'notify', @notify
+        # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
 
     # Toggle the menu in responsive mode

@@ -135,7 +135,7 @@ module.exports =
         AppDispatcher = require '../app_dispatcher'
         window.setInterval ->
             content =
-                "accountID": AccountStore.getSelected().get('id'),
+                "accountID": AccountStore.getDefault().get('id'),
                 "id": AccountStore.getDefaultMailbox().get('id'),
                 "label": "INBOX",
                 "path": "INBOX",
@@ -147,11 +147,20 @@ module.exports =
                 "lastSync": new Date().toISOString(),
                 "nbTotal": 467,
                 "nbUnread": 0,
-                "nbRecent": 0,
+                "nbRecent": 5,
                 "weight": 1000,
                 "depth": 0
             AppDispatcher.handleServerAction
                 type: 'RECEIVE_MAILBOX_UPDATE'
                 value: content
         , 5000
+
+    notify: (title, options) ->
+        if SettingsStore.get 'desktopNotifications'
+            new Notification title, options
+        else
+            # prevent dispatching when already dispatching
+            window.setTimeout ->
+                LayoutActionCreator.notify "#{title} - #{options.body}"
+            , 0
 

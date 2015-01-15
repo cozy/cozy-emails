@@ -222,8 +222,10 @@ module.exports =
       "settings plugin del"        : "Delete"
       "settings plugin new name"   : "Plugin Name"
       "settings plugin new url"    : "Plugin URL"
+      # SETTINGS
       "settings label composeInHTML"        : "Rich message editor"
       "settings label composeOnTop"         : "Reply on top of message"
+      "settings label desktopNotifications" : "Notifications"
       "settings label displayConversation"  : "Display conversations"
       "settings label displayPreview"       : "Display message preview"
       "settings label messageDisplayHTML"   : "Display message in HTML"
@@ -266,6 +268,13 @@ module.exports =
       "toast hide"      : "Hide alerts"
       "toast show"      : "Display alerts"
       "toast close all" : "Close all alerts"
+
+      # Notifications
+      "notif new title": 'CozyEmail'
+      "notif new": """
+        %{smart_count} new message in %{box} of %{account}||||
+        %{smart_count} new messages in %{box} of %{account}||||
+      """
 
       # Contacts
       "contact form"             : "Select contacts"

@@ -227,8 +227,10 @@ module.exports =
       "settings plugin del"        : "Supprimer"
       "settings plugin new name"   : "Nom du plugin"
       "settings plugin new url"    : "Url du plugin"
+      # SETTINGS
       "settings label composeInHTML"        : "Éditeur riche"
       "settings label composeOnTop"         : "Répondre au-dessus du message"
+      "settings label desktopNotifications" : "Notifications"
       "settings label displayConversation"  : "Afficher les conversations"
       "settings label displayPreview"       : "Prévisualiser les messages"
       "settings label messageDisplayHTML"   : "Afficher les messages en HTML"
@@ -275,6 +277,13 @@ module.exports =
       "toast hide"      : "Masquer les alertes"
       "toast show"      : "Afficher les alertes"
       "toast close all" : "Fermer toutes les alertes"
+
+      # Notifications
+      "notif new title": 'Messagerie Cozy'
+      "notif new": """
+        %{smart_count} nouveau message dans %{box} de %{account}||||
+        %{smart_count} nouveaux messages dans %{box} de %{account}||||
+      """
 
       # Contacts
       "contact form"             : "Sélectionnez des contacts"

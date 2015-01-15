@@ -4,9 +4,11 @@ _ = require 'lodash'
 Any = (x) -> x
 
 module.exports = Settings = americano.getModel 'MailsSettings',
+    # SETTINGS
     #messagesPerPage      : type : Number,  default : 25
     composeInHTML        : type : Boolean, default : true
     composeOnTop         : type : Boolean, default : false
+    desktopNotifications : type : Boolean, default : false
     displayConversation  : type : Boolean, default : true
     displayPreview       : type : Boolean, default : true
     layoutStyle          : type : String,  default : 'vertical'

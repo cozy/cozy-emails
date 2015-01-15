@@ -75,6 +75,13 @@ window.onload = ->
         # begin realtime
         require './utils/socketio_utils'
 
+        # Desktop notifications
+        if window.settings.desktopNotifications
+            Notification.requestPermission (status) ->
+                # This allows to use Notification.permission with Chrome/Safari
+                if Notification.permission isnt status
+                    Notification.permission = status
+
     catch e
         console.error e
         exception = e.toString()

@@ -12,7 +12,8 @@ module.exports = React.createClass
 
     render: ->
 
-        classLabel = 'col-sm-2 col-sm-offset-2 control-label'
+        classLabel = 'col-sm-5 col-sm-offset-1 control-label'
+        classInput = 'col-sm-6'
 
         div id: 'settings',
             h3 className: null, t "settings title"
@@ -24,7 +25,7 @@ module.exports = React.createClass
                 #div className: 'form-group',
                 #    label htmlFor: 'settings-mpp', className: classLabel,
                 #        t "settings label mpp"
-                #    div className: 'col-sm-3',
+                #    div className: classInput,
                 #        input
                 #            id: 'settings-mpp',
                 #            value: @state.settings.messagesPerPage,
@@ -40,7 +41,7 @@ module.exports = React.createClass
                 #div className: 'form-group',
                 #    label htmlFor: 'settings-mpp', className: classLabel,
                 #        t "settings lang"
-                #    div className: 'col-sm-3',
+                #    div className: classInput,
                 #        div className: "dropdown",
                 #            button
                 #                className: "btn btn-default dropdown-toggle"
@@ -65,7 +66,7 @@ module.exports = React.createClass
                 div className: 'form-group',
                     label htmlFor: 'settings-layoutStyle', className: classLabel,
                         t "settings label listStyle"
-                    div className: 'col-sm-3',
+                    div className: classInput,
                         div className: "dropdown",
                             button
                                 id: 'settings-layoutStyle'
@@ -97,7 +98,7 @@ module.exports = React.createClass
                 div className: 'form-group',
                     label htmlFor: 'settings-listStyle', className: classLabel,
                         t "settings label listStyle"
-                    div className: 'col-sm-3',
+                    div className: classInput,
                         div className: "dropdown",
                             button
                                 id: 'settings-listStyle'
@@ -119,6 +120,7 @@ module.exports = React.createClass
                                     onClick: @handleChange,
                                         a role: "menuitem", t "settings label listStyle compact"
 
+            # SETTINGS
             @_renderOption 'displayConversation'
             @_renderOption 'composeInHTML'
             @_renderOption 'composeOnTop'
@@ -126,6 +128,7 @@ module.exports = React.createClass
             @_renderOption 'messageDisplayImages'
             @_renderOption 'messageConfirmDelete'
             @_renderOption 'displayPreview'
+            @_renderOption 'desktopNotifications'
 
             fieldset null,
                 legend null, t 'settings plugins'
@@ -136,7 +139,7 @@ module.exports = React.createClass
                                 className: classLabel,
                                 htmlFor: 'settings-plugin-' + pluginName,
                                 t('plugin name ' + pluginConf.name, {_: pluginConf.name})
-                            div className: 'col-sm-3',
+                            div className: classInput,
                                 if pluginConf.url?
                                     span
                                         className: 'clickable'
@@ -177,14 +180,15 @@ module.exports = React.createClass
                                 i className: 'fa fa-plus'
 
     _renderOption: (option) ->
-        classLabel = 'col-sm-2 col-sm-offset-2 control-label'
+        classLabel = 'col-sm-5 col-sm-offset-1 control-label'
+        classInput = 'col-sm-6'
         form className: 'form-horizontal',
             div className: 'form-group',
                 label
                     htmlFor: 'settings-' + option,
                     className: classLabel,
                     t "settings label " + option
-                div className: 'col-sm-3',
+                div className: classInput,
                     input
                         id: 'settings-' + option,
                         checked: @state.settings[option],
@@ -201,17 +205,24 @@ module.exports = React.createClass
             #    settings.messagesPerPage = target.value
             #    @setState({settings: settings})
             #    SettingsActionCreator.edit settings
+            # SETTINGS
             when 'composeInHTML'
             ,    'composeOnTop'
+            ,    'desktopNotifications'
             ,    'displayConversation'
+            ,    'displayPreview'
+            ,    'messageConfirmDelete'
             ,    'messageDisplayHTML'
             ,    'messageDisplayImages'
-            ,    'messageConfirmDelete'
-            ,    'displayPreview'
                 settings = @state.settings
                 settings[target.dataset.target] = target.checked
                 @setState({settings: settings})
                 SettingsActionCreator.edit settings
+                if settings.desktopNotifications
+                    Notification.requestPermission (status) ->
+                        # This allows to use Notification.permission with Chrome/Safari
+                        if Notification.permission isnt status
+                            Notification.permission = status
             #when 'lang'
             #    lang = target.dataset.lang
             #    settings = @state.settings
