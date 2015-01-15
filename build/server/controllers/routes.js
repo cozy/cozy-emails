@@ -74,5 +74,8 @@ module.exports = {
   },
   'test': {
     get: test.main
+  },
+  'raw/:mailboxID/:messageID': {
+    get: messages.raw
   }
 };

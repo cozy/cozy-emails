@@ -10,14 +10,6 @@ Any = function(x) {
 };
 
 module.exports = Settings = americano.getModel('MailsSettings', {
-  displayConversation: {
-    type: Boolean,
-    "default": true
-  },
-  displayPreview: {
-    type: Boolean,
-    "default": true
-  },
   composeInHTML: {
     type: Boolean,
     "default": true
@@ -26,6 +18,30 @@ module.exports = Settings = americano.getModel('MailsSettings', {
     type: Boolean,
     "default": false
   },
+  desktopNotifications: {
+    type: Boolean,
+    "default": false
+  },
+  displayConversation: {
+    type: Boolean,
+    "default": true
+  },
+  displayPreview: {
+    type: Boolean,
+    "default": true
+  },
+  layoutStyle: {
+    type: String,
+    "default": 'vertical'
+  },
+  listStyle: {
+    type: String,
+    "default": 'default'
+  },
+  messageConfirmDelete: {
+    type: Boolean,
+    "default": true
+  },
   messageDisplayHTML: {
     type: Boolean,
     "default": true
@@ -33,14 +49,6 @@ module.exports = Settings = americano.getModel('MailsSettings', {
   messageDisplayImages: {
     type: Boolean,
     "default": false
-  },
-  messageConfirmDelete: {
-    type: Boolean,
-    "default": true
-  },
-  listStyle: {
-    type: String,
-    "default": 'default'
   },
   plugins: {
     type: Any,

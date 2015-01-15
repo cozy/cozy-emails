@@ -451,3 +451,28 @@ module.exports.conversationPatch = function(req, res, next) {
     return res.send(200, messages);
   });
 };
+
+module.exports.raw = function(req, res, next) {
+  return Mailbox.find(req.params.mailboxID, function(err, mailbox) {
+    if (err) {
+      return next(err);
+    }
+    if (mailbox == null) {
+      return next(new Error('Unknown mailbox'));
+    }
+    return mailbox.doASAPWithBox(function(imap, imapbox, cb) {
+      var e;
+      try {
+        return imap.fetchOneMailRaw(req.params.messageID, function(message) {
+          cb();
+          res.type('text/plain');
+          return res.send(200, message);
+        });
+      } catch (_error) {
+        e = _error;
+        cb();
+        return next(e);
+      }
+    });
+  });
+};
