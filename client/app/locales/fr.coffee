@@ -112,6 +112,7 @@ module.exports =
       "account edit"                : "Modifier le compte"
       "account add"                 : "Créer"
       "account save"                : "Enregistrer"
+      "account check"               : "Tester la connexion"
       "account accountType short"   : "IMAP"
       "account accountType"         : "Type de compte"
       "account imapPort short"      : "993"
@@ -154,6 +155,7 @@ module.exports =
                                         sont incorrectes"
       "account type"                : "Type de compte"
       "account updated"             : "Modification enregistrée"
+      "account checked"             : "Paramètres corrects"
       "account refreshed"           : "Actualisé"
       "account creation ok"         : "Youpi, le compte a été créé !
         Sélectionnez à présent les dossiers que vous voulez voir

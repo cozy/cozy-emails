@@ -183,7 +183,7 @@ module.exports = React.createClass
                 setError error for error in valid.errors
                 @setState errors: errors
 
-    onSubmit: (event) ->
+    onSubmit: (event, check) ->
         if event?
             # prevents the page from reloading
             event.preventDefault()
@@ -192,7 +192,10 @@ module.exports = React.createClass
 
         if valid.valid
             if @state.id?
-                AccountActionCreator.edit accountValue, @state.id
+                if check
+                    AccountActionCreator.check accountValue, @state.id
+                else
+                    AccountActionCreator.edit accountValue, @state.id
             else
                 AccountActionCreator.create accountValue, (account) =>
                     LAC.notify t "account creation ok"
@@ -441,7 +444,13 @@ AccountConfigMain = React.createClass
                 div className: 'col-sm-offset-4',
                     button
                         className: 'btn btn-cozy',
-                        onClick: @props.onSubmit, buttonLabel
+                        onClick: @props.onSubmit,
+                        buttonLabel
+                    if @state.id?
+                        button
+                            className: 'btn btn-cozy-non-default',
+                            onClick: @onCheck,
+                            t 'account check'
                 if @state.id?
                     fieldset null,
                         legend null, t 'account danger zone'
@@ -450,6 +459,10 @@ AccountConfigMain = React.createClass
                                 className: 'btn btn-default btn-danger btn-remove',
                                 onClick: @onRemove,
                                 t "account remove"
+
+    # Check current parameters
+    onCheck: (event) ->
+        @props.onSubmit event, true
 
     onRemove: (event) ->
         # prevents the page from reloading

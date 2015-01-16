@@ -120,6 +120,17 @@ Account.createIfValid = (data, callback) ->
         return callback err if err
         callback null, account
 
+
+# Public: check account parameters
+#
+# data - account parameters
+#
+# Returns  {Account}
+Account.checkParams = (data, callback) ->
+    account = new Account data
+    account.testConnections callback
+
+
 Account::testConnections = (callback) ->
     return callback null if @isTest()
     @testSMTPConnection (err) =>

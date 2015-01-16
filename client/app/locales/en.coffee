@@ -109,6 +109,7 @@ module.exports =
       "account edit"                : "Edit account"
       "account add"                 : "Add"
       "account save"                : "Save"
+      "account check"               : "Check connection"
       "account accountType short"   : "IMAP"
       "account accountType"         : "Account type"
       "account imapPort short"      : "993"
@@ -150,6 +151,7 @@ module.exports =
       "account errors"              : "Some data are missing or invalid"
       "account type"                : "Account type"
       "account updated"             : "Account updated"
+      "account checked"             : "Parameters ok"
       "account creation ok"         : "Yeah! The account has been successfully
         created. Now select the mailboxes you want to see in the menu"
       "account refreshed"           : "Account refreshed"

@@ -32,6 +32,9 @@ module.exports =
         put: [accounts.fetch, accounts.edit, accounts.format]
         delete: [accounts.fetch, accounts.remove]
 
+    'account/:accountID/check':
+        put: [accounts.check]
+
     'conversation/:conversationID':
         get: [messages.fetchConversation, messages.conversationGet]
         delete: [messages.fetchConversation, messages.conversationDelete]
