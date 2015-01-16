@@ -157,6 +157,7 @@ module.exports =
       "account updated"             : "Modification enregistrée"
       "account checked"             : "Paramètres corrects"
       "account refreshed"           : "Actualisé"
+      "account refresh error"       : "Une erreur est survenue, vérifiez les paramètres de connexion aux comptes"
       "account creation ok"         : "Youpi, le compte a été créé !
         Sélectionnez à présent les dossiers que vous voulez voir
         apparaitre dans le menu"

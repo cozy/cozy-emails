@@ -213,7 +213,10 @@ module.exports =
 
         request.get url
         .end (res) ->
-            callback?(res.text)
+            if res.ok
+                callback null, res.text
+            else
+                callback res.body
 
     activityCreate: (options, callback) ->
         request.post "activity"

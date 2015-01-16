@@ -222,11 +222,18 @@ module.exports = LayoutActionCreator =
 
 
     refreshMessages: ->
-        XHRUtils.refresh (results) ->
-            if results is "done"
-                MessageActionCreator.receiveRawMessages null
-                LayoutActionCreator.notify t('account refreshed'),
-                    autoclose: true
+        XHRUtils.refresh true, (err, results) ->
+            if err?
+                console.log err
+                LayoutActionCreator.notify t('account refresh error'),
+                    autoclose: false
+                    finished: true
+                    errors: [ JSON.stringify err ]
+            else
+                if results is "done"
+                    MessageActionCreator.receiveRawMessages null
+                    LayoutActionCreator.notify t('account refreshed'),
+                        autoclose: true
 
     toastsShow: ->
         AppDispatcher.handleViewAction

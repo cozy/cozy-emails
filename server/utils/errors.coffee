@@ -61,9 +61,9 @@ utils.BadRequest = class BadRequest extends Error
 
 utils.TimeoutError = class TimeoutError extends Error
     constructor: (msg) ->
-        @name = 'BadRequest'
+        @name = 'Timeout'
         @status = 400
-        @message = 'Bad request : ' + msg
+        @message = 'Timeout: ' + msg
         Error.captureStackTrace this, arguments.callee
         return this
 

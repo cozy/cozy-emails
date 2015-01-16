@@ -78,7 +78,9 @@ Account.refreshAccounts = (accounts, limitByBox, onlyFavorites, callback) ->
         return cb null if account.isTest()
         return cb null if account.isRefreshing()
         account.imap_fetchMails limitByBox, onlyFavorites, cb
-    , callback
+    , (err) ->
+        log.error "REFRESHING ACCOUNT FAILED", err if err
+        callback err
 
 
 # Public: fetch the mailbox tree of a new {Account}
@@ -270,7 +272,8 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, callback) ->
     onlyFavorites ?= false
 
     @imap_refreshBoxes (err, toFetch, toDestroy) ->
-        return callback err if err
+        account.setRefreshing(false) if err
+        return callback {account: account.label, error: err} if err
 
         if onlyFavorites
             toFetch = toFetch.filter (box) -> box.id in account.favorites
@@ -298,7 +301,8 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, callback) ->
                 cb null
 
         , (err) ->
-            return callback err if err
+            account.setRefreshing(false) if err
+            return callback {account: account.label, error: err} if err
             log.debug "account#imap_fetchMails#DONE"
 
             async.eachSeries toDestroy, (box, cb) ->

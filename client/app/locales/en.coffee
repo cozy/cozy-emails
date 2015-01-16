@@ -155,6 +155,7 @@ module.exports =
       "account creation ok"         : "Yeah! The account has been successfully
         created. Now select the mailboxes you want to see in the menu"
       "account refreshed"           : "Account refreshed"
+      "account refresh error"       : "Error refreshing accounts, check parameters"
       "account identifiers"         : "Identification"
       "account actions"             : "Actions"
       "account danger zone"         : "Danger Zone"

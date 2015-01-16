@@ -54,7 +54,7 @@ module.exports = Toast = React.createClass
 
         div className: classes, role: "alert", key: @props.key,
             if @state.modalErrors
-                renderModal()
+                @renderModal()
 
             if percent?
                 div className: "progress",
@@ -89,6 +89,11 @@ module.exports = Toast = React.createClass
                             key: id
                             onClick: action.onClick,
                             action.label
+
+            if hasErrors
+                div className: 'toast-actions',
+                    a onClick: showModal,
+                        t 'there were errors', smart_count: toast.errors.length
 
 
 module.exports.Container = ToastContainer =  React.createClass
