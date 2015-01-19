@@ -362,7 +362,7 @@ AccountConfigMain = React.createClass
             if @state.displayGMAILSecurity
                 fieldset null,
                     legend null, t 'gmail security tile'
-                    p null, t 'gmail security body', login: @state.login
+                    p null, t 'gmail security body', login: @state.login.value
                     p null,
                         a
                             target: '_blank',
