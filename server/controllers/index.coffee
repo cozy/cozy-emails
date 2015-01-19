@@ -63,10 +63,9 @@ module.exports.refresh = (req, res, next) ->
         onlyFavorites = true
 
     Account.refreshAllAccounts limit, onlyFavorites, (err) ->
-        if err
-            res.send 500, err
-        else
-            res.send 200, refresh: 'done'
+        log.error "REFRESHING ACCOUNT FAILED", err if err
+        return next err if err
+        res.send 200, refresh: 'done'
 
 module.exports.refreshes = (req, res, next) ->
     res.send 200, ImapReporter.summary()

@@ -177,7 +177,7 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                console.log "Error in checkAccount", account, res.body?.error
+                console.log "Error in checkAccount", res.body
                 callback res.body, null
 
     removeAccount: (accountID) ->
