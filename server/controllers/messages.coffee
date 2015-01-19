@@ -35,7 +35,8 @@ module.exports.details = (req, res, next) ->
 module.exports.attachment = (req, res, next) ->
     stream = req.message.getBinary req.params.attachment, (err) ->
         return next err if err
-
+    if req.query?.download
+        res.setHeader('Content-disposition', "attachment; filename=#{req.params.attachment}");
     stream.on 'error', next
     stream.pipe res
 
