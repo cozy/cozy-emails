@@ -27,7 +27,8 @@ describe 'Account creation', ->
             done()
 
     it "When I update an account", (done) ->
-        changes = label: "Ze Dovecot"
+        changes = store.accountDefinition
+        changes.label = "Ze Dovecot"
         client.put "/account/#{store.accountID}", changes, (err, res, body) =>
             res.statusCode.should.equal 200
             body.should.have.property 'label', 'Ze Dovecot'
