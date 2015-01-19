@@ -192,7 +192,7 @@ module.exports = React.createClass
 
         if valid.valid
             if @state.id?
-                if check
+                if check is true
                     AccountActionCreator.check accountValue, @state.id
                 else
                     AccountActionCreator.edit accountValue, @state.id
