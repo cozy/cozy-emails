@@ -154,6 +154,12 @@ Account.createIfValid = function(data, callback) {
   });
 };
 
+Account.checkParams = function(data, callback) {
+  var account;
+  account = new Account(data);
+  return account.testConnections(callback);
+};
+
 Account.prototype.testConnections = function(callback) {
   if (this.isTest()) {
     return callback(null);
@@ -343,6 +349,9 @@ Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback
   return this.imap_refreshBoxes(function(err, toFetch, toDestroy) {
     var reporter;
     if (err) {
+      account.setRefreshing(false);
+    }
+    if (err) {
       return callback(err);
     }
     if (onlyFavorites) {
@@ -374,6 +383,9 @@ Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback
         return cb(null);
       });
     }, function(err) {
+      if (err) {
+        account.setRefreshing(false);
+      }
       if (err) {
         return callback(err);
       }

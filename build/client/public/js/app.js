@@ -138,6 +138,21 @@ module.exports = AccountActionCreator = {
       }
     });
   },
+  check: function(inputValues, accountID) {
+    var account, newAccount;
+    account = AccountStore.getByID(accountID);
+    newAccount = account.mergeDeep(inputValues);
+    return XHRUtils.checkAccount(newAccount, function(error, rawAccount) {
+      if (error != null) {
+        return AccountActionCreator._setNewAccountError(error);
+      } else {
+        LayoutActionCreator = require('../actions/layout_action_creator');
+        return LayoutActionCreator.notify(t('account checked'), {
+          autoclose: true
+        });
+      }
+    });
+  },
   remove: function(accountID) {
     AppDispatcher.handleViewAction({
       type: ActionTypes.REMOVE_ACCOUNT,
@@ -645,12 +660,21 @@ module.exports = LayoutActionCreator = {
   },
   showSettings: function(panelInfo, direction) {},
   refreshMessages: function() {
-    return XHRUtils.refresh(function(results) {
-      if (results === "done") {
-        MessageActionCreator.receiveRawMessages(null);
-        return LayoutActionCreator.notify(t('account refreshed'), {
-          autoclose: true
+    return XHRUtils.refresh(true, function(err, results) {
+      if (err != null) {
+        console.log(err);
+        return LayoutActionCreator.notify(t('account refresh error'), {
+          autoclose: false,
+          finished: true,
+          errors: [JSON.stringify(err)]
         });
+      } else {
+        if (results === "done") {
+          MessageActionCreator.receiveRawMessages(null);
+          return LayoutActionCreator.notify(t('account refreshed'), {
+            autoclose: true
+          });
+        }
       }
     });
   },
@@ -1197,7 +1221,7 @@ module.exports = React.createClass({
       }
     }
   },
-  onSubmit: function(event) {
+  onSubmit: function(event, check) {
     var accountValue, error, errors, setError, valid, _i, _len, _ref1, _ref2;
     if (event != null) {
       event.preventDefault();
@@ -1205,7 +1229,11 @@ module.exports = React.createClass({
     _ref1 = this.doValidate(), accountValue = _ref1.accountValue, valid = _ref1.valid;
     if (valid.valid) {
       if (this.state.id != null) {
-        return AccountActionCreator.edit(accountValue, this.state.id);
+        if (check === true) {
+          return AccountActionCreator.check(accountValue, this.state.id);
+        } else {
+          return AccountActionCreator.edit(accountValue, this.state.id);
+        }
       } else {
         return AccountActionCreator.create(accountValue, (function(_this) {
           return function(account) {
@@ -1415,7 +1443,7 @@ AccountConfigMain = React.createClass({
       errorField: ['password', 'auth'],
       validateForm: this.props.validateForm
     }), this.state.displayGMAILSecurity ? fieldset(null, legend(null, t('gmail security tile')), p(null, t('gmail security body', {
-      login: this.state.login
+      login: this.state.login.value
     })), p(null, a({
       target: '_blank',
       href: "https://www.google.com/settings/security/lesssecureapps"
@@ -1500,12 +1528,18 @@ AccountConfigMain = React.createClass({
     }, button({
       className: 'btn btn-cozy',
       onClick: this.props.onSubmit
-    }, buttonLabel)), this.state.id != null ? fieldset(null, legend(null, t('account danger zone')), div({
+    }, buttonLabel), this.state.id != null ? button({
+      className: 'btn btn-cozy-non-default',
+      onClick: this.onCheck
+    }, t('account check')) : void 0), this.state.id != null ? fieldset(null, legend(null, t('account danger zone')), div({
       className: 'col-sm-offset-4'
     }, button({
       className: 'btn btn-default btn-danger btn-remove',
       onClick: this.onRemove
     }, t("account remove")))) : void 0));
+  },
+  onCheck: function(event) {
+    return this.props.onSubmit(event, true);
   },
   onRemove: function(event) {
     event.preventDefault();
@@ -3793,10 +3827,17 @@ FileItem = React.createClass({
       target: '_blank',
       onClick: this.doDisplay,
       href: file.url,
-      'data-file-url': file.url
+      'data-file-url': file.url,
+      'data-file-name': file.generatedFileName,
+      'data-file-type': file.contentType
     }, file.generatedFileName), div({
       className: 'file-detail'
-    }, span(null, "" + ((file.length / 1000).toFixed(2)) + "Ko")));
+    }, span(null, "" + ((file.length / 1000).toFixed(2)) + "Ko"), span({
+      className: 'file-actions'
+    }, a({
+      className: "fa fa-download",
+      href: "" + file.url + "?download=1"
+    }))));
   },
   doDisplay: function(e) {
     e.preventDefault();
@@ -6818,7 +6859,7 @@ module.exports = Toast = React.createClass({
       className: classes,
       role: "alert",
       key: this.props.key
-    }, this.state.modalErrors ? renderModal() : void 0, percent != null ? div({
+    }, this.state.modalErrors ? this.renderModal() : void 0, percent != null ? div({
       className: "progress"
     }, div({
       className: 'progress-bar',
@@ -6851,7 +6892,13 @@ module.exports = Toast = React.createClass({
         key: id,
         onClick: action.onClick
       }, action.label);
-    })) : void 0);
+    })) : void 0, hasErrors ? div({
+      className: 'toast-actions'
+    }, a({
+      onClick: showModal
+    }, t('there were errors', {
+      smart_count: toast.errors.length
+    }))) : void 0);
   }
 });
 
@@ -7615,63 +7662,6 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-require.register("libs/flux/store/Store", function(exports, require, module) {
-var AppDispatcher, Store,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-AppDispatcher = require('../../../app_dispatcher');
-
-module.exports = Store = (function(_super) {
-  var _addHandlers, _handlers, _nextUniqID, _processBinding;
-
-  __extends(Store, _super);
-
-  Store.prototype.uniqID = null;
-
-  _nextUniqID = 0;
-
-  _handlers = {};
-
-  _addHandlers = function(type, callback) {
-    if (_handlers[this.uniqID] == null) {
-      _handlers[this.uniqID] = {};
-    }
-    return _handlers[this.uniqID][type] = callback;
-  };
-
-  _processBinding = function() {
-    return this.dispatchToken = AppDispatcher.register((function(_this) {
-      return function(payload) {
-        var callback, type, value, _ref;
-        _ref = payload.action, type = _ref.type, value = _ref.value;
-        if ((callback = _handlers[_this.uniqID][type]) != null) {
-          return callback.call(_this, value);
-        }
-      };
-    })(this));
-  };
-
-  function Store() {
-    Store.__super__.constructor.call(this);
-    this.uniqID = _nextUniqID++;
-    this.__bindHandlers(_addHandlers.bind(this));
-    _processBinding.call(this);
-  }
-
-  Store.prototype.__bindHandlers = function(handle) {
-    var message;
-    if (__DEV__) {
-      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
-      throw new Error(message);
-    }
-  };
-
-  return Store;
-
-})(EventEmitter);
-});
-
 ;require.register("libs/flux/store/store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
@@ -8114,6 +8104,7 @@ module.exports = {
   "account edit": "Edit account",
   "account add": "Add",
   "account save": "Save",
+  "account check": "Check connection",
   "account accountType short": "IMAP",
   "account accountType": "Account type",
   "account imapPort short": "993",
@@ -8153,8 +8144,10 @@ module.exports = {
   "account errors": "Some data are missing or invalid",
   "account type": "Account type",
   "account updated": "Account updated",
+  "account checked": "Parameters ok",
   "account creation ok": "Yeah! The account has been successfully created. Now select the mailboxes you want to see in the menu",
   "account refreshed": "Account refreshed",
+  "account refresh error": "Error refreshing accounts, check parameters",
   "account identifiers": "Identification",
   "account actions": "Actions",
   "account danger zone": "Danger Zone",
@@ -8363,6 +8356,7 @@ module.exports = {
   "account edit": "Modifier le compte",
   "account add": "Créer",
   "account save": "Enregistrer",
+  "account check": "Tester la connexion",
   "account accountType short": "IMAP",
   "account accountType": "Type de compte",
   "account imapPort short": "993",
@@ -8402,7 +8396,9 @@ module.exports = {
   "account errors": "Certaines informations manquent ou sont incorrectes",
   "account type": "Type de compte",
   "account updated": "Modification enregistrée",
+  "account checked": "Paramètres corrects",
   "account refreshed": "Actualisé",
+  "account refresh error": "Une erreur est survenue, vérifiez les paramètres de connexion aux comptes",
   "account creation ok": "Youpi, le compte a été créé ! Sélectionnez à présent les dossiers que vous voulez voir apparaitre dans le menu",
   "account identifiers": "Identification",
   "account danger zone": "Zone dangereuse",
@@ -10934,6 +10930,18 @@ module.exports = {
       }
     });
   },
+  checkAccount: function(account, callback) {
+    var rawAccount;
+    rawAccount = account.toJS();
+    return request.put("account/" + rawAccount.id + "/check").send(rawAccount).set('Accept', 'application/json').end(function(res) {
+      if (res.ok) {
+        return callback(null, res.body);
+      } else {
+        console.log("Error in checkAccount", res.body);
+        return callback(res.body, null);
+      }
+    });
+  },
   removeAccount: function(accountID) {
     return request.del("account/" + accountID).set('Accept', 'application/json').end(function(res) {});
   },
@@ -10964,7 +10972,11 @@ module.exports = {
     var url;
     url = hard ? "refresh?all=true" : "refresh";
     return request.get(url).end(function(res) {
-      return typeof callback === "function" ? callback(res.text) : void 0;
+      if (res.ok) {
+        return callback(null, res.text);
+      } else {
+        return callback(res.body);
+      }
     });
   },
   activityCreate: function(options, callback) {

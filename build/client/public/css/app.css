@@ -2293,7 +2293,7 @@ textarea:active,
   cursor: pointer;
 }
 #mailbox-config button {
-  margin-left: 0.25em;
+  margin-left: 0.5em;
 }
 #mailbox-config .account-item-accountType {
   display: none;
@@ -2786,7 +2786,7 @@ textarea:active,
   display: inherit;
 }
 .file-picker .files {
-  max-height: 5em;
+  max-height: 10em;
   overflow: auto;
   position: relative;
 }
@@ -2812,6 +2812,9 @@ textarea:active,
 }
 .file-picker .files .file-item:hover .delete {
   display: inherit;
+}
+.file-picker .files .file-item .file-actions a {
+  padding: 0 0.5em;
 }
 .file-picker .files .attachment-name {
   color: #444;

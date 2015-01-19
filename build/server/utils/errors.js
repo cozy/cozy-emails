@@ -100,9 +100,9 @@ utils.TimeoutError = TimeoutError = (function(_super) {
   __extends(TimeoutError, _super);
 
   function TimeoutError(msg) {
-    this.name = 'BadRequest';
+    this.name = 'Timeout';
     this.status = 400;
-    this.message = 'Bad request : ' + msg;
+    this.message = 'Timeout: ' + msg;
     Error.captureStackTrace(this, arguments.callee);
     return this;
   }
@@ -132,7 +132,7 @@ baseHandler = americano.errorHandler();
 
 utils.errorHandler = function(err, req, res, next) {
   log.debug("ERROR HANDLER CALLED", err);
-  if (err instanceof utils.AccountConfigError) {
+  if (err instanceof utils.AccountConfigError || err.textCode === 'AUTHENTICATIONFAILED') {
     return res.send(400, {
       name: err.name,
       field: err.field,

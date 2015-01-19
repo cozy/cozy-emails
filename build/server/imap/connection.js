@@ -245,14 +245,11 @@ Imap.prototype.fetchOneMailRaw = function(uid, callback) {
       return flags = attrs.flags;
     });
     return msg.on('body', function(stream, info) {
-      var buffer;
-      console.log(info);
-      buffer = '';
-      stream.on('data', function(chunk) {
-        return buffer += chunk.toString('utf8');
-      });
-      return stream.once('end', function() {
-        return callback(buffer);
+      return stream_to_buffer_array(stream, function(err, parts) {
+        if (err) {
+          return callback(err);
+        }
+        return callback(null, Buffer.concat(parts));
       });
     });
   });

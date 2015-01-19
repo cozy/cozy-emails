@@ -71,6 +71,9 @@ module.exports.refresh = function(req, res, next) {
   }
   return Account.refreshAllAccounts(limit, onlyFavorites, function(err) {
     if (err) {
+      log.error("REFRESHING ACCOUNT FAILED", err);
+    }
+    if (err) {
       return next(err);
     }
     return res.send(200, {
