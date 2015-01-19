@@ -10,6 +10,9 @@ module.exports = Account = americano.getModel 'Account',
     smtpPort: Number            # SMTP port
     smtpSSL: Boolean            # Use SSL
     smtpTLS: Boolean            # Use STARTTLS
+    smtpLogin: String           # SMTP login, if different from default
+    smtpPassword: String        # SMTP password, if different from default
+    smtpMethod: String          # SMTP Auth Method
     imapServer: String          # IMAP host
     imapPort: Number            # IMAP port
     imapSSL: Boolean            # Use SSL
@@ -407,15 +410,20 @@ Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
 # Returns void
 Account::sendMessage = (message, callback) ->
     return callback null, messageId: 66 if @isTest()
-    transport = nodemailer.createTransport
+    options =
         port: @smtpPort
         host: @smtpServer
         secure: @smtpSSL
         ignoreTLS: not @smtpTLS
         tls: rejectUnauthorized: false
-        auth:
-            user: @login
-            pass: @password
+    if @smtpMethod? and @smtpMethod isnt 'NONE'
+        options.authMethod = @smtpMethod
+    if @smtpMethod isnt 'NONE'
+        options.auth =
+            user: @smtpLogin or @login
+            pass: @smtpPassword or @password
+
+    transport = nodemailer.createTransport options
 
     transport.sendMail message, callback
 
@@ -430,17 +438,21 @@ Account::testSMTPConnection = (callback) ->
 
     reject = _.once callback
 
-
-    connection = new SMTPConnection
+    options =
         port: @smtpPort
         host: @smtpServer
         secure: @smtpSSL
         ignoreTLS: not @smtpTLS
         tls: rejectUnauthorized: false
+    if @smtpMethod? and @smtpMethod isnt 'NONE'
+        options.authMethod = @smtpMethod
 
-    auth =
-        user: @login
-        pass: @password
+    connection = new SMTPConnection options
+
+    if @smtpMethod isnt 'NONE'
+        auth =
+            user: @smtpLogin or @login
+            pass: @smtpPassword or @password
 
     connection.once 'error', (err) ->
         log.warn "SMTP CONNECTION ERROR", err
@@ -452,11 +464,15 @@ Account::testSMTPConnection = (callback) ->
         connection.close()
     , 10000
 
-    connection.connect (err) ->
+    connection.connect (err) =>
         return reject new AccountConfigError 'smtpServer' if err
         clearTimeout timeout
 
-        connection.login auth, (err) ->
-            if err then reject new AccountConfigError 'auth'
-            else callback null
+        if @smtpMethod isnt 'NONE'
+            connection.login auth, (err) ->
+                if err then reject new AccountConfigError 'auth'
+                else callback null
+                connection.close()
+        else
+            callback null
             connection.close()

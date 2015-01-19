@@ -22,7 +22,7 @@ module.exports = React.createClass
     _accountFields: [
         'id', 'label', 'name', 'login', 'password',
         'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
-        'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
+        'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'smtpLogin', 'smtpPassword', 'smtpMethod',
         'accountType'
     ]
     _mailboxesFields: [
@@ -67,6 +67,15 @@ module.exports = React.createClass
             'smtpTLS':
                 allowEmpty: true
                 #type: 'boolean'
+            'smtpLogin':
+                allowEmpty: true
+                #type: 'string'
+            'smtpMethod':
+                allowEmpty: true
+                #type: 'string'
+            'smtpPassword':
+                allowEmpty: true
+                #type: 'string'
             'draftMailbox':
                 allowEmpty: true
                 #type: 'string'
@@ -254,6 +263,7 @@ module.exports = React.createClass
             if @state.id isnt account.get('id')
                 for field in @_accountFields
                     state[field] = account.get field
+                state.smtpMethod = 'PLAIN' if not state.smtpMethod?
             for field in @_mailboxesFields
                 state[field] = account.get field
             state.newMailboxParent = null
@@ -266,13 +276,14 @@ module.exports = React.createClass
                 state[field] = ''
             init field for field in @_accountFields
             init field for field in @_mailboxesFields
-            state.id       = null
-            state.smtpPort = 465
-            state.smtpSSL  = true
-            state.smtpTLS  = false
-            state.imapPort = 993
-            state.imapSSL  = true
-            state.imapTLS  = false
+            state.id          = null
+            state.smtpPort    = 465
+            state.smtpSSL     = true
+            state.smtpTLS     = false
+            state.smtpMethod  = 'PLAIN'
+            state.imapPort    = 993
+            state.imapSSL     = true
+            state.imapTLS     = false
             state.accountType = 'IMAP'
             state.newMailboxParent  = null
             state.favoriteMailboxes = null
@@ -388,7 +399,7 @@ AccountConfigMain = React.createClass
                     value: @linkState('imapPort').value
                     errors: @state.errors
                     onBlur: @_onimapPort
-                    onInput: -> @setState(imapManualPort: true)
+                    onInput: => @setState(imapManualPort: true)
 
                 AccountInput
                     name: 'imapSSL'
@@ -413,14 +424,14 @@ AccountConfigMain = React.createClass
                     name: 'smtpServer'
                     value: @linkState('smtpServer').value
                     errors: @state.errors
-                    errorField: ['smtp', 'smtpServer', 'smtpPort']
+                    errorField: ['smtp', 'smtpServer', 'smtpPort', 'smtpLogin', 'smtpPassword']
 
                 AccountInput
                     name: 'smtpPort'
                     value: @linkState('smtpPort').value
                     errors: @state.errors
                     onBlur: @_onSMTPPort
-                    onInput: -> @setState(smtpManualPort: true)
+                    onInput: => @setState(smtpManualPort: true)
 
                 AccountInput
                     name: 'smtpSSL'
@@ -437,6 +448,45 @@ AccountConfigMain = React.createClass
                     type: 'checkbox'
                     onClick: (ev) =>
                         @_onServerParam ev.target, 'smtp', 'tls'
+
+                div
+                    key: "account-input-smtpMethod",
+                    className: "form-group account-item-smtpMethod ",
+                        label
+                            htmlFor: "mailbox-smtpMethod",
+                            className: "col-sm-2 col-sm-offset-2 control-label",
+                            t "account smtpMethod"
+                        div className: 'col-sm-3',
+                            div className: "dropdown",
+                                button
+                                    id: "mailbox-smtpMethod",
+                                    name: "mailbox-smtpMethod",
+                                    className: "btn btn-default dropdown-toggle"
+                                    type: "button"
+                                    "data-toggle": "dropdown",
+                                    t "account smtpMethod #{@state.smtpMethod.value}"
+                                ul className: "dropdown-menu", role: "menu",
+                                    ['PLAIN', 'NONE', 'LOGIN', 'CRAM-MD5'].map (method) =>
+                                        li
+                                            role: "presentation",
+                                                a
+                                                    'data-value': method,
+                                                    role: "menuitem",
+                                                    onClick: @onMethodChange,
+                                                    t "account smtpMethod #{method}"
+
+                AccountInput
+                    name: 'smtpLogin'
+                    value: @linkState('smtpLogin').value
+                    errors: @state.errors
+                    errorField: ['smtp', 'smtpServer', 'smtpPort', 'smtpLogin', 'smtpPassword']
+
+                AccountInput
+                    name: 'smtpPassword'
+                    value: @linkState('smtpPassword').value
+                    type: 'password'
+                    errors: @state.errors
+                    errorField: ['smtp', 'smtpServer', 'smtpPort', 'smtpLogin', 'smtpPassword']
 
             fieldset null,
                 legend null, t 'account actions'
@@ -463,6 +513,9 @@ AccountConfigMain = React.createClass
     # Check current parameters
     onCheck: (event) ->
         @props.onSubmit event, true
+
+    onMethodChange: (event) ->
+        @state.smtpMethod.requestChange event.target.dataset.value
 
     onRemove: (event) ->
         # prevents the page from reloading
