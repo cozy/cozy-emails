@@ -227,6 +227,8 @@ module.exports =
       "message images display"      : "Afficher les images"
       "message html display"        : "Afficher en HTML"
       "message delete no trash"     : "Choisissez d'abord un dossier Corbeille"
+      "message delete already"      : "Ce message est déjà dans la corbeille"
+      "message move already"        : "Ce message est déjà dans ce dossier"
       "message undelete"            : "Annuler la suppression"
       "message undelete ok"         : "Message restauré"
       "message undelete error"      : "Impossible d'annuler l'action"
