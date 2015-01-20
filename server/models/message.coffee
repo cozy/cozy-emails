@@ -426,7 +426,7 @@ Message::applyPatchOperations = (patch, callback) ->
         else if operation.op is 'remove'
             boxOps.removeFrom.push boxid
             delete newmailboxIDs[boxid]
-        else throw new Error 'modifying UID is not possible'
+        else throw new Error "modifying UID is not possible, bad operation #{operation.op}"
 
     flagsOps = {add: [], remove: []}
     for operation in patch when operation.path.indexOf('/flags/') is 0

@@ -221,6 +221,8 @@ module.exports =
       "message images display"      : "Display images"
       "message html display"        : "Display HTML"
       "message delete no trash"     : "Please select a Trash folder"
+      "message delete already"      : "Message already in trash folder"
+      "message move already"        : "Message already in this folder"
       "message undelete"            : "Undo message deletion"
       "message undelete ok"         : "Message undeleted"
       "message undelete error"      : "Undo not available"
