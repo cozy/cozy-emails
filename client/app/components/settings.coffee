@@ -218,7 +218,7 @@ module.exports = React.createClass
                 settings[target.dataset.target] = target.checked
                 @setState({settings: settings})
                 SettingsActionCreator.edit settings
-                if settings.desktopNotifications
+                if window.Notification? and settings.desktopNotifications
                     Notification.requestPermission (status) ->
                         # This allows to use Notification.permission with Chrome/Safari
                         if Notification.permission isnt status

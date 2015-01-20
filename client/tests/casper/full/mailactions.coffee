@@ -37,6 +37,7 @@ casper.test.begin 'Test Message Actions', (test) ->
     casper.then ->
         test.comment "Reply all"
         casper.cozy.selectMessage "DoveCot", "Test Folder", "Re: troll", "20141106093513.GH5642@mail.cozy.io", ->
+            test.assertEquals casper.fetchText('.conversation .message.active .participants'), 'contact, Me, You', 'Participants'
             test.assertDoesntExist '#email-compose', "No compose form"
             casper.click '.messageToolbox button.reply-all'
             casper.waitForSelector '#email-compose', ->
@@ -61,10 +62,10 @@ casper.test.begin 'Test Message Actions', (test) ->
                 test.assertNotVisible '#compose-cc', 'Cc hidden'
                 test.assertNotVisible '#compose-bcc', 'Bcc hidden'
                 values = casper.getFormValues('#email-compose form')
-                test.assert values["compose-to"] is "", "Forward To"
-                test.assert values["compose-cc"] is "", "Forward Cc"
-                test.assert values["compose-bcc"] is "", "Forward Bcc"
-                test.assert values["compose-subject"] is "Fwd: Re: troll", "Reply Subject"
+                test.assertEquals values["compose-to"], "", "Forward To"
+                test.assertEquals values["compose-cc"], "", "Forward Cc"
+                test.assertEquals values["compose-bcc"], "", "Forward Bcc"
+                test.assertEquals values["compose-subject"], "Fwd: Re: troll", "Reply Subject"
                 casper.click '.form-compose .btn-cancel'
                 casper.waitWhileSelector '#email-compose'
 

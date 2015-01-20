@@ -48,11 +48,6 @@ casper.test.begin 'Test compose', (test) ->
 
     casper.then ->
         test.comment "Compose to contacts"
-        casper.evaluate ->
-            # Create some test contacts
-            ContactActionCreator = require '../actions/contact_action_creator'
-            ContactActionCreator.createContact name: 'Alice', address: 'alice@casper.cozy'
-            ContactActionCreator.createContact name: 'Bob', address: 'bob@casper.cozy'
         test.assertNotVisible '.contact-list', 'No contacts displayed'
         casper.fillSelectors 'form',
             '#compose-to': 'casper.cozy'

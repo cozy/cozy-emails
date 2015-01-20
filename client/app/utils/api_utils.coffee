@@ -156,7 +156,7 @@ module.exports =
         , 5000
 
     notify: (title, options) ->
-        if SettingsStore.get 'desktopNotifications'
+        if window.Notification? and SettingsStore.get 'desktopNotifications'
             new Notification title, options
         else
             # prevent dispatching when already dispatching

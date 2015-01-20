@@ -105,7 +105,9 @@ module.exports = React.createClass
                     className: 'compress clickable',
                         i className:'fa fa-compress'
 
-            h3 className: 'message-title',
+            h3
+                className: 'message-title'
+                'data-message-id': @props.message.get 'id'
                 @props.message.get 'subject'
 
             ul className: 'thread list-unstyled',

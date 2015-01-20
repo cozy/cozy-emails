@@ -44,16 +44,19 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
             casper.waitForSelector ".message-list li.message", ->
                 if typeof messageID is 'string'
-                    subjectSel = "[data-message-id='#{messageID}'] a .preview"
+                    subjectSel  = ".message-list li[data-message-id='#{messageID}'] a .preview"
+                    subjectDone = "h3[data-message-id='#{messageID}']"
                 else if typeof subject is 'string'
-                    subjectSel = x "//span[(contains(normalize-space(.), '#{subject}'))]"
+                    subjectSel  = x "//span[(contains(normalize-space(.), '#{subject}'))]"
+                    subjectDone = x "//h3[(contains(normalize-space(.), '#{subject}'))]"
                 else
-                    subjectSel = 'li.message:nth-of-type(1) .title'
+                    subjectSel = '.message-list li.message:nth-of-type(1) .title'
                 casper.waitForSelector subjectSel, ->
                     if not (typeof subject is 'string')
                         subject = casper.fetchText subjectSel
+                        subjectDone = x "//h3[(contains(normalize-space(.), '#{subject}'))]"
                     casper.click subjectSel
-                    casper.waitForSelector x("//h3[(contains(normalize-space(.), '#{subject}'))]"), ->
+                    casper.waitForSelector subjectDone, ->
                         #casper.test.pass "Message #{subject} selected"
                         cb(subject)
                     , ->
