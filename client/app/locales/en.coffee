@@ -169,6 +169,8 @@ module.exports =
       "account actions"             : "Actions"
       "account danger zone"         : "Danger Zone"
       "account no special mailboxes": "Please configure special folders first"
+      "account smtp hide advanced"  : "Show advanced parameters"
+      "account smtp show advanced"  : "Hide advanced parameters"
       "mailbox create ok"           : "Folder created"
       "mailbox create ko"           : "Error creating folder"
       "mailbox update ok"           : "Folder updated"

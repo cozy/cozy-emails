@@ -174,6 +174,8 @@ module.exports =
       "account danger zone"         : "Zone dangereuse"
       "account actions"             : "Actions"
       "account no special mailboxes": "Vous n'avez pas configuré les dossiers spéciaux"
+      "account smtp hide advanced"  : "Masquer les paramètres avancés"
+      "account smtp show advanced"  : "Afficher les paramètres avancés"
       "mailbox create ok"           : "Dossier créé"
       "mailbox create ko"           : "Erreur de création du dossier"
       "mailbox update ok"           : "Dossier mis à jour"

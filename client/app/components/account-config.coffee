@@ -308,7 +308,9 @@ AccountConfigMain = React.createClass
         return state
 
     getInitialState: ->
-        @_propsToState(@props)
+        state = @_propsToState(@props)
+        state.smtpAdvanced = false
+        return state
 
     componentWillReceiveProps: (props) ->
         @setState @_propsToState(props)
@@ -450,43 +452,53 @@ AccountConfigMain = React.createClass
                         @_onServerParam ev.target, 'smtp', 'tls'
 
                 div
-                    key: "account-input-smtpMethod",
-                    className: "form-group account-item-smtpMethod ",
-                        label
-                            htmlFor: "mailbox-smtpMethod",
-                            className: "col-sm-2 col-sm-offset-2 control-label",
-                            t "account smtpMethod"
-                        div className: 'col-sm-3',
-                            div className: "dropdown",
-                                button
-                                    id: "mailbox-smtpMethod",
-                                    name: "mailbox-smtpMethod",
-                                    className: "btn btn-default dropdown-toggle"
-                                    type: "button"
-                                    "data-toggle": "dropdown",
-                                    t "account smtpMethod #{@state.smtpMethod.value}"
-                                ul className: "dropdown-menu", role: "menu",
-                                    ['PLAIN', 'NONE', 'LOGIN', 'CRAM-MD5'].map (method) =>
-                                        li
-                                            role: "presentation",
-                                                a
-                                                    'data-value': method,
-                                                    role: "menuitem",
-                                                    onClick: @onMethodChange,
-                                                    t "account smtpMethod #{method}"
+                    className: "form-group",
+                    a
+                        className: "col-sm-3 col-sm-offset-2 control-label clickable",
+                        onClick: @toggleSMTPAdvanced,
+                        t "account smtp #{if @state.smtpAdvanced then 'hide' else 'show'} advanced"
 
-                AccountInput
-                    name: 'smtpLogin'
-                    value: @linkState('smtpLogin').value
-                    errors: @state.errors
-                    errorField: ['smtp', 'smtpServer', 'smtpPort', 'smtpLogin', 'smtpPassword']
+                if @state.smtpAdvanced
+                    div
+                        key: "account-input-smtpMethod",
+                        className: "form-group account-item-smtpMethod ",
+                            label
+                                htmlFor: "mailbox-smtpMethod",
+                                className: "col-sm-2 col-sm-offset-2 control-label",
+                                t "account smtpMethod"
+                            div className: 'col-sm-3',
+                                div className: "dropdown",
+                                    button
+                                        id: "mailbox-smtpMethod",
+                                        name: "mailbox-smtpMethod",
+                                        className: "btn btn-default dropdown-toggle"
+                                        type: "button"
+                                        "data-toggle": "dropdown",
+                                        t "account smtpMethod #{@state.smtpMethod.value}"
+                                    ul className: "dropdown-menu", role: "menu",
+                                        ['PLAIN', 'NONE', 'LOGIN', 'CRAM-MD5'].map (method) =>
+                                            li
+                                                role: "presentation",
+                                                    a
+                                                        'data-value': method,
+                                                        role: "menuitem",
+                                                        onClick: @onMethodChange,
+                                                        t "account smtpMethod #{method}"
 
-                AccountInput
-                    name: 'smtpPassword'
-                    value: @linkState('smtpPassword').value
-                    type: 'password'
-                    errors: @state.errors
-                    errorField: ['smtp', 'smtpServer', 'smtpPort', 'smtpLogin', 'smtpPassword']
+                if @state.smtpAdvanced
+                    AccountInput
+                        name: 'smtpLogin'
+                        value: @linkState('smtpLogin').value
+                        errors: @state.errors
+                        errorField: ['smtp', 'smtpServer', 'smtpPort', 'smtpLogin', 'smtpPassword']
+
+                if @state.smtpAdvanced
+                    AccountInput
+                        name: 'smtpPassword'
+                        value: @linkState('smtpPassword').value
+                        type: 'password'
+                        errors: @state.errors
+                        errorField: ['smtp', 'smtpServer', 'smtpPort', 'smtpLogin', 'smtpPassword']
 
             fieldset null,
                 legend null, t 'account actions'
@@ -523,6 +535,9 @@ AccountConfigMain = React.createClass
 
         if window.confirm(t 'account remove confirm')
             AccountActionCreator.remove @props.selectedAccount.get('id')
+
+    toggleSMTPAdvanced: ->
+        @setState smtpAdvanced: not @state.smtpAdvanced
 
     renderError: ->
         if @props.error and @props.error.name is 'AccountConfigError'
