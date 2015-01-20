@@ -59,7 +59,7 @@ describe 'Account Synchronizations', ->
         client.get "/refresh", done
 
     it "Message have been mark as read in cozy", (done) ->
-        Message = require '../server/models/message'
+        Message = require appPath + 'server/models/message'
         Message.UIDsInRange store.inboxID, 10, 10, (err, msg) ->
             return done err if err
             flags = msg[10][1]
@@ -75,7 +75,7 @@ describe 'Account Synchronizations', ->
         client.get "/refresh", done
 
     it "Then the mailbox has been updated", (done) ->
-        Mailbox = require '../server/models/mailbox'
+        Mailbox = require appPath + 'server/models/mailbox'
         Mailbox.find store.sentBoxID, (err, sentBox) ->
             return done err if err
             sentBox.should.have.property 'uidvalidity', 1337
@@ -92,7 +92,7 @@ describe 'Account Synchronizations', ->
         client.get "/refresh", done
 
     it "Then the mailbox has been created", (done) ->
-        Mailbox = require '../server/models/mailbox'
+        Mailbox = require appPath + 'server/models/mailbox'
         Mailbox.getBoxes store.accountID, (err, boxes) ->
             return done err if err
             for box in boxes when box.path is 'Yolo'
@@ -112,7 +112,7 @@ describe 'Account Synchronizations', ->
         client.get "/refresh", done
 
     it "Then the mailbox has been deleted", (done) ->
-        Mailbox = require '../server/models/mailbox'
+        Mailbox = require appPath + 'server/models/mailbox'
         Mailbox.find store.yoloID, (err, found) ->
             should.not.exist found
             done()

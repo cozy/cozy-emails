@@ -1,6 +1,6 @@
 should = require('should')
 _ = require 'lodash'
-{MSGBYPAGE} = require '../server/utils/constants'
+{MSGBYPAGE} = require appPath + 'server/utils/constants'
 
 describe 'Mailbox fetching', ->
 

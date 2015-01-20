@@ -24,7 +24,7 @@ describe "mailbox deletion", ->
 
     it "And it has been removed from the account favorites", (done) ->
 
-        Account = require '../server/models/account'
+        Account = require appPath + 'server/models/account'
         Account.find store.accountID, (err, account) ->
             return done err if err
             account.favorites.should.not.containEql store.draftBoxID

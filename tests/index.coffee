@@ -1,3 +1,6 @@
+global.appPath = if process.env.USEJS then '../build/'
+else '../'
+
 should = require('should')
 helpers = require './helpers'
 fixtures = require 'cozy-fixtures'
@@ -47,7 +50,7 @@ describe "Server tests", ->
         SMTPTesting.init SMTP_PORT, done
 
     # start the app & prepare store
-    before helpers.startApp APP_HOST, APP_PORT
+    before helpers.startApp appPath, APP_HOST, APP_PORT
     before ->
         global.store = {}
         global.helpers = helpers
@@ -72,6 +75,7 @@ describe "Server tests", ->
     # stop the app
     after helpers.stopApp
     after ->
+        delete global.appPath
         delete global.store
         delete global.helpers
         delete global.SMTPTesting
