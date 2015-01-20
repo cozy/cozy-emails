@@ -73,7 +73,10 @@ module.exports =
       "list next page"            : "More messages"
       "list end"                  : "This is the end of the road"
       "list mass no message"      : "No message selected"
-      "list delete confirm"       : "Do you really want to delete %{nb} messages?"
+      "list delete confirm"       : """
+                                    Do you really want to delete this message ?
+                                    Do you really want to delete %{smart_count} messages?
+                                    """
 
       # Mail
       "mail receivers"          : "To: "

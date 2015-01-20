@@ -262,7 +262,7 @@ MessageList = React.createClass
         if selected.length is 0
             alertError t 'list mass no message'
         else
-            if window.confirm(t 'list delete confirm', nb: selected.length)
+            if window.confirm(t 'list delete confirm', smart_count: selected.length)
                 MessageActionCreator.delete selected
                 ###
                 selected.forEach (id) ->
