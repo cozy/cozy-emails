@@ -1,2 +1,24 @@
 [
+  {
+    "_id": "",
+    "fn": "Alice",
+    "datapoints": [
+      {
+        "name": "email",
+        "value": "alice@casper.cozy"
+      }
+    ],
+    "docType": "Contact"
+  },
+  {
+    "_id": "",
+    "fn": "Bob",
+    "datapoints": [
+      {
+        "name": "email",
+        "value": "bob@casper.cozy"
+      }
+    ],
+    "docType": "Contact"
+  }
 ]
