@@ -45,7 +45,7 @@ module.exports =
             msg = message.toJSON()
             if not trash? or trash is ''
                 LayoutActionCreator.alertError t 'message delete no trash'
-            else if not msg.mailboxIDs[trash]? isnt -1
+            else if msg.mailboxIDs[trash]?
                 LayoutActionCreator.alertError t 'message delete already'
             else
                 AppDispatcher.handleViewAction

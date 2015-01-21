@@ -159,8 +159,8 @@ module.exports =
       "account newmailbox label"    : "Nouveaux dossier"
       "account newmailbox placeholder" : "Nom"
       "account newmailbox parent"   : "Créer sous"
-      "account confirm delbox"      : "Voulez-vous vraiment supprimer ce
-                                        dossier et tout son contenu ?"
+      "account confirm delbox"      : "Voulez-vous vraiment supprimer
+                                        tous les messages de la corbeille ?"
       "account tab account"         : "Compte"
       "account tab mailboxes"       : "Dossiers"
       "account errors"              : "Certaines informations manquent ou
@@ -185,6 +185,8 @@ module.exports =
       "mailbox update ko"           : "Erreur de mise à jour"
       "mailbox delete ok"           : "Dossier supprimé"
       "mailbox delete ko"           : "Erreur de suppression du dossier"
+      "mailbox expunge ok"          : "Corbeille vidée"
+      "mailbox expunge ko"          : "Erreur de suppression des messages"
       "mailbox title edit"          : "Renommer le dossier"
       "mailbox title delete"        : "Supprimer le dossier"
       "mailbox title edit save"     : "Enregistrer"

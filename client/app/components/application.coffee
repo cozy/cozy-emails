@@ -261,6 +261,9 @@ module.exports = Application = React.createClass
             query = _.clone(MessageStore.getParams())
             query.accountID = accountID
             query.mailboxID = mailboxID
+
+            isTrash = @state.selectedAccount?.get('trashMailbox') is mailboxID
+
             #paginationUrl = @buildUrl
             #    direction: 'first'
             #    action: 'account.mailbox.messages.full'
@@ -275,6 +278,7 @@ module.exports = Application = React.createClass
                 settings:      @state.settings
                 fetching:      fetching
                 query:         query
+                isTrash:       isTrash
                 conversationLengths: conversationLengths
                 emptyListMessage: emptyListMessage
                 counterMessage:   counterMessage

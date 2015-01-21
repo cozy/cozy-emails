@@ -14,6 +14,7 @@ module.exports =
         'MAILBOX_CREATE'            : 'MAILBOX_CREATE'
         'MAILBOX_UPDATE'            : 'MAILBOX_UPDATE'
         'MAILBOX_DELETE'            : 'MAILBOX_DELETE'
+        'MAILBOX_EXPUNGE'           : 'MAILBOX_EXPUNGE'
 
         # Message
         'RECEIVE_RAW_MESSAGE'       : 'RECEIVE_RAW_MESSAGE'

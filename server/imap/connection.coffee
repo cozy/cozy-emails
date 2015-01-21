@@ -104,6 +104,15 @@ Imap::fetchBoxMessageIDs = (callback) ->
             callback null, results
 
 
+# fetch all message-uid in open box
+# return An Array of UIDs
+Imap::fetchBoxMessageUIDs = (callback) ->
+    log.debug "imap#fetchBoxMessageUIDs"
+    @search [['ALL']], (err, uids) ->
+        log.debug "imap#fetchBoxMessageUIDs#result", uids
+        return callback err if err
+        return callback null, uids
+
 # fetch metadata for a range of uid in open mailbox
 # callback err, Map uid1 -> [messageid, flags]
 Imap::fetchMetadata = (min, max, callback) ->

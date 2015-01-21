@@ -105,3 +105,12 @@ module.exports = AccountActionCreator =
                     value: account
             if callback?
                 callback error
+
+    mailboxExpunge: (inputValues, callback) ->
+        XHRUtils.mailboxExpunge inputValues, (error, account) ->
+            if not error?
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MAILBOX_EXPUNGE
+                    value: inputValues.mailboxID
+            if callback?
+                callback error

@@ -156,8 +156,8 @@ module.exports =
       "account newmailbox label"    : "New Folder"
       "account newmailbox placeholder" : "Name"
       "account newmailbox parent"   : "Parent:"
-      "account confirm delbox"      : "Do you really want to delete this box
-                                        and everything in it?"
+      "account confirm delbox"      : "Do you really want to delete all
+                                        messages in this box?"
       "account tab account"         : "Account"
       "account tab mailboxes"       : "Folders"
       "account errors"              : "Some data are missing or invalid"
@@ -180,6 +180,8 @@ module.exports =
       "mailbox update ko"           : "Error updating folder"
       "mailbox delete ok"           : "Folder deleted"
       "mailbox delete ko"           : "Error deleting folder"
+      "mailbox expunge ok"          : "Folder expunged"
+      "mailbox expunge ko"          : "Error expunging folder"
       "mailbox title edit"          : "Rename folder"
       "mailbox title delete"        : "Delete folder"
       "mailbox title edit save"     : "Save"

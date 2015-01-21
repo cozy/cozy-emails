@@ -5,11 +5,15 @@ RouterMixin    = require '../mixins/router_mixin'
 MessageUtils   = require '../utils/message_utils'
 SocketUtils    = require '../utils/socketio_utils'
 {MessageFlags, MessageFilter, FlagsConstants} = require '../constants/app_constants'
-LayoutActionCreator  = require '../actions/layout_action_creator'
-ContactActionCreator = require '../actions/contact_action_creator'
+
+AccountActionCreator      = require '../actions/account_action_creator'
+ContactActionCreator      = require '../actions/contact_action_creator'
 ConversationActionCreator = require '../actions/conversation_action_creator'
-MessageActionCreator = require '../actions/message_action_creator'
+LayoutActionCreator       = require '../actions/layout_action_creator'
+MessageActionCreator      = require '../actions/message_action_creator'
+
 MessageStore   = require '../stores/message_store'
+
 MailboxList    = require './mailbox-list'
 Participants   = require './participant'
 ToolboxActions = require './toolbox_actions'
@@ -120,6 +124,7 @@ MessageList = React.createClass
             active: compact
         classEdited = classer
             active: @state.edited
+
         div className: 'message-list ' + classList, ref: 'list',
             div className: 'message-list-actions',
                 #if advanced and not @state.edited
@@ -209,6 +214,17 @@ MessageList = React.createClass
                                 onConversation: @onConversation
                                 onHeaders: @onHeaders
                                 direction: 'left'
+
+                        if @props.isTrash and not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                button
+                                    className: 'btn btn-default',
+                                    type: 'button',
+                                    disabled: null,
+                                    onClick: @expungeMailbox,
+                                        span
+                                            className: 'fa fa-recycle'
+
             if @props.messages.count() is 0
                 if @props.fetching
                     p null, t 'list fetching'
@@ -341,6 +357,20 @@ MessageList = React.createClass
                         ConversationActionCreator.unseen conversationID, (error) ->
                             if error?
                                 alertError "#{t("conversation unseen ok")} #{error}"
+
+    expungeMailbox: (e) ->
+        e.preventDefault()
+
+        if window.confirm(t 'account confirm delbox')
+            mailbox =
+                mailboxID: @props.mailboxID
+                accountID: @props.accountID
+
+            AccountActionCreator.mailboxExpunge mailbox, (error) ->
+                if error?
+                    LayoutActionCreator.alertError "#{t("mailbox expunge ko")} #{error}"
+                else
+                    LayoutActionCreator.notify t "mailbox expunge ok"
 
     _isVisible: (node, before) ->
         margin = if before then 40 else 0
