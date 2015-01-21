@@ -228,6 +228,14 @@ class MessageStore extends Store
             _messages = _messages.remove id
             @emit 'change'
 
+        handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
+            _messages = _messages.filter (message) ->
+                mailboxes = Object.keys message.get 'mailboxIDs'
+                return mailboxID not in mailboxes
+            .toOrderedMap()
+
+            @emit 'change'
+
         handle ActionTypes.SET_FETCHING, (fetching) ->
             _fetching = fetching
             @emit 'change'

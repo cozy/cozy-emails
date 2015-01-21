@@ -60,6 +60,12 @@ module.exports =
             mailboxes.delete,
             accounts.format]
 
+    'mailbox/:mailboxID/expunge':
+        delete: [mailboxes.fetch,
+            accounts.fetch,
+            mailboxes.expunge,
+            accounts.format]
+
     'message':
         post: [messages.parseSendForm,
                accounts.fetch,
