@@ -418,8 +418,8 @@ Mailbox::imap_expungeMails = (callback) ->
     box = this
     @doASAPWithBox (imap, imapbox, cbRelease) ->
         imap.fetchBoxMessageUIDs (err, uids) ->
-            return callback err if err
-            return callback null if uids.length is 0
+            return cbRelease err if err
+            return cbRelease null if uids.length is 0
             async.series [
                 (cb) -> imap.addFlags uids, '\\Deleted', cb
                 (cb) -> imap.expunge uids, cb
