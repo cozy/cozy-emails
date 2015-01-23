@@ -14,9 +14,9 @@
   "bin": {
     "webmail": "bin/webmail"
   },
-  "main": "server.coffee",
+  "main": "build/server.js",
   "dependencies": {
-    "americano": "0.3.10",
+    "americano": "0.3.11",
     "americano-cozy": "0.2.10",
     "printit": "0.1.3",
     "async": "^0.9.0",
