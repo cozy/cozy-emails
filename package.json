@@ -58,29 +58,5 @@
   "scripts": {
     "start": "RUN_STANDALONE=true node build/server.js"
   },
-  "cozy-permissions": {
-    "Account": {
-      "description": "Manages your email Accounts"
-    },
-    "MailsSettings": {
-      "description": "Store email app settings"
-    },
-    "Mailbox": {
-      "description": "Manage your Imap Mailboxes"
-    },
-    "Message": {
-      "description": "Manages your emails"
-    },
-    "CozyInstance": {
-      "description": "Localize the application with your language"
-    },
-    "send mail": {
-      "description": "Send emails to your contacts"
-    },
-    "Contact": {
-      "description": "Add contact from messages, send messages to contacts"
-    }
-  },
   "cozy-displayName": "Emails"
->>>>>>> 7f07f7e1a6108ad97de2a81a817e4e4dfad61299
 }
