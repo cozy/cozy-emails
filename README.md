@@ -1,4 +1,4 @@
-# [Cozy](http://cozy.io) Webmail
+# [Cozy](http://cozy.io) Emails
 
 Modern Email Client Based on Node.js and React.js.
 
@@ -9,14 +9,14 @@ Modern Email Client Based on Node.js and React.js.
 We assume that Node.js >= 0.10 is already installed on your computer/server.
 Then install Webmail via NPM.
 
-    npm install webmail -g
+    npm install emails -g
 
 
 ## Run
 
 Run Webmail with the command line, it will listen on the 9125 port:
 
-    webmail
+    emails
 
 ## Next steps
 
