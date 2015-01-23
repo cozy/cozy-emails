@@ -5,11 +5,11 @@
   "engines": [
     "node = 0.10.x"
   ],
-  "description": "Emails Web Client based on Node.js and React.js",
+  "description": "Emails Web Client based on React.js and PouchDB",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cozy/webmail.git"
+    "url": "https://github.com/cozy-labs/webmail.git"
   },
   "bin": {
     "webmail": "bin/webmail"
