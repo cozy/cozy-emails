@@ -12,7 +12,7 @@
     "url": "https://github.com/cozy-labs/webmail.git"
   },
   "bin": {
-    "webmail": "bin/emails"
+    "emails": "bin/emails"
   },
   "main": "build/server.js",
   "dependencies": {
