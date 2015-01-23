@@ -530,8 +530,16 @@ ComposeEditor = React.createClass
                     , 0
             )
             # Allow to hide original message
-            jQuery('#email-compose .rt-editor .originalToggle').on('click', ->
-                jQuery('#email-compose .rt-editor').toggleClass('folded')
+            if document.querySelector('.rt-editor blockquote') and not document.querySelector('.rt-editor .originalToggle')
+                try
+                    header = jQuery('.rt-editor blockquote').eq(0).prev()
+                    header.text(header.text().replace('…', ''))
+                    header.append('<span class="originalToggle">…</>')
+                catch e
+                    console.log e
+            jQuery('.rt-editor .originalToggle').on('click', ->
+                console.log 'click'
+                jQuery('.rt-editor').toggleClass('folded')
             )
         else
             # Text message
