@@ -195,7 +195,7 @@
         margin-right 1em
 
     .btn
-        margin-left 1em
+        margin-left .5em
 
     .btn.btn-cozy:first-child
         background-color contrastcolor
@@ -206,6 +206,8 @@
             border-color actioncolor
 
 
+.clickable
+    cursor: pointer
 /*
   EDITOR
 
@@ -246,6 +248,17 @@
         border-left .25em solid blue
         padding-left .5em
         margin 0
+
+    &.folded
+        blockquote
+            height .5em
+            overflow hidden
+            text-overflow ellipsis
+
+    .originalToggle
+        color basecolor
+        font-weight bold
+        cursor pointer
 
     div
     p

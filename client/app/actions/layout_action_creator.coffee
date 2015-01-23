@@ -14,6 +14,7 @@ MessageActionCreator = require './message_action_creator'
 SearchActionCreator = require './search_action_creator'
 
 _cachedQuery = {}
+_cachedDisposition = null
 
 module.exports = LayoutActionCreator =
 
@@ -23,6 +24,21 @@ module.exports = LayoutActionCreator =
             value:
                 type: type
                 value: value
+
+    toggleFullscreen: ->
+        if _cachedDisposition?
+            AppDispatcher.handleViewAction
+                type: ActionTypes.SET_DISPOSITION
+                value:
+                    disposition: _cachedDisposition
+            _cachedDisposition = null
+        else
+            _cachedDisposition = _.clone LayoutStore.getDisposition()
+            AppDispatcher.handleViewAction
+                type: ActionTypes.SET_DISPOSITION
+                value:
+                    type: _cachedDisposition.type
+                    value: 0
 
     alert: (level, message) ->
         AppDispatcher.handleViewAction
@@ -206,11 +222,18 @@ module.exports = LayoutActionCreator =
 
 
     refreshMessages: ->
-        XHRUtils.refresh (results) ->
-            if results is "done"
-                MessageActionCreator.receiveRawMessages null
-                LayoutActionCreator.notify t('account refreshed'),
-                    autoclose: true
+        XHRUtils.refresh true, (err, results) ->
+            if err?
+                console.log err
+                LayoutActionCreator.notify t('account refresh error'),
+                    autoclose: false
+                    finished: true
+                    errors: [ JSON.stringify err ]
+            else
+                if results is "done"
+                    MessageActionCreator.receiveRawMessages null
+                    LayoutActionCreator.notify t('account refreshed'),
+                        autoclose: true
 
     toastsShow: ->
         AppDispatcher.handleViewAction

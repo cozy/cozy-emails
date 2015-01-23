@@ -2,6 +2,8 @@
 Message = require './message'
 classer = React.addons.classSet
 
+LayoutActionCreator = require '../actions/layout_action_creator'
+
 RouterMixin = require '../mixins/router_mixin'
 {MessageFlags} = require '../constants/app_constants'
 
@@ -25,7 +27,7 @@ module.exports = React.createClass
                not(_.isEqual(nextProps, @props))
 
     getInitialState: ->
-        expanded: false
+        expanded: not @props.settings.get('displayConversation')
 
     expand: ->
         @setState expanded: true
@@ -62,14 +64,6 @@ module.exports = React.createClass
         else
             selectedAccountID = @props.conversation.get(0).mailbox
 
-        collapseUrl = @buildUrl
-            firstPanel:
-                action: 'account.mailbox.messages'
-                parameters: selectedAccountID
-            secondPanel:
-                action: 'message'
-                parameters: @props.conversation.get(0).get 'id'
-
         if @props.layout is 'full'
             closeUrl = @buildUrl
                 direction: 'first'
@@ -95,18 +89,20 @@ module.exports = React.createClass
 
         .toJS()
 
+        toggleFullscreen = ->
+            LayoutActionCreator.toggleFullscreen()
 
         div className: 'conversation',
 
             if @props.layout isnt 'full'
                 a
-                    href: expandUrl,
-                    className: 'expand hidden-xs hidden-sm',
+                    onClick: toggleFullscreen
+                    className: 'expand hidden-xs hidden-sm clickable',
                         i className: 'fa fa-arrows-h'
             else
                 a
-                    href: collapseUrl,
-                    className: 'compress',
+                    onClick: toggleFullscreen
+                    className: 'compress clickable',
                         i className:'fa fa-compress'
 
             h3 className: 'message-title',

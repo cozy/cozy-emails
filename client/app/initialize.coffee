@@ -9,8 +9,8 @@ window.onerror = (msg, url, line, col, error) ->
                 type: 'error'
                 error:
                     msg: msg
-                    full: error.toString()
-                    stack: error.stack
+                    full: exception
+                    stack: error?.stack
                 url: url
                 line: line
                 col: col
@@ -39,6 +39,8 @@ window.onload = ->
             "en"
 
         window.cozyMails.setLocale locale
+        LayoutActionCreator = require './actions/layout_action_creator/'
+        LayoutActionCreator.setDisposition window.settings.layoutStyle
 
         # init plugins
         PluginUtils = require "./utils/plugin_utils"
@@ -66,13 +68,19 @@ window.onload = ->
         Application = require './components/application'
         application = Application router: @router
         React.renderComponent application, document.body
-        SettingsActionCreator = require './actions/settings_action_creator/'
 
         # Starts the application by initializing the router
         Backbone.history.start()
 
         # begin realtime
         require './utils/socketio_utils'
+
+        # Desktop notifications
+        if window.settings.desktopNotifications
+            Notification.requestPermission (status) ->
+                # This allows to use Notification.permission with Chrome/Safari
+                if Notification.permission isnt status
+                    Notification.permission = status
 
     catch e
         console.error e

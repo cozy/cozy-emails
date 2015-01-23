@@ -40,18 +40,6 @@ module.exports = Compose = React.createClass
 
         return unless @props.accounts
 
-        expandUrl = @buildUrl
-            direction: 'first'
-            action: 'compose'
-            fullWidth: true
-
-        collapseUrl = @buildUrl
-            firstPanel:
-                action: 'account.mailbox.messages'
-                parameters: @state.accountID
-            secondPanel:
-                action: 'compose'
-
         onCancel = =>
             if @props.onCancel?
                 @props.onCancel()
@@ -60,6 +48,9 @@ module.exports = Compose = React.createClass
                     direction: 'first'
                     action: 'default'
                     fullWidth: true
+
+        toggleFullscreen = ->
+            LayoutActionCreator.toggleFullscreen()
 
         closeUrl = @buildClosePanelUrl @props.layout
 
@@ -73,14 +64,14 @@ module.exports = Compose = React.createClass
 
         div id: 'email-compose',
             if @props.layout isnt 'full'
-                a href: expandUrl, className: 'expand pull-right',
+                a onClick: toggleFullscreen, className: 'expand pull-right clickable',
                     i className: 'fa fa-arrows-h'
             else
-                a href: collapseUrl, className: 'close-email pull-right',
+                a onClick: toggleFullscreen, className: 'close-email pull-right clickable',
                     i className:'fa fa-compress'
             h3 null,
                 t 'compose'
-            form className: '',
+            form className: 'form-compose',
                 div className: 'form-group',
                     label
                         htmlFor: 'compose-from',
@@ -163,7 +154,7 @@ module.exports = Compose = React.createClass
                     div className: 'btn-toolbar', role: 'toolbar',
                         div className: '',
                             button
-                                className: 'btn btn-cozy',
+                                className: 'btn btn-cozy btn-send',
                                 type: 'button',
                                 disable: if @state.sending then true else null
                                 onClick: @onSend,
@@ -173,7 +164,7 @@ module.exports = Compose = React.createClass
                                         span className: 'fa fa-send'
                                     span null, labelSend
                             button
-                                className: 'btn btn-cozy',
+                                className: 'btn btn-cozy btn-save',
                                 disable: if @state.saving then true else null
                                 type: 'button', onClick: @onDraft,
                                     if @state.saving
@@ -183,14 +174,14 @@ module.exports = Compose = React.createClass
                                     span null, t 'compose action draft'
                             if @props.message?
                                 button
-                                    className: 'btn btn-cozy-non-default',
+                                    className: 'btn btn-cozy-non-default btn-delete',
                                     type: 'button',
                                     onClick: @onDelete,
                                         span className: 'fa fa-trash-o'
                                         span null, t 'compose action delete'
                             button
                                 onClick: onCancel
-                                className: 'btn btn-cozy-non-default',
+                                className: 'btn btn-cozy-non-default btn-cancel',
                                 t 'app cancel'
                 div className: 'clearfix', null
 
@@ -295,7 +286,7 @@ module.exports = Compose = React.createClass
             else if @state.subject is ''
                 valid = false
                 LayoutActionCreator.alertError t "compose error no subject"
-                setTimeout ->
+                setTimeout =>
                     @refs.subject.getDOMNode().focus()
                 , 0
 
@@ -306,6 +297,11 @@ module.exports = Compose = React.createClass
                     message.text = toMarkdown(message.html)
                 catch
                     message.text = message.html?replace /<[^>]*>/gi, ''
+
+                # convert HTML entities
+                tmp = document.createElement 'div'
+                tmp.innerHTML = message.text
+                message.text = tmp.textContent
             else
                 message.text = @state.text.trim()
 
@@ -331,7 +327,7 @@ module.exports = Compose = React.createClass
                 if error?
                     LayoutActionCreator.alertError "#{msgKo} :  error"
                 else
-                    LayoutActionCreator.notify msgOk
+                    LayoutActionCreator.notify msgOk, autoclose: true
                     @setState message
 
                     if not isDraft
@@ -388,9 +384,13 @@ ComposeEditor = React.createClass
             @props.html.requestChange @refs.html.getDOMNode().innerHTML
         onTextChange = (event) =>
             @props.text.requestChange @refs.content.getDOMNode().value
+        if @props.settings.get 'composeOnTop'
+            folded = 'folded'
+        else
+            folded = ''
         if @props.composeInHTML
             div
-                className: 'rt-editor form-control',
+                className: "rt-editor form-control #{folded}",
                 ref: 'html',
                 contentEditable: true,
                 onKeyDown: @onKeyDown,
@@ -528,6 +528,10 @@ ComposeEditor = React.createClass
                         sel.collapse inserted, 0
 
                     , 0
+            )
+            # Allow to hide original message
+            jQuery('#email-compose .rt-editor .originalToggle').on('click', ->
+                jQuery('#email-compose .rt-editor').toggleClass('folded')
             )
         else
             # Text message

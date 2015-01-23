@@ -37,6 +37,17 @@ module.exports = AccountActionCreator =
                 LayoutActionCreator = require '../actions/layout_action_creator'
                 LayoutActionCreator.notify t('account updated'), autoclose: true
 
+    check: (inputValues, accountID) ->
+        account = AccountStore.getByID accountID
+        newAccount = account.mergeDeep inputValues
+
+        XHRUtils.checkAccount newAccount, (error, rawAccount) ->
+            if error?
+                AccountActionCreator._setNewAccountError error
+            else
+                LayoutActionCreator = require '../actions/layout_action_creator'
+                LayoutActionCreator.notify t('account checked'), autoclose: true
+
     remove: (accountID) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.REMOVE_ACCOUNT

@@ -42,23 +42,26 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
             casper.test.fail "Unable to find mailbox #{box} in #{account}"
         casper.click "[data-reactid='#{id}'] .item-label"
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
-            if typeof messageID is 'string'
-                subjectSel = "[data-message-id='#{messageID}'] a .preview"
-            else if typeof subject is 'string'
-                subjectSel = x "//span[(contains(normalize-space(.), '#{subject}'))]"
-            else
-                subjectSel = 'li.message:nth-of-type(1) .title'
-            casper.waitForSelector subjectSel, ->
-                if not (typeof subject is 'string')
-                    subject = casper.fetchText subjectSel
-                casper.click subjectSel
-                casper.waitForSelector x("//h3[(contains(normalize-space(.), '#{subject}'))]"), ->
-                    #casper.test.pass "Message #{subject} selected"
-                    cb(subject)
+            casper.waitForSelector ".message-list li.message", ->
+                if typeof messageID is 'string'
+                    subjectSel = "[data-message-id='#{messageID}'] a .preview"
+                else if typeof subject is 'string'
+                    subjectSel = x "//span[(contains(normalize-space(.), '#{subject}'))]"
+                else
+                    subjectSel = 'li.message:nth-of-type(1) .title'
+                casper.waitForSelector subjectSel, ->
+                    if not (typeof subject is 'string')
+                        subject = casper.fetchText subjectSel
+                    casper.click subjectSel
+                    casper.waitForSelector x("//h3[(contains(normalize-space(.), '#{subject}'))]"), ->
+                        #casper.test.pass "Message #{subject} selected"
+                        cb(subject)
+                    , ->
+                        casper.test.fail "Error displaying #{subject}"
                 , ->
-                    casper.test.fail "Error displaying #{subject}"
+                    casper.test.fail "No message matching #{subjectSel}"
             , ->
-                casper.test.fail "No message with subject #{subject}"
+                casper.test.fail "No message in #{account}/#{box}"
         , ->
             casper.test.fail "Unable to go to mailbox #{box}"
     , ->
@@ -73,8 +76,8 @@ exports.init = (casper) ->
     if dev
         casper.options.verbose = true
         casper.options.logLevel = 'debug'
-    casper.options.waitTimeout = 15000
-    casper.options.timeout = 120000
+    casper.options.waitTimeout = 60000
+    casper.options.timeout = 200000
     casper.options.viewportSize = {width: 1024, height: 768}
     casper.on 'exit', (res) ->
         if res isnt 0 or dev
@@ -90,6 +93,8 @@ exports.init = (casper) ->
         casper.echo "Error: " + msg, "ERROR"
         utils.dump trace.slice 0, 2
     casper.on "load.finished", ->
+        if casper.getTitle() isnt 'Cozy Emails'
+            return
         accounts = casper.evaluate ->
             if window.cozyMails?
                 # ensure locale is english
@@ -108,4 +113,3 @@ exports.init = (casper) ->
             utils.dump accounts
             casper.test.done()
             casper.die("Fixtures not loaded, dying")
-

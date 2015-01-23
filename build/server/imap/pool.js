@@ -128,9 +128,10 @@ ImapPool = (function() {
     imap.connect();
     return wrongPortTimeout = setTimeout((function(_this) {
       return function() {
+        var _ref1, _ref2;
         log.debug(_this.id, "timeout 10s");
         imap.removeListener('error', onConnError);
-        onConnError(new TimeoutError(''));
+        onConnError(new TimeoutError("Timeout connecting to " + ((_ref1 = _this.account) != null ? _ref1.imapServer : void 0) + ":" + ((_ref2 = _this.account) != null ? _ref2.imapPort : void 0)));
         return imap.destroy();
       };
     })(this), 10000);

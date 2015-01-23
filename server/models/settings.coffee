@@ -4,16 +4,18 @@ _ = require 'lodash'
 Any = (x) -> x
 
 module.exports = Settings = americano.getModel 'MailsSettings',
+    # SETTINGS
     #messagesPerPage      : type : Number,  default : 25
-    displayConversation  : type : Boolean, default : true
-    displayPreview       : type : Boolean, default : true
     composeInHTML        : type : Boolean, default : true
     composeOnTop         : type : Boolean, default : false
+    desktopNotifications : type : Boolean, default : false
+    displayConversation  : type : Boolean, default : true
+    displayPreview       : type : Boolean, default : true
+    layoutStyle          : type : String,  default : 'vertical'
+    listStyle            : type : String,  default : 'default'
+    messageConfirmDelete : type : Boolean, default : true
     messageDisplayHTML   : type : Boolean, default : true
     messageDisplayImages : type : Boolean, default : false
-    messageConfirmDelete : type : Boolean, default : true
-    #lang                 : type : String,  default : 'en'
-    listStyle            : type : String,  default : 'default'
     plugins              : type : Any,     default : null
 
 Settings.getInstance = (callback) ->

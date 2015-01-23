@@ -6,6 +6,8 @@ module.exports = ToolboxActions = React.createClass
 
     render: ->
         direction = if @props.direction is 'right' then 'right' else 'left'
+        if @props.message?
+            messageRawId = @props.message.get('mailboxIDs')[@props.mailboxID]
         div className: 'btn-group btn-group-sm',
             button
                 className: 'btn btn-default dropdown-toggle more',
@@ -51,6 +53,12 @@ module.exports = ToolboxActions = React.createClass
                             onClick: @props.onHeaders,
                             'data-message-id': @props.messageID,
                             t 'mail action headers'
+                if @props.message?
+                    li role: 'presentation',
+                        a
+                            href: "raw/#{@props.mailboxID}/#{messageRawId}"
+                            target: '_blank'
+                            t 'mail action raw'
                 li role: 'presentation',
                     a
                         onClick: @props.onConversation,

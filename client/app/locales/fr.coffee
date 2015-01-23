@@ -28,10 +28,10 @@ module.exports =
       "compose reply separator"   : "\n\nLe %{date}, %{sender} a écrit \n"
       "compose forward prefix"    : "Fwd: "
       "compose forward separator" : "\n\nLe %{date}, %{sender} a écrit \n"
-      "compose action draft"      : "Enregistrer le brouillon"
+      "compose action draft"      : "Enregistrer"
       "compose action send"       : "Envoyer"
       "compose action sending"    : "Envoi…"
-      "compose action delete"     : "Supprimer le brouillon"
+      "compose action delete"     : "Supprimer"
       "compose toggle cc"         : "Copie à"
       "compose toggle bcc"        : "Copie cachée à"
       "compose error no dest"     : "Vous n'avez pas saisi de destinataires"
@@ -88,6 +88,7 @@ module.exports =
       "mail action move"        : "Déplacer…"
       "mail action more"        : "Plus…"
       "mail action headers"     : "Entêtes"
+      "mail action raw"         : "Message brut"
       "mail mark spam"          : "Pourriel"
       "mail mark nospam"        : "Légitime"
       "mail mark fav"           : "Important"
@@ -111,18 +112,30 @@ module.exports =
       "account edit"                : "Modifier le compte"
       "account add"                 : "Créer"
       "account save"                : "Enregistrer"
-      "account label"               : "Nom"
-      "account name short"          : "Nom abrégé"
-      "account user name"           : "Votre nom"
-      "account user fullname"       : "Votre nom, tel qu'il sera affiché"
-      "account address"             : "Adresse"
-      "account address placeholder" : "Votre adresse électronique"
+      "account check"               : "Tester la connexion"
+      "account accountType short"   : "IMAP"
+      "account accountType"         : "Type de compte"
+      "account imapPort short"      : "993"
+      "account imapPort"            : "Port"
+      "account imapSSL"             : "Utiliser SSL"
+      "account imapServer short"    : "imap.fournisseur.tld"
+      "account imapServer"          : "Serveur IMAP"
+      "account imapTLS"             : "Utiliser STARTTLS"
+      "account label short"         : "Nom abrégé"
+      "account label"               : "Nom du compte"
+      "account login short"         : "Votre adresse électronique"
+      "account login"               : "Adresse"
+      "account name short"          : "Votre nom, tel qu'il sera affiché"
+      "account name"                : "Votre nom"
       "account password"            : "Mot de passe"
-      "account sending server"      : "Serveur sortant"
-      "account receiving server"    : "Serveur IMAP"
-      "account port"                : "Port"
-      "account SSL"                 : "Utiliser SSL"
-      "account TLS"                 : "Utiliser STARTTLS"
+      "account receiving server"    : "Serveur de réception"
+      "account sending server"      : "Serveur d'envoi"
+      "account smtpPort short"      : "465"
+      "account smtpPort"            : "Port"
+      "account smtpSSL"             : "Utiliser SSL"
+      "account smtpServer short"    : "smtp.fournisseur.tld"
+      "account smtpServer"          : "Serveur sortant"
+      "account smtpTLS"             : "Utiliser STARTTLS"
       "account remove"              : "Supprimer ce compte"
       "account remove confirm"      : "Voulez-vous vraiment supprimer
                                         ce compte ?"
@@ -130,6 +143,7 @@ module.exports =
       "account sent mailbox"        : "Enregistrer les messages envoyés dans"
       "account trash mailbox"       : "Corbeille"
       "account mailboxes"           : "Dossiers"
+      "account special mailboxes"   : "Dossiers spéciaux"
       "account newmailbox label"    : "Nouveaux dossier"
       "account newmailbox placeholder" : "Nom"
       "account newmailbox parent"   : "Créer sous"
@@ -141,13 +155,16 @@ module.exports =
                                         sont incorrectes"
       "account type"                : "Type de compte"
       "account updated"             : "Modification enregistrée"
+      "account checked"             : "Paramètres corrects"
       "account refreshed"           : "Actualisé"
+      "account refresh error"       : "Une erreur est survenue, vérifiez les paramètres de connexion aux comptes"
       "account creation ok"         : "Youpi, le compte a été créé !
         Sélectionnez à présent les dossiers que vous voulez voir
         apparaitre dans le menu"
       "account identifiers"         : "Identification"
       "account danger zone"         : "Zone dangereuse"
       "account actions"             : "Actions"
+      "account no special mailboxes": "Vous n'avez pas configuré les dossiers spéciaux"
       "mailbox create ok"           : "Dossier créé"
       "mailbox create ko"           : "Erreur de création du dossier"
       "mailbox update ok"           : "Dossier mis à jour"
@@ -202,39 +219,49 @@ module.exports =
       "message undelete"            : "Annuler la suppression"
       "message undelete ok"         : "Message restauré"
       "message undelete error"      : "Impossible d'annuler l'action"
-      "message preview title"       : "Voir les pièces-jointes"
+      "message preview title"       : "Voir les pièces jointes"
 
       # Settings
       "settings title"             : "Paramètres"
       "settings button save"       : "Enregistrer"
       # "settings label mpp"         : "Nombre de messages par page"
       "settings plugins"           : "Modules complémentaires"
+      "settings plugin add"        : "Ajouter"
+      "settings plugin del"        : "Supprimer"
+      "settings plugin new name"   : "Nom du plugin"
+      "settings plugin new url"    : "Url du plugin"
+      # SETTINGS
       "settings label composeInHTML"        : "Éditeur riche"
-      "settings label composeOnTop"         : "Répondre au dessus du message"
+      "settings label composeOnTop"         : "Répondre au-dessus du message"
+      "settings label desktopNotifications" : "Notifications"
       "settings label displayConversation"  : "Afficher les conversations"
       "settings label displayPreview"       : "Prévisualiser les messages"
       "settings label messageDisplayHTML"   : "Afficher les messages en HTML"
       "settings label messageDisplayImages" : "Afficher les images"
       "settings label messageConfirmDelete" : "Demander confirmation avant
                                                 de supprimer un message"
+      "settings label layoutStyle"            : "Affichage"
+      "settings label layoutStyle horizontal" : "Message sous la liste"
+      "settings label layoutStyle vertical"   : "Message à côté de la liste"
+      "settings label layoutStyle three"      : "Trois colonnes"
       "settings label listStyle"            : "Affichage de la liste des messages"
       "settings label listStyle default"    : "Normal"
       "settings label listStyle compact"    : "Compact"
       "settings lang"             : "Langue"
       "settings lang en"          : "English"
       "settings lang fr"          : "Français"
-      "settings save error"       : "Erreur d'enregistrement des paramètres, veuillez ré-essayer"
+      "settings save error"       : "Erreur d'enregistrement des paramètres, veuillez réessayer"
 
       # File picker
       "picker drop here"           : "Déposer les fichiers ici"
 
       # Mailbox List
-      "mailbox pick one"           : "Choisissez une boite"
-      "mailbox pick null"          : "Pas de boite pour ça"
+      "mailbox pick one"           : "Choisissez une boîte"
+      "mailbox pick null"          : "Pas de boîte pour ça"
 
       # Tasks
-      "task account-fetch"         : 'Rafraichissement %{account}'
-      "task box-fetch"             : 'Rafraichissement %{box}'
+      "task account-fetch"         : 'Rafraîchissement %{account}'
+      "task box-fetch"             : 'Rafraîchissement %{box}'
       "task apply-diff-fetch"      : 'Téléchargement des messages du dossier
                                         %{box} de %{account}'
       "task apply-diff-remove"     : 'Suppression des messages du dossier
@@ -254,21 +281,36 @@ module.exports =
       "toast show"      : "Afficher les alertes"
       "toast close all" : "Fermer toutes les alertes"
 
+      # Notifications
+      "notif new title": 'Messagerie Cozy'
+      "notif new": """
+        %{smart_count} nouveau message dans %{box} de %{account}||||
+        %{smart_count} nouveaux messages dans %{box} de %{account}||||
+      """
+
       # Contacts
       "contact form"             : "Sélectionnez des contacts"
       "contact form placeholder" : "Nom"
       "contact create success"   : "%{contact} a été ajouté(e) à vos contacts"
-      "contact create error"     : "L'ajout à votre carnet d'adresse a
+      "contact create error"     : "L'ajout à votre carnet d'adresses a
                                         échoué : {error}"
 
       # GMail security
       "gmail security tile": "Sécurité Gmail"
       "gmail security body": """
-            Gmail considère les connection par nom d'utilisateur et mot de passe
-            non sécurisées. Veuillez cliquer sur le lien ci-dessous, assurez
-            vous d'être connecté avec le compte %{login} et activer l'accès
+            Gmail considère les connexions par nom d'utilisateur et mot de passe
+            comme non sécurisées. Veuillez cliquer sur le lien ci-dessous, assurez-vous
+            d'être connecté avec le compte %{login} et activez l'accès
             pour les applications moins sécurisées.
       """
       "gmail security link": """
             Activer l'accès pour les applications moins sécurisées
       """
+
+      # Plugins
+      'plugin name Gallery'            : 'Gallerie de pièces jointes'
+      'plugin name medium-editor'      : 'Éditeur Medium'
+      'plugin name MiniSlate'          : 'Éditeur MiniSlate'
+      'plugin name Sample JS'          : 'Example'
+      'plugin name Keyboard shortcuts' : 'Raccourcis clavier'
+      'plugin name VCard'              : 'Affichage de VCard'

@@ -87,6 +87,7 @@ module.exports =
       "mail action move"        : "Move…"
       "mail action more"        : "More…"
       "mail action headers"     : "Headers"
+      "mail action raw"         : "Raw message"
       "mail mark spam"          : "Spam"
       "mail mark nospam"        : "No spam"
       "mail mark fav"           : "Important"
@@ -108,18 +109,30 @@ module.exports =
       "account edit"                : "Edit account"
       "account add"                 : "Add"
       "account save"                : "Save"
-      "account label"               : "Label"
-      "account name short"          : "A short mailbox name"
-      "account user name"           : "Your name"
-      "account user fullname"       : "Your name, as it will be displayed"
-      "account address"             : "Email address"
-      "account address placeholder" : "Your email address"
+      "account check"               : "Check connection"
+      "account accountType short"   : "IMAP"
+      "account accountType"         : "Account type"
+      "account imapPort short"      : "993"
+      "account imapPort"            : "Port"
+      "account imapSSL"             : "Use SSL"
+      "account imapTLS"             : "Use TLS"
+      "account imapServer short"    : "imap.provider.tld"
+      "account imapServer"          : "IMAP server"
+      "account label short"         : "A short mailbox name"
+      "account label"               : "Account label"
+      "account login short" : "Your email address"
+      "account login"             : "Email address"
+      "account name short"       : "Your name, as it will be displayed"
+      "account name"           : "Your name"
       "account password"            : "Password"
+      "account receiving server"    : "Receiving server"
       "account sending server"      : "Sending server"
-      "account receiving server"    : "IMAP server"
-      "account port"                : "Port"
-      "account SSL"                 : "Use SSL"
-      "account TLS"                 : "Use STARTTLS"
+      "account smtpPort short"      : "465"
+      "account smtpPort"            : "Port"
+      "account smtpServer short"    : "smtp.provider.tld"
+      "account smtpServer"          : "SMTP server"
+      "account smtpSSL"             : "Use SSL"
+      "account smtpTLS"             : "Use STARTTLS"
       "account remove"              : "Remove this account"
       "account remove confirm"      : "Do you really want to remove this
                                         account?"
@@ -127,6 +140,7 @@ module.exports =
       "account sent mailbox"        : "Sent box"
       "account trash mailbox"       : "Trash"
       "account mailboxes"           : "Folders"
+      "account special mailboxes"   : "Special mailboxes"
       "account newmailbox label"    : "New Folder"
       "account newmailbox placeholder" : "Name"
       "account newmailbox parent"   : "Parent:"
@@ -137,12 +151,15 @@ module.exports =
       "account errors"              : "Some data are missing or invalid"
       "account type"                : "Account type"
       "account updated"             : "Account updated"
+      "account checked"             : "Parameters ok"
       "account creation ok"         : "Yeah! The account has been successfully
         created. Now select the mailboxes you want to see in the menu"
       "account refreshed"           : "Account refreshed"
+      "account refresh error"       : "Error refreshing accounts, check parameters"
       "account identifiers"         : "Identification"
       "account actions"             : "Actions"
       "account danger zone"         : "Danger Zone"
+      "account no special mailboxes": "Please configure special folders first"
       "mailbox create ok"           : "Folder created"
       "mailbox create ko"           : "Error creating folder"
       "mailbox update ok"           : "Folder updated"
@@ -203,13 +220,24 @@ module.exports =
       "settings button save"       : "Save"
       #"settings label mpp"         : "Messages per page"
       "settings plugins"           : "Add ons"
+      "settings plugins"           : "Modules complémentaires"
+      "settings plugin add"        : "Add"
+      "settings plugin del"        : "Delete"
+      "settings plugin new name"   : "Plugin Name"
+      "settings plugin new url"    : "Plugin URL"
+      # SETTINGS
       "settings label composeInHTML"        : "Rich message editor"
       "settings label composeOnTop"         : "Reply on top of message"
+      "settings label desktopNotifications" : "Notifications"
       "settings label displayConversation"  : "Display conversations"
       "settings label displayPreview"       : "Display message preview"
       "settings label messageDisplayHTML"   : "Display message in HTML"
       "settings label messageDisplayImages" : "Display images inside messages"
       "settings label messageConfirmDelete" : "Confirm before deleting a message"
+      "settings label layoutStyle"            : "Display Layout"
+      "settings label layoutStyle horizontal" : "Horizontal"
+      "settings label layoutStyle vertical"   : "Vertical"
+      "settings label layoutStyle three"      : "Three cols"
       "settings label listStyle"            : "Message list style"
       "settings label listStyle default"    : "Normal"
       "settings label listStyle compact"    : "Compact"
@@ -244,6 +272,13 @@ module.exports =
       "toast show"      : "Display alerts"
       "toast close all" : "Close all alerts"
 
+      # Notifications
+      "notif new title": 'CozyEmail'
+      "notif new": """
+        %{smart_count} new message in %{box} of %{account}||||
+        %{smart_count} new messages in %{box} of %{account}||||
+      """
+
       # Contacts
       "contact form"             : "Select contacts"
       "contact form placeholder" : "contact name"
@@ -259,3 +294,11 @@ module.exports =
             less secure apps.
       """
       "gmail security link": "Enable access for less secure apps."
+
+      # Plugins
+      'plugin name Gallery'            : 'Attachments gallery'
+      'plugin name medium-editor'      : 'Medium editor'
+      'plugin name MiniSlate'          : 'MiniSlate editor'
+      'plugin name Sample JS'          : 'Sample'
+      'plugin name Keyboard shortcuts' : 'Keyboard shortcuts'
+      'plugin name VCard'              : 'Contacts VCards'

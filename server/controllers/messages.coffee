@@ -35,7 +35,8 @@ module.exports.details = (req, res, next) ->
 module.exports.attachment = (req, res, next) ->
     stream = req.message.getBinary req.params.attachment, (err) ->
         return next err if err
-
+    if req.query?.download
+        res.setHeader('Content-disposition', "attachment; filename=#{req.params.attachment}");
     stream.on 'error', next
     stream.pipe res
 
@@ -378,3 +379,17 @@ module.exports.conversationPatch = (req, res, next) ->
     , (err) ->
         return next err if err
         res.send 200, messages
+
+module.exports.raw = (req, res, next) ->
+    req.mailbox.doASAPWithBox (imap, imapbox, cb) ->
+        try
+            imap.fetchOneMailRaw req.params.messageID, (err, message) ->
+                cb()
+                return next err if err
+                # should be message/rfc822 but text/plain allow to read the
+                # raw message in the browser
+                res.type 'text/plain'
+                res.send 200, message
+        catch e
+            cb()
+            return next e

@@ -145,6 +145,12 @@ class AccountStore extends Store
 
         handle ActionTypes.RECEIVE_MAILBOX_UPDATE, (boxData) ->
             setMailbox boxData.accountID, boxData.id, boxData
+            if boxData.nbRecent > 0
+                message = t 'notif new',
+                    smart_count: boxData.nbRecent
+                    box: boxData.label
+                    account: @getByID(boxData.accountID).get 'label'
+                @emit 'notify', t('notif new title'), body: message
             @emit 'change'
 
     ###

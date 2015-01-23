@@ -99,7 +99,7 @@ Contact.createNoDuplicate = function(data, callback) {
     if (err) {
       return callback(err);
     }
-    if ((existings != null ? existings.length : void 0) > 1) {
+    if ((existings != null ? existings.length : void 0) > 0) {
       return callback(null, existings);
     }
     contact = {

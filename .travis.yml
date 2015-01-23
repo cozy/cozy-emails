@@ -26,11 +26,11 @@ before_install:
     - npm install # do it now, DovecotTesting needs it
 
 script:
-    - npm run test
+    - npm run test:build
     - npm run fixtures
     - forever start -o casper-server.log build/server.js
     - sleep 5
-    - npm run client-test-travis
+    - npm run test:client
 
 
 after_failure:

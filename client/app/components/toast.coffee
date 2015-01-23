@@ -52,9 +52,9 @@ module.exports = Toast = React.createClass
         if hasErrors
             showModal = @showModal.bind(this, toast.errors)
 
-        div className: classes, role: "alert",
+        div className: classes, role: "alert", key: @props.key,
             if @state.modalErrors
-                renderModal()
+                @renderModal()
 
             if percent?
                 div className: "progress",
@@ -90,6 +90,11 @@ module.exports = Toast = React.createClass
                             onClick: action.onClick,
                             action.label
 
+            if hasErrors
+                div className: 'toast-actions',
+                    a onClick: showModal,
+                        t 'there were errors', smart_count: toast.errors.length
+
 
 module.exports.Container = ToastContainer =  React.createClass
     displayName: 'ToastContainer'
@@ -103,6 +108,9 @@ module.exports.Container = ToastContainer =  React.createClass
             toasts: LayoutStore.getToasts()
             hidden: not LayoutStore.isShown()
         }
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
     render: ->
         toasts = @state.toasts.map (toast, id) ->
@@ -142,3 +150,15 @@ module.exports.Container = ToastContainer =  React.createClass
 
     closeAll: ->
         LayoutActionCreator.clearToasts()
+
+    _clearToasts: ->
+        setTimeout ->
+            Array.prototype.forEach.call document.querySelectorAll('.toast-enter'), (e) ->
+                e.classList.add 'hidden'
+        , 10000
+
+    componentDidMount: ->
+        @_clearToasts()
+
+    componentDidUpdate: ->
+        @_clearToasts()

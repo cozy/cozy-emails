@@ -120,6 +120,17 @@ Account.createIfValid = (data, callback) ->
         return callback err if err
         callback null, account
 
+
+# Public: check account parameters
+#
+# data - account parameters
+#
+# Returns  {Account}
+Account.checkParams = (data, callback) ->
+    account = new Account data
+    account.testConnections callback
+
+
 Account::testConnections = (callback) ->
     return callback null if @isTest()
     @testSMTPConnection (err) =>
@@ -259,6 +270,7 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, callback) ->
     onlyFavorites ?= false
 
     @imap_refreshBoxes (err, toFetch, toDestroy) ->
+        account.setRefreshing(false) if err
         return callback err if err
 
         if onlyFavorites
@@ -287,6 +299,7 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, callback) ->
                 cb null
 
         , (err) ->
+            account.setRefreshing(false) if err
             return callback err if err
             log.debug "account#imap_fetchMails#DONE"
 
@@ -331,16 +344,6 @@ Account::imap_createMail = (box, message, callback) ->
         , (err, uid) ->
             return callback err if err
             callback null, uid
-
-# Public: remove a mail in the given box
-# used for drafts
-#
-# account - the {Account} to delete mail from
-# box - the {Mailbox} to delete mail from
-# mail - a {Message} to create
-#
-# Returns a the UID of the created mail
-
 
 Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
     useRFC6154 = false

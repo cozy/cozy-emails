@@ -161,6 +161,7 @@ class MessageStore extends Store
             AppDispatcher.waitFor [AccountStore.dispatchToken]
             _messages = _messages.filter (message) ->
                 message.get('accountID') isnt accountID
+            .toOrderedMap()
 
             @emit 'change'
 

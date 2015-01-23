@@ -72,13 +72,13 @@ Mailbox.prototype.RFC6154use = function() {
 Mailbox.prototype.guessUse = function() {
   var path;
   path = this.path.toLowerCase();
-  if (0 === path.indexOf('sent')) {
+  if (/sent/i.test(path)) {
     return 'sentMailbox';
-  } else if (0 === path.indexOf('draft')) {
+  } else if (/draft/i.test(path)) {
     return 'draftMailbox';
-  } else if (0 === path.indexOf('flagged')) {
+  } else if (/flagged/i.test(path)) {
     return 'flaggedMailbox';
-  } else if (0 === path.indexOf('trash')) {
+  } else if (/trash/i.test(path)) {
     return 'trashMailbox';
   }
 };

@@ -95,24 +95,22 @@ MessageList = React.createClass
         advanced   = @props.settings.get('advanced')
         nbSelected = if Object.keys(@state.selected).length > 0 then null else true
 
-        toggleFilterFlag = =>
-            filter = if @state.filterFlag then MessageFilter.ALL else MessageFilter.FLAGGED
-            LayoutActionCreator.filterMessages filter
-            params = MessageStore.getParams()
+        showList = =>
+            params = _.clone(MessageStore.getParams())
             params.accountID = @props.accountID
             params.mailboxID = @props.mailboxID
             LayoutActionCreator.showMessageList parameters: params
 
+        toggleFilterFlag = =>
+            filter = if @state.filterFlag then MessageFilter.ALL else MessageFilter.FLAGGED
+            LayoutActionCreator.filterMessages filter
+            showList()
             @setState filterFlag: not @state.filterFlag, filterUnseen: false
 
         toggleFilterUnseen = =>
             filter = if @state.filterUnseen then MessageFilter.ALL else MessageFilter.UNSEEN
             LayoutActionCreator.filterMessages filter
-            params = MessageStore.getParams()
-            params.accountID = @props.accountID
-            params.mailboxID = @props.mailboxID
-            LayoutActionCreator.showMessageList parameters: params
-
+            showList()
             @setState filterUnseen: not @state.filterUnseen, filterFlag: false
 
         classList = classer
@@ -124,7 +122,8 @@ MessageList = React.createClass
             active: @state.edited
         div className: 'message-list ' + classList, ref: 'list',
             div className: 'message-list-actions',
-                #MessagesQuickFilter {}
+                #if advanced and not @state.edited
+                #    MessagesQuickFilter {}
                 div className: 'btn-toolbar', role: 'toolbar',
                     div className: 'btn-group',
                         # Toggle edit
@@ -169,7 +168,7 @@ MessageList = React.createClass
                         if not @state.edited
                             div className: 'btn-group btn-group-sm message-list-option',
                                 button
-                                    className: 'btn btn-default trash',
+                                    className: 'btn btn-default',
                                     type: 'button',
                                     disabled: null,
                                     onClick: @refresh,
@@ -180,7 +179,7 @@ MessageList = React.createClass
                             div className: 'btn-group btn-group-sm message-list-option',
                                 a
                                     href: configMailboxUrl
-                                    className: 'btn btn-default',
+                                    className: 'btn btn-default mailbox-config',
                                     i className: 'fa fa-cog'
                         if @state.edited
                             div className: 'btn-group btn-group-sm message-list-option',
@@ -583,7 +582,7 @@ MessagesFilter = React.createClass
     onFilter: (ev) ->
         LayoutActionCreator.filterMessages ev.target.dataset.filter
 
-        params = MessageStore.getParams()
+        params = _.clone(MessageStore.getParams())
         params.accountID = @props.accountID
         params.mailboxID = @props.mailboxID
         LayoutActionCreator.showMessageList parameters: params
@@ -631,7 +630,7 @@ MessagesSort = React.createClass
         LayoutActionCreator.sortMessages
             field: field
 
-        params = MessageStore.getParams()
+        params = _.clone(MessageStore.getParams())
         params.accountID = @props.accountID
         params.mailboxID = @props.mailboxID
         LayoutActionCreator.showMessageList parameters: params

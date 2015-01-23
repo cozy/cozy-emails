@@ -26,13 +26,13 @@ module.exports = MessageUtils =
             res.push(MessageUtils.displayAddress item, full)
         return res.join ", "
 
-
     getReplyToAddress: (message) ->
         reply = message.get 'replyTo'
         from = message.get 'from'
-        return if reply?.length isnt 0 then reply else from
-
-
+        if (reply? and reply.length isnt 0)
+            return reply
+        else
+            return from
 
     makeReplyMessage: (inReplyTo, action, inHTML) ->
         message =
@@ -48,7 +48,11 @@ module.exports = MessageUtils =
             html = inReplyTo.get 'html'
 
             if text and not html and inHTML
-                html = markdown.toHTML text
+                try
+                    html = markdown.toHTML text
+                catch e
+                    console.log "Error converting text message to Markdown: #{e}"
+                    html = "<div class='text'>#{text}</div>" #markdown.toHTML text
 
             if html and not text and not inHTML
                 text = toMarkdown html
@@ -67,7 +71,7 @@ module.exports = MessageUtils =
                     @generateReplyText(text) + "\n"
                 message.html = """
                     <p><br /></p>
-                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
+                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}<span class="originalToggle"> … </span></p>
                     <blockquote>#{html}</blockquote>
                     <p><br /></p>
                     """
@@ -80,7 +84,7 @@ module.exports = MessageUtils =
                     @generateReplyText(text) + "\n"
                 message.html = """
                     <p><br /></p>
-                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}</p>
+                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}<span class="originalToggle"> … </span></p>
                     <blockquote>#{html}</blockquote>
                     <p><br /></p>
                     """

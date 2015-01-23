@@ -15,20 +15,34 @@ module.exports = AccountTranslator =
         last = {}
         weight1 = 900
         weight2 = 400
+        # Try to detect special mailboxes, first with flags, then by name
+        # Already done on server, except for TEST accounts
+        if not raw.draftMailbox? or
+           not raw.sentMailbox? or
+           not raw.trashMailbox?
+            raw.mailboxes.forEach (box) ->
+                # If needed, use mailboxes attribs to set draft, sent and trash
+                if not raw.draftMailbox? and MailboxFlags.DRAFT in box.attribs
+                    raw.draftMailbox = box.id
+                if not raw.sentMailbox? and MailboxFlags.SENT in box.attribs
+                    raw.sentMailbox = box.id
+                if not raw.trashMailbox? and MailboxFlags.TRASH in box.attribs
+                    raw.trashMailbox = box.id
+        if not raw.draftMailbox? or
+           not raw.sentMailbox? or
+           not raw.trashMailbox?
+            raw.mailboxes.forEach (box) ->
+                if not raw.draftMailbox? and /draft/i.test box.label
+                    raw.draftMailbox = box.id
+                if not raw.sentMailbox? and /sent/i.test box.label
+                    raw.sentMailbox = box.id
+                if not raw.trashMailbox? and /trash/i.test box.label
+                    raw.trashMailbox = box.id
+
         # Creates Immutable OrderedMap of mailboxes
         mailboxes = Immutable.Sequence raw.mailboxes
             .mapKeys (_, box) -> box.id
             .map (box) ->
-                # If needed, use mailboxes attribs to set draft, sent and trash
-                # @TODO, the server does it, remove this ?
-                if not raw.draftMailbox? and MailboxFlags.DRAFT in box.attribs
-                    raw.draftMailbox = mailboxes.draft
-
-                if not raw.sentMailbox? and MailboxFlags.SENT in box.attribs
-                    raw.sentMailbox = mailboxes.sent
-
-                if not raw.trashMailbox? and MailboxFlags.TRASH in box.attribs
-                    raw.trashMailbox = mailboxes.trash
 
                 box.depth = box.tree.length - 1
 

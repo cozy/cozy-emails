@@ -12,9 +12,9 @@ module.exports = React.createClass
 
     render: ->
         selectedId = @props.selectedMailbox
-        if selectedId?
-            selected = @props.mailboxes.get selectedId
-        if @props.mailboxes.length > 0
+        if @props.mailboxes? and @props.mailboxes.length > 0
+            if selectedId?
+                selected = @props.mailboxes.get selectedId
             div className: 'btn-group btn-group-sm dropdown pull-left',
                 button
                     className: 'btn btn-default dropdown-toggle',

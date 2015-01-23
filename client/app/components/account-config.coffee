@@ -23,7 +23,10 @@ module.exports = React.createClass
         'id', 'label', 'name', 'login', 'password',
         'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
         'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
-        'accountType', 'mailboxes', 'favoriteMailboxes',
+        'accountType'
+    ]
+    _mailboxesFields: [
+        'id', 'mailboxes', 'favoriteMailboxes',
         'draftMailbox', 'sentMailbox', 'trashMailbox'
     ]
     _accountSchema:
@@ -86,7 +89,6 @@ module.exports = React.createClass
         else
             titleLabel = t "account new"
 
-
         tabAccountClass = tabMailboxClass = ''
         tabAccountUrl = tabMailboxUrl = null
 
@@ -104,7 +106,23 @@ module.exports = React.createClass
                 action: 'account.config'
                 parameters: [@state.id, 'account']
 
-        div id: 'mailbox-config',
+        mainOptions =
+            isWaiting: @props.isWaiting
+            selectedAccount: @props.selectedAccount
+            validateForm: @validateForm
+            onSubmit: @onSubmit
+            errors: @state.errors
+        for field in @_accountFields
+            mainOptions[field] = @linkState(field)
+
+        mailboxesOptions =
+            error: @props.error
+            errors: @state.errors
+            onSubmit: @onSubmit
+        for field in @_mailboxesFields
+            mailboxesOptions[field] = @linkState(field)
+
+        div id: 'mailbox-config', key: 'account-config-' + @props.selectedAccount?.get('id'),
             h3 className: null, titleLabel
 
             if @props.tab?
@@ -119,368 +137,9 @@ module.exports = React.createClass
                             t "account tab mailboxes"
 
             if not @props.tab or @props.tab is 'account'
-                @renderMain()
+                AccountConfigMain mainOptions
             else
-                @renderMailboxes()
-
-    renderError: ->
-        if @props.error and @props.error.name is 'AccountConfigError'
-            message = t 'config error ' + @props.error.field
-            div className: 'alert alert-warning', message
-        else if @props.error
-            div className: 'alert alert-warning', @props.error.message
-        else if Object.keys(@state.errors).length isnt 0
-            div className: 'alert alert-warning', t 'account errors'
-
-    renderMain: ->
-
-        if @props.isWaiting then buttonLabel = 'Saving...'
-        else if @props.selectedAccount? then buttonLabel = t "account save"
-        else buttonLabel = t "account add"
-
-
-        hasError = (fields) =>
-            if not Array.isArray fields
-                fields = [ fields ]
-            errors = fields.some (field) => @state.errors[field]?
-            return if errors then ' has-error' else ''
-
-        getError = (field) =>
-            if @state.errors[field]?
-                div
-                    className: 'col-sm-5 col-sm-offset-2 control-label',
-                    @state.errors[field]
-
-        cancelUrl = @buildUrl
-            direction: 'first'
-            action: 'default'
-            fullWidth: true
-
-        form className: 'form-horizontal',
-            @renderError()
-            fieldset null,
-                legend null, t 'account identifiers'
-            div className: 'form-group' + hasError('label'),
-
-                label
-                    htmlFor: 'mailbox-label',
-                    className: 'col-sm-2 col-sm-offset-2 control-label',
-                    t "account label"
-                div className: 'col-sm-3',
-                    input
-                        id: 'mailbox-label',
-                        name: 'mailbox-label',
-                        valueLink: @linkState('label'),
-                        type: 'text',
-                        className: 'form-control',
-                        placeholder: t "account name short"
-                        onBlur: @validateForm
-                getError 'label'
-
-            div className: 'form-group' + hasError('name'),
-                label
-                    htmlFor: 'mailbox-name',
-                    className: 'col-sm-2 col-sm-offset-2 control-label',
-                    t "account user name"
-                div className: 'col-sm-3',
-                    input
-                        id: 'mailbox-name',
-                        name: 'mailbox-name',
-                        valueLink: @linkState('name'),
-                        type: 'text',
-                        className: 'form-control',
-                        placeholder: t "account user fullname"
-                        onBlur: @validateForm
-                getError 'name'
-
-            div className: 'form-group' + hasError(['login', 'auth']),
-                label
-                    htmlFor: 'mailbox-email-address',
-                    className: 'col-sm-2 col-sm-offset-2 control-label',
-                    t "account address"
-                div className: 'col-sm-3',
-                    input
-                        id: 'mailbox-email-address',
-                        name: 'mailbox-email-address',
-                        valueLink: @linkState('login'),
-                        ref: 'login',
-                        onBlur: @discover,
-                        type: 'email',
-                        className: 'form-control',
-                        placeholder: t "account address placeholder"
-                getError 'login'
-
-            div className: 'form-group' + hasError(['password', 'auth']),
-                label
-                    htmlFor: 'mailbox-password',
-                    className: 'col-sm-2 col-sm-offset-2 control-label',
-                    t 'account password'
-                div className: 'col-sm-3',
-                    input
-                        id: 'mailbox-password',
-                        name: 'mailbox-password',
-                        valueLink: @linkState('password'),
-                        type: 'password',
-                        className: 'form-control'
-                        onBlur: @validateForm
-                getError 'password'
-
-            if @state.displayGMAILSecurity
-                fieldset null,
-                    legend null, t 'gmail security tile'
-                    p null, t 'gmail security body', login: @state.login
-                    p null,
-                        a
-                            target: '_blank',
-                            href: "https://www.google.com/settings/security/lesssecureapps"
-                            t 'gmail security link'
-
-            fieldset null,
-                legend null, t 'account sending server'
-                div className: 'form-group' +
-                        hasError(['smtp', 'smtpServer', 'smtpPort']),
-                    label
-                        htmlFor: 'mailbox-smtp-server',
-                        className: 'col-sm-2 col-sm-offset-2 control-label',
-                        t "account sending server"
-                    div className: 'col-sm-3',
-                        input
-                            id: 'mailbox-smtp-server',
-                            name: 'mailbox-smtp-server',
-                            valueLink: @linkState('smtpServer'),
-                            type: 'text',
-                            className: 'form-control',
-                            placeholder: 'smtp.provider.tld'
-                            onBlur: @validateForm
-                div className: 'form-group',
-                    label
-                        htmlFor: 'mailbox-smtp-port',
-                        className: 'col-sm-2 col-sm-offset-2 control-label',
-                        t 'account port'
-                    div className: 'col-sm-3',
-                        input
-                            id: 'mailbox-smtp-port',
-                            name: 'mailbox-smtp-port',
-                            valueLink: @linkState('smtpPort'),
-                            type: 'text',
-                            className: 'form-control'
-                            onBlur: @_onSMTPPort,
-                            onInput: => @setState(smtpManualPort: true)
-                    getError 'smtpServer'
-                    getError 'smtpPort'
-
-                div className: 'form-group',
-                    label
-                        htmlFor: 'mailbox-smtp-ssl',
-                        className: 'col-sm-2 col-sm-offset-2 control-label',
-                        t 'account SSL'
-                    div className: 'col-sm-3',
-                        input
-                            id: 'mailbox-smtp-ssl',
-                            name: 'mailbox-smtp-ssl',
-                            checkedLink: @linkState('smtpSSL'),
-                            type: 'checkbox',
-                            onClick: (ev) =>
-                                @_onServerParam ev.target, 'smtp', 'ssl'
-                div className: 'form-group',
-                    label
-                        htmlFor: 'mailbox-smtp-tls',
-                        className: 'col-sm-2 col-sm-offset-2 control-label',
-                        t 'account TLS'
-                    div className: 'col-sm-3',
-                        input
-                            id: 'mailbox-smtp-tls',
-                            name: 'mailbox-smtp-tls',
-                            checkedLink: @linkState('smtpTLS'),
-                            type: 'checkbox',
-                            onClick: (ev) =>
-                                @_onServerParam ev.target, 'smtp', 'tls'
-
-            div className: 'hidden',
-                label
-                    htmlFor: 'account-type',
-                    className: 'col-sm-2 col-sm-offset-2 control-label',
-                    t 'account type'
-                div className: 'col-sm-3',
-                    input
-                        id: 'account-type',
-                        name: 'account-type',
-                        ref: 'type',
-                        valueLink: @linkState('accountType'),
-                        type: 'text',
-                        className: 'form-control'
-                getError 'password'
-            fieldset null,
-                legend null, t 'account receiving server'
-                div className: 'form-group' +
-                        hasError(['imap', 'imapServer', 'imapPort']),
-                    label
-                        htmlFor: 'mailbox-imap-server',
-                        className: 'col-sm-2 col-sm-offset-2 control-label',
-                        t "account receiving server"
-                    div className: 'col-sm-3',
-                        input
-                            id: 'mailbox-imap-server',
-                            name: 'mailbox-imap-server',
-                            valueLink: @linkState('imapServer'),
-                            type: 'text',
-                            className: 'form-control',
-                            placeholder: 'imap.provider.tld'
-                            onBlur: @validateForm
-                div className: 'form-group',
-                    label
-                        htmlFor: 'mailbox-imap-port',
-                        className: 'col-sm-2 col-sm-offset-2 control-label',
-                        'Port'
-                    div className: 'col-sm-3',
-                        input
-                            id: 'mailbox-imap-port',
-                            name: 'mailbox-imap-port',
-                            valueLink: @linkState('imapPort'),
-                            type: 'text',
-                            className: 'form-control',
-                            onBlur: @_onIMAPPort
-                            onInput: => @setState(imapManualPort: true)
-                    getError 'imapServer'
-                    getError 'imapPort'
-
-                div className: 'form-group',
-                    label
-                        htmlFor: 'mailbox-imap-ssl',
-                        className: 'col-sm-2 col-sm-offset-2 control-label',
-                        t 'account SSL'
-                    div className: 'col-sm-3',
-                        input
-                            id: 'mailbox-imap-ssl',
-                            name: 'mailbox-imap-ssl',
-                            checkedLink: @linkState('imapSSL'),
-                            type: 'checkbox',
-                            onClick: (ev) =>
-                                @_onServerParam ev.target, 'imap', 'ssl'
-                div className: 'form-group',
-                    label
-                        htmlFor: 'mailbox-imap-tls',
-                        className: 'col-sm-2 col-sm-offset-2 control-label',
-                        t 'account TLS'
-                    div className: 'col-sm-3',
-                        input
-                            id: 'mailbox-imap-tls',
-                            name: 'mailbox-imap-tls',
-                            checkedLink: @linkState('imapTLS'),
-                            type: 'checkbox',
-                            onClick: (ev) =>
-                                @_onServerParam ev.target, 'imap', 'tls'
-
-            fieldset null,
-                legend null, t 'account actions'
-            div className: '',
-                div className: 'col-sm-offset-4',
-                    button
-                        className: 'btn btn-cozy',
-                        onClick: @onSubmit, buttonLabel
-                if @state.id?
-                    fieldset null,
-                        legend null, t 'account danger zone'
-                        div className: 'col-sm-offset-4',
-                            button
-                                className: 'btn btn-default btn-danger btn-remove',
-                                onClick: @onRemove,
-                                t "account remove"
-
-    renderMailboxes: ->
-        favorites = @state.favoriteMailboxes
-        if @state.mailboxes? and favorites?
-            mailboxes = @state.mailboxes.map (mailbox, key) =>
-                try
-                    favorite = favorites.get(mailbox.get('id'))?
-                    MailboxItem {accountID: @state.id, mailbox, favorite}
-                catch error
-                    console.log error, favorites
-            .toJS()
-        form className: 'form-horizontal',
-
-            @renderError()
-            @_renderMailboxChoice t('account draft mailbox'), "draftMailbox"
-            @_renderMailboxChoice t('account sent mailbox'),  "sentMailbox"
-            @_renderMailboxChoice t('account trash mailbox'), "trashMailbox"
-
-            h4 className: 'config-title', t "account tab mailboxes"
-            ul className: "folder-list list-unstyled boxes container",
-                if mailboxes?
-                    li className: 'row box title', key: 'title',
-                        span
-                            className: "col-xs-1",
-                            ''
-                        span
-                            className: "col-xs-1",
-                            ''
-                        span
-                            className: "col-xs-6",
-                            ''
-                        span
-                            className: "col-xs-1",
-                            ''
-                        span
-                            className: "col-xs-1 text-center",
-                            t 'mailbox title total'
-                        span
-                            className: "col-xs-1 text-center",
-                            t 'mailbox title unread'
-                        span
-                            className: "col-xs-1 text-center",
-                            t 'mailbox title new'
-                mailboxes
-                li className: "row box new", key: 'new',
-                    span
-                        className: "col-xs-1 box-action add"
-                        onClick: @addMailbox
-                        title: t("mailbox title add"),
-                            i className: 'fa fa-plus'
-                    span
-                        className: "col-xs-1 box-action cancel"
-                        onClick: @undoMailbox
-                        title: t("mailbox title add cancel"),
-                            i className: 'fa fa-undo'
-                    div className: 'col-xs-6',
-                        input
-                            id: 'newmailbox',
-                            ref: 'newmailbox',
-                            type: 'text',
-                            className: 'form-control',
-                            placeholder: t "account newmailbox placeholder"
-                            onKeyDown: @onKeyDown
-                    label
-                        className: 'col-xs-2 text-center control-label',
-                        t "account newmailbox parent"
-                    div className: 'col-xs-2 text-center',
-                        MailboxList
-                            allowUndefined: true
-                            mailboxes: @state.mailboxes
-                            selectedMailbox: @state.newMailboxParent
-                            onChange: (mailbox) =>
-                                @setState newMailboxParent: mailbox
-
-    onKeyDown: (evt) ->
-        switch evt.key
-            when "Enter"
-                @addMailbox()
-
-    _renderMailboxChoice: (labelText, box) ->
-        if @state.id?
-            div className: "form-group #{box}",
-                label
-                    className: 'col-sm-2 col-sm-offset-2 control-label',
-                    labelText
-                div className: 'col-sm-3',
-                    MailboxList
-                        allowUndefined: true
-                        mailboxes: @state.mailboxes
-                        selectedMailbox: @state[box]
-                        onChange: (mailbox) =>
-                            newState = {}
-                            newState[box] = mailbox
-                            @setState newState, =>
-                                @onSubmit()
+                AccountConfigMailboxes mailboxesOptions
 
     _afterMount: ->
         # On error, scroll to message
@@ -499,6 +158,7 @@ module.exports = React.createClass
         init = (field) =>
             accountValue[field] = @state[field]
         init field for field in @_accountFields
+        init field for field in @_mailboxesFields
 
         validOptions =
             additionalProperties: true
@@ -523,7 +183,7 @@ module.exports = React.createClass
                 setError error for error in valid.errors
                 @setState errors: errors
 
-    onSubmit: (event) ->
+    onSubmit: (event, check) ->
         if event?
             # prevents the page from reloading
             event.preventDefault()
@@ -532,7 +192,10 @@ module.exports = React.createClass
 
         if valid.valid
             if @state.id?
-                AccountActionCreator.edit accountValue, @state.id
+                if check is true
+                    AccountActionCreator.check accountValue, @state.id
+                else
+                    AccountActionCreator.edit accountValue, @state.id
             else
                 AccountActionCreator.create accountValue, (account) =>
                     LAC.notify t "account creation ok"
@@ -551,39 +214,276 @@ module.exports = React.createClass
             setError error for error in valid.errors
             @setState errors: errors
 
+    componentWillReceiveProps: (props) ->
+        # prevents the form from changing during submission
+        if props.selectedAccount? and not props.isWaiting
+            @setState @_accountToState props
+
+        else
+            if props.error?
+                if props.error.name is 'AccountConfigError'
+                    errors = {}
+                    field = props.error.field
+                    if field is 'auth'
+                        errors['login']    = t 'config error auth'
+                        errors['password'] = t 'config error auth'
+                    else
+                        errors[field] = t 'config error ' + field
+                    @setState errors: errors
+            else
+                if not props.isWaiting
+                    @setState @_accountToState null
+
+    getInitialState: ->
+        return @_accountToState null
+
+    _accountToState: (props)->
+        state =
+            errors: {}
+        if props?
+            account = props.selectedAccount
+            if props.error?
+                if props.error.name is 'AccountConfigError'
+                    field = props.error.field
+                    if field is 'auth'
+                        state.errors['login']    = t 'config error auth'
+                        state.errors['password'] = t 'config error auth'
+                    else
+                        state.errors[field] = t 'config error ' + field
+        if account?
+            if @state.id isnt account.get('id')
+                for field in @_accountFields
+                    state[field] = account.get field
+            for field in @_mailboxesFields
+                state[field] = account.get field
+            state.newMailboxParent = null
+            state.mailboxes         = props.mailboxes
+            state.favoriteMailboxes = props.favoriteMailboxes
+            if state.mailboxes.length is 0
+                props.tab = 'mailboxes'
+        else if Object.keys(state.errors).length is 0
+            init = (field) ->
+                state[field] = ''
+            init field for field in @_accountFields
+            init field for field in @_mailboxesFields
+            state.id       = null
+            state.smtpPort = 465
+            state.smtpSSL  = true
+            state.smtpTLS  = false
+            state.imapPort = 993
+            state.imapSSL  = true
+            state.imapTLS  = false
+            state.accountType = 'IMAP'
+            state.newMailboxParent  = null
+            state.favoriteMailboxes = null
+
+        return state
+
+AccountConfigMain = React.createClass
+    displayName: 'AccountConfigMain'
+
+    mixins: [
+        RouterMixin
+        React.addons.LinkedStateMixin # two-way data binding
+    ]
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+        #return JSON.stringify(nextProps) isnt JSON.stringify(@props) or
+        #       JSON.stringify(nextState) isnt JSON.stringify(@state)
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
+    _propsToState: (props) ->
+        state = props
+        return state
+
+    getInitialState: ->
+        @_propsToState(@props)
+
+    componentWillReceiveProps: (props) ->
+        @setState @_propsToState(props)
+
+    render: ->
+        if @props.isWaiting then buttonLabel = 'Saving...'
+        else if @props.selectedAccount? then buttonLabel = t "account save"
+        else buttonLabel = t "account add"
+
+
+        hasError = (fields) =>
+            if not Array.isArray fields
+                fields = [ fields ]
+            errors = fields.some (field) => @state.errors[field]?
+            return if errors then ' has-error' else ''
+
+        getError = (field) =>
+            if @state.errors[field]?
+                div
+                    className: 'col-sm-5 col-sm-offset-2 control-label',
+                    @state.errors[field]
+
+        cancelUrl = @buildUrl
+            direction: 'first'
+            action: 'default'
+            fullWidth: true
+
+        form className: 'form-horizontal', method: 'POST',
+            @renderError()
+            fieldset null,
+                legend null, t 'account identifiers'
+
+            AccountInput
+                name: 'label'
+                value: @linkState('label').value
+                errors: @state.errors
+                validateForm: @props.validateForm
+
+            AccountInput
+                name: 'name'
+                value: @linkState('name').value
+                errors: @state.errors
+                validateForm: @props.validateForm
+
+            AccountInput
+                name: 'login'
+                value: @linkState('login').value
+                errors: @state.errors
+                type: 'email'
+                errorField: ['login', 'auth']
+                validateForm: @props.validateForm
+                onBlur: @discover
+
+            AccountInput
+                name: 'password'
+                value: @linkState('password').value
+                errors: @state.errors
+                type: 'password'
+                errorField: ['password', 'auth']
+                validateForm: @props.validateForm
+
+            if @state.displayGMAILSecurity
+                fieldset null,
+                    legend null, t 'gmail security tile'
+                    p null, t 'gmail security body', login: @state.login.value
+                    p null,
+                        a
+                            target: '_blank',
+                            href: "https://www.google.com/settings/security/lesssecureapps"
+                            t 'gmail security link'
+
+            AccountInput
+                name: 'accountType'
+                value: @linkState('accountType').value
+                errors: @state.errors
+
+            fieldset null,
+                legend null, t 'account receiving server'
+
+                AccountInput
+                    name: 'imapServer'
+                    value: @linkState('imapServer').value
+                    errors: @state.errors
+                    errorField: ['imap', 'imapServer', 'imapPort']
+
+                AccountInput
+                    name: 'imapPort'
+                    value: @linkState('imapPort').value
+                    errors: @state.errors
+                    onBlur: @_onimapPort
+                    onInput: -> @setState(imapManualPort: true)
+
+                AccountInput
+                    name: 'imapSSL'
+                    value: @linkState('imapSSL').value
+                    errors: @state.errors
+                    type: 'checkbox'
+                    onClick: (ev) =>
+                        @_onServerParam ev.target, 'imap', 'ssl'
+
+                AccountInput
+                    name: 'imapTLS'
+                    value: @linkState('imapTLS').value
+                    errors: @state.errors
+                    type: 'checkbox'
+                    onClick: (ev) =>
+                        @_onServerParam ev.target, 'imap', 'tls'
+
+            fieldset null,
+                legend null, t 'account sending server'
+
+                AccountInput
+                    name: 'smtpServer'
+                    value: @linkState('smtpServer').value
+                    errors: @state.errors
+                    errorField: ['smtp', 'smtpServer', 'smtpPort']
+
+                AccountInput
+                    name: 'smtpPort'
+                    value: @linkState('smtpPort').value
+                    errors: @state.errors
+                    onBlur: @_onSMTPPort
+                    onInput: -> @setState(smtpManualPort: true)
+
+                AccountInput
+                    name: 'smtpSSL'
+                    value: @linkState('smtpSSL').value
+                    errors: @state.errors
+                    type: 'checkbox'
+                    onClick: (ev) =>
+                        @_onServerParam ev.target, 'smtp', 'ssl'
+
+                AccountInput
+                    name: 'smtpTLS'
+                    value: @linkState('smtpTLS').value
+                    errors: @state.errors
+                    type: 'checkbox'
+                    onClick: (ev) =>
+                        @_onServerParam ev.target, 'smtp', 'tls'
+
+            fieldset null,
+                legend null, t 'account actions'
+            div className: '',
+                div className: 'col-sm-offset-4',
+                    button
+                        className: 'btn btn-cozy',
+                        onClick: @props.onSubmit,
+                        buttonLabel
+                    if @state.id?
+                        button
+                            className: 'btn btn-cozy-non-default',
+                            onClick: @onCheck,
+                            t 'account check'
+                if @state.id?
+                    fieldset null,
+                        legend null, t 'account danger zone'
+                        div className: 'col-sm-offset-4',
+                            button
+                                className: 'btn btn-default btn-danger btn-remove',
+                                onClick: @onRemove,
+                                t "account remove"
+
+    # Check current parameters
+    onCheck: (event) ->
+        @props.onSubmit event, true
+
     onRemove: (event) ->
         # prevents the page from reloading
         event.preventDefault()
 
         if window.confirm(t 'account remove confirm')
-            AccountActionCreator.remove @state.id
+            AccountActionCreator.remove @props.selectedAccount.get('id')
 
-
-    addMailbox: (event) ->
-        event?.preventDefault()
-
-        mailbox =
-            label: @refs.newmailbox.getDOMNode().value.trim()
-            accountID: @state.id
-            parentID: @state.newMailboxParent
-
-        AccountActionCreator.mailboxCreate mailbox, (error) ->
-            if error?
-                LAC.alertError "#{t("mailbox create ko")} #{error}"
-            else
-                LAC.notify t "mailbox create ok"
-
-    undoMailbox: (event) ->
-        event.preventDefault()
-
-        @refs.newmailbox.getDOMNode().value = ''
-        @setState newMailboxParent: null
-
+    renderError: ->
+        if @props.error and @props.error.name is 'AccountConfigError'
+            message = t 'config error ' + @props.error.field
+            div className: 'alert alert-warning', message
+        else if @props.error
+            div className: 'alert alert-warning', @props.error.message
+        else if Object.keys(@state.errors).length isnt 0
+            div className: 'alert alert-warning', t 'account errors'
 
     discover: (event) ->
-        @validateForm event
+        @props.validateForm event
 
-        login = @state.login#@refs.login.getDOMNode().value.trim()
+        login = @state.login.value
 
         if login isnt @_lastDiscovered
             AccountActionCreator.discover login.split('@')[1],
@@ -642,10 +542,11 @@ module.exports = React.createClass
                                 infos.smtpSSL = false
                                 infos.smtpTLS = false
                     isGmail = infos.imapServer is 'imap.googlemail.com'
-                    infos.displayGMAILSecurity = isGmail
+                    @setState displayGMAILSecurity: isGmail
 
-                    @setState infos
-                    @validateForm()
+                    for key, val of infos
+                        @state[key].requestChange val
+                    @props.validateForm()
             @_lastDiscovered = login
 
     _onServerParam: (target, server, type) ->
@@ -692,76 +593,175 @@ module.exports = React.createClass
                 infos.smtpTLS = false
         @setState infos
 
-    componentWillReceiveProps: (props) ->
-        # prevents the form from changing during submission
-        if props.selectedAccount and not props.isWaiting
+AccountConfigMailboxes = React.createClass
+    displayName: 'AccountConfigMailboxes'
 
-            @setState @_accountToState props
+    mixins: [
+        RouterMixin
+        React.addons.LinkedStateMixin # two-way data binding
+    ]
 
-        else
-            if props.error?
-                if props.error.name is 'AccountConfigError'
-                    errors = {}
-                    field = props.error.field
-                    if field is 'auth'
-                        errors['login']    = t 'config error auth'
-                        errors['password'] = t 'config error auth'
-                    else
-                        errors[field] = t 'config error ' + field
-                    @setState errors: errors
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
+    _propsToState: (props) ->
+        state = props
+        return state
 
     getInitialState: ->
-        return @_accountToState null
+        @_propsToState(@props)
 
-    _accountToState: (props)->
-        state =
-            errors: {}
-        if props?
-            account = props.selectedAccount
-            if props.error?
-                if props.error.name is 'AccountConfigError'
-                    field = props.error.field
-                    if field is 'auth'
-                        state.errors['login']    = t 'config error auth'
-                        state.errors['password'] = t 'config error auth'
-                    else
-                        state.errors[field] = t 'config error ' + field
-        if account?
-            for field in @_accountFields
-                state[field] = account.get field
-            state.newMailboxParent = null
-            state.mailboxes         = props.mailboxes
-            state.favoriteMailboxes = props.favoriteMailboxes
-            if state.mailboxes.length is 0
-                @redirect
-                    direction: 'first'
-                    action: 'account.config'
-                    parameters: [@state.id, 'mailboxes']
-        else if Object.keys(state.errors).length is 0
-            init = (field) ->
-                state[field] = ''
-            init field for field in @_accountFields
-            state.id       = null
-            state.smtpPort = 465
-            state.smtpSSL  = true
-            state.smtpTLS  = false
-            state.imapPort = 993
-            state.imapSSL  = true
-            state.imapTLS  = false
-            state.accountType = 'IMAP'
-            state.newMailboxParent  = null
-            state.favoriteMailboxes = null
+    componentWillReceiveProps: (props) ->
+        @setState @_propsToState(props)
 
-        return state
+    render: ->
+        favorites = @state.favoriteMailboxes.value
+        if @state.mailboxes.value isnt '' and favorites isnt ''
+            mailboxes = @state.mailboxes.value.map (mailbox, key) =>
+                try
+                    favorite = favorites.get(mailbox.get('id'))?
+                    MailboxItem {accountID: @state.id.value, mailbox, favorite}
+                catch error
+                    console.log error, favorites
+            .toJS()
+        form className: 'form-horizontal',
+
+            @renderError()
+            h4 className: 'config-title', t "account special mailboxes"
+            @_renderMailboxChoice t('account draft mailbox'), "draftMailbox"
+            @_renderMailboxChoice t('account sent mailbox'),  "sentMailbox"
+            @_renderMailboxChoice t('account trash mailbox'), "trashMailbox"
+
+            h4 className: 'config-title', t "account mailboxes"
+            ul className: "folder-list list-unstyled boxes container",
+                if mailboxes?
+                    li className: 'row box title', key: 'title',
+                        span
+                            className: "col-xs-1",
+                            ''
+                        span
+                            className: "col-xs-1",
+                            ''
+                        span
+                            className: "col-xs-6",
+                            ''
+                        span
+                            className: "col-xs-1",
+                            ''
+                        span
+                            className: "col-xs-1 text-center",
+                            t 'mailbox title total'
+                        span
+                            className: "col-xs-1 text-center",
+                            t 'mailbox title unread'
+                        span
+                            className: "col-xs-1 text-center",
+                            t 'mailbox title new'
+                mailboxes
+                li className: "row box new", key: 'new',
+                    span
+                        className: "col-xs-1 box-action add"
+                        onClick: @addMailbox
+                        title: t("mailbox title add"),
+                            i className: 'fa fa-plus'
+                    span
+                        className: "col-xs-1 box-action cancel"
+                        onClick: @undoMailbox
+                        title: t("mailbox title add cancel"),
+                            i className: 'fa fa-undo'
+                    div className: 'col-xs-6',
+                        input
+                            id: 'newmailbox',
+                            ref: 'newmailbox',
+                            type: 'text',
+                            className: 'form-control',
+                            placeholder: t "account newmailbox placeholder"
+                            onKeyDown: @onKeyDown
+                    label
+                        className: 'col-xs-2 text-center control-label',
+                        t "account newmailbox parent"
+                    div className: 'col-xs-2 text-center',
+                        MailboxList
+                            allowUndefined: true
+                            mailboxes: @state.mailboxes.value
+                            selectedMailbox: @state.newMailboxParent
+                            onChange: (mailbox) =>
+                                @setState newMailboxParent: mailbox
+
+    renderError: ->
+        if @props.error and @props.error.name is 'AccountConfigError'
+            message = t 'config error ' + @props.error.field
+            div className: 'alert alert-warning', message
+        else if @props.error
+            div className: 'alert alert-warning', @props.error.message
+        else if Object.keys(@state.errors).length isnt 0
+            div className: 'alert alert-warning', t 'account errors'
+
+    _renderMailboxChoice: (labelText, box) ->
+        if @state.id? and @state.mailboxes.value isnt ''
+            errorClass = if @state[box].value? then '' else 'has-error'
+            div className: "form-group #{box} #{errorClass}",
+                label
+                    className: 'col-sm-2 col-sm-offset-2 control-label',
+                    labelText
+                div className: 'col-sm-3',
+                    MailboxList
+                        allowUndefined: true
+                        mailboxes: @state.mailboxes.value
+                        selectedMailbox: @state[box].value
+                        onChange: (mailbox) =>
+                            # requestChange is asynchroneous, so we need to also call
+                            # setState to only call onSubmet once state has really been updated
+                            #@state[box].value = mailbox
+                            @state[box].requestChange mailbox
+                            newState = {}
+                            newState[box] =
+                                value = mailbox
+                            @setState newState, =>
+                                @props.onSubmit()
+
+    onKeyDown: (evt) ->
+        switch evt.key
+            when "Enter"
+                @addMailbox()
+
+    addMailbox: (event) ->
+        event?.preventDefault()
+
+        mailbox =
+            label: @refs.newmailbox.getDOMNode().value.trim()
+            accountID: @state.id.value
+            parentID: @state.newMailboxParent
+
+        AccountActionCreator.mailboxCreate mailbox, (error) =>
+            if error?
+                LAC.alertError "#{t("mailbox create ko")} #{error}"
+            else
+                LAC.notify t "mailbox create ok"
+                @refs.newmailbox.getDOMNode().value = ''
+
+    undoMailbox: (event) ->
+        event.preventDefault()
+
+        @refs.newmailbox.getDOMNode().value = ''
+        @setState newMailboxParent: null
 
 MailboxItem = React.createClass
     displayName: 'MailboxItem'
 
+    mixins: [
+        RouterMixin
+        React.addons.LinkedStateMixin # two-way data binding
+    ]
+
     propTypes:
         mailbox: React.PropTypes.object
 
-    componentWillReceiveProps: (props) ->
-        @setState edited: false
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
+    #componentWillReceiveProps: (props) ->
+    #    @setState edited: false
 
     getInitialState: ->
         return {
@@ -857,14 +857,14 @@ MailboxItem = React.createClass
             mailboxID: @props.mailbox.get 'id'
             accountID: @props.accountID
 
-        AccountActionCreator.mailboxUpdate mailbox, (error) ->
+        AccountActionCreator.mailboxUpdate mailbox, (error) =>
             if error?
                 LAC.alertError "#{t("mailbox update ko")} #{error}"
             else
                 LAC.notify t "mailbox update ok"
+                @setState edited: false
 
     toggleFavorite: (e) ->
-
         mailbox =
             favorite: not @state.favorite
             mailboxID: @props.mailbox.get 'id'
@@ -891,3 +891,61 @@ MailboxItem = React.createClass
                     LAC.alertError "#{t("mailbox delete ko")} #{error}"
                 else
                     LAC.notify t "mailbox delete ok"
+
+AccountInput = React.createClass
+    displayName: 'AccountInput'
+
+    mixins: [
+        RouterMixin
+        React.addons.LinkedStateMixin # two-way data binding
+    ]
+
+    getInitialState: ->
+        return @props
+
+    componentWillReceiveProps: (props) ->
+        @setState props
+
+    render: ->
+        hasError = (fields) =>
+            if not Array.isArray fields
+                fields = [ fields ]
+            errors = fields.some (field) => @state.errors[field]?
+            return if errors then ' has-error' else ''
+
+        getError = (field) =>
+            if @state.errors[field]?
+                div
+                    className: 'col-sm-5 col-sm-offset-2 control-label',
+                    @state.errors[field]
+
+        name = @props.name
+        type = @props.type or 'text'
+        errorField = @props.errorField or name
+
+        div
+            key: "account-input-#{name}",
+            className: "form-group account-item-#{name} " + hasError(errorField),
+                label
+                    htmlFor: "mailbox-#{name}",
+                    className: "col-sm-2 col-sm-offset-2 control-label",
+                    t "account #{name}"
+                div className: 'col-sm-3',
+                    if type isnt 'checkbox'
+                        input
+                            id: "mailbox-#{name}",
+                            name: "mailbox-#{name}",
+                            valueLink: @linkState('value').value,
+                            type: type,
+                            className: 'form-control',
+                            placeholder: if (type is 'text' or type is 'email') then t("account #{name} short") else null
+                            onBlur: @props.onBlur or null#@props.validateForm
+                            onInput: @props.onInput or null
+                    else
+                        input
+                            id: "mailbox-#{name}",
+                            name: "mailbox-#{name}",
+                            checkedLink: @linkState('value').value,
+                            type: type,
+                            onClick: @props.onClick
+                getError name

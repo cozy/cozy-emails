@@ -12,10 +12,15 @@ onMessageList = ->
 
 module.exports =
     getCurrentAccount: ->
-        AccountStore.getSelected()
+        AccountStore.getSelected()?.toJS()
 
     getCurrentMailbox: ->
-        AccountStore.getSelectedMailboxes()
+        AccountStore.getSelectedMailbox()?.toJS()
+
+    getCurrentMessage: ->
+        messageID = MessageStore.getCurrentID()
+        message = MessageStore.getByID messageID
+        return message.toJS()
 
     getCurrentActions: ->
         res = []
@@ -120,4 +125,42 @@ module.exports =
     messageUndo: ->
         MessageActionCreator = require '../actions/message_action_creator'
         MessageActionCreator.undelete()
+
+    customEvent: (name, data) ->
+        domEvent = new CustomEvent name, detail: data
+        window.dispatchEvent domEvent
+
+    simulateUpdate: ->
+
+        AppDispatcher = require '../app_dispatcher'
+        window.setInterval ->
+            content =
+                "accountID": AccountStore.getDefault().get('id'),
+                "id": AccountStore.getDefaultMailbox().get('id'),
+                "label": "INBOX",
+                "path": "INBOX",
+                "tree": ["INBOX"],
+                "delimiter": ".",
+                "uidvalidity": Date.now()
+                "attribs":[],
+                "docType": "Mailbox",
+                "lastSync": new Date().toISOString(),
+                "nbTotal": 467,
+                "nbUnread": 0,
+                "nbRecent": 5,
+                "weight": 1000,
+                "depth": 0
+            AppDispatcher.handleServerAction
+                type: 'RECEIVE_MAILBOX_UPDATE'
+                value: content
+        , 5000
+
+    notify: (title, options) ->
+        if SettingsStore.get 'desktopNotifications'
+            new Notification title, options
+        else
+            # prevent dispatching when already dispatching
+            window.setTimeout ->
+                LayoutActionCreator.notify "#{title} - #{options.body}"
+            , 0
 

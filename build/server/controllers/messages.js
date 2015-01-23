@@ -58,12 +58,15 @@ module.exports.details = function(req, res, next) {
 };
 
 module.exports.attachment = function(req, res, next) {
-  var stream;
+  var stream, _ref1;
   stream = req.message.getBinary(req.params.attachment, function(err) {
     if (err) {
       return next(err);
     }
   });
+  if ((_ref1 = req.query) != null ? _ref1.download : void 0) {
+    res.setHeader('Content-disposition', "attachment; filename=" + req.params.attachment);
+  }
   stream.on('error', next);
   return stream.pipe(res);
 };
@@ -449,5 +452,25 @@ module.exports.conversationPatch = function(req, res, next) {
       return next(err);
     }
     return res.send(200, messages);
+  });
+};
+
+module.exports.raw = function(req, res, next) {
+  return req.mailbox.doASAPWithBox(function(imap, imapbox, cb) {
+    var e;
+    try {
+      return imap.fetchOneMailRaw(req.params.messageID, function(err, message) {
+        cb();
+        if (err) {
+          return next(err);
+        }
+        res.type('text/plain');
+        return res.send(200, message);
+      });
+    } catch (_error) {
+      e = _error;
+      cb();
+      return next(e);
+    }
   });
 };

@@ -166,6 +166,20 @@ module.exports =
                 console.log "Error in editAccount", account, res.body?.error
                 callback res.body, null
 
+    checkAccount: (account, callback) ->
+
+        rawAccount = account.toJS()
+
+        request.put "account/#{rawAccount.id}/check"
+        .send rawAccount
+        .set 'Accept', 'application/json'
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                console.log "Error in checkAccount", res.body
+                callback res.body, null
+
     removeAccount: (accountID) ->
 
         request.del "account/#{accountID}"
@@ -199,7 +213,10 @@ module.exports =
 
         request.get url
         .end (res) ->
-            callback?(res.text)
+            if res.ok
+                callback null, res.text
+            else
+                callback res.body
 
     activityCreate: (options, callback) ->
         request.post "activity"

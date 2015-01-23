@@ -63,6 +63,7 @@ module.exports.refresh = (req, res, next) ->
         onlyFavorites = true
 
     Account.refreshAllAccounts limit, onlyFavorites, (err) ->
+        log.error "REFRESHING ACCOUNT FAILED", err if err
         return next err if err
         res.send 200, refresh: 'done'
 

@@ -49,6 +49,11 @@ module.exports.create = (req, res, next) ->
         res.account.imap_fetchMailsTwoSteps (err) ->
             log.error "FETCH MAIL FAILED", err.stack or err if err
 
+# check account parameters
+module.exports.check = (req, res, next) ->
+    Account.checkParams req.body, (err) ->
+        return next err if err
+        res.send 200
 
 # fetch the list of all Accounts
 # include the account mailbox tree
@@ -62,15 +67,19 @@ module.exports.list = (req, res, next) ->
 module.exports.edit = (req, res, next) ->
     # @TODO : may be only allow changes to label, unless connection broken
 
-    changes = _.pick req.body,
-        'label', 'login', 'password', 'name', 'account_type'
-        'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
-        'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
-        'draftMailbox', 'sentMailbox', 'trashMailbox'
+    # check params before applying changes
+    Account.checkParams req.body, (err) ->
+        return next err if err
 
-    req.account.updateAttributes changes, (err, updated) ->
-        res.account = updated
-        next err
+        changes = _.pick req.body,
+            'label', 'login', 'password', 'name', 'account_type'
+            'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
+            'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
+            'draftMailbox', 'sentMailbox', 'trashMailbox'
+
+        req.account.updateAttributes changes, (err, updated) ->
+            res.account = updated
+            next err
 
 # delete an account
 module.exports.remove = (req, res, next) ->

@@ -61,9 +61,9 @@ utils.BadRequest = class BadRequest extends Error
 
 utils.TimeoutError = class TimeoutError extends Error
     constructor: (msg) ->
-        @name = 'BadRequest'
+        @name = 'Timeout'
         @status = 400
-        @message = 'Bad request : ' + msg
+        @message = 'Timeout: ' + msg
         Error.captureStackTrace this, arguments.callee
         return this
 
@@ -90,7 +90,8 @@ baseHandler = americano.errorHandler()
 utils.errorHandler = (err, req, res, next) ->
     log.debug "ERROR HANDLER CALLED", err
 
-    if err instanceof utils.AccountConfigError
+    if err instanceof utils.AccountConfigError or
+       err.textCode is 'AUTHENTICATIONFAILED'
         res.send 400,
             name: err.name
             field: err.field

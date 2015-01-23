@@ -56,7 +56,7 @@ Contact.createNoDuplicate = (data, callback) ->
 
     , (err, existings) ->
         return callback err if err
-        return callback null, existings if existings?.length > 1
+        return callback null, existings if existings?.length > 0
 
         contact =
             fn: data.name

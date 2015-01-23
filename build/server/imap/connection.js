@@ -229,6 +229,38 @@ Imap.prototype.fetchOneMail = function(uid, callback) {
   });
 };
 
+Imap.prototype.fetchOneMailRaw = function(uid, callback) {
+  var fetch, messageReceived;
+  messageReceived = false;
+  fetch = this.fetch([uid], {
+    size: true,
+    bodies: ''
+  });
+  fetch.on('message', function(msg) {
+    var flags;
+    flags = [];
+    messageReceived = true;
+    msg.once('error', callback);
+    msg.on('attributes', function(attrs) {
+      return flags = attrs.flags;
+    });
+    return msg.on('body', function(stream, info) {
+      return stream_to_buffer_array(stream, function(err, parts) {
+        if (err) {
+          return callback(err);
+        }
+        return callback(null, Buffer.concat(parts));
+      });
+    });
+  });
+  fetch.on('error', callback);
+  return fetch.on('end', function() {
+    if (!messageReceived) {
+      return callback(new Error('fetch ended with no message'));
+    }
+  });
+};
+
 Imap.prototype.multicopy = function(uid, paths, callback) {
   return async.mapSeries(paths, (function(_this) {
     return function(path, cb) {

@@ -27,6 +27,8 @@ LayoutStore   = require '../stores/layout_store'
 SettingsStore = require '../stores/settings_store'
 SearchStore   = require '../stores/search_store'
 RefreshesStore = require '../stores/refreshes_store'
+Stores = [AccountStore, ContactStore, MessageStore, LayoutStore,
+        SettingsStore, SearchStore, RefreshesStore]
 
 # Flux actions
 LayoutActionCreator = require '../actions/layout_action_creator'
@@ -49,8 +51,7 @@ module.exports = Application = React.createClass
     displayName: 'Application'
 
     mixins: [
-        StoreWatchMixin [AccountStore, ContactStore, MessageStore, LayoutStore,
-        SettingsStore, SearchStore, RefreshesStore]
+        StoreWatchMixin Stores
         RouterMixin
     ]
 
@@ -248,7 +249,6 @@ module.exports = Application = React.createClass
                         action: "default"
                     return
 
-
             # gets the selected message if any
             messageID = MessageStore.getCurrentID()
             direction = if layout is 'first' then 'secondPanel' \
@@ -258,7 +258,7 @@ module.exports = Application = React.createClass
             if @state.settings.get 'displayConversation'
                 conversationLengths = MessageStore.getConversationsLength()
 
-            query = MessageStore.getParams()
+            query = _.clone(MessageStore.getParams())
             query.accountID = accountID
             query.mailboxID = mailboxID
             #paginationUrl = @buildUrl
@@ -410,14 +410,52 @@ module.exports = Application = React.createClass
         # Uses `forceUpdate` with the proper scope because React doesn't allow
         # to rebind its scope on the fly
         @onRoute = (params) =>
-            {firstPanelInfo, secondPanelInfo} = params
+            {firstPanel, secondPanel} = params
+            if firstPanel?
+                @checkAccount firstPanel.action
+            if secondPanel?
+                @checkAccount secondPanel.action
             @forceUpdate()
 
         @props.router.on 'fluxRoute', @onRoute
 
+    checkAccount: (action) ->
+        # "special" mailboxes must be set before accessing to the account
+        # otherwise, redirect to account config
+        account = @state.selectedAccount
+        if (account?)
+            if not account.get('draftMailbox')? or
+               not account.get('sentMailbox')? or
+               not account.get('trashMailbox')?
 
-    # Stops listening to router changes
+                if action is 'account.mailbox.messages' or
+                   action is 'account.mailbox.messages.full' or
+                   action is 'search' or
+                   action is 'message' or
+                   action is 'conversation' or
+                   action is 'compose' or
+                   action is 'edit'
+                    @redirect
+                        direction: 'first'
+                        action: 'account.config'
+                        parameters: [
+                            account.get 'id'
+                            'mailboxes'
+                        ]
+                        fullWidth: true
+                    LayoutActionCreator.alertError t 'account no special mailboxes'
+
+    _notify: (title, options) ->
+        window.cozyMails.notify title, options
+
+    componentDidMount: ->
+        Stores.forEach (store) =>
+            store.on 'notify', @_notify
+
     componentWillUnmount: ->
+        Stores.forEach (store) =>
+            store.removeListener 'notify', @notify
+        # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
 
     # Toggle the menu in responsive mode

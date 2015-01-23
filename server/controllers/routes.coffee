@@ -32,6 +32,9 @@ module.exports =
         put: [accounts.fetch, accounts.edit, accounts.format]
         delete: [accounts.fetch, accounts.remove]
 
+    'account/:accountID/check':
+        put: [accounts.check]
+
     'conversation/:conversationID':
         get: [messages.fetchConversation, messages.conversationGet]
         delete: [messages.fetchConversation, messages.conversationDelete]
@@ -77,3 +80,6 @@ module.exports =
         get: index.loadFixtures
 
     'test': get: test.main
+
+    'raw/:mailboxID/:messageID':
+        get: [mailboxes.fetch, messages.raw]

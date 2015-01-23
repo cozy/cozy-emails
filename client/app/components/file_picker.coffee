@@ -208,11 +208,17 @@ FileItem = React.createClass
                 onClick: @doDisplay,
                 href: file.url
                 'data-file-url': file.url
+                'data-file-name': file.generatedFileName
+                'data-file-type': file.contentType
                 file.generatedFileName
 
             div className: 'file-detail',
                 span null,
                     "#{(file.length / 1000).toFixed(2)}Ko"
+                span className: 'file-actions',
+                    a
+                        className: "fa fa-download"
+                        href: "#{file.url}?download=1"
 
     doDisplay: (e) ->
         e.preventDefault()
