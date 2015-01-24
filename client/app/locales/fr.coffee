@@ -308,9 +308,9 @@ module.exports =
       """
 
       # Plugins
-      'plugin name Gallery'            : 'Gallerie de pièces jointes'
+      'plugin name Gallery'            : 'Galerie de pièces jointes'
       'plugin name medium-editor'      : 'Éditeur Medium'
       'plugin name MiniSlate'          : 'Éditeur MiniSlate'
-      'plugin name Sample JS'          : 'Example'
+      'plugin name Sample JS'          : 'Exemple'
       'plugin name Keyboard shortcuts' : 'Raccourcis clavier'
       'plugin name VCard'              : 'Affichage de VCard'
