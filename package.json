@@ -9,7 +9,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/cozy-labs/webmail.git"
+    "url": "https://github.com/cozy/cozy-emails.git"
   },
   "bin": {
     "emails": "bin/emails"
