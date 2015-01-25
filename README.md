@@ -7,14 +7,14 @@ Modern Email Client Based on Node.js and React.js.
 ## Install
 
 We assume that Node.js >= 0.10 is already installed on your computer/server.
-Then install Webmail via NPM.
+Then install Emails via NPM.
 
     npm install emails -g
 
 
 ## Run
 
-Run Webmail with the command line, it will listen on the 9125 port:
+Run Emails with the command line, it will listen on the 9125 port:
 
     emails
 
