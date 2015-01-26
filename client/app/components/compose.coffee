@@ -432,7 +432,7 @@ ComposeEditor = React.createClass
             # Some DOM manipulation when replying inside the message.
             # When inserting a new line, we must close all blockquotes,
             # insert a blank line and then open again blockquotes
-            jQuery('#email-compose .rt-editor').on('keypress', (e) ->
+            jQuery('.rt-editor').on('keypress', (e) ->
                 if e.keyCode is 13
                     # timeout to let the editor perform its own stuff
                     setTimeout ->
