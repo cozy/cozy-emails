@@ -115,7 +115,7 @@ module.exports =
                 callback null, res.body
             else
                 console.log "Error in messageSend", message, res.body?.error
-                callback t('app error')
+                callback res.body?.error?.message
 
     messagePatch: (messageId, patch, callback) ->
         request.patch "message/#{messageId}", patch

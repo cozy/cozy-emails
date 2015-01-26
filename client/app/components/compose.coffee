@@ -325,7 +325,7 @@ module.exports = Compose = React.createClass
                     msgKo = t "message action sent ko"
                     msgOk = t "message action sent ok"
                 if error?
-                    LayoutActionCreator.alertError "#{msgKo} :  error"
+                    LayoutActionCreator.alertError "#{msgKo} #{error}"
                 else
                     LayoutActionCreator.notify msgOk, autoclose: true
                     @setState message
