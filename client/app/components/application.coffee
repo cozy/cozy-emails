@@ -102,6 +102,7 @@ module.exports = Application = React.createClass
                 # Menu is self-managed because this part of the layout
                 # is always the same.
                 Menu
+                    ref: 'menu'
                     accounts: @state.accounts
                     refreshes: @state.refreshes
                     selectedAccount: @state.selectedAccount
@@ -283,6 +284,7 @@ module.exports = Application = React.createClass
                 emptyListMessage: emptyListMessage
                 counterMessage:   counterMessage
                 #paginationUrl: paginationUrl
+                ref:           'messageList'
 
         # -- Generates a configuration window for a given account
         else if panelInfo.action is 'account.config'
@@ -340,6 +342,7 @@ module.exports = Application = React.createClass
                 conversationLength: conversationLength
                 prevID            : MessageStore.getPreviousMessage()
                 nextID            : MessageStore.getNextMessage()
+                ref               : 'conversation'
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
@@ -352,6 +355,7 @@ module.exports = Application = React.createClass
                 accounts        : @state.accounts
                 selectedAccount : @state.selectedAccount
                 message         : null
+                ref             : 'compose'
 
         # -- Generates the edit draft composition form
         else if panelInfo.action is 'edit'
@@ -367,6 +371,7 @@ module.exports = Application = React.createClass
                 accounts        : @state.accounts
                 selectedAccount : @state.selectedAccount
                 message         : message
+                ref             : 'compose'
 
         # -- Display the settings form
         else if panelInfo.action is 'settings'

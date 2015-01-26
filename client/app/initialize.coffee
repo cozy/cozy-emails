@@ -67,7 +67,7 @@ window.onload = ->
         # Binds the router and flux to the React application
         Application = require './components/application'
         application = Application router: @router
-        React.renderComponent application, document.body
+        window.rootComponent = React.renderComponent application, document.body
 
         # Starts the application by initializing the router
         Backbone.history.start()

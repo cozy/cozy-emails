@@ -150,6 +150,7 @@ module.exports = Compose = React.createClass
                         className: ''
                         editable: true
                         valueLink: @linkState 'attachments'
+                        ref: 'attachments'
 
                 div className: 'composeToolbox',
                     div className: 'btn-toolbar', role: 'toolbar',
