@@ -164,3 +164,8 @@ module.exports =
                 LayoutActionCreator.notify "#{title} - #{options.body}"
             , 0
 
+    # Send errors to serveur
+    # Usage: window.cozyMails.log(new Error('message'))
+    log: (error) ->
+        url = error.stack.split('\n')[0].split('@')[1].split(/:\d/)[0].split('/').slice(0, -2).join('/')
+        window.onerror error.name, url, error.lineNumber, error.colNumber, error

@@ -183,6 +183,8 @@ FileItem = React.createClass
 
     render: ->
         file = @props.file
+        if not(file.url?) and not(file.rawFileObject)
+            window.cozyMails.log(new Error "Wrong file #{JSON.stringify(file)}")
         type = MessageUtils.getAttachmentType file.contentType
         icons =
             'archive'      : 'fa-file-archive-o'
