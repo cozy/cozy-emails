@@ -137,6 +137,7 @@ module.exports = Compose = React.createClass
                         className: classLabel,
                         t "compose content"
                     ComposeEditor
+                        messageID: @props.message?.get 'id'
                         html: @linkState('html')
                         text: @linkState('text')
                         settings: @props.settings
@@ -376,6 +377,10 @@ ComposeEditor = React.createClass
             text: @props.text
         }
 
+    componentWillReceiveProps: (nextProps) ->
+        if nextProps.messageID isnt @props.messageID
+            @setState html: nextProps.html, text: nextProps.text
+
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
@@ -569,8 +574,9 @@ ComposeEditor = React.createClass
     componentDidMount: ->
         @_initCompose()
 
-    #componentDidUpdate: ->
-    #    @_initCompose()
+    componentDidUpdate: (nextProps, nextState) ->
+        if nextProps.messageID isnt @props.messageID
+            @_initCompose()
 
     onKeyDown: (evt) ->
         if evt.ctrlKey and evt.key is 'Enter'
