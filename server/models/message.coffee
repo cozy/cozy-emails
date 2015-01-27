@@ -1,32 +1,38 @@
-americano = require MODEL_MODULE
+cozydb = require 'cozydb'
 
 # Public: Message
 #
 
-module.exports = Message = americano.getModel 'Message',
+class MailAdress extends cozydb.Model
+    @schema:
+        name: String
+        address: String
 
-    accountID: String        # account this message belongs to
-    messageID: String        # normalized message-id (no <"">)
-    normSubject: String      # normalized subject (no Re: ...)
-    conversationID: String   # all message in thread have same conversationID
-    mailboxIDs: (x) -> x     # mailboxes as an hash {boxID:uid, boxID2:uid2}
-    hasTwin: (x) -> x        # [String] mailboxIDs where this message has twin
-    flags: (x) -> x          # [String] flags of the message
-    headers: (x) -> x        # hash of the message headers
-    from: (x) -> x           # array of {name, address}
-    to: (x) -> x             # array of {name, address}
-    cc: (x) -> x             # array of {name, address}
-    bcc: (x) -> x            # array of {name, address}
-    replyTo: (x) -> x        # array of {name, address}
-    subject: String          # subject of the message
-    inReplyTo: (x) -> x      # array of message-ids
-    references: (x) -> x     # array of message-ids
-    text: String             # message content as text
-    html: String             # message content as html
-    date: Date               # message date
-    priority: String         # message priority
-    binary: (x) -> x         # cozy binaries
-    attachments: (x) -> x    # array of message attachments objects
+module.exports = Message = cozydb.getModel 'Message',
+
+    accountID      : String          # account this message belongs to
+    messageID      : String          # normalized message-id (no <"">)
+    normSubject    : String          # normalized subject (no Re: ...)
+    conversationID : String          # all message in thread have same
+                                     # conversationID
+    mailboxIDs     : cozydb.NoSchema # mailboxes as an hash
+                                     # {boxID: uid, boxID2 : uid2}
+    hasTwin        : [String]        # [String] mailboxIDs where this message
+                                     # has twin
+    flags          : [String]        # [String] flags of the message
+    headers        : cozydb.NoSchema # hash of the message headers
+    from           : [MailAdress]    # array of {name, address}
+    to             : [MailAdress]    # array of {name, address}
+    cc             : [MailAdress]    # array of {name, address}
+    bcc            : [MailAdress]    # array of {name, address}
+    replyTo        : [MailAdress]    # array of {name, address}
+    subject        : String          # subject of the message
+    inReplyTo      : [String]        # array of message-ids
+    references     : [String]        # array of message-ids
+    text           : String          # message content as text
+    html           : String          # message content as html
+    date           : Date            # message date
+    priority       : String          # message priority
 
 mailutils = require '../utils/jwz_tools'
 CONSTANTS = require '../utils/constants'

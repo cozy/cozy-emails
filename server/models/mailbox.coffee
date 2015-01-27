@@ -1,14 +1,14 @@
-americano = require MODEL_MODULE
+cozydb = require 'cozydb'
 
-module.exports = Mailbox = americano.getModel 'Mailbox',
+module.exports = Mailbox = cozydb.getModel 'Mailbox',
     accountID: String        # Parent account
     label: String            # Human readable label
     path: String             # IMAP path
     lastsync: String         # Date.ISOString of last full box synchro
-    tree: (x) -> x           # Normalized path as Array
+    tree: [String]           # Normalized path as Array
     delimiter: String        # delimiter between this box and its children
     uidvalidity: Number      # Imap UIDValidity
-    attribs: (x) -> x        # [String] Attributes of this folder
+    attribs: [String]        # [String] Attributes of this folder
 
 Message = require './message'
 log = require('../utils/logging')(prefix: 'models:mailbox')
