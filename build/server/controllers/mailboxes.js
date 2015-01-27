@@ -104,3 +104,20 @@ module.exports["delete"] = function(req, res, next) {
     return next(null);
   });
 };
+
+module.exports.expunge = function(req, res, next) {
+  var account;
+  log.info("Expunging " + req.params.mailboxID);
+  account = req.account;
+  if (account.trashMailbox === req.params.mailboxID) {
+    return req.mailbox.imap_expungeMails(function(err) {
+      if (err) {
+        return next(err);
+      }
+      res.account = account;
+      return next(null);
+    });
+  } else {
+    return next(new BadRequest('You can only expunge trash mailbox'));
+  }
+};

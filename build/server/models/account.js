@@ -14,6 +14,9 @@ module.exports = Account = americano.getModel('Account', {
   smtpPort: Number,
   smtpSSL: Boolean,
   smtpTLS: Boolean,
+  smtpLogin: String,
+  smtpPassword: String,
+  smtpMethod: String,
   imapServer: String,
   imapPort: Number,
   imapSSL: Boolean,
@@ -490,35 +493,41 @@ Account.prototype.imap_scanBoxesForSpecialUse = function(boxes, callback) {
 };
 
 Account.prototype.sendMessage = function(message, callback) {
-  var transport;
+  var options, transport;
   if (this.isTest()) {
     return callback(null, {
       messageId: 66
     });
   }
-  transport = nodemailer.createTransport({
+  options = {
     port: this.smtpPort,
     host: this.smtpServer,
     secure: this.smtpSSL,
     ignoreTLS: !this.smtpTLS,
     tls: {
       rejectUnauthorized: false
-    },
-    auth: {
-      user: this.login,
-      pass: this.password
     }
-  });
+  };
+  if ((this.smtpMethod != null) && this.smtpMethod !== 'NONE') {
+    options.authMethod = this.smtpMethod;
+  }
+  if (this.smtpMethod !== 'NONE') {
+    options.auth = {
+      user: this.smtpLogin || this.login,
+      pass: this.smtpPassword || this.password
+    };
+  }
+  transport = nodemailer.createTransport(options);
   return transport.sendMail(message, callback);
 };
 
 Account.prototype.testSMTPConnection = function(callback) {
-  var auth, connection, reject, timeout;
+  var auth, connection, options, reject, timeout;
   if (this.isTest()) {
     return callback(null);
   }
   reject = _.once(callback);
-  connection = new SMTPConnection({
+  options = {
     port: this.smtpPort,
     host: this.smtpServer,
     secure: this.smtpSSL,
@@ -526,11 +535,17 @@ Account.prototype.testSMTPConnection = function(callback) {
     tls: {
       rejectUnauthorized: false
     }
-  });
-  auth = {
-    user: this.login,
-    pass: this.password
   };
+  if ((this.smtpMethod != null) && this.smtpMethod !== 'NONE') {
+    options.authMethod = this.smtpMethod;
+  }
+  connection = new SMTPConnection(options);
+  if (this.smtpMethod !== 'NONE') {
+    auth = {
+      user: this.smtpLogin || this.login,
+      pass: this.smtpPassword || this.password
+    };
+  }
   connection.once('error', function(err) {
     log.warn("SMTP CONNECTION ERROR", err);
     return reject(new AccountConfigError('smtpServer'));
@@ -539,18 +554,25 @@ Account.prototype.testSMTPConnection = function(callback) {
     reject(new AccountConfigError('smtpPort'));
     return connection.close();
   }, 10000);
-  return connection.connect(function(err) {
-    if (err) {
-      return reject(new AccountConfigError('smtpServer'));
-    }
-    clearTimeout(timeout);
-    return connection.login(auth, function(err) {
+  return connection.connect((function(_this) {
+    return function(err) {
       if (err) {
-        reject(new AccountConfigError('auth'));
+        return reject(new AccountConfigError('smtpServer'));
+      }
+      clearTimeout(timeout);
+      if (_this.smtpMethod !== 'NONE') {
+        return connection.login(auth, function(err) {
+          if (err) {
+            reject(new AccountConfigError('auth'));
+          } else {
+            callback(null);
+          }
+          return connection.close();
+        });
       } else {
         callback(null);
+        return connection.close();
       }
-      return connection.close();
-    });
-  });
+    };
+  })(this));
 };

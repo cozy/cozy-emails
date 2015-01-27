@@ -544,6 +544,37 @@ Mailbox.prototype.recoverChangedUIDValidity = function(imap, callback) {
   });
 };
 
+Mailbox.prototype.imap_expungeMails = function(callback) {
+  var box;
+  box = this;
+  return this.doASAPWithBox(function(imap, imapbox, cbRelease) {
+    return imap.fetchBoxMessageUIDs(function(err, uids) {
+      if (err) {
+        return cbRelease(err);
+      }
+      if (uids.length === 0) {
+        return cbRelease(null);
+      }
+      return async.series([
+        function(cb) {
+          return imap.addFlags(uids, '\\Deleted', cb);
+        }, function(cb) {
+          return imap.expunge(uids, cb);
+        }, function(cb) {
+          return imap.closeBox(cb);
+        }, function(cb) {
+          return Message.safeRemoveAllFromBox(box.id, function(err) {
+            if (err) {
+              log.error("fail to remove msg of box " + box.id, err);
+            }
+            return cb();
+          });
+        }
+      ], cbRelease);
+    });
+  }, callback);
+};
+
 Mailbox.removeOrphans = function(existings, callback) {
   log.debug("removeOrphans");
   return Mailbox.rawRequest('treemap', {}, function(err, rows) {

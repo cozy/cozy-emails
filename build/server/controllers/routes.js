@@ -59,6 +59,9 @@ module.exports = {
     put: [mailboxes.fetch, accounts.fetch, mailboxes.update, accounts.format],
     "delete": [mailboxes.fetch, accounts.fetch, mailboxes["delete"], accounts.format]
   },
+  'mailbox/:mailboxID/expunge': {
+    "delete": [mailboxes.fetch, accounts.fetch, mailboxes.expunge, accounts.format]
+  },
   'message': {
     post: [messages.parseSendForm, accounts.fetch, messages.fetchMaybe, messages.send]
   },
