@@ -70,7 +70,7 @@ casper.test.begin 'Test Message Actions', (test) ->
                 test.assertNotVisible '#compose-bcc', 'Bcc hidden'
                 values = casper.getFormValues('#email-compose form')
                 test.assertEquals values["compose-to"], "you@cozycloud.cc", "Reply All To"
-                test.assertEquals values["compose-cc"], 'contact@cozycloud.cc, "Me" <me@cozycloud.cc>', "Reply All Cc"
+                test.assertEquals values["compose-cc"], 'contact@cozycloud.cc', "Reply All Cc"
                 test.assertEquals values["compose-bcc"], "", "Reply All Bcc"
                 test.assertEquals values["compose-subject"], "Re: Re: troll", "Reply Subject"
                 casper.click '.form-compose .btn-cancel'

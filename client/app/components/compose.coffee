@@ -235,8 +235,8 @@ module.exports = Compose = React.createClass
 
         # new draft
         else
-            state = MessageUtils.makeReplyMessage @props.inReplyTo, @props.action,
-                @props.settings.get 'composeInHTML'
+            state = MessageUtils.makeReplyMessage @props.selectedAccount.get('login'),
+                @props.inReplyTo, @props.action, @props.settings.get('composeInHTML')
             state.accountID ?= @props.selectedAccount.get 'id'
 
         state.sending = false

@@ -27,7 +27,7 @@
        "_id": "dovecot-ID",
        "docType": "Account",
        "label": "DoveCot",
-       "login": "testuser",
+       "login": "me@cozycloud.cc",
        "password": "applesauce",
        "smtpServer": "172.0.0.1",
        "smtpPort": 0,

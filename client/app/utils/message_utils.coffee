@@ -34,7 +34,7 @@ module.exports = MessageUtils =
         else
             return from
 
-    makeReplyMessage: (inReplyTo, action, inHTML) ->
+    makeReplyMessage: (myAddress, inReplyTo, action, inHTML) ->
         message =
             composeInHTML: inHTML
             attachments: Immutable.Vector.empty()
@@ -80,7 +80,7 @@ module.exports = MessageUtils =
                 # filter to don't have same address twice
                 toAddresses = message.to.map (dest) -> return dest.address
                 message.cc = [].concat(inReplyTo.get('from'), inReplyTo.get('to'), inReplyTo.get('cc')).filter (dest) ->
-                    return toAddresses.indexOf(dest.address) is -1
+                    return dest? and toAddresses.indexOf(dest.address) is -1
                 message.bcc = []
                 message.subject = "#{t 'compose reply prefix'}#{inReplyTo.get 'subject'}"
                 message.text = t('compose reply separator', {date: dateHuman, sender: sender}) +
@@ -109,6 +109,10 @@ module.exports = MessageUtils =
                 message.subject = ''
                 message.text    = t 'compose default'
 
+        # remove my address from dests
+        notMe = (dest) -> return dest.address isnt myAddress
+        message.to = message.to.filter notMe
+        message.cc = message.cc.filter notMe
         return message
 
     generateReplyText: (text) ->
