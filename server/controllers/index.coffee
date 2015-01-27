@@ -1,4 +1,3 @@
-CozyInstance = require '../models/cozy_instance'
 ImapReporter = require '../imap/reporter'
 Account  = require '../models/account'
 Contact  = require '../models/contact'
@@ -10,11 +9,10 @@ log = require('../utils/logging')(prefix: 'controllers:index')
 module.exports.main = (req, res, next) ->
 
     async.series [
-        Settings.get
-        CozyInstance.getLocale
-        Account.clientList
-        (callback) ->
-            Contact.requestWithPictures 'all', {}, callback
+        (cb) -> Settings.get cb
+        (cb) -> cozydb.api.getCozyLocale cb
+        (cb) -> Account.clientList cb
+        (cb) -> Contact.requestWithPictures 'all', {}, cb
     ], (err, results) ->
 
         refreshes = ImapReporter.summary()
