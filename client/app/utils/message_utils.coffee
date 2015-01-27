@@ -77,7 +77,10 @@ module.exports = MessageUtils =
                     """
             when ComposeActions.REPLY_ALL
                 message.to = @getReplyToAddress inReplyTo
-                message.cc = [].concat inReplyTo.get('to'), inReplyTo.get('cc')
+                # filter to don't have same address twice
+                toAddresses = message.to.map (dest) -> return dest.address
+                message.cc = [].concat(inReplyTo.get('from'), inReplyTo.get('to'), inReplyTo.get('cc')).filter (dest) ->
+                    return toAddresses.indexOf(dest.address) is -1
                 message.bcc = []
                 message.subject = "#{t 'compose reply prefix'}#{inReplyTo.get 'subject'}"
                 message.text = t('compose reply separator', {date: dateHuman, sender: sender}) +

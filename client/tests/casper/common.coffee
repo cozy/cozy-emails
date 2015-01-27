@@ -87,6 +87,8 @@ exports.init = (casper) ->
             casper.capture("last.png")
             require('fs').write('last.html', this.getHTML())
     casper.on "remote.message", (msg) ->
+        if typeof msg isnt 'string'
+            msg = utils.serialize(msg, 2)
         casper.echo "Message: " + msg, "INFO"
     casper.on 'resource.requested', (request) ->
         if dev

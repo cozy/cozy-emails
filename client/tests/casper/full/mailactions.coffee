@@ -14,6 +14,7 @@ casper.test.begin 'Test Message Actions', (test) ->
             window.cozyMails.setSetting 'displayConversation', false
             window.cozyMails.setSetting 'displayPreview', true
             window.cozyMails.setSetting 'messageConfirmDelete', true
+            window.cozyMails.setSetting 'composeInHTML', true
 
     casper.then ->
         test.comment "Reply"
@@ -26,13 +27,36 @@ casper.test.begin 'Test Message Actions', (test) ->
                 test.assertNotVisible '#compose-cc', 'Cc hidden'
                 test.assertNotVisible '#compose-bcc', 'Bcc hidden'
                 values = casper.getFormValues('#email-compose form')
-                test.assertEquals values["compose-to"], "contact@cozycloud.cc", "Reply To"
+                test.assertEquals values["compose-to"], "you@cozycloud.cc", "Reply To"
                 test.assertEquals values["compose-cc"], "", "Reply Cc"
                 test.assertEquals values["compose-bcc"], "", "Reply Bcc"
                 test.assertEquals values["compose-subject"], "Re: Re: troll", "Reply Subject"
+                casper.sendKeys '.rt-editor', 'Toto', keepFocus: true
+                text = casper.fetchText '.rt-editor'
+                test.assertEquals text.substr(-4), 'Toto', "Compose under original message"
                 casper.click '.form-compose .btn-cancel'
                 casper.waitWhileSelector '#email-compose', ->
                     test.pass "Compose closed"
+
+    casper.then ->
+        test.comment "Compose on top"
+        casper.evaluate ->
+            window.cozyMails.setSetting 'composeOnTop', true
+            window.cozyMails.setSetting 'composeInHTML', true
+        casper.cozy.selectMessage "DoveCot", "Test Folder", "Re: troll", "20141106093513.GH5642@mail.cozy.io", ->
+            casper.click '.messageToolbox button.reply'
+            casper.waitForSelector '.rt-editor', ->
+                casper.sendKeys '.rt-editor', 'Toto', keepFocus: true
+                text = casper.fetchText '.rt-editor'
+                test.assertEquals text.substr(0, 4), 'Toto', "Compose on top"
+                test.assertExists '.rt-editor.folded', 'Original mail is hidden'
+                casper.click '.rt-editor .originalToggle'
+                casper.waitWhileSelector '.rt-editor.folded', ->
+                    test.pass 'Original mail is shown'
+                    casper.click '.form-compose .btn-cancel'
+                    casper.waitWhileSelector '#email-compose', ->
+                        casper.evaluate ->
+                            window.cozyMails.setSetting 'composeOnTop', false
 
     casper.then ->
         test.comment "Reply all"
@@ -45,8 +69,8 @@ casper.test.begin 'Test Message Actions', (test) ->
                 test.assertVisible '#compose-cc', 'Cc visible'
                 test.assertNotVisible '#compose-bcc', 'Bcc hidden'
                 values = casper.getFormValues('#email-compose form')
-                test.assertEquals values["compose-to"], "contact@cozycloud.cc", "Reply All To"
-                test.assertEquals values["compose-cc"], '"Me" <me@cozycloud.cc>, "You" <you@cozycloud.cc>', "Reply All Cc"
+                test.assertEquals values["compose-to"], "you@cozycloud.cc", "Reply All To"
+                test.assertEquals values["compose-cc"], 'contact@cozycloud.cc, "Me" <me@cozycloud.cc>', "Reply All Cc"
                 test.assertEquals values["compose-bcc"], "", "Reply All Bcc"
                 test.assertEquals values["compose-subject"], "Re: Re: troll", "Reply Subject"
                 casper.click '.form-compose .btn-cancel'

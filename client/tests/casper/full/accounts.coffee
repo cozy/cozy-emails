@@ -151,7 +151,7 @@ casper.test.begin 'Create account', (test) ->
         , ->
             casper.echo "Alert received: " + confirm
             casper.waitWhileSelector "ul.boxes .box span.box-label", ->
-                test.assertEquals confirm, "Do you really want to delete this box and everything in it?", "Confirmation dialog"
+                test.assertEquals confirm, "Do you really want to delete all messages in this box?", "Confirmation dialog"
                 test.assertDoesntExist ".form-group.draftMailbox .dropdown", "No draft folder"
                 test.assertDoesntExist ".form-group.sentMailbox .dropdown",  "No sent folder"
                 test.assertDoesntExist ".form-group.trashMailbox .dropdown", "No trash folder"
