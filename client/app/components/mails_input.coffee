@@ -166,3 +166,7 @@ module.exports = MailsInput = React.createClass
         address = contact.get 'address'
         val.requestChange "#{current}#{name} <#{address}>,"
         @setState contacts: null, open: false
+        # try to put back the focus at the end of the field
+        setTimeout =>
+            query = @refs.contactInput.getDOMNode().focus()
+        , 200
