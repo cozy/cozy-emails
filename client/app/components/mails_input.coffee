@@ -148,7 +148,11 @@ module.exports = MailsInput = React.createClass
                     return true
 
     onBlur: ->
-        @setState open: false
+        # We must use a timeout, otherwise, when user click inside contact list, blur is triggered first
+        # and the click event lost. Dirty hack
+        setTimeout =>
+            @setState open: false
+        , 100
 
     onContact: (contact) ->
         val = @proxyValueLink()
