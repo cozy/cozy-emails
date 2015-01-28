@@ -79,6 +79,7 @@ module.exports = React.createClass
         activeMessages = {}
 
         @props.conversation.map (message, key) =>
+            # open every unseen message of the conversation
             if @props.message.get('id') is message.get('id') or
                     MessageFlags.SEEN not in message.get('flags')
 

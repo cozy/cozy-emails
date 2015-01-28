@@ -57,8 +57,10 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
                         subjectDone = x "//h3[(contains(normalize-space(.), '#{subject}'))]"
                     casper.click subjectSel
                     casper.waitForSelector subjectDone, ->
-                        #casper.test.pass "Message #{subject} selected"
-                        cb(subject)
+                        if not (typeof messageID is 'string')
+                            infos = casper.getElementInfo '.message-list li.message.active'
+                            messageID = infos.attributes['data-message-id']
+                        cb(subject, messageID)
                     , ->
                         casper.test.fail "Error displaying #{subject}"
                 , ->
@@ -118,3 +120,5 @@ exports.init = (casper) ->
             utils.dump accounts
             casper.test.done()
             casper.die("Fixtures not loaded, dying")
+    casper.test.on 'fail', (failure) ->
+        casper.capture "#{failure.message.replace(/\W/gim, '')}.png"
