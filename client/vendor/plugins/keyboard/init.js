@@ -318,6 +318,7 @@ if (typeof window.plugins !== "object") {
     onDeactivate: function () {
       Mousetrap.reset();
     },
+    onHelp: bindingHelp,
     listeners: {
     }
   };

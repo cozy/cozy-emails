@@ -246,6 +246,7 @@ module.exports =
       "settings plugins"           : "Modules complémentaires"
       "settings plugin add"        : "Ajouter"
       "settings plugin del"        : "Supprimer"
+      "settings plugin help"       : "Documentation"
       "settings plugin new name"   : "Nom du plugin"
       "settings plugin new url"    : "Url du plugin"
       # SETTINGS
