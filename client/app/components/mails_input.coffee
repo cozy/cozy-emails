@@ -24,7 +24,8 @@ module.exports = MailsInput = React.createClass
     getStateFromStores: ->
         query = @refs.contactInput?.getDOMNode().value.trim()
         return {
-            contacts: if query?.length > 0 then ContactStore.getResults() else null
+            #contacts: if query?.length > 0 then ContactStore.getResults() else null
+            contacts: ContactStore.getResults()
             selected: 0
             open: false
         }
@@ -103,9 +104,13 @@ module.exports = MailsInput = React.createClass
 
     onQuery: (char) ->
         query = @refs.contactInput.getDOMNode().value.split(',').pop().trim()
-        if char? and typeof char is 'String'
+        if char? and typeof char is 'string'
             query += char
-        if query.length > 0
+            force = false
+        else if char? and typeof char is 'object'
+            # always display contact list when user click on contact button
+            force = true
+        if query.length > 0 or ( force and not @state.open )
             ContactActionCreator.searchContactLocal query
             @setState open: true
             return true

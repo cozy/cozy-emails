@@ -139,7 +139,9 @@
     {
         "docType": "Mailbox",
         "accountID": "dovecot-ID",
-        "attribs": [],
+        "attribs": [
+            "\\Draft"
+        ],
         "children": [],
         "delimiter": ".",
         "_id": "dovecot-ID-draft",
@@ -150,7 +152,9 @@
     {
         "docType": "Mailbox",
         "accountID": "dovecot-ID",
-        "attribs": [],
+        "attribs": [
+            "\\Trash"
+        ],
         "children": [],
         "delimiter": ".",
         "_id": "dovecot-ID-trash",

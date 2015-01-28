@@ -8,7 +8,6 @@ casper.test.begin 'Test Message Actions', (test) ->
 
     casper.start casper.cozy.startUrl, ->
         casper.evaluate ->
-            #window.cozyMails.setSetting 'messagesPerPage', 100
             window.cozyMails.setSetting 'messageDisplayHTML', true
             window.cozyMails.setSetting 'messageDisplayImages', false
             window.cozyMails.setSetting 'displayConversation', false
@@ -102,21 +101,28 @@ casper.test.begin 'Test Message Actions', (test) ->
             window.confirm = (txt) ->
                 window.cozytest.confirmTxt = txt
                 return true
-        casper.cozy.selectMessage "Gmail", "[Gmail]", null, (subject) ->
+        casper.evaluate ->
+            window.cozyMails.setSetting 'messageDisplayHTML', true
+            window.cozyMails.setSetting 'messageDisplayImages', false
+            window.cozyMails.setSetting 'displayConversation', false
+            window.cozyMails.setSetting 'displayPreview', true
+            window.cozyMails.setSetting 'messageConfirmDelete', true
+            window.cozyMails.setSetting 'composeInHTML', true
+        casper.cozy.selectMessage "DoveCot", "Test Folder", null, (subject) ->
             infos = casper.getElementInfo '.message-list li.message.active'
             messageID = infos.attributes['data-message-id']
             casper.click '.messageToolbox button.trash'
             casper.waitWhileSelector ".message-list li.message[data-message-id='#{messageID}']", ->
                 test.pass "Message #{subject} Moved"
-                casper.cozy.selectMessage "Gmail", "Corbeille", subject, messageID, ->
+                casper.cozy.selectMessage "DoveCot", "Trash", subject, messageID, ->
                     test.pass 'Message is in Trash'
                     casper.click '.messageToolbox button.move'
-                    boxSelector = '.messageToolbox [data-value="e7332094-e043-0156-0b5c-790219161c7a"]'
+                    boxSelector = '.messageToolbox [data-value="dovecot-ID-folder1"]'
                     casper.waitUntilVisible boxSelector, ->
                         test.pass 'Move menu displayed'
                         casper.click boxSelector
                         casper.waitWhileSelector ".message-list li.message[data-message-id='#{messageID}']", ->
-                            casper.cozy.selectMessage "Gmail", "[Gmail]", subject, messageID, ->
+                            casper.cozy.selectMessage "DoveCot", "Test Folder", subject, messageID, ->
                                 test.pass "Message moved back to original folder"
 
     casper.run ->
