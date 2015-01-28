@@ -2540,8 +2540,6 @@ module.exports = Application = React.createClass({
         if (previous.secondPanel.action === layout.firstPanel.action && _.difference(previous.secondPanel.parameters, layout.firstPanel.parameters).length === 0) {
           classes.firstPanel += ' expandFromRight';
         }
-      } else if (previous != null) {
-        classes.firstPanel += ' moveFromLeft';
       }
     } else {
       disposition = LayoutStore.getDisposition();
@@ -2558,16 +2556,6 @@ module.exports = Application = React.createClass({
       }
       if (previous != null) {
         wasFullWidth = previous.secondPanel == null;
-        if (wasFullWidth && !isFullWidth) {
-          if (previous.firstPanel.action === second.action && _.difference(previous.firstPanel.parameters, second.parameters).length === 0) {
-            classes.firstPanel += ' moveFromLeft';
-            classes.secondPanel += ' slide-in-from-left';
-          } else {
-            classes.secondPanel += ' slide-in-from-right';
-          }
-        } else if (!isFullWidth) {
-          classes.secondPanel += ' slide-in-from-left';
-        }
       }
     }
     return classes;
@@ -4088,7 +4076,7 @@ module.exports = MailsInput = React.createClass({
     var query, _ref1;
     query = (_ref1 = this.refs.contactInput) != null ? _ref1.getDOMNode().value.trim() : void 0;
     return {
-      contacts: (query != null ? query.length : void 0) > 0 ? ContactStore.getResults() : null,
+      contacts: ContactStore.getResults(),
       selected: 0,
       open: false
     };
@@ -4190,12 +4178,15 @@ module.exports = MailsInput = React.createClass({
     }), "" + (contact.get('fn')) + " <" + (contact.get('address')) + ">"));
   },
   onQuery: function(char) {
-    var query;
+    var force, query;
     query = this.refs.contactInput.getDOMNode().value.split(',').pop().trim();
-    if ((char != null) && typeof char === 'String') {
+    if ((char != null) && typeof char === 'string') {
       query += char;
+      force = false;
+    } else if ((char != null) && typeof char === 'object') {
+      force = true;
     }
-    if (query.length > 0) {
+    if (query.length > 0 || (force && !this.state.open)) {
       ContactActionCreator.searchContactLocal(query);
       this.setState({
         open: true
@@ -4254,9 +4245,13 @@ module.exports = MailsInput = React.createClass({
     }
   },
   onBlur: function() {
-    return this.setState({
-      open: false
-    });
+    return setTimeout((function(_this) {
+      return function() {
+        return _this.setState({
+          open: false
+        });
+      };
+    })(this), 100);
   },
   onContact: function(contact) {
     var address, current, name, val;
@@ -4272,10 +4267,16 @@ module.exports = MailsInput = React.createClass({
     name = contact.get('fn');
     address = contact.get('address');
     val.requestChange("" + current + name + " <" + address + ">,");
-    return this.setState({
+    this.setState({
       contacts: null,
       open: false
     });
+    return setTimeout((function(_this) {
+      return function() {
+        var query;
+        return query = _this.refs.contactInput.getDOMNode().focus();
+      };
+    })(this), 200);
   }
 });
 });
@@ -6741,7 +6742,7 @@ module.exports = React.createClass({
         }, t('plugin name ' + pluginConf.name, {
           _: pluginConf.name
         })), div({
-          className: classInput
+          className: 'col-sm-1'
         }, pluginConf.url != null ? span({
           className: 'clickable',
           onClick: this.pluginDel,
@@ -6756,7 +6757,16 @@ module.exports = React.createClass({
           'data-target': 'plugin',
           'data-plugin': pluginName,
           type: 'checkbox'
-        })))));
+        })), window.plugins[pluginName].onHelp ? div({
+          className: 'col-sm-1 plugin-help'
+        }, span({
+          className: 'clickable',
+          onClick: this.pluginHelp,
+          'data-plugin': pluginName,
+          title: t("settings plugin help")
+        }, i({
+          className: 'fa fa-question-circle'
+        }))) : void 0)));
       }
       return _results;
     }).call(this), form({
@@ -6906,6 +6916,13 @@ module.exports = React.createClass({
       settings: settings
     });
     return SettingsActionCreator.edit(settings);
+  },
+  pluginHelp: function(event) {
+    var pluginName, target;
+    event.preventDefault();
+    target = event.currentTarget;
+    pluginName = target.dataset.plugin;
+    return window.plugins[pluginName].onHelp();
   },
   getInitialState: function(forceDefault) {
     var settings;
@@ -7697,6 +7714,10 @@ module.exports = Dispatcher = Dispatcher = (function() {
   Dispatcher.prototype.dispatch = function(payload) {
     var id, message, _results;
     message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + 'of a dispatch.';
+    if (this._isDispatching) {
+      debugger;
+      console.log("pending", JSON.stringify(this._pendingPayload), "new", JSON.stringify(payload));
+    }
     invariant(!this._isDispatching, message);
     this._startDispatching(payload);
     try {
@@ -8448,6 +8469,7 @@ module.exports = {
   "settings plugins": "Modules complémentaires",
   "settings plugin add": "Add",
   "settings plugin del": "Delete",
+  "settings plugin help": "Help",
   "settings plugin new name": "Plugin Name",
   "settings plugin new url": "Plugin URL",
   "settings label composeInHTML": "Rich message editor",
@@ -8714,6 +8736,7 @@ module.exports = {
   "settings plugins": "Modules complémentaires",
   "settings plugin add": "Ajouter",
   "settings plugin del": "Supprimer",
+  "settings plugin help": "Documentation",
   "settings plugin new name": "Nom du plugin",
   "settings plugin new url": "Url du plugin",
   "settings label composeInHTML": "Éditeur riche",
