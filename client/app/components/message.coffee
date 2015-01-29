@@ -262,6 +262,7 @@ module.exports = React.createClass
                         FilePicker
                             editable: false
                             value: prepared.attachments
+                            messageID: @props.message.get 'id'
                 #if @props.inConversation
                 #    toggleActive
         else

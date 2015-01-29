@@ -24,6 +24,7 @@ FileShape = React.PropTypes.shape
 # - files: array
 # - form: boolean (true) embed component inside a form element
 # - valueLink: a ReactLink for files
+# - messageID: string
 ###
 
 FilePicker = React.createClass
@@ -36,6 +37,7 @@ FilePicker = React.createClass
         valueLink: React.PropTypes.shape
             value: React.PropTypes.instanceOf Immutable.Vector
             requestChange: React.PropTypes.func
+        messageID: React.PropTypes.string
 
 
     getDefaultProps: ->
@@ -81,6 +83,7 @@ FilePicker = React.createClass
                         editable: @props.editable
                         delete: => @deleteFile file
                         display: => @displayFile file
+                        messageID: @props.messageID
 
             if @props.editable
                 div null,
@@ -159,6 +162,7 @@ module.exports = FilePicker
 #  - editable: boolean (false) allow to delete file
 #  - (display): function
 #  - (delete): function
+#  - (messageID): string
 ###
 FileItem = React.createClass
     displayName: 'FileItem'
@@ -169,9 +173,10 @@ FileItem = React.createClass
             contentType: React.PropTypes.string
             length: React.PropTypes.number
         }).isRequired
-        editable: React.PropTypes.bool
-        display:  React.PropTypes.func
-        delete:   React.PropTypes.func
+        editable:  React.PropTypes.bool
+        display:   React.PropTypes.func
+        delete:    React.PropTypes.func
+        messageID: React.PropTypes.string
 
     getDefaultProps: ->
         return {
@@ -185,6 +190,7 @@ FileItem = React.createClass
         file = @props.file
         if not(file.url?) and not(file.rawFileObject)
             window.cozyMails.log(new Error "Wrong file #{JSON.stringify(file)}")
+            file.url = "message/#{@props.messageID}/attachments/#{file.generatedFileName}"
         type = MessageUtils.getAttachmentType file.contentType
         icons =
             'archive'      : 'fa-file-archive-o'

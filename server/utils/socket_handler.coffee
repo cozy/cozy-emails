@@ -56,7 +56,10 @@ SocketHandler.wrapModel = (Model, docType) ->
         old = @toObject()
         _oldUpdateAttributes.call this, data, (err, updated) ->
             unless err
-                raw = updated.toObject()
+                if docType is 'message' or docType is 'account'
+                    raw = updated.toClientObject()
+                else
+                    raw = updated.toObject()
                 SocketHandler.notify "#{docType}.update", raw, old
             callback err, updated
 
