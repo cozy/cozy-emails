@@ -159,6 +159,10 @@ module.exports =
         if window.Notification? and SettingsStore.get 'desktopNotifications'
             new Notification title, options
         else
+            # If no option given, use title as notification body
+            if not options?
+                options =
+                    body: title
             # prevent dispatching when already dispatching
             window.setTimeout ->
                 LayoutActionCreator.notify "#{title} - #{options.body}"
