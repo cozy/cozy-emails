@@ -57,6 +57,8 @@ module.exports =
         #            else if change.type is 'delete'
         #                @deactivate change.name
 
+        window.plugins.helpers = helpers
+
         # Init every plugins
         Object.keys(window.plugins).forEach (pluginName) =>
             pluginConf = window.plugins[pluginName]
@@ -67,8 +69,6 @@ module.exports =
             else
                 if pluginConf.active
                     @activate pluginName
-
-        window.plugins.helpers = helpers
 
         if MutationObserver?
 
@@ -121,50 +121,56 @@ module.exports =
             , 200
 
     activate: (key) ->
-        plugin = window.plugins[key]
-        type   = plugin.type
-        plugin.active = true
+        try
+            plugin = window.plugins[key]
+            type   = plugin.type
+            plugin.active = true
 
-        # Add custom events listeners
-        if plugin.listeners?
-            for own event, listener of plugin.listeners
-                window.addEventListener event, listener.bind(plugin)
+            # Add custom events listeners
+            if plugin.listeners?
+                for own event, listener of plugin.listeners
+                    window.addEventListener event, listener.bind(plugin)
 
-        if plugin.onActivate
-            plugin.onActivate()
+            if plugin.onActivate
+                plugin.onActivate()
 
-        if type?
-            for own pluginName, pluginConf of window.plugins
-                if pluginName is key
-                    continue
-                if pluginConf.type is type and pluginConf.active
-                    @deactivate pluginName
+            if type?
+                for own pluginName, pluginConf of window.plugins
+                    if pluginName is key
+                        continue
+                    if pluginConf.type is type and pluginConf.active
+                        @deactivate pluginName
 
-        event = new CustomEvent('plugin',
-            detail:
-                action: 'activate'
-                name: key
-        )
-        window.dispatchEvent event
+            event = new CustomEvent('plugin',
+                detail:
+                    action: 'activate'
+                    name: key
+            )
+            window.dispatchEvent event
+        catch e
+            console.log "Unable to activate plugin #{key}: #{e}"
 
     deactivate: (key) ->
-        plugin = window.plugins[key]
-        plugin.active = false
+        try
+            plugin = window.plugins[key]
+            plugin.active = false
 
-        # remove custom events listeners
-        if plugin.listeners?
-            for own event, listener of plugin.listeners
-                window.removeEventListener event, listener
+            # remove custom events listeners
+            if plugin.listeners?
+                for own event, listener of plugin.listeners
+                    window.removeEventListener event, listener
 
-        if plugin.onDeactivate
-            plugin.onDeactivate()
+            if plugin.onDeactivate
+                plugin.onDeactivate()
 
-        event = new CustomEvent('plugin',
-            detail:
-                action: 'deactivate'
-                name: key
-        )
-        window.dispatchEvent event
+            event = new CustomEvent('plugin',
+                detail:
+                    action: 'deactivate'
+                    name: key
+            )
+            window.dispatchEvent event
+        catch e
+            console.log "Unable to deactivate plugin #{key}: #{e}"
 
     merge: (remote) ->
         for own pluginName, pluginConf of remote

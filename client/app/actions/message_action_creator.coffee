@@ -42,10 +42,12 @@ module.exports =
                 LayoutActionCreator.alertError t 'app error'
                 return
             trash = account.get 'trashMailbox'
+            msg = message.toJSON()
             if not trash? or trash is ''
                 LayoutActionCreator.alertError t 'message delete no trash'
+            else if msg.mailboxIDs[trash]?
+                LayoutActionCreator.alertError t 'message delete already'
             else
-                msg = message.toJSON()
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_ACTION
                     value:
@@ -83,6 +85,11 @@ module.exports =
             doDelete message
 
     move: (message, from, to, callback) ->
+        LayoutActionCreator = require './layout_action_creator'
+        if from is to
+            LayoutActionCreator.alertWarning t 'message move already'
+            callback()
+            return
         if typeof message is "string"
             message = MessageStore.getByID message
         msg = message.toJSON()

@@ -139,7 +139,7 @@ module.exports = React.createClass
                                 className: classLabel,
                                 htmlFor: 'settings-plugin-' + pluginName,
                                 t('plugin name ' + pluginConf.name, {_: pluginConf.name})
-                            div className: classInput,
+                            div className: 'col-sm-1',
                                 if pluginConf.url?
                                     span
                                         className: 'clickable'
@@ -155,6 +155,14 @@ module.exports = React.createClass
                                         'data-target': 'plugin',
                                         'data-plugin': pluginName,
                                         type: 'checkbox'
+                            if window.plugins[pluginName].onHelp
+                                div className: 'col-sm-1 plugin-help',
+                                    span
+                                        className: 'clickable'
+                                        onClick: @pluginHelp
+                                        'data-plugin': pluginName,
+                                        title: t("settings plugin help"),
+                                            i className: 'fa fa-question-circle'
                 form className: 'form-horizontal', key: pluginName,
                     div className: 'form-group',
                         div className: 'col-xs-4',
@@ -218,7 +226,7 @@ module.exports = React.createClass
                 settings[target.dataset.target] = target.checked
                 @setState({settings: settings})
                 SettingsActionCreator.edit settings
-                if settings.desktopNotifications
+                if window.Notification? and settings.desktopNotifications
                     Notification.requestPermission (status) ->
                         # This allows to use Notification.permission with Chrome/Safari
                         if Notification.permission isnt status
@@ -275,6 +283,12 @@ module.exports = React.createClass
         delete settings.plugins[pluginName]
         @setState({settings: settings})
         SettingsActionCreator.edit settings
+
+    pluginHelp: (event) ->
+        event.preventDefault()
+        target = event.currentTarget
+        pluginName = target.dataset.plugin
+        window.plugins[pluginName].onHelp()
 
     getInitialState: (forceDefault) ->
         settings = @props.settings.toObject()

@@ -85,6 +85,16 @@ module.exports =
                 console.log "Error in mailboxDelete", data, res.body?.error
                 callback t('app error')
 
+    mailboxExpunge: (data, callback) ->
+        request.del "mailbox/#{data.mailboxID}/expunge"
+        .set 'Accept', 'application/json'
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                console.log "Error in mailboxExpunge", data, res.body?.error
+                callback t('app error')
+
     messageSend: (message, callback) ->
         req = request.post "message"
         .set 'Accept', 'application/json'
@@ -105,7 +115,7 @@ module.exports =
                 callback null, res.body
             else
                 console.log "Error in messageSend", message, res.body?.error
-                callback t('app error')
+                callback res.body?.error?.message
 
     messagePatch: (messageId, patch, callback) ->
         request.patch "message/#{messageId}", patch

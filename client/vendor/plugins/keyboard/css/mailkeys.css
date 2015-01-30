@@ -21,7 +21,7 @@ body, html {
 .mailkeys-help {
   display: inline-block;
   vertical-align: middle;
-  min-width: 20em;
+  min-width: 50%;
   max-width: 80%;
   min-height: 50%;
   max-height: 80%;
@@ -35,4 +35,8 @@ body, html {
 .mailkeys-help dt {
   float: left;
   min-width: 4em;
+}
+.plugin-help {
+  padding-top: .2em;
+  font-size: 1.5em;
 }

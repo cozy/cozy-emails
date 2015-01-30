@@ -79,3 +79,16 @@ module.exports.delete = (req, res, next) ->
         return next err if err
         res.account = account
         next null
+
+# expunge every messages from trash mailbox
+module.exports.expunge = (req, res, next) ->
+    log.info "Expunging #{req.params.mailboxID}"
+
+    account = req.account
+    if account.trashMailbox is req.params.mailboxID
+        req.mailbox.imap_expungeMails (err) ->
+            return next err if err
+            res.account = account
+            next null
+    else next new BadRequest 'You can only expunge trash mailbox'
+

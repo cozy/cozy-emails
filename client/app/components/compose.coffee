@@ -137,6 +137,7 @@ module.exports = Compose = React.createClass
                         className: classLabel,
                         t "compose content"
                     ComposeEditor
+                        messageID: @props.message?.get 'id'
                         html: @linkState('html')
                         text: @linkState('text')
                         settings: @props.settings
@@ -149,6 +150,7 @@ module.exports = Compose = React.createClass
                         className: ''
                         editable: true
                         valueLink: @linkState 'attachments'
+                        ref: 'attachments'
 
                 div className: 'composeToolbox',
                     div className: 'btn-toolbar', role: 'toolbar',
@@ -233,8 +235,8 @@ module.exports = Compose = React.createClass
 
         # new draft
         else
-            state = MessageUtils.makeReplyMessage @props.inReplyTo, @props.action,
-                @props.settings.get 'composeInHTML'
+            state = MessageUtils.makeReplyMessage @props.selectedAccount.get('login'),
+                @props.inReplyTo, @props.action, @props.settings.get('composeInHTML')
             state.accountID ?= @props.selectedAccount.get 'id'
 
         state.sending = false
@@ -325,7 +327,7 @@ module.exports = Compose = React.createClass
                     msgKo = t "message action sent ko"
                     msgOk = t "message action sent ok"
                 if error?
-                    LayoutActionCreator.alertError "#{msgKo} :  error"
+                    LayoutActionCreator.alertError "#{msgKo} #{error}"
                 else
                     LayoutActionCreator.notify msgOk, autoclose: true
                     @setState message
@@ -376,6 +378,10 @@ ComposeEditor = React.createClass
             text: @props.text
         }
 
+    componentWillReceiveProps: (nextProps) ->
+        if nextProps.messageID isnt @props.messageID
+            @setState html: nextProps.html, text: nextProps.text
+
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
@@ -413,9 +419,7 @@ ComposeEditor = React.createClass
                 node = @refs.html?.getDOMNode()
                 if not node?
                     return
-                setTimeout ->
-                    jQuery(node).focus()
-                , 0
+                document.querySelector(".rt-editor").focus()
                 if not @props.settings.get 'composeOnTop'
                     node.innerHTML += "<p><br /></p>"
                     node = node.lastChild
@@ -429,11 +433,12 @@ ComposeEditor = React.createClass
                         s.removeAllRanges()
                         s.addRange(r)
                         document.execCommand('delete', false, null)
+                        node.focus()
 
             # Some DOM manipulation when replying inside the message.
             # When inserting a new line, we must close all blockquotes,
             # insert a blank line and then open again blockquotes
-            jQuery('#email-compose .rt-editor').on('keypress', (e) ->
+            jQuery('.rt-editor').on('keypress', (e) ->
                 if e.keyCode is 13
                     # timeout to let the editor perform its own stuff
                     setTimeout ->
@@ -445,14 +450,19 @@ ComposeEditor = React.createClass
                               document.documentElement.msMatchesSelector
 
                         target = document.getSelection().anchorNode
+                        targetElement = target
+                        while not (targetElement instanceof Element)
+                            targetElement = targetElement.parentNode
                         if not target?
                             return
-                        if matchesSelector? and not matchesSelector.call(target, '.rt-editor blockquote *')
+                        if matchesSelector? and not matchesSelector.call(targetElement, '.rt-editor blockquote *')
                             # we are not inside a blockquote, nothing to do
                             return
 
-                        if target.lastChild
-                            target = target.lastChild.previousElementSibling
+                        if target.lastChild?
+                            target = target.lastChild
+                            if target.previousElementSibling?
+                                target = target.previousElementSibling
                         parent = target
 
                         # alternative 1
@@ -530,9 +540,18 @@ ComposeEditor = React.createClass
                     , 0
             )
             # Allow to hide original message
-            jQuery('#email-compose .rt-editor .originalToggle').on('click', ->
-                jQuery('#email-compose .rt-editor').toggleClass('folded')
-            )
+            if document.querySelector('.rt-editor blockquote') and not document.querySelector('.rt-editor .originalToggle')
+                try
+                    header = jQuery('.rt-editor blockquote').eq(0).prev()
+                    header.text(header.text().replace('…', ''))
+                    header.append('<span class="originalToggle">…</>')
+                    header.on 'click', ->
+                        jQuery('.rt-editor').toggleClass('folded')
+                catch e
+                    console.log e
+            jQuery('.rt-editor .originalToggle').on 'click', ->
+                jQuery('.rt-editor').toggleClass('folded')
+
         else
             # Text message
             if @props.focus
@@ -556,8 +575,9 @@ ComposeEditor = React.createClass
     componentDidMount: ->
         @_initCompose()
 
-    #componentDidUpdate: ->
-    #    @_initCompose()
+    componentDidUpdate: (nextProps, nextState) ->
+        if nextProps.messageID isnt @props.messageID
+            @_initCompose()
 
     onKeyDown: (evt) ->
         if evt.ctrlKey and evt.key is 'Enter'

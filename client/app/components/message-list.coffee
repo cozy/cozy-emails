@@ -5,11 +5,15 @@ RouterMixin    = require '../mixins/router_mixin'
 MessageUtils   = require '../utils/message_utils'
 SocketUtils    = require '../utils/socketio_utils'
 {MessageFlags, MessageFilter, FlagsConstants} = require '../constants/app_constants'
-LayoutActionCreator  = require '../actions/layout_action_creator'
-ContactActionCreator = require '../actions/contact_action_creator'
+
+AccountActionCreator      = require '../actions/account_action_creator'
+ContactActionCreator      = require '../actions/contact_action_creator'
 ConversationActionCreator = require '../actions/conversation_action_creator'
-MessageActionCreator = require '../actions/message_action_creator'
+LayoutActionCreator       = require '../actions/layout_action_creator'
+MessageActionCreator      = require '../actions/message_action_creator'
+
 MessageStore   = require '../stores/message_store'
+
 MailboxList    = require './mailbox-list'
 Participants   = require './participant'
 ToolboxActions = require './toolbox_actions'
@@ -30,6 +34,7 @@ MessageList = React.createClass
             edited: false
             filterFlag: false
             filterUnsead: false
+            filterAttach: false
             selected: {}
             allSelected: false
         }
@@ -105,13 +110,19 @@ MessageList = React.createClass
             filter = if @state.filterFlag then MessageFilter.ALL else MessageFilter.FLAGGED
             LayoutActionCreator.filterMessages filter
             showList()
-            @setState filterFlag: not @state.filterFlag, filterUnseen: false
+            @setState filterFlag: not @state.filterFlag, filterUnseen: false, filterAttach: false
 
         toggleFilterUnseen = =>
             filter = if @state.filterUnseen then MessageFilter.ALL else MessageFilter.UNSEEN
             LayoutActionCreator.filterMessages filter
             showList()
-            @setState filterUnseen: not @state.filterUnseen, filterFlag: false
+            @setState filterUnseen: not @state.filterUnseen, filterFlag: false, filterAttach: false
+
+        toggleFilterAttach = =>
+            filter = if @state.filterAttach then MessageFilter.ALL else MessageFilter.ATTACH
+            LayoutActionCreator.filterMessages filter
+            showList()
+            @setState filterAttach: not @state.filterAttach, filterFlag: false, filterUnseen: false
 
         classList = classer
             compact: compact
@@ -120,6 +131,7 @@ MessageList = React.createClass
             active: compact
         classEdited = classer
             active: @state.edited
+
         div className: 'message-list ' + classList, ref: 'list',
             div className: 'message-list-actions',
                 #if advanced and not @state.edited
@@ -156,6 +168,13 @@ MessageList = React.createClass
                                     title: t 'list filter flagged title'
                                     className: 'btn btn-default ' + if @state.filterFlag then ' shown ' else '',
                                     span className: 'fa fa-star'
+                        if not advanced and not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option ',
+                                button
+                                    onClick: toggleFilterAttach
+                                    title: t 'list filter attach title'
+                                    className: 'btn btn-default ' + if @state.filterAttach then ' shown ' else '',
+                                    span className: 'fa fa-paperclip'
                         if advanced and not @state.edited
                             div className: 'btn-group btn-group-sm message-list-option',
                                 MessagesFilter filterParams
@@ -209,6 +228,17 @@ MessageList = React.createClass
                                 onConversation: @onConversation
                                 onHeaders: @onHeaders
                                 direction: 'left'
+
+                        if @props.isTrash and not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option',
+                                button
+                                    className: 'btn btn-default',
+                                    type: 'button',
+                                    disabled: null,
+                                    onClick: @expungeMailbox,
+                                        span
+                                            className: 'fa fa-recycle'
+
             if @props.messages.count() is 0
                 if @props.fetching
                     p null, t 'list fetching'
@@ -262,7 +292,7 @@ MessageList = React.createClass
         if selected.length is 0
             alertError t 'list mass no message'
         else
-            if window.confirm(t 'list delete confirm', nb: selected.length)
+            if window.confirm(t 'list delete confirm', smart_count: selected.length)
                 MessageActionCreator.delete selected
                 ###
                 selected.forEach (id) ->
@@ -341,6 +371,20 @@ MessageList = React.createClass
                         ConversationActionCreator.unseen conversationID, (error) ->
                             if error?
                                 alertError "#{t("conversation unseen ok")} #{error}"
+
+    expungeMailbox: (e) ->
+        e.preventDefault()
+
+        if window.confirm(t 'account confirm delbox')
+            mailbox =
+                mailboxID: @props.mailboxID
+                accountID: @props.accountID
+
+            AccountActionCreator.mailboxExpunge mailbox, (error) ->
+                if error?
+                    LayoutActionCreator.alertError "#{t("mailbox expunge ko")} #{error}"
+                else
+                    LayoutActionCreator.notify t "mailbox expunge ok"
 
     _isVisible: (node, before) ->
         margin = if before then 40 else 0
@@ -578,6 +622,11 @@ MessagesFilter = React.createClass
                             onClick: @onFilter,
                             'data-filter': MessageFilter.FLAGGED,
                             t 'list filter flagged'
+                    li role: 'presentation',
+                        a
+                            onClick: @onFilter,
+                            'data-filter': MessageFilter.ATTACH,
+                            t 'list filter attach'
 
     onFilter: (ev) ->
         LayoutActionCreator.filterMessages ev.target.dataset.filter

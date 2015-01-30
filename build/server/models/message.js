@@ -486,7 +486,7 @@ Message.prototype.applyPatchOperations = function(patch, callback) {
       boxOps.removeFrom.push(boxid);
       delete newmailboxIDs[boxid];
     } else {
-      throw new Error('modifying UID is not possible');
+      throw new Error("modifying UID is not possible, bad operation " + operation.op);
     }
   }
   flagsOps = {

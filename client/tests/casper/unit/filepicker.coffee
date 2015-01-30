@@ -10,15 +10,21 @@ files = [
 ]
 casper.test.begin 'Test file picker', 9, (test) ->
     init casper
-    casper.start casper.cozy.startUrl + "test", ->
+    initFPTest = ->
         casper.evaluate ->
             window.__tests = {}
+            window.cozyMails =
+                log: ->
+                    console.log JSON.stringify(Array.prototype.slice.call(arguments))
             FilePicker = require "components/file_picker"
             window.__tests.fp = React.renderComponent new FilePicker({editable: true}), document.body
+    casper.start casper.cozy.startUrl + "test", ->
+        initFPTest()
         test.assertExists "input[type=file]", "File selector is visible"
         test.assertVisible ".dropzone", "Drop zone is visible"
 
     casper.then ->
+        initFPTest()
         casper.evaluate ->
             window.__tests.rendered = false
             window.__tests.fp.setProps({editable: false}, -> window.__tests.rendered = true)
@@ -29,6 +35,7 @@ casper.test.begin 'Test file picker', 9, (test) ->
             test.assertNotVisible ".dropzone", "Drop zone is not visible"
 
     casper.then ->
+        initFPTest()
         casper.evaluate (files) ->
             files = files.map (file) ->
                 Immutable.Map file

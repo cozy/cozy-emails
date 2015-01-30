@@ -118,7 +118,8 @@ module.exports.listByMailboxOptions = function(req, res, next) {
     'flagged': '\\Flagged',
     'unflagged': '!\\Flagged',
     'answered': '\\Answered',
-    'unanswered': '!\\Answered'
+    'unanswered': '!\\Answered',
+    'attach': '\\Attachments'
   };
   flagcode = req.query.flag;
   if (flagcode) {

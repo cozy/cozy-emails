@@ -156,11 +156,20 @@ module.exports =
         , 5000
 
     notify: (title, options) ->
-        if SettingsStore.get 'desktopNotifications'
+        if window.Notification? and SettingsStore.get 'desktopNotifications'
             new Notification title, options
         else
+            # If no option given, use title as notification body
+            if not options?
+                options =
+                    body: title
             # prevent dispatching when already dispatching
             window.setTimeout ->
                 LayoutActionCreator.notify "#{title} - #{options.body}"
             , 0
 
+    # Send errors to serveur
+    # Usage: window.cozyMails.log(new Error('message'))
+    log: (error) ->
+        url = error.stack.split('\n')[0].split('@')[1].split(/:\d/)[0].split('/').slice(0, -2).join('/')
+        window.onerror error.name, url, error.lineNumber, error.colNumber, error

@@ -56,8 +56,16 @@ SocketHandler.wrapModel = (Model, docType) ->
         old = @toObject()
         _oldUpdateAttributes.call this, data, (err, updated) ->
             unless err
-                raw = updated.toObject()
-                SocketHandler.notify "#{docType}.update", raw, old
+                if docType is 'message'
+                    raw = updated.toClientObject()
+                    SocketHandler.notify "#{docType}.update", raw, old
+                else if docType is 'account'
+                    updated.toClientObject (err, raw) ->
+                        if not err?
+                            SocketHandler.notify "#{docType}.update", raw, old
+                else
+                    raw = updated.toObject()
+                    SocketHandler.notify "#{docType}.update", raw, old
             callback err, updated
 
     _oldDestroy = Model::destroy

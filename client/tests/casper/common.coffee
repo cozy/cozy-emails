@@ -44,18 +44,23 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
             casper.waitForSelector ".message-list li.message", ->
                 if typeof messageID is 'string'
-                    subjectSel = "[data-message-id='#{messageID}'] a .preview"
+                    subjectSel  = ".message-list li[data-message-id='#{messageID}'] a .preview"
+                    subjectDone = "h3[data-message-id='#{messageID}']"
                 else if typeof subject is 'string'
-                    subjectSel = x "//span[(contains(normalize-space(.), '#{subject}'))]"
+                    subjectSel  = x "//span[(contains(normalize-space(.), '#{subject}'))]"
+                    subjectDone = x "//h3[(contains(normalize-space(.), '#{subject}'))]"
                 else
-                    subjectSel = 'li.message:nth-of-type(1) .title'
+                    subjectSel = '.message-list li.message:nth-of-type(1) .title'
                 casper.waitForSelector subjectSel, ->
                     if not (typeof subject is 'string')
                         subject = casper.fetchText subjectSel
+                        subjectDone = x "//h3[(contains(normalize-space(.), '#{subject}'))]"
                     casper.click subjectSel
-                    casper.waitForSelector x("//h3[(contains(normalize-space(.), '#{subject}'))]"), ->
-                        #casper.test.pass "Message #{subject} selected"
-                        cb(subject)
+                    casper.waitForSelector subjectDone, ->
+                        if not (typeof messageID is 'string')
+                            infos = casper.getElementInfo '.message-list li.message.active'
+                            messageID = infos.attributes['data-message-id']
+                        cb(subject, messageID)
                     , ->
                         casper.test.fail "Error displaying #{subject}"
                 , ->
@@ -84,6 +89,8 @@ exports.init = (casper) ->
             casper.capture("last.png")
             require('fs').write('last.html', this.getHTML())
     casper.on "remote.message", (msg) ->
+        if typeof msg isnt 'string'
+            msg = utils.serialize(msg, 2)
         casper.echo "Message: " + msg, "INFO"
     casper.on 'resource.requested', (request) ->
         if dev
@@ -113,3 +120,5 @@ exports.init = (casper) ->
             utils.dump accounts
             casper.test.done()
             casper.die("Fixtures not loaded, dying")
+    casper.test.on 'fail', (failure) ->
+        casper.capture "#{failure.message.replace(/\W/gim, '')}.png"

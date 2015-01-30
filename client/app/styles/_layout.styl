@@ -103,28 +103,6 @@
                 &.col-md-12
                   transition width animationDuration ease
 
-                // 'enter' animation
-                &.moveFromLeft
-                  animation moveFromLeft animationDuration ease
-
-                // 'enter' animation (from top right corner)
-                &.moveFromTopRightCorner
-                  animation moveFromTopRightCorner 0.2s ease
-
-                // right panel expands animation
-                // it's actually the left panel and we trick user's eyes
-                &.expandFromRight
-                  animation expandFromRight animationDuration ease
-
-            // right panel
-            &:nth-of-type(2)
-                // 'enter' animation from right
-                &.slide-in-from-right
-                  animation moveFromRight animationDuration ease
-
-                // 'enter' animation from left
-                &.slide-in-from-left
-                  animation moveFromLeft animationDuration ease-out
     #panels.horizontal
         .panel
             //height 49%

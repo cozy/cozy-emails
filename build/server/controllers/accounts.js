@@ -94,7 +94,7 @@ module.exports.edit = function(req, res, next) {
     if (err) {
       return next(err);
     }
-    changes = _.pick(req.body, 'label', 'login', 'password', 'name', 'account_type', 'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'imapServer', 'imapPort', 'imapSSL', 'imapTLS', 'draftMailbox', 'sentMailbox', 'trashMailbox');
+    changes = _.pick(req.body, 'label', 'login', 'password', 'name', 'account_type', 'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'smtpLogin', 'smtpPassword', 'smtpMethod', 'imapServer', 'imapPort', 'imapSSL', 'imapTLS', 'draftMailbox', 'sentMailbox', 'trashMailbox');
     return req.account.updateAttributes(changes, function(err, updated) {
       res.account = updated;
       return next(err);

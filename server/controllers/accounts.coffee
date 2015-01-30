@@ -73,7 +73,7 @@ module.exports.edit = (req, res, next) ->
 
         changes = _.pick req.body,
             'label', 'login', 'password', 'name', 'account_type'
-            'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
+            'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'smtpLogin', 'smtpPassword', 'smtpMethod',
             'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
             'draftMailbox', 'sentMailbox', 'trashMailbox'
 

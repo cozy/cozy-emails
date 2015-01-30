@@ -414,6 +414,22 @@ Mailbox::recoverChangedUIDValidity = (imap, callback) ->
                 reporter.onDone()
                 callback null
 
+Mailbox::imap_expungeMails = (callback) ->
+    box = this
+    @doASAPWithBox (imap, imapbox, cbRelease) ->
+        imap.fetchBoxMessageUIDs (err, uids) ->
+            return cbRelease err if err
+            return cbRelease null if uids.length is 0
+            async.series [
+                (cb) -> imap.addFlags uids, '\\Deleted', cb
+                (cb) -> imap.expunge uids, cb
+                (cb) -> imap.closeBox cb
+                (cb) -> Message.safeRemoveAllFromBox box.id, (err) ->
+                    log.error "fail to remove msg of box #{box.id}", err if err
+                    # loop anyway
+                    cb()
+            ], cbRelease
+    , callback
 
 Mailbox.removeOrphans = (existings, callback) ->
     log.debug "removeOrphans"

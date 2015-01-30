@@ -138,6 +138,17 @@ Imap.prototype.fetchBoxMessageIDs = function(callback) {
   })(this));
 };
 
+Imap.prototype.fetchBoxMessageUIDs = function(callback) {
+  log.debug("imap#fetchBoxMessageUIDs");
+  return this.search([['ALL']], function(err, uids) {
+    log.debug("imap#fetchBoxMessageUIDs#result", uids);
+    if (err) {
+      return callback(err);
+    }
+    return callback(null, uids);
+  });
+};
+
 Imap.prototype.fetchMetadata = function(min, max, callback) {
   log.debug("imap#fetchMetadata", min, max);
   return this.search([['UID', "" + min + ":" + max]], function(err, uids) {
