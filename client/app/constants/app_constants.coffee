@@ -93,6 +93,7 @@ module.exports =
 
     MessageFilter:
         'ALL'          : 'all'
+        'ATTACH'       : 'attach'
         'FLAGGED'      : 'flagged'
         'UNSEEN'       : 'unseen'
 

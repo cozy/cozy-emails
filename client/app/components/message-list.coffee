@@ -34,6 +34,7 @@ MessageList = React.createClass
             edited: false
             filterFlag: false
             filterUnsead: false
+            filterAttach: false
             selected: {}
             allSelected: false
         }
@@ -109,13 +110,19 @@ MessageList = React.createClass
             filter = if @state.filterFlag then MessageFilter.ALL else MessageFilter.FLAGGED
             LayoutActionCreator.filterMessages filter
             showList()
-            @setState filterFlag: not @state.filterFlag, filterUnseen: false
+            @setState filterFlag: not @state.filterFlag, filterUnseen: false, filterAttach: false
 
         toggleFilterUnseen = =>
             filter = if @state.filterUnseen then MessageFilter.ALL else MessageFilter.UNSEEN
             LayoutActionCreator.filterMessages filter
             showList()
-            @setState filterUnseen: not @state.filterUnseen, filterFlag: false
+            @setState filterUnseen: not @state.filterUnseen, filterFlag: false, filterAttach: false
+
+        toggleFilterAttach = =>
+            filter = if @state.filterAttach then MessageFilter.ALL else MessageFilter.ATTACH
+            LayoutActionCreator.filterMessages filter
+            showList()
+            @setState filterAttach: not @state.filterAttach, filterFlag: false, filterUnseen: false
 
         classList = classer
             compact: compact
@@ -161,6 +168,13 @@ MessageList = React.createClass
                                     title: t 'list filter flagged title'
                                     className: 'btn btn-default ' + if @state.filterFlag then ' shown ' else '',
                                     span className: 'fa fa-star'
+                        if not advanced and not @state.edited
+                            div className: 'btn-group btn-group-sm message-list-option ',
+                                button
+                                    onClick: toggleFilterAttach
+                                    title: t 'list filter attach title'
+                                    className: 'btn btn-default ' + if @state.filterAttach then ' shown ' else '',
+                                    span className: 'fa fa-paperclip'
                         if advanced and not @state.edited
                             div className: 'btn-group btn-group-sm message-list-option',
                                 MessagesFilter filterParams
@@ -608,6 +622,11 @@ MessagesFilter = React.createClass
                             onClick: @onFilter,
                             'data-filter': MessageFilter.FLAGGED,
                             t 'list filter flagged'
+                    li role: 'presentation',
+                        a
+                            onClick: @onFilter,
+                            'data-filter': MessageFilter.ATTACH,
+                            t 'list filter attach'
 
     onFilter: (ev) ->
         LayoutActionCreator.filterMessages ev.target.dataset.filter

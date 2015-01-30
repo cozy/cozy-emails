@@ -51,8 +51,9 @@ module.exports =
 
       # List
       "list empty"              : "No email in this box."
-      "no flagged message"        : "No Important email in this box."
-      "no unseen message"         : "All emails have been read in this box"
+      "no flagged message"      : "No Important email in this box."
+      "no unseen message"       : "All emails have been read in this box"
+      "no attach message"       : "No message with attachments"
       "no filter message"       : "No email for this filter."
       "list fetching"           : "Loading…"
       "list search empty"       : "No result found for the query \"%{query}\"."
@@ -66,6 +67,8 @@ module.exports =
       "list filter unseen title"  : "Show only unread messages"
       "list filter flagged"       : "Important"
       "list filter flagged title" : "Show only Important messages"
+      "list filter attach"        : "Attachments"
+      "list filter attach title"  : "Show only messages with attachments"
       "list sort"                 : "Sort"
       "list sort date"            : "Date"
       "list sort subject"         : "Subject"

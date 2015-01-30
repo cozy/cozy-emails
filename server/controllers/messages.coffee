@@ -83,6 +83,7 @@ module.exports.listByMailboxOptions = (req, res, next) ->
         'unflagged'  : '!\\Flagged'
         'answered'   : '\\Answered'
         'unanswered' : '!\\Answered'
+        'attach'     : '\\Attachments'
 
     flagcode = req.query.flag
     if flagcode

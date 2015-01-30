@@ -53,6 +53,7 @@ module.exports =
       "list empty"              : "Pas d'email dans cette boîte.."
       "no flagged message"      : "Pas d'email important dans cette boîte."
       "no unseen message"       : "Pas d'email non-lu dans cette boîte."
+      "no attach message"       : "Pas d'email avec des pièces-jointes."
       "no filter message"       : "Pas d'email pour ce filtre."
       "list fetching"           : "Chargement…"
       "list search empty"       : "Aucun résultat trouvé pour la requête
@@ -67,6 +68,8 @@ module.exports =
       "list filter unseen title"  : "N'afficher que les messages non lus"
       "list filter flagged"       : "Importants"
       "list filter flagged title" : "N'afficher que les messages importants"
+      "list filter attach"        : "Pièces-jointes"
+      "list filter attach title"  : "N'afficher que les messages avec des pièces-jointes"
       "list sort"                 : "Trier"
       "list sort date"            : "Date"
       "list sort subject"         : "Sujet"
