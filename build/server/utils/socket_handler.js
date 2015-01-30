@@ -74,8 +74,19 @@ SocketHandler.wrapModel = function(Model, docType) {
     return _oldUpdateAttributes.call(this, data, function(err, updated) {
       var raw;
       if (!err) {
-        raw = updated.toObject();
-        SocketHandler.notify("" + docType + ".update", raw, old);
+        if (docType === 'message') {
+          raw = updated.toClientObject();
+          SocketHandler.notify("" + docType + ".update", raw, old);
+        } else if (docType === 'account') {
+          updated.toClientObject(function(err, raw) {
+            if (err == null) {
+              return SocketHandler.notify("" + docType + ".update", raw, old);
+            }
+          });
+        } else {
+          raw = updated.toObject();
+          SocketHandler.notify("" + docType + ".update", raw, old);
+        }
       }
       return callback(err, updated);
     });

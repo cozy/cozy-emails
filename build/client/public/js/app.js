@@ -2540,6 +2540,8 @@ module.exports = Application = React.createClass({
         if (previous.secondPanel.action === layout.firstPanel.action && _.difference(previous.secondPanel.parameters, layout.firstPanel.parameters).length === 0) {
           classes.firstPanel += ' expandFromRight';
         }
+      } else if (previous != null) {
+        classes.firstPanel += ' moveFromLeft';
       }
     } else {
       disposition = LayoutStore.getDisposition();
@@ -2556,6 +2558,16 @@ module.exports = Application = React.createClass({
       }
       if (previous != null) {
         wasFullWidth = previous.secondPanel == null;
+        if (wasFullWidth && !isFullWidth) {
+          if (previous.firstPanel.action === second.action && _.difference(previous.firstPanel.parameters, second.parameters).length === 0) {
+            classes.firstPanel += ' moveFromLeft';
+            classes.secondPanel += ' slide-in-from-left';
+          } else {
+            classes.secondPanel += ' slide-in-from-right';
+          }
+        } else if (!isFullWidth) {
+          classes.secondPanel += ' slide-in-from-left';
+        }
       }
     }
     return classes;
@@ -3748,6 +3760,7 @@ FileShape = React.PropTypes.shape({
  * - files: array
  * - form: boolean (true) embed component inside a form element
  * - valueLink: a ReactLink for files
+ * - messageID: string
  */
 
 FilePicker = React.createClass({
@@ -3759,7 +3772,8 @@ FilePicker = React.createClass({
     valueLink: React.PropTypes.shape({
       value: React.PropTypes.instanceOf(Immutable.Vector),
       requestChange: React.PropTypes.func
-    })
+    }),
+    messageID: React.PropTypes.string
   },
   getDefaultProps: function() {
     return {
@@ -3821,7 +3835,8 @@ FilePicker = React.createClass({
           },
           display: function() {
             return _this.displayFile(file);
-          }
+          },
+          messageID: _this.props.messageID
         });
       };
     })(this))), this.props.editable ? div(null, span({
@@ -3898,6 +3913,7 @@ module.exports = FilePicker;
  *  - editable: boolean (false) allow to delete file
  *  - (display): function
  *  - (delete): function
+ *  - (messageID): string
  */
 
 FileItem = React.createClass({
@@ -3910,7 +3926,8 @@ FileItem = React.createClass({
     }).isRequired,
     editable: React.PropTypes.bool,
     display: React.PropTypes.func,
-    "delete": React.PropTypes.func
+    "delete": React.PropTypes.func,
+    messageID: React.PropTypes.string
   },
   getDefaultProps: function() {
     return {
@@ -3925,6 +3942,7 @@ FileItem = React.createClass({
     file = this.props.file;
     if (!(file.url != null) && !file.rawFileObject) {
       window.cozyMails.log(new Error("Wrong file " + (JSON.stringify(file))));
+      file.url = "message/" + this.props.messageID + "/attachments/" + file.generatedFileName;
     }
     type = MessageUtils.getAttachmentType(file.contentType);
     icons = {
@@ -4740,6 +4758,7 @@ MessageList = React.createClass({
       edited: false,
       filterFlag: false,
       filterUnsead: false,
+      filterAttach: false,
       selected: {},
       allSelected: false
     };
@@ -4771,7 +4790,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, messages, nbMessages, nbSelected, nextPage, showList, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, messages, nbMessages, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
     compact = this.props.settings.get('listStyle') === 'compact';
     messages = this.props.messages.map((function(_this) {
       return function(message, key) {
@@ -4860,7 +4879,8 @@ MessageList = React.createClass({
         showList();
         return _this.setState({
           filterFlag: !_this.state.filterFlag,
-          filterUnseen: false
+          filterUnseen: false,
+          filterAttach: false
         });
       };
     })(this);
@@ -4872,7 +4892,21 @@ MessageList = React.createClass({
         showList();
         return _this.setState({
           filterUnseen: !_this.state.filterUnseen,
-          filterFlag: false
+          filterFlag: false,
+          filterAttach: false
+        });
+      };
+    })(this);
+    toggleFilterAttach = (function(_this) {
+      return function() {
+        var filter;
+        filter = _this.state.filterAttach ? MessageFilter.ALL : MessageFilter.ATTACH;
+        LayoutActionCreator.filterMessages(filter);
+        showList();
+        return _this.setState({
+          filterAttach: !_this.state.filterAttach,
+          filterFlag: false,
+          filterUnseen: false
         });
       };
     })(this);
@@ -4926,6 +4960,14 @@ MessageList = React.createClass({
       className: 'btn btn-default ' + (this.state.filterFlag ? ' shown ' : '')
     }, span({
       className: 'fa fa-star'
+    }))) : void 0, !advanced && !this.state.edited ? div({
+      className: 'btn-group btn-group-sm message-list-option '
+    }, button({
+      onClick: toggleFilterAttach,
+      title: t('list filter attach title'),
+      className: 'btn btn-default ' + (this.state.filterAttach ? ' shown ' : '')
+    }, span({
+      className: 'fa fa-paperclip'
     }))) : void 0, advanced && !this.state.edited ? div({
       className: 'btn-group btn-group-sm message-list-option'
     }, MessagesFilter(filterParams)) : void 0, advanced && !this.state.edited ? div({
@@ -5465,7 +5507,12 @@ MessagesFilter = React.createClass({
     }, a({
       onClick: this.onFilter,
       'data-filter': MessageFilter.FLAGGED
-    }, t('list filter flagged')))));
+    }, t('list filter flagged'))), li({
+      role: 'presentation'
+    }, a({
+      onClick: this.onFilter,
+      'data-filter': MessageFilter.ATTACH
+    }, t('list filter attach')))));
   },
   onFilter: function(ev) {
     var params;
@@ -5812,7 +5859,8 @@ module.exports = React.createClass({
         className: 'col-md-4'
       }, FilePicker({
         editable: false,
-        value: prepared.attachments
+        value: prepared.attachments,
+        messageID: this.props.message.get('id')
       })) : void 0);
     } else {
       return div({
@@ -7492,6 +7540,7 @@ module.exports = {
   },
   MessageFilter: {
     'ALL': 'all',
+    'ATTACH': 'attach',
     'FLAGGED': 'flagged',
     'UNSEEN': 'unseen'
   },
@@ -8303,6 +8352,7 @@ module.exports = {
   "list empty": "No email in this box.",
   "no flagged message": "No Important email in this box.",
   "no unseen message": "All emails have been read in this box",
+  "no attach message": "No message with attachments",
   "no filter message": "No email for this filter.",
   "list fetching": "Loading…",
   "list search empty": "No result found for the query \"%{query}\".",
@@ -8314,6 +8364,8 @@ module.exports = {
   "list filter unseen title": "Show only unread messages",
   "list filter flagged": "Important",
   "list filter flagged title": "Show only Important messages",
+  "list filter attach": "Attachments",
+  "list filter attach title": "Show only messages with attachments",
   "list sort": "Sort",
   "list sort date": "Date",
   "list sort subject": "Subject",
@@ -8571,6 +8623,7 @@ module.exports = {
   "list empty": "Pas d'email dans cette boîte..",
   "no flagged message": "Pas d'email important dans cette boîte.",
   "no unseen message": "Pas d'email non-lu dans cette boîte.",
+  "no attach message": "Pas d'email avec des pièces-jointes.",
   "no filter message": "Pas d'email pour ce filtre.",
   "list fetching": "Chargement…",
   "list search empty": "Aucun résultat trouvé pour la requête \"%{query}\".",
@@ -8582,6 +8635,8 @@ module.exports = {
   "list filter unseen title": "N'afficher que les messages non lus",
   "list filter flagged": "Importants",
   "list filter flagged title": "N'afficher que les messages importants",
+  "list filter attach": "Pièces-jointes",
+  "list filter attach title": "N'afficher que les messages avec des pièces-jointes",
   "list sort": "Trier",
   "list sort date": "Date",
   "list sort subject": "Sujet",
@@ -10394,6 +10449,11 @@ module.exports = {
     if ((window.Notification != null) && SettingsStore.get('desktopNotifications')) {
       return new Notification(title, options);
     } else {
+      if (options == null) {
+        options = {
+          body: title
+        };
+      }
       return window.setTimeout(function() {
         return LayoutActionCreator.notify("" + title + " - " + options.body);
       }, 0);
