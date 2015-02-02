@@ -292,17 +292,53 @@ class MessageStore extends Store
         return _conversationMemoizeID
 
     getPreviousMessage: ->
-        keys = Object.keys _currentMessages.toJS()
-        idx = keys.indexOf _currentID
-        return if idx is -1 then null else keys[idx - 1]
+        if _conversationMemoizeID?
+            # Conversations displayed
+            idx = _conversationMemoize.findIndex (message) ->
+                return _currentID is message.get 'id'
+            if idx is _conversationMemoize.length - 1
+                # We need first message of previous conversation
+                keys = Object.keys _currentMessages.toJS()
+                idx = keys.indexOf(_conversationMemoize.last().get('id'))
+                if idx < 1
+                    return null
+                else
+                    convID = _currentMessages.get(keys[idx - 1])?.get('conversationID')
+                    return null if not convID?
+                    prevID = _messages.filter (message) ->
+                        message.get('conversationID') is convID
+                    .sort reverseDateSort
+                    .first().get('id')
+                    return prevID
+            else
+                return _conversationMemoize.get(idx + 1).get 'id'
+        else
+            keys = Object.keys _currentMessages.toJS()
+            idx = keys.indexOf _currentID
+            return if idx is -1 then null else keys[idx - 1]
 
     getNextMessage: ->
-        keys = Object.keys _currentMessages.toJS()
-        idx = keys.indexOf _currentID
-        if idx is -1 or idx is (keys.length - 1)
-            return null
+        if _conversationMemoizeID?
+            # Conversations displayed
+            idx = _conversationMemoize.findIndex (message) ->
+                return _currentID is message.get 'id'
+            if idx is 0
+                # We need first message of next conversation
+                keys = Object.keys _currentMessages.toJS()
+                idx = keys.indexOf(_conversationMemoize.last().get('id'))
+                if idx is -1 or idx is (keys.length - 1)
+                    return null
+                else
+                    return keys[idx + 1]
+            else
+                return _conversationMemoize.get(idx - 1).get 'id'
         else
-            return keys[idx + 1]
+            keys = Object.keys _currentMessages.toJS()
+            idx = keys.indexOf _currentID
+            if idx is -1 or idx is (keys.length - 1)
+                return null
+            else
+                return keys[idx + 1]
 
     getConversation: (conversationID) ->
         _conversationMemoize = _messages
