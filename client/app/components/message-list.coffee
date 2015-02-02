@@ -56,7 +56,10 @@ MessageList = React.createClass
         messages = @props.messages.map (message, key) =>
             id = message.get('id')
             cid = message.get('conversationID')
-            isActive = @props.messageID is id
+            if cid and @props.settings.get('displayConversation')
+                isActive = @props.conversationID is cid
+            else
+                isActive = @props.messageID is id
             MessageItem
                 message: message,
                 conversationLength: @props.conversationLengths?.get(cid),

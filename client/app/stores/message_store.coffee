@@ -51,7 +51,7 @@ class MessageStore extends Store
     _currentMessages = Immutable.Sequence()
     _conversationLengths = Immutable.Map()
     _conversationMemoize = null
-    _conversationMemoizeId = null
+    _conversationMemoizeID = null
     _currentID       = null
     _prevAction      = null
 
@@ -282,11 +282,14 @@ class MessageStore extends Store
             @setCurrentID _currentMessages.first()?.get 'id'
         return _currentMessages
 
-    getCurrentID: (messageID) ->
+    getCurrentID: ->
         return _currentID
 
     setCurrentID: (messageID) ->
         _currentID = messageID
+
+    getCurrentConversationID: ->
+        return _conversationMemoizeID
 
     getPreviousMessage: ->
         keys = Object.keys _currentMessages.toJS()
@@ -302,12 +305,12 @@ class MessageStore extends Store
             return keys[idx + 1]
 
     getConversation: (conversationID) ->
-        if conversationID isnt _conversationMemoizeId
-            _conversationMemoize = _messages
-                .filter (message) ->
-                    message.get('conversationID') is conversationID
-                .sort reverseDateSort
-                .toVector()
+        _conversationMemoize = _messages
+            .filter (message) ->
+                message.get('conversationID') is conversationID
+            .sort reverseDateSort
+            .toVector()
+        _conversationMemoizeID = conversationID
 
         return _conversationMemoize
 
