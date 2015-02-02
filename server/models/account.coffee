@@ -1,6 +1,6 @@
-americano = require MODEL_MODULE
+cozydb = require 'cozydb'
 
-module.exports = Account = americano.getModel 'Account',
+module.exports = Account = cozydb.getModel 'Account',
     label: String               # human readable label for the account
     name: String                # user name to put in sent mails
     login: String               # IMAP & SMTP login
@@ -23,7 +23,7 @@ module.exports = Account = americano.getModel 'Account',
     trashMailbox: String        # \Trash Maibox id
     junkMailbox: String         # \Junk Maibox id
     allMailbox: String          # \All Maibox id
-    favorites: (x) -> x         # [String] Maibox id of displayed boxes
+    favorites: [String]         # [String] Maibox id of displayed boxes
 
 
 
