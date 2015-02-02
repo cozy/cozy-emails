@@ -1,7 +1,6 @@
 {div, label, input, span, ul, li, a, img, i} = React.DOM
 
 MessageUtils    = require '../utils/message_utils'
-ContactForm     = require './contact-form'
 Modal           = require './modal'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 ContactStore    = require '../stores/contact_store'
