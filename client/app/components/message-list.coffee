@@ -380,8 +380,17 @@ MessageList = React.createClass
                 mailboxID: @props.mailboxID
                 accountID: @props.accountID
 
-            AccountActionCreator.mailboxExpunge mailbox, (error) ->
+            AccountActionCreator.mailboxExpunge mailbox, (error) =>
+
                 if error?
+                    # if user hasn't switched to another box, refresh display
+                    if @props.accountID is mailbox.accountID and
+                       @props.mailboxID is mailbox.mailboxID
+                        params = _.clone(MessageStore.getParams())
+                        params.accountID = @props.accountID
+                        params.mailboxID = @props.mailboxID
+                        LayoutActionCreator.showMessageList parameters: params
+
                     LayoutActionCreator.alertError "#{t("mailbox expunge ko")} #{error}"
                 else
                     LayoutActionCreator.notify t "mailbox expunge ok"
