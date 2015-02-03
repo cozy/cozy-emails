@@ -3,6 +3,7 @@ Account  = require '../models/account'
 Contact  = require '../models/contact'
 Settings = require '../models/settings'
 async = require 'async'
+cozydb = require 'cozydb'
 log = require('../utils/logging')(prefix: 'controllers:index')
 
 
