@@ -218,7 +218,9 @@ module.exports.send = (req, res, next) ->
 
     message.attachments ?= []
     message.flags = ['\\Seen']
-    if message.isDraft
+    isDraft = message.isDraft
+    delete message.isDraft
+    if isDraft
         message.flags.push '\\Draft'
 
     message.content = message.text
@@ -252,7 +254,7 @@ module.exports.send = (req, res, next) ->
     jdbMessage = null
     uidInDest = null
 
-    unless message.isDraft
+    unless isDraft
         # Send the message first
         steps.push (cb) ->
             log.debug "send#sending"
@@ -274,7 +276,7 @@ module.exports.send = (req, res, next) ->
                 cb()
 
     # If we will need the draftbox
-    if previousUID or message.isDraft
+    if previousUID or isDraft
         steps.push (cb) ->
             log.debug "send#getdraftbox"
             id = account.draftMailbox
@@ -294,7 +296,7 @@ module.exports.send = (req, res, next) ->
 
 
     # Add the message to draft or sent folder (imap)
-    if message.isDraft
+    if isDraft
         steps.push (cb) ->
             destination = draftBox
             log.debug "send#add_to_draft"
@@ -356,7 +358,9 @@ module.exports.send = (req, res, next) ->
     async.series steps, (err) ->
         return next err if err
         return next new Error('Server error') unless jdbMessage
-        res.send 200, jdbMessage.toClientObject()
+        out = jdbMessage.toClientObject()
+        out.isDraft = isDraft
+        res.send 200, out
 
 
 module.exports.fetchConversation = (req, res, next) ->

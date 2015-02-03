@@ -18,6 +18,7 @@ module.exports = Account = cozydb.getModel 'Account',
     imapSSL: Boolean            # Use SSL
     imapTLS: Boolean            # Use STARTTLS
     inboxMailbox: String        # INBOX Maibox id
+    flaggedMailbox: String      # \Flag Mailbox id
     draftMailbox: String        # \Draft Maibox id
     sentMailbox: String         # \Sent Maibox id
     trashMailbox: String        # \Trash Maibox id
