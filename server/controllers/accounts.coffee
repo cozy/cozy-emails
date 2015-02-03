@@ -67,15 +67,16 @@ module.exports.list = (req, res, next) ->
 module.exports.edit = (req, res, next) ->
     # @TODO : may be only allow changes to label, unless connection broken
 
-    # check params before applying changes
-    Account.checkParams req.body, (err) ->
-        return next err if err
+    changes = _.pick req.body,
+        'label', 'login', 'password', 'name', 'account_type'
+        'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
+        'smtpLogin', 'smtpPassword', 'smtpMethod',
+        'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
+        'draftMailbox', 'sentMailbox', 'trashMailbox'
 
-        changes = _.pick req.body,
-            'label', 'login', 'password', 'name', 'account_type'
-            'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'smtpLogin', 'smtpPassword', 'smtpMethod',
-            'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
-            'draftMailbox', 'sentMailbox', 'trashMailbox'
+    # check params before applying changes
+    Account.checkParams changes, (err) ->
+        return next err if err
 
         req.account.updateAttributes changes, (err, updated) ->
             res.account = updated

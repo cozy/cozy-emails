@@ -33,6 +33,8 @@ module.exports = Message = cozydb.getModel 'Message',
     html           : String          # message content as html
     date           : Date            # message date
     priority       : String          # message priority
+    binary         : cozydb.NoSchema
+    attachments    : cozydb.NoSchema
 
 mailutils = require '../utils/jwz_tools'
 CONSTANTS = require '../utils/constants'
@@ -547,6 +549,7 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
 
     # we store normalized versions of subject & messageID for threading
     messageID = mail.headers['message-id']
+    delete mail.messageId
 
     # reported bug : if a mail has two messageID, mailparser make it an array
     # and it crashes the server
@@ -563,6 +566,7 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
     mail.to ?= []
     mail.from ?= []
 
+
     if not mail.date?
         mail.date = new Date().toISOString()
 
@@ -576,6 +580,8 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
             return out =
                 name: att.generatedFileName
                 buffer: buffer
+
+        delete mail.attachments
 
     # pick a method to find the conversation id
     # if there is a x-gm-thrid, use it

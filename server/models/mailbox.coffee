@@ -4,7 +4,7 @@ module.exports = Mailbox = cozydb.getModel 'Mailbox',
     accountID: String        # Parent account
     label: String            # Human readable label
     path: String             # IMAP path
-    lastsync: String         # Date.ISOString of last full box synchro
+    lastSync: String         # Date.ISOString of last full box synchro
     tree: [String]           # Normalized path as Array
     delimiter: String        # delimiter between this box and its children
     uidvalidity: Number      # Imap UIDValidity
