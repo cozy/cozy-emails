@@ -2,6 +2,7 @@ cozydb = require 'cozydb'
 async = require 'async'
 stream_to_buffer_array = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'models:contact')
+stream = require 'stream'
 
 module.exports = Contact = cozydb.getModel 'Contact',
     id            : String
@@ -13,20 +14,27 @@ module.exports = Contact = cozydb.getModel 'Contact',
     _attachments  : Object
 
 Contact::includePicture = (callback) ->
-    if @_attachments?.picture
-        stream = @getFile 'picture', (err) =>
+    unless @_attachments?.picture
+        callback null, this
+    else
+        pictureStream = @getFile 'picture', (err) =>
             log.error "Contact #{@id} getting picture", err if err?
-        stream_to_buffer_array stream, (err, parts) =>
-            return callback err if err
-            base64 = Buffer.concat(parts).toString('base64')
+
+        chunks = []
+        bufferer = new stream.Writable
+        bufferer._write = (chunk, enc, next) ->
+            chunks.push(chunk)
+            next()
+        bufferer.end = =>
+            base64 = Buffer.concat(chunks).toString('base64')
             avatar = "data:image/jpeg;base64," + base64
             @datapoints ?= []
             @datapoints.push
                 name: 'avatar'
                 value: avatar
             callback null, this
-    else
-        callback null, this
+
+        pictureStream.pipe bufferer
 
 # @TODO try Couchdb ?attachments=true
 Contact.requestWithPictures = (name, options, callback) ->
