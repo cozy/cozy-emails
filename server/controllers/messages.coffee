@@ -7,6 +7,7 @@ _ = require 'lodash'
 async = require 'async'
 querystring = require 'querystring'
 multiparty = require 'multiparty'
+stream = require 'stream'
 stream_to_buffer_array = require '../utils/stream_to_array'
 messageUtils = require '../utils/jwz_tools'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
@@ -185,12 +186,17 @@ contentToBuffer = (req, attachment, callback) ->
     # file in the DS, from a previous save of the draft
     # cache it and pass around
     if attachment.url
-        stream = req.message.getBinary filename, (err) ->
+        fileStream = req.message.getBinary filename, (err) ->
             log.error "Attachment streaming error", err if err
 
-        stream_to_buffer_array stream, (err, buffers) ->
-            return callback err if err
-            callback null, Buffer.concat buffers
+        chunks = []
+        bufferer = new stream.Writable
+        bufferer._write = (chunk, enc, next) ->
+            chunks.push(chunk)
+            next()
+        bufferer.end = ->
+            callback null, Buffer.concat chunks
+        fileStream.pipe bufferer
 
     # file just uploaded, take the buffer from the multipart req
     # content is a buffer
