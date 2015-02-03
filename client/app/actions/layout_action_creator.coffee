@@ -161,26 +161,17 @@ module.exports = LayoutActionCreator =
             if  not selectedAccount? and msg?.accountID
                 AccountActionCreator.selectAccount msg.accountID
         messageID      = panelInfo.parameters.messageID
+        conversationID = panelInfo.parameters.conversationID
         message        = MessageStore.getByID messageID
         if message?
             onMessage message
-            conversationID = message.get 'conversationID'
-            XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
+        XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
 
-                if err?
-                    LayoutActionCreator.alertError err
-                else
-                    MessageActionCreator.receiveRawMessages rawMessages
-                    onMessage rawMessages[0]
-        else
-            XHRUtils.fetchMessage messageID, (err, rawMessage) ->
-
-                if err?
-                    LayoutActionCreator.alertError err
-                else
-                    MessageActionCreator.receiveRawMessage rawMessage
-                    onMessage rawMessage
-
+            if err?
+                LayoutActionCreator.alertError err
+            else
+                MessageActionCreator.receiveRawMessages rawMessages
+                onMessage rawMessages[0]
 
     showComposeNewMessage: (panelInfo, direction) ->
         # if there isn't a selected account (page loaded directly),

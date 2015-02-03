@@ -98,7 +98,7 @@ class MessageStore extends Store
             message.date = new Date().toISOString()
         if not message.createdAt?
             message.createdAt = message.date
-        # Add messageId to every attachment
+        # Add messageID to every attachment
 
         message.hasAttachments = message.attachments.length > 0
         message.attachments = message.attachments.map (file) ->
@@ -214,8 +214,8 @@ class MessageStore extends Store
         handle ActionTypes.MESSAGE_ACTION, (action) ->
             _prevAction = action
 
-        handle ActionTypes.MESSAGE_CURRENT, (messageID) ->
-            @setCurrentID messageID
+        handle ActionTypes.MESSAGE_CURRENT, (value) ->
+            @setCurrentID value.messageID, value.conv
             @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
@@ -285,14 +285,18 @@ class MessageStore extends Store
     getCurrentID: ->
         return _currentID
 
-    setCurrentID: (messageID) ->
+    setCurrentID: (messageID, conv) ->
+        if conv?
+            _conversationMemoizeID = @getByID(messageID).get 'conversationID'
         _currentID = messageID
 
     getCurrentConversationID: ->
         return _conversationMemoizeID
 
-    getPreviousMessage: ->
-        if _conversationMemoizeID?
+    getPreviousMessage: (isConv) ->
+        if isConv? and isConv
+            if not _conversationMemoize?
+                return null
             # Conversations displayed
             idx = _conversationMemoize.findIndex (message) ->
                 return _currentID is message.get 'id'
@@ -305,20 +309,22 @@ class MessageStore extends Store
                 else
                     convID = _currentMessages.get(keys[idx - 1])?.get('conversationID')
                     return null if not convID?
-                    prevID = _messages.filter (message) ->
+                    prev = _messages.filter (message) ->
                         message.get('conversationID') is convID
                     .sort reverseDateSort
-                    .first().get('id')
-                    return prevID
+                    .first()
+                    return prev
             else
-                return _conversationMemoize.get(idx + 1).get 'id'
+                return _conversationMemoize.get(idx + 1)
         else
             keys = Object.keys _currentMessages.toJS()
             idx = keys.indexOf _currentID
-            return if idx is -1 then null else keys[idx - 1]
+            return if idx is -1 then null else _currentMessages.get keys[idx - 1]
 
-    getNextMessage: ->
-        if _conversationMemoizeID?
+    getNextMessage: (isConv) ->
+        if isConv? and isConv
+            if not _conversationMemoize?
+                return null
             # Conversations displayed
             idx = _conversationMemoize.findIndex (message) ->
                 return _currentID is message.get 'id'
@@ -329,16 +335,16 @@ class MessageStore extends Store
                 if idx is -1 or idx is (keys.length - 1)
                     return null
                 else
-                    return keys[idx + 1]
+                    return _currentMessages.get keys[idx + 1]
             else
-                return _conversationMemoize.get(idx - 1).get 'id'
+                return _conversationMemoize.get(idx - 1)
         else
             keys = Object.keys _currentMessages.toJS()
             idx = keys.indexOf _currentID
             if idx is -1 or idx is (keys.length - 1)
                 return null
             else
-                return keys[idx + 1]
+                return _currentMessages.get keys[idx + 1]
 
     getConversation: (conversationID) ->
         _conversationMemoize = _messages

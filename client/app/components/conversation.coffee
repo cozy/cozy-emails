@@ -40,8 +40,8 @@ module.exports = React.createClass
             key: key
             mailboxes: @props.mailboxes
             message: message
-            nextID: @props.nextID
-            prevID: @props.prevID
+            next: @props.next
+            prev: @props.prev
             selectedAccount: @props.selectedAccount
             selectedMailboxID: @props.selectedMailboxID
             settings: @props.settings
@@ -118,8 +118,8 @@ module.exports = React.createClass
                         @renderMessage key, message, false
 
                 else if @props.conversationLength > 1
-                    li className: 'conversation-length-msg',
-                        a onClick: @expand,
+                    li className: 'conversation-length-msg', onClick: @expand,
+                        a null
                             t 'mail conversation length',
                                 smart_count: @props.conversationLength
 

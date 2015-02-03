@@ -94,6 +94,10 @@ module.exports = Application = React.createClass
         keyFirst = 'left-panel-' + layout.firstPanel.action.split('.')[0]
         if layout.secondPanel?
             keySecond = 'right-panel-' + layout.secondPanel.action.split('.')[0]
+            # update current message id
+            # this need to be done here, so MessageList get the good message ID
+            if layout.secondPanel.parameters.messageID?
+                MessageStore.setCurrentID layout.secondPanel.parameters.messageID
 
         # Actual layout
         div className: 'container-fluid',
@@ -257,6 +261,11 @@ module.exports = Application = React.createClass
 
             fetching = MessageStore.isFetching()
             if @state.settings.get 'displayConversation'
+                # select first conversation to allow navigation to start
+                conversationID = MessageStore.getCurrentConversationID()
+                if not conversationID? and messages.length > 0
+                    conversationID = messages.first().get 'conversationID'
+                    conversation = MessageStore.getConversation conversationID
                 conversationLengths = MessageStore.getConversationsLength()
 
             query = _.clone(MessageStore.getParams())
@@ -265,17 +274,13 @@ module.exports = Application = React.createClass
 
             isTrash = @state.selectedAccount?.get('trashMailbox') is mailboxID
 
-            #paginationUrl = @buildUrl
-            #    direction: 'first'
-            #    action: 'account.mailbox.messages.full'
-            #    parameters: query
             return MessageList
                 messages:      messages
                 messagesCount: messagesCount
                 accountID:     accountID
                 mailboxID:     mailboxID
                 messageID:     messageID
-                conversationID: MessageStore.getCurrentConversationID()
+                conversationID: conversationID
                 mailboxes:     @state.mailboxes
                 settings:      @state.settings
                 fetching:      fetching
@@ -284,7 +289,6 @@ module.exports = Application = React.createClass
                 conversationLengths: conversationLengths
                 emptyListMessage: emptyListMessage
                 counterMessage:   counterMessage
-                #paginationUrl: paginationUrl
                 ref:           'messageList'
 
         # -- Generates a configuration window for a given account
@@ -327,7 +331,6 @@ module.exports = Application = React.createClass
                 lengths = MessageStore.getConversationsLength()
                 conversationLength = lengths.get conversationID
                 conversation = MessageStore.getConversation conversationID
-                MessageStore.setCurrentID message.get('id')
                 selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
 
             return Conversation
@@ -341,8 +344,8 @@ module.exports = Application = React.createClass
                 message           : message
                 conversation      : conversation
                 conversationLength: conversationLength
-                prevID            : MessageStore.getPreviousMessage()
-                nextID            : MessageStore.getNextMessage()
+                prev              : MessageStore.getPreviousMessage(@state.settings.get 'displayConversation')
+                next              : MessageStore.getNextMessage(@state.settings.get 'displayConversation')
                 ref               : 'conversation'
 
         # -- Generates the new message composition form
