@@ -98,7 +98,7 @@ exports.init = (casper) ->
             utils.dump request
     casper.on "page.error", (msg, trace) ->
         casper.echo "Error: " + msg, "ERROR"
-        utils.dump trace.slice 0, 2
+        utils.dump trace.slice 0, 5
     casper.on "load.finished", ->
         if casper.getTitle() isnt 'Cozy Emails'
             return

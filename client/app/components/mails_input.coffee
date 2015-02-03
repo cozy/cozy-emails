@@ -150,7 +150,9 @@ module.exports = MailsInput = React.createClass
         # We must use a timeout, otherwise, when user click inside contact list, blur is triggered first
         # and the click event lost. Dirty hack
         setTimeout =>
-            @setState open: false
+            # if user cancel comose, component may be unmounted when the timeout is fired
+            if @isMounted()
+                @setState open: false
         , 100
 
     onContact: (contact) ->

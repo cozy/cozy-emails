@@ -33,18 +33,17 @@ casper.test.begin 'Test compose', (test) ->
                             doTest()
 
     casper.then ->
-        casper.open casper.cozy.startUrl + "#compose", ->
-            test.comment "Field visibility"
-            test.assertNotVisible '#compose-cc', 'Cc hidden'
-            test.assertNotVisible '#compose-bcc', 'Bcc hidden'
-            casper.click '.compose-toggle-cc'
-            casper.click '.compose-toggle-bcc'
-            test.assertVisible '#compose-cc', 'Cc shown'
-            test.assertVisible '#compose-bcc', 'Bcc shown'
-            casper.click '.compose-toggle-cc'
-            casper.click '.compose-toggle-bcc'
-            test.assertNotVisible '#compose-cc', 'Cc hidden'
-            test.assertNotVisible '#compose-bcc', 'Bcc hidden'
+        test.comment "Field visibility"
+        test.assertNotVisible '#compose-cc', 'Cc hidden'
+        test.assertNotVisible '#compose-bcc', 'Bcc hidden'
+        casper.click '.compose-toggle-cc'
+        casper.click '.compose-toggle-bcc'
+        test.assertVisible '#compose-cc', 'Cc shown'
+        test.assertVisible '#compose-bcc', 'Bcc shown'
+        casper.click '.compose-toggle-cc'
+        casper.click '.compose-toggle-bcc'
+        test.assertNotVisible '#compose-cc', 'Cc hidden'
+        test.assertNotVisible '#compose-bcc', 'Bcc hidden'
 
     ### @FIXME this test keeps failing on Travis
     casper.then ->
