@@ -68,7 +68,7 @@ module.exports = React.createClass
         # a value fo html, otherwise the content of the email flashes
         if text and not html and @state.messageDisplayHTML
             try
-                html = markdown.toHTML text
+                html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
             catch e
                 console.log "Error converting text message to Markdown: #{e}"
                 html = "<div class='text'>#{text}</div>" #markdown.toHTML text
