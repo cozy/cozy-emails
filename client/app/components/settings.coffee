@@ -65,7 +65,7 @@ module.exports = React.createClass
                 # Layout style
                 div className: 'form-group',
                     label htmlFor: 'settings-layoutStyle', className: classLabel,
-                        t "settings label listStyle"
+                        t "settings label layoutStyle"
                     div className: classInput,
                         div className: "dropdown",
                             button
