@@ -551,11 +551,12 @@ MessageItem = React.createClass
             event.preventDefault()
             event.stopPropagation()
         else
-            event.preventDefault()
-            MessageActionCreator.setCurrent @refs.target.getDOMNode().dataset.messageId
-            if @props.settings.get('displayPreview')
-                href = '#' + @refs.target.getDOMNode().href.split('#')[1]
-                @redirect href
+            if not (event.target.getAttribute('type') is 'checkbox')
+                event.preventDefault()
+                MessageActionCreator.setCurrent @refs.target.getDOMNode().dataset.messageId
+                if @props.settings.get('displayPreview')
+                    href = '#' + @refs.target.getDOMNode().href.split('#')[1]
+                    @redirect href
 
     onMessageDblClick: (event) ->
         if not @props.edited
