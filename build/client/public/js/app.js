@@ -230,13 +230,11 @@ module.exports = AccountActionCreator = {
     });
   },
   mailboxExpunge: function(inputValues, callback) {
+    AppDispatcher.handleViewAction({
+      type: ActionTypes.MAILBOX_EXPUNGE,
+      value: inputValues.mailboxID
+    });
     return XHRUtils.mailboxExpunge(inputValues, function(error, account) {
-      if (error == null) {
-        AppDispatcher.handleViewAction({
-          type: ActionTypes.MAILBOX_EXPUNGE,
-          value: inputValues.mailboxID
-        });
-      }
       if (callback != null) {
         return callback(error);
       }
@@ -331,8 +329,8 @@ XHRUtils = require('../utils/xhr_utils');
 MessageFlags = require('../constants/app_constants').MessageFlags;
 
 module.exports = {
-  "delete": function(conversationId, callback) {
-    return XHRUtils.conversationDelete(conversationId, function(error, messages) {
+  "delete": function(conversationID, callback) {
+    return XHRUtils.conversationDelete(conversationID, function(error, messages) {
       if (error == null) {
         AppDispatcher.handleViewAction({
           type: ActionTypes.RECEIVE_RAW_MESSAGES,
@@ -344,7 +342,7 @@ module.exports = {
       }
     });
   },
-  move: function(conversationId, to, callback) {
+  move: function(conversationID, to, callback) {
     var conversation, observer, patches;
     conversation = {
       mailboxIDs: []
@@ -352,7 +350,7 @@ module.exports = {
     observer = jsonpatch.observe(conversation);
     conversation.mailboxIDs.push(to);
     patches = jsonpatch.generate(observer);
-    return XHRUtils.conversationPatch(conversationId, patches, function(error, messages) {
+    return XHRUtils.conversationPatch(conversationID, patches, function(error, messages) {
       if (error == null) {
         AppDispatcher.handleViewAction({
           type: ActionTypes.RECEIVE_RAW_MESSAGES,
@@ -364,7 +362,7 @@ module.exports = {
       }
     });
   },
-  seen: function(conversationId, flags, callback) {
+  seen: function(conversationID, flags, callback) {
     var conversation, observer, patches;
     conversation = {
       flags: []
@@ -372,7 +370,7 @@ module.exports = {
     observer = jsonpatch.observe(conversation);
     conversation.flags.push(MessageFlags.SEEN);
     patches = jsonpatch.generate(observer);
-    return XHRUtils.conversationPatch(conversationId, patches, function(error, messages) {
+    return XHRUtils.conversationPatch(conversationID, patches, function(error, messages) {
       if (error == null) {
         AppDispatcher.handleViewAction({
           type: ActionTypes.RECEIVE_RAW_MESSAGES,
@@ -384,7 +382,7 @@ module.exports = {
       }
     });
   },
-  unseen: function(conversationId, flags, callback) {
+  unseen: function(conversationID, flags, callback) {
     var conversation, observer, patches;
     conversation = {
       flags: [MessageFlags.SEEN]
@@ -392,7 +390,7 @@ module.exports = {
     observer = jsonpatch.observe(conversation);
     conversation.flags = [];
     patches = jsonpatch.generate(observer);
-    return XHRUtils.conversationPatch(conversationId, patches, function(error, messages) {
+    return XHRUtils.conversationPatch(conversationID, patches, function(error, messages) {
       if (error == null) {
         AppDispatcher.handleViewAction({
           type: ActionTypes.RECEIVE_RAW_MESSAGES,
@@ -613,28 +611,19 @@ module.exports = LayoutActionCreator = {
       }
     };
     messageID = panelInfo.parameters.messageID;
+    conversationID = panelInfo.parameters.conversationID;
     message = MessageStore.getByID(messageID);
     if (message != null) {
       onMessage(message);
-      conversationID = message.get('conversationID');
-      return XHRUtils.fetchConversation(conversationID, function(err, rawMessages) {
-        if (err != null) {
-          return LayoutActionCreator.alertError(err);
-        } else {
-          MessageActionCreator.receiveRawMessages(rawMessages);
-          return onMessage(rawMessages[0]);
-        }
-      });
-    } else {
-      return XHRUtils.fetchMessage(messageID, function(err, rawMessage) {
-        if (err != null) {
-          return LayoutActionCreator.alertError(err);
-        } else {
-          MessageActionCreator.receiveRawMessage(rawMessage);
-          return onMessage(rawMessage);
-        }
-      });
     }
+    return XHRUtils.fetchConversation(conversationID, function(err, rawMessages) {
+      if (err != null) {
+        return LayoutActionCreator.alertError(err);
+      } else {
+        MessageActionCreator.receiveRawMessages(rawMessages);
+        return onMessage(rawMessages[0]);
+      }
+    });
   },
   showComposeNewMessage: function(panelInfo, direction) {
     var defaultAccount, selectedAccount;
@@ -911,10 +900,13 @@ module.exports = {
       });
     }, 0);
   },
-  setCurrent: function(messageID) {
+  setCurrent: function(messageID, conv) {
     return AppDispatcher.handleViewAction({
       type: ActionTypes.MESSAGE_CURRENT,
-      value: messageID
+      value: {
+        messageID: messageID,
+        conv: conv
+      }
     });
   }
 };
@@ -2488,6 +2480,9 @@ module.exports = Application = React.createClass({
     keyFirst = 'left-panel-' + layout.firstPanel.action.split('.')[0];
     if (layout.secondPanel != null) {
       keySecond = 'right-panel-' + layout.secondPanel.action.split('.')[0];
+      if (layout.secondPanel.parameters.messageID != null) {
+        MessageStore.setCurrentID(layout.secondPanel.parameters.messageID);
+      }
     }
     return div({
       className: 'container-fluid'
@@ -2617,6 +2612,11 @@ module.exports = Application = React.createClass({
       direction = layout === 'first' ? 'secondPanel' : 'firstPanel';
       fetching = MessageStore.isFetching();
       if (this.state.settings.get('displayConversation')) {
+        conversationID = MessageStore.getCurrentConversationID();
+        if ((conversationID == null) && messages.length > 0) {
+          conversationID = messages.first().get('conversationID');
+          conversation = MessageStore.getConversation(conversationID);
+        }
         conversationLengths = MessageStore.getConversationsLength();
       }
       query = _.clone(MessageStore.getParams());
@@ -2629,6 +2629,7 @@ module.exports = Application = React.createClass({
         accountID: accountID,
         mailboxID: mailboxID,
         messageID: messageID,
+        conversationID: conversationID,
         mailboxes: this.state.mailboxes,
         settings: this.state.settings,
         fetching: fetching,
@@ -2674,7 +2675,6 @@ module.exports = Application = React.createClass({
         lengths = MessageStore.getConversationsLength();
         conversationLength = lengths.get(conversationID);
         conversation = MessageStore.getConversation(conversationID);
-        MessageStore.setCurrentID(message.get('id'));
         if (selectedMailboxID == null) {
           selectedMailboxID = Object.keys(message.get('mailboxIDs'))[0];
         }
@@ -2690,8 +2690,8 @@ module.exports = Application = React.createClass({
         message: message,
         conversation: conversation,
         conversationLength: conversationLength,
-        prevID: MessageStore.getPreviousMessage(),
-        nextID: MessageStore.getNextMessage(),
+        prev: MessageStore.getPreviousMessage(this.state.settings.get('displayConversation')),
+        next: MessageStore.getNextMessage(this.state.settings.get('displayConversation')),
         ref: 'conversation'
       });
     } else if (panelInfo.action === 'compose') {
@@ -3406,17 +3406,18 @@ ComposeEditor = React.createClass({
           header = jQuery('.rt-editor blockquote').eq(0).prev();
           header.text(header.text().replace('…', ''));
           header.append('<span class="originalToggle">…</>');
-          header.on('click', function() {
+          return header.on('click', function() {
             return jQuery('.rt-editor').toggleClass('folded');
           });
         } catch (_error) {
           e = _error;
-          console.log(e);
+          return console.error(e);
         }
+      } else {
+        return jQuery('.rt-editor .originalToggle').on('click', function() {
+          return jQuery('.rt-editor').toggleClass('folded');
+        });
       }
-      return jQuery('.rt-editor .originalToggle').on('click', function() {
-        return jQuery('.rt-editor').toggleClass('folded');
-      });
     } else {
       if (this.props.focus) {
         node = this.refs.content.getDOMNode();
@@ -3451,131 +3452,6 @@ ComposeEditor = React.createClass({
   onKeyDown: function(evt) {
     if (evt.ctrlKey && evt.key === 'Enter') {
       return this.props.onSend();
-    }
-  }
-});
-});
-
-;require.register("components/contact-form", function(exports, require, module) {
-var ContactActionCreator, ContactStore, RouterMixin, StoreWatchMixin, a, classer, div, form, i, img, input, li, span, ul, _ref;
-
-_ref = React.DOM, div = _ref.div, form = _ref.form, input = _ref.input, span = _ref.span, ul = _ref.ul, li = _ref.li, a = _ref.a, img = _ref.img, i = _ref.i;
-
-classer = React.addons.classSet;
-
-ContactActionCreator = require('../actions/contact_action_creator');
-
-ContactStore = require('../stores/contact_store');
-
-StoreWatchMixin = require('../mixins/store_watch_mixin');
-
-RouterMixin = require('../mixins/router_mixin');
-
-module.exports = React.createClass({
-  displayName: 'ContactForm',
-  mixins: [StoreWatchMixin([ContactStore]), RouterMixin],
-  getStateFromStores: function() {
-    var query, _ref1;
-    query = (_ref1 = this.refs.contactInput) != null ? _ref1.getDOMNode().value.trim() : void 0;
-    return {
-      contacts: (query != null ? query.length : void 0) > 2 ? ContactStore.getResults() : null,
-      selected: 0
-    };
-  },
-  componentWillMount: function() {
-    return this.setState({
-      contacts: null
-    });
-  },
-  shouldComponentUpdate: function(nextProps, nextState) {
-    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
-  },
-  render: function() {
-    var current, listClass, _ref1;
-    listClass = ((_ref1 = this.state.contacts) != null ? _ref1.length : void 0) > 0 ? 'open' : '';
-    current = 0;
-    return form({
-      className: "contact-form"
-    }, div(null, div({
-      className: 'input-group'
-    }, input({
-      className: 'form-control search-input',
-      type: 'text',
-      placeholder: t('contact form placeholder'),
-      onKeyDown: this.onKeyDown,
-      ref: 'contactInput',
-      defaultValue: this.props.query
-    }), div({
-      className: 'input-group-addon btn btn-cozy search-btn',
-      onClick: this.onSubmit
-    }, span({
-      className: 'fa fa-search'
-    })))), this.state.contacts != null ? div({
-      className: listClass
-    }, ul({
-      className: "contact-list"
-    }, this.state.contacts.map((function(_this) {
-      return function(contact, key) {
-        var selected;
-        selected = current === _this.state.selected;
-        current++;
-        return _this.renderContact(contact, selected);
-      };
-    })(this)).toJS())) : void 0);
-  },
-  renderContact: function(contact, selected) {
-    var avatar, classes, selectContact;
-    selectContact = (function(_this) {
-      return function() {
-        return _this.props.onContact(contact);
-      };
-    })(this);
-    avatar = contact.get('avatar');
-    classes = classer({
-      selected: selected
-    });
-    return li({
-      className: classes,
-      onClick: selectContact
-    }, a(null, avatar != null ? img({
-      className: 'avatar',
-      src: avatar
-    }) : i({
-      className: 'avatar fa fa-user'
-    }), "" + (contact.get('fn')) + " <" + (contact.get('address')) + ">"));
-  },
-  onSubmit: function() {
-    var query;
-    query = this.refs.contactInput.getDOMNode().value.trim();
-    if (query.length > 2) {
-      return ContactActionCreator.searchContactLocal(query);
-    }
-  },
-  onKeyDown: function(evt) {
-    var contact, _ref1;
-    switch (evt.key) {
-      case "Tab":
-        this.onSubmit();
-        evt.preventDefault();
-        return false;
-      case "Enter":
-        if (((_ref1 = this.state.contacts) != null ? _ref1.count() : void 0) > 0) {
-          this.props.onContact;
-          contact = this.state.contacts.slice(this.state.selected).first();
-          this.props.onContact(contact);
-        } else {
-          this.onSubmit();
-        }
-        evt.preventDefault();
-        return false;
-      case "ArrowUp":
-        return this.setState({
-          selected: this.state.selected === 0 ? this.state.contacts.count() - 1 : this.state.selected - 1
-        });
-      case "ArrowDown":
-        return this.setState({
-          selected: this.state.selected === (this.state.contacts.count() - 1) ? 0 : this.state.selected + 1
-        });
     }
   }
 });
@@ -3631,8 +3507,8 @@ module.exports = React.createClass({
       key: key,
       mailboxes: this.props.mailboxes,
       message: message,
-      nextID: this.props.nextID,
-      prevID: this.props.prevID,
+      next: this.props.next,
+      prev: this.props.prev,
       selectedAccount: this.props.selectedAccount,
       selectedMailboxID: this.props.selectedMailboxID,
       settings: this.props.settings
@@ -3712,12 +3588,11 @@ module.exports = React.createClass({
         return _results;
       } else if (this.props.conversationLength > 1) {
         return li({
-          className: 'conversation-length-msg'
-        }, a({
+          className: 'conversation-length-msg',
           onClick: this.expand
-        }, t('mail conversation length', {
+        }, a(null), t('mail conversation length', {
           smart_count: this.props.conversationLength
-        })));
+        }));
       }
     }).call(this), (function() {
       var _results;
@@ -4069,13 +3944,11 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/mails_input", function(exports, require, module) {
-var ContactActionCreator, ContactForm, ContactStore, MailsInput, MessageUtils, Modal, StoreWatchMixin, a, classer, div, i, img, input, label, li, span, ul, _ref;
+var ContactActionCreator, ContactStore, MailsInput, MessageUtils, Modal, StoreWatchMixin, a, classer, div, i, img, input, label, li, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, label = _ref.label, input = _ref.input, span = _ref.span, ul = _ref.ul, li = _ref.li, a = _ref.a, img = _ref.img, i = _ref.i;
 
 MessageUtils = require('../utils/message_utils');
-
-ContactForm = require('./contact-form');
 
 Modal = require('./modal');
 
@@ -4204,7 +4077,7 @@ module.exports = MailsInput = React.createClass({
     } else if ((char != null) && typeof char === 'object') {
       force = true;
     }
-    if (query.length > 0 || (force && !this.state.open)) {
+    if (query.length > 2 || (force && !this.state.open)) {
       ContactActionCreator.searchContactLocal(query);
       this.setState({
         open: true
@@ -4265,9 +4138,11 @@ module.exports = MailsInput = React.createClass({
   onBlur: function() {
     return setTimeout((function(_this) {
       return function() {
-        return _this.setState({
-          open: false
-        });
+        if (_this.isMounted()) {
+          return _this.setState({
+            open: false
+          });
+        }
       };
     })(this), 100);
   },
@@ -4797,7 +4672,11 @@ MessageList = React.createClass({
         var cid, id, isActive, _ref2;
         id = message.get('id');
         cid = message.get('conversationID');
-        isActive = _this.props.messageID === id;
+        if (_this.props.settings.get('displayConversation')) {
+          isActive = _this.props.conversationID === cid;
+        } else {
+          isActive = _this.props.messageID === id;
+        }
         return MessageItem({
           message: message,
           conversationLength: (_ref2 = _this.props.conversationLengths) != null ? _ref2.get(cid) : void 0,
@@ -5085,15 +4964,6 @@ MessageList = React.createClass({
         smart_count: selected.length
       }))) {
         return MessageActionCreator["delete"](selected);
-
-        /*
-        selected.forEach (id) ->
-            MessageActionCreator.delete id, (error) ->
-                if error?
-                    alertError "#{t("message action delete ko")} #{error}"
-                else
-                    window.cozyMails.messageNavigate()
-         */
       }
     }
   },
@@ -5218,13 +5088,24 @@ MessageList = React.createClass({
         mailboxID: this.props.mailboxID,
         accountID: this.props.accountID
       };
-      return AccountActionCreator.mailboxExpunge(mailbox, function(error) {
-        if (error != null) {
-          return LayoutActionCreator.alertError("" + (t("mailbox expunge ko")) + " " + error);
-        } else {
-          return LayoutActionCreator.notify(t("mailbox expunge ok"));
-        }
-      });
+      return AccountActionCreator.mailboxExpunge(mailbox, (function(_this) {
+        return function(error) {
+          var params;
+          if (error != null) {
+            if (_this.props.accountID === mailbox.accountID && _this.props.mailboxID === mailbox.mailboxID) {
+              params = _.clone(MessageStore.getParams());
+              params.accountID = _this.props.accountID;
+              params.mailboxID = _this.props.mailboxID;
+              LayoutActionCreator.showMessageList({
+                parameters: params
+              });
+            }
+            return LayoutActionCreator.alertError("" + (t("mailbox expunge ko")) + " " + error);
+          } else {
+            return LayoutActionCreator.notify(t("mailbox expunge ok"));
+          }
+        };
+      })(this));
     }
   },
   _isVisible: function(node, before) {
@@ -5292,7 +5173,7 @@ MessageItem = React.createClass({
   displayName: 'MessagesItem',
   mixins: [RouterMixin],
   render: function() {
-    var action, avatar, classes, compact, conversationID, date, flags, id, isDraft, message, tag, url, _ref2;
+    var action, avatar, classes, compact, conversationID, date, flags, isDraft, message, params, tag, url, _ref2;
     message = this.props.message;
     flags = message.get('flags');
     classes = classer({
@@ -5307,22 +5188,30 @@ MessageItem = React.createClass({
     isDraft = message.get('flags').indexOf(MessageFlags.DRAFT) !== -1;
     if (isDraft) {
       action = 'edit';
-      id = message.get('id');
+      params = {
+        messageID: message.get('id')
+      };
     } else {
       conversationID = message.get('conversationID');
       if (conversationID && this.props.settings.get('displayConversation')) {
         action = 'conversation';
-        id = message.get('id');
+        params = {
+          conversationID: conversationID,
+          messageID: message.get('id')
+        };
       } else {
         action = 'message';
-        id = message.get('id');
+        params = {
+          conversationID: conversationID,
+          messageID: message.get('id')
+        };
       }
     }
     if (!this.props.edited) {
       url = this.buildUrl({
         direction: 'second',
         action: action,
-        parameters: id
+        parameters: params
       });
       tag = a;
     } else {
@@ -5343,7 +5232,8 @@ MessageItem = React.createClass({
       className: 'wrapper',
       'data-message-id': message.get('id'),
       onClick: this.onMessageClick,
-      onDoubleClick: this.onMessageDblClick
+      onDoubleClick: this.onMessageDblClick,
+      ref: 'target'
     }, div({
       className: 'avatar-wrapper'
     }, input({
@@ -5404,14 +5294,19 @@ MessageItem = React.createClass({
     return e.stopPropagation();
   },
   onMessageClick: function(event) {
+    var href;
     if (this.props.edited) {
       this.props.onSelect(!this.props.selected);
       event.preventDefault();
       return event.stopPropagation();
     } else {
-      if (!this.props.settings.get('displayPreview')) {
+      if (!(event.target.getAttribute('type') === 'checkbox')) {
         event.preventDefault();
-        return MessageActionCreator.setCurrent(event.currentTarget.dataset.messageId);
+        MessageActionCreator.setCurrent(this.refs.target.getDOMNode().dataset.messageId);
+        if (this.props.settings.get('displayPreview')) {
+          href = '#' + this.refs.target.getDOMNode().href.split('#')[1];
+          return this.redirect(href);
+        }
       }
     }
   },
@@ -5632,8 +5527,8 @@ module.exports = React.createClass({
     key: React.PropTypes.string.isRequired,
     mailboxes: React.PropTypes.object.isRequired,
     message: React.PropTypes.object.isRequired,
-    nextID: React.PropTypes.string,
-    prevID: React.PropTypes.string,
+    next: React.PropTypes.object,
+    prev: React.PropTypes.object,
     selectedAccount: React.PropTypes.object.isRequired,
     selectedMailboxID: React.PropTypes.string.isRequired,
     settings: React.PropTypes.object.isRequired
@@ -5659,7 +5554,7 @@ module.exports = React.createClass({
     urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim;
     if (text && !html && this.state.messageDisplayHTML) {
       try {
-        html = markdown.toHTML(text);
+        html = markdown.toHTML(text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2"));
       } catch (_error) {
         e = _error;
         console.log("Error converting text message to Markdown: " + e);
@@ -5935,26 +5830,31 @@ module.exports = React.createClass({
     isSeen = prepared.flags.indexOf(FlagsConstants.SEEN) === -1;
     conversationID = this.props.message.get('conversationID');
     getParams = (function(_this) {
-      return function(id) {
-        if (conversationID && _this.props.settings.get('displayConversation')) {
+      return function(message) {
+        if (_this.props.settings.get('displayConversation')) {
           return {
             action: 'conversation',
-            id: id
+            parameters: {
+              messageID: message.get('id'),
+              conversationID: message.get('convrsationID')
+            }
           };
         } else {
           return {
             action: 'message',
-            id: id
+            parameters: {
+              messageID: message.get('id')
+            }
           };
         }
       };
     })(this);
-    if (this.props.prevID != null) {
-      params = getParams(this.props.prevID);
+    if (this.props.prev != null) {
+      params = getParams(this.props.prev);
       prev = {
         direction: 'second',
         action: params.action,
-        parameters: params.id
+        parameters: params.parameters
       };
       prevUrl = this.buildUrl(prev);
       displayPrev = (function(_this) {
@@ -5963,12 +5863,12 @@ module.exports = React.createClass({
         };
       })(this);
     }
-    if (this.props.nextID != null) {
-      params = getParams(this.props.nextID);
+    if (this.props.next != null) {
+      params = getParams(this.props.next);
       next = {
         direction: 'second',
         action: params.action,
-        parameters: params.id
+        parameters: params.parameters
       };
       nextUrl = this.buildUrl(next);
       displayNext = (function(_this) {
@@ -6107,20 +6007,32 @@ module.exports = React.createClass({
       }
     }
   },
-  displayNextMessage: function(next) {
-    if (next == null) {
-      if (this.props.nextID != null) {
-        next = this.props.nextID;
-      } else {
-        next = this.props.prevID;
-      }
+  displayNextMessage: function() {
+    var next;
+    if (this.props.next != null) {
+      next = this.props.next;
+    } else {
+      next = this.props.prev;
     }
     if (next != null) {
-      return this.redirect({
-        direction: 'second',
-        action: 'message',
-        parameters: next
-      });
+      if (this.props.settings.get('displayConversation')) {
+        return this.redirect({
+          direction: 'second',
+          action: 'conversation',
+          parameters: {
+            messageID: next.get('id'),
+            conversationID: next.get('convrsationID')
+          }
+        });
+      } else {
+        return this.redirect({
+          direction: 'second',
+          action: 'message',
+          parameters: {
+            messageID: message.get('id')
+          }
+        });
+      }
     } else {
       return this.redirect({
         direction: 'first',
@@ -6152,17 +6064,12 @@ module.exports = React.createClass({
     });
   },
   onDelete: function(args) {
-    var message, next;
+    var message;
     message = this.props.message;
-    if (this.props.nextID != null) {
-      next = this.props.nextID;
-    } else {
-      next = this.props.prevID;
-    }
     if ((!this.props.settings.get('messageConfirmDelete')) || window.confirm(t('mail confirm delete', {
       subject: message.get('subject')
     }))) {
-      this.displayNextMessage(next);
+      this.displayNextMessage();
       return MessageActionCreator["delete"](message, function(error) {
         if (error != null) {
           return alertError("" + (t("message action delete ko")) + " " + error);
@@ -6174,13 +6081,8 @@ module.exports = React.createClass({
     return LayoutActionCreator.alertWarning(t("app unimplemented"));
   },
   onMove: function(args) {
-    var conversationID, newbox, next, oldbox;
+    var conversationID, newbox, oldbox;
     newbox = args.target.dataset.value;
-    if (this.props.nextID != null) {
-      next = this.props.nextID;
-    } else {
-      next = this.props.prevID;
-    }
     if (args.target.dataset.conversation != null) {
       conversationID = this.props.message.get('conversationID');
       return ConversationActionCreator.move(conversationID, newbox, (function(_this) {
@@ -6189,7 +6091,7 @@ module.exports = React.createClass({
             return alertError("" + (t("conversation move ko")) + " " + error);
           } else {
             alertSuccess(t("conversation move ok"));
-            return _this.displayNextMessage(next);
+            return _this.displayNextMessage();
           }
         };
       })(this));
@@ -6201,7 +6103,7 @@ module.exports = React.createClass({
             return alertError("" + (t("message action move ko")) + " " + error);
           } else {
             alertSuccess(t("message action move ok"));
-            return _this.displayNextMessage(next);
+            return _this.displayNextMessage();
           }
         };
       })(this));
@@ -6268,10 +6170,10 @@ module.exports = React.createClass({
     }
   },
   onHeaders: function(event) {
-    var messageId;
+    var messageID;
     event.preventDefault();
-    messageId = event.target.dataset.messageId;
-    return document.querySelector(".conversation [data-id='" + messageId + "']").classList.toggle('with-headers');
+    messageID = event.target.dataset.messageId;
+    return document.querySelector(".conversation [data-id='" + messageID + "']").classList.toggle('with-headers');
   },
   addAddress: function(address) {
     return ContactActionCreator.createContact(address);
@@ -6565,10 +6467,14 @@ Participant = React.createClass({
       node.addEventListener('mouseover', function() {
         return delay = setTimeout(function() {
           return addTooltip();
-        }, 1000);
+        }, 5000);
       });
-      return node.addEventListener('mouseout', function() {
+      node.addEventListener('mouseout', function() {
         return clearTimeout(delay);
+      });
+      return node.addEventListener('click', function(event) {
+        event.stopPropagation();
+        return addTooltip();
       });
     }
   },
@@ -6708,7 +6614,7 @@ module.exports = React.createClass({
     }, label({
       htmlFor: 'settings-layoutStyle',
       className: classLabel
-    }, t("settings label listStyle")), div({
+    }, t("settings label layoutStyle")), div({
       className: classInput
     }, div({
       className: "dropdown"
@@ -7763,10 +7669,6 @@ module.exports = Dispatcher = Dispatcher = (function() {
   Dispatcher.prototype.dispatch = function(payload) {
     var id, message, _results;
     message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + 'of a dispatch.';
-    if (this._isDispatching) {
-      debugger;
-      console.log("pending", JSON.stringify(this._pendingPayload), "new", JSON.stringify(payload));
-    }
     invariant(!this._isDispatching, message);
     this._startDispatching(payload);
     try {
@@ -8459,8 +8361,8 @@ module.exports = {
   "account actions": "Actions",
   "account danger zone": "Danger Zone",
   "account no special mailboxes": "Please configure special folders first",
-  "account smtp hide advanced": "Show advanced parameters",
-  "account smtp show advanced": "Hide advanced parameters",
+  "account smtp hide advanced": "Hide advanced parameters",
+  "account smtp show advanced": "Show advanced parameters",
   "mailbox create ok": "Folder created",
   "mailbox create ko": "Error creating folder",
   "mailbox update ok": "Folder updated",
@@ -8837,10 +8739,10 @@ module.exports = {
   "gmail security tile": "Sécurité Gmail",
   "gmail security body": "Gmail considère les connexions par nom d'utilisateur et mot de passe\ncomme non sécurisées. Veuillez cliquer sur le lien ci-dessous, assurez-vous\nd'être connecté avec le compte %{login} et activez l'accès\npour les applications moins sécurisées.",
   "gmail security link": "Activer l'accès pour les applications moins sécurisées",
-  'plugin name Gallery': 'Gallerie de pièces jointes',
+  'plugin name Gallery': 'Galerie de pièces jointes',
   'plugin name medium-editor': 'Éditeur Medium',
   'plugin name MiniSlate': 'Éditeur MiniSlate',
-  'plugin name Sample JS': 'Example',
+  'plugin name Sample JS': 'Exemple',
   'plugin name Keyboard shortcuts': 'Raccourcis clavier',
   'plugin name VCard': 'Affichage de VCard'
 };
@@ -8944,7 +8846,7 @@ module.exports = Router = (function(_super) {
       fluxAction: 'showMessage'
     },
     'conversation': {
-      pattern: 'conversation/:messageID',
+      pattern: 'conversation/:conversationID/:messageID/',
       fluxAction: 'showConversation'
     },
     'compose': {
@@ -9629,7 +9531,7 @@ MessageStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var computeMailboxDiff, onReceiveRawMessage, reverseDateSort, __getSortFunction, __sortFunction, _conversationLengths, _conversationMemoize, _conversationMemoizeId, _currentID, _currentMessages, _fetching, _filter, _messages, _params, _prevAction, _sortField, _sortOrder;
+  var computeMailboxDiff, onReceiveRawMessage, reverseDateSort, __getSortFunction, __sortFunction, _conversationLengths, _conversationMemoize, _conversationMemoizeID, _currentID, _currentMessages, _fetching, _filter, _messages, _params, _prevAction, _sortField, _sortOrder;
 
   __extends(MessageStore, _super);
 
@@ -9686,7 +9588,7 @@ MessageStore = (function(_super) {
 
   _conversationMemoize = null;
 
-  _conversationMemoizeId = null;
+  _conversationMemoizeID = null;
 
   _currentID = null;
 
@@ -9870,8 +9772,8 @@ MessageStore = (function(_super) {
     handle(ActionTypes.MESSAGE_ACTION, function(action) {
       return _prevAction = action;
     });
-    handle(ActionTypes.MESSAGE_CURRENT, function(messageID) {
-      this.setCurrentID(messageID);
+    handle(ActionTypes.MESSAGE_CURRENT, function(value) {
+      this.setCurrentID(value.messageID, value.conv);
       return this.emit('change');
     });
     handle(ActionTypes.SELECT_ACCOUNT, function(value) {
@@ -9949,42 +9851,95 @@ MessageStore = (function(_super) {
     return _currentMessages;
   };
 
-  MessageStore.prototype.getCurrentID = function(messageID) {
+  MessageStore.prototype.getCurrentID = function() {
     return _currentID;
   };
 
-  MessageStore.prototype.setCurrentID = function(messageID) {
+  MessageStore.prototype.setCurrentID = function(messageID, conv) {
+    if (conv != null) {
+      _conversationMemoizeID = this.getByID(messageID).get('conversationID');
+    }
     return _currentID = messageID;
   };
 
-  MessageStore.prototype.getPreviousMessage = function() {
-    var idx, keys;
-    keys = Object.keys(_currentMessages.toJS());
-    idx = keys.indexOf(_currentID);
-    if (idx === -1) {
-      return null;
+  MessageStore.prototype.getCurrentConversationID = function() {
+    return _conversationMemoizeID;
+  };
+
+  MessageStore.prototype.getPreviousMessage = function(isConv) {
+    var convID, idx, keys, prev, _ref1;
+    if ((isConv != null) && isConv) {
+      if (_conversationMemoize == null) {
+        return null;
+      }
+      idx = _conversationMemoize.findIndex(function(message) {
+        return _currentID === message.get('id');
+      });
+      if (idx === _conversationMemoize.length - 1) {
+        keys = Object.keys(_currentMessages.toJS());
+        idx = keys.indexOf(_conversationMemoize.last().get('id'));
+        if (idx < 1) {
+          return null;
+        } else {
+          convID = (_ref1 = _currentMessages.get(keys[idx - 1])) != null ? _ref1.get('conversationID') : void 0;
+          if (convID == null) {
+            return null;
+          }
+          prev = _messages.filter(function(message) {
+            return message.get('conversationID') === convID;
+          }).sort(reverseDateSort).first();
+          return prev;
+        }
+      } else {
+        return _conversationMemoize.get(idx + 1);
+      }
     } else {
-      return keys[idx - 1];
+      keys = Object.keys(_currentMessages.toJS());
+      idx = keys.indexOf(_currentID);
+      if (idx === -1) {
+        return null;
+      } else {
+        return _currentMessages.get(keys[idx - 1]);
+      }
     }
   };
 
-  MessageStore.prototype.getNextMessage = function() {
+  MessageStore.prototype.getNextMessage = function(isConv) {
     var idx, keys;
-    keys = Object.keys(_currentMessages.toJS());
-    idx = keys.indexOf(_currentID);
-    if (idx === -1 || idx === (keys.length - 1)) {
-      return null;
+    if ((isConv != null) && isConv) {
+      if (_conversationMemoize == null) {
+        return null;
+      }
+      idx = _conversationMemoize.findIndex(function(message) {
+        return _currentID === message.get('id');
+      });
+      if (idx === 0) {
+        keys = Object.keys(_currentMessages.toJS());
+        idx = keys.indexOf(_conversationMemoize.last().get('id'));
+        if (idx === -1 || idx === (keys.length - 1)) {
+          return null;
+        } else {
+          return _currentMessages.get(keys[idx + 1]);
+        }
+      } else {
+        return _conversationMemoize.get(idx - 1);
+      }
     } else {
-      return keys[idx + 1];
+      keys = Object.keys(_currentMessages.toJS());
+      idx = keys.indexOf(_currentID);
+      if (idx === -1 || idx === (keys.length - 1)) {
+        return null;
+      } else {
+        return _currentMessages.get(keys[idx + 1]);
+      }
     }
   };
 
   MessageStore.prototype.getConversation = function(conversationID) {
-    if (conversationID !== _conversationMemoizeId) {
-      _conversationMemoize = _messages.filter(function(message) {
-        return message.get('conversationID') === conversationID;
-      }).sort(reverseDateSort).toVector();
-    }
+    _conversationMemoize = _messages.filter(function(message) {
+      return message.get('conversationID') === conversationID;
+    }).sort(reverseDateSort).toVector();
+    _conversationMemoizeID = conversationID;
     return _conversationMemoize;
   };
 
@@ -10324,47 +10279,50 @@ module.exports = {
       value: settings
     });
   },
-  messageNavigate: function(direction, nextID) {
-    var MessageActionCreator;
+  messageNavigate: function(direction) {
+    var MessageActionCreator, conv, next;
     if (!onMessageList()) {
       return;
     }
-    if (nextID == null) {
-      if (direction === 'prev') {
-        nextID = MessageStore.getPreviousMessage();
-      } else {
-        nextID = MessageStore.getNextMessage();
-      }
+    conv = SettingsStore.get('displayConversation') && SettingsStore.get('displayPreview');
+    if (direction === 'prev') {
+      next = MessageStore.getPreviousMessage(conv);
+    } else {
+      next = MessageStore.getNextMessage(conv);
     }
-    if (nextID == null) {
+    if (next == null) {
       return;
     }
     MessageActionCreator = require('../actions/message_action_creator');
-    MessageActionCreator.setCurrent(nextID);
+    MessageActionCreator.setCurrent(next.get('id'), true);
     if (SettingsStore.get('displayPreview')) {
-      return this.messageDisplay(nextID);
+      return this.messageDisplay(next);
     }
   },
-  messageDisplay: function(messageID) {
-    var action, conversationID, message, url;
-    if (!messageID) {
-      messageID = MessageStore.getCurrentID();
+  messageDisplay: function(message) {
+    var action, params, url;
+    if (message == null) {
+      message = MessageStore.getById(MessageStore.getCurrentID());
     }
-    action = 'message';
+    if (message == null) {
+      return;
+    }
     if (SettingsStore.get('displayConversation')) {
-      message = MessageStore.getByID(messageID);
-      if (message == null) {
-        return;
-      }
-      conversationID = message.get('conversationID');
-      if (conversationID) {
-        action = 'conversation';
-      }
+      action = 'conversation';
+      params = {
+        messageID: message.get('id'),
+        conversationID: message.get('conversationID')
+      };
+    } else {
+      action = 'message';
+      params = {
+        messageID: message.get('id')
+      };
     }
     url = window.router.buildUrl({
       direction: 'second',
       action: action,
-      parameters: messageID
+      parameters: params
     });
     return window.router.navigate(url, {
       trigger: true
@@ -10383,7 +10341,7 @@ module.exports = {
     });
   },
   messageDeleteCurrent: function() {
-    var MessageActionCreator, alertError, message, nextID;
+    var MessageActionCreator, alertError, message;
     if (!onMessageList()) {
       return;
     }
@@ -10396,8 +10354,7 @@ module.exports = {
     if ((!SettingsStore.get('messageConfirmDelete')) || window.confirm(t('mail confirm delete', {
       subject: message.get('subject')
     }))) {
-      nextID = MessageStore.getNextMessage();
-      this.messageNavigate(null, nextID);
+      this.messageNavigate();
       return MessageActionCreator["delete"](message, function(error) {
         if (error != null) {
           return alertError("" + (t("message action delete ko")) + " " + error);
@@ -11255,35 +11212,35 @@ module.exports = {
       }
     });
   },
-  messagePatch: function(messageId, patch, callback) {
-    return request.patch("message/" + messageId, patch).set('Accept', 'application/json').end(function(res) {
+  messagePatch: function(messageID, patch, callback) {
+    return request.patch("message/" + messageID, patch).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);
       } else {
-        console.log("Error in messagePatch", messageId, (_ref = res.body) != null ? _ref.error : void 0);
+        console.log("Error in messagePatch", messageID, (_ref = res.body) != null ? _ref.error : void 0);
         return callback(t('app error'));
       }
     });
   },
-  conversationDelete: function(conversationId, callback) {
-    return request.del("conversation/" + conversationId).set('Accept', 'application/json').end(function(res) {
+  conversationDelete: function(conversationID, callback) {
+    return request.del("conversation/" + conversationID).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);
       } else {
-        console.log("Error in conversationDelete", conversationId, (_ref = res.body) != null ? _ref.error : void 0);
+        console.log("Error in conversationDelete", conversationID, (_ref = res.body) != null ? _ref.error : void 0);
         return callback(t('app error'));
       }
     });
   },
-  conversationPatch: function(conversationId, patch, callback) {
-    return request.patch("conversation/" + conversationId, patch).set('Accept', 'application/json').end(function(res) {
+  conversationPatch: function(conversationID, patch, callback) {
+    return request.patch("conversation/" + conversationID, patch).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);
       } else {
-        console.log("Error in conversationPatch", conversationId, (_ref = res.body) != null ? _ref.error : void 0);
+        console.log("Error in conversationPatch", conversationID, (_ref = res.body) != null ? _ref.error : void 0);
         return callback(t('app error'));
       }
     });
