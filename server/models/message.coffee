@@ -79,6 +79,19 @@ Message.getResultsAndCount = (mailboxID, params, callback) ->
                 count: count
                 conversationLengths: lengths
 
+
+Message.getUnreadCountByAccount = (accountID, callback) ->
+    Message.rawRequest 'accountUnread',
+        startkey: [accountID]
+        endkey: [accountID, {}]
+        reduce: true
+    , (err, rows) ->
+        return callback err if err
+        counts = {}
+        counts[row.key[1]] = row.value for row in rows
+        callback null, counts
+
+
 Message.getResults = (mailboxID, params, callback) ->
     {before, after, descending, sortField, flag} = params
 

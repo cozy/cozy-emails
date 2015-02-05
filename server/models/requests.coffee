@@ -30,6 +30,14 @@ module.exports =
 
     message:
 
+        accountUnread:
+            reduce: '_count'
+            map: (doc) ->
+                if ['\\Seen'] not in doc.flags
+                    emit [doc.accountID, '!\\Seen', null]
+                if ['\\Recent'] in doc.flags
+                    emit [doc.accountID, '\\Recent', null]
+
         byMailboxRequest:
             reduce: '_count'
             map: (doc) ->

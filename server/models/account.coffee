@@ -192,15 +192,21 @@ Account::toClientObject = (callback) ->
             row.doc.id ?= row.id
             _.pick row.doc, 'id', 'label', 'attribs', 'tree'
 
-        Mailbox.getCounts null, (err, counts) ->
+        Message.getUnreadCountByAccount rawObject.id, (err, counts) ->
             return callback err if err
-            for box in rawObject.mailboxes
-                count = counts[box.id] or {total: 0, unread: 0, recent: 0}
-                box.nbTotal  = count.total
-                box.nbUnread = count.unread
-                box.nbRecent = count.recent
+            rawObject.nbUnread = counts[!'\\Seen']
+            rawObject.nbRecent = counts['\\Recent']
 
-            callback null, rawObject
+            Mailbox.getCounts null, (err, counts) ->
+                return callback err if err
+                for box in rawObject.mailboxes
+                    count = counts[box.id]
+                    count ?= {total: 0, unread: 0, recent: 0}
+                    box.nbTotal  = count.total
+                    box.nbUnread = count.unread
+                    box.nbRecent = count.recent
+
+                callback null, rawObject
 
 Account.clientList = (callback) ->
     Account.request 'all', (err, accounts) ->
