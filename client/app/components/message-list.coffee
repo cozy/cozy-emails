@@ -460,7 +460,8 @@ MessageItem = React.createClass
 
         if isDraft
             action = 'edit'
-            id     = message.get 'id'
+            params =
+                messageID: message.get 'id'
         else
             conversationID = message.get 'conversationID'
             if conversationID and @props.settings.get('displayConversation')
