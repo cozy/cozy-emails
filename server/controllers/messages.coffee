@@ -368,6 +368,7 @@ module.exports.fetchConversation = (req, res, next) ->
         return next err if err
 
         req.conversation = messages
+        log.debug "fetchConversation", messages.length
         next()
 
 module.exports.conversationGet = (req, res, next) ->
