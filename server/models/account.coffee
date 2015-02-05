@@ -85,7 +85,7 @@ Account.refreshAccounts = (accounts, limitByBox, onlyFavorites, callback) ->
             if err
                 log.error "CANT REFRESH ACCOUNT", account.id, err
             # refresh all accounts even if one fails
-            else cb null
+            cb null
     , callback
 
 
