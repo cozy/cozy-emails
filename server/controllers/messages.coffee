@@ -315,7 +315,6 @@ module.exports.send = (req, res, next) ->
         delete message.attachments_backup
         delete message.content
         uidInDest = 0 if account.isTest()
-        console.log destination.id, uidInDest
         message.mailboxIDs = {}
         message.mailboxIDs[destination.id] = uidInDest
         message.date = new Date().toISOString()
