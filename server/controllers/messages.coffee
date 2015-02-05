@@ -290,10 +290,10 @@ module.exports.send = (req, res, next) ->
     # Add the message to draft or sent folder (imap)
     if message.isDraft
         steps.push (cb) ->
+            destination = draftBox
             log.debug "send#add_to_draft"
             account.imap_createMail draftBox, message, (err, uid) ->
                 return cb err if err
-                destination = draftBox
                 uidInDest = uid
                 cb null
 
@@ -301,10 +301,10 @@ module.exports.send = (req, res, next) ->
     else
         log.debug "send#add_to_sent"
         steps.push (cb) ->
+            destination = sentBox
             # check if message already created by IMAP/SMTP (gmail)
             sentBox.imap_createMailNoDuplicate account, message, (err, uid) ->
                 return cb err if err
-                destination = sentBox
                 uidInDest = uid
                 cb null
 
@@ -314,6 +314,8 @@ module.exports.send = (req, res, next) ->
         message.text = message.content
         delete message.attachments_backup
         delete message.content
+        uidInDest = 0 if account.isTest()
+        console.log destination.id, uidInDest
         message.mailboxIDs = {}
         message.mailboxIDs[destination.id] = uidInDest
         message.date = new Date().toISOString()
