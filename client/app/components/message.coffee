@@ -150,6 +150,10 @@ module.exports = React.createClass
 
         for link in doc.querySelectorAll 'a[href]'
             link.target = '_blank'
+            # convert relative to absolute links in message content
+            href = link.getAttribute 'href'
+            if href isnt '' and not /:\/\//.test href
+                link.setAttribute 'href', 'http://' + href
 
         if doc?
             @_htmlContent = doc.documentElement.innerHTML
