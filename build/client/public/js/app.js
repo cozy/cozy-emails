@@ -2279,7 +2279,8 @@ module.exports = React.createClass({
       className: 'compose-from dropdown-toggle',
       'data-toggle': 'dropdown'
     }, span({
-      ref: 'account'
+      ref: 'account',
+      'data-value': value
     }, label), span({
       className: 'caret'
     })), ul({
@@ -2895,10 +2896,10 @@ module.exports = Compose = React.createClass({
       className: 'close-email pull-right clickable'
     }, i({
       className: 'fa fa-compress'
-    })), h3(null, t('compose')), form({
+    })), h3(null, this.state.subject || t('compose')), form({
       className: 'form-compose'
     }, div({
-      className: 'form-group'
+      className: 'form-group account'
     }, label({
       htmlFor: 'compose-from',
       className: classLabel
@@ -4960,10 +4961,31 @@ MessageList = React.createClass({
     if (selected.length === 0) {
       return alertError(t('list mass no message'));
     } else {
-      if (window.confirm(t('list delete confirm', {
-        smart_count: selected.length
-      }))) {
-        return MessageActionCreator["delete"](selected);
+      if (this.props.settings.get('displayConversation')) {
+        if (window.confirm(t('list delete conv confirm', {
+          smart_count: selected.length
+        }))) {
+          return selected.forEach((function(_this) {
+            return function(id) {
+              var conversationID, message;
+              message = _this.props.messages.get(id);
+              conversationID = message.get('conversationID');
+              return ConversationActionCreator["delete"](conversationID, function(error) {
+                if (error != null) {
+                  return alertError("" + (t("conversation move ko")) + " " + error);
+                } else {
+                  return window.cozyMails.messageNavigate();
+                }
+              });
+            };
+          })(this));
+        }
+      } else {
+        if (window.confirm(t('list delete confirm', {
+          smart_count: selected.length
+        }))) {
+          return MessageActionCreator["delete"](selected);
+        }
       }
     }
   },
@@ -4974,7 +4996,7 @@ MessageList = React.createClass({
       return alertError(t('list mass no message'));
     } else {
       newbox = args.target.dataset.value;
-      if (args.target.dataset.conversation != null) {
+      if ((args.target.dataset.conversation != null) || this.props.settings.get('displayConversation')) {
         return selected.forEach((function(_this) {
           return function(id) {
             var conversationID, message;
@@ -5615,7 +5637,7 @@ module.exports = React.createClass({
     }
   },
   prepareHTML: function(prepared) {
-    var doc, hideImage, html, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
+    var doc, hideImage, href, html, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
     messageDisplayHTML = true;
     parser = new DOMParser();
     html = "<html><head>\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + prepared.html + "</body></html>";
@@ -5644,6 +5666,10 @@ module.exports = React.createClass({
     for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
       link = _ref2[_j];
       link.target = '_blank';
+      href = link.getAttribute('href');
+      if (href !== '' && !/:\/\//.test(href)) {
+        link.setAttribute('href', 'http://' + href);
+      }
     }
     if (doc != null) {
       this._htmlContent = doc.documentElement.innerHTML;
@@ -8276,6 +8302,7 @@ module.exports = {
   "list end": "This is the end of the road",
   "list mass no message": "No message selected",
   "list delete confirm": "Do you really want to delete this message ?\nDo you really want to delete %{smart_count} messages?",
+  "list delete conv confirm": "Do you really want to delete this conversation ?\nDo you really want to delete %{smart_count} conversation?",
   "mail receivers": "To: ",
   "mail receivers cc": "Cc: ",
   "mail action reply": "Reply",
@@ -8547,6 +8574,7 @@ module.exports = {
   "list end": "FIN",
   "list mass no message": "Aucun message sélectionné",
   "list delete confirm": "Voulez-vous vraiment supprimer ce message ?||||\nVoulez-vous vraiment supprimer %{smart_count} messages ?",
+  "list delete conv confirm": "Voulez-vous vraiment supprimer cette conversation ?||||\nVoulez-vous vraiment supprimer %{smart_count} conversations ?",
   "mail receivers": "À ",
   "mail receivers cc": "Copie ",
   "mail action reply": "Répondre",
@@ -10561,6 +10589,7 @@ module.exports = MessageUtils = {
         message.bcc = [];
         message.subject = '';
         message.text = t('compose default');
+        message.html = t('compose default');
     }
     notMe = function(dest) {
       return dest.address !== myAddress;

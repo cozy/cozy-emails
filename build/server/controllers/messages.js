@@ -370,9 +370,8 @@ module.exports.send = function(req, res, next) {
     delete message.attachments_backup;
     delete message.content;
     if (account.isTest()) {
-      uidInDest = 0;
+      uidInDest = Date.now();
     }
-    console.log(destination.id, uidInDest);
     message.mailboxIDs = {};
     message.mailboxIDs[destination.id] = uidInDest;
     message.date = new Date().toISOString();

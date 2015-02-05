@@ -1664,7 +1664,15 @@ input {
 }
 @font-face {
   font-family: main;
-  src: url("/fonts/signika-light.ttf");
+  font-style: normal;
+  font-weight: normal;
+  src: url("../fonts/signika-regular.ttf");
+}
+@font-face {
+  font-family: main;
+  font-style: normal;
+  font-weight: bold;
+  src: url("../fonts/signika-bold.ttf");
 }
 a {
   color: #34a6ff;
