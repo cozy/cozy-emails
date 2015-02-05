@@ -294,8 +294,19 @@ MessageList = React.createClass
         if selected.length is 0
             alertError t 'list mass no message'
         else
-            if window.confirm(t 'list delete confirm', smart_count: selected.length)
-                MessageActionCreator.delete selected
+            if @props.settings.get 'displayConversation'
+                if window.confirm(t 'list delete conv confirm', smart_count: selected.length)
+                    selected.forEach (id) =>
+                        message = @props.messages.get id
+                        conversationID = message.get 'conversationID'
+                        ConversationActionCreator.delete conversationID, (error) ->
+                            if error?
+                                alertError "#{t("conversation move ko")} #{error}"
+                            else
+                                window.cozyMails.messageNavigate()
+            else
+                if window.confirm(t 'list delete confirm', smart_count: selected.length)
+                    MessageActionCreator.delete selected
 
     onMove: (args) ->
         selected = Object.keys @state.selected
@@ -303,7 +314,8 @@ MessageList = React.createClass
             alertError t 'list mass no message'
         else
             newbox = args.target.dataset.value
-            if args.target.dataset.conversation?
+            if args.target.dataset.conversation? or
+               @props.settings.get 'displayConversation'
                 selected.forEach (id) =>
                     message = @props.messages.get id
                     conversationID = message.get('conversationID')
