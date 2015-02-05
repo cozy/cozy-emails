@@ -548,9 +548,10 @@ ComposeEditor = React.createClass
                     header.on 'click', ->
                         jQuery('.rt-editor').toggleClass('folded')
                 catch e
-                    console.log e
-            jQuery('.rt-editor .originalToggle').on 'click', ->
-                jQuery('.rt-editor').toggleClass('folded')
+                    console.error e
+            else
+                jQuery('.rt-editor .originalToggle').on 'click', ->
+                    jQuery('.rt-editor').toggleClass('folded')
 
         else
             # Text message
