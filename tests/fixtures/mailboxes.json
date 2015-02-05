@@ -140,7 +140,7 @@
         "docType": "Mailbox",
         "accountID": "dovecot-ID",
         "attribs": [
-            "\\Draft"
+            "\\Drafts"
         ],
         "children": [],
         "delimiter": ".",

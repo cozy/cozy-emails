@@ -70,9 +70,9 @@ module.exports = Compose = React.createClass
                 a onClick: toggleFullscreen, className: 'close-email pull-right clickable',
                     i className:'fa fa-compress'
             h3 null,
-                t 'compose'
+                @state.subject or t 'compose'
             form className: 'form-compose',
-                div className: 'form-group',
+                div className: 'form-group account',
                     label
                         htmlFor: 'compose-from',
                         className: classLabel,
