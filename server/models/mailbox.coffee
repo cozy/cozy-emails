@@ -29,7 +29,7 @@ Mailbox.RFC6154 =
     sentMailbox:    '\\Sent'
     trashMailbox:   '\\Trash'
     allMailbox:     '\\All'
-    spamMailbox:    '\\Junk'
+    junkMailbox:    '\\Junk'
     flaggedMailbox: '\\Flagged'
 
 Mailbox::isInbox = -> @path is 'INBOX'
@@ -95,6 +95,22 @@ Mailbox.getBoxes = (accountID, callback) ->
             new Mailbox row.doc
 
         callback null, rows
+
+# Public: find selectable mailbox for an account ID
+# as an id indexed object with only path attributes
+# @TODO : optimize this with a map/reduce request
+#
+# accountID - id of the account
+#
+# Returns  [{Mailbox}]
+Mailbox.getBoxesIndexedByID = (accountID, callback) ->
+    Mailbox.getBoxes accountID, (err, boxes) =>
+        return callback err if err
+        boxIndex = {}
+        boxIndex[box.id] = path: box.path for box in boxes
+        callback null, boxIndex
+
+
 
 # Public: get this mailbox's children mailboxes
 #

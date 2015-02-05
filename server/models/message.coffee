@@ -300,7 +300,6 @@ Message.safeDestroyByAccountID = (accountID, callback, retries = 2) ->
 # callback - Function(err)
 #
 # Returns void
-
 Message.safeRemoveAllFromBox = (mailboxID, callback, retries = 2) ->
     log.info "removing all messages from mailbox #{mailboxID}"
     Message.rawRequest 'byMailboxRequest',
@@ -467,15 +466,11 @@ Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, \
 
     oldflags = @flags
 
-    Mailbox.getBoxes @accountID, (err, boxes) =>
+    Mailbox.getBoxesIndexedByID @accountID, (err, boxIndex) =>
 
         return callback err if err
-
-
-        boxIndex = {}
-        for box in boxes
-            uid = @mailboxIDs[box.id]
-            boxIndex[box.id] = path: box.path, uid: uid
+        for boxID, box of boxIndex
+            box.uid = @mailboxIDs[boxID]
 
         # ERROR CASES
         for boxid in boxOps.addTo when not boxIndex[boxid]
@@ -488,24 +483,40 @@ Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, \
 
         @doASAP (imap, releaseImap) ->
 
+            permFlags = null
+
             async.series [
 
                 # step 1 - open one box at random
-                (cb) -> imap.openBox boxIndex[firstboxid].path, cb
-                # step 2a - remove flags
                 (cb) ->
-                    if flagsOps.remove.length
-                        log.debug "REMOVING FLAGS", flagsOps.remove
-                        imap.delFlags firstuid, flagsOps.remove, cb
-                    else
+                    imap.openBox boxIndex[firstboxid].path, (err, imapBox) ->
+                        return cb err if err
+                        permFlags = imapBox.permFlags
+                        log.debug "SUPPORTED FLAGS", permFlags
                         cb null
-                # step 2b - add flags
+
+                # step 2a - set flags
                 (cb) ->
-                    if flagsOps.add.length
-                        log.debug "ADDING FLAGS", flagsOps.add
-                        imap.addFlags firstuid, flagsOps.add, cb
+                    flags = _.intersection newflags, permFlags
+                    if flags.length is 0
+                        oldpflags = _.intersection oldflags, permFlags
+                        if oldpflags.length isnt 0
+                            imap.delFlags firstuid, oldpflags, cb
+                        else cb null
                     else
-                        cb null
+                        imap.setFlags firstuid, flags, cb
+
+                # step 2b - set keywords
+                (cb) ->
+                    keywords = _.difference newflags, permFlags
+                    if keywords.length is 0
+                        oldkeywords = _.difference oldflags, permFlags
+                        if oldkeywords.length isnt 0
+                            imap.delKeywords firstuid, oldkeywords, cb
+                        else cb null
+                    else
+                        imap.setKeywords firstuid, keywords, cb
+
                 # step 3 - copy the message to all addTo
                 (cb) ->
                     paths = boxOps.addTo.map (destID) ->
@@ -519,10 +530,10 @@ Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, \
                         cb null
                 # step 4 - remove the message from all removeFrom
                 (cb) ->
-                    async.eachSeries boxOps.removeFrom, (boxid, cb2) ->
-                        {path, uid} = boxIndex[boxid]
-                        imap.deleteMessageInBox path, uid, cb2
-                    , cb
+                    #paths = [{path:xxx, uid:xxx},{path:xxx, uid:xxx}]
+                    paths = boxOps.removeFrom.map (boxid) ->
+                        boxIndex[boxid]
+                    imap.multiremove paths, cb
 
             ], releaseImap
 
