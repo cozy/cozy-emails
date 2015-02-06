@@ -60,7 +60,11 @@ module.exports =
         AppDispatcher = require '../app_dispatcher'
         {ActionTypes} = require '../constants/app_constants'
         settings = SettingsStore.get().toJS()
-        settings[key] = value
+        if typeof key is 'object'
+            for own k, v of key
+                settings[key] = value
+        else
+            settings[key] = value
         AppDispatcher.handleViewAction
             type: ActionTypes.SETTINGS_UPDATED
             value: settings

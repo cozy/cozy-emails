@@ -505,12 +505,12 @@ AccountConfigMain = React.createClass
             div className: '',
                 div className: 'col-sm-offset-4',
                     button
-                        className: 'btn btn-cozy',
+                        className: 'btn btn-cozy action-save',
                         onClick: @props.onSubmit,
                         buttonLabel
                     if @state.id?
                         button
-                            className: 'btn btn-cozy-non-default',
+                            className: 'btn btn-cozy-non-default action-check',
                             onClick: @onCheck,
                             t 'account check'
                 if @state.id?
