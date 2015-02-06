@@ -714,6 +714,26 @@ Message::toClientObject = ->
 
     return raw
 
+Message::moveToTrash = (account, callback) ->
+    trashBoxID = account.trashMailbox
+    mailboxes = Object.keys(@mailboxIDs)
+
+    if trashBoxID in mailboxes
+        # message is already in trash
+        # @TODO : expunge ?
+        callback null
+
+    else
+        # make a patch that remove from all boxes and add to trash
+        patch = for boxid in mailboxes
+            op: 'remove'
+            path: "/mailboxIDs/#{boxid}"
+        patch.push
+            op: 'add'
+            path: "/mailboxIDs/#{trashBoxID}"
+            value: -1
+
+        @applyPatchOperations patch, callback
 
 
 Message::doASAP = (operation, callback) ->
