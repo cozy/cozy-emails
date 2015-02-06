@@ -77,11 +77,11 @@ module.exports =
       "list end"                  : "This is the end of the road"
       "list mass no message"      : "No message selected"
       "list delete confirm"       : """
-                                    Do you really want to delete this message ?
+                                    Do you really want to delete this message ? ||||
                                     Do you really want to delete %{smart_count} messages?
                                     """
       "list delete conv confirm"  : """
-                                    Do you really want to delete this conversation ?
+                                    Do you really want to delete this conversation ? ||||
                                     Do you really want to delete %{smart_count} conversation?
                                     """
 
