@@ -741,40 +741,40 @@ module.exports = {
   "delete": function(message, callback) {
     var LayoutActionCreator, doDelete, mass;
     LayoutActionCreator = require('./layout_action_creator');
-    doDelete = function(message) {
-      var account, id, msg, observer, patches, trash;
-      if (typeof message === "string") {
-        message = MessageStore.getByID(message);
-      }
-      account = AccountStore.getByID(message.get('accountID'));
-      if (account == null) {
-        console.log("No account with id " + (message.get('accountID')) + " for message " + (message.get('id')));
-        LayoutActionCreator.alertError(t('app error'));
-        return;
-      }
-      trash = account.get('trashMailbox');
-      msg = message.toJSON();
-      if ((trash == null) || trash === '') {
-        return LayoutActionCreator.alertError(t('message delete no trash'));
-      } else if (msg.mailboxIDs[trash] != null) {
-        return LayoutActionCreator.alertError(t('message delete already'));
-      } else {
-        AppDispatcher.handleViewAction({
-          type: ActionTypes.MESSAGE_ACTION,
-          value: {
-            id: message.get('id'),
-            from: Object.keys(msg.mailboxIDs),
-            to: trash
-          }
-        });
-        observer = jsonpatch.observe(msg);
-        for (id in msg.mailboxIDs) {
-          delete msg.mailboxIDs[id];
+    doDelete = (function(_this) {
+      return function(message) {
+        var account, id, msg, observer, patches, trash;
+        if (typeof message === "string") {
+          message = MessageStore.getByID(message);
         }
-        msg.mailboxIDs[trash] = -1;
-        patches = jsonpatch.generate(observer);
-        return XHRUtils.messagePatch(message.get('id'), patches, (function(_this) {
-          return function(err, message) {
+        account = AccountStore.getByID(message.get('accountID'));
+        if (account == null) {
+          console.log("No account with id " + (message.get('accountID')) + " for message " + (message.get('id')));
+          LayoutActionCreator.alertError(t('app error'));
+          return;
+        }
+        trash = account.get('trashMailbox');
+        msg = message.toJSON();
+        if ((trash == null) || trash === '') {
+          return LayoutActionCreator.alertError(t('message delete no trash'));
+        } else if (msg.mailboxIDs[trash] != null) {
+          return LayoutActionCreator.alertError(t('message delete already'));
+        } else {
+          AppDispatcher.handleViewAction({
+            type: ActionTypes.MESSAGE_ACTION,
+            value: {
+              id: message.get('id'),
+              from: Object.keys(msg.mailboxIDs),
+              to: trash
+            }
+          });
+          observer = jsonpatch.observe(msg);
+          for (id in msg.mailboxIDs) {
+            delete msg.mailboxIDs[id];
+          }
+          msg.mailboxIDs[trash] = -1;
+          patches = jsonpatch.generate(observer);
+          return XHRUtils.messagePatch(message.get('id'), patches, function(err, message) {
             var options;
             if (err == null) {
               AppDispatcher.handleViewAction({
@@ -803,10 +803,10 @@ module.exports = {
                 return callback(err);
               }
             }
-          };
-        })(this));
-      }
-    };
+          });
+        }
+      };
+    })(this);
     if (Array.isArray(message)) {
       mass = true;
       message.forEach(doDelete);
@@ -860,11 +860,15 @@ module.exports = {
     action = MessageStore.getPrevAction();
     if (action != null) {
       message = MessageStore.getByID(action.id);
-      return this.move(message, action.to, action.from, function(err) {
-        if (err == null) {
-          return LayoutActionCreator.notify(t('message undelete ok'));
-        }
-      });
+      return action.from.forEach((function(_this) {
+        return function(from) {
+          return _this.move(message, action.to, from, function(err) {
+            if (err == null) {
+              return LayoutActionCreator.notify(t('message undelete ok'));
+            }
+          });
+        };
+      })(this));
     } else {
       return LayoutActionCreator.alertError(t('message undelete error'));
     }
@@ -1604,10 +1608,10 @@ AccountConfigMain = React.createClass({
     }, div({
       className: 'col-sm-offset-4'
     }, button({
-      className: 'btn btn-cozy',
+      className: 'btn btn-cozy action-save',
       onClick: this.props.onSubmit
     }, buttonLabel), this.state.id != null ? button({
-      className: 'btn btn-cozy-non-default',
+      className: 'btn btn-cozy-non-default action-check',
       onClick: this.onCheck
     }, t('account check')) : void 0), this.state.id != null ? fieldset(null, legend(null, t('account danger zone')), div({
       className: 'col-sm-offset-4'
@@ -4962,7 +4966,7 @@ MessageList = React.createClass({
       return alertError(t('list mass no message'));
     } else {
       if (this.props.settings.get('displayConversation')) {
-        if (window.confirm(t('list delete conv confirm', {
+        if ((!this.props.settings.get('messageConfirmDelete')) || window.confirm(t('list delete conv confirm', {
           smart_count: selected.length
         }))) {
           return selected.forEach((function(_this) {
@@ -4981,7 +4985,7 @@ MessageList = React.createClass({
           })(this));
         }
       } else {
-        if (window.confirm(t('list delete confirm', {
+        if ((!this.props.settings.get('messageConfirmDelete')) || window.confirm(t('list delete confirm', {
           smart_count: selected.length
         }))) {
           return MessageActionCreator["delete"](selected);
@@ -6055,7 +6059,7 @@ module.exports = React.createClass({
           direction: 'second',
           action: 'message',
           parameters: {
-            messageID: message.get('id')
+            messageID: next.get('id')
           }
         });
       }
@@ -8301,8 +8305,8 @@ module.exports = {
   "list next page": "More messages",
   "list end": "This is the end of the road",
   "list mass no message": "No message selected",
-  "list delete confirm": "Do you really want to delete this message ?\nDo you really want to delete %{smart_count} messages?",
-  "list delete conv confirm": "Do you really want to delete this conversation ?\nDo you really want to delete %{smart_count} conversation?",
+  "list delete confirm": "Do you really want to delete this message ? ||||\nDo you really want to delete %{smart_count} messages?",
+  "list delete conv confirm": "Do you really want to delete this conversation ? ||||\nDo you really want to delete %{smart_count} conversation?",
   "mail receivers": "To: ",
   "mail receivers cc": "Cc: ",
   "mail action reply": "Reply",
@@ -9896,6 +9900,7 @@ MessageStore = (function(_super) {
 
   MessageStore.prototype.getPreviousMessage = function(isConv) {
     var convID, idx, keys, prev, _ref1;
+    isConv = false;
     if ((isConv != null) && isConv) {
       if (_conversationMemoize == null) {
         return null;
@@ -9934,6 +9939,7 @@ MessageStore = (function(_super) {
 
   MessageStore.prototype.getNextMessage = function(isConv) {
     var idx, keys;
+    isConv = false;
     if ((isConv != null) && isConv) {
       if (_conversationMemoize == null) {
         return null;
@@ -10226,7 +10232,8 @@ module.exports = ActivityUtils;
 
 ;require.register("utils/api_utils", function(exports, require, module) {
 var AccountStore, LayoutActionCreator, MessageStore, SettingsStore, onMessageList,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  __hasProp = {}.hasOwnProperty;
 
 AccountStore = require('../stores/account_store');
 
@@ -10297,11 +10304,19 @@ module.exports = {
     return SettingsStore.get().toJS()[key];
   },
   setSetting: function(key, value) {
-    var ActionTypes, AppDispatcher, settings;
+    var ActionTypes, AppDispatcher, k, settings, v;
     AppDispatcher = require('../app_dispatcher');
     ActionTypes = require('../constants/app_constants').ActionTypes;
     settings = SettingsStore.get().toJS();
-    settings[key] = value;
+    if (typeof key === 'object') {
+      for (k in key) {
+        if (!__hasProp.call(key, k)) continue;
+        v = key[k];
+        settings[key] = value;
+      }
+    } else {
+      settings[key] = value;
+    }
     return AppDispatcher.handleViewAction({
       type: ActionTypes.SETTINGS_UPDATED,
       value: settings
