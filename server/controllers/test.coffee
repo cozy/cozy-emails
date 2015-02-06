@@ -1,11 +1,10 @@
 async = require 'async'
+cozydb = require 'cozydb'
 Account = require '../models/account'
-
-CozyInstance = require '../models/cozy_instance'
 
 module.exports.main = (req, res, next) ->
     async.series [
-        (cb) -> CozyInstance.getLocale cb
+        (cb) -> cozydb.api.getCozyLocale cb
         (cb) -> Account.request 'all', cb
     ], (err, results) ->
 
