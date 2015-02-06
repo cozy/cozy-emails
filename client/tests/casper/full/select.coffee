@@ -85,6 +85,7 @@ casper.test.begin 'Test Message Selection', (test) ->
                                 doNav 'left', 2
 
 
+    ### Conversation navigation has been reverted
     casper.then ->
         test.comment "Click navigation in conversation mode"
         casper.evaluate ->
@@ -99,6 +100,7 @@ casper.test.begin 'Test Message Selection', (test) ->
                                 doNavConv 'right', 2, "CA+nLd+uoQZbQ0fUqDdcyZHW+SQo3E71UNT-m8YqOyci+Hskspw@mail.gmail.com", ->
                                     doNavConv 'left', 1, "20141106092130.GF5642@mail.cozy.io", ->
                                         doNavConv 'left', 1, "20141106092531.GG5642@mail.cozy.io"
+    ###
 
     ###
     casper.then ->
