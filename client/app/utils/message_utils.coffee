@@ -108,6 +108,7 @@ module.exports = MessageUtils =
                 message.bcc     = []
                 message.subject = ''
                 message.text    = t 'compose default'
+                message.html    = t 'compose default'
 
         # remove my address from dests
         notMe = (dest) -> return dest.address isnt myAddress

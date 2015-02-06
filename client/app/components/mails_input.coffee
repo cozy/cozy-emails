@@ -1,7 +1,6 @@
 {div, label, input, span, ul, li, a, img, i} = React.DOM
 
 MessageUtils    = require '../utils/message_utils'
-ContactForm     = require './contact-form'
 Modal           = require './modal'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 ContactStore    = require '../stores/contact_store'
@@ -24,7 +23,7 @@ module.exports = MailsInput = React.createClass
     getStateFromStores: ->
         query = @refs.contactInput?.getDOMNode().value.trim()
         return {
-            #contacts: if query?.length > 0 then ContactStore.getResults() else null
+            #contacts: if query?.length > 2 then ContactStore.getResults() else null
             contacts: ContactStore.getResults()
             selected: 0
             open: false
@@ -110,7 +109,7 @@ module.exports = MailsInput = React.createClass
         else if char? and typeof char is 'object'
             # always display contact list when user click on contact button
             force = true
-        if query.length > 0 or ( force and not @state.open )
+        if query.length > 2 or ( force and not @state.open )
             ContactActionCreator.searchContactLocal query
             @setState open: true
             return true
@@ -151,7 +150,9 @@ module.exports = MailsInput = React.createClass
         # We must use a timeout, otherwise, when user click inside contact list, blur is triggered first
         # and the click event lost. Dirty hack
         setTimeout =>
-            @setState open: false
+            # if user cancel comose, component may be unmounted when the timeout is fired
+            if @isMounted()
+                @setState open: false
         , 100
 
     onContact: (contact) ->

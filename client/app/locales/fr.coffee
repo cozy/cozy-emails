@@ -81,6 +81,10 @@ module.exports =
                                     Voulez-vous vraiment supprimer ce message ?||||
                                     Voulez-vous vraiment supprimer %{smart_count} messages ?
                                     """
+      "list delete conv confirm"  : """
+                                    Voulez-vous vraiment supprimer cette conversation ?||||
+                                    Voulez-vous vraiment supprimer %{smart_count} conversations ?
+                                    """
 
       # Mail
       "mail receivers"          : "À "

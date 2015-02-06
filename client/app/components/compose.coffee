@@ -70,9 +70,9 @@ module.exports = Compose = React.createClass
                 a onClick: toggleFullscreen, className: 'close-email pull-right clickable',
                     i className:'fa fa-compress'
             h3 null,
-                t 'compose'
+                @state.subject or t 'compose'
             form className: 'form-compose',
-                div className: 'form-group',
+                div className: 'form-group account',
                     label
                         htmlFor: 'compose-from',
                         className: classLabel,
@@ -548,9 +548,10 @@ ComposeEditor = React.createClass
                     header.on 'click', ->
                         jQuery('.rt-editor').toggleClass('folded')
                 catch e
-                    console.log e
-            jQuery('.rt-editor .originalToggle').on 'click', ->
-                jQuery('.rt-editor').toggleClass('folded')
+                    console.error e
+            else
+                jQuery('.rt-editor .originalToggle').on 'click', ->
+                    jQuery('.rt-editor').toggleClass('folded')
 
         else
             # Text message

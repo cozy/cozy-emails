@@ -80,6 +80,10 @@ module.exports =
                                     Do you really want to delete this message ?
                                     Do you really want to delete %{smart_count} messages?
                                     """
+      "list delete conv confirm"  : """
+                                    Do you really want to delete this conversation ?
+                                    Do you really want to delete %{smart_count} conversation?
+                                    """
 
       # Mail
       "mail receivers"          : "To: "
@@ -175,8 +179,8 @@ module.exports =
       "account actions"             : "Actions"
       "account danger zone"         : "Danger Zone"
       "account no special mailboxes": "Please configure special folders first"
-      "account smtp hide advanced"  : "Show advanced parameters"
-      "account smtp show advanced"  : "Hide advanced parameters"
+      "account smtp hide advanced"  : "Hide advanced parameters"
+      "account smtp show advanced"  : "Show advanced parameters"
       "mailbox create ok"           : "Folder created"
       "mailbox create ko"           : "Error creating folder"
       "mailbox update ok"           : "Folder updated"

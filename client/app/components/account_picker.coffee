@@ -45,7 +45,10 @@ module.exports = React.createClass
             #    className: 'btn btn-default dropdown-toggle',
             #    type: 'button',
             #    'data-toggle': 'dropdown',
-                    span ref: 'account', label
+                    span
+                        ref: 'account',
+                        'data-value': value,
+                        label
                     span className: 'caret'
             ul className: 'dropdown-menu', role: 'menu',
                 for key, account of accounts.toJS() when key isnt value

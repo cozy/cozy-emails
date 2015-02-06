@@ -56,7 +56,10 @@ MessageList = React.createClass
         messages = @props.messages.map (message, key) =>
             id = message.get('id')
             cid = message.get('conversationID')
-            isActive = @props.messageID is id
+            if @props.settings.get('displayConversation')
+                isActive = @props.conversationID is cid
+            else
+                isActive = @props.messageID is id
             MessageItem
                 message: message,
                 conversationLength: @props.conversationLengths?.get(cid),
@@ -258,7 +261,6 @@ MessageList = React.createClass
                                 i className: "fa fa-refresh fa-spin"
                             else
                                 a
-                                    #href: @props.paginationUrl
                                     className: 'more-messages'
                                     onClick: nextPage,
                                     ref: 'nextPage',
@@ -292,16 +294,19 @@ MessageList = React.createClass
         if selected.length is 0
             alertError t 'list mass no message'
         else
-            if window.confirm(t 'list delete confirm', smart_count: selected.length)
-                MessageActionCreator.delete selected
-                ###
-                selected.forEach (id) ->
-                    MessageActionCreator.delete id, (error) ->
-                        if error?
-                            alertError "#{t("message action delete ko")} #{error}"
-                        else
-                            window.cozyMails.messageNavigate()
-                ###
+            if @props.settings.get 'displayConversation'
+                if window.confirm(t 'list delete conv confirm', smart_count: selected.length)
+                    selected.forEach (id) =>
+                        message = @props.messages.get id
+                        conversationID = message.get 'conversationID'
+                        ConversationActionCreator.delete conversationID, (error) ->
+                            if error?
+                                alertError "#{t("conversation move ko")} #{error}"
+                            else
+                                window.cozyMails.messageNavigate()
+            else
+                if window.confirm(t 'list delete confirm', smart_count: selected.length)
+                    MessageActionCreator.delete selected
 
     onMove: (args) ->
         selected = Object.keys @state.selected
@@ -309,7 +314,8 @@ MessageList = React.createClass
             alertError t 'list mass no message'
         else
             newbox = args.target.dataset.value
-            if args.target.dataset.conversation?
+            if args.target.dataset.conversation? or
+               @props.settings.get 'displayConversation'
                 selected.forEach (id) =>
                     message = @props.messages.get id
                     conversationID = message.get('conversationID')
@@ -380,8 +386,17 @@ MessageList = React.createClass
                 mailboxID: @props.mailboxID
                 accountID: @props.accountID
 
-            AccountActionCreator.mailboxExpunge mailbox, (error) ->
+            AccountActionCreator.mailboxExpunge mailbox, (error) =>
+
                 if error?
+                    # if user hasn't switched to another box, refresh display
+                    if @props.accountID is mailbox.accountID and
+                       @props.mailboxID is mailbox.mailboxID
+                        params = _.clone(MessageStore.getParams())
+                        params.accountID = @props.accountID
+                        params.mailboxID = @props.mailboxID
+                        LayoutActionCreator.showMessageList parameters: params
+
                     LayoutActionCreator.alertError "#{t("mailbox expunge ko")} #{error}"
                 else
                     LayoutActionCreator.notify t "mailbox expunge ok"
@@ -457,20 +472,25 @@ MessageItem = React.createClass
 
         if isDraft
             action = 'edit'
-            id     = message.get 'id'
+            params =
+                messageID: message.get 'id'
         else
             conversationID = message.get 'conversationID'
             if conversationID and @props.settings.get('displayConversation')
                 action = 'conversation'
-                id     = message.get 'id'
+                params =
+                    conversationID: conversationID
+                    messageID: message.get 'id'
             else
                 action = 'message'
-                id     = message.get 'id'
+                params =
+                    conversationID: conversationID
+                    messageID: message.get 'id'
         if not @props.edited
             url = @buildUrl
                 direction: 'second'
                 action: action
-                parameters: id
+                parameters: params
             tag = a
         else
             tag = span
@@ -493,6 +513,7 @@ MessageItem = React.createClass
                 'data-message-id': message.get('id'),
                 onClick: @onMessageClick,
                 onDoubleClick: @onMessageDblClick,
+                ref: 'target',
                     div
                         className: 'avatar-wrapper',
                         input
@@ -543,9 +564,12 @@ MessageItem = React.createClass
             event.preventDefault()
             event.stopPropagation()
         else
-            if not @props.settings.get('displayPreview')
+            if not (event.target.getAttribute('type') is 'checkbox')
                 event.preventDefault()
-                MessageActionCreator.setCurrent event.currentTarget.dataset.messageId
+                MessageActionCreator.setCurrent @refs.target.getDOMNode().dataset.messageId
+                if @props.settings.get('displayPreview')
+                    href = '#' + @refs.target.getDOMNode().href.split('#')[1]
+                    @redirect href
 
     onMessageDblClick: (event) ->
         if not @props.edited

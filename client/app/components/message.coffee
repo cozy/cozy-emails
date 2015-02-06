@@ -40,8 +40,8 @@ module.exports = React.createClass
         key               : React.PropTypes.string.isRequired
         mailboxes         : React.PropTypes.object.isRequired
         message           : React.PropTypes.object.isRequired
-        nextID            : React.PropTypes.string
-        prevID            : React.PropTypes.string
+        next              : React.PropTypes.object
+        prev              : React.PropTypes.object
         selectedAccount   : React.PropTypes.object.isRequired
         selectedMailboxID : React.PropTypes.string.isRequired
         settings          : React.PropTypes.object.isRequired
@@ -68,7 +68,7 @@ module.exports = React.createClass
         # a value fo html, otherwise the content of the email flashes
         if text and not html and @state.messageDisplayHTML
             try
-                html = markdown.toHTML text
+                html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
             catch e
                 console.log "Error converting text message to Markdown: #{e}"
                 html = "<div class='text'>#{text}</div>" #markdown.toHTML text
@@ -150,6 +150,10 @@ module.exports = React.createClass
 
         for link in doc.querySelectorAll 'a[href]'
             link.target = '_blank'
+            # convert relative to absolute links in message content
+            href = link.getAttribute 'href'
+            if href isnt '' and not /:\/\//.test href
+                link.setAttribute 'href', 'http://' + href
 
         if doc?
             @_htmlContent = doc.documentElement.innerHTML
@@ -319,36 +323,38 @@ module.exports = React.createClass
 
         conversationID = @props.message.get 'conversationID'
 
-        getParams = (id) =>
-            if conversationID and @props.settings.get('displayConversation')
+        getParams = (message) =>
+            if @props.settings.get('displayConversation')
                 return {
                     action : 'conversation'
-                    id     : id
+                    parameters:
+                        messageID : message.get 'id'
+                        conversationID: message.get 'convrsationID'
                 }
             else
                 return {
                     action : 'message'
-                    id     : id
+                    parameters:
+                        messageID : message.get 'id'
                 }
-        if @props.prevID?
-            params = getParams @props.prevID
+        if @props.prev?
+            params = getParams @props.prev
             prev =
                 direction: 'second'
                 action: params.action
-                parameters: params.id
+                parameters: params.parameters
             prevUrl =  @buildUrl prev
             displayPrev = =>
                 @redirect prev
-        if @props.nextID?
-            params = getParams @props.nextID
+        if @props.next?
+            params = getParams @props.next
             next =
                 direction: 'second'
                 action: params.action
-                parameters: params.id
+                parameters: params.parameters
             nextUrl = @buildUrl next
             displayNext = =>
                 @redirect next
-
 
         div className: 'messageToolbox row',
             div className: 'btn-toolbar', role: 'toolbar',
@@ -453,16 +459,24 @@ module.exports = React.createClass
             else
                 @setState { active: true, headers: false }
 
-    displayNextMessage: (next)->
-        if not next?
-            if @props.nextID?
-                next = @props.nextID
-            else next = @props.prevID
+    displayNextMessage: ->
+        if @props.next?
+            next = @props.next
+        else next = @props.prev
         if next?
-            @redirect
-                direction: 'second'
-                action: 'message'
-                parameters: next
+            if @props.settings.get('displayConversation')
+                @redirect
+                    direction: 'second'
+                    action : 'conversation'
+                    parameters:
+                        messageID : next.get 'id'
+                        conversationID: next.get 'convrsationID'
+            else
+                @redirect
+                    direction: 'second'
+                    action : 'message'
+                    parameters:
+                        messageID : message.get 'id'
         else
             @redirect
                 direction: 'first'
@@ -483,12 +497,9 @@ module.exports = React.createClass
 
     onDelete: (args) ->
         message      = @props.message
-        if @props.nextID?
-            next = @props.nextID
-        else next = @props.prevID
         if (not @props.settings.get('messageConfirmDelete')) or
         window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
-            @displayNextMessage next
+            @displayNextMessage()
             MessageActionCreator.delete message, (error) ->
                 if error?
                     alertError "#{t("message action delete ko")} #{error}"
@@ -498,9 +509,6 @@ module.exports = React.createClass
 
     onMove: (args) ->
         newbox = args.target.dataset.value
-        if @props.nextID?
-            next = @props.nextID
-        else next = @props.prevID
         if args.target.dataset.conversation?
             conversationID = @props.message.get('conversationID')
             ConversationActionCreator.move conversationID, newbox, (error) =>
@@ -508,7 +516,7 @@ module.exports = React.createClass
                     alertError "#{t("conversation move ko")} #{error}"
                 else
                     alertSuccess t "conversation move ok"
-                    @displayNextMessage next
+                    @displayNextMessage()
         else
             oldbox = @props.selectedMailboxID
             MessageActionCreator.move @props.message, oldbox, newbox, (error) =>
@@ -516,7 +524,7 @@ module.exports = React.createClass
                     alertError "#{t("message action move ko")} #{error}"
                 else
                     alertSuccess t "message action move ok"
-                    @displayNextMessage next
+                    @displayNextMessage()
 
     onMark: (args) ->
         flags = @props.message.get('flags').slice()
@@ -561,8 +569,8 @@ module.exports = React.createClass
 
     onHeaders: (event) ->
         event.preventDefault()
-        messageId = event.target.dataset.messageId
-        document.querySelector(".conversation [data-id='#{messageId}']")
+        messageID = event.target.dataset.messageId
+        document.querySelector(".conversation [data-id='#{messageID}']")
             .classList.toggle('with-headers')
 
     addAddress: (address) ->

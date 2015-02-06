@@ -65,37 +65,40 @@ module.exports =
             type: ActionTypes.SETTINGS_UPDATED
             value: settings
 
-    messageNavigate: (direction, nextID) ->
+    messageNavigate: (direction) ->
         if not onMessageList()
             return
-        if not nextID?
-            if direction is 'prev'
-                nextID = MessageStore.getPreviousMessage()
-            else
-                nextID = MessageStore.getNextMessage()
-        if not nextID?
+        conv = SettingsStore.get('displayConversation') and SettingsStore.get('displayPreview')
+        if direction is 'prev'
+            next = MessageStore.getPreviousMessage conv
+        else
+            next = MessageStore.getNextMessage conv
+        if not next?
             return
 
         MessageActionCreator = require '../actions/message_action_creator'
-        MessageActionCreator.setCurrent nextID
+
+        MessageActionCreator.setCurrent next.get('id'), true
 
         if SettingsStore.get('displayPreview')
-            @messageDisplay nextID
+            @messageDisplay next
 
-    messageDisplay: (messageID) ->
-        if not messageID
-            messageID = MessageStore.getCurrentID()
-        action = 'message'
+    messageDisplay: (message) ->
+        if not message?
+            message = MessageStore.getById(MessageStore.getCurrentID())
+        if not message?
+            return
         if SettingsStore.get('displayConversation')
-            message = MessageStore.getByID messageID
-            if not message?
-                return
-            conversationID = message.get 'conversationID'
+            action = 'conversation'
+            params =
+                messageID: message.get 'id'
+                conversationID: message.get 'conversationID'
+        else
+            action = 'message'
+            params =
+                messageID: message.get 'id'
 
-            if conversationID
-                action = 'conversation'
-
-        url = window.router.buildUrl direction: 'second', action: action, parameters: messageID
+        url = window.router.buildUrl direction: 'second', action: action, parameters: params
         window.router.navigate url, {trigger: true}
 
     messageClose: ->
@@ -116,8 +119,7 @@ module.exports =
             return
         if (not SettingsStore.get('messageConfirmDelete')) or
         window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
-            nextID = MessageStore.getNextMessage()
-            @messageNavigate(null, nextID)
+            @messageNavigate()
             MessageActionCreator.delete message, (error) ->
                 if error?
                     alertError "#{t("message action delete ko")} #{error}"

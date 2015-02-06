@@ -11,9 +11,7 @@ if utils.cmpVersion("1.1", phantom.casperVersion) > 0
 casper.cozy =
     startUrl: system.env.COZY_URL
 
-casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
-    if typeof messageID is 'function'
-        cb = messageID
+casper.cozy.selectAccount = (account, box, cb) ->
     accounts = casper.evaluate ->
         getAccounts = ->
             _accounts = {}
@@ -43,34 +41,41 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
         casper.click "[data-reactid='#{id}'] .item-label"
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
             casper.waitForSelector ".message-list li.message", ->
-                if typeof messageID is 'string'
-                    subjectSel  = ".message-list li[data-message-id='#{messageID}'] a .preview"
-                    subjectDone = "h3[data-message-id='#{messageID}']"
-                else if typeof subject is 'string'
-                    subjectSel  = x "//span[(contains(normalize-space(.), '#{subject}'))]"
-                    subjectDone = x "//h3[(contains(normalize-space(.), '#{subject}'))]"
-                else
-                    subjectSel = '.message-list li.message:nth-of-type(1) .title'
-                casper.waitForSelector subjectSel, ->
-                    if not (typeof subject is 'string')
-                        subject = casper.fetchText subjectSel
-                        subjectDone = x "//h3[(contains(normalize-space(.), '#{subject}'))]"
-                    casper.click subjectSel
-                    casper.waitForSelector subjectDone, ->
-                        if not (typeof messageID is 'string')
-                            infos = casper.getElementInfo '.message-list li.message.active'
-                            messageID = infos.attributes['data-message-id']
-                        cb(subject, messageID)
-                    , ->
-                        casper.test.fail "Error displaying #{subject}"
-                , ->
-                    casper.test.fail "No message matching #{subjectSel}"
+                cb()
             , ->
                 casper.test.fail "No message in #{account}/#{box}"
         , ->
             casper.test.fail "Unable to go to mailbox #{box}"
     , ->
         casper.test.fail "Unable to go to account #{account}"
+
+casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
+    if typeof messageID is 'function'
+        cb = messageID
+
+    casper.cozy.selectAccount account, box, ->
+        if typeof messageID is 'string'
+            subjectSel  = ".message-list li[data-message-id='#{messageID}'] a .preview"
+            subjectDone = "h3[data-message-id='#{messageID}']"
+        else if typeof subject is 'string'
+            subjectSel  = x "//span[(contains(normalize-space(.), '#{subject}'))]"
+            subjectDone = x "//h3[(contains(normalize-space(.), '#{subject}'))]"
+        else
+            subjectSel = '.message-list li.message:nth-of-type(1) .title'
+        casper.waitForSelector subjectSel, ->
+            if not (typeof subject is 'string')
+                subject = casper.fetchText subjectSel
+                subjectDone = x "//h3[(contains(normalize-space(.), '#{subject}'))]"
+            casper.click subjectSel
+            casper.waitForSelector subjectDone, ->
+                if not (typeof messageID is 'string')
+                    infos = casper.getElementInfo '.message-list li.message.active'
+                    messageID = infos.attributes['data-message-id']
+                cb(subject, messageID)
+            , ->
+                casper.test.fail "Error displaying #{subject}"
+        , ->
+            casper.test.fail "No message matching #{subjectSel}"
 
 if not casper.cozy.startUrl?
     casper.die "Please set the base URL into COZY_URL environment variable"
@@ -98,7 +103,7 @@ exports.init = (casper) ->
             utils.dump request
     casper.on "page.error", (msg, trace) ->
         casper.echo "Error: " + msg, "ERROR"
-        utils.dump trace.slice 0, 2
+        utils.dump trace.slice 0, 5
     casper.on "load.finished", ->
         if casper.getTitle() isnt 'Cozy Emails'
             return
@@ -121,4 +126,6 @@ exports.init = (casper) ->
             casper.test.done()
             casper.die("Fixtures not loaded, dying")
     casper.test.on 'fail', (failure) ->
-        casper.capture "#{failure.message.replace(/\W/gim, '')}.png"
+        if failure? and typeof failure.message is 'string'
+            casper.capture "#{failure.message.replace(/\W/gim, '')}.png"
+        else console.log failure

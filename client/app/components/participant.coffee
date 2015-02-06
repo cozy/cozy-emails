@@ -96,9 +96,12 @@ Participant = React.createClass
             node.addEventListener 'mouseover', ->
                 delay = setTimeout ->
                     addTooltip()
-                , 1000
+                , 5000
             node.addEventListener 'mouseout', ->
                 clearTimeout delay
+            node.addEventListener 'click', (event) ->
+                event.stopPropagation()
+                addTooltip()
 
     componentDidMount: ->
         @tooltip()
