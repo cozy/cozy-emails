@@ -69,14 +69,14 @@ casper.test.begin 'Create account', (test) ->
         casper.waitForSelector '#mailbox-config', ->
             test.assertSelectorHasText "#mailbox-config h3", "New account"
             test.assertDoesntExist "#mailbox-config .nav-tabs", "No tabs"
-            test.assertSelectorHasText "#mailbox-config button", "Add", "Add button"
+            test.assertSelectorHasText "#mailbox-config button.action-save", "Add", "Add button"
             test.assertDoesntExist "#mailbox-config .alert", "No error message"
-            casper.click "#mailbox-config button"
+            casper.click "#mailbox-config button.action-save"
             casper.waitForSelector "#mailbox-config .alert", ->
                 test.pass "Error message displayed"
                 test.assertElementCount ".form-group.has-error", 6, "Errors are underlined"
                 casper.fillSelectors 'form', '#mailbox-label':  values['mailbox-label']
-                casper.click "#mailbox-config button"
+                casper.click "#mailbox-config button.action-save"
                 casper.wait 100, ->
                     test.assertElementCount ".form-group.has-error", 5, "Errors are underlined"
                     casper.fillSelectors 'form',
@@ -86,15 +86,15 @@ casper.test.begin 'Create account', (test) ->
                         '#mailbox-smtpServer': values['mailbox-smtpServer']
                         '#mailbox-imapServer': values['mailbox-imapServer']
                         '#maibox-accountType': values['account-type']
-                    casper.click "#mailbox-config button"
+                    casper.click "#mailbox-config button.action-save"
                     casper.wait 500, ->
-                        test.assertSelectorHasText "#mailbox-config button", "Add", "Wrong SMTP Server"
+                        test.assertSelectorHasText "#mailbox-config button.action-save", "Add", "Wrong SMTP Server"
                         test.assertEquals casper.getFormValues('form'), values, "Form not changed"
                         test.assertDoesntExist ".has-error #mailbox-label", "No error on label"
                         test.assertExist ".has-error #mailbox-smtpServer", "Error on SMTP"
                         casper.fillSelectors 'form', '#mailbox-accountType': 'TEST'
                         casper.wait 500, ->
-                            casper.click "#mailbox-config button"
+                            casper.click "#mailbox-config button.action-save"
                             casper.waitForSelector "#mailbox-config .nav-tabs", ->
                                 test.pass 'No more errors ☺'
 

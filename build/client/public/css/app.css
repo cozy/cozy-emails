@@ -1666,7 +1666,8 @@ input {
   font-family: main;
   font-style: normal;
   font-weight: normal;
-  src: url("../fonts/signika-regular.ttf");
+/*src url('../fonts/signika-regular.ttf')*/
+  src: url("../fonts/signika-light.ttf");
 }
 @font-face {
   font-family: main;
@@ -3420,10 +3421,11 @@ textarea:active,
   margin: 0;
 }
 .rt-editor.folded blockquote {
-  height: 0.5em;
+  height: 0;
   overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
+  padding: 0;
 }
 .rt-editor .originalToggle {
   color: #34a6ff;
