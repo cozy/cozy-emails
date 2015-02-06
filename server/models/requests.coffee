@@ -1,15 +1,15 @@
-cozydb = require 'cozydb'
+americano = require 'americano'
 emit = null # jslint
 
 module.exports =
     settings:
-        all: cozydb.defaultRequests.all
+        all: americano.defaultRequests.all
 
     account:
-        all: cozydb.defaultRequests.all
+        all: americano.defaultRequests.all
 
     contact:
-        all: cozydb.defaultRequests.all
+        all: americano.defaultRequests.all
         byName: (doc) ->
             if doc.fn? and doc.fn.length > 0
                 emit doc.fn, doc
@@ -29,14 +29,6 @@ module.exports =
             emit [doc.accountID].concat(doc.tree), null
 
     message:
-
-        accountUnread:
-            reduce: '_count'
-            map: (doc) ->
-                if ['\\Seen'] not in doc.flags
-                    emit [doc.accountID, '!\\Seen', null]
-                if ['\\Recent'] in doc.flags
-                    emit [doc.accountID, '\\Recent', null]
 
         byMailboxRequest:
             reduce: '_count'

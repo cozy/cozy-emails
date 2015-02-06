@@ -1,15 +1,15 @@
-cozydb = require 'cozydb'
+americano = require MODEL_MODULE
 async = require 'async'
 stream_to_buffer_array = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'models:contact')
 
-module.exports = Contact = cozydb.getModel 'Contact',
+module.exports = Contact = americano.getModel 'Contact',
     id            : String
     fn            : String
     n             : String
-    datapoints    : cozydb.NoSchema
+    datapoints    : (x) -> x
     note          : String
-    tags          : [String]
+    tags          : (x) -> x
     _attachments  : Object
 
 Contact::includePicture = (callback) ->

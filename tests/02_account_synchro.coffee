@@ -67,7 +67,7 @@ describe 'Account Synchronizations', ->
             done null
 
     it "When the server changes one UIDValidity", (done) ->
-        @timeout 30000
+        @timeout 10000
         DovecotTesting.changeSentUIDValidity done
 
     it "And refresh the account", (done) ->
