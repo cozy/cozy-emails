@@ -1,9 +1,9 @@
-cozydb = require 'cozydb'
+americano = require MODEL_MODULE
 _ = require 'lodash'
 
 Any = (x) -> x
 
-module.exports = Settings = cozydb.getModel 'MailsSettings',
+module.exports = Settings = americano.getModel 'MailsSettings',
     # SETTINGS
     #messagesPerPage      : type : Number,  default : 25
     composeInHTML        : type : Boolean, default : true
