@@ -295,7 +295,8 @@ MessageList = React.createClass
             alertError t 'list mass no message'
         else
             if @props.settings.get 'displayConversation'
-                if window.confirm(t 'list delete conv confirm', smart_count: selected.length)
+                if (not @props.settings.get('messageConfirmDelete')) or
+                window.confirm(t 'list delete conv confirm', smart_count: selected.length)
                     selected.forEach (id) =>
                         message = @props.messages.get id
                         conversationID = message.get 'conversationID'
@@ -305,7 +306,8 @@ MessageList = React.createClass
                             else
                                 window.cozyMails.messageNavigate()
             else
-                if window.confirm(t 'list delete confirm', smart_count: selected.length)
+                if (not @props.settings.get('messageConfirmDelete')) or
+                window.confirm(t 'list delete confirm', smart_count: selected.length)
                     MessageActionCreator.delete selected
 
     onMove: (args) ->
