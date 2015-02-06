@@ -1,40 +1,32 @@
-cozydb = require 'cozydb'
+americano = require MODEL_MODULE
 
 # Public: Message
 #
 
-class MailAdress extends cozydb.Model
-    @schema:
-        name: String
-        address: String
+module.exports = Message = americano.getModel 'Message',
 
-module.exports = Message = cozydb.getModel 'Message',
-
-    accountID      : String          # account this message belongs to
-    messageID      : String          # normalized message-id (no <"">)
-    normSubject    : String          # normalized subject (no Re: ...)
-    conversationID : String          # all message in thread have same
-                                     # conversationID
-    mailboxIDs     : cozydb.NoSchema # mailboxes as an hash
-                                     # {boxID: uid, boxID2 : uid2}
-    hasTwin        : [String]        # [String] mailboxIDs where this message
-                                     # has twin
-    flags          : [String]        # [String] flags of the message
-    headers        : cozydb.NoSchema # hash of the message headers
-    from           : [MailAdress]    # array of {name, address}
-    to             : [MailAdress]    # array of {name, address}
-    cc             : [MailAdress]    # array of {name, address}
-    bcc            : [MailAdress]    # array of {name, address}
-    replyTo        : [MailAdress]    # array of {name, address}
-    subject        : String          # subject of the message
-    inReplyTo      : [String]        # array of message-ids
-    references     : [String]        # array of message-ids
-    text           : String          # message content as text
-    html           : String          # message content as html
-    date           : Date            # message date
-    priority       : String          # message priority
-    binary         : cozydb.NoSchema
-    attachments    : cozydb.NoSchema
+    accountID: String        # account this message belongs to
+    messageID: String        # normalized message-id (no <"">)
+    normSubject: String      # normalized subject (no Re: ...)
+    conversationID: String   # all message in thread have same conversationID
+    mailboxIDs: (x) -> x     # mailboxes as an hash {boxID:uid, boxID2:uid2}
+    hasTwin: (x) -> x        # [String] mailboxIDs where this message has twin
+    flags: (x) -> x          # [String] flags of the message
+    headers: (x) -> x        # hash of the message headers
+    from: (x) -> x           # array of {name, address}
+    to: (x) -> x             # array of {name, address}
+    cc: (x) -> x             # array of {name, address}
+    bcc: (x) -> x            # array of {name, address}
+    replyTo: (x) -> x        # array of {name, address}
+    subject: String          # subject of the message
+    inReplyTo: (x) -> x      # array of message-ids
+    references: (x) -> x     # array of message-ids
+    text: String             # message content as text
+    html: String             # message content as html
+    date: Date               # message date
+    priority: String         # message priority
+    binary: (x) -> x         # cozy binaries
+    attachments: (x) -> x    # array of message attachments objects
 
 mailutils = require '../utils/jwz_tools'
 CONSTANTS = require '../utils/constants'
@@ -78,19 +70,6 @@ Message.getResultsAndCount = (mailboxID, params, callback) ->
                 messages: messages
                 count: count
                 conversationLengths: lengths
-
-
-Message.getUnreadCountByAccount = (accountID, callback) ->
-    Message.rawRequest 'accountUnread',
-        startkey: [accountID]
-        endkey: [accountID, {}]
-        reduce: true
-    , (err, rows) ->
-        return callback err if err
-        counts = {}
-        counts[row.key[1]] = row.value for row in rows
-        callback null, counts
-
 
 Message.getResults = (mailboxID, params, callback) ->
     {before, after, descending, sortField, flag} = params
@@ -313,6 +292,7 @@ Message.safeDestroyByAccountID = (accountID, callback, retries = 2) ->
 # callback - Function(err)
 #
 # Returns void
+
 Message.safeRemoveAllFromBox = (mailboxID, callback, retries = 2) ->
     log.info "removing all messages from mailbox #{mailboxID}"
     Message.rawRequest 'byMailboxRequest',
@@ -479,11 +459,15 @@ Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, \
 
     oldflags = @flags
 
-    Mailbox.getBoxesIndexedByID @accountID, (err, boxIndex) =>
+    Mailbox.getBoxes @accountID, (err, boxes) =>
 
         return callback err if err
-        for boxID, box of boxIndex
-            box.uid = @mailboxIDs[boxID]
+
+
+        boxIndex = {}
+        for box in boxes
+            uid = @mailboxIDs[box.id]
+            boxIndex[box.id] = path: box.path, uid: uid
 
         # ERROR CASES
         for boxid in boxOps.addTo when not boxIndex[boxid]
@@ -496,40 +480,24 @@ Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, \
 
         @doASAP (imap, releaseImap) ->
 
-            permFlags = null
-
             async.series [
 
                 # step 1 - open one box at random
+                (cb) -> imap.openBox boxIndex[firstboxid].path, cb
+                # step 2a - remove flags
                 (cb) ->
-                    imap.openBox boxIndex[firstboxid].path, (err, imapBox) ->
-                        return cb err if err
-                        permFlags = imapBox.permFlags
-                        log.debug "SUPPORTED FLAGS", permFlags
+                    if flagsOps.remove.length
+                        log.debug "REMOVING FLAGS", flagsOps.remove
+                        imap.delFlags firstuid, flagsOps.remove, cb
+                    else
                         cb null
-
-                # step 2a - set flags
+                # step 2b - add flags
                 (cb) ->
-                    flags = _.intersection newflags, permFlags
-                    if flags.length is 0
-                        oldpflags = _.intersection oldflags, permFlags
-                        if oldpflags.length isnt 0
-                            imap.delFlags firstuid, oldpflags, cb
-                        else cb null
+                    if flagsOps.add.length
+                        log.debug "ADDING FLAGS", flagsOps.add
+                        imap.addFlags firstuid, flagsOps.add, cb
                     else
-                        imap.setFlags firstuid, flags, cb
-
-                # step 2b - set keywords
-                (cb) ->
-                    keywords = _.difference newflags, permFlags
-                    if keywords.length is 0
-                        oldkeywords = _.difference oldflags, permFlags
-                        if oldkeywords.length isnt 0
-                            imap.delKeywords firstuid, oldkeywords, cb
-                        else cb null
-                    else
-                        imap.setKeywords firstuid, newflags, cb
-
+                        cb null
                 # step 3 - copy the message to all addTo
                 (cb) ->
                     paths = boxOps.addTo.map (destID) ->
@@ -543,10 +511,10 @@ Message::imap_applyChanges = (newflags, flagsOps, newmailboxIDs, \
                         cb null
                 # step 4 - remove the message from all removeFrom
                 (cb) ->
-                    #paths = [{path:xxx, uid:xxx},{path:xxx, uid:xxx}]
-                    paths = boxOps.removeFrom.map (boxid) ->
-                        boxIndex[boxid]
-                    imap.multiremove paths, cb
+                    async.eachSeries boxOps.removeFrom, (boxid, cb2) ->
+                        {path, uid} = boxIndex[boxid]
+                        imap.deleteMessageInBox path, uid, cb2
+                    , cb
 
             ], releaseImap
 
@@ -573,7 +541,6 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
 
     # we store normalized versions of subject & messageID for threading
     messageID = mail.headers['message-id']
-    delete mail.messageId
 
     # reported bug : if a mail has two messageID, mailparser make it an array
     # and it crashes the server
@@ -590,7 +557,6 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
     mail.to ?= []
     mail.from ?= []
 
-
     if not mail.date?
         mail.date = new Date().toISOString()
 
@@ -604,8 +570,6 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
             return out =
                 name: att.generatedFileName
                 buffer: buffer
-
-        delete mail.attachments
 
     # pick a method to find the conversation id
     # if there is a x-gm-thrid, use it
@@ -727,31 +691,6 @@ Message::toClientObject = ->
 
     return raw
 
-Message::moveToTrash = (callback) ->
-
-    Account.find @accountID, (err, account) ->
-        return callback err if err
-        return callback new Error 'no trash box' unless account.trashMailbox
-
-        trashBoxID = account.trashMailbox
-        mailboxes = Object.keys(@mailboxIDs)
-
-        if trashBoxID in mailboxes
-            # message is already in trash
-            # @TODO : expunge ?
-            callback null
-
-        else
-            # make a patch that remove from all boxes and add to trash
-            patch = for boxid in mailboxes
-                op: 'remove'
-                path: "/mailboxIDs/#{boxid}"
-            patch.push
-                op: 'add'
-                path: "/mailboxIDs/#{trashBoxID}"
-                value: -1
-
-            @applyPatchOperations patch, callback
 
 
 Message::doASAP = (operation, callback) ->

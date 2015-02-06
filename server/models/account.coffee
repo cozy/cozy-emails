@@ -1,6 +1,6 @@
-cozydb = require 'cozydb'
+americano = require MODEL_MODULE
 
-module.exports = Account = cozydb.getModel 'Account',
+module.exports = Account = americano.getModel 'Account',
     label: String               # human readable label for the account
     name: String                # user name to put in sent mails
     login: String               # IMAP & SMTP login
@@ -18,13 +18,12 @@ module.exports = Account = cozydb.getModel 'Account',
     imapSSL: Boolean            # Use SSL
     imapTLS: Boolean            # Use STARTTLS
     inboxMailbox: String        # INBOX Maibox id
-    flaggedMailbox: String      # \Flag Mailbox id
     draftMailbox: String        # \Draft Maibox id
     sentMailbox: String         # \Sent Maibox id
     trashMailbox: String        # \Trash Maibox id
     junkMailbox: String         # \Junk Maibox id
     allMailbox: String          # \All Maibox id
-    favorites: [String]         # [String] Maibox id of displayed boxes
+    favorites: (x) -> x         # [String] Maibox id of displayed boxes
 
 
 
@@ -81,11 +80,7 @@ Account.refreshAccounts = (accounts, limitByBox, onlyFavorites, callback) ->
         log.debug "refreshing account #{account.label}"
         return cb null if account.isTest()
         return cb null if account.isRefreshing()
-        account.imap_fetchMails limitByBox, onlyFavorites, (err) ->
-            if err
-                log.error "CANT REFRESH ACCOUNT", account.id, err
-            # refresh all accounts even if one fails
-            cb null
+        account.imap_fetchMails limitByBox, onlyFavorites, cb
     , callback
 
 
@@ -196,21 +191,15 @@ Account::toClientObject = (callback) ->
             row.doc.id ?= row.id
             _.pick row.doc, 'id', 'label', 'attribs', 'tree'
 
-        Message.getUnreadCountByAccount rawObject.id, (err, counts) ->
+        Mailbox.getCounts null, (err, counts) ->
             return callback err if err
-            rawObject.nbUnread = counts[!'\\Seen']
-            rawObject.nbRecent = counts['\\Recent']
+            for box in rawObject.mailboxes
+                count = counts[box.id] or {total: 0, unread: 0, recent: 0}
+                box.nbTotal  = count.total
+                box.nbUnread = count.unread
+                box.nbRecent = count.recent
 
-            Mailbox.getCounts null, (err, counts) ->
-                return callback err if err
-                for box in rawObject.mailboxes
-                    count = counts[box.id]
-                    count ?= {total: 0, unread: 0, recent: 0}
-                    box.nbTotal  = count.total
-                    box.nbUnread = count.unread
-                    box.nbRecent = count.recent
-
-                callback null, rawObject
+            callback null, rawObject
 
 Account.clientList = (callback) ->
     Account.request 'all', (err, accounts) ->
