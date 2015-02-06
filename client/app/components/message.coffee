@@ -476,7 +476,7 @@ module.exports = React.createClass
                     direction: 'second'
                     action : 'message'
                     parameters:
-                        messageID : message.get 'id'
+                        messageID : next.get 'id'
         else
             @redirect
                 direction: 'first'
