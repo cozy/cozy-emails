@@ -32,7 +32,7 @@ module.exports =
 
     delete: (message, callback) ->
         LayoutActionCreator = require './layout_action_creator'
-        doDelete = (message) ->
+        doDelete = (message) =>
             if typeof message is "string"
                 message = MessageStore.getByID message
             # Move message to Trash folder
@@ -116,9 +116,10 @@ module.exports =
         action = MessageStore.getPrevAction()
         if action?
             message = MessageStore.getByID action.id
-            @move message, action.to, action.from, (err) ->
-                if not err?
-                    LayoutActionCreator.notify t('message undelete ok')
+            action.from.forEach (from) =>
+                @move message, action.to, from, (err) ->
+                    if not err?
+                        LayoutActionCreator.notify t('message undelete ok')
         else
             LayoutActionCreator.alertError t 'message undelete error'
 
