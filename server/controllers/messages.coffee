@@ -375,9 +375,11 @@ module.exports.conversationGet = (req, res, next) ->
     res.send 200, req.conversation.map (msg) -> msg.toClientObject()
 
 module.exports.conversationDelete = (req, res, next) ->
-
-    # @TODO : Delete Conversation
-    res.send 200, []
+    async.eachSeries req.conversation, (message, cb) ->
+        message.moveToTrash cb
+    , (err) ->
+        return next err if err
+        res.send 200, []
 
 
 module.exports.conversationPatch = (req, res, next) ->
