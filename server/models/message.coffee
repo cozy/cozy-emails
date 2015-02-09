@@ -684,7 +684,7 @@ Message::toClientObject = ->
         attachments = raw.attachments or []
         raw.html = mailutils.sanitizeHTML raw.html, raw.id, attachments
 
-    if not raw.text?
+    if not raw.text? and raw.html?
         raw.text = htmlToText.fromString raw.html,
             tables: true
             wordwrap: 80

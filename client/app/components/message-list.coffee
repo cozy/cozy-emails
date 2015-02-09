@@ -500,6 +500,8 @@ MessageItem = React.createClass
         compact = @props.settings.get('listStyle') is 'compact'
         date    = MessageUtils.formatDate message.get('createdAt'), compact
         avatar  = MessageUtils.getAvatar message
+        text    = message.get('text')
+        preview = if text? then text.substr(0, 100) + "…" else ''
 
         li
             className: classes
@@ -535,7 +537,7 @@ MessageItem = React.createClass
                                 @props.conversationLength
                         span className: 'title',
                             message.get 'subject'
-                        p null, message.get('text')?.substr(0, 100) + "…"
+                        p null, preview
                     span className: 'hour', date
                     span className: "flags",
                         i className: 'attach fa fa-paperclip'
