@@ -69,10 +69,11 @@ module.exports =
             type: ActionTypes.SETTINGS_UPDATED
             value: settings
 
-    messageNavigate: (direction) ->
+    messageNavigate: (direction, inConv) ->
         if not onMessageList()
             return
-        conv = SettingsStore.get('displayConversation') and SettingsStore.get('displayPreview')
+        conv = inConv and SettingsStore.get('displayConversation') and SettingsStore.get('displayPreview')
+        console.log conv
         if direction is 'prev'
             next = MessageStore.getPreviousMessage conv
         else
