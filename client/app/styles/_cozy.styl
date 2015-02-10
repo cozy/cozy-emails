@@ -72,6 +72,10 @@ textarea
       background-color actioncolor
       border-color actioncolor
 
+    &:active
+    &:focus
+        outline 0
+
   &.btn-cozy.toggled
     box-shadow 1px 3px 2px rgba(0, 0, 0, 0.2) inset, 0 1px 2px rgba(0, 0, 0, 0.0)
     background-color basecolor - 10%
@@ -90,10 +94,15 @@ textarea
 
 .btn.btn-cozy-non-default
     color basecolor
+    background-color transparent
 
     &:hover
         text-decoration underline
         color actioncolor
+
+    &:active
+    &:focus
+        outline 0
 
 .hidden
   display none
