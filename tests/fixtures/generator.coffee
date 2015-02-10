@@ -1,4 +1,5 @@
 fs = require 'fs'
+path = require 'path'
 loremIpsum = require 'lorem-ipsum'
 moment = require 'moment'
 
@@ -116,8 +117,8 @@ for i in [1..numberOfEmails] by 1
         "conversationID": "conversation_id_#{i}"
 
 
-targetFile = './tests/fixtures/messages_generated.json'
+targetFile = path.resolve __dirname, 'messages_generated.json'
 json = JSON.stringify messages, null, '  '
-fs.writeFile targetFile, json, flag: 'w', (err) ->
+fs.writeFile targetFile, json, flag: 'w+', (err) ->
     console.log err if err?
 console.log "Done generating #{numberOfEmails} messages"
