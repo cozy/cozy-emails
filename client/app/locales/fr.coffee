@@ -122,6 +122,7 @@ module.exports =
       "account edit"                : "Modifier le compte"
       "account add"                 : "Créer"
       "account save"                : "Enregistrer"
+      "account saving"              : "En cours…"
       "account check"               : "Tester la connexion"
       "account accountType short"   : "IMAP"
       "account accountType"         : "Type de compte"
