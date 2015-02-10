@@ -437,6 +437,7 @@ MessageList = React.createClass
         setTimeout =>
             scrollable.removeEventListener 'scroll', @_loadNext
             scrollable.addEventListener 'scroll', @_loadNext
+            @_loadNext()
         , 0
 
     componentDidMount: ->
