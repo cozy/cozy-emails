@@ -1,5 +1,9 @@
-require = patchRequire global.require
-init = require("../common").init
+if global?
+    require = patchRequire global.require
+else
+    require = patchRequire this.require
+    require.globals.casper = casper
+init = require(fs.workingDirectory + "/client/tests/casper/common").init
 files = [
     {
         fileName: "file1.txt"

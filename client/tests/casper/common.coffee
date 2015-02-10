@@ -1,4 +1,7 @@
-require = patchRequire global.require
+if global?
+    require = patchRequire global.require
+else
+    require = patchRequire this.require
 utils   = require "utils"
 system  = require "system"
 x       = require('casper.js').selectXPath
@@ -86,7 +89,7 @@ exports.init = (casper) ->
     if dev
         casper.options.verbose = true
         casper.options.logLevel = 'debug'
-    casper.options.waitTimeout = 60000
+    casper.options.waitTimeout = 10000
     casper.options.timeout = 200000
     casper.options.viewportSize = {width: 1024, height: 768}
     casper.on 'exit', (res) ->
