@@ -92,6 +92,11 @@ module.exports = Dispatcher = class Dispatcher
     dispatch: (payload) ->
         message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + \
                   'of a dispatch.'
+        if this._isDispatching
+            # TOTO
+            debugger
+            console.log "pending", JSON.stringify(this._pendingPayload), "new", JSON.stringify(payload)
+
         invariant(
             not this._isDispatching,
             message
