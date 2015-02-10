@@ -110,7 +110,9 @@ module.exports =
         closeUrl = window.router.buildUrl
             direction: 'first'
             action: 'account.mailbox.messages'
-            parameters: AccountStore.getSelected().get 'id'
+            parameters:
+                accountID: AccountStore.getSelected().get 'id'
+                mailboxID: AccountStore.getSelectedMailbox().get 'id'
             fullWidth: true
         window.router.navigate closeUrl, {trigger: true}
 
