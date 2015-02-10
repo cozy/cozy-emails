@@ -44349,18 +44349,32 @@ if (typeof window.plugins !== "object") {
       },
       'j': {
         name: "Next Message",
-        alias: ['down', 'right'],
+        alias: ['down'],
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageNavigate('next');
         }
       },
+      'right': {
+        name: "Next Message in conversation",
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageNavigate('next', true);
+        }
+      },
       'k': {
         name: "Previous Message",
-        alias: ['up', 'left'],
+        alias: ['up'],
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageNavigate('prev');
+        }
+      },
+      'left': {
+        name: "Previous Message in conversation",
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageNavigate('prev', true);
         }
       },
       'ctrl+down': {

@@ -1409,9 +1409,9 @@ AccountConfigMain = React.createClass({
     return this.setState(this._propsToState(props));
   },
   render: function() {
-    var buttonLabel, cancelUrl, getError, hasError;
+    var buttonLabel, cancelUrl, formClass, getError, hasError;
     if (this.props.isWaiting) {
-      buttonLabel = 'Saving...';
+      buttonLabel = t('account saving');
     } else if (this.props.selectedAccount != null) {
       buttonLabel = t("account save");
     } else {
@@ -1447,8 +1447,13 @@ AccountConfigMain = React.createClass({
       action: 'default',
       fullWidth: true
     });
+    formClass = classer({
+      'form-horizontal': true,
+      'form-account': true,
+      'waiting': this.props.isWaiting
+    });
     return form({
-      className: 'form-horizontal',
+      className: formClass,
       method: 'POST'
     }, this.renderError(), fieldset(null, legend(null, t('account identifiers'))), AccountInput({
       name: 'label',
@@ -2695,8 +2700,8 @@ module.exports = Application = React.createClass({
         message: message,
         conversation: conversation,
         conversationLength: conversationLength,
-        prev: MessageStore.getPreviousMessage(this.state.settings.get('displayConversation')),
-        next: MessageStore.getNextMessage(this.state.settings.get('displayConversation')),
+        prev: MessageStore.getPreviousMessage(),
+        next: MessageStore.getNextMessage(),
         ref: 'conversation'
       });
     } else if (panelInfo.action === 'compose') {
@@ -5175,7 +5180,8 @@ MessageList = React.createClass({
     return setTimeout((function(_this) {
       return function() {
         scrollable.removeEventListener('scroll', _this._loadNext);
-        return scrollable.addEventListener('scroll', _this._loadNext);
+        scrollable.addEventListener('scroll', _this._loadNext);
+        return _this._loadNext();
       };
     })(this), 0);
   },
@@ -5199,7 +5205,7 @@ MessageItem = React.createClass({
   displayName: 'MessagesItem',
   mixins: [RouterMixin],
   render: function() {
-    var action, avatar, classes, compact, conversationID, date, flags, isDraft, message, params, tag, url, _ref2;
+    var action, avatar, classes, compact, conversationID, date, flags, isDraft, message, params, preview, tag, text, url;
     message = this.props.message;
     flags = message.get('flags');
     classes = classer({
@@ -5246,6 +5252,8 @@ MessageItem = React.createClass({
     compact = this.props.settings.get('listStyle') === 'compact';
     date = MessageUtils.formatDate(message.get('createdAt'), compact);
     avatar = MessageUtils.getAvatar(message);
+    text = message.get('text');
+    preview = text != null ? text.substr(0, 100) + "…" : '';
     return li({
       className: classes,
       key: this.props.key,
@@ -5281,7 +5289,7 @@ MessageItem = React.createClass({
       className: 'badge conversation-length'
     }, this.props.conversationLength) : void 0, span({
       className: 'title'
-    }, message.get('subject')), p(null, ((_ref2 = message.get('text')) != null ? _ref2.substr(0, 100) : void 0) + "…")), span({
+    }, message.get('subject')), p(null, preview)), span({
       className: 'hour'
     }, date), span({
       className: "flags"
@@ -5770,7 +5778,7 @@ module.exports = React.createClass({
       }, p({
         className: 'sender'
       }, this.renderAddress('from'), i({
-        className: 'toggle-headers fa fa-toggle-up',
+        className: 'toggle-headers fa fa-toggle-up clickable',
         onClick: this.toggleHeaders
       })), p({
         className: 'receivers'
@@ -5799,14 +5807,15 @@ module.exports = React.createClass({
       }), span({
         className: 'participants'
       }, this.getParticipants(prepared)), this.state.active ? i({
-        className: 'toggle-headers fa fa-toggle-down',
+        className: 'toggle-headers fa fa-toggle-down clickable',
         onClick: this.toggleHeaders
       }) : void 0, span({
         className: 'hour'
       }, prepared.date), span({
         className: "flags"
       }, i({
-        className: 'attach fa fa-paperclip'
+        className: 'attach fa fa-paperclip clickable',
+        onClick: this.toggleHeaders
       }), i({
         className: 'fav fa fa-star'
       })));
@@ -5820,7 +5829,8 @@ module.exports = React.createClass({
     }
     return Participants({
       participants: addresses,
-      onAdd: this.addAddress
+      onAdd: this.addAddress,
+      tooltip: true
     });
   },
   renderCompose: function() {
@@ -6509,10 +6519,14 @@ Participant = React.createClass({
     }
   },
   componentDidMount: function() {
-    return this.tooltip();
+    if (this.props.tooltip) {
+      return this.tooltip();
+    }
   },
   componentDidUpdate: function() {
-    return this.tooltip();
+    if (this.props.tooltip) {
+      return this.tooltip();
+    }
   }
 });
 
@@ -6535,7 +6549,8 @@ Participants = React.createClass({
           }, Participant({
             key: key,
             address: address,
-            onAdd: this.props.onAdd
+            onAdd: this.props.onAdd,
+            tooltip: this.props.tooltip
           }), key < (this.props.participants.length - 1) ? span(null, ', ') : void 0));
         }
         return _results;
@@ -7699,6 +7714,10 @@ module.exports = Dispatcher = Dispatcher = (function() {
   Dispatcher.prototype.dispatch = function(payload) {
     var id, message, _results;
     message = 'Dispatch.dispatch(...): Cannot dispatch in the middle ' + 'of a dispatch.';
+    if (this._isDispatching) {
+      debugger;
+      console.log("pending", JSON.stringify(this._pendingPayload), "new", JSON.stringify(payload));
+    }
     invariant(!this._isDispatching, message);
     this._startDispatching(payload);
     try {
@@ -8335,6 +8354,7 @@ module.exports = {
   "account edit": "Edit account",
   "account add": "Add",
   "account save": "Save",
+  "account saving": "Saving",
   "account check": "Check connection",
   "account accountType short": "IMAP",
   "account accountType": "Account type",
@@ -8607,6 +8627,7 @@ module.exports = {
   "account edit": "Modifier le compte",
   "account add": "Créer",
   "account save": "Enregistrer",
+  "account saving": "En cours…",
   "account check": "Tester la connexion",
   "account accountType short": "IMAP",
   "account accountType": "Type de compte",
@@ -9900,7 +9921,6 @@ MessageStore = (function(_super) {
 
   MessageStore.prototype.getPreviousMessage = function(isConv) {
     var convID, idx, keys, prev, _ref1;
-    isConv = false;
     if ((isConv != null) && isConv) {
       if (_conversationMemoize == null) {
         return null;
@@ -9939,7 +9959,6 @@ MessageStore = (function(_super) {
 
   MessageStore.prototype.getNextMessage = function(isConv) {
     var idx, keys;
-    isConv = false;
     if ((isConv != null) && isConv) {
       if (_conversationMemoize == null) {
         return null;
@@ -10322,12 +10341,13 @@ module.exports = {
       value: settings
     });
   },
-  messageNavigate: function(direction) {
+  messageNavigate: function(direction, inConv) {
     var MessageActionCreator, conv, next;
     if (!onMessageList()) {
       return;
     }
-    conv = SettingsStore.get('displayConversation') && SettingsStore.get('displayPreview');
+    conv = inConv && SettingsStore.get('displayConversation') && SettingsStore.get('displayPreview');
+    console.log(conv);
     if (direction === 'prev') {
       next = MessageStore.getPreviousMessage(conv);
     } else {
@@ -10376,7 +10396,10 @@ module.exports = {
     closeUrl = window.router.buildUrl({
       direction: 'first',
       action: 'account.mailbox.messages',
-      parameters: AccountStore.getSelected().get('id'),
+      parameters: {
+        accountID: AccountStore.getSelected().get('id'),
+        mailboxID: AccountStore.getSelectedMailbox().get('id')
+      },
       fullWidth: true
     });
     return window.router.navigate(closeUrl, {

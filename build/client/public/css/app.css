@@ -1891,20 +1891,6 @@ textarea:active,
     left: 0;
   }
 }
-#page-content #panels .panel:first-of-type.col-md-6 {
-  -webkit-transition: width 0.3s ease;
-  -moz-transition: width 0.3s ease;
-  -o-transition: width 0.3s ease;
-  -ms-transition: width 0.3s ease;
-  transition: width 0.3s ease;
-}
-#page-content #panels .panel:first-of-type.col-md-12 {
-  -webkit-transition: width 0.3s ease;
-  -moz-transition: width 0.3s ease;
-  -o-transition: width 0.3s ease;
-  -ms-transition: width 0.3s ease;
-  transition: width 0.3s ease;
-}
 #page-content #panels.horizontal .panel:nth-of-type(2) {
   left: 0;
 }
@@ -2420,14 +2406,6 @@ textarea:active,
 #email-compose.enable {
   display: block;
 }
-#email-compose.col-md-6,
-#email-compose.col-md-12 {
-  -webkit-transition: width 0.2s ease-out;
-  -moz-transition: width 0.2s ease-out;
-  -o-transition: width 0.2s ease-out;
-  -ms-transition: width 0.2s ease-out;
-  transition: width 0.2s ease-out;
-}
 #email-compose h3 {
   color: #444;
   margin-top: 0;
@@ -2721,14 +2699,6 @@ textarea:active,
 }
 .message-list.disable {
   display: none;
-}
-.message-list.col-md-6,
-.message-list.col-md-12 {
-  -webkit-transition: width 0.2s ease-out;
-  -moz-transition: width 0.2s ease-out;
-  -o-transition: width 0.2s ease-out;
-  -ms-transition: width 0.2s ease-out;
-  transition: width 0.2s ease-out;
 }
 .message-list .pagination-box {
   text-align: center;
