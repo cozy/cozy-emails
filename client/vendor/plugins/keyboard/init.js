@@ -24,7 +24,7 @@ if (typeof window.plugins !== "object") {
       if (Array.isArray(binding.alias)) {
         name = name.concat(binding.alias);
       }
-      help.innerHTML += "<dt>" + name.join(', ') + "&nbsp;: </dt><dd>" + binding.name + "</dd>";
+      help.innerHTML += "<dt><kbd>" + name.join(', ') + "&nbsp;: </kbd></dt><dd>" + binding.name + "</dd>";
     });
     container.appendChild(help);
     container.classList.add('mailkeys-container');
