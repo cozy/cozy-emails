@@ -45,7 +45,8 @@ casper.cozy.selectAccount = (account, box, cb) ->
         casper.click "[data-reactid='#{id}'] .item-label"
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
             casper.waitForSelector ".message-list li.message", ->
-                cb()
+                if cb?
+                    cb()
             , ->
                 casper.test.fail "No message in #{account}/#{box}"
         , ->
