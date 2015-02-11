@@ -73,11 +73,8 @@ casper.test.begin 'Test Message Selection', (test) ->
         , ->
             casper.cozy.selectAccount "DoveCot", "Test Folder", ->
                 test.assertExists '.message-list li.message:nth-of-type(1).active', 'First message selected'
-                doSelect 4, ->
-                    doSelect 1, ->
-                        doSelect 3, ->
-                            casper.evaluate ->
-                                window.cozyMails.setSetting 'displayConversation', true
+                doSelect 3, ->
+                    doSelect 1
 
     casper.then ->
         test.comment "Click navigation"
