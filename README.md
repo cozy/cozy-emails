@@ -65,15 +65,22 @@ We've adopted IMAP naming conventions, which means:
 
 ### Frontend
 
-Test suite is based on CasperJS. Test data are loaded by cozy-fixtures. So,
-prior to run it, you
-need to install additional tools:
-  
+Tests suite is based on CasperJS. Tests data are loaded by cozy-fixtures. So,
+prior to run it, you need to install additional tools:
+
     sudo apt-get install phantomjs
     sudo npm install casperjs -g # version >= 1.1 is required.
     sudo npm install cozy-fixtures -g
 
-    npm run-script load-fixtures && npm run-script client-test
+    npm run fixtures
+
+To run the client's tests, you also need to start the server:
+
+    coffee server.coffee
+
+Then you can run the client's tests:
+
+    npm run test:client
 
 ### Backend
 
