@@ -2866,7 +2866,7 @@ module.exports = Compose = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, labelSend, onCancel, toggleFullscreen, _ref1;
+    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, labelSend, onCancel, toggleFullscreen, _ref1, _ref2;
     if (!this.props.accounts) {
       return;
     }
@@ -2905,7 +2905,9 @@ module.exports = Compose = React.createClass({
       className: 'close-email pull-right clickable'
     }, i({
       className: 'fa fa-compress'
-    })), h3(null, this.state.subject || t('compose')), form({
+    })), h3({
+      'data-message-id': ((_ref1 = this.props.message) != null ? _ref1.get('id') : void 0) || ''
+    }, this.state.subject || t('compose')), form({
       className: 'form-compose'
     }, div({
       className: 'form-group account'
@@ -2967,7 +2969,7 @@ module.exports = Compose = React.createClass({
       htmlFor: 'compose-subject',
       className: classLabel
     }, t("compose content")), ComposeEditor({
-      messageID: (_ref1 = this.props.message) != null ? _ref1.get('id') : void 0,
+      messageID: (_ref2 = this.props.message) != null ? _ref2.get('id') : void 0,
       html: this.linkState('html'),
       text: this.linkState('text'),
       settings: this.props.settings,
@@ -3167,6 +3169,9 @@ module.exports = Compose = React.createClass({
             LayoutActionCreator.notify(msgOk, {
               autoclose: true
             });
+            if (_this.state.id == null) {
+              MessageActionCreator.setCurrent(message.id);
+            }
             _this.setState(message);
             if (!isDraft) {
               if (_this.props.callback != null) {
@@ -3198,7 +3203,7 @@ module.exports = Compose = React.createClass({
               return _this.redirect({
                 direction: 'first',
                 action: 'account.mailbox.messages',
-                parameters: [_this.props.selectedAccount.get('id'), _this.props.selectedMailboxID, 1],
+                parameters: [_this.props.selectedAccount.get('id'), _this.props.selectedMailboxID],
                 fullWidth: true
               });
             }
@@ -3846,7 +3851,7 @@ FileItem = React.createClass({
     iconClass = icons[type] || 'fa-file-o';
     return li({
       className: "file-item",
-      key: file.name
+      key: this.props.key
     }, i({
       className: "mime " + type + " fa " + iconClass
     }), this.props.editable ? i({
@@ -4040,7 +4045,8 @@ module.exports = MailsInput = React.createClass({
       ref: 'contactInput',
       valueLink: this.proxyValueLink(),
       type: 'text',
-      placeholder: this.props.placeholder
+      placeholder: this.props.placeholder,
+      'autoComplete': 'off'
     }), div({
       className: 'input-group-addon btn btn-cozy contact',
       onClick: this.onQuery
@@ -5181,7 +5187,8 @@ MessageList = React.createClass({
       return function() {
         scrollable.removeEventListener('scroll', _this._loadNext);
         scrollable.addEventListener('scroll', _this._loadNext);
-        return _this._loadNext();
+        _this._loadNext();
+        return _this._checkNextInterval = window.setInterval(_this._loadNext, 10000);
       };
     })(this), 0);
   },
@@ -5195,7 +5202,10 @@ MessageList = React.createClass({
   componentWillUnmount: function() {
     var scrollable;
     scrollable = this.refs.list.getDOMNode().parentNode;
-    return scrollable.removeEventListener('scroll', this._loadNext);
+    scrollable.removeEventListener('scroll', this._loadNext);
+    if (this._checkNextInterval != null) {
+      return window.clearInterval(this._checkNextInterval);
+    }
   }
 });
 
@@ -10281,7 +10291,7 @@ module.exports = {
     var message, messageID;
     messageID = MessageStore.getCurrentID();
     message = MessageStore.getByID(messageID);
-    return message.toJS();
+    return message != null ? message.toJS() : void 0;
   },
   getCurrentActions: function() {
     var res;
@@ -10331,7 +10341,7 @@ module.exports = {
       for (k in key) {
         if (!__hasProp.call(key, k)) continue;
         v = key[k];
-        settings[key] = value;
+        settings[k] = v;
       }
     } else {
       settings[key] = value;
