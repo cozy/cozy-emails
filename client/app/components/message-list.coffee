@@ -438,6 +438,8 @@ MessageList = React.createClass
             scrollable.removeEventListener 'scroll', @_loadNext
             scrollable.addEventListener 'scroll', @_loadNext
             @_loadNext()
+            # a lot of event can make the "more messages" label visible, so we check every few seconds
+            @_checkNextInterval = window.setInterval @_loadNext, 10000
         , 0
 
     componentDidMount: ->
@@ -451,6 +453,8 @@ MessageList = React.createClass
     componentWillUnmount: ->
         scrollable = @refs.list.getDOMNode().parentNode
         scrollable.removeEventListener 'scroll', @_loadNext
+        if @_checkNextInterval?
+            window.clearInterval @_checkNextInterval
 
 module.exports = MessageList
 
