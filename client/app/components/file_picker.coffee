@@ -206,7 +206,7 @@ FileItem = React.createClass
             'word'         : 'fa-file-word-o'
         iconClass = icons[type] or 'fa-file-o'
 
-        li className: "file-item", key: file.name,
+        li className: "file-item", key: @props.key,
             i className: "mime #{type} fa #{iconClass}"
             if @props.editable
                 i className: "fa fa-times delete", onClick: @doDelete

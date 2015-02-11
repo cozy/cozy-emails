@@ -7,13 +7,16 @@
     "level": "warn"
   },
   "cyclomatic_complexity": {
+    "value": 40,
     "level": "warn"
   },
   "max_line_length": {
-    "value": 80,
+    "value": 300,
     "level": "error"
   },
   "prefer_english_operator": {
     "level": "warn"
+  },
+  "missing_fat_arrows": {
   }
 }

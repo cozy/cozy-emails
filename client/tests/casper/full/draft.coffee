@@ -1,12 +1,16 @@
-require = patchRequire global.require
-init    = require("../common").init
-utils   = require "utils.js"
+if global?
+    require = patchRequire global.require
+else
+    require = patchRequire this.require
+    require.globals.casper = casper
+init  = require(fs.workingDirectory + "/client/tests/casper/common").init
+utils = require "utils.js"
 
 initSettings = ->
     casper.evaluate ->
         settings =
             "composeInHTML": true
-            "composeOnTop":false
+            "composeOnTop": false
             "displayConversation":false
             "displayPreview":true
             "layoutStyle":"three"
@@ -17,9 +21,16 @@ initSettings = ->
 casper.test.begin 'Test draft', (test) ->
     init casper
 
+    messageID = ''
+
     casper.start casper.cozy.startUrl, ->
         test.comment "Compose Draft"
         initSettings()
+        casper.waitFor ->
+            casper.evaluate ->
+                window.cozyMails.getSetting 'composeInHTML'
+
+    casper.then ->
         casper.click "#menu .compose-action"
         casper.waitForSelector "#email-compose .rt-editor", ->
             casper.click '.form-compose [data-value=dovecot-ID]'
@@ -31,18 +42,23 @@ casper.test.begin 'Test draft', (test) ->
                 "#compose-subject": "my draft subject",
                 "#compose-to": "to@cozy.io"
             casper.evaluate ->
-                document.querySelector('.rt-editor').innerHTML = "<p><em>Hello,</em><br>Join us now and share the software</p>"
-            casper.sendKeys '.rt-editor', "\n"
+                editor = document.querySelector('.rt-editor')
+                editor.innerHTML = "<div><em>Hello,</em><br>Join us now and share the software</div>"
+                evt = document.createEvent 'HTMLEvents'
+                evt.initEvent 'input', true, true
+                editor.dispatchEvent evt
             casper.click '.composeToolbox .btn-save'
             casper.waitForSelector '.composeToolbox .fa-refresh', ->
                 casper.waitWhileSelector '.composeToolbox .fa-refresh', ->
-                    test.pass 'Message should be saved'
+                    messageID = casper.evaluate ->
+                        window.cozyMails.getCurrentMessage().id
+                    test.pass "Message is saved: #{messageID}"
                     #casper.reload
 
     casper.then ->
         test.comment "Edit draft"
         initSettings()
-        casper.cozy.selectMessage "DoveCot", "Draft", "my draft subject", (messageID) ->
+        casper.cozy.selectMessage "DoveCot", "Draft", "my draft subject", messageID, ->
             casper.waitForSelector "#email-compose .rt-editor", ->
                 test.assertExists '#email-compose', 'Compose form is displayed'
                 values = casper.getFormValues('#email-compose form')
@@ -53,9 +69,9 @@ casper.test.begin 'Test draft', (test) ->
                 test.assertEquals casper.fetchText('.rt-editor'), "Hello,Join us now and share the software", "message HTML"
                 message = casper.evaluate ->
                     return window.cozyMails.getCurrentMessage()
-                test.assertEquals message.text, "_\n_\n\n_Hello,_\nJoin us now and share the software", "messageText"
+                test.assertEquals message.text, "_Hello,_\nJoin us now and share the software", "messageText"
                 casper.click '.composeToolbox .btn-delete'
-                casper.waitWhileSelector '#email-compose', ->
+                casper.waitWhileSelector "#email-compose h3[data-message-id=#{messageID}]", ->
                     test.pass 'Compose closed'
                     casper.reload ->
                         test.assertDoesntExist "li.message[data-message-id='#{messageID}']", "message deleted"

@@ -1,7 +1,11 @@
-require = patchRequire global.require
-init    = require("../common").init
-utils   = require "utils.js"
-x       = require('casper.js').selectXPath
+if global?
+    require = patchRequire global.require
+else
+    require = patchRequire this.require
+    require.globals.casper = casper
+init  = require(fs.workingDirectory + "/client/tests/casper/common").init
+utils = require "utils.js"
+x     = require('casper.js').selectXPath
 
 casper.test.begin 'Test Message Actions', (test) ->
     init casper
@@ -25,8 +29,8 @@ casper.test.begin 'Test Message Actions', (test) ->
             casper.click "#{currentSel} .messageToolbox button.reply"
             casper.waitForSelector '#email-compose', ->
                 test.pass "Compose form displayed"
-                test.assertNotVisible '#compose-cc', 'Cc hidden'
-                test.assertNotVisible '#compose-bcc', 'Bcc hidden'
+                test.assertNotVisible '.form-group.compose-cc', 'Cc hidden'
+                test.assertNotVisible '.form-group.compose-bcc', 'Bcc hidden'
                 values = casper.getFormValues('#email-compose form')
                 test.assertEquals values["compose-to"], "you@cozycloud.cc", "Reply To"
                 test.assertEquals values["compose-cc"], "", "Reply Cc"
@@ -71,8 +75,8 @@ casper.test.begin 'Test Message Actions', (test) ->
             casper.click "#{currentSel} .messageToolbox button.reply-all"
             casper.waitForSelector '#email-compose', ->
                 test.pass "Compose form displayed"
-                test.assertVisible '#compose-cc', 'Cc visible'
-                test.assertNotVisible '#compose-bcc', 'Bcc hidden'
+                test.assertVisible '.form-group.compose-cc', 'Cc shown'
+                test.assertNotVisible '.form-group.compose-bcc', 'Bcc hidden'
                 values = casper.getFormValues('#email-compose form')
                 test.assertEquals values["compose-to"], "you@cozycloud.cc", "Reply All To"
                 test.assertEquals values["compose-cc"], 'contact@cozycloud.cc', "Reply All Cc"
@@ -90,8 +94,8 @@ casper.test.begin 'Test Message Actions', (test) ->
             casper.click "#{currentSel} .messageToolbox button.forward"
             casper.waitForSelector '#email-compose', ->
                 test.pass "Compose form displayed"
-                test.assertNotVisible '#compose-cc', 'Cc hidden'
-                test.assertNotVisible '#compose-bcc', 'Bcc hidden'
+                test.assertNotVisible '.form-group.compose-cc', 'Cc hidden'
+                test.assertNotVisible '.form-group.compose-bcc', 'Bcc hidden'
                 values = casper.getFormValues('#email-compose form')
                 test.assertEquals values["compose-to"], "", "Forward To"
                 test.assertEquals values["compose-cc"], "", "Forward Cc"

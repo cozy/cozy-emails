@@ -1,5 +1,9 @@
-require = patchRequire global.require
-init = require("../common").init
+if global?
+    require = patchRequire global.require
+else
+    require = patchRequire this.require
+    require.globals.casper = casper
+init = require(fs.workingDirectory + "/client/tests/casper/common").init
 nbContacts = 0
 contacts = [
     {name: "Dr Claude Lambda"   , address: "claude.lambda@cozytest.cc"},
@@ -65,6 +69,7 @@ casper.test.begin 'Test Activities', (test) ->
                 window.test1 = this
             activity.onerror = ->
                 window.test1 = this
+            return null
         casper.waitFor ->
             return casper.getGlobal 'test1'
         , ->
@@ -95,6 +100,7 @@ casper.test.begin 'Test Activities', (test) ->
                 window.test2 = this
             activity.onerror = ->
                 window.test2 = this
+            return null
         casper.waitFor ->
             return casper.getGlobal 'test2'
         , ->
@@ -114,6 +120,7 @@ casper.test.begin 'Test Activities', (test) ->
                 window.test3 = this
             activity.onerror = ->
                 window.test3 = this
+            return null
         casper.waitFor ->
             return casper.getGlobal 'test3'
         , ->
@@ -183,6 +190,7 @@ casper.test.begin 'Test Activities', (test) ->
                         window.test6 = this
                     activity.onerror = ->
                         window.test6 = this
+                    return null
                 casper.waitFor ->
                     return casper.getGlobal 'test6'
                 , ->

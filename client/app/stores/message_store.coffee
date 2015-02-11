@@ -294,8 +294,6 @@ class MessageStore extends Store
         return _conversationMemoizeID
 
     getPreviousMessage: (isConv) ->
-        # reverting conversation navigation
-        isConv = false
         if isConv? and isConv
             if not _conversationMemoize?
                 return null
@@ -324,8 +322,6 @@ class MessageStore extends Store
             return if idx is -1 then null else _currentMessages.get keys[idx - 1]
 
     getNextMessage: (isConv) ->
-        # reverting conversation navigation
-        isConv = false
         if isConv? and isConv
             if not _conversationMemoize?
                 return null
