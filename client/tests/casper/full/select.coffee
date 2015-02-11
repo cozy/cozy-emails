@@ -66,21 +66,6 @@ casper.test.begin 'Test Message Selection', (test) ->
                         casper.cozy.selectAccount "DoveCot", "INBOX"
 
     casper.then ->
-        test.comment "Selecting by click in conversation mode"
-        casper.evaluate ->
-            window.cozyMails.setSetting 'displayConversation', true
-        casper.waitFor ->
-            casper.evaluate ->
-                window.cozyMails.getSetting 'displayConversation'
-        , ->
-            casper.cozy.selectAccount "DoveCot", "Test Folder", ->
-                test.assertExists '.message-list li.message:nth-of-type(1).active', 'First message selected'
-                doSelect 3, ->
-                    doSelect 1, ->
-                        # force folder update
-                        casper.cozy.selectAccount "DoveCot", "INBOX"
-
-    casper.then ->
         test.comment "Click navigation"
         casper.evaluate ->
             window.cozyMails.setSetting 'displayConversation', false
@@ -98,6 +83,21 @@ casper.test.begin 'Test Message Selection', (test) ->
                                     doNav 'left', 2, ->
                                         # force folder update
                                         casper.cozy.selectAccount "DoveCot", "INBOX"
+
+    casper.then ->
+        test.comment "Selecting by click in conversation mode"
+        casper.evaluate ->
+            window.cozyMails.setSetting 'displayConversation', true
+        casper.waitFor ->
+            casper.evaluate ->
+                window.cozyMails.getSetting 'displayConversation'
+        , ->
+            casper.cozy.selectAccount "DoveCot", "Test Folder", ->
+                test.assertExists '.message-list li.message:nth-of-type(1).active', 'First message selected'
+                doSelect 3, ->
+                    doSelect 1, ->
+                        # force folder update
+                        casper.cozy.selectAccount "DoveCot", "INBOX"
 
 
     ### Conversation navigation has been reverted
