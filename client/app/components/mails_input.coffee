@@ -10,7 +10,6 @@ classer = React.addons.classSet
 
 # Public: input to enter multiple mails
 # @TODO : use something tag-it like
-# @TODO : autocomplete contacts
 
 module.exports = MailsInput = React.createClass
     displayName: 'MailsInput'
@@ -70,6 +69,7 @@ module.exports = MailsInput = React.createClass
                     valueLink: @proxyValueLink(),
                     type: 'text',
                     placeholder: @props.placeholder
+                    'autoComplete': 'off'
                 div
                     className: 'input-group-addon btn btn-cozy contact',
                     onClick: @onQuery,
