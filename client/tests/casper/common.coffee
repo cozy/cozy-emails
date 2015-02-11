@@ -2,6 +2,7 @@ if global?
     require = patchRequire global.require
 else
     require = patchRequire this.require
+fs = require 'fs'
 utils   = require "utils"
 system  = require "system"
 x       = require('casper.js').selectXPath
@@ -44,7 +45,8 @@ casper.cozy.selectAccount = (account, box, cb) ->
         casper.click "[data-reactid='#{id}'] .item-label"
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
             casper.waitForSelector ".message-list li.message", ->
-                cb()
+                if cb?
+                    cb()
             , ->
                 casper.test.fail "No message in #{account}/#{box}"
         , ->
@@ -72,7 +74,7 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
             casper.click subjectSel
             casper.waitForSelector subjectDone, ->
                 if not (typeof messageID is 'string')
-                    infos = casper.getElementInfo '.message-list li.message.active'
+                    infos = casper.getElementInfo subjectSel
                     messageID = infos.attributes['data-message-id']
                 cb(subject, messageID)
             , ->
@@ -94,8 +96,9 @@ exports.init = (casper) ->
     casper.options.viewportSize = {width: 1024, height: 768}
     casper.on 'exit', (res) ->
         if res isnt 0 or dev
-            casper.capture("last.png")
-            require('fs').write('last.html', this.getHTML())
+            outputDir = fs.workingDirectory + "/client/tests/output/"
+            casper.capture(outputDir + "last.png")
+            fs.write(outputDir + 'last.html', this.getHTML())
     casper.on "remote.message", (msg) ->
         if typeof msg isnt 'string'
             msg = utils.serialize(msg, 2)
@@ -110,7 +113,10 @@ exports.init = (casper) ->
     casper.on "load.finished", ->
         if casper.getTitle() isnt 'Cozy Emails'
             return
+        if casper.getGlobal('__tests')?
+            return
         accounts = casper.evaluate ->
+            window.__tests = {}
             if window.cozyMails?
                 # ensure locale is english
                 window.cozyMails.setLocale 'en', true
@@ -120,6 +126,19 @@ exports.init = (casper) ->
                 PluginUtils = require '../utils/plugin_utils'
                 for pluginName, pluginConf of window.plugins
                     PluginUtils.deactivate pluginName
+                # default settings
+                settings =
+                    composeInHTML        : true
+                    composeOnTop         : false
+                    desktopNotifications : false
+                    displayConversation  : true
+                    displayPreview       : true
+                    layoutStyle          : 'vertical'
+                    listStyle            : 'default'
+                    messageConfirmDelete : true
+                    messageDisplayHTML   : true
+                    messageDisplayImages : false
+                cozyMails.setSetting settings
             return window.accounts
         if not accounts? or
         not Array.isArray accounts or
@@ -130,5 +149,8 @@ exports.init = (casper) ->
             casper.die("Fixtures not loaded, dying")
     casper.test.on 'fail', (failure) ->
         if failure? and typeof failure.message is 'string'
-            casper.capture "#{failure.message.replace(/\W/gim, '')}.png"
+            outputDir = fs.workingDirectory + "/client/tests/output/"
+            outputFile = failure.message.replace(/\W/gim, '')
+            casper.capture "#{outputDir}#{outputFile}.png"
+            fs.write("#{outputDir}#{outputFile}.html", casper.getHTML())
         else console.log failure

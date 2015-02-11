@@ -20,7 +20,7 @@ module.exports =
     getCurrentMessage: ->
         messageID = MessageStore.getCurrentID()
         message = MessageStore.getByID messageID
-        return message.toJS()
+        return message?.toJS()
 
     getCurrentActions: ->
         res = []
@@ -62,7 +62,7 @@ module.exports =
         settings = SettingsStore.get().toJS()
         if typeof key is 'object'
             for own k, v of key
-                settings[key] = value
+                settings[k] = v
         else
             settings[key] = value
         AppDispatcher.handleViewAction
