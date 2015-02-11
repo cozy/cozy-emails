@@ -21,6 +21,8 @@ initSettings = ->
 casper.test.begin 'Test draft', (test) ->
     init casper
 
+    messageID = ''
+
     casper.start casper.cozy.startUrl, ->
         test.comment "Compose Draft"
         initSettings()
@@ -48,13 +50,15 @@ casper.test.begin 'Test draft', (test) ->
             casper.click '.composeToolbox .btn-save'
             casper.waitForSelector '.composeToolbox .fa-refresh', ->
                 casper.waitWhileSelector '.composeToolbox .fa-refresh', ->
-                    test.pass 'Message should be saved'
+                    messageID = casper.evaluate ->
+                        window.cozyMails.getCurrentMessage().id
+                    test.pass "Message is saved: #{messageID}"
                     #casper.reload
 
     casper.then ->
         test.comment "Edit draft"
         initSettings()
-        casper.cozy.selectMessage "DoveCot", "Draft", "my draft subject", (messageID) ->
+        casper.cozy.selectMessage "DoveCot", "Draft", "my draft subject", messageID, ->
             casper.waitForSelector "#email-compose .rt-editor", ->
                 test.assertExists '#email-compose', 'Compose form is displayed'
                 values = casper.getFormValues('#email-compose form')

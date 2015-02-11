@@ -20,7 +20,7 @@ module.exports =
     getCurrentMessage: ->
         messageID = MessageStore.getCurrentID()
         message = MessageStore.getByID messageID
-        return message.toJS()
+        return message?.toJS()
 
     getCurrentActions: ->
         res = []

@@ -331,6 +331,10 @@ module.exports = Compose = React.createClass
                     LayoutActionCreator.alertError "#{msgKo} #{error}"
                 else
                     LayoutActionCreator.notify msgOk, autoclose: true
+
+                    if not @state.id?
+                        MessageActionCreator.setCurrent message.id
+
                     @setState message
 
                     if not isDraft

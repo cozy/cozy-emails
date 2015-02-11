@@ -73,7 +73,7 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
             casper.click subjectSel
             casper.waitForSelector subjectDone, ->
                 if not (typeof messageID is 'string')
-                    infos = casper.getElementInfo '.message-list li.message.active'
+                    infos = casper.getElementInfo subjectSel
                     messageID = infos.attributes['data-message-id']
                 cb(subject, messageID)
             , ->
@@ -112,7 +112,10 @@ exports.init = (casper) ->
     casper.on "load.finished", ->
         if casper.getTitle() isnt 'Cozy Emails'
             return
+        if casper.getGlobal('__tests')?
+            return
         accounts = casper.evaluate ->
+            window.__tests = {}
             if window.cozyMails?
                 # ensure locale is english
                 window.cozyMails.setLocale 'en', true
@@ -122,6 +125,19 @@ exports.init = (casper) ->
                 PluginUtils = require '../utils/plugin_utils'
                 for pluginName, pluginConf of window.plugins
                     PluginUtils.deactivate pluginName
+                # default settings
+                settings =
+                    composeInHTML        : true
+                    composeOnTop         : false
+                    desktopNotifications : false
+                    displayConversation  : true
+                    displayPreview       : true
+                    layoutStyle          : 'vertical'
+                    listStyle            : 'default'
+                    messageConfirmDelete : true
+                    messageDisplayHTML   : true
+                    messageDisplayImages : false
+                cozyMails.setSetting settings
             return window.accounts
         if not accounts? or
         not Array.isArray accounts or
