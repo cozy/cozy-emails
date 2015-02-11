@@ -2,6 +2,7 @@ if global?
     require = patchRequire global.require
 else
     require = patchRequire this.require
+fs = require 'fs'
 utils   = require "utils"
 system  = require "system"
 x       = require('casper.js').selectXPath
@@ -94,8 +95,9 @@ exports.init = (casper) ->
     casper.options.viewportSize = {width: 1024, height: 768}
     casper.on 'exit', (res) ->
         if res isnt 0 or dev
-            casper.capture("last.png")
-            require('fs').write('last.html', this.getHTML())
+            outputDir = fs.workingDirectory + "/client/tests/output/"
+            casper.capture(outputDir + "last.png")
+            fs.write(outputDir + 'last.html', this.getHTML())
     casper.on "remote.message", (msg) ->
         if typeof msg isnt 'string'
             msg = utils.serialize(msg, 2)
@@ -130,5 +132,8 @@ exports.init = (casper) ->
             casper.die("Fixtures not loaded, dying")
     casper.test.on 'fail', (failure) ->
         if failure? and typeof failure.message is 'string'
-            casper.capture "#{failure.message.replace(/\W/gim, '')}.png"
+            outputDir = fs.workingDirectory + "/client/tests/output/"
+            outputFile = failure.message.replace(/\W/gim, '')
+            casper.capture "#{outputDir}#{outputFile}.png"
+            fs.write("#{outputDir}#{outputFile}.html", casper.getHTML())
         else console.log failure
