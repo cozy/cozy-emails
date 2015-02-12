@@ -1,7 +1,11 @@
-require = patchRequire global.require
-init    = require("../common").init
-utils   = require "utils.js"
-x       = require('casper.js').selectXPath
+if global?
+    require = patchRequire global.require
+else
+    require = patchRequire this.require
+    require.globals.casper = casper
+init  = require(fs.workingDirectory + "/client/tests/casper/common").init
+utils = require "utils.js"
+x     = require('casper.js').selectXPath
 
 casper.test.begin 'Test conversation', (test) ->
     init casper

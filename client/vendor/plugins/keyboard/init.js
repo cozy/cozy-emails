@@ -24,7 +24,7 @@ if (typeof window.plugins !== "object") {
       if (Array.isArray(binding.alias)) {
         name = name.concat(binding.alias);
       }
-      help.innerHTML += "<dt>" + name.join(', ') + "&nbsp;: </dt><dd>" + binding.name + "</dd>";
+      help.innerHTML += "<dt><kbd>" + name.join(', ') + "&nbsp;: </kbd></dt><dd>" + binding.name + "</dd>";
     });
     container.appendChild(help);
     container.classList.add('mailkeys-container');
@@ -161,18 +161,32 @@ if (typeof window.plugins !== "object") {
       },
       'j': {
         name: "Next Message",
-        alias: ['down', 'right'],
+        alias: ['down'],
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageNavigate('next');
         }
       },
+      'right': {
+        name: "Next Message in conversation",
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageNavigate('next', true);
+        }
+      },
       'k': {
         name: "Previous Message",
-        alias: ['up', 'left'],
+        alias: ['up'],
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageNavigate('prev');
+        }
+      },
+      'left': {
+        name: "Previous Message in conversation",
+        action: function (e) {
+          e.preventDefault();
+          window.cozyMails.messageNavigate('prev', true);
         }
       },
       'ctrl+down': {

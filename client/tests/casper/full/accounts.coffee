@@ -1,6 +1,10 @@
-require = patchRequire global.require
-init    = require("../common").init
-utils   = require "utils.js"
+if global?
+    require = patchRequire global.require
+else
+    require = patchRequire this.require
+    require.globals.casper = casper
+init  = require(fs.workingDirectory + "/client/tests/casper/common").init
+utils = require "utils.js"
 
 deleteTestAccounts = ->
     casper.evaluate ->
@@ -87,16 +91,20 @@ casper.test.begin 'Create account', (test) ->
                         '#mailbox-imapServer': values['mailbox-imapServer']
                         '#maibox-accountType': values['account-type']
                     casper.click "#mailbox-config button.action-save"
-                    casper.wait 500, ->
-                        test.assertSelectorHasText "#mailbox-config button.action-save", "Add", "Wrong SMTP Server"
-                        test.assertEquals casper.getFormValues('form'), values, "Form not changed"
-                        test.assertDoesntExist ".has-error #mailbox-label", "No error on label"
-                        test.assertExist ".has-error #mailbox-smtpServer", "Error on SMTP"
-                        casper.fillSelectors 'form', '#mailbox-accountType': 'TEST'
-                        casper.wait 500, ->
-                            casper.click "#mailbox-config button.action-save"
-                            casper.waitForSelector "#mailbox-config .nav-tabs", ->
-                                test.pass 'No more errors ☺'
+                    casper.waitForSelector '.form-account.waiting', ->
+                        casper.waitWhileSelector '.form-account.waiting', ->
+                            test.assertSelectorHasText "#mailbox-config button.action-save", "Add", "Wrong SMTP Server"
+                            test.assertEquals casper.getFormValues('form'), values, "Form not changed"
+                            test.assertDoesntExist ".has-error #mailbox-label", "No error on label"
+                            test.assertExist ".has-error #mailbox-smtpServer", "Error on SMTP"
+                            casper.fillSelectors 'form',
+                                '#mailbox-accountType': 'TEST'
+                                '#mailbox-smtpServer': values['mailbox-smtpServer']
+                                '#mailbox-imapServer': values['mailbox-imapServer']
+                            casper.wait 500, ->
+                                casper.click "#mailbox-config button.action-save"
+                                casper.waitForSelector "#mailbox-config .nav-tabs", ->
+                                    test.pass 'No more errors ☺'
 
     casper.then ->
         test.comment "Creating mailbox"
@@ -143,6 +151,7 @@ casper.test.begin 'Create account', (test) ->
             window.confirm = (txt) ->
                 window.cozytest.confirmTxt = txt
                 return true
+            return null
         casper.click ".box .box-action.delete i"
         casper.waitFor ->
             confirm = casper.evaluate ->
@@ -179,7 +188,6 @@ casper.test.begin 'Test accounts', (test) ->
                 test.assertSelectorHasText "#mailbox-config h3", "Edit account"
                 test.assertSelectorHasText "#mailbox-config .nav-tabs .active", "Account", "Account tab is active"
                 test.assertSelectorHasText "#mailbox-config .nav-tabs", "Folders", "Folder tab visible"
-
 
     casper.run ->
         deleteTestAccounts()

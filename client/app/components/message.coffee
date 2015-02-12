@@ -248,7 +248,7 @@ module.exports = React.createClass
                         p className: 'sender',
                             @renderAddress 'from'
                             i
-                                className: 'toggle-headers fa fa-toggle-up'
+                                className: 'toggle-headers fa fa-toggle-up clickable'
                                 onClick: @toggleHeaders
                         p className: 'receivers',
                             span null, t "mail receivers"
@@ -279,12 +279,14 @@ module.exports = React.createClass
                 span className: 'participants', @getParticipants prepared
                 if @state.active
                     i
-                        className: 'toggle-headers fa fa-toggle-down'
+                        className: 'toggle-headers fa fa-toggle-down clickable'
                         onClick: @toggleHeaders
                 #span className: 'subject', @props.message.get 'subject'
                 span className: 'hour', prepared.date
                 span className: "flags",
-                    i className: 'attach fa fa-paperclip'
+                    i
+                        className: 'attach fa fa-paperclip clickable'
+                        onClick: @toggleHeaders
                     i className: 'fav fa fa-star'
                 #if @props.inConversation
                 #    toggleActive
@@ -295,7 +297,7 @@ module.exports = React.createClass
         if not addresses?
             return
 
-        Participants participants: addresses, onAdd: @addAddress
+        Participants participants: addresses, onAdd: @addAddress, tooltip: true
 
     renderCompose: ->
         if @state.composing

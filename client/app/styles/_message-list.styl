@@ -10,10 +10,6 @@
     &.disable
         display none
 
-    &.col-md-6
-    &.col-md-12
-        transition width 0.2s ease-out
-
     .pagination-box
         text-align center
 
@@ -204,16 +200,22 @@
 .message-list-option
 
     .btn.btn-default
-        font-size: 1em
+        font-size: 1.1em
         transition: color 0.2s ease
         background: none
         box-shadow: none
         border: 0
         color: basecolor
 
+        &:active
+            color actioncolor - 10%
+
     .btn.btn-default.shown
     .btn.btn-default:hover
         color: actioncolor
+
+        &:active
+            color actioncolor - 10%
 
 .message-list-actions
 
