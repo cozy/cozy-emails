@@ -1740,6 +1740,10 @@ textarea:active,
   background-color: #fe8800;
   border-color: #fe8800;
 }
+.btn.btn-cozy:active,
+.btn.btn-cozy:focus {
+  outline: 0;
+}
 .btn.btn-cozy.toggled {
   -webkit-box-shadow: 1px 3px 2px rgba(0,0,0,0.2) inset, 0 1px 2px rgba(0,0,0,0);
   box-shadow: 1px 3px 2px rgba(0,0,0,0.2) inset, 0 1px 2px rgba(0,0,0,0);
@@ -1759,10 +1763,15 @@ textarea:active,
 }
 .btn.btn-cozy-non-default {
   color: #34a6ff;
+  background-color: transparent;
 }
 .btn.btn-cozy-non-default:hover {
   text-decoration: underline;
   color: #fe8800;
+}
+.btn.btn-cozy-non-default:active,
+.btn.btn-cozy-non-default:focus {
+  outline: 0;
 }
 .hidden {
   display: none;
@@ -1890,20 +1899,6 @@ textarea:active,
   #page-content #panels .panel:nth-of-type(2) {
     left: 0;
   }
-}
-#page-content #panels .panel:first-of-type.col-md-6 {
-  -webkit-transition: width 0.3s ease;
-  -moz-transition: width 0.3s ease;
-  -o-transition: width 0.3s ease;
-  -ms-transition: width 0.3s ease;
-  transition: width 0.3s ease;
-}
-#page-content #panels .panel:first-of-type.col-md-12 {
-  -webkit-transition: width 0.3s ease;
-  -moz-transition: width 0.3s ease;
-  -o-transition: width 0.3s ease;
-  -ms-transition: width 0.3s ease;
-  transition: width 0.3s ease;
 }
 #page-content #panels.horizontal .panel:nth-of-type(2) {
   left: 0;
@@ -2181,15 +2176,22 @@ textarea:active,
   -o-transition: color 0.3s ease;
   -ms-transition: color 0.3s ease;
   transition: color 0.3s ease;
+  font-size: 14px;
 }
 .conversation .thread .message .messageToolbox .btn.btn-default:hover {
   color: #fe8800;
+}
+.conversation .thread .message .messageToolbox .btn.btn-default:active {
+  color: #e57a00;
 }
 .conversation .thread .message .messageToolbox .btn.btn-default.reply {
   color: #5c5;
 }
 .conversation .thread .message .messageToolbox .btn.btn-default.reply:hover {
   color: #fe8800;
+}
+.conversation .thread .message .messageToolbox .btn.btn-default.reply:active {
+  color: #e57a00;
 }
 .conversation .thread .message .messageNavigation {
   margin-bottom: 0;
@@ -2419,14 +2421,6 @@ textarea:active,
 }
 #email-compose.enable {
   display: block;
-}
-#email-compose.col-md-6,
-#email-compose.col-md-12 {
-  -webkit-transition: width 0.2s ease-out;
-  -moz-transition: width 0.2s ease-out;
-  -o-transition: width 0.2s ease-out;
-  -ms-transition: width 0.2s ease-out;
-  transition: width 0.2s ease-out;
 }
 #email-compose h3 {
   color: #444;
@@ -2722,14 +2716,6 @@ textarea:active,
 .message-list.disable {
   display: none;
 }
-.message-list.col-md-6,
-.message-list.col-md-12 {
-  -webkit-transition: width 0.2s ease-out;
-  -moz-transition: width 0.2s ease-out;
-  -o-transition: width 0.2s ease-out;
-  -ms-transition: width 0.2s ease-out;
-  transition: width 0.2s ease-out;
-}
 .message-list .pagination-box {
   text-align: center;
 }
@@ -2966,7 +2952,7 @@ textarea:active,
   cursor: pointer;
 }
 .message-list-option .btn.btn-default {
-  font-size: 1em;
+  font-size: 1.1em;
   -webkit-transition: color 0.2s ease;
   -moz-transition: color 0.2s ease;
   -o-transition: color 0.2s ease;
@@ -2978,9 +2964,16 @@ textarea:active,
   border: 0;
   color: #34a6ff;
 }
+.message-list-option .btn.btn-default:active {
+  color: #e57a00;
+}
 .message-list-option .btn.btn-default.shown,
 .message-list-option .btn.btn-default:hover {
   color: #fe8800;
+}
+.message-list-option .btn.btn-default.shown:active,
+.message-list-option .btn.btn-default:hover:active {
+  color: #e57a00;
 }
 .message-list-actions .btn.btn-default.dropdown-toggle.move,
 .message-list-actions .btn.btn-default.dropdown-toggle.more {
