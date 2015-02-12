@@ -364,21 +364,37 @@ module.exports.send = (req, res, next) ->
 
 
 module.exports.fetchConversation = (req, res, next) ->
-    Message.byConversationID req.params.conversationID, (err, messages) ->
+    conversationID = req.params.conversationID
+    Message.byConversationID conversationID, (err, messages) ->
         return next err if err
 
-        req.conversation = messages
-        next()
+        if messages.length is 0
+            next NotFound "conversation##{conversationID}"
+        else
+            log.debug "conversation##{conversationID}", messages.length
+            req.conversation = messages
+            next()
 
 module.exports.conversationGet = (req, res, next) ->
     res.send 200, req.conversation.map (msg) -> msg.toClientObject()
 
 module.exports.conversationDelete = (req, res, next) ->
-    async.eachSeries req.conversation, (message, cb) ->
-        message.moveToTrash cb
-    , (err) ->
+    accountID = req.conversation[0].accountID
+
+    Account.find accountID, (err, account) ->
         return next err if err
-        res.send 200, []
+        return next new NotFound "Account##{accountID}" unless account
+
+        console.log account
+
+        unless account.trashMailbox
+            next new AccountConfigError 'trashMailbox'
+        else
+            async.eachSeries req.conversation, (message, cb) ->
+                message.moveToTrash account, cb
+            , (err) ->
+                return next err if err
+                res.send 200, []
 
 
 module.exports.conversationPatch = (req, res, next) ->
