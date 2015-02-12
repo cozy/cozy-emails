@@ -777,7 +777,7 @@ Message.prototype.toClientObject = function() {
     attachments = raw.attachments || [];
     raw.html = mailutils.sanitizeHTML(raw.html, raw.id, attachments);
   }
-  if (raw.text == null) {
+  if ((raw.text == null) && (raw.html != null)) {
     raw.text = htmlToText.fromString(raw.html, {
       tables: true,
       wordwrap: 80
