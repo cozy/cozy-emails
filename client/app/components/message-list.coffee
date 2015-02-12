@@ -437,6 +437,9 @@ MessageList = React.createClass
         setTimeout =>
             scrollable.removeEventListener 'scroll', @_loadNext
             scrollable.addEventListener 'scroll', @_loadNext
+            @_loadNext()
+            # a lot of event can make the "more messages" label visible, so we check every few seconds
+            @_checkNextInterval = window.setInterval @_loadNext, 10000
         , 0
 
     componentDidMount: ->
@@ -450,6 +453,8 @@ MessageList = React.createClass
     componentWillUnmount: ->
         scrollable = @refs.list.getDOMNode().parentNode
         scrollable.removeEventListener 'scroll', @_loadNext
+        if @_checkNextInterval?
+            window.clearInterval @_checkNextInterval
 
 module.exports = MessageList
 
@@ -500,6 +505,8 @@ MessageItem = React.createClass
         compact = @props.settings.get('listStyle') is 'compact'
         date    = MessageUtils.formatDate message.get('createdAt'), compact
         avatar  = MessageUtils.getAvatar message
+        text    = message.get('text')
+        preview = if text? then text.substr(0, 100) + "…" else ''
 
         li
             className: classes
@@ -535,7 +542,7 @@ MessageItem = React.createClass
                                 @props.conversationLength
                         span className: 'title',
                             message.get 'subject'
-                        p null, message.get('text')?.substr(0, 100) + "…"
+                        p null, preview
                     span className: 'hour', date
                     span className: "flags",
                         i className: 'attach fa fa-paperclip'

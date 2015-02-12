@@ -1,4 +1,4 @@
-
+require('http').globalAgent.maxSocket = 100
 
 
 americano = require 'americano'

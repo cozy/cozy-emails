@@ -20,7 +20,7 @@ module.exports =
     getCurrentMessage: ->
         messageID = MessageStore.getCurrentID()
         message = MessageStore.getByID messageID
-        return message.toJS()
+        return message?.toJS()
 
     getCurrentActions: ->
         res = []
@@ -62,17 +62,18 @@ module.exports =
         settings = SettingsStore.get().toJS()
         if typeof key is 'object'
             for own k, v of key
-                settings[key] = value
+                settings[k] = v
         else
             settings[key] = value
         AppDispatcher.handleViewAction
             type: ActionTypes.SETTINGS_UPDATED
             value: settings
 
-    messageNavigate: (direction) ->
+    messageNavigate: (direction, inConv) ->
         if not onMessageList()
             return
-        conv = SettingsStore.get('displayConversation') and SettingsStore.get('displayPreview')
+        conv = inConv and SettingsStore.get('displayConversation') and SettingsStore.get('displayPreview')
+        console.log conv
         if direction is 'prev'
             next = MessageStore.getPreviousMessage conv
         else
@@ -109,7 +110,9 @@ module.exports =
         closeUrl = window.router.buildUrl
             direction: 'first'
             action: 'account.mailbox.messages'
-            parameters: AccountStore.getSelected().get 'id'
+            parameters:
+                accountID: AccountStore.getSelected().get 'id'
+                mailboxID: AccountStore.getSelectedMailbox().get 'id'
             fullWidth: true
         window.router.navigate closeUrl, {trigger: true}
 

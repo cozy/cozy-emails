@@ -69,7 +69,8 @@ module.exports = Compose = React.createClass
             else
                 a onClick: toggleFullscreen, className: 'close-email pull-right clickable',
                     i className:'fa fa-compress'
-            h3 null,
+            h3
+                'data-message-id': @props.message?.get('id') or ''
                 @state.subject or t 'compose'
             form className: 'form-compose',
                 div className: 'form-group account',
@@ -330,6 +331,10 @@ module.exports = Compose = React.createClass
                     LayoutActionCreator.alertError "#{msgKo} #{error}"
                 else
                     LayoutActionCreator.notify msgOk, autoclose: true
+
+                    if not @state.id?
+                        MessageActionCreator.setCurrent message.id
+
                     @setState message
 
                     if not isDraft
@@ -353,7 +358,7 @@ module.exports = Compose = React.createClass
                         @redirect
                             direction: 'first'
                             action: 'account.mailbox.messages'
-                            parameters: [@props.selectedAccount.get('id'), @props.selectedMailboxID, 1]
+                            parameters: [@props.selectedAccount.get('id'), @props.selectedMailboxID]
                             fullWidth: true
 
     onToggleCc: (e) ->

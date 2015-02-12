@@ -104,9 +104,12 @@ Participant = React.createClass
                 addTooltip()
 
     componentDidMount: ->
-        @tooltip()
+        if @props.tooltip
+            @tooltip()
+
     componentDidUpdate: ->
-        @tooltip()
+        if @props.tooltip
+            @tooltip()
 
 Participants = React.createClass
     displayName: 'Participants'
@@ -116,7 +119,7 @@ Participants = React.createClass
             if @props.participants
                 for address, key in @props.participants
                     span key: key, className: null,
-                        Participant {key, address, onAdd: @props.onAdd}
+                        Participant {key, address, onAdd: @props.onAdd, tooltip: @props.tooltip}
                         if key < ( @props.participants.length - 1)
                             span null, ', '
 
