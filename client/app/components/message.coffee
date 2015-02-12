@@ -297,7 +297,7 @@ module.exports = React.createClass
         if not addresses?
             return
 
-        Participants participants: addresses, onAdd: @addAddress
+        Participants participants: addresses, onAdd: @addAddress, tooltip: true
 
     renderCompose: ->
         if @state.composing
