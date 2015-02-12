@@ -7182,11 +7182,8 @@ _ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags
 module.exports = ToolboxActions = React.createClass({
   displayName: 'ToolboxActions',
   render: function() {
-    var direction, messageRawId;
+    var direction;
     direction = this.props.direction === 'right' ? 'right' : 'left';
-    if (this.props.message != null) {
-      messageRawId = this.props.message.get('mailboxIDs')[this.props.mailboxID];
-    }
     return div({
       className: 'btn-group btn-group-sm'
     }, button({
@@ -7227,7 +7224,7 @@ module.exports = ToolboxActions = React.createClass({
     }, t('mail action headers'))) : void 0, this.props.message != null ? li({
       role: 'presentation'
     }, a({
-      href: "raw/" + this.props.mailboxID + "/" + messageRawId,
+      href: "raw/" + (this.props.message.get('id')),
       target: '_blank'
     }, t('mail action raw'))) : void 0, li({
       role: 'presentation'
