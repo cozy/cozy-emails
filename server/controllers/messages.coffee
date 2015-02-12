@@ -396,15 +396,19 @@ module.exports.conversationPatch = (req, res, next) ->
         res.send 200, messages
 
 module.exports.raw = (req, res, next) ->
-    req.mailbox.doASAPWithBox (imap, imapbox, cb) ->
-        try
-            imap.fetchOneMailRaw req.params.messageID, (err, message) ->
-                cb()
-                return next err if err
-                # should be message/rfc822 but text/plain allow to read the
-                # raw message in the browser
-                res.type 'text/plain'
-                res.send 200, message
-        catch e
-            cb()
-            return next e
+
+    boxID = Object.keys(req.message.mailboxIDs)[0]
+    uid = req.message.mailboxIDs[boxID]
+
+    Mailbox.find boxID, (err, mailbox) ->
+        return next err if err
+
+        mailbox.doASAPWithBox (imap, imapbox, cbRelease) ->
+            try imap.fetchOneMailRaw uid, cbRelease
+            catch err then cbRelease err
+        , (err, message) ->
+            return next err if err
+            # should be message/rfc822 but text/plain allow to read the
+            # raw message in the browser
+            res.type 'text/plain'
+            res.send 200, message
