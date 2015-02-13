@@ -70,9 +70,9 @@ for i in [1..numberOfEmails] by 1
     content = loremIpsum count: getRandom(10), units: 'paragraphs', random: randomWithSeed
 
     # simulate email thread
-    if getRandom(10) > 3
-        inReplyTo  = "generated_id_#{i - 1}"
-        references = "generated_id_#{i - 2} generated_id_#{i - 1}"
+    if getRandom(10) > 3 and i > 2
+        inReplyTo  = ["generated_id_#{i - 1}"]
+        references = ["generated_id_#{i - 2}", "generated_id_#{i - 1}"]
     else
         inReplyTo  = null
         references = null
