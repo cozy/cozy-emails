@@ -1,6 +1,6 @@
-americano = require MODEL_MODULE
+cozydb = require 'cozydb'
 
-module.exports = Account = americano.getModel 'Account',
+module.exports = Account = cozydb.getModel 'Account',
     label: String               # human readable label for the account
     name: String                # user name to put in sent mails
     login: String               # IMAP & SMTP login
@@ -18,12 +18,13 @@ module.exports = Account = americano.getModel 'Account',
     imapSSL: Boolean            # Use SSL
     imapTLS: Boolean            # Use STARTTLS
     inboxMailbox: String        # INBOX Maibox id
+    flaggedMailbox: String      # \Flag Mailbox id
     draftMailbox: String        # \Draft Maibox id
     sentMailbox: String         # \Sent Maibox id
     trashMailbox: String        # \Trash Maibox id
     junkMailbox: String         # \Junk Maibox id
     allMailbox: String          # \All Maibox id
-    favorites: (x) -> x         # [String] Maibox id of displayed boxes
+    favorites: [String]         # [String] Maibox id of displayed boxes
 
 
 
@@ -80,7 +81,11 @@ Account.refreshAccounts = (accounts, limitByBox, onlyFavorites, callback) ->
         log.debug "refreshing account #{account.label}"
         return cb null if account.isTest()
         return cb null if account.isRefreshing()
-        account.imap_fetchMails limitByBox, onlyFavorites, cb
+        account.imap_fetchMails limitByBox, onlyFavorites, (err) ->
+            if err
+                log.error "CANT REFRESH ACCOUNT", account.id, err
+            # refresh all accounts even if one fails
+            cb null
     , callback
 
 

@@ -7,6 +7,7 @@ _ = require 'lodash'
 async = require 'async'
 querystring = require 'querystring'
 multiparty = require 'multiparty'
+stream = require 'stream'
 stream_to_buffer_array = require '../utils/stream_to_array'
 messageUtils = require '../utils/jwz_tools'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
@@ -185,12 +186,17 @@ contentToBuffer = (req, attachment, callback) ->
     # file in the DS, from a previous save of the draft
     # cache it and pass around
     if attachment.url
-        stream = req.message.getBinary filename, (err) ->
+        fileStream = req.message.getBinary filename, (err) ->
             log.error "Attachment streaming error", err if err
 
-        stream_to_buffer_array stream, (err, buffers) ->
-            return callback err if err
-            callback null, Buffer.concat buffers
+        chunks = []
+        bufferer = new stream.Writable
+        bufferer._write = (chunk, enc, next) ->
+            chunks.push(chunk)
+            next()
+        bufferer.end = ->
+            callback null, Buffer.concat chunks
+        fileStream.pipe bufferer
 
     # file just uploaded, take the buffer from the multipart req
     # content is a buffer
@@ -212,7 +218,9 @@ module.exports.send = (req, res, next) ->
 
     message.attachments ?= []
     message.flags = ['\\Seen']
-    if message.isDraft
+    isDraft = message.isDraft
+    delete message.isDraft
+    if isDraft
         message.flags.push '\\Draft'
 
     message.content = message.text
@@ -246,7 +254,7 @@ module.exports.send = (req, res, next) ->
     jdbMessage = null
     uidInDest = null
 
-    unless message.isDraft
+    unless isDraft
         # Send the message first
         steps.push (cb) ->
             log.debug "send#sending"
@@ -268,7 +276,7 @@ module.exports.send = (req, res, next) ->
                 cb()
 
     # If we will need the draftbox
-    if previousUID or message.isDraft
+    if previousUID or isDraft
         steps.push (cb) ->
             log.debug "send#getdraftbox"
             id = account.draftMailbox
@@ -288,7 +296,7 @@ module.exports.send = (req, res, next) ->
 
 
     # Add the message to draft or sent folder (imap)
-    if message.isDraft
+    if isDraft
         steps.push (cb) ->
             destination = draftBox
             log.debug "send#add_to_draft"
@@ -350,23 +358,43 @@ module.exports.send = (req, res, next) ->
     async.series steps, (err) ->
         return next err if err
         return next new Error('Server error') unless jdbMessage
-        res.send 200, jdbMessage.toClientObject()
+        out = jdbMessage.toClientObject()
+        out.isDraft = isDraft
+        res.send 200, out
 
 
 module.exports.fetchConversation = (req, res, next) ->
-    Message.byConversationID req.params.conversationID, (err, messages) ->
+    conversationID = req.params.conversationID
+    Message.byConversationID conversationID, (err, messages) ->
         return next err if err
 
-        req.conversation = messages
-        next()
+        if messages.length is 0
+            next NotFound "conversation##{conversationID}"
+        else
+            log.debug "conversation##{conversationID}", messages.length
+            req.conversation = messages
+            next()
 
 module.exports.conversationGet = (req, res, next) ->
     res.send 200, req.conversation.map (msg) -> msg.toClientObject()
 
 module.exports.conversationDelete = (req, res, next) ->
+    accountID = req.conversation[0].accountID
 
-    # @TODO : Delete Conversation
-    res.send 200, []
+    Account.find accountID, (err, account) ->
+        return next err if err
+        return next new NotFound "Account##{accountID}" unless account
+
+        console.log account
+
+        unless account.trashMailbox
+            next new AccountConfigError 'trashMailbox'
+        else
+            async.eachSeries req.conversation, (message, cb) ->
+                message.moveToTrash account, cb
+            , (err) ->
+                return next err if err
+                res.send 200, []
 
 
 module.exports.conversationPatch = (req, res, next) ->
@@ -384,15 +412,19 @@ module.exports.conversationPatch = (req, res, next) ->
         res.send 200, messages
 
 module.exports.raw = (req, res, next) ->
-    req.mailbox.doASAPWithBox (imap, imapbox, cb) ->
-        try
-            imap.fetchOneMailRaw req.params.messageID, (err, message) ->
-                cb()
-                return next err if err
-                # should be message/rfc822 but text/plain allow to read the
-                # raw message in the browser
-                res.type 'text/plain'
-                res.send 200, message
-        catch e
-            cb()
-            return next e
+
+    boxID = Object.keys(req.message.mailboxIDs)[0]
+    uid = req.message.mailboxIDs[boxID]
+
+    Mailbox.find boxID, (err, mailbox) ->
+        return next err if err
+
+        mailbox.doASAPWithBox (imap, imapbox, cbRelease) ->
+            try imap.fetchOneMailRaw uid, cbRelease
+            catch err then cbRelease err
+        , (err, message) ->
+            return next err if err
+            # should be message/rfc822 but text/plain allow to read the
+            # raw message in the browser
+            res.type 'text/plain'
+            res.send 200, message

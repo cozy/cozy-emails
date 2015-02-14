@@ -1,18 +1,18 @@
-CozyInstance = require '../models/cozy_instance'
 ImapReporter = require '../imap/reporter'
 Account  = require '../models/account'
 Contact  = require '../models/contact'
 Settings = require '../models/settings'
 async = require 'async'
+cozydb = require 'cozydb'
 log = require('../utils/logging')(prefix: 'controllers:index')
 
 
 module.exports.main = (req, res, next) ->
 
     async.series [
-        Settings.get
-        CozyInstance.getLocale
-        Account.clientList
+        (cb) -> Settings.get cb
+        (cb) -> cozydb.api.getCozyLocale cb
+        (cb) -> Account.clientList cb
         (callback) ->
             Contact.requestWithPictures 'all', {}, callback
     ], (err, results) ->

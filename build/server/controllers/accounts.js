@@ -89,12 +89,12 @@ module.exports.list = function(req, res, next) {
 };
 
 module.exports.edit = function(req, res, next) {
-  return Account.checkParams(req.body, function(err) {
-    var changes;
+  var changes;
+  changes = _.pick(req.body, 'label', 'login', 'password', 'name', 'account_type', 'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'smtpLogin', 'smtpPassword', 'smtpMethod', 'imapServer', 'imapPort', 'imapSSL', 'imapTLS', 'draftMailbox', 'sentMailbox', 'trashMailbox');
+  return Account.checkParams(changes, function(err) {
     if (err) {
       return next(err);
     }
-    changes = _.pick(req.body, 'label', 'login', 'password', 'name', 'account_type', 'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'smtpLogin', 'smtpPassword', 'smtpMethod', 'imapServer', 'imapPort', 'imapSSL', 'imapTLS', 'draftMailbox', 'sentMailbox', 'trashMailbox');
     return req.account.updateAttributes(changes, function(err, updated) {
       res.account = updated;
       return next(err);

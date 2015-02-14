@@ -1,14 +1,14 @@
-americano = require MODEL_MODULE
+cozydb = require 'cozydb'
 
-module.exports = Mailbox = americano.getModel 'Mailbox',
+module.exports = Mailbox = cozydb.getModel 'Mailbox',
     accountID: String        # Parent account
     label: String            # Human readable label
     path: String             # IMAP path
-    lastsync: String         # Date.ISOString of last full box synchro
-    tree: (x) -> x           # Normalized path as Array
+    lastSync: String         # Date.ISOString of last full box synchro
+    tree: [String]           # Normalized path as Array
     delimiter: String        # delimiter between this box and its children
     uidvalidity: Number      # Imap UIDValidity
-    attribs: (x) -> x        # [String] Attributes of this folder
+    attribs: [String]        # [String] Attributes of this folder
 
 Message = require './message'
 log = require('../utils/logging')(prefix: 'models:mailbox')
@@ -29,7 +29,7 @@ Mailbox.RFC6154 =
     sentMailbox:    '\\Sent'
     trashMailbox:   '\\Trash'
     allMailbox:     '\\All'
-    spamMailbox:    '\\Junk'
+    junkMailbox:    '\\Junk'
     flaggedMailbox: '\\Flagged'
 
 Mailbox::isInbox = -> @path is 'INBOX'
@@ -95,6 +95,22 @@ Mailbox.getBoxes = (accountID, callback) ->
             new Mailbox row.doc
 
         callback null, rows
+
+# Public: find selectable mailbox for an account ID
+# as an id indexed object with only path attributes
+# @TODO : optimize this with a map/reduce request
+#
+# accountID - id of the account
+#
+# Returns  [{Mailbox}]
+Mailbox.getBoxesIndexedByID = (accountID, callback) ->
+    Mailbox.getBoxes accountID, (err, boxes) =>
+        return callback err if err
+        boxIndex = {}
+        boxIndex[box.id] = path: box.path for box in boxes
+        callback null, boxIndex
+
+
 
 # Public: get this mailbox's children mailboxes
 #

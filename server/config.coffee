@@ -34,7 +34,7 @@ config =
     ]
 
     plugins: [
-        MODEL_MODULE
+        'cozydb'
     ]
 
 module.exports = config
