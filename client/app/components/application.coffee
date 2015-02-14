@@ -344,8 +344,8 @@ module.exports = Application = React.createClass
                 message           : message
                 conversation      : conversation
                 conversationLength: conversationLength
-                prev              : MessageStore.getPreviousMessage(@state.settings.get 'displayConversation')
-                next              : MessageStore.getNextMessage(@state.settings.get 'displayConversation')
+                prev              : MessageStore.getPreviousMessage()
+                next              : MessageStore.getNextMessage()
                 ref               : 'conversation'
 
         # -- Generates the new message composition form

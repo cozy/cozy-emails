@@ -316,7 +316,7 @@ AccountConfigMain = React.createClass
         @setState @_propsToState(props)
 
     render: ->
-        if @props.isWaiting then buttonLabel = 'Saving...'
+        if @props.isWaiting then buttonLabel = t 'account saving'
         else if @props.selectedAccount? then buttonLabel = t "account save"
         else buttonLabel = t "account add"
 
@@ -338,7 +338,11 @@ AccountConfigMain = React.createClass
             action: 'default'
             fullWidth: true
 
-        form className: 'form-horizontal', method: 'POST',
+        formClass = classer
+            'form-horizontal': true
+            'form-account': true
+            'waiting': @props.isWaiting
+        form className: formClass, method: 'POST',
             @renderError()
             fieldset null,
                 legend null, t 'account identifiers'
