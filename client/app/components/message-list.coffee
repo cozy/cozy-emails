@@ -30,14 +30,12 @@ MessageList = React.createClass
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
     getInitialState: ->
-        return {
-            edited: false
-            filterFlag: false
-            filterUnsead: false
-            filterAttach: false
-            selected: {}
-            allSelected: false
-        }
+        edited: false
+        filterFlag: false
+        filterUnsead: false
+        filterAttach: false
+        selected: {}
+        allSelected: false
 
     componentWillReceiveProps: (props) ->
         if props.mailboxID isnt @props.mailboxID
@@ -135,6 +133,8 @@ MessageList = React.createClass
         classEdited = classer
             active: @state.edited
 
+        btnClasses = 'btn-group btn-group-sm message-list-option'
+
         div className: 'message-list ' + classList, ref: 'list',
             div className: 'message-list-actions',
                 #if advanced and not @state.edited
@@ -143,7 +143,7 @@ MessageList = React.createClass
                     div className: 'btn-group',
                         # Toggle edit
                         if advanced
-                            div className: 'btn-group btn-group-sm message-list-option',
+                            div className: btnClasses,
                                 button
                                     type: "button"
                                     className: "btn btn-default " + classEdited
@@ -151,44 +151,54 @@ MessageList = React.createClass
                                         i className: 'fa fa-square-o'
                         # mailbox-list
                         if advanced and not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option',
+                            div className: btnClasses,
                                 MailboxList
                                     getUrl: getMailboxUrl
                                     mailboxes: @props.mailboxes
                                     selectedMailbox: @props.mailboxID
+
+                        # Responsive menu button
+                        if not advanced and not @state.edited
+                            div className: btnClasses + ' toggle-menu-button',
+                                button
+                                    onClick: @props.toggleMenu
+                                    title: t 'menu show'
+                                    className: 'btn btn-default',
+                                    span className: 'fa fa-inbox'
+
                         # filters
                         if not advanced and not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option ',
+                            div className: btnClasses,
                                 button
                                     onClick: toggleFilterUnseen
                                     title: t 'list filter unseen title'
                                     className: 'btn btn-default ' + if @state.filterUnseen then ' shown ' else '',
                                     span className: 'fa fa-envelope'
                         if not advanced and not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option ',
+                            div className: btnClasses,
                                 button
                                     onClick: toggleFilterFlag
                                     title: t 'list filter flagged title'
                                     className: 'btn btn-default ' + if @state.filterFlag then ' shown ' else '',
                                     span className: 'fa fa-star'
                         if not advanced and not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option ',
+                            div className: btnClasses,
                                 button
                                     onClick: toggleFilterAttach
                                     title: t 'list filter attach title'
                                     className: 'btn btn-default ' + if @state.filterAttach then ' shown ' else '',
                                     span className: 'fa fa-paperclip'
                         if advanced and not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option',
+                            div className: btnClasses,
                                 MessagesFilter filterParams
                         ## sort
                         if advanced and not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option',
+                            div className: btnClasses,
                                 MessagesSort filterParams
 
                         # refresh
                         if not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option',
+                            div className: btnClasses,
                                 button
                                     className: 'btn btn-default',
                                     type: 'button',
@@ -198,20 +208,20 @@ MessageList = React.createClass
                                             className: 'fa fa-refresh'
                         # config
                         if not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option',
+                            div className: btnClasses,
                                 a
                                     href: configMailboxUrl
                                     className: 'btn btn-default mailbox-config',
                                     i className: 'fa fa-cog'
                         if @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option',
+                            div className: btnClasses,
                                 button
                                     type: "button"
                                     className: "btn btn-default " + classEdited
                                     onClick: @toggleAll,
                                         i className: 'fa fa-square-o'
                         if @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option',
+                            div className: btnClasses,
                                 button
                                     className: 'btn btn-default trash',
                                     type: 'button',
@@ -233,7 +243,7 @@ MessageList = React.createClass
                                 direction: 'left'
 
                         if @props.isTrash and not @state.edited
-                            div className: 'btn-group btn-group-sm message-list-option',
+                            div className: btnClasses,
                                 button
                                     className: 'btn btn-default',
                                     type: 'button',

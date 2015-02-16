@@ -124,9 +124,9 @@ module.exports = Application = React.createClass
                     Alert { alert }
                     ToastContainer()
 
-                    a onClick: @toggleMenu, className: 'responsive-handler hidden-md hidden-lg',
-                        i className: 'fa fa-bars pull-left'
-                        t "app menu"
+                    #a onClick: @toggleMenu, className: 'responsive-handler hidden-md hidden-lg',
+                        #i className: 'fa fa-bars pull-left'
+                        #t "app menu"
                     # The quick actions bar
                     #Topbar
                     #    layout: @props.router.current
@@ -290,6 +290,7 @@ module.exports = Application = React.createClass
                 emptyListMessage: emptyListMessage
                 counterMessage:   counterMessage
                 ref:           'messageList'
+                toggleMenu: @toggleMenu
 
         # -- Generates a configuration window for a given account
         else if panelInfo.action is 'account.config'

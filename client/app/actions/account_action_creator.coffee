@@ -107,7 +107,8 @@ module.exports = AccountActionCreator =
                 callback error
 
     mailboxExpunge: (inputValues, callback) ->
-        # delete message from local store to refresh display, we'll fetch them again on error
+        # delete message from local store to refresh display, we'll fetch them
+        # again on error
         AppDispatcher.handleViewAction
             type: ActionTypes.MAILBOX_EXPUNGE
             value: inputValues.mailboxID
