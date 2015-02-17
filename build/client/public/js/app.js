@@ -2515,12 +2515,7 @@ module.exports = Application = React.createClass({
       className: responsiveClasses
     }, Alert({
       alert: alert
-    }), ToastContainer(), a({
-      onClick: this.toggleMenu,
-      className: 'responsive-handler hidden-md hidden-lg'
-    }, i({
-      className: 'fa fa-bars pull-left'
-    }), t("app menu")), div({
+    }), ToastContainer(), div({
       id: 'panels',
       className: panelsClasses
     }, div({
@@ -2648,7 +2643,8 @@ module.exports = Application = React.createClass({
         conversationLengths: conversationLengths,
         emptyListMessage: emptyListMessage,
         counterMessage: counterMessage,
-        ref: 'messageList'
+        ref: 'messageList',
+        toggleMenu: this.toggleMenu
       });
     } else if (panelInfo.action === 'account.config') {
       selectedAccount = AccountStore.getSelected();
@@ -4681,7 +4677,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, messages, nbMessages, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, btnClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, messages, nbMessages, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
     compact = this.props.settings.get('listStyle') === 'compact';
     messages = this.props.messages.map((function(_this) {
       return function(message, key) {
@@ -4815,6 +4811,7 @@ MessageList = React.createClass({
     classEdited = classer({
       active: this.state.edited
     });
+    btnClasses = 'btn-group btn-group-sm message-list-option';
     return div({
       className: 'message-list ' + classList,
       ref: 'list'
@@ -4826,7 +4823,7 @@ MessageList = React.createClass({
     }, div({
       className: 'btn-group'
     }, advanced ? div({
-      className: 'btn-group btn-group-sm message-list-option'
+      className: btnClasses
     }, button({
       type: "button",
       className: "btn btn-default " + classEdited,
@@ -4834,13 +4831,21 @@ MessageList = React.createClass({
     }, i({
       className: 'fa fa-square-o'
     }))) : void 0, advanced && !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option'
+      className: btnClasses
     }, MailboxList({
       getUrl: getMailboxUrl,
       mailboxes: this.props.mailboxes,
       selectedMailbox: this.props.mailboxID
     })) : void 0, !advanced && !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option '
+      className: btnClasses + ' toggle-menu-button'
+    }, button({
+      onClick: this.props.toggleMenu,
+      title: t('menu show'),
+      className: 'btn btn-default'
+    }, span({
+      className: 'fa fa-inbox'
+    }))) : void 0, !advanced && !this.state.edited ? div({
+      className: btnClasses
     }, button({
       onClick: toggleFilterUnseen,
       title: t('list filter unseen title'),
@@ -4848,7 +4853,7 @@ MessageList = React.createClass({
     }, span({
       className: 'fa fa-envelope'
     }))) : void 0, !advanced && !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option '
+      className: btnClasses
     }, button({
       onClick: toggleFilterFlag,
       title: t('list filter flagged title'),
@@ -4856,7 +4861,7 @@ MessageList = React.createClass({
     }, span({
       className: 'fa fa-star'
     }))) : void 0, !advanced && !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option '
+      className: btnClasses
     }, button({
       onClick: toggleFilterAttach,
       title: t('list filter attach title'),
@@ -4864,11 +4869,11 @@ MessageList = React.createClass({
     }, span({
       className: 'fa fa-paperclip'
     }))) : void 0, advanced && !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option'
+      className: btnClasses
     }, MessagesFilter(filterParams)) : void 0, advanced && !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option'
+      className: btnClasses
     }, MessagesSort(filterParams)) : void 0, !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option'
+      className: btnClasses
     }, button({
       className: 'btn btn-default',
       type: 'button',
@@ -4877,14 +4882,14 @@ MessageList = React.createClass({
     }, span({
       className: 'fa fa-refresh'
     }))) : void 0, !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option'
+      className: btnClasses
     }, a({
       href: configMailboxUrl,
       className: 'btn btn-default mailbox-config'
     }, i({
       className: 'fa fa-cog'
     }))) : void 0, this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option'
+      className: btnClasses
     }, button({
       type: "button",
       className: "btn btn-default " + classEdited,
@@ -4892,7 +4897,7 @@ MessageList = React.createClass({
     }, i({
       className: 'fa fa-square-o'
     }))) : void 0, this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option'
+      className: btnClasses
     }, button({
       className: 'btn btn-default trash',
       type: 'button',
@@ -4911,7 +4916,7 @@ MessageList = React.createClass({
       onHeaders: this.onHeaders,
       direction: 'left'
     }) : void 0, this.props.isTrash && !this.state.edited ? div({
-      className: 'btn-group btn-group-sm message-list-option'
+      className: btnClasses
     }, button({
       className: 'btn btn-default',
       type: 'button',
@@ -7854,7 +7859,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-require.register("libs/flux/store/Store", function(exports, require, module) {
+;require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
