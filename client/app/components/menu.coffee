@@ -205,11 +205,13 @@ module.exports = Menu = React.createClass
                         className: 'item-label',
                         account.get 'label'
 
-                if progress = refreshes.get accountID
+                if progress = refreshes.get(accountID)
                     if progress.get('errors').length
                         span className: 'refresh-error',
                             i className: 'fa warning', onClick: @displayErrors.bind null, progress
-                    ThinProgress done: progress.get('done'), total: progress.get('total')
+
+                    if progress.get('firstImport')
+                        ThinProgress done: progress.get('done'), total: progress.get('total')
 
             if isSelected
                 ul className: 'list-unstyled submenu mailbox-list',

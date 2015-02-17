@@ -53,6 +53,7 @@ module.exports = class ImapReporter
         @account = options.account
         @objectID = options.objectID
         @code = options.code
+        @firstImport = options.firstImport
 
         ImapReporter.userTasks[@id] = this
         io?.emit 'refresh.create', @toObject()
@@ -67,7 +68,7 @@ module.exports = class ImapReporter
 
     toObject: =>
         {@id, @finished, @done, @total, @errors,
-            @box, @account, @code, @objectID}
+            @box, @account, @code, @objectID, @firstImport}
 
     onDone: ->
         @finished = true
@@ -92,19 +93,21 @@ module.exports = class ImapReporter
         @sendtoclient()
 
 
-ImapReporter.accountFetch = (account, boxesLength) ->
+ImapReporter.accountFetch = (account, boxesLength, firstImport) ->
     return new ImapReporter
         total: boxesLength
         account: account.label
         objectID: account.id
         code: 'account-fetch'
+        firstImport: firstImport
 
-ImapReporter.boxFetch = (box, total) ->
+ImapReporter.boxFetch = (box, total, firstImport) ->
     return new ImapReporter
         total: total
         box: box.label
         objectID: box.id
         code: 'box-fetch'
+        firstImport: firstImport
 
 ImapReporter.recoverUIDValidty = (box, total) ->
     return new ImapReporter
