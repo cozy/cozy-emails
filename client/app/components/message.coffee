@@ -214,9 +214,9 @@ module.exports = React.createClass
         from = prepared.from
         to   = prepared.to.concat(prepared.cc)
         span null,
-            Participants participants: from, onAdd: @addAddress
+            Participants participants: from, onAdd: @addAddress, tooltip: true
             span null, ', '
-            Participants participants: to, onAdd: @addAddress
+            Participants participants: to, onAdd: @addAddress, tooltip: true
 
     renderHeaders: (prepared) ->
         hasAttachments = prepared.attachments.length
@@ -648,7 +648,7 @@ MessageContent = React.createClass
                     window.cozyMails.customEvent "MESSAGE_LOADED", @props.message.toJS()
                     updateHeight = (e) ->
                         height = doc.body.getBoundingClientRect().height
-                        frame.style.height = "#{height + 60}px"
+                        frame.style.height = "#{height * 1.2}px"
                         step++
                         # In Chrome, onresize loops
                         if step > 10
