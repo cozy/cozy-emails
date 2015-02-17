@@ -53,7 +53,7 @@ module.exports.create = (req, res, next) ->
 module.exports.check = (req, res, next) ->
     Account.checkParams req.body, (err) ->
         return next err if err
-        res.send 200
+        res.send check: 'ok'
 
 # fetch the list of all Accounts
 # include the account mailbox tree
@@ -87,4 +87,4 @@ module.exports.remove = (req, res, next) ->
     # @TODO, handle clean up of boxes & mails
     req.account.destroyEverything (err) ->
         return next err if err
-        res.send 204
+        res.status(204).end()

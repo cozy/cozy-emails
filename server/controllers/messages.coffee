@@ -31,7 +31,7 @@ module.exports.fetchMaybe = (req, res, next) ->
 
 # return a message's details
 module.exports.details = (req, res, next) ->
-    res.send 200, req.message.toClientObject()
+    res.send req.message.toClientObject()
 
 module.exports.attachment = (req, res, next) ->
     stream = req.message.getBinary req.params.attachment, (err) ->
@@ -145,7 +145,7 @@ module.exports.listByMailbox = (req, res, next) ->
         result.messages = result.messages.map (msg) -> msg.toClientObject()
         result.links = links
 
-        res.send 200, result
+        res.send result
 
 
 
@@ -360,7 +360,7 @@ module.exports.send = (req, res, next) ->
         return next new Error('Server error') unless jdbMessage
         out = jdbMessage.toClientObject()
         out.isDraft = isDraft
-        res.send 200, out
+        res.send out
 
 
 module.exports.fetchConversation = (req, res, next) ->
@@ -376,7 +376,7 @@ module.exports.fetchConversation = (req, res, next) ->
             next()
 
 module.exports.conversationGet = (req, res, next) ->
-    res.send 200, req.conversation.map (msg) -> msg.toClientObject()
+    res.send req.conversation.map (msg) -> msg.toClientObject()
 
 module.exports.conversationDelete = (req, res, next) ->
     accountID = req.conversation[0].accountID
@@ -385,8 +385,6 @@ module.exports.conversationDelete = (req, res, next) ->
         return next err if err
         return next new NotFound "Account##{accountID}" unless account
 
-        console.log account
-
         unless account.trashMailbox
             next new AccountConfigError 'trashMailbox'
         else
@@ -394,7 +392,7 @@ module.exports.conversationDelete = (req, res, next) ->
                 message.moveToTrash account, cb
             , (err) ->
                 return next err if err
-                res.send 200, []
+                res.send []
 
 
 module.exports.conversationPatch = (req, res, next) ->
@@ -409,7 +407,7 @@ module.exports.conversationPatch = (req, res, next) ->
 
     , (err) ->
         return next err if err
-        res.send 200, messages
+        res.send messages
 
 module.exports.raw = (req, res, next) ->
 
@@ -427,4 +425,4 @@ module.exports.raw = (req, res, next) ->
             # should be message/rfc822 but text/plain allow to read the
             # raw message in the browser
             res.type 'text/plain'
-            res.send 200, message
+            res.send message
