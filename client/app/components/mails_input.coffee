@@ -43,7 +43,7 @@ module.exports = MailsInput = React.createClass
                 if match = tupple.match /"(.*)" <(.*)>/
                     name: match[1], address: match[2]
                 else
-                    address: tupple.trim()
+                    address: tupple.trimLeft()
 
             @props.valueLink.requestChange result
 
