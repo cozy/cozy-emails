@@ -34,9 +34,16 @@ body, html {
 }
 .mailkeys-help dt {
   float: left;
-  min-width: 4em;
+  min-width: 7em;
+}
+.mailkeys-help dd {
+  line-height: 1.7em;
 }
 .plugin-help {
   padding-top: .2em;
   font-size: 1.5em;
+}
+kbd {
+  line-height: 1.5em;
+  margin: 0 1em 0 0;
 }
