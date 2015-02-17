@@ -84,18 +84,18 @@ module.exports.create = function(req, res, next) {
       if (ContactActivity[activity.name] != null) {
         return ContactActivity[activity.name](activity.data, function(err, result) {
           if (err != null) {
-            return res.send(400, {
+            return res.status(400).send({
               name: err.message,
               error: true
             });
           } else {
-            return res.send(200, {
+            return res.send({
               result: result
             });
           }
         });
       } else {
-        return res.send(400, {
+        return res.status(400).send({
           name: "Unknown activity name",
           error: true
         });
@@ -103,9 +103,9 @@ module.exports.create = function(req, res, next) {
       break;
     case 'error':
       log.error(activity.data);
-      return res.send(200, null);
+      return res.send(null);
     default:
-      return res.send(400, {
+      return res.status(400).send({
         name: "Unknown activity data type",
         error: true
       });

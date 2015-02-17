@@ -51,7 +51,7 @@ module.exports.get = function(req, res, next) {
             server = servers[_j];
             parseServer(server);
           }
-          return res.send(200, infos);
+          return res.send(infos);
         };
         _results = [];
         for (_i = 0, _len = providers.length; _i < _len; _i++) {
@@ -63,6 +63,8 @@ module.exports.get = function(req, res, next) {
     }
   });
   return req.on('error', function(e) {
-    return res.send(500, "Error getting provider infos : " + e.message);
+    return res.status(500).send({
+      error: "Error getting provider infos : " + e.message
+    });
   });
 };

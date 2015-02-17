@@ -30,8 +30,9 @@ module.exports.get = (req, res, next) ->
                     parseServer server for server in servers
                     servers = provider.getElementsByTagName 'outgoingServer'
                     parseServer server for server in servers
-                    res.send 200, infos
+                    res.send infos
                 getServers provider for provider in providers
 
     req.on 'error', (e) ->
-        res.send 500, "Error getting provider infos : " + e.message
+        res.status(500).send
+            error: "Error getting provider infos : " + e.message

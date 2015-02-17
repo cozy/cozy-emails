@@ -17,11 +17,6 @@ application = module.exports = function(options, callback) {
   if (options.host == null) {
     options.host = process.env.HOST || '127.0.0.1';
   }
-  if (options.db || options.dbName || process.env.RUN_STANDALONE) {
-    global.MODEL_MODULE = 'americano-cozy-pouchdb';
-  } else {
-    global.MODEL_MODULE = 'americano-cozy';
-  }
   if (callback == null) {
     callback = function() {};
   }

@@ -1,15 +1,15 @@
-americano = require 'americano'
+cozydb = require 'cozydb'
 emit = null # jslint
 
 module.exports =
     settings:
-        all: americano.defaultRequests.all
+        all: cozydb.defaultRequests.all
 
     account:
-        all: americano.defaultRequests.all
+        all: cozydb.defaultRequests.all
 
     contact:
-        all: americano.defaultRequests.all
+        all: cozydb.defaultRequests.all
         byName: (doc) ->
             if doc.fn? and doc.fn.length > 0
                 emit doc.fn, doc
