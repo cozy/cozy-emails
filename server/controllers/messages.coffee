@@ -7,8 +7,7 @@ _ = require 'lodash'
 async = require 'async'
 querystring = require 'querystring'
 multiparty = require 'multiparty'
-stream = require 'stream'
-stream_to_buffer_array = require '../utils/stream_to_array'
+stream_to_buffer = require '../utils/stream_to_array'
 messageUtils = require '../utils/jwz_tools'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
 
@@ -160,7 +159,7 @@ module.exports.parseSendForm = (req, res, next) ->
         fields[name] = value
 
     form.on 'part', (part) ->
-        stream_to_buffer_array part, (err, bufs) ->
+        stream_to_buffer part, (err, bufs) ->
             return nextonce err if err
 
             files[part.name] =
@@ -189,13 +188,8 @@ contentToBuffer = (req, attachment, callback) ->
         fileStream = req.message.getBinary filename, (err) ->
             log.error "Attachment streaming error", err if err
 
-        chunks = []
-        bufferer = new stream.Writable
-        bufferer._write = (chunk, enc, next) ->
-            chunks.push(chunk)
-            next()
-        bufferer.end = ->
-            callback null, Buffer.concat chunks
+        # we buffer the attachment in RAM to be used in the mailbuilder
+        bufferrer = new stream_to_buffer.Bufferer callback
         fileStream.pipe bufferer
 
     # file just uploaded, take the buffer from the multipart req
