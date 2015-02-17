@@ -347,7 +347,12 @@ module.exports = Compose = React.createClass
         @_doSend true
 
     onDelete: (args) ->
-        if window.confirm(t 'mail confirm delete', {subject: @props.message.get('subject')})
+        subject = @props.message.get 'subject'
+        if subject? and subject isnt ''
+            confirmMessage = t 'mail confirm delete', {subject: @props.message.get('subject')}
+        else
+            confirmMessage = t 'mail confirm delete nosubject'
+        if window.confirm confirmMessage
             MessageActionCreator.delete @props.message, (error) =>
                 if error?
                     LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"

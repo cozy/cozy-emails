@@ -105,6 +105,7 @@ module.exports =
       "mail mark read"          : "Read"
       "mail mark unread"        : "Unread"
       "mail confirm delete"     : "Do you really want to delete message “%{subject}”?"
+      "mail confirm delete nosubject" : "Do you really want to delete this message?"
       "mail action conversation delete" : "Delete conversation"
       "mail action conversation move"   : "Move conversation"
       "mail action conversation seen"   : "Mark conversation as read"
