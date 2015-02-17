@@ -189,7 +189,7 @@ contentToBuffer = (req, attachment, callback) ->
             log.error "Attachment streaming error", err if err
 
         # we buffer the attachment in RAM to be used in the mailbuilder
-        bufferrer = new stream_to_buffer.Bufferer callback
+        bufferer = new stream_to_buffer.Bufferer callback
         fileStream.pipe bufferer
 
     # file just uploaded, take the buffer from the multipart req
@@ -352,6 +352,8 @@ module.exports.send = (req, res, next) ->
     async.series steps, (err) ->
         return next err if err
         return next new Error('Server error') unless jdbMessage
+
+        # returns the message as the client expect it (with isDraft property)
         out = jdbMessage.toClientObject()
         out.isDraft = isDraft
         res.send out
@@ -362,9 +364,11 @@ module.exports.fetchConversation = (req, res, next) ->
     Message.byConversationID conversationID, (err, messages) ->
         return next err if err
 
+        # if there is no message, the conversationID is incorrect
         if messages.length is 0
             next NotFound "conversation##{conversationID}"
         else
+            # otherwise, store them with the request and move along
             log.debug "conversation##{conversationID}", messages.length
             req.conversation = messages
             next()

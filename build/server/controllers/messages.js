@@ -220,7 +220,7 @@ module.exports.parseSendForm = function(req, res, next) {
 };
 
 contentToBuffer = function(req, attachment, callback) {
-  var bufferrer, fileStream, filename;
+  var bufferer, fileStream, filename;
   filename = attachment.generatedFileName;
   if (attachment.url) {
     fileStream = req.message.getBinary(filename, function(err) {
@@ -228,7 +228,7 @@ contentToBuffer = function(req, attachment, callback) {
         return log.error("Attachment streaming error", err);
       }
     });
-    bufferrer = new stream_to_buffer.Bufferer(callback);
+    bufferer = new stream_to_buffer.Bufferer(callback);
     return fileStream.pipe(bufferer);
   } else if (req.files[filename]) {
     return callback(null, req.files[filename].content);
