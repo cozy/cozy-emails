@@ -58,7 +58,7 @@ module.exports.loadFixtures = function(req, res, next) {
       if (err) {
         return next(err);
       } else {
-        return res.send(200, {
+        return res.send({
           message: 'LOAD FIXTURES SUCCESS'
         });
       }
@@ -82,12 +82,12 @@ module.exports.refresh = function(req, res, next) {
     if (err) {
       return next(err);
     }
-    return res.send(200, {
+    return res.send({
       refresh: 'done'
     });
   });
 };
 
 module.exports.refreshes = function(req, res, next) {
-  return res.send(200, ImapReporter.summary());
+  return res.send(ImapReporter.summary());
 };

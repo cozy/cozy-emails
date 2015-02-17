@@ -74,7 +74,9 @@ module.exports.check = function(req, res, next) {
     if (err) {
       return next(err);
     }
-    return res.send(200);
+    return res.send({
+      check: 'ok'
+    });
   });
 };
 
@@ -107,6 +109,6 @@ module.exports.remove = function(req, res, next) {
     if (err) {
       return next(err);
     }
-    return res.send(204);
+    return res.status(204).end();
   });
 };
