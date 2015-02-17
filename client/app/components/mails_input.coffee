@@ -1,4 +1,4 @@
-{div, label, input, span, ul, li, a, img, i} = React.DOM
+{div, label, textarea, span, ul, li, a, img, i} = React.DOM
 
 MessageUtils    = require '../utils/message_utils'
 Modal           = require './modal'
@@ -20,13 +20,9 @@ module.exports = MailsInput = React.createClass
     ]
 
     getStateFromStores: ->
-        query = @refs.contactInput?.getDOMNode().value.trim()
-        return {
-            #contacts: if query?.length > 2 then ContactStore.getResults() else null
             contacts: ContactStore.getResults()
             selected: 0
             open: false
-        }
 
     componentWillMount: ->
         @setState contacts: null, open: false
@@ -46,6 +42,7 @@ module.exports = MailsInput = React.createClass
                     address: tupple.trimLeft()
 
             @props.valueLink.requestChange result
+            @fixHeight()
 
     render: ->
         className  = (@props.className or '') + ' form-group'
@@ -59,19 +56,20 @@ module.exports = MailsInput = React.createClass
             label htmlFor: @props.id, className: classLabel,
                 @props.label
             div className: 'contact-group dropdown ' + listClass,
-                input
-                    id: @props.id,
-                    name: @props.id,
-                    className: 'form-control compose-input',
-                    onKeyDown: @onKeyDown,
-                    onBlur: @onBlur,
+                textarea
+                    id: @props.id
+                    name: @props.id
+                    className: 'form-control compose-input'
+                    onKeyDown: @onKeyDown
+                    onBlur: @onBlur
                     ref: 'contactInput'
-                    valueLink: @proxyValueLink(),
-                    type: 'text',
+                    rows: 1
+                    valueLink: @proxyValueLink()
                     placeholder: @props.placeholder
                     'autoComplete': 'off'
+                    'spellCheck': 'off'
                 div
-                    className: 'input-group-addon btn btn-cozy contact',
+                    className: 'btn btn-cozy btn-contact',
                     onClick: @onQuery,
                         span className: 'fa fa-search'
 
@@ -100,6 +98,12 @@ module.exports = MailsInput = React.createClass
                 else
                     i className: 'avatar fa fa-user'
                 "#{contact.get 'fn'} <#{contact.get 'address'}>"
+
+    componentDidMount: ->
+        @fixHeight()
+
+    componentDidUpdate: ->
+        @fixHeight()
 
     onQuery: (char) ->
         query = @refs.contactInput.getDOMNode().value.split(',').pop().trim()
@@ -171,3 +175,8 @@ module.exports = MailsInput = React.createClass
         setTimeout =>
             query = @refs.contactInput.getDOMNode().focus()
         , 200
+
+    fixHeight: ->
+        input = @refs.contactInput.getDOMNode()
+        if input.scrollHeight > input.clientHeight
+            input.style.height = input.scrollHeight + "px"
