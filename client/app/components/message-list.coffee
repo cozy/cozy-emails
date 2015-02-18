@@ -162,7 +162,7 @@ MessageList = React.createClass
                             div className: btnClasses + ' toggle-menu-button',
                                 button
                                     onClick: @props.toggleMenu
-                                    title: t 'menu show'
+                                    title: t 'menu toggle'
                                     className: 'btn btn-default',
                                     span className: 'fa fa-inbox'
 

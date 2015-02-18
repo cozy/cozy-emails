@@ -48,6 +48,7 @@ module.exports =
       "menu mailbox new"        : " and %{smart_count} new message|||| and %{smart_count} new messages "
       "menu favorites on"       : "Favorites"
       "menu favorites off"      : "All"
+      "menu toggle"             : "Toggle Menu"
 
       # List
       "list empty"              : "No email in this box."
