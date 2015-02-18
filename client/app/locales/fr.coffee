@@ -40,6 +40,7 @@ module.exports =
       "compose draft deleted"     : "Brouillon supprimé"
 
       # Menu
+      "menu show"               : "Montrer le menu"
       "menu compose"            : "Nouveau"
       "menu account new"        : "Ajouter un compte"
       "menu settings"           : "Paramètres"

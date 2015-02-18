@@ -40,6 +40,7 @@ module.exports =
       "compose draft deleted"     : "Draft deleted"
 
       # Menu
+      "menu show"               : "Show menu"
       "menu compose"            : "Compose"
       "menu account new"        : "New Mailbox"
       "menu settings"           : "Parameters"
