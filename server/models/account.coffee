@@ -62,7 +62,12 @@ Account::setRefreshing = (value) ->
 Account.refreshAllAccounts = (limit, onlyFavorites, callback) ->
     Account.request 'all', (err, accounts) ->
         return callback err if err
-        Account.refreshAccounts accounts, limit, onlyFavorites, callback
+        options =
+            accounts: accounts
+            limitByBox: limit
+            onlyFavorites: onlyFavorites
+            firstImport: false
+        Account.refreshAccounts options, callback
 
 
 Account.removeOrphansAndRefresh = (limitByBox, onlyFavorites, callback) ->
@@ -73,15 +78,21 @@ Account.removeOrphansAndRefresh = (limitByBox, onlyFavorites, callback) ->
             return callback err if err
             Message.removeOrphans existingMailboxIDs, (err) ->
                 return callback err if err
-                Account.refreshAccounts accounts, limitByBox,
-                                                    onlyFavorites, callback
+                options =
+                    accounts: accounts
+                    limitByBox: limitByBox
+                    onlyFavorites: onlyFavorites
+                    firstImport: false
+                Account.refreshAccounts options, callback
 
-Account.refreshAccounts = (accounts, limitByBox, onlyFavorites, callback) ->
+
+Account.refreshAccounts = (options, callback) ->
+    {accounts, limitByBox, onlyFavorites, firstImport} = options
     async.eachSeries accounts, (account, cb) ->
         log.debug "refreshing account #{account.label}"
         return cb null if account.isTest()
         return cb null if account.isRefreshing()
-        account.imap_fetchMails limitByBox, onlyFavorites, (err) ->
+        account.imap_fetchMails limitByBox, onlyFavorites, firstImport, (err) ->
             if err
                 log.error "CANT REFRESH ACCOUNT", account.id, account.label, err
             # refresh all accounts even if one fails
@@ -270,7 +281,7 @@ Account::imap_refreshBoxes = (callback) ->
 # onlyFavorites - {Boolean} fetch messages only for favorite mailboxes
 #
 # Returns a task completion
-Account::imap_fetchMails = (limitByBox, onlyFavorites, callback) ->
+Account::imap_fetchMails = (limitByBox, onlyFavorites, firstImport, callback) ->
     log.debug "account#imap_fetchMails", limitByBox, onlyFavorites
     account = this
     account.setRefreshing true
@@ -288,7 +299,8 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, callback) ->
 
         log.info "FETCHING ACCOUNT #{account.label} : #{toFetch.length} BOXES"
         log.info "   ", toDestroy.length, "BOXES TO DESTROY"
-        reporter = ImapReporter.accountFetch account, toFetch.length + 1
+        numToFetch = toFetch.length + 1
+        reporter = ImapReporter.accountFetch account, numToFetch, firstImport
 
         # fetch INBOX first
         toFetch.sort (a, b) ->
@@ -296,7 +308,7 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, callback) ->
             else return 1
 
         async.eachSeries toFetch, (box, cb) ->
-            box.imap_fetchMails limitByBox, (err) ->
+            box.imap_fetchMails limitByBox, firstImport, (err) ->
                 # @TODO : Figure out how to distinguish a mailbox that
                 # is not selectable but not marked as such. In the meantime
                 # dont pop the error to the client
@@ -321,9 +333,9 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, callback) ->
 
 Account::imap_fetchMailsTwoSteps = (callback) ->
     log.debug "account#imap_fetchMails2Steps"
-    @imap_fetchMails 100, true, (err) =>
+    @imap_fetchMails 100, true, true, (err) =>
         return callback err if err
-        @imap_fetchMails null, false, (err) ->
+        @imap_fetchMails null, false, true, (err) ->
             return callback err if err
             callback null
 

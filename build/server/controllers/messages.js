@@ -67,7 +67,6 @@ module.exports.attachment = function(req, res, next) {
   if ((_ref1 = req.query) != null ? _ref1.download : void 0) {
     res.setHeader('Content-disposition', "attachment; filename=" + req.params.attachment);
   }
-  stream.on('error', next);
   return stream.pipe(res);
 };
 

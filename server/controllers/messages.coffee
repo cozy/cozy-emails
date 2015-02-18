@@ -37,7 +37,6 @@ module.exports.attachment = (req, res, next) ->
         return next err if err
     if req.query?.download
         res.setHeader('Content-disposition', "attachment; filename=#{req.params.attachment}");
-    stream.on 'error', next
     stream.pipe res
 
 # patch a message

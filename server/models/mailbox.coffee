@@ -234,9 +234,9 @@ Mailbox::destroyAndRemoveAllMessages = (callback) ->
         , callback
 
 
-Mailbox::imap_fetchMails = (limitByBox, callback) ->
+Mailbox::imap_fetchMails = (limitByBox, firstImport, callback) ->
     log.debug "imap_fetchMails", limitByBox
-    @imap_refreshStep limitByBox, null, (err) =>
+    @imap_refreshStep limitByBox, null, firstImport, (err) =>
         log.debug "imap_fetchMailsEnd", limitByBox
         return callback err if err
         unless limitByBox
@@ -345,7 +345,7 @@ Mailbox::applyToFetch = (toFetch, reporter, callback) ->
             cb null
     , callback
 
-Mailbox::imap_refreshStep = (limitByBox, laststep, callback) ->
+Mailbox::imap_refreshStep = (limitByBox, laststep, firstImport, callback) ->
     log.debug "imap_refreshStep", limitByBox, laststep
     box = this
     @getDiff laststep, limitByBox, (err, ops) =>
@@ -356,7 +356,7 @@ Mailbox::imap_refreshStep = (limitByBox, laststep, callback) ->
 
         nbTasks = ops.toFetch.length + ops.toRemove.length +
                                                         ops.flagsChange.length
-        reporter = ImapReporter.boxFetch @, nbTasks if nbTasks > 0
+        reporter = ImapReporter.boxFetch @, nbTasks, firstImport if nbTasks > 0
 
         async.series [
             (cb) => @applyToRemove     ops.toRemove,    reporter, cb
@@ -368,7 +368,7 @@ Mailbox::imap_refreshStep = (limitByBox, laststep, callback) ->
             if limitByBox
                 callback null
             else
-                @imap_refreshStep null, ops.step, callback
+                @imap_refreshStep null, ops.step, firstImport, callback
 
 
 Mailbox::imap_UIDByMessageID = (messageID, callback) ->

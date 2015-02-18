@@ -592,8 +592,6 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
                 name: att.generatedFileName
                 buffer: buffer
 
-        delete mail.attachments
-
     # pick a method to find the conversation id
     # if there is a x-gm-thrid, use it
     # else find the thread using References or Subject
