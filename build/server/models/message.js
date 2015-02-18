@@ -659,7 +659,6 @@ Message.createFromImapMessage = function(mail, box, uid, callback) {
         buffer: buffer
       };
     });
-    delete mail.attachments;
   }
   return Message.findConversationID(mail, function(err, conversationID) {
     if (err) {
