@@ -200,16 +200,18 @@ MessageList = React.createClass
                         # refresh
                         if not @state.edited
                             div className: btnClasses,
-                            refreshClasses = 'fa fa-refresh'
-                            if @props.refreshes.length > 0
-                                refreshClasses += ' fa-spin'
-                            div className: 'btn-group btn-group-sm message-list-option',
-                                button
-                                    className: 'btn btn-default',
-                                    type: 'button',
-                                    disabled: null,
-                                    onClick: @refresh,
-                                        span className: refreshClasses
+                                if @props.refreshes.length is 0
+                                    button
+                                        className: 'btn btn-default',
+                                        type: 'button',
+                                        disabled: null,
+                                        onClick: @refresh,
+                                            span className: 'fa fa-refresh'
+                                else
+                                    img
+                                        src: 'images/spinner.svg'
+                                        alt: 'spinner'
+                                        className: 'spin'
                         # config
                         if not @state.edited
                             div className: btnClasses,
