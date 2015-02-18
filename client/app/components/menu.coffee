@@ -209,7 +209,6 @@ module.exports = Menu = React.createClass
                     if progress.get('errors').length
                         span className: 'refresh-error',
                             i className: 'fa warning', onClick: @displayErrors.bind null, progress
-
                     if progress.get('firstImport')
                         ThinProgress done: progress.get('done'), total: progress.get('total')
 
@@ -313,7 +312,7 @@ MenuMailboxItem = React.createClass
                         className: 'item-label',
                         "#{pusher}#{@props.mailbox.get 'label'}"
 
-                if progress
+                if progress and progress.get('firstImport')
                     ThinProgress done: progress.get('done'), total: progress.get('total')
 
                 if progress?.get('errors').length
