@@ -15,7 +15,7 @@ module.exports = React.createClass
             levels[AlertLevel.WARNING] = 'alert-warning'
             levels[AlertLevel.ERROR]   = 'alert-danger'
 
-        div className: 'row',
+        div className: 'row row-alert',
             if alert.level?
                 div
                     ref: 'alert'

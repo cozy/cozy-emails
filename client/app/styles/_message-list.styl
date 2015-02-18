@@ -170,13 +170,27 @@
       display flex
       justify-content flex-start
       align-items left
+      position fixed
+      background-color white
+      top 0
+      padding .5em 0
 
       //.message-list-action
       //  margin 0 1em 0 0
 
     .message-list-actions + *
         clear both
-        margin-top 1em
+        margin-top 2.5em
+
+#panels.three .message-list-actions
+  width 34%
+#panels.three.full .message-list-actions
+  width 72%
+#panels.vertical .message-list-actions
+  width 42%
+#panels.horizontal .message-list-actions,
+#panels.vertical.full .message-list-actions
+  width 88%
 
 .message-list.compact
     .message
