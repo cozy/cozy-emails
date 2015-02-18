@@ -2975,6 +2975,9 @@ textarea:active,
 .message-list-option .btn.btn-default:hover:active {
   color: #e57a00;
 }
+.message-list-actions .toggle-menu-button {
+  display: none;
+}
 .message-list-actions .btn.btn-default.dropdown-toggle.move,
 .message-list-actions .btn.btn-default.dropdown-toggle.more {
   font-size: 1em;
@@ -3162,6 +3165,52 @@ textarea:active,
 }
 .toasts-container.action-hidden.has-toasts .toast-actions .show-action {
   display: inherit;
+}
+@media (max-width: 768px) {
+  #page-content #panels .panel {
+    padding: 0;
+  }
+  #page-content #panels .panel .participants {
+    max-width: 100px;
+    min-width: 100px;
+    margin-left: 0;
+    margin-right: 15px;
+  }
+  #page-content #panels .panel .message {
+    padding: 5px;
+  }
+  #page-content #panels .panel .avatar-wrapper,
+  #page-content #panels .panel .flags,
+  #page-content #panels .panel .hour {
+    display: none;
+  }
+  #page-content #panels .mailbox-config {
+    display: none;
+  }
+  .message-list-option .btn.btn-default {
+    font-size: 1.6em;
+  }
+  #menu .settings-action,
+  #menu .new-account-action,
+  #menu .compose-action {
+    display: none;
+  }
+  .message-list-actions .toggle-menu-button {
+    display: inline-block;
+    font-size: 1.1em;
+  }
+  .message-title {
+    padding: 10px;
+  }
+  .conversation .thread .message .messageToolbox {
+    display: none;
+  }
+  .conversation .thread .message .content-action {
+    padding: 10px 20px;
+  }
+  .conversation .thread .message .header.compact {
+    padding: 0px 20px;
+  }
 }
 * > .fa-compress {
   -webkit-transform: rotate(45deg);

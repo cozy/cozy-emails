@@ -5,6 +5,7 @@ async = require 'async'
 log = require('../utils/logging')(prefix: 'imap:extensions')
 mailutils = require '../utils/jwz_tools'
 {ImapImpossible} = require '../utils/errors'
+_ = require 'lodash'
 
 # Error predicates
 folderForbidden = (err) ->
@@ -71,8 +72,6 @@ Imap::delBox2 = (name, callback) ->
 
         callback err
 
-
-
 # convenient functions for batch operations
 
 # fetch all message-id in open box
@@ -81,7 +80,7 @@ Imap::fetchBoxMessageIDs = (callback) ->
     log.debug "imap#fetchBoxMessageIDs"
     results = {}
     @search [['ALL']], (err, uids) =>
-        log.debug "imap#fetchBoxMessageIDs#result", uids
+        log.debug "imap#fetchBoxMessageIDs#result", uids.length
         return callback err if err
         return callback null, [] if uids.length is 0
 
@@ -204,21 +203,18 @@ Imap::multicopy = (uid, paths, callback) ->
         @copy uid, path, cb
     , callback
 
+# remove message from multiple boxes
+Imap::multiremove = (paths, callback) ->
+    async.eachSeries paths, ({path, uid}, cb) =>
+        @deleteMessageInBox path, uid, cb
+    , callback
+
+# Perform a full delete cycle (\\Deleted & expunge) on one messsage.
 Imap::deleteMessageInBox = (path, uid, callback) ->
     async.series [
         (cb) => @openBox path, cb
         (cb) => @addFlags uid, '\\Deleted', cb
         (cb) => @expunge uid, cb
     ], callback
-
-# node-imap fail to setFlags []
-# handle this case differently
-# @TODO follow node-imap#437
-Imap::setFlagsSafe = (uid, oldflags, newflags, callback) ->
-    if newflags.length is 0
-        @delFlags uid, oldflags, callback
-    else
-        @setFlags uid, newflags, callback
-
 
 module.exports = Imap

@@ -81,7 +81,7 @@ module.exports = {
   'test': {
     get: test.main
   },
-  'raw/:mailboxID/:messageID': {
-    get: [mailboxes.fetch, messages.raw]
+  'raw/:messageID': {
+    get: [messages.fetch, messages.raw]
   }
 };

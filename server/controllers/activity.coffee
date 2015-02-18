@@ -58,14 +58,18 @@ module.exports.create = (req, res, next) ->
             if ContactActivity[activity.name]?
                 ContactActivity[activity.name] activity.data, (err, result) ->
                     if err?
-                        res.send 400, {name: err.message, error: true}
+                        res.status(400).send {name: err.message, error: true}
                     else
-                        res.send 200, result: result
+                        res.send result: result
             else
-                res.send 400, {name: "Unknown activity name", error: true}
+                res.status(400).send
+                    name: "Unknown activity name",
+                    error: true
         when 'error'
             log.error activity.data
-            res.send 200, null
+            res.send null
         else
-            res.send 400, {name: "Unknown activity data type", error: true}
+            res.status(400).send
+                name: "Unknown activity data type",
+                error: true
 
