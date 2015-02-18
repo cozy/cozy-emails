@@ -132,7 +132,7 @@ Account.refreshAccounts = function(options, callback) {
     }
     return account.imap_fetchMails(limitByBox, onlyFavorites, firstImport, function(err) {
       if (err) {
-        log.error("CANT REFRESH ACCOUNT", account.id, err);
+        log.error("CANT REFRESH ACCOUNT", account.id, account.label, err);
       }
       return cb(null);
     });

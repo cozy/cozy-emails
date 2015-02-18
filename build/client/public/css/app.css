@@ -2419,6 +2419,10 @@ textarea:active,
   border-top: 1px solid #ccc;
   border-bottom: 1px solid #ccc;
 }
+#email-compose {
+  width: 100%;
+  max-width: 800px;
+}
 #email-compose.enable {
   display: block;
 }
@@ -2449,11 +2453,8 @@ textarea:active,
 .attachements {
   margin: 1em 0;
 }
-.input-group.contact-group {
-  padding: 0 15px;
-}
-.contact {
-  top: -1px;
+.contact-group {
+  margin-top: 0.5em;
 }
 .compose-toggle {
   float: right;
@@ -2461,27 +2462,20 @@ textarea:active,
 .compose-toggle a {
   padding: 0 1em;
 }
-#compose-to {
-  width: 90%;
-  max-width: 750px;
-  display: inline;
+.btn-contact {
+  float: right;
+  width: 3em;
+  margin-left: 1em;
 }
-#compose-cc {
-  width: 90%;
-  max-width: 750px;
-  display: inline;
-}
-#compose-bcc {
-  width: 90%;
-  max-width: 750px;
-  display: inline;
-}
-.contact {
-  display: inline;
-  width: 10%;
-}
-.compose-input {
+textarea.compose-input {
   position: relative;
+  height: 2em;
+  padding: 0.2em 0.5em;
+  overflow: hidden;
+  width: calc(100% - 4em);
+  max-width: 750px;
+  display: inline;
+  resize: none;
 }
 .compose-from {
   line-height: 2em;
@@ -2498,6 +2492,19 @@ textarea:active,
 .compose-cc.shown,
 .compose-bcc.shown {
   display: inherit;
+}
+.address-tag {
+  border: 1px solid #bdbdbd;
+  background-color: #eee;
+  margin: 0 0.25em 0.25em 0.25em;
+  padding: 0.25em;
+  -webkit-border-radius: 0.25em;
+  border-radius: 0.25em;
+  display: inline-block;
+}
+.address-tag a {
+  font-size: 0.75em;
+  padding-left: 0.5em;
 }
 .file-picker .files {
   max-height: 10em;
@@ -2733,6 +2740,7 @@ textarea:active,
   cursor: pointer;
   font-size: 0.8em;
   border: 0;
+  height: 2.5em;
 }
 .message-list .message > a,
 .message-list .message > span {
@@ -2925,10 +2933,30 @@ textarea:active,
   -ms-flex-align: left;
   -webkit-align-items: left;
   align-items: left;
+  position: fixed;
+  background-color: #fff;
+  top: 0;
+  padding: 0.5em 0;
 }
 .message-list .message-list-actions + * {
   clear: both;
-  margin-top: 1em;
+  margin-top: 2.5em;
+}
+#panels.three .message-list-actions {
+  width: 34%;
+}
+#panels.three.full .message-list-actions {
+  width: 72%;
+}
+#panels.vertical .message-list-actions {
+  width: 42%;
+}
+#panels.horizontal .message-list-actions,
+#panels.vertical.full .message-list-actions {
+  width: 88%;
+}
+.message-list.compact .message {
+  height: 1.75em;
 }
 .message-list.compact .message a.wrapper,
 .message-list.compact .message span.wrapper {
@@ -3219,6 +3247,9 @@ textarea:active,
   -ms-transform: rotate(45deg);
   transform: rotate(45deg);
 }
+.spin {
+  margin: 10px;
+}
 /*
   Put styles here for scaffolding and testing out new features/stuff
   "Production-ready" components styles should live in a dedicated file
@@ -3385,12 +3416,15 @@ textarea:active,
   position: absolute;
   background: transparent;
 }
-.alert {
+.row-alert {
+  z-index: 1;
+}
+.row-alert .alert {
   opacity: 1;
   -ms-filter: none;
   filter: none;
 }
-.alert.autoclose {
+.row-alert .alert.autoclose {
   opacity: 0;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   filter: alpha(opacity=0);
@@ -3429,14 +3463,6 @@ textarea:active,
 
   --
 */
-#email-compose {
-  width: 100%;
-  max-width: 800px;
-}
-.compose-label {
-  display: block;
-  width: 100%;
-}
 .file-picker .dropzone {
   width: 100%;
 }
@@ -3521,11 +3547,18 @@ body, html {
 }
 .mailkeys-help dt {
   float: left;
-  min-width: 4em;
+  min-width: 7em;
+}
+.mailkeys-help dd {
+  line-height: 1.7em;
 }
 .plugin-help {
   padding-top: .2em;
   font-size: 1.5em;
+}
+kbd {
+  line-height: 1.5em;
+  margin: 0 1em 0 0;
 }
 
 .medium-toolbar-arrow-under:after{top:60px;border-color:#428bca transparent transparent transparent}.medium-toolbar-arrow-over:before{border-color:transparent transparent #428bca transparent}.medium-editor-toolbar{border:1px solid #357ebd;background-color:#428bca;border-radius:4px;-webkit-transition:top .075s ease-out,left .075s ease-out;transition:top .075s ease-out,left .075s ease-out}.medium-editor-toolbar li button{min-width:60px;height:60px;border:none;border-right:1px solid #357ebd;background-color:transparent;color:#fff;box-sizing:border-box;-webkit-transition:background-color .2s ease-in,color .2s ease-in;transition:background-color .2s ease-in,color .2s ease-in}.medium-editor-toolbar li button:hover{background-color:#3276b1;color:#fff}.medium-editor-toolbar li .medium-editor-button-first{border-top-left-radius:4px;border-bottom-left-radius:4px}.medium-editor-toolbar li .medium-editor-button-last{border-right:none;border-top-right-radius:4px;border-bottom-right-radius:4px}.medium-editor-toolbar li .medium-editor-button-active{background-color:#3276b1;color:#fff}.medium-editor-toolbar-form-anchor{background:#428bca;color:#fff;border-radius:4px}.medium-editor-toolbar-form-anchor .medium-editor-toolbar-anchor-input{height:60px;background:#428bca;color:#fff}.medium-editor-toolbar-form-anchor .medium-editor-toolbar-anchor-input::-webkit-input-placeholder{color:#fff;color:rgba(255,255,255,.8)}.medium-editor-toolbar-form-anchor .medium-editor-toolbar-anchor-input:-moz-placeholder{color:#fff;color:rgba(255,255,255,.8)}.medium-editor-toolbar-form-anchor .medium-editor-toolbar-anchor-input::-moz-placeholder{color:#fff;color:rgba(255,255,255,.8)}.medium-editor-toolbar-form-anchor .medium-editor-toolbar-anchor-input:-ms-input-placeholder{color:#fff;color:rgba(255,255,255,.8)}.medium-editor-toolbar-form-anchor a{color:#fff}.medium-editor-toolbar-anchor-preview{background:#428bca;color:#fff;border-radius:4px}.medium-editor-placeholder:after{color:#357ebd}

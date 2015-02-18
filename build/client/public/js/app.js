@@ -2349,7 +2349,7 @@ module.exports = React.createClass({
       levels[AlertLevel.ERROR] = 'alert-danger';
     }
     return div({
-      className: 'row'
+      className: 'row row-alert'
     }, alert.level != null ? div({
       ref: 'alert',
       className: "alert " + levels[alert.level] + " alert-dismissible",
@@ -2467,7 +2467,10 @@ module.exports = Application = React.createClass({
     disposition = LayoutStore.getDisposition();
     panelsClasses = classer({
       row: true,
-      horizontal: disposition.type === Dispositions.HORIZONTAL
+      horizontal: disposition.type === Dispositions.HORIZONTAL,
+      three: disposition.type === Dispositions.THREE,
+      vertical: disposition.type === Dispositions.VERTICAL,
+      full: isFullWidth
     });
     panelClasses = this.getPanelClasses(isFullWidth);
     responsiveClasses = classer({
@@ -3186,9 +3189,16 @@ module.exports = Compose = React.createClass({
     return this._doSend(true);
   },
   onDelete: function(args) {
-    if (window.confirm(t('mail confirm delete', {
-      subject: this.props.message.get('subject')
-    }))) {
+    var confirmMessage, subject;
+    subject = this.props.message.get('subject');
+    if ((subject != null) && subject !== '') {
+      confirmMessage = t('mail confirm delete', {
+        subject: this.props.message.get('subject')
+      });
+    } else {
+      confirmMessage = t('mail confirm delete nosubject');
+    }
+    if (window.confirm(confirmMessage)) {
       return MessageActionCreator["delete"](this.props.message, (function(_this) {
         return function(error) {
           if (error != null) {
@@ -3956,15 +3966,13 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/mails_input", function(exports, require, module) {
-var ContactActionCreator, ContactStore, MailsInput, MessageUtils, Modal, StoreWatchMixin, a, classer, div, i, img, input, label, li, span, ul, _ref;
+var ContactActionCreator, ContactStore, MailsInput, MessageUtils, Modal, a, classer, div, i, img, label, li, span, textarea, ul, _ref;
 
-_ref = React.DOM, div = _ref.div, label = _ref.label, input = _ref.input, span = _ref.span, ul = _ref.ul, li = _ref.li, a = _ref.a, img = _ref.img, i = _ref.i;
+_ref = React.DOM, div = _ref.div, label = _ref.label, textarea = _ref.textarea, span = _ref.span, ul = _ref.ul, li = _ref.li, a = _ref.a, img = _ref.img, i = _ref.i;
 
 MessageUtils = require('../utils/message_utils');
 
 Modal = require('./modal');
-
-StoreWatchMixin = require('../mixins/store_watch_mixin');
 
 ContactStore = require('../stores/contact_store');
 
@@ -3974,14 +3982,10 @@ classer = React.addons.classSet;
 
 module.exports = MailsInput = React.createClass({
   displayName: 'MailsInput',
-  mixins: [React.addons.LinkedStateMixin, StoreWatchMixin([ContactStore])],
+  mixins: [React.addons.LinkedStateMixin],
   getStateFromStores: function() {
-    var query, _ref1;
-    query = (_ref1 = this.refs.contactInput) != null ? _ref1.getDOMNode().value.trim() : void 0;
     return {
-      contacts: ContactStore.getResults(),
-      selected: 0,
-      open: false
+      contacts: ContactStore.getResults()
     };
   },
   componentWillMount: function() {
@@ -3990,35 +3994,112 @@ module.exports = MailsInput = React.createClass({
       open: false
     });
   },
+  getInitialState: function() {
+    var state;
+    state = this.getStateFromStores();
+    state.known = [];
+    state.selected = 0;
+    state.open = false;
+    return state;
+  },
+  componentDidMount: function() {
+    ContactStore.on('change', this._setStateFromStores);
+    return this.fixHeight();
+  },
+  componentWillUnmount: function() {
+    return ContactStore.removeListener('change', this._setStateFromStores);
+  },
+  _setStateFromStores: function() {
+    return this.setState(this.getStateFromStores());
+  },
+  componentDidUpdate: function() {
+    return this.fixHeight();
+  },
   shouldComponentUpdate: function(nextProps, nextState) {
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
+  _extractAddresses: function(values) {
+    var known, unknown;
+    known = [];
+    unknown = [];
+    values.map(function(address) {
+      var res;
+      if (address.address.indexOf('@') === -1) {
+        return unknown.push(address);
+      } else {
+        res = ContactStore.getByAddress(address.address);
+        if (res != null) {
+          return known.unshift(address);
+        } else {
+          return unknown.push(address);
+        }
+      }
+    });
+    setTimeout((function(_this) {
+      return function() {
+        return _this.setState({
+          known: known
+        });
+      };
+    })(this), 0);
+    return MessageUtils.displayAddresses(unknown, true);
+  },
   proxyValueLink: function() {
     return {
-      value: MessageUtils.displayAddresses(this.props.valueLink.value, true),
+      value: this._extractAddresses(this.props.valueLink.value),
       requestChange: (function(_this) {
         return function(newValue) {
           var result;
           result = newValue.split(',').map(function(tupple) {
             var match;
-            if (match = tupple.match(/"(.*)" <(.*)>/)) {
+            if (match = tupple.match(/"{0,1}(.*)"{0,1} <(.*)>/)) {
               return {
                 name: match[1],
                 address: match[2]
               };
             } else {
               return {
-                address: tupple.trim()
+                address: tupple.trimLeft()
               };
             }
+          }).filter(function(address) {
+            return address.addres !== '';
           });
-          return _this.props.valueLink.requestChange(result);
+          _this.props.valueLink.requestChange(result.concat(_this.state.known));
+          _this._extractAddresses(result);
+          return _this.fixHeight();
         };
       })(this)
     };
   },
   render: function() {
-    var classLabel, className, current, listClass, _ref1;
+    var classLabel, className, current, knownContacts, listClass, _ref1;
+    knownContacts = this.state.known.map((function(_this) {
+      return function(address) {
+        var remove;
+        remove = function() {
+          var known;
+          known = _this.state.known.filter(function(a) {
+            return a.address !== address.address;
+          });
+          return _this.setState({
+            known: known
+          }, function() {
+            return _this.proxyValueLink().requestChange(_this.refs.contactInput.getDOMNode().value);
+          });
+        };
+        return span({
+          className: 'address-tag',
+          key: "" + _this.props.id + "-" + address.address,
+          title: address.address
+        }, MessageUtils.displayAddress(address), a({
+          className: 'clickable',
+          onClick: remove
+        }, i({
+          className: 'fa fa-times'
+        })));
+      };
+    })(this));
     className = (this.props.className || '') + ' form-group';
     classLabel = 'compose-label control-label';
     listClass = classer({
@@ -4031,21 +4112,22 @@ module.exports = MailsInput = React.createClass({
     }, label({
       htmlFor: this.props.id,
       className: classLabel
-    }, this.props.label), div({
+    }, this.props.label), knownContacts, div({
       className: 'contact-group dropdown ' + listClass
-    }, input({
+    }, textarea({
       id: this.props.id,
       name: this.props.id,
       className: 'form-control compose-input',
       onKeyDown: this.onKeyDown,
       onBlur: this.onBlur,
       ref: 'contactInput',
+      rows: 1,
       valueLink: this.proxyValueLink(),
-      type: 'text',
       placeholder: this.props.placeholder,
-      'autoComplete': 'off'
+      'autoComplete': 'off',
+      'spellCheck': 'off'
     }), div({
-      className: 'input-group-addon btn btn-cozy contact',
+      className: 'btn btn-cozy btn-contact',
       onClick: this.onQuery
     }, span({
       className: 'fa fa-search'
@@ -4183,6 +4265,13 @@ module.exports = MailsInput = React.createClass({
         return query = _this.refs.contactInput.getDOMNode().focus();
       };
     })(this), 200);
+  },
+  fixHeight: function() {
+    var input;
+    input = this.refs.contactInput.getDOMNode();
+    if (input.scrollHeight > input.clientHeight) {
+      return input.style.height = input.scrollHeight + "px";
+    }
   }
 });
 });
@@ -4553,7 +4642,7 @@ MenuMailboxItem = React.createClass({
       className: 'badge'
     }, nbUnread) : void 0, span({
       className: 'item-label'
-    }, "" + pusher + (this.props.mailbox.get('label'))), progress ? ThinProgress({
+    }, "" + pusher + (this.props.mailbox.get('label'))), progress && progress.get('firstImport') ? ThinProgress({
       done: progress.get('done'),
       total: progress.get('total')
     }) : void 0, (progress != null ? progress.get('errors').length : void 0) ? span({
@@ -4678,7 +4767,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, btnClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, messages, nbMessages, nbSelected, nextPage, refreshClasses, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, btnClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, messages, nbMessages, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
     compact = this.props.settings.get('listStyle') === 'compact';
     messages = this.props.messages.map((function(_this) {
       return function(message, key) {
@@ -4841,7 +4930,7 @@ MessageList = React.createClass({
       className: btnClasses + ' toggle-menu-button'
     }, button({
       onClick: this.props.toggleMenu,
-      title: t('menu show'),
+      title: t('menu toggle'),
       className: 'btn btn-default'
     }, span({
       className: 'fa fa-inbox'
@@ -4873,18 +4962,20 @@ MessageList = React.createClass({
       className: btnClasses
     }, MessagesFilter(filterParams)) : void 0, advanced && !this.state.edited ? div({
       className: btnClasses
-    }, MessagesSort(filterParams)) : void 0, !this.state.edited ? (div({
+    }, MessagesSort(filterParams)) : void 0, !this.state.edited ? div({
       className: btnClasses
-    }, refreshClasses = 'fa fa-refresh'), this.props.refreshes.length > 0 ? refreshClasses += ' fa-spin' : void 0, div({
-      className: 'btn-group btn-group-sm message-list-option'
-    }, button({
+    }, this.props.refreshes.length === 0 ? button({
       className: 'btn btn-default',
       type: 'button',
       disabled: null,
       onClick: this.refresh
     }, span({
-      className: refreshClasses
-    })))) : void 0, !this.state.edited ? div({
+      className: 'fa fa-refresh'
+    })) : img({
+      src: 'images/spinner.svg',
+      alt: 'spinner',
+      className: 'spin'
+    })) : void 0, !this.state.edited ? div({
       className: btnClasses
     }, a({
       href: configMailboxUrl,
@@ -5765,10 +5856,12 @@ module.exports = React.createClass({
     to = prepared.to.concat(prepared.cc);
     return span(null, Participants({
       participants: from,
-      onAdd: this.addAddress
+      onAdd: this.addAddress,
+      tooltip: true
     }), span(null, ', '), Participants({
       participants: to,
-      onAdd: this.addAddress
+      onAdd: this.addAddress,
+      tooltip: true
     }));
   },
   renderHeaders: function(prepared) {
@@ -6322,7 +6415,7 @@ MessageContent = React.createClass({
             updateHeight = function(e) {
               var height, _ref4;
               height = doc.body.getBoundingClientRect().height;
-              frame.style.height = "" + (height + 60) + "px";
+              frame.style.height = "" + (height * 1.2) + "px";
               step++;
               if (step > 10) {
                 doc.body.removeEventListener('load', loadContent);
@@ -8333,6 +8426,7 @@ module.exports = {
   "compose error no subject": "Please set a subject",
   "compose confirm keep draft": "Message not sent, keep the draft?",
   "compose draft deleted": "Draft deleted",
+  "menu show": "Show menu",
   "menu compose": "Compose",
   "menu account new": "New Mailbox",
   "menu settings": "Parameters",
@@ -8341,6 +8435,7 @@ module.exports = {
   "menu mailbox new": " and %{smart_count} new message|||| and %{smart_count} new messages ",
   "menu favorites on": "Favorites",
   "menu favorites off": "All",
+  "menu toggle": "Toggle Menu",
   "list empty": "No email in this box.",
   "no flagged message": "No Important email in this box.",
   "no unseen message": "All emails have been read in this box",
@@ -8386,6 +8481,7 @@ module.exports = {
   "mail mark read": "Read",
   "mail mark unread": "Unread",
   "mail confirm delete": "Do you really want to delete message “%{subject}”?",
+  "mail confirm delete nosubject": "Do you really want to delete this message?",
   "mail action conversation delete": "Delete conversation",
   "mail action conversation move": "Move conversation",
   "mail action conversation seen": "Mark conversation as read",
@@ -8606,6 +8702,7 @@ module.exports = {
   "compose error no subject": "Vous n'avez pas saisi de sujet",
   "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?",
   "compose draft deleted": "Brouillon supprimé",
+  "menu show": "Montrer le menu",
   "menu compose": "Nouveau",
   "menu account new": "Ajouter un compte",
   "menu settings": "Paramètres",
@@ -8614,6 +8711,7 @@ module.exports = {
   "menu mailbox new": " et %{smart_count} nouveaux |||| et %{smart_count} nouveaux ",
   "menu favorites on": "Favorites",
   "menu favorites off": "Toutes",
+  "menu toggle": "Menu",
   "list empty": "Pas d'email dans cette boîte..",
   "no flagged message": "Pas d'email important dans cette boîte.",
   "no unseen message": "Pas d'email non-lu dans cette boîte.",
@@ -8659,6 +8757,7 @@ module.exports = {
   "mail mark read": "Lu",
   "mail mark unread": "Non lu",
   "mail confirm delete": "Voulez-vous vraiment supprimer le message « %{subject} » ?",
+  "mail confirm delete nosubject": "Voulez-vous vraiment supprimer ce message",
   "mail action conversation delete": "Supprimer la conversation",
   "mail action conversation move": "Déplacer la conversation",
   "mail action conversation seen": "Marquer la conversation comme lue",
