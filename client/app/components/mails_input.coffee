@@ -59,7 +59,7 @@ module.exports = MailsInput = React.createClass
             else
                 res = ContactStore.getByAddress address.address
                 if res?
-                    known.push address
+                    known.unshift address
                 else
                     unknown.push address
         setTimeout =>
@@ -85,6 +85,22 @@ module.exports = MailsInput = React.createClass
             @fixHeight()
 
     render: ->
+        knownContacts = @state.known.map (address) =>
+            remove = =>
+                known = @state.known.filter (a) ->
+                    return a.address isnt address.address
+                @setState known: known, =>
+                    @proxyValueLink().requestChange @refs.contactInput.getDOMNode().value
+            span
+                className: 'address-tag'
+                key: "#{@props.id}-#{address.address}"
+                title: address.address
+                MessageUtils.displayAddress address
+                    a
+                        className: 'clickable'
+                        onClick: remove,
+                            i className: 'fa fa-times'
+
         className  = (@props.className or '') + ' form-group'
         classLabel = 'compose-label control-label'
         listClass  = classer
@@ -95,21 +111,7 @@ module.exports = MailsInput = React.createClass
         div className: className,
             label htmlFor: @props.id, className: classLabel,
                 @props.label
-            @state.known.map (address) =>
-                remove = =>
-                    known = @state.known.filter (a) ->
-                        return a.address isnt address.address
-                    @setState known: known, =>
-                        @proxyValueLink().requestChange @refs.contactInput.getDOMNode().value
-                span
-                    className: 'address-tag'
-                    key: address.address
-                    title: address.address
-                    MessageUtils.displayAddress address
-                        a
-                            className: 'clickable'
-                            onClick: remove,
-                                i className: 'fa fa-times'
+            knownContacts
             div className: 'contact-group dropdown ' + listClass,
                 textarea
                     id: @props.id
