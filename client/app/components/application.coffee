@@ -284,6 +284,7 @@ module.exports = Application = React.createClass
                 mailboxes:     @state.mailboxes
                 settings:      @state.settings
                 fetching:      fetching
+                refreshes:     @state.refreshes
                 query:         query
                 isTrash:       isTrash
                 conversationLengths: conversationLengths

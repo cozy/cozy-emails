@@ -49,6 +49,7 @@ MessageList = React.createClass
             if Object.keys(selected).length is 0
                 @setState allSelected: false, edited: false
 
+
     render: ->
         compact = @props.settings.get('listStyle') is 'compact'
         messages = @props.messages.map (message, key) =>
@@ -199,13 +200,16 @@ MessageList = React.createClass
                         # refresh
                         if not @state.edited
                             div className: btnClasses,
+                            refreshClasses = 'fa fa-refresh'
+                            if @props.refreshes.length > 0
+                                refreshClasses += ' fa-spin'
+                            div className: 'btn-group btn-group-sm message-list-option',
                                 button
                                     className: 'btn btn-default',
                                     type: 'button',
                                     disabled: null,
                                     onClick: @refresh,
-                                        span
-                                            className: 'fa fa-refresh'
+                                        span className: refreshClasses
                         # config
                         if not @state.edited
                             div className: btnClasses,
@@ -472,6 +476,23 @@ MessageItem = React.createClass
     displayName: 'MessagesItem'
 
     mixins: [RouterMixin]
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+        # we must do the comparison manually because the property "onSelect" is
+        # a function (therefore it should not be compared)
+        shouldUpdate =
+            not _.isEqual(nextState, @state) \
+            or not Immutable.is(nextProps.message, @props.message) \
+            or not Immutable.is(nextProps.settings, @props.settings) \
+            or nextProps.conversationLength isnt @props.conversationLength \
+            or nextProps.key isnt @props.key \
+            or nextProps.isActive isnt @props.isActive \
+            or nextProps.edited isnt @props.edited \
+            or nextProps.selected isnt @props.selected
+
+        return shouldUpdate
+
+
 
     render: ->
         message = @props.message

@@ -26,6 +26,25 @@ window.onload = ->
     try
         window.__DEV__ = window.location.hostname is 'localhost'
 
+        # expose an APi for performance
+        # performance is not defined in phantomJS
+        referencePoint = 0
+        window.start = ->
+            referencePoint = performance.now() if performance?.now?
+            React.addons.Perf.start()
+        window.stop = ->
+            console.log performance.now() - referencePoint if performance?.now?
+            React.addons.Perf.stop()
+        window.printWasted = ->
+            stop()
+            React.addons.Perf.printWasted()
+        window.printInclusive = ->
+            stop()
+            React.addons.Perf.printInclusive()
+        window.printExclusive = ->
+            stop()
+            React.addons.Perf.printExclusive()
+
         # expose an API
         window.cozyMails = require './utils/api_utils'
 
