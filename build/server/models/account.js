@@ -75,10 +75,17 @@ Account.prototype.setRefreshing = function(value) {
 
 Account.refreshAllAccounts = function(limit, onlyFavorites, callback) {
   return Account.request('all', function(err, accounts) {
+    var options;
     if (err) {
       return callback(err);
     }
-    return Account.refreshAccounts(accounts, limit, onlyFavorites, callback);
+    options = {
+      accounts: accounts,
+      limitByBox: limit,
+      onlyFavorites: onlyFavorites,
+      firstImport: false
+    };
+    return Account.refreshAccounts(options, callback);
   });
 };
 
@@ -96,16 +103,25 @@ Account.removeOrphansAndRefresh = function(limitByBox, onlyFavorites, callback) 
         return callback(err);
       }
       return Message.removeOrphans(existingMailboxIDs, function(err) {
+        var options;
         if (err) {
           return callback(err);
         }
-        return Account.refreshAccounts(accounts, limitByBox, onlyFavorites, callback);
+        options = {
+          accounts: accounts,
+          limitByBox: limitByBox,
+          onlyFavorites: onlyFavorites,
+          firstImport: false
+        };
+        return Account.refreshAccounts(options, callback);
       });
     });
   });
 };
 
-Account.refreshAccounts = function(accounts, limitByBox, onlyFavorites, callback) {
+Account.refreshAccounts = function(options, callback) {
+  var accounts, firstImport, limitByBox, onlyFavorites;
+  accounts = options.accounts, limitByBox = options.limitByBox, onlyFavorites = options.onlyFavorites, firstImport = options.firstImport;
   return async.eachSeries(accounts, function(account, cb) {
     log.debug("refreshing account " + account.label);
     if (account.isTest()) {
@@ -114,7 +130,7 @@ Account.refreshAccounts = function(accounts, limitByBox, onlyFavorites, callback
     if (account.isRefreshing()) {
       return cb(null);
     }
-    return account.imap_fetchMails(limitByBox, onlyFavorites, function(err) {
+    return account.imap_fetchMails(limitByBox, onlyFavorites, firstImport, function(err) {
       if (err) {
         log.error("CANT REFRESH ACCOUNT", account.id, err);
       }
@@ -345,7 +361,7 @@ Account.prototype.imap_refreshBoxes = function(callback) {
   });
 };
 
-Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback) {
+Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, firstImport, callback) {
   var account;
   log.debug("account#imap_fetchMails", limitByBox, onlyFavorites);
   account = this;
@@ -354,7 +370,7 @@ Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback
     onlyFavorites = false;
   }
   return this.imap_refreshBoxes(function(err, toFetch, toDestroy) {
-    var reporter;
+    var numToFetch, reporter;
     if (err) {
       account.setRefreshing(false);
     }
@@ -372,7 +388,8 @@ Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback
     });
     log.info("FETCHING ACCOUNT " + account.label + " : " + toFetch.length + " BOXES");
     log.info("   ", toDestroy.length, "BOXES TO DESTROY");
-    reporter = ImapReporter.accountFetch(account, toFetch.length + 1);
+    numToFetch = toFetch.length + 1;
+    reporter = ImapReporter.accountFetch(account, numToFetch, firstImport);
     toFetch.sort(function(a, b) {
       if (a.label === 'INBOX') {
         return -1;
@@ -381,7 +398,7 @@ Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback
       }
     });
     return async.eachSeries(toFetch, function(box, cb) {
-      return box.imap_fetchMails(limitByBox, function(err) {
+      return box.imap_fetchMails(limitByBox, firstImport, function(err) {
         var _ref;
         if (err && -1 === ((_ref = err.message) != null ? _ref.indexOf("Mailbox doesn't exist") : void 0)) {
           reporter.onError(err);
@@ -410,12 +427,12 @@ Account.prototype.imap_fetchMails = function(limitByBox, onlyFavorites, callback
 
 Account.prototype.imap_fetchMailsTwoSteps = function(callback) {
   log.debug("account#imap_fetchMails2Steps");
-  return this.imap_fetchMails(100, true, (function(_this) {
+  return this.imap_fetchMails(100, true, true, (function(_this) {
     return function(err) {
       if (err) {
         return callback(err);
       }
-      return _this.imap_fetchMails(null, false, function(err) {
+      return _this.imap_fetchMails(null, false, true, function(err) {
         if (err) {
           return callback(err);
         }

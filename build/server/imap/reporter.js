@@ -55,6 +55,7 @@ module.exports = ImapReporter = (function() {
     this.account = options.account;
     this.objectID = options.objectID;
     this.code = options.code;
+    this.firstImport = options.firstImport;
     ImapReporter.userTasks[this.id] = this;
     if (io != null) {
       io.emit('refresh.create', this.toObject());
@@ -87,7 +88,8 @@ module.exports = ImapReporter = (function() {
       box: this.box,
       account: this.account,
       code: this.code,
-      objectID: this.objectID
+      objectID: this.objectID,
+      firstImport: this.firstImport
     };
   };
 
@@ -124,21 +126,23 @@ module.exports = ImapReporter = (function() {
 
 })();
 
-ImapReporter.accountFetch = function(account, boxesLength) {
+ImapReporter.accountFetch = function(account, boxesLength, firstImport) {
   return new ImapReporter({
     total: boxesLength,
     account: account.label,
     objectID: account.id,
-    code: 'account-fetch'
+    code: 'account-fetch',
+    firstImport: firstImport
   });
 };
 
-ImapReporter.boxFetch = function(box, total) {
+ImapReporter.boxFetch = function(box, total, firstImport) {
   return new ImapReporter({
     total: total,
     box: box.label,
     objectID: box.id,
-    code: 'box-fetch'
+    code: 'box-fetch',
+    firstImport: firstImport
   });
 };
 

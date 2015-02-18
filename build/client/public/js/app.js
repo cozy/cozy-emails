@@ -2638,6 +2638,7 @@ module.exports = Application = React.createClass({
         mailboxes: this.state.mailboxes,
         settings: this.state.settings,
         fetching: fetching,
+        refreshes: this.state.refreshes,
         query: query,
         isTrash: isTrash,
         conversationLengths: conversationLengths,
@@ -4436,10 +4437,10 @@ module.exports = Menu = React.createClass({
     }, i({
       className: 'fa warning',
       onClick: this.displayErrors.bind(null, progress)
-    })) : void 0, ThinProgress({
+    })) : void 0, progress.get('firstImport') ? ThinProgress({
       done: progress.get('done'),
       total: progress.get('total')
-    })) : void 0), isSelected ? ul({
+    }) : void 0) : void 0), isSelected ? ul({
       className: 'list-unstyled submenu mailbox-list'
     }, mailboxes != null ? mailboxes.map((function(_this) {
       return function(mailbox, key) {
@@ -4677,7 +4678,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, btnClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, messages, nbMessages, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, btnClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, messages, nbMessages, nbSelected, nextPage, refreshClasses, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
     compact = this.props.settings.get('listStyle') === 'compact';
     messages = this.props.messages.map((function(_this) {
       return function(message, key) {
@@ -4872,16 +4873,18 @@ MessageList = React.createClass({
       className: btnClasses
     }, MessagesFilter(filterParams)) : void 0, advanced && !this.state.edited ? div({
       className: btnClasses
-    }, MessagesSort(filterParams)) : void 0, !this.state.edited ? div({
+    }, MessagesSort(filterParams)) : void 0, !this.state.edited ? (div({
       className: btnClasses
+    }, refreshClasses = 'fa fa-refresh'), this.props.refreshes.length > 0 ? refreshClasses += ' fa-spin' : void 0, div({
+      className: 'btn-group btn-group-sm message-list-option'
     }, button({
       className: 'btn btn-default',
       type: 'button',
       disabled: null,
       onClick: this.refresh
     }, span({
-      className: 'fa fa-refresh'
-    }))) : void 0, !this.state.edited ? div({
+      className: refreshClasses
+    })))) : void 0, !this.state.edited ? div({
       className: btnClasses
     }, a({
       href: configMailboxUrl,
@@ -5219,6 +5222,11 @@ module.exports = MessageList;
 MessageItem = React.createClass({
   displayName: 'MessagesItem',
   mixins: [RouterMixin],
+  shouldComponentUpdate: function(nextProps, nextState) {
+    var shouldUpdate;
+    shouldUpdate = !_.isEqual(nextState, this.state) || !Immutable.is(nextProps.message, this.props.message) || !Immutable.is(nextProps.settings, this.props.settings) || nextProps.conversationLength !== this.props.conversationLength || nextProps.key !== this.props.key || nextProps.isActive !== this.props.isActive || nextProps.edited !== this.props.edited || nextProps.selected !== this.props.selected;
+    return shouldUpdate;
+  },
   render: function() {
     var action, avatar, classes, compact, conversationID, date, flags, isDraft, message, params, preview, tag, text, url;
     message = this.props.message;
@@ -7566,9 +7574,34 @@ window.onerror = function(msg, url, line, col, error) {
 };
 
 window.onload = function() {
-  var AccountStore, Application, ContactStore, LayoutActionCreator, LayoutStore, MessageStore, PluginUtils, Router, SearchStore, SettingsStore, application, data, e, exception, locale, xhr;
+  var AccountStore, Application, ContactStore, LayoutActionCreator, LayoutStore, MessageStore, PluginUtils, Router, SearchStore, SettingsStore, application, data, e, exception, locale, referencePoint, xhr;
   try {
     window.__DEV__ = window.location.hostname === 'localhost';
+    referencePoint = 0;
+    window.start = function() {
+      if ((typeof performance !== "undefined" && performance !== null ? performance.now : void 0) != null) {
+        referencePoint = performance.now();
+      }
+      return React.addons.Perf.start();
+    };
+    window.stop = function() {
+      if ((typeof performance !== "undefined" && performance !== null ? performance.now : void 0) != null) {
+        console.log(performance.now() - referencePoint);
+      }
+      return React.addons.Perf.stop();
+    };
+    window.printWasted = function() {
+      stop();
+      return React.addons.Perf.printWasted();
+    };
+    window.printInclusive = function() {
+      stop();
+      return React.addons.Perf.printInclusive();
+    };
+    window.printExclusive = function() {
+      stop();
+      return React.addons.Perf.printExclusive();
+    };
     window.cozyMails = require('./utils/api_utils');
     if (window.settings == null) {
       window.settings = {};
@@ -7859,7 +7892,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-;require.register("libs/flux/store/Store", function(exports, require, module) {
+require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };

@@ -289,9 +289,9 @@ Mailbox.prototype.destroyAndRemoveAllMessages = function(callback) {
   });
 };
 
-Mailbox.prototype.imap_fetchMails = function(limitByBox, callback) {
+Mailbox.prototype.imap_fetchMails = function(limitByBox, firstImport, callback) {
   log.debug("imap_fetchMails", limitByBox);
-  return this.imap_refreshStep(limitByBox, null, (function(_this) {
+  return this.imap_refreshStep(limitByBox, null, firstImport, (function(_this) {
     return function(err) {
       var changes;
       log.debug("imap_fetchMailsEnd", limitByBox);
@@ -440,7 +440,7 @@ Mailbox.prototype.applyToFetch = function(toFetch, reporter, callback) {
   }, callback);
 };
 
-Mailbox.prototype.imap_refreshStep = function(limitByBox, laststep, callback) {
+Mailbox.prototype.imap_refreshStep = function(limitByBox, laststep, firstImport, callback) {
   var box;
   log.debug("imap_refreshStep", limitByBox, laststep);
   box = this;
@@ -456,7 +456,7 @@ Mailbox.prototype.imap_refreshStep = function(limitByBox, laststep, callback) {
       }
       nbTasks = ops.toFetch.length + ops.toRemove.length + ops.flagsChange.length;
       if (nbTasks > 0) {
-        reporter = ImapReporter.boxFetch(_this, nbTasks);
+        reporter = ImapReporter.boxFetch(_this, nbTasks, firstImport);
       }
       return async.series([
         function(cb) {
@@ -473,7 +473,7 @@ Mailbox.prototype.imap_refreshStep = function(limitByBox, laststep, callback) {
         if (limitByBox) {
           return callback(null);
         } else {
-          return _this.imap_refreshStep(null, ops.step, callback);
+          return _this.imap_refreshStep(null, ops.step, firstImport, callback);
         }
       });
     };
