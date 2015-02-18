@@ -35,8 +35,8 @@
   .attachements
       margin 1em 0
 
-  .input-group.contact-group
-      padding 0 15px // pixels because we override Bootstrap
+  .contact-group
+    margin-top: .5em
 
   .compose-toggle
     float right
@@ -67,6 +67,7 @@
 
     .caret
         margin-left 0.5em
+
   .compose-cc,
   .compose-bcc
     display none
@@ -78,4 +79,11 @@
   .address-tag
       border 1px solid mediumcolor
       background-color lightcolor
-      margin 0 1em .25em .25em
+      margin 0 .25em .25em .25em
+      padding .25em
+      border-radius .25em
+      display inline-block
+
+      a
+        font-size .75em
+        padding-left .5em
