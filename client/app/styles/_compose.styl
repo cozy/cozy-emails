@@ -23,7 +23,7 @@
 
   .editor,
   .rt-editor
-    border 1px solid #444
+    border 1px solid basecolor
     min-height 16em
     max-height 24em
     overflow auto
@@ -31,6 +31,37 @@
     width 100%
     text-align left
     color black
+
+    &:hover
+        border 1px solid actioncolor
+
+    &:active
+    &:focus
+        border 0
+        outline 0
+        border 1px solid actioncolor
+
+    blockquote
+        border-left .25em solid blue
+        padding-left .5em
+        margin 0
+
+    &.folded
+        blockquote
+            height 0
+            overflow hidden
+            text-overflow ellipsis
+            padding 0
+
+    .originalToggle
+        color basecolor
+        font-weight bold
+        cursor pointer
+
+    div
+    p
+        margin 0
+        padding 0
 
   .attachements
       margin 1em 0
