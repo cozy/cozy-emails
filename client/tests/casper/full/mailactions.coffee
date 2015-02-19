@@ -32,7 +32,7 @@ casper.test.begin 'Test Message Actions', (test) ->
                 test.assertNotVisible '.form-group.compose-cc', 'Cc hidden'
                 test.assertNotVisible '.form-group.compose-bcc', 'Bcc hidden'
                 values = casper.getFormValues('#email-compose form')
-                test.assertEquals values["compose-to"], "you@cozycloud.cc", "Reply To"
+                test.assertEquals values["compose-to"], "you@cozytest.cc", "Reply To"
                 test.assertEquals values["compose-cc"], "", "Reply Cc"
                 test.assertEquals values["compose-bcc"], "", "Reply Bcc"
                 test.assertEquals values["compose-subject"], "Re: Re: troll", "Reply Subject"
@@ -78,8 +78,9 @@ casper.test.begin 'Test Message Actions', (test) ->
                 test.assertVisible '.form-group.compose-cc', 'Cc shown'
                 test.assertNotVisible '.form-group.compose-bcc', 'Bcc hidden'
                 values = casper.getFormValues('#email-compose form')
-                test.assertEquals values["compose-to"], "you@cozycloud.cc", "Reply All To"
-                test.assertEquals values["compose-cc"], 'contact@cozycloud.cc', "Reply All Cc"
+                test.assertEquals values["compose-to"], "you@cozytest.cc", "Reply All To"
+                test.assertEquals values["compose-cc"], 'contact@cozytest.cc', "Reply All Cc"
+                test.assertEquals values["compose-cc"], 'contact@cozytest.cc', "Reply All Cc"
                 test.assertEquals values["compose-bcc"], "", "Reply All Bcc"
                 test.assertEquals values["compose-subject"], "Re: Re: troll", "Reply Subject"
                 casper.click '.form-compose .btn-cancel'

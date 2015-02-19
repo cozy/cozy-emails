@@ -30,10 +30,12 @@ if (typeof window.plugins !== "object") {
     container.classList.add('mailkeys-container');
     help.classList.add('mailkeys-help');
     document.body.appendChild(container);
-    Mousetrap.bind("esc", function () {
+    function closeHelp(e) {
       document.body.removeChild(container);
       Mousetrap.unbind("esc");
-    });
+    }
+    container.addEventListener('click', closeHelp);
+    Mousetrap.bind("esc", closeHelp);
   }
   function layoutWidth(direction) {
     if (direction !== 1 && direction !== -1) {

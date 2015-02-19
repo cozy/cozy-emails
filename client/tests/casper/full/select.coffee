@@ -75,8 +75,10 @@ casper.test.begin 'Test Message Selection', (test) ->
                     return not window.cozyMails.getSetting 'displayConversation'
             , ->
                 casper.cozy.selectAccount "DoveCot", "Test Folder", ->
-                    casper.click '.message-list li.message:nth-of-type(1)'
-                    casper.waitForSelector '.conversation', ->
+                    firstSel = '.message-list li.message:nth-of-type(1)'
+                    casper.click firstSel
+                    messageID = casper.getElementInfo(firstSel).attributes['data-message-id']
+                    casper.waitForSelector "h3[data-message-id='#{messageID}']", ->
                         doNav 'right', 2, ->
                             doNav 'right', 3, ->
                                 doNav 'right', 4, ->

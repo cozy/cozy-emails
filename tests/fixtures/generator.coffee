@@ -7,7 +7,7 @@ mailboxUID = {}
 
 names = ['alice', 'bob', 'natacha', 'mark', 'zoey', 'john', 'felicia' ,'max']
 priorities = ['low', 'normal', 'high']
-provider = 'cozycloud.cc'
+provider = 'cozytest.cc'
 
 accounts = require './accounts.json'
 mailboxes = {}

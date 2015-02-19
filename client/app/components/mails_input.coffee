@@ -1,8 +1,7 @@
-{div, label, input, span, ul, li, a, img, i} = React.DOM
+{div, label, textarea, span, ul, li, a, img, i} = React.DOM
 
 MessageUtils    = require '../utils/message_utils'
 Modal           = require './modal'
-StoreWatchMixin = require '../mixins/store_watch_mixin'
 ContactStore    = require '../stores/contact_store'
 ContactActionCreator = require '../actions/contact_action_creator'
 
@@ -16,38 +15,92 @@ module.exports = MailsInput = React.createClass
 
     mixins: [
         React.addons.LinkedStateMixin # two-way data binding
-        StoreWatchMixin [ContactStore]
     ]
 
     getStateFromStores: ->
-        query = @refs.contactInput?.getDOMNode().value.trim()
-        return {
-            #contacts: if query?.length > 2 then ContactStore.getResults() else null
-            contacts: ContactStore.getResults()
-            selected: 0
-            open: false
-        }
+        contacts: ContactStore.getResults()
 
     componentWillMount: ->
         @setState contacts: null, open: false
 
+    getInitialState: ->
+        state = @getStateFromStores()
+        state.known    = []
+        state.selected = 0
+        state.open     = false
+        return state
+
+    # Code from the StoreWatch Mixin. We don't use the mixin
+    # because we store other things into the state
+    componentDidMount: ->
+        ContactStore.on 'change', @_setStateFromStores
+        @fixHeight()
+
+    componentWillUnmount: ->
+        ContactStore.removeListener 'change', @_setStateFromStores
+
+    _setStateFromStores: -> @setState @getStateFromStores()
+
+    componentDidUpdate: ->
+        @fixHeight()
+
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
+    # Filter addresses. Put known ones into state and return a string with unknown ones
+    # @params values Array of {name, address}
+    # @returns a string
+    _extractAddresses: (values) ->
+        known   = []
+        unknown = []
+        values.map (address) ->
+            if address.address.indexOf('@') is -1
+                unknown.push address
+            else
+                res = ContactStore.getByAddress address.address
+                if res?
+                    known.unshift address
+                else
+                    unknown.push address
+        setTimeout =>
+            @setState known: known
+        , 0
+        MessageUtils.displayAddresses unknown, true
+
     # convert mailslist between human-readable and [{address, name}]
     proxyValueLink: ->
-        value: MessageUtils.displayAddresses @props.valueLink.value, true
+        value: @_extractAddresses @props.valueLink.value
         requestChange: (newValue) =>
             # reverse of MessageUtils.displayAddresses full
             result = newValue.split(',').map (tupple) ->
-                if match = tupple.match /"(.*)" <(.*)>/
+                if match = tupple.match /"{0,1}(.*)"{0,1} <(.*)>/
                     name: match[1], address: match[2]
                 else
-                    address: tupple.trim()
+                    address: tupple.trimLeft()
+            .filter (address) ->
+                return address.addres isnt ''
 
-            @props.valueLink.requestChange result
+            @props.valueLink.requestChange result.concat(@state.known)
+            @_extractAddresses result
+            @fixHeight()
 
     render: ->
+        knownContacts = @state.known.map (address) =>
+            remove = =>
+                known = @state.known.filter (a) ->
+                    return a.address isnt address.address
+                @setState known: known, =>
+                    @proxyValueLink().requestChange @refs.contactInput.getDOMNode().value
+            span
+                className: 'address-tag'
+                key: "#{@props.id}-#{address.address}"
+                title: address.address
+                MessageUtils.displayAddress address
+                    a
+                        className: 'clickable'
+                        onClick: remove,
+                            i className: 'fa fa-times'
+
         className  = (@props.className or '') + ' form-group'
         classLabel = 'compose-label control-label'
         listClass  = classer
@@ -58,20 +111,22 @@ module.exports = MailsInput = React.createClass
         div className: className,
             label htmlFor: @props.id, className: classLabel,
                 @props.label
+            knownContacts
             div className: 'contact-group dropdown ' + listClass,
-                input
-                    id: @props.id,
-                    name: @props.id,
-                    className: 'form-control compose-input',
-                    onKeyDown: @onKeyDown,
-                    onBlur: @onBlur,
+                textarea
+                    id: @props.id
+                    name: @props.id
+                    className: 'form-control compose-input'
+                    onKeyDown: @onKeyDown
+                    onBlur: @onBlur
                     ref: 'contactInput'
-                    valueLink: @proxyValueLink(),
-                    type: 'text',
+                    rows: 1
+                    valueLink: @proxyValueLink()
                     placeholder: @props.placeholder
                     'autoComplete': 'off'
+                    'spellCheck': 'off'
                 div
-                    className: 'input-group-addon btn btn-cozy contact',
+                    className: 'btn btn-cozy btn-contact',
                     onClick: @onQuery,
                         span className: 'fa fa-search'
 
@@ -171,3 +226,8 @@ module.exports = MailsInput = React.createClass
         setTimeout =>
             query = @refs.contactInput.getDOMNode().focus()
         , 200
+
+    fixHeight: ->
+        input = @refs.contactInput.getDOMNode()
+        if input.scrollHeight > input.clientHeight
+            input.style.height = input.scrollHeight + "px"

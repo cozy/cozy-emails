@@ -57,18 +57,20 @@ casper.test.begin 'Test compose', (test) ->
                 casper.click '.contact-list li:nth-of-type(1) '
                 casper.waitWhileVisible '.contact-list', ->
                     values = casper.getFormValues('#email-compose form')
-                    test.assertEquals values["compose-to"], "#{contact}, ", "Contact added"
+                    test.assertEquals casper.fetchText('.address-tag'), "#{contact.split(' ')[0]}", "Known contact added"
+                    test.assertEquals values["compose-to"], "", "Known contact added"
                     casper.fillSelectors 'form',
                         '#compose-to': "#{contact}, casper.cozy"
                     casper.click '#compose-to + .btn-cozy'
                     casper.waitUntilVisible '.contact-list', ->
                         test.assertExist '.contact-list li', "Some contacts found"
-                        contact2 = casper.fetchText '.contact-form.open .contact-list li:nth-of-type(1)'
+                        contact2 = casper.fetchText '.contact-form.open .contact-list li:nth-of-type(2)'
                         test.assert /casper\.cozy/.test(contact), "Contact match"
-                        casper.click '.contact-list li:nth-of-type(1) '
+                        casper.click '.contact-list li:nth-of-type(2) '
                         casper.waitWhileVisible '.contact-list', ->
                             values = casper.getFormValues('#email-compose form')
-                            test.assert values["compose-to"] is "#{contact}, #{contact2}, ", "Contact added"
+                            test.assertEquals casper.fetchText('.address-tag'), "#{contact.split(' ')[0]}#{contact2.split(' ')[0]}", "Contact added"
+                            test.assertEquals values["compose-to"], "", "Contact added"
 
     casper.run ->
         test.done()

@@ -49,6 +49,7 @@ module.exports =
       "menu mailbox new"        : " et %{smart_count} nouveaux |||| et %{smart_count} nouveaux "
       "menu favorites on"       : "Favorites"
       "menu favorites off"      : "Toutes"
+      "menu toggle"             : "Menu"
 
       # List
       "list empty"              : "Pas d'email dans cette boîte.."
@@ -108,6 +109,7 @@ module.exports =
       "mail mark unread"        : "Non lu"
       "mail confirm delete"     : "Voulez-vous vraiment supprimer le message
                                     « %{subject} » ?"
+      "mail confirm delete nosubject"   : "Voulez-vous vraiment supprimer ce message"
       "mail action conversation delete" : "Supprimer la conversation"
       "mail action conversation move"   : "Déplacer la conversation"
       "mail action conversation seen"   : "Marquer la conversation comme lue"

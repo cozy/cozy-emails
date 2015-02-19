@@ -70,6 +70,9 @@ module.exports = Application = React.createClass
         panelsClasses = classer
             row: true
             horizontal: disposition.type is Dispositions.HORIZONTAL
+            three: disposition.type is Dispositions.THREE
+            vertical: disposition.type is Dispositions.VERTICAL
+            full: isFullWidth
         # css classes are a bit long so we use a subfunction to get them
         panelClasses = @getPanelClasses isFullWidth
 

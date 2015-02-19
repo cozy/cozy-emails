@@ -184,12 +184,15 @@
     position absolute
     background transparent
 
-.alert
-    opacity 1
+.row-alert
+    z-index 1
 
-.alert.autoclose
-    opacity 0
-    transition opacity 10s
+    .alert
+        opacity 1
+
+    .alert.autoclose
+        opacity 0
+        transition opacity 10s
 
 .compose-toggle-cc
 .compose-toggle-bcc
@@ -220,15 +223,6 @@
 
   --
 */
-
-
-#email-compose
-    width 100%
-    max-width 800px
-
-.compose-label
-  display block
-  width 100%
 
 .file-picker
     .dropzone

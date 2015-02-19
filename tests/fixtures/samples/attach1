@@ -1,13 +1,13 @@
-From me@cozycloud.cc Fri Sep 12 10:42:35 2014
-Return-Path: <me@cozycloud.cc>
+From me@cozytest.cc Fri Sep 12 10:42:35 2014
+Return-Path: <me@cozytest.cc>
 MIME-Version: 1.0
 In-Reply-To: <CAEL743O2AEB9fXPz9etzszN6ohNuZETDevXHmJZZ337nBWa=FA@mail.gmail.com>
 References: <CAEL743O2AEB9fXPz9etzszN6ohNuZETDevXHmJZZ337nBWa=FA@mail.gmail.com>
 Date: Fri, 12 Sep 2014 10:42:35 +0200
 Message-ID: <CAEL743PQBO2JQmogW8-iLWr1u26UWKa2DGWvPTCnDf6o+ivtVQ@mail.gmail.com>
 Subject: Email fixture attachments gmail
-From: Me <me@cozycloud.cc>
-To: You <you@cozycloud.cc>
+From: Me <me@cozytest.cc>
+To: You <you@cozytest.cc>
 Content-Type: multipart/related; boundary=e89a8f92410e4715ae0502da448a
 Status: RO
 Content-Length: 48310
@@ -22,7 +22,7 @@ Content-Transfer-Encoding: quoted-printable
 
 Nouveau test avec une image [image: Images int=C3=A9gr=C3=A9es 1]
 
-2014-09-12 10:22 GMT+02:00 Me <me@cozycloud.cc>=
+2014-09-12 10:22 GMT+02:00 Me <me@cozytest.cc>=
 :
 
 > Un email en *HTML* avec un attachment.
@@ -36,7 +36,7 @@ Content-Transfer-Encoding: quoted-printable
 713c468e25" alt=3D"Images int=C3=A9gr=C3=A9es 1" width=3D"480" height=3D"36=
 0"><br></div><div class=3D"gmail_extra"><br><div class=3D"gmail_quote">2014=
 -09-12 10:22 GMT+02:00 Me <span dir=3D"ltr">&lt;<a href=3D"ma=
-ilto:me@cozycloud.cc" target=3D"_blank">me@cozy=
+ilto:me@cozytest.cc" target=3D"_blank">me@cozy=
 cloud.cc</a>&gt;</span>:<br><blockquote class=3D"gmail_quote" style=3D"marg=
 in:0 0 0 .8ex;border-left:1px #ccc solid;padding-left:1ex"><div dir=3D"ltr"=
 >Un email en <b>HTML</b>=C2=A0avec un attachment.<img src=3D"http://localho=

@@ -94,7 +94,7 @@ Account.refreshAccounts = (options, callback) ->
         return cb null if account.isRefreshing()
         account.imap_fetchMails limitByBox, onlyFavorites, firstImport, (err) ->
             if err
-                log.error "CANT REFRESH ACCOUNT", account.id, err
+                log.error "CANT REFRESH ACCOUNT", account.id, account.label, err
             # refresh all accounts even if one fails
             cb null
     , callback
