@@ -59,11 +59,13 @@ module.exports = MailsInput = React.createClass
             else
                 res = ContactStore.getByAddress address.address
                 if res?
-                    known.unshift address
+                    # prevent adding same contact twice
+                    if not (known.some (a) -> return a.address is address.address)
+                        known.push address
                 else
                     unknown.push address
         setTimeout =>
-            @setState known: known
+            @setState known: known.reverse()
         , 0
         MessageUtils.displayAddresses unknown, true
 
@@ -80,12 +82,12 @@ module.exports = MailsInput = React.createClass
             .filter (address) ->
                 return address.addres isnt ''
 
-            @props.valueLink.requestChange result.concat(@state.known)
+            @props.valueLink.requestChange result.concat(@state.known.reverse())
             @_extractAddresses result
             @fixHeight()
 
     render: ->
-        knownContacts = @state.known.map (address) =>
+        knownContacts = @state.known.map (address, idx) =>
             remove = =>
                 known = @state.known.filter (a) ->
                     return a.address isnt address.address
@@ -93,7 +95,7 @@ module.exports = MailsInput = React.createClass
                     @proxyValueLink().requestChange @refs.contactInput.getDOMNode().value
             span
                 className: 'address-tag'
-                key: "#{@props.id}-#{address.address}"
+                key: "#{@props.id}-#{address.address}-#{idx}"
                 title: address.address
                 MessageUtils.displayAddress address
                     a
