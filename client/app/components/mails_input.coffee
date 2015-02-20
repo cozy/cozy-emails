@@ -159,7 +159,7 @@ module.exports = MailsInput = React.createClass
                 "#{contact.get 'fn'} <#{contact.get 'address'}>"
 
     onQuery: (char) ->
-        query = @refs.contactInput.getDOMNode().value.split(',').pop().trim()
+        query = @refs.contactInput.getDOMNode().value.split(',').pop().trimLeft()
         if char? and typeof char is 'string'
             query += char
             force = false
