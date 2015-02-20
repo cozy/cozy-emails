@@ -373,14 +373,15 @@ module.exports = Application = React.createClass
             message = MessageStore.getByID messageID
 
             return Compose
-                layout          : layout
-                action          : null
-                inReplyTo       : null
-                settings        : @state.settings
-                accounts        : @state.accounts
-                selectedAccount : @state.selectedAccount
-                message         : message
-                ref             : 'compose'
+                layout            : layout
+                action            : null
+                inReplyTo         : null
+                settings          : @state.settings
+                accounts          : @state.accounts
+                selectedAccount   : @state.selectedAccount
+                selectedMailboxID : @state.selectedMailboxID
+                message           : message
+                ref               : 'compose'
 
         # -- Display the settings form
         else if panelInfo.action is 'settings'
