@@ -318,13 +318,17 @@ MessageList = React.createClass
                         conversationID = message.get 'conversationID'
                         ConversationActionCreator.delete conversationID, (error) ->
                             if error?
-                                alertError "#{t("conversation move ko")} #{error}"
+                                alertError "#{t("conversation delete ko")} #{error}"
                             else
                                 window.cozyMails.messageNavigate()
             else
                 if (not @props.settings.get('messageConfirmDelete')) or
                 window.confirm(t 'list delete confirm', smart_count: selected.length)
-                    MessageActionCreator.delete selected
+                    MessageActionCreator.delete selected, (error) ->
+                        if error?
+                            alertError "#{t("message action delete ko")} #{error}"
+                        else
+                            window.cozyMails.messageNavigate()
 
     onMove: (args) ->
         selected = Object.keys @state.selected
@@ -390,11 +394,11 @@ MessageList = React.createClass
                     when 'seen'
                         ConversationActionCreator.seen conversationID, (error) ->
                             if error?
-                                alertError "#{t("conversation seen ok ")} #{error}"
+                                alertError "#{t("conversation seen ko ")} #{error}"
                     when 'unseen'
                         ConversationActionCreator.unseen conversationID, (error) ->
                             if error?
-                                alertError "#{t("conversation unseen ok")} #{error}"
+                                alertError "#{t("conversation unseen ko")} #{error}"
 
     expungeMailbox: (e) ->
         e.preventDefault()

@@ -2725,6 +2725,7 @@ module.exports = Application = React.createClass({
         settings: this.state.settings,
         accounts: this.state.accounts,
         selectedAccount: this.state.selectedAccount,
+        selectedMailboxID: this.state.selectedMailboxID,
         message: message,
         ref: 'compose'
       });
@@ -4029,7 +4030,11 @@ module.exports = MailsInput = React.createClass({
       } else {
         res = ContactStore.getByAddress(address.address);
         if (res != null) {
-          return known.unshift(address);
+          if (!(known.some(function(a) {
+            return a.address === address.address;
+          }))) {
+            return known.push(address);
+          }
         } else {
           return unknown.push(address);
         }
@@ -4038,7 +4043,7 @@ module.exports = MailsInput = React.createClass({
     setTimeout((function(_this) {
       return function() {
         return _this.setState({
-          known: known
+          known: known.reverse()
         });
       };
     })(this), 0);
@@ -4065,7 +4070,7 @@ module.exports = MailsInput = React.createClass({
           }).filter(function(address) {
             return address.addres !== '';
           });
-          _this.props.valueLink.requestChange(result.concat(_this.state.known));
+          _this.props.valueLink.requestChange(result.concat(_this.state.known.reverse()));
           _this._extractAddresses(result);
           return _this.fixHeight();
         };
@@ -4075,7 +4080,7 @@ module.exports = MailsInput = React.createClass({
   render: function() {
     var classLabel, className, current, knownContacts, listClass, _ref1;
     knownContacts = this.state.known.map((function(_this) {
-      return function(address) {
+      return function(address, idx) {
         var remove;
         remove = function() {
           var known;
@@ -4090,7 +4095,7 @@ module.exports = MailsInput = React.createClass({
         };
         return span({
           className: 'address-tag',
-          key: "" + _this.props.id + "-" + address.address,
+          key: "" + _this.props.id + "-" + address.address + "-" + idx,
           title: address.address
         }, MessageUtils.displayAddress(address), a({
           className: 'clickable',
@@ -5086,7 +5091,7 @@ MessageList = React.createClass({
               conversationID = message.get('conversationID');
               return ConversationActionCreator["delete"](conversationID, function(error) {
                 if (error != null) {
-                  return alertError("" + (t("conversation move ko")) + " " + error);
+                  return alertError("" + (t("conversation delete ko")) + " " + error);
                 } else {
                   return window.cozyMails.messageNavigate();
                 }
@@ -5098,7 +5103,13 @@ MessageList = React.createClass({
         if ((!this.props.settings.get('messageConfirmDelete')) || window.confirm(t('list delete confirm', {
           smart_count: selected.length
         }))) {
-          return MessageActionCreator["delete"](selected);
+          return MessageActionCreator["delete"](selected, function(error) {
+            if (error != null) {
+              return alertError("" + (t("message action delete ko")) + " " + error);
+            } else {
+              return window.cozyMails.messageNavigate();
+            }
+          });
         }
       }
     }
@@ -5202,13 +5213,13 @@ MessageList = React.createClass({
             case 'seen':
               return ConversationActionCreator.seen(conversationID, function(error) {
                 if (error != null) {
-                  return alertError("" + (t("conversation seen ok ")) + " " + error);
+                  return alertError("" + (t("conversation seen ko ")) + " " + error);
                 }
               });
             case 'unseen':
               return ConversationActionCreator.unseen(conversationID, function(error) {
                 if (error != null) {
-                  return alertError("" + (t("conversation unseen ok")) + " " + error);
+                  return alertError("" + (t("conversation unseen ko")) + " " + error);
                 }
               });
           }
@@ -7985,7 +7996,64 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-require.register("libs/flux/store/store", function(exports, require, module) {
+require.register("libs/flux/store/Store", function(exports, require, module) {
+var AppDispatcher, Store,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+AppDispatcher = require('../../../app_dispatcher');
+
+module.exports = Store = (function(_super) {
+  var _addHandlers, _handlers, _nextUniqID, _processBinding;
+
+  __extends(Store, _super);
+
+  Store.prototype.uniqID = null;
+
+  _nextUniqID = 0;
+
+  _handlers = {};
+
+  _addHandlers = function(type, callback) {
+    if (_handlers[this.uniqID] == null) {
+      _handlers[this.uniqID] = {};
+    }
+    return _handlers[this.uniqID][type] = callback;
+  };
+
+  _processBinding = function() {
+    return this.dispatchToken = AppDispatcher.register((function(_this) {
+      return function(payload) {
+        var callback, type, value, _ref;
+        _ref = payload.action, type = _ref.type, value = _ref.value;
+        if ((callback = _handlers[_this.uniqID][type]) != null) {
+          return callback.call(_this, value);
+        }
+      };
+    })(this));
+  };
+
+  function Store() {
+    Store.__super__.constructor.call(this);
+    this.uniqID = _nextUniqID++;
+    this.__bindHandlers(_addHandlers.bind(this));
+    _processBinding.call(this);
+  }
+
+  Store.prototype.__bindHandlers = function(handle) {
+    var message;
+    if (__DEV__) {
+      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
+      throw new Error(message);
+    }
+  };
+
+  return Store;
+
+})(EventEmitter);
+});
+
+;require.register("libs/flux/store/store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -9008,12 +9076,12 @@ module.exports = Router = (function(_super) {
   };
 
   Router.prototype._getDefaultParameters = function(action) {
-    var defaultAccount, defaultAccountID, defaultMailboxID, defaultParameters, _ref, _ref1;
+    var defaultAccount, defaultAccountID, defaultMailboxID, defaultParameters, _ref, _ref1, _ref2;
     switch (action) {
       case 'account.mailbox.messages':
       case 'account.mailbox.messages.full':
         defaultAccountID = (_ref = AccountStore.getDefault()) != null ? _ref.get('id') : void 0;
-        defaultMailboxID = AccountStore.getDefaultMailbox(defaultAccountID).get('id');
+        defaultMailboxID = (_ref1 = AccountStore.getDefaultMailbox(defaultAccountID)) != null ? _ref1.get('id') : void 0;
         defaultParameters = _.clone(MessageStore.getParams());
         defaultParameters.accountID = defaultAccountID;
         defaultParameters.mailboxID = defaultMailboxID;
@@ -9021,7 +9089,7 @@ module.exports = Router = (function(_super) {
         defaultParameters.pageAfter = '-';
         break;
       case 'account.config':
-        defaultAccount = (_ref1 = AccountStore.getDefault()) != null ? _ref1.get('id') : void 0;
+        defaultAccount = (_ref2 = AccountStore.getDefault()) != null ? _ref2.get('id') : void 0;
         defaultParameters = {
           accountID: defaultAccount,
           tab: 'account'
@@ -10527,10 +10595,10 @@ module.exports = {
     var AppDispatcher;
     AppDispatcher = require('../app_dispatcher');
     return window.setInterval(function() {
-      var content;
+      var content, _ref, _ref1;
       content = {
-        "accountID": AccountStore.getDefault().get('id'),
-        "id": AccountStore.getDefaultMailbox().get('id'),
+        "accountID": (_ref = AccountStore.getDefault()) != null ? _ref.get('id') : void 0,
+        "id": (_ref1 = AccountStore.getDefaultMailbox()) != null ? _ref1.get('id') : void 0,
         "label": "INBOX",
         "path": "INBOX",
         "tree": ["INBOX"],
