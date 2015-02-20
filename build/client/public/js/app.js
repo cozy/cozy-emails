@@ -2725,6 +2725,7 @@ module.exports = Application = React.createClass({
         settings: this.state.settings,
         accounts: this.state.accounts,
         selectedAccount: this.state.selectedAccount,
+        selectedMailboxID: this.state.selectedMailboxID,
         message: message,
         ref: 'compose'
       });
