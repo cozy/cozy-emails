@@ -138,7 +138,7 @@ module.exports = React.createClass
             doc.documentElement.innerHTML = html
 
         if not doc
-            console.log "Unable to parse HTML content of message"
+            console.error "Unable to parse HTML content of message"
             messageDisplayHTML = false
 
         if doc and not @state.messageDisplayImages
@@ -648,7 +648,10 @@ MessageContent = React.createClass
                     window.cozyMails.customEvent "MESSAGE_LOADED", @props.message.toJS()
                     updateHeight = (e) ->
                         height = doc.body.getBoundingClientRect().height
-                        frame.style.height = "#{height * 1.2}px"
+                        if height < 60
+                            frame.style.height = "60px"
+                        else
+                            frame.style.height = "#{height * 1.3}px"
                         step++
                         # In Chrome, onresize loops
                         if step > 10
