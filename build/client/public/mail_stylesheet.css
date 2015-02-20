@@ -1,16 +1,6 @@
-@font-face{
-  font-family: 'Source Sans Pro';
-  font-weight: 400;
-  font-style: normal;
-  font-stretch: normal;
-  src: url('./fonts/sourcesanspro/SourceSansPro-Regular.eot') format('embedded-opentype'),
-       url('./fonts/sourcesanspro/SourceSansPro-Regular.otf.woff') format('woff'),
-       url('./fonts/sourcesanspro/SourceSansPro-Regular.otf') format('opentype'),
-       url('./fonts/sourcesanspro/SourceSansPro-Regular.ttf') format('truetype');
-}
 body {
     visibility: visible !important;
-    font-family: 'Source Sans Pro';
+    font-family: 'Source Sans Pro', sans-serif;
 }
 table {
   width: 100%;
@@ -30,6 +20,6 @@ blockquote blockquote blockquote blockquote { border-color: magenta !important; 
 blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }
 
 .text {
-    font-family: 'Source Sans Pro';
+    font-family: 'Source Sans Pro', sans-serif;
     white-space: pre-wrap;
 }
