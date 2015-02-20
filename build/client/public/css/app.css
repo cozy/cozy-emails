@@ -2441,7 +2441,7 @@ textarea:active,
 }
 .editor,
 .rt-editor {
-  border: 1px solid #444;
+  border: 1px solid #34a6ff;
   min-height: 16em;
   max-height: 24em;
   overflow: auto;
@@ -2449,6 +2449,45 @@ textarea:active,
   width: 100%;
   text-align: left;
   color: #000;
+}
+.editor:hover,
+.rt-editor:hover {
+  border: 1px solid #fe8800;
+}
+.editor:active,
+.rt-editor:active,
+.editor:focus,
+.rt-editor:focus {
+  border: 0;
+  outline: 0;
+  border: 1px solid #fe8800;
+}
+.editor blockquote,
+.rt-editor blockquote {
+  border-left: 0.25em solid #00f;
+  padding-left: 0.5em;
+  margin: 0;
+}
+.editor.folded blockquote,
+.rt-editor.folded blockquote {
+  height: 0;
+  overflow: hidden;
+  -o-text-overflow: ellipsis;
+  text-overflow: ellipsis;
+  padding: 0;
+}
+.editor .originalToggle,
+.rt-editor .originalToggle {
+  color: #34a6ff;
+  font-weight: bold;
+  cursor: pointer;
+}
+.editor div,
+.rt-editor div,
+.editor p,
+.rt-editor p {
+  margin: 0;
+  padding: 0;
 }
 .attachements {
   margin: 1em 0;
@@ -2740,7 +2779,7 @@ textarea.compose-input {
   cursor: pointer;
   font-size: 0.8em;
   border: 0;
-  height: 2.5em;
+  height: 2.4rem;
 }
 .message-list .message > a,
 .message-list .message > span {
@@ -2937,6 +2976,7 @@ textarea.compose-input {
   background-color: #fff;
   top: 0;
   padding: 0.5em 0;
+  z-index: 1000;
 }
 .message-list .message-list-actions + * {
   clear: both;
@@ -2949,11 +2989,11 @@ textarea.compose-input {
   width: 72%;
 }
 #panels.vertical .message-list-actions {
-  width: 42%;
+  width: 43%;
 }
 #panels.horizontal .message-list-actions,
 #panels.vertical.full .message-list-actions {
-  width: 88%;
+  width: 89%;
 }
 .message-list.compact .message {
   height: 1.75em;
@@ -2966,8 +3006,8 @@ textarea.compose-input {
 .message-list.compact .avatar,
 .message-list.compact .select {
   font-size: 1.5em;
-  width: 1em;
-  height: 1.1em;
+  width: 1.2em;
+  height: 1.2em;
   margin: -0.1em 0;
   padding-top: 0.1em;
 }
@@ -2976,7 +3016,7 @@ textarea.compose-input {
 .message-list.compact .avatar-wrapper:hover .select {
   height: auto;
   width: auto;
-  margin: 0 0.1em 0 0.2em;
+  margin: 0 0.2em 0 0.3em;
   cursor: pointer;
 }
 .message-list-option .btn.btn-default {
@@ -3458,51 +3498,12 @@ textarea.compose-input {
 .clickable {
   cursor: pointer;
 }
-/*
-  EDITOR
-
-  --
-*/
 .file-picker .dropzone {
   width: 100%;
 }
 .file-picker .dropzone span,
 .file-picker .dropzone input {
   width: 100%;
-}
-.rt-editor {
-  border: 1px solid #34a6ff;
-  width: 100%;
-}
-.rt-editor:hover {
-  border: 1px solid #fe8800;
-}
-.rt-editor:active,
-.rt-editor:focus {
-  border: 0;
-  outline: 0;
-  border: 1px solid #fe8800;
-}
-.rt-editor blockquote {
-  border-left: 0.25em solid #00f;
-  padding-left: 0.5em;
-  margin: 0;
-}
-.rt-editor.folded blockquote {
-  height: 0;
-  overflow: hidden;
-  -o-text-overflow: ellipsis;
-  text-overflow: ellipsis;
-  padding: 0;
-}
-.rt-editor .originalToggle {
-  color: #34a6ff;
-  font-weight: bold;
-  cursor: pointer;
-}
-.rt-editor div,
-.rt-editor p {
-  margin: 0.5em 0;
 }
 
 /*!
