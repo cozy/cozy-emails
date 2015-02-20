@@ -60,29 +60,29 @@ module.exports = React.createClass
             else
                 fullHeaders.push "#{key}: #{value}"
 
-        text = message.get 'text'
-        html = message.get 'html'
-        urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
-        # @TODO Do we want to convert text only messages to HTML ?
-        # /!\ if messageDisplayHTML is set, this method should always return
-        # a value fo html, otherwise the content of the email flashes
-        if text and not html and @state.messageDisplayHTML
-            try
-                html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
-            catch e
-                console.log "Error converting text message to Markdown: #{e}"
-                html = "<div class='text'>#{text}</div>" #markdown.toHTML text
+        if @state.active
+            text = message.get 'text'
+            html = message.get 'html'
+            urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
+            # @TODO Do we want to convert text only messages to HTML ?
+            # /!\ if messageDisplayHTML is set, this method should always return
+            # a value fo html, otherwise the content of the email flashes
+            if text and not html and @state.messageDisplayHTML
+                try
+                    html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
+                catch e
+                    html = "<div class='text'>#{text}</div>" #markdown.toHTML text
 
-        if html and not text and not @state.messageDisplayHTML
-            text = toMarkdown html
+            if html and not text and not @state.messageDisplayHTML
+                text = toMarkdown html
 
-        if text
-            rich = text.replace urls, '<a href="$1" target="_blank">$1</a>', 'gim'
-            rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>')
-            rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>')
-            rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>')
-            rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>')
-            rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim')
+            if text
+                rich = text.replace urls, '<a href="$1" target="_blank">$1</a>', 'gim'
+                rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>')
+                rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>')
+                rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>')
+                rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>')
+                rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim')
 
         return {
             id         : message.get('id')
