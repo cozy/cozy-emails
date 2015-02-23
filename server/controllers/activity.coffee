@@ -28,7 +28,7 @@ ContactActivity =
     search: (data, callback) ->
 
         if data.query?
-            request = 'byName'
+            request = 'mailByName'
             params =
                 startkey: data.query
                 endkey:   data.query + "\uFFFF"

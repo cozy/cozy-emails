@@ -10,7 +10,7 @@ module.exports =
 
     contact:
         all: cozydb.defaultRequests.all
-        byName: (doc) ->
+        mailByName: (doc) ->
             if doc.fn? and doc.fn.length > 0
                 emit doc.fn, doc
             if doc.n?
@@ -19,7 +19,7 @@ module.exports =
                 if dp.name is 'email'
                     emit dp.value, doc
                     emit dp.value.split('@')[1], doc
-        byEmail: (doc) ->
+        mailByEmail: (doc) ->
             for dp in doc.datapoints
                 if dp.name is 'email'
                     emit dp.value, doc

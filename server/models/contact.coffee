@@ -59,7 +59,7 @@ Contact.requestWithPictures = (name, options, callback) ->
 Contact.createNoDuplicate = (data, callback) ->
     log.info "createNoDuplicate"
     key = data.address
-    Contact.request 'byEmail',
+    Contact.request 'mailByEmail',
         key: data.address
 
     , (err, existings) ->
@@ -74,4 +74,4 @@ Contact.createNoDuplicate = (data, callback) ->
 
         Contact.create contact, (err, created) ->
             return callback err if err
-            Contact.request 'byEmail', key: key, callback
+            Contact.request 'mailByEmail', key: key, callback
