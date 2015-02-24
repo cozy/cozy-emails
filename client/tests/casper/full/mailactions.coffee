@@ -105,43 +105,44 @@ casper.test.begin 'Test Message Actions', (test) ->
                 casper.click '.form-compose .btn-cancel'
                 casper.waitWhileSelector '#email-compose'
 
-    ###
-    # Commenting this out, as support of HTTP PATCH Verb is very buggy in PhantomJS
-    #
     casper.then ->
-        test.comment "Delete"
-        confirm = ''
-        casper.evaluate ->
-            window.cozytest = {}
-            window.cozytest.confirm = window.confirm
-            window.confirm = (txt) ->
-                console.log txt
-                window.cozytest.confirmTxt = txt
+        if casper.getEngine() isnt 'slimer'
+            test.comment "Skipping, as PhantomJS doesn't support PATCH verb"
+            test.skip 1
+        else
+            test.comment "Delete"
+            confirm = ''
+            casper.evaluate ->
+                window.cozytest = {}
+                window.cozytest.confirm = window.confirm
+                window.confirm = (txt) ->
+                    console.log txt
+                    window.cozytest.confirmTxt = txt
+                    return true
                 return true
-        casper.evaluate ->
-            window.cozyMails.setSetting 'messageDisplayHTML', true
-            window.cozyMails.setSetting 'messageDisplayImages', false
-            window.cozyMails.setSetting 'displayConversation', false
-            window.cozyMails.setSetting 'displayPreview', true
-            window.cozyMails.setSetting 'messageConfirmDelete', false
-            window.cozyMails.setSetting 'composeInHTML', true
-        casper.cozy.selectMessage "DoveCot", "Test Folder", null, (subject, messageID) ->
-            currentSel = ".conversation li.message.active[data-id='#{messageID}']"
-            console.log "#{currentSel} .messageToolbox button.trash"
-            casper.click "#{currentSel} .messageToolbox button.trash"
-            casper.waitWhileSelector ".message-list li.message[data-message-id='#{messageID}']", ->
-                test.pass "Message #{subject} Moved"
-                casper.cozy.selectMessage "DoveCot", "Trash", subject, messageID, ->
-                    test.pass 'Message is in Trash'
-                    casper.click "#{currentSel} .messageToolbox button.move"
-                    boxSelector = "#{currentSel} .messageToolbox [data-value='dovecot-ID-folder1']"
-                    casper.waitUntilVisible boxSelector, ->
-                        test.pass 'Move menu displayed'
-                        casper.click boxSelector
-                        casper.waitWhileSelector ".message-list li.message[data-message-id='#{messageID}']", ->
-                            casper.cozy.selectMessage "DoveCot", "Test Folder", subject, messageID, ->
-                                test.pass "Message moved back to original folder"
-    ###
+            casper.evaluate ->
+                window.cozyMails.setSetting 'messageDisplayHTML', true
+                window.cozyMails.setSetting 'messageDisplayImages', false
+                window.cozyMails.setSetting 'displayConversation', false
+                window.cozyMails.setSetting 'displayPreview', true
+                window.cozyMails.setSetting 'messageConfirmDelete', false
+                window.cozyMails.setSetting 'composeInHTML', true
+            casper.cozy.selectMessage "DoveCot", "Test Folder", null, (subject, messageID) ->
+                currentSel = ".conversation li.message.active[data-id='#{messageID}']"
+                console.log "#{currentSel} .messageToolbox button.trash"
+                casper.click "#{currentSel} .messageToolbox button.trash"
+                casper.waitWhileSelector ".message-list li.message[data-message-id='#{messageID}']", ->
+                    test.pass "Message #{subject} Moved"
+                    casper.cozy.selectMessage "DoveCot", "Trash", subject, messageID, ->
+                        test.pass 'Message is in Trash'
+                        casper.click "#{currentSel} .messageToolbox button.move"
+                        boxSelector = "#{currentSel} .messageToolbox [data-value='f5cbd722-c3f9-4f6e-73d0-c75ddf65a2f1']"
+                        casper.waitUntilVisible boxSelector, ->
+                            test.pass 'Move menu displayed'
+                            casper.click boxSelector
+                            casper.waitWhileSelector ".message-list li.message[data-message-id='#{messageID}']", ->
+                                casper.cozy.selectMessage "DoveCot", "Test Folder", subject, messageID, ->
+                                    test.pass "Message moved back to original folder"
 
     casper.run ->
         test.done()

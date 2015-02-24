@@ -53,7 +53,7 @@ casper.test.begin 'Test compose', (test) ->
             casper.waitUntilVisible '.contact-list', ->
                 test.assertExist '.contact-list li', "Some contacts found"
                 contact = casper.fetchText '.contact-form.open .contact-list li:nth-of-type(1)'
-                test.assert /casper\.cozy/.test(contact), "Contact match"
+                test.assert /casper\.cozy/.test(contact), "Contact #{contact} match"
                 casper.click '.contact-list li:nth-of-type(1) '
                 casper.waitWhileVisible '.contact-list', ->
                     values = casper.getFormValues('#email-compose form')
@@ -65,7 +65,7 @@ casper.test.begin 'Test compose', (test) ->
                     casper.waitUntilVisible '.contact-list', ->
                         test.assertExist '.contact-list li', "Some contacts found"
                         contact2 = casper.fetchText '.contact-form.open .contact-list li:nth-of-type(2)'
-                        test.assert /casper\.cozy/.test(contact), "Contact match"
+                        test.assert /casper\.cozy/.test(contact), "Contact #{contact} match"
                         casper.click '.contact-list li:nth-of-type(2) '
                         casper.waitWhileVisible '.contact-list', ->
                             values = casper.getFormValues('#email-compose form')

@@ -58,6 +58,14 @@ casper.test.begin 'Test draft', (test) ->
     casper.then ->
         test.comment "Edit draft"
         initSettings()
+        confirm = ''
+        casper.evaluate ->
+            window.cozytest = {}
+            window.cozytest.confirm = window.confirm
+            window.confirm = (txt) ->
+                window.cozytest.confirmTxt = txt
+                return true
+            return true
         casper.cozy.selectMessage "DoveCot", "Draft", "my draft subject", messageID, ->
             casper.waitForSelector "#email-compose .rt-editor", ->
                 test.assertExists '#email-compose', 'Compose form is displayed'
@@ -71,10 +79,21 @@ casper.test.begin 'Test draft', (test) ->
                     return window.cozyMails.getCurrentMessage()
                 test.assertEquals message.text, "_Hello,_\nJoin us now and share the software", "messageText"
                 casper.click '.composeToolbox .btn-delete'
-                casper.waitWhileSelector "#email-compose h3[data-message-id=#{messageID}]", ->
-                    test.pass 'Compose closed'
-                    casper.reload ->
-                        test.assertDoesntExist "li.message[data-message-id='#{messageID}']", "message deleted"
+                casper.waitFor ->
+                    confirm = casper.evaluate ->
+                        return window.cozytest.confirmTxt
+                    return confirm?
+                , ->
+                    test.assertEquals confirm, "Do you really want to delete message “my draft subject”?", "Confirmation dialog"
+                    casper.waitWhileSelector "#email-compose h3[data-message-id=#{messageID}]", ->
+                        test.pass 'Compose closed'
+                        casper.waitWhileSelector "li.message[data-message-id='#{messageID}']", ->
+                            test.pass "message deleted"
+                            if casper.getEngine() isnt 'slimer'
+                                test.skip 1
+                            else
+                                casper.reload ->
+                                    test.assertDoesntExist "li.message[data-message-id='#{messageID}']", "message really deleted"
 
     casper.run ->
         test.done()

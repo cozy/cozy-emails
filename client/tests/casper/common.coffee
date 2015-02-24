@@ -74,7 +74,7 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
             casper.click subjectSel
             casper.waitForSelector subjectDone, ->
                 if not (typeof messageID is 'string')
-                    infos = casper.getElementInfo subjectSel
+                    infos = casper.getElementInfo subjectDone
                     messageID = infos.attributes['data-message-id']
                 cb(subject, messageID)
             , ->
@@ -84,6 +84,9 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
 
 if not casper.cozy.startUrl?
     casper.die "Please set the base URL into COZY_URL environment variable"
+
+casper.getEngine = ->
+    if typeof slimer is 'object' then 'slimer' else 'phantom'
 
 exports.init = (casper) ->
     dev = casper.cli.options.dev?
