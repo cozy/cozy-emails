@@ -284,7 +284,7 @@ module.exports = Application = React.createClass
                 mailboxID:     mailboxID
                 messageID:     messageID
                 conversationID: conversationID
-                mailboxes:     @state.mailboxes
+                mailboxes:     @state.mailboxesFlat
                 settings:      @state.settings
                 fetching:      fetching
                 refreshes:     @state.refreshes
@@ -338,33 +338,40 @@ module.exports = Application = React.createClass
                 conversation = MessageStore.getConversation conversationID
                 selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
 
+            prevMessage = MessageStore.getPreviousMessage()
+            nextMessage = MessageStore.getNextMessage()
+
             return Conversation
                 key: 'conversation-' + conversationID
-                layout            : layout
-                settings          : @state.settings
-                accounts          : @state.accounts
-                mailboxes         : @state.mailboxes
-                selectedAccount   : @state.selectedAccount
-                selectedMailboxID : selectedMailboxID
-                message           : message
-                conversation      : conversation
-                conversationLength: conversationLength
-                prev              : MessageStore.getPreviousMessage()
-                next              : MessageStore.getNextMessage()
-                ref               : 'conversation'
+                layout               : layout
+                settings             : @state.settings
+                accounts             : @state.accountsFlat
+                mailboxes            : @state.mailboxesFlat
+                selectedAccountID    : @state.selectedAccount.get 'id'
+                selectedAccountLogin : @state.selectedAccount.get 'login'
+                selectedMailboxID    : selectedMailboxID
+                message              : message
+                conversation         : conversation
+                conversationLength   : conversationLength
+                prevMessageID        : prevMessage?.get 'id'
+                prevConversationID   : prevMessage?.get 'conversationID'
+                nextMessageID        : nextMessage?.get 'id'
+                nextConversationID   : nextMessage?.get 'conversationID'
+                ref                  : 'conversation'
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
 
             return Compose
-                layout          : layout
-                action          : null
-                inReplyTo       : null
-                settings        : @state.settings
-                accounts        : @state.accounts
-                selectedAccount : @state.selectedAccount
-                message         : null
-                ref             : 'compose'
+                layout               : layout
+                action               : null
+                inReplyTo            : null
+                settings             : @state.settings
+                accounts             : @state.accountsFlat
+                selectedAccountID    : @state.selectedAccount.get 'id'
+                selectedAccountLogin : @state.selectedAccount.get 'login'
+                message              : null
+                ref                  : 'compose'
 
         # -- Generates the edit draft composition form
         else if panelInfo.action is 'edit'
@@ -373,15 +380,16 @@ module.exports = Application = React.createClass
             message = MessageStore.getByID messageID
 
             return Compose
-                layout            : layout
-                action            : null
-                inReplyTo         : null
-                settings          : @state.settings
-                accounts          : @state.accounts
-                selectedAccount   : @state.selectedAccount
-                selectedMailboxID : @state.selectedMailboxID
-                message           : message
-                ref               : 'compose'
+                layout               : layout
+                action               : null
+                inReplyTo            : null
+                settings             : @state.settings
+                accounts             : @state.accountsFlat
+                selectedAccountID    : @state.selectedAccount.get 'id'
+                selectedAccountLogin : @state.selectedAccount.get 'login'
+                selectedMailboxID    : @state.selectedMailboxID
+                message              : message
+                ref                  : 'compose'
 
         # -- Display the settings form
         else if panelInfo.action is 'settings'
@@ -406,13 +414,33 @@ module.exports = Application = React.createClass
         else
             selectedMailboxID = null
 
+        accounts = AccountStore.getAll()
+        accountsFlat = {}
+        accounts.map (account) ->
+            accountsFlat[account.get 'id'] =
+                name:  account.get 'name'
+                label: account.get 'label'
+                login: account.get 'login'
+        .toJS()
+
+        mailboxes = AccountStore.getSelectedMailboxes()
+        mailboxesFlat = {}
+        mailboxes.map (mailbox) ->
+            id = mailbox.get 'id'
+            mailboxesFlat[id] = {}
+            ['id', 'label', 'depth', 'selectedId'].map (prop) ->
+                mailboxesFlat[id][prop] = mailbox.get prop
+        .toJS()
+
         return {
-            accounts: AccountStore.getAll()
+            accounts: accounts
+            accountsFlat: accountsFlat
             selectedAccount: selectedAccount
             isResponsiveMenuShown: false
             alertMessage: LayoutStore.getAlert()
-            mailboxes: AccountStore.getSelectedMailboxes()
+            mailboxes: mailboxes
             mailboxesSorted: AccountStore.getSelectedMailboxes true
+            mailboxesFlat: mailboxesFlat
             selectedMailboxID: selectedMailboxID
             selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
             favoriteMailboxes: AccountStore.getSelectedFavorites()

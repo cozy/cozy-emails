@@ -34,7 +34,7 @@ module.exports = Topbar = React.createClass
             @buildUrl
                 direction: 'first'
                 action: 'account.mailbox.messages'
-                parameters: [selectedAccount?.get('id'), mailbox.get('id')]
+                parameters: [selectedAccount?.get('id'), mailbox.id]
 
         if selectedAccount and layout.firstPanel.action isnt 'account.new'
             # the button toggles the mailbox config
@@ -69,7 +69,7 @@ module.exports = Topbar = React.createClass
                         MailboxList
                             getUrl: getUrl
                             mailboxes: mailboxes
-                            selectedMailbox: selectedMailboxID
+                            selectedMailboxID: selectedMailboxID
                         SearchForm query: searchQuery
 
             if layout.firstPanel.action is 'account.mailbox.messages' or

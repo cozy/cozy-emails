@@ -91,7 +91,7 @@ MessageList = React.createClass
             @buildUrl
                 direction: 'first'
                 action: 'account.mailbox.messages'
-                parameters: [@props.accountID, mailbox.get('id')]
+                parameters: [@props.accountID, mailbox.id]
 
         configMailboxUrl = @buildUrl
             direction: 'first'
@@ -156,7 +156,7 @@ MessageList = React.createClass
                                 MailboxList
                                     getUrl: getMailboxUrl
                                     mailboxes: @props.mailboxes
-                                    selectedMailbox: @props.mailboxID
+                                    selectedMailboxID: @props.mailboxID
 
                         # Responsive menu button
                         if not advanced and not @state.edited

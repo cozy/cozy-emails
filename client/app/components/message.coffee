@@ -34,17 +34,20 @@ module.exports = React.createClass
         }
 
     propTypes:
-        accounts          : React.PropTypes.object.isRequired
-        active            : React.PropTypes.bool
-        inConversation    : React.PropTypes.bool
-        key               : React.PropTypes.string.isRequired
-        mailboxes         : React.PropTypes.object.isRequired
-        message           : React.PropTypes.object.isRequired
-        next              : React.PropTypes.object
-        prev              : React.PropTypes.object
-        selectedAccount   : React.PropTypes.object.isRequired
-        selectedMailboxID : React.PropTypes.string.isRequired
-        settings          : React.PropTypes.object.isRequired
+        accounts               : React.PropTypes.object.isRequired
+        active                 : React.PropTypes.bool
+        inConversation         : React.PropTypes.bool
+        key                    : React.PropTypes.string.isRequired
+        mailboxes              : React.PropTypes.object.isRequired
+        message                : React.PropTypes.object.isRequired
+        nextMessageID          : React.PropTypes.string
+        nextConversationID     : React.PropTypes.string
+        prevMessageID          : React.PropTypes.string
+        prevConversationID     : React.PropTypes.string
+        selectedAccountID      : React.PropTypes.string.isRequired
+        selectedAccountLogin   : React.PropTypes.string.isRequired
+        selectedMailboxID      : React.PropTypes.string.isRequired
+        settings               : React.PropTypes.object.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
@@ -305,7 +308,8 @@ module.exports = React.createClass
                 inReplyTo       : @props.message
                 accounts        : @props.accounts
                 settings        : @props.settings
-                selectedAccount : @props.selectedAccount
+                selectedAccountID    : @props.selectedAccountID
+                selectedAccountLogin : @props.selectedAccountLogin
                 action          : @state.composeAction
                 layout          : 'second'
                 callback: (error) =>
@@ -325,22 +329,22 @@ module.exports = React.createClass
 
         conversationID = @props.message.get 'conversationID'
 
-        getParams = (message) =>
+        getParams = (messageID, conversationID) =>
             if @props.settings.get('displayConversation')
                 return {
                     action : 'conversation'
                     parameters:
-                        messageID : message.get 'id'
-                        conversationID: message.get 'convrsationID'
+                        messageID : messageID
+                        conversationID: conversationID
                 }
             else
                 return {
                     action : 'message'
                     parameters:
-                        messageID : message.get 'id'
+                        messageID : messageID
                 }
-        if @props.prev?
-            params = getParams @props.prev
+        if @props.prevMessageID?
+            params = getParams @props.prevMessageID, @props.prevConversationID
             prev =
                 direction: 'second'
                 action: params.action
@@ -348,8 +352,8 @@ module.exports = React.createClass
             prevUrl =  @buildUrl prev
             displayPrev = =>
                 @redirect prev
-        if @props.next?
-            params = getParams @props.next
+        if @props.nextMessageID?
+            params = getParams @props.nextMessageID, @props.nextConversationID
             next =
                 direction: 'second'
                 action: params.action
@@ -462,23 +466,26 @@ module.exports = React.createClass
                 @setState { active: true, headers: false }
 
     displayNextMessage: ->
-        if @props.next?
-            next = @props.next
-        else next = @props.prev
-        if next?
+        if @props.nextMessageID?
+            nextMessageID      = @props.nextMessageID
+            nextConversationID = @props.nextConversationID
+        else
+            nextMessageID      = @props.prevMessageID
+            nextConversationID = @props.prevConversationID
+        if nextMessageID
             if @props.settings.get('displayConversation')
                 @redirect
                     direction: 'second'
                     action : 'conversation'
                     parameters:
-                        messageID : next.get 'id'
-                        conversationID: next.get 'convrsationID'
+                        messageID : nextMessageID
+                        conversationID: nextConversationID
             else
                 @redirect
                     direction: 'second'
                     action : 'message'
                     parameters:
-                        messageID : next.get 'id'
+                        messageID : nextMessageID
         else
             @redirect
                 direction: 'first'
