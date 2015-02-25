@@ -9,7 +9,7 @@ Conversation  = require './conversation'
 Menu          = require './menu'
 MessageList   = require './message-list'
 Settings      = require './settings'
-SearchForm = require './search-form'
+SearchForm    = require './search-form'
 
 # React addons
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup
@@ -132,6 +132,7 @@ module.exports = Application = React.createClass
                         #t "app menu"
                     # The quick actions bar
                     #Topbar
+                    #    ref: 'topbar'
                     #    layout: @props.router.current
                     #    mailboxes: @state.mailboxes
                     #    selectedAccount: @state.selectedAccount
@@ -299,6 +300,7 @@ module.exports = Application = React.createClass
         # -- Generates a configuration window for a given account
         else if panelInfo.action is 'account.config'
             # don't use @state.selectedAccount
+            ref               = "accountConfig"
             selectedAccount   = AccountStore.getSelected()
             error             = AccountStore.getError()
             isWaiting         = AccountStore.isWaiting()
@@ -311,18 +313,13 @@ module.exports = Application = React.createClass
                     field: 'nomailboxes'
 
             return AccountConfig {error, isWaiting, selectedAccount,
-                mailboxes, favoriteMailboxes, tab}
+                mailboxes, favoriteMailboxes, tab, ref}
 
         else if panelInfo.action is 'account.new'
             return AccountConfig
+                ref: "accountConfig"
                 error: AccountStore.getError()
                 isWaiting: AccountStore.isWaiting()
-
-        # -- Generates a configuration window to create a new account
-        #else if panelInfo.action is 'account.new'
-        #    error = AccountStore.getError()
-        #    isWaiting = AccountStore.isWaiting()
-        #    return AccountConfig {layout, error, isWaiting}
 
         # -- Generates a conversation
         else if panelInfo.action is 'message' or
@@ -394,7 +391,9 @@ module.exports = Application = React.createClass
         # -- Display the settings form
         else if panelInfo.action is 'settings'
             settings = @state.settings
-            return Settings {settings}
+            return Settings
+                ref     : 'settings'
+                settings: @state.settings
 
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else return div null, 'Unknown component'

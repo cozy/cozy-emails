@@ -50,7 +50,8 @@ module.exports = React.createClass
         settings               : React.PropTypes.object.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        should = not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return should
 
     _prepareMessage: ->
         message = @props.message
@@ -195,6 +196,7 @@ module.exports = React.createClass
                     @renderToolbox message.get('id'), prepared
                     @renderCompose()
                     MessageContent
+                        ref: 'messageContent'
                         message: message
                         messageDisplayHTML: messageDisplayHTML
                         html: @_htmlContent
@@ -267,6 +269,7 @@ module.exports = React.createClass
                 if hasAttachments
                     div className: 'col-md-4',
                         FilePicker
+                            ref: 'filePicker'
                             editable: false
                             value: prepared.attachments
                             messageID: @props.message.get 'id'
@@ -305,6 +308,7 @@ module.exports = React.createClass
     renderCompose: ->
         if @state.composing
             Compose
+                ref             : 'compose'
                 inReplyTo       : @props.message
                 accounts        : @props.accounts
                 settings        : @props.settings
@@ -414,10 +418,12 @@ module.exports = React.createClass
                                     className: 'tool-long',
                                     t 'mail action delete'
                     ToolboxMove
+                        ref: 'toolboxMove'
                         mailboxes: @props.mailboxes
                         onMove: @onMove
                         direction: 'right'
                     ToolboxActions
+                        ref: 'toolboxActions'
                         mailboxes: @props.mailboxes
                         isSeen: isSeen
                         isFlagged: isFlagged
@@ -445,7 +451,10 @@ module.exports = React.createClass
         div className: 'att-previews',
             h4 null, t 'message preview title'
             files.map (file) ->
-                AttachmentPreview file: file, key: file.checksum
+                AttachmentPreview
+                    ref: 'attachmentPreview'
+                    file: file,
+                    key: file.checksum
 
     toggleHeaders: (e) ->
         e.preventDefault()
@@ -654,11 +663,11 @@ MessageContent = React.createClass
                     doc.documentElement.innerHTML = @props.html
                     window.cozyMails.customEvent "MESSAGE_LOADED", @props.message.toJS()
                     updateHeight = (e) ->
-                        height = doc.body.getBoundingClientRect().height
+                        height = doc.documentElement.getBoundingClientRect().height
                         if height < 60
                             frame.style.height = "60px"
                         else
-                            frame.style.height = "#{height * 1.3}px"
+                            frame.style.height = "#{height + 32}px"
                         step++
                         # In Chrome, onresize loops
                         if step > 10

@@ -35,6 +35,7 @@ module.exports = React.createClass
 
     renderMessage: (key, message, active) ->
         Message
+            ref                 : 'message'
             accounts            : @props.accounts
             active              : active
             inConversation      : @props.conversation.length > 1
