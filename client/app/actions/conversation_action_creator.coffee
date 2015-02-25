@@ -14,13 +14,19 @@ module.exports =
             if callback?
                 callback error
 
-    move: (conversationID, to, callback) ->
-        conversation =
-            mailboxIDs: []
-        observer = jsonpatch.observe conversation
-        conversation.mailboxIDs.push to
+    move: (message, from, to, callback) ->
+        msg = message.toJSON()
+        AppDispatcher.handleViewAction
+            type: ActionTypes.CONVERSATION_ACTION
+            value:
+                id: msg.conversationID
+                from: from
+                to: to
+        observer = jsonpatch.observe msg
+        delete msg.mailboxIDs[from]
+        msg.mailboxIDs[to] = -1
         patches = jsonpatch.generate observer
-        XHRUtils.conversationPatch conversationID, patches, (error, messages) ->
+        XHRUtils.conversationPatch msg.conversationID, patches, (error, messages) ->
             if not error?
                 AppDispatcher.handleViewAction
                     type: ActionTypes.RECEIVE_RAW_MESSAGES

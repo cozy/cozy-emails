@@ -82,7 +82,6 @@ module.exports = ToolboxActions = React.createClass
                     t 'mail action conversation move'
                 for key, mailbox of @props.mailboxes when key isnt @props.selectedMailboxID
                     @renderMailboxes mailbox, key
-                li role: 'presentation', className: 'divider'
 
     renderMailboxes: (mailbox, key) ->
         pusher = ""
@@ -90,7 +89,7 @@ module.exports = ToolboxActions = React.createClass
         li role: 'presentation', key: key,
             a
                 role: 'menuitem',
-                onClick: @onMove,
+                onClick: @props.onMove,
                 'data-value': key,
                 'data-conversation': true,
                 "#{pusher}#{mailbox.label}"

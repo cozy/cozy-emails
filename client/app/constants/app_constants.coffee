@@ -24,6 +24,7 @@ module.exports =
         'MESSAGE_BOXES'             : 'MESSAGE_BOXES'
         'MESSAGE_FLAG'              : 'MESSAGE_FLAG'
         'MESSAGE_ACTION'            : 'MESSAGE_ACTION'
+        'CONVERSATION_ACTION'       : 'CONVERSATION_ACTION'
         'MESSAGE_CURRENT'           : 'MESSAGE_CURRENT'
         'RECEIVE_MESSAGE_DELETE'    : 'RECEIVE_MESSAGE_DELETE'
         'RECEIVE_MAILBOX_UPDATE'    : 'RECEIVE_MAILBOX_UPDATE'

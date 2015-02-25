@@ -331,8 +331,7 @@ MessageList = React.createClass
                @props.settings.get 'displayConversation'
                 selected.forEach (id) =>
                     message = @props.messages.get id
-                    conversationID = message.get('conversationID')
-                    ConversationActionCreator.move conversationID, newbox, (error) ->
+                    ConversationActionCreator.move message, @props.mailboxID, newbox, (error) ->
                         if error?
                             alertError "#{t("conversation move ko")} #{error}"
                         else

@@ -431,6 +431,7 @@ module.exports = React.createClass
                         messageID: id
                         message: @props.message
                         onMark: @onMark
+                        onMove: @onMove
                         onConversation: @onConversation
                         onHeaders: @onHeaders
                         direction: 'right'
@@ -527,16 +528,15 @@ module.exports = React.createClass
 
     onMove: (args) ->
         newbox = args.target.dataset.value
+        oldbox = @props.selectedMailboxID
         if args.target.dataset.conversation?
-            conversationID = @props.message.get('conversationID')
-            ConversationActionCreator.move conversationID, newbox, (error) =>
+            ConversationActionCreator.move @props.message, oldbox, newbox, (error) =>
                 if error?
                     alertError "#{t("conversation move ko")} #{error}"
                 else
                     alertSuccess t "conversation move ok"
                     @displayNextMessage()
         else
-            oldbox = @props.selectedMailboxID
             MessageActionCreator.move @props.message, oldbox, newbox, (error) =>
                 if error?
                     alertError "#{t("message action move ko")} #{error}"
@@ -667,7 +667,7 @@ MessageContent = React.createClass
                         if height < 60
                             frame.style.height = "60px"
                         else
-                            frame.style.height = "#{height + 32}px"
+                            frame.style.height = "#{height + 40}px"
                         step++
                         # In Chrome, onresize loops
                         if step > 10
