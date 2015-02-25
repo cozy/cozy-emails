@@ -27,7 +27,8 @@ MessageList = React.createClass
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        should = not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return should
 
     getInitialState: ->
         edited: false
@@ -49,37 +50,8 @@ MessageList = React.createClass
             if Object.keys(selected).length is 0
                 @setState allSelected: false, edited: false
 
-
     render: ->
         compact = @props.settings.get('listStyle') is 'compact'
-        messages = @props.messages.map (message, key) =>
-            id = message.get('id')
-            cid = message.get('conversationID')
-            if @props.settings.get('displayConversation')
-                isActive = @props.conversationID is cid
-            else
-                isActive = @props.messageID is id
-            MessageItem
-                message: message,
-                conversationLength: @props.conversationLengths?.get(cid),
-                key: key,
-                isActive: isActive,
-                edited: @state.edited,
-                settings: @props.settings,
-                selected: @state.selected[id]?,
-                onSelect: (val) =>
-                    selected = _.clone @state.selected
-                    if val
-                        selected[id] = val
-                    else
-                        delete selected[id]
-                    if Object.keys(selected).length > 0
-                        @setState edited: true, selected: selected
-                    else
-                        @setState allSelected: false, edited: false, selected: {}
-
-        .toJS()
-        nbMessages = parseInt @props.counterMessage, 10
         filterParams =
             accountID: @props.accountID
             mailboxID: @props.mailboxID
@@ -266,12 +238,31 @@ MessageList = React.createClass
             else
                 div null,
                     #p null, @props.counterMessage
-                    ul className: 'list-unstyled',
-                        messages
+                    MessageListBody
+                        messages: @props.messages
+                        settings: @props.settings
+                        mailboxID: @props.mailboxID
+                        messageID: @props.messageID
+                        conversationID: @props.conversationID
+                        conversationLength: @props.conversationLength
+                        edited: @state.edited
+                        selected: @state.selected
+                        allSelected: @state.allSelected
+                        onSelect: (id, val) =>
+                            selected = _.clone @state.selected
+                            if val
+                                selected[id] = val
+                            else
+                                delete selected[id]
+                            if Object.keys(selected).length > 0
+                                @setState edited: true, selected: selected
+                            else
+                                @setState allSelected: false, edited: false, selected: {}
+
                     # If message list is filtered, we can't only rely on message count
                     # So we assume that if query.pageAfter is null, there's no more
                     # messages to display
-                    if @props.messages.count() < nbMessages and @props.query.pageAfter?
+                    if @props.messages.count() < parseInt(@props.counterMessage, 10) and @props.query.pageAfter?
                         p className: 'text-center',
                             if @props.fetching
                                 i className: "fa fa-refresh fa-spin"
@@ -478,6 +469,41 @@ MessageList = React.createClass
 
 module.exports = MessageList
 
+MessageListBody = React.createClass
+    displayName: 'MessageListBody'
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+        # we must do the comparison manually because the property "onSelect" is
+        # a function (therefore it should not be compared)
+        updatedProps = Object.keys(nextProps).filter (prop) =>
+            return typeof nextProps[prop] isnt 'function' and not (_.isEqual(nextProps[prop], @props[prop]))
+        should = not(_.isEqual(nextState, @state)) or updatedProps.length > 0
+
+        return should
+
+    render: ->
+        messages = @props.messages.map (message, key) =>
+            id = message.get('id')
+            cid = message.get('conversationID')
+            if @props.settings.get('displayConversation')
+                isActive = @props.conversationID is cid
+            else
+                isActive = @props.messageID is id
+            MessageItem
+                message: message,
+                conversationLength: @props.conversationLengths?.get(cid),
+                key: key,
+                isActive: isActive,
+                edited: @props.edited,
+                settings: @props.settings,
+                selected: @props.selected[id]?,
+                onSelect: (val) =>
+                    @props.onSelect id, val
+
+        .toJS()
+        ul className: 'list-unstyled',
+            messages
+
 MessageItem = React.createClass
     displayName: 'MessagesItem'
 
@@ -486,19 +512,11 @@ MessageItem = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         # we must do the comparison manually because the property "onSelect" is
         # a function (therefore it should not be compared)
-        shouldUpdate =
-            not _.isEqual(nextState, @state) \
-            or not Immutable.is(nextProps.message, @props.message) \
-            or not Immutable.is(nextProps.settings, @props.settings) \
-            or nextProps.conversationLength isnt @props.conversationLength \
-            or nextProps.key isnt @props.key \
-            or nextProps.isActive isnt @props.isActive \
-            or nextProps.edited isnt @props.edited \
-            or nextProps.selected isnt @props.selected
+        updatedProps = Object.keys(nextProps).filter (prop) =>
+            return typeof nextProps[prop] isnt 'function' and not (_.isEqual(nextProps[prop], @props[prop]))
+        shouldUpdate = not _.isEqual(nextState, @state) or updatedProps.length > 0
 
         return shouldUpdate
-
-
 
     render: ->
         message = @props.message
