@@ -94,7 +94,7 @@ Contact.createNoDuplicate = function(data, callback) {
   var key;
   log.info("createNoDuplicate");
   key = data.address;
-  return Contact.request('byEmail', {
+  return Contact.request('mailByEmail', {
     key: data.address
   }, function(err, existings) {
     var contact;
@@ -117,7 +117,7 @@ Contact.createNoDuplicate = function(data, callback) {
       if (err) {
         return callback(err);
       }
-      return Contact.request('byEmail', {
+      return Contact.request('mailByEmail', {
         key: key
       }, callback);
     });

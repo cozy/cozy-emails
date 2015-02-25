@@ -44,7 +44,7 @@ ContactActivity = {
   search: function(data, callback) {
     var params, request;
     if (data.query != null) {
-      request = 'byName';
+      request = 'mailByName';
       params = {
         startkey: data.query,
         endkey: data.query + "\uFFFF"

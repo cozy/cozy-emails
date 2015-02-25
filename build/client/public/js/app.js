@@ -1834,12 +1834,18 @@ AccountConfigMailboxes = React.createClass({
     return this.setState(this._propsToState(props));
   },
   render: function() {
-    var favorites, mailboxes;
+    var favorites, mailboxes, mailboxesFlat;
     favorites = this.state.favoriteMailboxes.value;
+    mailboxesFlat = {};
     if (this.state.mailboxes.value !== '' && favorites !== '') {
       mailboxes = this.state.mailboxes.value.map((function(_this) {
         return function(mailbox, key) {
-          var error, favorite;
+          var error, favorite, id;
+          id = mailbox.get('id');
+          mailboxesFlat[id] = {};
+          ['id', 'label', 'depth', 'selectedId'].map(function(prop) {
+            return mailboxesFlat[id][prop] = mailbox.get(prop);
+          });
           try {
             favorite = favorites.get(mailbox.get('id')) != null;
             return MailboxItem({
@@ -1909,8 +1915,8 @@ AccountConfigMailboxes = React.createClass({
       className: 'col-xs-2 text-center'
     }, MailboxList({
       allowUndefined: true,
-      mailboxes: this.state.mailboxes.value,
-      selectedMailbox: this.state.newMailboxParent,
+      mailboxes: mailboxesFlat,
+      selectedMailboxID: this.state.newMailboxParent,
       onChange: (function(_this) {
         return function(mailbox) {
           return _this.setState({
@@ -1938,8 +1944,17 @@ AccountConfigMailboxes = React.createClass({
     }
   },
   _renderMailboxChoice: function(labelText, box) {
-    var errorClass;
+    var errorClass, mailboxesFlat;
     if ((this.state.id != null) && this.state.mailboxes.value !== '') {
+      mailboxesFlat = {};
+      this.state.mailboxes.value.map(function(mailbox) {
+        var id;
+        id = mailbox.get('id');
+        mailboxesFlat[id] = {};
+        return ['id', 'label', 'depth', 'selectedId'].map(function(prop) {
+          return mailboxesFlat[id][prop] = mailbox.get(prop);
+        });
+      }).toJS();
       errorClass = this.state[box].value != null ? '' : 'has-error';
       return div({
         className: "form-group " + box + " " + errorClass
@@ -1949,8 +1964,8 @@ AccountConfigMailboxes = React.createClass({
         className: 'col-sm-3'
       }, MailboxList({
         allowUndefined: true,
-        mailboxes: this.state.mailboxes.value,
-        selectedMailbox: this.state[box].value,
+        mailboxes: mailboxesFlat,
+        selectedMailboxID: this.state[box].value,
         onChange: (function(_this) {
           return function(mailbox) {
             var newState, value;
@@ -2250,8 +2265,11 @@ RouterMixin = require('../mixins/router_mixin');
 
 module.exports = React.createClass({
   displayName: 'AccountPicker',
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+  },
   render: function() {
-    if (accounts.length === 1) {
+    if (Object.keys(accounts).length === 1) {
       return this.renderNoChoice();
     } else {
       return this.renderPicker();
@@ -2264,12 +2282,8 @@ module.exports = React.createClass({
   },
   renderNoChoice: function() {
     var account, label;
-    account = this.props.accounts.get(this.props.valueLink.value);
-    if (this.props.type === 'address') {
-      label = "\"" + (account.get('name') || account.get('label')) + "\" <" + (account.get('login')) + ">";
-    } else {
-      label = account.get('label');
-    }
+    account = this.props.accounts[this.props.valueLink.value];
+    label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
     return p({
       className: 'form-control-static col-sm-6'
     }, label);
@@ -2277,14 +2291,12 @@ module.exports = React.createClass({
   renderPicker: function() {
     var account, accounts, key, label, value;
     accounts = this.props.accounts;
-    account = accounts.get(this.props.valueLink.value);
+    account = accounts[this.props.valueLink.value];
     value = this.props.valueLink.value;
-    if (this.props.type === 'address') {
-      label = "\"" + (account.get('name') || account.get('label')) + "\" <" + (account.get('login')) + ">";
-    } else {
-      label = account.get('label');
-    }
-    return div(null, span({
+    label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
+    return div({
+      className: 'account-picker'
+    }, span({
       className: 'compose-from dropdown-toggle',
       'data-toggle': 'dropdown'
     }, span({
@@ -2296,11 +2308,10 @@ module.exports = React.createClass({
       className: 'dropdown-menu',
       role: 'menu'
     }, (function() {
-      var _ref1, _results;
-      _ref1 = accounts.toJS();
+      var _results;
       _results = [];
-      for (key in _ref1) {
-        account = _ref1[key];
+      for (key in accounts) {
+        account = accounts[key];
         if (key !== value) {
           _results.push(this.renderAccount(key, account));
         }
@@ -2310,11 +2321,7 @@ module.exports = React.createClass({
   },
   renderAccount: function(key, account) {
     var label;
-    if (this.props.type === 'address') {
-      label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
-    } else {
-      label = account.label;
-    }
+    label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
     return li({
       role: 'presentation',
       key: key
@@ -2576,7 +2583,7 @@ module.exports = Application = React.createClass({
     return classes;
   },
   getPanelComponent: function(panelInfo, layout) {
-    var account, accountID, conversation, conversationID, conversationLength, conversationLengths, counterMessage, direction, emptyListMessage, error, favoriteMailboxes, fetching, isTrash, isWaiting, lengths, mailbox, mailboxID, mailboxes, message, messageID, messages, messagesCount, query, selectedAccount, selectedMailboxID, settings, tab, _ref2;
+    var account, accountID, conversation, conversationID, conversationLength, conversationLengths, counterMessage, direction, emptyListMessage, error, favoriteMailboxes, fetching, isTrash, isWaiting, lengths, mailbox, mailboxID, mailboxes, message, messageID, messages, messagesCount, nextMessage, prevMessage, query, selectedAccount, selectedMailboxID, settings, tab, _ref2;
     if (panelInfo.action === 'account.mailbox.messages' || panelInfo.action === 'account.mailbox.messages.full' || panelInfo.action === 'search') {
       if (panelInfo.action === 'search') {
         accountID = null;
@@ -2638,7 +2645,7 @@ module.exports = Application = React.createClass({
         mailboxID: mailboxID,
         messageID: messageID,
         conversationID: conversationID,
-        mailboxes: this.state.mailboxes,
+        mailboxes: this.state.mailboxesFlat,
         settings: this.state.settings,
         fetching: fetching,
         refreshes: this.state.refreshes,
@@ -2689,19 +2696,24 @@ module.exports = Application = React.createClass({
           selectedMailboxID = Object.keys(message.get('mailboxIDs'))[0];
         }
       }
+      prevMessage = MessageStore.getPreviousMessage();
+      nextMessage = MessageStore.getNextMessage();
       return Conversation({
         key: 'conversation-' + conversationID,
         layout: layout,
         settings: this.state.settings,
-        accounts: this.state.accounts,
-        mailboxes: this.state.mailboxes,
-        selectedAccount: this.state.selectedAccount,
+        accounts: this.state.accountsFlat,
+        mailboxes: this.state.mailboxesFlat,
+        selectedAccountID: this.state.selectedAccount.get('id'),
+        selectedAccountLogin: this.state.selectedAccount.get('login'),
         selectedMailboxID: selectedMailboxID,
         message: message,
         conversation: conversation,
         conversationLength: conversationLength,
-        prev: MessageStore.getPreviousMessage(),
-        next: MessageStore.getNextMessage(),
+        prevMessageID: prevMessage != null ? prevMessage.get('id') : void 0,
+        prevConversationID: prevMessage != null ? prevMessage.get('conversationID') : void 0,
+        nextMessageID: nextMessage != null ? nextMessage.get('id') : void 0,
+        nextConversationID: nextMessage != null ? nextMessage.get('conversationID') : void 0,
         ref: 'conversation'
       });
     } else if (panelInfo.action === 'compose') {
@@ -2710,8 +2722,9 @@ module.exports = Application = React.createClass({
         action: null,
         inReplyTo: null,
         settings: this.state.settings,
-        accounts: this.state.accounts,
-        selectedAccount: this.state.selectedAccount,
+        accounts: this.state.accountsFlat,
+        selectedAccountID: this.state.selectedAccount.get('id'),
+        selectedAccountLogin: this.state.selectedAccount.get('login'),
         message: null,
         ref: 'compose'
       });
@@ -2723,8 +2736,9 @@ module.exports = Application = React.createClass({
         action: null,
         inReplyTo: null,
         settings: this.state.settings,
-        accounts: this.state.accounts,
-        selectedAccount: this.state.selectedAccount,
+        accounts: this.state.accountsFlat,
+        selectedAccountID: this.state.selectedAccount.get('id'),
+        selectedAccountLogin: this.state.selectedAccount.get('login'),
         selectedMailboxID: this.state.selectedMailboxID,
         message: message,
         ref: 'compose'
@@ -2739,7 +2753,7 @@ module.exports = Application = React.createClass({
     }
   },
   getStateFromStores: function() {
-    var firstPanelInfo, selectedAccount, selectedAccountID, selectedMailboxID, _ref2;
+    var accounts, accountsFlat, firstPanelInfo, mailboxes, mailboxesFlat, selectedAccount, selectedAccountID, selectedMailboxID, _ref2;
     selectedAccount = AccountStore.getSelected();
     if (selectedAccount == null) {
       selectedAccount = AccountStore.getDefault();
@@ -2751,13 +2765,34 @@ module.exports = Application = React.createClass({
     } else {
       selectedMailboxID = null;
     }
+    accounts = AccountStore.getAll();
+    accountsFlat = {};
+    accounts.map(function(account) {
+      return accountsFlat[account.get('id')] = {
+        name: account.get('name'),
+        label: account.get('label'),
+        login: account.get('login')
+      };
+    }).toJS();
+    mailboxes = AccountStore.getSelectedMailboxes();
+    mailboxesFlat = {};
+    mailboxes.map(function(mailbox) {
+      var id;
+      id = mailbox.get('id');
+      mailboxesFlat[id] = {};
+      return ['id', 'label', 'depth', 'selectedId'].map(function(prop) {
+        return mailboxesFlat[id][prop] = mailbox.get(prop);
+      });
+    }).toJS();
     return {
-      accounts: AccountStore.getAll(),
+      accounts: accounts,
+      accountsFlat: accountsFlat,
       selectedAccount: selectedAccount,
       isResponsiveMenuShown: false,
       alertMessage: LayoutStore.getAlert(),
-      mailboxes: AccountStore.getSelectedMailboxes(),
+      mailboxes: mailboxes,
       mailboxesSorted: AccountStore.getSelectedMailboxes(true),
+      mailboxesFlat: mailboxesFlat,
       selectedMailboxID: selectedMailboxID,
       selectedMailbox: AccountStore.getSelectedMailbox(selectedMailboxID),
       favoriteMailboxes: AccountStore.getSelectedFavorites(),
@@ -2854,7 +2889,8 @@ module.exports = Compose = React.createClass({
   displayName: 'Compose',
   mixins: [RouterMixin, React.addons.LinkedStateMixin],
   propTypes: {
-    selectedAccount: React.PropTypes.object.isRequired,
+    selectedAccountID: React.PropTypes.string.isRequired,
+    selectedAccountLogin: React.PropTypes.string.isRequired,
     layout: React.PropTypes.string.isRequired,
     accounts: React.PropTypes.object.isRequired,
     message: React.PropTypes.object,
@@ -2928,8 +2964,7 @@ module.exports = Compose = React.createClass({
       onClick: this.onToggleBcc
     }, t('compose toggle bcc'))), AccountPicker({
       accounts: this.props.accounts,
-      valueLink: this.linkState('accountID'),
-      type: 'address'
+      valueLink: this.linkState('accountID')
     }))), div({
       className: 'clearfix'
     }, null), MailsInput({
@@ -3058,9 +3093,9 @@ module.exports = Compose = React.createClass({
       }
       state.attachments = message.get('attachments');
     } else {
-      state = MessageUtils.makeReplyMessage(this.props.selectedAccount.get('login'), this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
+      state = MessageUtils.makeReplyMessage(this.props.selectedAccountLogin, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
       if (state.accountID == null) {
-        state.accountID = this.props.selectedAccount.get('id');
+        state.accountID = this.props.selectedAccountID;
       }
     }
     state.sending = false;
@@ -3081,14 +3116,11 @@ module.exports = Compose = React.createClass({
   },
   _doSend: function(isDraft) {
     var account, from, message, tmp, valid;
-    account = this.props.accounts.get(this.state.accountID);
+    account = this.props.accounts[this.state.accountID];
     from = {
-      name: (account != null ? account.get('name') : void 0) || void 0,
-      address: account.get('login')
+      name: account.name || void 0,
+      address: account.login
     };
-    if (!~from.address.indexOf('@')) {
-      from.address += '@' + account.get('imapServer');
-    }
     message = {
       id: this.state.id,
       accountID: this.state.accountID,
@@ -3211,7 +3243,7 @@ module.exports = Compose = React.createClass({
               return _this.redirect({
                 direction: 'first',
                 action: 'account.mailbox.messages',
-                parameters: [_this.props.selectedAccount.get('id'), _this.props.selectedMailboxID],
+                parameters: [_this.props.selectedAccountID, _this.props.selectedMailboxID],
                 fullWidth: true
               });
             }
@@ -3502,7 +3534,8 @@ module.exports = React.createClass({
   propTypes: {
     message: React.PropTypes.object,
     conversation: React.PropTypes.object,
-    selectedAccount: React.PropTypes.object.isRequired,
+    selectedAccountID: React.PropTypes.string.isRequired,
+    selectedAccountLogin: React.PropTypes.string.isRequired,
     layout: React.PropTypes.string.isRequired,
     selectedMailboxID: React.PropTypes.string,
     mailboxes: React.PropTypes.object.isRequired,
@@ -3530,9 +3563,12 @@ module.exports = React.createClass({
       key: key,
       mailboxes: this.props.mailboxes,
       message: message,
-      next: this.props.next,
-      prev: this.props.prev,
-      selectedAccount: this.props.selectedAccount,
+      nextMessageID: this.props.nextMessageID,
+      nextConversationID: this.props.nextConversationID,
+      prevMessageID: this.props.prevMessageID,
+      prevConversationID: this.props.prevConversationID,
+      selectedAccountID: this.props.selectedAccountID,
+      selectedAccountLogin: this.props.selectedAccountLogin,
       selectedMailboxID: this.props.selectedMailboxID,
       settings: this.props.settings
     });
@@ -3550,7 +3586,7 @@ module.exports = React.createClass({
     });
     if (window.router.previous != null) {
       try {
-        selectedAccountID = this.props.selectedAccount.get('id');
+        selectedAccountID = this.props.selectedAccountID;
       } catch (_error) {
         selectedAccountID = this.props.conversation.get(0).mailbox;
       }
@@ -3909,12 +3945,15 @@ module.exports = React.createClass({
     var _base;
     return typeof (_base = this.props).onChange === "function" ? _base.onChange(boxid) : void 0;
   },
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+  },
   render: function() {
-    var selected, selectedId;
-    selectedId = this.props.selectedMailbox;
-    if ((this.props.mailboxes != null) && this.props.mailboxes.length > 0) {
-      if (selectedId != null) {
-        selected = this.props.mailboxes.get(selectedId);
+    var key, mailbox, selected, selectedID;
+    selectedID = this.props.selectedMailboxID;
+    if ((this.props.mailboxes != null) && Object.keys(this.props.mailboxes).length > 0) {
+      if (selectedID != null) {
+        selected = this.props.mailboxes[selectedID];
       }
       return div({
         className: 'btn-group btn-group-sm dropdown pull-left'
@@ -3922,24 +3961,33 @@ module.exports = React.createClass({
         className: 'btn btn-default dropdown-toggle',
         type: 'button',
         'data-toggle': 'dropdown'
-      }, (selected != null ? selected.get('label') : void 0) || t('mailbox pick one'), span({
+      }, (selected != null ? selected.label : void 0) || t('mailbox pick one'), span({
         className: 'caret'
       }, '')), ul({
         className: 'dropdown-menu',
         role: 'menu'
-      }, this.props.allowUndefined && selected ? li({
+      }, this.props.allowUndefined && (selected != null) ? li({
         role: 'presentation',
         key: null,
         onClick: this.onChange.bind(this, null)
       }, a({
         role: 'menuitem'
-      }, t('mailbox pick null'))) : void 0, this.props.mailboxes.map((function(_this) {
-        return function(mailbox, key) {
-          if (mailbox.get('id') !== selectedId) {
-            return _this.getMailboxRender(mailbox, key);
+      }, t('mailbox pick null'))) : void 0, (function() {
+        var _ref1, _results;
+        _ref1 = this.props.mailboxes;
+        _results = [];
+        for (key in _ref1) {
+          mailbox = _ref1[key];
+          if (key !== this.props.selectedMailboxID) {
+            if (key !== selectedID) {
+              _results.push(this.getMailboxRender(mailbox, key));
+            } else {
+              _results.push(void 0);
+            }
           }
-        };
-      })(this)).toJS()));
+        }
+        return _results;
+      }).call(this)));
     } else {
       return div(null, "");
     }
@@ -3949,7 +3997,7 @@ module.exports = React.createClass({
     url = typeof (_base = this.props).getUrl === "function" ? _base.getUrl(mailbox) : void 0;
     onChange = this.onChange.bind(this, key);
     pusher = "";
-    for (i = _i = 1, _ref1 = mailbox.get('depth'); _i <= _ref1; i = _i += 1) {
+    for (i = _i = 1, _ref1 = mailbox.depth; _i <= _ref1; i = _i += 1) {
       pusher += "--";
     }
     return li({
@@ -3959,9 +4007,9 @@ module.exports = React.createClass({
     }, url != null ? a({
       href: url,
       role: 'menuitem'
-    }, "" + pusher + (mailbox.get('label'))) : a({
+    }, "" + pusher + mailbox.label) : a({
       role: 'menuitem'
-    }, "" + pusher + (mailbox.get('label'))));
+    }, "" + pusher + mailbox.label));
   }
 });
 });
@@ -4170,7 +4218,7 @@ module.exports = MailsInput = React.createClass({
   },
   onQuery: function(char) {
     var force, query;
-    query = this.refs.contactInput.getDOMNode().value.split(',').pop().trim();
+    query = this.refs.contactInput.getDOMNode().value.split(',').pop().trimLeft();
     if ((char != null) && typeof char === 'string') {
       query += char;
       force = false;
@@ -4834,7 +4882,7 @@ MessageList = React.createClass({
         return _this.buildUrl({
           direction: 'first',
           action: 'account.mailbox.messages',
-          parameters: [_this.props.accountID, mailbox.get('id')]
+          parameters: [_this.props.accountID, mailbox.id]
         });
       };
     })(this);
@@ -4930,7 +4978,7 @@ MessageList = React.createClass({
     }, MailboxList({
       getUrl: getMailboxUrl,
       mailboxes: this.props.mailboxes,
-      selectedMailbox: this.props.mailboxID
+      selectedMailboxID: this.props.mailboxID
     })) : void 0, !advanced && !this.state.edited ? div({
       className: btnClasses + ' toggle-menu-button'
     }, button({
@@ -5686,9 +5734,12 @@ module.exports = React.createClass({
     key: React.PropTypes.string.isRequired,
     mailboxes: React.PropTypes.object.isRequired,
     message: React.PropTypes.object.isRequired,
-    next: React.PropTypes.object,
-    prev: React.PropTypes.object,
-    selectedAccount: React.PropTypes.object.isRequired,
+    nextMessageID: React.PropTypes.string,
+    nextConversationID: React.PropTypes.string,
+    prevMessageID: React.PropTypes.string,
+    prevConversationID: React.PropTypes.string,
+    selectedAccountID: React.PropTypes.string.isRequired,
+    selectedAccountLogin: React.PropTypes.string.isRequired,
     selectedMailboxID: React.PropTypes.string.isRequired,
     settings: React.PropTypes.object.isRequired
   },
@@ -5708,28 +5759,29 @@ module.exports = React.createClass({
         fullHeaders.push("" + key + ": " + value);
       }
     }
-    text = message.get('text');
-    html = message.get('html');
-    urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim;
-    if (text && !html && this.state.messageDisplayHTML) {
-      try {
-        html = markdown.toHTML(text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2"));
-      } catch (_error) {
-        e = _error;
-        console.log("Error converting text message to Markdown: " + e);
-        html = "<div class='text'>" + text + "</div>";
+    if (this.state.active) {
+      text = message.get('text');
+      html = message.get('html');
+      urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim;
+      if (text && !html && this.state.messageDisplayHTML) {
+        try {
+          html = markdown.toHTML(text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2"));
+        } catch (_error) {
+          e = _error;
+          html = "<div class='text'>" + text + "</div>";
+        }
       }
-    }
-    if (html && !text && !this.state.messageDisplayHTML) {
-      text = toMarkdown(html);
-    }
-    if (text) {
-      rich = text.replace(urls, '<a href="$1" target="_blank">$1</a>', 'gim');
-      rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>');
-      rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>');
-      rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>');
-      rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>');
-      rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim');
+      if (html && !text && !this.state.messageDisplayHTML) {
+        text = toMarkdown(html);
+      }
+      if (text) {
+        rich = text.replace(urls, '<a href="$1" target="_blank">$1</a>', 'gim');
+        rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>');
+        rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>');
+        rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>');
+        rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>');
+        rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim');
+      }
     }
     return {
       id: message.get('id'),
@@ -5785,7 +5837,7 @@ module.exports = React.createClass({
       doc.documentElement.innerHTML = html;
     }
     if (!doc) {
-      console.log("Unable to parse HTML content of message");
+      console.error("Unable to parse HTML content of message");
       messageDisplayHTML = false;
     }
     if (doc && !this.state.messageDisplayImages) {
@@ -5966,7 +6018,8 @@ module.exports = React.createClass({
         inReplyTo: this.props.message,
         accounts: this.props.accounts,
         settings: this.props.settings,
-        selectedAccount: this.props.selectedAccount,
+        selectedAccountID: this.props.selectedAccountID,
+        selectedAccountLogin: this.props.selectedAccountLogin,
         action: this.state.composeAction,
         layout: 'second',
         callback: (function(_this) {
@@ -5997,27 +6050,27 @@ module.exports = React.createClass({
     isSeen = prepared.flags.indexOf(FlagsConstants.SEEN) === -1;
     conversationID = this.props.message.get('conversationID');
     getParams = (function(_this) {
-      return function(message) {
+      return function(messageID, conversationID) {
         if (_this.props.settings.get('displayConversation')) {
           return {
             action: 'conversation',
             parameters: {
-              messageID: message.get('id'),
-              conversationID: message.get('convrsationID')
+              messageID: messageID,
+              conversationID: conversationID
             }
           };
         } else {
           return {
             action: 'message',
             parameters: {
-              messageID: message.get('id')
+              messageID: messageID
             }
           };
         }
       };
     })(this);
-    if (this.props.prev != null) {
-      params = getParams(this.props.prev);
+    if (this.props.prevMessageID != null) {
+      params = getParams(this.props.prevMessageID, this.props.prevConversationID);
       prev = {
         direction: 'second',
         action: params.action,
@@ -6030,8 +6083,8 @@ module.exports = React.createClass({
         };
       })(this);
     }
-    if (this.props.next != null) {
-      params = getParams(this.props.next);
+    if (this.props.nextMessageID != null) {
+      params = getParams(this.props.nextMessageID, this.props.nextConversationID);
       next = {
         direction: 'second',
         action: params.action,
@@ -6175,20 +6228,22 @@ module.exports = React.createClass({
     }
   },
   displayNextMessage: function() {
-    var next;
-    if (this.props.next != null) {
-      next = this.props.next;
+    var nextConversationID, nextMessageID;
+    if (this.props.nextMessageID != null) {
+      nextMessageID = this.props.nextMessageID;
+      nextConversationID = this.props.nextConversationID;
     } else {
-      next = this.props.prev;
+      nextMessageID = this.props.prevMessageID;
+      nextConversationID = this.props.prevConversationID;
     }
-    if (next != null) {
+    if (nextMessageID) {
       if (this.props.settings.get('displayConversation')) {
         return this.redirect({
           direction: 'second',
           action: 'conversation',
           parameters: {
-            messageID: next.get('id'),
-            conversationID: next.get('convrsationID')
+            messageID: nextMessageID,
+            conversationID: nextConversationID
           }
         });
       } else {
@@ -6196,7 +6251,7 @@ module.exports = React.createClass({
           direction: 'second',
           action: 'message',
           parameters: {
-            messageID: next.get('id')
+            messageID: nextMessageID
           }
         });
       }
@@ -6426,7 +6481,11 @@ MessageContent = React.createClass({
             updateHeight = function(e) {
               var height, _ref4;
               height = doc.body.getBoundingClientRect().height;
-              frame.style.height = "" + (height * 1.2) + "px";
+              if (height < 60) {
+                frame.style.height = "60px";
+              } else {
+                frame.style.height = "" + (height * 1.3) + "px";
+              }
               step++;
               if (step > 10) {
                 doc.body.removeEventListener('load', loadContent);
@@ -7298,8 +7357,11 @@ _ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags
 
 module.exports = ToolboxActions = React.createClass({
   displayName: 'ToolboxActions',
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+  },
   render: function() {
-    var direction;
+    var direction, key, mailbox;
     direction = this.props.direction === 'right' ? 'right' : 'left';
     return div({
       className: 'btn-group btn-group-sm'
@@ -7363,22 +7425,26 @@ module.exports = ToolboxActions = React.createClass({
       className: 'divider'
     }), li({
       role: 'presentation'
-    }, t('mail action conversation move')), this.props.mailboxes.map((function(_this) {
-      return function(mailbox, key) {
-        return _this.renderMailboxes(mailbox, key, true);
-      };
-    })(this)).toJS(), li({
+    }, t('mail action conversation move')), (function() {
+      var _ref2, _results;
+      _ref2 = this.props.mailboxes;
+      _results = [];
+      for (key in _ref2) {
+        mailbox = _ref2[key];
+        if (key !== this.props.selectedMailboxID) {
+          _results.push(this.renderMailboxes(mailbox, key));
+        }
+      }
+      return _results;
+    }).call(this), li({
       role: 'presentation',
       className: 'divider'
     })));
   },
-  renderMailboxes: function(mailbox, key, conversation) {
+  renderMailboxes: function(mailbox, key) {
     var j, pusher, _i, _ref2;
-    if (mailbox.get('id') === this.props.selectedMailboxID) {
-      return;
-    }
     pusher = "";
-    for (j = _i = 1, _ref2 = mailbox.get('depth'); _i <= _ref2; j = _i += 1) {
+    for (j = _i = 1, _ref2 = mailbox.depth; _i <= _ref2; j = _i += 1) {
       pusher += "--";
     }
     return li({
@@ -7388,25 +7454,24 @@ module.exports = ToolboxActions = React.createClass({
       role: 'menuitem',
       onClick: this.onMove,
       'data-value': key,
-      'data-conversation': conversation
-    }, "" + pusher + (mailbox.get('label'))));
+      'data-conversation': true
+    }, "" + pusher + mailbox.label));
   }
 });
 });
 
 ;require.register("components/toolbox_move", function(exports, require, module) {
-var ConversationActionCreator, LayoutActionCreator, ToolboxMove, a, button, div, i, li, p, span, ul, _ref;
+var ToolboxMove, a, button, div, i, li, p, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button;
 
-LayoutActionCreator = require('../actions/layout_action_creator');
-
-ConversationActionCreator = require('../actions/conversation_action_creator');
-
 module.exports = ToolboxMove = React.createClass({
   displayName: 'ToolboxMove',
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+  },
   render: function() {
-    var direction;
+    var direction, key, mailbox;
     direction = this.props.direction === 'right' ? 'right' : 'left';
     return div({
       className: 'btn-group btn-group-sm'
@@ -7419,19 +7484,23 @@ module.exports = ToolboxMove = React.createClass({
     }))), ul({
       className: 'dropdown-menu dropdown-menu-' + direction,
       role: 'menu'
-    }, this.props.mailboxes.map((function(_this) {
-      return function(mailbox, key) {
-        return _this.renderMailboxes(mailbox, key);
-      };
-    })(this)).toJS()));
+    }, (function() {
+      var _ref1, _results;
+      _ref1 = this.props.mailboxes;
+      _results = [];
+      for (key in _ref1) {
+        mailbox = _ref1[key];
+        if (key !== this.props.selectedMailboxID) {
+          _results.push(this.renderMailboxes(mailbox, key));
+        }
+      }
+      return _results;
+    }).call(this)));
   },
-  renderMailboxes: function(mailbox, key, conversation) {
+  renderMailboxes: function(mailbox, key) {
     var j, pusher, _i, _ref1;
-    if (mailbox.get('id') === this.props.selectedMailboxID) {
-      return;
-    }
     pusher = "";
-    for (j = _i = 1, _ref1 = mailbox.get('depth'); _i <= _ref1; j = _i += 1) {
+    for (j = _i = 1, _ref1 = mailbox.depth; _i <= _ref1; j = _i += 1) {
       pusher += "--";
     }
     return li({
@@ -7440,9 +7509,8 @@ module.exports = ToolboxMove = React.createClass({
     }, a({
       role: 'menuitem',
       onClick: this.props.onMove,
-      'data-value': key,
-      'data-conversation': conversation
-    }, "" + pusher + (mailbox.get('label'))));
+      'data-value': key
+    }, "" + pusher + mailbox.label));
   }
 });
 });
@@ -7484,7 +7552,7 @@ module.exports = Topbar = React.createClass({
         return _this.buildUrl({
           direction: 'first',
           action: 'account.mailbox.messages',
-          parameters: [selectedAccount != null ? selectedAccount.get('id') : void 0, mailbox.get('id')]
+          parameters: [selectedAccount != null ? selectedAccount.get('id') : void 0, mailbox.id]
         });
       };
     })(this);
@@ -7520,7 +7588,7 @@ module.exports = Topbar = React.createClass({
     }, MailboxList({
       getUrl: getUrl,
       mailboxes: mailboxes,
-      selectedMailbox: selectedMailboxID
+      selectedMailboxID: selectedMailboxID
     }), SearchForm({
       query: searchQuery
     }))) : void 0, layout.firstPanel.action === 'account.mailbox.messages' || layout.firstPanel.action === 'account.mailbox.messages' ? div({
