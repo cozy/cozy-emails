@@ -31,6 +31,39 @@ Settings.get = (callback) ->
     Settings.getInstance (err, instance) ->
         callback err, instance?.toObject()
 
+Settings.getDefault = (callback) ->
+    settings =
+        composeInHTML        : true
+        composeOnTop         : false
+        desktopNotifications : false
+        displayConversation  : true
+        displayPreview       : true
+        layoutStyle          : 'three'
+        listStyle            : 'default'
+        messageConfirmDelete : true
+        messageDisplayHTML   : true
+        messageDisplayImages : false
+        plugins:
+            gallery:
+                name: "Gallery"
+                active: true
+            mailkeys:
+                name: "Keyboard shortcuts"
+                active: true
+            mediumeditor:
+                name: "Medium Editor"
+                active: true
+            minislate:
+                name: "Slate editor"
+                active: false
+            sample:
+                name: "Sample plugin"
+                active: false
+            vcard:
+                name: "VCard"
+                active: false
+
+    callback null, settings
 
 Settings.set = (changes, callback) ->
     Settings.getInstance (err, instance) ->

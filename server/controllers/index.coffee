@@ -10,7 +10,7 @@ log = require('../utils/logging')(prefix: 'controllers:index')
 module.exports.main = (req, res, next) ->
 
     async.series [
-        (cb) -> Settings.get cb
+        (cb) -> Settings.getDefault cb
         (cb) -> cozydb.api.getCozyLocale cb
         (cb) -> Account.clientList cb
         (callback) ->

@@ -9,6 +9,10 @@ utils = require "utils.js"
 casper.test.begin 'Test compose', (test) ->
     init casper
 
+    casper.start casper.cozy.startUrl + "#compose", ->
+        test.comment "Skipping compose settings test"
+        test.skip 1
+    ###
     casper.start casper.cozy.startUrl + "#settings", ->
         test.comment "Compose in HTML"
         accountSel = "#account-list .menu-item.account .item-label"
@@ -29,6 +33,7 @@ casper.test.begin 'Test compose', (test) ->
                     casper.click "#menu .compose-action"
                     casper.waitForSelector selText, ->
                         test.assertDoesntExist selHtml, 'Compose in Text'
+    ###
 
     casper.then ->
         test.comment "Field visibility"

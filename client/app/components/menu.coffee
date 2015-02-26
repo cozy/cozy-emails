@@ -131,12 +131,13 @@ module.exports = Menu = React.createClass
                     i className: 'fa fa-inbox'
                     span className: 'item-label', t 'menu account new'
 
-            a
-                href: settingsUrl,
-                onClick: @_hideMenu
-                className: 'menu-item settings-action ' + settingsClass,
-                    i className: 'fa fa-cog'
-                    span className: 'item-label', t 'menu settings'
+            # #201: remove settings panel
+            #a
+            #    href: settingsUrl,
+            #    onClick: @_hideMenu
+            #    className: 'menu-item settings-action ' + settingsClass,
+            #        i className: 'fa fa-cog'
+            #        span className: 'item-label', t 'menu settings'
 
 
     # renders a single account and its submenu
