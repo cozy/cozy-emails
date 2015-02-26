@@ -73,7 +73,6 @@ module.exports =
         if not onMessageList()
             return
         conv = inConv and SettingsStore.get('displayConversation') and SettingsStore.get('displayPreview')
-        console.log conv
         if direction is 'prev'
             next = MessageStore.getPreviousMessage conv
         else

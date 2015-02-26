@@ -108,7 +108,7 @@ MessageList = React.createClass
 
         btnClasses = 'btn-group btn-group-sm message-list-option'
 
-        div className: 'message-list ' + classList, ref: 'list',
+        div className: 'message-list ' + classList, ref: 'list', 'data-mailbox-id': @props.mailboxID,
             div className: 'message-list-actions',
                 #if advanced and not @state.edited
                 #    MessagesQuickFilter {}

@@ -44,7 +44,9 @@ casper.cozy.selectAccount = (account, box, cb) ->
             casper.test.fail "Unable to find mailbox #{box} in #{account}"
         casper.click "[data-reactid='#{id}'] .item-label"
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
-            casper.waitForSelector ".message-list li.message", ->
+            infos = casper.getElementInfo "[data-reactid='#{id}'].active [data-mailbox-id]"
+            mailboxID = infos.attributes['data-mailbox-id']
+            casper.waitForSelector ".message-list[data-mailbox-id='#{mailboxID}'] li.message", ->
                 if cb?
                     cb()
             , ->

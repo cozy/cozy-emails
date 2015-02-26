@@ -10,7 +10,7 @@ module.exports = ToolboxActions = React.createClass
 
     render: ->
         direction = if @props.direction is 'right' then 'right' else 'left'
-        div className: 'btn-group btn-group-sm',
+        div className: 'menu-action btn-group btn-group-sm',
             button
                 className: 'btn btn-default dropdown-toggle more',
                 type: 'button',
