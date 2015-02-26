@@ -413,7 +413,12 @@ module.exports = Application = React.createClass
         else
             selectedMailboxID = null
 
-        accounts = AccountStore.getAll()
+        accounts  = AccountStore.getAll()
+        mailboxes = AccountStore.getSelectedMailboxes()
+
+        # Flat copies of accounts and mailboxes
+        # This prevents components to refresh when properties they don't use are
+        # updated (unread counts, timestamp of last refresh…)
         accountsFlat = {}
         accounts.map (account) ->
             accountsFlat[account.get 'id'] =
@@ -422,12 +427,11 @@ module.exports = Application = React.createClass
                 login: account.get 'login'
         .toJS()
 
-        mailboxes = AccountStore.getSelectedMailboxes()
         mailboxesFlat = {}
         mailboxes.map (mailbox) ->
             id = mailbox.get 'id'
             mailboxesFlat[id] = {}
-            ['id', 'label', 'depth', 'selectedId'].map (prop) ->
+            ['id', 'label', 'depth'].map (prop) ->
                 mailboxesFlat[id][prop] = mailbox.get prop
         .toJS()
 

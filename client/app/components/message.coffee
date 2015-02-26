@@ -71,16 +71,16 @@ module.exports = React.createClass
             # @TODO Do we want to convert text only messages to HTML ?
             # /!\ if messageDisplayHTML is set, this method should always return
             # a value fo html, otherwise the content of the email flashes
-            if text and not html and @state.messageDisplayHTML
+            if text? and not html? and @state.messageDisplayHTML
                 try
                     html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
                 catch e
                     html = "<div class='text'>#{text}</div>" #markdown.toHTML text
 
-            if html and not text and not @state.messageDisplayHTML
+            if html? and not text? and not @state.messageDisplayHTML
                 text = toMarkdown html
 
-            if text
+            if text?
                 rich = text.replace urls, '<a href="$1" target="_blank">$1</a>', 'gim'
                 rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>')
                 rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>')

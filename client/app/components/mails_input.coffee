@@ -78,9 +78,9 @@ module.exports = MailsInput = React.createClass
                 if match = tupple.match /"{0,1}(.*)"{0,1} <(.*)>/
                     name: match[1], address: match[2]
                 else
-                    address: tupple.trimLeft()
+                    address: tupple.replace(/^\s*/, '')
             .filter (address) ->
-                return address.addres isnt ''
+                return address.address isnt ''
 
             @props.valueLink.requestChange result.concat(@state.known.reverse())
             @_extractAddresses result
@@ -93,11 +93,12 @@ module.exports = MailsInput = React.createClass
                     return a.address isnt address.address
                 @setState known: known, =>
                     @proxyValueLink().requestChange @refs.contactInput.getDOMNode().value
+            display = if address.name? then address.name else address.address
             span
                 className: 'address-tag'
                 key: "#{@props.id}-#{address.address}-#{idx}"
                 title: address.address
-                MessageUtils.displayAddress address
+                display
                     a
                         className: 'clickable'
                         onClick: remove,
@@ -159,7 +160,7 @@ module.exports = MailsInput = React.createClass
                 "#{contact.get 'fn'} <#{contact.get 'address'}>"
 
     onQuery: (char) ->
-        query = @refs.contactInput.getDOMNode().value.split(',').pop().trimLeft()
+        query = @refs.contactInput.getDOMNode().value.split(',').pop().replace(/^\s*/, '')
         if char? and typeof char is 'string'
             query += char
             force = false
@@ -179,7 +180,6 @@ module.exports = MailsInput = React.createClass
         switch evt.key
             when "Enter"
                 if @state.contacts?.count() > 0
-                    @onContact
                     contact = @state.contacts.slice(@state.selected).first()
                     @onContact contact
                 else
@@ -207,7 +207,7 @@ module.exports = MailsInput = React.createClass
         # We must use a timeout, otherwise, when user click inside contact list, blur is triggered first
         # and the click event lost. Dirty hack
         setTimeout =>
-            # if user cancel comose, component may be unmounted when the timeout is fired
+            # if user cancel compose, component may be unmounted when the timeout is fired
             if @isMounted()
                 @setState open: false
         , 100

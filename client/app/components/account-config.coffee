@@ -678,6 +678,14 @@ AccountConfigMailboxes = React.createClass
 
     _propsToState: (props) ->
         state = props
+        state.mailboxesFlat = {}
+        if state.mailboxes.value isnt ''
+            state.mailboxes.value.map (mailbox, key) ->
+                id = mailbox.get 'id'
+                state.mailboxesFlat[id] = {}
+                ['id', 'label', 'depth'].map (prop) ->
+                    state.mailboxesFlat[id][prop] = mailbox.get prop
+            .toJS()
         return state
 
     getInitialState: ->
@@ -688,13 +696,8 @@ AccountConfigMailboxes = React.createClass
 
     render: ->
         favorites = @state.favoriteMailboxes.value
-        mailboxesFlat = {}
         if @state.mailboxes.value isnt '' and favorites isnt ''
             mailboxes = @state.mailboxes.value.map (mailbox, key) =>
-                id = mailbox.get 'id'
-                mailboxesFlat[id] = {}
-                ['id', 'label', 'depth', 'selectedId'].map (prop) ->
-                    mailboxesFlat[id][prop] = mailbox.get prop
                 try
                     favorite = favorites.get(mailbox.get('id'))?
                     MailboxItem {accountID: @state.id.value, mailbox, favorite}
@@ -760,7 +763,7 @@ AccountConfigMailboxes = React.createClass
                     div className: 'col-xs-2 text-center',
                         MailboxList
                             allowUndefined: true
-                            mailboxes: mailboxesFlat
+                            mailboxes: @state.mailboxesFlat
                             selectedMailboxID: @state.newMailboxParent
                             onChange: (mailbox) =>
                                 @setState newMailboxParent: mailbox
@@ -776,13 +779,6 @@ AccountConfigMailboxes = React.createClass
 
     _renderMailboxChoice: (labelText, box) ->
         if @state.id? and @state.mailboxes.value isnt ''
-            mailboxesFlat = {}
-            @state.mailboxes.value.map (mailbox) ->
-                id = mailbox.get 'id'
-                mailboxesFlat[id] = {}
-                ['id', 'label', 'depth', 'selectedId'].map (prop) ->
-                    mailboxesFlat[id][prop] = mailbox.get prop
-            .toJS()
             errorClass = if @state[box].value? then '' else 'has-error'
             div className: "form-group #{box} #{errorClass}",
                 label
@@ -791,7 +787,7 @@ AccountConfigMailboxes = React.createClass
                 div className: 'col-sm-3',
                     MailboxList
                         allowUndefined: true
-                        mailboxes: mailboxesFlat
+                        mailboxes: @state.mailboxesFlat
                         selectedMailboxID: @state[box].value
                         onChange: (mailbox) =>
                             # requestChange is asynchroneous, so we need to also call

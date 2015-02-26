@@ -129,7 +129,6 @@ casper.test.begin 'Test Message Actions', (test) ->
                 window.cozyMails.setSetting 'composeInHTML', true
             casper.cozy.selectMessage "DoveCot", "Test Folder", null, (subject, messageID) ->
                 currentSel = ".conversation li.message.active[data-id='#{messageID}']"
-                console.log "#{currentSel} .messageToolbox button.trash"
                 casper.click "#{currentSel} .messageToolbox button.trash"
                 casper.waitWhileSelector ".message-list li.message[data-message-id='#{messageID}']", ->
                     test.pass "Message #{subject} Moved"
