@@ -244,7 +244,7 @@ MessageList = React.createClass
                         mailboxID: @props.mailboxID
                         messageID: @props.messageID
                         conversationID: @props.conversationID
-                        conversationLength: @props.conversationLength
+                        conversationLengths: @props.conversationLengths
                         edited: @state.edited
                         selected: @state.selected
                         allSelected: @state.allSelected
@@ -490,7 +490,7 @@ MessageListBody = React.createClass
                 isActive = @props.messageID is id
             MessageItem
                 message: message,
-                conversationLength: @props.conversationLengths?.get(cid),
+                conversationLengths: @props.conversationLengths?.get(cid),
                 key: key,
                 isActive: isActive,
                 edited: @props.edited,
@@ -591,9 +591,9 @@ MessageItem = React.createClass
                             i className: 'fa fa-user'
                     span className: 'participants', @getParticipants message
                     div className: 'preview',
-                        if @props.conversationLength > 1
+                        if @props.conversationLengths > 1
                             span className: 'badge conversation-length',
-                                @props.conversationLength
+                                @props.conversationLengths
                         span className: 'title',
                             message.get 'subject'
                         p null, preview
