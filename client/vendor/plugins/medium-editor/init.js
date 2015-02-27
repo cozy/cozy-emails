@@ -12,10 +12,14 @@ window.plugins.mediumeditor = {
       return node.querySelector('.rt-editor') !== null;
     },
     action: function (node) {
-      // jshint unused: false
+      /* eslint no-unused-vars: 0 */
       "use strict";
       var editorNode = node.querySelector('.rt-editor'),
-          medium = new window.MediumEditor(editorNode);
+          medium;
+      if (!editorNode.classList.contains('medium-editor')) {
+        medium = new window.MediumEditor(editorNode);
+        editorNode.classList.add('medium-editor');
+      }
     }
   }
 };
