@@ -2,6 +2,7 @@
 classer = React.addons.classSet
 
 RouterMixin    = require '../mixins/router_mixin'
+DomUtils       = require '../utils/dom_utils'
 MessageUtils   = require '../utils/message_utils'
 SocketUtils    = require '../utils/socketio_utils'
 {MessageFlags, MessageFilter, FlagsConstants} = require '../constants/app_constants'
@@ -413,34 +414,20 @@ MessageList = React.createClass
                 else
                     LayoutActionCreator.notify t "mailbox expunge ok"
 
-    _isVisible: (node, before) ->
-        margin = if before then 40 else 0
-        rect   = node.getBoundingClientRect()
-        height = window.innerHeight or document.documentElement.clientHeight
-        width  = window.innerWidth  or document.documentElement.clientWidth
-        return rect.bottom <= ( height + 0 ) and rect.top >= 0
-
     _loadNext: ->
-        if @refs.nextPage? and @_isVisible(@refs.nextPage.getDOMNode(), true)
+        if @refs.nextPage? and DomUtils.isVisible(@refs.nextPage.getDOMNode(), true)
             LayoutActionCreator.showMessageList parameters: @props.query
 
     _handleRealtimeGrowth: ->
         nbMessages = parseInt @props.counterMessage, 10
         if nbMessages < @props.messages.count() and @refs.listEnd? and
-        not @_isVisible(@refs.listEnd.getDOMNode(), true)
+        not DomUtils.isVisible(@refs.listEnd.getDOMNode(), true)
             lastdate = @props.messages.last().get('date')
             SocketUtils.changeRealtimeScope @props.mailboxID, lastdate
 
     _initScroll: ->
         if not @refs.nextPage?
             return
-
-        # scroll current message into view
-        if @state.messageID isnt @props.messageID
-            active = document.querySelector("[data-message-id='#{@props.messageID}']")
-            if active? and not @_isVisible(active)
-                active.scrollIntoView()
-            @setState messageID: @props.messageID
 
         # listen to scroll events
         scrollable = @refs.list.getDOMNode().parentNode
@@ -470,6 +457,10 @@ module.exports = MessageList
 
 MessageListBody = React.createClass
     displayName: 'MessageListBody'
+
+    getInitialState: ->
+        state =
+            messageID: null
 
     shouldComponentUpdate: (nextProps, nextState) ->
         # we must do the comparison manually because the property "onSelect" is
@@ -502,6 +493,20 @@ MessageListBody = React.createClass
         .toJS()
         ul className: 'list-unstyled',
             messages
+
+    componentDidMount: ->
+        @_onMount()
+
+    componentDidUpdate: ->
+        @_onMount()
+
+    _onMount: ->
+        # scroll current message into view
+        if @state.messageID isnt @props.messageID
+            active = document.querySelector("[data-message-id='#{@props.messageID}']")
+            if active? and not DomUtils.isVisible(active)
+                active.scrollIntoView(false)
+            @setState messageID: @props.messageID
 
 MessageItem = React.createClass
     displayName: 'MessagesItem'
