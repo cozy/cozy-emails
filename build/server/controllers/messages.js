@@ -476,7 +476,9 @@ module.exports.conversationPatch = function(req, res, next) {
   messages = [];
   return async.eachSeries(req.conversation, function(message, cb) {
     return message.applyPatchOperations(patch, function(err, updated) {
-      messages.push(updated.toClientObject());
+      if (!err) {
+        messages.push(updated.toClientObject());
+      }
       return cb(err);
     });
   }, function(err) {

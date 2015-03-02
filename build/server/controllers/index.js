@@ -20,7 +20,7 @@ log = require('../utils/logging')({
 module.exports.main = function(req, res, next) {
   return async.series([
     function(cb) {
-      return Settings.get(cb);
+      return Settings.getDefault(cb);
     }, function(cb) {
       return cozydb.api.getCozyLocale(cb);
     }, function(cb) {
