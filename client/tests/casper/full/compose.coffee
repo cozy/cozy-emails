@@ -52,9 +52,7 @@ casper.test.begin 'Test compose', (test) ->
         if require('system').env.NO_TRAVIS
             test.comment "Compose to contacts"
             test.assertNotVisible '.contact-list', 'No contacts displayed'
-            casper.fillSelectors 'form',
-                '#compose-to': 'casper.cozy'
-            casper.click '#compose-to + .btn-cozy'
+            casper.sendKeys '#compose-to', 'casper.cozy'
             casper.waitUntilVisible '.contact-list', ->
                 test.assertExist '.contact-list li', "Some contacts found"
                 contact = casper.fetchText '.contact-form.open .contact-list li:nth-of-type(1)'
@@ -64,9 +62,7 @@ casper.test.begin 'Test compose', (test) ->
                     values = casper.getFormValues('#email-compose form')
                     test.assertEquals casper.fetchText('.address-tag'), "#{contact.split(' ')[0]}", "Known contact added"
                     test.assertEquals values["compose-to"], "", "Known contact added"
-                    casper.fillSelectors 'form',
-                        '#compose-to': "#{contact}, casper.cozy"
-                    casper.click '#compose-to + .btn-cozy'
+                    casper.sendKeys '#compose-to', "casper.cozy"
                     casper.waitUntilVisible '.contact-list', ->
                         test.assertExist '.contact-list li', "Some contacts found"
                         contact2 = casper.fetchText '.contact-form.open .contact-list li:nth-of-type(2)'

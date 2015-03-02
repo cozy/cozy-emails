@@ -11,10 +11,9 @@ initSettings = ->
         settings =
             "composeInHTML": true
             "composeOnTop": false
-            "displayConversation":false
+            "displayConversation": true
             "displayPreview":true
             "layoutStyle":"three"
-            "listStyle":"compact"
             "messageConfirmDelete":false
         window.cozyMails.setSetting settings
 
@@ -37,10 +36,10 @@ casper.test.begin 'Test draft', (test) ->
             casper.click '.form-compose .compose-toggle-cc'
             casper.click '.form-compose .compose-toggle-bcc'
             casper.fillSelectors 'form',
-                "#compose-bcc": "bcc@cozy.io",
-                "#compose-cc": "cc@cozy.io",
                 "#compose-subject": "my draft subject",
-                "#compose-to": "to@cozy.io"
+            casper.sendKeys "#compose-bcc", "bcc@cozy.io,",
+            casper.sendKeys "#compose-cc", "cc@cozy.io,",
+            casper.sendKeys "#compose-to", "to@cozy.io,"
             casper.evaluate ->
                 editor = document.querySelector('.rt-editor')
                 editor.innerHTML = "<div><em>Hello,</em><br>Join us now and share the software</div>"
@@ -53,7 +52,6 @@ casper.test.begin 'Test draft', (test) ->
                     messageID = casper.evaluate ->
                         window.cozyMails.getCurrentMessage().id
                     test.pass "Message is saved: #{messageID}"
-                    #casper.reload
 
     casper.then ->
         test.comment "Edit draft"
@@ -70,10 +68,10 @@ casper.test.begin 'Test draft', (test) ->
             casper.waitForSelector "#email-compose .rt-editor", ->
                 test.assertExists '#email-compose', 'Compose form is displayed'
                 values = casper.getFormValues('#email-compose form')
-                test.assertEquals values["compose-bcc"], "bcc@cozy.io"
-                test.assertEquals values["compose-cc"], "cc@cozy.io"
-                test.assertEquals values["compose-subject"], "my draft subject"
-                test.assertEquals values["compose-to"], "to@cozy.io"
+                test.assertEquals casper.fetchText(".compose-bcc .address-tag"), "bcc@cozy.io", "Bcc dests"
+                test.assertEquals casper.fetchText(".compose-cc .address-tag"), "cc@cozy.io", "Cc dests"
+                test.assertEquals casper.fetchText(".compose-to .address-tag"), "to@cozy.io", "To dests"
+                test.assertEquals values["compose-subject"], "my draft subject", "Subject"
                 test.assertEquals casper.fetchText('.rt-editor'), "Hello,Join us now and share the software", "message HTML"
                 message = casper.evaluate ->
                     return window.cozyMails.getCurrentMessage()
