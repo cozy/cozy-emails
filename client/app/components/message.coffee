@@ -131,6 +131,7 @@ module.exports = React.createClass
         messageDisplayHTML = true
         parser = new DOMParser()
         html   = """<html><head>
+                <link rel="stylesheet" href="/fonts/fonts.css" />
                 <link rel="stylesheet" href="./mail_stylesheet.css" />
                 <style>body { visibility: hidden; }</style>
             </head><body>#{prepared.html}</body></html>"""
@@ -667,7 +668,7 @@ MessageContent = React.createClass
                         if height < 60
                             frame.style.height = "60px"
                         else
-                            frame.style.height = "#{height + 40}px"
+                            frame.style.height = "#{height + 60}px"
                         step++
                         # In Chrome, onresize loops
                         if step > 10
