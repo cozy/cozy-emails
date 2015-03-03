@@ -4043,7 +4043,6 @@ classer = React.addons.classSet;
 
 module.exports = MailsInput = React.createClass({
   displayName: 'MailsInput',
-  mixins: [React.addons.LinkedStateMixin],
   getStateFromStores: function() {
     return {
       contacts: ContactStore.getResults()
@@ -4058,10 +4057,16 @@ module.exports = MailsInput = React.createClass({
   getInitialState: function() {
     var state;
     state = this.getStateFromStores();
-    state.known = [];
+    state.known = this.props.valueLink.value;
+    state.unknown = '';
     state.selected = 0;
     state.open = false;
     return state;
+  },
+  componentWillReceiveProps: function(nextProps) {
+    return this.setState({
+      known: nextProps.valueLink.value
+    });
   },
   componentDidMount: function() {
     ContactStore.on('change', this._setStateFromStores);
@@ -4079,67 +4084,9 @@ module.exports = MailsInput = React.createClass({
   shouldComponentUpdate: function(nextProps, nextState) {
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
-  _extractAddresses: function(values) {
-    var known, unknown;
-    known = [];
-    unknown = [];
-    values.map(function(address) {
-      var res;
-      if (address.address.indexOf('@') === -1) {
-        return unknown.push(address);
-      } else {
-        res = ContactStore.getByAddress(address.address);
-        if (res != null) {
-          if (!(known.some(function(a) {
-            return a.address === address.address;
-          }))) {
-            return known.push(address);
-          }
-        } else {
-          return unknown.push(address);
-        }
-      }
-    });
-    setTimeout((function(_this) {
-      return function() {
-        return _this.setState({
-          known: known.reverse()
-        });
-      };
-    })(this), 0);
-    return MessageUtils.displayAddresses(unknown, true);
-  },
-  proxyValueLink: function() {
-    return {
-      value: this._extractAddresses(this.props.valueLink.value),
-      requestChange: (function(_this) {
-        return function(newValue) {
-          var result;
-          result = newValue.split(',').map(function(tupple) {
-            var match;
-            if (match = tupple.match(/"{0,1}(.*)"{0,1} <(.*)>/)) {
-              return {
-                name: match[1],
-                address: match[2]
-              };
-            } else {
-              return {
-                address: tupple.replace(/^\s*/, '')
-              };
-            }
-          }).filter(function(address) {
-            return address.address !== '';
-          });
-          _this.props.valueLink.requestChange(result.concat(_this.state.known.reverse()));
-          _this._extractAddresses(result);
-          return _this.fixHeight();
-        };
-      })(this)
-    };
-  },
   render: function() {
-    var classLabel, className, current, knownContacts, listClass, _ref1;
-    knownContacts = this.state.known.map((function(_this) {
+    var classLabel, className, current, knownContacts, listClass, onChange, renderTag, _ref1;
+    renderTag = (function(_this) {
       return function(address, idx) {
         var display, remove;
         remove = function() {
@@ -4147,13 +4094,13 @@ module.exports = MailsInput = React.createClass({
           known = _this.state.known.filter(function(a) {
             return a.address !== address.address;
           });
-          return _this.setState({
-            known: known
-          }, function() {
-            return _this.proxyValueLink().requestChange(_this.refs.contactInput.getDOMNode().value);
-          });
+          return _this.props.valueLink.requestChange(known);
         };
-        display = address.name != null ? address.name : address.address;
+        if ((address.name != null) && address.name.trim() !== '') {
+          display = address.name;
+        } else {
+          display = address.address;
+        }
         return span({
           className: 'address-tag',
           key: "" + _this.props.id + "-" + address.address + "-" + idx,
@@ -4165,8 +4112,26 @@ module.exports = MailsInput = React.createClass({
           className: 'fa fa-times'
         })));
       };
-    })(this));
-    className = (this.props.className || '') + ' form-group';
+    })(this);
+    knownContacts = this.state.known.map(renderTag);
+    onChange = (function(_this) {
+      return function(event) {
+        var value;
+        value = event.target.value.split(',');
+        if (value.length === 2) {
+          _this.state.known.push(MessageUtils.parseAddress(value[0]));
+          _this.props.valueLink.requestChange(_this.state.known);
+          return _this.setState({
+            unknown: value[1].trim()
+          });
+        } else {
+          return _this.setState({
+            unknown: event.target.value
+          });
+        }
+      };
+    })(this);
+    className = (this.props.className || '') + (" form-group " + this.props.id);
     classLabel = 'compose-label control-label';
     listClass = classer({
       'contact-form': true,
@@ -4188,7 +4153,8 @@ module.exports = MailsInput = React.createClass({
       onBlur: this.onBlur,
       ref: 'contactInput',
       rows: 1,
-      valueLink: this.proxyValueLink(),
+      value: this.state.unknown,
+      onChange: onChange,
       placeholder: this.props.placeholder,
       'autoComplete': 'off',
       'spellCheck': 'off'
@@ -4255,11 +4221,13 @@ module.exports = MailsInput = React.createClass({
     }
   },
   onKeyDown: function(evt) {
-    var contact, node, _ref1;
+    var contact, count, node, selected, _ref1, _ref2;
+    count = (_ref1 = this.state.contacts) != null ? _ref1.count() : void 0;
+    selected = this.state.selected;
     switch (evt.key) {
       case "Enter":
-        if (((_ref1 = this.state.contacts) != null ? _ref1.count() : void 0) > 0) {
-          contact = this.state.contacts.slice(this.state.selected).first();
+        if (((_ref2 = this.state.contacts) != null ? _ref2.count() : void 0) > 0) {
+          contact = this.state.contacts.slice(selected).first();
           this.onContact(contact);
         } else {
           this.onQuery();
@@ -4268,11 +4236,11 @@ module.exports = MailsInput = React.createClass({
         return false;
       case "ArrowUp":
         return this.setState({
-          selected: this.state.selected === 0 ? this.state.contacts.count() - 1 : this.state.selected - 1
+          selected: selected === 0 ? count - 1 : selected - 1
         });
       case "ArrowDown":
         return this.setState({
-          selected: this.state.selected === (this.state.contacts.count() - 1) ? 0 : this.state.selected + 1
+          selected: selected === (count - 1) ? 0 : selected + 1
         });
       case "Backspace":
         node = this.refs.contactInput.getDOMNode();
@@ -4298,29 +4266,32 @@ module.exports = MailsInput = React.createClass({
   onBlur: function() {
     return setTimeout((function(_this) {
       return function() {
+        var state, value;
         if (_this.isMounted()) {
-          return _this.setState({
-            open: false
-          });
+          state = {};
+          state.open = false;
+          value = _this.refs.contactInput.getDOMNode().value;
+          if (value.trim() !== '') {
+            _this.state.known.push(MessageUtils.parseAddress(value));
+            state.known = _this.state.known;
+            state.unknown = '';
+            _this.props.valueLink.requestChange(state.known);
+          }
+          return _this.setState(state);
         }
       };
     })(this), 100);
   },
   onContact: function(contact) {
-    var address, current, name, val;
-    val = this.proxyValueLink();
-    if (this.props.valueLink.value.length > 0) {
-      current = val.value.split(',').slice(0, -1).join(',');
-    } else {
-      current = "";
-    }
-    if (current.trim() !== '') {
-      current += ',';
-    }
-    name = contact.get('fn');
-    address = contact.get('address');
-    val.requestChange("" + current + name + " <" + address + ">,");
+    var address;
+    address = {
+      name: contact.get('fn'),
+      address: contact.get('address')
+    };
+    this.state.known.push(address);
+    this.props.valueLink.requestChange(this.state.known);
     this.setState({
+      unknown: '',
       contacts: null,
       open: false
     });
@@ -4828,7 +4799,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, btnClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
     compact = this.props.settings.get('listStyle') === 'compact';
     filterParams = {
       accountID: this.props.accountID,
@@ -4919,7 +4890,8 @@ MessageList = React.createClass({
     classEdited = classer({
       active: this.state.edited
     });
-    btnClasses = 'btn-group btn-group-sm message-list-option';
+    btnClasses = 'btn btn-default ';
+    btnGrpClasses = 'btn-group btn-group-sm message-list-option ';
     return div({
       className: 'message-list ' + classList,
       ref: 'list',
@@ -4932,59 +4904,59 @@ MessageList = React.createClass({
     }, div({
       className: 'btn-group'
     }, advanced ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
       type: "button",
-      className: "btn btn-default " + classEdited,
+      className: btnClasses + classEdited,
       onClick: this.toggleEdited
     }, i({
       className: 'fa fa-square-o'
     }))) : void 0, advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, MailboxList({
       getUrl: getMailboxUrl,
       mailboxes: this.props.mailboxes,
       selectedMailboxID: this.props.mailboxID
     })) : void 0, !advanced && !this.state.edited ? div({
-      className: btnClasses + ' toggle-menu-button'
+      className: btnGrpClasses + ' toggle-menu-button'
     }, button({
       onClick: this.props.toggleMenu,
       title: t('menu toggle'),
-      className: 'btn btn-default'
+      className: btnClasses
     }, span({
       className: 'fa fa-inbox'
     }))) : void 0, !advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
       onClick: toggleFilterUnseen,
       title: t('list filter unseen title'),
-      className: 'btn btn-default ' + (this.state.filterUnseen ? ' shown ' : '')
+      className: btnClasses + (this.state.filterUnseen ? ' shown' : void 0)
     }, span({
       className: 'fa fa-envelope'
     }))) : void 0, !advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
       onClick: toggleFilterFlag,
       title: t('list filter flagged title'),
-      className: 'btn btn-default ' + (this.state.filterFlag ? ' shown ' : '')
+      className: btnClasses + (this.state.filterFlag ? ' shown' : void 0)
     }, span({
       className: 'fa fa-star'
     }))) : void 0, !advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
       onClick: toggleFilterAttach,
       title: t('list filter attach title'),
-      className: 'btn btn-default ' + (this.state.filterAttach ? ' shown ' : '')
+      className: btnClasses + (this.state.filterAttach ? ' shown' : void 0)
     }, span({
       className: 'fa fa-paperclip'
     }))) : void 0, advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, MessagesFilter(filterParams)) : void 0, advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, MessagesSort(filterParams)) : void 0, !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, this.props.refreshes.length === 0 ? button({
-      className: 'btn btn-default',
+      className: btnClasses,
       type: 'button',
       disabled: null,
       onClick: this.refresh
@@ -4995,24 +4967,24 @@ MessageList = React.createClass({
       alt: 'spinner',
       className: 'spin'
     })) : void 0, !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, a({
       href: configMailboxUrl,
-      className: 'btn btn-default mailbox-config'
+      className: btnClasses + 'mailbox-config'
     }, i({
       className: 'fa fa-cog'
     }))) : void 0, this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
       type: "button",
-      className: "btn btn-default " + classEdited,
+      className: btnClasses + classEdited,
       onClick: this.toggleAll
     }, i({
       className: 'fa fa-square-o'
     }))) : void 0, this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
-      className: 'btn btn-default trash',
+      className: btnClasses + 'trash',
       type: 'button',
       disabled: nbSelected,
       onClick: this.onDelete
@@ -5029,9 +5001,9 @@ MessageList = React.createClass({
       onHeaders: this.onHeaders,
       direction: 'left'
     }) : void 0, this.props.isTrash && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
-      className: 'btn btn-default',
+      className: btnClasses,
       type: 'button',
       disabled: null,
       onClick: this.expungeMailbox
@@ -5300,7 +5272,7 @@ MessageList = React.createClass({
     }
   },
   _loadNext: function() {
-    if ((this.refs.nextPage != null) && DomUtils.isVisible(this.refs.nextPage.getDOMNode(), true)) {
+    if ((this.refs.nextPage != null) && DomUtils.isVisible(this.refs.nextPage.getDOMNode())) {
       return LayoutActionCreator.showMessageList({
         parameters: this.props.query
       });
@@ -5309,7 +5281,7 @@ MessageList = React.createClass({
   _handleRealtimeGrowth: function() {
     var lastdate, nbMessages;
     nbMessages = parseInt(this.props.counterMessage, 10);
-    if (nbMessages < this.props.messages.count() && (this.refs.listEnd != null) && !DomUtils.isVisible(this.refs.listEnd.getDOMNode(), true)) {
+    if (nbMessages < this.props.messages.count() && (this.refs.listEnd != null) && !DomUtils.isVisible(this.refs.listEnd.getDOMNode())) {
       lastdate = this.props.messages.last().get('date');
       return SocketUtils.changeRealtimeScope(this.props.mailboxID, lastdate);
     }
@@ -5553,7 +5525,7 @@ MessageItem = React.createClass({
     return e.stopPropagation();
   },
   onMessageClick: function(event) {
-    var href;
+    var href, node;
     if (this.props.edited) {
       this.props.onSelect(!this.props.selected);
       event.preventDefault();
@@ -5561,9 +5533,10 @@ MessageItem = React.createClass({
     } else {
       if (!(event.target.getAttribute('type') === 'checkbox')) {
         event.preventDefault();
-        MessageActionCreator.setCurrent(this.refs.target.getDOMNode().dataset.messageId);
+        node = this.refs.target.getDOMNode();
+        MessageActionCreator.setCurrent(node.dataset.messageId);
         if (this.props.settings.get('displayPreview')) {
-          href = '#' + this.refs.target.getDOMNode().href.split('#')[1];
+          href = '#' + node.href.split('#')[1];
           return this.redirect(href);
         }
       }
@@ -5829,18 +5802,18 @@ module.exports = React.createClass({
         text = toMarkdown(html);
       }
       if (text != null) {
-        rich = text.replace(urls, '<a href="$1" target="_blank">$1</a>', 'gim');
+        rich = text.replace(urls, '<a href="$1" target="_blank">$1</a>');
         rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>');
         rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>');
         rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>');
         rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>');
-        rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim');
+        rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>');
       }
     }
     return {
       id: message.get('id'),
       attachments: message.get('attachments'),
-      flags: message.get('flags') || [],
+      flags: message.get('flags' || []),
       from: message.get('from'),
       to: message.get('to'),
       cc: message.get('cc'),
@@ -5883,7 +5856,7 @@ module.exports = React.createClass({
     var doc, hideImage, href, html, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
     messageDisplayHTML = true;
     parser = new DOMParser();
-    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + prepared.html + "</body></html>";
+    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"/fonts/fonts.css\" />\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + prepared.html + "</body></html>";
     doc = parser.parseFromString(html, "text/html");
     images = [];
     if (!doc) {
@@ -6521,7 +6494,7 @@ MessageContent = React.createClass({
     }
   },
   _initFrame: function(type) {
-    var doc, frame, loadContent, panel, step, _ref2;
+    var checkResize, doc, frame, loadContent, panel, step, _ref2;
     panel = document.querySelector("#panels > .panel:nth-of-type(2)");
     if ((panel != null) && !this.props.composing) {
       panel.scrollTop = 0;
@@ -6529,10 +6502,11 @@ MessageContent = React.createClass({
     if (this.props.messageDisplayHTML && this.refs.content) {
       frame = this.refs.content.getDOMNode();
       doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
+      checkResize = false;
       step = 0;
       loadContent = (function(_this) {
         return function(e) {
-          var updateHeight, _ref3;
+          var updateHeight, _ref3, _ref4;
           step = 0;
           doc = frame.contentDocument || ((_ref3 = frame.contentWindow) != null ? _ref3.document : void 0);
           if (doc != null) {
@@ -6544,17 +6518,22 @@ MessageContent = React.createClass({
               if (height < 60) {
                 frame.style.height = "60px";
               } else {
-                frame.style.height = "" + (height + 40) + "px";
+                frame.style.height = "" + (height + 60) + "px";
               }
               step++;
-              if (step > 10) {
+              if (checkResize && step > 10) {
                 doc.body.removeEventListener('load', loadContent);
                 return (_ref4 = frame.contentWindow) != null ? _ref4.removeEventListener('resize') : void 0;
               }
             };
             updateHeight();
             setTimeout(updateHeight, 1000);
-            return doc.body.onload = updateHeight;
+            doc.body.onload = updateHeight;
+            if (checkResize) {
+              frame.contentWindow.onresize = updateHeight;
+              window.onresize = updateHeight;
+              return (_ref4 = frame.contentWindow) != null ? _ref4.addEventListener('resize', updateHeight, true) : void 0;
+            }
           } else {
             return _this.props.displayHTML(false);
           }
@@ -6605,7 +6584,7 @@ AttachmentPreview = React.createClass({
     }) : button({
       className: 'btn btn-default btn-lg',
       onClick: toggleDisplay
-    }, this.props.file.fileName));
+    }, this.props.file.generatedFileName));
   }
 });
 });
@@ -10810,9 +10789,8 @@ module.exports = {
 var DomUtils;
 
 module.exports = DomUtils = {
-  isVisible: function(node, before) {
-    var height, margin, rect, width;
-    margin = before ? 40 : 0;
+  isVisible: function(node) {
+    var height, rect, width;
     rect = node.getBoundingClientRect();
     height = window.innerHeight || document.documentElement.clientHeight;
     width = window.innerWidth || document.documentElement.clientWidth;
@@ -10864,6 +10842,20 @@ module.exports = MessageUtils = {
       res.push(MessageUtils.displayAddress(item, full));
     }
     return res.join(", ");
+  },
+  parseAddress: function(text) {
+    var address, match;
+    text = text.trim();
+    if (match = text.match(/"{0,1}(.*)"{0,1} <(.*)>/)) {
+      return address = {
+        name: match[1],
+        address: match[2]
+      };
+    } else {
+      return address = {
+        address: text.replace(/^\s*/, '')
+      };
+    }
   },
   getReplyToAddress: function(message) {
     var from, reply;

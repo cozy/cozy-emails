@@ -808,6 +808,9 @@ textarea:active,
 .conversation .att-preview img {
   padding: 0.5em;
 }
+.conversation .att-preview button {
+  margin: 0.5em;
+}
 .conversation #email-compose {
   margin-top: 2em;
   padding-top: 1em;
