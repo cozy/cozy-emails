@@ -728,4 +728,4 @@ AttachmentPreview = React.createClass
                 button
                     className: 'btn btn-default btn-lg'
                     onClick: toggleDisplay
-                    @props.file.fileName
+                    @props.file.generatedFileName
