@@ -25,7 +25,7 @@ casper.test.begin 'List action', (test) ->
             casper.evaluate ->
                 window.cozyMails.setSetting 'displayConversation', true
             casper.cozy.selectAccount "DoveCot", "Test Folder", ->
-                test.assertElementCount '.message-list .badge.conversation-length', 2, 'Badges'
+                test.assertElementCount '.message-list .badge.conversation-length', 1, 'Badges'
                 badges = casper.fetchText "#{base} .badge.conversation-length"
                 test.assertEquals badges, '5', 'Badges value'
                 infos = casper.getElementInfo base

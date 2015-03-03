@@ -31,6 +31,7 @@ module.exports = React.createClass
             headers: false
             messageDisplayHTML:   @props.settings.get 'messageDisplayHTML'
             messageDisplayImages: @props.settings.get 'messageDisplayImages'
+            currentMessageID: null
         }
 
     propTypes:
@@ -117,15 +118,14 @@ module.exports = React.createClass
 
     _markRead: (message) ->
         # Hack to prevent infinite loop if server side mark as read fails
-        if @_currentMessageId is message.get 'id'
-            return
-        @_currentMessageId = message.get 'id'
-
-        # Mark message as seen if needed
-        flags = message.get('flags').slice()
-        if flags.indexOf(MessageFlags.SEEN) is -1
-            flags.push MessageFlags.SEEN
-            MessageActionCreator.updateFlag message, flags
+        messageID = message.get 'id'
+        if @state.currentMessageID isnt messageID
+            @setState currentMessageID: messageID
+            # Mark message as seen if needed
+            flags = message.get('flags').slice()
+            if flags.indexOf(MessageFlags.SEEN) is -1
+                flags.push MessageFlags.SEEN
+                MessageActionCreator.updateFlag message, flags
 
     prepareHTML: (prepared) ->
         messageDisplayHTML = true
