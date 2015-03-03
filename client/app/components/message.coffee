@@ -81,20 +81,20 @@ module.exports = React.createClass
                 text = toMarkdown html
 
             if text?
-                rich = text.replace urls, '<a href="$1" target="_blank">$1</a>', 'gim'
-                rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>')
-                rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>')
-                rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>')
-                rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>')
-                rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim')
+                rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
+                rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>'
+                rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>'
+                rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>'
+                rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span>'
+                rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span>'
 
         return {
-            id         : message.get('id')
-            attachments: message.get('attachments')
-            flags      : message.get('flags') or []
-            from       : message.get('from')
-            to         : message.get('to')
-            cc         : message.get('cc')
+            id         : message.get 'id'
+            attachments: message.get 'attachments'
+            flags      : message.get 'flags' or []
+            from       : message.get 'from'
+            to         : message.get 'to'
+            cc         : message.get 'cc'
             fullHeaders: fullHeaders
             text       : text
             rich       : rich
@@ -446,7 +446,8 @@ module.exports = React.createClass
                                         span className: 'fa fa-long-arrow-right'
 
     renderAttachments: (attachments) ->
-        files = attachments.filter (file) -> return MessageUtils.getAttachmentType(file.contentType) is 'image'
+        files = attachments.filter (file) ->
+            return MessageUtils.getAttachmentType(file.contentType) is 'image'
         if files.length is 0
             return
 
@@ -656,7 +657,11 @@ MessageContent = React.createClass
         if @props.messageDisplayHTML and @refs.content
             frame = @refs.content.getDOMNode()
             doc = frame.contentDocument or frame.contentWindow?.document
+            checkResize = false # disabled for now
             step = 0
+            # Function called on frame load
+            # Inject HTML content of the message inside the frame, then
+            # update frame height to remove scrollbar
             loadContent = (e) =>
                 step = 0
                 doc = frame.contentDocument or frame.contentWindow?.document
@@ -670,20 +675,25 @@ MessageContent = React.createClass
                         else
                             frame.style.height = "#{height + 60}px"
                         step++
-                        # In Chrome, onresize loops
-                        if step > 10
+                        # Prevent infinite loop on onresize event
+                        if checkResize and step > 10
 
                             doc.body.removeEventListener 'load', loadContent
                             frame.contentWindow?.removeEventListener 'resize'
 
                     updateHeight()
+                    # some browsers don't fire event when remote fonts are loaded
+                    # so we need to wait a little and check the frame height again
                     setTimeout updateHeight, 1000
+
+                    # Update frame height on load
                     doc.body.onload = updateHeight
-                    #frame.contentWindow.onresize = updateHeight
-                    #window.onresize = updateHeight
-                    # In Chrome, addEventListener is forbidden by iframe sandboxing
-                    #doc.body.addEventListener 'load', updateHeight, true
-                    #frame.contentWindow?.addEventListener 'resize', updateHeight, true
+
+                    # disabled for now
+                    if checkResize
+                        frame.contentWindow.onresize = updateHeight
+                        window.onresize = updateHeight
+                        frame.contentWindow?.addEventListener 'resize', updateHeight, true
                 else
                     # try to display text only
                     @props.displayHTML false

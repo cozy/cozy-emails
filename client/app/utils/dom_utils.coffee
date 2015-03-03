@@ -1,8 +1,11 @@
 
 module.exports = DomUtils =
 
-    isVisible: (node, before) ->
-        margin = if before then 40 else 0
+    # Check if an element is inside visible viewport
+    # @params DOMElement node
+    isVisible: (node) ->
+        # Get the element bounding client rect and check if it's inside
+        # visible viewport
         rect   = node.getBoundingClientRect()
         height = window.innerHeight or document.documentElement.clientHeight
         width  = window.innerWidth  or document.documentElement.clientWidth

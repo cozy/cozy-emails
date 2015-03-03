@@ -153,19 +153,21 @@ module.exports = MailsInput = React.createClass
             return false
 
     onKeyDown: (evt) ->
+        count    = @state.contacts?.count()
+        selected = @state.selected
         switch evt.key
             when "Enter"
                 if @state.contacts?.count() > 0
-                    contact = @state.contacts.slice(@state.selected).first()
+                    contact = @state.contacts.slice(selected).first()
                     @onContact contact
                 else
                     @onQuery()
                 evt.preventDefault()
                 return false
             when "ArrowUp"
-                @setState selected: if @state.selected is 0 then @state.contacts.count() - 1 else @state.selected - 1
+                @setState selected: if selected is 0 then count - 1 else selected - 1
             when "ArrowDown"
-                @setState selected: if @state.selected is (@state.contacts.count() - 1) then 0 else @state.selected + 1
+                @setState selected: if selected is (count - 1) then 0 else selected + 1
             when "Backspace"
                 node = @refs.contactInput.getDOMNode()
                 node.value = node.value.trim()
@@ -179,8 +181,8 @@ module.exports = MailsInput = React.createClass
                     return true
 
     onBlur: ->
-        # We must use a timeout, otherwise, when user click inside contact list, blur is triggered first
-        # and the click event lost. Dirty hack
+        # We must use a timeout, otherwise, when user click inside contact list,
+        # blur is triggered first and the click event lost. Dirty hack
         setTimeout =>
             # if user cancel compose, component may be unmounted when the timeout is fired
             if @isMounted()
