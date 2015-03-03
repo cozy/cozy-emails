@@ -31,23 +31,28 @@ module.exports = React.createClass
             headers: false
             messageDisplayHTML:   @props.settings.get 'messageDisplayHTML'
             messageDisplayImages: @props.settings.get 'messageDisplayImages'
+            currentMessageID: null
         }
 
     propTypes:
-        accounts          : React.PropTypes.object.isRequired
-        active            : React.PropTypes.bool
-        inConversation    : React.PropTypes.bool
-        key               : React.PropTypes.string.isRequired
-        mailboxes         : React.PropTypes.object.isRequired
-        message           : React.PropTypes.object.isRequired
-        next              : React.PropTypes.object
-        prev              : React.PropTypes.object
-        selectedAccount   : React.PropTypes.object.isRequired
-        selectedMailboxID : React.PropTypes.string.isRequired
-        settings          : React.PropTypes.object.isRequired
+        accounts               : React.PropTypes.object.isRequired
+        active                 : React.PropTypes.bool
+        inConversation         : React.PropTypes.bool
+        key                    : React.PropTypes.string.isRequired
+        mailboxes              : React.PropTypes.object.isRequired
+        message                : React.PropTypes.object.isRequired
+        nextMessageID          : React.PropTypes.string
+        nextConversationID     : React.PropTypes.string
+        prevMessageID          : React.PropTypes.string
+        prevConversationID     : React.PropTypes.string
+        selectedAccountID      : React.PropTypes.string.isRequired
+        selectedAccountLogin   : React.PropTypes.string.isRequired
+        selectedMailboxID      : React.PropTypes.string.isRequired
+        settings               : React.PropTypes.object.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        should = not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return should
 
     _prepareMessage: ->
         message = @props.message
@@ -60,37 +65,37 @@ module.exports = React.createClass
             else
                 fullHeaders.push "#{key}: #{value}"
 
-        text = message.get 'text'
-        html = message.get 'html'
-        urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
-        # @TODO Do we want to convert text only messages to HTML ?
-        # /!\ if messageDisplayHTML is set, this method should always return
-        # a value fo html, otherwise the content of the email flashes
-        if text and not html and @state.messageDisplayHTML
-            try
-                html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
-            catch e
-                console.log "Error converting text message to Markdown: #{e}"
-                html = "<div class='text'>#{text}</div>" #markdown.toHTML text
+        if @state.active
+            text = message.get 'text'
+            html = message.get 'html'
+            urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
+            # @TODO Do we want to convert text only messages to HTML ?
+            # /!\ if messageDisplayHTML is set, this method should always return
+            # a value fo html, otherwise the content of the email flashes
+            if text? and not html? and @state.messageDisplayHTML
+                try
+                    html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
+                catch e
+                    html = "<div class='text'>#{text}</div>" #markdown.toHTML text
 
-        if html and not text and not @state.messageDisplayHTML
-            text = toMarkdown html
+            if html? and not text? and not @state.messageDisplayHTML
+                text = toMarkdown html
 
-        if text
-            rich = text.replace urls, '<a href="$1" target="_blank">$1</a>', 'gim'
-            rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>')
-            rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>')
-            rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>')
-            rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>')
-            rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim')
+            if text?
+                rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
+                rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>'
+                rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>'
+                rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>'
+                rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span>'
+                rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span>'
 
         return {
-            id         : message.get('id')
-            attachments: message.get('attachments')
-            flags      : message.get('flags') or []
-            from       : message.get('from')
-            to         : message.get('to')
-            cc         : message.get('cc')
+            id         : message.get 'id'
+            attachments: message.get 'attachments'
+            flags      : message.get 'flags' or []
+            from       : message.get 'from'
+            to         : message.get 'to'
+            cc         : message.get 'cc'
             fullHeaders: fullHeaders
             text       : text
             rich       : rich
@@ -113,20 +118,20 @@ module.exports = React.createClass
 
     _markRead: (message) ->
         # Hack to prevent infinite loop if server side mark as read fails
-        if @_currentMessageId is message.get 'id'
-            return
-        @_currentMessageId = message.get 'id'
-
-        # Mark message as seen if needed
-        flags = message.get('flags').slice()
-        if flags.indexOf(MessageFlags.SEEN) is -1
-            flags.push MessageFlags.SEEN
-            MessageActionCreator.updateFlag message, flags
+        messageID = message.get 'id'
+        if @state.currentMessageID isnt messageID
+            @setState currentMessageID: messageID
+            # Mark message as seen if needed
+            flags = message.get('flags').slice()
+            if flags.indexOf(MessageFlags.SEEN) is -1
+                flags.push MessageFlags.SEEN
+                MessageActionCreator.updateFlag message, flags
 
     prepareHTML: (prepared) ->
         messageDisplayHTML = true
         parser = new DOMParser()
         html   = """<html><head>
+                <link rel="stylesheet" href="/fonts/fonts.css" />
                 <link rel="stylesheet" href="./mail_stylesheet.css" />
                 <style>body { visibility: hidden; }</style>
             </head><body>#{prepared.html}</body></html>"""
@@ -138,7 +143,7 @@ module.exports = React.createClass
             doc.documentElement.innerHTML = html
 
         if not doc
-            console.log "Unable to parse HTML content of message"
+            console.error "Unable to parse HTML content of message"
             messageDisplayHTML = false
 
         if doc and not @state.messageDisplayImages
@@ -192,7 +197,8 @@ module.exports = React.createClass
                     @renderToolbox message.get('id'), prepared
                     @renderCompose()
                     MessageContent
-                        message: message
+                        ref: 'messageContent'
+                        messageID: message.get 'id'
                         messageDisplayHTML: messageDisplayHTML
                         html: @_htmlContent
                         text: prepared.text
@@ -264,6 +270,7 @@ module.exports = React.createClass
                 if hasAttachments
                     div className: 'col-md-4',
                         FilePicker
+                            ref: 'filePicker'
                             editable: false
                             value: prepared.attachments
                             messageID: @props.message.get 'id'
@@ -302,10 +309,12 @@ module.exports = React.createClass
     renderCompose: ->
         if @state.composing
             Compose
+                ref             : 'compose'
                 inReplyTo       : @props.message
                 accounts        : @props.accounts
                 settings        : @props.settings
-                selectedAccount : @props.selectedAccount
+                selectedAccountID    : @props.selectedAccountID
+                selectedAccountLogin : @props.selectedAccountLogin
                 action          : @state.composeAction
                 layout          : 'second'
                 callback: (error) =>
@@ -325,22 +334,22 @@ module.exports = React.createClass
 
         conversationID = @props.message.get 'conversationID'
 
-        getParams = (message) =>
+        getParams = (messageID, conversationID) =>
             if @props.settings.get('displayConversation')
                 return {
                     action : 'conversation'
                     parameters:
-                        messageID : message.get 'id'
-                        conversationID: message.get 'convrsationID'
+                        messageID : messageID
+                        conversationID: conversationID
                 }
             else
                 return {
                     action : 'message'
                     parameters:
-                        messageID : message.get 'id'
+                        messageID : messageID
                 }
-        if @props.prev?
-            params = getParams @props.prev
+        if @props.prevMessageID?
+            params = getParams @props.prevMessageID, @props.prevConversationID
             prev =
                 direction: 'second'
                 action: params.action
@@ -348,8 +357,8 @@ module.exports = React.createClass
             prevUrl =  @buildUrl prev
             displayPrev = =>
                 @redirect prev
-        if @props.next?
-            params = getParams @props.next
+        if @props.nextMessageID?
+            params = getParams @props.nextMessageID, @props.nextConversationID
             next =
                 direction: 'second'
                 action: params.action
@@ -410,10 +419,12 @@ module.exports = React.createClass
                                     className: 'tool-long',
                                     t 'mail action delete'
                     ToolboxMove
+                        ref: 'toolboxMove'
                         mailboxes: @props.mailboxes
                         onMove: @onMove
                         direction: 'right'
                     ToolboxActions
+                        ref: 'toolboxActions'
                         mailboxes: @props.mailboxes
                         isSeen: isSeen
                         isFlagged: isFlagged
@@ -421,6 +432,7 @@ module.exports = React.createClass
                         messageID: id
                         message: @props.message
                         onMark: @onMark
+                        onMove: @onMove
                         onConversation: @onConversation
                         onHeaders: @onHeaders
                         direction: 'right'
@@ -434,14 +446,18 @@ module.exports = React.createClass
                                         span className: 'fa fa-long-arrow-right'
 
     renderAttachments: (attachments) ->
-        files = attachments.filter (file) -> return MessageUtils.getAttachmentType(file.contentType) is 'image'
+        files = attachments.filter (file) ->
+            return MessageUtils.getAttachmentType(file.contentType) is 'image'
         if files.length is 0
             return
 
         div className: 'att-previews',
             h4 null, t 'message preview title'
             files.map (file) ->
-                AttachmentPreview file: file, key: file.checksum
+                AttachmentPreview
+                    ref: 'attachmentPreview'
+                    file: file,
+                    key: file.checksum
 
     toggleHeaders: (e) ->
         e.preventDefault()
@@ -462,23 +478,26 @@ module.exports = React.createClass
                 @setState { active: true, headers: false }
 
     displayNextMessage: ->
-        if @props.next?
-            next = @props.next
-        else next = @props.prev
-        if next?
+        if @props.nextMessageID?
+            nextMessageID      = @props.nextMessageID
+            nextConversationID = @props.nextConversationID
+        else
+            nextMessageID      = @props.prevMessageID
+            nextConversationID = @props.prevConversationID
+        if nextMessageID
             if @props.settings.get('displayConversation')
                 @redirect
                     direction: 'second'
                     action : 'conversation'
                     parameters:
-                        messageID : next.get 'id'
-                        conversationID: next.get 'convrsationID'
+                        messageID : nextMessageID
+                        conversationID: nextConversationID
             else
                 @redirect
                     direction: 'second'
                     action : 'message'
                     parameters:
-                        messageID : next.get 'id'
+                        messageID : nextMessageID
         else
             @redirect
                 direction: 'first'
@@ -511,16 +530,15 @@ module.exports = React.createClass
 
     onMove: (args) ->
         newbox = args.target.dataset.value
+        oldbox = @props.selectedMailboxID
         if args.target.dataset.conversation?
-            conversationID = @props.message.get('conversationID')
-            ConversationActionCreator.move conversationID, newbox, (error) =>
+            ConversationActionCreator.move @props.message, oldbox, newbox, (error) =>
                 if error?
                     alertError "#{t("conversation move ko")} #{error}"
                 else
                     alertSuccess t "conversation move ok"
                     @displayNextMessage()
         else
-            oldbox = @props.selectedMailboxID
             MessageActionCreator.move @props.message, oldbox, newbox, (error) =>
                 if error?
                     alertError "#{t("message action move ko")} #{error}"
@@ -610,8 +628,8 @@ MessageContent = React.createClass
                                 onClick: @props.displayImages,
                                 t 'message images display'
                 iframe
-                    'data-message-id': @props.message.get 'id'
-                    name: "frame-#{@props.message.get 'id'}"
+                    'data-message-id': @props.messageID
+                    name: "frame-#{@props.messageID}"
                     className: 'content',
                     ref: 'content',
                     allowTransparency: true,
@@ -639,32 +657,43 @@ MessageContent = React.createClass
         if @props.messageDisplayHTML and @refs.content
             frame = @refs.content.getDOMNode()
             doc = frame.contentDocument or frame.contentWindow?.document
+            checkResize = false # disabled for now
             step = 0
+            # Function called on frame load
+            # Inject HTML content of the message inside the frame, then
+            # update frame height to remove scrollbar
             loadContent = (e) =>
                 step = 0
                 doc = frame.contentDocument or frame.contentWindow?.document
                 if doc?
                     doc.documentElement.innerHTML = @props.html
-                    window.cozyMails.customEvent "MESSAGE_LOADED", @props.message.toJS()
+                    window.cozyMails.customEvent "MESSAGE_LOADED", @props.messageID
                     updateHeight = (e) ->
-                        height = doc.body.getBoundingClientRect().height
-                        frame.style.height = "#{height * 1.2}px"
+                        height = doc.documentElement.scrollHeight
+                        if height < 60
+                            frame.style.height = "60px"
+                        else
+                            frame.style.height = "#{height + 60}px"
                         step++
-                        # In Chrome, onresize loops
-                        if step > 10
+                        # Prevent infinite loop on onresize event
+                        if checkResize and step > 10
 
                             doc.body.removeEventListener 'load', loadContent
                             frame.contentWindow?.removeEventListener 'resize'
 
-                    frame.style.height = "32px"
                     updateHeight()
+                    # some browsers don't fire event when remote fonts are loaded
+                    # so we need to wait a little and check the frame height again
                     setTimeout updateHeight, 1000
+
+                    # Update frame height on load
                     doc.body.onload = updateHeight
-                    #frame.contentWindow.onresize = updateHeight
-                    #window.onresize = updateHeight
-                    # In Chrome, addEventListener is forbidden by iframe sandboxing
-                    #doc.body.addEventListener 'load', updateHeight, true
-                    #frame.contentWindow?.addEventListener 'resize', updateHeight, true
+
+                    # disabled for now
+                    if checkResize
+                        frame.contentWindow.onresize = updateHeight
+                        window.onresize = updateHeight
+                        frame.contentWindow?.addEventListener 'resize', updateHeight, true
                 else
                     # try to display text only
                     @props.displayHTML false
@@ -674,7 +703,7 @@ MessageContent = React.createClass
             else
                 loadContent()
         else
-            window.cozyMails.customEvent "MESSAGE_LOADED", @props.message.toJS()
+            window.cozyMails.customEvent "MESSAGE_LOADED", @props.messageID
 
 
     componentDidMount: ->
@@ -709,4 +738,4 @@ AttachmentPreview = React.createClass
                 button
                     className: 'btn btn-default btn-lg'
                     onClick: toggleDisplay
-                    @props.file.fileName
+                    @props.file.generatedFileName

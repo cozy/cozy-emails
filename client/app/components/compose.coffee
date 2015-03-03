@@ -24,14 +24,15 @@ module.exports = Compose = React.createClass
     ]
 
     propTypes:
-        selectedAccount: React.PropTypes.object.isRequired
-        layout:          React.PropTypes.string.isRequired
-        accounts:        React.PropTypes.object.isRequired
-        message:         React.PropTypes.object
-        action:          React.PropTypes.string
-        callback:        React.PropTypes.func
-        onCancel:        React.PropTypes.func
-        settings:        React.PropTypes.object.isRequired
+        selectedAccountID:    React.PropTypes.string.isRequired
+        selectedAccountLogin: React.PropTypes.string.isRequired
+        layout:               React.PropTypes.string.isRequired
+        accounts:             React.PropTypes.object.isRequired
+        message:              React.PropTypes.object
+        action:               React.PropTypes.string
+        callback:             React.PropTypes.func
+        onCancel:             React.PropTypes.func
+        settings:             React.PropTypes.object.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
@@ -95,7 +96,6 @@ module.exports = Compose = React.createClass
                         AccountPicker
                             accounts: @props.accounts
                             valueLink: @linkState 'accountID'
-                            type: 'address'
                 div className: 'clearfix', null
 
                 MailsInput
@@ -236,9 +236,9 @@ module.exports = Compose = React.createClass
 
         # new draft
         else
-            state = MessageUtils.makeReplyMessage @props.selectedAccount.get('login'),
+            state = MessageUtils.makeReplyMessage @props.selectedAccountLogin,
                 @props.inReplyTo, @props.action, @props.settings.get('composeInHTML')
-            state.accountID ?= @props.selectedAccount.get 'id'
+            state.accountID ?= @props.selectedAccountID
 
         state.sending = false
         state.saving  = false
@@ -257,14 +257,11 @@ module.exports = Compose = React.createClass
 
     _doSend: (isDraft) ->
 
-        account = @props.accounts.get @state.accountID
+        account = @props.accounts[@state.accountID]
 
         from =
-            name: account?.get('name') or undefined
-            address: account.get('login')
-
-        unless ~from.address.indexOf '@'
-            from.address += '@' + account.get('imapServer')
+            name: account.name or undefined
+            address: account.login
 
         message =
             id          : @state.id
@@ -363,7 +360,7 @@ module.exports = Compose = React.createClass
                         @redirect
                             direction: 'first'
                             action: 'account.mailbox.messages'
-                            parameters: [@props.selectedAccount.get('id'), @props.selectedMailboxID]
+                            parameters: [@props.selectedAccountID, @props.selectedMailboxID]
                             fullWidth: true
 
     onToggleCc: (e) ->

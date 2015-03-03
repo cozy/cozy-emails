@@ -77,6 +77,49 @@ Settings.get = function(callback) {
   });
 };
 
+Settings.getDefault = function(callback) {
+  var settings;
+  settings = {
+    composeInHTML: true,
+    composeOnTop: false,
+    desktopNotifications: false,
+    displayConversation: true,
+    displayPreview: true,
+    layoutStyle: 'three',
+    listStyle: 'default',
+    messageConfirmDelete: true,
+    messageDisplayHTML: true,
+    messageDisplayImages: false,
+    plugins: {
+      gallery: {
+        name: "Gallery",
+        active: true
+      },
+      mailkeys: {
+        name: "Keyboard shortcuts",
+        active: true
+      },
+      mediumeditor: {
+        name: "Medium Editor",
+        active: true
+      },
+      minislate: {
+        name: "Slate editor",
+        active: false
+      },
+      sample: {
+        name: "Sample plugin",
+        active: false
+      },
+      vcard: {
+        name: "VCard",
+        active: false
+      }
+    }
+  };
+  return callback(null, settings);
+};
+
 Settings.set = function(changes, callback) {
   return Settings.getInstance(function(err, instance) {
     if (err) {

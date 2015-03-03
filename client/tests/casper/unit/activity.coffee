@@ -151,21 +151,19 @@ casper.test.begin 'Test Activities', (test) ->
             res = res.shift()
             test.assert (not res.error?), "No error"
             test.assert Array.isArray(res.result), "Got contacts"
-            test.assert res.result.length is (nbContacts + contacts.length),
-                "Contact added"
+            test.assertEquals res.result.length, (nbContacts + contacts.length), "Contact added"
 
             for contact in res.result
                 test.assert /^Dr /.test(contact.fn), "Name ok"
 
     casper.then ->
         test.comment "Search by address for contacts created"
-        options = getOptions 'search', 'query', 'cozytest'
+        options = getOptions 'search', 'query', 'cozytest.cc'
         doActivity options, (res) ->
             res = res.shift()
             test.assert (not res.error?), "No error"
             test.assert Array.isArray(res.result), "Got contacts"
-            test.assert res.result.length is (nbContacts + contacts.length),
-                "Contact added"
+            test.assertEquals res.result.length, (nbContacts + contacts.length), "Contact added"
 
             toDelete = []
             for contact in res.result

@@ -44,7 +44,9 @@ casper.cozy.selectAccount = (account, box, cb) ->
             casper.test.fail "Unable to find mailbox #{box} in #{account}"
         casper.click "[data-reactid='#{id}'] .item-label"
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
-            casper.waitForSelector ".message-list li.message", ->
+            infos = casper.getElementInfo "[data-reactid='#{id}'].active [data-mailbox-id]"
+            mailboxID = infos.attributes['data-mailbox-id']
+            casper.waitForSelector ".message-list[data-mailbox-id='#{mailboxID}'] li.message", ->
                 if cb?
                     cb()
             , ->
@@ -74,7 +76,7 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
             casper.click subjectSel
             casper.waitForSelector subjectDone, ->
                 if not (typeof messageID is 'string')
-                    infos = casper.getElementInfo subjectSel
+                    infos = casper.getElementInfo subjectDone
                     messageID = infos.attributes['data-message-id']
                 cb(subject, messageID)
             , ->
@@ -85,13 +87,16 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
 if not casper.cozy.startUrl?
     casper.die "Please set the base URL into COZY_URL environment variable"
 
+casper.getEngine = ->
+    if typeof slimer is 'object' then 'slimer' else 'phantom'
+
 exports.init = (casper) ->
     dev = casper.cli.options.dev?
 
     if dev
         casper.options.verbose = true
         casper.options.logLevel = 'debug'
-    casper.options.waitTimeout = 10000
+    casper.options.waitTimeout = 20000
     casper.options.timeout = 200000
     casper.options.viewportSize = {width: 1024, height: 768}
     casper.on 'exit', (res) ->

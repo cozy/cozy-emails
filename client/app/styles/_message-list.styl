@@ -170,19 +170,19 @@
       display flex
       justify-content flex-start
       align-items left
+      /* Fixed toolbar, see https://github.com/cozy/cozy-emails/issues/191
       position fixed
       background-color white
       top 0
       padding .5em 0
       z-index 1000
-
-      //.message-list-action
-      //  margin 0 1em 0 0
+      */
 
     .message-list-actions + *
         clear both
         margin-top 2.5em
 
+/* Fixed toolbar, see https://github.com/cozy/cozy-emails/issues/191
 #panels.three .message-list-actions
   width 34%
 #panels.three.full .message-list-actions
@@ -192,6 +192,7 @@
 #panels.horizontal .message-list-actions,
 #panels.vertical.full .message-list-actions
   width 89%
+*/
 
 .message-list.compact
     .message

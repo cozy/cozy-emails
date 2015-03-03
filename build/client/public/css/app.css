@@ -808,6 +808,9 @@ textarea:active,
 .conversation .att-preview img {
   padding: 0.5em;
 }
+.conversation .att-preview button {
+  margin: 0.5em;
+}
 .conversation #email-compose {
   margin-top: 2em;
   padding-top: 1em;
@@ -919,6 +922,9 @@ textarea.compose-input {
 }
 .compose-from .caret {
   margin-left: 0.5em;
+}
+.account-picker .dropdown-menu {
+  top: auto;
 }
 .compose-cc,
 .compose-bcc {
@@ -1368,28 +1374,17 @@ textarea.compose-input {
   -ms-flex-align: left;
   -webkit-align-items: left;
   align-items: left;
-  position: fixed;
-  background-color: #fff;
-  top: 0;
-  padding: 0.5em 0;
-  z-index: 1000;
+/* Fixed toolbar, see https://github.com/cozy/cozy-emails/issues/191
+      position fixed
+      background-color white
+      top 0
+      padding .5em 0
+      z-index 1000
+      */
 }
 .message-list .message-list-actions + * {
   clear: both;
   margin-top: 2.5em;
-}
-#panels.three .message-list-actions {
-  width: 34%;
-}
-#panels.three.full .message-list-actions {
-  width: 72%;
-}
-#panels.vertical .message-list-actions {
-  width: 43%;
-}
-#panels.horizontal .message-list-actions,
-#panels.vertical.full .message-list-actions {
-  width: 89%;
 }
 .message-list.compact .message {
   height: 1.75em;

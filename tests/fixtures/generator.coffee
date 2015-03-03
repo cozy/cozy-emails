@@ -14,7 +14,8 @@ mailboxes = {}
 for box in require './mailboxes.json'
     mailboxes[box.accountID] = [] unless mailboxes[box.accountID]?
     # test folder will only be used for loaded messages
-    mailboxes[box.accountID].push box unless box.label is "Test Folder"
+    # we don't want messages in trash to make testing message deletion easier
+    mailboxes[box.accountID].push box unless box.label is "Test Folder" or box.label is "Trash"
 
 numberOfEmails = process.argv[2] or 100
 

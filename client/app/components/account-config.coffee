@@ -678,6 +678,14 @@ AccountConfigMailboxes = React.createClass
 
     _propsToState: (props) ->
         state = props
+        state.mailboxesFlat = {}
+        if state.mailboxes.value isnt ''
+            state.mailboxes.value.map (mailbox, key) ->
+                id = mailbox.get 'id'
+                state.mailboxesFlat[id] = {}
+                ['id', 'label', 'depth'].map (prop) ->
+                    state.mailboxesFlat[id][prop] = mailbox.get prop
+            .toJS()
         return state
 
     getInitialState: ->
@@ -755,8 +763,8 @@ AccountConfigMailboxes = React.createClass
                     div className: 'col-xs-2 text-center',
                         MailboxList
                             allowUndefined: true
-                            mailboxes: @state.mailboxes.value
-                            selectedMailbox: @state.newMailboxParent
+                            mailboxes: @state.mailboxesFlat
+                            selectedMailboxID: @state.newMailboxParent
                             onChange: (mailbox) =>
                                 @setState newMailboxParent: mailbox
 
@@ -779,8 +787,8 @@ AccountConfigMailboxes = React.createClass
                 div className: 'col-sm-3',
                     MailboxList
                         allowUndefined: true
-                        mailboxes: @state.mailboxes.value
-                        selectedMailbox: @state[box].value
+                        mailboxes: @state.mailboxesFlat
+                        selectedMailboxID: @state[box].value
                         onChange: (mailbox) =>
                             # requestChange is asynchroneous, so we need to also call
                             # setState to only call onSubmet once state has really been updated

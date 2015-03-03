@@ -26,6 +26,16 @@ module.exports = MessageUtils =
             res.push(MessageUtils.displayAddress item, full)
         return res.join ", "
 
+    parseAddress: (text) ->
+        text = text.trim()
+        if match = text.match /"{0,1}(.*)"{0,1} <(.*)>/
+            address =
+                name: match[1]
+                address: match[2]
+        else
+            address =
+                address: text.replace(/^\s*/, '')
+
     getReplyToAddress: (message) ->
         reply = message.get 'replyTo'
         from = message.get 'from'

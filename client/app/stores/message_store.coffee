@@ -212,6 +212,11 @@ class MessageStore extends Store
                 sort : newOrder + sort.field
 
         handle ActionTypes.MESSAGE_ACTION, (action) ->
+            action.target = 'message'
+            _prevAction = action
+
+        handle ActionTypes.CONVERSATION_ACTION, (action) ->
+            action.target = 'conversation'
             _prevAction = action
 
         handle ActionTypes.MESSAGE_CURRENT, (value) ->

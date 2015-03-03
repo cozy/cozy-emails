@@ -4,9 +4,13 @@
 module.exports = ToolboxActions = React.createClass
     displayName: 'ToolboxActions'
 
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or
+               not(_.isEqual(nextProps, @props))
+
     render: ->
         direction = if @props.direction is 'right' then 'right' else 'left'
-        div className: 'btn-group btn-group-sm',
+        div className: 'menu-action btn-group btn-group-sm',
             button
                 className: 'btn btn-default dropdown-toggle more',
                 type: 'button',
@@ -76,22 +80,17 @@ module.exports = ToolboxActions = React.createClass
                 li
                     role: 'presentation',
                     t 'mail action conversation move'
-                @props.mailboxes.map (mailbox, key) =>
-                    @renderMailboxes mailbox, key, true
-                .toJS()
-                li role: 'presentation', className: 'divider'
+                for key, mailbox of @props.mailboxes when key isnt @props.selectedMailboxID
+                    @renderMailboxes mailbox, key
 
-    renderMailboxes: (mailbox, key, conversation) ->
-        # Don't display current mailbox
-        if mailbox.get('id') is @props.selectedMailboxID
-            return
+    renderMailboxes: (mailbox, key) ->
         pusher = ""
-        pusher += "--" for j in [1..mailbox.get('depth')] by 1
+        pusher += "--" for j in [1..mailbox.depth] by 1
         li role: 'presentation', key: key,
             a
                 role: 'menuitem',
-                onClick: @onMove,
+                onClick: @props.onMove,
                 'data-value': key,
-                'data-conversation': conversation,
-                "#{pusher}#{mailbox.get 'label'}"
+                'data-conversation': true,
+                "#{pusher}#{mailbox.label}"
 

@@ -10,30 +10,32 @@ module.exports = React.createClass
     onChange: (boxid) ->
         @props.onChange? boxid
 
+    shouldComponentUpdate: (nextProps, nextState) ->
+        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
     render: ->
-        selectedId = @props.selectedMailbox
-        if @props.mailboxes? and @props.mailboxes.length > 0
-            if selectedId?
-                selected = @props.mailboxes.get selectedId
+        selectedID = @props.selectedMailboxID
+        if @props.mailboxes? and Object.keys(@props.mailboxes).length > 0
+            if selectedID?
+                selected = @props.mailboxes[selectedID]
             div className: 'btn-group btn-group-sm dropdown pull-left',
                 button
                     className: 'btn btn-default dropdown-toggle',
                     type: 'button',
                     'data-toggle': 'dropdown',
-                    selected?.get('label') or t 'mailbox pick one'
+                    selected?.label or t 'mailbox pick one'
                         span className: 'caret', ''
                 ul className: 'dropdown-menu', role: 'menu',
-                    if @props.allowUndefined and selected
+                    if @props.allowUndefined and selected?
                         li
                             role: 'presentation',
                             key: null,
                             onClick: @onChange.bind(this, null),
                                 a role: 'menuitem', t 'mailbox pick null'
 
-                    @props.mailboxes.map (mailbox, key) =>
-                        if mailbox.get('id') isnt selectedId
+                    for key, mailbox of @props.mailboxes when key isnt @props.selectedMailboxID
+                        if key isnt selectedID
                             @getMailboxRender mailbox, key
-                    .toJS()
         else
             # no account selected
             div null, ""
@@ -46,11 +48,11 @@ module.exports = React.createClass
         # Mark nested levels with "--" because plain space
         # just doesn't work for some reason
         pusher = ""
-        pusher += "--" for i in [1..mailbox.get('depth')] by 1
+        pusher += "--" for i in [1..mailbox.depth] by 1
 
         li role: 'presentation', key: key, onClick: onChange,
             if url?
-                a href: url, role: 'menuitem', "#{pusher}#{mailbox.get 'label'}"
+                a href: url, role: 'menuitem', "#{pusher}#{mailbox.label}"
             else
-                a role: 'menuitem', "#{pusher}#{mailbox.get 'label'}"
+                a role: 'menuitem', "#{pusher}#{mailbox.label}"
 

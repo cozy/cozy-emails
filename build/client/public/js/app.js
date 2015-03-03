@@ -342,15 +342,22 @@ module.exports = {
       }
     });
   },
-  move: function(conversationID, to, callback) {
-    var conversation, observer, patches;
-    conversation = {
-      mailboxIDs: []
-    };
-    observer = jsonpatch.observe(conversation);
-    conversation.mailboxIDs.push(to);
+  move: function(message, from, to, callback) {
+    var msg, observer, patches;
+    msg = message.toJSON();
+    AppDispatcher.handleViewAction({
+      type: ActionTypes.CONVERSATION_ACTION,
+      value: {
+        id: msg.conversationID,
+        from: from,
+        to: to
+      }
+    });
+    observer = jsonpatch.observe(msg);
+    delete msg.mailboxIDs[from];
+    msg.mailboxIDs[to] = -1;
     patches = jsonpatch.generate(observer);
-    return XHRUtils.conversationPatch(conversationID, patches, function(error, messages) {
+    return XHRUtils.conversationPatch(msg.conversationID, patches, function(error, messages) {
       if (error == null) {
         AppDispatcher.handleViewAction({
           type: ActionTypes.RECEIVE_RAW_MESSAGES,
@@ -859,16 +866,20 @@ module.exports = {
     LayoutActionCreator = require('./layout_action_creator');
     action = MessageStore.getPrevAction();
     if (action != null) {
-      message = MessageStore.getByID(action.id);
-      return action.from.forEach((function(_this) {
-        return function(from) {
-          return _this.move(message, action.to, from, function(err) {
-            if (err == null) {
-              return LayoutActionCreator.notify(t('message undelete ok'));
-            }
-          });
-        };
-      })(this));
+      if (action.target === 'message') {
+        message = MessageStore.getByID(action.id);
+        return action.from.forEach((function(_this) {
+          return function(from) {
+            return _this.move(message, action.to, from, function(err) {
+              if (err == null) {
+                return LayoutActionCreator.notify(t('message undelete ok'));
+              }
+            });
+          };
+        })(this));
+      } else {
+        return LayoutActionCreator.alertError(t('app unimplemented'));
+      }
     } else {
       return LayoutActionCreator.alertError(t('message undelete error'));
     }
@@ -1825,6 +1836,17 @@ AccountConfigMailboxes = React.createClass({
   _propsToState: function(props) {
     var state;
     state = props;
+    state.mailboxesFlat = {};
+    if (state.mailboxes.value !== '') {
+      state.mailboxes.value.map(function(mailbox, key) {
+        var id;
+        id = mailbox.get('id');
+        state.mailboxesFlat[id] = {};
+        return ['id', 'label', 'depth'].map(function(prop) {
+          return state.mailboxesFlat[id][prop] = mailbox.get(prop);
+        });
+      }).toJS();
+    }
     return state;
   },
   getInitialState: function() {
@@ -1909,8 +1931,8 @@ AccountConfigMailboxes = React.createClass({
       className: 'col-xs-2 text-center'
     }, MailboxList({
       allowUndefined: true,
-      mailboxes: this.state.mailboxes.value,
-      selectedMailbox: this.state.newMailboxParent,
+      mailboxes: this.state.mailboxesFlat,
+      selectedMailboxID: this.state.newMailboxParent,
       onChange: (function(_this) {
         return function(mailbox) {
           return _this.setState({
@@ -1949,8 +1971,8 @@ AccountConfigMailboxes = React.createClass({
         className: 'col-sm-3'
       }, MailboxList({
         allowUndefined: true,
-        mailboxes: this.state.mailboxes.value,
-        selectedMailbox: this.state[box].value,
+        mailboxes: this.state.mailboxesFlat,
+        selectedMailboxID: this.state[box].value,
         onChange: (function(_this) {
           return function(mailbox) {
             var newState, value;
@@ -2250,8 +2272,11 @@ RouterMixin = require('../mixins/router_mixin');
 
 module.exports = React.createClass({
   displayName: 'AccountPicker',
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+  },
   render: function() {
-    if (accounts.length === 1) {
+    if (Object.keys(accounts).length === 1) {
       return this.renderNoChoice();
     } else {
       return this.renderPicker();
@@ -2264,12 +2289,8 @@ module.exports = React.createClass({
   },
   renderNoChoice: function() {
     var account, label;
-    account = this.props.accounts.get(this.props.valueLink.value);
-    if (this.props.type === 'address') {
-      label = "\"" + (account.get('name') || account.get('label')) + "\" <" + (account.get('login')) + ">";
-    } else {
-      label = account.get('label');
-    }
+    account = this.props.accounts[this.props.valueLink.value];
+    label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
     return p({
       className: 'form-control-static col-sm-6'
     }, label);
@@ -2277,14 +2298,12 @@ module.exports = React.createClass({
   renderPicker: function() {
     var account, accounts, key, label, value;
     accounts = this.props.accounts;
-    account = accounts.get(this.props.valueLink.value);
+    account = accounts[this.props.valueLink.value];
     value = this.props.valueLink.value;
-    if (this.props.type === 'address') {
-      label = "\"" + (account.get('name') || account.get('label')) + "\" <" + (account.get('login')) + ">";
-    } else {
-      label = account.get('label');
-    }
-    return div(null, span({
+    label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
+    return div({
+      className: 'account-picker'
+    }, span({
       className: 'compose-from dropdown-toggle',
       'data-toggle': 'dropdown'
     }, span({
@@ -2296,11 +2315,10 @@ module.exports = React.createClass({
       className: 'dropdown-menu',
       role: 'menu'
     }, (function() {
-      var _ref1, _results;
-      _ref1 = accounts.toJS();
+      var _results;
       _results = [];
-      for (key in _ref1) {
-        account = _ref1[key];
+      for (key in accounts) {
+        account = accounts[key];
         if (key !== value) {
           _results.push(this.renderAccount(key, account));
         }
@@ -2310,11 +2328,7 @@ module.exports = React.createClass({
   },
   renderAccount: function(key, account) {
     var label;
-    if (this.props.type === 'address') {
-      label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
-    } else {
-      label = account.label;
-    }
+    label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
     return li({
       role: 'presentation',
       key: key
@@ -2576,7 +2590,7 @@ module.exports = Application = React.createClass({
     return classes;
   },
   getPanelComponent: function(panelInfo, layout) {
-    var account, accountID, conversation, conversationID, conversationLength, conversationLengths, counterMessage, direction, emptyListMessage, error, favoriteMailboxes, fetching, isTrash, isWaiting, lengths, mailbox, mailboxID, mailboxes, message, messageID, messages, messagesCount, query, selectedAccount, selectedMailboxID, settings, tab, _ref2;
+    var account, accountID, conversation, conversationID, conversationLength, conversationLengths, counterMessage, direction, emptyListMessage, error, favoriteMailboxes, fetching, isTrash, isWaiting, lengths, mailbox, mailboxID, mailboxes, message, messageID, messages, messagesCount, nextMessage, prevMessage, query, ref, selectedAccount, selectedMailboxID, settings, tab, _ref2;
     if (panelInfo.action === 'account.mailbox.messages' || panelInfo.action === 'account.mailbox.messages.full' || panelInfo.action === 'search') {
       if (panelInfo.action === 'search') {
         accountID = null;
@@ -2638,7 +2652,7 @@ module.exports = Application = React.createClass({
         mailboxID: mailboxID,
         messageID: messageID,
         conversationID: conversationID,
-        mailboxes: this.state.mailboxes,
+        mailboxes: this.state.mailboxesFlat,
         settings: this.state.settings,
         fetching: fetching,
         refreshes: this.state.refreshes,
@@ -2651,6 +2665,7 @@ module.exports = Application = React.createClass({
         toggleMenu: this.toggleMenu
       });
     } else if (panelInfo.action === 'account.config') {
+      ref = "accountConfig";
       selectedAccount = AccountStore.getSelected();
       error = AccountStore.getError();
       isWaiting = AccountStore.isWaiting();
@@ -2669,10 +2684,12 @@ module.exports = Application = React.createClass({
         selectedAccount: selectedAccount,
         mailboxes: mailboxes,
         favoriteMailboxes: favoriteMailboxes,
-        tab: tab
+        tab: tab,
+        ref: ref
       });
     } else if (panelInfo.action === 'account.new') {
       return AccountConfig({
+        ref: "accountConfig",
         error: AccountStore.getError(),
         isWaiting: AccountStore.isWaiting()
       });
@@ -2689,19 +2706,24 @@ module.exports = Application = React.createClass({
           selectedMailboxID = Object.keys(message.get('mailboxIDs'))[0];
         }
       }
+      prevMessage = MessageStore.getPreviousMessage();
+      nextMessage = MessageStore.getNextMessage();
       return Conversation({
         key: 'conversation-' + conversationID,
         layout: layout,
         settings: this.state.settings,
-        accounts: this.state.accounts,
-        mailboxes: this.state.mailboxes,
-        selectedAccount: this.state.selectedAccount,
+        accounts: this.state.accountsFlat,
+        mailboxes: this.state.mailboxesFlat,
+        selectedAccountID: this.state.selectedAccount.get('id'),
+        selectedAccountLogin: this.state.selectedAccount.get('login'),
         selectedMailboxID: selectedMailboxID,
         message: message,
         conversation: conversation,
         conversationLength: conversationLength,
-        prev: MessageStore.getPreviousMessage(),
-        next: MessageStore.getNextMessage(),
+        prevMessageID: prevMessage != null ? prevMessage.get('id') : void 0,
+        prevConversationID: prevMessage != null ? prevMessage.get('conversationID') : void 0,
+        nextMessageID: nextMessage != null ? nextMessage.get('id') : void 0,
+        nextConversationID: nextMessage != null ? nextMessage.get('conversationID') : void 0,
         ref: 'conversation'
       });
     } else if (panelInfo.action === 'compose') {
@@ -2710,8 +2732,9 @@ module.exports = Application = React.createClass({
         action: null,
         inReplyTo: null,
         settings: this.state.settings,
-        accounts: this.state.accounts,
-        selectedAccount: this.state.selectedAccount,
+        accounts: this.state.accountsFlat,
+        selectedAccountID: this.state.selectedAccount.get('id'),
+        selectedAccountLogin: this.state.selectedAccount.get('login'),
         message: null,
         ref: 'compose'
       });
@@ -2723,8 +2746,9 @@ module.exports = Application = React.createClass({
         action: null,
         inReplyTo: null,
         settings: this.state.settings,
-        accounts: this.state.accounts,
-        selectedAccount: this.state.selectedAccount,
+        accounts: this.state.accountsFlat,
+        selectedAccountID: this.state.selectedAccount.get('id'),
+        selectedAccountLogin: this.state.selectedAccount.get('login'),
         selectedMailboxID: this.state.selectedMailboxID,
         message: message,
         ref: 'compose'
@@ -2732,14 +2756,15 @@ module.exports = Application = React.createClass({
     } else if (panelInfo.action === 'settings') {
       settings = this.state.settings;
       return Settings({
-        settings: settings
+        ref: 'settings',
+        settings: this.state.settings
       });
     } else {
       return div(null, 'Unknown component');
     }
   },
   getStateFromStores: function() {
-    var firstPanelInfo, selectedAccount, selectedAccountID, selectedMailboxID, _ref2;
+    var accounts, accountsFlat, firstPanelInfo, mailboxes, mailboxesFlat, selectedAccount, selectedAccountID, selectedMailboxID, _ref2;
     selectedAccount = AccountStore.getSelected();
     if (selectedAccount == null) {
       selectedAccount = AccountStore.getDefault();
@@ -2751,13 +2776,34 @@ module.exports = Application = React.createClass({
     } else {
       selectedMailboxID = null;
     }
+    accounts = AccountStore.getAll();
+    mailboxes = AccountStore.getSelectedMailboxes();
+    accountsFlat = {};
+    accounts.map(function(account) {
+      return accountsFlat[account.get('id')] = {
+        name: account.get('name'),
+        label: account.get('label'),
+        login: account.get('login')
+      };
+    }).toJS();
+    mailboxesFlat = {};
+    mailboxes.map(function(mailbox) {
+      var id;
+      id = mailbox.get('id');
+      mailboxesFlat[id] = {};
+      return ['id', 'label', 'depth'].map(function(prop) {
+        return mailboxesFlat[id][prop] = mailbox.get(prop);
+      });
+    }).toJS();
     return {
-      accounts: AccountStore.getAll(),
+      accounts: accounts,
+      accountsFlat: accountsFlat,
       selectedAccount: selectedAccount,
       isResponsiveMenuShown: false,
       alertMessage: LayoutStore.getAlert(),
-      mailboxes: AccountStore.getSelectedMailboxes(),
+      mailboxes: mailboxes,
       mailboxesSorted: AccountStore.getSelectedMailboxes(true),
+      mailboxesFlat: mailboxesFlat,
       selectedMailboxID: selectedMailboxID,
       selectedMailbox: AccountStore.getSelectedMailbox(selectedMailboxID),
       favoriteMailboxes: AccountStore.getSelectedFavorites(),
@@ -2854,7 +2900,8 @@ module.exports = Compose = React.createClass({
   displayName: 'Compose',
   mixins: [RouterMixin, React.addons.LinkedStateMixin],
   propTypes: {
-    selectedAccount: React.PropTypes.object.isRequired,
+    selectedAccountID: React.PropTypes.string.isRequired,
+    selectedAccountLogin: React.PropTypes.string.isRequired,
     layout: React.PropTypes.string.isRequired,
     accounts: React.PropTypes.object.isRequired,
     message: React.PropTypes.object,
@@ -2928,8 +2975,7 @@ module.exports = Compose = React.createClass({
       onClick: this.onToggleBcc
     }, t('compose toggle bcc'))), AccountPicker({
       accounts: this.props.accounts,
-      valueLink: this.linkState('accountID'),
-      type: 'address'
+      valueLink: this.linkState('accountID')
     }))), div({
       className: 'clearfix'
     }, null), MailsInput({
@@ -3058,9 +3104,9 @@ module.exports = Compose = React.createClass({
       }
       state.attachments = message.get('attachments');
     } else {
-      state = MessageUtils.makeReplyMessage(this.props.selectedAccount.get('login'), this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
+      state = MessageUtils.makeReplyMessage(this.props.selectedAccountLogin, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
       if (state.accountID == null) {
-        state.accountID = this.props.selectedAccount.get('id');
+        state.accountID = this.props.selectedAccountID;
       }
     }
     state.sending = false;
@@ -3081,14 +3127,11 @@ module.exports = Compose = React.createClass({
   },
   _doSend: function(isDraft) {
     var account, from, message, tmp, valid;
-    account = this.props.accounts.get(this.state.accountID);
+    account = this.props.accounts[this.state.accountID];
     from = {
-      name: (account != null ? account.get('name') : void 0) || void 0,
-      address: account.get('login')
+      name: account.name || void 0,
+      address: account.login
     };
-    if (!~from.address.indexOf('@')) {
-      from.address += '@' + account.get('imapServer');
-    }
     message = {
       id: this.state.id,
       accountID: this.state.accountID,
@@ -3211,7 +3254,7 @@ module.exports = Compose = React.createClass({
               return _this.redirect({
                 direction: 'first',
                 action: 'account.mailbox.messages',
-                parameters: [_this.props.selectedAccount.get('id'), _this.props.selectedMailboxID],
+                parameters: [_this.props.selectedAccountID, _this.props.selectedMailboxID],
                 fullWidth: true
               });
             }
@@ -3502,7 +3545,8 @@ module.exports = React.createClass({
   propTypes: {
     message: React.PropTypes.object,
     conversation: React.PropTypes.object,
-    selectedAccount: React.PropTypes.object.isRequired,
+    selectedAccountID: React.PropTypes.string.isRequired,
+    selectedAccountLogin: React.PropTypes.string.isRequired,
     layout: React.PropTypes.string.isRequired,
     selectedMailboxID: React.PropTypes.string,
     mailboxes: React.PropTypes.object.isRequired,
@@ -3524,15 +3568,19 @@ module.exports = React.createClass({
   },
   renderMessage: function(key, message, active) {
     return Message({
+      ref: 'message',
       accounts: this.props.accounts,
       active: active,
       inConversation: this.props.conversation.length > 1,
       key: key,
       mailboxes: this.props.mailboxes,
       message: message,
-      next: this.props.next,
-      prev: this.props.prev,
-      selectedAccount: this.props.selectedAccount,
+      nextMessageID: this.props.nextMessageID,
+      nextConversationID: this.props.nextConversationID,
+      prevMessageID: this.props.prevMessageID,
+      prevConversationID: this.props.prevConversationID,
+      selectedAccountID: this.props.selectedAccountID,
+      selectedAccountLogin: this.props.selectedAccountLogin,
       selectedMailboxID: this.props.selectedMailboxID,
       settings: this.props.settings
     });
@@ -3550,7 +3598,7 @@ module.exports = React.createClass({
     });
     if (window.router.previous != null) {
       try {
-        selectedAccountID = this.props.selectedAccount.get('id');
+        selectedAccountID = this.props.selectedAccountID;
       } catch (_error) {
         selectedAccountID = this.props.conversation.get(0).mailbox;
       }
@@ -3909,12 +3957,15 @@ module.exports = React.createClass({
     var _base;
     return typeof (_base = this.props).onChange === "function" ? _base.onChange(boxid) : void 0;
   },
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+  },
   render: function() {
-    var selected, selectedId;
-    selectedId = this.props.selectedMailbox;
-    if ((this.props.mailboxes != null) && this.props.mailboxes.length > 0) {
-      if (selectedId != null) {
-        selected = this.props.mailboxes.get(selectedId);
+    var key, mailbox, selected, selectedID;
+    selectedID = this.props.selectedMailboxID;
+    if ((this.props.mailboxes != null) && Object.keys(this.props.mailboxes).length > 0) {
+      if (selectedID != null) {
+        selected = this.props.mailboxes[selectedID];
       }
       return div({
         className: 'btn-group btn-group-sm dropdown pull-left'
@@ -3922,24 +3973,33 @@ module.exports = React.createClass({
         className: 'btn btn-default dropdown-toggle',
         type: 'button',
         'data-toggle': 'dropdown'
-      }, (selected != null ? selected.get('label') : void 0) || t('mailbox pick one'), span({
+      }, (selected != null ? selected.label : void 0) || t('mailbox pick one'), span({
         className: 'caret'
       }, '')), ul({
         className: 'dropdown-menu',
         role: 'menu'
-      }, this.props.allowUndefined && selected ? li({
+      }, this.props.allowUndefined && (selected != null) ? li({
         role: 'presentation',
         key: null,
         onClick: this.onChange.bind(this, null)
       }, a({
         role: 'menuitem'
-      }, t('mailbox pick null'))) : void 0, this.props.mailboxes.map((function(_this) {
-        return function(mailbox, key) {
-          if (mailbox.get('id') !== selectedId) {
-            return _this.getMailboxRender(mailbox, key);
+      }, t('mailbox pick null'))) : void 0, (function() {
+        var _ref1, _results;
+        _ref1 = this.props.mailboxes;
+        _results = [];
+        for (key in _ref1) {
+          mailbox = _ref1[key];
+          if (key !== this.props.selectedMailboxID) {
+            if (key !== selectedID) {
+              _results.push(this.getMailboxRender(mailbox, key));
+            } else {
+              _results.push(void 0);
+            }
           }
-        };
-      })(this)).toJS()));
+        }
+        return _results;
+      }).call(this)));
     } else {
       return div(null, "");
     }
@@ -3949,7 +4009,7 @@ module.exports = React.createClass({
     url = typeof (_base = this.props).getUrl === "function" ? _base.getUrl(mailbox) : void 0;
     onChange = this.onChange.bind(this, key);
     pusher = "";
-    for (i = _i = 1, _ref1 = mailbox.get('depth'); _i <= _ref1; i = _i += 1) {
+    for (i = _i = 1, _ref1 = mailbox.depth; _i <= _ref1; i = _i += 1) {
       pusher += "--";
     }
     return li({
@@ -3959,9 +4019,9 @@ module.exports = React.createClass({
     }, url != null ? a({
       href: url,
       role: 'menuitem'
-    }, "" + pusher + (mailbox.get('label'))) : a({
+    }, "" + pusher + mailbox.label) : a({
       role: 'menuitem'
-    }, "" + pusher + (mailbox.get('label'))));
+    }, "" + pusher + mailbox.label));
   }
 });
 });
@@ -3983,7 +4043,6 @@ classer = React.addons.classSet;
 
 module.exports = MailsInput = React.createClass({
   displayName: 'MailsInput',
-  mixins: [React.addons.LinkedStateMixin],
   getStateFromStores: function() {
     return {
       contacts: ContactStore.getResults()
@@ -3998,10 +4057,16 @@ module.exports = MailsInput = React.createClass({
   getInitialState: function() {
     var state;
     state = this.getStateFromStores();
-    state.known = [];
+    state.known = this.props.valueLink.value;
+    state.unknown = '';
     state.selected = 0;
     state.open = false;
     return state;
+  },
+  componentWillReceiveProps: function(nextProps) {
+    return this.setState({
+      known: nextProps.valueLink.value
+    });
   },
   componentDidMount: function() {
     ContactStore.on('change', this._setStateFromStores);
@@ -4019,93 +4084,54 @@ module.exports = MailsInput = React.createClass({
   shouldComponentUpdate: function(nextProps, nextState) {
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
-  _extractAddresses: function(values) {
-    var known, unknown;
-    known = [];
-    unknown = [];
-    values.map(function(address) {
-      var res;
-      if (address.address.indexOf('@') === -1) {
-        return unknown.push(address);
-      } else {
-        res = ContactStore.getByAddress(address.address);
-        if (res != null) {
-          if (!(known.some(function(a) {
-            return a.address === address.address;
-          }))) {
-            return known.push(address);
-          }
-        } else {
-          return unknown.push(address);
-        }
-      }
-    });
-    setTimeout((function(_this) {
-      return function() {
-        return _this.setState({
-          known: known.reverse()
-        });
-      };
-    })(this), 0);
-    return MessageUtils.displayAddresses(unknown, true);
-  },
-  proxyValueLink: function() {
-    return {
-      value: this._extractAddresses(this.props.valueLink.value),
-      requestChange: (function(_this) {
-        return function(newValue) {
-          var result;
-          result = newValue.split(',').map(function(tupple) {
-            var match;
-            if (match = tupple.match(/"{0,1}(.*)"{0,1} <(.*)>/)) {
-              return {
-                name: match[1],
-                address: match[2]
-              };
-            } else {
-              return {
-                address: tupple.trimLeft()
-              };
-            }
-          }).filter(function(address) {
-            return address.addres !== '';
-          });
-          _this.props.valueLink.requestChange(result.concat(_this.state.known.reverse()));
-          _this._extractAddresses(result);
-          return _this.fixHeight();
-        };
-      })(this)
-    };
-  },
   render: function() {
-    var classLabel, className, current, knownContacts, listClass, _ref1;
-    knownContacts = this.state.known.map((function(_this) {
+    var classLabel, className, current, knownContacts, listClass, onChange, renderTag, _ref1;
+    renderTag = (function(_this) {
       return function(address, idx) {
-        var remove;
+        var display, remove;
         remove = function() {
           var known;
           known = _this.state.known.filter(function(a) {
             return a.address !== address.address;
           });
-          return _this.setState({
-            known: known
-          }, function() {
-            return _this.proxyValueLink().requestChange(_this.refs.contactInput.getDOMNode().value);
-          });
+          return _this.props.valueLink.requestChange(known);
         };
+        if ((address.name != null) && address.name.trim() !== '') {
+          display = address.name;
+        } else {
+          display = address.address;
+        }
         return span({
           className: 'address-tag',
           key: "" + _this.props.id + "-" + address.address + "-" + idx,
           title: address.address
-        }, MessageUtils.displayAddress(address), a({
+        }, display, a({
           className: 'clickable',
           onClick: remove
         }, i({
           className: 'fa fa-times'
         })));
       };
-    })(this));
-    className = (this.props.className || '') + ' form-group';
+    })(this);
+    knownContacts = this.state.known.map(renderTag);
+    onChange = (function(_this) {
+      return function(event) {
+        var value;
+        value = event.target.value.split(',');
+        if (value.length === 2) {
+          _this.state.known.push(MessageUtils.parseAddress(value[0]));
+          _this.props.valueLink.requestChange(_this.state.known);
+          return _this.setState({
+            unknown: value[1].trim()
+          });
+        } else {
+          return _this.setState({
+            unknown: event.target.value
+          });
+        }
+      };
+    })(this);
+    className = (this.props.className || '') + (" form-group " + this.props.id);
     classLabel = 'compose-label control-label';
     listClass = classer({
       'contact-form': true,
@@ -4127,7 +4153,8 @@ module.exports = MailsInput = React.createClass({
       onBlur: this.onBlur,
       ref: 'contactInput',
       rows: 1,
-      valueLink: this.proxyValueLink(),
+      value: this.state.unknown,
+      onChange: onChange,
       placeholder: this.props.placeholder,
       'autoComplete': 'off',
       'spellCheck': 'off'
@@ -4170,7 +4197,7 @@ module.exports = MailsInput = React.createClass({
   },
   onQuery: function(char) {
     var force, query;
-    query = this.refs.contactInput.getDOMNode().value.split(',').pop().trim();
+    query = this.refs.contactInput.getDOMNode().value.split(',').pop().replace(/^\s*/, '');
     if ((char != null) && typeof char === 'string') {
       query += char;
       force = false;
@@ -4194,12 +4221,13 @@ module.exports = MailsInput = React.createClass({
     }
   },
   onKeyDown: function(evt) {
-    var contact, node, _ref1;
+    var contact, count, node, selected, _ref1, _ref2;
+    count = (_ref1 = this.state.contacts) != null ? _ref1.count() : void 0;
+    selected = this.state.selected;
     switch (evt.key) {
       case "Enter":
-        if (((_ref1 = this.state.contacts) != null ? _ref1.count() : void 0) > 0) {
-          this.onContact;
-          contact = this.state.contacts.slice(this.state.selected).first();
+        if (((_ref2 = this.state.contacts) != null ? _ref2.count() : void 0) > 0) {
+          contact = this.state.contacts.slice(selected).first();
           this.onContact(contact);
         } else {
           this.onQuery();
@@ -4208,11 +4236,11 @@ module.exports = MailsInput = React.createClass({
         return false;
       case "ArrowUp":
         return this.setState({
-          selected: this.state.selected === 0 ? this.state.contacts.count() - 1 : this.state.selected - 1
+          selected: selected === 0 ? count - 1 : selected - 1
         });
       case "ArrowDown":
         return this.setState({
-          selected: this.state.selected === (this.state.contacts.count() - 1) ? 0 : this.state.selected + 1
+          selected: selected === (count - 1) ? 0 : selected + 1
         });
       case "Backspace":
         node = this.refs.contactInput.getDOMNode();
@@ -4238,29 +4266,32 @@ module.exports = MailsInput = React.createClass({
   onBlur: function() {
     return setTimeout((function(_this) {
       return function() {
+        var state, value;
         if (_this.isMounted()) {
-          return _this.setState({
-            open: false
-          });
+          state = {};
+          state.open = false;
+          value = _this.refs.contactInput.getDOMNode().value;
+          if (value.trim() !== '') {
+            _this.state.known.push(MessageUtils.parseAddress(value));
+            state.known = _this.state.known;
+            state.unknown = '';
+            _this.props.valueLink.requestChange(state.known);
+          }
+          return _this.setState(state);
         }
       };
     })(this), 100);
   },
   onContact: function(contact) {
-    var address, current, name, val;
-    val = this.proxyValueLink();
-    if (this.props.valueLink.value.length > 0) {
-      current = val.value.split(',').slice(0, -1).join(',');
-    } else {
-      current = "";
-    }
-    if (current.trim() !== '') {
-      current += ',';
-    }
-    name = contact.get('fn');
-    address = contact.get('address');
-    val.requestChange("" + current + name + " <" + address + ">,");
+    var address;
+    address = {
+      name: contact.get('fn'),
+      address: contact.get('address')
+    };
+    this.state.known.push(address);
+    this.props.valueLink.requestChange(this.state.known);
     this.setState({
+      unknown: '',
       contacts: null,
       open: false
     });
@@ -4437,15 +4468,7 @@ module.exports = Menu = React.createClass({
       className: 'fa fa-inbox'
     }), span({
       className: 'item-label'
-    }, t('menu account new'))), a({
-      href: settingsUrl,
-      onClick: this._hideMenu,
-      className: 'menu-item settings-action ' + settingsClass
-    }, i({
-      className: 'fa fa-cog'
-    }), span({
-      className: 'item-label'
-    }, t('menu settings'))));
+    }, t('menu account new'))));
   },
   getAccountRender: function(account, key) {
     var accountClasses, accountID, defaultMailbox, icon, isSelected, mailboxes, progress, refreshes, toggleActive, toggleDisplay, toggleFavorites, toggleFavoritesLabel, url, _ref2;
@@ -4693,13 +4716,15 @@ MenuMailboxItem = React.createClass({
 });
 
 ;require.register("components/message-list", function(exports, require, module) {
-var AccountActionCreator, ContactActionCreator, ConversationActionCreator, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, ToolboxActions, ToolboxMove, a, alertError, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
+var AccountActionCreator, ContactActionCreator, ConversationActionCreator, DomUtils, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageListBody, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, ToolboxActions, ToolboxMove, a, alertError, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p, button = _ref.button, input = _ref.input, img = _ref.img;
 
 classer = React.addons.classSet;
 
 RouterMixin = require('../mixins/router_mixin');
+
+DomUtils = require('../utils/dom_utils');
 
 MessageUtils = require('../utils/message_utils');
 
@@ -4733,7 +4758,9 @@ MessageList = React.createClass({
   displayName: 'MessageList',
   mixins: [RouterMixin],
   shouldComponentUpdate: function(nextProps, nextState) {
-    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+    var should;
+    should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+    return should;
   },
   getInitialState: function() {
     return {
@@ -4772,51 +4799,8 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, btnClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, messages, nbMessages, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
     compact = this.props.settings.get('listStyle') === 'compact';
-    messages = this.props.messages.map((function(_this) {
-      return function(message, key) {
-        var cid, id, isActive, _ref2;
-        id = message.get('id');
-        cid = message.get('conversationID');
-        if (_this.props.settings.get('displayConversation')) {
-          isActive = _this.props.conversationID === cid;
-        } else {
-          isActive = _this.props.messageID === id;
-        }
-        return MessageItem({
-          message: message,
-          conversationLength: (_ref2 = _this.props.conversationLengths) != null ? _ref2.get(cid) : void 0,
-          key: key,
-          isActive: isActive,
-          edited: _this.state.edited,
-          settings: _this.props.settings,
-          selected: _this.state.selected[id] != null,
-          onSelect: function(val) {
-            var selected;
-            selected = _.clone(_this.state.selected);
-            if (val) {
-              selected[id] = val;
-            } else {
-              delete selected[id];
-            }
-            if (Object.keys(selected).length > 0) {
-              return _this.setState({
-                edited: true,
-                selected: selected
-              });
-            } else {
-              return _this.setState({
-                allSelected: false,
-                edited: false,
-                selected: {}
-              });
-            }
-          }
-        });
-      };
-    })(this)).toJS();
-    nbMessages = parseInt(this.props.counterMessage, 10);
     filterParams = {
       accountID: this.props.accountID,
       mailboxID: this.props.mailboxID,
@@ -4834,7 +4818,7 @@ MessageList = React.createClass({
         return _this.buildUrl({
           direction: 'first',
           action: 'account.mailbox.messages',
-          parameters: [_this.props.accountID, mailbox.get('id')]
+          parameters: [_this.props.accountID, mailbox.id]
         });
       };
     })(this);
@@ -4906,10 +4890,12 @@ MessageList = React.createClass({
     classEdited = classer({
       active: this.state.edited
     });
-    btnClasses = 'btn-group btn-group-sm message-list-option';
+    btnClasses = 'btn btn-default ';
+    btnGrpClasses = 'btn-group btn-group-sm message-list-option ';
     return div({
       className: 'message-list ' + classList,
-      ref: 'list'
+      ref: 'list',
+      'data-mailbox-id': this.props.mailboxID
     }, div({
       className: 'message-list-actions'
     }, div({
@@ -4918,59 +4904,59 @@ MessageList = React.createClass({
     }, div({
       className: 'btn-group'
     }, advanced ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
       type: "button",
-      className: "btn btn-default " + classEdited,
+      className: btnClasses + classEdited,
       onClick: this.toggleEdited
     }, i({
       className: 'fa fa-square-o'
     }))) : void 0, advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, MailboxList({
       getUrl: getMailboxUrl,
       mailboxes: this.props.mailboxes,
-      selectedMailbox: this.props.mailboxID
+      selectedMailboxID: this.props.mailboxID
     })) : void 0, !advanced && !this.state.edited ? div({
-      className: btnClasses + ' toggle-menu-button'
+      className: btnGrpClasses + ' toggle-menu-button'
     }, button({
       onClick: this.props.toggleMenu,
       title: t('menu toggle'),
-      className: 'btn btn-default'
+      className: btnClasses
     }, span({
       className: 'fa fa-inbox'
     }))) : void 0, !advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
       onClick: toggleFilterUnseen,
       title: t('list filter unseen title'),
-      className: 'btn btn-default ' + (this.state.filterUnseen ? ' shown ' : '')
+      className: btnClasses + (this.state.filterUnseen ? ' shown' : void 0)
     }, span({
       className: 'fa fa-envelope'
     }))) : void 0, !advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
       onClick: toggleFilterFlag,
       title: t('list filter flagged title'),
-      className: 'btn btn-default ' + (this.state.filterFlag ? ' shown ' : '')
+      className: btnClasses + (this.state.filterFlag ? ' shown' : void 0)
     }, span({
       className: 'fa fa-star'
     }))) : void 0, !advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
       onClick: toggleFilterAttach,
       title: t('list filter attach title'),
-      className: 'btn btn-default ' + (this.state.filterAttach ? ' shown ' : '')
+      className: btnClasses + (this.state.filterAttach ? ' shown' : void 0)
     }, span({
       className: 'fa fa-paperclip'
     }))) : void 0, advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, MessagesFilter(filterParams)) : void 0, advanced && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, MessagesSort(filterParams)) : void 0, !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, this.props.refreshes.length === 0 ? button({
-      className: 'btn btn-default',
+      className: btnClasses,
       type: 'button',
       disabled: null,
       onClick: this.refresh
@@ -4981,24 +4967,24 @@ MessageList = React.createClass({
       alt: 'spinner',
       className: 'spin'
     })) : void 0, !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, a({
       href: configMailboxUrl,
-      className: 'btn btn-default mailbox-config'
+      className: btnClasses + 'mailbox-config'
     }, i({
       className: 'fa fa-cog'
     }))) : void 0, this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
       type: "button",
-      className: "btn btn-default " + classEdited,
+      className: btnClasses + classEdited,
       onClick: this.toggleAll
     }, i({
       className: 'fa fa-square-o'
     }))) : void 0, this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
-      className: 'btn btn-default trash',
+      className: btnClasses + 'trash',
       type: 'button',
       disabled: nbSelected,
       onClick: this.onDelete
@@ -5015,17 +5001,48 @@ MessageList = React.createClass({
       onHeaders: this.onHeaders,
       direction: 'left'
     }) : void 0, this.props.isTrash && !this.state.edited ? div({
-      className: btnClasses
+      className: btnGrpClasses
     }, button({
-      className: 'btn btn-default',
+      className: btnClasses,
       type: 'button',
       disabled: null,
       onClick: this.expungeMailbox
     }, span({
       className: 'fa fa-recycle'
-    }))) : void 0))), this.props.messages.count() === 0 ? this.props.fetching ? p(null, t('list fetching')) : p(null, this.props.emptyListMessage) : div(null, ul({
-      className: 'list-unstyled'
-    }, messages), this.props.messages.count() < nbMessages && (this.props.query.pageAfter != null) ? p({
+    }))) : void 0))), this.props.messages.count() === 0 ? this.props.fetching ? p(null, t('list fetching')) : p(null, this.props.emptyListMessage) : div(null, MessageListBody({
+      messages: this.props.messages,
+      settings: this.props.settings,
+      mailboxID: this.props.mailboxID,
+      messageID: this.props.messageID,
+      conversationID: this.props.conversationID,
+      conversationLengths: this.props.conversationLengths,
+      edited: this.state.edited,
+      selected: this.state.selected,
+      allSelected: this.state.allSelected,
+      onSelect: (function(_this) {
+        return function(id, val) {
+          var selected;
+          selected = _.clone(_this.state.selected);
+          if (val) {
+            selected[id] = val;
+          } else {
+            delete selected[id];
+          }
+          if (Object.keys(selected).length > 0) {
+            return _this.setState({
+              edited: true,
+              selected: selected
+            });
+          } else {
+            return _this.setState({
+              allSelected: false,
+              edited: false,
+              selected: {}
+            });
+          }
+        };
+      })(this)
+    }), this.props.messages.count() < parseInt(this.props.counterMessage, 10) && (this.props.query.pageAfter != null) ? p({
       className: 'text-center'
     }, this.props.fetching ? i({
       className: "fa fa-refresh fa-spin"
@@ -5124,10 +5141,9 @@ MessageList = React.createClass({
       if ((args.target.dataset.conversation != null) || this.props.settings.get('displayConversation')) {
         return selected.forEach((function(_this) {
           return function(id) {
-            var conversationID, message;
+            var message;
             message = _this.props.messages.get(id);
-            conversationID = message.get('conversationID');
-            return ConversationActionCreator.move(conversationID, newbox, function(error) {
+            return ConversationActionCreator.move(message, _this.props.mailboxID, newbox, function(error) {
               if (error != null) {
                 return alertError("" + (t("conversation move ko")) + " " + error);
               } else {
@@ -5255,16 +5271,8 @@ MessageList = React.createClass({
       })(this));
     }
   },
-  _isVisible: function(node, before) {
-    var height, margin, rect, width;
-    margin = before ? 40 : 0;
-    rect = node.getBoundingClientRect();
-    height = window.innerHeight || document.documentElement.clientHeight;
-    width = window.innerWidth || document.documentElement.clientWidth;
-    return rect.bottom <= (height + 0) && rect.top >= 0;
-  },
   _loadNext: function() {
-    if ((this.refs.nextPage != null) && this._isVisible(this.refs.nextPage.getDOMNode(), true)) {
+    if ((this.refs.nextPage != null) && DomUtils.isVisible(this.refs.nextPage.getDOMNode())) {
       return LayoutActionCreator.showMessageList({
         parameters: this.props.query
       });
@@ -5273,24 +5281,15 @@ MessageList = React.createClass({
   _handleRealtimeGrowth: function() {
     var lastdate, nbMessages;
     nbMessages = parseInt(this.props.counterMessage, 10);
-    if (nbMessages < this.props.messages.count() && (this.refs.listEnd != null) && !this._isVisible(this.refs.listEnd.getDOMNode(), true)) {
+    if (nbMessages < this.props.messages.count() && (this.refs.listEnd != null) && !DomUtils.isVisible(this.refs.listEnd.getDOMNode())) {
       lastdate = this.props.messages.last().get('date');
       return SocketUtils.changeRealtimeScope(this.props.mailboxID, lastdate);
     }
   },
   _initScroll: function() {
-    var active, scrollable;
+    var scrollable;
     if (this.refs.nextPage == null) {
       return;
-    }
-    if (this.state.messageID !== this.props.messageID) {
-      active = document.querySelector("[data-message-id='" + this.props.messageID + "']");
-      if ((active != null) && !this._isVisible(active)) {
-        active.scrollIntoView();
-      }
-      this.setState({
-        messageID: this.props.messageID
-      });
     }
     scrollable = this.refs.list.getDOMNode().parentNode;
     return setTimeout((function(_this) {
@@ -5321,12 +5320,85 @@ MessageList = React.createClass({
 
 module.exports = MessageList;
 
+MessageListBody = React.createClass({
+  displayName: 'MessageListBody',
+  getInitialState: function() {
+    var state;
+    return state = {
+      messageID: null
+    };
+  },
+  shouldComponentUpdate: function(nextProps, nextState) {
+    var should, updatedProps;
+    updatedProps = Object.keys(nextProps).filter((function(_this) {
+      return function(prop) {
+        return typeof nextProps[prop] !== 'function' && !(_.isEqual(nextProps[prop], _this.props[prop]));
+      };
+    })(this));
+    should = !(_.isEqual(nextState, this.state)) || updatedProps.length > 0;
+    return should;
+  },
+  render: function() {
+    var messages;
+    messages = this.props.messages.map((function(_this) {
+      return function(message, key) {
+        var cid, id, isActive, _ref2;
+        id = message.get('id');
+        cid = message.get('conversationID');
+        if (_this.props.settings.get('displayConversation')) {
+          isActive = _this.props.conversationID === cid;
+        } else {
+          isActive = _this.props.messageID === id;
+        }
+        return MessageItem({
+          message: message,
+          conversationLengths: (_ref2 = _this.props.conversationLengths) != null ? _ref2.get(cid) : void 0,
+          key: key,
+          isActive: isActive,
+          edited: _this.props.edited,
+          settings: _this.props.settings,
+          selected: _this.props.selected[id] != null,
+          onSelect: function(val) {
+            return _this.props.onSelect(id, val);
+          }
+        });
+      };
+    })(this)).toJS();
+    return ul({
+      className: 'list-unstyled'
+    }, messages);
+  },
+  componentDidMount: function() {
+    return this._onMount();
+  },
+  componentDidUpdate: function() {
+    return this._onMount();
+  },
+  _onMount: function() {
+    var active;
+    if (this.state.messageID !== this.props.messageID) {
+      active = document.querySelector("[data-message-id='" + this.props.messageID + "']");
+      if ((active != null) && !DomUtils.isVisible(active)) {
+        active.scrollIntoView(false);
+      }
+      return this.setState({
+        messageID: this.props.messageID
+      });
+    }
+  }
+});
+
 MessageItem = React.createClass({
   displayName: 'MessagesItem',
   mixins: [RouterMixin],
   shouldComponentUpdate: function(nextProps, nextState) {
-    var shouldUpdate;
-    shouldUpdate = !_.isEqual(nextState, this.state) || !Immutable.is(nextProps.message, this.props.message) || !Immutable.is(nextProps.settings, this.props.settings) || nextProps.conversationLength !== this.props.conversationLength || nextProps.key !== this.props.key || nextProps.isActive !== this.props.isActive || nextProps.edited !== this.props.edited || nextProps.selected !== this.props.selected;
+    var shouldUpdate, updatedProps;
+    updatedProps = Object.keys(nextProps).filter((function(_this) {
+      return function(prop) {
+        return typeof nextProps[prop] !== 'function' && !(_.isEqual(nextProps[prop], _this.props[prop]));
+      };
+    })(this));
+    shouldUpdate = !_.isEqual(nextState, this.state) || updatedProps.length > 0;
     return shouldUpdate;
   },
   render: function() {
@@ -5410,9 +5482,9 @@ MessageItem = React.createClass({
       className: 'participants'
     }, this.getParticipants(message)), div({
       className: 'preview'
-    }, this.props.conversationLength > 1 ? span({
+    }, this.props.conversationLengths > 1 ? span({
       className: 'badge conversation-length'
-    }, this.props.conversationLength) : void 0, span({
+    }, this.props.conversationLengths) : void 0, span({
       className: 'title'
     }, message.get('subject')), p(null, preview)), span({
       className: 'hour'
@@ -5453,7 +5525,7 @@ MessageItem = React.createClass({
     return e.stopPropagation();
   },
   onMessageClick: function(event) {
-    var href;
+    var href, node;
     if (this.props.edited) {
       this.props.onSelect(!this.props.selected);
       event.preventDefault();
@@ -5461,9 +5533,10 @@ MessageItem = React.createClass({
     } else {
       if (!(event.target.getAttribute('type') === 'checkbox')) {
         event.preventDefault();
-        MessageActionCreator.setCurrent(this.refs.target.getDOMNode().dataset.messageId);
+        node = this.refs.target.getDOMNode();
+        MessageActionCreator.setCurrent(node.dataset.messageId);
         if (this.props.settings.get('displayPreview')) {
-          href = '#' + this.refs.target.getDOMNode().href.split('#')[1];
+          href = '#' + node.href.split('#')[1];
           return this.redirect(href);
         }
       }
@@ -5686,14 +5759,19 @@ module.exports = React.createClass({
     key: React.PropTypes.string.isRequired,
     mailboxes: React.PropTypes.object.isRequired,
     message: React.PropTypes.object.isRequired,
-    next: React.PropTypes.object,
-    prev: React.PropTypes.object,
-    selectedAccount: React.PropTypes.object.isRequired,
+    nextMessageID: React.PropTypes.string,
+    nextConversationID: React.PropTypes.string,
+    prevMessageID: React.PropTypes.string,
+    prevConversationID: React.PropTypes.string,
+    selectedAccountID: React.PropTypes.string.isRequired,
+    selectedAccountLogin: React.PropTypes.string.isRequired,
     selectedMailboxID: React.PropTypes.string.isRequired,
     settings: React.PropTypes.object.isRequired
   },
   shouldComponentUpdate: function(nextProps, nextState) {
-    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+    var should;
+    should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+    return should;
   },
   _prepareMessage: function() {
     var e, fullHeaders, html, key, message, rich, text, urls, value, _ref2;
@@ -5708,33 +5786,34 @@ module.exports = React.createClass({
         fullHeaders.push("" + key + ": " + value);
       }
     }
-    text = message.get('text');
-    html = message.get('html');
-    urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim;
-    if (text && !html && this.state.messageDisplayHTML) {
-      try {
-        html = markdown.toHTML(text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2"));
-      } catch (_error) {
-        e = _error;
-        console.log("Error converting text message to Markdown: " + e);
-        html = "<div class='text'>" + text + "</div>";
+    if (this.state.active) {
+      text = message.get('text');
+      html = message.get('html');
+      urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim;
+      if ((text != null) && (html == null) && this.state.messageDisplayHTML) {
+        try {
+          html = markdown.toHTML(text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2"));
+        } catch (_error) {
+          e = _error;
+          html = "<div class='text'>" + text + "</div>";
+        }
       }
-    }
-    if (html && !text && !this.state.messageDisplayHTML) {
-      text = toMarkdown(html);
-    }
-    if (text) {
-      rich = text.replace(urls, '<a href="$1" target="_blank">$1</a>', 'gim');
-      rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>');
-      rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>');
-      rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>');
-      rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>');
-      rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>', 'gim');
+      if ((html != null) && (text == null) && !this.state.messageDisplayHTML) {
+        text = toMarkdown(html);
+      }
+      if (text != null) {
+        rich = text.replace(urls, '<a href="$1" target="_blank">$1</a>');
+        rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>');
+        rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>');
+        rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>');
+        rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>');
+        rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>');
+      }
     }
     return {
       id: message.get('id'),
       attachments: message.get('attachments'),
-      flags: message.get('flags') || [],
+      flags: message.get('flags' || []),
       from: message.get('from'),
       to: message.get('to'),
       cc: message.get('cc'),
@@ -5777,7 +5856,7 @@ module.exports = React.createClass({
     var doc, hideImage, href, html, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
     messageDisplayHTML = true;
     parser = new DOMParser();
-    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + prepared.html + "</body></html>";
+    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"/fonts/fonts.css\" />\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + prepared.html + "</body></html>";
     doc = parser.parseFromString(html, "text/html");
     images = [];
     if (!doc) {
@@ -5785,7 +5864,7 @@ module.exports = React.createClass({
       doc.documentElement.innerHTML = html;
     }
     if (!doc) {
-      console.log("Unable to parse HTML content of message");
+      console.error("Unable to parse HTML content of message");
       messageDisplayHTML = false;
     }
     if (doc && !this.state.messageDisplayImages) {
@@ -5841,7 +5920,8 @@ module.exports = React.createClass({
       }, this.renderHeaders(prepared), div({
         className: 'full-headers'
       }, pre(null, prepared.fullHeaders.join("\n"))), this.renderToolbox(message.get('id'), prepared), this.renderCompose(), MessageContent({
-        message: message,
+        ref: 'messageContent',
+        messageID: message.get('id'),
         messageDisplayHTML: messageDisplayHTML,
         html: this._htmlContent,
         text: prepared.text,
@@ -5918,6 +5998,7 @@ module.exports = React.createClass({
       }, prepared.date) : void 0), hasAttachments ? div({
         className: 'col-md-4'
       }, FilePicker({
+        ref: 'filePicker',
         editable: false,
         value: prepared.attachments,
         messageID: this.props.message.get('id')
@@ -5963,10 +6044,12 @@ module.exports = React.createClass({
   renderCompose: function() {
     if (this.state.composing) {
       return Compose({
+        ref: 'compose',
         inReplyTo: this.props.message,
         accounts: this.props.accounts,
         settings: this.props.settings,
-        selectedAccount: this.props.selectedAccount,
+        selectedAccountID: this.props.selectedAccountID,
+        selectedAccountLogin: this.props.selectedAccountLogin,
         action: this.state.composeAction,
         layout: 'second',
         callback: (function(_this) {
@@ -5997,27 +6080,27 @@ module.exports = React.createClass({
     isSeen = prepared.flags.indexOf(FlagsConstants.SEEN) === -1;
     conversationID = this.props.message.get('conversationID');
     getParams = (function(_this) {
-      return function(message) {
+      return function(messageID, conversationID) {
         if (_this.props.settings.get('displayConversation')) {
           return {
             action: 'conversation',
             parameters: {
-              messageID: message.get('id'),
-              conversationID: message.get('convrsationID')
+              messageID: messageID,
+              conversationID: conversationID
             }
           };
         } else {
           return {
             action: 'message',
             parameters: {
-              messageID: message.get('id')
+              messageID: messageID
             }
           };
         }
       };
     })(this);
-    if (this.props.prev != null) {
-      params = getParams(this.props.prev);
+    if (this.props.prevMessageID != null) {
+      params = getParams(this.props.prevMessageID, this.props.prevConversationID);
       prev = {
         direction: 'second',
         action: params.action,
@@ -6030,8 +6113,8 @@ module.exports = React.createClass({
         };
       })(this);
     }
-    if (this.props.next != null) {
-      params = getParams(this.props.next);
+    if (this.props.nextMessageID != null) {
+      params = getParams(this.props.nextMessageID, this.props.nextConversationID);
       next = {
         direction: 'second',
         action: params.action,
@@ -6102,10 +6185,12 @@ module.exports = React.createClass({
     }), span({
       className: 'tool-long'
     }, t('mail action delete')))), ToolboxMove({
+      ref: 'toolboxMove',
       mailboxes: this.props.mailboxes,
       onMove: this.onMove,
       direction: 'right'
     }), ToolboxActions({
+      ref: 'toolboxActions',
       mailboxes: this.props.mailboxes,
       isSeen: isSeen,
       isFlagged: isFlagged,
@@ -6113,6 +6198,7 @@ module.exports = React.createClass({
       messageID: id,
       message: this.props.message,
       onMark: this.onMark,
+      onMove: this.onMove,
       onConversation: this.onConversation,
       onHeaders: this.onHeaders,
       direction: 'right'
@@ -6140,6 +6226,7 @@ module.exports = React.createClass({
       className: 'att-previews'
     }, h4(null, t('message preview title')), files.map(function(file) {
       return AttachmentPreview({
+        ref: 'attachmentPreview',
         file: file,
         key: file.checksum
       });
@@ -6175,20 +6262,22 @@ module.exports = React.createClass({
     }
   },
   displayNextMessage: function() {
-    var next;
-    if (this.props.next != null) {
-      next = this.props.next;
+    var nextConversationID, nextMessageID;
+    if (this.props.nextMessageID != null) {
+      nextMessageID = this.props.nextMessageID;
+      nextConversationID = this.props.nextConversationID;
     } else {
-      next = this.props.prev;
+      nextMessageID = this.props.prevMessageID;
+      nextConversationID = this.props.prevConversationID;
     }
-    if (next != null) {
+    if (nextMessageID) {
       if (this.props.settings.get('displayConversation')) {
         return this.redirect({
           direction: 'second',
           action: 'conversation',
           parameters: {
-            messageID: next.get('id'),
-            conversationID: next.get('convrsationID')
+            messageID: nextMessageID,
+            conversationID: nextConversationID
           }
         });
       } else {
@@ -6196,7 +6285,7 @@ module.exports = React.createClass({
           direction: 'second',
           action: 'message',
           parameters: {
-            messageID: next.get('id')
+            messageID: nextMessageID
           }
         });
       }
@@ -6248,11 +6337,11 @@ module.exports = React.createClass({
     return LayoutActionCreator.alertWarning(t("app unimplemented"));
   },
   onMove: function(args) {
-    var conversationID, newbox, oldbox;
+    var newbox, oldbox;
     newbox = args.target.dataset.value;
+    oldbox = this.props.selectedMailboxID;
     if (args.target.dataset.conversation != null) {
-      conversationID = this.props.message.get('conversationID');
-      return ConversationActionCreator.move(conversationID, newbox, (function(_this) {
+      return ConversationActionCreator.move(this.props.message, oldbox, newbox, (function(_this) {
         return function(error) {
           if (error != null) {
             return alertError("" + (t("conversation move ko")) + " " + error);
@@ -6263,7 +6352,6 @@ module.exports = React.createClass({
         };
       })(this));
     } else {
-      oldbox = this.props.selectedMailboxID;
       return MessageActionCreator.move(this.props.message, oldbox, newbox, (function(_this) {
         return function(error) {
           if (error != null) {
@@ -6385,8 +6473,8 @@ MessageContent = React.createClass({
         ref: 'imagesDisplay',
         onClick: this.props.displayImages
       }, t('message images display'))) : void 0, iframe({
-        'data-message-id': this.props.message.get('id'),
-        name: "frame-" + (this.props.message.get('id')),
+        'data-message-id': this.props.messageID,
+        name: "frame-" + this.props.messageID,
         className: 'content',
         ref: 'content',
         allowTransparency: true,
@@ -6406,7 +6494,7 @@ MessageContent = React.createClass({
     }
   },
   _initFrame: function(type) {
-    var doc, frame, loadContent, panel, step, _ref2;
+    var checkResize, doc, frame, loadContent, panel, step, _ref2;
     panel = document.querySelector("#panels > .panel:nth-of-type(2)");
     if ((panel != null) && !this.props.composing) {
       panel.scrollTop = 0;
@@ -6414,29 +6502,38 @@ MessageContent = React.createClass({
     if (this.props.messageDisplayHTML && this.refs.content) {
       frame = this.refs.content.getDOMNode();
       doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
+      checkResize = false;
       step = 0;
       loadContent = (function(_this) {
         return function(e) {
-          var updateHeight, _ref3;
+          var updateHeight, _ref3, _ref4;
           step = 0;
           doc = frame.contentDocument || ((_ref3 = frame.contentWindow) != null ? _ref3.document : void 0);
           if (doc != null) {
             doc.documentElement.innerHTML = _this.props.html;
-            window.cozyMails.customEvent("MESSAGE_LOADED", _this.props.message.toJS());
+            window.cozyMails.customEvent("MESSAGE_LOADED", _this.props.messageID);
             updateHeight = function(e) {
               var height, _ref4;
-              height = doc.body.getBoundingClientRect().height;
-              frame.style.height = "" + (height * 1.2) + "px";
+              height = doc.documentElement.scrollHeight;
+              if (height < 60) {
+                frame.style.height = "60px";
+              } else {
+                frame.style.height = "" + (height + 60) + "px";
+              }
               step++;
-              if (step > 10) {
+              if (checkResize && step > 10) {
                 doc.body.removeEventListener('load', loadContent);
                 return (_ref4 = frame.contentWindow) != null ? _ref4.removeEventListener('resize') : void 0;
               }
             };
-            frame.style.height = "32px";
             updateHeight();
             setTimeout(updateHeight, 1000);
-            return doc.body.onload = updateHeight;
+            doc.body.onload = updateHeight;
+            if (checkResize) {
+              frame.contentWindow.onresize = updateHeight;
+              window.onresize = updateHeight;
+              return (_ref4 = frame.contentWindow) != null ? _ref4.addEventListener('resize', updateHeight, true) : void 0;
+            }
           } else {
             return _this.props.displayHTML(false);
           }
@@ -6448,7 +6545,7 @@ MessageContent = React.createClass({
         return loadContent();
       }
     } else {
-      return window.cozyMails.customEvent("MESSAGE_LOADED", this.props.message.toJS());
+      return window.cozyMails.customEvent("MESSAGE_LOADED", this.props.messageID);
     }
   },
   componentDidMount: function() {
@@ -6487,7 +6584,7 @@ AttachmentPreview = React.createClass({
     }) : button({
       className: 'btn btn-default btn-lg',
       onClick: toggleDisplay
-    }, this.props.file.fileName));
+    }, this.props.file.generatedFileName));
   }
 });
 });
@@ -7298,11 +7395,14 @@ _ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags
 
 module.exports = ToolboxActions = React.createClass({
   displayName: 'ToolboxActions',
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+  },
   render: function() {
-    var direction;
+    var direction, key, mailbox;
     direction = this.props.direction === 'right' ? 'right' : 'left';
     return div({
-      className: 'btn-group btn-group-sm'
+      className: 'menu-action btn-group btn-group-sm'
     }, button({
       className: 'btn btn-default dropdown-toggle more',
       type: 'button',
@@ -7363,75 +7463,23 @@ module.exports = ToolboxActions = React.createClass({
       className: 'divider'
     }), li({
       role: 'presentation'
-    }, t('mail action conversation move')), this.props.mailboxes.map((function(_this) {
-      return function(mailbox, key) {
-        return _this.renderMailboxes(mailbox, key, true);
-      };
-    })(this)).toJS(), li({
-      role: 'presentation',
-      className: 'divider'
-    })));
+    }, t('mail action conversation move')), (function() {
+      var _ref2, _results;
+      _ref2 = this.props.mailboxes;
+      _results = [];
+      for (key in _ref2) {
+        mailbox = _ref2[key];
+        if (key !== this.props.selectedMailboxID) {
+          _results.push(this.renderMailboxes(mailbox, key));
+        }
+      }
+      return _results;
+    }).call(this)));
   },
-  renderMailboxes: function(mailbox, key, conversation) {
+  renderMailboxes: function(mailbox, key) {
     var j, pusher, _i, _ref2;
-    if (mailbox.get('id') === this.props.selectedMailboxID) {
-      return;
-    }
     pusher = "";
-    for (j = _i = 1, _ref2 = mailbox.get('depth'); _i <= _ref2; j = _i += 1) {
-      pusher += "--";
-    }
-    return li({
-      role: 'presentation',
-      key: key
-    }, a({
-      role: 'menuitem',
-      onClick: this.onMove,
-      'data-value': key,
-      'data-conversation': conversation
-    }, "" + pusher + (mailbox.get('label'))));
-  }
-});
-});
-
-;require.register("components/toolbox_move", function(exports, require, module) {
-var ConversationActionCreator, LayoutActionCreator, ToolboxMove, a, button, div, i, li, p, span, ul, _ref;
-
-_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button;
-
-LayoutActionCreator = require('../actions/layout_action_creator');
-
-ConversationActionCreator = require('../actions/conversation_action_creator');
-
-module.exports = ToolboxMove = React.createClass({
-  displayName: 'ToolboxMove',
-  render: function() {
-    var direction;
-    direction = this.props.direction === 'right' ? 'right' : 'left';
-    return div({
-      className: 'btn-group btn-group-sm'
-    }, button({
-      className: 'btn btn-default dropdown-toggle move',
-      type: 'button',
-      'data-toggle': 'dropdown'
-    }, t('mail action move', span({
-      className: 'caret'
-    }))), ul({
-      className: 'dropdown-menu dropdown-menu-' + direction,
-      role: 'menu'
-    }, this.props.mailboxes.map((function(_this) {
-      return function(mailbox, key) {
-        return _this.renderMailboxes(mailbox, key);
-      };
-    })(this)).toJS()));
-  },
-  renderMailboxes: function(mailbox, key, conversation) {
-    var j, pusher, _i, _ref1;
-    if (mailbox.get('id') === this.props.selectedMailboxID) {
-      return;
-    }
-    pusher = "";
-    for (j = _i = 1, _ref1 = mailbox.get('depth'); _i <= _ref1; j = _i += 1) {
+    for (j = _i = 1, _ref2 = mailbox.depth; _i <= _ref2; j = _i += 1) {
       pusher += "--";
     }
     return li({
@@ -7441,8 +7489,63 @@ module.exports = ToolboxMove = React.createClass({
       role: 'menuitem',
       onClick: this.props.onMove,
       'data-value': key,
-      'data-conversation': conversation
-    }, "" + pusher + (mailbox.get('label'))));
+      'data-conversation': true
+    }, "" + pusher + mailbox.label));
+  }
+});
+});
+
+;require.register("components/toolbox_move", function(exports, require, module) {
+var ToolboxMove, a, button, div, i, li, p, span, ul, _ref;
+
+_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button;
+
+module.exports = ToolboxMove = React.createClass({
+  displayName: 'ToolboxMove',
+  shouldComponentUpdate: function(nextProps, nextState) {
+    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+  },
+  render: function() {
+    var direction, key, mailbox;
+    direction = this.props.direction === 'right' ? 'right' : 'left';
+    return div({
+      className: 'menu-move btn-group btn-group-sm'
+    }, button({
+      className: 'btn btn-default dropdown-toggle move',
+      type: 'button',
+      'data-toggle': 'dropdown'
+    }, t('mail action move', span({
+      className: 'caret'
+    }))), ul({
+      className: 'dropdown-menu dropdown-menu-' + direction,
+      role: 'menu'
+    }, (function() {
+      var _ref1, _results;
+      _ref1 = this.props.mailboxes;
+      _results = [];
+      for (key in _ref1) {
+        mailbox = _ref1[key];
+        if (key !== this.props.selectedMailboxID) {
+          _results.push(this.renderMailboxes(mailbox, key));
+        }
+      }
+      return _results;
+    }).call(this)));
+  },
+  renderMailboxes: function(mailbox, key) {
+    var j, pusher, _i, _ref1;
+    pusher = "";
+    for (j = _i = 1, _ref1 = mailbox.depth; _i <= _ref1; j = _i += 1) {
+      pusher += "--";
+    }
+    return li({
+      role: 'presentation',
+      key: key
+    }, a({
+      role: 'menuitem',
+      onClick: this.props.onMove,
+      'data-value': key
+    }, "" + pusher + mailbox.label));
   }
 });
 });
@@ -7484,7 +7587,7 @@ module.exports = Topbar = React.createClass({
         return _this.buildUrl({
           direction: 'first',
           action: 'account.mailbox.messages',
-          parameters: [selectedAccount != null ? selectedAccount.get('id') : void 0, mailbox.get('id')]
+          parameters: [selectedAccount != null ? selectedAccount.get('id') : void 0, mailbox.id]
         });
       };
     })(this);
@@ -7520,7 +7623,7 @@ module.exports = Topbar = React.createClass({
     }, MailboxList({
       getUrl: getUrl,
       mailboxes: mailboxes,
-      selectedMailbox: selectedMailboxID
+      selectedMailboxID: selectedMailboxID
     }), SearchForm({
       query: searchQuery
     }))) : void 0, layout.firstPanel.action === 'account.mailbox.messages' || layout.firstPanel.action === 'account.mailbox.messages' ? div({
@@ -7564,6 +7667,7 @@ module.exports = {
     'MESSAGE_BOXES': 'MESSAGE_BOXES',
     'MESSAGE_FLAG': 'MESSAGE_FLAG',
     'MESSAGE_ACTION': 'MESSAGE_ACTION',
+    'CONVERSATION_ACTION': 'CONVERSATION_ACTION',
     'MESSAGE_CURRENT': 'MESSAGE_CURRENT',
     'RECEIVE_MESSAGE_DELETE': 'RECEIVE_MESSAGE_DELETE',
     'RECEIVE_MAILBOX_UPDATE': 'RECEIVE_MAILBOX_UPDATE',
@@ -9974,6 +10078,11 @@ MessageStore = (function(_super) {
       };
     });
     handle(ActionTypes.MESSAGE_ACTION, function(action) {
+      action.target = 'message';
+      return _prevAction = action;
+    });
+    handle(ActionTypes.CONVERSATION_ACTION, function(action) {
+      action.target = 'conversation';
       return _prevAction = action;
     });
     handle(ActionTypes.MESSAGE_CURRENT, function(value) {
@@ -10498,7 +10607,6 @@ module.exports = {
       return;
     }
     conv = inConv && SettingsStore.get('displayConversation') && SettingsStore.get('displayPreview');
-    console.log(conv);
     if (direction === 'prev') {
       next = MessageStore.getPreviousMessage(conv);
     } else {
@@ -10637,6 +10745,56 @@ module.exports = {
     var url;
     url = error.stack.split('\n')[0].split('@')[1].split(/:\d/)[0].split('/').slice(0, -2).join('/');
     return window.onerror(error.name, url, error.lineNumber, error.colNumber, error);
+  },
+  dump: function() {
+    var _dump;
+    _dump = function(root) {
+      var key, res, value, _ref, _ref1, _ref2;
+      res = {
+        children: {},
+        state: {},
+        props: {}
+      };
+      _ref = root.state;
+      for (key in _ref) {
+        value = _ref[key];
+        if (typeof root.state[key] === 'object') {
+          res.state[key] = '{object}';
+        } else {
+          res.state[key] = value;
+        }
+      }
+      _ref1 = root.props;
+      for (key in _ref1) {
+        value = _ref1[key];
+        if (typeof root.props[key] === 'object') {
+          res.props[key] = '{object}';
+        } else {
+          res.props[key] = value;
+        }
+      }
+      _ref2 = root.refs;
+      for (key in _ref2) {
+        value = _ref2[key];
+        res.children[key] = _dump(root.refs[key]);
+      }
+      return res;
+    };
+    return _dump(window.rootComponent);
+  }
+};
+});
+
+;require.register("utils/dom_utils", function(exports, require, module) {
+var DomUtils;
+
+module.exports = DomUtils = {
+  isVisible: function(node) {
+    var height, rect, width;
+    rect = node.getBoundingClientRect();
+    height = window.innerHeight || document.documentElement.clientHeight;
+    width = window.innerWidth || document.documentElement.clientWidth;
+    return rect.bottom <= (height + 0) && rect.top >= 0;
   }
 };
 });
@@ -10684,6 +10842,20 @@ module.exports = MessageUtils = {
       res.push(MessageUtils.displayAddress(item, full));
     }
     return res.join(", ");
+  },
+  parseAddress: function(text) {
+    var address, match;
+    text = text.trim();
+    if (match = text.match(/"{0,1}(.*)"{0,1} <(.*)>/)) {
+      return address = {
+        name: match[1],
+        address: match[2]
+      };
+    } else {
+      return address = {
+        address: text.replace(/^\s*/, '')
+      };
+    }
   },
   getReplyToAddress: function(message) {
     var from, reply;

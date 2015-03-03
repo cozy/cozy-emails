@@ -13,10 +13,6 @@ classer = React.addons.classSet
 module.exports = MailsInput = React.createClass
     displayName: 'MailsInput'
 
-    mixins: [
-        React.addons.LinkedStateMixin # two-way data binding
-    ]
-
     getStateFromStores: ->
         contacts: ContactStore.getResults()
 
@@ -25,10 +21,14 @@ module.exports = MailsInput = React.createClass
 
     getInitialState: ->
         state = @getStateFromStores()
-        state.known    = []
+        state.known    = @props.valueLink.value
+        state.unknown  = ''
         state.selected = 0
         state.open     = false
         return state
+
+    componentWillReceiveProps: (nextProps) ->
+        @setState known: nextProps.valueLink.value
 
     # Code from the StoreWatch Mixin. We don't use the mixin
     # because we store other things into the state
@@ -47,63 +47,39 @@ module.exports = MailsInput = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
 
-    # Filter addresses. Put known ones into state and return a string with unknown ones
-    # @params values Array of {name, address}
-    # @returns a string
-    _extractAddresses: (values) ->
-        known   = []
-        unknown = []
-        values.map (address) ->
-            if address.address.indexOf('@') is -1
-                unknown.push address
-            else
-                res = ContactStore.getByAddress address.address
-                if res?
-                    # prevent adding same contact twice
-                    if not (known.some (a) -> return a.address is address.address)
-                        known.push address
-                else
-                    unknown.push address
-        setTimeout =>
-            @setState known: known.reverse()
-        , 0
-        MessageUtils.displayAddresses unknown, true
-
-    # convert mailslist between human-readable and [{address, name}]
-    proxyValueLink: ->
-        value: @_extractAddresses @props.valueLink.value
-        requestChange: (newValue) =>
-            # reverse of MessageUtils.displayAddresses full
-            result = newValue.split(',').map (tupple) ->
-                if match = tupple.match /"{0,1}(.*)"{0,1} <(.*)>/
-                    name: match[1], address: match[2]
-                else
-                    address: tupple.trimLeft()
-            .filter (address) ->
-                return address.addres isnt ''
-
-            @props.valueLink.requestChange result.concat(@state.known.reverse())
-            @_extractAddresses result
-            @fixHeight()
-
     render: ->
-        knownContacts = @state.known.map (address, idx) =>
+
+        renderTag = (address, idx) =>
             remove = =>
                 known = @state.known.filter (a) ->
                     return a.address isnt address.address
-                @setState known: known, =>
-                    @proxyValueLink().requestChange @refs.contactInput.getDOMNode().value
+                @props.valueLink.requestChange known
+            if address.name? and address.name.trim() isnt ''
+                display = address.name
+            else
+                display = address.address
             span
                 className: 'address-tag'
                 key: "#{@props.id}-#{address.address}-#{idx}"
                 title: address.address
-                MessageUtils.displayAddress address
+                display
                     a
                         className: 'clickable'
                         onClick: remove,
                             i className: 'fa fa-times'
 
-        className  = (@props.className or '') + ' form-group'
+        knownContacts = @state.known.map renderTag
+
+        onChange = (event) =>
+            value = event.target.value.split ','
+            if value.length is 2
+                @state.known.push(MessageUtils.parseAddress value[0])
+                @props.valueLink.requestChange @state.known
+                @setState unknown: value[1].trim()
+            else
+                @setState unknown: event.target.value
+
+        className  = (@props.className or '') + " form-group #{@props.id}"
         classLabel = 'compose-label control-label'
         listClass  = classer
             'contact-form': true
@@ -123,7 +99,8 @@ module.exports = MailsInput = React.createClass
                     onBlur: @onBlur
                     ref: 'contactInput'
                     rows: 1
-                    valueLink: @proxyValueLink()
+                    value: @state.unknown
+                    onChange: onChange
                     placeholder: @props.placeholder
                     'autoComplete': 'off'
                     'spellCheck': 'off'
@@ -159,7 +136,7 @@ module.exports = MailsInput = React.createClass
                 "#{contact.get 'fn'} <#{contact.get 'address'}>"
 
     onQuery: (char) ->
-        query = @refs.contactInput.getDOMNode().value.split(',').pop().trim()
+        query = @refs.contactInput.getDOMNode().value.split(',').pop().replace(/^\s*/, '')
         if char? and typeof char is 'string'
             query += char
             force = false
@@ -176,22 +153,22 @@ module.exports = MailsInput = React.createClass
             return false
 
     onKeyDown: (evt) ->
+        count    = @state.contacts?.count()
+        selected = @state.selected
         switch evt.key
             when "Enter"
                 if @state.contacts?.count() > 0
-                    @onContact
-                    contact = @state.contacts.slice(@state.selected).first()
+                    contact = @state.contacts.slice(selected).first()
                     @onContact contact
                 else
                     @onQuery()
                 evt.preventDefault()
                 return false
             when "ArrowUp"
-                @setState selected: if @state.selected is 0 then @state.contacts.count() - 1 else @state.selected - 1
+                @setState selected: if selected is 0 then count - 1 else selected - 1
             when "ArrowDown"
-                @setState selected: if @state.selected is (@state.contacts.count() - 1) then 0 else @state.selected + 1
+                @setState selected: if selected is (count - 1) then 0 else selected + 1
             when "Backspace"
-                # hack needed because proxyValueLink prevent deleting empty contact
                 node = @refs.contactInput.getDOMNode()
                 node.value = node.value.trim()
                 if node.value.length < 2
@@ -204,26 +181,32 @@ module.exports = MailsInput = React.createClass
                     return true
 
     onBlur: ->
-        # We must use a timeout, otherwise, when user click inside contact list, blur is triggered first
-        # and the click event lost. Dirty hack
+        # We must use a timeout, otherwise, when user click inside contact list,
+        # blur is triggered first and the click event lost. Dirty hack
         setTimeout =>
-            # if user cancel comose, component may be unmounted when the timeout is fired
+            # if user cancel compose, component may be unmounted when the timeout is fired
             if @isMounted()
-                @setState open: false
+                state = {}
+                # close suggestion list
+                state.open = false
+                # Add current value to list of addresses
+                value = @refs.contactInput.getDOMNode().value
+                if value.trim() isnt ''
+                    @state.known.push(MessageUtils.parseAddress value)
+                    state.known   = @state.known
+                    state.unknown = ''
+                    @props.valueLink.requestChange state.known
+                @setState state
         , 100
 
     onContact: (contact) ->
-        val = @proxyValueLink()
-        if @props.valueLink.value.length > 0
-            current = val.value.split(',').slice(0, -1).join(',')
-        else
-            current = ""
-        if current.trim() isnt ''
-            current += ','
-        name    = contact.get 'fn'
-        address = contact.get 'address'
-        val.requestChange "#{current}#{name} <#{address}>,"
-        @setState contacts: null, open: false
+        address =
+            name    : contact.get 'fn'
+            address : contact.get 'address'
+        @state.known.push address
+        @props.valueLink.requestChange @state.known
+        @setState unknown: '', contacts: null, open: false
+
         # try to put back the focus at the end of the field
         setTimeout =>
             query = @refs.contactInput.getDOMNode().focus()

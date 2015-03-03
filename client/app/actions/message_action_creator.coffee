@@ -115,11 +115,14 @@ module.exports =
         LayoutActionCreator = require './layout_action_creator'
         action = MessageStore.getPrevAction()
         if action?
-            message = MessageStore.getByID action.id
-            action.from.forEach (from) =>
-                @move message, action.to, from, (err) ->
-                    if not err?
-                        LayoutActionCreator.notify t('message undelete ok')
+            if action.target is 'message'
+                message = MessageStore.getByID action.id
+                action.from.forEach (from) =>
+                    @move message, action.to, from, (err) ->
+                        if not err?
+                            LayoutActionCreator.notify t('message undelete ok')
+            else
+                LayoutActionCreator.alertError t 'app unimplemented'
         else
             LayoutActionCreator.alertError t 'message undelete error'
 

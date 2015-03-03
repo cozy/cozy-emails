@@ -14,7 +14,7 @@ module.exports = {
   },
   contact: {
     all: cozydb.defaultRequests.all,
-    byName: function(doc) {
+    mailByName: function(doc) {
       var dp, _i, _len, _ref, _results;
       if ((doc.fn != null) && doc.fn.length > 0) {
         emit(doc.fn, doc);
@@ -35,7 +35,7 @@ module.exports = {
       }
       return _results;
     },
-    byEmail: function(doc) {
+    mailByEmail: function(doc) {
       var dp, _i, _len, _ref, _results;
       _ref = doc.datapoints;
       _results = [];

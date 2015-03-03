@@ -73,7 +73,6 @@ module.exports =
         if not onMessageList()
             return
         conv = inConv and SettingsStore.get('displayConversation') and SettingsStore.get('displayPreview')
-        console.log conv
         if direction is 'prev'
             next = MessageStore.getPreviousMessage conv
         else
@@ -182,3 +181,28 @@ module.exports =
     log: (error) ->
         url = error.stack.split('\n')[0].split('@')[1].split(/:\d/)[0].split('/').slice(0, -2).join('/')
         window.onerror error.name, url, error.lineNumber, error.colNumber, error
+
+    # Debug: allow to dump component tree
+    dump: ->
+        _dump = (root) ->
+            res =
+                children: {}
+                state: {}
+                props: {}
+            for key, value of root.state
+                if (typeof root.state[key] is 'object')
+                    res.state[key] = '{object}'
+                else
+                    res.state[key] = value
+            for key, value of root.props
+                if (typeof root.props[key] is 'object')
+                    res.props[key] = '{object}'
+                else
+                    res.props[key] = value
+            for key, value of root.refs
+                res.children[key] = _dump root.refs[key]
+
+            return res
+
+        _dump window.rootComponent
+
