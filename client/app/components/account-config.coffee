@@ -240,7 +240,7 @@ module.exports = React.createClass
                         errors[field] = t 'config error ' + field
                     @setState errors: errors
             else
-                if not props.isWaiting
+                if not props.isWaiting and not _.isEqual(props, @props)
                     @setState @_accountToState null
 
     getInitialState: ->
@@ -702,7 +702,7 @@ AccountConfigMailboxes = React.createClass
                     favorite = favorites.get(mailbox.get('id'))?
                     MailboxItem {accountID: @state.id.value, mailbox, favorite}
                 catch error
-                    console.log error, favorites
+                    console.error error, favorites
             .toJS()
         form className: 'form-horizontal',
 
