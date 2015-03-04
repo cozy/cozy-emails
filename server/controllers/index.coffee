@@ -1,10 +1,11 @@
 ImapReporter = require '../imap/reporter'
-Account  = require '../models/account'
-Contact  = require '../models/contact'
-Settings = require '../models/settings'
-async = require 'async'
-cozydb = require 'cozydb'
-log = require('../utils/logging')(prefix: 'controllers:index')
+Account      = require '../models/account'
+Contact      = require '../models/contact'
+Settings     = require '../models/settings'
+CONSTANTS    = require '../utils/constants'
+async        = require 'async'
+cozydb       = require 'cozydb'
+log          = require('../utils/logging')(prefix: 'controllers:index')
 
 
 module.exports.main = (req, res, next) ->
@@ -56,13 +57,13 @@ module.exports.loadFixtures = (req, res, next) ->
 
 module.exports.refresh = (req, res, next) ->
     if req.query?.all
-        limit = undefined
+        limitByBox    = null
         onlyFavorites = false
     else
-        limit = 1000
+        limitByBox    = CONSTANTS.LIMIT_BY_BOX
         onlyFavorites = true
 
-    Account.refreshAllAccounts limit, onlyFavorites, (err) ->
+    Account.refreshAllAccounts limitByBox, onlyFavorites, (err) ->
         log.error "REFRESHING ACCOUNT FAILED", err if err
         return next err if err
         res.send refresh: 'done'

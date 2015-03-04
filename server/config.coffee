@@ -1,7 +1,7 @@
-path = require 'path'
+path      = require 'path'
 americano = require 'americano'
-log = require('./utils/logging')(prefix: 'config')
-
+log       = require('./utils/logging')(prefix: 'config')
+CONSTANTS = require './utils/constants'
 {errorHandler} = require './utils/errors'
 
 config =
@@ -22,7 +22,15 @@ config =
             SocketHandler = require './utils/socket_handler'
             SocketHandler.setup app, server
             Account = require './models/account'
-            Account.removeOrphansAndRefresh null, false, ->
+            if process.env.NODE_ENV is 'production'
+                limitByBox    = null
+                onlyFavorites = false
+            else
+                # Don't refresh all malboxes to speed up restart on
+                # developement environment
+                limitByBox    = CONSTANTS.LIMIT_BY_BOX
+                onlyFavorites = true
+            Account.removeOrphansAndRefresh limitByBox, onlyFavorites, ->
                 log.info "initial refresh completed"
 
     development: [
