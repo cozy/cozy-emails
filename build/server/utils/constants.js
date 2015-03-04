@@ -8,3 +8,7 @@ exports.LIMIT_UPDATE = 30;
 exports.CONCURRENT_DESTROY = 1;
 
 exports.FETCH_AT_ONCE = 1000;
+
+exports.LIMIT_BY_BOX = 1000;
+
+exports.REFRESH_INTERVAL = 300000;
