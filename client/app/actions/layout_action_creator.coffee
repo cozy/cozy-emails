@@ -7,7 +7,7 @@ MessageStore  = require '../stores/message_store'
 
 AppDispatcher = require '../app_dispatcher'
 
-{ActionTypes, AlertLevel} = require '../constants/app_constants'
+{ActionTypes, AlertLevel, MessageFlags} = require '../constants/app_constants'
 
 AccountActionCreator = require './account_action_creator'
 MessageActionCreator = require './message_action_creator'
@@ -170,6 +170,16 @@ module.exports = LayoutActionCreator =
             if err?
                 LayoutActionCreator.alertError err
             else
+                # prevent flashing of message in message list when first
+                # marking as read a new message. If it has been flagged Seen
+                # in local cache but not on server, ignore server value
+                if rawMessages.length is 1
+                    message = MessageStore.getByID rawMessages[0].id
+                    if message? and
+                       rawMessages[0].flags.length is 0 and
+                       message.get('flags').length is 1 and
+                       message.get('flags')[0] is MessageFlags.SEEN
+                        rawMessages[0].flags = MessageFlags.SEEN
                 MessageActionCreator.receiveRawMessages rawMessages
                 onMessage rawMessages[0]
 
