@@ -26,7 +26,7 @@ SocketHandler.setup = function(app, server) {
 
 SocketHandler.notify = function(type, data, olddata) {
   var socket, _i, _len, _results;
-  log.info("notify", type, data.toString());
+  log.debug("notify", type, data.toString());
   if (type === 'message.update' || type === 'message.create') {
     _results = [];
     for (_i = 0, _len = sockets.length; _i < _len; _i++) {

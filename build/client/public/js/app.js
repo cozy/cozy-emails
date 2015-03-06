@@ -1319,7 +1319,7 @@ module.exports = React.createClass({
           });
         }
       } else {
-        if (!props.isWaiting) {
+        if (!props.isWaiting && !_.isEqual(props, this.props)) {
           return this.setState(this._accountToState(null));
         }
       }
@@ -1871,7 +1871,7 @@ AccountConfigMailboxes = React.createClass({
             });
           } catch (_error) {
             error = _error;
-            return console.log(error, favorites);
+            return console.error(error, favorites);
           }
         };
       })(this)).toJS();
@@ -5749,7 +5749,8 @@ module.exports = React.createClass({
       composeAction: '',
       headers: false,
       messageDisplayHTML: this.props.settings.get('messageDisplayHTML'),
-      messageDisplayImages: this.props.settings.get('messageDisplayImages')
+      messageDisplayImages: this.props.settings.get('messageDisplayImages'),
+      currentMessageID: null
     };
   },
   propTypes: {
@@ -5841,15 +5842,17 @@ module.exports = React.createClass({
     return this.setState(state);
   },
   _markRead: function(message) {
-    var flags;
-    if (this._currentMessageId === message.get('id')) {
-      return;
-    }
-    this._currentMessageId = message.get('id');
-    flags = message.get('flags').slice();
-    if (flags.indexOf(MessageFlags.SEEN) === -1) {
-      flags.push(MessageFlags.SEEN);
-      return MessageActionCreator.updateFlag(message, flags);
+    var flags, messageID;
+    messageID = message.get('id');
+    if (this.state.currentMessageID !== messageID) {
+      this.setState({
+        currentMessageID: messageID
+      });
+      flags = message.get('flags').slice();
+      if (flags.indexOf(MessageFlags.SEEN) === -1) {
+        flags.push(MessageFlags.SEEN);
+        return MessageActionCreator.updateFlag(message, flags);
+      }
     }
   },
   prepareHTML: function(prepared) {

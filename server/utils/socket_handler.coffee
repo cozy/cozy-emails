@@ -16,7 +16,7 @@ SocketHandler.setup = (app, server) ->
 
 
 SocketHandler.notify = (type, data, olddata) ->
-    log.info "notify", type, data.toString()
+    log.debug "notify", type, data.toString()
     if type in ['message.update', 'message.create']
         # we cant just spam the client with all
         # message events, check if the message is in
