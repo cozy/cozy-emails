@@ -332,3 +332,8 @@ module.exports =
       'plugin name Sample JS'          : 'Sample'
       'plugin name Keyboard shortcuts' : 'Keyboard shortcuts'
       'plugin name VCard'              : 'Contacts VCards'
+
+      # Misc
+      'calendar unknown format' : """
+            This message contains an invite to an event in a currently unknown format.
+            """

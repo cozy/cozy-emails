@@ -35,6 +35,7 @@ module.exports = Message = cozydb.getModel 'Message',
     priority       : String          # message priority
     binary         : cozydb.NoSchema
     attachments    : cozydb.NoSchema
+    alternatives   : cozydb.NoSchema # for calendar content
 
 mailutils = require '../utils/jwz_tools'
 CONSTANTS = require '../utils/constants'
