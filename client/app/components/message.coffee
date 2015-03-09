@@ -115,11 +115,11 @@ module.exports = React.createClass
     componentWillReceiveProps: (props) ->
         state =
             active: props.active
-            composing: false
         if props.message.get('id') isnt @props.message.get('id')
             @_markRead @props.message
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
             state.messageDisplayImages = props.settings.get 'messageDisplayImages'
+            state.composing = false
         @setState state
 
     _markRead: (message) ->
