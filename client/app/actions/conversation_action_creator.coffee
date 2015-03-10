@@ -2,6 +2,7 @@ AppDispatcher  = require '../app_dispatcher'
 {ActionTypes}  = require '../constants/app_constants'
 XHRUtils       = require '../utils/xhr_utils'
 {MessageFlags} = require '../constants/app_constants'
+MessageActionCreator = require '../actions/message_action_creator'
 
 module.exports =
 
@@ -15,24 +16,28 @@ module.exports =
                 callback error
 
     move: (message, from, to, callback) ->
-        msg = message.toJSON()
-        AppDispatcher.handleViewAction
-            type: ActionTypes.CONVERSATION_ACTION
-            value:
-                id: msg.conversationID
-                from: from
-                to: to
-        observer = jsonpatch.observe msg
-        delete msg.mailboxIDs[from]
-        msg.mailboxIDs[to] = -1
-        patches = jsonpatch.generate observer
-        XHRUtils.conversationPatch msg.conversationID, patches, (error, messages) ->
-            if not error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.RECEIVE_RAW_MESSAGES
-                    value: messages
-            if callback?
-                callback error
+        # sometime, draft messages don't have a conversationID
+        if not (message.get 'conversationID')?
+            MessageActionCreator.move message, from, to, callback
+        else
+            msg = message.toJSON()
+            AppDispatcher.handleViewAction
+                type: ActionTypes.CONVERSATION_ACTION
+                value:
+                    id: msg.conversationID
+                    from: from
+                    to: to
+            observer = jsonpatch.observe msg
+            delete msg.mailboxIDs[from]
+            msg.mailboxIDs[to] = -1
+            patches = jsonpatch.generate observer
+            XHRUtils.conversationPatch msg.conversationID, patches, (error, messages) ->
+                if not error?
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.RECEIVE_RAW_MESSAGES
+                        value: messages
+                if callback?
+                    callback error
 
     seen: (conversationID, flags, callback) ->
         conversation =

@@ -132,10 +132,10 @@ class MessageStore extends Store
             if messages.mailboxID
                 SocketUtils.changeRealtimeScope messages.mailboxID
 
-            # reinit params here for pagination on filtered lists
-            _params = {}
             if messages.links?
                 if messages.links.next?
+                    # reinit params here for pagination on filtered lists
+                    _params = {}
                     next   = decodeURIComponent(messages.links.next)
                     url    = 'http://localhost' + next
                     url.split('?')[1].split('&').forEach (p) ->
