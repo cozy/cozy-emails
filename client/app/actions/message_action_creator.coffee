@@ -121,10 +121,19 @@ module.exports =
                     @move message, action.to, from, (err) ->
                         if not err?
                             LayoutActionCreator.notify t('message undelete ok')
+                        else
+                            LayoutActionCreator.notify t('message undelete error')
+            else if action.target is 'conversation' and
+                    Array.isArray(action.messages)
+                action.messages.forEach (message) =>
+                    message.from.forEach (from) =>
+                        @move message.id, message.to, from, (err) ->
+                            if not err?
+                                LayoutActionCreator.notify t('message undelete ok')
+                            else
+                                LayoutActionCreator.notify t('message undelete error')
             else
-                LayoutActionCreator.alertError t 'app unimplemented'
-        else
-            LayoutActionCreator.alertError t 'message undelete error'
+                LayoutActionCreator.alertError t 'message undelete unavailable'
 
     updateFlag: (message, flags, callback) ->
         msg = message.toJSON()
