@@ -385,11 +385,16 @@ module.exports.conversationDelete = (req, res, next) ->
         unless account.trashMailbox
             next new AccountConfigError 'trashMailbox'
         else
+            messages = []
             async.eachSeries req.conversation, (message, cb) ->
-                message.moveToTrash account, cb
+                message.moveToTrash account, (err, updated) ->
+                    if not err and updated?
+                        messages.push updated.toClientObject()
+                    cb err
+
             , (err) ->
                 return next err if err
-                res.send []
+                res.send messages
 
 
 module.exports.conversationPatch = (req, res, next) ->

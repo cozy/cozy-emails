@@ -313,6 +313,12 @@ MessageList = React.createClass
 
     onDelete: ->
         selected = Object.keys @state.selected
+        deleteMessage = (messageID) ->
+            MessageActionCreator.delete messageID, (error) ->
+                if error?
+                    alertError "#{t("message action delete ko")} #{error}"
+                else
+                    window.cozyMails.messageNavigate()
         if selected.length is 0
             alertError t 'list mass no message'
         else
@@ -321,20 +327,20 @@ MessageList = React.createClass
                 window.confirm(t 'list delete conv confirm', smart_count: selected.length)
                     selected.forEach (id) =>
                         message = @props.messages.get id
+                        # sometime, draft messages don't have a conversationID
                         conversationID = message.get 'conversationID'
-                        ConversationActionCreator.delete conversationID, (error) ->
-                            if error?
-                                alertError "#{t("conversation delete ko")} #{error}"
-                            else
-                                window.cozyMails.messageNavigate()
+                        if conversationID?
+                            ConversationActionCreator.delete conversationID, (error) ->
+                                if error?
+                                    alertError "#{t("conversation delete ko")} #{error}"
+                                else
+                                    window.cozyMails.messageNavigate()
+                        else
+                            deleteMessage(message.get 'id')
             else
                 if (not @props.settings.get('messageConfirmDelete')) or
                 window.confirm(t 'list delete confirm', smart_count: selected.length)
-                    MessageActionCreator.delete selected, (error) ->
-                        if error?
-                            alertError "#{t("message action delete ko")} #{error}"
-                        else
-                            window.cozyMails.messageNavigate()
+                    deleteMessage selected
 
     onMove: (args) ->
         selected = Object.keys @state.selected
@@ -451,7 +457,8 @@ MessageList = React.createClass
             @_loadNext()
             # a lot of event can make the "more messages" label visible,
             # so we check every few seconds
-            @_checkNextInterval = window.setInterval @_loadNext, 10000
+            if not @_checkNextInterval?
+                @_checkNextInterval = window.setInterval @_loadNext, 10000
         , 0
 
     componentDidMount: ->

@@ -232,6 +232,7 @@ module.exports =
       "conversation seen ko"        : "Error"
       "conversation unseen ok"      : "Conversation marked as unread"
       "conversation unseen ko"      : "Error"
+      "conversation undelete"       : "Undo conversation deletion"
       "message images warning"      : "Display of images inside message has
                                         been blocked"
       "message images display"      : "Display images"
@@ -241,7 +242,8 @@ module.exports =
       "message move already"        : "Message already in this folder"
       "message undelete"            : "Undo message deletion"
       "message undelete ok"         : "Message undeleted"
-      "message undelete error"      : "Undo not available"
+      "message undelete error"      : "Error undoing some action"
+      "message undelete unnavalable": "Undo not available"
       "message preview title"       : "View attachments"
 
       # Settings
@@ -332,3 +334,8 @@ module.exports =
       'plugin name Sample JS'          : 'Sample'
       'plugin name Keyboard shortcuts' : 'Keyboard shortcuts'
       'plugin name VCard'              : 'Contacts VCards'
+
+      # Misc
+      'calendar unknown format' : """
+            This message contains an invite to an event in a currently unknown format.
+            """

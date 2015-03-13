@@ -238,6 +238,7 @@ module.exports =
       "conversation seen ko"        : "L'opération a échoué"
       "conversation unseen ok"      : "Ok"
       "conversation unseen ko"      : "L'opération a échoué"
+      "conversation undelete"       : "Annuler la suppression"
       "message images warning"      : "L'affichage des images du message a été
                                         bloqué"
       "message images display"      : "Afficher les images"
@@ -248,6 +249,7 @@ module.exports =
       "message undelete"            : "Annuler la suppression"
       "message undelete ok"         : "Message restauré"
       "message undelete error"      : "Impossible d'annuler l'action"
+      "message undelete unavailable": "Impossible d'annuler l'action"
       "message preview title"       : "Voir les pièces jointes"
 
       # Settings
@@ -344,3 +346,9 @@ module.exports =
       'plugin name Sample JS'          : 'Exemple'
       'plugin name Keyboard shortcuts' : 'Raccourcis clavier'
       'plugin name VCard'              : 'Affichage de VCard'
+
+      # Misc
+      'calendar unknown format' : """
+            Ce message contient une invitation à un évènement
+            dans un format actuellement non pris en charge.
+            """

@@ -68,7 +68,13 @@ module.exports = React.createClass
         if @state.active
             text = message.get 'text'
             html = message.get 'html'
+            alternatives = message.get 'alternatives'
             urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
+            # Some calendar invite may contain neither text nor HTML part
+            if not text? and not html? and alternatives?.length > 0
+                text = t 'calendar unknown format'
+
+            #
             # @TODO Do we want to convert text only messages to HTML ?
             # /!\ if messageDisplayHTML is set, this method should always return
             # a value fo html, otherwise the content of the email flashes
@@ -109,11 +115,11 @@ module.exports = React.createClass
     componentWillReceiveProps: (props) ->
         state =
             active: props.active
-            composing: false
         if props.message.get('id') isnt @props.message.get('id')
             @_markRead @props.message
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
             state.messageDisplayImages = props.settings.get 'messageDisplayImages'
+            state.composing = false
         @setState state
 
     _markRead: (message) ->
