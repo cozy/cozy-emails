@@ -449,6 +449,7 @@ module.exports.conversationDelete = function(req, res, next) {
   var accountID;
   accountID = req.conversation[0].accountID;
   return Account.find(accountID, function(err, account) {
+    var messages;
     if (err) {
       return next(err);
     }
@@ -458,13 +459,19 @@ module.exports.conversationDelete = function(req, res, next) {
     if (!account.trashMailbox) {
       return next(new AccountConfigError('trashMailbox'));
     } else {
+      messages = [];
       return async.eachSeries(req.conversation, function(message, cb) {
-        return message.moveToTrash(account, cb);
+        return message.moveToTrash(account, function(err, updated) {
+          if (!err && (updated != null)) {
+            messages.push(updated.toClientObject());
+          }
+          return cb(err);
+        });
       }, function(err) {
         if (err) {
           return next(err);
         }
-        return res.send([]);
+        return res.send(messages);
       });
     }
   });

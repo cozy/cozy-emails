@@ -318,7 +318,7 @@ module.exports = ContactActionCreator = {
 });
 
 ;require.register("actions/conversation_action_creator", function(exports, require, module) {
-var ActionTypes, AppDispatcher, MessageFlags, XHRUtils;
+var AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, MessageActionCreator, MessageFlags, MessageStore, XHRUtils;
 
 AppDispatcher = require('../app_dispatcher');
 
@@ -328,15 +328,54 @@ XHRUtils = require('../utils/xhr_utils');
 
 MessageFlags = require('../constants/app_constants').MessageFlags;
 
+LayoutActionCreator = require('./layout_action_creator');
+
+MessageActionCreator = require('../actions/message_action_creator');
+
+AccountStore = require("../stores/account_store");
+
+MessageStore = require('../stores/message_store');
+
 module.exports = {
   "delete": function(conversationID, callback) {
+    var account, conversation, messages, trash;
+    conversation = MessageStore.getConversation(conversationID);
+    account = AccountStore.getByID(conversation.get(0).get('accountID'));
+    trash = account.get('trashMailbox');
+    messages = conversation.map(function(message) {
+      var action;
+      return action = {
+        id: message.get('id'),
+        from: Object.keys(message.get('mailboxIDs')),
+        to: trash
+      };
+    }).toJS();
+    AppDispatcher.handleViewAction({
+      type: ActionTypes.CONVERSATION_ACTION,
+      value: {
+        messages: messages
+      }
+    });
     return XHRUtils.conversationDelete(conversationID, function(error, messages) {
+      var options;
       if (error == null) {
         AppDispatcher.handleViewAction({
           type: ActionTypes.RECEIVE_RAW_MESSAGES,
           value: messages
         });
       }
+      options = {
+        autoclose: true,
+        actions: [
+          {
+            label: t('conversation undelete'),
+            onClick: function() {
+              return MessageActionCreator.undelete();
+            }
+          }
+        ]
+      };
+      LayoutActionCreator.notify(t('conversation delete ok'), options);
       if (callback != null) {
         return callback(error);
       }
@@ -344,30 +383,34 @@ module.exports = {
   },
   move: function(message, from, to, callback) {
     var msg, observer, patches;
-    msg = message.toJSON();
-    AppDispatcher.handleViewAction({
-      type: ActionTypes.CONVERSATION_ACTION,
-      value: {
-        id: msg.conversationID,
-        from: from,
-        to: to
-      }
-    });
-    observer = jsonpatch.observe(msg);
-    delete msg.mailboxIDs[from];
-    msg.mailboxIDs[to] = -1;
-    patches = jsonpatch.generate(observer);
-    return XHRUtils.conversationPatch(msg.conversationID, patches, function(error, messages) {
-      if (error == null) {
-        AppDispatcher.handleViewAction({
-          type: ActionTypes.RECEIVE_RAW_MESSAGES,
-          value: messages
-        });
-      }
-      if (callback != null) {
-        return callback(error);
-      }
-    });
+    if ((message.get('conversationID')) == null) {
+      return MessageActionCreator.move(message, from, to, callback);
+    } else {
+      msg = message.toJSON();
+      AppDispatcher.handleViewAction({
+        type: ActionTypes.CONVERSATION_ACTION,
+        value: {
+          id: msg.conversationID,
+          from: from,
+          to: to
+        }
+      });
+      observer = jsonpatch.observe(msg);
+      delete msg.mailboxIDs[from];
+      msg.mailboxIDs[to] = -1;
+      patches = jsonpatch.generate(observer);
+      return XHRUtils.conversationPatch(msg.conversationID, patches, function(error, messages) {
+        if (error == null) {
+          AppDispatcher.handleViewAction({
+            type: ActionTypes.RECEIVE_RAW_MESSAGES,
+            value: messages
+          });
+        }
+        if (callback != null) {
+          return callback(error);
+        }
+      });
+    }
   },
   seen: function(conversationID, flags, callback) {
     var conversation, observer, patches;
@@ -413,7 +456,7 @@ module.exports = {
 });
 
 ;require.register("actions/layout_action_creator", function(exports, require, module) {
-var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageStore, SearchActionCreator, SocketUtils, XHRUtils, _cachedDisposition, _cachedQuery, _ref;
+var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageFlags, MessageStore, SearchActionCreator, SocketUtils, XHRUtils, _cachedDisposition, _cachedQuery, _ref;
 
 XHRUtils = require('../utils/xhr_utils');
 
@@ -427,7 +470,7 @@ MessageStore = require('../stores/message_store');
 
 AppDispatcher = require('../app_dispatcher');
 
-_ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, AlertLevel = _ref.AlertLevel;
+_ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, AlertLevel = _ref.AlertLevel, MessageFlags = _ref.MessageFlags;
 
 AccountActionCreator = require('./account_action_creator');
 
@@ -627,6 +670,12 @@ module.exports = LayoutActionCreator = {
       if (err != null) {
         return LayoutActionCreator.alertError(err);
       } else {
+        if (rawMessages.length === 1) {
+          message = MessageStore.getByID(rawMessages[0].id);
+          if ((message != null) && rawMessages[0].flags.length === 0 && message.get('flags').length === 1 && message.get('flags')[0] === MessageFlags.SEEN) {
+            rawMessages[0].flags = MessageFlags.SEEN;
+          }
+        }
         MessageActionCreator.receiveRawMessages(rawMessages);
         return onMessage(rawMessages[0]);
       }
@@ -873,15 +922,29 @@ module.exports = {
             return _this.move(message, action.to, from, function(err) {
               if (err == null) {
                 return LayoutActionCreator.notify(t('message undelete ok'));
+              } else {
+                return LayoutActionCreator.notify(t('message undelete error'));
               }
             });
           };
         })(this));
+      } else if (action.target === 'conversation' && Array.isArray(action.messages)) {
+        return action.messages.forEach((function(_this) {
+          return function(message) {
+            return message.from.forEach(function(from) {
+              return _this.move(message.id, message.to, from, function(err) {
+                if (err == null) {
+                  return LayoutActionCreator.notify(t('message undelete ok'));
+                } else {
+                  return LayoutActionCreator.notify(t('message undelete error'));
+                }
+              });
+            });
+          };
+        })(this));
       } else {
-        return LayoutActionCreator.alertError(t('app unimplemented'));
+        return LayoutActionCreator.alertError(t('message undelete unavailable'));
       }
-    } else {
-      return LayoutActionCreator.alertError(t('message undelete error'));
     }
   },
   updateFlag: function(message, flags, callback) {
@@ -5092,8 +5155,17 @@ MessageList = React.createClass({
     }
   },
   onDelete: function() {
-    var selected;
+    var deleteMessage, selected;
     selected = Object.keys(this.state.selected);
+    deleteMessage = function(messageID) {
+      return MessageActionCreator["delete"](messageID, function(error) {
+        if (error != null) {
+          return alertError("" + (t("message action delete ko")) + " " + error);
+        } else {
+          return window.cozyMails.messageNavigate();
+        }
+      });
+    };
     if (selected.length === 0) {
       return alertError(t('list mass no message'));
     } else {
@@ -5106,13 +5178,17 @@ MessageList = React.createClass({
               var conversationID, message;
               message = _this.props.messages.get(id);
               conversationID = message.get('conversationID');
-              return ConversationActionCreator["delete"](conversationID, function(error) {
-                if (error != null) {
-                  return alertError("" + (t("conversation delete ko")) + " " + error);
-                } else {
-                  return window.cozyMails.messageNavigate();
-                }
-              });
+              if (conversationID != null) {
+                return ConversationActionCreator["delete"](conversationID, function(error) {
+                  if (error != null) {
+                    return alertError("" + (t("conversation delete ko")) + " " + error);
+                  } else {
+                    return window.cozyMails.messageNavigate();
+                  }
+                });
+              } else {
+                return deleteMessage(message.get('id'));
+              }
             };
           })(this));
         }
@@ -5120,13 +5196,7 @@ MessageList = React.createClass({
         if ((!this.props.settings.get('messageConfirmDelete')) || window.confirm(t('list delete confirm', {
           smart_count: selected.length
         }))) {
-          return MessageActionCreator["delete"](selected, function(error) {
-            if (error != null) {
-              return alertError("" + (t("message action delete ko")) + " " + error);
-            } else {
-              return window.cozyMails.messageNavigate();
-            }
-          });
+          return deleteMessage(selected);
         }
       }
     }
@@ -5297,7 +5367,9 @@ MessageList = React.createClass({
         scrollable.removeEventListener('scroll', _this._loadNext);
         scrollable.addEventListener('scroll', _this._loadNext);
         _this._loadNext();
-        return _this._checkNextInterval = window.setInterval(_this._loadNext, 10000);
+        if (_this._checkNextInterval == null) {
+          return _this._checkNextInterval = window.setInterval(_this._loadNext, 10000);
+        }
       };
     })(this), 0);
   },
@@ -5775,7 +5847,7 @@ module.exports = React.createClass({
     return should;
   },
   _prepareMessage: function() {
-    var e, fullHeaders, html, key, message, rich, text, urls, value, _ref2;
+    var alternatives, e, fullHeaders, html, key, message, rich, text, urls, value, _ref2;
     message = this.props.message;
     fullHeaders = [];
     _ref2 = message.get('headers');
@@ -5790,7 +5862,11 @@ module.exports = React.createClass({
     if (this.state.active) {
       text = message.get('text');
       html = message.get('html');
+      alternatives = message.get('alternatives');
       urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim;
+      if ((text == null) && (html == null) && (alternatives != null ? alternatives.length : void 0) > 0) {
+        text = t('calendar unknown format');
+      }
       if ((text != null) && (html == null) && this.state.messageDisplayHTML) {
         try {
           html = markdown.toHTML(text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2"));
@@ -5831,13 +5907,13 @@ module.exports = React.createClass({
   componentWillReceiveProps: function(props) {
     var state;
     state = {
-      active: props.active,
-      composing: false
+      active: props.active
     };
     if (props.message.get('id') !== this.props.message.get('id')) {
       this._markRead(this.props.message);
       state.messageDisplayHTML = props.settings.get('messageDisplayHTML');
       state.messageDisplayImages = props.settings.get('messageDisplayImages');
+      state.composing = false;
     }
     return this.setState(state);
   },
@@ -8103,7 +8179,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-require.register("libs/flux/store/Store", function(exports, require, module) {
+;require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -8713,6 +8789,7 @@ module.exports = {
   "conversation seen ko": "Error",
   "conversation unseen ok": "Conversation marked as unread",
   "conversation unseen ko": "Error",
+  "conversation undelete": "Undo conversation deletion",
   "message images warning": "Display of images inside message has been blocked",
   "message images display": "Display images",
   "message html display": "Display HTML",
@@ -8721,7 +8798,8 @@ module.exports = {
   "message move already": "Message already in this folder",
   "message undelete": "Undo message deletion",
   "message undelete ok": "Message undeleted",
-  "message undelete error": "Undo not available",
+  "message undelete error": "Error undoing some action",
+  "message undelete unnavalable": "Undo not available",
   "message preview title": "View attachments",
   "settings title": "Settings",
   "settings button save": "Save",
@@ -8780,7 +8858,8 @@ module.exports = {
   'plugin name MiniSlate': 'MiniSlate editor',
   'plugin name Sample JS': 'Sample',
   'plugin name Keyboard shortcuts': 'Keyboard shortcuts',
-  'plugin name VCard': 'Contacts VCards'
+  'plugin name VCard': 'Contacts VCards',
+  'calendar unknown format': "This message contains an invite to an event in a currently unknown format."
 };
 });
 
@@ -8989,6 +9068,7 @@ module.exports = {
   "conversation seen ko": "L'opération a échoué",
   "conversation unseen ok": "Ok",
   "conversation unseen ko": "L'opération a échoué",
+  "conversation undelete": "Annuler la suppression",
   "message images warning": "L'affichage des images du message a été bloqué",
   "message images display": "Afficher les images",
   "message html display": "Afficher en HTML",
@@ -8998,6 +9078,7 @@ module.exports = {
   "message undelete": "Annuler la suppression",
   "message undelete ok": "Message restauré",
   "message undelete error": "Impossible d'annuler l'action",
+  "message undelete unavailable": "Impossible d'annuler l'action",
   "message preview title": "Voir les pièces jointes",
   "settings title": "Paramètres",
   "settings button save": "Enregistrer",
@@ -9055,7 +9136,8 @@ module.exports = {
   'plugin name MiniSlate': 'Éditeur MiniSlate',
   'plugin name Sample JS': 'Exemple',
   'plugin name Keyboard shortcuts': 'Raccourcis clavier',
-  'plugin name VCard': 'Affichage de VCard'
+  'plugin name VCard': 'Affichage de VCard',
+  'calendar unknown format': "Ce message contient une invitation à un évènement\ndans un format actuellement non pris en charge."
 };
 });
 
@@ -9993,9 +10075,9 @@ MessageStore = (function(_super) {
       if (messages.mailboxID) {
         SocketUtils.changeRealtimeScope(messages.mailboxID);
       }
-      _params = {};
       if (messages.links != null) {
         if (messages.links.next != null) {
+          _params = {};
           next = decodeURIComponent(messages.links.next);
           url = 'http://localhost' + next;
           url.split('?')[1].split('&').forEach(function(p) {
