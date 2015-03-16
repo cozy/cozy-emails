@@ -285,6 +285,7 @@ module.exports = Application = React.createClass
                 mailboxID:     mailboxID
                 messageID:     messageID
                 conversationID: conversationID
+                login:         AccountStore.getByID(accountID).get 'login'
                 mailboxes:     @state.mailboxesFlat
                 settings:      @state.settings
                 fetching:      fetching

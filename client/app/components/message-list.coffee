@@ -259,6 +259,7 @@ MessageList = React.createClass
                         messageID: @props.messageID
                         conversationID: @props.conversationID
                         conversationLengths: @props.conversationLengths
+                        login: @props.login
                         edited: @state.edited
                         selected: @state.selected
                         allSelected: @state.allSelected
@@ -488,6 +489,7 @@ MessageListBody = React.createClass
                 edited: @props.edited,
                 settings: @props.settings,
                 selected: @props.selected[id]?,
+                login: @props.login
                 onSelect: (val) =>
                     @props.onSelect id, val
 
@@ -659,10 +661,13 @@ MessageItem = React.createClass
 
     getParticipants: (message) ->
         from = message.get 'from'
-        to   = message.get('to').concat(message.get('cc'))
+        to   = message.get('to').concat(message.get('cc')).filter (address) =>
+            return address.address isnt @props.login and
+                address.address isnt from[0]?.address
+        separator = if to.length > 0 then ', ' else ' '
         span null,
             Participants participants: from, onAdd: @addAddress
-            span null, ', '
+            span null, separator
             Participants participants: to, onAdd: @addAddress
 
     addAddress: (address) ->
