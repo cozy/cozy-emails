@@ -32,6 +32,7 @@ module.exports = React.createClass
             messageDisplayHTML:   @props.settings.get 'messageDisplayHTML'
             messageDisplayImages: @props.settings.get 'messageDisplayImages'
             currentMessageID: null
+            prepared: {}
         }
 
     propTypes:
@@ -54,9 +55,7 @@ module.exports = React.createClass
         should = not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
         return should
 
-    _prepareMessage: ->
-        message = @props.message
-
+    _prepareMessage: (message) ->
         # display full headers
         fullHeaders = []
         for key, value of message.get 'headers'
@@ -65,48 +64,41 @@ module.exports = React.createClass
             else
                 fullHeaders.push "#{key}: #{value}"
 
-        if @state.active
-            text = message.get 'text'
-            html = message.get 'html'
-            alternatives = message.get 'alternatives'
-            urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
-            # Some calendar invite may contain neither text nor HTML part
-            if not text? and not html? and alternatives?.length > 0
-                text = t 'calendar unknown format'
+        text = message.get 'text'
+        html = message.get 'html'
+        alternatives = message.get 'alternatives'
+        urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
+        # Some calendar invite may contain neither text nor HTML part
+        if not text? and not html? and alternatives?.length > 0
+            text = t 'calendar unknown format'
 
-            #
-            # @TODO Do we want to convert text only messages to HTML ?
-            # /!\ if messageDisplayHTML is set, this method should always return
-            # a value fo html, otherwise the content of the email flashes
-            if text? and not html? and @state.messageDisplayHTML
-                try
-                    html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
-                catch e
-                    html = "<div class='text'>#{text}</div>" #markdown.toHTML text
+        #
+        # @TODO Do we want to convert text only messages to HTML ?
+        # /!\ if messageDisplayHTML is set, this method should always return
+        # a value fo html, otherwise the content of the email flashes
+        if text? and not html? and @state.messageDisplayHTML
+            try
+                html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
+            catch e
+                html = "<div class='text'>#{text}</div>" #markdown.toHTML text
 
-            if html? and not text? and not @state.messageDisplayHTML
-                text = toMarkdown html
+        if html? and not text? and not @state.messageDisplayHTML
+            text = toMarkdown html
 
-            if text?
-                rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
-                rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>'
-                rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>'
-                rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>'
-                rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span>'
-                rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span>'
+        if text?
+            rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
+            rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>'
+            rich = rich.replace /^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>'
+            rich = rich.replace /^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>'
+            rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span>'
+            rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span>'
 
         return {
-            id         : message.get 'id'
             attachments: message.get 'attachments'
-            flags      : message.get 'flags' or []
-            from       : message.get 'from'
-            to         : message.get 'to'
-            cc         : message.get 'cc'
             fullHeaders: fullHeaders
             text       : text
             rich       : rich
             html       : html
-            date       : MessageUtils.formatDate message.get 'createdAt'
         }
 
     componentWillMount: ->
@@ -116,31 +108,34 @@ module.exports = React.createClass
         state =
             active: props.active
         if props.message.get('id') isnt @props.message.get('id')
-            @_markRead @props.message
+            @_markRead props.message
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
             state.messageDisplayImages = props.settings.get 'messageDisplayImages'
-            state.composing = false
+            state.composing            = false
         @setState state
 
     _markRead: (message) ->
         # Hack to prevent infinite loop if server side mark as read fails
         messageID = message.get 'id'
         if @state.currentMessageID isnt messageID
-            @setState currentMessageID: messageID
+            state =
+                currentMessageID: messageID
+                prepared: @_prepareMessage message
             # Mark message as seen if needed
             flags = message.get('flags').slice()
             if flags.indexOf(MessageFlags.SEEN) is -1
                 flags.push MessageFlags.SEEN
                 MessageActionCreator.updateFlag message, flags
+            @setState state
 
-    prepareHTML: (prepared) ->
+    prepareHTML: (html) ->
         messageDisplayHTML = true
         parser = new DOMParser()
         html   = """<html><head>
                 <link rel="stylesheet" href="/fonts/fonts.css" />
                 <link rel="stylesheet" href="./mail_stylesheet.css" />
                 <style>body { visibility: hidden; }</style>
-            </head><body>#{prepared.html}</body></html>"""
+            </head><body>#{html}</body></html>"""
         doc    = parser.parseFromString html, "text/html"
         images = []
 
@@ -169,7 +164,7 @@ module.exports = React.createClass
         if doc?
             @_htmlContent = doc.documentElement.innerHTML
         else
-            @_htmlContent = prepared.html
+            @_htmlContent = html
 
             #htmluri = "data:text/html;charset=utf-8;base64,
             #      #{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
@@ -178,10 +173,10 @@ module.exports = React.createClass
     render: ->
 
         message  = @props.message
-        prepared = @_prepareMessage()
+        prepared = @state.prepared
 
-        if @state.messageDisplayHTML and prepared.html
-            {messageDisplayHTML, images} = @prepareHTML prepared
+        if @state.messageDisplayHTML and prepared.html?
+            {messageDisplayHTML, images} = @prepareHTML prepared.html
             imagesWarning = images.length > 0 and
                             not @state.messageDisplayImages
         else
@@ -197,10 +192,10 @@ module.exports = React.createClass
                 className: classes,
                 key: @props.key,
                 'data-id': message.get('id'),
-                    @renderHeaders prepared
+                    @renderHeaders message
                     div className: 'full-headers',
-                        pre null, prepared.fullHeaders.join "\n"
-                    @renderToolbox message.get('id'), prepared
+                        pre null, prepared?.fullHeaders?.join "\n"
+                    @renderToolbox message
                     @renderCompose()
                     MessageContent
                         ref: 'messageContent'
@@ -213,28 +208,30 @@ module.exports = React.createClass
                         composing: @state.composing
                         displayImages: @displayImages
                         displayHTML: @displayHTML
-                    @renderAttachments prepared.attachments.toJS()
+                    @renderAttachments message.get('attachments').toJS()
                     div className: 'clearfix'
         else
             li
                 className: classes,
                 key: @props.key,
                 'data-id': message.get('id'),
-                    @renderHeaders prepared
+                    @renderHeaders message
 
-    getParticipants: (prepared) ->
-        from = prepared.from
-        to   = prepared.to.concat(prepared.cc)
+    getParticipants: (message) ->
+        from = message.get 'from'
+        to   = message.get('to').concat(message.get('cc'))
         span null,
             Participants participants: from, onAdd: @addAddress, tooltip: true
             span null, ', '
             Participants participants: to, onAdd: @addAddress, tooltip: true
 
-    renderHeaders: (prepared) ->
-        hasAttachments = prepared.attachments.length
+    renderHeaders: (message) ->
+        attachments    = message.get('attachments')
+        hasAttachments = attachments.length
         leftClass = if hasAttachments then 'col-md-8' else 'col-md-12'
-        flags     = prepared.flags
-        avatar = MessageUtils.getAvatar @props.message
+        flags     = message.get('flags') or []
+        avatar    = MessageUtils.getAvatar @props.message
+        date      = MessageUtils.formatDate message.get 'createdAt'
         classes = classer
             'header': true
             'row': true
@@ -270,15 +267,15 @@ module.exports = React.createClass
                                 span null, t "mail receivers cc"
                                 @renderAddress 'cc'
                         if hasAttachments
-                            span className: 'hour', prepared.date
+                            span className: 'hour', date
                     if not hasAttachments
-                        span className: 'hour', prepared.date
+                        span className: 'hour', date
                 if hasAttachments
                     div className: 'col-md-4',
                         FilePicker
                             ref: 'filePicker'
                             editable: false
-                            value: prepared.attachments
+                            value: attachments
                             messageID: @props.message.get 'id'
                 #if @props.inConversation
                 #    toggleActive
@@ -289,13 +286,13 @@ module.exports = React.createClass
                     img className: 'sender-avatar', src: avatar
                 else
                     i className: 'sender-avatar fa fa-user'
-                span className: 'participants', @getParticipants prepared
+                span className: 'participants', @getParticipants message
                 if @state.active
                     i
                         className: 'toggle-headers fa fa-toggle-down clickable'
                         onClick: @toggleHeaders
                 #span className: 'subject', @props.message.get 'subject'
-                span className: 'hour', prepared.date
+                span className: 'hour', date
                 span className: "flags",
                     i
                         className: 'attach fa fa-paperclip clickable'
@@ -329,13 +326,14 @@ module.exports = React.createClass
                 onCancel: =>
                     @setState composing: false
 
-    renderToolbox: (id, prepared) ->
+    renderToolbox: (message) ->
 
         if @state.composing
             return
 
-        isFlagged = prepared.flags.indexOf(FlagsConstants.FLAGGED) is -1
-        isSeen    = prepared.flags.indexOf(FlagsConstants.SEEN) is -1
+        flags     = message.get('flags') or []
+        isFlagged = flags.indexOf(FlagsConstants.FLAGGED) is -1
+        isSeen    = flags.indexOf(FlagsConstants.SEEN) is -1
 
 
         conversationID = @props.message.get 'conversationID'
@@ -435,7 +433,7 @@ module.exports = React.createClass
                         isSeen: isSeen
                         isFlagged: isFlagged
                         mailboxID: @props.selectedMailboxID
-                        messageID: id
+                        messageID: message.get 'id'
                         message: @props.message
                         onMark: @onMark
                         onMove: @onMove
