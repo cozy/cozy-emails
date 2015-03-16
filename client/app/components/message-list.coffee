@@ -313,34 +313,12 @@ MessageList = React.createClass
 
     onDelete: ->
         selected = Object.keys @state.selected
-        deleteMessage = (messageID) ->
-            MessageActionCreator.delete messageID, (error) ->
-                if error?
-                    alertError "#{t("message action delete ko")} #{error}"
-                else
-                    window.cozyMails.messageNavigate()
+        settings = @props.settings
         if selected.length is 0
             alertError t 'list mass no message'
         else
-            if @props.settings.get 'displayConversation'
-                if (not @props.settings.get('messageConfirmDelete')) or
-                window.confirm(t 'list delete conv confirm', smart_count: selected.length)
-                    selected.forEach (id) =>
-                        message = @props.messages.get id
-                        # sometime, draft messages don't have a conversationID
-                        conversationID = message.get 'conversationID'
-                        if conversationID?
-                            ConversationActionCreator.delete conversationID, (error) ->
-                                if error?
-                                    alertError "#{t("conversation delete ko")} #{error}"
-                                else
-                                    window.cozyMails.messageNavigate()
-                        else
-                            deleteMessage(message.get 'id')
-            else
-                if (not @props.settings.get('messageConfirmDelete')) or
-                window.confirm(t 'list delete confirm', smart_count: selected.length)
-                    deleteMessage selected
+            MessageUtils.delete selected, settings.get 'displayConversation',
+                settings.get 'messageConfirmDelete'
 
     onMove: (args) ->
         selected = Object.keys @state.selected
