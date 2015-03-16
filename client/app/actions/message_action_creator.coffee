@@ -30,6 +30,11 @@ module.exports =
             if callback?
                 callback error, message
 
+    ##
+    # Delete one or some messages
+    #
+    # @params {Message|MessageID|[Messages]|[MessageIDs]}
+    # @params {Function}
     delete: (message, callback) ->
         LayoutActionCreator = require './layout_action_creator'
         doDelete = (message) =>

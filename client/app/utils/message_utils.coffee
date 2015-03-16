@@ -1,5 +1,8 @@
 {ComposeActions} = require '../constants/app_constants'
 ContactStore     = require '../stores/contact_store'
+MessageStore     = require '../stores/message_store'
+ConversationActionCreator = require '../actions/conversation_action_creator'
+MessageActionCreator      = require '../actions/message_action_creator'
 
 module.exports = MessageUtils =
 
@@ -181,3 +184,43 @@ module.exports = MessageUtils =
             return ContactStore.getAvatar message.get('from')[0].address
         else
             return null
+
+    # Delete message(s) or conversations
+    #
+    # @params {Mixed}    ids          messageID or Message or array of messageIDs or Messages
+    # @params {Boolean}  conversation true to delete whole conversation
+    # @params {Boolean}  confirm      true to ask user to confirm
+    # @params {Function} cb           callback
+    delete: (ids, conversation, confirm, cb) ->
+        if Array.isArray ids
+            mass = true
+            selected = ids
+        else
+            mass = false
+            selected = [ids]
+        deleteMessage = (messageID) ->
+            MessageActionCreator.delete messageID, (error) ->
+                if error?
+                    alertError "#{t("message action delete ko")} #{error}"
+                else
+                    window.cozyMails.messageNavigate()
+        if conversation
+            if (not confirm) or
+            window.confirm(t 'list delete conv confirm', smart_count: selected.length)
+                selected.forEach (message) ->
+                    if typeof message is 'string'
+                        message = MessageStore.getByID message
+                    # sometime, draft messages don't have a conversationID
+                    conversationID = message.get 'conversationID'
+                    if conversationID?
+                        ConversationActionCreator.delete conversationID, (error) ->
+                            if error?
+                                alertError "#{t("conversation delete ko")} #{error}"
+                            else
+                                window.cozyMails.messageNavigate()
+                    else
+                        deleteMessage(message.get 'id')
+        else
+            if (not confirm) or
+            window.confirm(t 'list delete confirm', smart_count: selected.length)
+                deleteMessage selected
