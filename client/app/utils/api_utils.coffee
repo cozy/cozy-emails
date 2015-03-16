@@ -1,3 +1,4 @@
+MessageUtils  = require './message_utils'
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 SettingsStore = require '../stores/settings_store'
