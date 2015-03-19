@@ -64,11 +64,7 @@ module.exports =
                 msg.mailboxIDs[trash] = -1
                 patches = jsonpatch.generate observer
                 XHRUtils.messagePatch message.get('id'), patches, (err, message) =>
-                    if not err?
-                        AppDispatcher.handleViewAction
-                            type: ActionTypes.MESSAGE_DELETE
-                            value: msg
-                    else
+                    if err?
                         LayoutActionCreator.alertError "#{t("message action delete ko")} #{err}"
                     if not mass
                         options =
@@ -80,6 +76,12 @@ module.exports =
                         LayoutActionCreator.notify t('message action delete ok', subject: msg.subject), options
                         if callback?
                             callback err
+
+                # Update datastore without waiting for server response
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_DELETE
+                    value: msg
+
         if Array.isArray message
             mass = true
             message.forEach doDelete

@@ -13,16 +13,26 @@ module.exports =
         conversation = MessageStore.getConversation conversationID
         account = AccountStore.getByID(conversation.get(0).get 'accountID')
         trash   = account.get 'trashMailbox'
-        messages = conversation.map (message) ->
+        messages        = []
+        messagesActions = []
+        conversation.map (message) ->
+            # action to allow undelete
             action =
                 id: message.get 'id'
                 from: Object.keys(message.get 'mailboxIDs')
                 to: trash
+            messagesActions.push action
+
+            # move messages client-side to trash, to update UI without waiting
+            # for server response
+            msg = message.toJS()
+            delete msg.mailboxIDs[id] for id of msg.mailboxIDs
+            msg.mailboxIDs[trash] = -1
+            messages.push msg
+
         .toJS()
-        AppDispatcher.handleViewAction
-            type: ActionTypes.CONVERSATION_ACTION
-            value:
-                messages: messages
+
+        # send requests ASAP
         XHRUtils.conversationDelete conversationID, (error, messages) ->
             if not error?
                 AppDispatcher.handleViewAction
@@ -37,6 +47,17 @@ module.exports =
             LayoutActionCreator.notify t('conversation delete ok'), options
             if callback?
                 callback error
+
+        # Update datastore
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RECEIVE_RAW_MESSAGES
+            value: messages
+
+        # Store action to allow undelete
+        AppDispatcher.handleViewAction
+            type: ActionTypes.CONVERSATION_ACTION
+            value:
+                messages: messagesActions
 
     move: (message, from, to, callback) ->
         # sometime, draft messages don't have a conversationID
