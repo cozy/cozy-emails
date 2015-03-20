@@ -127,7 +127,8 @@ module.exports =
                 action.from.forEach (from) =>
                     @move message, action.to, from, (err) ->
                         if not err?
-                            LayoutActionCreator.notify t('message undelete ok')
+                            LayoutActionCreator.notify t('message undelete ok'),
+                                autoclose: true
                         else
                             LayoutActionCreator.notify t('message undelete error')
             else if action.target is 'conversation' and
@@ -136,7 +137,8 @@ module.exports =
                     message.from.forEach (from) =>
                         @move message.id, message.to, from, (err) ->
                             if not err?
-                                LayoutActionCreator.notify t('message undelete ok')
+                                LayoutActionCreator.notify t('message undelete ok'),
+                                    autoclose: true
                             else
                                 LayoutActionCreator.notify t('message undelete error')
             else

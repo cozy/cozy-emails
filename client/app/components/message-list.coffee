@@ -411,7 +411,8 @@ MessageList = React.createClass
 
                     LayoutActionCreator.alertError "#{t("mailbox expunge ko")} #{error}"
                 else
-                    LayoutActionCreator.notify t "mailbox expunge ok"
+                    LayoutActionCreator.notify t("mailbox expunge ok"),
+                        autoclose: true
 
     _loadNext: ->
         if @refs.nextPage? and DomUtils.isVisible(@refs.nextPage.getDOMNode())
