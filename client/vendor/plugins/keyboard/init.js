@@ -289,6 +289,25 @@ if (typeof window.plugins !== "object") {
           MessageActionCreator.undelete();
         }
       },
+      'r': {
+        name: 'Reply',
+        action: function () {
+          var current, btn;
+          Array.prototype.forEach.call(document.querySelectorAll('.row > .content, .row > .preview'), function (e) {
+            var rect = e.getBoundingClientRect(),
+                visible = rect.bottom >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight)
+            if (visible) {
+              current = e;
+            }
+          });
+          if (typeof current !== 'undefined') {
+            btn = document.querySelector(".thread li.message[data-id='" + current.dataset.messageId + "'] button.btn.reply");
+            if (btn !== null) {
+                btn.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
+            }
+          }
+        }
+      },
       '?': {
         name: "Toggle display of available bindings",
         action: bindingHelp
