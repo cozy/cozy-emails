@@ -341,10 +341,12 @@ MenuMailboxItem = React.createClass
                 if error?
                     LayoutActionCreator.alertError "#{t("conversation move ko")} #{error}"
                 else
-                    LayoutActionCreator.notify t "conversation move ok"
+                    LayoutActionCreator.notify t("conversation move ok"),
+                        autoclose: true
         else
             MessageActionCreator.move messageID, mailboxID, newID, (error) ->
                 if error?
                     LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
                 else
-                    LayoutActionCreator.notify t "message action move ok"
+                    LayoutActionCreator.notify t("message action move ok"),
+                        autoclose: true
