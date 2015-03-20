@@ -483,6 +483,7 @@ MessageListBody = React.createClass
                 isActive = @props.messageID is id
             MessageItem
                 message: message,
+                mailboxID: @props.mailboxID,
                 conversationLengths: @props.conversationLengths?.get(cid),
                 key: key,
                 isActive: isActive,
@@ -655,6 +656,7 @@ MessageItem = React.createClass
         data =
             messageID: event.currentTarget.dataset.messageId
             mailboxID: @props.mailboxID
+            conversation: @props.settings.get 'displayConversation'
         event.dataTransfer.setData 'text', JSON.stringify(data)
         event.dataTransfer.effectAllowed = 'move'
         event.dataTransfer.dropEffect = 'move'

@@ -44,7 +44,7 @@ module.exports =
                     label: t 'conversation undelete'
                     onClick: -> MessageActionCreator.undelete()
                 ]
-            LayoutActionCreator.notify t('conversation delete ok'), options
+            LayoutActionCreator.notify t('conversation delete ok', subject: messages[0].subject), options
             if callback?
                 callback error
 
@@ -60,6 +60,8 @@ module.exports =
                 messages: messagesActions
 
     move: (message, from, to, callback) ->
+        if typeof message is 'string'
+            message = MessageStore.getByID message
         # sometime, draft messages don't have a conversationID
         if not (message.get 'conversationID')?
             MessageActionCreator.move message, from, to, callback
@@ -82,6 +84,19 @@ module.exports =
                         value: messages
                 if callback?
                     callback error
+
+        # move message without waiting for server response
+        conversation = MessageStore.getConversation(message.get 'conversationID')
+        messages     = []
+        conversation.map (message) ->
+            msg = message.toJS()
+            delete msg.mailboxIDs[from] for id of msg.mailboxIDs
+            msg.mailboxIDs[to] = -1
+            messages.push msg
+        .toJS()
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RECEIVE_RAW_MESSAGES
+            value: messages
 
     seen: (conversationID, flags, callback) ->
         conversation =
