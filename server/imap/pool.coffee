@@ -83,6 +83,7 @@ class ImapPool
 
         onConnError = @_onConnectionError.bind this, imap
         imap.connectionID = 'conn' + connectionID++
+        imap.connectionName = "#{options.host}:#{options.port}"
 
         imap.on 'error', onConnError
         imap.once 'ready', =>
@@ -105,7 +106,7 @@ class ImapPool
 
 
     _onConnectionError: (connection, err) ->
-        log.debug @id, "connection error"
+        log.debug @id, "connection error on #{connection.connectionName}"
         # we failed to establish a new connection
         @connecting--
         @failConnectionCounter++
@@ -127,12 +128,12 @@ class ImapPool
         process.nextTick @_deQueue
 
     _onActiveError: (connection, err) ->
-        log.error "error on active imap socket", err.stack
+        log.error "error on active imap socket on #{connection.connectionName}", err.stack
         @_removeFromPool connection
         try connection.destroy()
 
     _onActiveClose: (connection, err) ->
-        log.error "active connection closed", err.stack
+        log.error "active connection #{connection.connectionName} closed", err.stack
         task = @pending[connection.connectionID]
         if task
             delete @pending[connection.connectionID]
