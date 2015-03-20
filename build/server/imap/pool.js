@@ -116,6 +116,7 @@ ImapPool = (function() {
     imap = new Imap(options);
     onConnError = this._onConnectionError.bind(this, imap);
     imap.connectionID = 'conn' + connectionID++;
+    imap.connectionName = options.host + ":" + options.port;
     imap.on('error', onConnError);
     imap.once('ready', (function(_this) {
       return function() {
@@ -138,7 +139,7 @@ ImapPool = (function() {
   };
 
   ImapPool.prototype._onConnectionError = function(connection, err) {
-    log.debug(this.id, "connection error");
+    log.debug(this.id, "connection error on " + connection.connectionName);
     this.connecting--;
     this.failConnectionCounter++;
     if (this.failConnectionCounter > 2) {
@@ -160,7 +161,7 @@ ImapPool = (function() {
   };
 
   ImapPool.prototype._onActiveError = function(connection, err) {
-    log.error("error on active imap socket", err.stack);
+    log.error("error on active imap socket on " + connection.connectionName, err.stack);
     this._removeFromPool(connection);
     try {
       return connection.destroy();
@@ -169,7 +170,7 @@ ImapPool = (function() {
 
   ImapPool.prototype._onActiveClose = function(connection, err) {
     var task;
-    log.error("active connection closed", err.stack);
+    log.error("active connection " + connection.connectionName + " closed", err.stack);
     task = this.pending[connection.connectionID];
     if (task) {
       delete this.pending[connection.connectionID];

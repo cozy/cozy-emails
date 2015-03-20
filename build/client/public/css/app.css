@@ -848,6 +848,7 @@ textarea:active,
   width: 100%;
   text-align: left;
   color: #000;
+  cursor: text;
 }
 .editor:hover,
 .rt-editor:hover {

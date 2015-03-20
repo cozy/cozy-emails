@@ -318,7 +318,7 @@ module.exports = ContactActionCreator = {
 });
 
 ;require.register("actions/conversation_action_creator", function(exports, require, module) {
-var ActionTypes, AppDispatcher, MessageFlags, XHRUtils;
+var AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, MessageActionCreator, MessageFlags, MessageStore, XHRUtils;
 
 AppDispatcher = require('../app_dispatcher');
 
@@ -328,45 +328,121 @@ XHRUtils = require('../utils/xhr_utils');
 
 MessageFlags = require('../constants/app_constants').MessageFlags;
 
+LayoutActionCreator = require('./layout_action_creator');
+
+MessageActionCreator = require('../actions/message_action_creator');
+
+AccountStore = require("../stores/account_store");
+
+MessageStore = require('../stores/message_store');
+
 module.exports = {
   "delete": function(conversationID, callback) {
-    return XHRUtils.conversationDelete(conversationID, function(error, messages) {
+    var account, conversation, messages, messagesActions, trash;
+    conversation = MessageStore.getConversation(conversationID);
+    account = AccountStore.getByID(conversation.get(0).get('accountID'));
+    trash = account.get('trashMailbox');
+    messages = [];
+    messagesActions = [];
+    conversation.map(function(message) {
+      var action, id, msg;
+      action = {
+        id: message.get('id'),
+        from: Object.keys(message.get('mailboxIDs')),
+        to: trash
+      };
+      messagesActions.push(action);
+      msg = message.toJS();
+      for (id in msg.mailboxIDs) {
+        delete msg.mailboxIDs[id];
+      }
+      msg.mailboxIDs[trash] = -1;
+      return messages.push(msg);
+    }).toJS();
+    XHRUtils.conversationDelete(conversationID, function(error, messages) {
+      var options;
       if (error == null) {
         AppDispatcher.handleViewAction({
           type: ActionTypes.RECEIVE_RAW_MESSAGES,
           value: messages
         });
       }
+      options = {
+        autoclose: true,
+        actions: [
+          {
+            label: t('conversation undelete'),
+            onClick: function() {
+              return MessageActionCreator.undelete();
+            }
+          }
+        ]
+      };
+      LayoutActionCreator.notify(t('conversation delete ok', {
+        subject: messages[0].subject
+      }), options);
       if (callback != null) {
         return callback(error);
+      }
+    });
+    AppDispatcher.handleViewAction({
+      type: ActionTypes.RECEIVE_RAW_MESSAGES,
+      value: messages
+    });
+    return AppDispatcher.handleViewAction({
+      type: ActionTypes.CONVERSATION_ACTION,
+      value: {
+        messages: messagesActions
       }
     });
   },
   move: function(message, from, to, callback) {
-    var msg, observer, patches;
-    msg = message.toJSON();
-    AppDispatcher.handleViewAction({
-      type: ActionTypes.CONVERSATION_ACTION,
-      value: {
-        id: msg.conversationID,
-        from: from,
-        to: to
+    var conversation, messages, msg, observer, patches;
+    if (typeof message === 'string') {
+      message = MessageStore.getByID(message);
+    }
+    if ((message.get('conversationID')) == null) {
+      MessageActionCreator.move(message, from, to, callback);
+    } else {
+      msg = message.toJSON();
+      AppDispatcher.handleViewAction({
+        type: ActionTypes.CONVERSATION_ACTION,
+        value: {
+          id: msg.conversationID,
+          from: from,
+          to: to
+        }
+      });
+      observer = jsonpatch.observe(msg);
+      delete msg.mailboxIDs[from];
+      msg.mailboxIDs[to] = -1;
+      patches = jsonpatch.generate(observer);
+      XHRUtils.conversationPatch(msg.conversationID, patches, function(error, messages) {
+        if (error == null) {
+          AppDispatcher.handleViewAction({
+            type: ActionTypes.RECEIVE_RAW_MESSAGES,
+            value: messages
+          });
+        }
+        if (callback != null) {
+          return callback(error);
+        }
+      });
+    }
+    conversation = MessageStore.getConversation(message.get('conversationID'));
+    messages = [];
+    conversation.map(function(message) {
+      var id;
+      msg = message.toJS();
+      for (id in msg.mailboxIDs) {
+        delete msg.mailboxIDs[from];
       }
-    });
-    observer = jsonpatch.observe(msg);
-    delete msg.mailboxIDs[from];
-    msg.mailboxIDs[to] = -1;
-    patches = jsonpatch.generate(observer);
-    return XHRUtils.conversationPatch(msg.conversationID, patches, function(error, messages) {
-      if (error == null) {
-        AppDispatcher.handleViewAction({
-          type: ActionTypes.RECEIVE_RAW_MESSAGES,
-          value: messages
-        });
-      }
-      if (callback != null) {
-        return callback(error);
-      }
+      msg.mailboxIDs[to] = -1;
+      return messages.push(msg);
+    }).toJS();
+    return AppDispatcher.handleViewAction({
+      type: ActionTypes.RECEIVE_RAW_MESSAGES,
+      value: messages
     });
   },
   seen: function(conversationID, flags, callback) {
@@ -413,7 +489,7 @@ module.exports = {
 });
 
 ;require.register("actions/layout_action_creator", function(exports, require, module) {
-var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageStore, SearchActionCreator, SocketUtils, XHRUtils, _cachedDisposition, _cachedQuery, _ref;
+var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageFlags, MessageStore, SearchActionCreator, SocketUtils, XHRUtils, _cachedDisposition, _cachedQuery, _ref;
 
 XHRUtils = require('../utils/xhr_utils');
 
@@ -427,7 +503,7 @@ MessageStore = require('../stores/message_store');
 
 AppDispatcher = require('../app_dispatcher');
 
-_ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, AlertLevel = _ref.AlertLevel;
+_ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, AlertLevel = _ref.AlertLevel, MessageFlags = _ref.MessageFlags;
 
 AccountActionCreator = require('./account_action_creator');
 
@@ -627,6 +703,12 @@ module.exports = LayoutActionCreator = {
       if (err != null) {
         return LayoutActionCreator.alertError(err);
       } else {
+        if (rawMessages.length === 1) {
+          message = MessageStore.getByID(rawMessages[0].id);
+          if ((message != null) && rawMessages[0].flags.length === 0 && message.get('flags').length === 1 && message.get('flags')[0] === MessageFlags.SEEN) {
+            rawMessages[0].flags = MessageFlags.SEEN;
+          }
+        }
         MessageActionCreator.receiveRawMessages(rawMessages);
         return onMessage(rawMessages[0]);
       }
@@ -781,14 +863,9 @@ module.exports = {
           }
           msg.mailboxIDs[trash] = -1;
           patches = jsonpatch.generate(observer);
-          return XHRUtils.messagePatch(message.get('id'), patches, function(err, message) {
+          XHRUtils.messagePatch(message.get('id'), patches, function(err, message) {
             var options;
-            if (err == null) {
-              AppDispatcher.handleViewAction({
-                type: ActionTypes.MESSAGE_DELETE,
-                value: msg
-              });
-            } else {
+            if (err != null) {
               LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + err);
             }
             if (!mass) {
@@ -810,6 +887,10 @@ module.exports = {
                 return callback(err);
               }
             }
+          });
+          return AppDispatcher.handleViewAction({
+            type: ActionTypes.MESSAGE_DELETE,
+            value: msg
           });
         }
       };
@@ -872,16 +953,34 @@ module.exports = {
           return function(from) {
             return _this.move(message, action.to, from, function(err) {
               if (err == null) {
-                return LayoutActionCreator.notify(t('message undelete ok'));
+                return LayoutActionCreator.notify(t('message undelete ok'), {
+                  autoclose: true
+                });
+              } else {
+                return LayoutActionCreator.notify(t('message undelete error'));
               }
             });
           };
         })(this));
+      } else if (action.target === 'conversation' && Array.isArray(action.messages)) {
+        return action.messages.forEach((function(_this) {
+          return function(message) {
+            return message.from.forEach(function(from) {
+              return _this.move(message.id, message.to, from, function(err) {
+                if (err == null) {
+                  return LayoutActionCreator.notify(t('message undelete ok'), {
+                    autoclose: true
+                  });
+                } else {
+                  return LayoutActionCreator.notify(t('message undelete error'));
+                }
+              });
+            });
+          };
+        })(this));
       } else {
-        return LayoutActionCreator.alertError(t('app unimplemented'));
+        return LayoutActionCreator.alertError(t('message undelete unavailable'));
       }
-    } else {
-      return LayoutActionCreator.alertError(t('message undelete error'));
     }
   },
   updateFlag: function(message, flags, callback) {
@@ -1274,7 +1373,9 @@ module.exports = React.createClass({
       } else {
         return AccountActionCreator.create(accountValue, (function(_this) {
           return function(account) {
-            LAC.notify(t("account creation ok"));
+            LAC.notify(t("account creation ok"), {
+              autoclose: true
+            });
             return _this.redirect({
               direction: 'first',
               action: 'account.config',
@@ -2008,7 +2109,9 @@ AccountConfigMailboxes = React.createClass({
         if (error != null) {
           return LAC.alertError("" + (t("mailbox create ko")) + " " + error);
         } else {
-          LAC.notify(t("mailbox create ok"));
+          LAC.notify(t("mailbox create ok"), {
+            autoclose: true
+          });
           return _this.refs.newmailbox.getDOMNode().value = '';
         }
       };
@@ -2151,7 +2254,9 @@ MailboxItem = React.createClass({
         if (error != null) {
           return LAC.alertError("" + (t("mailbox update ko")) + " " + error);
         } else {
-          LAC.notify(t("mailbox update ok"));
+          LAC.notify(t("mailbox update ok"), {
+            autoclose: true
+          });
           return _this.setState({
             edited: false
           });
@@ -2170,7 +2275,9 @@ MailboxItem = React.createClass({
       if (error != null) {
         return LAC.alertError("" + (t("mailbox update ko")) + " " + error);
       } else {
-        return LAC.notify(t("mailbox update ok"));
+        return LAC.notify(t("mailbox update ok"), {
+          autoclose: true
+        });
       }
     });
     return this.setState({
@@ -2189,7 +2296,9 @@ MailboxItem = React.createClass({
         if (error != null) {
           return LAC.alertError("" + (t("mailbox delete ko")) + " " + error);
         } else {
-          return LAC.notify(t("mailbox delete ok"));
+          return LAC.notify(t("mailbox delete ok"), {
+            autoclose: true
+          });
         }
       });
     }
@@ -2652,6 +2761,7 @@ module.exports = Application = React.createClass({
         mailboxID: mailboxID,
         messageID: messageID,
         conversationID: conversationID,
+        login: AccountStore.getByID(accountID).get('login'),
         mailboxes: this.state.mailboxesFlat,
         settings: this.state.settings,
         fetching: fetching,
@@ -4313,7 +4423,7 @@ module.exports = MailsInput = React.createClass({
 });
 
 ;require.register("components/menu", function(exports, require, module) {
-var AccountStore, Dispositions, LayoutActionCreator, Menu, MenuMailboxItem, MessageActionCreator, Modal, RouterMixin, SpecialBoxIcons, ThinProgress, a, classer, div, i, li, span, ul, _ref, _ref1;
+var AccountStore, ConversationActionCreator, Dispositions, LayoutActionCreator, Menu, MenuMailboxItem, MessageActionCreator, Modal, RouterMixin, SpecialBoxIcons, ThinProgress, a, classer, div, i, li, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i;
 
@@ -4322,6 +4432,8 @@ classer = React.addons.classSet;
 RouterMixin = require('../mixins/router_mixin');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
+
+ConversationActionCreator = require('../actions/conversation_action_creator');
 
 MessageActionCreator = require('../actions/message_action_creator');
 
@@ -4698,19 +4810,33 @@ MenuMailboxItem = React.createClass({
     return e.preventDefault();
   },
   onDrop: function(event) {
-    var mailboxID, messageID, newID, _ref2;
-    _ref2 = JSON.parse(event.dataTransfer.getData('text')), messageID = _ref2.messageID, mailboxID = _ref2.mailboxID;
+    var conversation, mailboxID, messageID, newID, _ref2;
+    _ref2 = JSON.parse(event.dataTransfer.getData('text')), messageID = _ref2.messageID, mailboxID = _ref2.mailboxID, conversation = _ref2.conversation;
     newID = event.currentTarget.dataset.mailboxId;
     this.setState({
       target: false
     });
-    return MessageActionCreator.move(messageID, mailboxID, newID, function(error) {
-      if (error != null) {
-        return LayoutActionCreator.alertError("" + (t("message action move ko")) + " " + error);
-      } else {
-        return LayoutActionCreator.notify(t("message action move ok"));
-      }
-    });
+    if (conversation) {
+      return ConversationActionCreator.move(messageID, mailboxID, newID, function(error) {
+        if (error != null) {
+          return LayoutActionCreator.alertError("" + (t("conversation move ko")) + " " + error);
+        } else {
+          return LayoutActionCreator.notify(t("conversation move ok"), {
+            autoclose: true
+          });
+        }
+      });
+    } else {
+      return MessageActionCreator.move(messageID, mailboxID, newID, function(error) {
+        if (error != null) {
+          return LayoutActionCreator.alertError("" + (t("message action move ko")) + " " + error);
+        } else {
+          return LayoutActionCreator.notify(t("message action move ok"), {
+            autoclose: true
+          });
+        }
+      });
+    }
   }
 });
 });
@@ -5016,6 +5142,7 @@ MessageList = React.createClass({
       messageID: this.props.messageID,
       conversationID: this.props.conversationID,
       conversationLengths: this.props.conversationLengths,
+      login: this.props.login,
       edited: this.state.edited,
       selected: this.state.selected,
       allSelected: this.state.allSelected,
@@ -5043,7 +5170,7 @@ MessageList = React.createClass({
         };
       })(this)
     }), this.props.messages.count() < parseInt(this.props.counterMessage, 10) && (this.props.query.pageAfter != null) ? p({
-      className: 'text-center'
+      className: 'text-center list-footer'
     }, this.props.fetching ? i({
       className: "fa fa-refresh fa-spin"
     }) : a({
@@ -5092,43 +5219,13 @@ MessageList = React.createClass({
     }
   },
   onDelete: function() {
-    var selected;
+    var selected, settings;
     selected = Object.keys(this.state.selected);
+    settings = this.props.settings;
     if (selected.length === 0) {
       return alertError(t('list mass no message'));
     } else {
-      if (this.props.settings.get('displayConversation')) {
-        if ((!this.props.settings.get('messageConfirmDelete')) || window.confirm(t('list delete conv confirm', {
-          smart_count: selected.length
-        }))) {
-          return selected.forEach((function(_this) {
-            return function(id) {
-              var conversationID, message;
-              message = _this.props.messages.get(id);
-              conversationID = message.get('conversationID');
-              return ConversationActionCreator["delete"](conversationID, function(error) {
-                if (error != null) {
-                  return alertError("" + (t("conversation delete ko")) + " " + error);
-                } else {
-                  return window.cozyMails.messageNavigate();
-                }
-              });
-            };
-          })(this));
-        }
-      } else {
-        if ((!this.props.settings.get('messageConfirmDelete')) || window.confirm(t('list delete confirm', {
-          smart_count: selected.length
-        }))) {
-          return MessageActionCreator["delete"](selected, function(error) {
-            if (error != null) {
-              return alertError("" + (t("message action delete ko")) + " " + error);
-            } else {
-              return window.cozyMails.messageNavigate();
-            }
-          });
-        }
-      }
+      return MessageUtils["delete"](selected, settings.get('displayConversation', settings.get('messageConfirmDelete')));
     }
   },
   onMove: function(args) {
@@ -5265,7 +5362,9 @@ MessageList = React.createClass({
             }
             return LayoutActionCreator.alertError("" + (t("mailbox expunge ko")) + " " + error);
           } else {
-            return LayoutActionCreator.notify(t("mailbox expunge ok"));
+            return LayoutActionCreator.notify(t("mailbox expunge ok"), {
+              autoclose: true
+            });
           }
         };
       })(this));
@@ -5297,7 +5396,9 @@ MessageList = React.createClass({
         scrollable.removeEventListener('scroll', _this._loadNext);
         scrollable.addEventListener('scroll', _this._loadNext);
         _this._loadNext();
-        return _this._checkNextInterval = window.setInterval(_this._loadNext, 10000);
+        if (_this._checkNextInterval == null) {
+          return _this._checkNextInterval = window.setInterval(_this._loadNext, 10000);
+        }
       };
     })(this), 0);
   },
@@ -5352,12 +5453,14 @@ MessageListBody = React.createClass({
         }
         return MessageItem({
           message: message,
+          mailboxID: _this.props.mailboxID,
           conversationLengths: (_ref2 = _this.props.conversationLengths) != null ? _ref2.get(cid) : void 0,
           key: key,
           isActive: isActive,
           edited: _this.props.edited,
           settings: _this.props.settings,
           selected: _this.props.selected[id] != null,
+          login: _this.props.login,
           onSelect: function(val) {
             return _this.props.onSelect(id, val);
           }
@@ -5556,20 +5659,27 @@ MessageItem = React.createClass({
     event.stopPropagation();
     data = {
       messageID: event.currentTarget.dataset.messageId,
-      mailboxID: this.props.mailboxID
+      mailboxID: this.props.mailboxID,
+      conversation: this.props.settings.get('displayConversation')
     };
     event.dataTransfer.setData('text', JSON.stringify(data));
     event.dataTransfer.effectAllowed = 'move';
     return event.dataTransfer.dropEffect = 'move';
   },
   getParticipants: function(message) {
-    var from, to;
+    var from, separator, to;
     from = message.get('from');
-    to = message.get('to').concat(message.get('cc'));
+    to = message.get('to').concat(message.get('cc')).filter((function(_this) {
+      return function(address) {
+        var _ref2;
+        return address.address !== _this.props.login && address.address !== ((_ref2 = from[0]) != null ? _ref2.address : void 0);
+      };
+    })(this));
+    separator = to.length > 0 ? ', ' : ' ';
     return span(null, Participants({
       participants: from,
       onAdd: this.addAddress
-    }), span(null, ', '), Participants({
+    }), span(null, separator), Participants({
       participants: to,
       onAdd: this.addAddress
     }));
@@ -5750,7 +5860,8 @@ module.exports = React.createClass({
       headers: false,
       messageDisplayHTML: this.props.settings.get('messageDisplayHTML'),
       messageDisplayImages: this.props.settings.get('messageDisplayImages'),
-      currentMessageID: null
+      currentMessageID: null,
+      prepared: {}
     };
   },
   propTypes: {
@@ -5774,9 +5885,8 @@ module.exports = React.createClass({
     should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
     return should;
   },
-  _prepareMessage: function() {
-    var e, fullHeaders, html, key, message, rich, text, urls, value, _ref2;
-    message = this.props.message;
+  _prepareMessage: function(message) {
+    var alternatives, e, fullHeaders, html, key, rich, text, urls, value, _ref2;
     fullHeaders = [];
     _ref2 = message.get('headers');
     for (key in _ref2) {
@@ -5787,42 +5897,38 @@ module.exports = React.createClass({
         fullHeaders.push("" + key + ": " + value);
       }
     }
-    if (this.state.active) {
-      text = message.get('text');
-      html = message.get('html');
-      urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim;
-      if ((text != null) && (html == null) && this.state.messageDisplayHTML) {
-        try {
-          html = markdown.toHTML(text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2"));
-        } catch (_error) {
-          e = _error;
-          html = "<div class='text'>" + text + "</div>";
-        }
-      }
-      if ((html != null) && (text == null) && !this.state.messageDisplayHTML) {
-        text = toMarkdown(html);
-      }
-      if (text != null) {
-        rich = text.replace(urls, '<a href="$1" target="_blank">$1</a>');
-        rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>');
-        rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>');
-        rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>');
-        rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>');
-        rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>');
+    text = message.get('text');
+    html = message.get('html');
+    alternatives = message.get('alternatives');
+    urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim;
+    if ((text == null) && (html == null) && (alternatives != null ? alternatives.length : void 0) > 0) {
+      text = t('calendar unknown format');
+    }
+    if ((text != null) && (html == null) && this.state.messageDisplayHTML) {
+      try {
+        html = markdown.toHTML(text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2"));
+      } catch (_error) {
+        e = _error;
+        html = "<div class='text'>" + text + "</div>";
       }
     }
+    if ((html != null) && (text == null) && !this.state.messageDisplayHTML) {
+      text = toMarkdown(html);
+    }
+    if (text != null) {
+      rich = text.replace(urls, '<a href="$1" target="_blank">$1</a>');
+      rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>');
+      rich = rich.replace(/^>>>>[^>]?.*$/gim, '<span class="quote4">$&</span>');
+      rich = rich.replace(/^>>>[^>]?.*$/gim, '<span class="quote3">$&</span>');
+      rich = rich.replace(/^>>[^>]?.*$/gim, '<span class="quote2">$&</span>');
+      rich = rich.replace(/^>[^>]?.*$/gim, '<span class="quote1">$&</span>');
+    }
     return {
-      id: message.get('id'),
       attachments: message.get('attachments'),
-      flags: message.get('flags' || []),
-      from: message.get('from'),
-      to: message.get('to'),
-      cc: message.get('cc'),
       fullHeaders: fullHeaders,
       text: text,
       rich: rich,
-      html: html,
-      date: MessageUtils.formatDate(message.get('createdAt'))
+      html: html
     };
   },
   componentWillMount: function() {
@@ -5831,35 +5937,37 @@ module.exports = React.createClass({
   componentWillReceiveProps: function(props) {
     var state;
     state = {
-      active: props.active,
-      composing: false
+      active: props.active
     };
     if (props.message.get('id') !== this.props.message.get('id')) {
-      this._markRead(this.props.message);
+      this._markRead(props.message);
       state.messageDisplayHTML = props.settings.get('messageDisplayHTML');
       state.messageDisplayImages = props.settings.get('messageDisplayImages');
+      state.composing = false;
     }
     return this.setState(state);
   },
   _markRead: function(message) {
-    var flags, messageID;
+    var flags, messageID, state;
     messageID = message.get('id');
     if (this.state.currentMessageID !== messageID) {
-      this.setState({
-        currentMessageID: messageID
-      });
+      state = {
+        currentMessageID: messageID,
+        prepared: this._prepareMessage(message)
+      };
       flags = message.get('flags').slice();
       if (flags.indexOf(MessageFlags.SEEN) === -1) {
         flags.push(MessageFlags.SEEN);
-        return MessageActionCreator.updateFlag(message, flags);
+        MessageActionCreator.updateFlag(message, flags);
       }
+      return this.setState(state);
     }
   },
-  prepareHTML: function(prepared) {
-    var doc, hideImage, href, html, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
+  prepareHTML: function(html) {
+    var doc, hideImage, href, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
     messageDisplayHTML = true;
     parser = new DOMParser();
-    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"/fonts/fonts.css\" />\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + prepared.html + "</body></html>";
+    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"/fonts/fonts.css\" />\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + html + "</body></html>";
     doc = parser.parseFromString(html, "text/html");
     images = [];
     if (!doc) {
@@ -5893,7 +6001,7 @@ module.exports = React.createClass({
     if (doc != null) {
       this._htmlContent = doc.documentElement.innerHTML;
     } else {
-      this._htmlContent = prepared.html;
+      this._htmlContent = html;
     }
     return {
       messageDisplayHTML: messageDisplayHTML,
@@ -5901,11 +6009,11 @@ module.exports = React.createClass({
     };
   },
   render: function() {
-    var classes, images, imagesWarning, message, messageDisplayHTML, prepared, _ref2;
+    var classes, images, imagesWarning, message, messageDisplayHTML, prepared, _ref2, _ref3;
     message = this.props.message;
-    prepared = this._prepareMessage();
-    if (this.state.messageDisplayHTML && prepared.html) {
-      _ref2 = this.prepareHTML(prepared), messageDisplayHTML = _ref2.messageDisplayHTML, images = _ref2.images;
+    prepared = this.state.prepared;
+    if (this.state.messageDisplayHTML && (prepared.html != null)) {
+      _ref2 = this.prepareHTML(prepared.html), messageDisplayHTML = _ref2.messageDisplayHTML, images = _ref2.images;
       imagesWarning = images.length > 0 && !this.state.messageDisplayImages;
     } else {
       messageDisplayHTML = false;
@@ -5920,9 +6028,9 @@ module.exports = React.createClass({
         className: classes,
         key: this.props.key,
         'data-id': message.get('id')
-      }, this.renderHeaders(prepared), div({
+      }, this.renderHeaders(message), div({
         className: 'full-headers'
-      }, pre(null, prepared.fullHeaders.join("\n"))), this.renderToolbox(message.get('id'), prepared), this.renderCompose(), MessageContent({
+      }, pre(null, prepared != null ? (_ref3 = prepared.fullHeaders) != null ? _ref3.join("\n") : void 0 : void 0)), this.renderToolbox(message), this.renderCompose(), MessageContent({
         ref: 'messageContent',
         messageID: message.get('id'),
         messageDisplayHTML: messageDisplayHTML,
@@ -5933,7 +6041,7 @@ module.exports = React.createClass({
         composing: this.state.composing,
         displayImages: this.displayImages,
         displayHTML: this.displayHTML
-      }), this.renderAttachments(prepared.attachments.toJS()), div({
+      }), this.renderAttachments(message.get('attachments').toJS()), div({
         className: 'clearfix'
       }));
     } else {
@@ -5941,13 +6049,13 @@ module.exports = React.createClass({
         className: classes,
         key: this.props.key,
         'data-id': message.get('id')
-      }, this.renderHeaders(prepared));
+      }, this.renderHeaders(message));
     }
   },
-  getParticipants: function(prepared) {
+  getParticipants: function(message) {
     var from, to;
-    from = prepared.from;
-    to = prepared.to.concat(prepared.cc);
+    from = message.get('from');
+    to = message.get('to').concat(message.get('cc'));
     return span(null, Participants({
       participants: from,
       onAdd: this.addAddress,
@@ -5958,12 +6066,14 @@ module.exports = React.createClass({
       tooltip: true
     }));
   },
-  renderHeaders: function(prepared) {
-    var avatar, classes, flags, hasAttachments, leftClass, _ref2;
-    hasAttachments = prepared.attachments.length;
+  renderHeaders: function(message) {
+    var attachments, avatar, classes, date, flags, hasAttachments, leftClass, _ref2;
+    attachments = message.get('attachments');
+    hasAttachments = attachments.length;
     leftClass = hasAttachments ? 'col-md-8' : 'col-md-12';
-    flags = prepared.flags;
+    flags = message.get('flags') || [];
     avatar = MessageUtils.getAvatar(this.props.message);
+    date = MessageUtils.formatDate(message.get('createdAt'));
     classes = classer({
       'header': true,
       'row': true,
@@ -5996,14 +6106,14 @@ module.exports = React.createClass({
         className: 'receivers'
       }, span(null, t("mail receivers cc")), this.renderAddress('cc')) : void 0, hasAttachments ? span({
         className: 'hour'
-      }, prepared.date) : void 0), !hasAttachments ? span({
+      }, date) : void 0), !hasAttachments ? span({
         className: 'hour'
-      }, prepared.date) : void 0), hasAttachments ? div({
+      }, date) : void 0), hasAttachments ? div({
         className: 'col-md-4'
       }, FilePicker({
         ref: 'filePicker',
         editable: false,
-        value: prepared.attachments,
+        value: attachments,
         messageID: this.props.message.get('id')
       })) : void 0);
     } else {
@@ -6017,12 +6127,12 @@ module.exports = React.createClass({
         className: 'sender-avatar fa fa-user'
       }), span({
         className: 'participants'
-      }, this.getParticipants(prepared)), this.state.active ? i({
+      }, this.getParticipants(message)), this.state.active ? i({
         className: 'toggle-headers fa fa-toggle-down clickable',
         onClick: this.toggleHeaders
       }) : void 0, span({
         className: 'hour'
-      }, prepared.date), span({
+      }, date), span({
         className: "flags"
       }, i({
         className: 'attach fa fa-paperclip clickable',
@@ -6074,13 +6184,14 @@ module.exports = React.createClass({
       });
     }
   },
-  renderToolbox: function(id, prepared) {
-    var conversationID, displayNext, displayPrev, getParams, isFlagged, isSeen, next, nextUrl, params, prev, prevUrl;
+  renderToolbox: function(message) {
+    var conversationID, displayNext, displayPrev, flags, getParams, isFlagged, isSeen, next, nextUrl, params, prev, prevUrl;
     if (this.state.composing) {
       return;
     }
-    isFlagged = prepared.flags.indexOf(FlagsConstants.FLAGGED) === -1;
-    isSeen = prepared.flags.indexOf(FlagsConstants.SEEN) === -1;
+    flags = message.get('flags') || [];
+    isFlagged = flags.indexOf(FlagsConstants.FLAGGED) === -1;
+    isSeen = flags.indexOf(FlagsConstants.SEEN) === -1;
     conversationID = this.props.message.get('conversationID');
     getParams = (function(_this) {
       return function(messageID, conversationID) {
@@ -6198,7 +6309,7 @@ module.exports = React.createClass({
       isSeen: isSeen,
       isFlagged: isFlagged,
       mailboxID: this.props.selectedMailboxID,
-      messageID: id,
+      messageID: message.get('id'),
       message: this.props.message,
       onMark: this.onMark,
       onMove: this.onMove,
@@ -6488,7 +6599,8 @@ MessageContent = React.createClass({
       return div({
         className: 'row'
       }, div({
-        className: 'preview'
+        className: 'preview',
+        ref: content
       }, p({
         dangerouslySetInnerHTML: {
           __html: this.props.rich
@@ -6543,12 +6655,15 @@ MessageContent = React.createClass({
         };
       })(this);
       if (type === 'mount' && doc.readyState !== 'complete') {
-        return frame.addEventListener('load', loadContent);
+        frame.addEventListener('load', loadContent);
       } else {
-        return loadContent();
+        loadContent();
       }
     } else {
-      return window.cozyMails.customEvent("MESSAGE_LOADED", this.props.messageID);
+      window.cozyMails.customEvent("MESSAGE_LOADED", this.props.messageID);
+    }
+    if ((this.refs.content != null) && !this.props.composing) {
+      return this.refs.content.getDOMNode().scrollIntoView();
     }
   },
   componentDidMount: function() {
@@ -8707,12 +8822,13 @@ module.exports = {
   "message action mark ko": "Error marking message: ",
   "conversation move ok": "Conversation moved",
   "conversation move ko": "Error moving conversation",
-  "conversation delete ok": "Conversation deleted",
+  "conversation delete ok": "Conversation “%{subject}” deleted",
   "conversation delete ko": "Error deleting conversation",
   "conversation seen ok": "Conversation marked as read",
   "conversation seen ko": "Error",
   "conversation unseen ok": "Conversation marked as unread",
   "conversation unseen ko": "Error",
+  "conversation undelete": "Undo conversation deletion",
   "message images warning": "Display of images inside message has been blocked",
   "message images display": "Display images",
   "message html display": "Display HTML",
@@ -8721,7 +8837,8 @@ module.exports = {
   "message move already": "Message already in this folder",
   "message undelete": "Undo message deletion",
   "message undelete ok": "Message undeleted",
-  "message undelete error": "Undo not available",
+  "message undelete error": "Error undoing some action",
+  "message undelete unnavalable": "Undo not available",
   "message preview title": "View attachments",
   "settings title": "Settings",
   "settings button save": "Save",
@@ -8780,7 +8897,9 @@ module.exports = {
   'plugin name MiniSlate': 'MiniSlate editor',
   'plugin name Sample JS': 'Sample',
   'plugin name Keyboard shortcuts': 'Keyboard shortcuts',
-  'plugin name VCard': 'Contacts VCards'
+  'plugin name VCard': 'Contacts VCards',
+  'plugin modal close': 'Close',
+  'calendar unknown format': "This message contains an invite to an event in a currently unknown format."
 };
 });
 
@@ -8983,12 +9102,13 @@ module.exports = {
   "message action mark ko": "L'opération a échoué",
   "conversation move ok": "Conversation déplacée",
   "conversation move ko": "L'opération a échoué",
-  "conversation delete ok": "Conversation supprimée",
+  "conversation delete ok": "Conversation « %{subject} » supprimée",
   "conversation delete ko": "L'opération a échoué",
   "conversation seen ok": "Ok",
   "conversation seen ko": "L'opération a échoué",
   "conversation unseen ok": "Ok",
   "conversation unseen ko": "L'opération a échoué",
+  "conversation undelete": "Annuler la suppression",
   "message images warning": "L'affichage des images du message a été bloqué",
   "message images display": "Afficher les images",
   "message html display": "Afficher en HTML",
@@ -8998,6 +9118,7 @@ module.exports = {
   "message undelete": "Annuler la suppression",
   "message undelete ok": "Message restauré",
   "message undelete error": "Impossible d'annuler l'action",
+  "message undelete unavailable": "Impossible d'annuler l'action",
   "message preview title": "Voir les pièces jointes",
   "settings title": "Paramètres",
   "settings button save": "Enregistrer",
@@ -9055,7 +9176,9 @@ module.exports = {
   'plugin name MiniSlate': 'Éditeur MiniSlate',
   'plugin name Sample JS': 'Exemple',
   'plugin name Keyboard shortcuts': 'Raccourcis clavier',
-  'plugin name VCard': 'Affichage de VCard'
+  'plugin name VCard': 'Affichage de VCard',
+  'plugin modal close': 'Fermer',
+  'calendar unknown format': "Ce message contient une invitation à un évènement\ndans un format actuellement non pris en charge."
 };
 });
 
@@ -9993,9 +10116,9 @@ MessageStore = (function(_super) {
       if (messages.mailboxID) {
         SocketUtils.changeRealtimeScope(messages.mailboxID);
       }
-      _params = {};
       if (messages.links != null) {
         if (messages.links.next != null) {
+          _params = {};
           next = decodeURIComponent(messages.links.next);
           url = 'http://localhost' + next;
           url.split('?')[1].split('&').forEach(function(p) {
@@ -10513,9 +10636,11 @@ module.exports = ActivityUtils;
 });
 
 ;require.register("utils/api_utils", function(exports, require, module) {
-var AccountStore, LayoutActionCreator, MessageStore, SettingsStore, onMessageList,
+var AccountStore, LayoutActionCreator, MessageStore, MessageUtils, SettingsStore, onMessageList,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __hasProp = {}.hasOwnProperty;
+
+MessageUtils = require('./message_utils');
 
 AccountStore = require('../stores/account_store');
 
@@ -10669,26 +10794,16 @@ module.exports = {
     });
   },
   messageDeleteCurrent: function() {
-    var MessageActionCreator, alertError, message;
+    var messageID, settings;
     if (!onMessageList()) {
       return;
     }
-    MessageActionCreator = require('../actions/message_action_creator');
-    alertError = LayoutActionCreator.alertError;
-    message = MessageStore.getByID(MessageStore.getCurrentID());
-    if (message == null) {
+    messageID = MessageStore.getCurrentID();
+    if (messageID == null) {
       return;
     }
-    if ((!SettingsStore.get('messageConfirmDelete')) || window.confirm(t('mail confirm delete', {
-      subject: message.get('subject')
-    }))) {
-      this.messageNavigate();
-      return MessageActionCreator["delete"](message, function(error) {
-        if (error != null) {
-          return alertError("" + (t("message action delete ko")) + " " + error);
-        }
-      });
-    }
+    settings = SettingsStore.get();
+    return MessageUtils["delete"](messageID, settings.get('displayConversation', settings.get('messageConfirmDelete')));
   },
   messageUndo: function() {
     var MessageActionCreator;
@@ -10803,11 +10918,17 @@ module.exports = DomUtils = {
 });
 
 ;require.register("utils/message_utils", function(exports, require, module) {
-var ComposeActions, ContactStore, MessageUtils;
+var ComposeActions, ContactStore, ConversationActionCreator, MessageActionCreator, MessageStore, MessageUtils;
 
 ComposeActions = require('../constants/app_constants').ComposeActions;
 
 ContactStore = require('../stores/contact_store');
+
+MessageStore = require('../stores/message_store');
+
+ConversationActionCreator = require('../actions/conversation_action_creator');
+
+MessageActionCreator = require('../actions/message_action_creator');
 
 module.exports = MessageUtils = {
   displayAddress: function(address, full) {
@@ -11032,6 +11153,76 @@ module.exports = MessageUtils = {
     } else {
       return null;
     }
+  },
+  "delete": function(ids, conversation, confirm, cb) {
+    var confirmMessage, deleteConversation, deleteMessage, mass, onDeleted, selected;
+    if (Array.isArray(ids)) {
+      mass = ids.length;
+      selected = ids;
+    } else {
+      mass = 1;
+      selected = [ids];
+    }
+    if (selected.length > 1) {
+      window.cozyMails.messageClose();
+    }
+    onDeleted = _.after(selected.length, function() {
+      if (selected.length === 1) {
+        window.cozyMails.messageNavigate();
+      }
+      if (typeof cb === 'function') {
+        return cb();
+      }
+    });
+    deleteMessage = function(messageID) {
+      return MessageActionCreator["delete"](messageID, function(error) {
+        if (error != null) {
+          alertError("" + (t("message action delete ko")) + " " + error);
+        }
+        return onDeleted();
+      });
+    };
+    deleteConversation = function(messageID) {
+      var conversationID, message;
+      if (typeof messageID === 'string') {
+        message = MessageStore.getByID(messageID);
+      } else {
+        message = messageID;
+        messageID = message.get('id');
+      }
+      conversationID = message.get('conversationID');
+      if (conversationID != null) {
+        return ConversationActionCreator["delete"](conversationID, function(error) {
+          if (error != null) {
+            alertError("" + (t("conversation delete ko")) + " " + error);
+          }
+          return onDeleted();
+        });
+      } else {
+        return deleteMessage(messageID);
+      }
+    };
+    if (conversation) {
+      confirmMessage = t('list delete conv confirm', {
+        smart_count: selected.length
+      });
+    } else {
+      confirmMessage = t('list delete confirm', {
+        smart_count: selected.length
+      });
+    }
+    if ((!confirm) || window.confirm(confirmMessage)) {
+      return selected.forEach(function(messageID) {
+        if (conversation) {
+          return deleteConversation(messageID);
+        } else {
+          if (typeof messageID !== 'string') {
+            messageID = messageID.get('id');
+          }
+          return deleteMessage(messageID);
+        }
+      });
+    }
   }
 };
 });
@@ -11047,11 +11238,15 @@ helpers = {
     win.classList.add('modal');
     win.classList.add('fade');
     win.innerHTML = "<div class=\"modal-dialog\">\n    <div class=\"modal-content\">\n        <div class=\"modal-header\">\n            <button type=\"button\" class=\"close\" data-dismiss=\"modal\"\n                    aria-label=\"Close\">\n                <span aria-hidden=\"true\">&times;</span>\n            </button>\n            <h4 class=\"modal-title\"></h4>\n        </div>\n        <div class=\"modal-body\"> </div>\n        <div class=\"modal-footer\">\n            <button type=\"button\" class=\"btn btn-default\"\n                    data-dismiss=\"modal\">" + (t('plugin modal close')) + "\n            </button>\n        </div>\n    </div>\n</div>";
-    if (options.title) {
+    if (options.title != null) {
       win.querySelector('.modal-title').innerHTML = options.title;
     }
-    if (options.body) {
-      win.querySelector('.modal-body').innerHTML = options.body;
+    if (options.body != null) {
+      if (typeof options.body === 'string') {
+        win.querySelector('.modal-body').innerHTML = options.body;
+      } else {
+        win.querySelector('.modal-body').appendChild(options.body);
+      }
     }
     if (options.size === 'small') {
       win.querySelector('.modal-dialog').classList.add('modal-sm');
@@ -11418,6 +11613,9 @@ module.exports = AccountTranslator = {
     last = {};
     weight1 = 900;
     weight2 = 400;
+    if (raw.mailboxes == null) {
+      raw.mailboxes = [];
+    }
     if ((raw.draftMailbox == null) || (raw.sentMailbox == null) || (raw.trashMailbox == null)) {
       raw.mailboxes.forEach(function(box) {
         var _ref, _ref1, _ref2;

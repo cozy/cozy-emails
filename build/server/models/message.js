@@ -44,7 +44,8 @@ module.exports = Message = cozydb.getModel('Message', {
   date: Date,
   priority: String,
   binary: cozydb.NoSchema,
-  attachments: cozydb.NoSchema
+  attachments: cozydb.NoSchema,
+  alternatives: cozydb.NoSchema
 });
 
 mailutils = require('../utils/jwz_tools');
