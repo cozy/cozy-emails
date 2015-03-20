@@ -32,7 +32,7 @@ helpers =
         if options.title?
             win.querySelector('.modal-title').innerHTML = options.title
         if options.body?
-            if typeof options.body is 'String'
+            if typeof options.body is 'string'
                 win.querySelector('.modal-body').innerHTML = options.body
             else
                 win.querySelector('.modal-body').appendChild options.body

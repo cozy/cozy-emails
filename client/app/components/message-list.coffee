@@ -279,7 +279,7 @@ MessageList = React.createClass
                     # messages to display
                     if @props.messages.count() < parseInt(@props.counterMessage, 10) and
                        @props.query.pageAfter?
-                        p className: 'text-center',
+                        p className: 'text-center list-footer',
                             if @props.fetching
                                 i className: "fa fa-refresh fa-spin"
                             else

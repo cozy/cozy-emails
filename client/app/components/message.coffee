@@ -647,7 +647,7 @@ MessageContent = React.createClass
                 #       type: "button",
                 #       onClick: @props.displayHTML,
                 #       t 'message html display'
-                div className: 'preview',
+                div className: 'preview', ref: content,
                     p dangerouslySetInnerHTML: { __html: @props.rich }
                     #p null, @props.text
 
@@ -708,6 +708,9 @@ MessageContent = React.createClass
                 loadContent()
         else
             window.cozyMails.customEvent "MESSAGE_LOADED", @props.messageID
+
+        if @refs.content? and not @props.composing
+            @refs.content.getDOMNode().scrollIntoView()
 
 
     componentDidMount: ->

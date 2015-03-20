@@ -346,6 +346,7 @@ module.exports =
       'plugin name Sample JS'          : 'Exemple'
       'plugin name Keyboard shortcuts' : 'Raccourcis clavier'
       'plugin name VCard'              : 'Affichage de VCard'
+      'plugin modal close'             : 'Fermer'
 
       # Misc
       'calendar unknown format' : """
