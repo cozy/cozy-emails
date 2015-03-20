@@ -86,11 +86,10 @@ casper.test.begin 'Test draft', (test) ->
                     test.assertEquals confirm, "Do you really want to delete message “#{messageSubject}”?", "Confirmation dialog"
                     casper.waitWhileSelector "#email-compose h3[data-message-id=#{messageID}]", ->
                         test.pass 'Compose closed'
-                        casper.waitWhileSelector "li.message[data-message-id='#{messageID}']", ->
-                            test.pass "message deleted"
-                            if casper.getEngine() isnt 'slimer'
-                                test.skip 1
-                            else
+                        if casper.getEngine() is 'slimer'
+                            # delete doesn't work in PhantomJs
+                            casper.waitWhileSelector "li.message[data-message-id='#{messageID}']", ->
+                                test.pass "message deleted"
                                 casper.reload ->
                                     test.assertDoesntExist "li.message[data-message-id='#{messageID}']", "message really deleted"
 
