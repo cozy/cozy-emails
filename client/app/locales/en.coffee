@@ -226,7 +226,7 @@ module.exports =
       "message action mark ko"      : "Error marking message: "
       "conversation move ok"        : "Conversation moved"
       "conversation move ko"        : "Error moving conversation"
-      "conversation delete ok"      : "Conversation deleted"
+      "conversation delete ok"      : "Conversation “%{subject}” deleted"
       "conversation delete ko"      : "Error deleting conversation"
       "conversation seen ok"        : "Conversation marked as read"
       "conversation seen ko"        : "Error"
@@ -334,6 +334,7 @@ module.exports =
       'plugin name Sample JS'          : 'Sample'
       'plugin name Keyboard shortcuts' : 'Keyboard shortcuts'
       'plugin name VCard'              : 'Contacts VCards'
+      'plugin modal close'             : 'Close'
 
       # Misc
       'calendar unknown format' : """

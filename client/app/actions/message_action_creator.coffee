@@ -30,6 +30,11 @@ module.exports =
             if callback?
                 callback error, message
 
+    ##
+    # Delete one or some messages
+    #
+    # @params {Message|MessageID|[Messages]|[MessageIDs]}
+    # @params {Function}
     delete: (message, callback) ->
         LayoutActionCreator = require './layout_action_creator'
         doDelete = (message) =>
@@ -59,11 +64,7 @@ module.exports =
                 msg.mailboxIDs[trash] = -1
                 patches = jsonpatch.generate observer
                 XHRUtils.messagePatch message.get('id'), patches, (err, message) =>
-                    if not err?
-                        AppDispatcher.handleViewAction
-                            type: ActionTypes.MESSAGE_DELETE
-                            value: msg
-                    else
+                    if err?
                         LayoutActionCreator.alertError "#{t("message action delete ko")} #{err}"
                     if not mass
                         options =
@@ -75,6 +76,12 @@ module.exports =
                         LayoutActionCreator.notify t('message action delete ok', subject: msg.subject), options
                         if callback?
                             callback err
+
+                # Update datastore without waiting for server response
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_DELETE
+                    value: msg
+
         if Array.isArray message
             mass = true
             message.forEach doDelete
@@ -120,7 +127,8 @@ module.exports =
                 action.from.forEach (from) =>
                     @move message, action.to, from, (err) ->
                         if not err?
-                            LayoutActionCreator.notify t('message undelete ok')
+                            LayoutActionCreator.notify t('message undelete ok'),
+                                autoclose: true
                         else
                             LayoutActionCreator.notify t('message undelete error')
             else if action.target is 'conversation' and
@@ -129,7 +137,8 @@ module.exports =
                     message.from.forEach (from) =>
                         @move message.id, message.to, from, (err) ->
                             if not err?
-                                LayoutActionCreator.notify t('message undelete ok')
+                                LayoutActionCreator.notify t('message undelete ok'),
+                                    autoclose: true
                             else
                                 LayoutActionCreator.notify t('message undelete error')
             else

@@ -259,6 +259,7 @@ MessageList = React.createClass
                         messageID: @props.messageID
                         conversationID: @props.conversationID
                         conversationLengths: @props.conversationLengths
+                        login: @props.login
                         edited: @state.edited
                         selected: @state.selected
                         allSelected: @state.allSelected
@@ -278,7 +279,7 @@ MessageList = React.createClass
                     # messages to display
                     if @props.messages.count() < parseInt(@props.counterMessage, 10) and
                        @props.query.pageAfter?
-                        p className: 'text-center',
+                        p className: 'text-center list-footer',
                             if @props.fetching
                                 i className: "fa fa-refresh fa-spin"
                             else
@@ -313,34 +314,12 @@ MessageList = React.createClass
 
     onDelete: ->
         selected = Object.keys @state.selected
-        deleteMessage = (messageID) ->
-            MessageActionCreator.delete messageID, (error) ->
-                if error?
-                    alertError "#{t("message action delete ko")} #{error}"
-                else
-                    window.cozyMails.messageNavigate()
+        settings = @props.settings
         if selected.length is 0
             alertError t 'list mass no message'
         else
-            if @props.settings.get 'displayConversation'
-                if (not @props.settings.get('messageConfirmDelete')) or
-                window.confirm(t 'list delete conv confirm', smart_count: selected.length)
-                    selected.forEach (id) =>
-                        message = @props.messages.get id
-                        # sometime, draft messages don't have a conversationID
-                        conversationID = message.get 'conversationID'
-                        if conversationID?
-                            ConversationActionCreator.delete conversationID, (error) ->
-                                if error?
-                                    alertError "#{t("conversation delete ko")} #{error}"
-                                else
-                                    window.cozyMails.messageNavigate()
-                        else
-                            deleteMessage(message.get 'id')
-            else
-                if (not @props.settings.get('messageConfirmDelete')) or
-                window.confirm(t 'list delete confirm', smart_count: selected.length)
-                    deleteMessage selected
+            MessageUtils.delete selected, settings.get 'displayConversation',
+                settings.get 'messageConfirmDelete'
 
     onMove: (args) ->
         selected = Object.keys @state.selected
@@ -432,7 +411,8 @@ MessageList = React.createClass
 
                     LayoutActionCreator.alertError "#{t("mailbox expunge ko")} #{error}"
                 else
-                    LayoutActionCreator.notify t "mailbox expunge ok"
+                    LayoutActionCreator.notify t("mailbox expunge ok"),
+                        autoclose: true
 
     _loadNext: ->
         if @refs.nextPage? and DomUtils.isVisible(@refs.nextPage.getDOMNode())
@@ -504,12 +484,14 @@ MessageListBody = React.createClass
                 isActive = @props.messageID is id
             MessageItem
                 message: message,
+                mailboxID: @props.mailboxID,
                 conversationLengths: @props.conversationLengths?.get(cid),
                 key: key,
                 isActive: isActive,
                 edited: @props.edited,
                 settings: @props.settings,
                 selected: @props.selected[id]?,
+                login: @props.login
                 onSelect: (val) =>
                     @props.onSelect id, val
 
@@ -675,16 +657,20 @@ MessageItem = React.createClass
         data =
             messageID: event.currentTarget.dataset.messageId
             mailboxID: @props.mailboxID
+            conversation: @props.settings.get 'displayConversation'
         event.dataTransfer.setData 'text', JSON.stringify(data)
         event.dataTransfer.effectAllowed = 'move'
         event.dataTransfer.dropEffect = 'move'
 
     getParticipants: (message) ->
         from = message.get 'from'
-        to   = message.get('to').concat(message.get('cc'))
+        to   = message.get('to').concat(message.get('cc')).filter (address) =>
+            return address.address isnt @props.login and
+                address.address isnt from[0]?.address
+        separator = if to.length > 0 then ', ' else ' '
         span null,
             Participants participants: from, onAdd: @addAddress
-            span null, ', '
+            span null, separator
             Participants participants: to, onAdd: @addAddress
 
     addAddress: (address) ->

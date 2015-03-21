@@ -29,10 +29,13 @@ helpers =
             </div>
         </div>
         """
-        if options.title
+        if options.title?
             win.querySelector('.modal-title').innerHTML = options.title
-        if options.body
-            win.querySelector('.modal-body').innerHTML = options.body
+        if options.body?
+            if typeof options.body is 'string'
+                win.querySelector('.modal-body').innerHTML = options.body
+            else
+                win.querySelector('.modal-body').appendChild options.body
         if options.size is 'small'
             win.querySelector('.modal-dialog').classList.add 'modal-sm'
         if options.size is 'large'

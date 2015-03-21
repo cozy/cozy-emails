@@ -1,3 +1,4 @@
+MessageUtils  = require './message_utils'
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 SettingsStore = require '../stores/settings_store'
@@ -118,17 +119,12 @@ module.exports =
     messageDeleteCurrent: ->
         if not onMessageList()
             return
-        MessageActionCreator = require '../actions/message_action_creator'
-        alertError   = LayoutActionCreator.alertError
-        message = MessageStore.getByID MessageStore.getCurrentID()
-        if not message?
+        messageID = MessageStore.getCurrentID()
+        if not messageID?
             return
-        if (not SettingsStore.get('messageConfirmDelete')) or
-        window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
-            @messageNavigate()
-            MessageActionCreator.delete message, (error) ->
-                if error?
-                    alertError "#{t("message action delete ko")} #{error}"
+        settings = SettingsStore.get()
+        MessageUtils.delete messageID, settings.get 'displayConversation',
+            settings.get 'messageConfirmDelete'
 
     messageUndo: ->
         MessageActionCreator = require '../actions/message_action_creator'

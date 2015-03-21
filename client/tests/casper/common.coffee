@@ -47,8 +47,11 @@ casper.cozy.selectAccount = (account, box, cb) ->
             infos = casper.getElementInfo "[data-reactid='#{id}'].active [data-mailbox-id]"
             mailboxID = infos.attributes['data-mailbox-id']
             casper.waitForSelector ".message-list[data-mailbox-id='#{mailboxID}'] li.message", ->
-                if cb?
-                    cb()
+                casper.waitWhileSelector ".list-footer .fa-spin", ->
+                    if cb?
+                        cb()
+                , ->
+                    casper.test.fail "#{account}/#{box} fetches forever"
             , ->
                 casper.test.fail "No message in #{account}/#{box}"
         , ->

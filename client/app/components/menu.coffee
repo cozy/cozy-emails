@@ -4,7 +4,8 @@ classer = React.addons.classSet
 
 RouterMixin          = require '../mixins/router_mixin'
 LayoutActionCreator  = require '../actions/layout_action_creator'
-MessageActionCreator = require '../actions/message_action_creator'
+ConversationActionCreator = require '../actions/conversation_action_creator'
+MessageActionCreator      = require '../actions/message_action_creator'
 AccountStore         = require '../stores/account_store'
 Modal                = require './modal'
 ThinProgress         = require './thin_progress'
@@ -332,11 +333,20 @@ MenuMailboxItem = React.createClass
         e.preventDefault()
 
     onDrop: (event) ->
-        {messageID, mailboxID} = JSON.parse(event.dataTransfer.getData 'text')
+        {messageID, mailboxID, conversation} = JSON.parse(event.dataTransfer.getData 'text')
         newID = event.currentTarget.dataset.mailboxId
         @setState target: false
-        MessageActionCreator.move messageID, mailboxID, newID, (error) ->
-            if error?
-                LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
-            else
-                LayoutActionCreator.notify t "message action move ok"
+        if conversation
+            ConversationActionCreator.move messageID, mailboxID, newID, (error) ->
+                if error?
+                    LayoutActionCreator.alertError "#{t("conversation move ko")} #{error}"
+                else
+                    LayoutActionCreator.notify t("conversation move ok"),
+                        autoclose: true
+        else
+            MessageActionCreator.move messageID, mailboxID, newID, (error) ->
+                if error?
+                    LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
+                else
+                    LayoutActionCreator.notify t("message action move ok"),
+                        autoclose: true

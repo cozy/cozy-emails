@@ -232,7 +232,7 @@ module.exports =
       "message action mark ko"      : "L'opération a échoué"
       "conversation move ok"        : "Conversation déplacée"
       "conversation move ko"        : "L'opération a échoué"
-      "conversation delete ok"      : "Conversation supprimée"
+      "conversation delete ok"      : "Conversation « %{subject} » supprimée"
       "conversation delete ko"      : "L'opération a échoué"
       "conversation seen ok"        : "Ok"
       "conversation seen ko"        : "L'opération a échoué"
@@ -346,6 +346,7 @@ module.exports =
       'plugin name Sample JS'          : 'Exemple'
       'plugin name Keyboard shortcuts' : 'Raccourcis clavier'
       'plugin name VCard'              : 'Affichage de VCard'
+      'plugin modal close'             : 'Fermer'
 
       # Misc
       'calendar unknown format' : """

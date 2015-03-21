@@ -1,5 +1,8 @@
 {ComposeActions} = require '../constants/app_constants'
 ContactStore     = require '../stores/contact_store'
+MessageStore     = require '../stores/message_store'
+ConversationActionCreator = require '../actions/conversation_action_creator'
+MessageActionCreator      = require '../actions/message_action_creator'
 
 module.exports = MessageUtils =
 
@@ -181,3 +184,67 @@ module.exports = MessageUtils =
             return ContactStore.getAvatar message.get('from')[0].address
         else
             return null
+
+    # Delete message(s) or conversations
+    #
+    # @params {Mixed}    ids          messageID or Message or array of messageIDs or Messages
+    # @params {Boolean}  conversation true to delete whole conversation
+    # @params {Boolean}  confirm      true to ask user to confirm
+    # @params {Function} cb           callback
+    delete: (ids, conversation, confirm, cb) ->
+        if Array.isArray ids
+            mass = ids.length
+            selected = ids
+        else
+            mass = 1
+            selected = [ids]
+
+        if selected.length > 1
+            window.cozyMails.messageClose()
+
+        # Called one every message has been deleted
+        onDeleted = _.after selected.length, ->
+            # If we deleted only one message, navigate to the next one, otherwise close preview panel and select first message
+            if selected.length is 1
+                window.cozyMails.messageNavigate()
+            if typeof cb is 'function'
+                cb()
+
+        # Delete one message
+        deleteMessage = (messageID) ->
+            MessageActionCreator.delete messageID, (error) ->
+                if error?
+                    alertError "#{t("message action delete ko")} #{error}"
+                onDeleted()
+
+        # Delete one conversation
+        deleteConversation = (messageID) ->
+            if typeof messageID is 'string'
+                message = MessageStore.getByID messageID
+            else
+                message   = messageID
+                messageID = message.get 'id'
+            # sometime, draft messages don't have a conversationID
+            conversationID = message.get 'conversationID'
+            if conversationID?
+                ConversationActionCreator.delete conversationID, (error) ->
+                    if error?
+                        alertError "#{t("conversation delete ko")} #{error}"
+                    onDeleted()
+            else
+                deleteMessage(messageID)
+
+        if conversation
+            confirmMessage = t 'list delete conv confirm', smart_count: selected.length
+        else
+            confirmMessage = t 'list delete confirm', smart_count: selected.length
+
+        if (not confirm) or
+        window.confirm confirmMessage
+            selected.forEach (messageID) ->
+                if conversation
+                    deleteConversation messageID
+                else
+                    if typeof messageID isnt 'string'
+                        messageID = messageID.get 'id'
+                    deleteMessage messageID

@@ -21,6 +21,7 @@ casper.test.begin 'Test draft', (test) ->
     init casper
 
     messageID = ''
+    messageSubject = "My draft subject #{new Date().toUTCString()}"
 
     casper.start casper.cozy.startUrl, ->
         test.comment "Compose Draft"
@@ -36,7 +37,7 @@ casper.test.begin 'Test draft', (test) ->
             casper.click '.form-compose .compose-toggle-cc'
             casper.click '.form-compose .compose-toggle-bcc'
             casper.fillSelectors 'form',
-                "#compose-subject": "my draft subject",
+                "#compose-subject": messageSubject,
             casper.sendKeys "#compose-bcc", "bcc@cozy.io,",
             casper.sendKeys "#compose-cc", "cc@cozy.io,",
             casper.sendKeys "#compose-to", "to@cozy.io,"
@@ -64,14 +65,14 @@ casper.test.begin 'Test draft', (test) ->
                 window.cozytest.confirmTxt = txt
                 return true
             return true
-        casper.cozy.selectMessage "DoveCot", "Draft", "my draft subject", messageID, ->
+        casper.cozy.selectMessage "DoveCot", "Draft", messageSubject, messageID, ->
             casper.waitForSelector "#email-compose .rt-editor", ->
                 test.assertExists '#email-compose', 'Compose form is displayed'
                 values = casper.getFormValues('#email-compose form')
                 test.assertEquals casper.fetchText(".compose-bcc .address-tag"), "bcc@cozy.io", "Bcc dests"
                 test.assertEquals casper.fetchText(".compose-cc .address-tag"), "cc@cozy.io", "Cc dests"
                 test.assertEquals casper.fetchText(".compose-to .address-tag"), "to@cozy.io", "To dests"
-                test.assertEquals values["compose-subject"], "my draft subject", "Subject"
+                test.assertEquals values["compose-subject"], messageSubject, "Subject"
                 test.assertEquals casper.fetchText('.rt-editor'), "Hello,Join us now and share the software", "message HTML"
                 message = casper.evaluate ->
                     return window.cozyMails.getCurrentMessage()
@@ -82,14 +83,13 @@ casper.test.begin 'Test draft', (test) ->
                         return window.cozytest.confirmTxt
                     return confirm?
                 , ->
-                    test.assertEquals confirm, "Do you really want to delete message “my draft subject”?", "Confirmation dialog"
+                    test.assertEquals confirm, "Do you really want to delete message “#{messageSubject}”?", "Confirmation dialog"
                     casper.waitWhileSelector "#email-compose h3[data-message-id=#{messageID}]", ->
                         test.pass 'Compose closed'
-                        casper.waitWhileSelector "li.message[data-message-id='#{messageID}']", ->
-                            test.pass "message deleted"
-                            if casper.getEngine() isnt 'slimer'
-                                test.skip 1
-                            else
+                        if casper.getEngine() is 'slimer'
+                            # delete doesn't work in PhantomJs
+                            casper.waitWhileSelector "li.message[data-message-id='#{messageID}']", ->
+                                test.pass "message deleted"
                                 casper.reload ->
                                     test.assertDoesntExist "li.message[data-message-id='#{messageID}']", "message really deleted"
 
