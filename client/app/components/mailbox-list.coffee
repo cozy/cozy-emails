@@ -11,7 +11,8 @@ module.exports = React.createClass
         @props.onChange? boxid
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
 
     render: ->
         selectedID = @props.selectedMailboxID
@@ -33,9 +34,8 @@ module.exports = React.createClass
                             onClick: @onChange.bind(this, null),
                                 a role: 'menuitem', t 'mailbox pick null'
 
-                    for key, mailbox of @props.mailboxes when key isnt @props.selectedMailboxID
-                        if key isnt selectedID
-                            @getMailboxRender mailbox, key
+                    for key, mailbox of @props.mailboxes when key isnt selectedID
+                        @getMailboxRender mailbox, key
         else
             # no account selected
             div null, ""

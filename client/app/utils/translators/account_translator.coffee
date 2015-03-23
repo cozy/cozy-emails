@@ -17,7 +17,7 @@ module.exports = AccountTranslator =
         weight2 = 400
         # Try to detect special mailboxes, first with flags, then by name
         # Already done on server, except for TEST accounts
-        raw.mailboxes = [] if not raw.mailboxes?
+        raw.mailboxes ?= []
         if not raw.draftMailbox? or
            not raw.sentMailbox? or
            not raw.trashMailbox?
@@ -53,7 +53,9 @@ module.exports = AccountTranslator =
                     if label is 'inbox'
                         box.weight = 1000
                     else if (box.attribs.length > 0 or
-                            /draft/.test(label) or /sent/.test(label) or /trash/.test(label))
+                            /draft/.test(label) or
+                            /sent/.test(label) or
+                            /trash/.test(label))
                         box.weight = weight1
                         weight1 -= 5
                     else

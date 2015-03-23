@@ -35,7 +35,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                console.log "Error in fetchConversation", emailID, res.body?.error
+                console.log "Error in fetchConversation", emailID,
+                    res.body?.error
                 callback t('app error')
 
 
@@ -134,7 +135,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                console.log "Error in conversationDelete", conversationID, res.body?.error
+                console.log "Error in conversationDelete", conversationID,
+                    res.body?.error
                 callback t('app error')
 
     conversationPatch: (conversationID, patch, callback) ->
@@ -144,7 +146,8 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                console.log "Error in conversationPatch", conversationID, res.body?.error
+                console.log "Error in conversationPatch", conversationID,
+                    res.body?.error
                 callback t('app error')
 
     createAccount: (account, callback) ->

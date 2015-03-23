@@ -127,9 +127,10 @@ module.exports = Application = React.createClass
                     Alert { alert }
                     ToastContainer()
 
-                    #a onClick: @toggleMenu, className: 'responsive-handler hidden-md hidden-lg',
-                        #i className: 'fa fa-bars pull-left'
-                        #t "app menu"
+                    #a onClick: @toggleMenu,
+                    #    className: 'responsive-handler hidden-md hidden-lg',
+                            #i className: 'fa fa-bars pull-left'
+                            #t "app menu"
                     # The quick actions bar
                     #Topbar
                     #    ref: 'topbar'
@@ -232,7 +233,8 @@ module.exports = Application = React.createClass
                 mailboxID = null
                 messages  = SearchStore.getResults()
                 messagesCount    = messages.count()
-                emptyListMessage = t 'list search empty', query: @state.searchQuery
+                emptyListMessage = t 'list search empty',
+                    query: @state.searchQuery
                 counterMessage   = t 'list search count', messagesCount
             else
                 accountID = panelInfo.parameters.accountID
@@ -240,7 +242,8 @@ module.exports = Application = React.createClass
                 account   = AccountStore.getByID accountID
                 if account?
                     mailbox   = account.get('mailboxes').get mailboxID
-                    messages  = MessageStore.getMessagesByMailbox mailboxID, @state.settings.get('displayConversation')
+                    messages  = MessageStore.getMessagesByMailbox mailboxID,
+                        @state.settings.get('displayConversation')
                     messagesCount = mailbox?.get('nbTotal') or 0
                     emptyListMessage = switch MessageStore.getCurrentFilter()
                         when MessageFilter.FLAGGED

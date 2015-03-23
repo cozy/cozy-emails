@@ -126,12 +126,12 @@ module.exports = LayoutActionCreator =
 
         if not cached
             MessageActionCreator.setFetching true
-            XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMessages) ->
+            XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMsg) ->
                 MessageActionCreator.setFetching false
                 if err?
                     LayoutActionCreator.alertError err
                 else
-                    MessageActionCreator.receiveRawMessages rawMessages
+                    MessageActionCreator.receiveRawMessages rawMsg
 
     showMessage: (panelInfo, direction) ->
         onMessage = (msg) ->

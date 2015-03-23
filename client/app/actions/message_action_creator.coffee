@@ -36,22 +36,25 @@ module.exports =
     # @params {Message|MessageID|[Messages]|[MessageIDs]}
     # @params {Function}
     delete: (message, callback) ->
-        LayoutActionCreator = require './layout_action_creator'
+        LAC = require './layout_action_creator'
         doDelete = (message) =>
             if typeof message is "string"
                 message = MessageStore.getByID message
             # Move message to Trash folder
             account = AccountStore.getByID(message.get 'accountID')
             if not account?
-                console.log "No account with id #{message.get 'accountID'} for message #{message.get 'id'}"
-                LayoutActionCreator.alertError t 'app error'
+                console.log """
+                    No account with id #{message.get 'accountID'}
+                    for message #{message.get 'id'}
+                    """
+                LAC.alertError t 'app error'
                 return
             trash = account.get 'trashMailbox'
             msg = message.toJSON()
             if not trash? or trash is ''
-                LayoutActionCreator.alertError t 'message delete no trash'
+                LAC.alertError t 'message delete no trash'
             else if msg.mailboxIDs[trash]?
-                LayoutActionCreator.alertError t 'message delete already'
+                LAC.alertError t 'message delete already'
             else
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_ACTION
@@ -63,9 +66,9 @@ module.exports =
                 delete msg.mailboxIDs[id] for id of msg.mailboxIDs
                 msg.mailboxIDs[trash] = -1
                 patches = jsonpatch.generate observer
-                XHRUtils.messagePatch message.get('id'), patches, (err, message) =>
+                XHRUtils.messagePatch message.get('id'), patches, (err, res) =>
                     if err?
-                        LayoutActionCreator.alertError "#{t("message action delete ko")} #{err}"
+                        LAC.alertError "#{t("message action delete ko")} #{err}"
                     if not mass
                         options =
                             autoclose: true,
@@ -73,7 +76,9 @@ module.exports =
                                 label: t 'message undelete'
                                 onClick: => @undelete()
                             ]
-                        LayoutActionCreator.notify t('message action delete ok', subject: msg.subject), options
+                        notifOk = t 'message action delete ok',
+                            subject: msg.subject
+                        LAC.notify notifOk, options
                         if callback?
                             callback err
 
@@ -92,9 +97,9 @@ module.exports =
             doDelete message
 
     move: (message, from, to, callback) ->
-        LayoutActionCreator = require './layout_action_creator'
+        LAC = require './layout_action_creator'
         if from is to
-            LayoutActionCreator.alertWarning t 'message move already'
+            LAC.alertWarning t 'message move already'
             callback()
             return
         if typeof message is "string"
@@ -119,7 +124,7 @@ module.exports =
                 callback error
 
     undelete: ->
-        LayoutActionCreator = require './layout_action_creator'
+        LAC = require './layout_action_creator'
         action = MessageStore.getPrevAction()
         if action?
             if action.target is 'message'
@@ -127,42 +132,43 @@ module.exports =
                 action.from.forEach (from) =>
                     @move message, action.to, from, (err) ->
                         if not err?
-                            LayoutActionCreator.notify t('message undelete ok'),
+                            LAC.notify t('message undelete ok'),
                                 autoclose: true
                         else
-                            LayoutActionCreator.notify t('message undelete error')
+                            LAC.notify t('message undelete error')
             else if action.target is 'conversation' and
                     Array.isArray(action.messages)
                 action.messages.forEach (message) =>
                     message.from.forEach (from) =>
                         @move message.id, message.to, from, (err) ->
                             if not err?
-                                LayoutActionCreator.notify t('message undelete ok'),
+                                LAC.notify t('message undelete ok'),
                                     autoclose: true
                             else
-                                LayoutActionCreator.notify t('message undelete error')
+                                LAC.notify t('message undelete error')
             else
-                LayoutActionCreator.alertError t 'message undelete unavailable'
+                LAC.alertError t 'message undelete unavailable'
 
     updateFlag: (message, flags, callback) ->
         msg = message.toJSON()
         patches = jsonpatch.compare {flags: msg.flags}, {flags}
-        XHRUtils.messagePatch message.get('id'), patches, (error, messageUpdated) ->
-            if not error?
-                if not _.isEqual(flags, messageUpdated.flags)
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.RECEIVE_RAW_MESSAGE
-                        value: messageUpdated
-            if callback?
-                callback error
+        XHRUtils.messagePatch message.get('id'), patches,
+            (error, messageUpdated) ->
+                if not error?
+                    if not _.isEqual(flags, messageUpdated.flags)
+                        AppDispatcher.handleViewAction
+                            type: ActionTypes.RECEIVE_RAW_MESSAGE
+                            value: messageUpdated
+                if callback?
+                    callback error
 
         # dont wait for server response to display update
         setTimeout ->
-            messageUpdated = message.toJS()
-            messageUpdated.flags = flags
+            updated = message.toJS()
+            updated.flags = flags
             AppDispatcher.handleViewAction
                 type: ActionTypes.RECEIVE_RAW_MESSAGE
-                value: messageUpdated
+                value: updated
         , 0
 
     # set conv to true to update current conversation ID

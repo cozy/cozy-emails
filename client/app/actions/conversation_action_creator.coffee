@@ -44,7 +44,8 @@ module.exports =
                     label: t 'conversation undelete'
                     onClick: -> MessageActionCreator.undelete()
                 ]
-            LayoutActionCreator.notify t('conversation delete ok', subject: messages[0].subject), options
+            msgOk = t('conversation delete ok', subject: messages[0].subject)
+            LayoutActionCreator.notify msgOk, options
             if callback?
                 callback error
 
@@ -63,7 +64,8 @@ module.exports =
         if typeof message is 'string'
             message = MessageStore.getByID message
         # sometime, draft messages don't have a conversationID
-        if not (message.get 'conversationID')?
+        conversationID = message.get 'conversationID'
+        if not conversationID?
             MessageActionCreator.move message, from, to, callback
         else
             msg = message.toJSON()
@@ -77,26 +79,27 @@ module.exports =
             delete msg.mailboxIDs[from]
             msg.mailboxIDs[to] = -1
             patches = jsonpatch.generate observer
-            XHRUtils.conversationPatch msg.conversationID, patches, (error, messages) ->
-                if not error?
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.RECEIVE_RAW_MESSAGES
-                        value: messages
-                if callback?
-                    callback error
+            XHRUtils.conversationPatch msg.conversationID, patches,
+                (error, messages) ->
+                    if not error?
+                        AppDispatcher.handleViewAction
+                            type: ActionTypes.RECEIVE_RAW_MESSAGES
+                            value: messages
+                    if callback?
+                        callback error
 
-        # move message without waiting for server response
-        conversation = MessageStore.getConversation(message.get 'conversationID')
-        messages     = []
-        conversation.map (message) ->
-            msg = message.toJS()
-            delete msg.mailboxIDs[from] for id of msg.mailboxIDs
-            msg.mailboxIDs[to] = -1
-            messages.push msg
-        .toJS()
-        AppDispatcher.handleViewAction
-            type: ActionTypes.RECEIVE_RAW_MESSAGES
-            value: messages
+            # move message without waiting for server response
+            conversation = MessageStore.getConversation conversationID
+            messages     = []
+            conversation.map (message) ->
+                msg = message.toJS()
+                delete msg.mailboxIDs[from] for id of msg.mailboxIDs
+                msg.mailboxIDs[to] = -1
+                messages.push msg
+            .toJS()
+            AppDispatcher.handleViewAction
+                type: ActionTypes.RECEIVE_RAW_MESSAGES
+                value: messages
 
     seen: (conversationID, flags, callback) ->
         conversation =

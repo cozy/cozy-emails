@@ -64,8 +64,8 @@ module.exports = MessageUtils =
                 try
                     html = markdown.toHTML text
                 catch e
-                    console.log "Error converting text message to Markdown: #{e}"
-                    html = "<div class='text'>#{text}</div>" #markdown.toHTML text
+                    console.log "Error converting message to Markdown: #{e}"
+                    html = "<div class='text'>#{text}</div>"
 
             if html and not text and not inHTML
                 text = toMarkdown html
@@ -76,41 +76,53 @@ module.exports = MessageUtils =
 
         switch action
             when ComposeActions.REPLY
+                separator = t('compose reply separator',
+                    {date: dateHuman, sender: sender})
                 message.to = @getReplyToAddress inReplyTo
                 message.cc = []
                 message.bcc = []
-                message.subject = "#{t 'compose reply prefix'}#{inReplyTo.get 'subject'}"
-                message.text = t('compose reply separator', {date: dateHuman, sender: sender}) +
-                    @generateReplyText(text) + "\n"
+                message.subject = """
+                    #{t 'compose reply prefix'}#{inReplyTo.get 'subject'}
+                    """
+                message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
                     <p><br /></p>
-                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}<span class="originalToggle"> … </span></p>
+                    <p>#{separator}<span class="originalToggle"> … </span></p>
                     <blockquote>#{html}</blockquote>
                     <p><br /></p>
                     """
             when ComposeActions.REPLY_ALL
+                separator = t('compose reply separator',
+                    {date: dateHuman, sender: sender})
                 message.to = @getReplyToAddress inReplyTo
                 # filter to don't have same address twice
                 toAddresses = message.to.map (dest) -> return dest.address
-                message.cc = [].concat(inReplyTo.get('from'), inReplyTo.get('to'), inReplyTo.get('cc')).filter (dest) ->
+                message.cc = [].concat(inReplyTo.get('from'),
+                    inReplyTo.get('to'),
+                    inReplyTo.get('cc')).filter (dest) ->
                     return dest? and toAddresses.indexOf(dest.address) is -1
                 message.bcc = []
-                message.subject = "#{t 'compose reply prefix'}#{inReplyTo.get 'subject'}"
-                message.text = t('compose reply separator', {date: dateHuman, sender: sender}) +
-                    @generateReplyText(text) + "\n"
+                message.subject = """
+                    #{t 'compose reply prefix'}#{inReplyTo.get 'subject'}
+                    """
+                message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
                     <p><br /></p>
-                    <p>#{t('compose reply separator', {date: dateHuman, sender: sender})}<span class="originalToggle"> … </span></p>
+                    <p>#{separator}<span class="originalToggle"> … </span></p>
                     <blockquote>#{html}</blockquote>
                     <p><br /></p>
                     """
             when ComposeActions.FORWARD
+                separator = t('compose forward separator',
+                    {date: dateHuman, sender: sender})
                 message.to = []
                 message.cc = []
                 message.bcc = []
-                message.subject = "#{t 'compose forward prefix'}#{inReplyTo.get 'subject'}"
-                message.text = t('compose forward separator', {date: dateHuman, sender: sender}) + text
-                message.html = "<p>#{t('compose forward separator', {date: dateHuman, sender: sender})}</p>" + html
+                message.subject = """
+                    #{t 'compose forward prefix'}#{inReplyTo.get 'subject'}
+                    """
+                message.text = separator + text
+                message.html = "<p>#{separator}</p>" + html
 
                 # Add original message attachments
                 message.attachments = inReplyTo.get 'attachments'
@@ -204,7 +216,8 @@ module.exports = MessageUtils =
 
         # Called one every message has been deleted
         onDeleted = _.after selected.length, ->
-            # If we deleted only one message, navigate to the next one, otherwise close preview panel and select first message
+            # If we deleted only one message, navigate to the next one,
+            # otherwise close preview panel and select first message
             if selected.length is 1
                 window.cozyMails.messageNavigate()
             if typeof cb is 'function'
@@ -235,9 +248,11 @@ module.exports = MessageUtils =
                 deleteMessage(messageID)
 
         if conversation
-            confirmMessage = t 'list delete conv confirm', smart_count: selected.length
+            confirmMessage = t 'list delete conv confirm',
+                smart_count: selected.length
         else
-            confirmMessage = t 'list delete confirm', smart_count: selected.length
+            confirmMessage = t 'list delete confirm',
+                smart_count: selected.length
 
         if (not confirm) or
         window.confirm confirmMessage

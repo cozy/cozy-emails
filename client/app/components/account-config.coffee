@@ -22,7 +22,8 @@ module.exports = React.createClass
     _accountFields: [
         'id', 'label', 'name', 'login', 'password',
         'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
-        'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'smtpLogin', 'smtpPassword', 'smtpMethod',
+        'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
+        'smtpLogin', 'smtpPassword', 'smtpMethod',
         'accountType'
     ]
     _mailboxesFields: [
@@ -90,7 +91,8 @@ module.exports = React.createClass
                 #type: 'string'
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
 
     render: ->
         if @state.id
@@ -300,9 +302,8 @@ AccountConfigMain = React.createClass
     ]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        #return JSON.stringify(nextProps) isnt JSON.stringify(@props) or
-        #       JSON.stringify(nextState) isnt JSON.stringify(@state)
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
 
     _propsToState: (props) ->
         state = props
@@ -675,7 +676,8 @@ AccountConfigMailboxes = React.createClass
     ]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
 
     _propsToState: (props) ->
         state = props
@@ -791,9 +793,9 @@ AccountConfigMailboxes = React.createClass
                         mailboxes: @state.mailboxesFlat
                         selectedMailboxID: @state[box].value
                         onChange: (mailbox) =>
-                            # requestChange is asynchroneous, so we need to also call
-                            # setState to only call onSubmet once state has really been updated
-                            #@state[box].value = mailbox
+                            # requestChange is asynchroneous, so we need
+                            # to also call setState to only call onSubmet
+                            # once state has really been updated
                             @state[box].requestChange mailbox
                             newState = {}
                             newState[box] =
@@ -840,7 +842,8 @@ MailboxItem = React.createClass
         mailbox: React.PropTypes.object
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
 
     #componentWillReceiveProps: (props) ->
     #    @setState edited: false

@@ -73,7 +73,8 @@ module.exports =
     messageNavigate: (direction, inConv) ->
         if not onMessageList()
             return
-        conv = inConv and SettingsStore.get('displayConversation') and SettingsStore.get('displayPreview')
+        conv = inConv and SettingsStore.get('displayConversation') and
+            SettingsStore.get('displayPreview')
         if direction is 'prev'
             next = MessageStore.getPreviousMessage conv
         else
@@ -103,7 +104,11 @@ module.exports =
             params =
                 messageID: message.get 'id'
 
-        url = window.router.buildUrl direction: 'second', action: action, parameters: params
+        urlOptions =
+            direction: 'second'
+            action: action
+            parameters: params
+        url = window.router.buildUrl urlOptions
         window.router.navigate url, {trigger: true}
 
     messageClose: ->
@@ -175,7 +180,8 @@ module.exports =
     # Send errors to serveur
     # Usage: window.cozyMails.log(new Error('message'))
     log: (error) ->
-        url = error.stack.split('\n')[0].split('@')[1].split(/:\d/)[0].split('/').slice(0, -2).join('/')
+        url = error.stack.split('\n')[0].split('@')[1]
+            .split(/:\d/)[0].split('/').slice(0, -2).join('/')
         window.onerror error.name, url, error.lineNumber, error.colNumber, error
 
     # Debug: allow to dump component tree
