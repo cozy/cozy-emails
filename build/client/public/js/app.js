@@ -360,7 +360,7 @@ module.exports = {
       return messages.push(msg);
     }).toJS();
     XHRUtils.conversationDelete(conversationID, function(error, messages) {
-      var options;
+      var msgOk, options;
       if (error == null) {
         AppDispatcher.handleViewAction({
           type: ActionTypes.RECEIVE_RAW_MESSAGES,
@@ -378,9 +378,10 @@ module.exports = {
           }
         ]
       };
-      LayoutActionCreator.notify(t('conversation delete ok', {
+      msgOk = t('conversation delete ok', {
         subject: messages[0].subject
-      }), options);
+      });
+      LayoutActionCreator.notify(msgOk, options);
       if (callback != null) {
         return callback(error);
       }
@@ -397,12 +398,13 @@ module.exports = {
     });
   },
   move: function(message, from, to, callback) {
-    var conversation, messages, msg, observer, patches;
+    var conversation, conversationID, messages, msg, observer, patches;
     if (typeof message === 'string') {
       message = MessageStore.getByID(message);
     }
-    if ((message.get('conversationID')) == null) {
-      MessageActionCreator.move(message, from, to, callback);
+    conversationID = message.get('conversationID');
+    if (conversationID == null) {
+      return MessageActionCreator.move(message, from, to, callback);
     } else {
       msg = message.toJSON();
       AppDispatcher.handleViewAction({
@@ -428,22 +430,22 @@ module.exports = {
           return callback(error);
         }
       });
+      conversation = MessageStore.getConversation(conversationID);
+      messages = [];
+      conversation.map(function(message) {
+        var id;
+        msg = message.toJS();
+        for (id in msg.mailboxIDs) {
+          delete msg.mailboxIDs[from];
+        }
+        msg.mailboxIDs[to] = -1;
+        return messages.push(msg);
+      }).toJS();
+      return AppDispatcher.handleViewAction({
+        type: ActionTypes.RECEIVE_RAW_MESSAGES,
+        value: messages
+      });
     }
-    conversation = MessageStore.getConversation(message.get('conversationID'));
-    messages = [];
-    conversation.map(function(message) {
-      var id;
-      msg = message.toJS();
-      for (id in msg.mailboxIDs) {
-        delete msg.mailboxIDs[from];
-      }
-      msg.mailboxIDs[to] = -1;
-      return messages.push(msg);
-    }).toJS();
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.RECEIVE_RAW_MESSAGES,
-      value: messages
-    });
   },
   seen: function(conversationID, flags, callback) {
     var conversation, observer, patches;
@@ -650,12 +652,12 @@ module.exports = LayoutActionCreator = {
     _cachedQuery.mailboxID = mailboxID;
     if (!cached) {
       MessageActionCreator.setFetching(true);
-      return XHRUtils.fetchMessagesByFolder(mailboxID, query, function(err, rawMessages) {
+      return XHRUtils.fetchMessagesByFolder(mailboxID, query, function(err, rawMsg) {
         MessageActionCreator.setFetching(false);
         if (err != null) {
           return LayoutActionCreator.alertError(err);
         } else {
-          return MessageActionCreator.receiveRawMessages(rawMessages);
+          return MessageActionCreator.receiveRawMessages(rawMsg);
         }
       });
     }
@@ -828,8 +830,8 @@ module.exports = {
     });
   },
   "delete": function(message, callback) {
-    var LayoutActionCreator, doDelete, mass;
-    LayoutActionCreator = require('./layout_action_creator');
+    var LAC, doDelete, mass;
+    LAC = require('./layout_action_creator');
     doDelete = (function(_this) {
       return function(message) {
         var account, id, msg, observer, patches, trash;
@@ -838,16 +840,16 @@ module.exports = {
         }
         account = AccountStore.getByID(message.get('accountID'));
         if (account == null) {
-          console.log("No account with id " + (message.get('accountID')) + " for message " + (message.get('id')));
-          LayoutActionCreator.alertError(t('app error'));
+          console.log("No account with id " + (message.get('accountID')) + "\nfor message " + (message.get('id')));
+          LAC.alertError(t('app error'));
           return;
         }
         trash = account.get('trashMailbox');
         msg = message.toJSON();
         if ((trash == null) || trash === '') {
-          return LayoutActionCreator.alertError(t('message delete no trash'));
+          return LAC.alertError(t('message delete no trash'));
         } else if (msg.mailboxIDs[trash] != null) {
-          return LayoutActionCreator.alertError(t('message delete already'));
+          return LAC.alertError(t('message delete already'));
         } else {
           AppDispatcher.handleViewAction({
             type: ActionTypes.MESSAGE_ACTION,
@@ -863,10 +865,10 @@ module.exports = {
           }
           msg.mailboxIDs[trash] = -1;
           patches = jsonpatch.generate(observer);
-          XHRUtils.messagePatch(message.get('id'), patches, function(err, message) {
-            var options;
+          XHRUtils.messagePatch(message.get('id'), patches, function(err, res) {
+            var notifOk, options;
             if (err != null) {
-              LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + err);
+              LAC.alertError("" + (t("message action delete ko")) + " " + err);
             }
             if (!mass) {
               options = {
@@ -880,9 +882,10 @@ module.exports = {
                   }
                 ]
               };
-              LayoutActionCreator.notify(t('message action delete ok', {
+              notifOk = t('message action delete ok', {
                 subject: msg.subject
-              }), options);
+              });
+              LAC.notify(notifOk, options);
               if (callback != null) {
                 return callback(err);
               }
@@ -907,10 +910,10 @@ module.exports = {
     }
   },
   move: function(message, from, to, callback) {
-    var LayoutActionCreator, msg, observer, patches;
-    LayoutActionCreator = require('./layout_action_creator');
+    var LAC, msg, observer, patches;
+    LAC = require('./layout_action_creator');
     if (from === to) {
-      LayoutActionCreator.alertWarning(t('message move already'));
+      LAC.alertWarning(t('message move already'));
       callback();
       return;
     }
@@ -943,8 +946,8 @@ module.exports = {
     });
   },
   undelete: function() {
-    var LayoutActionCreator, action, message;
-    LayoutActionCreator = require('./layout_action_creator');
+    var LAC, action, message;
+    LAC = require('./layout_action_creator');
     action = MessageStore.getPrevAction();
     if (action != null) {
       if (action.target === 'message') {
@@ -953,11 +956,11 @@ module.exports = {
           return function(from) {
             return _this.move(message, action.to, from, function(err) {
               if (err == null) {
-                return LayoutActionCreator.notify(t('message undelete ok'), {
+                return LAC.notify(t('message undelete ok'), {
                   autoclose: true
                 });
               } else {
-                return LayoutActionCreator.notify(t('message undelete error'));
+                return LAC.notify(t('message undelete error'));
               }
             });
           };
@@ -968,18 +971,18 @@ module.exports = {
             return message.from.forEach(function(from) {
               return _this.move(message.id, message.to, from, function(err) {
                 if (err == null) {
-                  return LayoutActionCreator.notify(t('message undelete ok'), {
+                  return LAC.notify(t('message undelete ok'), {
                     autoclose: true
                   });
                 } else {
-                  return LayoutActionCreator.notify(t('message undelete error'));
+                  return LAC.notify(t('message undelete error'));
                 }
               });
             });
           };
         })(this));
       } else {
-        return LayoutActionCreator.alertError(t('message undelete unavailable'));
+        return LAC.alertError(t('message undelete unavailable'));
       }
     }
   },
@@ -1005,12 +1008,12 @@ module.exports = {
       }
     });
     return setTimeout(function() {
-      var messageUpdated;
-      messageUpdated = message.toJS();
-      messageUpdated.flags = flags;
+      var updated;
+      updated = message.toJS();
+      updated.flags = flags;
       return AppDispatcher.handleViewAction({
         type: ActionTypes.RECEIVE_RAW_MESSAGE,
-        value: messageUpdated
+        value: updated
       });
     }, 0);
   },
@@ -4100,12 +4103,8 @@ module.exports = React.createClass({
         _results = [];
         for (key in _ref1) {
           mailbox = _ref1[key];
-          if (key !== this.props.selectedMailboxID) {
-            if (key !== selectedID) {
-              _results.push(this.getMailboxRender(mailbox, key));
-            } else {
-              _results.push(void 0);
-            }
+          if (key !== selectedID) {
+            _results.push(this.getMailboxRender(mailbox, key));
           }
         }
         return _results;
@@ -10750,7 +10749,7 @@ module.exports = {
     }
   },
   messageDisplay: function(message) {
-    var action, params, url;
+    var action, params, url, urlOptions;
     if (message == null) {
       message = MessageStore.getById(MessageStore.getCurrentID());
     }
@@ -10769,11 +10768,12 @@ module.exports = {
         messageID: message.get('id')
       };
     }
-    url = window.router.buildUrl({
+    urlOptions = {
       direction: 'second',
       action: action,
       parameters: params
-    });
+    };
+    url = window.router.buildUrl(urlOptions);
     return window.router.navigate(url, {
       trigger: true
     });
@@ -10992,7 +10992,7 @@ module.exports = MessageUtils = {
     }
   },
   makeReplyMessage: function(myAddress, inReplyTo, action, inHTML) {
-    var dateHuman, e, html, message, notMe, sender, text, toAddresses;
+    var dateHuman, e, html, message, notMe, sender, separator, text, toAddresses;
     message = {
       composeInHTML: inHTML,
       attachments: Immutable.Vector.empty()
@@ -11008,7 +11008,7 @@ module.exports = MessageUtils = {
           html = markdown.toHTML(text);
         } catch (_error) {
           e = _error;
-          console.log("Error converting text message to Markdown: " + e);
+          console.log("Error converting message to Markdown: " + e);
           html = "<div class='text'>" + text + "</div>";
         }
       }
@@ -11021,20 +11021,22 @@ module.exports = MessageUtils = {
     }
     switch (action) {
       case ComposeActions.REPLY:
+        separator = t('compose reply separator', {
+          date: dateHuman,
+          sender: sender
+        });
         message.to = this.getReplyToAddress(inReplyTo);
         message.cc = [];
         message.bcc = [];
         message.subject = "" + (t('compose reply prefix')) + (inReplyTo.get('subject'));
-        message.text = t('compose reply separator', {
-          date: dateHuman,
-          sender: sender
-        }) + this.generateReplyText(text) + "\n";
-        message.html = "<p><br /></p>\n<p>" + (t('compose reply separator', {
-          date: dateHuman,
-          sender: sender
-        })) + "<span class=\"originalToggle\"> … </span></p>\n<blockquote>" + html + "</blockquote>\n<p><br /></p>";
+        message.text = separator + this.generateReplyText(text) + "\n";
+        message.html = "<p><br /></p>\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote>" + html + "</blockquote>\n<p><br /></p>";
         break;
       case ComposeActions.REPLY_ALL:
+        separator = t('compose reply separator', {
+          date: dateHuman,
+          sender: sender
+        });
         message.to = this.getReplyToAddress(inReplyTo);
         toAddresses = message.to.map(function(dest) {
           return dest.address;
@@ -11044,28 +11046,20 @@ module.exports = MessageUtils = {
         });
         message.bcc = [];
         message.subject = "" + (t('compose reply prefix')) + (inReplyTo.get('subject'));
-        message.text = t('compose reply separator', {
-          date: dateHuman,
-          sender: sender
-        }) + this.generateReplyText(text) + "\n";
-        message.html = "<p><br /></p>\n<p>" + (t('compose reply separator', {
-          date: dateHuman,
-          sender: sender
-        })) + "<span class=\"originalToggle\"> … </span></p>\n<blockquote>" + html + "</blockquote>\n<p><br /></p>";
+        message.text = separator + this.generateReplyText(text) + "\n";
+        message.html = "<p><br /></p>\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote>" + html + "</blockquote>\n<p><br /></p>";
         break;
       case ComposeActions.FORWARD:
+        separator = t('compose forward separator', {
+          date: dateHuman,
+          sender: sender
+        });
         message.to = [];
         message.cc = [];
         message.bcc = [];
         message.subject = "" + (t('compose forward prefix')) + (inReplyTo.get('subject'));
-        message.text = t('compose forward separator', {
-          date: dateHuman,
-          sender: sender
-        }) + text;
-        message.html = ("<p>" + (t('compose forward separator', {
-          date: dateHuman,
-          sender: sender
-        })) + "</p>") + html;
+        message.text = separator + text;
+        message.html = ("<p>" + separator + "</p>") + html;
         message.attachments = inReplyTo.get('attachments');
         break;
       case null:
