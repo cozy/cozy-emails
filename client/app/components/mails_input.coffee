@@ -104,10 +104,6 @@ module.exports = MailsInput = React.createClass
                     placeholder: @props.placeholder
                     'autoComplete': 'off'
                     'spellCheck': 'off'
-                div
-                    className: 'btn btn-cozy btn-contact',
-                    onClick: @onQuery,
-                        span className: 'fa fa-search'
 
                 if @state.contacts?
                     ul className: "dropdown-menu contact-list",
