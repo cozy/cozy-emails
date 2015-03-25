@@ -3,6 +3,7 @@ ContactStore     = require '../stores/contact_store'
 MessageStore     = require '../stores/message_store'
 ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
+LayoutActionCreator       = require '../actions/layout_action_creator'
 
 module.exports = MessageUtils =
 
@@ -204,6 +205,7 @@ module.exports = MessageUtils =
     # @params {Boolean}  confirm      true to ask user to confirm
     # @params {Function} cb           callback
     delete: (ids, conversation, confirm, cb) ->
+        alertError   = LayoutActionCreator.alertError
         if Array.isArray ids
             mass = ids.length
             selected = ids
@@ -227,7 +229,7 @@ module.exports = MessageUtils =
         deleteMessage = (messageID) ->
             MessageActionCreator.delete messageID, (error) ->
                 if error?
-                    alertError "#{t("message action delete ko")} #{error}"
+                    alertError "#{t("message action delete ko")} : #{error}"
                 onDeleted()
 
         # Delete one conversation
@@ -242,7 +244,7 @@ module.exports = MessageUtils =
             if conversationID?
                 ConversationActionCreator.delete conversationID, (error) ->
                     if error?
-                        alertError "#{t("conversation delete ko")} #{error}"
+                        alertError "#{t("conversation delete ko")} : #{error}"
                     onDeleted()
             else
                 deleteMessage(messageID)
