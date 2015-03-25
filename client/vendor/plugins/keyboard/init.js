@@ -291,7 +291,8 @@ if (typeof window.plugins !== "object") {
       },
       'r': {
         name: 'Reply',
-        action: function () {
+        action: function (e) {
+          e.preventDefault();
           var current, btn;
           Array.prototype.forEach.call(document.querySelectorAll('.row > .content, .row > .preview'), function (e) {
             var rect = e.getBoundingClientRect(),
