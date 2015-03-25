@@ -493,7 +493,7 @@ Account::testSMTPConnection = (callback) ->
 
     connection.once 'error', (err) ->
         log.warn "SMTP CONNECTION ERROR", err
-        reject new AccountConfigError 'smtpServer'
+        reject new AccountConfigError 'smtpServer', err
 
     # in case of wrong port, the connection takes forever to emit error
     timeout = setTimeout ->
@@ -502,12 +502,12 @@ Account::testSMTPConnection = (callback) ->
     , 10000
 
     connection.connect (err) =>
-        return reject new AccountConfigError 'smtpServer' if err
+        return reject new AccountConfigError 'smtpServer', err if err
         clearTimeout timeout
 
         if @smtpMethod isnt 'NONE'
             connection.login auth, (err) ->
-                if err then reject new AccountConfigError 'auth'
+                if err then reject new AccountConfigError 'auth', err
                 else callback null
                 connection.close()
         else
