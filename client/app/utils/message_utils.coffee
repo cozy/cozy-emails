@@ -213,15 +213,15 @@ module.exports = MessageUtils =
             mass = 1
             selected = [ids]
 
+        # If we deleted only one message, we'll navigate to the next one,
+        # otherwise close preview panel and select first message
         if selected.length > 1
             window.cozyMails.messageClose()
+        else
+            next = MessageStore.getNextMessage conversation
 
-        # Called one every message has been deleted
+        # Called once every message has been deleted
         onDeleted = _.after selected.length, ->
-            # If we deleted only one message, navigate to the next one,
-            # otherwise close preview panel and select first message
-            if selected.length is 1
-                window.cozyMails.messageNavigate()
             if typeof cb is 'function'
                 cb()
 
@@ -265,3 +265,7 @@ module.exports = MessageUtils =
                     if typeof messageID isnt 'string'
                         messageID = messageID.get 'id'
                     deleteMessage messageID
+            if next?
+                MessageActionCreator.setCurrent next.get('id'), true
+                # open next message if the deleted one was open
+                window.cozyMails.messageDisplay next, false

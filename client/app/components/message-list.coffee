@@ -318,8 +318,11 @@ MessageList = React.createClass
         if selected.length is 0
             alertError t 'list mass no message'
         else
-            MessageUtils.delete selected, settings.get 'displayConversation',
-                settings.get 'messageConfirmDelete'
+            MessageUtils.delete selected, settings.get('displayConversation'),
+                settings.get('messageConfirmDelete'), =>
+                    if selected.length > 0 and @props.messages.count() > 0
+                        MessageActionCreator.setCurrent @props.messages.first().get('id'), true
+
 
     onMove: (args) ->
         selected = Object.keys @state.selected
@@ -642,7 +645,7 @@ MessageItem = React.createClass
             if not (event.target.getAttribute('type') is 'checkbox')
                 event.preventDefault()
                 node = @refs.target.getDOMNode()
-                MessageActionCreator.setCurrent node.dataset.messageId
+                MessageActionCreator.setCurrent node.dataset.messageId, true
                 if @props.settings.get('displayPreview')
                     href = '#' + node.href.split('#')[1]
                     @redirect href

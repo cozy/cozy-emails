@@ -2,7 +2,8 @@ MessageUtils  = require './message_utils'
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 SettingsStore = require '../stores/settings_store'
-LayoutActionCreator = require '../actions/layout_action_creator'
+LayoutActionCreator  = require '../actions/layout_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
 
 onMessageList = ->
     actions = [
@@ -82,17 +83,22 @@ module.exports =
         if not next?
             return
 
-        MessageActionCreator = require '../actions/message_action_creator'
-
         MessageActionCreator.setCurrent next.get('id'), true
 
         if SettingsStore.get('displayPreview')
             @messageDisplay next
 
-    messageDisplay: (message) ->
+    ##
+    # Display a message
+    # @params {Immutable} message the message (current one if null)
+    # @params {Boolean}   force   if false do nothing if right panel is not open
+    messageDisplay: (message, force) ->
         if not message?
             message = MessageStore.getById(MessageStore.getCurrentID())
         if not message?
+            return
+        # return if second panel isn't already open
+        if force is false and not window.router.current.secondPanel?
             return
         if SettingsStore.get('displayConversation')
             action = 'conversation'
@@ -128,11 +134,10 @@ module.exports =
         if not messageID?
             return
         settings = SettingsStore.get()
-        MessageUtils.delete messageID, settings.get 'displayConversation',
-            settings.get 'messageConfirmDelete'
+        MessageUtils.delete messageID, settings.get('displayConversation'),
+            settings.get('messageConfirmDelete')
 
     messageUndo: ->
-        MessageActionCreator = require '../actions/message_action_creator'
         MessageActionCreator.undelete()
 
     customEvent: (name, data) ->
