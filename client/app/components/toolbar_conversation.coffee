@@ -34,7 +34,7 @@ module.exports = React.createClass
 
 
     render: ->
-        nav className: 'toolbar conversation btn-toolbar pull-right',
+        nav className: 'toolbar toolbar-conversation btn-toolbar pull-right',
             div className: 'btn-group',
                 @renderNav 'prev'
                 @renderNav 'next'

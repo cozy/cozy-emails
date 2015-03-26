@@ -1,20 +1,24 @@
 {div, ul, li, span, i, p, a, button, pre, iframe, img, h4} = React.DOM
+MessageUtils = require '../utils/message_utils'
+
+ToolbarMessage = require './toolbar_message'
 Compose        = require './compose'
 FilePicker     = require './file_picker'
-ToolboxActions = require './toolbox_actions'
-ToolboxMove    = require './toolbox_move'
-MessageUtils = require '../utils/message_utils'
+
 {ComposeActions, MessageFlags, FlagsConstants} = require '../constants/app_constants'
+
 LayoutActionCreator       = require '../actions/layout_action_creator'
 ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 ContactActionCreator      = require '../actions/contact_action_creator'
+
 RouterMixin = require '../mixins/router_mixin'
 Participants  = require './participant'
 
 classer = React.addons.classSet
 alertError   = LayoutActionCreator.alertError
 alertSuccess = LayoutActionCreator.notify
+
 
 module.exports = React.createClass
     displayName: 'Message'
@@ -190,7 +194,7 @@ module.exports = React.createClass
                     @renderHeaders message
                     div className: 'full-headers',
                         pre null, prepared?.fullHeaders?.join "\n"
-                    @renderToolbox message
+                    @renderToolbox()
                     @renderCompose()
                     MessageContent
                         ref: 'messageContent'
@@ -296,6 +300,22 @@ module.exports = React.createClass
                 #if @props.inConversation
                 #    toggleActive
 
+    renderToolbox: ->
+        return if @state.composing
+
+        ToolbarMessage
+            message:           @props.message
+            flags:             @props.message.get('flags') or []
+            mailboxes:         @props.mailboxes
+            selectedMailboxID: @props.selectedMailboxID
+            onReply:           @onReply
+            onReplyAll:        @onReplyAll
+            onForward:         @onForward
+            onDelete:          @onDelete
+            onMark:            @onMark
+            onMove:            @onMove
+            onConversation:    @onConversation
+            onHeaders:         @onHeaders
 
     renderAddress: (field) ->
         addresses = @props.message.get(field)
@@ -320,89 +340,6 @@ module.exports = React.createClass
                         @setState composing: false
                 onCancel: =>
                     @setState composing: false
-
-    renderToolbox: (message) ->
-
-        if @state.composing
-            return
-
-        flags     = message.get('flags') or []
-        isFlagged = flags.indexOf(FlagsConstants.FLAGGED) is -1
-        isSeen    = flags.indexOf(FlagsConstants.SEEN) is -1
-
-
-        conversationID = @props.message.get 'conversationID'
-
-
-        div className: 'messageToolbox row',
-            div className: 'btn-toolbar', role: 'toolbar',
-                div className: 'btn-group btn-group-sm btn-group-justified',
-                    div className: 'btn-group btn-group-sm',
-                        button
-                            className: 'btn btn-default reply',
-                            type: 'button',
-                            onClick: @onReply,
-                                span
-                                    className: 'fa fa-reply'
-                                span
-                                    className: 'tool-long',
-                                    t 'mail action reply'
-                    div className: 'btn-group btn-group-sm',
-                        button
-                            className: 'btn btn-default reply-all',
-                            type: 'button',
-                            onClick: @onReplyAll,
-                                span
-                                    className: 'fa fa-reply-all'
-                                span
-                                    className: 'tool-long',
-                                    t 'mail action reply all'
-                    div className: 'btn-group btn-group-sm',
-                        button
-                            className: 'btn btn-default forward',
-                            type: 'button',
-                            onClick: @onForward,
-                                span
-                                    className: 'fa fa-mail-forward'
-                                span
-                                    className: 'tool-long',
-                                    t 'mail action forward'
-                    div className: 'btn-group btn-group-sm',
-                        button
-                            className: 'btn btn-default trash',
-                            type: 'button',
-                            onClick: @onDelete,
-                                span
-                                    className: 'fa fa-trash-o'
-                                span
-                                    className: 'tool-long',
-                                    t 'mail action delete'
-                    ToolboxMove
-                        ref: 'toolboxMove'
-                        mailboxes: @props.mailboxes
-                        onMove: @onMove
-                        direction: 'right'
-                    ToolboxActions
-                        ref: 'toolboxActions'
-                        mailboxes: @props.mailboxes
-                        isSeen: isSeen
-                        isFlagged: isFlagged
-                        mailboxID: @props.selectedMailboxID
-                        messageID: message.get 'id'
-                        message: @props.message
-                        onMark: @onMark
-                        onMove: @onMove
-                        onConversation: @onConversation
-                        onHeaders: @onHeaders
-                        direction: 'right'
-                    if nextUrl?
-                        div className: 'btn-group btn-group-sm',
-                            button
-                                className: 'btn btn-default',
-                                type: 'button',
-                                onClick: displayNext,
-                                    a href: nextUrl,
-                                        span className: 'fa fa-long-arrow-right'
 
     renderAttachments: (attachments) ->
         files = attachments.filter (file) ->
@@ -467,6 +404,7 @@ module.exports = React.createClass
                 fullWidth: true
 
     onReply: (args) ->
+        console.debug @
         @setState composing: true, composeAction: ComposeActions.REPLY
 
     onReplyAll: (args) ->
@@ -563,6 +501,8 @@ module.exports = React.createClass
         if not value?
             value = true
         @setState messageDisplayHTML: value
+
+
 
 MessageContent = React.createClass
     displayName: 'MessageContent'
@@ -673,6 +613,8 @@ MessageContent = React.createClass
 
     componentDidUpdate: ->
         @_initFrame('update')
+
+
 
 AttachmentPreview = React.createClass
     displayName: 'AttachmentPreview'
