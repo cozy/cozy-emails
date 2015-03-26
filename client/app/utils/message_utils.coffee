@@ -202,9 +202,18 @@ module.exports = MessageUtils =
     #
     # @params {Mixed}    ids          messageID or Message or array of messageIDs or Messages
     # @params {Boolean}  conversation true to delete whole conversation
-    # @params {Boolean}  confirm      true to ask user to confirm
     # @params {Function} cb           callback
-    delete: (ids, conversation, confirm, cb) ->
+    delete: (ids, conversation, cb) ->
+        @action 'delete', ids, conversation, null, cb
+
+    move: (ids, conversation, from, to, cb) ->
+        options =
+            from: from
+            to: to
+        @action 'move', ids, conversation, options, cb
+
+    action: (action, ids, conversation, options, cb) ->
+
         alertError   = LayoutActionCreator.alertError
         if Array.isArray ids
             mass = ids.length
@@ -221,51 +230,56 @@ module.exports = MessageUtils =
             next = MessageStore.getNextMessage conversation
 
         # Called once every message has been deleted
-        onDeleted = _.after selected.length, ->
+        onDone = _.after selected.length, ->
             if typeof cb is 'function'
                 cb()
 
-        # Delete one message
-        deleteMessage = (messageID) ->
-            MessageActionCreator.delete messageID, (error) ->
-                if error?
-                    alertError "#{t("message action delete ko")} : #{error}"
-                onDeleted()
+        # Handle one message
+        handleMessage = (messageID) ->
+            switch action
+                when 'move'
+                    MessageActionCreator.move messageID, options.from, options.to, (error) ->
+                        if error?
+                            alertError "#{t("message action move ko")} #{error}"
+                        onDone()
+                when 'delete'
+                    MessageActionCreator.delete messageID, (error) ->
+                        if error?
+                            alertError "#{t("message action delete ko")} : #{error}"
+                        onDone()
 
-        # Delete one conversation
-        deleteConversation = (messageID) ->
-            if typeof messageID is 'string'
-                message = MessageStore.getByID messageID
-            else
-                message   = messageID
-                messageID = message.get 'id'
+        # Handle one conversation
+        handleConversation = (message) ->
+            messageID = message.get 'id'
             # sometime, draft messages don't have a conversationID
             conversationID = message.get 'conversationID'
             if conversationID?
-                ConversationActionCreator.delete conversationID, (error) ->
-                    if error?
-                        alertError "#{t("conversation delete ko")} : #{error}"
-                    onDeleted()
+                switch action
+                    when 'move'
+                        ConversationActionCreator.move message, options.from, options.to, (error) ->
+                            if error?
+                                alertError "#{t("message action move ko", subject: message.get('subject'))} #{error}"
+                            onDone()
+                    when 'delete'
+                        ConversationActionCreator.delete conversationID, (error) ->
+                            if error?
+                                alertError "#{t("conversation delete ko", subject: message.get('subject'))} : #{error}"
+                            onDone()
             else
-                deleteMessage(messageID)
+                handleMessage(messageID)
 
-        if conversation
-            confirmMessage = t 'list delete conv confirm',
-                smart_count: selected.length
-        else
-            confirmMessage = t 'list delete confirm',
-                smart_count: selected.length
-
-        if (not confirm) or
-        window.confirm confirmMessage
-            selected.forEach (messageID) ->
-                if conversation
-                    deleteConversation messageID
+        selected.forEach (messageID) ->
+            if conversation
+                if typeof messageID is 'string'
+                    message = MessageStore.getByID messageID
                 else
-                    if typeof messageID isnt 'string'
-                        messageID = messageID.get 'id'
-                    deleteMessage messageID
-            if next?
-                MessageActionCreator.setCurrent next.get('id'), true
-                # open next message if the deleted one was open
-                window.cozyMails.messageDisplay next, false
+                    message   = messageID
+                handleConversation message
+            else
+                if typeof messageID isnt 'string'
+                    messageID = messageID.get 'id'
+                handleMessage messageID
+        if next?
+            MessageActionCreator.setCurrent next.get('id'), true
+            # open next message if the deleted one was open
+            window.cozyMails.messageDisplay next, false

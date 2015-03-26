@@ -97,6 +97,14 @@ module.exports =
                         AppDispatcher.handleViewAction
                             type: ActionTypes.RECEIVE_RAW_MESSAGES
                             value: messages
+                        options =
+                            autoclose: true,
+                            actions: [
+                                label: t 'conversation undelete'
+                                onClick: -> MessageActionCreator.undelete()
+                            ]
+                        msgOk = t('conversation move ok', subject: messages[0].subject)
+                        LayoutActionCreator.notify msgOk, options
                     if callback?
                         callback error
 

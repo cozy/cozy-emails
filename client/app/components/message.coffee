@@ -533,21 +533,22 @@ module.exports = React.createClass
         LayoutActionCreator.alertWarning t "app unimplemented"
 
     onMove: (args) ->
-        newbox = args.target.dataset.value
-        oldbox = @props.selectedMailboxID
+        newbox  = args.target.dataset.value
+        oldbox  = @props.selectedMailboxID
+        subject = @props.message.get 'subject'
         if args.target.dataset.conversation?
             ConversationActionCreator.move @props.message, oldbox, newbox, (error) =>
                 if error?
-                    alertError "#{t("conversation move ko")} #{error}"
+                    alertError "#{t("conversation move ko", subject: subject)} #{error}"
                 else
-                    alertSuccess t "conversation move ok"
+                    alertSuccess t("conversation move ok", subject: subject)
                     @displayNextMessage()
         else
             MessageActionCreator.move @props.message, oldbox, newbox, (error) =>
                 if error?
-                    alertError "#{t("message action move ko")} #{error}"
+                    alertError "#{t("message action move ko", subject: subject)} #{error}"
                 else
-                    alertSuccess t "message action move ok"
+                    alertSuccess t("message action move ok", subject: subject)
                     @displayNextMessage()
 
     onMark: (args) ->

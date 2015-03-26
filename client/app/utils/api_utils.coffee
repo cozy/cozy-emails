@@ -134,8 +134,18 @@ module.exports =
         if not messageID?
             return
         settings = SettingsStore.get()
-        MessageUtils.delete messageID, settings.get('displayConversation'),
-            settings.get('messageConfirmDelete')
+        conversation = settings.get('displayConversation')
+        confirm      = settings.get('messageConfirmDelete')
+        if confirm
+            if conversation
+                confirmMessage = t 'list delete conv confirm',
+                    smart_count: 1
+            else
+                confirmMessage = t 'list delete confirm',
+                    smart_count: 1
+        if (not confirm) or
+        window.confirm confirmMessage
+            MessageUtils.delete messageID, conversation
 
     messageUndo: ->
         MessageActionCreator.undelete()
