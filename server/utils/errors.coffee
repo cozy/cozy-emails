@@ -81,6 +81,14 @@ utils.HttpError = (status, msg) ->
         this.name = 'HttpError'
 
 
+utils.RefreshError = class RefreshError extends Error
+    constructor: (payload) ->
+        @name = 'Refresh'
+        @status = 500
+        @message = 'Error occured during refresh'
+        @payload = payload
+        Error.captureStackTrace this, arguments.callee
+        return this
 
 
 
@@ -101,6 +109,13 @@ utils.errorHandler = (err, req, res, next) ->
 
     else if err.message is 'Request aborted'
         log.warn "Request aborted"
+
+
+    else if err instanceof utils.RefreshError
+        res.send err.status,
+            name: err.name
+            message: err.message
+            payload: err.payload
 
 
     # pass it down the line to errorhandler module
