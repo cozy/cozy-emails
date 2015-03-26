@@ -45,6 +45,7 @@ async = require 'async'
 CONSTANTS = require '../utils/constants'
 require('../utils/socket_handler').wrapModel Account, 'account'
 
+refreshTimeout = null
 
 Account::doASAP = (operation, callback) ->
     ImapPool.get(@id).doASAP operation, callback
@@ -102,7 +103,8 @@ Account.refreshAccounts = (options, callback) ->
             cb null
     , (err) ->
         if periodic?
-            setTimeout ->
+            clearTimeout refreshTimeout
+            refreshTimeout = setTimeout ->
                 log.debug "doing periodic refresh"
                 # periodic refresh should only check new messages on favorites mailboxes
                 options.onlyFavorites = true
