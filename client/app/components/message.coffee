@@ -42,10 +42,6 @@ module.exports = React.createClass
         key                    : React.PropTypes.string.isRequired
         mailboxes              : React.PropTypes.object.isRequired
         message                : React.PropTypes.object.isRequired
-        nextMessageID          : React.PropTypes.string
-        nextConversationID     : React.PropTypes.string
-        prevMessageID          : React.PropTypes.string
-        prevConversationID     : React.PropTypes.string
         selectedAccountID      : React.PropTypes.string.isRequired
         selectedAccountLogin   : React.PropTypes.string.isRequired
         selectedMailboxID      : React.PropTypes.string.isRequired
@@ -171,7 +167,6 @@ module.exports = React.createClass
         return {messageDisplayHTML, images}
 
     render: ->
-
         message  = @props.message
         prepared = @state.prepared
 
@@ -338,50 +333,10 @@ module.exports = React.createClass
 
         conversationID = @props.message.get 'conversationID'
 
-        getParams = (messageID, conversationID) =>
-            if @props.settings.get('displayConversation')
-                return {
-                    action : 'conversation'
-                    parameters:
-                        messageID : messageID
-                        conversationID: conversationID
-                }
-            else
-                return {
-                    action : 'message'
-                    parameters:
-                        messageID : messageID
-                }
-        if @props.prevMessageID?
-            params = getParams @props.prevMessageID, @props.prevConversationID
-            prev =
-                direction: 'second'
-                action: params.action
-                parameters: params.parameters
-            prevUrl =  @buildUrl prev
-            displayPrev = =>
-                @redirect prev
-        if @props.nextMessageID?
-            params = getParams @props.nextMessageID, @props.nextConversationID
-            next =
-                direction: 'second'
-                action: params.action
-                parameters: params.parameters
-            nextUrl = @buildUrl next
-            displayNext = =>
-                @redirect next
 
         div className: 'messageToolbox row',
             div className: 'btn-toolbar', role: 'toolbar',
                 div className: 'btn-group btn-group-sm btn-group-justified',
-                    if prevUrl?
-                        div className: 'btn-group btn-group-sm',
-                            button
-                                className: 'btn btn-default prev',
-                                type: 'button',
-                                onClick: displayPrev,
-                                    a href: prevUrl,
-                                        span className: 'fa fa-long-arrow-left'
                     div className: 'btn-group btn-group-sm',
                         button
                             className: 'btn btn-default reply',
