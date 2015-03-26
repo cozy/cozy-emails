@@ -43,6 +43,7 @@ log = require('../utils/logging')(prefix: 'models:account')
 _ = require 'lodash'
 async = require 'async'
 CONSTANTS = require '../utils/constants'
+{RefreshError} = require '../utils/errors'
 require('../utils/socket_handler').wrapModel Account, 'account'
 
 refreshTimeout = null
@@ -91,6 +92,7 @@ Account.removeOrphansAndRefresh = (limitByBox, onlyFavorites, callback) ->
 
 Account.refreshAccounts = (options, callback) ->
     {accounts, limitByBox, onlyFavorites, firstImport, periodic} = options
+    errors = {}
     async.eachSeries accounts, (account, cb) ->
         log.debug "refreshing account #{account.label}"
         return cb null if account.isTest()
@@ -99,9 +101,10 @@ Account.refreshAccounts = (options, callback) ->
             log.debug "done refreshing account #{account.label}"
             if err
                 log.error "CANT REFRESH ACCOUNT", account.id, account.label, err
+                errors[account.id] = err
             # refresh all accounts even if one fails
             cb null
-    , (err) ->
+    , ->
         if periodic?
             clearTimeout refreshTimeout
             refreshTimeout = setTimeout ->
@@ -112,7 +115,9 @@ Account.refreshAccounts = (options, callback) ->
                 Account.refreshAccounts options
             , periodic
         if callback?
-            callback err
+            if Object.keys(errors).length > 0
+                error = new RefreshError errors
+            callback error
 
 
 # Public: fetch the mailbox tree of a new {Account}
