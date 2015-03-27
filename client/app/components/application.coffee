@@ -222,7 +222,6 @@ module.exports = Application = React.createClass
 
     # Factory of React components for panels
     getPanelComponent: (panelInfo, layout) ->
-
         # -- Generates a list of messages for a given account and mailbox
         if panelInfo.action is 'account.mailbox.messages' or
            panelInfo.action is 'account.mailbox.messages.full' or
@@ -341,10 +340,10 @@ module.exports = Application = React.createClass
 
             prevMessage = MessageStore.getPreviousMessage()
             nextMessage = MessageStore.getNextMessage()
-
             return Conversation
                 key: 'conversation-' + conversationID
                 layout               : layout
+                readability          : @state.readability
                 settings             : @state.settings
                 accounts             : @state.accountsFlat
                 mailboxes            : @state.mailboxesFlat
@@ -439,6 +438,10 @@ module.exports = Application = React.createClass
                 mailboxesFlat[id][prop] = mailbox.get prop
         .toJS()
 
+        # Test if the message view is currently displayed in large mode or not
+        disposition = LayoutStore.getDisposition()
+        readability = 0 in [disposition.width, disposition.height]
+
         return {
             accounts: accounts
             accountsFlat: accountsFlat
@@ -454,6 +457,7 @@ module.exports = Application = React.createClass
             favoriteSorted: AccountStore.getSelectedFavorites true
             searchQuery: SearchStore.getQuery()
             refreshes: RefreshesStore.getRefreshing()
+            readability: readability
             settings: SettingsStore.get()
             plugins: window.plugins
         }
