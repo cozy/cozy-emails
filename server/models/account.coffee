@@ -262,7 +262,7 @@ Account::imap_refreshBoxes = (callback) ->
         (cb) => Mailbox.getBoxes @id, cb
         (cb) => @imap_getBoxes cb
     ], (err, results) ->
-        log.debug "refreshBoxes#results", results
+        log.debug "refreshBoxes#results"
         return callback err if err
         [cozyBoxes, imapBoxes] = results
 
@@ -279,8 +279,8 @@ Account::imap_refreshBoxes = (callback) ->
             else
                 toDestroy.push cozyBox
 
-        log.debug "refreshBoxes#results2"
-
+        log.debug "refreshBoxes#results2", boxToAdd.length,
+            toFetch.length, toDestroy.length
 
         async.eachSeries boxToAdd, (box, cb) ->
             log.debug "refreshBoxes#creating", box.label
