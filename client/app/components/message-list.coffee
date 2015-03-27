@@ -228,9 +228,11 @@ MessageList = React.createClass
                                 direction: 'left'
                         if @state.edited
                             ToolboxActions
+                                ref: 'listeToolboxActions'
                                 mailboxes: @props.mailboxes
                                 onMark: @onMark
                                 onConversation: @onConversation
+                                onMove: @onConversationMove
                                 onHeaders: @onHeaders
                                 direction: 'left'
 
@@ -312,38 +314,44 @@ MessageList = React.createClass
             .toJS()
             @setState allSelected: true, edited: true, selected: selected
 
-    onDelete: ->
+    onDelete: (conv) ->
         selected = Object.keys @state.selected
         settings = @props.settings
+        if not conv?
+            conv = settings.get 'displayConversation'
         if selected.length is 0
             alertError t 'list mass no message'
         else
-            MessageUtils.delete selected, settings.get 'displayConversation',
-                settings.get 'messageConfirmDelete'
+            confirm = settings.get('messageConfirmDelete')
+            if confirm
+                if conv
+                    confirmMessage = t 'list delete conv confirm',
+                        smart_count: selected.length
+                else
+                    confirmMessage = t 'list delete confirm',
+                        smart_count: selected.length
 
-    onMove: (args) ->
+            if (not confirm) or
+            window.confirm confirmMessage
+                MessageUtils.delete selected, conv, =>
+                    if selected.length > 0 and @props.messages.count() > 0
+                        MessageActionCreator.setCurrent @props.messages.first().get('id'), true
+
+
+    onConversationMove: (args) ->
+        @onMove args, true
+
+    onMove: (args, conv) ->
         selected = Object.keys @state.selected
+        if not conv?
+            conv = @props.settings.get('displayConversation')
         if selected.length is 0
             alertError t 'list mass no message'
         else
             newbox = args.target.dataset.value
-            if args.target.dataset.conversation? or
-               @props.settings.get 'displayConversation'
-                selected.forEach (id) =>
-                    message = @props.messages.get id
-                    ConversationActionCreator.move message, @props.mailboxID, newbox, (error) ->
-                        if error?
-                            alertError "#{t("conversation move ko")} #{error}"
-                        else
-                            window.cozyMails.messageNavigate()
-            else
-                selected.forEach (id) =>
-                    message = @props.messages.get id
-                    MessageActionCreator.move message, @props.mailboxID, newbox, (error) ->
-                        if error?
-                            alertError "#{t("message action move ko")} #{error}"
-                        else
-                            window.cozyMails.messageNavigate()
+            MessageUtils.move selected, conv, @props.mailboxID, newbox, =>
+                if selected.length > 0 and @props.messages.count() > 0
+                    MessageActionCreator.setCurrent @props.messages.first().get('id'), true
 
     onMark: (args) ->
         selected = Object.keys @state.selected
@@ -369,26 +377,25 @@ MessageList = React.createClass
 
     onConversation: (args) ->
         selected = Object.keys @state.selected
-        if selected.length is 0
-            alertError t 'list mass no message'
+        action = args.target.dataset.action
+        if action is 'delete'
+            @onDelete true
         else
-            selected.forEach (id) =>
-                message = @props.messages.get id
-                conversationID = message.get 'conversationID'
-                action = args.target.dataset.action
-                switch action
-                    when 'delete'
-                        ConversationActionCreator.delete conversationID, (error) ->
-                            if error?
-                                alertError "#{t("conversation delete ko")} #{error}"
-                    when 'seen'
-                        ConversationActionCreator.seen conversationID, (error) ->
-                            if error?
-                                alertError "#{t("conversation seen ko ")} #{error}"
-                    when 'unseen'
-                        ConversationActionCreator.unseen conversationID, (error) ->
-                            if error?
-                                alertError "#{t("conversation unseen ko")} #{error}"
+            if selected.length is 0
+                alertError t 'list mass no message'
+            else
+                selected.forEach (id) =>
+                    message = @props.messages.get id
+                    conversationID = message.get 'conversationID'
+                    switch action
+                        when 'seen'
+                            ConversationActionCreator.seen conversationID, (error) ->
+                                if error?
+                                    alertError "#{t("conversation seen ko ")} #{error}"
+                        when 'unseen'
+                            ConversationActionCreator.unseen conversationID, (error) ->
+                                if error?
+                                    alertError "#{t("conversation unseen ko")} #{error}"
 
     expungeMailbox: (e) ->
         e.preventDefault()
@@ -642,7 +649,7 @@ MessageItem = React.createClass
             if not (event.target.getAttribute('type') is 'checkbox')
                 event.preventDefault()
                 node = @refs.target.getDOMNode()
-                MessageActionCreator.setCurrent node.dataset.messageId
+                MessageActionCreator.setCurrent node.dataset.messageId, true
                 if @props.settings.get('displayPreview')
                     href = '#' + node.href.split('#')[1]
                     @redirect href

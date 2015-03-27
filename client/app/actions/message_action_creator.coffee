@@ -173,6 +173,8 @@ module.exports =
 
     # set conv to true to update current conversation ID
     setCurrent: (messageID, conv) ->
+        if typeof messageID isnt 'string'
+            messageID = messageID.get 'id'
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_CURRENT
             value:

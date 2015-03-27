@@ -9,6 +9,7 @@ MessageActionCreator      = require '../actions/message_action_creator'
 AccountStore         = require '../stores/account_store'
 Modal                = require './modal'
 ThinProgress         = require './thin_progress'
+MessageUtils         = require '../utils/message_utils'
 
 {Dispositions, SpecialBoxIcons} = require '../constants/app_constants'
 
@@ -336,17 +337,4 @@ MenuMailboxItem = React.createClass
         {messageID, mailboxID, conversation} = JSON.parse(event.dataTransfer.getData 'text')
         newID = event.currentTarget.dataset.mailboxId
         @setState target: false
-        if conversation
-            ConversationActionCreator.move messageID, mailboxID, newID, (error) ->
-                if error?
-                    LayoutActionCreator.alertError "#{t("conversation move ko")} #{error}"
-                else
-                    LayoutActionCreator.notify t("conversation move ok"),
-                        autoclose: true
-        else
-            MessageActionCreator.move messageID, mailboxID, newID, (error) ->
-                if error?
-                    LayoutActionCreator.alertError "#{t("message action move ko")} #{error}"
-                else
-                    LayoutActionCreator.notify t("message action move ok"),
-                        autoclose: true
+        MessageUtils.move messageID, conversation, mailboxID, newID
