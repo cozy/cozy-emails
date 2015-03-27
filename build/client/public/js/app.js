@@ -6155,16 +6155,13 @@ module.exports = React.createClass({
     }
     return ToolbarMessage({
       message: this.props.message,
-      flags: this.props.message.get('flags') || [],
       mailboxes: this.props.mailboxes,
       selectedMailboxID: this.props.selectedMailboxID,
       onReply: this.onReply,
       onReplyAll: this.onReplyAll,
       onForward: this.onForward,
       onDelete: this.onDelete,
-      onMark: this.onMark,
       onMove: this.onMove,
-      onConversation: this.onConversation,
       onHeaders: this.onHeaders
     });
   },
@@ -6298,7 +6295,6 @@ module.exports = React.createClass({
     }
   },
   onReply: function(args) {
-    console.debug(this);
     return this.setState({
       composing: true,
       composeAction: ComposeActions.REPLY
@@ -6368,66 +6364,6 @@ module.exports = React.createClass({
           }
         };
       })(this));
-    }
-  },
-  onMark: function(args) {
-    var flag, flags;
-    flags = this.props.message.get('flags').slice();
-    flag = args.target.dataset.value;
-    switch (flag) {
-      case FlagsConstants.SEEN:
-        flags.push(MessageFlags.SEEN);
-        break;
-      case FlagsConstants.UNSEEN:
-        flags = flags.filter(function(e) {
-          return e !== FlagsConstants.SEEN;
-        });
-        break;
-      case FlagsConstants.FLAGGED:
-        flags.push(MessageFlags.FLAGGED);
-        break;
-      case FlagsConstants.NOFLAG:
-        flags = flags.filter(function(e) {
-          return e !== FlagsConstants.FLAGGED;
-        });
-    }
-    return MessageActionCreator.updateFlag(this.props.message, flags, function(error) {
-      if (error != null) {
-        return alertError("" + (t("message action mark ko")) + " " + error);
-      } else {
-        return alertSuccess(t("message action mark ok"));
-      }
-    });
-  },
-  onConversation: function(args) {
-    var action, id;
-    id = this.props.message.get('conversationID');
-    action = args.target.dataset.action;
-    switch (action) {
-      case 'delete':
-        return ConversationActionCreator["delete"](id, function(error) {
-          if (error != null) {
-            return alertError("" + (t("conversation delete ko")) + " " + error);
-          } else {
-            return alertSuccess(t("conversation delete ok"));
-          }
-        });
-      case 'seen':
-        return ConversationActionCreator.seen(id, function(error) {
-          if (error != null) {
-            return alertError("" + (t("conversation seen ko")) + " " + error);
-          } else {
-            return alertSuccess(t("conversation seen ok"));
-          }
-        });
-      case 'unseen':
-        return ConversationActionCreator.unseen(id, function(error) {
-          if (error != null) {
-            return alertError("" + (t("conversation unseen ko")) + " " + error);
-          } else {
-            return alertSuccess(t("conversation unseen ok"));
-          }
-        });
     }
   },
   onHeaders: function(event) {
@@ -7485,16 +7421,26 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/toolbar_message", function(exports, require, module) {
-var FlagsConstants, ToolboxActions, ToolboxMove, a, button, cBtn, cBtnGroup, div, nav, _ref,
+var ConversationActionCreator, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageFlags, ToolboxActions, ToolboxMove, a, alertError, alertSuccess, button, cBtn, cBtnGroup, div, nav, _ref, _ref1,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 _ref = React.DOM, nav = _ref.nav, div = _ref.div, button = _ref.button, a = _ref.a;
 
-FlagsConstants = require('../constants/app_constants').FlagsConstants;
+_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, FlagsConstants = _ref1.FlagsConstants;
 
 ToolboxActions = require('./toolbox_actions');
 
 ToolboxMove = require('./toolbox_move');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
+
+ConversationActionCreator = require('../actions/conversation_action_creator');
+
+MessageActionCreator = require('../actions/message_action_creator');
+
+alertError = LayoutActionCreator.alertError;
+
+alertSuccess = LayoutActionCreator.notify;
 
 cBtnGroup = 'btn-group btn-group-sm pull-right';
 
@@ -7504,16 +7450,13 @@ module.exports = React.createClass({
   displayName: 'ToolbarMessage',
   propTypes: {
     message: React.PropTypes.object.isRequired,
-    flags: React.PropTypes.array,
     mailboxes: React.PropTypes.object.isRequired,
     selectedMailboxID: React.PropTypes.string.isRequired,
     onReply: React.PropTypes.func.isRequired,
     onReplyAll: React.PropTypes.func.isRequired,
     onForward: React.PropTypes.func.isRequired,
     onDelete: React.PropTypes.func.isRequired,
-    onMark: React.PropTypes.func.isRequired,
     onMove: React.PropTypes.func.isRequired,
-    onConversation: React.PropTypes.func.isRequired,
     onHeaders: React.PropTypes.func.isRequired
   },
   render: function() {
@@ -7546,21 +7489,22 @@ module.exports = React.createClass({
     }));
   },
   renderToolboxActions: function() {
-    var isFlagged, isSeen, _ref1, _ref2;
-    isFlagged = (_ref1 = FlagsConstants.FLAGGED, __indexOf.call(this.props.flags, _ref1) >= 0);
-    isSeen = (_ref2 = FlagsConstants.SEEN, __indexOf.call(this.props.flags, _ref2) >= 0);
+    var flags, isFlagged, isSeen, _ref2, _ref3;
+    flags = this.props.message.get('flags') || [];
+    isFlagged = (_ref2 = FlagsConstants.FLAGGED, __indexOf.call(flags, _ref2) >= 0);
+    isSeen = (_ref3 = FlagsConstants.SEEN, __indexOf.call(flags, _ref3) >= 0);
     return ToolboxActions({
       ref: 'toolboxActions',
       mailboxes: this.props.mailboxes,
-      isSeen: !isSeen,
-      isFlagged: !isFlagged,
+      isSeen: isSeen,
+      isFlagged: isFlagged,
       mailboxID: this.props.selectedMailboxID,
       messageID: this.props.message.get('id'),
       message: this.props.message,
       onMark: this.onMark,
-      onMove: this.onMove,
       onConversation: this.onConversation,
-      onHeaders: this.onHeaders,
+      onMove: this.props.onMove,
+      onHeaders: this.props.onHeaders,
       direction: 'right'
     });
   },
@@ -7568,20 +7512,80 @@ module.exports = React.createClass({
     return ToolboxMove({
       ref: 'toolboxMove',
       mailboxes: this.props.mailboxes,
-      onMove: this.onMove,
+      onMove: this.props.onMove,
       direction: 'right'
     });
+  },
+  onMark: function(args) {
+    var flag, flags;
+    flags = this.props.message.get('flags').slice();
+    flag = args.target.dataset.value;
+    switch (flag) {
+      case FlagsConstants.SEEN:
+        flags.push(MessageFlags.SEEN);
+        break;
+      case FlagsConstants.UNSEEN:
+        flags = flags.filter(function(e) {
+          return e !== FlagsConstants.SEEN;
+        });
+        break;
+      case FlagsConstants.FLAGGED:
+        flags.push(MessageFlags.FLAGGED);
+        break;
+      case FlagsConstants.NOFLAG:
+        flags = flags.filter(function(e) {
+          return e !== FlagsConstants.FLAGGED;
+        });
+    }
+    return MessageActionCreator.updateFlag(this.props.message, flags, function(error) {
+      if (error != null) {
+        return alertError("" + (t("message action mark ko")) + " " + error);
+      } else {
+        return alertSuccess(t("message action mark ok"));
+      }
+    });
+  },
+  onConversation: function(args) {
+    var action, id;
+    id = this.props.message.get('conversationID');
+    action = args.target.dataset.action;
+    switch (action) {
+      case 'delete':
+        return ConversationActionCreator["delete"](id, function(error) {
+          if (error != null) {
+            return alertError("" + (t("conversation delete ko")) + " " + error);
+          } else {
+            return alertSuccess(t("conversation delete ok"));
+          }
+        });
+      case 'seen':
+        return ConversationActionCreator.seen(id, function(error) {
+          if (error != null) {
+            return alertError("" + (t("conversation seen ko")) + " " + error);
+          } else {
+            return alertSuccess(t("conversation seen ok"));
+          }
+        });
+      case 'unseen':
+        return ConversationActionCreator.unseen(id, function(error) {
+          if (error != null) {
+            return alertError("" + (t("conversation unseen ko")) + " " + error);
+          } else {
+            return alertSuccess(t("conversation unseen ok"));
+          }
+        });
+    }
   }
 });
 });
 
 ;require.register("components/toolbox_actions", function(exports, require, module) {
-var FlagsConstants, MessageFlags, ToolboxActions, a, button, div, li, span, ul, _ref, _ref1,
+var FlagsConstants, ToolboxActions, a, button, div, li, span, ul, _ref,
   __slice = [].slice;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, a = _ref.a, button = _ref.button;
 
-_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, FlagsConstants = _ref1.FlagsConstants;
+FlagsConstants = require('../constants/app_constants').FlagsConstants;
 
 module.exports = ToolboxActions = React.createClass({
   displayName: 'ToolboxActions',
@@ -7614,39 +7618,48 @@ module.exports = ToolboxActions = React.createClass({
     }, t('mail action conversation move'))], [this.renderMailboxes()])));
   },
   renderMarkActions: function() {
-    var flag, seen;
-    seen = this.props.isSeen ? {
-      value: FlagsConstants.SEEN,
-      label: t('mail mark read')
-    } : {
-      value: FlagsConstants.UNSEEN,
-      label: t('mail mark unread')
-    };
-    flag = this.props.isFlagged ? {
-      value: FlagsConstants.FLAGGED,
-      label: t('mail mark fav')
-    } : {
-      value: FlagsConstants.NOFLAG,
-      label: t('mail mark nofav')
-    };
-    return [
-      li({
-        role: 'presentation',
-        className: 'dropdown-header'
-      }, t('mail action mark')), li({
-        role: 'presentation'
-      }, a({
-        role: 'menuitemu',
-        onClick: this.props.onMark,
-        value: seen.value
-      }, seen.label)), li({
-        role: 'presentation'
-      }, a({
-        role: 'menuitemu',
-        onClick: this.props.onMark,
-        value: flag.value
-      }, flag.label))
-    ];
+    var buildMenuItem, items;
+    items = [];
+    items.push(li({
+      role: 'presentation',
+      className: 'dropdown-header'
+    }, t('mail action mark')));
+    buildMenuItem = (function(_this) {
+      return function(args) {
+        return li({
+          role: 'presentation'
+        }, a({
+          role: 'menuitemu',
+          onClick: _this.props.onMark,
+          'data-value': args.value
+        }, args.label));
+      };
+    })(this);
+    if ((this.props.isSeen == null) || !this.props.isSeen) {
+      items.push(buildMenuItem({
+        value: FlagsConstants.SEEN,
+        label: t('mail mark read')
+      }));
+    }
+    if ((this.props.isSeen == null) || this.props.isSeen) {
+      items.push(buildMenuItem({
+        value: FlagsConstants.UNSEEN,
+        label: t('mail mark unread')
+      }));
+    }
+    if ((this.props.isFlagged == null) || this.props.isFlagged) {
+      items.push(buildMenuItem({
+        value: FlagsConstants.NOFLAG,
+        label: t('mail mark nofav')
+      }));
+    }
+    if ((this.props.isFlagged == null) || !this.props.isFlagged) {
+      items.push(buildMenuItem({
+        value: FlagsConstants.FLAGGED,
+        label: t('mail mark fav')
+      }));
+    }
+    return items;
   },
   renderRawActions: function() {
     var items;
@@ -7692,11 +7705,11 @@ module.exports = ToolboxActions = React.createClass({
     return items;
   },
   renderMailboxes: function() {
-    var id, mbox, _ref2, _results;
-    _ref2 = this.props.mailboxes;
+    var id, mbox, _ref1, _results;
+    _ref1 = this.props.mailboxes;
     _results = [];
-    for (id in _ref2) {
-      mbox = _ref2[id];
+    for (id in _ref1) {
+      mbox = _ref1[id];
       if (id !== this.props.selectedMailboxID) {
         _results.push(this.renderMailbox(mbox, id));
       }

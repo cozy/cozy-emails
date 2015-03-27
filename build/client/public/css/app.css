@@ -1503,34 +1503,34 @@ textarea.compose-input {
   -ms-transform: none;
   transform: none;
 }
-.toolbar .pusher-1 {
+.dropdown-menu .pusher-1 {
   padding-left: 40px;
 }
-.toolbar .pusher-2 {
+.dropdown-menu .pusher-2 {
   padding-left: 60px;
 }
-.toolbar .pusher-3 {
+.dropdown-menu .pusher-3 {
   padding-left: 80px;
 }
-.toolbar .pusher-4 {
+.dropdown-menu .pusher-4 {
   padding-left: 100px;
 }
-.toolbar .pusher-5 {
+.dropdown-menu .pusher-5 {
   padding-left: 120px;
 }
-.toolbar .pusher-6 {
+.dropdown-menu .pusher-6 {
   padding-left: 140px;
 }
-.toolbar .pusher-7 {
+.dropdown-menu .pusher-7 {
   padding-left: 160px;
 }
-.toolbar .pusher-8 {
+.dropdown-menu .pusher-8 {
   padding-left: 180px;
 }
-.toolbar .pusher-9 {
+.dropdown-menu .pusher-9 {
   padding-left: 200px;
 }
-.toolbar .pusher-10 {
+.dropdown-menu .pusher-10 {
   padding-left: 220px;
 }
 .toasts-container {
