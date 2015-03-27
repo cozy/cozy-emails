@@ -6,9 +6,11 @@
 module.exports = ToolboxActions = React.createClass
     displayName: 'ToolboxActions'
 
+
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
                not(_.isEqual(nextProps, @props))
+
 
     render: ->
         direction = if @props.direction is 'right' then 'right' else 'left'
@@ -34,38 +36,40 @@ module.exports = ToolboxActions = React.createClass
 
 
     renderMarkActions: ->
-        seen = if @props.isSeen
-            value: FlagsConstants.SEEN
-            label: t 'mail mark read'
-        else
-            value: FlagsConstants.UNSEEN
-            label: t 'mail mark unread'
+        items = []
+        items.push li
+            role:      'presentation'
+            className: 'dropdown-header'
+            t 'mail action mark'
 
-        flag = if @props.isFlagged
-            value: FlagsConstants.FLAGGED
-            label: t 'mail mark fav'
-        else
-            value: FlagsConstants.NOFLAG
-            label: t 'mail mark nofav'
-
-        [
-            li
-                role:      'presentation'
-                className: 'dropdown-header'
-                t 'mail action mark'
+        # TODO: Use a Factory to improve this ugly conditionnal nesting
+        buildMenuItem = (args) =>
             li role: 'presentation',
                 a
                     role:    'menuitemu'
                     onClick: @props.onMark
-                    value:   seen.value
-                    seen.label
-            li role: 'presentation',
-                a
-                    role:    'menuitemu'
-                    onClick: @props.onMark
-                    value:   flag.value
-                    flag.label
-        ]
+                    value:   args.value
+                    args.label
+
+        if not @props.isSeen? or not @props.isSeen
+            items.push buildMenuItem
+                value: FlagsConstants.SEEN
+                label: t 'mail mark read'
+        if not @props.isSeen? or @props.isSeen
+            items.push buildMenuItem
+                value: FlagsConstants.UNSEEN
+                label: t 'mail mark unread'
+
+        if not @props.isFlagged? or @props.isFlagged
+            items.push buildMenuItem
+                value: FlagsConstants.NOFLAG
+                label: t 'mail mark nofav'
+        if not @props.isFlagged? or not @props.isFlagged
+            items.push buildMenuItem
+                value: FlagsConstants.FLAGGED
+                label: t 'mail mark fav'
+
+        return items
 
 
     renderRawActions: ->

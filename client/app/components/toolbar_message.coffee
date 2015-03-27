@@ -5,6 +5,12 @@
 ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'
 
+LayoutActionCreator       = require '../actions/layout_action_creator'
+ConversationActionCreator = require '../actions/conversation_action_creator'
+MessageActionCreator      = require '../actions/message_action_creator'
+alertError                = LayoutActionCreator.alertError
+alertSuccess              = LayoutActionCreator.notify
+
 # Shortcuts for buttons classes
 cBtnGroup = 'btn-group btn-group-sm pull-right'
 cBtn      = 'btn btn-default fa'
@@ -15,16 +21,13 @@ module.exports = React.createClass
 
     propTypes:
         message            : React.PropTypes.object.isRequired
-        flags              : React.PropTypes.array
         mailboxes          : React.PropTypes.object.isRequired
         selectedMailboxID  : React.PropTypes.string.isRequired
         onReply            : React.PropTypes.func.isRequired
         onReplyAll         : React.PropTypes.func.isRequired
         onForward          : React.PropTypes.func.isRequired
         onDelete           : React.PropTypes.func.isRequired
-        onMark             : React.PropTypes.func.isRequired
         onMove             : React.PropTypes.func.isRequired
-        onConversation     : React.PropTypes.func.isRequired
         onHeaders          : React.PropTypes.func.isRequired
 
 
@@ -59,21 +62,22 @@ module.exports = React.createClass
 
 
     renderToolboxActions: ->
-        isFlagged = FlagsConstants.FLAGGED in @props.flags
-        isSeen    = FlagsConstants.SEEN in @props.flags
+        flags = @props.message.get('flags') or []
+        isFlagged = FlagsConstants.FLAGGED in flags
+        isSeen    = FlagsConstants.SEEN in flags
 
         ToolboxActions
             ref:            'toolboxActions'
             mailboxes:      @props.mailboxes
-            isSeen:         !isSeen
-            isFlagged:      !isFlagged
+            isSeen:         isSeen
+            isFlagged:      isFlagged
             mailboxID:      @props.selectedMailboxID
             messageID:      @props.message.get 'id'
             message:        @props.message
             onMark:         @onMark
-            onMove:         @onMove
             onConversation: @onConversation
-            onHeaders:      @onHeaders
+            onMove:         @props.onMove
+            onHeaders:      @props.onHeaders
             direction:      'right'
 
 
@@ -81,5 +85,48 @@ module.exports = React.createClass
         ToolboxMove
             ref:       'toolboxMove'
             mailboxes: @props.mailboxes
-            onMove:    @onMove
+            onMove:    @props.onMove
             direction: 'right'
+
+
+    onMark: (args) ->
+        flags = @props.message.get('flags').slice()
+        flag = args.target.dataset.value
+        switch flag
+            when FlagsConstants.SEEN
+                flags.push MessageFlags.SEEN
+            when FlagsConstants.UNSEEN
+                flags = flags.filter (e) -> return e isnt FlagsConstants.SEEN
+            when FlagsConstants.FLAGGED
+                flags.push MessageFlags.FLAGGED
+            when FlagsConstants.NOFLAG
+                flags = flags.filter (e) -> return e isnt FlagsConstants.FLAGGED
+        MessageActionCreator.updateFlag @props.message, flags, (error) ->
+            if error?
+                alertError "#{t("message action mark ko")} #{error}"
+            else
+                alertSuccess t "message action mark ok"
+
+
+    onConversation: (args) ->
+        id     = @props.message.get 'conversationID'
+        action = args.target.dataset.action
+        switch action
+            when 'delete'
+                ConversationActionCreator.delete id, (error) ->
+                    if error?
+                        alertError "#{t("conversation delete ko")} #{error}"
+                    else
+                        alertSuccess t "conversation delete ok"
+            when 'seen'
+                ConversationActionCreator.seen id, (error) ->
+                    if error?
+                        alertError "#{t("conversation seen ko")} #{error}"
+                    else
+                        alertSuccess t "conversation seen ok"
+            when 'unseen'
+                ConversationActionCreator.unseen id, (error) ->
+                    if error?
+                        alertError "#{t("conversation unseen ko")} #{error}"
+                    else
+                        alertSuccess t "conversation unseen ok"
