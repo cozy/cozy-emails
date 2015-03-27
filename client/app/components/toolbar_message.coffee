@@ -1,6 +1,6 @@
 {nav, div, button, a} = React.DOM
 
-{FlagsConstants} = require '../constants/app_constants'
+{MessageFlags, FlagsConstants} = require '../constants/app_constants'
 
 ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'

@@ -1,6 +1,6 @@
 {div, ul, li, span, a, button} = React.DOM
 
-{MessageFlags, FlagsConstants} = require '../constants/app_constants'
+{FlagsConstants} = require '../constants/app_constants'
 
 
 module.exports = ToolboxActions = React.createClass
@@ -46,9 +46,9 @@ module.exports = ToolboxActions = React.createClass
         buildMenuItem = (args) =>
             li role: 'presentation',
                 a
-                    role:    'menuitemu'
-                    onClick: @props.onMark
-                    value:   args.value
+                    role:         'menuitemu'
+                    onClick:      @props.onMark
+                    'data-value': args.value
                     args.label
 
         if not @props.isSeen? or not @props.isSeen
