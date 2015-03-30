@@ -75,9 +75,10 @@ module.exports = MessageUtils =
             message.references = message.references.concat message.inReplyTo
 
         switch action
+
             when ComposeActions.REPLY
-                separator = t('compose reply separator',
-                    {date: dateHuman, sender: sender})
+                params = date: dateHuman, sender: sender
+                separator = t 'compose reply separator', params
                 message.to = @getReplyToAddress inReplyTo
                 message.cc = []
                 message.bcc = []
@@ -90,10 +91,12 @@ module.exports = MessageUtils =
                     <blockquote>#{html}</blockquote>
                     <p><br /></p>
                     """
+
             when ComposeActions.REPLY_ALL
-                separator = t('compose reply separator',
-                    {date: dateHuman, sender: sender})
+                params = date: dateHuman, sender: sender
+                separator = t 'compose reply separator', params
                 message.to = @getReplyToAddress inReplyTo
+
                 # filter to don't have same address twice
                 toAddresses = message.to.map (dest) -> return dest.address
                 message.cc = [].concat(inReplyTo.get('from'),
@@ -110,6 +113,7 @@ module.exports = MessageUtils =
                     <blockquote>#{html}</blockquote>
                     <p><br /></p>
                     """
+
             when ComposeActions.FORWARD
                 separator = t('compose forward separator',
                     {date: dateHuman, sender: sender})
