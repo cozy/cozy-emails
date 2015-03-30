@@ -86,7 +86,6 @@ module.exports = MessageUtils =
                     """
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
-                    <p><br /></p>
                     <p>#{separator}<span class="originalToggle"> … </span></p>
                     <blockquote>#{html}</blockquote>
                     <p><br /></p>
@@ -107,7 +106,6 @@ module.exports = MessageUtils =
                     """
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
-                    <p><br /></p>
                     <p>#{separator}<span class="originalToggle"> … </span></p>
                     <blockquote>#{html}</blockquote>
                     <p><br /></p>
@@ -199,7 +197,8 @@ module.exports = MessageUtils =
 
     # Delete message(s) or conversations
     #
-    # @params {Mixed}    ids          messageID or Message or array of messageIDs or Messages
+    # @params {Mixed}    ids          messageID or Message or array of
+    #                                 messageIDs or Messages
     # @params {Boolean}  conversation true to delete whole conversation
     # @params {Boolean}  confirm      true to ask user to confirm
     # @params {Function} cb           callback
