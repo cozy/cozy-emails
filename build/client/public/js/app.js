@@ -3275,7 +3275,7 @@ module.exports = Compose = React.createClass({
     return this._doSend(false);
   },
   _doSend: function(isDraft) {
-    var account, from, message, tmp, valid;
+    var account, from, message, tmp, valid, _ref1;
     account = this.props.accounts[this.state.accountID];
     from = {
       name: account.name || void 0,
@@ -3291,7 +3291,9 @@ module.exports = Compose = React.createClass({
       bcc: this.state.bcc,
       subject: this.state.subject,
       isDraft: isDraft,
-      attachments: this.state.attachments
+      attachments: this.state.attachments,
+      inReplyTo: this.state.inReplyTo,
+      references: this.state.references
     };
     valid = true;
     if (!isDraft) {
@@ -3317,7 +3319,7 @@ module.exports = Compose = React.createClass({
         try {
           message.text = toMarkdown(message.html);
         } catch (_error) {
-          message.text = typeof message.html === "function" ? message.html(replace(/<[^>]*>/gi, '')) : void 0;
+          message.text = (_ref1 = message.html) != null ? _ref1.replace(/<[^>]*>/gi, '') : void 0;
         }
         tmp = document.createElement('div');
         tmp.innerHTML = message.text;
@@ -4227,13 +4229,29 @@ module.exports = MailsInput = React.createClass({
     var classLabel, className, current, knownContacts, listClass, onChange, renderTag, _ref1;
     renderTag = (function(_this) {
       return function(address, idx) {
-        var display, remove;
+        var display, onDragEnd, onDragStart, remove;
         remove = function() {
           var known;
           known = _this.state.known.filter(function(a) {
             return a.address !== address.address;
           });
           return _this.props.valueLink.requestChange(known);
+        };
+        onDragStart = function(event) {
+          var data;
+          event.stopPropagation();
+          data = {
+            name: address.name,
+            address: address.address
+          };
+          event.dataTransfer.setData('text', JSON.stringify(data));
+          event.dataTransfer.effectAllowed = 'move';
+          return event.dataTransfer.dropEffect = 'move';
+        };
+        onDragEnd = function(event) {
+          if (event.dataTransfer.dropEffect === 'move') {
+            return remove();
+          }
         };
         if ((address.name != null) && address.name.trim() !== '') {
           display = address.name;
@@ -4242,6 +4260,9 @@ module.exports = MailsInput = React.createClass({
         }
         return span({
           className: 'address-tag',
+          draggable: true,
+          onDragStart: onDragStart,
+          onDragEnd: onDragEnd,
           key: "" + _this.props.id + "-" + address.address + "-" + idx,
           title: address.address
         }, display, a({
@@ -4278,7 +4299,8 @@ module.exports = MailsInput = React.createClass({
     });
     current = 0;
     return div({
-      className: className
+      className: className,
+      onDrop: this.onDrop
     }, label({
       htmlFor: this.props.id,
       className: classLabel
@@ -4290,6 +4312,7 @@ module.exports = MailsInput = React.createClass({
       className: 'form-control compose-input',
       onKeyDown: this.onKeyDown,
       onBlur: this.onBlur,
+      onDrop: this.onDrop,
       ref: 'contactInput',
       rows: 1,
       value: this.state.unknown,
@@ -4442,6 +4465,23 @@ module.exports = MailsInput = React.createClass({
     if (input.scrollHeight > input.clientHeight) {
       return input.style.height = input.scrollHeight + "px";
     }
+  },
+  onDrop: function(event) {
+    var address, name, _ref1;
+    event.preventDefault();
+    event.stopPropagation();
+    _ref1 = JSON.parse(event.dataTransfer.getData('text')), name = _ref1.name, address = _ref1.address;
+    address = {
+      name: name,
+      address: address
+    };
+    this.state.known.push(address);
+    this.props.valueLink.requestChange(this.state.known);
+    return this.setState({
+      unknown: '',
+      contacts: null,
+      open: false
+    });
   }
 });
 });
@@ -5552,12 +5592,12 @@ MessageItem = React.createClass({
         };
       }
     }
+    url = this.buildUrl({
+      direction: 'second',
+      action: action,
+      parameters: params
+    });
     if (!this.props.edited) {
-      url = this.buildUrl({
-        direction: 'second',
-        action: action,
-        parameters: params
-      });
       tag = a;
     } else {
       tag = span;
@@ -5576,16 +5616,17 @@ MessageItem = React.createClass({
       onDragStart: this.onDragStart
     }, tag({
       href: url,
+      'data-href': url,
       className: 'wrapper',
       'data-message-id': message.get('id'),
       onClick: this.onMessageClick,
       onDoubleClick: this.onMessageDblClick,
       ref: 'target'
     }, div({
-      className: 'avatar-wrapper'
+      className: 'avatar-wrapper select-target'
     }, input({
       ref: 'select',
-      className: 'select',
+      className: 'select select-target',
       type: 'checkbox',
       checked: this.props.selected,
       onChange: this.onSelect
@@ -5642,17 +5683,17 @@ MessageItem = React.createClass({
   },
   onMessageClick: function(event) {
     var href, node;
-    if (this.props.edited) {
+    node = this.refs.target.getDOMNode();
+    if (this.props.edited && event.target.classList.contains('select-target')) {
       this.props.onSelect(!this.props.selected);
       event.preventDefault();
       return event.stopPropagation();
     } else {
       if (!(event.target.getAttribute('type') === 'checkbox')) {
         event.preventDefault();
-        node = this.refs.target.getDOMNode();
         MessageActionCreator.setCurrent(node.dataset.messageId, true);
         if (this.props.settings.get('displayPreview')) {
-          href = '#' + node.href.split('#')[1];
+          href = '#' + node.dataset.href.split('#')[1];
           return this.redirect(href);
         }
       }
@@ -11149,7 +11190,7 @@ module.exports = MessageUtils = {
       if (html && !text && !inHTML) {
         text = toMarkdown(html);
       }
-      message.inReplyTo = inReplyTo.get('id');
+      message.inReplyTo = [inReplyTo.get('id')];
       message.references = inReplyTo.get('references') || [];
       message.references = message.references.concat(message.inReplyTo);
     }
