@@ -39,7 +39,7 @@ Participant = React.createClass
                     image = "<i class='avatar fa fa-user' />"
                 if contact?
                     image = """
-                    <a href="#apps/contacts/contact/#{contact.get 'id'}" target="blank">
+                    <a href="/#apps/contacts/contact/#{contact.get 'id'}" target="blank">
                         #{image}
                     </a>
                     """

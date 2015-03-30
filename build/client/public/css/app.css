@@ -285,7 +285,7 @@ textarea:active,
 #page-content #panels .panel {
   overflow-y: auto;
   margin: 0;
-  padding: 1em 1em 0 1em;
+  padding: 0;
   position: absolute;
 }
 #page-content #panels .panel:first-of-type {
@@ -524,7 +524,7 @@ textarea:active,
   background-color: #ffa500;
 }
 .conversation .message-title {
-  margin-top: 0.5em;
+  margin-bottom: 0.5em;
   line-height: 1.4em;
   border: 0;
 }
@@ -555,11 +555,11 @@ textarea:active,
 .conversation .thread .message .messageNavigation .btn-toolbar {
   margin-right: 0.5em;
   padding-top: 1em;
-  margin-bottom: 2em;
+  margin-bottom: 1em;
   border-top: 1px solid #ccc;
 }
 .conversation .thread .message .messageToolbox {
-  margin-top: 2em;
+  margin-top: 1em;
 }
 .conversation .thread .message .messageToolbox .btn.btn-default {
   background: none;
@@ -821,6 +821,7 @@ textarea:active,
 #email-compose {
   width: 100%;
   max-width: 800px;
+  margin-bottom: 20px;
 }
 #email-compose.enable {
   display: block;
@@ -828,8 +829,8 @@ textarea:active,
 #email-compose h3 {
   color: #444;
   margin-top: 0;
-  padding-top: 1em;
-  margin-bottom: 2em;
+  padding-top: 0.5em;
+  margin-bottom: 1em;
 }
 #email-compose a.close-email {
   margin-right: 0;
@@ -911,8 +912,7 @@ textarea.compose-input {
   height: 2em;
   padding: 0.2em 0.5em;
   overflow: hidden;
-  width: calc(100% - 4em);
-  max-width: 750px;
+  width: 100%;
   display: inline;
   resize: none;
 }
@@ -1482,6 +1482,56 @@ textarea.compose-input {
 }
 #quick-actions a.btn {
   margin-right: 0.5em;
+}
+.toolbar {
+  padding: 0.5em 15px;
+}
+.toolbar .btn {
+  border: none;
+  color: #34a6ff;
+  text-shadow: none;
+  -webkit-box-shadow: none;
+  box-shadow: none;
+}
+.toolbar .btn:hover {
+  color: #fe8800;
+}
+.toolbar .fa-compress {
+  -webkit-transform: none;
+  -moz-transform: none;
+  -o-transform: none;
+  -ms-transform: none;
+  transform: none;
+}
+.dropdown-menu .pusher-1 {
+  padding-left: 40px;
+}
+.dropdown-menu .pusher-2 {
+  padding-left: 60px;
+}
+.dropdown-menu .pusher-3 {
+  padding-left: 80px;
+}
+.dropdown-menu .pusher-4 {
+  padding-left: 100px;
+}
+.dropdown-menu .pusher-5 {
+  padding-left: 120px;
+}
+.dropdown-menu .pusher-6 {
+  padding-left: 140px;
+}
+.dropdown-menu .pusher-7 {
+  padding-left: 160px;
+}
+.dropdown-menu .pusher-8 {
+  padding-left: 180px;
+}
+.dropdown-menu .pusher-9 {
+  padding-left: 200px;
+}
+.dropdown-menu .pusher-10 {
+  padding-left: 220px;
 }
 .toasts-container {
   position: absolute;

@@ -128,12 +128,12 @@ class ImapPool
         process.nextTick @_deQueue
 
     _onActiveError: (connection, err) ->
-        log.error "error on active imap socket on #{connection.connectionName}", err.stack
+        log.error "error on active imap socket on #{connection.connectionName}", err
         @_removeFromPool connection
         try connection.destroy()
 
     _onActiveClose: (connection, err) ->
-        log.error "active connection #{connection.connectionName} closed", err.stack
+        log.error "active connection #{connection.connectionName} closed", err
         task = @pending[connection.connectionID]
         if task
             delete @pending[connection.connectionID]

@@ -13,13 +13,21 @@ module.exports =
         conversation = MessageStore.getConversation conversationID
         account = AccountStore.getByID(conversation.get(0).get 'accountID')
         trash   = account.get 'trashMailbox'
+        if not trash? or trash is ''
+            callback t('message delete no trash')
+            return
+
         messages        = []
         messagesActions = []
+        error           = ''
         conversation.map (message) ->
+            mailboxIDs = message.get 'mailboxIDs'
+            if mailboxIDs[trash]?
+                error = t 'message delete already'
             # action to allow undelete
             action =
                 id: message.get 'id'
-                from: Object.keys(message.get 'mailboxIDs')
+                from: Object.keys mailboxIDs
                 to: trash
             messagesActions.push action
 
@@ -31,6 +39,10 @@ module.exports =
             messages.push msg
 
         .toJS()
+
+        if error isnt ''
+            callback error
+            return
 
         # send requests ASAP
         XHRUtils.conversationDelete conversationID, (error, messages) ->
@@ -85,6 +97,14 @@ module.exports =
                         AppDispatcher.handleViewAction
                             type: ActionTypes.RECEIVE_RAW_MESSAGES
                             value: messages
+                        options =
+                            autoclose: true,
+                            actions: [
+                                label: t 'conversation undelete'
+                                onClick: -> MessageActionCreator.undelete()
+                            ]
+                        msgOk = t('conversation move ok', subject: messages[0].subject)
+                        LayoutActionCreator.notify msgOk, options
                     if callback?
                         callback error
 

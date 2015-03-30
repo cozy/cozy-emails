@@ -292,7 +292,8 @@ class MessageStore extends Store
 
     setCurrentID: (messageID, conv) ->
         if conv?
-            _conversationMemoizeID = @getByID(messageID).get 'conversationID'
+            # this will set current conversation and conversationID
+            @getConversation(@getByID(messageID).get 'conversationID')
         _currentID = messageID
 
     getCurrentConversationID: ->
