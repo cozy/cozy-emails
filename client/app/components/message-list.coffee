@@ -566,11 +566,11 @@ MessageItem = React.createClass
                 params =
                     conversationID: conversationID
                     messageID: message.get 'id'
+        url = @buildUrl
+            direction: 'second'
+            action: action
+            parameters: params
         if not @props.edited
-            url = @buildUrl
-                direction: 'second'
-                action: action
-                parameters: params
             tag = a
         else
             tag = span
@@ -591,16 +591,17 @@ MessageItem = React.createClass
         ,
             tag
                 href: url,
-                className: 'wrapper'
+                'data-href': url,
+                className: 'wrapper',
                 'data-message-id': message.get('id'),
                 onClick: @onMessageClick,
                 onDoubleClick: @onMessageDblClick,
                 ref: 'target',
                     div
-                        className: 'avatar-wrapper',
+                        className: 'avatar-wrapper select-target',
                         input
                             ref: 'select'
-                            className: 'select',
+                            className: 'select select-target',
                             type: 'checkbox',
                             checked: @props.selected,
                             onChange: @onSelect
@@ -641,17 +642,17 @@ MessageItem = React.createClass
         e.stopPropagation()
 
     onMessageClick: (event) ->
-        if @props.edited
+        node = @refs.target.getDOMNode()
+        if @props.edited and event.target.classList.contains 'select-target'
             @props.onSelect(not @props.selected)
             event.preventDefault()
             event.stopPropagation()
         else
             if not (event.target.getAttribute('type') is 'checkbox')
                 event.preventDefault()
-                node = @refs.target.getDOMNode()
                 MessageActionCreator.setCurrent node.dataset.messageId, true
                 if @props.settings.get('displayPreview')
-                    href = '#' + node.href.split('#')[1]
+                    href = '#' + node.dataset.href.split('#')[1]
                     @redirect href
 
     onMessageDblClick: (event) ->
