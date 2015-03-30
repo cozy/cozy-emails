@@ -1,8 +1,7 @@
 {div, ul, li, span, i, p, h3, a} = React.DOM
 Message = require './message'
+Toolbar = require './toolbar_conversation'
 classer = React.addons.classSet
-
-LayoutActionCreator = require '../actions/layout_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
 {MessageFlags} = require '../constants/app_constants'
@@ -18,6 +17,7 @@ module.exports = React.createClass
         selectedAccountID    : React.PropTypes.string.isRequired
         selectedAccountLogin : React.PropTypes.string.isRequired
         layout               : React.PropTypes.string.isRequired
+        readability          : React.PropTypes.bool.isRequired
         selectedMailboxID    : React.PropTypes.string
         mailboxes            : React.PropTypes.object.isRequired
         settings             : React.PropTypes.object.isRequired
@@ -33,6 +33,15 @@ module.exports = React.createClass
     expand: ->
         @setState expanded: true
 
+    renderToolbar: ->
+        Toolbar
+            readability         : @props.readability
+            nextMessageID       : @props.nextMessageID
+            nextConversationID  : @props.nextConversationID
+            prevMessageID       : @props.prevMessageID
+            prevConversationID  : @props.prevConversationID
+            settings            : @props.settings
+
     renderMessage: (key, message, active) ->
         Message
             ref                 : 'message'
@@ -42,10 +51,6 @@ module.exports = React.createClass
             key                 : key
             mailboxes           : @props.mailboxes
             message             : message
-            nextMessageID       : @props.nextMessageID
-            nextConversationID  : @props.nextConversationID
-            prevMessageID       : @props.prevMessageID
-            prevConversationID  : @props.prevConversationID
             selectedAccountID   : @props.selectedAccountID
             selectedAccountLogin: @props.selectedAccountLogin
             selectedMailboxID   : @props.selectedMailboxID
@@ -95,21 +100,8 @@ module.exports = React.createClass
 
         .toJS()
 
-        toggleFullscreen = ->
-            LayoutActionCreator.toggleFullscreen()
-
         div className: 'conversation',
-
-            if @props.layout isnt 'full'
-                a
-                    onClick: toggleFullscreen
-                    className: 'expand hidden-xs hidden-sm clickable',
-                        i className: 'fa fa-arrows-h'
-            else
-                a
-                    onClick: toggleFullscreen
-                    className: 'compress clickable',
-                        i className:'fa fa-compress'
+            @renderToolbar()
 
             h3
                 className: 'message-title'
