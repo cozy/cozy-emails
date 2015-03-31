@@ -3253,7 +3253,7 @@ module.exports = Compose = React.createClass({
       }
       state.attachments = message.get('attachments');
     } else {
-      state = messageUtils.makeReplyMessage(this.props.selectedAccountLogin, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
+      state = MessageUtils.makeReplyMessage(this.props.selectedAccountLogin, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
       if (state.accountID == null) {
         state.accountID = this.props.selectedAccountID;
       }
@@ -3291,7 +3291,9 @@ module.exports = Compose = React.createClass({
       bcc: this.state.bcc,
       subject: this.state.subject,
       isDraft: isDraft,
-      attachments: this.state.attachments
+      attachments: this.state.attachments,
+      inReplyTo: this.state.inReplyTo,
+      references: this.state.references
     };
     valid = true;
     if (!isDraft) {
@@ -4225,13 +4227,29 @@ module.exports = MailsInput = React.createClass({
     var classLabel, className, current, knownContacts, listClass, onChange, renderTag, _ref1;
     renderTag = (function(_this) {
       return function(address, idx) {
-        var display, remove;
+        var display, onDragEnd, onDragStart, remove;
         remove = function() {
           var known;
           known = _this.state.known.filter(function(a) {
             return a.address !== address.address;
           });
           return _this.props.valueLink.requestChange(known);
+        };
+        onDragStart = function(event) {
+          var data;
+          event.stopPropagation();
+          data = {
+            name: address.name,
+            address: address.address
+          };
+          event.dataTransfer.setData('text', JSON.stringify(data));
+          event.dataTransfer.effectAllowed = 'move';
+          return event.dataTransfer.dropEffect = 'move';
+        };
+        onDragEnd = function(event) {
+          if (event.dataTransfer.dropEffect === 'move') {
+            return remove();
+          }
         };
         if ((address.name != null) && address.name.trim() !== '') {
           display = address.name;
@@ -4240,6 +4258,9 @@ module.exports = MailsInput = React.createClass({
         }
         return span({
           className: 'address-tag',
+          draggable: true,
+          onDragStart: onDragStart,
+          onDragEnd: onDragEnd,
           key: "" + _this.props.id + "-" + address.address + "-" + idx,
           title: address.address
         }, display, a({
@@ -4276,7 +4297,8 @@ module.exports = MailsInput = React.createClass({
     });
     current = 0;
     return div({
-      className: className
+      className: className,
+      onDrop: this.onDrop
     }, label({
       htmlFor: this.props.id,
       className: classLabel
@@ -4288,6 +4310,7 @@ module.exports = MailsInput = React.createClass({
       className: 'form-control compose-input',
       onKeyDown: this.onKeyDown,
       onBlur: this.onBlur,
+      onDrop: this.onDrop,
       ref: 'contactInput',
       rows: 1,
       value: this.state.unknown,
@@ -4440,6 +4463,23 @@ module.exports = MailsInput = React.createClass({
     if (input.scrollHeight > input.clientHeight) {
       return input.style.height = input.scrollHeight + "px";
     }
+  },
+  onDrop: function(event) {
+    var address, name, _ref1;
+    event.preventDefault();
+    event.stopPropagation();
+    _ref1 = JSON.parse(event.dataTransfer.getData('text')), name = _ref1.name, address = _ref1.address;
+    address = {
+      name: name,
+      address: address
+    };
+    this.state.known.push(address);
+    this.props.valueLink.requestChange(this.state.known);
+    return this.setState({
+      unknown: '',
+      contacts: null,
+      open: false
+    });
   }
 });
 });
@@ -4929,7 +4969,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbMessages, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
     compact = this.props.settings.get('listStyle') === 'compact';
     filterParams = {
       accountID: this.props.accountID,
@@ -4959,7 +4999,11 @@ MessageList = React.createClass({
       fullWidth: true
     });
     advanced = this.props.settings.get('advanced');
-    nbSelected = Object.keys(this.state.selected).length > 0 ? null : true;
+    if (Object.keys(this.state.selected).length > 0) {
+      nbSelected = null;
+    } else {
+      nbSelected = true;
+    }
     showList = (function(_this) {
       return function() {
         var params;
@@ -4974,7 +5018,11 @@ MessageList = React.createClass({
     toggleFilterFlag = (function(_this) {
       return function() {
         var filter;
-        filter = _this.state.filterFlag ? MessageFilter.ALL : MessageFilter.FLAGGED;
+        if (_this.state.filterFlag) {
+          filter = MessageFilter.ALL;
+        } else {
+          filter = MessageFilter.FLAGGED;
+        }
         LayoutActionCreator.filterMessages(filter);
         showList();
         return _this.setState({
@@ -4987,7 +5035,11 @@ MessageList = React.createClass({
     toggleFilterUnseen = (function(_this) {
       return function() {
         var filter;
-        filter = _this.state.filterUnseen ? MessageFilter.ALL : MessageFilter.UNSEEN;
+        if (_this.state.filterUnseen) {
+          filter = MessageFilter.ALL;
+        } else {
+          filter = MessageFilter.UNSEEN;
+        }
         LayoutActionCreator.filterMessages(filter);
         showList();
         return _this.setState({
@@ -5000,7 +5052,11 @@ MessageList = React.createClass({
     toggleFilterAttach = (function(_this) {
       return function() {
         var filter;
-        filter = _this.state.filterAttach ? MessageFilter.ALL : MessageFilter.ATTACH;
+        if (_this.state.filterAttach) {
+          filter = MessageFilter.ALL;
+        } else {
+          filter = MessageFilter.ATTACH;
+        }
         LayoutActionCreator.filterMessages(filter);
         showList();
         return _this.setState({
@@ -5154,7 +5210,7 @@ MessageList = React.createClass({
       allSelected: this.state.allSelected,
       onSelect: (function(_this) {
         return function(id, val) {
-          var selected;
+          var newState, selected;
           selected = _.clone(_this.state.selected);
           if (val) {
             selected[id] = val;
@@ -5162,20 +5218,21 @@ MessageList = React.createClass({
             delete selected[id];
           }
           if (Object.keys(selected).length > 0) {
-            return _this.setState({
+            newState = {
               edited: true,
               selected: selected
-            });
+            };
           } else {
-            return _this.setState({
+            newState = {
               allSelected: false,
               edited: false,
               selected: {}
-            });
+            };
           }
+          return _this.setState(newState);
         };
       })(this)
-    }), this.props.messages.count() < parseInt(this.props.counterMessage, 10) && (this.props.query.pageAfter != null) ? p({
+    }), nbMessages = parseInt(this.props.counterMessage, 10), this.props.messages.count() < nbMessages && (this.props.query.pageAfter != null) ? p({
       className: 'text-center list-footer'
     }, this.props.fetching ? i({
       className: "fa fa-refresh fa-spin"
@@ -5249,8 +5306,10 @@ MessageList = React.createClass({
       if ((!confirm) || window.confirm(confirmMessage)) {
         return MessageUtils["delete"](selected, conv, (function(_this) {
           return function() {
+            var firstMessageID;
             if (selected.length > 0 && _this.props.messages.count() > 0) {
-              return MessageActionCreator.setCurrent(_this.props.messages.first().get('id'), true);
+              firstMessageID = _this.props.messages.first().get('id');
+              return MessageActionCreator.setCurrent(firstMessageID, true);
             }
           };
         })(this));
@@ -5272,8 +5331,10 @@ MessageList = React.createClass({
       newbox = args.target.dataset.value;
       return MessageUtils.move(selected, conv, this.props.mailboxID, newbox, (function(_this) {
         return function() {
+          var firstMessageID;
           if (selected.length > 0 && _this.props.messages.count() > 0) {
-            return MessageActionCreator.setCurrent(_this.props.messages.first().get('id'), true);
+            firstMessageID = _this.props.messages.first().get('id');
+            return MessageActionCreator.setCurrent(firstMessageID, true);
           }
         };
       })(this));
@@ -5550,12 +5611,12 @@ MessageItem = React.createClass({
         };
       }
     }
+    url = this.buildUrl({
+      direction: 'second',
+      action: action,
+      parameters: params
+    });
     if (!this.props.edited) {
-      url = this.buildUrl({
-        direction: 'second',
-        action: action,
-        parameters: params
-      });
       tag = a;
     } else {
       tag = span;
@@ -5580,10 +5641,10 @@ MessageItem = React.createClass({
       onDoubleClick: this.onMessageDblClick,
       ref: 'target'
     }, div({
-      className: 'avatar-wrapper'
+      className: 'avatar-wrapper select-target'
     }, input({
       ref: 'select',
-      className: 'select',
+      className: 'select select-target',
       type: 'checkbox',
       checked: this.props.selected,
       onChange: this.onSelect
@@ -5640,17 +5701,17 @@ MessageItem = React.createClass({
   },
   onMessageClick: function(event) {
     var href, node;
-    if (this.props.edited) {
+    node = this.refs.target.getDOMNode();
+    if (this.props.edited && event.target.classList.contains('select-target')) {
       this.props.onSelect(!this.props.selected);
       event.preventDefault();
       return event.stopPropagation();
     } else {
       if (!(event.target.getAttribute('type') === 'checkbox')) {
         event.preventDefault();
-        node = this.refs.target.getDOMNode();
         MessageActionCreator.setCurrent(node.dataset.messageId, true);
         if (this.props.settings.get('displayPreview')) {
-          href = '#' + node.href.split('#')[1];
+          href = '#' + node.getAttribute('href').split('#')[1];
           return this.redirect(href);
         }
       }
@@ -11148,7 +11209,7 @@ module.exports = MessageUtils = {
       if (html && !text && !inHTML) {
         text = toMarkdown(html);
       }
-      message.inReplyTo = inReplyTo.get('id');
+      message.inReplyTo = [inReplyTo.get('id')];
       message.references = inReplyTo.get('references') || [];
       message.references = message.references.concat(message.inReplyTo);
     }

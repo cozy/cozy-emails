@@ -72,7 +72,7 @@ module.exports = MessageUtils =
             if html and not text and not inHTML
                 text = toMarkdown html
 
-            message.inReplyTo  = inReplyTo.get 'id'
+            message.inReplyTo  = [ inReplyTo.get 'id' ]
             message.references = inReplyTo.get('references') or []
             message.references = message.references.concat message.inReplyTo
 

@@ -54,12 +54,29 @@ module.exports = MailsInput = React.createClass
                 known = @state.known.filter (a) ->
                     return a.address isnt address.address
                 @props.valueLink.requestChange known
+
+            onDragStart = (event) ->
+                event.stopPropagation()
+                data =
+                    name: address.name
+                    address: address.address
+                event.dataTransfer.setData 'text', JSON.stringify(data)
+                event.dataTransfer.effectAllowed = 'move'
+                event.dataTransfer.dropEffect = 'move'
+
+            onDragEnd = (event) ->
+                if event.dataTransfer.dropEffect is 'move'
+                    remove()
+
             if address.name? and address.name.trim() isnt ''
                 display = address.name
             else
                 display = address.address
             span
                 className: 'address-tag'
+                draggable: true
+                onDragStart: onDragStart
+                onDragEnd: onDragEnd
                 key: "#{@props.id}-#{address.address}-#{idx}"
                 title: address.address
                 display
@@ -86,32 +103,35 @@ module.exports = MailsInput = React.createClass
             open: @state.open and @state.contacts?.length > 0
         current    = 0
 
-        div className: className,
-            label htmlFor: @props.id, className: classLabel,
-                @props.label
-            knownContacts
-            div className: 'contact-group dropdown ' + listClass,
-                textarea
-                    id: @props.id
-                    name: @props.id
-                    className: 'form-control compose-input'
-                    onKeyDown: @onKeyDown
-                    onBlur: @onBlur
-                    ref: 'contactInput'
-                    rows: 1
-                    value: @state.unknown
-                    onChange: onChange
-                    placeholder: @props.placeholder
-                    'autoComplete': 'off'
-                    'spellCheck': 'off'
+        div
+            className: className,
+            onDrop: @onDrop,
+                label htmlFor: @props.id, className: classLabel,
+                    @props.label
+                knownContacts
+                div className: 'contact-group dropdown ' + listClass,
+                    textarea
+                        id: @props.id
+                        name: @props.id
+                        className: 'form-control compose-input'
+                        onKeyDown: @onKeyDown
+                        onBlur: @onBlur
+                        onDrop: @onDrop,
+                        ref: 'contactInput'
+                        rows: 1
+                        value: @state.unknown
+                        onChange: onChange
+                        placeholder: @props.placeholder
+                        'autoComplete': 'off'
+                        'spellCheck': 'off'
 
-                if @state.contacts?
-                    ul className: "dropdown-menu contact-list",
-                        @state.contacts.map (contact, key) =>
-                            selected = current is @state.selected
-                            current++
-                            @renderContact contact, selected
-                        .toJS()
+                    if @state.contacts?
+                        ul className: "dropdown-menu contact-list",
+                            @state.contacts.map (contact, key) =>
+                                selected = current is @state.selected
+                                current++
+                                @renderContact contact, selected
+                            .toJS()
 
     renderContact: (contact, selected) ->
         selectContact = =>
@@ -212,3 +232,14 @@ module.exports = MailsInput = React.createClass
         input = @refs.contactInput.getDOMNode()
         if input.scrollHeight > input.clientHeight
             input.style.height = input.scrollHeight + "px"
+
+    onDrop: (event) ->
+        event.preventDefault()
+        event.stopPropagation()
+        {name, address} = JSON.parse(event.dataTransfer.getData 'text')
+        address =
+            name    : name
+            address : address
+        @state.known.push address
+        @props.valueLink.requestChange @state.known
+        @setState unknown: '', contacts: null, open: false

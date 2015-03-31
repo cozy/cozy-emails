@@ -943,6 +943,7 @@ textarea.compose-input {
   -webkit-border-radius: 0.25em;
   border-radius: 0.25em;
   display: inline-block;
+  cursor: move;
 }
 .address-tag a {
   font-size: 0.75em;

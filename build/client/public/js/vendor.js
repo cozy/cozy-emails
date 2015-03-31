@@ -44192,7 +44192,8 @@ if (typeof window.plugins !== "object") {
   window.plugins = {};
 }
 (function (root) {
-  function bindingNew() {
+  function bindingNew(e) {
+    e.preventDefault();
     window.cozyMails.messageNew();
   }
   function bindingHelp() {
@@ -44457,6 +44458,7 @@ if (typeof window.plugins !== "object") {
         }
       },
       'n': {
+        alias: ['ctrl+n'],
         name: "New message",
         action: bindingNew
       },

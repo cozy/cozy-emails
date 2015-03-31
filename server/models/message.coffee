@@ -572,7 +572,7 @@ Message.createFromImapMessage = (mail, box, uid, callback) ->
     mail.normSubject = mailutils.normalizeSubject mail.subject if mail.subject
 
     # @TODO, find and parse from mail.headers ?
-    mail.replyTo = []
+    mail.replyTo ?= []
     mail.cc ?= []
     mail.bcc ?= []
     mail.to ?= []

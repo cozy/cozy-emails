@@ -237,8 +237,9 @@ module.exports = Compose = React.createClass
 
         # new draft
         else
-            state = messageUtils.makeReplyMessage @props.selectedAccountLogin,
-                @props.inReplyTo, @props.action, @props.settings.get('composeInHTML')
+            state = MessageUtils.makeReplyMessage @props.selectedAccountLogin,
+                @props.inReplyTo, @props.action,
+                @props.settings.get('composeInHTML')
             state.accountID ?= @props.selectedAccountID
 
         state.sending = false
@@ -275,6 +276,8 @@ module.exports = Compose = React.createClass
             subject     : @state.subject
             isDraft     : isDraft
             attachments : @state.attachments
+            inReplyTo   : @state.inReplyTo
+            references  : @state.references
 
         valid = true
         if not isDraft
@@ -396,7 +399,8 @@ ComposeEditor = React.createClass
             @setState html: nextProps.html, text: nextProps.text
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
 
     render: ->
 

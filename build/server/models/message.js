@@ -633,7 +633,9 @@ Message.createFromImapMessage = function(mail, box, uid, callback) {
   if (mail.subject) {
     mail.normSubject = mailutils.normalizeSubject(mail.subject);
   }
-  mail.replyTo = [];
+  if (mail.replyTo == null) {
+    mail.replyTo = [];
+  }
   if (mail.cc == null) {
     mail.cc = [];
   }
