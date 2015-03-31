@@ -188,37 +188,31 @@ module.exports = React.createClass
             message: true
             active: @state.active
 
-        if @state.active
-            article
-                className: classes,
-                key: @props.key,
-                'data-id': message.get('id'),
-                    header null,
-                        @renderHeaders()
-                        # div className: 'full-headers',
-                        #     pre null, prepared?.fullHeaders?.join "\n"
-                        @renderToolbox()
-                    @renderCompose()
-                    MessageContent
-                        ref: 'messageContent'
-                        messageID: message.get 'id'
-                        messageDisplayHTML: messageDisplayHTML
-                        html: @_htmlContent
-                        text: prepared.text
-                        rich: prepared.rich
-                        imagesWarning: imagesWarning
-                        composing: @state.composing
-                        displayImages: @displayImages
-                        displayHTML: @displayHTML
-                    footer null,
-                        @renderFooter()
-                        @renderToolbox(false)
-        # else
-        #     li
-        #         className: classes,
-        #         key: @props.key,
-        #         'data-id': message.get('id'),
-        #             @renderHeaders message
+        article
+            className: classes,
+            key: @props.key,
+            'data-id': message.get('id'),
+                header
+                    onClick: => @setState active: !@state.active
+                    @renderHeaders()
+                    # div className: 'full-headers',
+                    #     pre null, prepared?.fullHeaders?.join "\n"
+                    @renderToolbox() if @state.active
+                @renderCompose() if @state.active
+                (MessageContent
+                    ref: 'messageContent'
+                    messageID: message.get 'id'
+                    messageDisplayHTML: messageDisplayHTML
+                    html: @_htmlContent
+                    text: prepared.text
+                    rich: prepared.rich
+                    imagesWarning: imagesWarning
+                    composing: @state.composing
+                    displayImages: @displayImages
+                    displayHTML: @displayHTML) if @state.active
+                (footer null,
+                    @renderFooter()
+                    @renderToolbox(false)) if @state.active
 
     getParticipants: (message) ->
         from = message.get 'from'

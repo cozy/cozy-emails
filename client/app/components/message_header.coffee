@@ -114,23 +114,27 @@ module.exports = React.createClass
         #         #if @props.inConversation
         #         #    toggleActive
         #
+        #
+    formatUsers: (users) ->
+        return unless users?
+        format = (user) ->
+            console.trace() if not user?
+            unless user.name is ''
+                "#{user.name} <#{user.address}>"
+            else
+                user.address
+
+        if _.isArray users
+            items = []
+            for user in users
+                items.push a null, format(user)
+                items.push ", " if user isnt users.last()
+            return items
+        else
+            return format(users)
 
 
     renderAddress: (field) ->
-        formatUsers = (users) ->
-            items = []
-
-            for user in users
-                label = if user.name
-                    "#{user.name} <#{user.address}>"
-                else
-                    user.address
-
-                items.push a null, label
-                items.push ", " if user isnt users.last()
-
-            return items
-
         users = @props.message.get field
         return unless users.length
 
@@ -138,14 +142,14 @@ module.exports = React.createClass
             if field isnt 'from'
                 span null,
                     t "mail #{field}: "
-            formatUsers(users)...
+            @formatUsers(users)...
 
 
     renderDetailsPopup: ->
         from = @props.message.get('from')[0]
         to = @props.message.get 'to'
         cc = @props.message.get 'cc'
-        replyTo = @props.message.get('reply-to')?[0]
+        reply = @props.message.get('reply-to')?[0]
 
         row = (value, label = false, rowSpan = false) ->
             items = []
@@ -158,18 +162,19 @@ module.exports = React.createClass
 
 
         div className: 'details', 'aria-expanded': @state.detailled,
-            i className: 'btn fa fa-caret-down', onClick: @showDetails
+            i className: 'btn fa fa-caret-down', onClick: @toggleDetails
             div className: 'popup', 'aria-hidden': !@state.detailled,
                 table null,
                     tbody null,
-                        row "#{from.name} <#{from.address}>", 'headers from'
-                        row "#{to[0].name} <#{to[0].address}>", 'headers to'
-                        row "#{dest.name} <#{dest.address}>" for dest in to[1..]
-                        row "#{cc[0].name} <#{cc[0].address}>", 'headers cc', cc.length if cc.length
-                        row "#{dest.name} <#{dest.address}>" for dest in cc[1..] if cc.length
-                        row "#{replyTo.name} <#{replyTo.address}>", 'headers reply-to' if replyTo?
+                        row @formatUsers(from), 'headers from'
+                        row @formatUsers(to[0]), 'headers to', to.length if to.length
+                        row @formatUsers(dest) for dest in to[1..] if to.length
+                        row @formatUsers(cc[0]), 'headers cc', cc.length if cc.length
+                        row @formatUsers(dest) for dest in cc[1..] if cc.length
+                        row @formatUsers(reply), 'headers reply-to' if reply?
                         row @props.message.get('createdAt'), 'headers date'
                         row @props.message.get('subject'), 'headers subject'
 
-    showDetails: ->
+    toggleDetails: (event)->
+        event.stopPropagation()
         @setState detailled: !@state.detailled
