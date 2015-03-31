@@ -4381,6 +4381,9 @@ module.exports = MailsInput = React.createClass({
     selected = this.state.selected;
     switch (evt.key) {
       case "Enter":
+        if (13 === evt.keyCode || 13 === evt.which) {
+          this.addContactFromInput();
+        }
         if (((_ref2 = this.state.contacts) != null ? _ref2.count() : void 0) > 0) {
           contact = this.state.contacts.slice(selected).first();
           this.onContact(contact);
@@ -4419,23 +4422,39 @@ module.exports = MailsInput = React.createClass({
     }
   },
   onBlur: function() {
-    return setTimeout((function(_this) {
-      return function() {
-        var state, value;
-        if (_this.isMounted()) {
-          state = {};
-          state.open = false;
-          value = _this.refs.contactInput.getDOMNode().value;
-          if (value.trim() !== '') {
-            _this.state.known.push(MessageUtils.parseAddress(value));
-            state.known = _this.state.known;
-            state.unknown = '';
-            _this.props.valueLink.requestChange(state.known);
+    return setTimeout(this.addContactFromInput, 100);
+  },
+  addContactFromInput: function() {
+    var address, state, value;
+    if (this.isMounted()) {
+      state = {};
+      state.open = false;
+      value = this.refs.contactInput.getDOMNode().value;
+      if (value.trim() !== '') {
+        address = MessageUtils.parseAddress(value);
+        if (address.isValid) {
+          this.state.known.push(address);
+          state.known = this.state.known;
+          state.unknown = '';
+          this.props.valueLink.requestChange(state.known);
+          return this.setState(state);
+        } else {
+          if (!this.isShowingAlert) {
+            this.isShowingAlert = true;
+            alert(t('compose wrong email format', {
+              address: address.address
+            }));
+            return setTimeout((function(_this) {
+              return function() {
+                return _this.isShowingAlert = false;
+              };
+            })(this), 200);
           }
-          return _this.setState(state);
         }
-      };
-    })(this), 100);
+      } else {
+        return this.setState(state);
+      }
+    }
   },
   onContact: function(contact) {
     var address;
@@ -8832,6 +8851,7 @@ module.exports = {
   "compose error no subject": "Please set a subject",
   "compose confirm keep draft": "Message not sent, keep the draft?",
   "compose draft deleted": "Draft deleted",
+  "compose wrong email format": "The given email is unproperly formatted: %{address}.",
   "menu show": "Show menu",
   "menu compose": "Compose",
   "menu account new": "New Mailbox",
@@ -9112,6 +9132,7 @@ module.exports = {
   "compose error no subject": "Vous n'avez pas saisi de sujet",
   "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?",
   "compose draft deleted": "Brouillon supprimé",
+  "compose wrong email format": "L'addresse mail donnée n'est pas bien formattée : %{address}.",
   "menu show": "Montrer le menu",
   "menu compose": "Nouveau",
   "menu account new": "Ajouter un compte",
@@ -11161,18 +11182,21 @@ module.exports = MessageUtils = {
     return res.join(", ");
   },
   parseAddress: function(text) {
-    var address, match;
+    var address, emailRe, match;
     text = text.trim();
     if (match = text.match(/"{0,1}(.*)"{0,1} <(.*)>/)) {
-      return address = {
+      address = {
         name: match[1],
         address: match[2]
       };
     } else {
-      return address = {
+      address = {
         address: text.replace(/^\s*/, '')
       };
     }
+    emailRe = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+    address.isValid = address.address.match(emailRe);
+    return address;
   },
   getReplyToAddress: function(message) {
     var from, reply;
