@@ -1,4 +1,6 @@
-{div, h3, a, i, textarea, form, label, button, span, ul, li, input} = React.DOM
+{div, h3, a, i, textarea, form, label, button} = React.DOM
+{span, ul, li, input, img} = React.DOM
+
 classer = React.addons.classSet
 
 FilePicker = require './file_picker'
@@ -162,7 +164,10 @@ module.exports = Compose = React.createClass
                                 disable: if @state.sending then true else null
                                 onClick: @onSend,
                                     if @state.sending
-                                        span className: 'fa fa-refresh fa-spin'
+                                        span null,
+                                            img
+                                                src: 'images/spinner-white.svg'
+                                                className: 'button-spinner'
                                     else
                                         span className: 'fa fa-send'
                                     span null, labelSend
@@ -171,7 +176,10 @@ module.exports = Compose = React.createClass
                                 disable: if @state.saving then true else null
                                 type: 'button', onClick: @onDraft,
                                     if @state.saving
-                                        span className: 'fa fa-refresh fa-spin'
+                                        span null,
+                                            img
+                                                src: 'images/spinner-white.svg'
+                                                className: 'button-spinner'
                                     else
                                         span className: 'fa fa-save'
                                     span null, t 'compose action draft'

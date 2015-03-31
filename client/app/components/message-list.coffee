@@ -305,7 +305,8 @@ MessageList = React.createClass
                        @props.query.pageAfter?
                         p className: 'text-center list-footer',
                             if @props.fetching
-                                i className: "fa fa-refresh fa-spin"
+                                img
+                                    src: 'images/spinner.svg'
                             else
                                 a
                                     className: 'more-messages'
