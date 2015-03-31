@@ -33,7 +33,8 @@
     "sanitizer": "0.1.2",
     "html-to-text": "0.1.0",
     "multiparty": "4.0.0",
-    "sanitize-html": "1.4.3"
+    "sanitize-html": "1.4.3",
+    "cozy-notifications-helper": "1.0.2"
   },
   "devDependencies": {
     "should": "4.0.4",
@@ -75,6 +76,9 @@
     },
     "Message": {
       "description": "Manages your emails"
+    },
+    "Notification": {
+      "description": "Display new mails count as cozy notifications"
     },
     "CozyInstance": {
       "description": "Localize the application with your language"
