@@ -3253,7 +3253,7 @@ module.exports = Compose = React.createClass({
       }
       state.attachments = message.get('attachments');
     } else {
-      state = MessageUtils.makeReplyMessage(this.props.selectedAccountLogin, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
+      state = messageUtils.makeReplyMessage(this.props.selectedAccountLogin, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
       if (state.accountID == null) {
         state.accountID = this.props.selectedAccountID;
       }
