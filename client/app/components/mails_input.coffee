@@ -207,8 +207,8 @@ module.exports = MailsInput = React.createClass
         setTimeout @addContactFromInput, 100
 
 
-    # Grab text set in the input and ensure it's a proper address.
-    # If the address is valid, it adds it to the contact list.
+    # Grab text from the input and ensure it's a valid email address.
+    # If the address is valid, adds it to the recipient list.
     addContactFromInput: ->
         # if user cancel compose, component may be unmounted when the timeout
         # is fired
