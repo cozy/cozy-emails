@@ -5,7 +5,8 @@ RouterMixin    = require '../mixins/router_mixin'
 DomUtils       = require '../utils/dom_utils'
 MessageUtils   = require '../utils/message_utils'
 SocketUtils    = require '../utils/socketio_utils'
-{MessageFlags, MessageFilter, FlagsConstants} = require '../constants/app_constants'
+{MessageFlags, MessageFilter, FlagsConstants} =
+    require '../constants/app_constants'
 
 AccountActionCreator      = require '../actions/account_action_creator'
 ContactActionCreator      = require '../actions/contact_action_creator'
@@ -28,7 +29,8 @@ MessageList = React.createClass
     mixins: [RouterMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        should = not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
         return should
 
     getInitialState: ->
@@ -73,7 +75,10 @@ MessageList = React.createClass
             fullWidth: true
 
         advanced   = @props.settings.get('advanced')
-        nbSelected = if Object.keys(@state.selected).length > 0 then null else true
+        if Object.keys(@state.selected).length > 0
+            nbSelected = null
+        else
+            nbSelected = true
 
         showList = =>
             params = _.clone(MessageStore.getParams())
@@ -82,7 +87,10 @@ MessageList = React.createClass
             LayoutActionCreator.showMessageList parameters: params
 
         toggleFilterFlag = =>
-            filter = if @state.filterFlag then MessageFilter.ALL else MessageFilter.FLAGGED
+            if @state.filterFlag
+                filter = MessageFilter.ALL
+            else
+                filter = MessageFilter.FLAGGED
             LayoutActionCreator.filterMessages filter
             showList()
             @setState
@@ -91,7 +99,10 @@ MessageList = React.createClass
                 filterAttach: false
 
         toggleFilterUnseen = =>
-            filter = if @state.filterUnseen then MessageFilter.ALL else MessageFilter.UNSEEN
+            if @state.filterUnseen
+                filter = MessageFilter.ALL
+            else
+                filter = MessageFilter.UNSEEN
             LayoutActionCreator.filterMessages filter
             showList()
             @setState
@@ -100,7 +111,10 @@ MessageList = React.createClass
                 filterAttach: false
 
         toggleFilterAttach = =>
-            filter = if @state.filterAttach then MessageFilter.ALL else MessageFilter.ATTACH
+            if @state.filterAttach
+                filter = MessageFilter.ALL
+            else
+                filter = MessageFilter.ATTACH
             LayoutActionCreator.filterMessages filter
             showList()
             @setState
@@ -272,14 +286,22 @@ MessageList = React.createClass
                             else
                                 delete selected[id]
                             if Object.keys(selected).length > 0
-                                @setState edited: true, selected: selected
+                                newState =
+                                    edited: true
+                                    selected: selected
                             else
-                                @setState allSelected: false, edited: false, selected: {}
+                                newState =
+                                    allSelected: false
+                                    edited: false
+                                    selected: {}
+                            @setState newState
 
-                    # If message list is filtered, we can't only rely on message count
-                    # So we assume that if query.pageAfter is null, there's no more
-                    # messages to display
-                    if @props.messages.count() < parseInt(@props.counterMessage, 10) and
+                    # If message list is filtered, we can't only rely on
+                    # message count
+                    # So we assume that if query.pageAfter is null, there's
+                    # no more messages to display
+                    nbMessages = parseInt(@props.counterMessage, 10)
+                    if @props.messages.count() < nbMessages and
                        @props.query.pageAfter?
                         p className: 'text-center list-footer',
                             if @props.fetching
@@ -335,7 +357,8 @@ MessageList = React.createClass
             window.confirm confirmMessage
                 MessageUtils.delete selected, conv, =>
                     if selected.length > 0 and @props.messages.count() > 0
-                        MessageActionCreator.setCurrent @props.messages.first().get('id'), true
+                        firstMessageID = @props.messages.first().get('id')
+                        MessageActionCreator.setCurrent firstMessageID, true
 
 
     onConversationMove: (args) ->
@@ -351,7 +374,8 @@ MessageList = React.createClass
             newbox = args.target.dataset.value
             MessageUtils.move selected, conv, @props.mailboxID, newbox, =>
                 if selected.length > 0 and @props.messages.count() > 0
-                    MessageActionCreator.setCurrent @props.messages.first().get('id'), true
+                    firstMessageID = @props.messages.first().get('id')
+                    MessageActionCreator.setCurrent firstMessageID, true
 
     onMark: (args) ->
         selected = Object.keys @state.selected
@@ -366,11 +390,13 @@ MessageList = React.createClass
                     when FlagsConstants.SEEN
                         flags.push MessageFlags.SEEN
                     when FlagsConstants.UNSEEN
-                        flags = flags.filter (e) -> return e isnt FlagsConstants.SEEN
+                        flags = flags.filter (e) ->
+                            return e isnt FlagsConstants.SEEN
                     when FlagsConstants.FLAGGED
                         flags.push MessageFlags.FLAGGED
                     when FlagsConstants.NOFLAG
-                        flags = flags.filter (e) -> return e isnt FlagsConstants.FLAGGED
+                        flags = flags.filter (e) ->
+                            return e isnt FlagsConstants.FLAGGED
                 MessageActionCreator.updateFlag message, flags, (error) ->
                     if error?
                         alertError "#{t("message action mark ko")} #{error}"
@@ -513,8 +539,8 @@ MessageListBody = React.createClass
         @_onMount()
 
     _onMount: ->
-        # If selected message has changed, scroll the list to put current message
-        # into view
+        # If selected message has changed, scroll the list to put
+        # current message into view
         if @state.messageID isnt @props.messageID
             active = document.querySelector("[data-message-id='#{@props.messageID}']")
             if active? and not DomUtils.isVisible(active)
@@ -532,7 +558,8 @@ MessageItem = React.createClass
         updatedProps = Object.keys(nextProps).filter (prop) =>
             return typeof nextProps[prop] isnt 'function' and
                 not (_.isEqual(nextProps[prop], @props[prop]))
-        shouldUpdate = not _.isEqual(nextState, @state) or updatedProps.length > 0
+        shouldUpdate = not _.isEqual(nextState, @state) or
+            updatedProps.length > 0
 
         return shouldUpdate
 
@@ -591,7 +618,6 @@ MessageItem = React.createClass
         ,
             tag
                 href: url,
-                'data-href': url,
                 className: 'wrapper',
                 'data-message-id': message.get('id'),
                 onClick: @onMessageClick,
@@ -652,7 +678,7 @@ MessageItem = React.createClass
                 event.preventDefault()
                 MessageActionCreator.setCurrent node.dataset.messageId, true
                 if @props.settings.get('displayPreview')
-                    href = '#' + node.dataset.href.split('#')[1]
+                    href = '#' + node.getAttribute('href').split('#')[1]
                     @redirect href
 
     onMessageDblClick: (event) ->
