@@ -55,47 +55,22 @@
     #quick-actions
         margin 1em 0
 
-    // We want the panel to be scrollable independantly but not their parent
-    #panels
-        flex 1
-        overflow-y hidden
-        height 100%
-        position relative
+// We want the panel to be scrollable independantly but not their parent
+#panels
+    flex 1
+    overflow-y hidden
+    height 100%
+    position relative
 
-        // layout
-        .panel
-            overflow-y auto
-            //height 100%
-            margin 0
-            padding 0
+    // layout
+    & > div
+        overflow-y auto
+        padding 0
 
-            // to ease transitions
-            position absolute
+        // left panel
+        &:first-of-type
+            border-right 1px solid #e4e4e4
 
-            // left panel
-            &:first-of-type
-                // visual separation between panels
-                border-right 1px solid #e4e4e4
-                //z-index 100
-
-            // right panel
-            &:nth-of-type(2)
-                //left 50%
-                //z-index 50
-
-            @media (max-width: 992px) {
-                &:nth-of-type(2) {
-                  left 0
-                }
-            }
-
-    #panels.horizontal
-        .panel
-            //height 49%
-
-            // right panel
-            &:nth-of-type(2)
-                left 0
 .row-1
     height 9%
 .row-2

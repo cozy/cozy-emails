@@ -1,4 +1,4 @@
-{div, ul, li, span, i, p, h3, a} = React.DOM
+{section, header, ul, li, span, i, p, h3, a} = React.DOM
 Message = require './message'
 Toolbar = require './toolbar_conversation'
 classer = React.addons.classSet
@@ -100,25 +100,24 @@ module.exports = React.createClass
 
         .toJS()
 
-        div className: 'conversation',
-            @renderToolbar()
+        section className: 'conversation',
 
-            h3
-                className: 'message-title'
-                'data-message-id': @props.message.get 'id'
-                @props.message.get 'subject'
-
-            ul className: 'thread list-unstyled',
+            header null,
+                @renderToolbar()
+                h3
+                    className: 'conversation-title'
+                    'data-message-id': @props.message.get 'id'
+                    @props.message.get 'subject'
 
                 if @state.expanded
                     for key, message of otherMessages
                         @renderMessage key, message, false
 
-                else if @props.conversationLength > 1
-                    li className: 'conversation-length-msg', onClick: @expand,
-                        a null
-                            t 'mail conversation length',
-                                smart_count: @props.conversationLength
+                # else if @props.conversationLength > 1
+                #     li className: 'conversation-length-msg', onClick: @expand,
+                #         a null
+                #             t 'mail conversation length',
+                #                 smart_count: @props.conversationLength
 
                 for key, message of activeMessages
                     @renderMessage key, message, true
