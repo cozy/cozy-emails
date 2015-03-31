@@ -34,10 +34,10 @@ module.exports = React.createClass
     render: ->
         nav className: 'toolbar toolbar-message btn-toolbar',
             # inverted order due to `pull-right` class
-            div className: cBtnGroup,
+            div(className: cBtnGroup,
                 @renderToolboxMove()
-                @renderToolboxActions()
-            @renderQuickActions()
+                @renderToolboxActions()) if @props.full
+            @renderQuickActions() if @props.full
             @renderReply()
 
 

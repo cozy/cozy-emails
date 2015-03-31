@@ -212,6 +212,7 @@ module.exports = React.createClass
                         displayHTML: @displayHTML
                     footer null,
                         @renderFooter()
+                        @renderToolbox(false)
         # else
         #     li
         #         className: classes,
@@ -231,10 +232,11 @@ module.exports = React.createClass
         MessageHeader
             message: @props.message
 
-    renderToolbox: ->
+    renderToolbox: (full = true) ->
         return if @state.composing
 
         ToolbarMessage
+            full:              full
             message:           @props.message
             mailboxes:         @props.mailboxes
             selectedMailboxID: @props.selectedMailboxID
