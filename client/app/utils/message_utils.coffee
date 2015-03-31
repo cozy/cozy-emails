@@ -52,10 +52,11 @@ module.exports = MessageUtils =
         message =
             composeInHTML: inHTML
             attachments: Immutable.Vector.empty()
+        quoteStyle = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;"
 
         if inReplyTo
             message.accountID = inReplyTo.get 'accountID'
-            dateHuman = @formatDate inReplyTo.get 'createdAt'
+            dateHuman = @formatReplyDate inReplyTo.get 'createdAt'
             sender = @displayAddresses inReplyTo.get 'from'
 
             text = inReplyTo.get 'text'
@@ -89,7 +90,7 @@ module.exports = MessageUtils =
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
                     <p>#{separator}<span class="originalToggle"> … </span></p>
-                    <blockquote>#{html}</blockquote>
+                    <blockquote style="#{quoteStyle}">#{html}</blockquote>
                     <p><br /></p>
                     """
 
@@ -111,7 +112,7 @@ module.exports = MessageUtils =
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
                     <p>#{separator}<span class="originalToggle"> … </span></p>
-                    <blockquote>#{html}</blockquote>
+                    <blockquote style="#{quoteStyle}">#{html}</blockquote>
                     <p><br /></p>
                     """
 
@@ -178,8 +179,15 @@ module.exports = MessageUtils =
                     when "pdf" then return sub[1]
                     when "gzip", "zip" then return 'archive'
 
+
+    formatReplyDate: (date) ->
+        date = moment() unless date?
+        date = moment date
+        date.format 'lll'
+
+
     formatDate: (date, compact) ->
-        if not date?
+        unless date?
             return
         today = moment()
         date  = moment date
@@ -286,3 +294,42 @@ module.exports = MessageUtils =
             MessageActionCreator.setCurrent next.get('id'), true
             # open next message if the deleted one was open
             window.cozyMails.messageDisplay next, false
+
+
+    # Remove from given string:
+    # * html tags
+    # * extra spaces between reply markers and text
+    # * empty reply lines
+    cleanReplyText: (html) ->
+
+        # Convert HTML to markdown
+        try
+            result = toMarkdown html
+        catch
+            result = html.replace /<[^>]*>/gi, '' if html?
+
+        # convert HTML entities
+        tmp = document.createElement 'div'
+        tmp.innerHTML = result
+        result = tmp.textContent
+
+        # Make citation more human readable.
+        result = result.replace />[ \t]+/ig, '> '
+        result = result.replace /(> \n)+/g, '> \n'
+        result
+
+
+    # Add additional html tags to HTML replies:
+    # * add style block to change the blockquotes styles.
+    wrapReplyHtml: (html) ->
+        return """
+<style type="text/css">
+blockquote {
+    margin: 0.8ex;
+    padding-left: 1ex;
+    border-left: 3px solid #34A6FF;
+}
+</style>
+#{html}
+                """
+
