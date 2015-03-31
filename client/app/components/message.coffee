@@ -470,8 +470,8 @@ MessageContent = React.createClass
         else
             window.cozyMails.customEvent "MESSAGE_LOADED", @props.messageID
 
-        if @refs.content? and not @props.composing
-            @refs.content.getDOMNode().scrollIntoView()
+        # if @refs.content? and not @props.composing
+        #     @refs.content.getDOMNode().scrollIntoView()
 
 
     componentDidMount: ->
