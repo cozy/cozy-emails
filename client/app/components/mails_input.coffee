@@ -116,7 +116,7 @@ module.exports = MailsInput = React.createClass
                         className: 'form-control compose-input'
                         onKeyDown: @onKeyDown
                         onBlur: @onBlur
-                        onDrop: @onDrop,
+                        onDrop: @onDrop
                         ref: 'contactInput'
                         rows: 1
                         value: @state.unknown
@@ -173,6 +173,10 @@ module.exports = MailsInput = React.createClass
         selected = @state.selected
         switch evt.key
             when "Enter"
+                # Typing enter key leads to the same behavior as blurring:
+                # adding a contact to the current list
+                @addContactFromInput() if 13 in [evt.keyCode, evt.which]
+
                 if @state.contacts?.count() > 0
                     contact = @state.contacts.slice(selected).first()
                     @onContact contact
@@ -196,24 +200,49 @@ module.exports = MailsInput = React.createClass
                     @onQuery(String.fromCharCode(evt.which))
                     return true
 
+
     onBlur: ->
         # We must use a timeout, otherwise, when user click inside contact list,
         # blur is triggered first and the click event lost. Dirty hack
-        setTimeout =>
-            # if user cancel compose, component may be unmounted when the timeout is fired
-            if @isMounted()
-                state = {}
-                # close suggestion list
-                state.open = false
-                # Add current value to list of addresses
-                value = @refs.contactInput.getDOMNode().value
-                if value.trim() isnt ''
-                    @state.known.push(MessageUtils.parseAddress value)
+        setTimeout @addContactFromInput, 100
+
+
+    # Grab text set in the input and ensure it's a proper address.
+    # If the address is valid, it adds it to the contact list.
+    addContactFromInput: ->
+        # if user cancel compose, component may be unmounted when the timeout
+        # is fired
+        if @isMounted()
+            state = {}
+            # close suggestion list
+            state.open = false
+            # Add current value to list of addresses
+            value = @refs.contactInput.getDOMNode().value
+
+            if value.trim() isnt ''
+                address = MessageUtils.parseAddress value
+
+                if address.isValid
+                    @state.known.push address
                     state.known   = @state.known
                     state.unknown = ''
                     @props.valueLink.requestChange state.known
+                    @setState state
+
+                else
+                    # Trick to make sure that the alert error is not pop up
+                    # twiced due to multiple blur and key down.
+                    unless @isShowingAlert
+                        @isShowingAlert = true
+                        alert t('compose wrong email format',
+                            address: address.address)
+                        setTimeout =>
+                            @isShowingAlert = false
+                        , 200
+
+            else
                 @setState state
-        , 100
+
 
     onContact: (contact) ->
         address =

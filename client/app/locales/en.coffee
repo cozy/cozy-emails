@@ -38,6 +38,7 @@ module.exports =
       "compose error no subject"  : "Please set a subject"
       "compose confirm keep draft": "Message not sent, keep the draft?"
       "compose draft deleted"     : "Draft deleted"
+      "compose wrong email format": "The given email is unproperly formatted: %{address}."
 
       # Menu
       "menu show"               : "Show menu"

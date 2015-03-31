@@ -38,6 +38,7 @@ module.exports =
       "compose error no subject"  : "Vous n'avez pas saisi de sujet"
       "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?"
       "compose draft deleted"     : "Brouillon supprimé"
+      "compose wrong email format": "L'addresse mail donnée n'est pas bien formattée : %{address}."
 
       # Menu
       "menu show"               : "Montrer le menu"

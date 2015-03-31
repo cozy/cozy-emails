@@ -40,6 +40,11 @@ module.exports = MessageUtils =
             address =
                 address: text.replace(/^\s*/, '')
 
+        emailRe = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/
+        address.isValid = address.address.match emailRe
+
+        address
+
     getReplyToAddress: (message) ->
         reply = message.get 'replyTo'
         from = message.get 'from'
