@@ -39,6 +39,11 @@ module.exports =
       "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?"
       "compose draft deleted"     : "Brouillon supprimé"
       "compose wrong email format": "L'addresse mail donnée n'est pas bien formattée : %{address}."
+      "compose forward header"    : "Message transféré"
+      "compose forward subject"   : "Sujet :"
+      "compose forward date"      : "Date :"
+      "compose forward from"      : "De :"
+      "compose forward to"        : "Pour :"
 
       # Menu
       "menu show"               : "Montrer le menu"

@@ -57,7 +57,8 @@ module.exports = MessageUtils =
         message =
             composeInHTML: inHTML
             attachments: Immutable.Vector.empty()
-        quoteStyle = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;"
+        quoteStyle = "margin-left: 0.8ex; padding-left: 1ex;"
+        quoteStyle += " border-left: 3px solid #34A6FF;"
 
         if inReplyTo
             message.accountID = inReplyTo.get 'accountID'
@@ -77,7 +78,7 @@ module.exports = MessageUtils =
             if html and not text and not inHTML
                 text = toMarkdown html
 
-            message.inReplyTo  = [ inReplyTo.get 'id' ]
+            message.inReplyTo  = [inReplyTo.get 'id']
             message.references = inReplyTo.get('references') or []
             message.references = message.references.concat message.inReplyTo
 
@@ -122,8 +123,20 @@ module.exports = MessageUtils =
                     """
 
             when ComposeActions.FORWARD
-                separator = t('compose forward separator',
-                    {date: dateHuman, sender: sender})
+                console.log inReplyTo.get 'to'
+                addresses = ''
+                for address in inReplyTo.get 'to'
+                    addresses += "#{address.address}, "
+                if addresses.length > 3
+                    addresses = addresses.substring 0, addresses.length - 2
+                separator = """
+----- #{t 'compose forward header'} ------
+#{t 'compose forward subject'} #{inReplyTo.get 'subject'}
+#{t 'compose forward date'} #{dateHuman}
+#{t 'compose forward from'} #{sender}
+#{t 'compose forward to'} #{addresses}
+
+"""
                 message.to = []
                 message.cc = []
                 message.bcc = []
@@ -131,7 +144,8 @@ module.exports = MessageUtils =
                     #{t 'compose forward prefix'}#{inReplyTo.get 'subject'}
                     """
                 message.text = separator + text
-                message.html = "<p>#{separator}</p>" + html
+                html = "<p>#{separator.replace /(\n)+/g, '<br />'}</p>#{html}"
+                message.html = html
 
                 # Add original message attachments
                 message.attachments = inReplyTo.get 'attachments'

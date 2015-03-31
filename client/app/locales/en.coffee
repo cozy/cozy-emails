@@ -39,6 +39,11 @@ module.exports =
       "compose confirm keep draft": "Message not sent, keep the draft?"
       "compose draft deleted"     : "Draft deleted"
       "compose wrong email format": "The given email is unproperly formatted: %{address}."
+      "compose forward header"    : "Forwarded message"
+      "compose forward subject"   : "Subject:"
+      "compose forward date"      : "Date:"
+      "compose forward from"      : "From:"
+      "compose forward to"        : "To:"
 
       # Menu
       "menu show"               : "Show menu"
