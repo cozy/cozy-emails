@@ -3023,7 +3023,7 @@ module.exports = Application = React.createClass({
 });
 
 ;require.register("components/compose", function(exports, require, module) {
-var AccountPicker, Compose, ComposeActions, ComposeEditor, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, a, button, classer, div, form, h3, i, input, label, li, span, textarea, ul, _ref;
+var AccountPicker, Compose, ComposeActions, ComposeEditor, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, RouterMixin, a, button, classer, div, form, h3, i, input, label, li, messageUtils, span, textarea, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label, button = _ref.button, span = _ref.span, ul = _ref.ul, li = _ref.li, input = _ref.input;
 
@@ -3037,7 +3037,7 @@ AccountPicker = require('./account_picker');
 
 ComposeActions = require('../constants/app_constants').ComposeActions;
 
-MessageUtils = require('../utils/message_utils');
+messageUtils = require('../utils/message_utils');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
@@ -3253,7 +3253,7 @@ module.exports = Compose = React.createClass({
       }
       state.attachments = message.get('attachments');
     } else {
-      state = MessageUtils.makeReplyMessage(this.props.selectedAccountLogin, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
+      state = messageUtils.makeReplyMessage(this.props.selectedAccountLogin, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
       if (state.accountID == null) {
         state.accountID = this.props.selectedAccountID;
       }
@@ -3275,7 +3275,7 @@ module.exports = Compose = React.createClass({
     return this._doSend(false);
   },
   _doSend: function(isDraft) {
-    var account, from, message, tmp, valid;
+    var account, from, message, valid;
     account = this.props.accounts[this.state.accountID];
     from = {
       name: account.name || void 0,
@@ -3314,14 +3314,8 @@ module.exports = Compose = React.createClass({
     if (valid) {
       if (this.state.composeInHTML) {
         message.html = this.state.html;
-        try {
-          message.text = toMarkdown(message.html);
-        } catch (_error) {
-          message.text = typeof message.html === "function" ? message.html(replace(/<[^>]*>/gi, '')) : void 0;
-        }
-        tmp = document.createElement('div');
-        tmp.innerHTML = message.text;
-        message.text = tmp.textContent;
+        message.text = messageUtils.cleanReplyText(message.html);
+        message.html = messageUtils.wrapReplyHtml(message.html);
       } else {
         message.text = this.state.text.trim();
       }
@@ -3382,28 +3376,32 @@ module.exports = Compose = React.createClass({
     return this._doSend(true);
   },
   onDelete: function(args) {
-    var confirmMessage, subject;
+    var confirmMessage, params, subject;
     subject = this.props.message.get('subject');
     if ((subject != null) && subject !== '') {
-      confirmMessage = t('mail confirm delete', {
+      params = {
         subject: this.props.message.get('subject')
-      });
+      };
+      confirmMessage = t('mail confirm delete', params);
     } else {
       confirmMessage = t('mail confirm delete nosubject');
     }
     if (window.confirm(confirmMessage)) {
       return MessageActionCreator["delete"](this.props.message, (function(_this) {
         return function(error) {
+          var msg, parameters;
           if (error != null) {
-            return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
+            msg = "" + (t("message action delete ko")) + " " + error;
+            return LayoutActionCreator.alertError(msg);
           } else {
             if (_this.props.callback) {
               return _this.props.callback();
             } else {
+              parameters = [_this.props.selectedAccountID, _this.props.selectedMailboxID];
               return _this.redirect({
                 direction: 'first',
                 action: 'account.mailbox.messages',
-                parameters: [_this.props.selectedAccountID, _this.props.selectedMailboxID],
+                parameters: parameters,
                 fullWidth: true
               });
             }
@@ -8332,7 +8330,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-require.register("libs/flux/store/Store", function(exports, require, module) {
+;require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -11126,14 +11124,15 @@ module.exports = MessageUtils = {
     }
   },
   makeReplyMessage: function(myAddress, inReplyTo, action, inHTML) {
-    var dateHuman, e, html, message, notMe, sender, separator, text, toAddresses;
+    var dateHuman, e, html, message, notMe, params, quoteStyle, sender, separator, text, toAddresses;
     message = {
       composeInHTML: inHTML,
       attachments: Immutable.Vector.empty()
     };
+    quoteStyle = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;";
     if (inReplyTo) {
       message.accountID = inReplyTo.get('accountID');
-      dateHuman = this.formatDate(inReplyTo.get('createdAt'));
+      dateHuman = this.formatReplyDate(inReplyTo.get('createdAt'));
       sender = this.displayAddresses(inReplyTo.get('from'));
       text = inReplyTo.get('text');
       html = inReplyTo.get('html');
@@ -11155,22 +11154,24 @@ module.exports = MessageUtils = {
     }
     switch (action) {
       case ComposeActions.REPLY:
-        separator = t('compose reply separator', {
+        params = {
           date: dateHuman,
           sender: sender
-        });
+        };
+        separator = t('compose reply separator', params);
         message.to = this.getReplyToAddress(inReplyTo);
         message.cc = [];
         message.bcc = [];
         message.subject = "" + (t('compose reply prefix')) + (inReplyTo.get('subject'));
         message.text = separator + this.generateReplyText(text) + "\n";
-        message.html = "<p><br /></p>\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote>" + html + "</blockquote>\n<p><br /></p>";
+        message.html = "<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
         break;
       case ComposeActions.REPLY_ALL:
-        separator = t('compose reply separator', {
+        params = {
           date: dateHuman,
           sender: sender
-        });
+        };
+        separator = t('compose reply separator', params);
         message.to = this.getReplyToAddress(inReplyTo);
         toAddresses = message.to.map(function(dest) {
           return dest.address;
@@ -11181,7 +11182,7 @@ module.exports = MessageUtils = {
         message.bcc = [];
         message.subject = "" + (t('compose reply prefix')) + (inReplyTo.get('subject'));
         message.text = separator + this.generateReplyText(text) + "\n";
-        message.html = "<p><br /></p>\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote>" + html + "</blockquote>\n<p><br /></p>";
+        message.html = "<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
         break;
       case ComposeActions.FORWARD:
         separator = t('compose forward separator', {
@@ -11254,6 +11255,13 @@ module.exports = MessageUtils = {
             return 'archive';
         }
     }
+  },
+  formatReplyDate: function(date) {
+    if (date == null) {
+      date = moment();
+    }
+    date = moment(date);
+    return date.format('lll');
   },
   formatDate: function(date, compact) {
     var formatter, today;
@@ -11380,6 +11388,25 @@ module.exports = MessageUtils = {
       MessageActionCreator.setCurrent(next.get('id'), true);
       return window.cozyMails.messageDisplay(next, false);
     }
+  },
+  cleanReplyText: function(html) {
+    var result, tmp;
+    try {
+      result = toMarkdown(html);
+    } catch (_error) {
+      if (html != null) {
+        result = html.replace(/<[^>]*>/gi, '');
+      }
+    }
+    tmp = document.createElement('div');
+    tmp.innerHTML = result;
+    result = tmp.textContent;
+    result = result.replace(/>[ \t]+/ig, '> ');
+    result = result.replace(/(> \n)+/g, '> \n');
+    return result;
+  },
+  wrapReplyHtml: function(html) {
+    return "<style type=\"text/css\">\nblockquote {\n    margin: 0.8ex;\n    padding-left: 1ex;\n    border-left: 3px solid #34A6FF;\n}\n</style>\n" + html;
   }
 };
 });
