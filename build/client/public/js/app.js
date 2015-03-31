@@ -4971,7 +4971,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbMessages, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
     compact = this.props.settings.get('listStyle') === 'compact';
     filterParams = {
       accountID: this.props.accountID,
@@ -5001,7 +5001,11 @@ MessageList = React.createClass({
       fullWidth: true
     });
     advanced = this.props.settings.get('advanced');
-    nbSelected = Object.keys(this.state.selected).length > 0 ? null : true;
+    if (Object.keys(this.state.selected).length > 0) {
+      nbSelected = null;
+    } else {
+      nbSelected = true;
+    }
     showList = (function(_this) {
       return function() {
         var params;
@@ -5016,7 +5020,11 @@ MessageList = React.createClass({
     toggleFilterFlag = (function(_this) {
       return function() {
         var filter;
-        filter = _this.state.filterFlag ? MessageFilter.ALL : MessageFilter.FLAGGED;
+        if (_this.state.filterFlag) {
+          filter = MessageFilter.ALL;
+        } else {
+          filter = MessageFilter.FLAGGED;
+        }
         LayoutActionCreator.filterMessages(filter);
         showList();
         return _this.setState({
@@ -5029,7 +5037,11 @@ MessageList = React.createClass({
     toggleFilterUnseen = (function(_this) {
       return function() {
         var filter;
-        filter = _this.state.filterUnseen ? MessageFilter.ALL : MessageFilter.UNSEEN;
+        if (_this.state.filterUnseen) {
+          filter = MessageFilter.ALL;
+        } else {
+          filter = MessageFilter.UNSEEN;
+        }
         LayoutActionCreator.filterMessages(filter);
         showList();
         return _this.setState({
@@ -5042,7 +5054,11 @@ MessageList = React.createClass({
     toggleFilterAttach = (function(_this) {
       return function() {
         var filter;
-        filter = _this.state.filterAttach ? MessageFilter.ALL : MessageFilter.ATTACH;
+        if (_this.state.filterAttach) {
+          filter = MessageFilter.ALL;
+        } else {
+          filter = MessageFilter.ATTACH;
+        }
         LayoutActionCreator.filterMessages(filter);
         showList();
         return _this.setState({
@@ -5196,7 +5212,7 @@ MessageList = React.createClass({
       allSelected: this.state.allSelected,
       onSelect: (function(_this) {
         return function(id, val) {
-          var selected;
+          var newState, selected;
           selected = _.clone(_this.state.selected);
           if (val) {
             selected[id] = val;
@@ -5204,20 +5220,21 @@ MessageList = React.createClass({
             delete selected[id];
           }
           if (Object.keys(selected).length > 0) {
-            return _this.setState({
+            newState = {
               edited: true,
               selected: selected
-            });
+            };
           } else {
-            return _this.setState({
+            newState = {
               allSelected: false,
               edited: false,
               selected: {}
-            });
+            };
           }
+          return _this.setState(newState);
         };
       })(this)
-    }), this.props.messages.count() < parseInt(this.props.counterMessage, 10) && (this.props.query.pageAfter != null) ? p({
+    }), nbMessages = parseInt(this.props.counterMessage, 10), this.props.messages.count() < nbMessages && (this.props.query.pageAfter != null) ? p({
       className: 'text-center list-footer'
     }, this.props.fetching ? i({
       className: "fa fa-refresh fa-spin"
@@ -5291,8 +5308,10 @@ MessageList = React.createClass({
       if ((!confirm) || window.confirm(confirmMessage)) {
         return MessageUtils["delete"](selected, conv, (function(_this) {
           return function() {
+            var firstMessageID;
             if (selected.length > 0 && _this.props.messages.count() > 0) {
-              return MessageActionCreator.setCurrent(_this.props.messages.first().get('id'), true);
+              firstMessageID = _this.props.messages.first().get('id');
+              return MessageActionCreator.setCurrent(firstMessageID, true);
             }
           };
         })(this));
@@ -5314,8 +5333,10 @@ MessageList = React.createClass({
       newbox = args.target.dataset.value;
       return MessageUtils.move(selected, conv, this.props.mailboxID, newbox, (function(_this) {
         return function() {
+          var firstMessageID;
           if (selected.length > 0 && _this.props.messages.count() > 0) {
-            return MessageActionCreator.setCurrent(_this.props.messages.first().get('id'), true);
+            firstMessageID = _this.props.messages.first().get('id');
+            return MessageActionCreator.setCurrent(firstMessageID, true);
           }
         };
       })(this));
@@ -5616,7 +5637,6 @@ MessageItem = React.createClass({
       onDragStart: this.onDragStart
     }, tag({
       href: url,
-      'data-href': url,
       className: 'wrapper',
       'data-message-id': message.get('id'),
       onClick: this.onMessageClick,
@@ -5693,7 +5713,7 @@ MessageItem = React.createClass({
         event.preventDefault();
         MessageActionCreator.setCurrent(node.dataset.messageId, true);
         if (this.props.settings.get('displayPreview')) {
-          href = '#' + node.dataset.href.split('#')[1];
+          href = '#' + node.getAttribute('href').split('#')[1];
           return this.redirect(href);
         }
       }
