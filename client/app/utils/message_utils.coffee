@@ -323,13 +323,13 @@ module.exports = MessageUtils =
     # * add style block to change the blockquotes styles.
     wrapReplyHtml: (html) ->
         return """
-<style type="text/css">
-blockquote {
-    margin: 0.8ex;
-    padding-left: 1ex;
-    border-left: 3px solid #34A6FF;
-}
-</style>
-#{html}
-                """
+            <style type="text/css">
+            blockquote {
+                margin: 0.8ex;
+                padding-left: 1ex;
+                border-left: 3px solid #34A6FF;
+            }
+            </style>
+            #{html}
+            """
 
