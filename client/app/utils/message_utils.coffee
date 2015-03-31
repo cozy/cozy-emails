@@ -130,6 +130,7 @@ module.exports = MessageUtils =
                 if addresses.length > 3
                     addresses = addresses.substring 0, addresses.length - 2
                 separator = """
+
 ----- #{t 'compose forward header'} ------
 #{t 'compose forward subject'} #{inReplyTo.get 'subject'}
 #{t 'compose forward date'} #{dateHuman}
