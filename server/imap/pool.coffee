@@ -99,7 +99,8 @@ class ImapPool
         wrongPortTimeout = setTimeout =>
             log.debug @id, "timeout 10s"
             imap.removeListener 'error', onConnError
-            onConnError new TimeoutError "Timeout connecting to #{@account?.imapServer}:#{@account?.imapPort}"
+            onConnError new TimeoutError "Timeout connecting to " +
+                "#{@account?.imapServer}:#{@account?.imapPort}"
             imap.destroy()
 
         ,10000
