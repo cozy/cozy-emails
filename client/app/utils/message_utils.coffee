@@ -123,12 +123,10 @@ module.exports = MessageUtils =
                     """
 
             when ComposeActions.FORWARD
-                console.log inReplyTo.get 'to'
-                addresses = ''
-                for address in inReplyTo.get 'to'
-                    addresses += "#{address.address}, "
-                if addresses.length > 3
-                    addresses = addresses.substring 0, addresses.length - 2
+                addresses = inReplyTo.get('to')
+                   .map (address) -> address.address
+                   .join ', '
+
                 separator = """
 
 ----- #{t 'compose forward header'} ------
@@ -145,7 +143,8 @@ module.exports = MessageUtils =
                     #{t 'compose forward prefix'}#{inReplyTo.get 'subject'}
                     """
                 message.text = separator + text
-                html = "<p>#{separator.replace /(\n)+/g, '<br />'}</p>#{html}"
+                htmlSeparator = separator.replace /(\n)+/g, '<br />'
+                html = "<p>#{htmlSeparator}</p><p><br /></p>#{html}"
                 message.html = html
 
                 # Add original message attachments
