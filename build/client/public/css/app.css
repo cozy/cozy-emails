@@ -71,6 +71,12 @@ input {
 .dropdown-menu {
   cursor: pointer;
 }
+.button-spinner {
+  position: relative;
+  top: -2px;
+  width: 12px;
+  margin-right: 8px;
+}
 a {
   color: #34a6ff;
 }
@@ -270,7 +276,7 @@ textarea:active,
 #page-content #quick-actions {
   margin: 1em 0;
 }
-#page-content #panels {
+#panels {
   -webkit-box-flex: 1;
   -moz-box-flex: 1;
   -o-box-flex: 1;
@@ -282,22 +288,12 @@ textarea:active,
   height: 100%;
   position: relative;
 }
-#page-content #panels .panel {
+#panels > div {
   overflow-y: auto;
-  margin: 0;
   padding: 0;
-  position: absolute;
 }
-#page-content #panels .panel:first-of-type {
+#panels > div:first-of-type {
   border-right: 1px solid #e4e4e4;
-}
-@media (max-width: 992px) {
-  #page-content #panels .panel:nth-of-type(2) {
-    left: 0;
-  }
-}
-#page-content #panels.horizontal .panel:nth-of-type(2) {
-  left: 0;
 }
 .row-1 {
   height: 9%;
@@ -483,320 +479,291 @@ textarea:active,
 #mailbox-config .presentation {
   test-align: left;
 }
+.conversation {
+  padding: 1em 10px 0.5em;
+  background-color: #f5f5f5;
+}
+.conversation > header {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+}
+.conversation > header nav {
+  -webkit-box-ordinal-group: 2;
+  -moz-box-ordinal-group: 2;
+  -o-box-ordinal-group: 2;
+  -ms-flex-order: 2;
+  -webkit-order: 2;
+  order: 2;
+}
+.conversation > header .btn-group {
+  float: none;
+}
+.conversation > header h3 {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+}
 .conversation.enable {
   display: block;
 }
-.conversation h3 {
+.conversation .conversation-title {
+  margin: 0 0 0.5em 0;
+  font: 20px/1.4 'Maven Pro', sans-serif;
   color: #444;
-  margin-top: 0;
-  padding-bottom: 0.5em;
 }
-.conversation h3 .close-conversation {
-  display: none;
-  cursor: pointer;
-  margin-left: 1em;
-}
-.conversation h3 .expand {
-  font-size: 0.75em;
-  float: right;
-}
-.conversation h3 .expand,
-.conversation h3 .close-conversation {
+.conversation .more {
+  display: block;
+  padding: 0.5em 10px;
+  width: 100%;
+  border: none;
+  border-top: 1px solid #eee;
+  font-size: 0.875em;
+  background-color: #f5f5f5;
   color: #34a6ff;
 }
-.conversation h3 .expand:hover,
-.conversation h3 .close-conversation:hover {
-  color: #fe8800;
+.conversation .more:hover {
+  color: #ffa500;
 }
-.conversation .conversation-length-msg {
-  height: 2em;
-  line-height: 1.8em;
-  font-size: 1.2em;
-  background: #f4f4f4;
-  cursor: pointer;
-  border: 0;
-  padding: 0 1rem;
+.conversation .more i {
+  vertical-align: middle;
+  padding: 0 10px;
 }
-.conversation .conversation-length-msg a {
-  color: #000;
-}
-.conversation .conversation-length-msg:hover {
-  background-color: #ffa500;
-}
-.conversation .message-title {
-  margin-bottom: 0.5em;
-  line-height: 1.4em;
-  border: 0;
-}
-.conversation .thread {
-  padding: 0;
-}
-.conversation .thread .message {
-  border: 0;
-  padding: 0 1rem;
-  cursor: pointer;
-  background: #f4f4f4;
-}
-.conversation .thread .message:hover {
-  border-left: 0;
-}
-.conversation .thread .message.active {
-  background: #fff;
-  cursor: default;
-  border: 0;
-}
-.conversation .thread .message.active .preview {
-  display: block;
-}
-.conversation .thread .message.active .content {
-  display: block;
-}
-.conversation .thread .message .messageToolbox .btn-toolbar,
-.conversation .thread .message .messageNavigation .btn-toolbar {
-  margin-right: 0.5em;
-  padding-top: 1em;
-  margin-bottom: 1em;
-  border-top: 1px solid #ccc;
-}
-.conversation .thread .message .messageToolbox {
-  margin-top: 1em;
-}
-.conversation .thread .message .messageToolbox .btn.btn-default {
-  background: none;
-  -webkit-box-shadow: none;
-  box-shadow: none;
-  border: 0;
-  color: #34a6ff;
-  -webkit-transition: color 0.3s ease;
-  -moz-transition: color 0.3s ease;
-  -o-transition: color 0.3s ease;
-  -ms-transition: color 0.3s ease;
-  transition: color 0.3s ease;
-  font-size: 14px;
-}
-.conversation .thread .message .messageToolbox .btn.btn-default:hover {
-  color: #fe8800;
-}
-.conversation .thread .message .messageToolbox .btn.btn-default:active {
-  color: #e57a00;
-}
-.conversation .thread .message .messageToolbox .btn.btn-default.reply {
-  color: #5c5;
-}
-.conversation .thread .message .messageToolbox .btn.btn-default.reply:hover {
-  color: #fe8800;
-}
-.conversation .thread .message .messageToolbox .btn.btn-default.reply:active {
-  color: #e57a00;
-}
-.conversation .thread .message .messageNavigation {
-  margin-bottom: 0;
-}
-.conversation .thread .message .messageNavigation .btn.btn-default {
-  background: none;
-  -webkit-box-shadow: none;
-  box-shadow: none;
-  border: 0;
-  color: #34a6ff;
-  -webkit-transition: color 0.3s ease;
-  -moz-transition: color 0.3s ease;
-  -o-transition: color 0.3s ease;
-  -ms-transition: color 0.3s ease;
-  transition: color 0.3s ease;
-}
-.conversation .thread .message .messageNavigation .btn.btn-default:hover {
-  color: #fe8800;
-}
-.conversation .thread .message .messageNavigation .btn.btn-default.prev {
-  text-align: left;
-}
-.conversation .thread .message .messageNavigation .btn.btn-default.next {
-  text-align: right;
-}
-.conversation .thread .message .messageToolbox .tool-long {
-  display: none;
-}
-.conversation .thread .message .preview,
-.conversation .thread .message .content {
-  margin: 0.5em 0.25em;
-  padding: 0.5em;
-  border: 0;
-  background-color: #fff;
-}
-.conversation .thread .message .preview body,
-.conversation .thread .message .content body {
-  font-family: 'Source Sans Pro', sans-serif;
-}
-.conversation .thread .message .header {
-  display: -webkit-box;
-  display: -moz-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: box;
-  display: flex;
-  padding: 0 0.25em;
-  -webkit-box-pack: start;
-  -moz-box-pack: start;
-  -o-box-pack: start;
-  -ms-flex-pack: start;
-  -webkit-justify-content: flex-start;
-  justify-content: flex-start;
-  -webkit-box-align: center;
-  -moz-box-align: center;
-  -o-box-align: center;
-  -ms-flex-align: center;
-  -webkit-align-items: center;
-  align-items: center;
-  font-size: 14px;
-  border: 0;
-}
-.conversation .thread .message .sender-avatar {
-  display: block;
-  float: left;
-  margin: 0 0.5em 0 0;
-  font-size: 2em;
-  width: 2em;
-  height: 2em;
-  line-height: 2em;
-  color: #aaa;
-}
-.conversation .thread .message i.sender-avatar {
-  padding: 0 0.5em;
-}
-.conversation .thread .message .toggle-headers {
-  padding: 0 1em;
-  color: #bdbdbd;
-  cursor: pointer;
-}
-.conversation .thread .message .header.compact {
-  outline: none;
-  display: -webkit-box;
-  display: -moz-box;
-  display: -webkit-flex;
-  display: -ms-flexbox;
-  display: box;
-  display: flex;
-  -webkit-box-pack: start;
-  -moz-box-pack: start;
-  -o-box-pack: start;
-  -ms-flex-pack: start;
-  -webkit-justify-content: flex-start;
-  justify-content: flex-start;
-  -webkit-box-align: center;
-  -moz-box-align: center;
-  -o-box-align: center;
-  -ms-flex-align: center;
-  -webkit-align-items: center;
-  align-items: center;
-}
-.conversation .thread .message .header.compact .participants,
-.conversation .thread .message .header.compact .subject {
-  margin: 0 0.5em;
-  overflow: hidden;
-  -o-text-overflow: ellipsis;
-  text-overflow: ellipsis;
-  max-width: 50%;
-  max-height: 5em;
-}
-.conversation .thread .message .header.compact .hour {
-  margin-left: auto;
-  color: #444;
-  white-space: pre;
-}
-.conversation .thread .message .header.compact .flags {
-  width: 3em;
-}
-.conversation .thread .message .header.compact .attach {
-  display: none;
-}
-.conversation .thread .message .header.compact .fav {
-  color: #ff0;
-  display: none;
-}
-.conversation .thread .message .header.compact .sender-avatar {
-  font-size: 2em;
-  width: 1em;
-  height: 1em;
-  line-height: 1em;
-  padding: 0 2px;
-}
-.conversation .thread .message .header.compact.has-attachments .attach,
-.conversation .thread .message .header.compact.is-fav .fav {
-  display: inline;
-  padding: 0 0.5em;
-}
-.conversation .thread .message .toggle-active {
-  position: relative;
-  top: 0;
-  right: 0;
-  -webkit-align-self: flex-start;
-  align-self: flex-start;
-  -ms-flex-item-align: start;
+.conversation .message {
   margin: 0;
-  padding: 0.25em;
+  padding: 0.5em 10px;
+  border: 1px solid #eee;
+  border-bottom: none;
+  -webkit-border-radius: 4px 4px 0 0;
+  border-radius: 4px 4px 0 0;
+  -webkit-box-shadow: 0 3px 1px #eee;
+  box-shadow: 0 3px 1px #eee;
   background-color: #fff;
-  border-style: solid;
-  border-color: #bdbdbd;
-  border-width: 0 0 1px 1px;
 }
-.conversation .thread .message .participants {
-  color: #444;
+.conversation .message.active {
+  margin: 1em 0;
+  border-bottom: 1px solid #eee;
+  -webkit-border-radius: 4px;
+  border-radius: 4px;
 }
-.conversation .thread .message .participants.receivers {
-  color: #bdbdbd;
+.conversation .message.active header {
+  margin-bottom: 1em;
 }
-.conversation .thread .message .content-action {
-  background-color: #f4f4f4;
-  margin: 0.5em 0;
-  padding: 0.5em;
-  color: #333;
+.conversation .message.active .sender-avatar {
+  width: 40px;
+  height: 40px;
 }
-.conversation .thread .message .content-action button {
-  margin: 0 1em;
+.conversation .message.active .infos {
+  margin-bottom: 1em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid #eee;
 }
-.conversation .thread .message .subject {
-  display: none;
+.conversation .message.active .infos .addresses {
+  display: block !important;
 }
-.conversation .thread .message .content {
-  white-space: pre-line;
-  margin: 0 0 0 0;
-  display: none;
+.conversation .message header,
+.conversation .message footer {
+  font-size: 0.875em;
+}
+.conversation .message header {
+  cursor: pointer;
+}
+.conversation .message footer {
+  margin-top: 1em;
+  padding-top: 0.5em;
+  border-top: 1px solid #eee;
+}
+.conversation .message .full-headers pre {
+  border: 1px solid #eee;
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+  font-size: 0.75em;
+  font-family: "Source Code Pro", monospace;
+  background-color: #f5f5f5;
+}
+.conversation .message iframe {
   width: 100%;
 }
-.conversation .thread .message .preview {
+.conversation .message .fa-mail-reply {
+  color: #5c5;
+}
+.conversation .message .sender-avatar {
+  float: left;
+  margin: 0 10px 0 0;
+  width: 24px;
+  height: 24px;
   overflow: hidden;
-  white-space: pre-line;
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+}
+.conversation .message .sender-avatar img {
+  max-width: 100%;
+  max-height: 100%;
+}
+.conversation .message .infos {
+  position: relative;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  -webkit-box-orient: horizontal;
+  -moz-box-orient: horizontal;
+  -o-box-orient: horizontal;
+  -webkit-box-lines: multiple;
+  -moz-box-lines: multiple;
+  -o-box-lines: multiple;
+  -webkit-flex-flow: row wrap;
+  -ms-flex-flow: row wrap;
+  flex-flow: row wrap;
+  -webkit-box-align: center;
+  -moz-box-align: center;
+  -o-box-align: center;
+  -ms-flex-align: center;
+  -webkit-align-items: center;
+  align-items: center;
+}
+.conversation .message .infos .addresses {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1 1 55%;
+  -ms-flex: 1 1 55%;
+  flex: 1 1 55%;
+  line-height: 1.632653063;
+  overflow: hidden;
   -o-text-overflow: ellipsis;
   text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.conversation .message .infos .addresses + .addresses {
+  display: none;
+}
+.conversation .message .infos .participant {
   color: #444;
-  font-family: "Source Sans Pro";
 }
-.conversation .thread .message .preview .quote1 {
-  color: #00f;
+.conversation .message .infos .indicators,
+.conversation .message .infos .date {
+  padding-left: 10px;
 }
-.conversation .thread .message .preview .quote2 {
-  color: #f00;
+.conversation .message .infos .from {
+  -webkit-box-ordinal-group: 1;
+  -moz-box-ordinal-group: 1;
+  -o-box-ordinal-group: 1;
+  -ms-flex-order: 1;
+  -webkit-order: 1;
+  order: 1;
 }
-.conversation .thread .message .preview .quote3 {
-  color: #008000;
+.conversation .message .infos .indicators {
+  -webkit-box-ordinal-group: 2;
+  -moz-box-ordinal-group: 2;
+  -o-box-ordinal-group: 2;
+  -ms-flex-order: 2;
+  -webkit-order: 2;
+  order: 2;
 }
-.conversation .thread .message .preview .quote4 {
-  color: #f0f;
+.conversation .message .infos .date {
+  -webkit-box-ordinal-group: 3;
+  -moz-box-ordinal-group: 3;
+  -o-box-ordinal-group: 3;
+  -ms-flex-order: 3;
+  -webkit-order: 3;
+  order: 3;
 }
-.conversation .thread .message .preview .quote5 {
-  color: #00f;
+.conversation .message .infos .to {
+  -webkit-box-ordinal-group: 4;
+  -moz-box-ordinal-group: 4;
+  -o-box-ordinal-group: 4;
+  -ms-flex-order: 4;
+  -webkit-order: 4;
+  order: 4;
 }
-.conversation .thread .message .preview p {
+.conversation .message .infos .cc {
+  -webkit-box-ordinal-group: 5;
+  -moz-box-ordinal-group: 5;
+  -o-box-ordinal-group: 5;
+  -ms-flex-order: 5;
+  -webkit-order: 5;
+  order: 5;
+}
+.conversation .message .infos .details {
+  -webkit-box-ordinal-group: 6;
+  -moz-box-ordinal-group: 6;
+  -o-box-ordinal-group: 6;
+  -ms-flex-order: 6;
+  -webkit-order: 6;
+  order: 6;
+}
+.conversation .message .fa-star {
+  color: #ffc47f;
+}
+.conversation .message .details .popup {
+  z-index: 1;
+  position: absolute;
+  top: 90%;
+  right: 10px;
+  padding: 0.5em 10px;
+  border: 1px solid #d3d3d3;
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+  background: #fff;
+}
+.conversation .message .details td {
+  display: table-cell;
+  padding: 0.3em;
+  color: #444;
+  font-size: 1em;
+  vertical-align: baseline;
+}
+.conversation .message .details .label {
+  text-align: right;
+  font-weight: normal;
+  color: #bdbdbd;
+}
+.conversation .message .details .btn {
+  padding: 0 10px;
+}
+.conversation .message .details [aria-hidden=true] {
+  display: none;
+}
+.conversation .message .label-warning {
+  display: block;
+  margin-bottom: 1em;
+}
+.conversation .message .btn-warning {
+  display: inline-block;
+  margin-left: 1em;
+  vertical-align: baseline;
+}
+.conversation .message .attachments ul {
   margin: 0;
-  display: inline;
+  padding: 0;
 }
-.conversation .thread .message .hour {
-  margin-left: auto;
-  color: #444;
-  white-space: pre;
+.conversation .message .attachments li {
+  margin: 0.7em 0;
+  list-style-type: none;
 }
-.conversation .thread .message:hover:not(.active) {
-  background: #f4f4f4;
+.conversation .message .attachments i {
+  display: inline-block;
+  margin-right: 0.3em;
+}
+.conversation .message .attachments img {
+  display: inline-block;
+  margin-right: 0.35em;
+  padding: 0.2em;
+  vertical-align: top;
+  border: 1px solid #eee;
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
 }
 .conversation .full-headers {
   display: none;
@@ -1248,6 +1215,15 @@ textarea.compose-input {
   -webkit-flex-grow: 1;
   flex-grow: 1;
 }
+.message-list .message .avatar-wrapper {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1 90px;
+  -ms-flex: 1 90px;
+  flex: 1 90px;
+}
 .message-list .message .preview {
   margin: 0.25em 0.75em 0 auto;
   overflow: hidden;
@@ -1307,7 +1283,7 @@ textarea.compose-input {
   display: none;
 }
 .message-list .fav {
-  color: #ff0;
+  color: #ffc47f;
   display: none;
 }
 .message-list .attach {
@@ -1335,6 +1311,10 @@ textarea.compose-input {
 }
 .message-list .message:hover {
   background: #ffc47f;
+}
+.message-list .message:hover .fav,
+.message-list .message:hover .attach {
+  color: #fff;
 }
 .message-list .message.edited span.wrapper {
   margin: 0;
@@ -1457,20 +1437,6 @@ textarea.compose-input {
 .message-list-actions .btn.btn-default.dropdown-toggle.more:hover {
   color: #fe8800;
 }
-.message .fa-paperclip {
-  display: none;
-}
-.message .fa-star {
-  display: none;
-}
-.message:hover {
-  background: #ffc47f;
-}
-.message.active .select {
-  height: auto;
-  margin: 0;
-  padding: 0;
-}
 .more-messages {
   cursor: pointer;
 }
@@ -1485,7 +1451,7 @@ textarea.compose-input {
   margin-right: 0.5em;
 }
 .toolbar {
-  padding: 0.5em 15px;
+  white-space: nowrap;
 }
 .toolbar .btn {
   border: none;

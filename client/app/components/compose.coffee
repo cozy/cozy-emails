@@ -1,4 +1,6 @@
-{div, h3, a, i, textarea, form, label, button, span, ul, li, input} = React.DOM
+{div, h3, a, i, textarea, form, label, button} = React.DOM
+{span, ul, li, input, img} = React.DOM
+
 classer = React.addons.classSet
 
 FilePicker = require './file_picker'
@@ -8,7 +10,7 @@ AccountPicker = require './account_picker'
 
 {ComposeActions} = require '../constants/app_constants'
 
-MessageUtils = require '../utils/message_utils'
+messageUtils = require '../utils/message_utils'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
@@ -162,7 +164,10 @@ module.exports = Compose = React.createClass
                                 disable: if @state.sending then true else null
                                 onClick: @onSend,
                                     if @state.sending
-                                        span className: 'fa fa-refresh fa-spin'
+                                        span null,
+                                            img
+                                                src: 'images/spinner-white.svg'
+                                                className: 'button-spinner'
                                     else
                                         span className: 'fa fa-send'
                                     span null, labelSend
@@ -171,7 +176,10 @@ module.exports = Compose = React.createClass
                                 disable: if @state.saving then true else null
                                 type: 'button', onClick: @onDraft,
                                     if @state.saving
-                                        span className: 'fa fa-refresh fa-spin'
+                                        span null,
+                                            img
+                                                src: 'images/spinner-white.svg'
+                                                className: 'button-spinner'
                                     else
                                         span className: 'fa fa-save'
                                     span null, t 'compose action draft'
@@ -186,6 +194,7 @@ module.exports = Compose = React.createClass
                                 onClick: onCancel
                                 className: 'btn btn-cozy-non-default btn-cancel',
                                 t 'app cancel'
+
                 div className: 'clearfix', null
 
     _initCompose: ->
@@ -236,7 +245,7 @@ module.exports = Compose = React.createClass
 
         # new draft
         else
-            state = MessageUtils.makeReplyMessage @props.selectedAccountLogin,
+            state = messageUtils.makeReplyMessage @props.selectedAccountLogin,
                 @props.inReplyTo, @props.action,
                 @props.settings.get('composeInHTML')
             state.accountID ?= @props.selectedAccountID
@@ -296,15 +305,8 @@ module.exports = Compose = React.createClass
         if valid
             if @state.composeInHTML
                 message.html = @state.html
-                try
-                    message.text = toMarkdown(message.html)
-                catch
-                    message.text = message.html?.replace /<[^>]*>/gi, ''
-
-                # convert HTML entities
-                tmp = document.createElement 'div'
-                tmp.innerHTML = message.text
-                message.text = tmp.textContent
+                message.text = messageUtils.cleanReplyText message.html
+                message.html = messageUtils.wrapReplyHtml message.html
             else
                 message.text = @state.text.trim()
 
@@ -348,22 +350,34 @@ module.exports = Compose = React.createClass
 
     onDelete: (args) ->
         subject = @props.message.get 'subject'
+
         if subject? and subject isnt ''
-            confirmMessage = t 'mail confirm delete', {subject: @props.message.get('subject')}
+            params = subject: @props.message.get 'subject'
+            confirmMessage = t 'mail confirm delete', params
+
         else
             confirmMessage = t 'mail confirm delete nosubject'
+
         if window.confirm confirmMessage
             MessageActionCreator.delete @props.message, (error) =>
+
                 if error?
-                    LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
+                    msg = "#{t("message action delete ko")} #{error}"
+                    LayoutActionCreator.alertError msg
                 else
+
                     if @props.callback
                         @props.callback()
                     else
+                        parameters = [
+                            @props.selectedAccountID
+                            @props.selectedMailboxID
+                        ]
+
                         @redirect
                             direction: 'first'
                             action: 'account.mailbox.messages'
-                            parameters: [@props.selectedAccountID, @props.selectedMailboxID]
+                            parameters: parameters
                             fullWidth: true
 
     onToggleCc: (e) ->
@@ -397,14 +411,18 @@ ComposeEditor = React.createClass
             not (_.isEqual(nextProps, @props))
 
     render: ->
+
         onHTMLChange = (event) =>
             @props.html.requestChange @refs.html.getDOMNode().innerHTML
+
         onTextChange = (event) =>
             @props.text.requestChange @refs.content.getDOMNode().value
+
         if @props.settings.get 'composeOnTop'
             folded = 'folded'
         else
             folded = ''
+
         if @props.composeInHTML
             div
                 className: "rt-editor form-control #{folded}",
@@ -550,6 +568,7 @@ ComposeEditor = React.createClass
 
                     , 0
             )
+
             # Allow to hide original message
             if document.querySelector('.rt-editor blockquote') and not document.querySelector('.rt-editor .originalToggle')
                 try
@@ -560,6 +579,7 @@ ComposeEditor = React.createClass
                         jQuery('.rt-editor').toggleClass('folded')
                 catch e
                     console.error e
+
             else
                 jQuery('.rt-editor .originalToggle').on 'click', ->
                     jQuery('.rt-editor').toggleClass('folded')
@@ -568,11 +588,14 @@ ComposeEditor = React.createClass
             # Text message
             if @props.focus
                 node = @refs.content.getDOMNode()
+
                 if not @props.settings.get 'composeOnTop'
                     rect = node.getBoundingClientRect()
                     node.scrollTop = node.scrollHeight - rect.height
+
                     if (typeof node.selectionStart is "number")
                         node.selectionStart = node.selectionEnd = node.value.length
+
                     else if (typeof node.createTextRange isnt "undefined")
                         setTimeout ->
                             node.focus()
@@ -580,6 +603,7 @@ ComposeEditor = React.createClass
                         range = node.createTextRange()
                         range.collapse(false)
                         range.select()
+
                 setTimeout ->
                     node.focus()
                 , 0

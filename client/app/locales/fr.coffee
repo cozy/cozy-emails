@@ -38,6 +38,12 @@ module.exports =
       "compose error no subject"  : "Vous n'avez pas saisi de sujet"
       "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?"
       "compose draft deleted"     : "Brouillon supprimé"
+      "compose wrong email format": "L'addresse mail donnée n'est pas bien formattée : %{address}."
+      "compose forward header"    : "Message transféré"
+      "compose forward subject"   : "Sujet :"
+      "compose forward date"      : "Date :"
+      "compose forward from"      : "De :"
+      "compose forward to"        : "Pour :"
 
       # Menu
       "menu show"               : "Montrer le menu"
@@ -89,8 +95,15 @@ module.exports =
                                     """
 
       # Mail
-      "mail receivers"          : "À "
-      "mail receivers cc"       : "Copie "
+      "mail to"                 : "À "
+      "mail cc"                 : "Copie "
+      "headers from"            : "De"
+      "headers to"              : "À"
+      "headers cc"              : "Copie"
+      "headers reply-to"        : "Répondre à"
+      "headers date"            : "Date"
+      "headers subject"         : "Objet"
+      "load more messages"      : "afficher %{smart_count} message supplémentaire |||| afficher %{smart_count} messages supplémentaires"
       "mail action reply"       : "Répondre"
       "mail action reply all"   : "Répondre à tous"
       "mail action forward"     : "Transférer"

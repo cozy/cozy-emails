@@ -40,6 +40,11 @@ module.exports = MessageUtils =
             address =
                 address: text.replace(/^\s*/, '')
 
+        emailRe = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/
+        address.isValid = address.address.match emailRe
+
+        address
+
     getReplyToAddress: (message) ->
         reply = message.get 'replyTo'
         from = message.get 'from'
@@ -52,10 +57,12 @@ module.exports = MessageUtils =
         message =
             composeInHTML: inHTML
             attachments: Immutable.Vector.empty()
+        quoteStyle = "margin-left: 0.8ex; padding-left: 1ex;"
+        quoteStyle += " border-left: 3px solid #34A6FF;"
 
         if inReplyTo
             message.accountID = inReplyTo.get 'accountID'
-            dateHuman = @formatDate inReplyTo.get 'createdAt'
+            dateHuman = @formatReplyDate inReplyTo.get 'createdAt'
             sender = @displayAddresses inReplyTo.get 'from'
 
             text = inReplyTo.get 'text'
@@ -71,14 +78,15 @@ module.exports = MessageUtils =
             if html and not text and not inHTML
                 text = toMarkdown html
 
-            message.inReplyTo  = [ inReplyTo.get 'id' ]
+            message.inReplyTo  = [inReplyTo.get 'id']
             message.references = inReplyTo.get('references') or []
             message.references = message.references.concat message.inReplyTo
 
         switch action
+
             when ComposeActions.REPLY
-                separator = t('compose reply separator',
-                    {date: dateHuman, sender: sender})
+                params = date: dateHuman, sender: sender
+                separator = t 'compose reply separator', params
                 message.to = @getReplyToAddress inReplyTo
                 message.cc = []
                 message.bcc = []
@@ -87,15 +95,16 @@ module.exports = MessageUtils =
                     """
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
-                    <p><br /></p>
                     <p>#{separator}<span class="originalToggle"> … </span></p>
-                    <blockquote>#{html}</blockquote>
+                    <blockquote style="#{quoteStyle}">#{html}</blockquote>
                     <p><br /></p>
                     """
+
             when ComposeActions.REPLY_ALL
-                separator = t('compose reply separator',
-                    {date: dateHuman, sender: sender})
+                params = date: dateHuman, sender: sender
+                separator = t 'compose reply separator', params
                 message.to = @getReplyToAddress inReplyTo
+
                 # filter to don't have same address twice
                 toAddresses = message.to.map (dest) -> return dest.address
                 message.cc = [].concat(inReplyTo.get('from'),
@@ -108,14 +117,25 @@ module.exports = MessageUtils =
                     """
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
-                    <p><br /></p>
                     <p>#{separator}<span class="originalToggle"> … </span></p>
-                    <blockquote>#{html}</blockquote>
+                    <blockquote style="#{quoteStyle}">#{html}</blockquote>
                     <p><br /></p>
                     """
+
             when ComposeActions.FORWARD
-                separator = t('compose forward separator',
-                    {date: dateHuman, sender: sender})
+                addresses = inReplyTo.get('to')
+                   .map (address) -> address.address
+                   .join ', '
+
+                separator = """
+
+----- #{t 'compose forward header'} ------
+#{t 'compose forward subject'} #{inReplyTo.get 'subject'}
+#{t 'compose forward date'} #{dateHuman}
+#{t 'compose forward from'} #{sender}
+#{t 'compose forward to'} #{addresses}
+
+"""
                 message.to = []
                 message.cc = []
                 message.bcc = []
@@ -123,7 +143,9 @@ module.exports = MessageUtils =
                     #{t 'compose forward prefix'}#{inReplyTo.get 'subject'}
                     """
                 message.text = separator + text
-                message.html = "<p>#{separator}</p>" + html
+                htmlSeparator = separator.replace /(\n)+/g, '<br />'
+                html = "<p>#{htmlSeparator}</p><p><br /></p>#{html}"
+                message.html = html
 
                 # Add original message attachments
                 message.attachments = inReplyTo.get 'attachments'
@@ -176,8 +198,15 @@ module.exports = MessageUtils =
                     when "pdf" then return sub[1]
                     when "gzip", "zip" then return 'archive'
 
+
+    formatReplyDate: (date) ->
+        date = moment() unless date?
+        date = moment date
+        date.format 'lll'
+
+
     formatDate: (date, compact) ->
-        if not date?
+        unless date?
             return
         today = moment()
         date  = moment date
@@ -200,7 +229,8 @@ module.exports = MessageUtils =
 
     # Delete message(s) or conversations
     #
-    # @params {Mixed}    ids          messageID or Message or array of messageIDs or Messages
+    # @params {Mixed}    ids          messageID or Message or array of
+    #                                 messageIDs or Messages
     # @params {Boolean}  conversation true to delete whole conversation
     # @params {Function} cb           callback
     delete: (ids, conversation, cb) ->
@@ -283,3 +313,42 @@ module.exports = MessageUtils =
             MessageActionCreator.setCurrent next.get('id'), true
             # open next message if the deleted one was open
             window.cozyMails.messageDisplay next, false
+
+
+    # Remove from given string:
+    # * html tags
+    # * extra spaces between reply markers and text
+    # * empty reply lines
+    cleanReplyText: (html) ->
+
+        # Convert HTML to markdown
+        try
+            result = toMarkdown html
+        catch
+            result = html.replace /<[^>]*>/gi, '' if html?
+
+        # convert HTML entities
+        tmp = document.createElement 'div'
+        tmp.innerHTML = result
+        result = tmp.textContent
+
+        # Make citation more human readable.
+        result = result.replace />[ \t]+/ig, '> '
+        result = result.replace /(> \n)+/g, '> \n'
+        result
+
+
+    # Add additional html tags to HTML replies:
+    # * add style block to change the blockquotes styles.
+    wrapReplyHtml: (html) ->
+        return """
+            <style type="text/css">
+            blockquote {
+                margin: 0.8ex;
+                padding-left: 1ex;
+                border-left: 3px solid #34A6FF;
+            }
+            </style>
+            #{html}
+            """
+
