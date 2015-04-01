@@ -1,6 +1,8 @@
-{div, ul, li, span, i, p, a, button, pre, iframe, img, h4} = React.DOM
+{div, article, header, footer, ul, li, span, i, p, a, button, pre, iframe, img, h4} = React.DOM
 MessageUtils = require '../utils/message_utils'
 
+MessageHeader  = require "./message_header"
+MessageFooter  = require "./message_footer"
 ToolbarMessage = require './toolbar_message'
 Compose        = require './compose'
 FilePicker     = require './file_picker'
@@ -72,8 +74,7 @@ module.exports = React.createClass
         if not text? and not html? and alternatives?.length > 0
             text = t 'calendar unknown format'
 
-        #
-        # @TODO Do we want to convert text only messages to HTML ?
+        # TODO: Do we want to convert text only messages to HTML ?
         # /!\ if messageDisplayHTML is set, this method should always return
         # a value fo html, otherwise the content of the email flashes
         if text? and not html? and @state.messageDisplayHTML
@@ -166,8 +167,6 @@ module.exports = React.createClass
         else
             @_htmlContent = html
 
-            #htmluri = "data:text/html;charset=utf-8;base64,
-            #      #{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
         return {messageDisplayHTML, images}
 
     render: ->
@@ -186,35 +185,31 @@ module.exports = React.createClass
             message: true
             active: @state.active
 
-        if @state.active
-            li
-                className: classes,
-                key: @props.key,
-                'data-id': message.get('id'),
-                    @renderHeaders message
-                    div className: 'full-headers',
-                        pre null, prepared?.fullHeaders?.join "\n"
-                    @renderToolbox()
-                    @renderCompose()
-                    MessageContent
-                        ref: 'messageContent'
-                        messageID: message.get 'id'
-                        messageDisplayHTML: messageDisplayHTML
-                        html: @_htmlContent
-                        text: prepared.text
-                        rich: prepared.rich
-                        imagesWarning: imagesWarning
-                        composing: @state.composing
-                        displayImages: @displayImages
-                        displayHTML: @displayHTML
-                    @renderAttachments message.get('attachments').toJS()
-                    div className: 'clearfix'
-        else
-            li
-                className: classes,
-                key: @props.key,
-                'data-id': message.get('id'),
-                    @renderHeaders message
+        article
+            className: classes,
+            key: @props.key,
+            'data-id': message.get('id'),
+                header
+                    onClick: => @setState active: !@state.active
+                    @renderHeaders()
+                    @renderToolbox() if @state.active
+                @renderCompose() if @state.active
+                (div className: 'full-headers',
+                    pre null, prepared?.fullHeaders?.join "\n") if @state.active
+                (MessageContent
+                    ref: 'messageContent'
+                    messageID: message.get 'id'
+                    messageDisplayHTML: messageDisplayHTML
+                    html: @_htmlContent
+                    text: prepared.text
+                    rich: prepared.rich
+                    imagesWarning: imagesWarning
+                    composing: @state.composing
+                    displayImages: @displayImages
+                    displayHTML: @displayHTML) if @state.active
+                (footer null,
+                    @renderFooter()
+                    @renderToolbox(false)) if @state.active
 
     getParticipants: (message) ->
         from = message.get 'from'
@@ -224,86 +219,15 @@ module.exports = React.createClass
             span null, ', '
             Participants participants: to, onAdd: @addAddress, tooltip: true
 
-    renderHeaders: (message) ->
-        attachments    = message.get('attachments')
-        hasAttachments = attachments.length
-        leftClass = if hasAttachments then 'col-md-8' else 'col-md-12'
-        flags     = message.get('flags') or []
-        avatar    = MessageUtils.getAvatar @props.message
-        date      = MessageUtils.formatDate message.get 'createdAt'
-        classes = classer
-            'header': true
-            'row': true
-            'full': @state.headers
-            'compact': not @state.headers
-            'has-attachments': hasAttachments
-            'is-fav': flags.indexOf(MessageFlags.FLAGGED) isnt -1
+    renderHeaders: ->
+        MessageHeader
+            message: @props.message
 
-        #toggleActive = a className: "toggle-active", onClick: @toggleActive,
-        #    if @state.active
-        #        i className: 'fa fa-compress'
-        #    else
-        #        i className: 'fa fa-expand'
-        if @state.headers
-            # detailed headers
-            div className: classes, onClick: @toggleActive,
-                div className: leftClass,
-                    if avatar
-                        img className: 'sender-avatar', src: avatar
-                    else
-                        i className: 'sender-avatar fa fa-user'
-                    div className: 'participants col-md-9',
-                        p className: 'sender',
-                            @renderAddress 'from'
-                            i
-                                className: 'toggle-headers fa fa-toggle-up clickable'
-                                onClick: @toggleHeaders
-                        p className: 'receivers',
-                            span null, t "mail receivers"
-                            @renderAddress 'to'
-                        if @props.message.get('cc')?.length > 0
-                            p className: 'receivers',
-                                span null, t "mail receivers cc"
-                                @renderAddress 'cc'
-                        if hasAttachments
-                            span className: 'hour', date
-                    if not hasAttachments
-                        span className: 'hour', date
-                if hasAttachments
-                    div className: 'col-md-4',
-                        FilePicker
-                            ref: 'filePicker'
-                            editable: false
-                            value: attachments
-                            messageID: @props.message.get 'id'
-                #if @props.inConversation
-                #    toggleActive
-        else
-            # compact headers
-            div className: classes, onClick: @toggleActive,
-                if avatar
-                    img className: 'sender-avatar', src: avatar
-                else
-                    i className: 'sender-avatar fa fa-user'
-                span className: 'participants', @getParticipants message
-                if @state.active
-                    i
-                        className: 'toggle-headers fa fa-toggle-down clickable'
-                        onClick: @toggleHeaders
-                #span className: 'subject', @props.message.get 'subject'
-                span className: 'hour', date
-                span className: "flags",
-                    i
-                        className: 'attach fa fa-paperclip clickable'
-                        onClick: @toggleHeaders
-                    i className: 'fav fa fa-star'
-                #if @props.inConversation
-                #    toggleActive
-
-    renderToolbox: ->
+    renderToolbox: (full = true) ->
         return if @state.composing
 
         ToolbarMessage
+            full:              full
             message:           @props.message
             mailboxes:         @props.mailboxes
             selectedMailboxID: @props.selectedMailboxID
@@ -314,12 +238,9 @@ module.exports = React.createClass
             onMove:            @onMove
             onHeaders:         @onHeaders
 
-    renderAddress: (field) ->
-        addresses = @props.message.get(field)
-        if not addresses?
-            return
-
-        Participants participants: addresses, onAdd: @addAddress, tooltip: true
+    renderFooter: ->
+        MessageFooter
+            message: @props.message
 
     renderCompose: ->
         if @state.composing
@@ -337,20 +258,6 @@ module.exports = React.createClass
                         @setState composing: false
                 onCancel: =>
                     @setState composing: false
-
-    renderAttachments: (attachments) ->
-        files = attachments.filter (file) ->
-            return MessageUtils.getAttachmentType(file.contentType) is 'image'
-        if files.length is 0
-            return
-
-        div className: 'att-previews',
-            h4 null, t 'message preview title'
-            files.map (file) ->
-                AttachmentPreview
-                    ref: 'attachmentPreview'
-                    file: file,
-                    key: file.checksum
 
     toggleHeaders: (e) ->
         e.preventDefault()
@@ -470,14 +377,14 @@ MessageContent = React.createClass
         displayHTML= =>
             @props.displayHTML true
         if @props.messageDisplayHTML and @props.html
-            div className: 'row',
+            div null,
                 if @props.imagesWarning
                     div
-                        className: "imagesWarning content-action",
+                        className: "imagesWarning label label-warning content-action",
                         ref: "imagesWarning",
                             span null, t 'message images warning'
                             button
-                                className: 'btn btn-default',
+                                className: 'btn btn-xs btn-warning',
                                 type: "button",
                                 ref: 'imagesDisplay',
                                 onClick: @props.displayImages,
@@ -492,15 +399,8 @@ MessageContent = React.createClass
                     frameBorder: 0
         else
             div className: 'row',
-                #div className: "content-action",
-                #    button
-                #       className: 'btn btn-default',
-                #       type: "button",
-                #       onClick: @props.displayHTML,
-                #       t 'message html display'
                 div className: 'preview', ref: content,
                     p dangerouslySetInnerHTML: { __html: @props.rich }
-                    #p null, @props.text
 
     _initFrame: (type) ->
         panel = document.querySelector "#panels > .panel:nth-of-type(2)"
@@ -560,42 +460,8 @@ MessageContent = React.createClass
         else
             window.cozyMails.customEvent "MESSAGE_LOADED", @props.messageID
 
-        if @refs.content? and not @props.composing
-            @refs.content.getDOMNode().scrollIntoView()
-
-
     componentDidMount: ->
         @_initFrame('mount')
 
     componentDidUpdate: ->
         @_initFrame('update')
-
-
-
-AttachmentPreview = React.createClass
-    displayName: 'AttachmentPreview'
-
-    getInitialState: ->
-        return {
-            displayed: false
-        }
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
-
-    render: ->
-        toggleDisplay = =>
-            @setState displayed: not @state.displayed
-
-        span
-            className: 'att-preview',
-            key: @props.key,
-            if @state.displayed
-                img
-                    onClick: toggleDisplay
-                    src: @props.file.url
-            else
-                button
-                    className: 'btn btn-default btn-lg'
-                    onClick: toggleDisplay
-                    @props.file.generatedFileName
