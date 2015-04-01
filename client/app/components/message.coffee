@@ -74,8 +74,7 @@ module.exports = React.createClass
         if not text? and not html? and alternatives?.length > 0
             text = t 'calendar unknown format'
 
-        #
-        # @TODO Do we want to convert text only messages to HTML ?
+        # TODO: Do we want to convert text only messages to HTML ?
         # /!\ if messageDisplayHTML is set, this method should always return
         # a value fo html, otherwise the content of the email flashes
         if text? and not html? and @state.messageDisplayHTML
@@ -168,8 +167,6 @@ module.exports = React.createClass
         else
             @_htmlContent = html
 
-            #htmluri = "data:text/html;charset=utf-8;base64,
-            #      #{btoa(unescape(encodeURIComponent(doc.body.innerHTML)))}"
         return {messageDisplayHTML, images}
 
     render: ->
@@ -402,15 +399,8 @@ MessageContent = React.createClass
                     frameBorder: 0
         else
             div className: 'row',
-                #div className: "content-action",
-                #    button
-                #       className: 'btn btn-default',
-                #       type: "button",
-                #       onClick: @props.displayHTML,
-                #       t 'message html display'
                 div className: 'preview', ref: content,
                     p dangerouslySetInnerHTML: { __html: @props.rich }
-                    #p null, @props.text
 
     _initFrame: (type) ->
         panel = document.querySelector "#panels > .panel:nth-of-type(2)"
@@ -469,10 +459,6 @@ MessageContent = React.createClass
                 loadContent()
         else
             window.cozyMails.customEvent "MESSAGE_LOADED", @props.messageID
-
-        # if @refs.content? and not @props.composing
-        #     @refs.content.getDOMNode().scrollIntoView()
-
 
     componentDidMount: ->
         @_initFrame('mount')

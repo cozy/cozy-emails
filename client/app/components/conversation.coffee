@@ -82,44 +82,6 @@ module.exports = React.createClass
         if not @props.message? or not @props.conversation
             return p null, t "app loading"
 
-        # expandUrl = @buildUrl
-        #     direction: 'first'
-        #     action: 'message'
-        #     parameters: @props.message.get 'id'
-        #     fullWidth: true
-
-        # if window.router.previous?
-        #     try
-        #         selectedAccountID = @props.selectedAccountID
-        #     catch
-        #         selectedAccountID = @props.conversation.get(0).mailbox
-        # else
-        #     selectedAccountID = @props.conversation.get(0).mailbox
-
-        # if @props.layout is 'full'
-        #     closeUrl = @buildUrl
-        #         direction: 'first'
-        #         action: 'account.mailbox.messages'
-        #         parameters: selectedAccountID
-        #         fullWidth: true
-        # else
-        #     closeUrl = @buildClosePanelUrl @props.layout
-
-        # otherMessages = {}
-        # activeMessages = {}
-
-        # @props.conversation.map (message, key) =>
-        #     # open every unseen message of the conversation
-        #     if @props.message.get('id') is message.get('id') or
-        #             MessageFlags.SEEN not in message.get('flags')
-
-        #         activeMessages[key] = message
-
-        #     else
-        #         otherMessages[key] = message
-
-        # .toJS()
-
         # Sort messages in conversation to find seen messages and group them
         messages = []
         lastMessageIndex = @props.conversation.length - 1
