@@ -46,7 +46,7 @@ module.exports = React.createClass
     renderReply: ->
         div className: cBtnGroup,
             button
-                className: "#{cBtn} fa-mail-reply"
+                className: "#{cBtn} fa-mail-reply mail-reply"
                 onClick: @props.onReply
             button
                 className: "#{cBtn} fa-mail-reply-all"
