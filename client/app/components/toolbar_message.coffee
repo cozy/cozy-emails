@@ -49,10 +49,10 @@ module.exports = React.createClass
                 className: "#{cBtn} fa-mail-reply mail-reply"
                 onClick: @props.onReply
             button
-                className: "#{cBtn} fa-mail-reply-all"
+                className: "#{cBtn} fa-mail-reply-all mail-reply-all"
                 onClick: @props.onReplyAll
             button
-                className: "#{cBtn} fa-mail-forward"
+                className: "#{cBtn} fa-mail-forward mail-forward"
                 onClick: @props.onForward
 
 

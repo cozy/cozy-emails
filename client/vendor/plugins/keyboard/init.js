@@ -246,7 +246,7 @@ if (typeof window.plugins !== "object") {
           layoutHeight(-1);
         }
       },
-      'f': {
+      'F': {
         name: "Toggle fullscreen",
         action: function (e) {
           e.preventDefault();
@@ -312,6 +312,20 @@ if (typeof window.plugins !== "object") {
         action: function (e) {
           e.preventDefault();
           mailAction('reply');
+        }
+      },
+      'g': {
+        name: 'Reply all',
+        action: function (e) {
+          e.preventDefault();
+          mailAction('reply-all');
+        }
+      },
+      'f': {
+        name: 'Forward',
+        action: function (e) {
+          e.preventDefault();
+          mailAction('forward');
         }
       },
       '?': {
