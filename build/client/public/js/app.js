@@ -8414,7 +8414,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-;require.register("libs/flux/store/Store", function(exports, require, module) {
+require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -11827,7 +11827,10 @@ url = window.location.origin;
 pathToSocketIO = "" + window.location.pathname + "socket.io";
 
 socket = io.connect(url, {
-  path: pathToSocketIO
+  path: pathToSocketIO,
+  reconnectionDelayMax: 60000,
+  reconectionDelay: 2000,
+  reconnectionAttempts: 3
 });
 
 dispatchAs = function(action) {
