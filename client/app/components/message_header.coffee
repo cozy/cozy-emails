@@ -1,6 +1,8 @@
 {div, span, table, tbody, tr, td, img, a, i} = React.DOM
 MessageUtils = require '../utils/message_utils'
 
+ContactStore   = require '../stores/contact_store'
+
 {MessageFlags} = require '../constants/app_constants'
 
 
@@ -117,6 +119,7 @@ module.exports = React.createClass
         #
     formatUsers: (users) ->
         return unless users?
+
         format = (user) ->
             console.trace() if not user?
             unless user.name is ''
@@ -127,7 +130,17 @@ module.exports = React.createClass
         if _.isArray users
             items = []
             for user in users
-                items.push a null, format(user)
+                contact = ContactStore.getByAddress user.address
+                tag = if contact? then a else span
+                attrs = if contact?
+                    target: '_blank'
+                    href: "/#apps/contacts/contact/#{contact.get 'id'}"
+                    onClick: (event) -> event.stopPropagation()
+                else
+                    className: 'participant'
+                    onClick: (event) -> event.stopPropagation()
+
+                items.push tag attrs, format(user)
                 items.push ", " if user isnt users.last()
             return items
         else
@@ -161,7 +174,9 @@ module.exports = React.createClass
             return tr null, items...
 
 
-        div className: 'details', 'aria-expanded': @state.detailled,
+        div
+            className: 'details', 'aria-expanded': @state.detailled
+            onClick: (event) -> event.stopPropagation()
             i className: 'btn fa fa-caret-down', onClick: @toggleDetails
             div className: 'popup', 'aria-hidden': !@state.detailled,
                 table null,
@@ -175,6 +190,5 @@ module.exports = React.createClass
                         row @props.message.get('createdAt'), 'headers date'
                         row @props.message.get('subject'), 'headers subject'
 
-    toggleDetails: (event)->
-        event.stopPropagation()
+    toggleDetails: ->
         @setState detailled: !@state.detailled
