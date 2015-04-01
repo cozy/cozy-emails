@@ -154,7 +154,7 @@ module.exports = React.createClass
         div className: "addresses #{field}",
             if field isnt 'from'
                 span null,
-                    t "mail #{field}: "
+                    t "mail #{field}"
             @formatUsers(users)...
 
 

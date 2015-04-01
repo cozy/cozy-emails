@@ -94,8 +94,15 @@ module.exports =
                                     """
 
       # Mail
-      "mail receivers"          : "To: "
-      "mail receivers cc"       : "Cc: "
+      "mail to"                 : "To: "
+      "mail cc"                 : "Cc: "
+      "headers from"            : "From"
+      "headers to"              : "To"
+      "headers cc"              : "Cc"
+      "headers reply-to"        : "Reply to"
+      "headers date"            : "Date"
+      "headers subject"         : "Subject"
+      "load more messages"      : "load %{smart_count} more message |||| load %{smart_count} more messages"
       "mail action reply"       : "Reply"
       "mail action reply all"   : "Reply all"
       "mail action forward"     : "Forward"
