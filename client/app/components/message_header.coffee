@@ -6,9 +6,6 @@ ContactStore   = require '../stores/contact_store'
 {MessageFlags} = require '../constants/app_constants'
 
 
-(Array.prototype.last = -> this[this.length - 1]) unless Array.prototype.last
-
-
 module.exports = React.createClass
     displayName: 'MessageHeader'
 
@@ -65,7 +62,7 @@ module.exports = React.createClass
                     onClick: (event) -> event.stopPropagation()
 
                 items.push tag attrs, format(user)
-                items.push ", " if user isnt users.last()
+                items.push ", " if user isnt _.last(users)
             return items
         else
             return format(users)
