@@ -11223,7 +11223,7 @@ module.exports = MessageUtils = {
     }
   },
   makeReplyMessage: function(myAddress, inReplyTo, action, inHTML) {
-    var address, addresses, dateHuman, e, html, message, notMe, params, quoteStyle, sender, separator, text, toAddresses, _i, _len, _ref;
+    var addresses, dateHuman, e, html, htmlSeparator, message, notMe, params, quoteStyle, sender, separator, text, toAddresses;
     message = {
       composeInHTML: inHTML,
       attachments: Immutable.Vector.empty()
@@ -11285,23 +11285,17 @@ module.exports = MessageUtils = {
         message.html = "<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
         break;
       case ComposeActions.FORWARD:
-        console.log(inReplyTo.get('to'));
-        addresses = '';
-        _ref = inReplyTo.get('to');
-        for (_i = 0, _len = _ref.length; _i < _len; _i++) {
-          address = _ref[_i];
-          addresses += "" + address.address + ", ";
-        }
-        if (addresses.length > 3) {
-          addresses = addresses.substring(0, addresses.length - 2);
-        }
+        addresses = inReplyTo.get('to').map(function(address) {
+          return address.address;
+        }).join(', ');
         separator = "\n----- " + (t('compose forward header')) + " ------\n" + (t('compose forward subject')) + " " + (inReplyTo.get('subject')) + "\n" + (t('compose forward date')) + " " + dateHuman + "\n" + (t('compose forward from')) + " " + sender + "\n" + (t('compose forward to')) + " " + addresses + "\n";
         message.to = [];
         message.cc = [];
         message.bcc = [];
         message.subject = "" + (t('compose forward prefix')) + (inReplyTo.get('subject'));
         message.text = separator + text;
-        html = "<p>" + (separator.replace(/(\n)+/g, '<br />')) + "</p>" + html;
+        htmlSeparator = separator.replace(/(\n)+/g, '<br />');
+        html = "<p>" + htmlSeparator + "</p><p><br /></p>" + html;
         message.html = html;
         message.attachments = inReplyTo.get('attachments');
         break;
