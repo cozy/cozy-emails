@@ -2,7 +2,11 @@ AppDispatcher = require '../app_dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 url = window.location.origin
 pathToSocketIO = "#{window.location.pathname}socket.io"
-socket = io.connect url, path: pathToSocketIO
+socket = io.connect url,
+    path: pathToSocketIO
+    reconnectionDelayMax: 60000
+    reconectionDelay: 2000
+    reconnectionAttempts: 3
 
 dispatchAs = (action) -> (content) ->
     AppDispatcher.handleServerAction
