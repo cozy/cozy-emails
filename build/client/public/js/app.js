@@ -2708,13 +2708,13 @@ module.exports = Application = React.createClass({
       disposition = LayoutStore.getDisposition();
       if (disposition.type === Dispositions.HORIZONTAL) {
         classes = {
-          firstPanel: "panel col-xs-12 col-md-12 hidden-xs hidden-sm row-" + disposition.height,
-          secondPanel: "panel col-xs-12 col-md-12 row-" + (10 - disposition.height) + " row-offset-" + disposition.height
+          firstPanel: "col-xs-12 col-md-12 hidden-xs hidden-sm row-" + disposition.height,
+          secondPanel: "col-xs-12 col-md-12 row-" + (10 - disposition.height)
         };
       } else {
         classes = {
-          firstPanel: "panel col-xs-12 col-md-" + disposition.width + " hidden-xs hidden-sm row-10",
-          secondPanel: "panel col-xs-12 col-md-" + (12 - disposition.width) + " col-offset-" + disposition.width + " row-10"
+          firstPanel: "col-xs-12 col-md-" + disposition.width + " hidden-xs hidden-sm row-10",
+          secondPanel: "col-xs-12 col-md-" + (12 - disposition.width) + " row-10"
         };
       }
       if (previous != null) {
@@ -3677,10 +3677,10 @@ ComposeEditor = React.createClass({
 });
 
 ;require.register("components/conversation", function(exports, require, module) {
-var Message, MessageFlags, RouterMixin, Toolbar, a, classer, div, h3, i, li, p, span, ul, _ref,
+var Message, MessageFlags, RouterMixin, Toolbar, a, button, classer, h3, header, i, li, p, section, span, ul, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a;
+_ref = React.DOM, section = _ref.section, header = _ref.header, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button;
 
 Message = require('./message');
 
@@ -3712,13 +3712,8 @@ module.exports = React.createClass({
   },
   getInitialState: function() {
     return {
-      expanded: !this.props.settings.get('displayConversation')
+      expanded: []
     };
-  },
-  expand: function() {
-    return this.setState({
-      expanded: true
-    });
   },
   renderToolbar: function() {
     return Toolbar({
@@ -3730,97 +3725,96 @@ module.exports = React.createClass({
       settings: this.props.settings
     });
   },
-  renderMessage: function(key, message, active) {
+  renderMessage: function(key, active) {
     return Message({
       ref: 'message',
       accounts: this.props.accounts,
       active: active,
       inConversation: this.props.conversation.length > 1,
-      key: key,
+      key: key.toString(),
       mailboxes: this.props.mailboxes,
-      message: message,
+      message: this.props.conversation.get(key),
       selectedAccountID: this.props.selectedAccountID,
       selectedAccountLogin: this.props.selectedAccountLogin,
       selectedMailboxID: this.props.selectedMailboxID,
       settings: this.props.settings
     });
   },
+  renderGroup: function(messages, key) {
+    var first, items, last;
+    if (messages.length > 3 && __indexOf.call(this.state.expanded, key) < 0) {
+      items = [];
+      first = messages[0], last = messages[messages.length - 1];
+      items.push(this.renderMessage(first, false));
+      items.push(button({
+        className: 'more',
+        onClick: (function(_this) {
+          return function() {
+            var expanded;
+            expanded = _this.state.expanded.slice(0);
+            expanded.push(key);
+            return _this.setState({
+              expanded: expanded
+            });
+          };
+        })(this)
+      }, t('load more messages', messages.length - 2), i({
+        className: 'fa fa-ellipsis-v'
+      })));
+      items.push(this.renderMessage(last, false));
+    } else {
+      items = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = messages.length; _i < _len; _i++) {
+          key = messages[_i];
+          _results.push(this.renderMessage(key, false));
+        }
+        return _results;
+      }).call(this);
+    }
+    return items;
+  },
   render: function() {
-    var activeMessages, closeIcon, closeUrl, expandUrl, key, message, otherMessages, selectedAccountID;
+    var glob, index, lastMessageIndex, messages;
     if ((this.props.message == null) || !this.props.conversation) {
       return p(null, t("app loading"));
     }
-    expandUrl = this.buildUrl({
-      direction: 'first',
-      action: 'message',
-      parameters: this.props.message.get('id'),
-      fullWidth: true
-    });
-    if (window.router.previous != null) {
-      try {
-        selectedAccountID = this.props.selectedAccountID;
-      } catch (_error) {
-        selectedAccountID = this.props.conversation.get(0).mailbox;
-      }
-    } else {
-      selectedAccountID = this.props.conversation.get(0).mailbox;
-    }
-    if (this.props.layout === 'full') {
-      closeUrl = this.buildUrl({
-        direction: 'first',
-        action: 'account.mailbox.messages',
-        parameters: selectedAccountID,
-        fullWidth: true
-      });
-    } else {
-      closeUrl = this.buildClosePanelUrl(this.props.layout);
-    }
-    closeIcon = this.props.layout === 'full' ? 'fa-th-list' : 'fa-times';
-    otherMessages = {};
-    activeMessages = {};
+    messages = [];
+    lastMessageIndex = this.props.conversation.length - 1;
     this.props.conversation.map((function(_this) {
       return function(message, key) {
-        var _ref1;
-        if (_this.props.message.get('id') === message.get('id') || (_ref1 = MessageFlags.SEEN, __indexOf.call(message.get('flags'), _ref1) < 0)) {
-          return activeMessages[key] = message;
+        var isSeen, last, _ref1;
+        isSeen = (_ref1 = MessageFlags.SEEN, __indexOf.call(message.get('flags'), _ref1) >= 0);
+        if (!isSeen || key === lastMessageIndex) {
+          return messages.push(key);
         } else {
-          return otherMessages[key] = message;
+          last = messages[messages.length - 1];
+          if (!_.isArray(last)) {
+            messages.push(last = []);
+          }
+          return last.push(key);
         }
       };
     })(this)).toJS();
-    return div({
+    return section({
       className: 'conversation'
-    }, this.renderToolbar(), h3({
-      className: 'message-title',
+    }, header(null, this.renderToolbar(), h3({
+      className: 'conversation-title',
       'data-message-id': this.props.message.get('id')
-    }, this.props.message.get('subject')), ul({
-      className: 'thread list-unstyled'
-    }, (function() {
-      var _results;
-      if (this.state.expanded) {
-        _results = [];
-        for (key in otherMessages) {
-          message = otherMessages[key];
-          _results.push(this.renderMessage(key, message, false));
-        }
-        return _results;
-      } else if (this.props.conversationLength > 1) {
-        return li({
-          className: 'conversation-length-msg',
-          onClick: this.expand
-        }, a(null), t('mail conversation length', {
-          smart_count: this.props.conversationLength
-        }));
-      }
-    }).call(this), (function() {
-      var _results;
+    }, this.props.message.get('subject'))), (function() {
+      var _i, _len, _results;
       _results = [];
-      for (key in activeMessages) {
-        message = activeMessages[key];
-        _results.push(this.renderMessage(key, message, true));
+      for (index = _i = 0, _len = messages.length; _i < _len; index = ++_i) {
+        glob = messages[index];
+        if (_.isArray(glob)) {
+          _results.push(this.renderGroup(glob, index));
+        } else {
+          _results.push(this.renderMessage(glob, true));
+        }
       }
       return _results;
-    }).call(this)));
+    }).call(this));
   }
 });
 });
@@ -5910,11 +5904,15 @@ MessagesSort = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var AttachmentPreview, Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageUtils, Participants, RouterMixin, ToolbarMessage, a, alertError, alertSuccess, button, classer, div, h4, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
+var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, MessageUtils, Participants, RouterMixin, ToolbarMessage, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
 
-_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img, h4 = _ref.h4;
+_ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img, h4 = _ref.h4;
 
 MessageUtils = require('../utils/message_utils');
+
+MessageHeader = require("./message_header");
+
+MessageFooter = require("./message_footer");
 
 ToolbarMessage = require('./toolbar_message');
 
@@ -6112,34 +6110,32 @@ module.exports = React.createClass({
       message: true,
       active: this.state.active
     });
-    if (this.state.active) {
-      return li({
-        className: classes,
-        key: this.props.key,
-        'data-id': message.get('id')
-      }, this.renderHeaders(message), div({
-        className: 'full-headers'
-      }, pre(null, prepared != null ? (_ref3 = prepared.fullHeaders) != null ? _ref3.join("\n") : void 0 : void 0)), this.renderToolbox(), this.renderCompose(), MessageContent({
-        ref: 'messageContent',
-        messageID: message.get('id'),
-        messageDisplayHTML: messageDisplayHTML,
-        html: this._htmlContent,
-        text: prepared.text,
-        rich: prepared.rich,
-        imagesWarning: imagesWarning,
-        composing: this.state.composing,
-        displayImages: this.displayImages,
-        displayHTML: this.displayHTML
-      }), this.renderAttachments(message.get('attachments').toJS()), div({
-        className: 'clearfix'
-      }));
-    } else {
-      return li({
-        className: classes,
-        key: this.props.key,
-        'data-id': message.get('id')
-      }, this.renderHeaders(message));
-    }
+    return article({
+      className: classes,
+      key: this.props.key,
+      'data-id': message.get('id')
+    }, header({
+      onClick: (function(_this) {
+        return function() {
+          return _this.setState({
+            active: !_this.state.active
+          });
+        };
+      })(this)
+    }, this.renderHeaders(), this.state.active ? this.renderToolbox() : void 0), this.state.active ? this.renderCompose() : void 0, this.state.active ? div({
+      className: 'full-headers'
+    }, pre(null, prepared != null ? (_ref3 = prepared.fullHeaders) != null ? _ref3.join("\n") : void 0 : void 0)) : void 0, this.state.active ? MessageContent({
+      ref: 'messageContent',
+      messageID: message.get('id'),
+      messageDisplayHTML: messageDisplayHTML,
+      html: this._htmlContent,
+      text: prepared.text,
+      rich: prepared.rich,
+      imagesWarning: imagesWarning,
+      composing: this.state.composing,
+      displayImages: this.displayImages,
+      displayHTML: this.displayHTML
+    }) : void 0, this.state.active ? footer(null, this.renderFooter(), this.renderToolbox(false)) : void 0);
   },
   getParticipants: function(message) {
     var from, to;
@@ -6155,87 +6151,20 @@ module.exports = React.createClass({
       tooltip: true
     }));
   },
-  renderHeaders: function(message) {
-    var attachments, avatar, classes, date, flags, hasAttachments, leftClass, _ref2;
-    attachments = message.get('attachments');
-    hasAttachments = attachments.length;
-    leftClass = hasAttachments ? 'col-md-8' : 'col-md-12';
-    flags = message.get('flags') || [];
-    avatar = MessageUtils.getAvatar(this.props.message);
-    date = MessageUtils.formatDate(message.get('createdAt'));
-    classes = classer({
-      'header': true,
-      'row': true,
-      'full': this.state.headers,
-      'compact': !this.state.headers,
-      'has-attachments': hasAttachments,
-      'is-fav': flags.indexOf(MessageFlags.FLAGGED) !== -1
+  renderHeaders: function() {
+    return MessageHeader({
+      message: this.props.message
     });
-    if (this.state.headers) {
-      return div({
-        className: classes,
-        onClick: this.toggleActive
-      }, div({
-        className: leftClass
-      }, avatar ? img({
-        className: 'sender-avatar',
-        src: avatar
-      }) : i({
-        className: 'sender-avatar fa fa-user'
-      }), div({
-        className: 'participants col-md-9'
-      }, p({
-        className: 'sender'
-      }, this.renderAddress('from'), i({
-        className: 'toggle-headers fa fa-toggle-up clickable',
-        onClick: this.toggleHeaders
-      })), p({
-        className: 'receivers'
-      }, span(null, t("mail receivers")), this.renderAddress('to')), ((_ref2 = this.props.message.get('cc')) != null ? _ref2.length : void 0) > 0 ? p({
-        className: 'receivers'
-      }, span(null, t("mail receivers cc")), this.renderAddress('cc')) : void 0, hasAttachments ? span({
-        className: 'hour'
-      }, date) : void 0), !hasAttachments ? span({
-        className: 'hour'
-      }, date) : void 0), hasAttachments ? div({
-        className: 'col-md-4'
-      }, FilePicker({
-        ref: 'filePicker',
-        editable: false,
-        value: attachments,
-        messageID: this.props.message.get('id')
-      })) : void 0);
-    } else {
-      return div({
-        className: classes,
-        onClick: this.toggleActive
-      }, avatar ? img({
-        className: 'sender-avatar',
-        src: avatar
-      }) : i({
-        className: 'sender-avatar fa fa-user'
-      }), span({
-        className: 'participants'
-      }, this.getParticipants(message)), this.state.active ? i({
-        className: 'toggle-headers fa fa-toggle-down clickable',
-        onClick: this.toggleHeaders
-      }) : void 0, span({
-        className: 'hour'
-      }, date), span({
-        className: "flags"
-      }, i({
-        className: 'attach fa fa-paperclip clickable',
-        onClick: this.toggleHeaders
-      }), i({
-        className: 'fav fa fa-star'
-      })));
-    }
   },
-  renderToolbox: function() {
+  renderToolbox: function(full) {
+    if (full == null) {
+      full = true;
+    }
     if (this.state.composing) {
       return;
     }
     return ToolbarMessage({
+      full: full,
       message: this.props.message,
       mailboxes: this.props.mailboxes,
       selectedMailboxID: this.props.selectedMailboxID,
@@ -6247,16 +6176,9 @@ module.exports = React.createClass({
       onHeaders: this.onHeaders
     });
   },
-  renderAddress: function(field) {
-    var addresses;
-    addresses = this.props.message.get(field);
-    if (addresses == null) {
-      return;
-    }
-    return Participants({
-      participants: addresses,
-      onAdd: this.addAddress,
-      tooltip: true
+  renderFooter: function() {
+    return MessageFooter({
+      message: this.props.message
     });
   },
   renderCompose: function() {
@@ -6288,24 +6210,6 @@ module.exports = React.createClass({
         })(this)
       });
     }
-  },
-  renderAttachments: function(attachments) {
-    var files;
-    files = attachments.filter(function(file) {
-      return MessageUtils.getAttachmentType(file.contentType) === 'image';
-    });
-    if (files.length === 0) {
-      return;
-    }
-    return div({
-      className: 'att-previews'
-    }, h4(null, t('message preview title')), files.map(function(file) {
-      return AttachmentPreview({
-        ref: 'attachmentPreview',
-        file: file,
-        key: file.checksum
-      });
-    }));
   },
   toggleHeaders: function(e) {
     var state;
@@ -6486,13 +6390,11 @@ MessageContent = React.createClass({
       };
     })(this);
     if (this.props.messageDisplayHTML && this.props.html) {
-      return div({
-        className: 'row'
-      }, this.props.imagesWarning ? div({
-        className: "imagesWarning content-action",
+      return div(null, this.props.imagesWarning ? div({
+        className: "imagesWarning label label-warning content-action",
         ref: "imagesWarning"
       }, span(null, t('message images warning')), button({
-        className: 'btn btn-default',
+        className: 'btn btn-xs btn-warning',
         type: "button",
         ref: 'imagesDisplay',
         onClick: this.props.displayImages
@@ -6565,15 +6467,12 @@ MessageContent = React.createClass({
         };
       })(this);
       if (type === 'mount' && doc.readyState !== 'complete') {
-        frame.addEventListener('load', loadContent);
+        return frame.addEventListener('load', loadContent);
       } else {
-        loadContent();
+        return loadContent();
       }
     } else {
-      window.cozyMails.customEvent("MESSAGE_LOADED", this.props.messageID);
-    }
-    if ((this.refs.content != null) && !this.props.composing) {
-      return this.refs.content.getDOMNode().scrollIntoView();
+      return window.cozyMails.customEvent("MESSAGE_LOADED", this.props.messageID);
     }
   },
   componentDidMount: function() {
@@ -6583,36 +6482,288 @@ MessageContent = React.createClass({
     return this._initFrame('update');
   }
 });
+});
+
+;require.register("components/message_footer", function(exports, require, module) {
+var AttachmentPreview, MessageUtils, a, div, i, img, li, span, ul, _ref;
+
+_ref = React.DOM, div = _ref.div, span = _ref.span, ul = _ref.ul, li = _ref.li, img = _ref.img, a = _ref.a, i = _ref.i;
+
+MessageUtils = require('../utils/message_utils');
+
+module.exports = React.createClass({
+  displayName: 'MessageFooter',
+  propTypes: {
+    message: React.PropTypes.object.isRequired
+  },
+  render: function() {
+    return div({
+      className: 'attachments'
+    }, this.renderAttachments());
+  },
+  renderAttachments: function() {
+    var attachments, file, resources, _ref1;
+    attachments = ((_ref1 = this.props.message.get('attachments')) != null ? _ref1.toJS() : void 0) || [];
+    if (!attachments.length) {
+      return;
+    }
+    resources = _.groupBy(attachments, function(file) {
+      if (MessageUtils.getAttachmentType(file.contentType) === 'image') {
+        return 'preview';
+      } else {
+        return 'binary';
+      }
+    });
+    return ul({
+      className: null
+    }, (function() {
+      var _i, _len, _ref2, _results;
+      if (resources.preview) {
+        _ref2 = resources.preview;
+        _results = [];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          file = _ref2[_i];
+          _results.push(AttachmentPreview({
+            ref: 'attachmentPreview',
+            file: file,
+            key: file.checksum,
+            preview: true
+          }));
+        }
+        return _results;
+      }
+    })(), (function() {
+      var _i, _len, _ref2, _results;
+      if (resources.binary) {
+        _ref2 = resources.binary;
+        _results = [];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          file = _ref2[_i];
+          _results.push(AttachmentPreview({
+            ref: 'attachmentPreview',
+            file: file,
+            key: file.checksum,
+            preview: false
+          }));
+        }
+        return _results;
+      }
+    })());
+  }
+});
 
 AttachmentPreview = React.createClass({
   displayName: 'AttachmentPreview',
-  getInitialState: function() {
-    return {
-      displayed: false
-    };
-  },
-  shouldComponentUpdate: function(nextProps, nextState) {
-    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+  icons: {
+    'archive': 'fa-file-archive-o',
+    'audio': 'fa-file-audio-o',
+    'code': 'fa-file-code-o',
+    'image': 'fa-file-image-o',
+    'pdf': 'fa-file-pdf-o',
+    'word': 'fa-file-word-o',
+    'presentation': 'fa-file-powerpoint-o',
+    'spreadsheet': 'fa-file-excel-o',
+    'text': 'fa-file-text-o',
+    'video': 'fa-file-video-o',
+    'word': 'fa-file-word-o'
   },
   render: function() {
-    var toggleDisplay;
-    toggleDisplay = (function(_this) {
-      return function() {
-        return _this.setState({
-          displayed: !_this.state.displayed
-        });
-      };
-    })(this);
-    return span({
-      className: 'att-preview',
+    return li({
       key: this.props.key
-    }, this.state.displayed ? img({
-      onClick: toggleDisplay,
+    }, this.renderIcon(), a({
+      target: '_blank',
+      href: this.props.file.url
+    }, this.props.preview ? img({
+      width: 90,
       src: this.props.file.url
-    }) : button({
-      className: 'btn btn-default btn-lg',
-      onClick: toggleDisplay
-    }, this.props.file.generatedFileName));
+    }) : void 0, this.props.file.generatedFileName), ' - ', a({
+      href: "" + this.props.file.url + "?download=1"
+    }, i({
+      className: 'fa fa-download'
+    }), this.displayFilesize(this.props.file.length)));
+  },
+  renderIcon: function() {
+    var type;
+    type = MessageUtils.getAttachmentType(this.props.file.contentType);
+    return i({
+      className: "fa " + (this.icons[type] || 'fa-file-o')
+    });
+  },
+  displayFilesize: function(length) {
+    if (length < 1024) {
+      return "" + length + " octets";
+    } else if (length < 1024 * 1024) {
+      return "" + (0 | length / 1024) + " Ko";
+    } else {
+      return "" + (0 | length / (1024 * 1024)) + " Mo";
+    }
+  }
+});
+});
+
+;require.register("components/message_header", function(exports, require, module) {
+var ContactStore, MessageFlags, MessageUtils, a, div, i, img, span, table, tbody, td, tr, _ref,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  __slice = [].slice;
+
+_ref = React.DOM, div = _ref.div, span = _ref.span, table = _ref.table, tbody = _ref.tbody, tr = _ref.tr, td = _ref.td, img = _ref.img, a = _ref.a, i = _ref.i;
+
+MessageUtils = require('../utils/message_utils');
+
+ContactStore = require('../stores/contact_store');
+
+MessageFlags = require('../constants/app_constants').MessageFlags;
+
+module.exports = React.createClass({
+  displayName: 'MessageHeader',
+  propTypes: {
+    message: React.PropTypes.object.isRequired
+  },
+  getInitialState: function() {
+    return {
+      detailled: false
+    };
+  },
+  render: function() {
+    var avatar, _ref1;
+    avatar = MessageUtils.getAvatar(this.props.message);
+    return div(null, avatar ? div({
+      className: 'sender-avatar'
+    }, img({
+      className: 'media-object',
+      src: avatar
+    })) : void 0, div({
+      className: 'infos'
+    }, this.renderAddress('from'), this.renderAddress('to'), this.renderAddress('cc'), div({
+      className: 'indicators'
+    }, this.props.message.get('attachments').length ? i({
+      className: 'fa fa-paperclip fa-flip-horizontal'
+    }) : void 0, (_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
+      className: 'fa fa-star'
+    }) : void 0), div({
+      className: 'date'
+    }, MessageUtils.formatDate(this.props.message.get('createdAt'))), this.renderDetailsPopup()));
+  },
+  formatUsers: function(users) {
+    var attrs, contact, format, items, tag, user, _i, _len;
+    if (users == null) {
+      return;
+    }
+    format = function(user) {
+      if (user == null) {
+        console.trace();
+      }
+      if (user.name !== '') {
+        return "" + user.name + " <" + user.address + ">";
+      } else {
+        return user.address;
+      }
+    };
+    if (_.isArray(users)) {
+      items = [];
+      for (_i = 0, _len = users.length; _i < _len; _i++) {
+        user = users[_i];
+        contact = ContactStore.getByAddress(user.address);
+        tag = contact != null ? a : span;
+        attrs = contact != null ? {
+          target: '_blank',
+          href: "/#apps/contacts/contact/" + (contact.get('id')),
+          onClick: function(event) {
+            return event.stopPropagation();
+          }
+        } : {
+          className: 'participant',
+          onClick: function(event) {
+            return event.stopPropagation();
+          }
+        };
+        items.push(tag(attrs, format(user)));
+        if (user !== _.last(users)) {
+          items.push(", ");
+        }
+      }
+      return items;
+    } else {
+      return format(users);
+    }
+  },
+  renderAddress: function(field) {
+    var users;
+    users = this.props.message.get(field);
+    if (!users.length) {
+      return;
+    }
+    return div.apply(null, [{
+      className: "addresses " + field
+    }, field !== 'from' ? span(null, t("mail " + field)) : void 0].concat(__slice.call(this.formatUsers(users))));
+  },
+  renderDetailsPopup: function() {
+    var cc, dest, from, reply, row, to, _ref1;
+    from = this.props.message.get('from')[0];
+    to = this.props.message.get('to');
+    cc = this.props.message.get('cc');
+    reply = (_ref1 = this.props.message.get('reply-to')) != null ? _ref1[0] : void 0;
+    row = function(value, label, rowSpan) {
+      var attrs, items;
+      if (label == null) {
+        label = false;
+      }
+      if (rowSpan == null) {
+        rowSpan = false;
+      }
+      items = [];
+      if (label) {
+        attrs = {
+          className: 'label'
+        };
+        if (rowSpan) {
+          attrs.rowSpan = rowSpan;
+        }
+        items.push(td(attrs, t(label)));
+      }
+      items.push(td(null, value));
+      return tr.apply(null, [null].concat(__slice.call(items)));
+    };
+    return div({
+      className: 'details',
+      'aria-expanded': this.state.detailled,
+      onClick: function(event) {
+        return event.stopPropagation();
+      }
+    }, i({
+      className: 'btn fa fa-caret-down',
+      onClick: this.toggleDetails
+    }), div({
+      className: 'popup',
+      'aria-hidden': !this.state.detailled
+    }, table(null, tbody(null, row(this.formatUsers(from), 'headers from'), to.length ? row(this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
+      var _i, _len, _ref2, _results;
+      if (to.length) {
+        _ref2 = to.slice(1);
+        _results = [];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          dest = _ref2[_i];
+          _results.push(row(this.formatUsers(dest)));
+        }
+        return _results;
+      }
+    }).call(this), cc.length ? row(this.formatUsers(cc[0]), 'headers cc', cc.length) : void 0, (function() {
+      var _i, _len, _ref2, _results;
+      if (cc.length) {
+        _ref2 = cc.slice(1);
+        _results = [];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          dest = _ref2[_i];
+          _results.push(row(this.formatUsers(dest)));
+        }
+        return _results;
+      }
+    }).call(this), reply != null ? row(this.formatUsers(reply), 'headers reply-to') : void 0, row(this.props.message.get('createdAt'), 'headers date'), row(this.props.message.get('subject'), 'headers subject')))));
+  },
+  toggleDetails: function() {
+    return this.setState({
+      detailled: !this.state.detailled
+    });
   }
 });
 });
@@ -7456,7 +7607,7 @@ module.exports = React.createClass({
   },
   render: function() {
     return nav({
-      className: 'toolbar toolbar-conversation btn-toolbar pull-right'
+      className: 'toolbar toolbar-conversation btn-toolbar'
     }, div({
       className: 'btn-group'
     }, this.renderNav('prev'), this.renderNav('next')), this.renderFullscreen());
@@ -7543,10 +7694,13 @@ module.exports = React.createClass({
   },
   render: function() {
     return nav({
-      className: 'toolbar toolbar-message btn-toolbar'
-    }, div({
+      className: 'toolbar toolbar-message btn-toolbar',
+      onClick: function(event) {
+        return event.stopPropagation();
+      }
+    }, this.props.full ? div({
       className: cBtnGroup
-    }, this.renderToolboxMove(), this.renderToolboxActions()), this.renderQuickActions(), this.renderReply());
+    }, this.renderToolboxMove(), this.renderToolboxActions()) : void 0, this.props.full ? this.renderQuickActions() : void 0, this.renderReply());
   },
   renderReply: function() {
     return div({
@@ -8897,8 +9051,15 @@ module.exports = {
   "list mass no message": "No message selected",
   "list delete confirm": "Do you really want to delete this message ? ||||\nDo you really want to delete %{smart_count} messages?",
   "list delete conv confirm": "Do you really want to delete this conversation ? ||||\nDo you really want to delete %{smart_count} conversation?",
-  "mail receivers": "To: ",
-  "mail receivers cc": "Cc: ",
+  "mail to": "To: ",
+  "mail cc": "Cc: ",
+  "headers from": "From",
+  "headers to": "To",
+  "headers cc": "Cc",
+  "headers reply-to": "Reply to",
+  "headers date": "Date",
+  "headers subject": "Subject",
+  "load more messages": "load %{smart_count} more message |||| load %{smart_count} more messages",
   "mail action reply": "Reply",
   "mail action reply all": "Reply all",
   "mail action forward": "Forward",
@@ -9183,8 +9344,15 @@ module.exports = {
   "list mass no message": "Aucun message sélectionné",
   "list delete confirm": "Voulez-vous vraiment supprimer ce message ?||||\nVoulez-vous vraiment supprimer %{smart_count} messages ?",
   "list delete conv confirm": "Voulez-vous vraiment supprimer cette conversation ?||||\nVoulez-vous vraiment supprimer %{smart_count} conversations ?",
-  "mail receivers": "À ",
-  "mail receivers cc": "Copie ",
+  "mail to": "À ",
+  "mail cc": "Copie ",
+  "headers from": "De",
+  "headers to": "À",
+  "headers cc": "Copie",
+  "headers reply-to": "Répondre à",
+  "headers date": "Date",
+  "headers subject": "Objet",
+  "load more messages": "afficher %{smart_count} message supplémentaire |||| afficher %{smart_count} messages supplémentaires",
   "mail action reply": "Répondre",
   "mail action reply all": "Répondre à tous",
   "mail action forward": "Transférer",
