@@ -32,7 +32,9 @@ module.exports = React.createClass
 
 
     render: ->
-        nav className: 'toolbar toolbar-message btn-toolbar',
+        nav
+            className: 'toolbar toolbar-message btn-toolbar'
+            onClick: (event) -> event.stopPropagation()
             # inverted order due to `pull-right` class
             div(className: cBtnGroup,
                 @renderToolboxMove()
