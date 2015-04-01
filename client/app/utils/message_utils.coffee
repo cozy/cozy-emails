@@ -40,6 +40,11 @@ module.exports = MessageUtils =
             address =
                 address: text.replace(/^\s*/, '')
 
+        emailRe = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/
+        address.isValid = address.address.match emailRe
+
+        address
+
     getReplyToAddress: (message) ->
         reply = message.get 'replyTo'
         from = message.get 'from'
@@ -52,7 +57,8 @@ module.exports = MessageUtils =
         message =
             composeInHTML: inHTML
             attachments: Immutable.Vector.empty()
-        quoteStyle = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;"
+        quoteStyle = "margin-left: 0.8ex; padding-left: 1ex;"
+        quoteStyle += " border-left: 3px solid #34A6FF;"
 
         if inReplyTo
             message.accountID = inReplyTo.get 'accountID'
@@ -72,7 +78,7 @@ module.exports = MessageUtils =
             if html and not text and not inHTML
                 text = toMarkdown html
 
-            message.inReplyTo  = [ inReplyTo.get 'id' ]
+            message.inReplyTo  = [inReplyTo.get 'id']
             message.references = inReplyTo.get('references') or []
             message.references = message.references.concat message.inReplyTo
 
@@ -117,8 +123,19 @@ module.exports = MessageUtils =
                     """
 
             when ComposeActions.FORWARD
-                separator = t('compose forward separator',
-                    {date: dateHuman, sender: sender})
+                addresses = inReplyTo.get('to')
+                   .map (address) -> address.address
+                   .join ', '
+
+                separator = """
+
+----- #{t 'compose forward header'} ------
+#{t 'compose forward subject'} #{inReplyTo.get 'subject'}
+#{t 'compose forward date'} #{dateHuman}
+#{t 'compose forward from'} #{sender}
+#{t 'compose forward to'} #{addresses}
+
+"""
                 message.to = []
                 message.cc = []
                 message.bcc = []
@@ -126,7 +143,9 @@ module.exports = MessageUtils =
                     #{t 'compose forward prefix'}#{inReplyTo.get 'subject'}
                     """
                 message.text = separator + text
-                message.html = "<p>#{separator}</p>" + html
+                htmlSeparator = separator.replace /(\n)+/g, '<br />'
+                html = "<p>#{htmlSeparator}</p><p><br /></p>#{html}"
+                message.html = html
 
                 # Add original message attachments
                 message.attachments = inReplyTo.get 'attachments'

@@ -3023,9 +3023,11 @@ module.exports = Application = React.createClass({
 });
 
 ;require.register("components/compose", function(exports, require, module) {
-var AccountPicker, Compose, ComposeActions, ComposeEditor, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, RouterMixin, a, button, classer, div, form, h3, i, input, label, li, messageUtils, span, textarea, ul, _ref;
+var AccountPicker, Compose, ComposeActions, ComposeEditor, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, RouterMixin, a, button, classer, div, form, h3, i, img, input, label, li, messageUtils, span, textarea, ul, _ref, _ref1;
 
-_ref = React.DOM, div = _ref.div, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label, button = _ref.button, span = _ref.span, ul = _ref.ul, li = _ref.li, input = _ref.input;
+_ref = React.DOM, div = _ref.div, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label, button = _ref.button;
+
+_ref1 = React.DOM, span = _ref1.span, ul = _ref1.ul, li = _ref1.li, input = _ref1.input, img = _ref1.img;
 
 classer = React.addons.classSet;
 
@@ -3063,7 +3065,7 @@ module.exports = Compose = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, labelSend, onCancel, toggleFullscreen, _ref1, _ref2;
+    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, labelSend, onCancel, toggleFullscreen, _ref2, _ref3;
     if (!this.props.accounts) {
       return;
     }
@@ -3103,7 +3105,7 @@ module.exports = Compose = React.createClass({
     }, i({
       className: 'fa fa-compress'
     })), h3({
-      'data-message-id': ((_ref1 = this.props.message) != null ? _ref1.get('id') : void 0) || ''
+      'data-message-id': ((_ref2 = this.props.message) != null ? _ref2.get('id') : void 0) || ''
     }, this.state.subject || t('compose')), form({
       className: 'form-compose'
     }, div({
@@ -3165,7 +3167,7 @@ module.exports = Compose = React.createClass({
       htmlFor: 'compose-subject',
       className: classLabel
     }, t("compose content")), ComposeEditor({
-      messageID: (_ref2 = this.props.message) != null ? _ref2.get('id') : void 0,
+      messageID: (_ref3 = this.props.message) != null ? _ref3.get('id') : void 0,
       html: this.linkState('html'),
       text: this.linkState('text'),
       settings: this.props.settings,
@@ -3191,18 +3193,20 @@ module.exports = Compose = React.createClass({
       type: 'button',
       disable: this.state.sending ? true : null,
       onClick: this.onSend
-    }, this.state.sending ? span({
-      className: 'fa fa-refresh fa-spin'
-    }) : span({
+    }, this.state.sending ? span(null, img({
+      src: 'images/spinner-white.svg',
+      className: 'button-spinner'
+    })) : span({
       className: 'fa fa-send'
     }), span(null, labelSend)), button({
       className: 'btn btn-cozy btn-save',
       disable: this.state.saving ? true : null,
       type: 'button',
       onClick: this.onDraft
-    }, this.state.saving ? span({
-      className: 'fa fa-refresh fa-spin'
-    }) : span({
+    }, this.state.saving ? span(null, img({
+      src: 'images/spinner-white.svg',
+      className: 'button-spinner'
+    })) : span({
       className: 'fa fa-save'
     }), span(null, t('compose action draft'))), this.props.message != null ? button({
       className: 'btn btn-cozy-non-default btn-delete',
@@ -3238,7 +3242,7 @@ module.exports = Compose = React.createClass({
     }
   },
   getInitialState: function(forceDefault) {
-    var key, message, state, value, _ref1;
+    var key, message, state, value, _ref2;
     if (message = this.props.message) {
       state = {
         composeInHTML: this.props.settings.get('composeInHTML')
@@ -3246,9 +3250,9 @@ module.exports = Compose = React.createClass({
       if ((message.get('html') == null) && message.get('text')) {
         state.conposeInHTML = false;
       }
-      _ref1 = message.toJS();
-      for (key in _ref1) {
-        value = _ref1[key];
+      _ref2 = message.toJS();
+      for (key in _ref2) {
+        value = _ref2[key];
         state[key] = value;
       }
       state.attachments = message.get('attachments');
@@ -3413,27 +3417,27 @@ module.exports = Compose = React.createClass({
     }
   },
   onToggleCc: function(e) {
-    var toggle, _i, _len, _ref1, _results;
+    var toggle, _i, _len, _ref2, _results;
     toggle = function(e) {
       return e.classList.toggle('shown');
     };
-    _ref1 = this.getDOMNode().querySelectorAll('.compose-cc');
+    _ref2 = this.getDOMNode().querySelectorAll('.compose-cc');
     _results = [];
-    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-      e = _ref1[_i];
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      e = _ref2[_i];
       _results.push(toggle(e));
     }
     return _results;
   },
   onToggleBcc: function(e) {
-    var toggle, _i, _len, _ref1, _results;
+    var toggle, _i, _len, _ref2, _results;
     toggle = function(e) {
       return e.classList.toggle('shown');
     };
-    _ref1 = this.getDOMNode().querySelectorAll('.compose-bcc');
+    _ref2 = this.getDOMNode().querySelectorAll('.compose-bcc');
     _results = [];
-    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-      e = _ref1[_i];
+    for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+      e = _ref2[_i];
       _results.push(toggle(e));
     }
     return _results;
@@ -3499,10 +3503,10 @@ ComposeEditor = React.createClass({
     }
   },
   _initCompose: function() {
-    var e, header, node, r, range, rect, s, _ref1;
+    var e, header, node, r, range, rect, s, _ref2;
     if (this.props.composeInHTML) {
       if (this.props.focus) {
-        node = (_ref1 = this.refs.html) != null ? _ref1.getDOMNode() : void 0;
+        node = (_ref2 = this.refs.html) != null ? _ref2.getDOMNode() : void 0;
         if (node == null) {
           return;
         }
@@ -4381,6 +4385,9 @@ module.exports = MailsInput = React.createClass({
     selected = this.state.selected;
     switch (evt.key) {
       case "Enter":
+        if (13 === evt.keyCode || 13 === evt.which) {
+          this.addContactFromInput();
+        }
         if (((_ref2 = this.state.contacts) != null ? _ref2.count() : void 0) > 0) {
           contact = this.state.contacts.slice(selected).first();
           this.onContact(contact);
@@ -4419,23 +4426,39 @@ module.exports = MailsInput = React.createClass({
     }
   },
   onBlur: function() {
-    return setTimeout((function(_this) {
-      return function() {
-        var state, value;
-        if (_this.isMounted()) {
-          state = {};
-          state.open = false;
-          value = _this.refs.contactInput.getDOMNode().value;
-          if (value.trim() !== '') {
-            _this.state.known.push(MessageUtils.parseAddress(value));
-            state.known = _this.state.known;
-            state.unknown = '';
-            _this.props.valueLink.requestChange(state.known);
+    return setTimeout(this.addContactFromInput, 100);
+  },
+  addContactFromInput: function() {
+    var address, state, value;
+    if (this.isMounted()) {
+      state = {};
+      state.open = false;
+      value = this.refs.contactInput.getDOMNode().value;
+      if (value.trim() !== '') {
+        address = MessageUtils.parseAddress(value);
+        if (address.isValid) {
+          this.state.known.push(address);
+          state.known = this.state.known;
+          state.unknown = '';
+          this.props.valueLink.requestChange(state.known);
+          return this.setState(state);
+        } else {
+          if (!this.isShowingAlert) {
+            this.isShowingAlert = true;
+            alert(t('compose wrong email format', {
+              address: address.address
+            }));
+            return setTimeout((function(_this) {
+              return function() {
+                return _this.isShowingAlert = false;
+              };
+            })(this), 200);
           }
-          return _this.setState(state);
         }
-      };
-    })(this), 100);
+      } else {
+        return this.setState(state);
+      }
+    }
   },
   onContact: function(contact) {
     var address;
@@ -5234,8 +5257,8 @@ MessageList = React.createClass({
       })(this)
     }), nbMessages = parseInt(this.props.counterMessage, 10), this.props.messages.count() < nbMessages && (this.props.query.pageAfter != null) ? p({
       className: 'text-center list-footer'
-    }, this.props.fetching ? i({
-      className: "fa fa-refresh fa-spin"
+    }, this.props.fetching ? img({
+      src: 'images/spinner.svg'
     }) : a({
       className: 'more-messages',
       onClick: nextPage,
@@ -7533,7 +7556,7 @@ module.exports = React.createClass({
       onClick: this.props.onReply
     }), button({
       className: "" + cBtn + " fa-mail-reply-all",
-      onClick: this.props.onReplayAll
+      onClick: this.props.onReplyAll
     }), button({
       className: "" + cBtn + " fa-mail-forward",
       onClick: this.props.onForward
@@ -8832,6 +8855,12 @@ module.exports = {
   "compose error no subject": "Please set a subject",
   "compose confirm keep draft": "Message not sent, keep the draft?",
   "compose draft deleted": "Draft deleted",
+  "compose wrong email format": "The given email is unproperly formatted: %{address}.",
+  "compose forward header": "Forwarded message",
+  "compose forward subject": "Subject:",
+  "compose forward date": "Date:",
+  "compose forward from": "From:",
+  "compose forward to": "To:",
   "menu show": "Show menu",
   "menu compose": "Compose",
   "menu account new": "New Mailbox",
@@ -9112,6 +9141,12 @@ module.exports = {
   "compose error no subject": "Vous n'avez pas saisi de sujet",
   "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?",
   "compose draft deleted": "Brouillon supprimé",
+  "compose wrong email format": "L'addresse mail donnée n'est pas bien formattée : %{address}.",
+  "compose forward header": "Message transféré",
+  "compose forward subject": "Sujet :",
+  "compose forward date": "Date :",
+  "compose forward from": "De :",
+  "compose forward to": "Pour :",
   "menu show": "Montrer le menu",
   "menu compose": "Nouveau",
   "menu account new": "Ajouter un compte",
@@ -11161,18 +11196,21 @@ module.exports = MessageUtils = {
     return res.join(", ");
   },
   parseAddress: function(text) {
-    var address, match;
+    var address, emailRe, match;
     text = text.trim();
     if (match = text.match(/"{0,1}(.*)"{0,1} <(.*)>/)) {
-      return address = {
+      address = {
         name: match[1],
         address: match[2]
       };
     } else {
-      return address = {
+      address = {
         address: text.replace(/^\s*/, '')
       };
     }
+    emailRe = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/;
+    address.isValid = address.address.match(emailRe);
+    return address;
   },
   getReplyToAddress: function(message) {
     var from, reply;
@@ -11185,12 +11223,13 @@ module.exports = MessageUtils = {
     }
   },
   makeReplyMessage: function(myAddress, inReplyTo, action, inHTML) {
-    var dateHuman, e, html, message, notMe, params, quoteStyle, sender, separator, text, toAddresses;
+    var addresses, dateHuman, e, html, htmlSeparator, message, notMe, params, quoteStyle, sender, separator, text, toAddresses;
     message = {
       composeInHTML: inHTML,
       attachments: Immutable.Vector.empty()
     };
-    quoteStyle = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;";
+    quoteStyle = "margin-left: 0.8ex; padding-left: 1ex;";
+    quoteStyle += " border-left: 3px solid #34A6FF;";
     if (inReplyTo) {
       message.accountID = inReplyTo.get('accountID');
       dateHuman = this.formatReplyDate(inReplyTo.get('createdAt'));
@@ -11246,16 +11285,18 @@ module.exports = MessageUtils = {
         message.html = "<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
         break;
       case ComposeActions.FORWARD:
-        separator = t('compose forward separator', {
-          date: dateHuman,
-          sender: sender
-        });
+        addresses = inReplyTo.get('to').map(function(address) {
+          return address.address;
+        }).join(', ');
+        separator = "\n----- " + (t('compose forward header')) + " ------\n" + (t('compose forward subject')) + " " + (inReplyTo.get('subject')) + "\n" + (t('compose forward date')) + " " + dateHuman + "\n" + (t('compose forward from')) + " " + sender + "\n" + (t('compose forward to')) + " " + addresses + "\n";
         message.to = [];
         message.cc = [];
         message.bcc = [];
         message.subject = "" + (t('compose forward prefix')) + (inReplyTo.get('subject'));
         message.text = separator + text;
-        message.html = ("<p>" + separator + "</p>") + html;
+        htmlSeparator = separator.replace(/(\n)+/g, '<br />');
+        html = "<p>" + htmlSeparator + "</p><p><br /></p>" + html;
+        message.html = html;
         message.attachments = inReplyTo.get('attachments');
         break;
       case null:
