@@ -43,7 +43,8 @@ module.exports = Compose = React.createClass
 
         return unless @props.accounts
 
-        onCancel = =>
+        onCancel = (e) =>
+            e.preventDefault()
             if @props.onCancel?
                 @props.onCancel()
             else
@@ -75,7 +76,7 @@ module.exports = Compose = React.createClass
             h3
                 'data-message-id': @props.message?.get('id') or ''
                 @state.subject or t 'compose'
-            form className: 'form-compose',
+            form className: 'form-compose', method: 'POST',
                 div className: 'form-group account',
                     label
                         htmlFor: 'compose-from',
@@ -259,10 +260,13 @@ module.exports = Compose = React.createClass
             @props.message = nextProps.message
             @setState @getInitialState()
 
-    onDraft: (args) ->
+    onDraft: (e) ->
+        e.preventDefault()
         @_doSend true
 
-    onSend: (args) ->
+    onSend: (e) ->
+        if e?
+            e.preventDefault()
         @_doSend false
 
     _doSend: (isDraft) ->
@@ -348,7 +352,8 @@ module.exports = Compose = React.createClass
     _autosave: ->
         @_doSend true
 
-    onDelete: (args) ->
+    onDelete: (e) ->
+        e.preventDefault()
         subject = @props.message.get 'subject'
 
         if subject? and subject isnt ''
@@ -464,13 +469,27 @@ ComposeEditor = React.createClass
                         document.execCommand('delete', false, null)
                         node.focus()
 
+
+            # Webkit/Blink and Gecko have some different behavior on
+            # contentEditable, so we need to test the rendering engine
+            # Webklink doesn't support insertBrOnReturn, so this will return
+            # false
+            gecko = document.queryCommandEnabled 'insertBrOnReturn'
+
             # Some DOM manipulation when replying inside the message.
             # When inserting a new line, we must close all blockquotes,
             # insert a blank line and then open again blockquotes
             jQuery('.rt-editor').on('keypress', (e) ->
-                if e.keyCode is 13
-                    # timeout to let the editor perform its own stuff
-                    setTimeout ->
+                if e.keyCode isnt 13
+                    # yes, our styleguide returning before the end of a
+                    # function. But they also don't like lines longer than
+                    # 80 characters
+                    return
+
+                # main function that remove quote at cursor
+                quote = ->
+                    # check whether a node is inside a blockquote
+                    isInsideQuote = (node) ->
                         matchesSelector = document.documentElement.matches or
                               document.documentElement.matchesSelector or
                               document.documentElement.webkitMatchesSelector or
@@ -478,99 +497,67 @@ ComposeEditor = React.createClass
                               document.documentElement.oMatchesSelector or
                               document.documentElement.msMatchesSelector
 
-                        target = document.getSelection().anchorNode
-                        targetElement = target
-                        while not (targetElement instanceof Element)
-                            targetElement = targetElement.parentNode
-                        if not target?
-                            return
-                        if matchesSelector? and not matchesSelector.call(targetElement, '.rt-editor blockquote *')
-                            # we are not inside a blockquote, nothing to do
-                            return
-
-                        if target.lastChild?
-                            target = target.lastChild
-                            if target.previousElementSibling?
-                                target = target.previousElementSibling
-                        parent = target
-
-                        # alternative 1
-                        # we create 2 ranges, one from the begining of message
-                        # to the caret position, the second from caret to the
-                        # end. We then create fragments from the ranges and
-                        # override message with first fragment, a blank line
-                        # and second fragment
-                        process = ->
-                            current = parent
-                            parent = parent?.parentNode
-                        process()
-                        process() while (parent? and
-                            not parent.classList.contains 'rt-editor')
-                        rangeBefore = document.createRange()
-                        rangeBefore.setEnd target, 0
-                        rangeBefore.setStartBefore parent.firstChild
-                        rangeAfter = document.createRange()
-                        if target.nextSibling?
-                            # remove the BR the <enter> key probably inserted
-                            rangeAfter.setStart target.nextSibling, 0
+                        if matchesSelector?
+                            return matchesSelector.call node, '.rt-editor blockquote, .rt-editor blockquote *'
                         else
-                            rangeAfter.setStart target, 0
-                        rangeAfter.setEndAfter parent.lastChild
-                        before = rangeBefore.cloneContents()
-                        after = rangeAfter.cloneContents()
-                        inserted = document.createElement 'p'
-                        inserted.innerHTML = "<br />"
-                        parent.innerHTML = ""
-                        parent.appendChild before
-                        parent.appendChild inserted
-                        parent.appendChild after
+                            while node? and node.tagName isnt 'BLOCKQUOTE'
+                                node = node.parentNode
+                            return node.tagName is 'BLOCKQUOTE'
 
-                        ###
-                        # alternative 2
-                        # We move every node from the caret to the end of the
-                        # message to a new DOM tree, then insert a blank line
-                        # and the new tree
-                        parent = target
-                        p2 = null
-                        p3 = null
-                        process = ->
-                            p3 = p2
-                            current = parent
-                            parent = parent.parentNode
-                            p2 = parent.cloneNode false
-                            if p3?
-                                p2.appendChild p3
-                            s = current.nextSibling
-                            while s?
-                                p2.appendChild(s.cloneNode(true))
-                                s2 = s.nextSibling
-                                parent.removeChild s
-                                s = s2
-                        process()
-                        process() while (parent.parentNode? and
-                            not parent.parentNode.classList.contains 'rt-editor')
-                        after = p2
-                        inserted = document.createElement 'p'
-                        inserted.innerHTML = "<br />"
-                        if parent.nextSibling
-                            parent.parentNode.insertBefore inserted, parent.nextSibling
-                            parent.parentNode.insertBefore after, parent.nextSibling
-                        else
-                            parent.parentNode.appendChild inserted
-                            parent.parentNode.appendChild after
-                        ###
+                    # try to get the real target element
+                    target = document.getSelection().anchorNode
+                    if target.lastChild?
+                        target = target.lastChild
+                        if target.previousElementSibling?
+                            target = target.previousElementSibling
+                    targetElement = target
+                    while targetElement and not (targetElement instanceof Element)
+                        targetElement = targetElement.parentNode
+                    if not target?
+                        return
+                    if not isInsideQuote(targetElement)
+                        # we are not inside a blockquote, nothing to do
+                        return
 
-                        setTimeout ->
-                            inserted.focus()
-                        , 0
-                        sel = window.getSelection()
-                        sel.collapse inserted, 0
+                    # Insert another break, then select it and use outdent to
+                    # remove blocquotes
+                    if gecko
+                        br = "\r\n<br>\r\n<br class='cozyInsertedBr'>\r\n"
+                    else
+                        br = "\r\n<div></div><div><br class='cozyInsertedBr'></div>\r\n"
+                    document.execCommand 'insertHTML', false, br
 
-                    , 0
+                    if gecko
+                        node = document.querySelector('.cozyInsertedBr').previousElementSibling
+                    else
+                        node = document.querySelector('.cozyInsertedBr')
+                    getPath = (node) ->
+                        path = node.tagName
+                        while node.parentNode? and node.contentEditable isnt 'true'
+                            node = node.parentNode
+                            path = "#{node.tagName} > #{path}"
+                        return path
+                    s = window.getSelection()
+                    r = document.createRange()
+                    r.selectNode(node)
+                    s.removeAllRanges()
+                    s.addRange(r)
+                    depth = getPath(node).split('>').length
+                    while depth > 0
+                        document.execCommand 'outdent', false, null
+                        depth--
+                    node = document.querySelector '.cozyInsertedBr'
+                    node?.parentNode.removeChild node
+                    document.execCommand 'removeFormat', false, null
+                    return
+
+                # timeout to let the editor perform its own stuff
+                setTimeout quote, 50
             )
 
             # Allow to hide original message
-            if document.querySelector('.rt-editor blockquote') and not document.querySelector('.rt-editor .originalToggle')
+            if document.querySelector('.rt-editor blockquote') and
+               not document.querySelector('.rt-editor .originalToggle')
                 try
                     header = jQuery('.rt-editor blockquote').eq(0).prev()
                     header.text(header.text().replace('…', ''))
@@ -594,8 +581,8 @@ ComposeEditor = React.createClass
                     node.scrollTop = node.scrollHeight - rect.height
 
                     if (typeof node.selectionStart is "number")
-                        node.selectionStart = node.selectionEnd = node.value.length
-
+                        node.selectionStart = node.value.length
+                        node.selectionEnd   = node.value.length
                     else if (typeof node.createTextRange isnt "undefined")
                         setTimeout ->
                             node.focus()

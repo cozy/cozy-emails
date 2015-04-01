@@ -95,6 +95,7 @@ module.exports = MessageUtils =
                     """
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
+                    <br /><br /><br />
                     <p>#{separator}<span class="originalToggle"> … </span></p>
                     <blockquote style="#{quoteStyle}">#{html}</blockquote>
                     <p><br /></p>
