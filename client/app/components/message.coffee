@@ -195,10 +195,10 @@ module.exports = React.createClass
                 header
                     onClick: => @setState active: !@state.active
                     @renderHeaders()
-                    # div className: 'full-headers',
-                    #     pre null, prepared?.fullHeaders?.join "\n"
                     @renderToolbox() if @state.active
                 @renderCompose() if @state.active
+                (div className: 'full-headers',
+                    pre null, prepared?.fullHeaders?.join "\n") if @state.active
                 (MessageContent
                     ref: 'messageContent'
                     messageID: message.get 'id'
