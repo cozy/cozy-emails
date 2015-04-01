@@ -22,6 +22,10 @@ module.exports = ToolboxMove = React.createClass
             ul
                 className: "dropdown-menu dropdown-menu-#{direction}"
                 role: 'menu',
+                    li
+                        role:      'presentation'
+                        className: 'dropdown-header'
+                        t 'mail action move'
                     @renderMailboxes()
 
 
