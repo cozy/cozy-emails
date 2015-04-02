@@ -546,6 +546,11 @@ textarea:active,
   -webkit-box-shadow: 0 3px 1px #eee;
   box-shadow: 0 3px 1px #eee;
   background-color: #fff;
+  -webkit-transition: margin 280ms ease-out;
+  -moz-transition: margin 280ms ease-out;
+  -o-transition: margin 280ms ease-out;
+  -ms-transition: margin 280ms ease-out;
+  transition: margin 280ms ease-out;
 }
 .conversation .message.active {
   margin: 1em 0;
@@ -648,8 +653,17 @@ textarea:active,
 .conversation .message .infos .addresses + .addresses {
   display: none;
 }
+.conversation .message .infos .addresses a:hover {
+  text-decoration: none;
+}
 .conversation .message .infos .participant {
   color: #444;
+}
+.conversation .message .infos .contact-address {
+  color: #bdbdbd;
+}
+.conversation .message .infos .contact-address i {
+  padding: 0 0.2em;
 }
 .conversation .message .infos .indicators,
 .conversation .message .infos .date {
@@ -680,14 +694,6 @@ textarea:active,
   order: 3;
 }
 .conversation .message .infos .to {
-  -webkit-box-ordinal-group: 4;
-  -moz-box-ordinal-group: 4;
-  -o-box-ordinal-group: 4;
-  -ms-flex-order: 4;
-  -webkit-order: 4;
-  order: 4;
-}
-.conversation .message .infos .cc {
   -webkit-box-ordinal-group: 5;
   -moz-box-ordinal-group: 5;
   -o-box-ordinal-group: 5;
@@ -695,7 +701,7 @@ textarea:active,
   -webkit-order: 5;
   order: 5;
 }
-.conversation .message .infos .details {
+.conversation .message .infos .cc {
   -webkit-box-ordinal-group: 6;
   -moz-box-ordinal-group: 6;
   -o-box-ordinal-group: 6;
@@ -703,45 +709,79 @@ textarea:active,
   -webkit-order: 6;
   order: 6;
 }
+.conversation .message .infos .details {
+  -webkit-box-ordinal-group: 4;
+  -moz-box-ordinal-group: 4;
+  -o-box-ordinal-group: 4;
+  -ms-flex-order: 4;
+  -webkit-order: 4;
+  order: 4;
+}
 .conversation .message .fa-star {
   color: #ffc47f;
 }
-.conversation .message .details .popup {
+.conversation .message [aria-expanded] {
+  position: relative;
+}
+.conversation .message [aria-expanded] .btn {
+  padding: 0;
+  color: #34a6ff;
+}
+.conversation .message [aria-expanded] .btn:hover {
+  color: #fe8800;
+}
+.conversation .message [aria-expanded] .popup {
   z-index: 1;
   position: absolute;
-  top: 90%;
-  right: 10px;
+  top: 100%;
+  right: 0;
   padding: 0.5em 10px;
   border: 1px solid #d3d3d3;
   -webkit-border-radius: 2px;
   border-radius: 2px;
   background: #fff;
 }
-.conversation .message .details td {
+.conversation .message [aria-expanded] td {
   display: table-cell;
   padding: 0.3em;
   color: #444;
   font-size: 1em;
   vertical-align: baseline;
 }
-.conversation .message .details .label {
+.conversation .message [aria-expanded] td,
+.conversation .message [aria-expanded] li {
+  white-space: nowrap;
+}
+.conversation .message [aria-expanded] .label {
   text-align: right;
   font-weight: normal;
   color: #bdbdbd;
 }
-.conversation .message .details .btn {
-  padding: 0 10px;
-}
-.conversation .message .details [aria-hidden=true] {
+.conversation .message [aria-expanded] [aria-hidden=true] {
   display: none;
 }
-.conversation .message .label-warning {
-  display: block;
+.conversation .message .details .btn {
+  padding: 0 0 0 10px;
+  color: #bdbdbd;
+}
+.conversation .message .attachments .popup {
+  right: 5px;
+}
+.conversation .message .alert-warning {
   margin-bottom: 1em;
+  padding: 0.5em 10px;
+  -webkit-border-radius: 2px;
+  border-radius: 2px;
+  font-size: 0.875em;
+  line-height: 2em;
+  text-align: center;
+}
+.conversation .message .alert-warning i {
+  padding-right: 0.75em;
 }
 .conversation .message .btn-warning {
   display: inline-block;
-  margin-left: 1em;
+  margin-left: 0.75em;
   vertical-align: baseline;
 }
 .conversation .message .attachments ul {

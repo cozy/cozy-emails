@@ -3022,6 +3022,70 @@ module.exports = Application = React.createClass({
 });
 });
 
+;require.register("components/attachement_preview", function(exports, require, module) {
+var MessageUtils, a, i, img, li, _ref;
+
+_ref = React.DOM, li = _ref.li, img = _ref.img, a = _ref.a, i = _ref.i;
+
+MessageUtils = require('../utils/message_utils');
+
+module.exports = React.createClass({
+  displayName: 'AttachmentPreview',
+  icons: {
+    'archive': 'fa-file-archive-o',
+    'audio': 'fa-file-audio-o',
+    'code': 'fa-file-code-o',
+    'image': 'fa-file-image-o',
+    'pdf': 'fa-file-pdf-o',
+    'word': 'fa-file-word-o',
+    'presentation': 'fa-file-powerpoint-o',
+    'spreadsheet': 'fa-file-excel-o',
+    'text': 'fa-file-text-o',
+    'video': 'fa-file-video-o',
+    'word': 'fa-file-word-o'
+  },
+  render: function() {
+    if (this.props.previewLink) {
+      return li({
+        key: this.props.key
+      }, this.renderIcon(), a({
+        target: '_blank',
+        href: this.props.file.url
+      }, this.props.preview ? img({
+        width: 90,
+        src: this.props.file.url
+      }) : void 0, this.props.file.generatedFileName), ' - ', a({
+        href: "" + this.props.file.url + "?download=1"
+      }, i({
+        className: 'fa fa-download'
+      }), this.displayFilesize(this.props.file.length)));
+    } else {
+      return li({
+        key: this.props.key
+      }, this.renderIcon(), a({
+        href: "" + this.props.file.url + "?download=1"
+      }, "" + this.props.file.generatedFileName + "\n(" + (this.displayFilesize(this.props.file.length)) + ")"));
+    }
+  },
+  renderIcon: function() {
+    var type;
+    type = MessageUtils.getAttachmentType(this.props.file.contentType);
+    return i({
+      className: "fa " + (this.icons[type] || 'fa-file-o')
+    });
+  },
+  displayFilesize: function(length) {
+    if (length < 1024) {
+      return "" + length + " " + (t('length bytes'));
+    } else if (length < 1024 * 1024) {
+      return "" + (0 | length / 1024) + " " + (t('length kbytes'));
+    } else {
+      return "" + (0 | length / (1024 * 1024)) + " " + (t('length mbytes'));
+    }
+  }
+});
+});
+
 ;require.register("components/compose", function(exports, require, module) {
 var AccountPicker, Compose, ComposeActions, ComposeEditor, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, RouterMixin, a, button, classer, div, form, h3, i, img, input, label, li, messageUtils, span, textarea, ul, _ref, _ref1;
 
@@ -6391,9 +6455,11 @@ MessageContent = React.createClass({
     })(this);
     if (this.props.messageDisplayHTML && this.props.html) {
       return div(null, this.props.imagesWarning ? div({
-        className: "imagesWarning label label-warning content-action",
+        className: "imagesWarning alert alert-warning content-action",
         ref: "imagesWarning"
-      }, span(null, t('message images warning')), button({
+      }, i({
+        className: 'fa fa-shield'
+      }), t('message images warning'), button({
         className: 'btn btn-xs btn-warning',
         type: "button",
         ref: 'imagesDisplay',
@@ -6491,6 +6557,8 @@ _ref = React.DOM, div = _ref.div, span = _ref.span, ul = _ref.ul, li = _ref.li, 
 
 MessageUtils = require('../utils/message_utils');
 
+AttachmentPreview = require('./attachement_preview');
+
 module.exports = React.createClass({
   displayName: 'MessageFooter',
   propTypes: {
@@ -6527,7 +6595,8 @@ module.exports = React.createClass({
             ref: 'attachmentPreview',
             file: file,
             key: file.checksum,
-            preview: true
+            preview: true,
+            previewLink: true
           }));
         }
         return _results;
@@ -6543,7 +6612,8 @@ module.exports = React.createClass({
             ref: 'attachmentPreview',
             file: file,
             key: file.checksum,
-            preview: false
+            preview: false,
+            previewLink: true
           }));
         }
         return _results;
@@ -6551,64 +6621,18 @@ module.exports = React.createClass({
     })());
   }
 });
-
-AttachmentPreview = React.createClass({
-  displayName: 'AttachmentPreview',
-  icons: {
-    'archive': 'fa-file-archive-o',
-    'audio': 'fa-file-audio-o',
-    'code': 'fa-file-code-o',
-    'image': 'fa-file-image-o',
-    'pdf': 'fa-file-pdf-o',
-    'word': 'fa-file-word-o',
-    'presentation': 'fa-file-powerpoint-o',
-    'spreadsheet': 'fa-file-excel-o',
-    'text': 'fa-file-text-o',
-    'video': 'fa-file-video-o',
-    'word': 'fa-file-word-o'
-  },
-  render: function() {
-    return li({
-      key: this.props.key
-    }, this.renderIcon(), a({
-      target: '_blank',
-      href: this.props.file.url
-    }, this.props.preview ? img({
-      width: 90,
-      src: this.props.file.url
-    }) : void 0, this.props.file.generatedFileName), ' - ', a({
-      href: "" + this.props.file.url + "?download=1"
-    }, i({
-      className: 'fa fa-download'
-    }), this.displayFilesize(this.props.file.length)));
-  },
-  renderIcon: function() {
-    var type;
-    type = MessageUtils.getAttachmentType(this.props.file.contentType);
-    return i({
-      className: "fa " + (this.icons[type] || 'fa-file-o')
-    });
-  },
-  displayFilesize: function(length) {
-    if (length < 1024) {
-      return "" + length + " octets";
-    } else if (length < 1024 * 1024) {
-      return "" + (0 | length / 1024) + " Ko";
-    } else {
-      return "" + (0 | length / (1024 * 1024)) + " Mo";
-    }
-  }
-});
 });
 
 ;require.register("components/message_header", function(exports, require, module) {
-var ContactStore, MessageFlags, MessageUtils, a, div, i, img, span, table, tbody, td, tr, _ref,
+var AttachmentPreview, ContactStore, MessageFlags, MessageUtils, a, div, i, img, li, span, table, tbody, td, tr, ul, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice;
 
-_ref = React.DOM, div = _ref.div, span = _ref.span, table = _ref.table, tbody = _ref.tbody, tr = _ref.tr, td = _ref.td, img = _ref.img, a = _ref.a, i = _ref.i;
+_ref = React.DOM, div = _ref.div, span = _ref.span, ul = _ref.ul, li = _ref.li, table = _ref.table, tbody = _ref.tbody, tr = _ref.tr, td = _ref.td, img = _ref.img, a = _ref.a, i = _ref.i;
 
 MessageUtils = require('../utils/message_utils');
+
+AttachmentPreview = require('./attachement_preview');
 
 ContactStore = require('../stores/contact_store');
 
@@ -6621,7 +6645,8 @@ module.exports = React.createClass({
   },
   getInitialState: function() {
     return {
-      detailled: false
+      showDetails: false,
+      showAttachements: false
     };
   },
   render: function() {
@@ -6636,48 +6661,51 @@ module.exports = React.createClass({
       className: 'infos'
     }, this.renderAddress('from'), this.renderAddress('to'), this.renderAddress('cc'), div({
       className: 'indicators'
-    }, this.props.message.get('attachments').length ? i({
-      className: 'fa fa-paperclip fa-flip-horizontal'
-    }) : void 0, (_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
+    }, this.props.message.get('attachments').length ? this.renderAttachementsIndicator() : void 0, (_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
       className: 'fa fa-star'
     }) : void 0), div({
       className: 'date'
     }, MessageUtils.formatDate(this.props.message.get('createdAt'))), this.renderDetailsPopup()));
   },
   formatUsers: function(users) {
-    var attrs, contact, format, items, tag, user, _i, _len;
+    var contact, format, items, user, _i, _len;
     if (users == null) {
       return;
     }
     format = function(user) {
-      if (user == null) {
-        console.trace();
-      }
-      if (user.name !== '') {
-        return "" + user.name + " <" + user.address + ">";
+      var items;
+      items = [];
+      if (user.name) {
+        items.push("" + user.name + " ");
+        items.push(span({
+          className: 'contact-address'
+        }, i({
+          className: 'fa fa-angle-left'
+        }), user.address, i({
+          className: 'fa fa-angle-right'
+        })));
       } else {
-        return user.address;
+        items.push(user.address);
       }
+      return items;
     };
     if (_.isArray(users)) {
       items = [];
       for (_i = 0, _len = users.length; _i < _len; _i++) {
         user = users[_i];
         contact = ContactStore.getByAddress(user.address);
-        tag = contact != null ? a : span;
-        attrs = contact != null ? {
+        items.push(contact != null ? a({
           target: '_blank',
           href: "/#apps/contacts/contact/" + (contact.get('id')),
           onClick: function(event) {
             return event.stopPropagation();
           }
-        } : {
+        }, format(user)) : span({
           className: 'participant',
           onClick: function(event) {
             return event.stopPropagation();
           }
-        };
-        items.push(tag(attrs, format(user)));
+        }, format(user)));
         if (user !== _.last(users)) {
           items.push(", ");
         }
@@ -6696,6 +6724,38 @@ module.exports = React.createClass({
     return div.apply(null, [{
       className: "addresses " + field
     }, field !== 'from' ? span(null, t("mail " + field)) : void 0].concat(__slice.call(this.formatUsers(users))));
+  },
+  renderAttachementsIndicator: function() {
+    var attachments, file, _ref1;
+    attachments = ((_ref1 = this.props.message.get('attachments')) != null ? _ref1.toJS() : void 0) || [];
+    return div({
+      className: 'attachments',
+      'aria-expanded': this.state.showAttachements,
+      onClick: function(event) {
+        return event.stopPropagation();
+      }
+    }, i({
+      className: 'btn fa fa-paperclip fa-flip-horizontal',
+      onClick: this.toggleAttachments
+    }), div({
+      className: 'popup',
+      'aria-hidden': !this.state.showAttachements
+    }, ul({
+      className: null
+    }, (function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = attachments.length; _i < _len; _i++) {
+        file = attachments[_i];
+        _results.push(AttachmentPreview({
+          ref: 'attachmentPreview',
+          file: file,
+          key: file.checksum,
+          preview: false
+        }));
+      }
+      return _results;
+    })())));
   },
   renderDetailsPopup: function() {
     var cc, dest, from, reply, row, to, _ref1;
@@ -6726,7 +6786,7 @@ module.exports = React.createClass({
     };
     return div({
       className: 'details',
-      'aria-expanded': this.state.detailled,
+      'aria-expanded': this.state.showDetails,
       onClick: function(event) {
         return event.stopPropagation();
       }
@@ -6735,7 +6795,7 @@ module.exports = React.createClass({
       onClick: this.toggleDetails
     }), div({
       className: 'popup',
-      'aria-hidden': !this.state.detailled
+      'aria-hidden': !this.state.showDetails
     }, table(null, tbody(null, row(this.formatUsers(from), 'headers from'), to.length ? row(this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
       var _i, _len, _ref2, _results;
       if (to.length) {
@@ -6762,7 +6822,12 @@ module.exports = React.createClass({
   },
   toggleDetails: function() {
     return this.setState({
-      detailled: !this.state.detailled
+      showDetails: !this.state.showDetails
+    });
+  },
+  toggleAttachments: function() {
+    return this.setState({
+      showAttachements: !this.state.showAttachements
     });
   }
 });
@@ -7990,7 +8055,10 @@ module.exports = ToolboxMove = React.createClass({
     })), ul({
       className: "dropdown-menu dropdown-menu-" + direction,
       role: 'menu'
-    }, this.renderMailboxes()));
+    }, li({
+      role: 'presentation',
+      className: 'dropdown-header'
+    }, t('mail action move')), this.renderMailboxes()));
   },
   renderMailboxes: function() {
     var id, mbox, _ref1, _results;
@@ -9060,6 +9128,9 @@ module.exports = {
   "headers date": "Date",
   "headers subject": "Subject",
   "load more messages": "load %{smart_count} more message |||| load %{smart_count} more messages",
+  "length bytes": "bytes",
+  "length kbytes": "Kb",
+  "length mbytes": "Mb",
   "mail action reply": "Reply",
   "mail action reply all": "Reply all",
   "mail action forward": "Forward",
@@ -9353,6 +9424,9 @@ module.exports = {
   "headers date": "Date",
   "headers subject": "Objet",
   "load more messages": "afficher %{smart_count} message supplémentaire |||| afficher %{smart_count} messages supplémentaires",
+  "length bytes": "octets",
+  "length kbytes": "ko",
+  "length mbytes": "Mo",
   "mail action reply": "Répondre",
   "mail action reply all": "Répondre à tous",
   "mail action forward": "Transférer",
