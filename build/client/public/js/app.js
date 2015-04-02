@@ -4740,9 +4740,10 @@ module.exports = Menu = React.createClass({
     }, t('menu account new'))));
   },
   getAccountRender: function(account, key) {
-    var accountClasses, accountID, defaultMailbox, icon, isSelected, mailboxes, progress, refreshes, toggleActive, toggleDisplay, toggleFavorites, toggleFavoritesLabel, url, _ref2;
+    var accountClasses, accountID, defaultMailbox, icon, isSelected, mailboxes, nbUnread, progress, refreshes, toggleActive, toggleDisplay, toggleFavorites, toggleFavoritesLabel, url, _ref2;
     isSelected = ((this.props.selectedAccount == null) && key === 0) || ((_ref2 = this.props.selectedAccount) != null ? _ref2.get('id') : void 0) === account.get('id');
     accountID = account.get('id');
+    nbUnread = account.get('totalUnread');
     defaultMailbox = AccountStore.getDefaultMailbox(accountID);
     refreshes = this.props.refreshes;
     if (defaultMailbox != null) {
@@ -4826,7 +4827,9 @@ module.exports = Menu = React.createClass({
     })) : void 0, progress.get('firstImport') ? ThinProgress({
       done: progress.get('done'),
       total: progress.get('total')
-    }) : void 0) : void 0), isSelected ? ul({
+    }) : void 0) : nbUnread > 0 ? span({
+      className: 'badge'
+    }, nbUnread) : void 0), isSelected ? ul({
       className: 'list-unstyled submenu mailbox-list'
     }, mailboxes != null ? mailboxes.map((function(_this) {
       return function(mailbox, key) {
@@ -8264,6 +8267,7 @@ module.exports = {
     'RECEIVE_REFRESH_UPDATE': 'RECEIVE_REFRESH_UPDATE',
     'RECEIVE_REFRESH_STATUS': 'RECEIVE_REFRESH_STATUS',
     'RECEIVE_REFRESH_DELETE': 'RECEIVE_REFRESH_DELETE',
+    'RECEIVE_REFRESH_NOTIF': 'RECEIVE_REFRESH_NOTIF',
     'LIST_FILTER': 'LIST_FILTER',
     'LIST_QUICK_FILTER': 'LIST_QUICK_FILTER',
     'LIST_SORT': 'LIST_SORT',
@@ -9355,7 +9359,8 @@ module.exports = {
   "toast show": "Display alerts",
   "toast close all": "Close all alerts",
   "notif new title": 'CozyEmail',
-  "notif new": "%{smart_count} new message in %{box} of %{account}||||\n%{smart_count} new messages in %{box} of %{account}||||",
+  "notif new": "%{smart_count} message not read in account %{account}||||\n%{smart_count} messages not read in account %{account}",
+  "notif complete": "Importation of account %{account} complete.",
   "contact form": "Select contacts",
   "contact form placeholder": "contact name",
   "contact create success": "%{contact} has been added to your contacts",
@@ -9650,7 +9655,8 @@ module.exports = {
   "toast show": "Afficher les alertes",
   "toast close all": "Fermer toutes les alertes",
   "notif new title": 'Messagerie Cozy',
-  "notif new": "%{smart_count} nouveau message dans %{box} de %{account}||||\n%{smart_count} nouveaux messages dans %{box} de %{account}||||",
+  "notif new": "%{smart_count} message non-lu dans le compte %{account}||||\n%{smart_count} messages non-lus dans le compte  %{account}",
+  "notif complete": "Importation du compte %{account} finie.",
   "contact form": "Sélectionnez des contacts",
   "contact form placeholder": "Nom",
   "contact create success": "%{contact} a été ajouté(e) à vos contacts",
@@ -9924,7 +9930,7 @@ AccountStore = (function(_super) {
   };
 
   AccountStore.prototype._applyMailboxDiff = function(accountID, diff) {
-    var account, mailboxes, updated;
+    var account, diffTotalUnread, mailboxes, totalUnread, updated, _ref;
     account = _accounts.get(accountID);
     mailboxes = account.get('mailboxes');
     updated = mailboxes.withMutations(function(map) {
@@ -9948,8 +9954,15 @@ AccountStore = (function(_super) {
       }
       return _results;
     });
+    diffTotalUnread = ((_ref = diff[accountID]) != null ? _ref.nbUnread : void 0) || 0;
+    if (diffTotalUnread) {
+      totalUnread = account.get('totalUnread') + diffTotalUnread;
+      account = account.set('totalUnread', totalUnread);
+    }
     if (updated !== mailboxes) {
       account = account.set('mailboxes', updated);
+    }
+    if (account !== _accounts.get(accountID)) {
       _accounts = _accounts.set(accountID, account);
       _refreshSelected();
       return this.emit('change');
@@ -10021,19 +10034,15 @@ AccountStore = (function(_super) {
       this._setCurrentAccount(this.getDefault());
       return this.emit('change');
     });
-    return handle(ActionTypes.RECEIVE_MAILBOX_UPDATE, function(boxData) {
-      var message;
+    handle(ActionTypes.RECEIVE_MAILBOX_UPDATE, function(boxData) {
       setMailbox(boxData.accountID, boxData.id, boxData);
-      if (boxData.nbRecent > 0) {
-        message = t('notif new', {
-          smart_count: boxData.nbRecent,
-          box: boxData.label,
-          account: this.getByID(boxData.accountID).get('label')
-        });
-        this.emit('notify', t('notif new title'), {
-          body: message
-        });
-      }
+      return this.emit('change');
+    });
+    return handle(ActionTypes.RECEIVE_REFRESH_NOTIF, function(data) {
+      var account;
+      account = _accounts.get(data.accountID);
+      account = account.set('totalUnread', data.totalUnread);
+      _accounts.set(data.accountID, account);
       return this.emit('change');
     });
   };
@@ -10516,13 +10525,14 @@ MessageStore = (function(_super) {
   _prevAction = null;
 
   computeMailboxDiff = function(oldmsg, newmsg) {
-    var added, changed, deltaUnread, isRead, newboxes, oldboxes, out, removed, stayed, wasRead, _ref1, _ref2;
+    var accountID, added, changed, deltaUnread, isRead, newboxes, oldboxes, out, removed, stayed, wasRead, _ref1, _ref2;
     if (!oldmsg) {
       return {};
     }
     changed = false;
     wasRead = (_ref1 = MessageFlags.SEEN, __indexOf.call(oldmsg.get('flags'), _ref1) >= 0);
     isRead = (_ref2 = MessageFlags.SEEN, __indexOf.call(newmsg.get('flags'), _ref2) >= 0);
+    accountID = newmsg.get('accountID');
     oldboxes = Object.keys(oldmsg.get('mailboxIDs'));
     newboxes = Object.keys(newmsg.get('mailboxIDs'));
     out = {};
@@ -10544,10 +10554,13 @@ MessageStore = (function(_super) {
     });
     stayed = _.intersection(oldboxes, newboxes);
     deltaUnread = wasRead && !isRead ? +1 : !wasRead && isRead ? -1 : 0;
+    if (deltaUnread !== 0) {
+      changed = true;
+    }
+    out[accountID] = {
+      nbUnread: deltaUnread
+    };
     stayed.forEach(function(boxid) {
-      if (deltaUnread !== 0) {
-        changed = true;
-      }
       return out[boxid] = {
         nbTotal: 0,
         nbUnread: deltaUnread
@@ -10945,11 +10958,16 @@ RefreshesStore = (function(_super) {
       _refreshes = _refreshes.set(id, refresh).toOrderedMap();
       return this.emit('change');
     });
-    return handle(ActionTypes.RECEIVE_REFRESH_DELETE, function(refreshID) {
+    handle(ActionTypes.RECEIVE_REFRESH_DELETE, function(refreshID) {
       _refreshes = _refreshes.filter(function(refresh) {
         return refresh.get('id') !== refreshID;
       }).toOrderedMap();
       return this.emit('change');
+    });
+    return handle(ActionTypes.RECEIVE_REFRESH_NOTIF, function(data) {
+      return this.emit('notify', t('notif new title'), {
+        body: data.message
+      });
     });
   };
 
@@ -12158,6 +12176,8 @@ socket.on('connect', function() {
 socket.on('reconnect', function() {
   return setServerScope();
 });
+
+socket.on('refresh.notify', dispatchAs(ActionTypes.RECEIVE_REFRESH_NOTIF));
 
 exports.acknowledgeRefresh = function(taskid) {
   return socket.emit('mark_ack', taskid);

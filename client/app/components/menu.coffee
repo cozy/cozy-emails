@@ -149,6 +149,7 @@ module.exports = Menu = React.createClass
                      or @props.selectedAccount?.get('id') is account.get('id')
 
         accountID = account.get 'id'
+        nbUnread = account.get('totalUnread')
         defaultMailbox = AccountStore.getDefaultMailbox accountID
         refreshes = @props.refreshes
 
@@ -214,6 +215,9 @@ module.exports = Menu = React.createClass
                             i className: 'fa warning', onClick: @displayErrors.bind null, progress
                     if progress.get('firstImport')
                         ThinProgress done: progress.get('done'), total: progress.get('total')
+
+                else if nbUnread > 0
+                    span className: 'badge', nbUnread
 
             if isSelected
                 ul className: 'list-unstyled submenu mailbox-list',

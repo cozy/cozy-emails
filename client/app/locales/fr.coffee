@@ -332,9 +332,12 @@ module.exports =
       # Notifications
       "notif new title": 'Messagerie Cozy'
       "notif new": """
-        %{smart_count} nouveau message dans %{box} de %{account}||||
-        %{smart_count} nouveaux messages dans %{box} de %{account}||||
+        %{smart_count} message non-lu dans le compte %{account}||||
+        %{smart_count} messages non-lus dans le compte  %{account}
       """
+      "notif complete": "
+            Importation du compte %{account} finie.
+      "
 
       # Contacts
       "contact form"             : "Sélectionnez des contacts"

@@ -10,11 +10,12 @@ americano = require('americano');
 utils.AccountConfigError = AccountConfigError = (function(_super) {
   __extends(AccountConfigError, _super);
 
-  function AccountConfigError(field) {
+  function AccountConfigError(field, originalErr) {
     this.name = 'AccountConfigError';
     this.field = field;
     this.message = "on field '" + field + "'";
     this.stack = '';
+    this.original = originalErr;
     return this;
   }
 

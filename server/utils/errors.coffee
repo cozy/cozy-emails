@@ -4,11 +4,12 @@ americano = require 'americano'
 # Something is wrong with the account's config
 # field give more information about what's wrong
 utils.AccountConfigError = class AccountConfigError extends Error
-    constructor: (field) ->
+    constructor: (field, originalErr) ->
         @name = 'AccountConfigError'
         @field = field
         @message = "on field '#{field}'"
         @stack = ''
+        @original = originalErr
         # WE DONT NEED STACK FOR THIS ERROR
         # Error.captureStackTrace this, arguments.callee
         return this

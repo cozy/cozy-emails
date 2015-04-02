@@ -62,6 +62,7 @@ class MessageStore extends Store
         wasRead = MessageFlags.SEEN in oldmsg.get 'flags'
         isRead = MessageFlags.SEEN in newmsg.get 'flags'
 
+        accountID = newmsg.get 'accountID'
         oldboxes = Object.keys oldmsg.get 'mailboxIDs'
         newboxes = Object.keys newmsg.get 'mailboxIDs'
 
@@ -80,8 +81,13 @@ class MessageStore extends Store
         deltaUnread = if wasRead and not isRead then +1
         else if not wasRead and isRead then -1
         else 0
+
+        if deltaUnread isnt 0
+            changed = true
+
+        out[accountID] = nbUnread: deltaUnread
+
         stayed.forEach (boxid) ->
-            changed = true if deltaUnread isnt 0
             out[boxid] = nbTotal: 0, nbUnread: deltaUnread
 
         if changed

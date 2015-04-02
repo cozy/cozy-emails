@@ -59,7 +59,8 @@ describe 'Mailbox fetching', ->
             last = body.messages[0]
             for i in [1..body.messages.length - 1] by 1
                 current = body.messages[i]
-                last.normSubject.should.be.lessThan current.normSubject
+                eqOrBelow = last <= current
+                eqOrBelow.should.be.true
                 last = current
 
             testNextLinks "/mailbox/#{store.inboxID}?sort=%2Bsubject", done

@@ -132,7 +132,7 @@ ImapPool = (function() {
         var _ref1, _ref2;
         log.debug(_this.id, "timeout 10s");
         imap.removeListener('error', onConnError);
-        onConnError(new TimeoutError("Timeout connecting to " + ((_ref1 = _this.account) != null ? _ref1.imapServer : void 0) + ":" + ((_ref2 = _this.account) != null ? _ref2.imapPort : void 0)));
+        onConnError(new TimeoutError("Timeout connecting to " + (((_ref1 = _this.account) != null ? _ref1.imapServer : void 0) + ":" + ((_ref2 = _this.account) != null ? _ref2.imapPort : void 0))));
         return imap.destroy();
       };
     })(this), 10000);
@@ -276,18 +276,21 @@ ImapPool = (function() {
     var typed;
     typed = err;
     if (err.textCode === 'AUTHENTICATIONFAILED') {
-      typed = new AccountConfigError('auth');
+      typed = new AccountConfigError('auth', err);
     }
     if (err.code === 'ENOTFOUND' && err.syscall === 'getaddrinfo') {
-      typed = new AccountConfigError('imapServer');
+      typed = new AccountConfigError('imapServer', err);
+    }
+    if (err.code === 'EHOSTUNREACH') {
+      typed = new AccountConfigError('imapServer', err);
     }
     if (err.source === 'timeout-auth') {
-      typed = new AccountConfigError('imapTLS');
+      typed = new AccountConfigError('imapTLS', err);
     }
     if (err instanceof TimeoutError) {
-      typed = new AccountConfigError('imapPort');
+      typed = new AccountConfigError('imapPort', err);
     }
-    return err;
+    return typed;
   };
 
   ImapPool.prototype._wrapOpenBox = function(cozybox, operation) {

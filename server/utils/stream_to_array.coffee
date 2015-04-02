@@ -9,12 +9,12 @@ module.exports = stream_to_buffer_array = (stream, cb) ->
 
 module.exports.Bufferer = class Bufferer extends stream.Writable
 
-	constructor: (onDone) ->
-		super
-		@chunks = []
-		@onDone = onDone
+    constructor: (onDone) ->
+        super
+        @chunks = []
+        @onDone = onDone
 
-	_write: (chunk, enc, next) =>
+    _write: (chunk, enc, next) =>
         @chunks.push(chunk)
         next()
 

@@ -12,8 +12,7 @@ application = module.exports = (options, callback) ->
 
     callback ?= ->
 
-    americano.start options, (app, server) ->
-        callback null, app, server
+    americano.start options, callback
 
 if not module.parent
     application()

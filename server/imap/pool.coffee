@@ -99,7 +99,8 @@ class ImapPool
         wrongPortTimeout = setTimeout =>
             log.debug @id, "timeout 10s"
             imap.removeListener 'error', onConnError
-            onConnError new TimeoutError "Timeout connecting to #{@account?.imapServer}:#{@account?.imapPort}"
+            onConnError new TimeoutError "Timeout connecting to " +
+                "#{@account?.imapServer}:#{@account?.imapPort}"
             imap.destroy()
 
         ,10000
@@ -223,20 +224,23 @@ class ImapPool
         typed = err
 
         if err.textCode is 'AUTHENTICATIONFAILED'
-            typed =  new AccountConfigError 'auth'
+            typed =  new AccountConfigError 'auth', err
 
         if err.code is 'ENOTFOUND' and err.syscall is 'getaddrinfo'
-            typed = new AccountConfigError 'imapServer'
+            typed = new AccountConfigError 'imapServer', err
+
+        if err.code is 'EHOSTUNREACH'
+            typed = new AccountConfigError 'imapServer', err
 
         if err.source is 'timeout-auth'
             # @TODO : this can happen for other reason,
             # we need to retry before throwing
-            typed = new AccountConfigError 'imapTLS'
+            typed = new AccountConfigError 'imapTLS', err
 
         if err instanceof TimeoutError
-            typed = new AccountConfigError 'imapPort'
+            typed = new AccountConfigError 'imapPort', err
 
-        return err
+        return typed
 
 
     _wrapOpenBox: (cozybox, operation) ->
