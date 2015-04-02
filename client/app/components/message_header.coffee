@@ -144,7 +144,7 @@ module.exports = React.createClass
                         row @props.message.get('subject'), 'headers subject'
 
     toggleDetails: ->
-        @setState showDetails: !@state.showDetails
+        @setState showDetails: not @state.showDetails
 
     toggleAttachments: ->
-        @setState showAttachements: !@state.showAttachements
+        @setState showAttachements: not @state.showAttachements
