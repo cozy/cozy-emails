@@ -352,21 +352,20 @@ module.exports = {
     conversation.map(function(message) {
       var action, id, mailboxIDs, msg;
       mailboxIDs = message.get('mailboxIDs');
-      if (mailboxIDs[trash] != null) {
-        error = t('message delete already');
+      if (mailboxIDs[trash] == null) {
+        action = {
+          id: message.get('id'),
+          from: Object.keys(mailboxIDs),
+          to: trash
+        };
+        messagesActions.push(action);
+        msg = message.toJS();
+        for (id in msg.mailboxIDs) {
+          delete msg.mailboxIDs[id];
+        }
+        msg.mailboxIDs[trash] = -1;
+        return messages.push(msg);
       }
-      action = {
-        id: message.get('id'),
-        from: Object.keys(mailboxIDs),
-        to: trash
-      };
-      messagesActions.push(action);
-      msg = message.toJS();
-      for (id in msg.mailboxIDs) {
-        delete msg.mailboxIDs[id];
-      }
-      msg.mailboxIDs[trash] = -1;
-      return messages.push(msg);
     }).toJS();
     if (error !== '') {
       callback(error);
@@ -2708,13 +2707,13 @@ module.exports = Application = React.createClass({
       disposition = LayoutStore.getDisposition();
       if (disposition.type === Dispositions.HORIZONTAL) {
         classes = {
-          firstPanel: "panel col-xs-12 col-md-12 hidden-xs hidden-sm row-" + disposition.height,
-          secondPanel: "panel col-xs-12 col-md-12 row-" + (10 - disposition.height) + " row-offset-" + disposition.height
+          firstPanel: "col-xs-12 col-md-12 hidden-xs hidden-sm row-" + disposition.height,
+          secondPanel: "col-xs-12 col-md-12 row-" + (10 - disposition.height)
         };
       } else {
         classes = {
-          firstPanel: "panel col-xs-12 col-md-" + disposition.width + " hidden-xs hidden-sm row-10",
-          secondPanel: "panel col-xs-12 col-md-" + (12 - disposition.width) + " col-offset-" + disposition.width + " row-10"
+          firstPanel: "col-xs-12 col-md-" + disposition.width + " hidden-xs hidden-sm row-10",
+          secondPanel: "col-xs-12 col-md-" + (12 - disposition.width) + " row-10"
         };
       }
       if (previous != null) {
@@ -2781,7 +2780,9 @@ module.exports = Application = React.createClass({
         conversationID = MessageStore.getCurrentConversationID();
         if ((conversationID == null) && messages.length > 0) {
           conversationID = messages.first().get('conversationID');
-          conversation = MessageStore.getConversation(conversationID);
+          if (conversationID != null) {
+            conversation = MessageStore.getConversation(conversationID);
+          }
         }
         conversationLengths = MessageStore.getConversationsLength();
       }
@@ -3022,6 +3023,70 @@ module.exports = Application = React.createClass({
 });
 });
 
+;require.register("components/attachement_preview", function(exports, require, module) {
+var MessageUtils, a, i, img, li, _ref;
+
+_ref = React.DOM, li = _ref.li, img = _ref.img, a = _ref.a, i = _ref.i;
+
+MessageUtils = require('../utils/message_utils');
+
+module.exports = React.createClass({
+  displayName: 'AttachmentPreview',
+  icons: {
+    'archive': 'fa-file-archive-o',
+    'audio': 'fa-file-audio-o',
+    'code': 'fa-file-code-o',
+    'image': 'fa-file-image-o',
+    'pdf': 'fa-file-pdf-o',
+    'word': 'fa-file-word-o',
+    'presentation': 'fa-file-powerpoint-o',
+    'spreadsheet': 'fa-file-excel-o',
+    'text': 'fa-file-text-o',
+    'video': 'fa-file-video-o',
+    'word': 'fa-file-word-o'
+  },
+  render: function() {
+    if (this.props.previewLink) {
+      return li({
+        key: this.props.key
+      }, this.renderIcon(), a({
+        target: '_blank',
+        href: this.props.file.url
+      }, this.props.preview ? img({
+        width: 90,
+        src: this.props.file.url
+      }) : void 0, this.props.file.generatedFileName), ' - ', a({
+        href: "" + this.props.file.url + "?download=1"
+      }, i({
+        className: 'fa fa-download'
+      }), this.displayFilesize(this.props.file.length)));
+    } else {
+      return li({
+        key: this.props.key
+      }, this.renderIcon(), a({
+        href: "" + this.props.file.url + "?download=1"
+      }, "" + this.props.file.generatedFileName + "\n(" + (this.displayFilesize(this.props.file.length)) + ")"));
+    }
+  },
+  renderIcon: function() {
+    var type;
+    type = MessageUtils.getAttachmentType(this.props.file.contentType);
+    return i({
+      className: "fa " + (this.icons[type] || 'fa-file-o')
+    });
+  },
+  displayFilesize: function(length) {
+    if (length < 1024) {
+      return "" + length + " " + (t('length bytes'));
+    } else if (length < 1024 * 1024) {
+      return "" + (0 | length / 1024) + " " + (t('length kbytes'));
+    } else {
+      return "" + (0 | length / (1024 * 1024)) + " " + (t('length mbytes'));
+    }
+  }
+});
+});
+
 ;require.register("components/compose", function(exports, require, module) {
 var AccountPicker, Compose, ComposeActions, ComposeEditor, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, RouterMixin, a, button, classer, div, form, h3, i, img, input, label, li, messageUtils, span, textarea, ul, _ref, _ref1;
 
@@ -3070,7 +3135,8 @@ module.exports = Compose = React.createClass({
       return;
     }
     onCancel = (function(_this) {
-      return function() {
+      return function(e) {
+        e.preventDefault();
         if (_this.props.onCancel != null) {
           return _this.props.onCancel();
         } else {
@@ -3090,7 +3156,11 @@ module.exports = Compose = React.createClass({
     classInput = 'compose-input';
     classCc = this.state.cc.length === 0 ? '' : ' shown';
     classBcc = this.state.bcc.length === 0 ? '' : ' shown';
-    labelSend = this.state.sending ? t('compose action sending') : t('compose action send');
+    if (this.state.sending) {
+      labelSend = t('compose action sending');
+    } else {
+      labelSend = t('compose action send');
+    }
     focusEditor = Array.isArray(this.state.to) && this.state.to.length > 0 && this.state.subject !== '';
     return div({
       id: 'email-compose'
@@ -3107,7 +3177,8 @@ module.exports = Compose = React.createClass({
     })), h3({
       'data-message-id': ((_ref2 = this.props.message) != null ? _ref2.get('id') : void 0) || ''
     }, this.state.subject || t('compose')), form({
-      className: 'form-compose'
+      className: 'form-compose',
+      method: 'POST'
     }, div({
       className: 'form-group account'
     }, label({
@@ -3238,7 +3309,16 @@ module.exports = Compose = React.createClass({
   },
   componentWillUnmount: function() {
     if (this._saveInterval) {
-      return window.clearInterval(this._saveInterval);
+      window.clearInterval(this._saveInterval);
+    }
+    if (this.state.isDraft && (this.state.id != null) && !window.confirm(t('compose confirm keep draft'))) {
+      return MessageActionCreator["delete"](this.state.id, function(error) {
+        if (error != null) {
+          return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
+        } else {
+          return LayoutActionCreator.notify(t('compose draft deleted'));
+        }
+      });
     }
   },
   getInitialState: function(forceDefault) {
@@ -3272,10 +3352,14 @@ module.exports = Compose = React.createClass({
       return this.setState(this.getInitialState());
     }
   },
-  onDraft: function(args) {
+  onDraft: function(e) {
+    e.preventDefault();
     return this._doSend(true);
   },
-  onSend: function(args) {
+  onSend: function(e) {
+    if (e != null) {
+      e.preventDefault();
+    }
     return this._doSend(false);
   },
   _doSend: function(isDraft) {
@@ -3381,8 +3465,9 @@ module.exports = Compose = React.createClass({
   _autosave: function() {
     return this._doSend(true);
   },
-  onDelete: function(args) {
+  onDelete: function(e) {
     var confirmMessage, params, subject;
+    e.preventDefault();
     subject = this.props.message.get('subject');
     if ((subject != null) && subject !== '') {
       params = {
@@ -3503,7 +3588,7 @@ ComposeEditor = React.createClass({
     }
   },
   _initCompose: function() {
-    var e, header, node, r, range, rect, s, _ref2;
+    var e, gecko, header, node, r, range, rect, s, _ref2;
     if (this.props.composeInHTML) {
       if (this.props.focus) {
         node = (_ref2 = this.refs.html) != null ? _ref2.getDOMNode() : void 0;
@@ -3527,98 +3612,79 @@ ComposeEditor = React.createClass({
           }
         }
       }
+      gecko = document.queryCommandEnabled('insertBrOnReturn');
       jQuery('.rt-editor').on('keypress', function(e) {
-        if (e.keyCode === 13) {
-          return setTimeout(function() {
-            var after, before, inserted, matchesSelector, parent, process, rangeAfter, rangeBefore, sel, target, targetElement;
-            matchesSelector = document.documentElement.matches || document.documentElement.matchesSelector || document.documentElement.webkitMatchesSelector || document.documentElement.mozMatchesSelector || document.documentElement.oMatchesSelector || document.documentElement.msMatchesSelector;
-            target = document.getSelection().anchorNode;
-            targetElement = target;
-            while (!(targetElement instanceof Element)) {
-              targetElement = targetElement.parentNode;
-            }
-            if (target == null) {
-              return;
-            }
-            if ((matchesSelector != null) && !matchesSelector.call(targetElement, '.rt-editor blockquote *')) {
-              return;
-            }
-            if (target.lastChild != null) {
-              target = target.lastChild;
-              if (target.previousElementSibling != null) {
-                target = target.previousElementSibling;
-              }
-            }
-            parent = target;
-            process = function() {
-              var current;
-              current = parent;
-              return parent = parent != null ? parent.parentNode : void 0;
-            };
-            process();
-            while ((parent != null) && !parent.classList.contains('rt-editor')) {
-              process();
-            }
-            rangeBefore = document.createRange();
-            rangeBefore.setEnd(target, 0);
-            rangeBefore.setStartBefore(parent.firstChild);
-            rangeAfter = document.createRange();
-            if (target.nextSibling != null) {
-              rangeAfter.setStart(target.nextSibling, 0);
-            } else {
-              rangeAfter.setStart(target, 0);
-            }
-            rangeAfter.setEndAfter(parent.lastChild);
-            before = rangeBefore.cloneContents();
-            after = rangeAfter.cloneContents();
-            inserted = document.createElement('p');
-            inserted.innerHTML = "<br />";
-            parent.innerHTML = "";
-            parent.appendChild(before);
-            parent.appendChild(inserted);
-            parent.appendChild(after);
-
-            /*
-             * alternative 2
-             * We move every node from the caret to the end of the
-             * message to a new DOM tree, then insert a blank line
-             * and the new tree
-            parent = target
-            p2 = null
-            p3 = null
-            process = ->
-                p3 = p2
-                current = parent
-                parent = parent.parentNode
-                p2 = parent.cloneNode false
-                if p3?
-                    p2.appendChild p3
-                s = current.nextSibling
-                while s?
-                    p2.appendChild(s.cloneNode(true))
-                    s2 = s.nextSibling
-                    parent.removeChild s
-                    s = s2
-            process()
-            process() while (parent.parentNode? and
-                not parent.parentNode.classList.contains 'rt-editor')
-            after = p2
-            inserted = document.createElement 'p'
-            inserted.innerHTML = "<br />"
-            if parent.nextSibling
-                parent.parentNode.insertBefore inserted, parent.nextSibling
-                parent.parentNode.insertBefore after, parent.nextSibling
-            else
-                parent.parentNode.appendChild inserted
-                parent.parentNode.appendChild after
-             */
-            setTimeout(function() {
-              return inserted.focus();
-            }, 0);
-            sel = window.getSelection();
-            return sel.collapse(inserted, 0);
-          }, 0);
+        var quote;
+        if (e.keyCode !== 13) {
+          return;
         }
+        quote = function() {
+          var br, depth, getPath, isInsideQuote, range, selection, target, targetElement;
+          isInsideQuote = function(node) {
+            var matchesSelector;
+            matchesSelector = document.documentElement.matches || document.documentElement.matchesSelector || document.documentElement.webkitMatchesSelector || document.documentElement.mozMatchesSelector || document.documentElement.oMatchesSelector || document.documentElement.msMatchesSelector;
+            if (matchesSelector != null) {
+              return matchesSelector.call(node, '.rt-editor blockquote, .rt-editor blockquote *');
+            } else {
+              while ((node != null) && node.tagName !== 'BLOCKQUOTE') {
+                node = node.parentNode;
+              }
+              return node.tagName === 'BLOCKQUOTE';
+            }
+          };
+          target = document.getSelection().anchorNode;
+          if (target.lastChild != null) {
+            target = target.lastChild;
+            if (target.previousElementSibling != null) {
+              target = target.previousElementSibling;
+            }
+          }
+          targetElement = target;
+          while (targetElement && !(targetElement instanceof Element)) {
+            targetElement = targetElement.parentNode;
+          }
+          if (target == null) {
+            return;
+          }
+          if (!isInsideQuote(targetElement)) {
+            return;
+          }
+          if (gecko) {
+            br = "\r\n<br>\r\n<br class='cozyInsertedBr'>\r\n";
+          } else {
+            br = "\r\n<div></div><div><br class='cozyInsertedBr'></div>\r\n";
+          }
+          document.execCommand('insertHTML', false, br);
+          node = document.querySelector('.cozyInsertedBr');
+          if (gecko) {
+            node = node.previousElementSibling;
+          }
+          getPath = function(node) {
+            var path;
+            path = node.tagName;
+            while ((node.parentNode != null) && node.contentEditable !== 'true') {
+              node = node.parentNode;
+              path = "" + node.tagName + " > " + path;
+            }
+            return path;
+          };
+          selection = window.getSelection();
+          range = document.createRange();
+          range.selectNode(node);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          depth = getPath(node).split('>').length;
+          while (depth > 0) {
+            document.execCommand('outdent', false, null);
+            depth--;
+          }
+          node = document.querySelector('.cozyInsertedBr');
+          if (node != null) {
+            node.parentNode.removeChild(node);
+          }
+          document.execCommand('removeFormat', false, null);
+        };
+        return setTimeout(quote, 50);
       });
       if (document.querySelector('.rt-editor blockquote') && !document.querySelector('.rt-editor .originalToggle')) {
         try {
@@ -3644,7 +3710,8 @@ ComposeEditor = React.createClass({
           rect = node.getBoundingClientRect();
           node.scrollTop = node.scrollHeight - rect.height;
           if (typeof node.selectionStart === "number") {
-            node.selectionStart = node.selectionEnd = node.value.length;
+            node.selectionStart = node.value.length;
+            node.selectionEnd = node.value.length;
           } else if (typeof node.createTextRange !== "undefined") {
             setTimeout(function() {
               return node.focus();
@@ -3677,10 +3744,10 @@ ComposeEditor = React.createClass({
 });
 
 ;require.register("components/conversation", function(exports, require, module) {
-var Message, MessageFlags, RouterMixin, Toolbar, a, classer, div, h3, i, li, p, span, ul, _ref,
+var Message, MessageFlags, RouterMixin, Toolbar, a, button, classer, h3, header, i, li, p, section, span, ul, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
-_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a;
+_ref = React.DOM, section = _ref.section, header = _ref.header, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button;
 
 Message = require('./message');
 
@@ -3712,13 +3779,8 @@ module.exports = React.createClass({
   },
   getInitialState: function() {
     return {
-      expanded: !this.props.settings.get('displayConversation')
+      expanded: []
     };
-  },
-  expand: function() {
-    return this.setState({
-      expanded: true
-    });
   },
   renderToolbar: function() {
     return Toolbar({
@@ -3730,97 +3792,96 @@ module.exports = React.createClass({
       settings: this.props.settings
     });
   },
-  renderMessage: function(key, message, active) {
+  renderMessage: function(key, active) {
     return Message({
       ref: 'message',
       accounts: this.props.accounts,
       active: active,
       inConversation: this.props.conversation.length > 1,
-      key: key,
+      key: key.toString(),
       mailboxes: this.props.mailboxes,
-      message: message,
+      message: this.props.conversation.get(key),
       selectedAccountID: this.props.selectedAccountID,
       selectedAccountLogin: this.props.selectedAccountLogin,
       selectedMailboxID: this.props.selectedMailboxID,
       settings: this.props.settings
     });
   },
+  renderGroup: function(messages, key) {
+    var first, items, last;
+    if (messages.length > 3 && __indexOf.call(this.state.expanded, key) < 0) {
+      items = [];
+      first = messages[0], last = messages[messages.length - 1];
+      items.push(this.renderMessage(first, false));
+      items.push(button({
+        className: 'more',
+        onClick: (function(_this) {
+          return function() {
+            var expanded;
+            expanded = _this.state.expanded.slice(0);
+            expanded.push(key);
+            return _this.setState({
+              expanded: expanded
+            });
+          };
+        })(this)
+      }, t('load more messages', messages.length - 2), i({
+        className: 'fa fa-ellipsis-v'
+      })));
+      items.push(this.renderMessage(last, false));
+    } else {
+      items = (function() {
+        var _i, _len, _results;
+        _results = [];
+        for (_i = 0, _len = messages.length; _i < _len; _i++) {
+          key = messages[_i];
+          _results.push(this.renderMessage(key, false));
+        }
+        return _results;
+      }).call(this);
+    }
+    return items;
+  },
   render: function() {
-    var activeMessages, closeIcon, closeUrl, expandUrl, key, message, otherMessages, selectedAccountID;
+    var glob, index, lastMessageIndex, messages;
     if ((this.props.message == null) || !this.props.conversation) {
       return p(null, t("app loading"));
     }
-    expandUrl = this.buildUrl({
-      direction: 'first',
-      action: 'message',
-      parameters: this.props.message.get('id'),
-      fullWidth: true
-    });
-    if (window.router.previous != null) {
-      try {
-        selectedAccountID = this.props.selectedAccountID;
-      } catch (_error) {
-        selectedAccountID = this.props.conversation.get(0).mailbox;
-      }
-    } else {
-      selectedAccountID = this.props.conversation.get(0).mailbox;
-    }
-    if (this.props.layout === 'full') {
-      closeUrl = this.buildUrl({
-        direction: 'first',
-        action: 'account.mailbox.messages',
-        parameters: selectedAccountID,
-        fullWidth: true
-      });
-    } else {
-      closeUrl = this.buildClosePanelUrl(this.props.layout);
-    }
-    closeIcon = this.props.layout === 'full' ? 'fa-th-list' : 'fa-times';
-    otherMessages = {};
-    activeMessages = {};
+    messages = [];
+    lastMessageIndex = this.props.conversation.length - 1;
     this.props.conversation.map((function(_this) {
       return function(message, key) {
-        var _ref1;
-        if (_this.props.message.get('id') === message.get('id') || (_ref1 = MessageFlags.SEEN, __indexOf.call(message.get('flags'), _ref1) < 0)) {
-          return activeMessages[key] = message;
+        var isSeen, last, _ref1;
+        isSeen = (_ref1 = MessageFlags.SEEN, __indexOf.call(message.get('flags'), _ref1) >= 0);
+        if (!isSeen || key === lastMessageIndex) {
+          return messages.push(key);
         } else {
-          return otherMessages[key] = message;
+          last = messages[messages.length - 1];
+          if (!_.isArray(last)) {
+            messages.push(last = []);
+          }
+          return last.push(key);
         }
       };
     })(this)).toJS();
-    return div({
+    return section({
       className: 'conversation'
-    }, this.renderToolbar(), h3({
-      className: 'message-title',
+    }, header(null, this.renderToolbar(), h3({
+      className: 'conversation-title',
       'data-message-id': this.props.message.get('id')
-    }, this.props.message.get('subject')), ul({
-      className: 'thread list-unstyled'
-    }, (function() {
-      var _results;
-      if (this.state.expanded) {
-        _results = [];
-        for (key in otherMessages) {
-          message = otherMessages[key];
-          _results.push(this.renderMessage(key, message, false));
-        }
-        return _results;
-      } else if (this.props.conversationLength > 1) {
-        return li({
-          className: 'conversation-length-msg',
-          onClick: this.expand
-        }, a(null), t('mail conversation length', {
-          smart_count: this.props.conversationLength
-        }));
-      }
-    }).call(this), (function() {
-      var _results;
+    }, this.props.message.get('subject'))), (function() {
+      var _i, _len, _results;
       _results = [];
-      for (key in activeMessages) {
-        message = activeMessages[key];
-        _results.push(this.renderMessage(key, message, true));
+      for (index = _i = 0, _len = messages.length; _i < _len; index = ++_i) {
+        glob = messages[index];
+        if (_.isArray(glob)) {
+          _results.push(this.renderGroup(glob, index));
+        } else {
+          _results.push(this.renderMessage(glob, true));
+        }
       }
       return _results;
-    }).call(this)));
+    }).call(this));
   }
 });
 });
@@ -4228,7 +4289,7 @@ module.exports = MailsInput = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var classLabel, className, current, knownContacts, listClass, onChange, renderTag, _ref1;
+    var cancelDragEvent, classLabel, className, current, knownContacts, listClass, onChange, renderTag, _ref1;
     renderTag = (function(_this) {
       return function(address, idx) {
         var display, onDragEnd, onDragStart, remove;
@@ -4300,9 +4361,15 @@ module.exports = MailsInput = React.createClass({
       open: this.state.open && ((_ref1 = this.state.contacts) != null ? _ref1.length : void 0) > 0
     });
     current = 0;
+    cancelDragEvent = function(event) {
+      return event.preventDefault();
+    };
     return div({
       className: className,
-      onDrop: this.onDrop
+      onDrop: this.onDrop,
+      onDragEnter: cancelDragEvent,
+      onDragLeave: cancelDragEvent,
+      onDragOver: cancelDragEvent
     }, label({
       htmlFor: this.props.id,
       className: classLabel
@@ -4315,6 +4382,9 @@ module.exports = MailsInput = React.createClass({
       onKeyDown: this.onKeyDown,
       onBlur: this.onBlur,
       onDrop: this.onDrop,
+      onDragEnter: cancelDragEvent,
+      onDragLeave: cancelDragEvent,
+      onDragOver: cancelDragEvent,
       ref: 'contactInput',
       rows: 1,
       value: this.state.unknown,
@@ -4670,9 +4740,10 @@ module.exports = Menu = React.createClass({
     }, t('menu account new'))));
   },
   getAccountRender: function(account, key) {
-    var accountClasses, accountID, defaultMailbox, icon, isSelected, mailboxes, progress, refreshes, toggleActive, toggleDisplay, toggleFavorites, toggleFavoritesLabel, url, _ref2;
+    var accountClasses, accountID, defaultMailbox, icon, isSelected, mailboxes, nbUnread, progress, refreshes, toggleActive, toggleDisplay, toggleFavorites, toggleFavoritesLabel, url, _ref2;
     isSelected = ((this.props.selectedAccount == null) && key === 0) || ((_ref2 = this.props.selectedAccount) != null ? _ref2.get('id') : void 0) === account.get('id');
     accountID = account.get('id');
+    nbUnread = account.get('totalUnread');
     defaultMailbox = AccountStore.getDefaultMailbox(accountID);
     refreshes = this.props.refreshes;
     if (defaultMailbox != null) {
@@ -4756,7 +4827,9 @@ module.exports = Menu = React.createClass({
     })) : void 0, progress.get('firstImport') ? ThinProgress({
       done: progress.get('done'),
       total: progress.get('total')
-    }) : void 0) : void 0), isSelected ? ul({
+    }) : void 0) : nbUnread > 0 ? span({
+      className: 'badge'
+    }, nbUnread) : void 0), isSelected ? ul({
       className: 'list-unstyled submenu mailbox-list'
     }, mailboxes != null ? mailboxes.map((function(_this) {
       return function(mailbox, key) {
@@ -4992,7 +5065,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbMessages, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
     compact = this.props.settings.get('listStyle') === 'compact';
     filterParams = {
       accountID: this.props.accountID,
@@ -5255,7 +5328,7 @@ MessageList = React.createClass({
           return _this.setState(newState);
         };
       })(this)
-    }), nbMessages = parseInt(this.props.counterMessage, 10), this.props.messages.count() < nbMessages && (this.props.query.pageAfter != null) ? p({
+    }), this.moreToSee() && (this.props.query.pageAfter != null) ? p({
       className: 'text-center list-footer'
     }, this.props.fetching ? img({
       src: 'images/spinner.svg'
@@ -5266,6 +5339,25 @@ MessageList = React.createClass({
     }, t('list next page'))) : p({
       ref: 'listEnd'
     }, t('list end'))));
+  },
+  moreToSee: function() {
+    var nbInConv, nbMessages;
+    nbMessages = parseInt(this.props.messagesCount, 10);
+    if (this.props.settings.get('displayConversation')) {
+      nbInConv = 0;
+      this.props.messages.map((function(_this) {
+        return function(message) {
+          var length;
+          length = _this.props.conversationLengths.get(message.get('conversationID'));
+          if (length != null) {
+            return nbInConv += _this.props.conversationLengths.get(message.get('conversationID'));
+          }
+        };
+      })(this)).toJS();
+      return nbInConv < nbMessages;
+    } else {
+      return this.props.messages.count() < nbMessages;
+    }
   },
   refresh: function(event) {
     event.preventDefault();
@@ -5474,8 +5566,8 @@ MessageList = React.createClass({
   },
   _handleRealtimeGrowth: function() {
     var lastdate, nbMessages;
-    nbMessages = parseInt(this.props.counterMessage, 10);
-    if (nbMessages < this.props.messages.count() && (this.refs.listEnd != null) && !DomUtils.isVisible(this.refs.listEnd.getDOMNode())) {
+    nbMessages = parseInt(this.props.messagesCount, 10);
+    if ((!this.moreToSee()) && (this.refs.listEnd != null) && !DomUtils.isVisible(this.refs.listEnd.getDOMNode())) {
       lastdate = this.props.messages.last().get('date');
       return SocketUtils.changeRealtimeScope(this.props.mailboxID, lastdate);
     }
@@ -5541,7 +5633,7 @@ MessageListBody = React.createClass({
         var cid, id, isActive, _ref2;
         id = message.get('id');
         cid = message.get('conversationID');
-        if (_this.props.settings.get('displayConversation')) {
+        if (_this.props.settings.get('displayConversation') && (cid != null)) {
           isActive = _this.props.conversationID === cid;
         } else {
           isActive = _this.props.messageID === id;
@@ -5620,7 +5712,7 @@ MessageItem = React.createClass({
       };
     } else {
       conversationID = message.get('conversationID');
-      if (conversationID && this.props.settings.get('displayConversation')) {
+      if ((conversationID != null) && this.props.settings.get('displayConversation')) {
         action = 'conversation';
         params = {
           conversationID: conversationID,
@@ -5629,7 +5721,6 @@ MessageItem = React.createClass({
       } else {
         action = 'message';
         params = {
-          conversationID: conversationID,
           messageID: message.get('id')
         };
       }
@@ -5910,11 +6001,15 @@ MessagesSort = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var AttachmentPreview, Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageUtils, Participants, RouterMixin, ToolbarMessage, a, alertError, alertSuccess, button, classer, div, h4, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
+var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, MessageUtils, Participants, RouterMixin, ToolbarMessage, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
 
-_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img, h4 = _ref.h4;
+_ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img, h4 = _ref.h4;
 
 MessageUtils = require('../utils/message_utils');
+
+MessageHeader = require("./message_header");
+
+MessageFooter = require("./message_footer");
 
 ToolbarMessage = require('./toolbar_message');
 
@@ -6112,34 +6207,32 @@ module.exports = React.createClass({
       message: true,
       active: this.state.active
     });
-    if (this.state.active) {
-      return li({
-        className: classes,
-        key: this.props.key,
-        'data-id': message.get('id')
-      }, this.renderHeaders(message), div({
-        className: 'full-headers'
-      }, pre(null, prepared != null ? (_ref3 = prepared.fullHeaders) != null ? _ref3.join("\n") : void 0 : void 0)), this.renderToolbox(), this.renderCompose(), MessageContent({
-        ref: 'messageContent',
-        messageID: message.get('id'),
-        messageDisplayHTML: messageDisplayHTML,
-        html: this._htmlContent,
-        text: prepared.text,
-        rich: prepared.rich,
-        imagesWarning: imagesWarning,
-        composing: this.state.composing,
-        displayImages: this.displayImages,
-        displayHTML: this.displayHTML
-      }), this.renderAttachments(message.get('attachments').toJS()), div({
-        className: 'clearfix'
-      }));
-    } else {
-      return li({
-        className: classes,
-        key: this.props.key,
-        'data-id': message.get('id')
-      }, this.renderHeaders(message));
-    }
+    return article({
+      className: classes,
+      key: this.props.key,
+      'data-id': message.get('id')
+    }, header({
+      onClick: (function(_this) {
+        return function() {
+          return _this.setState({
+            active: !_this.state.active
+          });
+        };
+      })(this)
+    }, this.renderHeaders(), this.state.active ? this.renderToolbox() : void 0), this.state.active ? this.renderCompose() : void 0, this.state.active ? div({
+      className: 'full-headers'
+    }, pre(null, prepared != null ? (_ref3 = prepared.fullHeaders) != null ? _ref3.join("\n") : void 0 : void 0)) : void 0, this.state.active ? MessageContent({
+      ref: 'messageContent',
+      messageID: message.get('id'),
+      messageDisplayHTML: messageDisplayHTML,
+      html: this._htmlContent,
+      text: prepared.text,
+      rich: prepared.rich,
+      imagesWarning: imagesWarning,
+      composing: this.state.composing,
+      displayImages: this.displayImages,
+      displayHTML: this.displayHTML
+    }) : void 0, this.state.active ? footer(null, this.renderFooter(), this.renderToolbox(false)) : void 0);
   },
   getParticipants: function(message) {
     var from, to;
@@ -6155,87 +6248,20 @@ module.exports = React.createClass({
       tooltip: true
     }));
   },
-  renderHeaders: function(message) {
-    var attachments, avatar, classes, date, flags, hasAttachments, leftClass, _ref2;
-    attachments = message.get('attachments');
-    hasAttachments = attachments.length;
-    leftClass = hasAttachments ? 'col-md-8' : 'col-md-12';
-    flags = message.get('flags') || [];
-    avatar = MessageUtils.getAvatar(this.props.message);
-    date = MessageUtils.formatDate(message.get('createdAt'));
-    classes = classer({
-      'header': true,
-      'row': true,
-      'full': this.state.headers,
-      'compact': !this.state.headers,
-      'has-attachments': hasAttachments,
-      'is-fav': flags.indexOf(MessageFlags.FLAGGED) !== -1
+  renderHeaders: function() {
+    return MessageHeader({
+      message: this.props.message
     });
-    if (this.state.headers) {
-      return div({
-        className: classes,
-        onClick: this.toggleActive
-      }, div({
-        className: leftClass
-      }, avatar ? img({
-        className: 'sender-avatar',
-        src: avatar
-      }) : i({
-        className: 'sender-avatar fa fa-user'
-      }), div({
-        className: 'participants col-md-9'
-      }, p({
-        className: 'sender'
-      }, this.renderAddress('from'), i({
-        className: 'toggle-headers fa fa-toggle-up clickable',
-        onClick: this.toggleHeaders
-      })), p({
-        className: 'receivers'
-      }, span(null, t("mail receivers")), this.renderAddress('to')), ((_ref2 = this.props.message.get('cc')) != null ? _ref2.length : void 0) > 0 ? p({
-        className: 'receivers'
-      }, span(null, t("mail receivers cc")), this.renderAddress('cc')) : void 0, hasAttachments ? span({
-        className: 'hour'
-      }, date) : void 0), !hasAttachments ? span({
-        className: 'hour'
-      }, date) : void 0), hasAttachments ? div({
-        className: 'col-md-4'
-      }, FilePicker({
-        ref: 'filePicker',
-        editable: false,
-        value: attachments,
-        messageID: this.props.message.get('id')
-      })) : void 0);
-    } else {
-      return div({
-        className: classes,
-        onClick: this.toggleActive
-      }, avatar ? img({
-        className: 'sender-avatar',
-        src: avatar
-      }) : i({
-        className: 'sender-avatar fa fa-user'
-      }), span({
-        className: 'participants'
-      }, this.getParticipants(message)), this.state.active ? i({
-        className: 'toggle-headers fa fa-toggle-down clickable',
-        onClick: this.toggleHeaders
-      }) : void 0, span({
-        className: 'hour'
-      }, date), span({
-        className: "flags"
-      }, i({
-        className: 'attach fa fa-paperclip clickable',
-        onClick: this.toggleHeaders
-      }), i({
-        className: 'fav fa fa-star'
-      })));
-    }
   },
-  renderToolbox: function() {
+  renderToolbox: function(full) {
+    if (full == null) {
+      full = true;
+    }
     if (this.state.composing) {
       return;
     }
     return ToolbarMessage({
+      full: full,
       message: this.props.message,
       mailboxes: this.props.mailboxes,
       selectedMailboxID: this.props.selectedMailboxID,
@@ -6247,16 +6273,9 @@ module.exports = React.createClass({
       onHeaders: this.onHeaders
     });
   },
-  renderAddress: function(field) {
-    var addresses;
-    addresses = this.props.message.get(field);
-    if (addresses == null) {
-      return;
-    }
-    return Participants({
-      participants: addresses,
-      onAdd: this.addAddress,
-      tooltip: true
+  renderFooter: function() {
+    return MessageFooter({
+      message: this.props.message
     });
   },
   renderCompose: function() {
@@ -6288,24 +6307,6 @@ module.exports = React.createClass({
         })(this)
       });
     }
-  },
-  renderAttachments: function(attachments) {
-    var files;
-    files = attachments.filter(function(file) {
-      return MessageUtils.getAttachmentType(file.contentType) === 'image';
-    });
-    if (files.length === 0) {
-      return;
-    }
-    return div({
-      className: 'att-previews'
-    }, h4(null, t('message preview title')), files.map(function(file) {
-      return AttachmentPreview({
-        ref: 'attachmentPreview',
-        file: file,
-        key: file.checksum
-      });
-    }));
   },
   toggleHeaders: function(e) {
     var state;
@@ -6346,7 +6347,7 @@ module.exports = React.createClass({
       nextConversationID = this.props.prevConversationID;
     }
     if (nextMessageID) {
-      if (this.props.settings.get('displayConversation')) {
+      if (this.props.settings.get('displayConversation') && (nextConversationID != null)) {
         return this.redirect({
           direction: 'second',
           action: 'conversation',
@@ -6486,13 +6487,13 @@ MessageContent = React.createClass({
       };
     })(this);
     if (this.props.messageDisplayHTML && this.props.html) {
-      return div({
-        className: 'row'
-      }, this.props.imagesWarning ? div({
-        className: "imagesWarning content-action",
+      return div(null, this.props.imagesWarning ? div({
+        className: "imagesWarning alert alert-warning content-action",
         ref: "imagesWarning"
-      }, span(null, t('message images warning')), button({
-        className: 'btn btn-default',
+      }, i({
+        className: 'fa fa-shield'
+      }), t('message images warning'), button({
+        className: 'btn btn-xs btn-warning',
         type: "button",
         ref: 'imagesDisplay',
         onClick: this.props.displayImages
@@ -6565,15 +6566,12 @@ MessageContent = React.createClass({
         };
       })(this);
       if (type === 'mount' && doc.readyState !== 'complete') {
-        frame.addEventListener('load', loadContent);
+        return frame.addEventListener('load', loadContent);
       } else {
-        loadContent();
+        return loadContent();
       }
     } else {
-      window.cozyMails.customEvent("MESSAGE_LOADED", this.props.messageID);
-    }
-    if ((this.refs.content != null) && !this.props.composing) {
-      return this.refs.content.getDOMNode().scrollIntoView();
+      return window.cozyMails.customEvent("MESSAGE_LOADED", this.props.messageID);
     }
   },
   componentDidMount: function() {
@@ -6583,36 +6581,294 @@ MessageContent = React.createClass({
     return this._initFrame('update');
   }
 });
+});
 
-AttachmentPreview = React.createClass({
-  displayName: 'AttachmentPreview',
-  getInitialState: function() {
-    return {
-      displayed: false
-    };
-  },
-  shouldComponentUpdate: function(nextProps, nextState) {
-    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+;require.register("components/message_footer", function(exports, require, module) {
+var AttachmentPreview, MessageUtils, a, div, i, img, li, span, ul, _ref;
+
+_ref = React.DOM, div = _ref.div, span = _ref.span, ul = _ref.ul, li = _ref.li, img = _ref.img, a = _ref.a, i = _ref.i;
+
+MessageUtils = require('../utils/message_utils');
+
+AttachmentPreview = require('./attachement_preview');
+
+module.exports = React.createClass({
+  displayName: 'MessageFooter',
+  propTypes: {
+    message: React.PropTypes.object.isRequired
   },
   render: function() {
-    var toggleDisplay;
-    toggleDisplay = (function(_this) {
-      return function() {
-        return _this.setState({
-          displayed: !_this.state.displayed
-        });
-      };
-    })(this);
-    return span({
-      className: 'att-preview',
-      key: this.props.key
-    }, this.state.displayed ? img({
-      onClick: toggleDisplay,
-      src: this.props.file.url
-    }) : button({
-      className: 'btn btn-default btn-lg',
-      onClick: toggleDisplay
-    }, this.props.file.generatedFileName));
+    return div({
+      className: 'attachments'
+    }, this.renderAttachments());
+  },
+  renderAttachments: function() {
+    var attachments, file, resources, _ref1;
+    attachments = ((_ref1 = this.props.message.get('attachments')) != null ? _ref1.toJS() : void 0) || [];
+    if (!attachments.length) {
+      return;
+    }
+    resources = _.groupBy(attachments, function(file) {
+      if (MessageUtils.getAttachmentType(file.contentType) === 'image') {
+        return 'preview';
+      } else {
+        return 'binary';
+      }
+    });
+    return ul({
+      className: null
+    }, (function() {
+      var _i, _len, _ref2, _results;
+      if (resources.preview) {
+        _ref2 = resources.preview;
+        _results = [];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          file = _ref2[_i];
+          _results.push(AttachmentPreview({
+            ref: 'attachmentPreview',
+            file: file,
+            key: file.checksum,
+            preview: true,
+            previewLink: true
+          }));
+        }
+        return _results;
+      }
+    })(), (function() {
+      var _i, _len, _ref2, _results;
+      if (resources.binary) {
+        _ref2 = resources.binary;
+        _results = [];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          file = _ref2[_i];
+          _results.push(AttachmentPreview({
+            ref: 'attachmentPreview',
+            file: file,
+            key: file.checksum,
+            preview: false,
+            previewLink: true
+          }));
+        }
+        return _results;
+      }
+    })());
+  }
+});
+});
+
+;require.register("components/message_header", function(exports, require, module) {
+var AttachmentPreview, ContactStore, MessageFlags, MessageUtils, a, div, i, img, li, span, table, tbody, td, tr, ul, _ref,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  __slice = [].slice;
+
+_ref = React.DOM, div = _ref.div, span = _ref.span, ul = _ref.ul, li = _ref.li, table = _ref.table, tbody = _ref.tbody, tr = _ref.tr, td = _ref.td, img = _ref.img, a = _ref.a, i = _ref.i;
+
+MessageUtils = require('../utils/message_utils');
+
+AttachmentPreview = require('./attachement_preview');
+
+ContactStore = require('../stores/contact_store');
+
+MessageFlags = require('../constants/app_constants').MessageFlags;
+
+module.exports = React.createClass({
+  displayName: 'MessageHeader',
+  propTypes: {
+    message: React.PropTypes.object.isRequired
+  },
+  getInitialState: function() {
+    return {
+      showDetails: false,
+      showAttachements: false
+    };
+  },
+  render: function() {
+    var avatar, _ref1;
+    avatar = MessageUtils.getAvatar(this.props.message);
+    return div({
+      key: "message-header-" + (this.props.message.get('id'))
+    }, avatar ? div({
+      className: 'sender-avatar'
+    }, img({
+      className: 'media-object',
+      src: avatar
+    })) : void 0, div({
+      className: 'infos'
+    }, this.renderAddress('from'), this.renderAddress('to'), this.renderAddress('cc'), div({
+      className: 'indicators'
+    }, this.props.message.get('attachments').length ? this.renderAttachementsIndicator() : void 0, (_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
+      className: 'fa fa-star'
+    }) : void 0), div({
+      className: 'date'
+    }, MessageUtils.formatDate(this.props.message.get('createdAt'))), this.renderDetailsPopup()));
+  },
+  formatUsers: function(users) {
+    var contact, format, items, user, _i, _len;
+    if (users == null) {
+      return;
+    }
+    format = function(user) {
+      var items;
+      items = [];
+      if (user.name) {
+        items.push("" + user.name + " ");
+        items.push(span({
+          className: 'contact-address'
+        }, i({
+          className: 'fa fa-angle-left'
+        }), user.address, i({
+          className: 'fa fa-angle-right'
+        })));
+      } else {
+        items.push(user.address);
+      }
+      return items;
+    };
+    if (_.isArray(users)) {
+      items = [];
+      for (_i = 0, _len = users.length; _i < _len; _i++) {
+        user = users[_i];
+        contact = ContactStore.getByAddress(user.address);
+        items.push(contact != null ? a({
+          target: '_blank',
+          href: "/#apps/contacts/contact/" + (contact.get('id')),
+          onClick: function(event) {
+            return event.stopPropagation();
+          }
+        }, format(user)) : span({
+          className: 'participant',
+          onClick: function(event) {
+            return event.stopPropagation();
+          }
+        }, format(user)));
+        if (user !== _.last(users)) {
+          items.push(", ");
+        }
+      }
+      return items;
+    } else {
+      return format(users);
+    }
+  },
+  renderAddress: function(field) {
+    var users;
+    users = this.props.message.get(field);
+    if (!users.length) {
+      return;
+    }
+    return div.apply(null, [{
+      className: "addresses " + field,
+      key: "address-" + field
+    }, field !== 'from' ? span(null, t("mail " + field)) : void 0].concat(__slice.call(this.formatUsers(users))));
+  },
+  renderAttachementsIndicator: function() {
+    var attachments, file, _ref1;
+    attachments = ((_ref1 = this.props.message.get('attachments')) != null ? _ref1.toJS() : void 0) || [];
+    return div({
+      className: 'attachments',
+      'aria-expanded': this.state.showAttachements,
+      onClick: function(event) {
+        return event.stopPropagation();
+      }
+    }, i({
+      className: 'btn fa fa-paperclip fa-flip-horizontal',
+      onClick: this.toggleAttachments
+    }), div({
+      className: 'popup',
+      'aria-hidden': !this.state.showAttachements
+    }, ul({
+      className: null
+    }, (function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = attachments.length; _i < _len; _i++) {
+        file = attachments[_i];
+        _results.push(AttachmentPreview({
+          ref: 'attachmentPreview',
+          file: file,
+          key: file.checksum,
+          preview: false
+        }));
+      }
+      return _results;
+    })())));
+  },
+  renderDetailsPopup: function() {
+    var cc, dest, from, reply, row, to, _ref1;
+    from = this.props.message.get('from')[0];
+    to = this.props.message.get('to');
+    cc = this.props.message.get('cc');
+    reply = (_ref1 = this.props.message.get('reply-to')) != null ? _ref1[0] : void 0;
+    row = function(id, value, label, rowSpan) {
+      var attrs, items;
+      if (label == null) {
+        label = false;
+      }
+      if (rowSpan == null) {
+        rowSpan = false;
+      }
+      items = [];
+      if (label) {
+        attrs = {
+          className: 'label'
+        };
+        if (rowSpan) {
+          attrs.rowSpan = rowSpan;
+        }
+        items.push(td(attrs, t(label)));
+      }
+      items.push(td({
+        key: "cell-" + id
+      }, value));
+      return tr.apply(null, [{
+        key: "row-" + id
+      }].concat(__slice.call(items)));
+    };
+    return div({
+      className: 'details',
+      'aria-expanded': this.state.showDetails,
+      onClick: function(event) {
+        return event.stopPropagation();
+      }
+    }, i({
+      className: 'btn fa fa-caret-down',
+      onClick: this.toggleDetails
+    }), div({
+      className: 'popup',
+      'aria-hidden': !this.state.showDetails
+    }, table(null, tbody(null, row('from', this.formatUsers(from), 'headers from'), to.length ? row('to', this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
+      var _i, _len, _ref2, _results;
+      if (to.length) {
+        _ref2 = to.slice(1);
+        _results = [];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          dest = _ref2[_i];
+          _results.push(row('dest', this.formatUsers(dest)));
+        }
+        return _results;
+      }
+    }).call(this), cc.length ? row('cc', this.formatUsers(cc[0]), 'headers cc', cc.length) : void 0, (function() {
+      var _i, _len, _ref2, _results;
+      if (cc.length) {
+        _ref2 = cc.slice(1);
+        _results = [];
+        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+          dest = _ref2[_i];
+          _results.push(row('dest', this.formatUsers(dest)));
+        }
+        return _results;
+      }
+    }).call(this), reply != null ? row('reply', this.formatUsers(reply), 'headers reply-to') : void 0, row('created', this.props.message.get('createdAt'), 'headers date'), row('subject', this.props.message.get('subject'), 'headers subject')))));
+  },
+  toggleDetails: function() {
+    return this.setState({
+      showDetails: !this.state.showDetails
+    });
+  },
+  toggleAttachments: function() {
+    return this.setState({
+      showAttachements: !this.state.showAttachements
+    });
   }
 });
 });
@@ -7437,7 +7693,7 @@ module.exports = React.createClass({
     settings: React.PropTypes.object.isRequired
   },
   getParams: function(messageID, conversationID) {
-    if (this.props.settings.get('displayConversation')) {
+    if (this.props.settings.get('displayConversation' && (conversationID != null))) {
       return {
         action: 'conversation',
         parameters: {
@@ -7456,7 +7712,7 @@ module.exports = React.createClass({
   },
   render: function() {
     return nav({
-      className: 'toolbar toolbar-conversation btn-toolbar pull-right'
+      className: 'toolbar toolbar-conversation btn-toolbar'
     }, div({
       className: 'btn-group'
     }, this.renderNav('prev'), this.renderNav('next')), this.renderFullscreen());
@@ -7543,22 +7799,25 @@ module.exports = React.createClass({
   },
   render: function() {
     return nav({
-      className: 'toolbar toolbar-message btn-toolbar'
-    }, div({
+      className: 'toolbar toolbar-message btn-toolbar',
+      onClick: function(event) {
+        return event.stopPropagation();
+      }
+    }, this.props.full ? div({
       className: cBtnGroup
-    }, this.renderToolboxMove(), this.renderToolboxActions()), this.renderQuickActions(), this.renderReply());
+    }, this.renderToolboxMove(), this.renderToolboxActions()) : void 0, this.props.full ? this.renderQuickActions() : void 0, this.renderReply());
   },
   renderReply: function() {
     return div({
       className: cBtnGroup
     }, button({
-      className: "" + cBtn + " fa-mail-reply",
+      className: "" + cBtn + " fa-mail-reply mail-reply",
       onClick: this.props.onReply
     }), button({
-      className: "" + cBtn + " fa-mail-reply-all",
+      className: "" + cBtn + " fa-mail-reply-all mail-reply-all",
       onClick: this.props.onReplyAll
     }), button({
-      className: "" + cBtn + " fa-mail-forward",
+      className: "" + cBtn + " fa-mail-forward mail-forward",
       onClick: this.props.onForward
     }));
   },
@@ -7836,7 +8095,10 @@ module.exports = ToolboxMove = React.createClass({
     })), ul({
       className: "dropdown-menu dropdown-menu-" + direction,
       role: 'menu'
-    }, this.renderMailboxes()));
+    }, li({
+      role: 'presentation',
+      className: 'dropdown-header'
+    }, t('mail action move')), this.renderMailboxes()));
   },
   renderMailboxes: function() {
     var id, mbox, _ref1, _results;
@@ -8005,6 +8267,7 @@ module.exports = {
     'RECEIVE_REFRESH_UPDATE': 'RECEIVE_REFRESH_UPDATE',
     'RECEIVE_REFRESH_STATUS': 'RECEIVE_REFRESH_STATUS',
     'RECEIVE_REFRESH_DELETE': 'RECEIVE_REFRESH_DELETE',
+    'RECEIVE_REFRESH_NOTIF': 'RECEIVE_REFRESH_NOTIF',
     'LIST_FILTER': 'LIST_FILTER',
     'LIST_QUICK_FILTER': 'LIST_QUICK_FILTER',
     'LIST_SORT': 'LIST_SORT',
@@ -8414,7 +8677,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-;require.register("libs/flux/store/Store", function(exports, require, module) {
+require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -8897,8 +9160,18 @@ module.exports = {
   "list mass no message": "No message selected",
   "list delete confirm": "Do you really want to delete this message ? ||||\nDo you really want to delete %{smart_count} messages?",
   "list delete conv confirm": "Do you really want to delete this conversation ? ||||\nDo you really want to delete %{smart_count} conversation?",
-  "mail receivers": "To: ",
-  "mail receivers cc": "Cc: ",
+  "mail to": "To: ",
+  "mail cc": "Cc: ",
+  "headers from": "From",
+  "headers to": "To",
+  "headers cc": "Cc",
+  "headers reply-to": "Reply to",
+  "headers date": "Date",
+  "headers subject": "Subject",
+  "load more messages": "load %{smart_count} more message |||| load %{smart_count} more messages",
+  "length bytes": "bytes",
+  "length kbytes": "Kb",
+  "length mbytes": "Mb",
   "mail action reply": "Reply",
   "mail action reply all": "Reply all",
   "mail action forward": "Forward",
@@ -9086,7 +9359,8 @@ module.exports = {
   "toast show": "Display alerts",
   "toast close all": "Close all alerts",
   "notif new title": 'CozyEmail',
-  "notif new": "%{smart_count} new message in %{box} of %{account}||||\n%{smart_count} new messages in %{box} of %{account}||||",
+  "notif new": "%{smart_count} message not read in account %{account}||||\n%{smart_count} messages not read in account %{account}",
+  "notif complete": "Importation of account %{account} complete.",
   "contact form": "Select contacts",
   "contact form placeholder": "contact name",
   "contact create success": "%{contact} has been added to your contacts",
@@ -9183,8 +9457,18 @@ module.exports = {
   "list mass no message": "Aucun message sélectionné",
   "list delete confirm": "Voulez-vous vraiment supprimer ce message ?||||\nVoulez-vous vraiment supprimer %{smart_count} messages ?",
   "list delete conv confirm": "Voulez-vous vraiment supprimer cette conversation ?||||\nVoulez-vous vraiment supprimer %{smart_count} conversations ?",
-  "mail receivers": "À ",
-  "mail receivers cc": "Copie ",
+  "mail to": "À ",
+  "mail cc": "Copie ",
+  "headers from": "De",
+  "headers to": "À",
+  "headers cc": "Copie",
+  "headers reply-to": "Répondre à",
+  "headers date": "Date",
+  "headers subject": "Objet",
+  "load more messages": "afficher %{smart_count} message supplémentaire |||| afficher %{smart_count} messages supplémentaires",
+  "length bytes": "octets",
+  "length kbytes": "ko",
+  "length mbytes": "Mo",
   "mail action reply": "Répondre",
   "mail action reply all": "Répondre à tous",
   "mail action forward": "Transférer",
@@ -9371,7 +9655,8 @@ module.exports = {
   "toast show": "Afficher les alertes",
   "toast close all": "Fermer toutes les alertes",
   "notif new title": 'Messagerie Cozy',
-  "notif new": "%{smart_count} nouveau message dans %{box} de %{account}||||\n%{smart_count} nouveaux messages dans %{box} de %{account}||||",
+  "notif new": "%{smart_count} message non-lu dans le compte %{account}||||\n%{smart_count} messages non-lus dans le compte  %{account}",
+  "notif complete": "Importation du compte %{account} finie.",
   "contact form": "Sélectionnez des contacts",
   "contact form placeholder": "Nom",
   "contact create success": "%{contact} a été ajouté(e) à vos contacts",
@@ -9645,7 +9930,7 @@ AccountStore = (function(_super) {
   };
 
   AccountStore.prototype._applyMailboxDiff = function(accountID, diff) {
-    var account, mailboxes, updated;
+    var account, diffTotalUnread, mailboxes, totalUnread, updated, _ref;
     account = _accounts.get(accountID);
     mailboxes = account.get('mailboxes');
     updated = mailboxes.withMutations(function(map) {
@@ -9669,8 +9954,15 @@ AccountStore = (function(_super) {
       }
       return _results;
     });
+    diffTotalUnread = ((_ref = diff[accountID]) != null ? _ref.nbUnread : void 0) || 0;
+    if (diffTotalUnread) {
+      totalUnread = account.get('totalUnread') + diffTotalUnread;
+      account = account.set('totalUnread', totalUnread);
+    }
     if (updated !== mailboxes) {
       account = account.set('mailboxes', updated);
+    }
+    if (account !== _accounts.get(accountID)) {
       _accounts = _accounts.set(accountID, account);
       _refreshSelected();
       return this.emit('change');
@@ -9742,19 +10034,15 @@ AccountStore = (function(_super) {
       this._setCurrentAccount(this.getDefault());
       return this.emit('change');
     });
-    return handle(ActionTypes.RECEIVE_MAILBOX_UPDATE, function(boxData) {
-      var message;
+    handle(ActionTypes.RECEIVE_MAILBOX_UPDATE, function(boxData) {
       setMailbox(boxData.accountID, boxData.id, boxData);
-      if (boxData.nbRecent > 0) {
-        message = t('notif new', {
-          smart_count: boxData.nbRecent,
-          box: boxData.label,
-          account: this.getByID(boxData.accountID).get('label')
-        });
-        this.emit('notify', t('notif new title'), {
-          body: message
-        });
-      }
+      return this.emit('change');
+    });
+    return handle(ActionTypes.RECEIVE_REFRESH_NOTIF, function(data) {
+      var account;
+      account = _accounts.get(data.accountID);
+      account = account.set('totalUnread', data.totalUnread);
+      _accounts.set(data.accountID, account);
       return this.emit('change');
     });
   };
@@ -10237,13 +10525,14 @@ MessageStore = (function(_super) {
   _prevAction = null;
 
   computeMailboxDiff = function(oldmsg, newmsg) {
-    var added, changed, deltaUnread, isRead, newboxes, oldboxes, out, removed, stayed, wasRead, _ref1, _ref2;
+    var accountID, added, changed, deltaUnread, isRead, newboxes, oldboxes, out, removed, stayed, wasRead, _ref1, _ref2;
     if (!oldmsg) {
       return {};
     }
     changed = false;
     wasRead = (_ref1 = MessageFlags.SEEN, __indexOf.call(oldmsg.get('flags'), _ref1) >= 0);
     isRead = (_ref2 = MessageFlags.SEEN, __indexOf.call(newmsg.get('flags'), _ref2) >= 0);
+    accountID = newmsg.get('accountID');
     oldboxes = Object.keys(oldmsg.get('mailboxIDs'));
     newboxes = Object.keys(newmsg.get('mailboxIDs'));
     out = {};
@@ -10265,10 +10554,13 @@ MessageStore = (function(_super) {
     });
     stayed = _.intersection(oldboxes, newboxes);
     deltaUnread = wasRead && !isRead ? +1 : !wasRead && isRead ? -1 : 0;
+    if (deltaUnread !== 0) {
+      changed = true;
+    }
+    out[accountID] = {
+      nbUnread: deltaUnread
+    };
     stayed.forEach(function(boxid) {
-      if (deltaUnread !== 0) {
-        changed = true;
-      }
       return out[boxid] = {
         nbTotal: 0,
         nbUnread: deltaUnread
@@ -10666,11 +10958,16 @@ RefreshesStore = (function(_super) {
       _refreshes = _refreshes.set(id, refresh).toOrderedMap();
       return this.emit('change');
     });
-    return handle(ActionTypes.RECEIVE_REFRESH_DELETE, function(refreshID) {
+    handle(ActionTypes.RECEIVE_REFRESH_DELETE, function(refreshID) {
       _refreshes = _refreshes.filter(function(refresh) {
         return refresh.get('id') !== refreshID;
       }).toOrderedMap();
       return this.emit('change');
+    });
+    return handle(ActionTypes.RECEIVE_REFRESH_NOTIF, function(data) {
+      return this.emit('notify', t('notif new title'), {
+        body: data.message
+      });
     });
   };
 
@@ -10881,6 +11178,13 @@ module.exports = {
     message = MessageStore.getByID(messageID);
     return message != null ? message.toJS() : void 0;
   },
+  getCurrentConversation: function() {
+    var conversationID, _ref;
+    conversationID = MessageStore.getCurrentConversationID();
+    if (conversationID != null) {
+      return (_ref = MessageStore.getConversation(conversationID)) != null ? _ref.toJS() : void 0;
+    }
+  },
   getCurrentActions: function() {
     var res;
     res = [];
@@ -10959,7 +11263,7 @@ module.exports = {
     }
   },
   messageDisplay: function(message, force) {
-    var action, params, url, urlOptions;
+    var action, conversationID, params, url, urlOptions;
     if (message == null) {
       message = MessageStore.getById(MessageStore.getCurrentID());
     }
@@ -10969,11 +11273,12 @@ module.exports = {
     if (force === false && (window.router.current.secondPanel == null)) {
       return;
     }
-    if (SettingsStore.get('displayConversation')) {
+    conversationID = message.get('conversationID');
+    if (SettingsStore.get('displayConversation') && (conversationID != null)) {
       action = 'conversation';
       params = {
         messageID: message.get('id'),
-        conversationID: message.get('conversationID')
+        conversationID: conversationID
       };
     } else {
       action = 'message';
@@ -11264,7 +11569,7 @@ module.exports = MessageUtils = {
         message.bcc = [];
         message.subject = "" + (t('compose reply prefix')) + (inReplyTo.get('subject'));
         message.text = separator + this.generateReplyText(text) + "\n";
-        message.html = "<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
+        message.html = "<br /><br /><br />\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
         break;
       case ComposeActions.REPLY_ALL:
         params = {
@@ -11827,7 +12132,10 @@ url = window.location.origin;
 pathToSocketIO = "" + window.location.pathname + "socket.io";
 
 socket = io.connect(url, {
-  path: pathToSocketIO
+  path: pathToSocketIO,
+  reconnectionDelayMax: 60000,
+  reconectionDelay: 2000,
+  reconnectionAttempts: 3
 });
 
 dispatchAs = function(action) {
@@ -11868,6 +12176,8 @@ socket.on('connect', function() {
 socket.on('reconnect', function() {
   return setServerScope();
 });
+
+socket.on('refresh.notify', dispatchAs(ActionTypes.RECEIVE_REFRESH_NOTIF));
 
 exports.acknowledgeRefresh = function(taskid) {
   return socket.emit('mark_ack', taskid);

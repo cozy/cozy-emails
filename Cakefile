@@ -15,7 +15,7 @@ task 'build', 'Build CoffeeScript to Javascript', ->
               "cp server/views/* build/server/views/ && " + \
               "rm -rf build/client && mkdir build/client && " + \
               "cd client/ && brunch build --production && cd .. && " + \
-              "cp -R client/public build/client/"
+              "coffee -cb --output build/client/app/locales client/app/locales"
 
     exec command, (err, stdout, stderr) ->
         if err

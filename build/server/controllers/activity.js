@@ -77,7 +77,7 @@ ContactActivity = {
 };
 
 module.exports.create = function(req, res, next) {
-  var activity;
+  var activity, _ref1;
   activity = req.body;
   switch (activity.data.type) {
     case 'contact':
@@ -103,6 +103,7 @@ module.exports.create = function(req, res, next) {
       break;
     case 'error':
       log.error(activity.data);
+      log.error((_ref1 = activity.data.error) != null ? _ref1.stack : void 0);
       return res.send(null);
     default:
       return res.status(400).send({

@@ -22,21 +22,22 @@ module.exports =
         error           = ''
         conversation.map (message) ->
             mailboxIDs = message.get 'mailboxIDs'
-            if mailboxIDs[trash]?
-                error = t 'message delete already'
-            # action to allow undelete
-            action =
-                id: message.get 'id'
-                from: Object.keys mailboxIDs
-                to: trash
-            messagesActions.push action
+            # Some messages of the conversation may already be in trash.
+            # Do nothing if it is the case
+            if not mailboxIDs[trash]?
+                # action to allow undelete
+                action =
+                    id: message.get 'id'
+                    from: Object.keys mailboxIDs
+                    to: trash
+                messagesActions.push action
 
-            # move messages client-side to trash, to update UI without waiting
-            # for server response
-            msg = message.toJS()
-            delete msg.mailboxIDs[id] for id of msg.mailboxIDs
-            msg.mailboxIDs[trash] = -1
-            messages.push msg
+                # move messages client-side to trash, to update UI without waiting
+                # for server response
+                msg = message.toJS()
+                delete msg.mailboxIDs[id] for id of msg.mailboxIDs
+                msg.mailboxIDs[trash] = -1
+                messages.push msg
 
         .toJS()
 

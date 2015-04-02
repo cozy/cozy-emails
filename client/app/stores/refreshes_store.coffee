@@ -39,6 +39,10 @@ class RefreshesStore extends Store
             .toOrderedMap()
             @emit 'change'
 
+        handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
+            @emit 'notify', t('notif new title'), body: data.message
+
+
     getRefreshing: -> _refreshes
 
 module.exports = new RefreshesStore()

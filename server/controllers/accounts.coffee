@@ -4,7 +4,7 @@ Account = require '../models/account'
 log = require('../utils/logging')(prefix: 'accounts:controller')
 {NotFound} = require '../utils/errors'
 async = require 'async'
-
+notifications = require '../utils/notifications'
 
 
 
@@ -48,6 +48,7 @@ module.exports.create = (req, res, next) ->
         # in the background, start fetching mails
         res.account.imap_fetchMailsTwoSteps (err) ->
             log.error "FETCH MAIL FAILED", err.stack or err if err
+            notifications.accountFirstImportComplete res.account
 
 # check account parameters
 module.exports.check = (req, res, next) ->

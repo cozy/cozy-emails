@@ -58,6 +58,11 @@
         .hour
           flex-grow 1
 
+        // Hard quickfix for chrome
+        // FIXME: Remove when revamp message-list
+        .avatar-wrapper
+          flex 1 90px
+
         .preview
             margin 0.25em .75em 0 auto
             overflow hidden
@@ -114,7 +119,7 @@
             display none
 
       .fav
-        color yellow
+        color lightorange
         display none
 
       .attach
@@ -142,7 +147,11 @@
       padding 0 .5em
 
     .message:hover
-       background lightorange
+      background lightorange
+
+      .fav
+      .attach
+        color white
 
     .message.edited
        span.wrapper
@@ -253,24 +262,6 @@
     .btn.btn-default.dropdown-toggle.move:hover
     .btn.btn-default.dropdown-toggle.more:hover
         color: actioncolor
-
-
-.message
-    .fa-paperclip
-        display none
-
-    .fa-star
-        display none
-
-.message:hover
-    background lightorange
-
-.message.active
-
-    .select
-        height auto
-        margin 0
-        padding 0
 
 .more-messages
     cursor pointer

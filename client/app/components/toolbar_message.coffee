@@ -32,25 +32,27 @@ module.exports = React.createClass
 
 
     render: ->
-        nav className: 'toolbar toolbar-message btn-toolbar',
+        nav
+            className: 'toolbar toolbar-message btn-toolbar'
+            onClick: (event) -> event.stopPropagation()
             # inverted order due to `pull-right` class
-            div className: cBtnGroup,
+            div(className: cBtnGroup,
                 @renderToolboxMove()
-                @renderToolboxActions()
-            @renderQuickActions()
+                @renderToolboxActions()) if @props.full
+            @renderQuickActions() if @props.full
             @renderReply()
 
 
     renderReply: ->
         div className: cBtnGroup,
             button
-                className: "#{cBtn} fa-mail-reply"
+                className: "#{cBtn} fa-mail-reply mail-reply"
                 onClick: @props.onReply
             button
-                className: "#{cBtn} fa-mail-reply-all"
+                className: "#{cBtn} fa-mail-reply-all mail-reply-all"
                 onClick: @props.onReplyAll
             button
-                className: "#{cBtn} fa-mail-forward"
+                className: "#{cBtn} fa-mail-forward mail-forward"
                 onClick: @props.onForward
 
 

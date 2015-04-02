@@ -67,6 +67,7 @@ module.exports.create = (req, res, next) ->
                     error: true
         when 'error'
             log.error activity.data
+            log.error activity.data.error?.stack
             res.send null
         else
             res.status(400).send

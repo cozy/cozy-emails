@@ -22,7 +22,7 @@ module.exports = React.createClass
 
 
     getParams: (messageID, conversationID) ->
-        if @props.settings.get 'displayConversation'
+        if @props.settings.get 'displayConversation' and conversationID?
             action: 'conversation'
             parameters:
                 messageID: messageID
@@ -34,7 +34,7 @@ module.exports = React.createClass
 
 
     render: ->
-        nav className: 'toolbar toolbar-conversation btn-toolbar pull-right',
+        nav className: 'toolbar toolbar-conversation btn-toolbar',
             div className: 'btn-group',
                 @renderNav 'prev'
                 @renderNav 'next'

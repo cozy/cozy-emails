@@ -45,7 +45,8 @@ module.exports = MailsInput = React.createClass
         @fixHeight()
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
 
     render: ->
 
@@ -103,9 +104,16 @@ module.exports = MailsInput = React.createClass
             open: @state.open and @state.contacts?.length > 0
         current    = 0
 
+        # inChrome, we need to cancel some events for drop to work
+        cancelDragEvent = (event) ->
+            event.preventDefault()
+
         div
             className: className,
             onDrop: @onDrop,
+            onDragEnter: cancelDragEvent,
+            onDragLeave: cancelDragEvent,
+            onDragOver: cancelDragEvent,
                 label htmlFor: @props.id, className: classLabel,
                     @props.label
                 knownContacts
@@ -117,6 +125,9 @@ module.exports = MailsInput = React.createClass
                         onKeyDown: @onKeyDown
                         onBlur: @onBlur
                         onDrop: @onDrop
+                        onDragEnter: cancelDragEvent
+                        onDragLeave: cancelDragEvent
+                        onDragOver: cancelDragEvent
                         ref: 'contactInput'
                         rows: 1
                         value: @state.unknown

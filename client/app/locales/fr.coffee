@@ -95,8 +95,18 @@ module.exports =
                                     """
 
       # Mail
-      "mail receivers"          : "À "
-      "mail receivers cc"       : "Copie "
+      "mail to"                 : "À "
+      "mail cc"                 : "Copie "
+      "headers from"            : "De"
+      "headers to"              : "À"
+      "headers cc"              : "Copie"
+      "headers reply-to"        : "Répondre à"
+      "headers date"            : "Date"
+      "headers subject"         : "Objet"
+      "load more messages"      : "afficher %{smart_count} message supplémentaire |||| afficher %{smart_count} messages supplémentaires"
+      "length bytes"            : "octets"
+      "length kbytes"           : "ko"
+      "length mbytes"           : "Mo"
       "mail action reply"       : "Répondre"
       "mail action reply all"   : "Répondre à tous"
       "mail action forward"     : "Transférer"
@@ -322,9 +332,12 @@ module.exports =
       # Notifications
       "notif new title": 'Messagerie Cozy'
       "notif new": """
-        %{smart_count} nouveau message dans %{box} de %{account}||||
-        %{smart_count} nouveaux messages dans %{box} de %{account}||||
+        %{smart_count} message non-lu dans le compte %{account}||||
+        %{smart_count} messages non-lus dans le compte  %{account}
       """
+      "notif complete": "
+            Importation du compte %{account} finie.
+      "
 
       # Contacts
       "contact form"             : "Sélectionnez des contacts"

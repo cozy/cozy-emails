@@ -1,4 +1,4 @@
-{div, ul, li, span, i, p, h3, a} = React.DOM
+{section, header, ul, li, span, i, p, h3, a, button} = React.DOM
 Message = require './message'
 Toolbar = require './toolbar_conversation'
 classer = React.addons.classSet
@@ -23,15 +23,15 @@ module.exports = React.createClass
         settings             : React.PropTypes.object.isRequired
         accounts             : React.PropTypes.object.isRequired
 
+
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
                not(_.isEqual(nextProps, @props))
 
-    getInitialState: ->
-        expanded: not @props.settings.get('displayConversation')
 
-    expand: ->
-        @setState expanded: true
+    getInitialState: ->
+        expanded: []
+
 
     renderToolbar: ->
         Toolbar
@@ -42,83 +42,72 @@ module.exports = React.createClass
             prevConversationID  : @props.prevConversationID
             settings            : @props.settings
 
-    renderMessage: (key, message, active) ->
+
+    renderMessage: (key, active) ->
         Message
             ref                 : 'message'
             accounts            : @props.accounts
             active              : active
             inConversation      : @props.conversation.length > 1
-            key                 : key
+            key                 : key.toString()
             mailboxes           : @props.mailboxes
-            message             : message
+            message             : @props.conversation.get key
             selectedAccountID   : @props.selectedAccountID
             selectedAccountLogin: @props.selectedAccountLogin
             selectedMailboxID   : @props.selectedMailboxID
             settings            : @props.settings
 
+
+    renderGroup: (messages, key) ->
+        if messages.length > 3 and key not in @state.expanded
+            items = []
+            [first, ..., last] = messages
+            items.push @renderMessage(first, false)
+            items.push button
+                className: 'more'
+                onClick: =>
+                    expanded = @state.expanded[..]
+                    expanded.push key
+                    @setState expanded: expanded
+                t 'load more messages', messages.length - 2
+                i className: 'fa fa-ellipsis-v'
+            items.push @renderMessage(last, false)
+        else
+            items = (@renderMessage(key, false) for key in messages)
+
+        return items
+
+
     render: ->
         if not @props.message? or not @props.conversation
             return p null, t "app loading"
 
-        expandUrl = @buildUrl
-            direction: 'first'
-            action: 'message'
-            parameters: @props.message.get 'id'
-            fullWidth: true
+        # Sort messages in conversation to find seen messages and group them
+        messages = []
+        lastMessageIndex = @props.conversation.length - 1
+        @props.conversation.map((message, key) =>
+            isSeen = MessageFlags.SEEN in message.get 'flags'
 
-        if window.router.previous?
-            try
-                selectedAccountID = @props.selectedAccountID
-            catch
-                selectedAccountID = @props.conversation.get(0).mailbox
-        else
-            selectedAccountID = @props.conversation.get(0).mailbox
-
-        if @props.layout is 'full'
-            closeUrl = @buildUrl
-                direction: 'first'
-                action: 'account.mailbox.messages'
-                parameters: selectedAccountID
-                fullWidth: true
-        else
-            closeUrl = @buildClosePanelUrl @props.layout
-
-        closeIcon = if @props.layout is 'full' then 'fa-th-list' else 'fa-times'
-
-        otherMessages = {}
-        activeMessages = {}
-
-        @props.conversation.map (message, key) =>
-            # open every unseen message of the conversation
-            if @props.message.get('id') is message.get('id') or
-                    MessageFlags.SEEN not in message.get('flags')
-
-                activeMessages[key] = message
-
+            if not isSeen or key is lastMessageIndex
+                messages.push key
             else
-                otherMessages[key] = message
+                [..., last] = messages
+                messages.push(last = []) unless _.isArray(last)
+                last.push key
+        ).toJS()
 
-        .toJS()
+        # Starts components rendering
+        section className: 'conversation',
 
-        div className: 'conversation',
-            @renderToolbar()
+            header null,
+                @renderToolbar()
+                h3
+                    className: 'conversation-title'
+                    'data-message-id': @props.message.get 'id'
+                    @props.message.get 'subject'
 
-            h3
-                className: 'message-title'
-                'data-message-id': @props.message.get 'id'
-                @props.message.get 'subject'
-
-            ul className: 'thread list-unstyled',
-
-                if @state.expanded
-                    for key, message of otherMessages
-                        @renderMessage key, message, false
-
-                else if @props.conversationLength > 1
-                    li className: 'conversation-length-msg', onClick: @expand,
-                        a null
-                            t 'mail conversation length',
-                                smart_count: @props.conversationLength
-
-                for key, message of activeMessages
-                    @renderMessage key, message, true
+            for glob, index in messages
+                if _.isArray glob
+                    @renderGroup glob, index
+                else
+                    @renderMessage glob, true

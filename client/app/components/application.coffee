@@ -188,12 +188,12 @@ module.exports = Application = React.createClass
             disposition = LayoutStore.getDisposition()
             if disposition.type is Dispositions.HORIZONTAL
                 classes =
-                    firstPanel: "panel col-xs-12 col-md-12 hidden-xs hidden-sm row-#{disposition.height}"
-                    secondPanel: "panel col-xs-12 col-md-12 row-#{10 - disposition.height} row-offset-#{disposition.height}"
+                    firstPanel: "col-xs-12 col-md-12 hidden-xs hidden-sm row-#{disposition.height}"
+                    secondPanel: "col-xs-12 col-md-12 row-#{10 - disposition.height}"
             else
                 classes =
-                    firstPanel: "panel col-xs-12 col-md-#{disposition.width} hidden-xs hidden-sm row-10"
-                    secondPanel: "panel col-xs-12 col-md-#{12 - disposition.width} col-offset-#{disposition.width} row-10"
+                    firstPanel: "col-xs-12 col-md-#{disposition.width} hidden-xs hidden-sm row-10"
+                    secondPanel: "col-xs-12 col-md-#{12 - disposition.width} row-10"
 
             # we don't animate in the first render
             if previous?
@@ -271,7 +271,8 @@ module.exports = Application = React.createClass
                 conversationID = MessageStore.getCurrentConversationID()
                 if not conversationID? and messages.length > 0
                     conversationID = messages.first().get 'conversationID'
-                    conversation = MessageStore.getConversation conversationID
+                    if conversationID?
+                        conversation = MessageStore.getConversation conversationID
                 conversationLengths = MessageStore.getConversationsLength()
 
             query = _.clone(MessageStore.getParams())

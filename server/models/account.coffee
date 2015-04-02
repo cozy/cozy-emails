@@ -44,6 +44,7 @@ _ = require 'lodash'
 async = require 'async'
 CONSTANTS = require '../utils/constants'
 {RefreshError} = require '../utils/errors'
+notifications = require '../utils/notifications'
 require('../utils/socket_handler').wrapModel Account, 'account'
 
 refreshTimeout = null
@@ -213,29 +214,51 @@ Account::destroyEverything = (callback) ->
         (cb) => Message.safeDestroyByAccountID @id, cb
     ], callback
 
-Account::toClientObject = (callback) ->
-    rawObject = @toObject()
-    rawObject.favorites ?= []
+Account::totalUnread = (callback) ->
+    Message.rawRequest 'totalUnreadByAccount',
+        key: @id,
+        reduce: true
+    , (err, results) ->
+        return callback err if err
+        callback null, results?[0]?.value or 0
 
+Account::getMailboxes = (callback) ->
     Mailbox.rawRequest 'treeMap',
         startkey: [@id]
         endkey: [@id, {}]
         include_docs: true
-    , (err, rows) ->
+    , callback
+
+Account::toClientObject = (callback) ->
+    rawObject = @toObject()
+    rawObject.favorites ?= []
+
+    async.parallel
+        totalUnread: (cb) => @totalUnread cb
+        mailboxes:   (cb) => @getMailboxes cb
+        counts:      (cb) -> Mailbox.getCounts null, cb
+
+    , (err, {mailboxes, counts, totalUnread}) ->
         return callback err if err
-        rawObject.mailboxes = rows.map (row) ->
-            row.doc.id ?= row.id
-            _.pick row.doc, 'id', 'label', 'attribs', 'tree'
 
-        Mailbox.getCounts null, (err, counts) ->
-            return callback err if err
-            for box in rawObject.mailboxes
-                count = counts[box.id] or {total: 0, unread: 0, recent: 0}
-                box.nbTotal  = count.total
-                box.nbUnread = count.unread
-                box.nbRecent = count.recent
 
-            callback null, rawObject
+
+        rawObject.totalUnread = totalUnread
+        rawObject.mailboxes = mailboxes.map (row) ->
+            box = row.doc
+            id = box.id or row.id
+            count = counts[id]
+            return clientBox =
+                id       : id
+                label    : box.label
+                tree     : box.tree
+                label    : box.label
+                attribs  : box.attribs
+                nbTotal  : count?.total  or 0
+                nbUnread : count?.unread or 0
+                nbRecent : count?.recent or 0
+
+        callback null, rawObject
 
 Account.clientList = (callback) ->
     Account.request 'all', (err, accounts) ->
@@ -262,7 +285,7 @@ Account::imap_refreshBoxes = (callback) ->
         (cb) => Mailbox.getBoxes @id, cb
         (cb) => @imap_getBoxes cb
     ], (err, results) ->
-        log.debug "refreshBoxes#results", results
+        log.debug "refreshBoxes#results"
         return callback err if err
         [cozyBoxes, imapBoxes] = results
 
@@ -279,8 +302,8 @@ Account::imap_refreshBoxes = (callback) ->
             else
                 toDestroy.push cozyBox
 
-        log.debug "refreshBoxes#results2"
-
+        log.debug "refreshBoxes#results2", boxToAdd.length,
+            toFetch.length, toDestroy.length
 
         async.eachSeries boxToAdd, (box, cb) ->
             log.debug "refreshBoxes#creating", box.label
@@ -321,6 +344,7 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, firstImport, callback) ->
         log.info "   ", toDestroy.length, "BOXES TO DESTROY"
         numToFetch = toFetch.length + 1
         reporter = ImapReporter.accountFetch account, numToFetch, firstImport
+        shouldNotifAccount = false
 
         # fetch INBOX first
         toFetch.sort (a, b) ->
@@ -328,13 +352,14 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, firstImport, callback) ->
             else return 1
 
         async.eachSeries toFetch, (box, cb) ->
-            box.imap_fetchMails limitByBox, firstImport, (err) ->
+            box.imap_fetchMails limitByBox, firstImport, (err, shouldNotif) ->
                 # @TODO : Figure out how to distinguish a mailbox that
                 # is not selectable but not marked as such. In the meantime
                 # dont pop the error to the client
                 if err and -1 is err.message?.indexOf "Mailbox doesn't exist"
                     reporter.onError err
                 reporter.addProgress 1
+                shouldNotifAccount = true if shouldNotif
                 # dont interrupt the loop if one fail
                 cb null
 
@@ -349,6 +374,8 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, firstImport, callback) ->
             , (err) ->
                 account.setRefreshing false
                 reporter.onDone()
+                if shouldNotifAccount
+                    notifications.accountRefreshed account
                 callback null
 
 Account::imap_fetchMailsTwoSteps = (callback) ->
@@ -493,7 +520,7 @@ Account::testSMTPConnection = (callback) ->
 
     connection.once 'error', (err) ->
         log.warn "SMTP CONNECTION ERROR", err
-        reject new AccountConfigError 'smtpServer'
+        reject new AccountConfigError 'smtpServer', err
 
     # in case of wrong port, the connection takes forever to emit error
     timeout = setTimeout ->
@@ -502,12 +529,12 @@ Account::testSMTPConnection = (callback) ->
     , 10000
 
     connection.connect (err) =>
-        return reject new AccountConfigError 'smtpServer' if err
+        return reject new AccountConfigError 'smtpServer', err if err
         clearTimeout timeout
 
         if @smtpMethod isnt 'NONE'
             connection.login auth, (err) ->
-                if err then reject new AccountConfigError 'auth'
+                if err then reject new AccountConfigError 'auth', err
                 else callback null
                 connection.close()
         else

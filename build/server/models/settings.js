@@ -82,7 +82,7 @@ Settings.getDefault = function(callback) {
   settings = {
     composeInHTML: true,
     composeOnTop: false,
-    desktopNotifications: false,
+    desktopNotifications: true,
     displayConversation: true,
     displayPreview: true,
     layoutStyle: 'three',
