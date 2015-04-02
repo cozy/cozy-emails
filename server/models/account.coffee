@@ -213,29 +213,51 @@ Account::destroyEverything = (callback) ->
         (cb) => Message.safeDestroyByAccountID @id, cb
     ], callback
 
-Account::toClientObject = (callback) ->
-    rawObject = @toObject()
-    rawObject.favorites ?= []
+Account::totalUnread = (callback) ->
+    Message.rawRequest 'totalUnreadByAccount',
+        key: @id,
+        reduce: true
+    , (err, results) ->
+        return callback err if err
+        callback null, results?[0]?.value or 0
 
+Account::getMailboxes = (callback) ->
     Mailbox.rawRequest 'treeMap',
         startkey: [@id]
         endkey: [@id, {}]
         include_docs: true
-    , (err, rows) ->
+    , callback
+
+Account::toClientObject = (callback) ->
+    rawObject = @toObject()
+    rawObject.favorites ?= []
+
+    async.parallel
+        totalUnread: (cb) => @totalUnread cb
+        mailboxes:   (cb) => @getMailboxes cb
+        counts:      (cb) -> Mailbox.getCounts null, cb
+
+    , (err, {mailboxes, counts, totalUnread}) ->
         return callback err if err
-        rawObject.mailboxes = rows.map (row) ->
-            row.doc.id ?= row.id
-            _.pick row.doc, 'id', 'label', 'attribs', 'tree'
 
-        Mailbox.getCounts null, (err, counts) ->
-            return callback err if err
-            for box in rawObject.mailboxes
-                count = counts[box.id] or {total: 0, unread: 0, recent: 0}
-                box.nbTotal  = count.total
-                box.nbUnread = count.unread
-                box.nbRecent = count.recent
 
-            callback null, rawObject
+
+        rawObject.totalUnread = totalUnread
+        rawObject.mailboxes = mailboxes.map (row) ->
+            box = row.doc
+            id = box.id or row.id
+            count = counts[id]
+            return clientBox =
+                id       : id
+                label    : box.label
+                tree     : box.tree
+                label    : box.label
+                attribs  : box.attribs
+                nbTotal  : count?.total  or 0
+                nbUnread : count?.unread or 0
+                nbRecent : count?.recent or 0
+
+        callback null, rawObject
 
 Account.clientList = (callback) ->
     Account.request 'all', (err, accounts) ->

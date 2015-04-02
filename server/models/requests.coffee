@@ -30,6 +30,12 @@ module.exports =
 
     message:
 
+        totalUnreadByAccount:
+            reduce: '_count'
+            map: (doc) ->
+                if -1 is doc.flags.indexOf '\\Seen'
+                    emit doc.accountID, null
+
         byMailboxRequest:
             reduce: '_count'
             map: (doc) ->
