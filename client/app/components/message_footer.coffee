@@ -14,7 +14,7 @@ module.exports = React.createClass
             @renderAttachments()
 
 
-    renderAttachments: () ->
+    renderAttachments: ->
         attachments = @props.message.get('attachments')?.toJS() or []
         return unless attachments.length
 
@@ -60,7 +60,7 @@ AttachmentPreview = React.createClass
 
 
     render: ->
-         li key: @props.key,
+        li key: @props.key,
             @renderIcon()
             a
                 target: '_blank'

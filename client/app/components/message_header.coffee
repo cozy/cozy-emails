@@ -20,7 +20,7 @@ module.exports = React.createClass
     render: ->
         avatar = MessageUtils.getAvatar @props.message
 
-        div null,
+        div key: "message-header-#{@props.message.get 'id'}",
             if avatar
                 div className: 'sender-avatar',
                     img className: 'media-object', src: avatar
@@ -72,11 +72,13 @@ module.exports = React.createClass
         users = @props.message.get field
         return unless users.length
 
-        div className: "addresses #{field}",
-            if field isnt 'from'
-                span null,
-                    t "mail #{field}"
-            @formatUsers(users)...
+        div
+            className: "addresses #{field}",
+            key: "address-#{field}",
+                if field isnt 'from'
+                    span null,
+                        t "mail #{field}"
+                @formatUsers(users)...
 
 
     renderDetailsPopup: ->
@@ -85,31 +87,31 @@ module.exports = React.createClass
         cc = @props.message.get 'cc'
         reply = @props.message.get('reply-to')?[0]
 
-        row = (value, label = false, rowSpan = false) ->
+        row = (id, value, label = false, rowSpan = false) ->
             items = []
             if label
                 attrs = className: 'label'
                 attrs.rowSpan = rowSpan if rowSpan
                 items.push td attrs, t label
-            items.push td null, value
-            return tr null, items...
+            items.push td key: "cell-#{id}", value
+            return tr key: "row-#{id}", items...
 
 
         div
             className: 'details', 'aria-expanded': @state.detailled
             onClick: (event) -> event.stopPropagation()
             i className: 'btn fa fa-caret-down', onClick: @toggleDetails
-            div className: 'popup', 'aria-hidden': !@state.detailled,
+            div className: 'popup', 'aria-hidden': not @state.detailled,
                 table null,
                     tbody null,
-                        row @formatUsers(from), 'headers from'
-                        row @formatUsers(to[0]), 'headers to', to.length if to.length
-                        row @formatUsers(dest) for dest in to[1..] if to.length
-                        row @formatUsers(cc[0]), 'headers cc', cc.length if cc.length
-                        row @formatUsers(dest) for dest in cc[1..] if cc.length
-                        row @formatUsers(reply), 'headers reply-to' if reply?
-                        row @props.message.get('createdAt'), 'headers date'
-                        row @props.message.get('subject'), 'headers subject'
+                        row 'from', @formatUsers(from), 'headers from'
+                        row 'to',   @formatUsers(to[0]), 'headers to', to.length if to.length
+                        row 'dest', @formatUsers(dest) for dest in to[1..] if to.length
+                        row 'cc',   @formatUsers(cc[0]), 'headers cc', cc.length if cc.length
+                        row 'dest', @formatUsers(dest) for dest in cc[1..] if cc.length
+                        row 'reply', @formatUsers(reply), 'headers reply-to' if reply?
+                        row 'created', @props.message.get('createdAt'), 'headers date'
+                        row 'subject', @props.message.get('subject'), 'headers subject'
 
     toggleDetails: ->
-        @setState detailled: !@state.detailled
+        @setState detailled: not @state.detailled
