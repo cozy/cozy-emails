@@ -512,7 +512,7 @@ MessageListBody = React.createClass
         messages = @props.messages.map (message, key) =>
             id = message.get('id')
             cid = message.get('conversationID')
-            if @props.settings.get('displayConversation')
+            if @props.settings.get('displayConversation') and cid?
                 isActive = @props.conversationID is cid
             else
                 isActive = @props.messageID is id
@@ -584,7 +584,7 @@ MessageItem = React.createClass
                 messageID: message.get 'id'
         else
             conversationID = message.get 'conversationID'
-            if conversationID and @props.settings.get('displayConversation')
+            if conversationID? and @props.settings.get('displayConversation')
                 action = 'conversation'
                 params =
                     conversationID: conversationID
@@ -592,7 +592,6 @@ MessageItem = React.createClass
             else
                 action = 'message'
                 params =
-                    conversationID: conversationID
                     messageID: message.get 'id'
         url = @buildUrl
             direction: 'second'

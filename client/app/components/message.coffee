@@ -285,7 +285,7 @@ module.exports = React.createClass
             nextMessageID      = @props.prevMessageID
             nextConversationID = @props.prevConversationID
         if nextMessageID
-            if @props.settings.get('displayConversation')
+            if @props.settings.get('displayConversation') and nextConversationID?
                 @redirect
                     direction: 'second'
                     action : 'conversation'

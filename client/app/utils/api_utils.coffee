@@ -100,11 +100,12 @@ module.exports =
         # return if second panel isn't already open
         if force is false and not window.router.current.secondPanel?
             return
-        if SettingsStore.get('displayConversation')
+        conversationID = message.get 'conversationID'
+        if SettingsStore.get('displayConversation') and conversationID?
             action = 'conversation'
             params =
                 messageID: message.get 'id'
-                conversationID: message.get 'conversationID'
+                conversationID: conversationID
         else
             action = 'message'
             params =

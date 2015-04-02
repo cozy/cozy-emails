@@ -22,7 +22,7 @@ module.exports = React.createClass
 
 
     getParams: (messageID, conversationID) ->
-        if @props.settings.get 'displayConversation'
+        if @props.settings.get 'displayConversation' and conversationID?
             action: 'conversation'
             parameters:
                 messageID: messageID
