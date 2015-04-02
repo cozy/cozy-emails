@@ -300,8 +300,7 @@ MessageList = React.createClass
                     # message count
                     # So we assume that if query.pageAfter is null, there's
                     # no more messages to display
-                    nbMessages = parseInt(@props.counterMessage, 10)
-                    if @props.messages.count() < nbMessages and
+                    if @moreToSee() and
                        @props.query.pageAfter?
                         p className: 'text-center list-footer',
                             if @props.fetching
@@ -315,6 +314,25 @@ MessageList = React.createClass
                                     t 'list next page'
                     else
                         p ref: 'listEnd', t 'list end'
+
+
+    # Check if we should display "More messages"
+    moreToSee: ->
+        nbMessages = parseInt(@props.messagesCount, 10)
+        # when displaying conversations, we have to sum the number of messages
+        # inside each one to know if we have displayed all messages inside this
+        # box
+        if @props.settings.get('displayConversation')
+            nbInConv   = 0
+            @props.messages.map (message) =>
+                length = @props.conversationLengths.get(message.get 'conversationID')
+                if length?
+                    nbInConv += @props.conversationLengths.get(message.get 'conversationID')
+            .toJS()
+
+            return nbInConv < nbMessages
+        else
+            return @props.messages.count() < nbMessages
 
 
     refresh: (event) ->
@@ -453,8 +471,8 @@ MessageList = React.createClass
             LayoutActionCreator.showMessageList parameters: @props.query
 
     _handleRealtimeGrowth: ->
-        nbMessages = parseInt @props.counterMessage, 10
-        if nbMessages < @props.messages.count() and @refs.listEnd? and
+        nbMessages = parseInt @props.messagesCount, 10
+        if (not @moreToSee()) and @refs.listEnd? and
         not DomUtils.isVisible(@refs.listEnd.getDOMNode())
             lastdate = @props.messages.last().get('date')
             SocketUtils.changeRealtimeScope @props.mailboxID, lastdate
