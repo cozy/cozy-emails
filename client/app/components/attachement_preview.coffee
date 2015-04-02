@@ -49,8 +49,8 @@ module.exports = React.createClass
 
     displayFilesize: (length) ->
         if length < 1024
-            "#{length} octets"
+            "#{length} #{t 'length bytes'}"
         else if length < 1024*1024
-            "#{0 | length / 1024} Ko"
+            "#{0 | length / 1024} #{t 'length kbytes'}"
         else
-            "#{0 | length / (1024*1024)} Mo"
+            "#{0 | length / (1024*1024)} #{t 'length mbytes'}"
