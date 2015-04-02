@@ -129,8 +129,17 @@
                 + .addresses
                     display none
 
+                a:hover
+                    text-decoration none
+
             .participant
                 color darkcolor
+
+            .contact-address
+                color mediumcolor
+
+                i
+                    padding 0 .2em
 
             .indicators
             .date
@@ -143,21 +152,23 @@
             .date
                 order 3
             .to
-                order 4
-            .cc
                 order 5
-            .details
+            .cc
                 order 6
+            .details
+                order 4
 
         .fa-star
             color lightorange
 
         .details
+            position relative
+
             .popup
                 z-index 1
                 position absolute
                 top 90%
-                right 10px
+                right 0
                 padding 0.5em 10px
                 border 1px solid lightgrey
                 border-radius 2px
@@ -169,6 +180,7 @@
                 color darkcolor
                 font-size 1em
                 vertical-align baseline
+                white-space nowrap
 
             .label
                 text-align right
@@ -176,7 +188,7 @@
                 color mediumcolor
 
             .btn
-                padding 0 10px
+                padding 0 0 0 10px
 
             [aria-hidden=true]
                 display none

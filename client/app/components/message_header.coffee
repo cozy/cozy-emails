@@ -42,26 +42,34 @@ module.exports = React.createClass
         return unless users?
 
         format = (user) ->
-            console.trace() if not user?
-            unless user.name is ''
-                "#{user.name} <#{user.address}>"
+            items = []
+            if user.name
+                items.push "#{user.name} "
+                items.push span className: 'contact-address',
+                    i className: 'fa fa-angle-left'
+                    user.address
+                    i className: 'fa fa-angle-right'
             else
-                user.address
+                items.push user.address
+            return items
 
         if _.isArray users
             items = []
             for user in users
                 contact = ContactStore.getByAddress user.address
-                tag = if contact? then a else span
-                attrs = if contact?
-                    target: '_blank'
-                    href: "/#apps/contacts/contact/#{contact.get 'id'}"
-                    onClick: (event) -> event.stopPropagation()
-                else
-                    className: 'participant'
-                    onClick: (event) -> event.stopPropagation()
+                items.push if contact?
+                    a
+                        target: '_blank'
+                        href: "/#apps/contacts/contact/#{contact.get 'id'}"
+                        onClick: (event) -> event.stopPropagation()
+                        format(user)
 
-                items.push tag attrs, format(user)
+                else
+                    span
+                        className: 'participant'
+                        onClick: (event) -> event.stopPropagation()
+                        format(user)
+
                 items.push ", " if user isnt _.last(users)
             return items
         else
