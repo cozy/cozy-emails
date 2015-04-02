@@ -1,5 +1,7 @@
-{div, span, table, tbody, tr, td, img, a, i} = React.DOM
+{div, span, ul, li, table, tbody, tr, td, img, a, i} = React.DOM
 MessageUtils = require '../utils/message_utils'
+
+AttachmentPreview = require './attachement_preview'
 
 ContactStore   = require '../stores/contact_store'
 
@@ -14,7 +16,8 @@ module.exports = React.createClass
 
 
     getInitialState: ->
-        detailled: false
+        showDetails:      false
+        showAttachements: false
 
 
     render: ->
@@ -30,7 +33,7 @@ module.exports = React.createClass
                 @renderAddress 'cc'
                 div className: 'indicators',
                     if @props.message.get('attachments').length
-                        i className: 'fa fa-paperclip fa-flip-horizontal'
+                        @renderAttachementsIndicator()
                     if MessageFlags.FLAGGED in @props.message.get('flags')
                         i className: 'fa fa-star'
                 div className: 'date',
@@ -42,26 +45,34 @@ module.exports = React.createClass
         return unless users?
 
         format = (user) ->
-            console.trace() if not user?
-            unless user.name is ''
-                "#{user.name} <#{user.address}>"
+            items = []
+            if user.name
+                items.push "#{user.name} "
+                items.push span className: 'contact-address',
+                    i className: 'fa fa-angle-left'
+                    user.address
+                    i className: 'fa fa-angle-right'
             else
-                user.address
+                items.push user.address
+            return items
 
         if _.isArray users
             items = []
             for user in users
                 contact = ContactStore.getByAddress user.address
-                tag = if contact? then a else span
-                attrs = if contact?
-                    target: '_blank'
-                    href: "/#apps/contacts/contact/#{contact.get 'id'}"
-                    onClick: (event) -> event.stopPropagation()
-                else
-                    className: 'participant'
-                    onClick: (event) -> event.stopPropagation()
+                items.push if contact?
+                    a
+                        target: '_blank'
+                        href: "/#apps/contacts/contact/#{contact.get 'id'}"
+                        onClick: (event) -> event.stopPropagation()
+                        format(user)
 
-                items.push tag attrs, format(user)
+                else
+                    span
+                        className: 'participant'
+                        onClick: (event) -> event.stopPropagation()
+                        format(user)
+
                 items.push ", " if user isnt _.last(users)
             return items
         else
@@ -81,6 +92,26 @@ module.exports = React.createClass
                 @formatUsers(users)...
 
 
+    renderAttachementsIndicator: ->
+        attachments = @props.message.get('attachments')?.toJS() or []
+
+        div
+            className: 'attachments'
+            'aria-expanded': @state.showAttachements
+            onClick: (event) -> event.stopPropagation()
+            i
+                className: 'btn fa fa-paperclip fa-flip-horizontal'
+                onClick: @toggleAttachments
+            div className: 'popup', 'aria-hidden': !@state.showAttachements,
+                ul className: null,
+                    for file in attachments
+                        AttachmentPreview
+                            ref: 'attachmentPreview'
+                            file: file
+                            key: file.checksum
+                            preview: false
+
+
     renderDetailsPopup: ->
         from = @props.message.get('from')[0]
         to = @props.message.get 'to'
@@ -98,10 +129,11 @@ module.exports = React.createClass
 
 
         div
-            className: 'details', 'aria-expanded': @state.detailled
+            className: 'details'
+            'aria-expanded': @state.showDetails
             onClick: (event) -> event.stopPropagation()
             i className: 'btn fa fa-caret-down', onClick: @toggleDetails
-            div className: 'popup', 'aria-hidden': not @state.detailled,
+            div className: 'popup', 'aria-hidden': not @state.showDetails,
                 table null,
                     tbody null,
                         row 'from', @formatUsers(from), 'headers from'
@@ -114,4 +146,7 @@ module.exports = React.createClass
                         row 'subject', @props.message.get('subject'), 'headers subject'
 
     toggleDetails: ->
-        @setState detailled: not @state.detailled
+        @setState showDetails: not @state.showDetails
+
+    toggleAttachments: ->
+        @setState showAttachements: not @state.showAttachements

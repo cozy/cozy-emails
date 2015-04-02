@@ -54,6 +54,7 @@
         border-radius 4px 4px 0 0
         box-shadow 0 3px 1px lightcolor
         background-color white
+        transition margin 280ms ease-out
 
         &.active
             margin 1em 0
@@ -128,8 +129,17 @@
                 + .addresses
                     display none
 
+                a:hover
+                    text-decoration none
+
             .participant
                 color darkcolor
+
+            .contact-address
+                color mediumcolor
+
+                i
+                    padding 0 .2em
 
             .indicators
             .date
@@ -142,21 +152,30 @@
             .date
                 order 3
             .to
-                order 4
-            .cc
                 order 5
-            .details
+            .cc
                 order 6
+            .details
+                order 4
 
         .fa-star
             color lightorange
 
-        .details
+        [aria-expanded]
+            position relative
+
+            .btn
+                padding 0
+                color basecolor
+
+                &:hover
+                    color actioncolor
+
             .popup
                 z-index 1
                 position absolute
-                top 90%
-                right 10px
+                top 100%
+                right 0
                 padding 0.5em 10px
                 border 1px solid lightgrey
                 border-radius 2px
@@ -169,24 +188,39 @@
                 font-size 1em
                 vertical-align baseline
 
+            td
+            li
+                white-space nowrap
+
             .label
                 text-align right
                 font-weight normal
                 color mediumcolor
 
-            .btn
-                padding 0 10px
-
             [aria-hidden=true]
                 display none
 
-        .label-warning
-            display block
+        .details .btn
+                padding 0 0 0 10px
+                color mediumcolor
+
+        .attachments .popup
+            right 5px
+
+        .alert-warning
             margin-bottom 1em
+            padding .5em 10px
+            border-radius 2px
+            font-size .875em
+            line-height 2em
+            text-align center
+
+            i
+                padding-right .75em
 
         .btn-warning
             display inline-block
-            margin-left 1em
+            margin-left .75em
             vertical-align baseline
 
         .attachments
