@@ -3046,6 +3046,8 @@ module.exports = React.createClass({
     'word': 'fa-file-word-o'
   },
   render: function() {
+    var url;
+    url = encodeURIComponent(this.props.file.url);
     if (this.props.previewLink) {
       return li({
         key: this.props.key
@@ -3056,7 +3058,7 @@ module.exports = React.createClass({
         width: 90,
         src: this.props.file.url
       }) : void 0, this.props.file.generatedFileName), ' - ', a({
-        href: "" + this.props.file.url + "?download=1"
+        href: "" + url + "?download=1"
       }, i({
         className: 'fa fa-download'
       }), this.displayFilesize(this.props.file.length)));
@@ -3064,7 +3066,7 @@ module.exports = React.createClass({
       return li({
         key: this.props.key
       }, this.renderIcon(), a({
-        href: "" + this.props.file.url + "?download=1"
+        href: "" + url + "?download=1"
       }, "" + this.props.file.generatedFileName + "\n(" + (this.displayFilesize(this.props.file.length)) + ")"));
     }
   },
