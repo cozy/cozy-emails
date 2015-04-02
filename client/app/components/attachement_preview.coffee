@@ -20,6 +20,7 @@ module.exports = React.createClass
 
 
     render: ->
+        url = encodeURIComponent @props.file.url
         if @props.previewLink
              li key: @props.key,
                 @renderIcon()
@@ -30,13 +31,13 @@ module.exports = React.createClass
                         img width: 90, src: @props.file.url if @props.preview
                         @props.file.generatedFileName
                 ' - '
-                a href: "#{@props.file.url}?download=1",
+                a href: "#{url}?download=1",
                     i className: 'fa fa-download'
                     @displayFilesize(@props.file.length)
         else
             li key: @props.key,
                 @renderIcon()
-                a href: "#{@props.file.url}?download=1",
+                a href: "#{url}?download=1",
                     """#{@props.file.generatedFileName}
                     (#{@displayFilesize(@props.file.length)})"""
 
