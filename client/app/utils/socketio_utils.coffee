@@ -34,6 +34,8 @@ socket.on 'connect', ->
 socket.on 'reconnect', ->
     setServerScope()
 
+socket.on 'refresh.notify', dispatchAs ActionTypes.RECEIVE_REFRESH_NOTIF
+
 exports.acknowledgeRefresh = (taskid) ->
     socket.emit 'mark_ack', taskid
 

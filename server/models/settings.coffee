@@ -35,7 +35,7 @@ Settings.getDefault = (callback) ->
     settings =
         composeInHTML        : true
         composeOnTop         : false
-        desktopNotifications : false
+        desktopNotifications : true
         displayConversation  : true
         displayPreview       : true
         layoutStyle          : 'three'
