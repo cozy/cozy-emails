@@ -161,13 +161,20 @@
         .fa-star
             color lightorange
 
-        .details
+        [aria-expanded]
             position relative
+
+            .btn
+                padding 0
+                color basecolor
+
+                &:hover
+                    color actioncolor
 
             .popup
                 z-index 1
                 position absolute
-                top 90%
+                top 100%
                 right 0
                 padding 0.5em 10px
                 border 1px solid lightgrey
@@ -180,6 +187,9 @@
                 color darkcolor
                 font-size 1em
                 vertical-align baseline
+
+            td
+            li
                 white-space nowrap
 
             .label
@@ -187,11 +197,15 @@
                 font-weight normal
                 color mediumcolor
 
-            .btn
-                padding 0 0 0 10px
-
             [aria-hidden=true]
                 display none
+
+        .details .btn
+                padding 0 0 0 10px
+                color mediumcolor
+
+        .attachments .popup
+            right 5px
 
         .alert-warning
             margin-bottom 1em

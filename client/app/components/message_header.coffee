@@ -1,5 +1,7 @@
-{div, span, table, tbody, tr, td, img, a, i} = React.DOM
+{div, span, ul, li, table, tbody, tr, td, img, a, i} = React.DOM
 MessageUtils = require '../utils/message_utils'
+
+AttachmentPreview = require './attachement_preview'
 
 ContactStore   = require '../stores/contact_store'
 
@@ -14,7 +16,8 @@ module.exports = React.createClass
 
 
     getInitialState: ->
-        detailled: false
+        showDetails:      false
+        showAttachements: false
 
 
     render: ->
@@ -30,7 +33,7 @@ module.exports = React.createClass
                 @renderAddress 'cc'
                 div className: 'indicators',
                     if @props.message.get('attachments').length
-                        i className: 'fa fa-paperclip fa-flip-horizontal'
+                        @renderAttachementsIndicator()
                     if MessageFlags.FLAGGED in @props.message.get('flags')
                         i className: 'fa fa-star'
                 div className: 'date',
@@ -87,6 +90,26 @@ module.exports = React.createClass
             @formatUsers(users)...
 
 
+    renderAttachementsIndicator: ->
+        attachments = @props.message.get('attachments')?.toJS() or []
+
+        div
+            className: 'attachments'
+            'aria-expanded': @state.showAttachements
+            onClick: (event) -> event.stopPropagation()
+            i
+                className: 'btn fa fa-paperclip fa-flip-horizontal'
+                onClick: @toggleAttachments
+            div className: 'popup', 'aria-hidden': !@state.showAttachements,
+                ul className: null,
+                    for file in attachments
+                        AttachmentPreview
+                            ref: 'attachmentPreview'
+                            file: file
+                            key: file.checksum
+                            preview: false
+
+
     renderDetailsPopup: ->
         from = @props.message.get('from')[0]
         to = @props.message.get 'to'
@@ -104,10 +127,11 @@ module.exports = React.createClass
 
 
         div
-            className: 'details', 'aria-expanded': @state.detailled
+            className: 'details'
+            'aria-expanded': @state.showDetails
             onClick: (event) -> event.stopPropagation()
             i className: 'btn fa fa-caret-down', onClick: @toggleDetails
-            div className: 'popup', 'aria-hidden': !@state.detailled,
+            div className: 'popup', 'aria-hidden': !@state.showDetails,
                 table null,
                     tbody null,
                         row @formatUsers(from), 'headers from'
@@ -120,4 +144,7 @@ module.exports = React.createClass
                         row @props.message.get('subject'), 'headers subject'
 
     toggleDetails: ->
-        @setState detailled: !@state.detailled
+        @setState showDetails: !@state.showDetails
+
+    toggleAttachments: ->
+        @setState showAttachements: !@state.showAttachements
