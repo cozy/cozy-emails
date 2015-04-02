@@ -24,6 +24,11 @@ module.exports =
         message = MessageStore.getByID messageID
         return message?.toJS()
 
+    getCurrentConversation: ->
+        conversationID = MessageStore.getCurrentConversationID()
+        if conversationID?
+            return MessageStore.getConversation(conversationID)?.toJS()
+
     getCurrentActions: ->
         res = []
         Object.keys(router.current).forEach (panel) ->
