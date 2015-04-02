@@ -352,21 +352,20 @@ module.exports = {
     conversation.map(function(message) {
       var action, id, mailboxIDs, msg;
       mailboxIDs = message.get('mailboxIDs');
-      if (mailboxIDs[trash] != null) {
-        error = t('message delete already');
+      if (mailboxIDs[trash] == null) {
+        action = {
+          id: message.get('id'),
+          from: Object.keys(mailboxIDs),
+          to: trash
+        };
+        messagesActions.push(action);
+        msg = message.toJS();
+        for (id in msg.mailboxIDs) {
+          delete msg.mailboxIDs[id];
+        }
+        msg.mailboxIDs[trash] = -1;
+        return messages.push(msg);
       }
-      action = {
-        id: message.get('id'),
-        from: Object.keys(mailboxIDs),
-        to: trash
-      };
-      messagesActions.push(action);
-      msg = message.toJS();
-      for (id in msg.mailboxIDs) {
-        delete msg.mailboxIDs[id];
-      }
-      msg.mailboxIDs[trash] = -1;
-      return messages.push(msg);
     }).toJS();
     if (error !== '') {
       callback(error);
@@ -2781,7 +2780,9 @@ module.exports = Application = React.createClass({
         conversationID = MessageStore.getCurrentConversationID();
         if ((conversationID == null) && messages.length > 0) {
           conversationID = messages.first().get('conversationID');
-          conversation = MessageStore.getConversation(conversationID);
+          if (conversationID != null) {
+            conversation = MessageStore.getConversation(conversationID);
+          }
         }
         conversationLengths = MessageStore.getConversationsLength();
       }
@@ -3134,7 +3135,8 @@ module.exports = Compose = React.createClass({
       return;
     }
     onCancel = (function(_this) {
-      return function() {
+      return function(e) {
+        e.preventDefault();
         if (_this.props.onCancel != null) {
           return _this.props.onCancel();
         } else {
@@ -3154,7 +3156,11 @@ module.exports = Compose = React.createClass({
     classInput = 'compose-input';
     classCc = this.state.cc.length === 0 ? '' : ' shown';
     classBcc = this.state.bcc.length === 0 ? '' : ' shown';
-    labelSend = this.state.sending ? t('compose action sending') : t('compose action send');
+    if (this.state.sending) {
+      labelSend = t('compose action sending');
+    } else {
+      labelSend = t('compose action send');
+    }
     focusEditor = Array.isArray(this.state.to) && this.state.to.length > 0 && this.state.subject !== '';
     return div({
       id: 'email-compose'
@@ -3171,7 +3177,8 @@ module.exports = Compose = React.createClass({
     })), h3({
       'data-message-id': ((_ref2 = this.props.message) != null ? _ref2.get('id') : void 0) || ''
     }, this.state.subject || t('compose')), form({
-      className: 'form-compose'
+      className: 'form-compose',
+      method: 'POST'
     }, div({
       className: 'form-group account'
     }, label({
@@ -3302,7 +3309,16 @@ module.exports = Compose = React.createClass({
   },
   componentWillUnmount: function() {
     if (this._saveInterval) {
-      return window.clearInterval(this._saveInterval);
+      window.clearInterval(this._saveInterval);
+    }
+    if (this.state.isDraft && (this.state.id != null) && !window.confirm(t('compose confirm keep draft'))) {
+      return MessageActionCreator["delete"](this.state.id, function(error) {
+        if (error != null) {
+          return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
+        } else {
+          return LayoutActionCreator.notify(t('compose draft deleted'));
+        }
+      });
     }
   },
   getInitialState: function(forceDefault) {
@@ -3336,10 +3352,14 @@ module.exports = Compose = React.createClass({
       return this.setState(this.getInitialState());
     }
   },
-  onDraft: function(args) {
+  onDraft: function(e) {
+    e.preventDefault();
     return this._doSend(true);
   },
-  onSend: function(args) {
+  onSend: function(e) {
+    if (e != null) {
+      e.preventDefault();
+    }
     return this._doSend(false);
   },
   _doSend: function(isDraft) {
@@ -3445,8 +3465,9 @@ module.exports = Compose = React.createClass({
   _autosave: function() {
     return this._doSend(true);
   },
-  onDelete: function(args) {
+  onDelete: function(e) {
     var confirmMessage, params, subject;
+    e.preventDefault();
     subject = this.props.message.get('subject');
     if ((subject != null) && subject !== '') {
       params = {
@@ -3567,7 +3588,7 @@ ComposeEditor = React.createClass({
     }
   },
   _initCompose: function() {
-    var e, header, node, r, range, rect, s, _ref2;
+    var e, gecko, header, node, r, range, rect, s, _ref2;
     if (this.props.composeInHTML) {
       if (this.props.focus) {
         node = (_ref2 = this.refs.html) != null ? _ref2.getDOMNode() : void 0;
@@ -3591,98 +3612,79 @@ ComposeEditor = React.createClass({
           }
         }
       }
+      gecko = document.queryCommandEnabled('insertBrOnReturn');
       jQuery('.rt-editor').on('keypress', function(e) {
-        if (e.keyCode === 13) {
-          return setTimeout(function() {
-            var after, before, inserted, matchesSelector, parent, process, rangeAfter, rangeBefore, sel, target, targetElement;
-            matchesSelector = document.documentElement.matches || document.documentElement.matchesSelector || document.documentElement.webkitMatchesSelector || document.documentElement.mozMatchesSelector || document.documentElement.oMatchesSelector || document.documentElement.msMatchesSelector;
-            target = document.getSelection().anchorNode;
-            targetElement = target;
-            while (!(targetElement instanceof Element)) {
-              targetElement = targetElement.parentNode;
-            }
-            if (target == null) {
-              return;
-            }
-            if ((matchesSelector != null) && !matchesSelector.call(targetElement, '.rt-editor blockquote *')) {
-              return;
-            }
-            if (target.lastChild != null) {
-              target = target.lastChild;
-              if (target.previousElementSibling != null) {
-                target = target.previousElementSibling;
-              }
-            }
-            parent = target;
-            process = function() {
-              var current;
-              current = parent;
-              return parent = parent != null ? parent.parentNode : void 0;
-            };
-            process();
-            while ((parent != null) && !parent.classList.contains('rt-editor')) {
-              process();
-            }
-            rangeBefore = document.createRange();
-            rangeBefore.setEnd(target, 0);
-            rangeBefore.setStartBefore(parent.firstChild);
-            rangeAfter = document.createRange();
-            if (target.nextSibling != null) {
-              rangeAfter.setStart(target.nextSibling, 0);
-            } else {
-              rangeAfter.setStart(target, 0);
-            }
-            rangeAfter.setEndAfter(parent.lastChild);
-            before = rangeBefore.cloneContents();
-            after = rangeAfter.cloneContents();
-            inserted = document.createElement('p');
-            inserted.innerHTML = "<br />";
-            parent.innerHTML = "";
-            parent.appendChild(before);
-            parent.appendChild(inserted);
-            parent.appendChild(after);
-
-            /*
-             * alternative 2
-             * We move every node from the caret to the end of the
-             * message to a new DOM tree, then insert a blank line
-             * and the new tree
-            parent = target
-            p2 = null
-            p3 = null
-            process = ->
-                p3 = p2
-                current = parent
-                parent = parent.parentNode
-                p2 = parent.cloneNode false
-                if p3?
-                    p2.appendChild p3
-                s = current.nextSibling
-                while s?
-                    p2.appendChild(s.cloneNode(true))
-                    s2 = s.nextSibling
-                    parent.removeChild s
-                    s = s2
-            process()
-            process() while (parent.parentNode? and
-                not parent.parentNode.classList.contains 'rt-editor')
-            after = p2
-            inserted = document.createElement 'p'
-            inserted.innerHTML = "<br />"
-            if parent.nextSibling
-                parent.parentNode.insertBefore inserted, parent.nextSibling
-                parent.parentNode.insertBefore after, parent.nextSibling
-            else
-                parent.parentNode.appendChild inserted
-                parent.parentNode.appendChild after
-             */
-            setTimeout(function() {
-              return inserted.focus();
-            }, 0);
-            sel = window.getSelection();
-            return sel.collapse(inserted, 0);
-          }, 0);
+        var quote;
+        if (e.keyCode !== 13) {
+          return;
         }
+        quote = function() {
+          var br, depth, getPath, isInsideQuote, range, selection, target, targetElement;
+          isInsideQuote = function(node) {
+            var matchesSelector;
+            matchesSelector = document.documentElement.matches || document.documentElement.matchesSelector || document.documentElement.webkitMatchesSelector || document.documentElement.mozMatchesSelector || document.documentElement.oMatchesSelector || document.documentElement.msMatchesSelector;
+            if (matchesSelector != null) {
+              return matchesSelector.call(node, '.rt-editor blockquote, .rt-editor blockquote *');
+            } else {
+              while ((node != null) && node.tagName !== 'BLOCKQUOTE') {
+                node = node.parentNode;
+              }
+              return node.tagName === 'BLOCKQUOTE';
+            }
+          };
+          target = document.getSelection().anchorNode;
+          if (target.lastChild != null) {
+            target = target.lastChild;
+            if (target.previousElementSibling != null) {
+              target = target.previousElementSibling;
+            }
+          }
+          targetElement = target;
+          while (targetElement && !(targetElement instanceof Element)) {
+            targetElement = targetElement.parentNode;
+          }
+          if (target == null) {
+            return;
+          }
+          if (!isInsideQuote(targetElement)) {
+            return;
+          }
+          if (gecko) {
+            br = "\r\n<br>\r\n<br class='cozyInsertedBr'>\r\n";
+          } else {
+            br = "\r\n<div></div><div><br class='cozyInsertedBr'></div>\r\n";
+          }
+          document.execCommand('insertHTML', false, br);
+          node = document.querySelector('.cozyInsertedBr');
+          if (gecko) {
+            node = node.previousElementSibling;
+          }
+          getPath = function(node) {
+            var path;
+            path = node.tagName;
+            while ((node.parentNode != null) && node.contentEditable !== 'true') {
+              node = node.parentNode;
+              path = "" + node.tagName + " > " + path;
+            }
+            return path;
+          };
+          selection = window.getSelection();
+          range = document.createRange();
+          range.selectNode(node);
+          selection.removeAllRanges();
+          selection.addRange(range);
+          depth = getPath(node).split('>').length;
+          while (depth > 0) {
+            document.execCommand('outdent', false, null);
+            depth--;
+          }
+          node = document.querySelector('.cozyInsertedBr');
+          if (node != null) {
+            node.parentNode.removeChild(node);
+          }
+          document.execCommand('removeFormat', false, null);
+        };
+        return setTimeout(quote, 50);
       });
       if (document.querySelector('.rt-editor blockquote') && !document.querySelector('.rt-editor .originalToggle')) {
         try {
@@ -3708,7 +3710,8 @@ ComposeEditor = React.createClass({
           rect = node.getBoundingClientRect();
           node.scrollTop = node.scrollHeight - rect.height;
           if (typeof node.selectionStart === "number") {
-            node.selectionStart = node.selectionEnd = node.value.length;
+            node.selectionStart = node.value.length;
+            node.selectionEnd = node.value.length;
           } else if (typeof node.createTextRange !== "undefined") {
             setTimeout(function() {
               return node.focus();
@@ -4286,7 +4289,7 @@ module.exports = MailsInput = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var classLabel, className, current, knownContacts, listClass, onChange, renderTag, _ref1;
+    var cancelDragEvent, classLabel, className, current, knownContacts, listClass, onChange, renderTag, _ref1;
     renderTag = (function(_this) {
       return function(address, idx) {
         var display, onDragEnd, onDragStart, remove;
@@ -4358,9 +4361,15 @@ module.exports = MailsInput = React.createClass({
       open: this.state.open && ((_ref1 = this.state.contacts) != null ? _ref1.length : void 0) > 0
     });
     current = 0;
+    cancelDragEvent = function(event) {
+      return event.preventDefault();
+    };
     return div({
       className: className,
-      onDrop: this.onDrop
+      onDrop: this.onDrop,
+      onDragEnter: cancelDragEvent,
+      onDragLeave: cancelDragEvent,
+      onDragOver: cancelDragEvent
     }, label({
       htmlFor: this.props.id,
       className: classLabel
@@ -4373,6 +4382,9 @@ module.exports = MailsInput = React.createClass({
       onKeyDown: this.onKeyDown,
       onBlur: this.onBlur,
       onDrop: this.onDrop,
+      onDragEnter: cancelDragEvent,
+      onDragLeave: cancelDragEvent,
+      onDragOver: cancelDragEvent,
       ref: 'contactInput',
       rows: 1,
       value: this.state.unknown,
@@ -5050,7 +5062,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbMessages, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
     compact = this.props.settings.get('listStyle') === 'compact';
     filterParams = {
       accountID: this.props.accountID,
@@ -5313,7 +5325,7 @@ MessageList = React.createClass({
           return _this.setState(newState);
         };
       })(this)
-    }), nbMessages = parseInt(this.props.counterMessage, 10), this.props.messages.count() < nbMessages && (this.props.query.pageAfter != null) ? p({
+    }), this.moreToSee() && (this.props.query.pageAfter != null) ? p({
       className: 'text-center list-footer'
     }, this.props.fetching ? img({
       src: 'images/spinner.svg'
@@ -5324,6 +5336,25 @@ MessageList = React.createClass({
     }, t('list next page'))) : p({
       ref: 'listEnd'
     }, t('list end'))));
+  },
+  moreToSee: function() {
+    var nbInConv, nbMessages;
+    nbMessages = parseInt(this.props.messagesCount, 10);
+    if (this.props.settings.get('displayConversation')) {
+      nbInConv = 0;
+      this.props.messages.map((function(_this) {
+        return function(message) {
+          var length;
+          length = _this.props.conversationLengths.get(message.get('conversationID'));
+          if (length != null) {
+            return nbInConv += _this.props.conversationLengths.get(message.get('conversationID'));
+          }
+        };
+      })(this)).toJS();
+      return nbInConv < nbMessages;
+    } else {
+      return this.props.messages.count() < nbMessages;
+    }
   },
   refresh: function(event) {
     event.preventDefault();
@@ -5532,8 +5563,8 @@ MessageList = React.createClass({
   },
   _handleRealtimeGrowth: function() {
     var lastdate, nbMessages;
-    nbMessages = parseInt(this.props.counterMessage, 10);
-    if (nbMessages < this.props.messages.count() && (this.refs.listEnd != null) && !DomUtils.isVisible(this.refs.listEnd.getDOMNode())) {
+    nbMessages = parseInt(this.props.messagesCount, 10);
+    if ((!this.moreToSee()) && (this.refs.listEnd != null) && !DomUtils.isVisible(this.refs.listEnd.getDOMNode())) {
       lastdate = this.props.messages.last().get('date');
       return SocketUtils.changeRealtimeScope(this.props.mailboxID, lastdate);
     }
@@ -5599,7 +5630,7 @@ MessageListBody = React.createClass({
         var cid, id, isActive, _ref2;
         id = message.get('id');
         cid = message.get('conversationID');
-        if (_this.props.settings.get('displayConversation')) {
+        if (_this.props.settings.get('displayConversation') && (cid != null)) {
           isActive = _this.props.conversationID === cid;
         } else {
           isActive = _this.props.messageID === id;
@@ -5678,7 +5709,7 @@ MessageItem = React.createClass({
       };
     } else {
       conversationID = message.get('conversationID');
-      if (conversationID && this.props.settings.get('displayConversation')) {
+      if ((conversationID != null) && this.props.settings.get('displayConversation')) {
         action = 'conversation';
         params = {
           conversationID: conversationID,
@@ -5687,7 +5718,6 @@ MessageItem = React.createClass({
       } else {
         action = 'message';
         params = {
-          conversationID: conversationID,
           messageID: message.get('id')
         };
       }
@@ -6314,7 +6344,7 @@ module.exports = React.createClass({
       nextConversationID = this.props.prevConversationID;
     }
     if (nextMessageID) {
-      if (this.props.settings.get('displayConversation')) {
+      if (this.props.settings.get('displayConversation') && (nextConversationID != null)) {
         return this.redirect({
           direction: 'second',
           action: 'conversation',
@@ -6652,7 +6682,9 @@ module.exports = React.createClass({
   render: function() {
     var avatar, _ref1;
     avatar = MessageUtils.getAvatar(this.props.message);
-    return div(null, avatar ? div({
+    return div({
+      key: "message-header-" + (this.props.message.get('id'))
+    }, avatar ? div({
       className: 'sender-avatar'
     }, img({
       className: 'media-object',
@@ -6722,7 +6754,8 @@ module.exports = React.createClass({
       return;
     }
     return div.apply(null, [{
-      className: "addresses " + field
+      className: "addresses " + field,
+      key: "address-" + field
     }, field !== 'from' ? span(null, t("mail " + field)) : void 0].concat(__slice.call(this.formatUsers(users))));
   },
   renderAttachementsIndicator: function() {
@@ -6763,7 +6796,7 @@ module.exports = React.createClass({
     to = this.props.message.get('to');
     cc = this.props.message.get('cc');
     reply = (_ref1 = this.props.message.get('reply-to')) != null ? _ref1[0] : void 0;
-    row = function(value, label, rowSpan) {
+    row = function(id, value, label, rowSpan) {
       var attrs, items;
       if (label == null) {
         label = false;
@@ -6781,8 +6814,12 @@ module.exports = React.createClass({
         }
         items.push(td(attrs, t(label)));
       }
-      items.push(td(null, value));
-      return tr.apply(null, [null].concat(__slice.call(items)));
+      items.push(td({
+        key: "cell-" + id
+      }, value));
+      return tr.apply(null, [{
+        key: "row-" + id
+      }].concat(__slice.call(items)));
     };
     return div({
       className: 'details',
@@ -6796,29 +6833,29 @@ module.exports = React.createClass({
     }), div({
       className: 'popup',
       'aria-hidden': !this.state.showDetails
-    }, table(null, tbody(null, row(this.formatUsers(from), 'headers from'), to.length ? row(this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
+    }, table(null, tbody(null, row('from', this.formatUsers(from), 'headers from'), to.length ? row('to', this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
       var _i, _len, _ref2, _results;
       if (to.length) {
         _ref2 = to.slice(1);
         _results = [];
         for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
           dest = _ref2[_i];
-          _results.push(row(this.formatUsers(dest)));
+          _results.push(row('dest', this.formatUsers(dest)));
         }
         return _results;
       }
-    }).call(this), cc.length ? row(this.formatUsers(cc[0]), 'headers cc', cc.length) : void 0, (function() {
+    }).call(this), cc.length ? row('cc', this.formatUsers(cc[0]), 'headers cc', cc.length) : void 0, (function() {
       var _i, _len, _ref2, _results;
       if (cc.length) {
         _ref2 = cc.slice(1);
         _results = [];
         for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
           dest = _ref2[_i];
-          _results.push(row(this.formatUsers(dest)));
+          _results.push(row('dest', this.formatUsers(dest)));
         }
         return _results;
       }
-    }).call(this), reply != null ? row(this.formatUsers(reply), 'headers reply-to') : void 0, row(this.props.message.get('createdAt'), 'headers date'), row(this.props.message.get('subject'), 'headers subject')))));
+    }).call(this), reply != null ? row('reply', this.formatUsers(reply), 'headers reply-to') : void 0, row('created', this.props.message.get('createdAt'), 'headers date'), row('subject', this.props.message.get('subject'), 'headers subject')))));
   },
   toggleDetails: function() {
     return this.setState({
@@ -7653,7 +7690,7 @@ module.exports = React.createClass({
     settings: React.PropTypes.object.isRequired
   },
   getParams: function(messageID, conversationID) {
-    if (this.props.settings.get('displayConversation')) {
+    if (this.props.settings.get('displayConversation' && (conversationID != null))) {
       return {
         action: 'conversation',
         parameters: {
@@ -7771,13 +7808,13 @@ module.exports = React.createClass({
     return div({
       className: cBtnGroup
     }, button({
-      className: "" + cBtn + " fa-mail-reply",
+      className: "" + cBtn + " fa-mail-reply mail-reply",
       onClick: this.props.onReply
     }), button({
-      className: "" + cBtn + " fa-mail-reply-all",
+      className: "" + cBtn + " fa-mail-reply-all mail-reply-all",
       onClick: this.props.onReplyAll
     }), button({
-      className: "" + cBtn + " fa-mail-forward",
+      className: "" + cBtn + " fa-mail-forward mail-forward",
       onClick: this.props.onForward
     }));
   },
@@ -11123,6 +11160,13 @@ module.exports = {
     message = MessageStore.getByID(messageID);
     return message != null ? message.toJS() : void 0;
   },
+  getCurrentConversation: function() {
+    var conversationID, _ref;
+    conversationID = MessageStore.getCurrentConversationID();
+    if (conversationID != null) {
+      return (_ref = MessageStore.getConversation(conversationID)) != null ? _ref.toJS() : void 0;
+    }
+  },
   getCurrentActions: function() {
     var res;
     res = [];
@@ -11201,7 +11245,7 @@ module.exports = {
     }
   },
   messageDisplay: function(message, force) {
-    var action, params, url, urlOptions;
+    var action, conversationID, params, url, urlOptions;
     if (message == null) {
       message = MessageStore.getById(MessageStore.getCurrentID());
     }
@@ -11211,11 +11255,12 @@ module.exports = {
     if (force === false && (window.router.current.secondPanel == null)) {
       return;
     }
-    if (SettingsStore.get('displayConversation')) {
+    conversationID = message.get('conversationID');
+    if (SettingsStore.get('displayConversation') && (conversationID != null)) {
       action = 'conversation';
       params = {
         messageID: message.get('id'),
-        conversationID: message.get('conversationID')
+        conversationID: conversationID
       };
     } else {
       action = 'message';
@@ -11506,7 +11551,7 @@ module.exports = MessageUtils = {
         message.bcc = [];
         message.subject = "" + (t('compose reply prefix')) + (inReplyTo.get('subject'));
         message.text = separator + this.generateReplyText(text) + "\n";
-        message.html = "<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
+        message.html = "<br /><br /><br />\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
         break;
       case ComposeActions.REPLY_ALL:
         params = {
