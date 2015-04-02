@@ -380,9 +380,10 @@ MessageContent = React.createClass
             div null,
                 if @props.imagesWarning
                     div
-                        className: "imagesWarning label label-warning content-action",
+                        className: "imagesWarning alert alert-warning content-action",
                         ref: "imagesWarning",
-                            span null, t 'message images warning'
+                            i className: 'fa fa-shield'
+                            t 'message images warning'
                             button
                                 className: 'btn btn-xs btn-warning',
                                 type: "button",
