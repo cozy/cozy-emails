@@ -37,7 +37,8 @@ module.exports = Compose = React.createClass
         settings:             React.PropTypes.object.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        return not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
 
     render: ->
 
@@ -63,16 +64,25 @@ module.exports = Compose = React.createClass
         classCc    = if @state.cc.length is 0 then '' else ' shown'
         classBcc   = if @state.bcc.length is 0 then '' else ' shown'
 
-        labelSend   = if @state.sending then t 'compose action sending' else t 'compose action send'
-        focusEditor = Array.isArray(@state.to) and @state.to.length > 0 and @state.subject isnt ''
+        if @state.sending
+            labelSend = t 'compose action sending'
+        else
+            labelSend = t 'compose action send'
+        focusEditor = Array.isArray(@state.to) and
+            @state.to.length > 0 and
+            @state.subject isnt ''
 
         div id: 'email-compose',
             if @props.layout isnt 'full'
-                a onClick: toggleFullscreen, className: 'expand pull-right clickable',
-                    i className: 'fa fa-arrows-h'
+                a
+                    onClick: toggleFullscreen,
+                    className: 'expand pull-right clickable',
+                        i className: 'fa fa-arrows-h'
             else
-                a onClick: toggleFullscreen, className: 'close-email pull-right clickable',
-                    i className:'fa fa-compress'
+                a
+                    onClick: toggleFullscreen,
+                    className: 'close-email pull-right clickable',
+                        i className:'fa fa-compress'
             h3
                 'data-message-id': @props.message?.get('id') or ''
                 @state.subject or t 'compose'
@@ -222,13 +232,15 @@ module.exports = Compose = React.createClass
     componentWillUnmount: ->
         if @_saveInterval
             window.clearInterval @_saveInterval
-        #if @state.isDraft and @state.id?
-        #    if not window.confirm(t 'compose confirm keep draft')
-        #        MessageActionCreator.delete @state.id, (error) ->
-        #            if error?
-        #                LayoutActionCreator.alertError "#{t("message action delete ko")} #{error}"
-        #            else
-        #                LayoutActionCreator.notify t('compose draft deleted')
+        if @state.isDraft and
+           @state.id? and
+           not window.confirm(t 'compose confirm keep draft')
+            MessageActionCreator.delete @state.id, (error) ->
+                if error?
+                    LayoutActionCreator.alertError \
+                        "#{t("message action delete ko")} #{error}"
+                else
+                    LayoutActionCreator.notify t('compose draft deleted')
 
     getInitialState: (forceDefault) ->
 
@@ -293,7 +305,9 @@ module.exports = Compose = React.createClass
 
         valid = true
         if not isDraft
-            if @state.to.length is 0 and @state.cc.length is 0 and @state.bcc.length is 0
+            if @state.to.length is 0 and
+               @state.cc.length is 0 and
+               @state.bcc.length is 0
                 valid = false
                 LayoutActionCreator.alertError t "compose error no dest"
                 setTimeout ->
@@ -498,7 +512,8 @@ ComposeEditor = React.createClass
                               document.documentElement.msMatchesSelector
 
                         if matchesSelector?
-                            return matchesSelector.call node, '.rt-editor blockquote, .rt-editor blockquote *'
+                            return matchesSelector.call node,
+                                '.rt-editor blockquote, .rt-editor blockquote *'
                         else
                             while node? and node.tagName isnt 'BLOCKQUOTE'
                                 node = node.parentNode
@@ -524,30 +539,40 @@ ComposeEditor = React.createClass
                     if gecko
                         br = "\r\n<br>\r\n<br class='cozyInsertedBr'>\r\n"
                     else
-                        br = "\r\n<div></div><div><br class='cozyInsertedBr'></div>\r\n"
+                        br = """
+                          \r\n<div></div><div><br class='cozyInsertedBr'></div>\r\n
+                            """
                     document.execCommand 'insertHTML', false, br
 
+                    node = document.querySelector('.cozyInsertedBr')
                     if gecko
-                        node = document.querySelector('.cozyInsertedBr').previousElementSibling
-                    else
-                        node = document.querySelector('.cozyInsertedBr')
+                        node = node.previousElementSibling
+
+                    # get path of a node inside the contentEditable
                     getPath = (node) ->
                         path = node.tagName
                         while node.parentNode? and node.contentEditable isnt 'true'
                             node = node.parentNode
                             path = "#{node.tagName} > #{path}"
                         return path
-                    s = window.getSelection()
-                    r = document.createRange()
-                    r.selectNode(node)
-                    s.removeAllRanges()
-                    s.addRange(r)
+
+                    # ensure focus is on newly inserted node
+                    selection = window.getSelection()
+                    range = document.createRange()
+                    range.selectNode(node)
+                    selection.removeAllRanges()
+                    selection.addRange(range)
+
+                    # outdent node
                     depth = getPath(node).split('>').length
                     while depth > 0
                         document.execCommand 'outdent', false, null
                         depth--
+                    # remove the surnumerous block
                     node = document.querySelector '.cozyInsertedBr'
                     node?.parentNode.removeChild node
+
+                    # try to remove format that may remains from the quote
                     document.execCommand 'removeFormat', false, null
                     return
 
