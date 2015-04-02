@@ -246,9 +246,8 @@ module.exports = MailsInput = React.createClass
                     # Trick to make sure that the alert error is not pop up
                     # twiced due to multiple blur and key down.
                     # Do not display anything when the field is blurred.
-                    if not @isShowingAlert
-                    and @state.contacts.length is 0
-                    and not isBlur
+                    isContacts = @state.contacts?.length is 0
+                    if not @isShowingAlert and not isBlur and isContacts
                         @isShowingAlert = true
                         alert t('compose wrong email format',
                             address: address.address)
