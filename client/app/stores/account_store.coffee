@@ -81,8 +81,16 @@ class AccountStore extends Store
                         nbUnread: box.get('nbUnread') + deltas.nbUnread
                     map.set boxid, box
 
+        diffTotalUnread = diff[accountID]?.nbUnread or 0
+
+        if diffTotalUnread
+            totalUnread = account.get('totalUnread') + diffTotalUnread
+            account = account.set 'totalUnread', totalUnread
+
         unless updated is mailboxes
             account = account.set 'mailboxes', updated
+
+        if account isnt _accounts.get accountID
             _accounts = _accounts.set accountID, account
             _refreshSelected()
             @emit 'change'
@@ -145,13 +153,15 @@ class AccountStore extends Store
 
         handle ActionTypes.RECEIVE_MAILBOX_UPDATE, (boxData) ->
             setMailbox boxData.accountID, boxData.id, boxData
-            if boxData.nbRecent > 0
-                message = t 'notif new',
-                    smart_count: boxData.nbRecent
-                    box: boxData.label
-                    account: @getByID(boxData.accountID).get 'label'
-                @emit 'notify', t('notif new title'), body: message
             @emit 'change'
+
+        handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
+            account = _accounts.get data.accountID
+            account = account.set 'totalUnread', data.totalUnread
+            _accounts.set data.accountID, account
+            @emit 'change'
+
+
 
     ###
         Public API
