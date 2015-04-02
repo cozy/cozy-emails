@@ -27,6 +27,18 @@ helpers.getImapServerRawConnection = (done, operation) ->
         if err then next err else next null
     imap.connect()
 
+helpers.waitAllTaskComplete = (done) ->
+    lastFinished = false
+    checkIfDone = ->
+        client.get "/refreshes", (err, res, body) ->
+            finished = not body.some (task) -> not task.finished
+            if finished and lastFinished then return done()
+
+            lastFinished = finished
+            setTimeout checkIfDone, 1000
+
+    setTimeout checkIfDone, 1000
+
 helpers.startApp = (appPath, host, port) -> (done) ->
     @timeout 20000
 

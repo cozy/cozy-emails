@@ -10,6 +10,7 @@ multiparty = require 'multiparty'
 stream_to_buffer = require '../utils/stream_to_array'
 messageUtils = require '../utils/jwz_tools'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
+ImapReporter = require '../imap/reporter'
 
 # get a message and attach it to req.message
 module.exports.fetch = (req, res, next) ->
@@ -361,6 +362,38 @@ module.exports.send = (req, res, next) ->
         out = jdbMessage.toClientObject()
         out.isDraft = isDraft
         res.send out
+
+
+module.exports.batchTrash = (req, res, next) ->
+    ids = req.body.ids
+    unless ids?.length and ids.length > 0
+        return next new BadRequest "no ids in request's body"
+
+    accountID = req.body.accountID
+    unless accountID
+        return next new BadRequest "no accountID in request's body"
+
+
+    Account.findSafe accountID, (err, account) ->
+        return next err if err
+
+        unless account.trashMailbox
+            return next new AccountConfigError 'trashMailbox'
+
+        reporter = ImapReporter.batchMoveToTrash ids.length
+        # immediately send the reporter
+        res.status(202).send reporter.toObject()
+
+        # in background, proceed to delete
+        async.eachSeries ids, (id, cb) ->
+            Message.moveToTrash account, id, (err) ->
+                reporter.onError err if err
+                reporter.addProgress 1
+                cb null # loop anyway
+        , (err, messages) ->
+            reporter.onDone()
+            log.info "BATCH TRASH #{reporter.id} COMPLETE"
+
 
 
 module.exports.fetchConversation = (req, res, next) ->

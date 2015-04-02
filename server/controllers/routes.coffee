@@ -72,6 +72,9 @@ module.exports =
                messages.fetchMaybe,
                messages.send]
 
+    'messages/batchTrash':
+        put: [messages.batchTrash]
+
     'message/:messageID':
         get: [messages.fetch, messages.details]
         patch: [messages.fetch, messages.patch]

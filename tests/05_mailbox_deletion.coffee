@@ -7,7 +7,7 @@ describe "mailbox deletion", ->
 
         client.del "/mailbox/#{store.draftBoxID}", (err, res, body) =>
             res.statusCode.should.equal 200
-            body.should.have.property('mailboxes').with.lengthOf(4)
+            body.should.have.property('mailboxes').with.lengthOf(5)
             for box in body.mailboxes
                 box.id.should.not.equal store.draftBoxID
             done()
