@@ -2,7 +2,7 @@ async = require 'async'
 
 Account = require '../models/account'
 Mailbox = require '../models/mailbox'
-{BadRequest, NotFound} = require '../utils/errors'
+{BadRequest} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'mailbox:controller')
 _ = require 'lodash'
 async = require 'async'

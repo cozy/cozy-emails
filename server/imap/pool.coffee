@@ -1,4 +1,4 @@
-{NotFound, AccountConfigError, TimeoutError} = require '../utils/errors'
+{AccountConfigError, TimeoutError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'imap:pool')
 rawImapLog = require('../utils/logging')(prefix: 'imap:raw')
 Account = require '../models/account'
@@ -60,9 +60,8 @@ class ImapPool
 
     _getAccount: ->
         log.debug @id, "getAccount"
-        Account.find @accountID, (err, account) =>
+        Account.findSafe @accountID, (err, account) =>
             return @_giveUp err if err
-            return @_giveUp new NotFound "Account #{@accountID}" unless account
             @account = account
             @_deQueue()
 

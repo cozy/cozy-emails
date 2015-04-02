@@ -1,8 +1,7 @@
 _ = require 'lodash'
 Account = require '../models/account'
-{AccountConfigError, HttpError, NotFound} = require '../utils/errors'
+{AccountConfigError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'accounts:controller')
-{NotFound} = require '../utils/errors'
 async = require 'async'
 notifications = require '../utils/notifications'
 
@@ -15,9 +14,8 @@ module.exports.fetch = (req, res, next) ->
          req.mailbox.accountID or
          req.message.accountID
 
-    Account.find id, (err, found) ->
-        return next new HttpError 404, err if err
-        return next new NotFound "Acccount #{id}" unless found
+    Account.findSafe id, (err, found) ->
+        return next err if err
         req.account = found
         next()
 

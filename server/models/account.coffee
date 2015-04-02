@@ -43,7 +43,7 @@ log = require('../utils/logging')(prefix: 'models:account')
 _ = require 'lodash'
 async = require 'async'
 CONSTANTS = require '../utils/constants'
-{RefreshError} = require '../utils/errors'
+{RefreshError, NotFound} = require '../utils/errors'
 notifications = require '../utils/notifications'
 require('../utils/socket_handler').wrapModel Account, 'account'
 
@@ -60,6 +60,13 @@ Account::isRefreshing = ->
 
 Account::setRefreshing = (value) ->
     ImapPool.get(@id).isRefreshing = value
+
+
+Account.findSafe = (id, callback) ->
+    Account.find id, (err, account) ->
+        return callback err if err
+        return callback new NotFound "Account##{id}" unless account
+        callback null, account
 
 # Public: refresh all accounts
 #

@@ -383,19 +383,22 @@ module.exports.conversationGet = (req, res, next) ->
 module.exports.conversationDelete = (req, res, next) ->
     accountID = req.conversation[0].accountID
 
-    Account.find accountID, (err, account) ->
+    Account.findSafe accountID, (err, account) ->
         return next err if err
-        return next new NotFound "Account##{accountID}" unless account
 
         unless account.trashMailbox
             next new AccountConfigError 'trashMailbox'
         else
             messages = []
             async.eachSeries req.conversation, (message, cb) ->
-                message.moveToTrash account, (err, updated) ->
-                    if not err and updated?
-                        messages.push updated.toClientObject()
-                    cb err
+                if message.mailboxIDs[trashMailbox]
+                    # one of the message is already in Trash
+                    cb null
+                else
+                    message.moveToTrash account, (err, updated) ->
+                        if not err and updated?
+                            messages.push updated.toClientObject()
+                        cb err
 
             , (err) ->
                 return next err if err
