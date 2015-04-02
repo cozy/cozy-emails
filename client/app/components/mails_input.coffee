@@ -204,12 +204,14 @@ module.exports = MailsInput = React.createClass
     onBlur: ->
         # We must use a timeout, otherwise, when user click inside contact list,
         # blur is triggered first and the click event lost. Dirty hack
-        setTimeout @addContactFromInput, 100
+        setTimeout =>
+            @addContactFromInput true
+        , 100
 
 
     # Grab text from the input and ensure it's a valid email address.
     # If the address is valid, adds it to the recipient list.
-    addContactFromInput: ->
+    addContactFromInput: (isBlur=false) ->
         # if user cancel compose, component may be unmounted when the timeout
         # is fired
         if @isMounted()
@@ -232,7 +234,10 @@ module.exports = MailsInput = React.createClass
                 else
                     # Trick to make sure that the alert error is not pop up
                     # twiced due to multiple blur and key down.
-                    unless @isShowingAlert
+                    # Do not display anything when the field is blurred.
+                    if not @isShowingAlert
+                    and @state.contacts.length is 0
+                    and not isBlur
                         @isShowingAlert = true
                         alert t('compose wrong email format',
                             address: address.address)
