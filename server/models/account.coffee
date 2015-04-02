@@ -44,6 +44,7 @@ _ = require 'lodash'
 async = require 'async'
 CONSTANTS = require '../utils/constants'
 {RefreshError} = require '../utils/errors'
+notifications = require '../utils/notifications'
 require('../utils/socket_handler').wrapModel Account, 'account'
 
 refreshTimeout = null
@@ -343,6 +344,7 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, firstImport, callback) ->
         log.info "   ", toDestroy.length, "BOXES TO DESTROY"
         numToFetch = toFetch.length + 1
         reporter = ImapReporter.accountFetch account, numToFetch, firstImport
+        shouldNotifAccount = false
 
         # fetch INBOX first
         toFetch.sort (a, b) ->
@@ -350,13 +352,14 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, firstImport, callback) ->
             else return 1
 
         async.eachSeries toFetch, (box, cb) ->
-            box.imap_fetchMails limitByBox, firstImport, (err) ->
+            box.imap_fetchMails limitByBox, firstImport, (err, shouldNotif) ->
                 # @TODO : Figure out how to distinguish a mailbox that
                 # is not selectable but not marked as such. In the meantime
                 # dont pop the error to the client
                 if err and -1 is err.message?.indexOf "Mailbox doesn't exist"
                     reporter.onError err
                 reporter.addProgress 1
+                shouldNotifAccount = true if shouldNotif
                 # dont interrupt the loop if one fail
                 cb null
 
@@ -371,6 +374,8 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, firstImport, callback) ->
             , (err) ->
                 account.setRefreshing false
                 reporter.onDone()
+                if shouldNotifAccount
+                    notifications.accountRefreshed account
                 callback null
 
 Account::imap_fetchMailsTwoSteps = (callback) ->
