@@ -4496,10 +4496,17 @@ module.exports = MailsInput = React.createClass({
     }
   },
   onBlur: function() {
-    return setTimeout(this.addContactFromInput, 100);
+    return setTimeout((function(_this) {
+      return function() {
+        return _this.addContactFromInput(true);
+      };
+    })(this), 100);
   },
-  addContactFromInput: function() {
-    var address, state, value;
+  addContactFromInput: function(isBlur) {
+    var address, isContacts, state, value, _ref1;
+    if (isBlur == null) {
+      isBlur = false;
+    }
     if (this.isMounted()) {
       state = {};
       state.open = false;
@@ -4513,7 +4520,8 @@ module.exports = MailsInput = React.createClass({
           this.props.valueLink.requestChange(state.known);
           return this.setState(state);
         } else {
-          if (!this.isShowingAlert) {
+          isContacts = ((_ref1 = this.state.contacts) != null ? _ref1.length : void 0) === 0;
+          if (!this.isShowingAlert && !isBlur && isContacts) {
             this.isShowingAlert = true;
             alert(t('compose wrong email format', {
               address: address.address
@@ -8677,7 +8685,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-require.register("libs/flux/store/Store", function(exports, require, module) {
+;require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
