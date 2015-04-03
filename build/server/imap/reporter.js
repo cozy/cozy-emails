@@ -126,6 +126,13 @@ module.exports = ImapReporter = (function() {
 
 })();
 
+ImapReporter.batchMoveToTrash = function(idsLength) {
+  return new ImapReporter({
+    code: 'batch-trash',
+    total: idsLength
+  });
+};
+
 ImapReporter.accountFetch = function(account, boxesLength, firstImport) {
   return new ImapReporter({
     total: boxesLength,
