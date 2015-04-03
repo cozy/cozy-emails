@@ -67,11 +67,11 @@ describe 'Account Synchronizations', ->
             done null
 
     it "When the server changes one UIDValidity", (done) ->
-        @timeout 10000
+        @timeout 30000
         DovecotTesting.changeSentUIDValidity done
 
     it "And refresh the account", (done) ->
-        @timeout 10000
+        @timeout 15000
         client.get "/refresh", done
 
     it "Then the mailbox has been updated", (done) ->

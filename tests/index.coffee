@@ -70,7 +70,7 @@ describe "Server tests", ->
             smtpTLS: true
             imapServer: DovecotTesting.serverIP()
             imapPort: 993
-            imapSecure: true
+            imapSSL: true
 
     # stop the app
     after helpers.stopApp

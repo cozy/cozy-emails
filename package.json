@@ -12,7 +12,7 @@
   },
   "main": "server.coffee",
   "dependencies": {
-    "americano": "0.3.10",
+    "americano": "0.4.1",
     "cozydb": "0.0.10",
     "printit": "0.1.3",
     "async": "0.9.0",
