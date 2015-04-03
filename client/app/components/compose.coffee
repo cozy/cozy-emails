@@ -61,8 +61,8 @@ module.exports = Compose = React.createClass
 
         classLabel = 'compose-label'
         classInput = 'compose-input'
-        classCc    = if @state.cc.length is 0 then '' else ' shown'
-        classBcc   = if @state.bcc.length is 0 then '' else ' shown'
+        classCc    = if @state.ccShown  then ' shown ' else ''
+        classBcc   = if @state.bccShown then ' shown ' else ''
 
         if @state.sending
             labelSend = t 'compose action sending'
@@ -263,8 +263,10 @@ module.exports = Compose = React.createClass
                 @props.settings.get('composeInHTML')
             state.accountID ?= @props.selectedAccountID
 
-        state.sending = false
-        state.saving  = false
+        state.sending  = false
+        state.saving   = false
+        state.ccShown  = false
+        state.bccShown = false
         return state
 
     componentWillReceiveProps: (nextProps) ->
@@ -402,10 +404,12 @@ module.exports = Compose = React.createClass
     onToggleCc: (e) ->
         toggle = (e) -> e.classList.toggle 'shown'
         toggle e for e in @getDOMNode().querySelectorAll '.compose-cc'
+        @setState ccShown: not @state.ccShown
 
     onToggleBcc: (e) ->
         toggle = (e) -> e.classList.toggle 'shown'
         toggle e for e in @getDOMNode().querySelectorAll '.compose-bcc'
+        @setState bccShown: not @state.bccShown
 
 
 ComposeEditor = React.createClass
