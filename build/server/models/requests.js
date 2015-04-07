@@ -56,6 +56,14 @@ module.exports = {
     }
   },
   message: {
+    totalUnreadByAccount: {
+      reduce: '_count',
+      map: function(doc) {
+        if (-1 === doc.flags.indexOf('\\Seen')) {
+          return emit(doc.accountID, null);
+        }
+      }
+    },
     byMailboxRequest: {
       reduce: '_count',
       map: function(doc) {

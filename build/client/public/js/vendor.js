@@ -392,7 +392,7 @@ if (!isFunction(window.CustomEvent)) {
   });
   global.EventEmitter = require('/index.js');
 }.call(this, this));
-/**
+;/**
  * React (with addons) v0.11.1
  */
 !function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.React=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
@@ -20643,7 +20643,7 @@ module.exports = warning;
 },{"./emptyFunction":116}]},{},[88])
 (88)
 });
-/*!
+;/*!
  * jQuery JavaScript Library v2.1.1
  * http://jquery.com/
  *
@@ -29834,7 +29834,7 @@ return jQuery;
 
 }));
 
-//     Underscore.js 1.6.0
+;//     Underscore.js 1.6.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 //     Underscore may be freely distributed under the MIT license.
@@ -31178,7 +31178,7 @@ return jQuery;
   }
 }).call(this);
 
-//     Backbone.js 1.1.2
+;//     Backbone.js 1.1.2
 
 //     (c) 2010-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
 //     Backbone may be freely distributed under the MIT license.
@@ -32787,7 +32787,7 @@ return jQuery;
 
 }));
 
-;(function(){
+;;(function(){
 
 /**
  * Require the given path.
@@ -34303,13 +34303,13 @@ require.alias("superagent/lib/client.js", "superagent/index.js");if (typeof expo
 } else {
   this["superagent"] = require("superagent");
 }})();
-/*!
+;/*!
  * Bootstrap v3.1.1 (http://getbootstrap.com)
  * Copyright 2011-2014 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
  */
 if("undefined"==typeof jQuery)throw new Error("Bootstrap's JavaScript requires jQuery");+function(a){"use strict";function b(){var a=document.createElement("bootstrap"),b={WebkitTransition:"webkitTransitionEnd",MozTransition:"transitionend",OTransition:"oTransitionEnd otransitionend",transition:"transitionend"};for(var c in b)if(void 0!==a.style[c])return{end:b[c]};return!1}a.fn.emulateTransitionEnd=function(b){var c=!1,d=this;a(this).one(a.support.transition.end,function(){c=!0});var e=function(){c||a(d).trigger(a.support.transition.end)};return setTimeout(e,b),this},a(function(){a.support.transition=b()})}(jQuery),+function(a){"use strict";var b='[data-dismiss="alert"]',c=function(c){a(c).on("click",b,this.close)};c.prototype.close=function(b){function c(){f.trigger("closed.bs.alert").remove()}var d=a(this),e=d.attr("data-target");e||(e=d.attr("href"),e=e&&e.replace(/.*(?=#[^\s]*$)/,""));var f=a(e);b&&b.preventDefault(),f.length||(f=d.hasClass("alert")?d:d.parent()),f.trigger(b=a.Event("close.bs.alert")),b.isDefaultPrevented()||(f.removeClass("in"),a.support.transition&&f.hasClass("fade")?f.one(a.support.transition.end,c).emulateTransitionEnd(150):c())};var d=a.fn.alert;a.fn.alert=function(b){return this.each(function(){var d=a(this),e=d.data("bs.alert");e||d.data("bs.alert",e=new c(this)),"string"==typeof b&&e[b].call(d)})},a.fn.alert.Constructor=c,a.fn.alert.noConflict=function(){return a.fn.alert=d,this},a(document).on("click.bs.alert.data-api",b,c.prototype.close)}(jQuery),+function(a){"use strict";var b=function(c,d){this.$element=a(c),this.options=a.extend({},b.DEFAULTS,d),this.isLoading=!1};b.DEFAULTS={loadingText:"loading..."},b.prototype.setState=function(b){var c="disabled",d=this.$element,e=d.is("input")?"val":"html",f=d.data();b+="Text",f.resetText||d.data("resetText",d[e]()),d[e](f[b]||this.options[b]),setTimeout(a.proxy(function(){"loadingText"==b?(this.isLoading=!0,d.addClass(c).attr(c,c)):this.isLoading&&(this.isLoading=!1,d.removeClass(c).removeAttr(c))},this),0)},b.prototype.toggle=function(){var a=!0,b=this.$element.closest('[data-toggle="buttons"]');if(b.length){var c=this.$element.find("input");"radio"==c.prop("type")&&(c.prop("checked")&&this.$element.hasClass("active")?a=!1:b.find(".active").removeClass("active")),a&&c.prop("checked",!this.$element.hasClass("active")).trigger("change")}a&&this.$element.toggleClass("active")};var c=a.fn.button;a.fn.button=function(c){return this.each(function(){var d=a(this),e=d.data("bs.button"),f="object"==typeof c&&c;e||d.data("bs.button",e=new b(this,f)),"toggle"==c?e.toggle():c&&e.setState(c)})},a.fn.button.Constructor=b,a.fn.button.noConflict=function(){return a.fn.button=c,this},a(document).on("click.bs.button.data-api","[data-toggle^=button]",function(b){var c=a(b.target);c.hasClass("btn")||(c=c.closest(".btn")),c.button("toggle"),b.preventDefault()})}(jQuery),+function(a){"use strict";var b=function(b,c){this.$element=a(b),this.$indicators=this.$element.find(".carousel-indicators"),this.options=c,this.paused=this.sliding=this.interval=this.$active=this.$items=null,"hover"==this.options.pause&&this.$element.on("mouseenter",a.proxy(this.pause,this)).on("mouseleave",a.proxy(this.cycle,this))};b.DEFAULTS={interval:5e3,pause:"hover",wrap:!0},b.prototype.cycle=function(b){return b||(this.paused=!1),this.interval&&clearInterval(this.interval),this.options.interval&&!this.paused&&(this.interval=setInterval(a.proxy(this.next,this),this.options.interval)),this},b.prototype.getActiveIndex=function(){return this.$active=this.$element.find(".item.active"),this.$items=this.$active.parent().children(),this.$items.index(this.$active)},b.prototype.to=function(b){var c=this,d=this.getActiveIndex();return b>this.$items.length-1||0>b?void 0:this.sliding?this.$element.one("slid.bs.carousel",function(){c.to(b)}):d==b?this.pause().cycle():this.slide(b>d?"next":"prev",a(this.$items[b]))},b.prototype.pause=function(b){return b||(this.paused=!0),this.$element.find(".next, .prev").length&&a.support.transition&&(this.$element.trigger(a.support.transition.end),this.cycle(!0)),this.interval=clearInterval(this.interval),this},b.prototype.next=function(){return this.sliding?void 0:this.slide("next")},b.prototype.prev=function(){return this.sliding?void 0:this.slide("prev")},b.prototype.slide=function(b,c){var d=this.$element.find(".item.active"),e=c||d[b](),f=this.interval,g="next"==b?"left":"right",h="next"==b?"first":"last",i=this;if(!e.length){if(!this.options.wrap)return;e=this.$element.find(".item")[h]()}if(e.hasClass("active"))return this.sliding=!1;var j=a.Event("slide.bs.carousel",{relatedTarget:e[0],direction:g});return this.$element.trigger(j),j.isDefaultPrevented()?void 0:(this.sliding=!0,f&&this.pause(),this.$indicators.length&&(this.$indicators.find(".active").removeClass("active"),this.$element.one("slid.bs.carousel",function(){var b=a(i.$indicators.children()[i.getActiveIndex()]);b&&b.addClass("active")})),a.support.transition&&this.$element.hasClass("slide")?(e.addClass(b),e[0].offsetWidth,d.addClass(g),e.addClass(g),d.one(a.support.transition.end,function(){e.removeClass([b,g].join(" ")).addClass("active"),d.removeClass(["active",g].join(" ")),i.sliding=!1,setTimeout(function(){i.$element.trigger("slid.bs.carousel")},0)}).emulateTransitionEnd(1e3*d.css("transition-duration").slice(0,-1))):(d.removeClass("active"),e.addClass("active"),this.sliding=!1,this.$element.trigger("slid.bs.carousel")),f&&this.cycle(),this)};var c=a.fn.carousel;a.fn.carousel=function(c){return this.each(function(){var d=a(this),e=d.data("bs.carousel"),f=a.extend({},b.DEFAULTS,d.data(),"object"==typeof c&&c),g="string"==typeof c?c:f.slide;e||d.data("bs.carousel",e=new b(this,f)),"number"==typeof c?e.to(c):g?e[g]():f.interval&&e.pause().cycle()})},a.fn.carousel.Constructor=b,a.fn.carousel.noConflict=function(){return a.fn.carousel=c,this},a(document).on("click.bs.carousel.data-api","[data-slide], [data-slide-to]",function(b){var c,d=a(this),e=a(d.attr("data-target")||(c=d.attr("href"))&&c.replace(/.*(?=#[^\s]+$)/,"")),f=a.extend({},e.data(),d.data()),g=d.attr("data-slide-to");g&&(f.interval=!1),e.carousel(f),(g=d.attr("data-slide-to"))&&e.data("bs.carousel").to(g),b.preventDefault()}),a(window).on("load",function(){a('[data-ride="carousel"]').each(function(){var b=a(this);b.carousel(b.data())})})}(jQuery),+function(a){"use strict";var b=function(c,d){this.$element=a(c),this.options=a.extend({},b.DEFAULTS,d),this.transitioning=null,this.options.parent&&(this.$parent=a(this.options.parent)),this.options.toggle&&this.toggle()};b.DEFAULTS={toggle:!0},b.prototype.dimension=function(){var a=this.$element.hasClass("width");return a?"width":"height"},b.prototype.show=function(){if(!this.transitioning&&!this.$element.hasClass("in")){var b=a.Event("show.bs.collapse");if(this.$element.trigger(b),!b.isDefaultPrevented()){var c=this.$parent&&this.$parent.find("> .panel > .in");if(c&&c.length){var d=c.data("bs.collapse");if(d&&d.transitioning)return;c.collapse("hide"),d||c.data("bs.collapse",null)}var e=this.dimension();this.$element.removeClass("collapse").addClass("collapsing")[e](0),this.transitioning=1;var f=function(){this.$element.removeClass("collapsing").addClass("collapse in")[e]("auto"),this.transitioning=0,this.$element.trigger("shown.bs.collapse")};if(!a.support.transition)return f.call(this);var g=a.camelCase(["scroll",e].join("-"));this.$element.one(a.support.transition.end,a.proxy(f,this)).emulateTransitionEnd(350)[e](this.$element[0][g])}}},b.prototype.hide=function(){if(!this.transitioning&&this.$element.hasClass("in")){var b=a.Event("hide.bs.collapse");if(this.$element.trigger(b),!b.isDefaultPrevented()){var c=this.dimension();this.$element[c](this.$element[c]())[0].offsetHeight,this.$element.addClass("collapsing").removeClass("collapse").removeClass("in"),this.transitioning=1;var d=function(){this.transitioning=0,this.$element.trigger("hidden.bs.collapse").removeClass("collapsing").addClass("collapse")};return a.support.transition?void this.$element[c](0).one(a.support.transition.end,a.proxy(d,this)).emulateTransitionEnd(350):d.call(this)}}},b.prototype.toggle=function(){this[this.$element.hasClass("in")?"hide":"show"]()};var c=a.fn.collapse;a.fn.collapse=function(c){return this.each(function(){var d=a(this),e=d.data("bs.collapse"),f=a.extend({},b.DEFAULTS,d.data(),"object"==typeof c&&c);!e&&f.toggle&&"show"==c&&(c=!c),e||d.data("bs.collapse",e=new b(this,f)),"string"==typeof c&&e[c]()})},a.fn.collapse.Constructor=b,a.fn.collapse.noConflict=function(){return a.fn.collapse=c,this},a(document).on("click.bs.collapse.data-api","[data-toggle=collapse]",function(b){var c,d=a(this),e=d.attr("data-target")||b.preventDefault()||(c=d.attr("href"))&&c.replace(/.*(?=#[^\s]+$)/,""),f=a(e),g=f.data("bs.collapse"),h=g?"toggle":d.data(),i=d.attr("data-parent"),j=i&&a(i);g&&g.transitioning||(j&&j.find('[data-toggle=collapse][data-parent="'+i+'"]').not(d).addClass("collapsed"),d[f.hasClass("in")?"addClass":"removeClass"]("collapsed")),f.collapse(h)})}(jQuery),+function(a){"use strict";function b(b){a(d).remove(),a(e).each(function(){var d=c(a(this)),e={relatedTarget:this};d.hasClass("open")&&(d.trigger(b=a.Event("hide.bs.dropdown",e)),b.isDefaultPrevented()||d.removeClass("open").trigger("hidden.bs.dropdown",e))})}function c(b){var c=b.attr("data-target");c||(c=b.attr("href"),c=c&&/#[A-Za-z]/.test(c)&&c.replace(/.*(?=#[^\s]*$)/,""));var d=c&&a(c);return d&&d.length?d:b.parent()}var d=".dropdown-backdrop",e="[data-toggle=dropdown]",f=function(b){a(b).on("click.bs.dropdown",this.toggle)};f.prototype.toggle=function(d){var e=a(this);if(!e.is(".disabled, :disabled")){var f=c(e),g=f.hasClass("open");if(b(),!g){"ontouchstart"in document.documentElement&&!f.closest(".navbar-nav").length&&a('<div class="dropdown-backdrop"/>').insertAfter(a(this)).on("click",b);var h={relatedTarget:this};if(f.trigger(d=a.Event("show.bs.dropdown",h)),d.isDefaultPrevented())return;f.toggleClass("open").trigger("shown.bs.dropdown",h),e.focus()}return!1}},f.prototype.keydown=function(b){if(/(38|40|27)/.test(b.keyCode)){var d=a(this);if(b.preventDefault(),b.stopPropagation(),!d.is(".disabled, :disabled")){var f=c(d),g=f.hasClass("open");if(!g||g&&27==b.keyCode)return 27==b.which&&f.find(e).focus(),d.click();var h=" li:not(.divider):visible a",i=f.find("[role=menu]"+h+", [role=listbox]"+h);if(i.length){var j=i.index(i.filter(":focus"));38==b.keyCode&&j>0&&j--,40==b.keyCode&&j<i.length-1&&j++,~j||(j=0),i.eq(j).focus()}}}};var g=a.fn.dropdown;a.fn.dropdown=function(b){return this.each(function(){var c=a(this),d=c.data("bs.dropdown");d||c.data("bs.dropdown",d=new f(this)),"string"==typeof b&&d[b].call(c)})},a.fn.dropdown.Constructor=f,a.fn.dropdown.noConflict=function(){return a.fn.dropdown=g,this},a(document).on("click.bs.dropdown.data-api",b).on("click.bs.dropdown.data-api",".dropdown form",function(a){a.stopPropagation()}).on("click.bs.dropdown.data-api",e,f.prototype.toggle).on("keydown.bs.dropdown.data-api",e+", [role=menu], [role=listbox]",f.prototype.keydown)}(jQuery),+function(a){"use strict";var b=function(b,c){this.options=c,this.$element=a(b),this.$backdrop=this.isShown=null,this.options.remote&&this.$element.find(".modal-content").load(this.options.remote,a.proxy(function(){this.$element.trigger("loaded.bs.modal")},this))};b.DEFAULTS={backdrop:!0,keyboard:!0,show:!0},b.prototype.toggle=function(a){return this[this.isShown?"hide":"show"](a)},b.prototype.show=function(b){var c=this,d=a.Event("show.bs.modal",{relatedTarget:b});this.$element.trigger(d),this.isShown||d.isDefaultPrevented()||(this.isShown=!0,this.escape(),this.$element.on("click.dismiss.bs.modal",'[data-dismiss="modal"]',a.proxy(this.hide,this)),this.backdrop(function(){var d=a.support.transition&&c.$element.hasClass("fade");c.$element.parent().length||c.$element.appendTo(document.body),c.$element.show().scrollTop(0),d&&c.$element[0].offsetWidth,c.$element.addClass("in").attr("aria-hidden",!1),c.enforceFocus();var e=a.Event("shown.bs.modal",{relatedTarget:b});d?c.$element.find(".modal-dialog").one(a.support.transition.end,function(){c.$element.focus().trigger(e)}).emulateTransitionEnd(300):c.$element.focus().trigger(e)}))},b.prototype.hide=function(b){b&&b.preventDefault(),b=a.Event("hide.bs.modal"),this.$element.trigger(b),this.isShown&&!b.isDefaultPrevented()&&(this.isShown=!1,this.escape(),a(document).off("focusin.bs.modal"),this.$element.removeClass("in").attr("aria-hidden",!0).off("click.dismiss.bs.modal"),a.support.transition&&this.$element.hasClass("fade")?this.$element.one(a.support.transition.end,a.proxy(this.hideModal,this)).emulateTransitionEnd(300):this.hideModal())},b.prototype.enforceFocus=function(){a(document).off("focusin.bs.modal").on("focusin.bs.modal",a.proxy(function(a){this.$element[0]===a.target||this.$element.has(a.target).length||this.$element.focus()},this))},b.prototype.escape=function(){this.isShown&&this.options.keyboard?this.$element.on("keyup.dismiss.bs.modal",a.proxy(function(a){27==a.which&&this.hide()},this)):this.isShown||this.$element.off("keyup.dismiss.bs.modal")},b.prototype.hideModal=function(){var a=this;this.$element.hide(),this.backdrop(function(){a.removeBackdrop(),a.$element.trigger("hidden.bs.modal")})},b.prototype.removeBackdrop=function(){this.$backdrop&&this.$backdrop.remove(),this.$backdrop=null},b.prototype.backdrop=function(b){var c=this.$element.hasClass("fade")?"fade":"";if(this.isShown&&this.options.backdrop){var d=a.support.transition&&c;if(this.$backdrop=a('<div class="modal-backdrop '+c+'" />').appendTo(document.body),this.$element.on("click.dismiss.bs.modal",a.proxy(function(a){a.target===a.currentTarget&&("static"==this.options.backdrop?this.$element[0].focus.call(this.$element[0]):this.hide.call(this))},this)),d&&this.$backdrop[0].offsetWidth,this.$backdrop.addClass("in"),!b)return;d?this.$backdrop.one(a.support.transition.end,b).emulateTransitionEnd(150):b()}else!this.isShown&&this.$backdrop?(this.$backdrop.removeClass("in"),a.support.transition&&this.$element.hasClass("fade")?this.$backdrop.one(a.support.transition.end,b).emulateTransitionEnd(150):b()):b&&b()};var c=a.fn.modal;a.fn.modal=function(c,d){return this.each(function(){var e=a(this),f=e.data("bs.modal"),g=a.extend({},b.DEFAULTS,e.data(),"object"==typeof c&&c);f||e.data("bs.modal",f=new b(this,g)),"string"==typeof c?f[c](d):g.show&&f.show(d)})},a.fn.modal.Constructor=b,a.fn.modal.noConflict=function(){return a.fn.modal=c,this},a(document).on("click.bs.modal.data-api",'[data-toggle="modal"]',function(b){var c=a(this),d=c.attr("href"),e=a(c.attr("data-target")||d&&d.replace(/.*(?=#[^\s]+$)/,"")),f=e.data("bs.modal")?"toggle":a.extend({remote:!/#/.test(d)&&d},e.data(),c.data());c.is("a")&&b.preventDefault(),e.modal(f,this).one("hide",function(){c.is(":visible")&&c.focus()})}),a(document).on("show.bs.modal",".modal",function(){a(document.body).addClass("modal-open")}).on("hidden.bs.modal",".modal",function(){a(document.body).removeClass("modal-open")})}(jQuery),+function(a){"use strict";var b=function(a,b){this.type=this.options=this.enabled=this.timeout=this.hoverState=this.$element=null,this.init("tooltip",a,b)};b.DEFAULTS={animation:!0,placement:"top",selector:!1,template:'<div class="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',trigger:"hover focus",title:"",delay:0,html:!1,container:!1},b.prototype.init=function(b,c,d){this.enabled=!0,this.type=b,this.$element=a(c),this.options=this.getOptions(d);for(var e=this.options.trigger.split(" "),f=e.length;f--;){var g=e[f];if("click"==g)this.$element.on("click."+this.type,this.options.selector,a.proxy(this.toggle,this));else if("manual"!=g){var h="hover"==g?"mouseenter":"focusin",i="hover"==g?"mouseleave":"focusout";this.$element.on(h+"."+this.type,this.options.selector,a.proxy(this.enter,this)),this.$element.on(i+"."+this.type,this.options.selector,a.proxy(this.leave,this))}}this.options.selector?this._options=a.extend({},this.options,{trigger:"manual",selector:""}):this.fixTitle()},b.prototype.getDefaults=function(){return b.DEFAULTS},b.prototype.getOptions=function(b){return b=a.extend({},this.getDefaults(),this.$element.data(),b),b.delay&&"number"==typeof b.delay&&(b.delay={show:b.delay,hide:b.delay}),b},b.prototype.getDelegateOptions=function(){var b={},c=this.getDefaults();return this._options&&a.each(this._options,function(a,d){c[a]!=d&&(b[a]=d)}),b},b.prototype.enter=function(b){var c=b instanceof this.constructor?b:a(b.currentTarget)[this.type](this.getDelegateOptions()).data("bs."+this.type);return clearTimeout(c.timeout),c.hoverState="in",c.options.delay&&c.options.delay.show?void(c.timeout=setTimeout(function(){"in"==c.hoverState&&c.show()},c.options.delay.show)):c.show()},b.prototype.leave=function(b){var c=b instanceof this.constructor?b:a(b.currentTarget)[this.type](this.getDelegateOptions()).data("bs."+this.type);return clearTimeout(c.timeout),c.hoverState="out",c.options.delay&&c.options.delay.hide?void(c.timeout=setTimeout(function(){"out"==c.hoverState&&c.hide()},c.options.delay.hide)):c.hide()},b.prototype.show=function(){var b=a.Event("show.bs."+this.type);if(this.hasContent()&&this.enabled){if(this.$element.trigger(b),b.isDefaultPrevented())return;var c=this,d=this.tip();this.setContent(),this.options.animation&&d.addClass("fade");var e="function"==typeof this.options.placement?this.options.placement.call(this,d[0],this.$element[0]):this.options.placement,f=/\s?auto?\s?/i,g=f.test(e);g&&(e=e.replace(f,"")||"top"),d.detach().css({top:0,left:0,display:"block"}).addClass(e),this.options.container?d.appendTo(this.options.container):d.insertAfter(this.$element);var h=this.getPosition(),i=d[0].offsetWidth,j=d[0].offsetHeight;if(g){var k=this.$element.parent(),l=e,m=document.documentElement.scrollTop||document.body.scrollTop,n="body"==this.options.container?window.innerWidth:k.outerWidth(),o="body"==this.options.container?window.innerHeight:k.outerHeight(),p="body"==this.options.container?0:k.offset().left;e="bottom"==e&&h.top+h.height+j-m>o?"top":"top"==e&&h.top-m-j<0?"bottom":"right"==e&&h.right+i>n?"left":"left"==e&&h.left-i<p?"right":e,d.removeClass(l).addClass(e)}var q=this.getCalculatedOffset(e,h,i,j);this.applyPlacement(q,e),this.hoverState=null;var r=function(){c.$element.trigger("shown.bs."+c.type)};a.support.transition&&this.$tip.hasClass("fade")?d.one(a.support.transition.end,r).emulateTransitionEnd(150):r()}},b.prototype.applyPlacement=function(b,c){var d,e=this.tip(),f=e[0].offsetWidth,g=e[0].offsetHeight,h=parseInt(e.css("margin-top"),10),i=parseInt(e.css("margin-left"),10);isNaN(h)&&(h=0),isNaN(i)&&(i=0),b.top=b.top+h,b.left=b.left+i,a.offset.setOffset(e[0],a.extend({using:function(a){e.css({top:Math.round(a.top),left:Math.round(a.left)})}},b),0),e.addClass("in");var j=e[0].offsetWidth,k=e[0].offsetHeight;if("top"==c&&k!=g&&(d=!0,b.top=b.top+g-k),/bottom|top/.test(c)){var l=0;b.left<0&&(l=-2*b.left,b.left=0,e.offset(b),j=e[0].offsetWidth,k=e[0].offsetHeight),this.replaceArrow(l-f+j,j,"left")}else this.replaceArrow(k-g,k,"top");d&&e.offset(b)},b.prototype.replaceArrow=function(a,b,c){this.arrow().css(c,a?50*(1-a/b)+"%":"")},b.prototype.setContent=function(){var a=this.tip(),b=this.getTitle();a.find(".tooltip-inner")[this.options.html?"html":"text"](b),a.removeClass("fade in top bottom left right")},b.prototype.hide=function(){function b(){"in"!=c.hoverState&&d.detach(),c.$element.trigger("hidden.bs."+c.type)}var c=this,d=this.tip(),e=a.Event("hide.bs."+this.type);return this.$element.trigger(e),e.isDefaultPrevented()?void 0:(d.removeClass("in"),a.support.transition&&this.$tip.hasClass("fade")?d.one(a.support.transition.end,b).emulateTransitionEnd(150):b(),this.hoverState=null,this)},b.prototype.fixTitle=function(){var a=this.$element;(a.attr("title")||"string"!=typeof a.attr("data-original-title"))&&a.attr("data-original-title",a.attr("title")||"").attr("title","")},b.prototype.hasContent=function(){return this.getTitle()},b.prototype.getPosition=function(){var b=this.$element[0];return a.extend({},"function"==typeof b.getBoundingClientRect?b.getBoundingClientRect():{width:b.offsetWidth,height:b.offsetHeight},this.$element.offset())},b.prototype.getCalculatedOffset=function(a,b,c,d){return"bottom"==a?{top:b.top+b.height,left:b.left+b.width/2-c/2}:"top"==a?{top:b.top-d,left:b.left+b.width/2-c/2}:"left"==a?{top:b.top+b.height/2-d/2,left:b.left-c}:{top:b.top+b.height/2-d/2,left:b.left+b.width}},b.prototype.getTitle=function(){var a,b=this.$element,c=this.options;return a=b.attr("data-original-title")||("function"==typeof c.title?c.title.call(b[0]):c.title)},b.prototype.tip=function(){return this.$tip=this.$tip||a(this.options.template)},b.prototype.arrow=function(){return this.$arrow=this.$arrow||this.tip().find(".tooltip-arrow")},b.prototype.validate=function(){this.$element[0].parentNode||(this.hide(),this.$element=null,this.options=null)},b.prototype.enable=function(){this.enabled=!0},b.prototype.disable=function(){this.enabled=!1},b.prototype.toggleEnabled=function(){this.enabled=!this.enabled},b.prototype.toggle=function(b){var c=b?a(b.currentTarget)[this.type](this.getDelegateOptions()).data("bs."+this.type):this;c.tip().hasClass("in")?c.leave(c):c.enter(c)},b.prototype.destroy=function(){clearTimeout(this.timeout),this.hide().$element.off("."+this.type).removeData("bs."+this.type)};var c=a.fn.tooltip;a.fn.tooltip=function(c){return this.each(function(){var d=a(this),e=d.data("bs.tooltip"),f="object"==typeof c&&c;(e||"destroy"!=c)&&(e||d.data("bs.tooltip",e=new b(this,f)),"string"==typeof c&&e[c]())})},a.fn.tooltip.Constructor=b,a.fn.tooltip.noConflict=function(){return a.fn.tooltip=c,this}}(jQuery),+function(a){"use strict";var b=function(a,b){this.init("popover",a,b)};if(!a.fn.tooltip)throw new Error("Popover requires tooltip.js");b.DEFAULTS=a.extend({},a.fn.tooltip.Constructor.DEFAULTS,{placement:"right",trigger:"click",content:"",template:'<div class="popover"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'}),b.prototype=a.extend({},a.fn.tooltip.Constructor.prototype),b.prototype.constructor=b,b.prototype.getDefaults=function(){return b.DEFAULTS},b.prototype.setContent=function(){var a=this.tip(),b=this.getTitle(),c=this.getContent();a.find(".popover-title")[this.options.html?"html":"text"](b),a.find(".popover-content")[this.options.html?"string"==typeof c?"html":"append":"text"](c),a.removeClass("fade top bottom left right in"),a.find(".popover-title").html()||a.find(".popover-title").hide()},b.prototype.hasContent=function(){return this.getTitle()||this.getContent()},b.prototype.getContent=function(){var a=this.$element,b=this.options;return a.attr("data-content")||("function"==typeof b.content?b.content.call(a[0]):b.content)},b.prototype.arrow=function(){return this.$arrow=this.$arrow||this.tip().find(".arrow")},b.prototype.tip=function(){return this.$tip||(this.$tip=a(this.options.template)),this.$tip};var c=a.fn.popover;a.fn.popover=function(c){return this.each(function(){var d=a(this),e=d.data("bs.popover"),f="object"==typeof c&&c;(e||"destroy"!=c)&&(e||d.data("bs.popover",e=new b(this,f)),"string"==typeof c&&e[c]())})},a.fn.popover.Constructor=b,a.fn.popover.noConflict=function(){return a.fn.popover=c,this}}(jQuery),+function(a){"use strict";function b(c,d){var e,f=a.proxy(this.process,this);this.$element=a(a(c).is("body")?window:c),this.$body=a("body"),this.$scrollElement=this.$element.on("scroll.bs.scroll-spy.data-api",f),this.options=a.extend({},b.DEFAULTS,d),this.selector=(this.options.target||(e=a(c).attr("href"))&&e.replace(/.*(?=#[^\s]+$)/,"")||"")+" .nav li > a",this.offsets=a([]),this.targets=a([]),this.activeTarget=null,this.refresh(),this.process()}b.DEFAULTS={offset:10},b.prototype.refresh=function(){var b=this.$element[0]==window?"offset":"position";this.offsets=a([]),this.targets=a([]);{var c=this;this.$body.find(this.selector).map(function(){var d=a(this),e=d.data("target")||d.attr("href"),f=/^#./.test(e)&&a(e);return f&&f.length&&f.is(":visible")&&[[f[b]().top+(!a.isWindow(c.$scrollElement.get(0))&&c.$scrollElement.scrollTop()),e]]||null}).sort(function(a,b){return a[0]-b[0]}).each(function(){c.offsets.push(this[0]),c.targets.push(this[1])})}},b.prototype.process=function(){var a,b=this.$scrollElement.scrollTop()+this.options.offset,c=this.$scrollElement[0].scrollHeight||this.$body[0].scrollHeight,d=c-this.$scrollElement.height(),e=this.offsets,f=this.targets,g=this.activeTarget;if(b>=d)return g!=(a=f.last()[0])&&this.activate(a);if(g&&b<=e[0])return g!=(a=f[0])&&this.activate(a);for(a=e.length;a--;)g!=f[a]&&b>=e[a]&&(!e[a+1]||b<=e[a+1])&&this.activate(f[a])},b.prototype.activate=function(b){this.activeTarget=b,a(this.selector).parentsUntil(this.options.target,".active").removeClass("active");var c=this.selector+'[data-target="'+b+'"],'+this.selector+'[href="'+b+'"]',d=a(c).parents("li").addClass("active");d.parent(".dropdown-menu").length&&(d=d.closest("li.dropdown").addClass("active")),d.trigger("activate.bs.scrollspy")};var c=a.fn.scrollspy;a.fn.scrollspy=function(c){return this.each(function(){var d=a(this),e=d.data("bs.scrollspy"),f="object"==typeof c&&c;e||d.data("bs.scrollspy",e=new b(this,f)),"string"==typeof c&&e[c]()})},a.fn.scrollspy.Constructor=b,a.fn.scrollspy.noConflict=function(){return a.fn.scrollspy=c,this},a(window).on("load",function(){a('[data-spy="scroll"]').each(function(){var b=a(this);b.scrollspy(b.data())})})}(jQuery),+function(a){"use strict";var b=function(b){this.element=a(b)};b.prototype.show=function(){var b=this.element,c=b.closest("ul:not(.dropdown-menu)"),d=b.data("target");if(d||(d=b.attr("href"),d=d&&d.replace(/.*(?=#[^\s]*$)/,"")),!b.parent("li").hasClass("active")){var e=c.find(".active:last a")[0],f=a.Event("show.bs.tab",{relatedTarget:e});if(b.trigger(f),!f.isDefaultPrevented()){var g=a(d);this.activate(b.parent("li"),c),this.activate(g,g.parent(),function(){b.trigger({type:"shown.bs.tab",relatedTarget:e})})}}},b.prototype.activate=function(b,c,d){function e(){f.removeClass("active").find("> .dropdown-menu > .active").removeClass("active"),b.addClass("active"),g?(b[0].offsetWidth,b.addClass("in")):b.removeClass("fade"),b.parent(".dropdown-menu")&&b.closest("li.dropdown").addClass("active"),d&&d()}var f=c.find("> .active"),g=d&&a.support.transition&&f.hasClass("fade");g?f.one(a.support.transition.end,e).emulateTransitionEnd(150):e(),f.removeClass("in")};var c=a.fn.tab;a.fn.tab=function(c){return this.each(function(){var d=a(this),e=d.data("bs.tab");e||d.data("bs.tab",e=new b(this)),"string"==typeof c&&e[c]()})},a.fn.tab.Constructor=b,a.fn.tab.noConflict=function(){return a.fn.tab=c,this},a(document).on("click.bs.tab.data-api",'[data-toggle="tab"], [data-toggle="pill"]',function(b){b.preventDefault(),a(this).tab("show")})}(jQuery),+function(a){"use strict";var b=function(c,d){this.options=a.extend({},b.DEFAULTS,d),this.$window=a(window).on("scroll.bs.affix.data-api",a.proxy(this.checkPosition,this)).on("click.bs.affix.data-api",a.proxy(this.checkPositionWithEventLoop,this)),this.$element=a(c),this.affixed=this.unpin=this.pinnedOffset=null,this.checkPosition()};b.RESET="affix affix-top affix-bottom",b.DEFAULTS={offset:0},b.prototype.getPinnedOffset=function(){if(this.pinnedOffset)return this.pinnedOffset;this.$element.removeClass(b.RESET).addClass("affix");var a=this.$window.scrollTop(),c=this.$element.offset();return this.pinnedOffset=c.top-a},b.prototype.checkPositionWithEventLoop=function(){setTimeout(a.proxy(this.checkPosition,this),1)},b.prototype.checkPosition=function(){if(this.$element.is(":visible")){var c=a(document).height(),d=this.$window.scrollTop(),e=this.$element.offset(),f=this.options.offset,g=f.top,h=f.bottom;"top"==this.affixed&&(e.top+=d),"object"!=typeof f&&(h=g=f),"function"==typeof g&&(g=f.top(this.$element)),"function"==typeof h&&(h=f.bottom(this.$element));var i=null!=this.unpin&&d+this.unpin<=e.top?!1:null!=h&&e.top+this.$element.height()>=c-h?"bottom":null!=g&&g>=d?"top":!1;if(this.affixed!==i){this.unpin&&this.$element.css("top","");var j="affix"+(i?"-"+i:""),k=a.Event(j+".bs.affix");this.$element.trigger(k),k.isDefaultPrevented()||(this.affixed=i,this.unpin="bottom"==i?this.getPinnedOffset():null,this.$element.removeClass(b.RESET).addClass(j).trigger(a.Event(j.replace("affix","affixed"))),"bottom"==i&&this.$element.offset({top:c-h-this.$element.height()}))}}};var c=a.fn.affix;a.fn.affix=function(c){return this.each(function(){var d=a(this),e=d.data("bs.affix"),f="object"==typeof c&&c;e||d.data("bs.affix",e=new b(this,f)),"string"==typeof c&&e[c]()})},a.fn.affix.Constructor=b,a.fn.affix.noConflict=function(){return a.fn.affix=c,this},a(window).on("load",function(){a('[data-spy="affix"]').each(function(){var b=a(this),c=b.data();c.offset=c.offset||{},c.offsetBottom&&(c.offset.bottom=c.offsetBottom),c.offsetTop&&(c.offset.top=c.offsetTop),b.affix(c)})})}(jQuery);
-//! moment.js
+;//! moment.js
 //! version : 2.8.1
 //! authors : Tim Wood, Iskren Chernev, Moment.js contributors
 //! license : MIT
@@ -43382,7 +43382,7 @@ if("undefined"==typeof jQuery)throw new Error("Bootstrap's JavaScript requires j
     }
 }).call(this);
 
-//     (c) 2012 Airbnb, Inc.
+;//     (c) 2012 Airbnb, Inc.
 //
 //     polyglot.js may be freely distributed under the terms of the BSD
 //     license. For all licensing information, details, and documention:
@@ -43620,7 +43620,7 @@ if("undefined"==typeof jQuery)throw new Error("Bootstrap's JavaScript requires j
 }(this);
 
 
-(function (exports) {
+;(function (exports) {
   exports.validate = validate;
   exports.mixin = mixin;
 
@@ -44078,14 +44078,14 @@ if("undefined"==typeof jQuery)throw new Error("Bootstrap's JavaScript requires j
 
 })(typeof module === 'object' && module && module.exports ? module.exports : window);
 
-/*!
+;/*!
  * baguetteBox.js
  * @author  feimosi
  * @version 1.1.1
  * @url https://github.com/feimosi/baguetteBox.js
  */
 var baguetteBox=function(){function t(t,n){L.transforms=f(),L.svg=p(),e(),D=document.querySelectorAll(t),[].forEach.call(D,function(t){var e=t.getElementsByTagName("a");e=[].filter.call(e,function(t){return j.test(t.href)});var o=S.length;S.push(e),S[o].options=n,[].forEach.call(S[o],function(t,e){h(t,"click",function(t){t.preventDefault?t.preventDefault():t.returnValue=!1,i(o),a(e)})})})}function e(){return(b=v("baguetteBox-overlay"))?(k=v("baguetteBox-slider"),w=v("previous-button"),C=v("next-button"),void(T=v("close-button"))):(b=y("div"),b.id="baguetteBox-overlay",document.getElementsByTagName("body")[0].appendChild(b),k=y("div"),k.id="baguetteBox-slider",b.appendChild(k),w=y("button"),w.id="previous-button",w.innerHTML=L.svg?E:"&lt;",b.appendChild(w),C=y("button"),C.id="next-button",C.innerHTML=L.svg?x:"&gt;",b.appendChild(C),T=y("button"),T.id="close-button",T.innerHTML=L.svg?B:"X",b.appendChild(T),w.className=C.className=T.className="baguetteBox-button",void n())}function n(){h(b,"click",function(t){t.target&&"IMG"!==t.target.nodeName&&"FIGCAPTION"!==t.target.nodeName&&s()}),h(w,"click",function(t){t.stopPropagation?t.stopPropagation():t.cancelBubble=!0,c()}),h(C,"click",function(t){t.stopPropagation?t.stopPropagation():t.cancelBubble=!0,u()}),h(T,"click",function(t){t.stopPropagation?t.stopPropagation():t.cancelBubble=!0,s()}),h(b,"touchstart",function(t){N=t.changedTouches[0].pageX}),h(b,"touchmove",function(t){H||(t.preventDefault?t.preventDefault():t.returnValue=!1,touch=t.touches[0]||t.changedTouches[0],touch.pageX-N>40?(H=!0,c()):touch.pageX-N<-40&&(H=!0,u()))}),h(b,"touchend",function(){H=!1}),h(document,"keydown",function(t){switch(t.keyCode){case 37:c();break;case 39:u();break;case 27:s()}})}function i(t){if(A!==t){for(A=t,o(S[t].options);k.firstChild;)k.removeChild(k.firstChild);X.length=0;for(var e,n=0;n<S[t].length;n++)e=y("div"),e.className="full-image",e.id="baguette-img-"+n,X.push(e),k.appendChild(X[n])}}function o(t){t||(t={});for(var e in P)I[e]=P[e],"undefined"!=typeof t[e]&&(I[e]=t[e]);k.style.transition=k.style.webkitTransition="fadeIn"===I.animation?"opacity .4s ease":"slideIn"===I.animation?"":"none","auto"===I.buttons&&("ontouchstart"in window||1===S[A].length)&&(I.buttons=!1),w.style.display=C.style.display=I.buttons?"":"none"}function a(t){"block"!==b.style.display&&(M=t,r(M,function(){g(M),m(M)}),d(),b.style.display="block",setTimeout(function(){b.className="visible"},50))}function s(){"none"!==b.style.display&&(b.className="",setTimeout(function(){b.style.display="none"},500))}function r(t,e){var n=X[t];if("undefined"!=typeof n){if(n.getElementsByTagName("img")[0])return void(e&&e());imageElement=S[A][t],imageCaption=imageElement.getAttribute("data-caption")||imageElement.title,imageSrc=l(imageElement);var i=y("figure"),o=y("img"),a=y("figcaption");n.appendChild(i),i.innerHTML='<div class="spinner"><div class="double-bounce1"></div><div class="double-bounce2"></div></div>',o.onload=function(){var n=document.querySelector("#baguette-img-"+t+" .spinner");i.removeChild(n),!I.async&&e&&e()},o.setAttribute("src",imageSrc),i.appendChild(o),I.captions&&imageCaption&&(a.innerHTML=imageCaption,i.appendChild(a)),I.async&&e&&e()}}function l(t){var e=imageElement.href;if(t.dataset){var n=[];for(var i in t.dataset)"at-"!==i.substring(0,3)||isNaN(i.substring(3))||(n[i.replace("at-","")]=t.dataset[i]);keys=Object.keys(n).sort(function(t,e){return parseInt(t)<parseInt(e)?-1:1});for(var o=window.innerWidth*window.devicePixelRatio,a=0;a<keys.length-1&&keys[a]<o;)a++;e=n[keys[a]]||e}return e}function u(){M<=X.length-2?(M++,d(),g(M)):I.animation&&(k.className="bounce-from-right",setTimeout(function(){k.className=""},400))}function c(){M>=1?(M--,d(),m(M)):I.animation&&(k.className="bounce-from-left",setTimeout(function(){k.className=""},400))}function d(){var t=100*-M+"%";"fadeIn"===I.animation?(k.style.opacity=0,setTimeout(function(){L.transforms?k.style.transform=k.style.webkitTransform="translate3d("+t+",0,0)":k.style.left=t,k.style.opacity=1},400)):L.transforms?k.style.transform=k.style.webkitTransform="translate3d("+t+",0,0)":k.style.left=t}function f(){var t=y("div");return"undefined"!=typeof t.style.perspective||"undefined"!=typeof t.style.webkitPerspective}function p(){var t=y("div");return t.innerHTML="<svg/>","http://www.w3.org/2000/svg"==(t.firstChild&&t.firstChild.namespaceURI)}function g(t){t-M>=I.preload||r(t+1,function(){g(t+1)})}function m(t){M-t>=I.preload||r(t-1,function(){m(t-1)})}function h(t,e,n){t.addEventListener?t.addEventListener(e,n,!1):t.attachEvent("on"+e,n)}function v(t){return document.getElementById(t)}function y(t){return document.createElement(t)}var b,k,w,C,T,N,E='<svg width="44" height="60"><polyline points="30 10 10 30 30 50" stroke="rgba(255,255,255,0.5)" stroke-width="4"stroke-linecap="butt" fill="none" stroke-linejoin="round"/></svg>',x='<svg width="44" height="60"><polyline points="14 10 34 30 14 50" stroke="rgba(255,255,255,0.5)" stroke-width="4"stroke-linecap="butt" fill="none" stroke-linejoin="round"/></svg>',B='<svg width="30" height="30"><g stroke="rgb(160, 160, 160)" stroke-width="4"><line x1="5" y1="5" x2="25" y2="25"/><line x1="5" y1="25" x2="25" y2="5"/></g></svg>',I={},P={captions:!0,buttons:"auto",async:!1,preload:2,animation:"slideIn"},L={},M=0,A=-1,H=!1,j=/.+\.(gif|jpe?g|png|webp)/i,D=[],S=[],X=[];return[].forEach||(Array.prototype.forEach=function(t,e){for(var n=0;n<this.length;n++)t.call(e,this[n],n,this)}),[].filter||(Array.prototype.filter=function(t,e,n,i,o){for(n=this,i=[],o=0;o<n.length;o++)t.call(e,n[o],o,n)&&i.push(n[o]);return i}),{run:t}}();
-//jshint browser: true, strict: false
+;//jshint browser: true, strict: false
 if (typeof window.plugins !== "object") {
   window.plugins = {};
 }
@@ -44186,7 +44186,7 @@ window.plugins.gallery = {
   }
 };
 
-//jshint browser: true, strict: false
+;//jshint browser: true, strict: false
 /*global require, Mousetrap */
 if (typeof window.plugins !== "object") {
   window.plugins = {};
@@ -44285,6 +44285,22 @@ if (typeof window.plugins !== "object") {
     updateClass(panels[1], 1 * direction);
     require('actions/layout_action_creator').setDisposition('vertical', height);
     */
+  }
+  function mailAction(action) {
+    var current, btn;
+    Array.prototype.forEach.call(document.querySelectorAll('article.message .content, article.message .preview'), function (e) {
+      var rect = e.getBoundingClientRect(),
+          visible = rect.bottom >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight)
+      if (visible) {
+        current = e;
+      }
+    });
+    if (typeof current !== 'undefined') {
+      btn = document.querySelector("section.conversation article.message[data-id='" + current.dataset.messageId + "'] button.btn.mail-" + action);
+      if (btn !== null) {
+          btn.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
+      }
+    }
   }
   function menuNavigate() {
     var links, prev, next;
@@ -44418,7 +44434,7 @@ if (typeof window.plugins !== "object") {
           layoutHeight(-1);
         }
       },
-      'f': {
+      'F': {
         name: "Toggle fullscreen",
         action: function (e) {
           e.preventDefault();
@@ -44483,20 +44499,21 @@ if (typeof window.plugins !== "object") {
         name: 'Reply',
         action: function (e) {
           e.preventDefault();
-          var current, btn;
-          Array.prototype.forEach.call(document.querySelectorAll('.row > .content, .row > .preview'), function (e) {
-            var rect = e.getBoundingClientRect(),
-                visible = rect.bottom >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight)
-            if (visible) {
-              current = e;
-            }
-          });
-          if (typeof current !== 'undefined') {
-            btn = document.querySelector(".thread li.message[data-id='" + current.dataset.messageId + "'] button.btn.reply");
-            if (btn !== null) {
-                btn.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
-            }
-          }
+          mailAction('reply');
+        }
+      },
+      'g': {
+        name: 'Reply all',
+        action: function (e) {
+          e.preventDefault();
+          mailAction('reply-all');
+        }
+      },
+      'f': {
+        name: 'Forward',
+        action: function (e) {
+          e.preventDefault();
+          mailAction('forward');
         }
       },
       '?': {
@@ -44550,7 +44567,7 @@ if (typeof window.plugins !== "object") {
   };
 })(window.plugins);
 
-/* mousetrap v1.4.6 craig.is/killing/mice */
+;/* mousetrap v1.4.6 craig.is/killing/mice */
 (function(J,r,f){function s(a,b,d){a.addEventListener?a.addEventListener(b,d,!1):a.attachEvent("on"+b,d)}function A(a){if("keypress"==a.type){var b=String.fromCharCode(a.which);a.shiftKey||(b=b.toLowerCase());return b}return h[a.which]?h[a.which]:B[a.which]?B[a.which]:String.fromCharCode(a.which).toLowerCase()}function t(a){a=a||{};var b=!1,d;for(d in n)a[d]?b=!0:n[d]=0;b||(u=!1)}function C(a,b,d,c,e,v){var g,k,f=[],h=d.type;if(!l[a])return[];"keyup"==h&&w(a)&&(b=[a]);for(g=0;g<l[a].length;++g)if(k=
 l[a][g],!(!c&&k.seq&&n[k.seq]!=k.level||h!=k.action||("keypress"!=h||d.metaKey||d.ctrlKey)&&b.sort().join(",")!==k.modifiers.sort().join(","))){var m=c&&k.seq==c&&k.level==v;(!c&&k.combo==e||m)&&l[a].splice(g,1);f.push(k)}return f}function K(a){var b=[];a.shiftKey&&b.push("shift");a.altKey&&b.push("alt");a.ctrlKey&&b.push("ctrl");a.metaKey&&b.push("meta");return b}function x(a,b,d,c){m.stopCallback(b,b.target||b.srcElement,d,c)||!1!==a(b,d)||(b.preventDefault?b.preventDefault():b.returnValue=!1,b.stopPropagation?
 b.stopPropagation():b.cancelBubble=!0)}function y(a){"number"!==typeof a.which&&(a.which=a.keyCode);var b=A(a);b&&("keyup"==a.type&&z===b?z=!1:m.handleKey(b,K(a),a))}function w(a){return"shift"==a||"ctrl"==a||"alt"==a||"meta"==a}function L(a,b,d,c){function e(b){return function(){u=b;++n[a];clearTimeout(D);D=setTimeout(t,1E3)}}function v(b){x(d,b,a);"keyup"!==c&&(z=A(b));setTimeout(t,10)}for(var g=n[a]=0;g<b.length;++g){var f=g+1===b.length?v:e(c||E(b[g+1]).action);F(b[g],f,c,a,g)}}function E(a,b){var d,
@@ -44560,7 +44577,7 @@ c,a,e),l[d.key][c?"unshift":"push"]({callback:b,modifiers:d.modifiers,action:d.a
 unbind:function(a,b){return m.bind(a,function(){},b)},trigger:function(a,b){if(q[a+":"+b])q[a+":"+b]({},a);return this},reset:function(){l={};q={};return this},stopCallback:function(a,b){return-1<(" "+b.className+" ").indexOf(" mousetrap ")?!1:"INPUT"==b.tagName||"SELECT"==b.tagName||"TEXTAREA"==b.tagName||b.isContentEditable},handleKey:function(a,b,d){var c=C(a,b,d),e;b={};var f=0,g=!1;for(e=0;e<c.length;++e)c[e].seq&&(f=Math.max(f,c[e].level));for(e=0;e<c.length;++e)c[e].seq?c[e].level==f&&(g=!0,
 b[c[e].seq]=1,x(c[e].callback,d,c[e].combo,c[e].seq)):g||x(c[e].callback,d,c[e].combo);c="keypress"==d.type&&I;d.type!=u||w(a)||c||t(b);I=g&&"keydown"==d.type}};J.Mousetrap=m;"function"===typeof define&&define.amd&&define(m)})(window,document);
 
-//jshint browser: true
+;//jshint browser: true
 if (typeof window.plugins !== "object") {
   window.plugins = {};
 }
@@ -44586,7 +44603,7 @@ window.plugins.mediumeditor = {
   }
 };
 
-/*global self, document, DOMException */
+;/*global self, document, DOMException */
 
 /*! @source http://purl.eligrey.com/github/classList.js/blob/master/classList.js */
 
@@ -44759,6 +44776,218 @@ if (!("classList" in document.createElement("_"))) {
   }(self));
 }
 
+/* Blob.js
+ * A Blob implementation.
+ * 2014-07-24
+ *
+ * By Eli Grey, http://eligrey.com
+ * By Devin Samarin, https://github.com/dsamarin
+ * License: X11/MIT
+ *   See https://github.com/eligrey/Blob.js/blob/master/LICENSE.md
+ */
+
+/*global self, unescape */
+/*jslint bitwise: true, regexp: true, confusion: true, es5: true, vars: true, white: true,
+  plusplus: true */
+
+/*! @source http://purl.eligrey.com/github/Blob.js/blob/master/Blob.js */
+
+(function (view) {
+  "use strict";
+
+  view.URL = view.URL || view.webkitURL;
+
+  if (view.Blob && view.URL) {
+    try {
+      new Blob;
+      return;
+    } catch (e) {}
+  }
+
+  // Internally we use a BlobBuilder implementation to base Blob off of
+  // in order to support older browsers that only have BlobBuilder
+  var BlobBuilder = view.BlobBuilder || view.WebKitBlobBuilder || view.MozBlobBuilder || (function(view) {
+    var
+        get_class = function(object) {
+        return Object.prototype.toString.call(object).match(/^\[object\s(.*)\]$/)[1];
+      }
+      , FakeBlobBuilder = function BlobBuilder() {
+        this.data = [];
+      }
+      , FakeBlob = function Blob(data, type, encoding) {
+        this.data = data;
+        this.size = data.length;
+        this.type = type;
+        this.encoding = encoding;
+      }
+      , FBB_proto = FakeBlobBuilder.prototype
+      , FB_proto = FakeBlob.prototype
+      , FileReaderSync = view.FileReaderSync
+      , FileException = function(type) {
+        this.code = this[this.name = type];
+      }
+      , file_ex_codes = (
+          "NOT_FOUND_ERR SECURITY_ERR ABORT_ERR NOT_READABLE_ERR ENCODING_ERR "
+        + "NO_MODIFICATION_ALLOWED_ERR INVALID_STATE_ERR SYNTAX_ERR"
+      ).split(" ")
+      , file_ex_code = file_ex_codes.length
+      , real_URL = view.URL || view.webkitURL || view
+      , real_create_object_URL = real_URL.createObjectURL
+      , real_revoke_object_URL = real_URL.revokeObjectURL
+      , URL = real_URL
+      , btoa = view.btoa
+      , atob = view.atob
+
+      , ArrayBuffer = view.ArrayBuffer
+      , Uint8Array = view.Uint8Array
+
+      , origin = /^[\w-]+:\/*\[?[\w\.:-]+\]?(?::[0-9]+)?/
+    ;
+    FakeBlob.fake = FB_proto.fake = true;
+    while (file_ex_code--) {
+      FileException.prototype[file_ex_codes[file_ex_code]] = file_ex_code + 1;
+    }
+    // Polyfill URL
+    if (!real_URL.createObjectURL) {
+      URL = view.URL = function(uri) {
+        var
+            uri_info = document.createElementNS("http://www.w3.org/1999/xhtml", "a")
+          , uri_origin
+        ;
+        uri_info.href = uri;
+        if (!("origin" in uri_info)) {
+          if (uri_info.protocol.toLowerCase() === "data:") {
+            uri_info.origin = null;
+          } else {
+            uri_origin = uri.match(origin);
+            uri_info.origin = uri_origin && uri_origin[1];
+          }
+        }
+        return uri_info;
+      };
+    }
+    URL.createObjectURL = function(blob) {
+      var
+          type = blob.type
+        , data_URI_header
+      ;
+      if (type === null) {
+        type = "application/octet-stream";
+      }
+      if (blob instanceof FakeBlob) {
+        data_URI_header = "data:" + type;
+        if (blob.encoding === "base64") {
+          return data_URI_header + ";base64," + blob.data;
+        } else if (blob.encoding === "URI") {
+          return data_URI_header + "," + decodeURIComponent(blob.data);
+        } if (btoa) {
+          return data_URI_header + ";base64," + btoa(blob.data);
+        } else {
+          return data_URI_header + "," + encodeURIComponent(blob.data);
+        }
+      } else if (real_create_object_URL) {
+        return real_create_object_URL.call(real_URL, blob);
+      }
+    };
+    URL.revokeObjectURL = function(object_URL) {
+      if (object_URL.substring(0, 5) !== "data:" && real_revoke_object_URL) {
+        real_revoke_object_URL.call(real_URL, object_URL);
+      }
+    };
+    FBB_proto.append = function(data/*, endings*/) {
+      var bb = this.data;
+      // decode data to a binary string
+      if (Uint8Array && (data instanceof ArrayBuffer || data instanceof Uint8Array)) {
+        var
+            str = ""
+          , buf = new Uint8Array(data)
+          , i = 0
+          , buf_len = buf.length
+        ;
+        for (; i < buf_len; i++) {
+          str += String.fromCharCode(buf[i]);
+        }
+        bb.push(str);
+      } else if (get_class(data) === "Blob" || get_class(data) === "File") {
+        if (FileReaderSync) {
+          var fr = new FileReaderSync;
+          bb.push(fr.readAsBinaryString(data));
+        } else {
+          // async FileReader won't work as BlobBuilder is sync
+          throw new FileException("NOT_READABLE_ERR");
+        }
+      } else if (data instanceof FakeBlob) {
+        if (data.encoding === "base64" && atob) {
+          bb.push(atob(data.data));
+        } else if (data.encoding === "URI") {
+          bb.push(decodeURIComponent(data.data));
+        } else if (data.encoding === "raw") {
+          bb.push(data.data);
+        }
+      } else {
+        if (typeof data !== "string") {
+          data += ""; // convert unsupported types to strings
+        }
+        // decode UTF-16 to binary string
+        bb.push(unescape(encodeURIComponent(data)));
+      }
+    };
+    FBB_proto.getBlob = function(type) {
+      if (!arguments.length) {
+        type = null;
+      }
+      return new FakeBlob(this.data.join(""), type, "raw");
+    };
+    FBB_proto.toString = function() {
+      return "[object BlobBuilder]";
+    };
+    FB_proto.slice = function(start, end, type) {
+      var args = arguments.length;
+      if (args < 3) {
+        type = null;
+      }
+      return new FakeBlob(
+          this.data.slice(start, args > 1 ? end : this.data.length)
+        , type
+        , this.encoding
+      );
+    };
+    FB_proto.toString = function() {
+      return "[object Blob]";
+    };
+    FB_proto.close = function() {
+      this.size = 0;
+      delete this.data;
+    };
+    return FakeBlobBuilder;
+  }(view));
+
+  view.Blob = function(blobParts, options) {
+    var type = options ? (options.type || "") : "";
+    var builder = new BlobBuilder();
+    if (blobParts) {
+      for (var i = 0, len = blobParts.length; i < len; i++) {
+        if (Uint8Array && blobParts[i] instanceof Uint8Array) {
+          builder.append(blobParts[i].buffer);
+        }
+        else {
+          builder.append(blobParts[i]);
+        }
+      }
+    }
+    var blob = builder.getBlob(type);
+    if (!blob.slice && blob.webkitSlice) {
+      blob.slice = blob.webkitSlice;
+    }
+    return blob;
+  };
+
+  var getPrototypeOf = Object.getPrototypeOf || function(object) {
+    return object.__proto__;
+  };
+  view.Blob.prototype = getPrototypeOf(new view.Blob());
+}(typeof self !== "undefined" && self || typeof window !== "undefined" && window || this.content || this));
+
 (function (root, factory) {
     'use strict';
     if (typeof module === 'object') {
@@ -44810,10 +45039,6 @@ var Util;
 
         defaults: function defaults(dest, source) {
             return copyInto(dest, source);
-        },
-
-        extend: function extend(dest, source) {
-            return copyInto(dest, source, true);
         },
 
         derives: function derives(base, derived) {
@@ -44874,42 +45099,41 @@ var Util;
             return !!(obj && obj.nodeType === 1);
         },
 
-        now: function now() {
-            return Date.now || new Date().getTime();
-        },
+        now: Date.now,
 
         // https://github.com/jashkenas/underscore
-        throttle: function throttle(func, wait) {
+        throttle: function (func, wait) {
             var THROTTLE_INTERVAL = 50,
                 context,
                 args,
                 result,
                 timeout = null,
                 previous = 0,
-                later;
+                later = function () {
+                    previous = Util.now();
+                    timeout = null;
+                    result = func.apply(context, args);
+                    if (!timeout) {
+                        context = args = null;
+                    }
+                };
 
             if (!wait && wait !== 0) {
                 wait = THROTTLE_INTERVAL;
             }
 
-            later = function () {
-                previous = Util.now();
-                timeout = null;
-                result = func.apply(context, args);
-                if (!timeout) {
-                    context = args = null;
-                }
-            };
-
             return function () {
-                var currNow = Util.now(),
-                    remaining = wait - (currNow - previous);
+                var now = Util.now(),
+                    remaining = wait - (now - previous);
+
                 context = this;
                 args = arguments;
                 if (remaining <= 0 || remaining > wait) {
-                    clearTimeout(timeout);
-                    timeout = null;
-                    previous = currNow;
+                    if (timeout) {
+                        clearTimeout(timeout);
+                        timeout = null;
+                    }
+                    previous = now;
                     result = func.apply(context, args);
                     if (!timeout) {
                         context = args = null;
@@ -44949,7 +45173,7 @@ var Util;
 
         // http://stackoverflow.com/questions/6690752/insert-html-at-caret-in-a-contenteditable-div
         insertHTMLCommand: function (doc, html) {
-            var selection, range, el, fragment, node, lastNode;
+            var selection, range, el, fragment, node, lastNode, toReplace;
 
             if (doc.queryCommandSupported('insertHTML')) {
                 try {
@@ -44957,9 +45181,21 @@ var Util;
                 } catch (ignore) {}
             }
 
-            selection = window.getSelection();
+            selection = doc.defaultView.getSelection();
             if (selection.getRangeAt && selection.rangeCount) {
                 range = selection.getRangeAt(0);
+                toReplace = range.commonAncestorContainer;
+                // Ensure range covers maximum amount of nodes as possible
+                // By moving up the DOM and selecting ancestors whose only child is the range
+                if ((toReplace.nodeType === 3 && toReplace.nodeValue === range.toString()) ||
+                        (toReplace.nodeType !== 3 && toReplace.innerHTML === range.toString())) {
+                    while (toReplace.parentNode &&
+                            toReplace.parentNode.childNodes.length === 1 &&
+                            !toReplace.parentNode.getAttribute('data-medium-element')) {
+                        toReplace = toReplace.parentNode;
+                    }
+                    range.selectNode(toReplace);
+                }
                 range.deleteContents();
 
                 el = doc.createElement("div");
@@ -44982,6 +45218,67 @@ var Util;
             }
         },
 
+        getSelectionRange: function (ownerDocument) {
+            var selection = ownerDocument.getSelection();
+            if (selection.rangeCount === 0) {
+                return null;
+            }
+            return selection.getRangeAt(0);
+        },
+
+        // http://stackoverflow.com/questions/1197401/how-can-i-get-the-element-the-caret-is-in-with-javascript-when-using-contentedi
+        // by You
+        getSelectionStart: function (ownerDocument) {
+            var node = ownerDocument.getSelection().anchorNode,
+                startNode = (node && node.nodeType === 3 ? node.parentNode : node);
+            return startNode;
+        },
+
+        getSelectionData: function (el) {
+            var tagName;
+
+            if (el && el.tagName) {
+                tagName = el.tagName.toLowerCase();
+            }
+
+            while (el && this.parentElements.indexOf(tagName) === -1) {
+                el = el.parentNode;
+                if (el && el.tagName) {
+                    tagName = el.tagName.toLowerCase();
+                }
+            }
+
+            return {
+                el: el,
+                tagName: tagName
+            };
+        },
+
+        execFormatBlock: function (doc, tagName) {
+            var selectionData = this.getSelectionData(this.getSelectionStart(doc));
+            // FF handles blockquote differently on formatBlock
+            // allowing nesting, we need to use outdent
+            // https://developer.mozilla.org/en-US/docs/Rich-Text_Editing_in_Mozilla
+            if (tagName === 'blockquote' && selectionData.el &&
+                    selectionData.el.parentNode.tagName.toLowerCase() === 'blockquote') {
+                return doc.execCommand('outdent', false, null);
+            }
+            if (selectionData.tagName === tagName) {
+                tagName = 'p';
+            }
+            // When IE we need to add <> to heading elements and
+            //  blockquote needs to be called as indent
+            // http://stackoverflow.com/questions/10741831/execcommand-formatblock-headings-in-ie
+            // http://stackoverflow.com/questions/1816223/rich-text-editor-with-blockquote-function/1821777#1821777
+            if (this.isIE) {
+                if (tagName === 'blockquote') {
+                    return doc.execCommand('indent', false, tagName);
+                }
+                tagName = '<' + tagName + '>';
+            }
+            return doc.execCommand('formatBlock', false, tagName);
+        },
+
         // TODO: not sure if this should be here
         setTargetBlank: function (el) {
             var i;
@@ -44996,7 +45293,32 @@ var Util;
             }
         },
 
-        isListItemChild: function (node) {
+        addClassToAnchors: function (el, buttonClass) {
+            var classes = buttonClass.split(' '),
+                i,
+                j;
+            if (el.tagName.toLowerCase() === 'a') {
+                for (j = 0; j < classes.length; j += 1) {
+                    el.classList.add(classes[j]);
+                }
+            } else {
+                el = el.getElementsByTagName('a');
+                for (i = 0; i < el.length; i += 1) {
+                    for (j = 0; j < classes.length; j += 1) {
+                        el[i].classList.add(classes[j]);
+                    }
+                }
+            }
+        },
+
+        isListItem: function (node) {
+            if (!node) {
+                return false;
+            }
+            if (node.tagName.toLowerCase() === 'li') {
+                return true;
+            }
+
             var parentNode = node.parentNode,
                 tagName = parentNode.tagName.toLowerCase();
             while (this.parentElements.indexOf(tagName) === -1 && tagName !== 'div') {
@@ -45011,6 +45333,40 @@ var Util;
                 }
             }
             return false;
+        },
+
+        cleanListDOM: function (element) {
+            if (element.tagName.toLowerCase() === 'li') {
+                var list = element.parentElement;
+                if (list.parentElement.tagName.toLowerCase() === 'p') { // yes we need to clean up
+                    this.unwrapElement(list.parentElement);
+                }
+            }
+        },
+
+        unwrapElement: function (element) {
+            var parent = element.parentNode,
+                current = element.firstChild,
+                next;
+            do {
+                next = current.nextSibling;
+                parent.insertBefore(current, element);
+                current = next;
+            } while (current);
+            parent.removeChild(element);
+        },
+
+        deprecatedMethod: function (oldName, newName, args) {
+            // Thanks IE9, you're the best
+            if (window.console !== undefined) {
+                console.warn(oldName +
+                    ' is deprecated and will be removed, please use ' +
+                    newName +
+                    ' instead');
+            }
+            if (typeof this[newName] === 'function') {
+                this[newName].apply(this, args);
+            }
         }
     };
 }(window, document));
@@ -45021,14 +45377,6 @@ var Selection;
     'use strict';
 
     Selection = {
-        // http://stackoverflow.com/questions/1197401/how-can-i-get-the-element-the-caret-is-in-with-javascript-when-using-contentedi
-        // by You
-        getSelectionStart: function (ownerDocument) {
-            var node = ownerDocument.getSelection().anchorNode,
-                startNode = (node && node.nodeType === 3 ? node.parentNode : node);
-            return startNode;
-        },
-
         findMatchingSelectionParent: function (testElementFunction, contentWindow) {
             var selection = contentWindow.getSelection(), range, current;
 
@@ -45059,22 +45407,15 @@ var Selection;
         getSelectionHtml: function getSelectionHtml() {
             var i,
                 html = '',
-                sel,
+                sel = this.options.contentWindow.getSelection(),
                 len,
                 container;
-            if (this.options.contentWindow.getSelection !== undefined) {
-                sel = this.options.contentWindow.getSelection();
-                if (sel.rangeCount) {
-                    container = this.options.ownerDocument.createElement('div');
-                    for (i = 0, len = sel.rangeCount; i < len; i += 1) {
-                        container.appendChild(sel.getRangeAt(i).cloneContents());
-                    }
-                    html = container.innerHTML;
+            if (sel.rangeCount) {
+                container = this.options.ownerDocument.createElement('div');
+                for (i = 0, len = sel.rangeCount; i < len; i += 1) {
+                    container.appendChild(sel.getRangeAt(i).cloneContents());
                 }
-            } else if (this.options.ownerDocument.selection !== undefined) {
-                if (this.options.ownerDocument.selection.type === 'Text') {
-                    html = this.options.ownerDocument.selection.createRange().htmlText;
-                }
+                html = container.innerHTML;
             }
             return html;
         },
@@ -45126,30 +45467,246 @@ var Selection;
                 selectedParentElement = range.startContainer;
             }
             return selectedParentElement;
-        },
-
-        getSelectionData: function (el) {
-            var tagName;
-
-            if (el && el.tagName) {
-                tagName = el.tagName.toLowerCase();
-            }
-
-            while (el && Util.parentElements.indexOf(tagName) === -1) {
-                el = el.parentNode;
-                if (el && el.tagName) {
-                    tagName = el.tagName.toLowerCase();
-                }
-            }
-
-            return {
-                el: el,
-                tagName: tagName
-            };
         }
     };
 }(document, window));
 
+var Events;
+
+(function (window, document) {
+    'use strict';
+
+    Events = function (instance) {
+        this.base = instance;
+        this.options = this.base.options;
+        this.events = [];
+        this.customEvents = {};
+        this.listeners = {};
+    };
+
+    Events.prototype = {
+
+        // Helpers for event handling
+
+        attachDOMEvent: function (target, event, listener, useCapture) {
+            target.addEventListener(event, listener, useCapture);
+            this.events.push([target, event, listener, useCapture]);
+        },
+
+        detachDOMEvent: function (target, event, listener, useCapture) {
+            var index = this.indexOfListener(target, event, listener, useCapture),
+                e;
+            if (index !== -1) {
+                e = this.events.splice(index, 1)[0];
+                e[0].removeEventListener(e[1], e[2], e[3]);
+            }
+        },
+
+        indexOfListener: function (target, event, listener, useCapture) {
+            var i, n, item;
+            for (i = 0, n = this.events.length; i < n; i = i + 1) {
+                item = this.events[i];
+                if (item[0] === target && item[1] === event && item[2] === listener && item[3] === useCapture) {
+                    return i;
+                }
+            }
+            return -1;
+        },
+
+        detachAllDOMEvents: function () {
+            var e = this.events.pop();
+            while (e) {
+                e[0].removeEventListener(e[1], e[2], e[3]);
+                e = this.events.pop();
+            }
+        },
+
+        // custom events
+        attachCustomEvent: function (event, handler) {
+            this.setupListener(event);
+            // If we don't suppot this custom event, don't do anything
+            if (this.listeners[event]) {
+                if (!this.customEvents[event]) {
+                    this.customEvents[event] = [];
+                }
+                this.customEvents[event].push(handler);
+            }
+        },
+
+        triggerCustomEvent: function (name, data, editable) {
+            if (this.customEvents[name]) {
+                this.customEvents[name].forEach(function (handler) {
+                    handler(data, editable);
+                });
+            }
+        },
+
+        // Listening to browser events to emit events medium-editor cares about
+
+        setupListener: function (name) {
+            if (this.listeners[name]) {
+                return;
+            }
+
+            switch (name) {
+            case 'externalInteraction':
+                // Detecting when focus is lost
+                this.attachDOMEvent(this.options.ownerDocument.body, 'click', this.handleInteraction.bind(this), true);
+                this.attachDOMEvent(this.options.ownerDocument.body, 'focus', this.handleInteraction.bind(this), true);
+                this.listeners[name] = true;
+                break;
+            case 'editableClick':
+                // Detecting click in the contenteditables
+                this.base.elements.forEach(function (element) {
+                    this.attachDOMEvent(element, 'click', this.handleClick.bind(this));
+                }.bind(this));
+                this.listeners[name] = true;
+                break;
+            case 'editableBlur':
+                // Detecting blur in the contenteditables
+                this.base.elements.forEach(function (element) {
+                    this.attachDOMEvent(element, 'blur', this.handleBlur.bind(this));
+                }.bind(this));
+                this.listeners[name] = true;
+                break;
+            case 'editableKeypress':
+                // Detecting keypress in the contenteditables
+                this.base.elements.forEach(function (element) {
+                    this.attachDOMEvent(element, 'keypress', this.handleKeypress.bind(this));
+                }.bind(this));
+                this.listeners[name] = true;
+                break;
+            case 'editableKeydown':
+                // Detecting keydown on the contenteditables
+                this.base.elements.forEach(function (element) {
+                    this.attachDOMEvent(element, 'keydown', this.handleKeydown.bind(this));
+                }.bind(this));
+                this.listeners[name] = true;
+                break;
+            case 'editableKeydownEnter':
+                // Detecting keydown for ENTER on the contenteditables
+                this.setupListener('editableKeydown');
+                this.listeners[name] = true;
+                break;
+            case 'editableKeydownTab':
+                // Detecting keydown for TAB on the contenteditable
+                this.setupListener('editableKeydown');
+                this.listeners[name] = true;
+                break;
+            case 'editableKeydownDelete':
+                // Detecting keydown for DELETE/BACKSPACE on the contenteditables
+                this.setupListener('editableKeydown');
+                this.listeners[name] = true;
+                break;
+            case 'editableMouseover':
+                // Detecting mouseover on the contenteditables
+                this.base.elements.forEach(function (element) {
+                    this.attachDOMEvent(element, 'mouseover', this.handleMouseover.bind(this));
+                }.bind(this));
+                this.listeners[name] = true;
+                break;
+            case 'editableDrag':
+                // Detecting dragover and dragleave on the contenteditables
+                this.base.elements.forEach(function (element) {
+                    this.attachDOMEvent(element, 'dragover', this.handleDragging.bind(this));
+                    this.attachDOMEvent(element, 'dragleave', this.handleDragging.bind(this));
+                }.bind(this));
+                this.listeners[name] = true;
+                break;
+            case 'editableDrop':
+                // Detecting drop on the contenteditables
+                this.base.elements.forEach(function (element) {
+                    this.attachDOMEvent(element, 'drop', this.handleDrop.bind(this));
+                }.bind(this));
+                this.listeners[name] = true;
+                break;
+            case 'editablePaste':
+                // Detecting paste on the contenteditables
+                this.base.elements.forEach(function (element) {
+                    this.attachDOMEvent(element, 'paste', this.handlePaste.bind(this));
+                }.bind(this));
+                this.listeners[name] = true;
+                break;
+            }
+        },
+
+        handleInteraction: function (event) {
+            var isDescendantOfEditorElements = false,
+                selection = this.options.contentWindow.getSelection(),
+                toolbarEl = (this.base.toolbar) ? this.base.toolbar.getToolbarElement() : null,
+                anchorPreview = this.base.getExtensionByName('anchor-preview'),
+                previewEl = (anchorPreview && anchorPreview.getPreviewElement) ? anchorPreview.getPreviewElement() : null,
+                selRange = selection.isCollapsed ?
+                           null :
+                           Selection.getSelectedParentElement(selection.getRangeAt(0)),
+                i;
+
+            // This control was introduced also to avoid the toolbar
+            // to disapper when selecting from right to left and
+            // the selection ends at the beginning of the text.
+            for (i = 0; i < this.base.elements.length; i += 1) {
+                if (this.base.elements[i] === event.target
+                        || Util.isDescendant(this.base.elements[i], event.target)
+                        || Util.isDescendant(this.base.elements[i], selRange)) {
+                    isDescendantOfEditorElements = true;
+                    break;
+                }
+            }
+            // If it's not part of the editor, toolbar, or anchor preview
+            if (!isDescendantOfEditorElements
+                    && (!toolbarEl || (toolbarEl !== event.target && !Util.isDescendant(toolbarEl, event.target)))
+                    && (!previewEl || (previewEl !== event.target && !Util.isDescendant(previewEl, event.target)))) {
+                this.triggerCustomEvent('externalInteraction', event);
+            }
+        },
+
+        handleClick: function (event) {
+            this.triggerCustomEvent('editableClick', event, event.currentTarget);
+        },
+
+        handleBlur: function (event) {
+            this.triggerCustomEvent('editableBlur', event, event.currentTarget);
+        },
+
+        handleKeypress: function (event) {
+            this.triggerCustomEvent('editableKeypress', event, event.currentTarget);
+        },
+
+        handleMouseover: function (event) {
+            this.triggerCustomEvent('editableMouseover', event, event.currentTarget);
+        },
+
+        handleDragging: function (event) {
+            this.triggerCustomEvent('editableDrag', event, event.currentTarget);
+        },
+
+        handleDrop: function (event) {
+            this.triggerCustomEvent('editableDrop', event, event.currentTarget);
+        },
+
+        handlePaste: function (event) {
+            this.triggerCustomEvent('editablePaste', event, event.currentTarget);
+        },
+
+        handleKeydown: function (event) {
+            this.triggerCustomEvent('editableKeydown', event, event.currentTarget);
+
+            switch (event.which) {
+            case Util.keyCode.ENTER:
+                this.triggerCustomEvent('editableKeydownEnter', event, event.currentTarget);
+                break;
+            case Util.keyCode.TAB:
+                this.triggerCustomEvent('editableKeydownTab', event, event.currentTarget);
+                break;
+            case Util.keyCode.DELETE:
+            case Util.keyCode.BACKSPACE:
+                this.triggerCustomEvent('editableKeydownDelete', event, event.currentTarget);
+                break;
+            }
+        }
+    };
+
+}(window, document));
 var DefaultButton,
     ButtonsData;
 
@@ -45384,6 +45941,9 @@ var DefaultButton,
 
             this.button = this.createButton();
             this.base.on(this.button, 'click', this.handleClick.bind(this));
+            if (this.options.key) {
+                this.base.subscribe('editableKeydown', this.handleKeydown.bind(this));
+            }
         },
         getButton: function () {
             return this.button;
@@ -45413,6 +45973,22 @@ var DefaultButton,
             }
             button.innerHTML = content;
             return button;
+        },
+        handleKeydown: function (evt) {
+            var key, action;
+
+            if (evt.ctrlKey || evt.metaKey) {
+                key = String.fromCharCode(evt.which || evt.keyCode).toLowerCase();
+                if (this.options.key === key) {
+                    evt.preventDefault();
+                    evt.stopPropagation();
+
+                    action = this.getAction();
+                    if (action) {
+                        this.base.execAction(action);
+                    }
+                }
+            }
         },
         handleClick: function (evt) {
             evt.preventDefault();
@@ -45461,7 +46037,13 @@ var DefaultButton,
                 computedStyle = this.base.options.contentWindow.getComputedStyle(node, null).getPropertyValue(this.options.style.prop);
                 styleVals.forEach(function (val) {
                     if (!this.knownState) {
-                        this.knownState = isMatch = (computedStyle.indexOf(val) !== -1);
+                        isMatch = (computedStyle.indexOf(val) !== -1);
+                        // text-decoration is not inherited by default
+                        // so if the computed style for text-decoration doesn't match
+                        // don't write to knownState so we can fallback to other checks
+                        if (isMatch || this.options.style.prop !== 'text-decoration') {
+                            this.knownState = isMatch;
+                        }
                     }
                 }.bind(this));
             }
@@ -45471,7 +46053,7 @@ var DefaultButton,
     };
 }(window, document));
 
-var pasteHandler;
+var PasteHandler;
 
 (function (window, document) {
     'use strict';
@@ -45506,28 +46088,39 @@ var pasteHandler;
             [new RegExp(/&lt;(\/?)(i|b|a)&gt;/gi), '<$1$2>'],
 
              // replace manually a tags with real ones, converting smart-quotes from google docs
-            [new RegExp(/&lt;a\s+href=(&quot;|&rdquo;|&ldquo;|“|”)([^&]+)(&quot;|&rdquo;|&ldquo;|“|”)&gt;/gi), '<a href="$2">']
+            [new RegExp(/&lt;a\s+href=(&quot;|&rdquo;|&ldquo;|“|”)([^&]+)(&quot;|&rdquo;|&ldquo;|“|”)&gt;/gi), '<a href="$2">'],
 
+            // Newlines between paragraphs in html have no syntactic value,
+            // but then have a tendency to accidentally become additional paragraphs down the line
+            [new RegExp(/<\/p>\n+/gi), '</p>'],
+            [new RegExp(/\n+<p/gi), '<p'],
+
+            // Microsoft Word makes these odd tags, like <o:p></o:p>
+            [new RegExp(/<\/?o:[a-z]*>/gi), '']
         ];
     }
     /*jslint regexp: false*/
 
-    pasteHandler = {
-        handlePaste: function (element, evt, options) {
+    PasteHandler = function (instance) {
+        this.base = instance;
+        this.options = this.base.options;
+
+        if (this.options.forcePlainText || this.options.cleanPastedHTML) {
+            this.base.subscribe('editablePaste', this.handlePaste.bind(this));
+        }
+    };
+
+    PasteHandler.prototype = {
+        handlePaste: function (event, element) {
             var paragraphs,
                 html = '',
                 p,
                 dataFormatHTML = 'text/html',
                 dataFormatPlain = 'text/plain';
 
-            element.classList.remove('medium-editor-placeholder');
-            if (!options.forcePlainText && !options.cleanPastedHTML) {
-                return element;
-            }
-
-            if (options.contentWindow.clipboardData && evt.clipboardData === undefined) {
-                evt.clipboardData = options.contentWindow.clipboardData;
-                // If window.clipboardData exists, but e.clipboardData doesn't exist,
+            if (this.options.contentWindow.clipboardData && event.clipboardData === undefined) {
+                event.clipboardData = this.options.contentWindow.clipboardData;
+                // If window.clipboardData exists, but event.clipboardData doesn't exist,
                 // we're probably in IE. IE only has two possibilities for clipboard
                 // data format: 'Text' and 'URL'.
                 //
@@ -45536,30 +46129,33 @@ var pasteHandler;
                 dataFormatPlain = 'Text';
             }
 
-            if (evt.clipboardData && evt.clipboardData.getData && !evt.defaultPrevented) {
-                evt.preventDefault();
+            if (event.clipboardData
+                    && event.clipboardData.getData
+                    && !event.defaultPrevented) {
+                event.preventDefault();
 
-                if (options.cleanPastedHTML && evt.clipboardData.getData(dataFormatHTML)) {
-                    return this.cleanPaste(evt.clipboardData.getData(dataFormatHTML), options);
+                if (this.options.cleanPastedHTML && event.clipboardData.getData(dataFormatHTML)) {
+                    return this.cleanPaste(event.clipboardData.getData(dataFormatHTML));
                 }
-                if (!(options.disableReturn || element.getAttribute('data-disable-return'))) {
-                    paragraphs = evt.clipboardData.getData(dataFormatPlain).split(/[\r\n]/g);
+
+                if (!(this.options.disableReturn || element.getAttribute('data-disable-return'))) {
+                    paragraphs = event.clipboardData.getData(dataFormatPlain).split(/[\r\n]/g);
                     for (p = 0; p < paragraphs.length; p += 1) {
                         if (paragraphs[p] !== '') {
                             html += '<p>' + Util.htmlEntities(paragraphs[p]) + '</p>';
                         }
                     }
-                    Util.insertHTMLCommand(options.ownerDocument, html);
+                    Util.insertHTMLCommand(this.options.ownerDocument, html);
                 } else {
-                    html = Util.htmlEntities(evt.clipboardData.getData(dataFormatPlain));
-                    Util.insertHTMLCommand(options.ownerDocument, html);
+                    html = Util.htmlEntities(event.clipboardData.getData(dataFormatPlain));
+                    Util.insertHTMLCommand(this.options.ownerDocument, html);
                 }
             }
         },
 
-        cleanPaste: function (text, options) {
+        cleanPaste: function (text) {
             var i, elList, workEl,
-                el = Selection.getSelectionElement(options.contentWindow),
+                el = Selection.getSelectionElement(this.options.contentWindow),
                 multiline = /<p|<br|<div/.test(text),
                 replacements = createReplacements();
 
@@ -45571,10 +46167,10 @@ var pasteHandler;
                 // double br's aren't converted to p tags, but we want paragraphs.
                 elList = text.split('<br><br>');
 
-                this.pasteHTML('<p>' + elList.join('</p><p>') + '</p>', options.ownerDocument);
+                this.pasteHTML('<p>' + elList.join('</p><p>') + '</p>');
 
                 try {
-                    options.ownerDocument.execCommand('insertText', false, "\n");
+                    this.options.ownerDocument.execCommand('insertText', false, "\n");
                 } catch (ignore) { }
 
                 // block element cleanup
@@ -45582,9 +46178,14 @@ var pasteHandler;
                 for (i = 0; i < elList.length; i += 1) {
                     workEl = elList[i];
 
+                    // Microsoft Word replaces some spaces with newlines.
+                    // While newlines between block elements are meaningless, newlines within
+                    // elements are sometimes actually spaces.
+                    workEl.innerHTML = workEl.innerHTML.replace(/\n/gi, ' ');
+
                     switch (workEl.tagName.toLowerCase()) {
                     case 'a':
-                        if (options.targetBlank) {
+                        if (this.options.targetBlank) {
                             Util.setTargetBlank(workEl);
                         }
                         break;
@@ -45598,19 +46199,19 @@ var pasteHandler;
                     }
                 }
             } else {
-                this.pasteHTML(text, options.ownerDocument);
+                this.pasteHTML(text);
             }
         },
 
-        pasteHTML: function (html, ownerDocument) {
-            var elList, workEl, i, fragmentBody, pasteBlock = ownerDocument.createDocumentFragment();
+        pasteHTML: function (html) {
+            var elList, workEl, i, fragmentBody, pasteBlock = this.options.ownerDocument.createDocumentFragment();
 
-            pasteBlock.appendChild(ownerDocument.createElement('body'));
+            pasteBlock.appendChild(this.options.ownerDocument.createElement('body'));
 
             fragmentBody = pasteBlock.querySelector('body');
             fragmentBody.innerHTML = html;
 
-            this.cleanupSpans(fragmentBody, ownerDocument);
+            this.cleanupSpans(fragmentBody);
 
             elList = fragmentBody.querySelectorAll('*');
             for (i = 0; i < elList.length; i += 1) {
@@ -45625,28 +46226,28 @@ var pasteHandler;
                     workEl.parentNode.removeChild(workEl);
                 }
             }
-            Util.insertHTMLCommand(ownerDocument, fragmentBody.innerHTML.replace(/&nbsp;/g, ' '));
+            Util.insertHTMLCommand(this.options.ownerDocument, fragmentBody.innerHTML.replace(/&nbsp;/g, ' '));
         },
         isCommonBlock: function (el) {
             return (el && (el.tagName.toLowerCase() === 'p' || el.tagName.toLowerCase() === 'div'));
         },
         filterCommonBlocks: function (el) {
-            if (/^\s*$/.test(el.textContent)) {
+            if (/^\s*$/.test(el.textContent) && el.parentNode) {
                 el.parentNode.removeChild(el);
             }
         },
         filterLineBreak: function (el) {
+
             if (this.isCommonBlock(el.previousElementSibling)) {
                 // remove stray br's following common block elements
-                el.parentNode.removeChild(el);
+                this.removeWithParent(el);
             } else if (this.isCommonBlock(el.parentNode) && (el.parentNode.firstChild === el || el.parentNode.lastChild === el)) {
                 // remove br's just inside open or close tags of a div/p
-                el.parentNode.removeChild(el);
-            } else if (el.parentNode.childElementCount === 1 && el.parentNode.textContent === '') {
-                // and br's that are the only child of a div/p
+                this.removeWithParent(el);
+            } else if (el.parentNode && el.parentNode.childElementCount === 1 && el.parentNode.textContent === '') {
+                // and br's that are the only child of elements other than div/p
                 this.removeWithParent(el);
             }
-
         },
 
         // remove an element, including its parent, if it is the only element within its parent
@@ -45655,12 +46256,12 @@ var pasteHandler;
                 if (el.parentNode.parentNode && el.parentNode.childElementCount === 1) {
                     el.parentNode.parentNode.removeChild(el.parentNode);
                 } else {
-                    el.parentNode.removeChild(el.parentNode);
+                    el.parentNode.removeChild(el);
                 }
             }
         },
 
-        cleanupSpans: function (container_el, ownerDocument) {
+        cleanupSpans: function (container_el) {
             var i,
                 el,
                 new_el,
@@ -45671,7 +46272,7 @@ var pasteHandler;
 
             for (i = 0; i < spans.length; i += 1) {
                 el = spans[i];
-                new_el = ownerDocument.createElement(el.classList.contains('bold') ? 'b' : 'i');
+                new_el = this.options.ownerDocument.createElement(el.classList.contains('bold') ? 'b' : 'i');
 
                 if (el.classList.contains('bold') && el.classList.contains('italic')) {
                     // add an i tag as well if this has both italics and bold
@@ -45695,7 +46296,7 @@ var pasteHandler;
                 if (/^\s*$/.test()) {
                     el.parentNode.removeChild(el);
                 } else {
-                    el.parentNode.replaceChild(ownerDocument.createTextNode(el.textContent), el);
+                    el.parentNode.replaceChild(this.options.ownerDocument.createTextNode(el.textContent), el);
                 }
             }
         }
@@ -45725,17 +46326,17 @@ var AnchorExtension;
 
         // Button and Extension handling
 
+        // labels for the anchor-edit form buttons
+        formSaveLabel: '&#10003;',
+        formCloseLabel: '&times;',
+
         // Called when the button the toolbar is clicked
         // Overrides DefaultButton.handleClick
         handleClick: function (evt) {
             evt.preventDefault();
             evt.stopPropagation();
 
-            if (!this.base.selection) {
-                this.base.checkSelection();
-            }
-
-            var selectedParentElement = Selection.getSelectedParentElement(this.base.selectionRange);
+            var selectedParentElement = Selection.getSelectedParentElement(Util.getSelectionRange(this.base.options.ownerDocument));
             if (selectedParentElement.tagName &&
                     selectedParentElement.tagName.toLowerCase() === 'a') {
                 return this.base.execAction('unlink');
@@ -45750,10 +46351,53 @@ var AnchorExtension;
 
         // Called by medium-editor to append form to the toolbar
         getForm: function () {
-            if (!this.anchorForm) {
-                this.anchorForm = this.createForm();
+            if (!this.form) {
+                this.form = this.createForm();
             }
-            return this.anchorForm;
+            return this.form;
+        },
+
+        getTemplate: function () {
+
+            var template = [
+                '<input type="text" class="medium-editor-toolbar-input" placeholder="', this.base.options.anchorInputPlaceholder, '">'
+            ];
+
+            template.push(
+                '<a href="#" class="medium-editor-toolbar-save">',
+                this.base.options.buttonLabels === 'fontawesome' ? '<i class="fa fa-check"></i>' : this.formSaveLabel,
+                '</a>'
+            );
+
+            template.push('<a href="#" class="medium-editor-toolbar-close">',
+                this.base.options.buttonLabels === 'fontawesome' ? '<i class="fa fa-times"></i>' : this.formCloseLabel,
+                '</a>');
+
+            // both of these options are slightly moot with the ability to
+            // override the various form buildup/serialize functions.
+
+            if (this.base.options.anchorTarget) {
+                // fixme: ideally, this options.anchorInputCheckboxLabel would be a formLabel too,
+                // figure out how to deprecate? also consider `fa-` icon default implcations.
+                template.push(
+                    '<input type="checkbox" class="medium-editor-toolbar-anchor-target">',
+                    '<label>',
+                    this.base.options.anchorInputCheckboxLabel,
+                    '</label>'
+                );
+            }
+
+            if (this.base.options.anchorButton) {
+                // fixme: expose this `Button` text as a formLabel property, too
+                // and provide similar access to a `fa-` icon default.
+                template.push(
+                    '<input type="checkbox" class="medium-editor-toolbar-anchor-button">',
+                    '<label>Button</label>'
+                );
+            }
+
+            return template.join("");
+
         },
 
         // Used by medium-editor when the default toolbar is to be displayed
@@ -45773,7 +46417,6 @@ var AnchorExtension;
             this.base.hideToolbarDefaultActions();
             this.getForm().style.display = 'block';
             this.base.setToolbarPosition();
-            this.base.keepToolbarAlive = true;
 
             input.value = link_value || '';
             input.focus();
@@ -45781,27 +46424,26 @@ var AnchorExtension;
 
         // Called by core when tearing down medium-editor (deactivate)
         deactivate: function () {
-            if (!this.anchorForm) {
+            if (!this.form) {
                 return false;
             }
 
-            if (this.anchorForm.parentNode) {
-                this.anchorForm.parentNode.removeChild(this.anchorForm);
+            if (this.form.parentNode) {
+                this.form.parentNode.removeChild(this.form);
             }
 
-            delete this.anchorForm;
+            delete this.form;
         },
 
         // core methods
 
-        doLinkCreation: function () {
+        getFormOpts: function () {
+            // no notion of private functions? wanted `_getFormOpts`
             var targetCheckbox = this.getForm().querySelector('.medium-editor-toolbar-anchor-target'),
                 buttonCheckbox = this.getForm().querySelector('.medium-editor-toolbar-anchor-button'),
                 opts = {
                     url: this.getInput().value
                 };
-
-            this.base.restoreSelection();
 
             if (this.base.options.checkLinkFormat) {
                 opts.url = this.checkLinkFormat(opts.url);
@@ -45817,8 +46459,17 @@ var AnchorExtension;
                 opts.buttonClass = this.base.options.anchorButtonClass;
             }
 
+            return opts;
+        },
+
+        doFormSave: function () {
+            var opts = this.getFormOpts();
+            this.completeFormSave(opts);
+        },
+
+        completeFormSave: function (opts) {
+            this.base.restoreSelection();
             this.base.createLink(opts);
-            this.base.keepToolbarAlive = false;
             this.base.checkSelection();
         },
 
@@ -45829,93 +46480,39 @@ var AnchorExtension;
 
         doFormCancel: function () {
             this.base.restoreSelection();
-            this.base.keepToolbarAlive = false;
             this.base.checkSelection();
         },
 
         // form creation and event handling
 
-        createForm: function () {
-            var doc = this.base.options.ownerDocument,
-                form = doc.createElement('div'),
-                input = doc.createElement('input'),
-                close = doc.createElement('a'),
-                save = doc.createElement('a'),
-                target,
-                target_label,
-                button,
-                button_label;
-
-            // Anchor Form (div)
-            form.className = 'medium-editor-toolbar-form';
-            form.id = 'medium-editor-toolbar-form-anchor-' + this.base.id;
+        attachFormEvents: function (form) {
+            var close = form.querySelector(".medium-editor-toolbar-close"),
+                save = form.querySelector(".medium-editor-toolbar-save"),
+                input = form.querySelector(".medium-editor-toolbar-input");
 
             // Handle clicks on the form itself
             this.base.on(form, 'click', this.handleFormClick.bind(this));
 
-            // Add url textbox
-            input.setAttribute('type', 'text');
-            input.className = 'medium-editor-toolbar-input';
-            input.setAttribute('placeholder', this.base.options.anchorInputPlaceholder);
-            form.appendChild(input);
-
             // Handle typing in the textbox
             this.base.on(input, 'keyup', this.handleTextboxKeyup.bind(this));
-
-            // Handle clicks into the textbox
-            this.base.on(input, 'click', this.handleFormClick.bind(this));
-
-            // Add save buton
-            save.setAttribute('href', '#');
-            save.className = 'medium-editor-toobar-save';
-            save.innerHTML = this.base.options.buttonLabels === 'fontawesome' ?
-                             '<i class="fa fa-check"></i>' :
-                             '&#10003;';
-            form.appendChild(save);
-
-            // Handle save button clicks (capture)
-            this.base.on(save, 'click', this.handleSaveClick.bind(this), true);
-
-            // Add close button
-            close.setAttribute('href', '#');
-            close.className = 'medium-editor-toobar-close';
-            close.innerHTML = this.base.options.buttonLabels === 'fontawesome' ?
-                              '<i class="fa fa-times"></i>' :
-                              '&times;';
-            form.appendChild(close);
 
             // Handle close button clicks
             this.base.on(close, 'click', this.handleCloseClick.bind(this));
 
-            // (Optional) Add 'open in new window' checkbox
-            if (this.base.options.anchorTarget) {
-                target = doc.createElement('input');
-                target.setAttribute('type', 'checkbox');
-                target.className = 'medium-editor-toolbar-anchor-target';
+            // Handle save button clicks (capture)
+            this.base.on(save, 'click', this.handleSaveClick.bind(this), true);
 
-                target_label = doc.createElement('label');
-                target_label.innerHTML = this.base.options.anchorInputCheckboxLabel;
-                target_label.insertBefore(target, target_label.firstChild);
+        },
 
-                form.appendChild(target_label);
-            }
+        createForm: function () {
+            var doc = this.base.options.ownerDocument,
+                form = doc.createElement('div');
 
-            // (Optional) Add 'add button class to anchor' checkbox
-            if (this.base.options.anchorButton) {
-                button = doc.createElement('input');
-                button.setAttribute('type', 'checkbox');
-                button.className = 'medium-editor-toolbar-anchor-button';
-
-                button_label = doc.createElement('label');
-                button_label.innerHTML = "Button";
-                button_label.insertBefore(button, button_label.firstChild);
-
-                form.appendChild(button_label);
-            }
-
-            // Handle click (capture) & focus (capture) outside of the form
-            this.base.on(doc.body, 'click', this.handleOutsideInteraction.bind(this), true);
-            this.base.on(doc.body, 'focus', this.handleOutsideInteraction.bind(this), true);
+            // Anchor Form (div)
+            form.className = 'medium-editor-toolbar-form';
+            form.id = 'medium-editor-toolbar-form-anchor-' + this.base.id;
+            form.innerHTML = this.getTemplate();
+            this.attachFormEvents(form);
 
             return form;
         },
@@ -45924,20 +46521,11 @@ var AnchorExtension;
             return this.getForm().querySelector('input.medium-editor-toolbar-input');
         },
 
-        handleOutsideInteraction: function (event) {
-            if (event.target !== this.getForm() &&
-                    !Util.isDescendant(this.getForm(), event.target) &&
-                    !Util.isDescendant(this.base.toolbarActions, event.target)) {
-                this.base.keepToolbarAlive = false;
-                this.base.checkSelection();
-            }
-        },
-
         handleTextboxKeyup: function (event) {
             // For ENTER -> create the anchor
             if (event.keyCode === Util.keyCode.ENTER) {
                 event.preventDefault();
-                this.doLinkCreation();
+                this.doFormSave();
                 return;
             }
 
@@ -45951,13 +46539,12 @@ var AnchorExtension;
         handleFormClick: function (event) {
             // make sure not to hide form when clicking inside the form
             event.stopPropagation();
-            this.base.keepToolbarAlive = true;
         },
 
         handleSaveClick: function (event) {
             // Clicking Save -> create the anchor
             event.preventDefault();
-            this.doLinkCreation();
+            this.doFormSave();
         },
 
         handleCloseClick: function (event) {
@@ -45968,8 +46555,878 @@ var AnchorExtension;
     };
 
     AnchorExtension = Util.derives(DefaultButton, AnchorDerived);
+
 }(window, document));
 
+var AnchorPreview;
+
+(function (window, document) {
+    'use strict';
+
+    AnchorPreview = function () {
+        this.parent = true;
+        this.name = 'anchor-preview';
+    };
+
+    AnchorPreview.prototype = {
+
+        // the default selector to locate where to
+        // put the activeAnchor value in the preview
+        previewValueSelector: 'i',
+
+        init: function (instance) {
+            this.base = instance;
+            this.anchorPreview = this.createPreview();
+            this.base.options.elementsContainer.appendChild(this.anchorPreview);
+
+            this.attachToEditables();
+        },
+
+        getPreviewElement: function () {
+            return this.anchorPreview;
+        },
+
+        createPreview: function () {
+            var el = this.base.options.ownerDocument.createElement('div');
+
+            el.id = 'medium-editor-anchor-preview-' + this.base.id;
+            el.className = 'medium-editor-anchor-preview';
+            el.innerHTML = this.getTemplate();
+
+            this.base.on(el, 'click', this.handleClick.bind(this));
+
+            return el;
+        },
+
+        getTemplate: function () {
+            return '<div class="medium-editor-toolbar-anchor-preview" id="medium-editor-toolbar-anchor-preview">' +
+                '    <i class="medium-editor-toolbar-anchor-preview-inner"></i>' +
+                '</div>';
+        },
+
+        deactivate: function () {
+            if (this.anchorPreview) {
+                if (this.anchorPreview.parentNode) {
+                    this.anchorPreview.parentNode.removeChild(this.anchorPreview);
+                }
+                delete this.anchorPreview;
+            }
+        },
+
+        hidePreview: function () {
+            this.anchorPreview.classList.remove('medium-editor-anchor-preview-active');
+            this.activeAnchor = null;
+        },
+
+        showPreview: function (anchorEl) {
+            if (this.anchorPreview.classList.contains('medium-editor-anchor-preview-active')
+                    || anchorEl.getAttribute('data-disable-preview')) {
+                return true;
+            }
+
+            if (this.previewValueSelector) {
+                this.anchorPreview.querySelector(this.previewValueSelector).textContent = anchorEl.attributes.href.value;
+            }
+
+            this.anchorPreview.classList.add('medium-toolbar-arrow-over');
+            this.anchorPreview.classList.remove('medium-toolbar-arrow-under');
+
+            if (!this.anchorPreview.classList.contains('medium-editor-anchor-preview-active')) {
+                this.anchorPreview.classList.add('medium-editor-anchor-preview-active');
+            }
+
+            this.activeAnchor = anchorEl;
+
+            this.positionPreview();
+            this.attachPreviewHandlers();
+
+            return this;
+        },
+
+        positionPreview: function () {
+            var buttonHeight = 40,
+                boundary = this.activeAnchor.getBoundingClientRect(),
+                middleBoundary = (boundary.left + boundary.right) / 2,
+                halfOffsetWidth,
+                defaultLeft;
+
+            halfOffsetWidth = this.anchorPreview.offsetWidth / 2;
+            defaultLeft = this.base.options.diffLeft - halfOffsetWidth;
+
+            this.anchorPreview.style.top = Math.round(buttonHeight + boundary.bottom - this.base.options.diffTop + this.base.options.contentWindow.pageYOffset - this.anchorPreview.offsetHeight) + 'px';
+            if (middleBoundary < halfOffsetWidth) {
+                this.anchorPreview.style.left = defaultLeft + halfOffsetWidth + 'px';
+            } else if ((this.base.options.contentWindow.innerWidth - middleBoundary) < halfOffsetWidth) {
+                this.anchorPreview.style.left = this.base.options.contentWindow.innerWidth + defaultLeft - halfOffsetWidth + 'px';
+            } else {
+                this.anchorPreview.style.left = defaultLeft + middleBoundary + 'px';
+            }
+        },
+
+        attachToEditables: function () {
+            this.base.subscribe('editableMouseover', this.handleEditableMouseover.bind(this));
+        },
+
+        handleClick: function (event) {
+            var range,
+                sel,
+                anchorExtension = this.base.getExtensionByName('anchor'),
+                activeAnchor = this.activeAnchor;
+
+            if (anchorExtension && activeAnchor) {
+                range = this.base.options.ownerDocument.createRange();
+                range.selectNodeContents(this.activeAnchor);
+
+                sel = this.base.options.contentWindow.getSelection();
+                sel.removeAllRanges();
+                sel.addRange(range);
+                // Using setTimeout + options.delay because:
+                // We may actually be displaying the anchor form, which should be controlled by options.delay
+                this.base.delay(function () {
+                    if (activeAnchor) {
+                        anchorExtension.showForm(activeAnchor.attributes.href.value);
+                        activeAnchor = null;
+                    }
+                }.bind(this));
+            }
+
+            this.hidePreview();
+        },
+
+        handleAnchorMouseout: function (event) {
+            this.anchorToPreview = null;
+            this.base.off(this.activeAnchor, 'mouseout', this.instance_handleAnchorMouseout);
+            this.instance_handleAnchorMouseout = null;
+        },
+
+        handleEditableMouseover: function (event) {
+            if (event.target && event.target.tagName.toLowerCase() === 'a') {
+
+                // Detect empty href attributes
+                // The browser will make href="" or href="#top"
+                // into absolute urls when accessed as event.targed.href, so check the html
+                if (!/href=["']\S+["']/.test(event.target.outerHTML) || /href=["']#\S+["']/.test(event.target.outerHTML)) {
+                    return true;
+                }
+
+                // only show when hovering on anchors
+                if (this.base.toolbar && this.base.toolbar.isDisplayed()) {
+                    // only show when toolbar is not present
+                    return true;
+                }
+
+                // detach handler for other anchor in case we hovered multiple anchors quickly
+                if (this.activeAnchor && this.activeAnchor !== event.target) {
+                    this.detachPreviewHandlers();
+                }
+
+                this.anchorToPreview = event.target;
+
+                this.instance_handleAnchorMouseout = this.handleAnchorMouseout.bind(this);
+                this.base.on(this.anchorToPreview, 'mouseout', this.instance_handleAnchorMouseout);
+                // Using setTimeout + options.delay because:
+                // - We're going to show the anchor preview according to the configured delay
+                //   if the mouse has not left the anchor tag in that time
+                this.base.delay(function () {
+                    if (this.anchorToPreview) {
+                        //this.activeAnchor = this.anchorToPreview;
+                        this.showPreview(this.anchorToPreview);
+                    }
+                }.bind(this));
+            }
+        },
+
+        handlePreviewMouseover: function (event) {
+            this.lastOver = (new Date()).getTime();
+            this.hovering = true;
+        },
+
+        handlePreviewMouseout: function (event) {
+            if (!event.relatedTarget || !/anchor-preview/.test(event.relatedTarget.className)) {
+                this.hovering = false;
+            }
+        },
+
+        updatePreview: function () {
+            if (this.hovering) {
+                return true;
+            }
+            var durr = (new Date()).getTime() - this.lastOver;
+            if (durr > this.base.options.anchorPreviewHideDelay) {
+                // hide the preview 1/2 second after mouse leaves the link
+                this.detachPreviewHandlers();
+            }
+        },
+
+        detachPreviewHandlers: function () {
+            // cleanup
+            clearInterval(this.interval_timer);
+            if (this.instance_handlePreviewMouseover) {
+                this.base.off(this.anchorPreview, 'mouseover', this.instance_handlePreviewMouseover);
+                this.base.off(this.anchorPreview, 'mouseout', this.instance_handlePreviewMouseout);
+                if (this.activeAnchor) {
+                    this.base.off(this.activeAnchor, 'mouseover', this.instance_handlePreviewMouseover);
+                    this.base.off(this.activeAnchor, 'mouseout', this.instance_handlePreviewMouseout);
+                }
+            }
+
+            this.hidePreview();
+
+            this.hovering = this.instance_handlePreviewMouseover = this.instance_handlePreviewMouseout = null;
+        },
+
+        // TODO: break up method and extract out handlers
+        attachPreviewHandlers: function () {
+            this.lastOver = (new Date()).getTime();
+            this.hovering = true;
+
+            this.instance_handlePreviewMouseover = this.handlePreviewMouseover.bind(this);
+            this.instance_handlePreviewMouseout = this.handlePreviewMouseout.bind(this);
+
+            this.interval_timer = setInterval(this.updatePreview.bind(this), 200);
+
+            this.base.on(this.anchorPreview, 'mouseover', this.instance_handlePreviewMouseover);
+            this.base.on(this.anchorPreview, 'mouseout', this.instance_handlePreviewMouseout);
+            this.base.on(this.activeAnchor, 'mouseover', this.instance_handlePreviewMouseover);
+            this.base.on(this.activeAnchor, 'mouseout', this.instance_handlePreviewMouseout);
+        }
+    };
+}(window, document));
+
+var Toolbar;
+
+(function (window, document) {
+    'use strict';
+
+    Toolbar = function Toolbar(instance) {
+        this.base = instance;
+        this.options = instance.options;
+        this.initThrottledMethods();
+    };
+
+    Toolbar.prototype = {
+
+        // Toolbar creation/deletion
+
+        createToolbar: function () {
+            var toolbar = this.base.options.ownerDocument.createElement('div');
+
+            toolbar.id = 'medium-editor-toolbar-' + this.base.id;
+            toolbar.className = 'medium-editor-toolbar';
+
+            if (this.options.staticToolbar) {
+                toolbar.className += " static-toolbar";
+            } else {
+                toolbar.className += " stalker-toolbar";
+            }
+
+            toolbar.appendChild(this.createToolbarButtons());
+
+            // Add any forms that extensions may have
+            this.base.commands.forEach(function (extension) {
+                if (extension.hasForm) {
+                    toolbar.appendChild(extension.getForm());
+                }
+            });
+
+            this.attachEventHandlers();
+            this.base.subscribe('externalInteraction', this.handleBlur.bind(this));
+
+            return toolbar;
+        },
+
+        createToolbarButtons: function () {
+            var ul = this.base.options.ownerDocument.createElement('ul'),
+                li,
+                btn,
+                buttons;
+
+            ul.id = 'medium-editor-toolbar-actions' + this.base.id;
+            ul.className = 'medium-editor-toolbar-actions clearfix';
+            ul.style.display = 'block';
+
+            this.base.commands.forEach(function (extension) {
+                if (typeof extension.getButton === 'function') {
+                    btn = extension.getButton(this.base);
+                    li = this.base.options.ownerDocument.createElement('li');
+                    if (Util.isElement(btn)) {
+                        li.appendChild(btn);
+                    } else {
+                        li.innerHTML = btn;
+                    }
+                    ul.appendChild(li);
+                }
+            }.bind(this));
+
+            buttons = ul.querySelectorAll('button');
+            if (buttons.length > 0) {
+                buttons[0].classList.add(this.options.firstButtonClass);
+                buttons[buttons.length - 1].classList.add(this.options.lastButtonClass);
+            }
+
+            return ul;
+        },
+
+        deactivate: function () {
+            if (this.toolbar) {
+                if (this.toolbar.parentNode) {
+                    this.toolbar.parentNode.removeChild(this.toolbar);
+                }
+                delete this.toolbar;
+            }
+        },
+
+        // Toolbar accessors
+
+        getToolbarElement: function () {
+            if (!this.toolbar) {
+                this.toolbar = this.createToolbar();
+            }
+
+            return this.toolbar;
+        },
+
+        getToolbarActionsElement: function () {
+            return this.getToolbarElement().querySelector('.medium-editor-toolbar-actions');
+        },
+
+        // Toolbar event handlers
+
+        initThrottledMethods: function () {
+            // throttledPositionToolbar is throttled because:
+            // - It will be called when the browser is resizing, which can fire many times very quickly
+            // - For some event (like resize) a slight lag in UI responsiveness is OK and provides performance benefits
+            this.throttledPositionToolbar = Util.throttle(function (event) {
+                if (this.base.isActive) {
+                    this.positionToolbarIfShown();
+                }
+            }.bind(this));
+        },
+
+        attachEventHandlers: function () {
+            //this.base.on(this.options.ownerDocument.documentElement, 'mousedown', this.handleDocumentMousedown.bind(this));
+            // Handle mouseup on document for updating the selection in the toolbar
+            this.base.on(this.options.ownerDocument.documentElement, 'mouseup', this.handleDocumentMouseup.bind(this));
+
+            // Add a scroll event for sticky toolbar
+            if (this.options.staticToolbar && this.options.stickyToolbar) {
+                // On scroll (capture), re-position the toolbar
+                this.base.on(this.options.contentWindow, 'scroll', this.handleWindowScroll.bind(this), true);
+            }
+
+            // On resize, re-position the toolbar
+            this.base.on(this.options.contentWindow, 'resize', this.handleWindowResize.bind(this));
+
+            // Handlers for each contentedtiable element
+            this.base.elements.forEach(function (element) {
+                // Attach click handler to each contenteditable element
+                this.base.on(element, 'click', this.handleEditableClick.bind(this));
+
+                // Attach keyup handler to each contenteditable element
+                this.base.on(element, 'keyup', this.handleEditableKeyup.bind(this));
+
+                // Attach blur handler to each contenteditable element
+                this.base.on(element, 'blur', this.handleEditableBlur.bind(this));
+            }.bind(this));
+        },
+
+        handleWindowScroll: function (event) {
+            this.positionToolbarIfShown();
+        },
+
+        handleWindowResize: function (event) {
+            this.throttledPositionToolbar();
+        },
+
+        /*handleDocumentMousedown: function (event) {
+            this.lastMousedownTarget = event.target;
+        },*/
+
+        handleDocumentMouseup: function (event) {
+            //this.lastMousedownTarget = null;
+            // Do not trigger checkState when mouseup fires over the toolbar
+            if (event &&
+                    event.target &&
+                    Util.isDescendant(this.getToolbarElement(), event.target)) {
+                return false;
+            }
+            this.checkState();
+        },
+
+        handleEditableClick: function (event) {
+            // Delay the call to checkState to handle bug where selection is empty
+            // immediately after clicking inside a pre-existing selection
+            setTimeout(function () {
+                this.checkState();
+            }.bind(this), 0);
+        },
+
+        handleEditableKeyup: function (event) {
+            this.checkState();
+        },
+
+        handleEditableBlur: function (event) {
+            /*var isRelatedTargetOwnedByThisEditor = false;
+            // Do not trigger checkState when blurring the editable area and clicking into the toolbar
+            if (Util.isDescendant(this.getToolbarElement(), this.lastMousedownTarget)) {
+                return false;
+            }
+            if (this.lastMousedownTarget) {
+                // Remove all selections before checking state. This is necessary to avoid issues with
+                // standardizeSelectionStart 'canceling' the blur event by moving the selection.
+                this.base.elements.forEach(function (el) {
+                    isRelatedTargetOwnedByThisEditor = isRelatedTargetOwnedByThisEditor || Util.isDescendant(el, this.lastMousedownTarget) ||
+                        this.lastMousedownTarget === el;
+                }, this);
+                // We only remove all the ranges if the user clicked outside the contenteditables managed by this medium-editor instance. Otherwise keep the ranges,
+                // because we were okay with the behavior that it did.
+                if (!isRelatedTargetOwnedByThisEditor) {
+                    this.options.contentWindow.getSelection().removeAllRanges();
+                }
+            }*/
+
+            // Do not trigger checkState when bluring the editable area and clicking into the toolbar
+            if (event &&
+                    event.relatedTarget &&
+                    Util.isDescendant(this.getToolbarElement(), event.relatedTarget)) {
+                return false;
+            }
+            this.checkState();
+        },
+
+        handleBlur: function (event) {
+            // Delay the call to hideToolbar to handle bug with multiple editors on the page at once
+            setTimeout(function () {
+                this.hideToolbar();
+            }.bind(this), 0);
+        },
+
+        // Hiding/showing toolbar
+
+        isDisplayed: function () {
+            return this.getToolbarElement().classList.contains('medium-editor-toolbar-active');
+        },
+
+        showToolbar: function () {
+            if (!this.isDisplayed()) {
+                this.getToolbarElement().classList.add('medium-editor-toolbar-active');
+                if (typeof this.options.onShowToolbar === 'function') {
+                    this.options.onShowToolbar();
+                }
+            }
+        },
+
+        hideToolbar: function () {
+            if (this.isDisplayed()) {
+                this.base.commands.forEach(function (extension) {
+                    if (typeof extension.onHide === 'function') {
+                        extension.onHide();
+                    }
+                });
+
+                this.getToolbarElement().classList.remove('medium-editor-toolbar-active');
+                if (typeof this.options.onHideToolbar === 'function') {
+                    this.options.onHideToolbar();
+                }
+            }
+        },
+
+        isToolbarDefaultActionsDisplayed: function () {
+            return this.getToolbarActionsElement().style.display === 'block';
+        },
+
+        hideToolbarDefaultActions: function () {
+            if (this.isToolbarDefaultActionsDisplayed()) {
+                this.getToolbarActionsElement().style.display = 'none';
+            }
+        },
+
+        showToolbarDefaultActions: function () {
+            this.hideExtensionForms();
+
+            if (!this.isToolbarDefaultActionsDisplayed()) {
+                this.getToolbarActionsElement().style.display = 'block';
+            }
+
+            // Using setTimeout + options.delay because:
+            // We will actually be displaying the toolbar, which should be controlled by options.delay
+            this.base.delay(function () {
+                this.showToolbar();
+            }.bind(this));
+        },
+
+        hideExtensionForms: function () {
+            // Hide all extension forms
+            this.base.commands.forEach(function (extension) {
+                if (extension.hasForm && extension.isDisplayed()) {
+                    extension.hideForm();
+                }
+            });
+        },
+
+        // Responding to changes in user selection
+
+        // Checks for existance of multiple block elements in the current selection
+        multipleBlockElementsSelected: function () {
+            /*jslint regexp: true*/
+            var selectionHtml = Selection.getSelectionHtml.call(this).replace(/<[\S]+><\/[\S]+>/gim, ''),
+                hasMultiParagraphs = selectionHtml.match(/<(p|h[1-6]|blockquote)[^>]*>/g);
+            /*jslint regexp: false*/
+
+            return !!hasMultiParagraphs && hasMultiParagraphs.length > 1;
+        },
+
+        // TODO: selection and selectionRange should be properties of the
+        //       Selection object
+        checkSelectionElement: function (newSelection, selectionElement) {
+            var i,
+                adjacentNode,
+                offset = 0,
+                newRange,
+                selectionRange = newSelection.getRangeAt(0);
+
+            /*
+            * In firefox, there are cases (ie doubleclick of a word) where the selectionRange start
+            * will be at the very end of an element.  In other browsers, the selectionRange start
+            * would instead be at the very beginning of an element that actually has content.
+            * example:
+            *   <span>foo</span><span>bar</span>
+            *
+            * If the text 'bar' is selected, most browsers will have the selectionRange start at the beginning
+            * of the 'bar' span.  However, there are cases where firefox will have the selectionRange start
+            * at the end of the 'foo' span.  The contenteditable behavior will be ok, but if there are any
+            * properties on the 'bar' span, they won't be reflected accurately in the toolbar
+            * (ie 'Bold' button wouldn't be active)
+            *
+            * So, for cases where the selectionRange start is at the end of an element/node, find the next
+            * adjacent text node that actually has content in it, and move the selectionRange start there.
+            */
+            if (this.options.standardizeSelectionStart &&
+                    selectionRange.startContainer.nodeValue &&
+                    (selectionRange.startOffset === selectionRange.startContainer.nodeValue.length)) {
+                adjacentNode = Util.findAdjacentTextNodeWithContent(Selection.getSelectionElement(this.options.contentWindow), selectionRange.startContainer, this.options.ownerDocument);
+                if (adjacentNode) {
+                    offset = 0;
+                    while (adjacentNode.nodeValue.substr(offset, 1).trim().length === 0) {
+                        offset = offset + 1;
+                    }
+                    newRange = this.options.ownerDocument.createRange();
+                    newRange.setStart(adjacentNode, offset);
+                    newRange.setEnd(selectionRange.endContainer, selectionRange.endOffset);
+                    newSelection.removeAllRanges();
+                    newSelection.addRange(newRange);
+                    selectionRange = newRange;
+                }
+            }
+
+            for (i = 0; i < this.base.elements.length; i += 1) {
+                if (this.base.elements[i] === selectionElement) {
+                    this.showAndUpdateToolbar();
+                    return;
+                }
+            }
+
+            if (!this.options.staticToolbar) {
+                this.hideToolbar();
+            }
+        },
+
+        checkState: function () {
+            var newSelection,
+                selectionElement;
+
+            if (!this.base.preventSelectionUpdates) {
+                newSelection = this.options.contentWindow.getSelection();
+                if ((!this.options.updateOnEmptySelection && newSelection.toString().trim() === '') ||
+                        (this.options.allowMultiParagraphSelection === false && this.multipleBlockElementsSelected()) ||
+                        Selection.selectionInContentEditableFalse(this.options.contentWindow)) {
+                    if (!this.options.staticToolbar) {
+                        this.hideToolbar();
+                    } else {
+                        this.showAndUpdateToolbar();
+                    }
+
+                } else {
+                    selectionElement = Selection.getSelectionElement(this.options.contentWindow);
+                    if (!selectionElement || selectionElement.getAttribute('data-disable-toolbar')) {
+                        if (!this.options.staticToolbar) {
+                            this.hideToolbar();
+                        }
+                    } else {
+                        this.checkSelectionElement(newSelection, selectionElement);
+                    }
+                }
+            }
+        },
+
+        // Updating the toolbar
+
+        showAndUpdateToolbar: function () {
+            this.setToolbarButtonStates();
+            this.showToolbarDefaultActions();
+            this.setToolbarPosition();
+        },
+
+        setToolbarButtonStates: function () {
+            this.base.commands.forEach(function (extension) {
+                if (typeof extension.isActive === 'function') {
+                    extension.setInactive();
+                }
+            }.bind(this));
+            this.checkActiveButtons();
+        },
+
+        checkActiveButtons: function () {
+            var manualStateChecks = [],
+                queryState = null,
+                selectionRange = Util.getSelectionRange(this.options.ownerDocument),
+                parentNode,
+                updateExtensionState = function (extension) {
+                    if (typeof extension.checkState === 'function') {
+                        extension.checkState(parentNode);
+                    } else if (typeof extension.isActive === 'function' &&
+                               typeof extension.isAlreadyApplied === 'function') {
+                        if (!extension.isActive() && extension.isAlreadyApplied(parentNode)) {
+                            extension.setActive();
+                        }
+                    }
+                };
+
+            if (!selectionRange) {
+                return;
+            }
+
+            parentNode = Selection.getSelectedParentElement(selectionRange);
+
+            // Loop through all commands
+            this.base.commands.forEach(function (command) {
+                // For those commands where we can use document.queryCommandState(), do so
+                if (typeof command.queryCommandState === 'function') {
+                    queryState = command.queryCommandState();
+                    // If queryCommandState returns a valid value, we can trust the browser
+                    // and don't need to do our manual checks
+                    if (queryState !== null) {
+                        if (queryState) {
+                            command.setActive();
+                        }
+                        return;
+                    }
+                }
+                // We can't use queryCommandState for this command, so add to manualStateChecks
+                manualStateChecks.push(command);
+            });
+
+            // Climb up the DOM and do manual checks for whether a certain command is currently enabled for this node
+            while (parentNode.tagName !== undefined && Util.parentElements.indexOf(parentNode.tagName.toLowerCase) === -1) {
+                manualStateChecks.forEach(updateExtensionState);
+
+                // we can abort the search upwards if we leave the contentEditable element
+                if (this.base.elements.indexOf(parentNode) !== -1) {
+                    break;
+                }
+                parentNode = parentNode.parentNode;
+            }
+        },
+
+        // Positioning toolbar
+
+        positionToolbarIfShown: function () {
+            if (this.isDisplayed()) {
+                this.setToolbarPosition();
+            }
+        },
+
+        setToolbarPosition: function () {
+            var container = Selection.getSelectionElement(this.options.contentWindow),
+                selection = this.options.contentWindow.getSelection(),
+                anchorPreview;
+
+            // If there isn't a valid selection, bail
+            if (!container || !this.options.contentWindow.getSelection().focusNode) {
+                return this;
+            }
+
+            // If the container isn't part of this medium-editor instance, bail
+            if (this.base.elements.indexOf(container) === -1) {
+                return this;
+            }
+
+            if (this.options.staticToolbar) {
+                this.showToolbar();
+                this.positionStaticToolbar(container);
+
+            } else if (!selection.isCollapsed) {
+                this.showToolbar();
+                this.positionToolbar(selection);
+            }
+
+            anchorPreview = this.base.getExtensionByName('anchor-preview');
+
+            if (anchorPreview && typeof anchorPreview.hidePreview === 'function') {
+                anchorPreview.hidePreview();
+            }
+        },
+
+        positionStaticToolbar: function (container) {
+            // position the toolbar at left 0, so we can get the real width of the toolbar
+            this.getToolbarElement().style.left = '0';
+
+            // document.documentElement for IE 9
+            var scrollTop = (this.options.ownerDocument.documentElement && this.options.ownerDocument.documentElement.scrollTop) || this.options.ownerDocument.body.scrollTop,
+                windowWidth = this.options.contentWindow.innerWidth,
+                toolbarElement = this.getToolbarElement(),
+                containerRect = container.getBoundingClientRect(),
+                containerTop = containerRect.top + scrollTop,
+                containerCenter = (containerRect.left + (containerRect.width / 2)),
+                toolbarHeight = toolbarElement.offsetHeight,
+                toolbarWidth = toolbarElement.offsetWidth,
+                halfOffsetWidth = toolbarWidth / 2,
+                targetLeft;
+
+            if (this.options.stickyToolbar) {
+                // If it's beyond the height of the editor, position it at the bottom of the editor
+                if (scrollTop > (containerTop + container.offsetHeight - toolbarHeight)) {
+                    toolbarElement.style.top = (containerTop + container.offsetHeight - toolbarHeight) + 'px';
+                    toolbarElement.classList.remove('sticky-toolbar');
+
+                // Stick the toolbar to the top of the window
+                } else if (scrollTop > (containerTop - toolbarHeight)) {
+                    toolbarElement.classList.add('sticky-toolbar');
+                    toolbarElement.style.top = "0px";
+
+                // Normal static toolbar position
+                } else {
+                    toolbarElement.classList.remove('sticky-toolbar');
+                    toolbarElement.style.top = containerTop - toolbarHeight + "px";
+                }
+            } else {
+                toolbarElement.style.top = containerTop - toolbarHeight + "px";
+            }
+
+            if (this.options.toolbarAlign === 'left') {
+                targetLeft = containerRect.left;
+            } else if (this.options.toolbarAlign === 'center') {
+                targetLeft = containerCenter - halfOffsetWidth;
+            } else if (this.options.toolbarAlign === 'right') {
+                targetLeft = containerRect.right - toolbarWidth;
+            }
+
+            if (targetLeft < 0) {
+                targetLeft = 0;
+            } else if ((targetLeft + toolbarWidth) > windowWidth) {
+                targetLeft = windowWidth - toolbarWidth;
+            }
+
+            toolbarElement.style.left = targetLeft + 'px';
+        },
+
+        positionToolbar: function (selection) {
+            // position the toolbar at left 0, so we can get the real width of the toolbar
+            this.getToolbarElement().style.left = '0';
+
+            var windowWidth = this.options.contentWindow.innerWidth,
+                range = selection.getRangeAt(0),
+                boundary = range.getBoundingClientRect(),
+                middleBoundary = (boundary.left + boundary.right) / 2,
+                toolbarElement = this.getToolbarElement(),
+                toolbarHeight = toolbarElement.offsetHeight,
+                toolbarWidth = toolbarElement.offsetWidth,
+                halfOffsetWidth = toolbarWidth / 2,
+                buttonHeight = 50,
+                defaultLeft = this.options.diffLeft - halfOffsetWidth;
+
+            if (boundary.top < buttonHeight) {
+                toolbarElement.classList.add('medium-toolbar-arrow-over');
+                toolbarElement.classList.remove('medium-toolbar-arrow-under');
+                toolbarElement.style.top = buttonHeight + boundary.bottom - this.options.diffTop + this.options.contentWindow.pageYOffset - toolbarHeight + 'px';
+            } else {
+                toolbarElement.classList.add('medium-toolbar-arrow-under');
+                toolbarElement.classList.remove('medium-toolbar-arrow-over');
+                toolbarElement.style.top = boundary.top + this.options.diffTop + this.options.contentWindow.pageYOffset - toolbarHeight + 'px';
+            }
+            if (middleBoundary < halfOffsetWidth) {
+                toolbarElement.style.left = defaultLeft + halfOffsetWidth + 'px';
+            } else if ((windowWidth - middleBoundary) < halfOffsetWidth) {
+                toolbarElement.style.left = windowWidth + defaultLeft - halfOffsetWidth + 'px';
+            } else {
+                toolbarElement.style.left = defaultLeft + middleBoundary + 'px';
+            }
+        }
+    };
+}(window, document));
+
+var Placeholders;
+
+(function (window, document) {
+    'use strict';
+
+    Placeholders = function (instance) {
+        this.base = instance;
+
+        this.initPlaceholders();
+        this.attachEventHandlers();
+    };
+
+    Placeholders.prototype = {
+
+        initPlaceholders: function () {
+            this.base.elements.forEach(function (el) {
+                this.updatePlaceholder(el);
+            }.bind(this));
+        },
+
+        showPlaceholder: function (el) {
+            if (el) {
+                el.classList.add('medium-editor-placeholder');
+            }
+        },
+
+        hidePlaceholder: function (el) {
+            if (el) {
+                el.classList.remove('medium-editor-placeholder');
+            }
+        },
+
+        updatePlaceholder: function (el) {
+            if (!(el.querySelector('img')) &&
+                    !(el.querySelector('blockquote')) &&
+                    el.textContent.replace(/^\s+|\s+$/g, '') === '') {
+                this.showPlaceholder(el);
+            } else {
+                this.hidePlaceholder(el);
+            }
+        },
+
+        attachEventHandlers: function () {
+            // Custom events
+            this.base.subscribe('externalInteraction', this.handleExternalInteraction.bind(this));
+
+            // Check placeholder on blur
+            this.base.subscribe('editableBlur', this.handleBlur.bind(this));
+
+            // Events where we always hide the placeholder
+            this.base.subscribe('editableClick', this.handleHidePlaceholderEvent.bind(this));
+            this.base.subscribe('editableKeypress', this.handleHidePlaceholderEvent.bind(this));
+            this.base.subscribe('editablePaste', this.handleHidePlaceholderEvent.bind(this));
+        },
+
+        handleHidePlaceholderEvent: function (event, element) {
+            // Events where we hide the placeholder
+            this.hidePlaceholder(element);
+        },
+
+        handleBlur: function (event, element) {
+            // Update placeholder for element that lost focus
+            this.updatePlaceholder(element);
+        },
+
+        handleExternalInteraction: function (event) {
+            // Update all placeholders
+            this.initPlaceholders();
+        }
+    };
+
+}(window, document));
 function MediumEditor(elements, options) {
     'use strict';
     return this.init(elements, options);
@@ -45978,10 +47435,389 @@ function MediumEditor(elements, options) {
 (function () {
     'use strict';
 
+    // Event handlers that shouldn't be exposed externally
+
+    function handleDisabledEnterKeydown(event, element) {
+        if (this.options.disableReturn || element.getAttribute('data-disable-return')) {
+            event.preventDefault();
+        } else if (this.options.disableDoubleReturn || this.getAttribute('data-disable-double-return')) {
+            var node = Util.getSelectionStart(this.options.ownerDocument);
+            if (node && node.textContent.trim() === '') {
+                event.preventDefault();
+            }
+        }
+    }
+
+    function handleTabKeydown(event, element) {
+        // Override tab only for pre nodes
+        var node = Util.getSelectionStart(this.options.ownerDocument),
+            tag = node && node.tagName.toLowerCase();
+
+        if (tag === 'pre') {
+            event.preventDefault();
+            Util.insertHTMLCommand(this.options.ownerDocument, '    ');
+        }
+
+        // Tab to indent list structures!
+        if (Util.isListItem(node)) {
+            event.preventDefault();
+
+            // If Shift is down, outdent, otherwise indent
+            if (event.shiftKey) {
+                this.options.ownerDocument.execCommand('outdent', false, null);
+            } else {
+                this.options.ownerDocument.execCommand('indent', false, null);
+            }
+        }
+    }
+
+    function handleBlockDeleteKeydowns(event, element) {
+        var range, sel, p, node = Util.getSelectionStart(this.options.ownerDocument),
+            tagName = node.tagName.toLowerCase(),
+            isEmpty = /^(\s+|<br\/?>)?$/i,
+            isHeader = /h\d/i;
+
+        if ((event.which === Util.keyCode.BACKSPACE || event.which === Util.keyCode.ENTER)
+                // has a preceeding sibling
+                && node.previousElementSibling
+                // in a header
+                && isHeader.test(tagName)
+                // at the very end of the block
+                && Selection.getCaretOffsets(node).left === 0) {
+            if (event.which === Util.keyCode.BACKSPACE && isEmpty.test(node.previousElementSibling.innerHTML)) {
+                // backspacing the begining of a header into an empty previous element will
+                // change the tagName of the current node to prevent one
+                // instead delete previous node and cancel the event.
+                node.previousElementSibling.parentNode.removeChild(node.previousElementSibling);
+                event.preventDefault();
+            } else if (event.which === Util.keyCode.ENTER) {
+                // hitting return in the begining of a header will create empty header elements before the current one
+                // instead, make "<p><br></p>" element, which are what happens if you hit return in an empty paragraph
+                p = this.options.ownerDocument.createElement('p');
+                p.innerHTML = '<br>';
+                node.previousElementSibling.parentNode.insertBefore(p, node);
+                event.preventDefault();
+            }
+        } else if (event.which === Util.keyCode.DELETE
+                    // between two sibling elements
+                    && node.nextElementSibling
+                    && node.previousElementSibling
+                    // not in a header
+                    && !isHeader.test(tagName)
+                    // in an empty tag
+                    && isEmpty.test(node.innerHTML)
+                    // when the next tag *is* a header
+                    && isHeader.test(node.nextElementSibling.tagName)) {
+            // hitting delete in an empty element preceding a header, ex:
+            //  <p>[CURSOR]</p><h1>Header</h1>
+            // Will cause the h1 to become a paragraph.
+            // Instead, delete the paragraph node and move the cursor to the begining of the h1
+
+            // remove node and move cursor to start of header
+            range = this.options.ownerDocument.createRange();
+            sel = this.options.ownerDocument.getSelection();
+
+            range.setStart(node.nextElementSibling, 0);
+            range.collapse(true);
+
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            node.previousElementSibling.parentNode.removeChild(node);
+
+            event.preventDefault();
+        } else if (event.which === Util.keyCode.BACKSPACE
+                && tagName === 'li'
+                // hitting backspace inside an empty li
+                && isEmpty.test(node.innerHTML)
+                // is first element (no preceeding siblings)
+                && !node.previousElementSibling
+                // parent also does not have a sibling
+                && !node.parentElement.previousElementSibling
+                // is not the only li in a list
+                && node.nextElementSibling.tagName.toLowerCase() === 'li') {
+            // backspacing in an empty first list element in the first list (with more elements) ex:
+            //  <ul><li>[CURSOR]</li><li>List Item 2</li></ul>
+            // will remove the first <li> but add some extra element before (varies based on browser)
+            // Instead, this will:
+            // 1) remove the list element
+            // 2) create a paragraph before the list
+            // 3) move the cursor into the paragraph
+
+            // create a paragraph before the list
+            p = this.options.ownerDocument.createElement('p');
+            p.innerHTML = '<br>';
+            node.parentElement.parentElement.insertBefore(p, node.parentElement);
+
+            // move the cursor into the new paragraph
+            range = this.options.ownerDocument.createRange();
+            sel = this.options.ownerDocument.getSelection();
+            range.setStart(p, 0);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+
+            // remove the list element
+            node.parentElement.removeChild(node);
+
+            event.preventDefault();
+        }
+    }
+
+    function handleDrag(event, element) {
+        var className = 'medium-editor-dragover';
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+
+        if (event.type === 'dragover') {
+            event.target.classList.add(className);
+        } else if (event.type === 'dragleave') {
+            event.target.classList.remove(className);
+        }
+    }
+
+    function handleDrop(event, element) {
+        var className = 'medium-editor-dragover',
+            files;
+        event.preventDefault();
+        event.stopPropagation();
+
+        // IE9 does not support the File API, so prevent file from opening in a new window
+        // but also don't try to actually get the file
+        if (event.dataTransfer.files) {
+            files = Array.prototype.slice.call(event.dataTransfer.files, 0);
+            files.some(function (file) {
+                if (file.type.match("image")) {
+                    var fileReader, id;
+                    fileReader = new FileReader();
+                    fileReader.readAsDataURL(file);
+
+                    id = 'medium-img-' + (+new Date());
+                    Util.insertHTMLCommand(this.options.ownerDocument, '<img class="medium-image-loading" id="' + id + '" />');
+
+                    fileReader.onload = function () {
+                        var img = this.options.ownerDocument.getElementById(id);
+                        if (img) {
+                            img.removeAttribute('id');
+                            img.removeAttribute('class');
+                            img.src = fileReader.result;
+                        }
+                    }.bind(this);
+                }
+            }.bind(this));
+        }
+        event.target.classList.remove(className);
+    }
+
+    function handleKeyup(event) {
+        var node = Util.getSelectionStart(this.options.ownerDocument),
+            tagName;
+
+        if (!node) {
+            return;
+        }
+
+        if (node.getAttribute('data-medium-element') && node.children.length === 0) {
+            this.options.ownerDocument.execCommand('formatBlock', false, 'p');
+        }
+
+        if (event.which === Util.keyCode.ENTER && !Util.isListItem(node)) {
+            tagName = node.tagName.toLowerCase();
+            // For anchor tags, unlink
+            if (tagName === 'a') {
+                this.options.ownerDocument.execCommand('unlink', false, null);
+            } else if (!event.shiftKey) {
+                // only format block if this is not a header tag
+                if (!/h\d/.test(tagName)) {
+                    this.options.ownerDocument.execCommand('formatBlock', false, 'p');
+                }
+            }
+        }
+    }
+
+    // Internal helper methods which shouldn't be exposed externally
+
+    function createElementsArray(selector) {
+        if (!selector) {
+            selector = [];
+        }
+        // If string, use as query selector
+        if (typeof selector === 'string') {
+            selector = this.options.ownerDocument.querySelectorAll(selector);
+        }
+        // If element, put into array
+        if (Util.isElement(selector)) {
+            selector = [selector];
+        }
+        // Convert NodeList (or other array like object) into an array
+        this.elements = Array.prototype.slice.apply(selector);
+    }
+
+    function initExtension(extension, name, instance) {
+        if (extension.parent) {
+            extension.base = instance;
+        }
+        if (typeof extension.init === 'function') {
+            extension.init(instance);
+        }
+        if (!extension.name) {
+            extension.name = name;
+        }
+        return extension;
+    }
+
+    function shouldAddDefaultAnchorPreview() {
+        var i,
+            shouldAdd = false;
+
+        // If anchor-preview is disabled, don't add
+        if (this.options.disableAnchorPreview) {
+            return false;
+        }
+        // If anchor-preview extension has been overriden, don't add
+        if (this.options.extensions['anchor-preview']) {
+            return false;
+        }
+        // If toolbar is disabled, don't add
+        if (this.options.disableToolbar) {
+            return false;
+        }
+        // If all elements have 'data-disable-toolbar' attribute, don't add
+        for (i = 0; i < this.elements.length; i += 1) {
+            if (!this.elements[i].getAttribute('data-disable-toolbar')) {
+                shouldAdd = true;
+                break;
+            }
+        }
+
+        return shouldAdd;
+    }
+
+    function initElements() {
+        var i,
+            addToolbar = false;
+        for (i = 0; i < this.elements.length; i += 1) {
+            if (!this.options.disableEditing && !this.elements[i].getAttribute('data-disable-editing')) {
+                this.elements[i].setAttribute('contentEditable', true);
+            }
+            if (!this.elements[i].getAttribute('data-placeholder')) {
+                this.elements[i].setAttribute('data-placeholder', this.options.placeholder);
+            }
+            this.elements[i].setAttribute('data-medium-element', true);
+            this.elements[i].setAttribute('role', 'textbox');
+            this.elements[i].setAttribute('aria-multiline', true);
+            if (!this.options.disableToolbar && !this.elements[i].getAttribute('data-disable-toolbar')) {
+                addToolbar = true;
+            }
+        }
+        // Init toolbar
+        if (!this.toolbar && addToolbar) {
+            this.toolbar = new Toolbar(this);
+            this.options.elementsContainer.appendChild(this.toolbar.getToolbarElement());
+        }
+    }
+
+    function attachHandlers() {
+        var i;
+
+        // attach to tabs
+        this.subscribe('editableKeydownTab', handleTabKeydown.bind(this));
+
+        // Bind keys which can create or destroy a block element: backspace, delete, return
+        this.subscribe('editableKeydownDelete', handleBlockDeleteKeydowns.bind(this));
+        this.subscribe('editableKeydownEnter', handleBlockDeleteKeydowns.bind(this));
+
+        // disabling return or double return
+        if (this.options.disableReturn || this.options.disableDoubleReturn) {
+            this.subscribe('editableKeydownEnter', handleDisabledEnterKeydown.bind(this));
+        } else {
+            for (i = 0; i < this.elements.length; i += 1) {
+                if (this.elements[i].getAttribute('data-disable-return') || this.elements[i].getAttribute('data-disable-double-return')) {
+                    this.subscribe('editableKeydownEnter', handleDisabledEnterKeydown.bind(this));
+                    break;
+                }
+            }
+        }
+
+        // if we're not disabling return, add a handler to help handle cleanup
+        // for certain cases when enter is pressed
+        if (!this.options.disableReturn) {
+            this.elements.forEach(function (element) {
+                if (!element.getAttribute('data-disable-return')) {
+                    this.on(element, 'keyup', handleKeyup.bind(this));
+                }
+            }.bind(this));
+        }
+
+        // drag and drop of images
+        if (this.options.imageDragging) {
+            this.subscribe('editableDrag', handleDrag.bind(this));
+            this.subscribe('editableDrop', handleDrop.bind(this));
+        }
+    }
+
+    function initCommands() {
+        var buttons = this.options.buttons,
+            extensions = this.options.extensions,
+            ext,
+            name;
+        this.commands = [];
+
+        buttons.forEach(function (buttonName) {
+            if (extensions[buttonName]) {
+                ext = initExtension(extensions[buttonName], buttonName, this);
+                this.commands.push(ext);
+            } else if (buttonName === 'anchor') {
+                ext = initExtension(new AnchorExtension(), buttonName, this);
+                this.commands.push(ext);
+            } else if (ButtonsData.hasOwnProperty(buttonName)) {
+                ext = new DefaultButton(ButtonsData[buttonName], this);
+                this.commands.push(ext);
+            }
+        }.bind(this));
+
+        for (name in extensions) {
+            if (extensions.hasOwnProperty(name) && buttons.indexOf(name) === -1) {
+                ext = initExtension(extensions[name], name, this);
+            }
+        }
+
+        // Add AnchorPreview as extension if needed
+        if (shouldAddDefaultAnchorPreview.call(this)) {
+            this.commands.push(initExtension(new AnchorPreview(), 'anchor-preview', this));
+        }
+    }
+
+    function execActionInternal(action, opts) {
+        /*jslint regexp: true*/
+        var appendAction = /^append-(.+)$/gi,
+            match;
+        /*jslint regexp: false*/
+
+        // Actions starting with 'append-' should attempt to format a block of text ('formatBlock') using a specific
+        // type of block element (ie append-blockquote, append-h1, append-pre, etc.)
+        match = appendAction.exec(action);
+        if (match) {
+            return Util.execFormatBlock(this.options.ownerDocument, match[1]);
+        }
+
+        if (action === 'createLink') {
+            return this.createLink(opts);
+        }
+
+        if (action === 'image') {
+            return this.options.ownerDocument.execCommand('insertImage', false, this.options.contentWindow.getSelection());
+        }
+
+        return this.options.ownerDocument.execCommand(action, false, null);
+    }
+
     MediumEditor.statics = {
         ButtonsData: ButtonsData,
         DefaultButton: DefaultButton,
-        AnchorExtension: AnchorExtension
+        AnchorExtension: AnchorExtension,
+        Toolbar: Toolbar,
+        AnchorPreview: AnchorPreview
     };
 
     MediumEditor.prototype = {
@@ -46000,6 +47836,7 @@ function MediumEditor(elements, options) {
             disableReturn: false,
             disableDoubleReturn: false,
             disableToolbar: false,
+            disableAnchorPreview: false,
             disableEditing: false,
             disablePlaceholders: false,
             toolbarAlign: 'center',
@@ -46022,11 +47859,12 @@ function MediumEditor(elements, options) {
             lastButtonClass: 'medium-editor-button-last'
         },
 
+        // NOT DOCUMENTED - exposed for backwards compatability
         init: function (elements, options) {
             var uniqueId = 1;
 
             this.options = Util.defaults(options, this.defaults);
-            this.setElementSelection(elements);
+            createElementsArray.call(this, elements);
             if (this.elements.length === 0) {
                 return;
             }
@@ -46045,42 +47883,63 @@ function MediumEditor(elements, options) {
         },
 
         setup: function () {
-            this.events = [];
+            if (this.isActive) {
+                return;
+            }
+
+            this.events = new Events(this);
             this.isActive = true;
-            this.initThrottledMethods()
-                .initCommands()
-                .initElements()
-                .bindSelect()
-                .bindDragDrop()
-                .bindPaste()
-                .setPlaceholders()
-                .bindElementActions()
-                .bindWindowActions();
+
+            // Call initialization helpers
+            initCommands.call(this);
+            initElements.call(this);
+            attachHandlers.call(this);
+
+            this.pasteHandler = new PasteHandler(this);
+
+            if (!this.options.disablePlaceholders) {
+                this.placeholders = new Placeholders(this);
+            }
+        },
+
+        destroy: function () {
+            if (!this.isActive) {
+                return;
+            }
+
+            var i;
+
+            this.isActive = false;
+
+            if (this.toolbar !== undefined) {
+                this.toolbar.deactivate();
+                delete this.toolbar;
+            }
+
+            for (i = 0; i < this.elements.length; i += 1) {
+                this.elements[i].removeAttribute('contentEditable');
+                this.elements[i].removeAttribute('data-medium-element');
+            }
+
+            this.commands.forEach(function (extension) {
+                if (typeof extension.deactivate === 'function') {
+                    extension.deactivate();
+                }
+            }.bind(this));
+
+            this.events.detachAllDOMEvents();
         },
 
         on: function (target, event, listener, useCapture) {
-            target.addEventListener(event, listener, useCapture);
-            this.events.push([target, event, listener, useCapture]);
+            this.events.attachDOMEvent(target, event, listener, useCapture);
         },
 
         off: function (target, event, listener, useCapture) {
-            var index = this.indexOfListener(target, event, listener, useCapture),
-                e;
-            if (index !== -1) {
-                e = this.events.splice(index, 1)[0];
-                e[0].removeEventListener(e[1], e[2], e[3]);
-            }
+            this.events.detachDOMEvent(target, event, listener, useCapture);
         },
 
-        indexOfListener: function (target, event, listener, useCapture) {
-            var i, n, item;
-            for (i = 0, n = this.events.length; i < n; i = i + 1) {
-                item = this.events[i];
-                if (item[0] === target && item[1] === event && item[2] === listener && item[3] === useCapture) {
-                    return i;
-                }
-            }
-            return -1;
+        subscribe: function (event, listener) {
+            this.events.attachCustomEvent(event, listener);
         },
 
         delay: function (fn) {
@@ -46090,183 +47949,6 @@ function MediumEditor(elements, options) {
                     fn();
                 }
             }, this.options.delay);
-        },
-
-        removeAllEvents: function () {
-            var e = this.events.pop();
-            while (e) {
-                e[0].removeEventListener(e[1], e[2], e[3]);
-                e = this.events.pop();
-            }
-        },
-
-        initThrottledMethods: function () {
-            var self = this;
-
-            // handleResize is throttled because:
-            // - It will be called when the browser is resizing, which can fire many times very quickly
-            // - For some event (like resize) a slight lag in UI responsiveness is OK and provides performance benefits
-            this.handleResize = Util.throttle(function () {
-                if (self.isActive) {
-                    self.positionToolbarIfShown();
-                }
-            });
-
-            // handleBlur is throttled because:
-            // - This method could be called many times due to the type of event handlers that are calling it
-            // - We want a slight delay so that other events in the stack can run, some of which may
-            //   prevent the toolbar from being hidden (via this.keepToolbarAlive).
-            this.handleBlur = Util.throttle(function () {
-                if (self.isActive && !self.keepToolbarAlive) {
-                    self.hideToolbarActions();
-                }
-            });
-
-            return this;
-        },
-
-        initElements: function () {
-            var i,
-                addToolbar = false;
-            for (i = 0; i < this.elements.length; i += 1) {
-                if (!this.options.disableEditing && !this.elements[i].getAttribute('data-disable-editing')) {
-                    this.elements[i].setAttribute('contentEditable', true);
-                }
-                if (!this.elements[i].getAttribute('data-placeholder')) {
-                    this.elements[i].setAttribute('data-placeholder', this.options.placeholder);
-                }
-                this.elements[i].setAttribute('data-medium-element', true);
-                this.elements[i].setAttribute('role', 'textbox');
-                this.elements[i].setAttribute('aria-multiline', true);
-                this.bindParagraphCreation(i);
-                if (!this.options.disableToolbar && !this.elements[i].getAttribute('data-disable-toolbar')) {
-                    addToolbar = true;
-                }
-            }
-            // Init toolbar
-            if (addToolbar) {
-                this.initToolbar()
-                    .setFirstAndLastButtons()
-                    .bindAnchorPreview();
-            }
-            return this;
-        },
-
-        setElementSelection: function (selector) {
-            if (!selector) {
-                selector = [];
-            }
-            // If string, use as query selector
-            if (typeof selector === 'string') {
-                selector = this.options.ownerDocument.querySelectorAll(selector);
-            }
-            // If element, put into array
-            if (Util.isElement(selector)) {
-                selector = [selector];
-            }
-            // Convert NodeList (or other array like object) into an array
-            this.elements = Array.prototype.slice.apply(selector);
-        },
-
-        bindBlur: function () {
-            var self = this,
-                blurFunction = function (e) {
-                    var isDescendantOfEditorElements = false,
-                        selection = self.options.contentWindow.getSelection(),
-                        selRange = selection.isCollapsed ?
-                                   null :
-                                   Selection.getSelectedParentElement(selection.getRangeAt(0)),
-                        i;
-
-                    // This control was introduced also to avoid the toolbar
-                    // to disapper when selecting from right to left and
-                    // the selection ends at the beginning of the text.
-                    for (i = 0; i < self.elements.length; i += 1) {
-                        if (Util.isDescendant(self.elements[i], e.target)
-                                || Util.isDescendant(self.elements[i], selRange)) {
-                            isDescendantOfEditorElements = true;
-                            break;
-                        }
-                    }
-                    // If it's not part of the editor, or the toolbar
-                    if (e.target !== self.toolbar
-                            && self.elements.indexOf(e.target) === -1
-                            && !isDescendantOfEditorElements
-                            && !Util.isDescendant(self.toolbar, e.target)
-                            && !Util.isDescendant(self.anchorPreview, e.target)) {
-
-                        // Activate the placeholder
-                        if (!self.options.disablePlaceholders) {
-                            self.placeholderWrapper(e, self.elements[0]);
-                        }
-
-                        // Hide the toolbar after a small delay so we can prevent this on toolbar click
-                        self.handleBlur();
-                    }
-                };
-
-            // Hide the toolbar when focusing outside of the editor.
-            this.on(this.options.ownerDocument.body, 'click', blurFunction, true);
-            this.on(this.options.ownerDocument.body, 'focus', blurFunction, true);
-
-            return this;
-        },
-
-        bindClick: function (i) {
-            var self = this;
-
-            this.on(this.elements[i], 'click', function () {
-                if (!self.options.disablePlaceholders) {
-                    // Remove placeholder
-                    this.classList.remove('medium-editor-placeholder');
-                }
-
-                if (self.options.staticToolbar) {
-                    self.setToolbarPosition();
-                }
-            });
-
-            return this;
-        },
-
-        /**
-         * This handles blur and keypress events on elements
-         * Including Placeholders, and tooldbar hiding on blur
-         */
-        bindElementActions: function () {
-            var i;
-
-            for (i = 0; i < this.elements.length; i += 1) {
-
-                if (!this.options.disablePlaceholders) {
-                    // Active all of the placeholders
-                    this.activatePlaceholder(this.elements[i]);
-                }
-
-                // Bind the return and tab keypress events
-                this.bindReturn(i)
-                    .bindKeydown(i)
-                    .bindClick(i);
-            }
-
-            return this;
-        },
-
-        // Two functions to handle placeholders
-        activatePlaceholder:  function (el) {
-            if (!(el.querySelector('img')) &&
-                    !(el.querySelector('blockquote')) &&
-                    el.textContent.replace(/^\s+|\s+$/g, '') === '') {
-
-                el.classList.add('medium-editor-placeholder');
-            }
-        },
-        placeholderWrapper: function (evt, el) {
-            el = el || evt.target;
-            el.classList.remove('medium-editor-placeholder');
-            if (evt.type !== 'keypress') {
-                this.activatePlaceholder(el);
-            }
         },
 
         serialize: function () {
@@ -46282,48 +47964,6 @@ function MediumEditor(elements, options) {
             return content;
         },
 
-        initExtension: function (extension, name) {
-            if (extension.parent) {
-                extension.base = this;
-            }
-            if (typeof extension.init === 'function') {
-                extension.init(this);
-            }
-            if (!extension.name) {
-                extension.name = name;
-            }
-            return extension;
-        },
-
-        initCommands: function () {
-            var buttons = this.options.buttons,
-                extensions = this.options.extensions,
-                ext,
-                name;
-            this.commands = [];
-
-            buttons.forEach(function (buttonName) {
-                if (extensions[buttonName]) {
-                    ext = this.initExtension(extensions[buttonName], buttonName);
-                    this.commands.push(ext);
-                } else if (buttonName === 'anchor') {
-                    ext = this.initExtension(new AnchorExtension(), buttonName);
-                    this.commands.push(ext);
-                } else if (ButtonsData.hasOwnProperty(buttonName)) {
-                    ext = new DefaultButton(ButtonsData[buttonName], this);
-                    this.commands.push(ext);
-                }
-            }.bind(this));
-
-            for (name in extensions) {
-                if (extensions.hasOwnProperty(name) && buttons.indexOf(name) === -1) {
-                    ext = this.initExtension(extensions[name], name);
-                }
-            }
-
-            return this;
-        },
-
         getExtensionByName: function (name) {
             var extension;
             if (this.commands && this.commands.length) {
@@ -46337,6 +47977,7 @@ function MediumEditor(elements, options) {
         },
 
         /**
+         * NOT DOCUMENTED - exposed for backwards compatability
          * Helper function to call a method with a number of parameters on all registered extensions.
          * The function assures that the function exists before calling.
          *
@@ -46363,324 +48004,6 @@ function MediumEditor(elements, options) {
             return this;
         },
 
-        bindParagraphCreation: function (index) {
-            var self = this;
-            this.on(this.elements[index], 'keypress', function (e) {
-                var node,
-                    tagName;
-                if (e.which === Util.keyCode.SPACE) {
-                    node = Selection.getSelectionStart(self.options.ownerDocument);
-                    tagName = node.tagName.toLowerCase();
-                    if (tagName === 'a') {
-                        self.options.ownerDocument.execCommand('unlink', false, null);
-                    }
-                }
-            });
-
-            this.on(this.elements[index], 'keyup', function (e) {
-                var node = Selection.getSelectionStart(self.options.ownerDocument),
-                    tagName,
-                    editorElement;
-
-                if (node && node.getAttribute('data-medium-element') && node.children.length === 0 && !(self.options.disableReturn || node.getAttribute('data-disable-return'))) {
-                  // Cozy: don't insert paragraphs
-                  // self.options.ownerDocument.execCommand('formatBlock', false, 'p');
-                }
-                if (e.which === Util.keyCode.ENTER) {
-                    node = Selection.getSelectionStart(self.options.ownerDocument);
-                    tagName = node.tagName.toLowerCase();
-                    editorElement = Selection.getSelectionElement(self.options.contentWindow);
-
-                    if (!(self.options.disableReturn || editorElement.getAttribute('data-disable-return')) &&
-                            tagName !== 'li' && !Util.isListItemChild(node)) {
-                        if (!e.shiftKey) {
-
-                            // paragraph creation should not be forced within a header tag
-                            if (!/h\d/.test(tagName)) {
-                                // Cozy: don't insert paragraphs
-                                //self.options.ownerDocument.execCommand('formatBlock', false, 'p');
-                            }
-                            // Cozy: don't insert paragraphs
-                            e.preventDefault();
-                        }
-                        if (tagName === 'a') {
-                            self.options.ownerDocument.execCommand('unlink', false, null);
-                        }
-                    }
-                }
-            });
-            return this;
-        },
-
-        bindReturn: function (index) {
-            var self = this;
-            this.on(this.elements[index], 'keypress', function (e) {
-                if (e.which === Util.keyCode.ENTER) {
-                    /* Cozy: don't insert paragraphs
-                    if (self.options.disableReturn || this.getAttribute('data-disable-return')) {
-                        e.preventDefault();
-                    } else if (self.options.disableDoubleReturn || this.getAttribute('data-disable-double-return')) {
-                        var node = Selection.getSelectionStart(self.options.contentWindow);
-                        if (node && node.textContent.trim() === '') {
-                            e.preventDefault();
-                        }
-                    }
-                    */
-                    e.preventDefault();
-                    self.options.ownerDocument.execCommand('insertHTML', false, "\n<br>\n<br>\n");
-                }
-            });
-            return this;
-        },
-
-        bindKeydown: function (index) {
-            var self = this;
-            this.on(this.elements[index], 'keydown', function (e) {
-                var node, tag, key;
-
-                if (e.which === Util.keyCode.TAB) {
-                    // Override tab only for pre nodes
-                    node = Selection.getSelectionStart(self.options.ownerDocument);
-                    tag = node && node.tagName.toLowerCase();
-
-                    if (tag === 'pre') {
-                        e.preventDefault();
-                        self.options.ownerDocument.execCommand('insertHtml', null, '    ');
-                    }
-
-                    // Tab to indent list structures!
-                    if (tag === 'li' || Util.isListItemChild(node)) {
-                        e.preventDefault();
-
-                        // If Shift is down, outdent, otherwise indent
-                        if (e.shiftKey) {
-                            self.options.ownerDocument.execCommand('outdent', e);
-                        } else {
-                            self.options.ownerDocument.execCommand('indent', e);
-                        }
-                    }
-                } else if (e.which === Util.keyCode.BACKSPACE || e.which === Util.keyCode.DELETE || e.which === Util.keyCode.ENTER) {
-
-                    // Bind keys which can create or destroy a block element: backspace, delete, return
-                    self.onBlockModifier(e);
-
-                } else if (e.ctrlKey || e.metaKey) {
-                    key = String.fromCharCode(e.which || e.keyCode).toLowerCase();
-                    self.commands.forEach(function (extension) {
-                        if (extension.options.key && extension.options.key === key) {
-                            extension.handleClick(e);
-                        }
-                    });
-                }
-            });
-            return this;
-        },
-
-        onBlockModifier: function (e) {
-            var range, sel, p, node = Selection.getSelectionStart(this.options.ownerDocument),
-                tagName = node.tagName.toLowerCase(),
-                isEmpty = /^(\s+|<br\/?>)?$/i,
-                isHeader = /h\d/i;
-
-            if ((e.which === Util.keyCode.BACKSPACE || e.which === Util.keyCode.ENTER)
-                    && node.previousElementSibling
-                    // in a header
-                    && isHeader.test(tagName)
-                    // at the very end of the block
-                    && Selection.getCaretOffsets(node).left === 0) {
-                if (e.which === Util.keyCode.BACKSPACE && isEmpty.test(node.previousElementSibling.innerHTML)) {
-                    // backspacing the begining of a header into an empty previous element will
-                    // change the tagName of the current node to prevent one
-                    // instead delete previous node and cancel the event.
-                    node.previousElementSibling.parentNode.removeChild(node.previousElementSibling);
-                    e.preventDefault();
-                } else if (e.which === Util.keyCode.ENTER) {
-                    // hitting return in the begining of a header will create empty header elements before the current one
-                    // instead, make "<p><br></p>" element, which are what happens if you hit return in an empty paragraph
-                    p = this.options.ownerDocument.createElement('p');
-                    p.innerHTML = '<br>';
-                    node.previousElementSibling.parentNode.insertBefore(p, node);
-                    e.preventDefault();
-                }
-            } else if (e.which === Util.keyCode.DELETE
-                        && node.nextElementSibling
-                        && node.previousElementSibling
-                        // not in a header
-                        && !isHeader.test(tagName)
-                        // in an empty tag
-                        && isEmpty.test(node.innerHTML)
-                        // when the next tag *is* a header
-                        && isHeader.test(node.nextElementSibling.tagName)) {
-                // hitting delete in an empty element preceding a header, ex:
-                //  <p>[CURSOR]</p><h1>Header</h1>
-                // Will cause the h1 to become a paragraph.
-                // Instead, delete the paragraph node and move the cursor to the begining of the h1
-
-                // remove node and move cursor to start of header
-                range = document.createRange();
-                sel = window.getSelection();
-
-                range.setStart(node.nextElementSibling, 0);
-                range.collapse(true);
-
-                sel.removeAllRanges();
-                sel.addRange(range);
-
-                node.previousElementSibling.parentNode.removeChild(node);
-
-                e.preventDefault();
-            }
-        },
-
-        initToolbar: function () {
-            if (this.toolbar) {
-                return this;
-            }
-            this.toolbar = this.createToolbar();
-            this.keepToolbarAlive = false;
-            this.toolbarActions = this.toolbar.querySelector('.medium-editor-toolbar-actions');
-            this.anchorPreview = this.createAnchorPreview();
-
-            return this;
-        },
-
-        createToolbar: function () {
-            var toolbar = this.options.ownerDocument.createElement('div');
-            toolbar.id = 'medium-editor-toolbar-' + this.id;
-            toolbar.className = 'medium-editor-toolbar';
-
-            if (this.options.staticToolbar) {
-                toolbar.className += " static-toolbar";
-            } else {
-                toolbar.className += " stalker-toolbar";
-            }
-
-            toolbar.appendChild(this.toolbarButtons());
-
-            // Add any forms that extensions may have
-            this.commands.forEach(function (extension) {
-                if (extension.hasForm) {
-                    toolbar.appendChild(extension.getForm());
-                }
-            });
-
-            this.options.elementsContainer.appendChild(toolbar);
-            return toolbar;
-        },
-
-        //TODO: actionTemplate
-        toolbarButtons: function () {
-            var ul = this.options.ownerDocument.createElement('ul'),
-                li,
-                btn;
-
-            ul.id = 'medium-editor-toolbar-actions' + this.id;
-            ul.className = 'medium-editor-toolbar-actions clearfix';
-
-            this.commands.forEach(function (extension) {
-                if (typeof extension.getButton === 'function') {
-                    btn = extension.getButton(this);
-                    li = this.options.ownerDocument.createElement('li');
-                    if (Util.isElement(btn)) {
-                        li.appendChild(btn);
-                    } else {
-                        li.innerHTML = btn;
-                    }
-                    ul.appendChild(li);
-                }
-            }.bind(this));
-
-            return ul;
-        },
-
-        bindSelect: function () {
-            var i,
-                blurHelper = function (event) {
-                    // Do not close the toolbar when bluring the editable area and clicking into the anchor form
-                    if (event &&
-                            event.type &&
-                            event.type.toLowerCase() === 'blur' &&
-                            event.relatedTarget &&
-                            Util.isDescendant(this.toolbar, event.relatedTarget)) {
-                        return false;
-                    }
-                    this.checkSelection();
-                }.bind(this),
-                timeoutHelper = function () {
-                    setTimeout(function () {
-                        this.checkSelection();
-                    }.bind(this), 0);
-                }.bind(this);
-
-            this.on(this.options.ownerDocument.documentElement, 'mouseup', this.checkSelection.bind(this));
-
-            for (i = 0; i < this.elements.length; i += 1) {
-                this.on(this.elements[i], 'keyup', this.checkSelection.bind(this));
-                this.on(this.elements[i], 'blur', blurHelper);
-                this.on(this.elements[i], 'click', timeoutHelper);
-            }
-
-            return this;
-        },
-
-        bindDragDrop: function () {
-            var self = this, i, className, onDrag, onDrop, element;
-
-            if (!self.options.imageDragging) {
-                return this;
-            }
-
-            className = 'medium-editor-dragover';
-
-            onDrag = function (e) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = "copy";
-
-                if (e.type === "dragover") {
-                    this.classList.add(className);
-                } else {
-                    this.classList.remove(className);
-                }
-            };
-
-            onDrop = function (e) {
-                var files;
-                e.preventDefault();
-                e.stopPropagation();
-                files = Array.prototype.slice.call(e.dataTransfer.files, 0);
-                files.some(function (file) {
-                    if (file.type.match("image")) {
-                        var fileReader, id;
-                        fileReader = new FileReader();
-                        fileReader.readAsDataURL(file);
-
-                        id = 'medium-img-' + (+new Date());
-                        Util.insertHTMLCommand(self.options.ownerDocument, '<img class="medium-image-loading" id="' + id + '" />');
-
-                        fileReader.onload = function () {
-                            var img = document.getElementById(id);
-                            if (img) {
-                                img.removeAttribute('id');
-                                img.removeAttribute('class');
-                                img.src = fileReader.result;
-                            }
-                        };
-                    }
-                });
-                this.classList.remove(className);
-            };
-
-            for (i = 0; i < this.elements.length; i += 1) {
-                element = this.elements[i];
-
-
-                this.on(element, 'dragover', onDrag);
-                this.on(element, 'dragleave', onDrag);
-                this.on(element, 'drop', onDrop);
-            }
-            return this;
-        },
-
         stopSelectionUpdates: function () {
             this.preventSelectionUpdates = true;
         },
@@ -46689,284 +48012,10 @@ function MediumEditor(elements, options) {
             this.preventSelectionUpdates = false;
         },
 
+        // NOT DOCUMENTED - exposed as extension helper and for backwards compatability
         checkSelection: function () {
-            var newSelection,
-                selectionElement;
-
-            if (!this.preventSelectionUpdates &&
-                    this.keepToolbarAlive !== true &&
-                    !this.options.disableToolbar) {
-
-                newSelection = this.options.contentWindow.getSelection();
-                if ((!this.options.updateOnEmptySelection && newSelection.toString().trim() === '') ||
-                        (this.options.allowMultiParagraphSelection === false && this.multipleBlockElementsSelected()) ||
-                        Selection.selectionInContentEditableFalse(this.options.contentWindow)) {
-                    if (!this.options.staticToolbar) {
-                        this.hideToolbarActions();
-                    } else {
-                        this.showAndUpdateToolbar();
-                    }
-
-                } else {
-                    selectionElement = Selection.getSelectionElement(this.options.contentWindow);
-                    if (!selectionElement || selectionElement.getAttribute('data-disable-toolbar')) {
-                        if (!this.options.staticToolbar) {
-                            this.hideToolbarActions();
-                        }
-                    } else {
-                        this.checkSelectionElement(newSelection, selectionElement);
-                    }
-                }
-            }
-            return this;
-        },
-
-        // Checks for existance of multiple block elements in the current selection
-        multipleBlockElementsSelected: function () {
-            /*jslint regexp: true*/
-            var selectionHtml = Selection.getSelectionHtml.call(this).replace(/<[\S]+><\/[\S]+>/gim, ''),
-                hasMultiParagraphs = selectionHtml.match(/<(p|h[1-6]|blockquote)[^>]*>/g);
-            /*jslint regexp: false*/
-
-            return !!hasMultiParagraphs && hasMultiParagraphs.length > 1;
-        },
-
-        checkSelectionElement: function (newSelection, selectionElement) {
-            var i,
-                adjacentNode,
-                offset = 0,
-                newRange;
-            this.selection = newSelection;
-            this.selectionRange = this.selection.getRangeAt(0);
-
-            /*
-            * In firefox, there are cases (ie doubleclick of a word) where the selectionRange start
-            * will be at the very end of an element.  In other browsers, the selectionRange start
-            * would instead be at the very beginning of an element that actually has content.
-            * example:
-            *   <span>foo</span><span>bar</span>
-            *
-            * If the text 'bar' is selected, most browsers will have the selectionRange start at the beginning
-            * of the 'bar' span.  However, there are cases where firefox will have the selectionRange start
-            * at the end of the 'foo' span.  The contenteditable behavior will be ok, but if there are any
-            * properties on the 'bar' span, they won't be reflected accurately in the toolbar
-            * (ie 'Bold' button wouldn't be active)
-            *
-            * So, for cases where the selectionRange start is at the end of an element/node, find the next
-            * adjacent text node that actually has content in it, and move the selectionRange start there.
-            */
-            if (this.options.standardizeSelectionStart &&
-                    this.selectionRange.startContainer.nodeValue &&
-                    (this.selectionRange.startOffset === this.selectionRange.startContainer.nodeValue.length)) {
-                adjacentNode = Util.findAdjacentTextNodeWithContent(Selection.getSelectionElement(this.options.contentWindow), this.selectionRange.startContainer, this.options.ownerDocument);
-                if (adjacentNode) {
-                    offset = 0;
-                    while (adjacentNode.nodeValue.substr(offset, 1).trim().length === 0) {
-                        offset = offset + 1;
-                    }
-                    newRange = this.options.ownerDocument.createRange();
-                    newRange.setStart(adjacentNode, offset);
-                    newRange.setEnd(this.selectionRange.endContainer, this.selectionRange.endOffset);
-                    this.selection.removeAllRanges();
-                    this.selection.addRange(newRange);
-                    this.selectionRange = newRange;
-                }
-            }
-
-            for (i = 0; i < this.elements.length; i += 1) {
-                if (this.elements[i] === selectionElement) {
-                    this.showAndUpdateToolbar();
-                    return;
-                }
-            }
-
-            if (!this.options.staticToolbar) {
-                this.hideToolbarActions();
-            }
-        },
-
-        showAndUpdateToolbar: function () {
-            this.setToolbarButtonStates()
-                .setToolbarPosition()
-                .showToolbarDefaultActions();
-        },
-
-        setToolbarPosition: function () {
-            // document.documentElement for IE 9
-            var scrollTop = (this.options.ownerDocument.documentElement && this.options.ownerDocument.documentElement.scrollTop) || this.options.ownerDocument.body.scrollTop,
-                selection = this.options.contentWindow.getSelection(),
-                windowWidth = this.options.contentWindow.innerWidth,
-                container = Selection.getSelectionElement(this.options.contentWindow),
-                buttonHeight = 50,
-                toolbarWidth,
-                toolbarHeight,
-                halfOffsetWidth,
-                defaultLeft,
-                containerRect,
-                containerTop,
-                containerCenter,
-                range,
-                boundary,
-                middleBoundary,
-                targetLeft;
-
-            // If there isn't a valid selection, bail
-            if (!container || !this.options.contentWindow.getSelection().focusNode) {
-                return this;
-            }
-
-            // If the container isn't part of this medium-editor instance, bail
-            if (this.elements.indexOf(container) === -1) {
-                return this;
-            }
-
-            // Calculate container dimensions
-            containerRect = container.getBoundingClientRect();
-            containerTop = containerRect.top + scrollTop;
-            containerCenter = (containerRect.left + (containerRect.width / 2));
-
-            // position the toolbar at left 0, so we can get the real width of the toolbar
-            this.toolbar.style.left = '0';
-            toolbarWidth = this.toolbar.offsetWidth;
-            toolbarHeight = this.toolbar.offsetHeight;
-            halfOffsetWidth = toolbarWidth / 2;
-            defaultLeft = this.options.diffLeft - halfOffsetWidth;
-
-            if (this.options.staticToolbar) {
-                this.showToolbar();
-
-                if (this.options.stickyToolbar) {
-                    // If it's beyond the height of the editor, position it at the bottom of the editor
-                    if (scrollTop > (containerTop + container.offsetHeight - toolbarHeight)) {
-                        this.toolbar.style.top = (containerTop + container.offsetHeight - toolbarHeight) + 'px';
-                        this.toolbar.classList.remove('sticky-toolbar');
-
-                    // Stick the toolbar to the top of the window
-                    } else if (scrollTop > (containerTop - toolbarHeight)) {
-                        this.toolbar.classList.add('sticky-toolbar');
-                        this.toolbar.style.top = "0px";
-
-                    // Normal static toolbar position
-                    } else {
-                        this.toolbar.classList.remove('sticky-toolbar');
-                        this.toolbar.style.top = containerTop - toolbarHeight + "px";
-                    }
-                } else {
-                    this.toolbar.style.top = containerTop - toolbarHeight + "px";
-                }
-
-                if (this.options.toolbarAlign === 'left') {
-                    targetLeft = containerRect.left;
-                } else if (this.options.toolbarAlign === 'center') {
-                    targetLeft = containerCenter - halfOffsetWidth;
-                } else if (this.options.toolbarAlign === 'right') {
-                    targetLeft = containerRect.right - toolbarWidth;
-                }
-
-                if (targetLeft < 0) {
-                    targetLeft = 0;
-                } else if ((targetLeft + toolbarWidth) > windowWidth) {
-                    targetLeft = windowWidth - toolbarWidth;
-                }
-
-                this.toolbar.style.left = targetLeft + 'px';
-
-            } else if (!selection.isCollapsed) {
-                this.showToolbar();
-
-                range = selection.getRangeAt(0);
-                boundary = range.getBoundingClientRect();
-                middleBoundary = (boundary.left + boundary.right) / 2;
-
-                if (boundary.top < buttonHeight) {
-                    this.toolbar.classList.add('medium-toolbar-arrow-over');
-                    this.toolbar.classList.remove('medium-toolbar-arrow-under');
-                    this.toolbar.style.top = buttonHeight + boundary.bottom - this.options.diffTop + this.options.contentWindow.pageYOffset - toolbarHeight + 'px';
-                } else {
-                    this.toolbar.classList.add('medium-toolbar-arrow-under');
-                    this.toolbar.classList.remove('medium-toolbar-arrow-over');
-                    this.toolbar.style.top = boundary.top + this.options.diffTop + this.options.contentWindow.pageYOffset - toolbarHeight + 'px';
-                }
-                if (middleBoundary < halfOffsetWidth) {
-                    this.toolbar.style.left = defaultLeft + halfOffsetWidth + 'px';
-                } else if ((windowWidth - middleBoundary) < halfOffsetWidth) {
-                    this.toolbar.style.left = windowWidth + defaultLeft - halfOffsetWidth + 'px';
-                } else {
-                    this.toolbar.style.left = defaultLeft + middleBoundary + 'px';
-                }
-            }
-
-            this.hideAnchorPreview();
-
-            return this;
-        },
-
-        setToolbarButtonStates: function () {
-            this.commands.forEach(function (extension) {
-                if (typeof extension.isActive === 'function') {
-                    extension.setInactive();
-                }
-            }.bind(this));
-            this.checkActiveButtons();
-            return this;
-        },
-
-        checkActiveButtons: function () {
-            var elements = Array.prototype.slice.call(this.elements),
-                manualStateChecks = [],
-                queryState = null,
-                parentNode,
-                checkExtension = function (extension) {
-                    if (typeof extension.checkState === 'function') {
-                        extension.checkState(parentNode);
-                    } else if (typeof extension.isActive === 'function' &&
-                               typeof extension.isAlreadyApplied === 'function') {
-                        if (!extension.isActive() && extension.isAlreadyApplied(parentNode)) {
-                            extension.setActive();
-                        }
-                    }
-                };
-
-            if (!this.selectionRange) {
-                return;
-            }
-            parentNode = Selection.getSelectedParentElement(this.selectionRange);
-
-            // Loop through all commands
-            this.commands.forEach(function (command) {
-                // For those commands where we can use document.queryCommandState(), do so
-                if (typeof command.queryCommandState === 'function') {
-                    queryState = command.queryCommandState();
-                    // If queryCommandState returns a valid value, we can trust the browser
-                    // and don't need to do our manual checks
-                    if (queryState !== null) {
-                        if (queryState) {
-                            command.setActive();
-                        }
-                        return;
-                    }
-                }
-                // We can't use queryCommandState for this command, so add to manualStateChecks
-                manualStateChecks.push(command);
-            });
-
-            // Climb up the DOM and do manual checks for whether a certain command is currently enabled for this node
-            while (parentNode.tagName !== undefined && Util.parentElements.indexOf(parentNode.tagName.toLowerCase) === -1) {
-                manualStateChecks.forEach(checkExtension.bind(this));
-
-                // we can abort the search upwards if we leave the contentEditable element
-                if (elements.indexOf(parentNode) !== -1) {
-                    break;
-                }
-                parentNode = parentNode.parentNode;
-            }
-        },
-
-        setFirstAndLastButtons: function () {
-            var buttons = this.toolbar.querySelectorAll('button');
-            if (buttons.length > 0) {
-                buttons[0].className += ' ' + this.options.firstButtonClass;
-                buttons[buttons.length - 1].className += ' ' + this.options.lastButtonClass;
+            if (this.toolbar) {
+                this.toolbar.checkState();
             }
             return this;
         },
@@ -47008,159 +48057,42 @@ function MediumEditor(elements, options) {
                 this.saveSelection();
                 // Select all of the contents before calling the action
                 this.selectAllContents();
-                result = this.execActionInternal(match[1], opts);
+                result = execActionInternal.call(this, match[1], opts);
                 // Restore the previous selection
                 this.restoreSelection();
             } else {
-                result = this.execActionInternal(action, opts);
+                result = execActionInternal.call(this, action, opts);
+            }
+
+            // do some DOM clean-up for known browser issues after the action
+            if (action === 'insertunorderedlist' || action === 'insertorderedlist') {
+                Util.cleanListDOM(this.getSelectedParentElement());
             }
 
             this.checkSelection();
             return result;
         },
 
-        execActionInternal: function (action, opts) {
-            /*jslint regexp: true*/
-            var appendAction = /^append-(.+)$/gi,
-                match;
-            /*jslint regexp: false*/
-
-            // Actions starting with 'append-' should attempt to format a block of text ('formatBlock') using a specific
-            // type of block element (ie append-blockquote, append-h1, append-pre, etc.)
-            match = appendAction.exec(action);
-            if (match) {
-                return this.execFormatBlock(match[1]);
+        getSelectedParentElement: function (range) {
+            if (range === undefined) {
+                range = this.options.contentWindow.getSelection().getRangeAt(0);
             }
-
-            if (action === 'createLink') {
-                return this.createLink(opts);
-            }
-
-            if (action === 'image') {
-                return this.options.ownerDocument.execCommand('insertImage', false, this.options.contentWindow.getSelection());
-            }
-
-            return this.options.ownerDocument.execCommand(action, false, null);
+            return Selection.getSelectedParentElement(range);
         },
 
-        // TODO: move these two methods to selection.js
-        // http://stackoverflow.com/questions/15867542/range-object-get-selection-parent-node-chrome-vs-firefox
-        rangeSelectsSingleNode: function (range) {
-            var startNode = range.startContainer;
-            return startNode === range.endContainer &&
-                startNode.hasChildNodes() &&
-                range.endOffset === range.startOffset + 1;
-        },
-
-        getSelectedParentElement: function () {
-            var selectedParentElement = null,
-                range = this.selectionRange;
-            if (this.rangeSelectsSingleNode(range) && range.startContainer.childNodes[range.startOffset].nodeType !== 3) {
-                selectedParentElement = range.startContainer.childNodes[range.startOffset];
-            } else if (range.startContainer.nodeType === 3) {
-                selectedParentElement = range.startContainer.parentNode;
-            } else {
-                selectedParentElement = range.startContainer;
-            }
-            return selectedParentElement;
-        },
-
-        execFormatBlock: function (el) {
-            var selectionData = Selection.getSelectionData(this.selection.anchorNode);
-            // FF handles blockquote differently on formatBlock
-            // allowing nesting, we need to use outdent
-            // https://developer.mozilla.org/en-US/docs/Rich-Text_Editing_in_Mozilla
-            if (el === 'blockquote' && selectionData.el &&
-                    selectionData.el.parentNode.tagName.toLowerCase() === 'blockquote') {
-                return this.options.ownerDocument.execCommand('outdent', false, null);
-            }
-            if (selectionData.tagName === el) {
-                el = 'p';
-            }
-            // When IE we need to add <> to heading elements and
-            //  blockquote needs to be called as indent
-            // http://stackoverflow.com/questions/10741831/execcommand-formatblock-headings-in-ie
-            // http://stackoverflow.com/questions/1816223/rich-text-editor-with-blockquote-function/1821777#1821777
-            if (Util.isIE) {
-                if (el === 'blockquote') {
-                    return this.options.ownerDocument.execCommand('indent', false, el);
-                }
-                el = '<' + el + '>';
-            }
-            return this.options.ownerDocument.execCommand('formatBlock', false, el);
-        },
-
-        isToolbarDefaultActionsShown: function () {
-            return !!this.toolbarActions && this.toolbarActions.style.display === 'block';
-        },
-
+        // NOT DOCUMENTED - exposed as extension helper
         hideToolbarDefaultActions: function () {
-            if (this.toolbarActions && this.isToolbarDefaultActionsShown()) {
-                this.commands.forEach(function (extension) {
-                    if (extension.onHide && typeof extension.onHide === 'function') {
-                        extension.onHide();
-                    }
-                });
-                this.toolbarActions.style.display = 'none';
+            if (this.toolbar) {
+                this.toolbar.hideToolbarDefaultActions();
             }
-        },
-
-        showToolbarDefaultActions: function () {
-            this.hideExtensionForms();
-
-            if (this.toolbarActions && !this.isToolbarDefaultActionsShown()) {
-                this.toolbarActions.style.display = 'block';
-            }
-
-            this.keepToolbarAlive = false;
-            // Using setTimeout + options.delay because:
-            // We will actually be displaying the toolbar, which should be controlled by options.delay
-            this.delay(function () {
-                this.showToolbar();
-            }.bind(this));
-
             return this;
         },
 
-        hideExtensionForms: function () {
-            // Hide all extension forms
-            this.commands.forEach(function (extension) {
-                if (extension.hasForm && extension.isDisplayed()) {
-                    extension.hideForm();
-                }
-            });
-        },
-
-        isToolbarShown: function () {
-            return this.toolbar && this.toolbar.classList.contains('medium-editor-toolbar-active');
-        },
-
-        showToolbar: function () {
-            if (this.toolbar && !this.isToolbarShown()) {
-                this.toolbar.classList.add('medium-editor-toolbar-active');
-                if (typeof this.options.onShowToolbar === 'function') {
-                    this.options.onShowToolbar();
-                }
+        // NOT DOCUMENTED - exposed as extension helper and for backwards compatability
+        setToolbarPosition: function () {
+            if (this.toolbar) {
+                this.toolbar.setToolbarPosition();
             }
-        },
-
-        hideToolbar: function () {
-            if (this.isToolbarShown()) {
-                this.toolbar.classList.remove('medium-editor-toolbar-active');
-                if (typeof this.options.onHideToolbar === 'function') {
-                    this.options.onHideToolbar();
-                }
-            }
-        },
-
-        hideToolbarActions: function () {
-            this.commands.forEach(function (extension) {
-                if (extension.onHide && typeof extension.onHide === 'function') {
-                    extension.onHide();
-                }
-            });
-            this.keepToolbarAlive = false;
-            this.hideToolbar();
         },
 
         selectAllContents: function () {
@@ -47270,181 +48202,6 @@ function MediumEditor(elements, options) {
             sel.addRange(range);
         },
 
-        hideAnchorPreview: function () {
-            this.anchorPreview.classList.remove('medium-editor-anchor-preview-active');
-        },
-
-        // TODO: break method
-        showAnchorPreview: function (anchorEl) {
-            if (this.anchorPreview.classList.contains('medium-editor-anchor-preview-active')
-                    || anchorEl.getAttribute('data-disable-preview')) {
-                return true;
-            }
-
-            var self = this,
-                buttonHeight = 40,
-                boundary = anchorEl.getBoundingClientRect(),
-                middleBoundary = (boundary.left + boundary.right) / 2,
-                halfOffsetWidth,
-                defaultLeft;
-
-            self.anchorPreview.querySelector('i').textContent = anchorEl.attributes.href.value;
-            halfOffsetWidth = self.anchorPreview.offsetWidth / 2;
-            defaultLeft = self.options.diffLeft - halfOffsetWidth;
-
-            self.observeAnchorPreview(anchorEl);
-
-            self.anchorPreview.classList.add('medium-toolbar-arrow-over');
-            self.anchorPreview.classList.remove('medium-toolbar-arrow-under');
-            self.anchorPreview.style.top = Math.round(buttonHeight + boundary.bottom - self.options.diffTop + this.options.contentWindow.pageYOffset - self.anchorPreview.offsetHeight) + 'px';
-            if (middleBoundary < halfOffsetWidth) {
-                self.anchorPreview.style.left = defaultLeft + halfOffsetWidth + 'px';
-            } else if ((this.options.contentWindow.innerWidth - middleBoundary) < halfOffsetWidth) {
-                self.anchorPreview.style.left = this.options.contentWindow.innerWidth + defaultLeft - halfOffsetWidth + 'px';
-            } else {
-                self.anchorPreview.style.left = defaultLeft + middleBoundary + 'px';
-            }
-
-            if (this.anchorPreview && !this.anchorPreview.classList.contains('medium-editor-anchor-preview-active')) {
-                this.anchorPreview.classList.add('medium-editor-anchor-preview-active');
-            }
-
-            return this;
-        },
-
-        // TODO: break method
-        observeAnchorPreview: function (anchorEl) {
-            var self = this,
-                lastOver = (new Date()).getTime(),
-                over = true,
-                stamp = function () {
-                    lastOver = (new Date()).getTime();
-                    over = true;
-                },
-                unstamp = function (e) {
-                    if (!e.relatedTarget || !/anchor-preview/.test(e.relatedTarget.className)) {
-                        over = false;
-                    }
-                },
-                interval_timer = setInterval(function () {
-                    if (over) {
-                        return true;
-                    }
-                    var durr = (new Date()).getTime() - lastOver;
-                    if (durr > self.options.anchorPreviewHideDelay) {
-                        // hide the preview 1/2 second after mouse leaves the link
-                        self.hideAnchorPreview();
-
-                        // cleanup
-                        clearInterval(interval_timer);
-                        self.off(self.anchorPreview, 'mouseover', stamp);
-                        self.off(self.anchorPreview, 'mouseout', unstamp);
-                        self.off(anchorEl, 'mouseover', stamp);
-                        self.off(anchorEl, 'mouseout', unstamp);
-
-                    }
-                }, 200);
-
-            this.on(self.anchorPreview, 'mouseover', stamp);
-            this.on(self.anchorPreview, 'mouseout', unstamp);
-            this.on(anchorEl, 'mouseover', stamp);
-            this.on(anchorEl, 'mouseout', unstamp);
-        },
-
-        createAnchorPreview: function () {
-            var self = this,
-                anchorPreview = this.options.ownerDocument.createElement('div');
-
-            anchorPreview.id = 'medium-editor-anchor-preview-' + this.id;
-            anchorPreview.className = 'medium-editor-anchor-preview';
-            anchorPreview.innerHTML = this.anchorPreviewTemplate();
-            this.options.elementsContainer.appendChild(anchorPreview);
-
-            this.on(anchorPreview, 'click', function () {
-                self.anchorPreviewClickHandler();
-            });
-
-            return anchorPreview;
-        },
-
-        anchorPreviewTemplate: function () {
-            return '<div class="medium-editor-toolbar-anchor-preview" id="medium-editor-toolbar-anchor-preview">' +
-                '    <i class="medium-editor-toolbar-anchor-preview-inner"></i>' +
-                '</div>';
-        },
-
-        anchorPreviewClickHandler: function (event) {
-            var range,
-                sel,
-                anchorExtension = this.getExtensionByName('anchor');
-
-            if (anchorExtension && this.activeAnchor) {
-                range = this.options.ownerDocument.createRange();
-                range.selectNodeContents(this.activeAnchor);
-
-                sel = this.options.contentWindow.getSelection();
-                sel.removeAllRanges();
-                sel.addRange(range);
-                // Using setTimeout + options.delay because:
-                // We may actually be displaying the anchor form, which should be controlled by options.delay
-                this.delay(function () {
-                    if (this.activeAnchor) {
-                        anchorExtension.showForm(this.activeAnchor.attributes.href.value);
-                    }
-                    this.keepToolbarAlive = false;
-                }.bind(this));
-            }
-
-            this.hideAnchorPreview();
-        },
-
-        editorAnchorObserver: function (e) {
-            var self = this,
-                overAnchor = true,
-                leaveAnchor = function () {
-                    // mark the anchor as no longer hovered, and stop listening
-                    overAnchor = false;
-                    self.off(self.activeAnchor, 'mouseout', leaveAnchor);
-                };
-
-            if (e.target && e.target.tagName.toLowerCase() === 'a') {
-
-                // Detect empty href attributes
-                // The browser will make href="" or href="#top"
-                // into absolute urls when accessed as e.targed.href, so check the html
-                if (!/href=["']\S+["']/.test(e.target.outerHTML) || /href=["']#\S+["']/.test(e.target.outerHTML)) {
-                    return true;
-                }
-
-                // only show when hovering on anchors
-                if (this.isToolbarShown()) {
-                    // only show when toolbar is not present
-                    return true;
-                }
-                this.activeAnchor = e.target;
-                this.on(this.activeAnchor, 'mouseout', leaveAnchor);
-                // Using setTimeout + options.delay because:
-                // - We're going to show the anchor preview according to the configured delay
-                //   if the mouse has not left the anchor tag in that time
-                this.delay(function () {
-                    if (overAnchor) {
-                        self.showAnchorPreview(e.target);
-                    }
-                });
-            }
-        },
-
-        bindAnchorPreview: function (index) {
-            var i, self = this;
-            this.editorAnchorObserverWrapper = function (e) {
-                self.editorAnchorObserver(e);
-            };
-            for (i = 0; i < this.elements.length; i += 1) {
-                this.on(this.elements[i], 'mouseover', this.editorAnchorObserverWrapper);
-            }
-            return this;
-        },
-
         createLink: function (opts) {
             var customEvent,
                 i;
@@ -47453,11 +48210,11 @@ function MediumEditor(elements, options) {
                 this.options.ownerDocument.execCommand('createLink', false, opts.url);
 
                 if (this.options.targetBlank || opts.target === '_blank') {
-                    Util.setTargetBlank(Selection.getSelectionStart(this.options.ownerDocument));
+                    Util.setTargetBlank(Util.getSelectionStart(this.options.ownerDocument));
                 }
 
                 if (opts.buttonClass) {
-                    this.setButtonClass(opts.buttonClass);
+                    Util.addClassToAnchors(Util.getSelectionStart(this.options.ownerDocument), opts.buttonClass);
                 }
             }
 
@@ -47470,126 +48227,30 @@ function MediumEditor(elements, options) {
             }
         },
 
-        setButtonClass: function (buttonClass) {
-            var el = Selection.getSelectionStart(this.options.ownerDocument),
-                classes = buttonClass.split(' '),
-                i,
-                j;
-            if (el.tagName.toLowerCase() === 'a') {
-                for (j = 0; j < classes.length; j += 1) {
-                    el.classList.add(classes[j]);
-                }
-            } else {
-                el = el.getElementsByTagName('a');
-                for (i = 0; i < el.length; i += 1) {
-                    for (j = 0; j < classes.length; j += 1) {
-                        el[i].classList.add(classes[j]);
-                    }
-                }
-            }
-        },
-
-        positionToolbarIfShown: function () {
-            if (this.isToolbarShown()) {
-                this.setToolbarPosition();
-            }
-        },
-
-        bindWindowActions: function () {
-            var self = this;
-
-            // Add a scroll event for sticky toolbar
-            if (this.options.staticToolbar && this.options.stickyToolbar) {
-                // On scroll, re-position the toolbar
-                this.on(this.options.contentWindow, 'scroll', function () {
-                    self.positionToolbarIfShown();
-                }, true);
-            }
-
-            this.on(this.options.contentWindow, 'resize', function () {
-                self.handleResize();
-            });
-
-            this.bindBlur();
-
-            return this;
-        },
-
+        // alias for setup - keeping for backwards compatability
         activate: function () {
-            if (this.isActive) {
-                return;
-            }
-
-            this.setup();
+            Util.deprecatedMethod.call(this, 'activate', 'setup', arguments);
         },
 
-        // TODO: break method
+        // alias for destory - keeping for backwards compatability
         deactivate: function () {
-            var i;
-            if (!this.isActive) {
-                return;
-            }
-            this.isActive = false;
-
-            if (this.toolbar !== undefined) {
-                this.options.elementsContainer.removeChild(this.anchorPreview);
-                this.options.elementsContainer.removeChild(this.toolbar);
-                delete this.toolbar;
-                delete this.anchorPreview;
-            }
-
-            for (i = 0; i < this.elements.length; i += 1) {
-                this.elements[i].removeAttribute('contentEditable');
-                this.elements[i].removeAttribute('data-medium-element');
-            }
-
-            this.commands.forEach(function (extension) {
-                if (typeof extension.deactivate === 'function') {
-                    extension.deactivate();
-                }
-            }.bind(this));
-
-            this.removeAllEvents();
-        },
-
-        bindPaste: function () {
-            var i, self = this;
-            this.pasteWrapper = function (e) {
-                pasteHandler.handlePaste(this, e, self.options);
-            };
-            for (i = 0; i < this.elements.length; i += 1) {
-                this.on(this.elements[i], 'paste', this.pasteWrapper);
-            }
-            return this;
-        },
-
-        setPlaceholders: function () {
-            if (!this.options.disablePlaceholders && this.elements && this.elements.length) {
-                this.elements.forEach(function (el) {
-                    this.activatePlaceholder(el);
-                    this.on(el, 'blur', this.placeholderWrapper.bind(this));
-                    this.on(el, 'keypress', this.placeholderWrapper.bind(this));
-                }.bind(this));
-            }
-
-            return this;
+            Util.deprecatedMethod.call(this, 'deactivate', 'destroy', arguments);
         },
 
         cleanPaste: function (text) {
-            pasteHandler.cleanPaste(text, this.options);
+            this.pasteHandler.cleanPaste(text);
         },
 
         pasteHTML: function (html) {
-            pasteHandler.pasteHTML(html, this.options.ownerDocument);
+            this.pasteHandler.pasteHTML(html);
         }
     };
-
 }());
 
     return MediumEditor;
 }()));
 
-//jshint browser: true
+;//jshint browser: true
 if (typeof window.plugins !== "object") {
   window.plugins = {};
 }
@@ -47611,7 +48272,7 @@ window.plugins.minislate = {
   }
 };
 
-/*!
+;/*!
  * Minislate
  * Version: 0.2.0
  *
@@ -52051,7 +52712,7 @@ window.plugins.minislate = {
     }, {}, [ 9 ])(9);
 });
 
-//jshint browser: true, strict: false
+;//jshint browser: true, strict: false
 if (typeof window.plugins !== "object") {
   window.plugins = {};
 }
@@ -52115,7 +52776,7 @@ window.plugins.sample = {
   }
 };
 
-//jshint browser: true, strict: false
+;//jshint browser: true, strict: false
 /*global require */
 if (typeof window.plugins !== "object") {
   window.plugins = {};
@@ -52209,7 +52870,7 @@ window.plugins.vcard = {
   }
 };
 
-(function(){
+;(function(){
 (function(){
 var _1="0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz".split("");
 Math.uuid=function(_2,_3){
@@ -52724,7 +53385,7 @@ window.VCard = _9;
 }());
 
 
-/**
+;/**
  *  Copyright (c) 2014, Facebook, Inc.
  *  All rights reserved.
  *
@@ -52752,7 +53413,7 @@ var u=ce(t._size),s=ee(t._root&&t._root.array,t._level,-t._origin,u-t._origin-1)
 },__deepEqual:function(t){var e=this.entries();return t.every(function(t,n){var r=e.next().value;return r&&R(r[0],n)&&R(r[1],t)})},__ensureOwner:function(t){if(t===this.__ownerID)return this;var e=this._map.__ensureOwner(t),n=this._vector.__ensureOwner(t);return t?le(e,n,t,this.__hash):(this.__ownerID=t,this._map=e,this._vector=n,this)}},{empty:function(){return kn||(kn=le(Qe.empty(),cn.empty()))}},Qe),Sn.from=Sn,Sn.prototype[qe]=Sn.prototype.remove;var kn,bn=function(t,e){var n=function(t){return this instanceof n?void(this._map=Qe(t)):new n(t)};t=Ue(t);var r=n.prototype=Object.create(Dn);r.constructor=n,r._name=e,r._defaultValues=t;var i=Object.keys(t);return n.prototype.length=i.length,Object.defineProperty&&t.forEach(function(t,e){Object.defineProperty(n.prototype,e,{get:function(){return this.get(e)},set:function(t){h(this.__ownerID,"Cannot set on an immutable record."),this.set(e,t)}})}),n},Mn=bn;de.createClass(bn,{toString:function(){return this.__toString((this._name||"Record")+" {","}")},has:function(t){return this._defaultValues.has(t)},get:function(t,e){return void 0===e||this.has(t)?this._map.get(t,this._defaultValues.get(t)):e},clear:function(){if(this.__ownerID)return this._map.clear(),this;Object.getPrototypeOf(this).constructor;return Mn._empty||(Mn._empty=ve(this,Qe.empty()))},set:function(t,e){if(null==t||!this.has(t))return this;var n=this._map.set(t,e);return this.__ownerID||n===this._map?this:ve(this,n)},remove:function(t){if(null==t||!this.has(t))return this;var e=this._map.remove(t);return this.__ownerID||e===this._map?this:ve(this,e)},keys:function(){return this._map.keys()},values:function(){return this._map.values()},entries:function(){return this._map.entries()},wasAltered:function(){return this._map.wasAltered()},__iterate:function(t,e){var n=this;return this._defaultValues.map(function(t,e){return n.get(e)}).__iterate(t,e)},__ensureOwner:function(t){if(t===this.__ownerID)return this;var e=this._map&&this._map.__ensureOwner(t);return t?ve(this,e,t):(this.__ownerID=t,this._map=e,this)}},{},Ue);
 var Dn=bn.prototype;Dn[qe]=Dn.remove,Dn[Oe]=Xe[Oe],Dn.merge=Xe.merge,Dn.mergeWith=Xe.mergeWith,Dn.mergeDeep=Xe.mergeDeep,Dn.mergeDeepWith=Xe.mergeDeepWith,Dn.update=Xe.update,Dn.updateIn=Xe.updateIn,Dn.cursor=Xe.cursor,Dn.withMutations=Xe.withMutations,Dn.asMutable=Xe.asMutable,Dn.asImmutable=Xe.asImmutable,Dn.__deepEqual=Xe.__deepEqual;var qn=function(t,e,n){return this instanceof On?(h(0!==n,"Cannot step a Range by 0"),t=t||0,null==e&&(e=1/0),t===e&&An?An:(n=null==n?1:Math.abs(n),t>e&&(n=-n),this._start=t,this._end=e,this._step=n,void(this.length=Math.max(0,Math.ceil((e-t)/n-1)+1)))):new On(t,e,n)},On=qn;de.createClass(qn,{toString:function(){return 0===this.length?"Range []":"Range [ "+this._start+"..."+this._end+(this._step>1?" by "+this._step:"")+" ]"},has:function(t){return h(t>=0,"Index out of bounds"),this.length>t},get:function(t,e){return h(t>=0,"Index out of bounds"),1/0===this.length||this.length>t?this._start+t*this._step:e},contains:function(t){var e=(t-this._start)/this._step;return e>=0&&this.length>e&&e===Math.floor(e)},slice:function(t,e,n){return m(t,e,this.length)?this:n?de.superCall(this,On.prototype,"slice",[t,e,n]):(t=y(t,this.length),e=d(e,this.length),t>=e?An:new On(this.get(t,this._end),this.get(e,this._end),this._step))},indexOf:function(t){var e=t-this._start;if(e%this._step===0){var n=e/this._step;if(n>=0&&this.length>n)return n}return-1},lastIndexOf:function(t){return this.indexOf(t)},take:function(t){return this.slice(0,t)},skip:function(t,e){return e?de.superCall(this,On.prototype,"skip",[t]):this.slice(t)},__iterate:function(t,e,n){for(var r=e^n,i=this.length-1,u=this._step,s=e?this._start+i*u:this._start,a=0;i>=a&&t(s,r?i-a:a,this)!==!1;a++)s+=e?-u:u;return r?this.length:a},__deepEquals:function(t){return this._start===t._start&&this._end===t._end&&this._step===t._step}},{},Be);var xn=qn.prototype;xn.__toJS=xn.toArray,xn.first=ln.first,xn.last=ln.last;var An=qn(0,0),Cn=function(t,e){return 0===e&&Pn?Pn:this instanceof En?(this._value=t,void(this.length=null==e?1/0:Math.max(0,e))):new En(t,e)
 },En=Cn;de.createClass(Cn,{toString:function(){return 0===this.length?"Repeat []":"Repeat [ "+this._value+" "+this.length+" times ]"},get:function(t,e){return h(t>=0,"Index out of bounds"),1/0===this.length||this.length>t?this._value:e},first:function(){return this._value},contains:function(t){return R(this._value,t)},slice:function(t,e,n){if(n)return de.superCall(this,En.prototype,"slice",[t,e,n]);var r=this.length;return t=0>t?Math.max(0,r+t):Math.min(r,t),e=null==e?r:e>0?Math.min(r,e):Math.max(0,r+e),e>t?new En(this._value,e-t):Pn},reverse:function(t){return t?de.superCall(this,En.prototype,"reverse",[t]):this},indexOf:function(t){return R(this._value,t)?0:-1},lastIndexOf:function(t){return R(this._value,t)?this.length:-1},__iterate:function(t,e,n){var r=e^n;h(!r||1/0>this.length,"Cannot access end of infinite range.");for(var i=this.length-1,u=0;i>=u&&t(this._value,r?i-u:u,this)!==!1;u++);return r?this.length:u},__deepEquals:function(t){return R(this._value,t._value)}},{},Be);var jn=Cn.prototype;jn.last=jn.first,jn.has=xn.has,jn.take=xn.take,jn.skip=xn.skip,jn.__toJS=xn.__toJS;var Pn=new Cn(void 0,0),Wn={Sequence:Ue,Map:Qe,Vector:cn,Set:mn,OrderedMap:Sn,Record:bn,Range:qn,Repeat:Cn,is:R,fromJS:ge};return Wn}"object"==typeof exports?module.exports=t():"function"==typeof define&&define.amd?define(t):Immutable=t();
-/*! http://mths.be/he v0.4.1 by @mathias | MIT license */
+;/*! http://mths.be/he v0.4.1 by @mathias | MIT license */
 ;(function(root) {
 
 	// Detect free variables `exports`.
@@ -53078,7 +53739,7 @@ var Dn=bn.prototype;Dn[qe]=Dn.remove,Dn[Oe]=Xe[Oe],Dn.merge=Xe.merge,Dn.mergeWit
 
 }(this));
 
-/*!
+;/*!
 * https://github.com/Starcounter-Jack/Fast-JSON-Patch
 * json-patch-duplex.js 0.5.0
 * (c) 2013 Joachim Wester
@@ -55416,7 +56077,7 @@ function merge_text_nodes( jsonml ) {
   }
 } )() );
 
-!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.io=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
+;!function(e){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=e();else if("function"==typeof define&&define.amd)define([],e);else{var f;"undefined"!=typeof window?f=window:"undefined"!=typeof global?f=global:"undefined"!=typeof self&&(f=self),f.io=e()}}(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(_dereq_,module,exports){
 
 module.exports = _dereq_('./lib/');
 
@@ -61610,7 +62271,7 @@ function toArray(list, index) {
 (1)
 });
 
-/*
+;/*
  * to-markdown - an HTML to Markdown converter
  *
  * Copyright 2011, Dom Christie

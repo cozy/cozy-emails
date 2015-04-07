@@ -54,6 +54,43 @@ Mailbox::guessUse = ->
     # @TODO add more
 
 
+class RefreshStep
+
+    @finished: {symbol: 'DONE'}
+
+    @initial: (limitByBox, firstImport) ->
+        step = new RefreshStep()
+        step.limitByBox = limitByBox
+        step.firstImport = firstImport
+        step.shouldNotif = false
+        step.initial = true
+        return step
+
+    getNext: (uidnext) ->
+        log.debug "computeNextStep", this, uidnext, @limitByBox
+
+        if @initial
+            @min = uidnext + 1
+
+        if @min is 1
+            return RefreshStep.finished
+
+        if @limitByBox and not @initial
+            return RefreshStep.finished
+
+        range = if @limitByBox then @limitByBox else FETCH_AT_ONCE
+
+        step = new RefreshStep()
+        step.firstImport = @firstImport
+        step.limitByBox = @limitByBox
+        step.shouldNotif = @shouldNotif
+        step.max = Math.max 1, @min - 1
+        step.min = Math.max 1, @min - range
+
+        return step
+
+
+
 Mailbox.imapcozy_create = (account, parent, label, callback) ->
     if parent
         path = parent.path + parent.delimiter + label
@@ -104,7 +141,7 @@ Mailbox.getBoxes = (accountID, callback) ->
 #
 # Returns  [{Mailbox}]
 Mailbox.getBoxesIndexedByID = (accountID, callback) ->
-    Mailbox.getBoxes accountID, (err, boxes) =>
+    Mailbox.getBoxes accountID, (err, boxes) ->
         return callback err if err
         boxIndex = {}
         boxIndex[box.id] = path: box.path for box in boxes
@@ -236,43 +273,29 @@ Mailbox::destroyAndRemoveAllMessages = (callback) ->
 
 Mailbox::imap_fetchMails = (limitByBox, firstImport, callback) ->
     log.debug "imap_fetchMails", limitByBox
-    @imap_refreshStep limitByBox, null, firstImport, (err) =>
+    step = RefreshStep.initial limitByBox, firstImport
+
+    @imap_refreshStep step, (err, shouldNotif) =>
         log.debug "imap_fetchMailsEnd", limitByBox
         return callback err if err
         unless limitByBox
             changes = lastSync: new Date().toISOString()
             @updateAttributes changes, callback
         else
-            callback null
+            callback null, shouldNotif
 
 
 
-computeNextStep = (laststep, uidnext, limitByBox) ->
-    log.debug "computeNextStep", laststep, uidnext, limitByBox
-    laststep ?= min: uidnext + 1
-
-    if laststep.min is 1
-        return false
-
-
-    step =
-        max: Math.max 1, laststep.min - 1
-        min: Math.max 1, laststep.min - FETCH_AT_ONCE
-
-    if limitByBox
-        step.min = Math.max 1, laststep.min - limitByBox
-
-    return step
-
-Mailbox::getDiff = (laststep, limit, callback) ->
-    log.debug "diff", laststep, limit
+Mailbox::getDiff = (laststep, callback) ->
+    log.debug "diff", laststep
 
     step = null
     box = this
 
     @doLaterWithBox (imap, imapbox, cbRelease) ->
 
-        unless step = computeNextStep(laststep, imapbox.uidnext, limit)
+        step = laststep.getNext(imapbox.uidnext)
+        if step is RefreshStep.finished
             return cbRelease null
 
         log.info "IMAP REFRESH", box.label, "UID #{step.min}:#{step.max}"
@@ -299,7 +322,14 @@ Mailbox::getDiff = (laststep, limit, callback) ->
                 # this message is already in cozy, compare flags
                 imapFlags = imapMessage[1]
                 cozyFlags = cozyMessage[1]
-                if _.xor(imapFlags, cozyFlags).length
+                diff = _.xor(imapFlags, cozyFlags)
+
+                # gmail is weird (same message has flag \\Draft in some boxes
+                # but not all)
+                needApply = diff.length > 2 or
+                            diff.length is 1 and diff[0] isnt '\\Draft'
+
+                if needApply
                     id = cozyMessage[0]
                     flagsChange.push id: id, flags: imapFlags
 
@@ -311,7 +341,7 @@ Mailbox::getDiff = (laststep, limit, callback) ->
             unless imapUIDs[uid]
                 toRemove.push id = cozyMessage[0]
 
-        callback null, {toFetch, toRemove, flagsChange, step}
+        callback null, {toFetch, toRemove, flagsChange}, step
 
 Mailbox::applyToRemove = (toRemove, reporter, callback) ->
     log.debug "applyRemove", toRemove.length
@@ -337,38 +367,61 @@ Mailbox::applyToFetch = (toFetch, reporter, callback) ->
     log.debug "applyFetch", toFetch.length
     box = this
     toFetch.reverse()
+    shouldNotif = false
     async.eachSeries toFetch, (msg, cb) ->
-        Message.fetchOrUpdate box, msg.mid, msg.uid, (err) ->
+        Message.fetchOrUpdate box, msg.mid, msg.uid, (err, result) ->
             reporter.onError err if err
             reporter.addProgress 1
+            if result?.shouldNotif is true
+                shouldNotif = true
             # dont stop
             cb null
-    , callback
+    , (err) ->
+        callback err, shouldNotif
 
-Mailbox::imap_refreshStep = (limitByBox, laststep, firstImport, callback) ->
-    log.debug "imap_refreshStep", limitByBox, laststep
+# Public: refresh part of a mailbox
+#
+# laststep - {Object} can be null, step references
+#               - min : min uid to fetch
+#               - max : max uid to fetch
+# callback - Function({Error} err, {Boolean} shouldNotif)
+#               - err
+#               - shouldNotif display a notification for it
+#
+# Returns a task completion
+Mailbox::imap_refreshStep = (laststep, callback) ->
+    log.debug "imap_refreshStep", laststep.limitByBox, laststep
     box = this
-    @getDiff laststep, limitByBox, (err, ops) =>
+    @getDiff laststep, (err, ops, step) =>
         log.debug "imap_refreshStep#diff", err, ops
 
         return callback err if err
-        return callback null unless ops
+        return callback null, false unless ops
 
         nbTasks = ops.toFetch.length + ops.toRemove.length +
                                                         ops.flagsChange.length
-        reporter = ImapReporter.boxFetch @, nbTasks, firstImport if nbTasks > 0
+        if nbTasks > 0
+            reporter = ImapReporter.boxFetch @, nbTasks, laststep.firstImport
+
+        shouldNotifStep = false
 
         async.series [
             (cb) => @applyToRemove     ops.toRemove,    reporter, cb
             (cb) => @applyFlagsChanges ops.flagsChange, reporter, cb
-            (cb) => @applyToFetch      ops.toFetch,     reporter, cb
+            (cb) => @applyToFetch ops.toFetch, reporter, (err, shouldNotif) ->
+                return cb err if err
+                shouldNotifStep = shouldNotif
+                cb null
         ], (err) =>
-
             reporter?.onDone()
-            if limitByBox
-                callback null
-            else
-                @imap_refreshStep null, ops.step, firstImport, callback
+
+            if err
+                reporter.onError err if err
+                return callback err
+
+            else # next step
+                @imap_refreshStep step, (err, shouldNotifNext) ->
+                    callback err, shouldNotifStep or shouldNotifNext
 
 
 Mailbox::imap_UIDByMessageID = (messageID, callback) ->
@@ -393,7 +446,10 @@ Mailbox::imap_fetchOneMail = (uid, callback) ->
 
     , (err, mail) =>
         return callback err if err
-        Message.createFromImapMessage mail, this, uid, callback
+        shouldNotif = '\\Seen' in mail.flags
+        Message.createFromImapMessage mail, this, uid, (err) ->
+            return callback err if err
+            callback null, {shouldNotif}
 
 # Public: remove a mail in the given box
 # used for drafts

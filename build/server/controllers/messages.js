@@ -58,14 +58,15 @@ module.exports.details = function(req, res, next) {
 };
 
 module.exports.attachment = function(req, res, next) {
-  var stream, _ref1;
+  var encodedFileName, stream, _ref1;
   stream = req.message.getBinary(req.params.attachment, function(err) {
     if (err) {
       return next(err);
     }
   });
   if ((_ref1 = req.query) != null ? _ref1.download : void 0) {
-    res.setHeader('Content-disposition', "attachment; filename=" + req.params.attachment);
+    encodedFileName = encodeURIComponent(req.params.attachment);
+    res.setHeader('Content-disposition', "attachment; filename*=UTF8''" + encodedFileName);
   }
   return stream.pipe(res);
 };
