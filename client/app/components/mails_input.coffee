@@ -56,14 +56,16 @@ module.exports = MailsInput = React.createClass
                     return a.address isnt address.address
                 @props.valueLink.requestChange known
 
-            onDragStart = (event) ->
+            onDragStart = (event) =>
                 event.stopPropagation()
-                data =
-                    name: address.name
-                    address: address.address
-                event.dataTransfer.setData 'text', JSON.stringify(data)
-                event.dataTransfer.effectAllowed = 'move'
-                event.dataTransfer.dropEffect = 'move'
+                if address?
+                    data =
+                        name: address.name
+                        address: address.address
+                    event.dataTransfer.setData 'address', JSON.stringify(data)
+                    event.dataTransfer.effectAllowed = 'all'
+                    # needed to prevent droping over drag source
+                    event.dataTransfer.setData @props.id, true
 
             onDragEnd = (event) ->
                 if event.dataTransfer.dropEffect is 'move'
@@ -91,8 +93,9 @@ module.exports = MailsInput = React.createClass
         onChange = (event) =>
             value = event.target.value.split ','
             if value.length is 2
-                @state.known.push(MessageUtils.parseAddress value[0])
-                @props.valueLink.requestChange @state.known
+                known = _.clone @state.known
+                known.push(MessageUtils.parseAddress value[0])
+                @props.valueLink.requestChange known
                 @setState unknown: value[1].trim()
             else
                 @setState unknown: event.target.value
@@ -104,9 +107,18 @@ module.exports = MailsInput = React.createClass
             open: @state.open and @state.contacts?.length > 0
         current    = 0
 
-        # inChrome, we need to cancel some events for drop to work
-        cancelDragEvent = (event) ->
+        # in Chrome, we need to cancel some events for drop to work
+        cancelDragEvent = (event) =>
             event.preventDefault()
+            # To prevent removing the contact when dropped where it has been dragged,
+            # we must set dropEffect to 'none'
+            # if Chrome, we can only access types of data, not data themselves
+            # In Chrome, types are an array; in Firefox, a DOMStringList
+            types = Array.prototype.slice.call(event.dataTransfer.types)
+            if types.indexOf(@props.id) is -1
+                event.dataTransfer.dropEffect = 'move'
+            else
+                event.dataTransfer.dropEffect = 'none'
 
         div
             className: className,
@@ -263,8 +275,9 @@ module.exports = MailsInput = React.createClass
         address =
             name    : contact.get 'fn'
             address : contact.get 'address'
-        @state.known.push address
-        @props.valueLink.requestChange @state.known
+        known = _.clone @state.known
+        known.push address
+        @props.valueLink.requestChange known
         @setState unknown: '', contacts: null, open: false
 
         # try to put back the focus at the end of the field
@@ -280,10 +293,17 @@ module.exports = MailsInput = React.createClass
     onDrop: (event) ->
         event.preventDefault()
         event.stopPropagation()
-        {name, address} = JSON.parse(event.dataTransfer.getData 'text')
-        address =
-            name    : name
-            address : address
-        @state.known.push address
-        @props.valueLink.requestChange @state.known
-        @setState unknown: '', contacts: null, open: false
+        {name, address} = JSON.parse(event.dataTransfer.getData 'address')
+        exists = @state.known.some (item) ->
+            return item.name is name and item.address is address
+        if address? and not exists
+            address =
+                name    : name
+                address : address
+            known = _.clone @state.known
+            known.push address
+            @props.valueLink.requestChange known
+            @setState unknown: '', contacts: null, open: false
+            event.dataTransfer.dropEffect = 'move'
+        else
+            event.dataTransfer.dropEffect = 'none'
