@@ -259,7 +259,7 @@ module.exports =
       "message undelete"            : "Undo message deletion"
       "message undelete ok"         : "Message undeleted"
       "message undelete error"      : "Error undoing some action"
-      "message undelete unnavalable": "Undo not available"
+      "message undelete unavalable" : "Undo not available"
       "message preview title"       : "View attachments"
 
       # Settings

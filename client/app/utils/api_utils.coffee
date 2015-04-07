@@ -24,6 +24,10 @@ module.exports =
         message = MessageStore.getByID messageID
         return message?.toJS()
 
+    getMessage: (id) ->
+        message = MessageStore.getByID id
+        return message?.toJS()
+
     getCurrentConversation: ->
         conversationID = MessageStore.getCurrentConversationID()
         if conversationID?
@@ -213,13 +217,13 @@ module.exports =
                 state: {}
                 props: {}
             for key, value of root.state
-                if (typeof root.state[key] is 'object')
-                    res.state[key] = '{object}'
+                if (typeof value is 'object')
+                    res.state[key] = _.clone value
                 else
                     res.state[key] = value
             for key, value of root.props
-                if (typeof root.props[key] is 'object')
-                    res.props[key] = '{object}'
+                if (typeof value is 'object')
+                    res.props[key] = _.clone value
                 else
                     res.props[key] = value
             for key, value of root.refs
