@@ -43,7 +43,7 @@ log = require('../utils/logging')(prefix: 'models:account')
 _ = require 'lodash'
 async = require 'async'
 CONSTANTS = require '../utils/constants'
-{RefreshError} = require '../utils/errors'
+{RefreshError, NotFound} = require '../utils/errors'
 notifications = require '../utils/notifications'
 require('../utils/socket_handler').wrapModel Account, 'account'
 
@@ -60,6 +60,17 @@ Account::isRefreshing = ->
 
 Account::setRefreshing = (value) ->
     ImapPool.get(@id).isRefreshing = value
+
+# Public : find an account by id
+# cozydb's find can return no error and no account (if id isnt an account)
+# this version always return one or the other
+#  id - id of the account to find
+#  callback - Function(Error err, Account account)
+Account.findSafe = (id, callback) ->
+    Account.find id, (err, account) ->
+        return callback err if err
+        return callback new NotFound "Account##{id}" unless account
+        callback null, account
 
 # Public: refresh all accounts
 #
@@ -110,7 +121,8 @@ Account.refreshAccounts = (options, callback) ->
             clearTimeout refreshTimeout
             refreshTimeout = setTimeout ->
                 log.debug "doing periodic refresh"
-                # periodic refresh should only check new messages on favorites mailboxes
+                # periodic refresh should only check new messages on
+                # favorites mailboxes
                 options.onlyFavorites = true
                 options.limitByBox    = CONSTANTS.LIMIT_BY_BOX
                 Account.refreshAccounts options
@@ -129,7 +141,7 @@ Account.refreshAccounts = (options, callback) ->
 #
 # data - account parameters
 #
-# Returns  {Account}
+# Returns (callback) {Account} the created account
 Account.createIfValid = (data, callback) ->
 
     account = new Account data
@@ -252,7 +264,6 @@ Account::toClientObject = (callback) ->
                 id       : id
                 label    : box.label
                 tree     : box.tree
-                label    : box.label
                 attribs  : box.attribs
                 nbTotal  : count?.total  or 0
                 nbUnread : count?.unread or 0
@@ -323,7 +334,7 @@ Account::imap_refreshBoxes = (callback) ->
 # limitByBox - the maximum {Number} of message to fetch at once for each box
 # onlyFavorites - {Boolean} fetch messages only for favorite mailboxes
 #
-# Returns a task completion
+# Returns (callback) at task completion
 Account::imap_fetchMails = (limitByBox, onlyFavorites, firstImport, callback) ->
     log.debug "account#imap_fetchMails", limitByBox, onlyFavorites
     account = this
@@ -378,6 +389,11 @@ Account::imap_fetchMails = (limitByBox, onlyFavorites, firstImport, callback) ->
                     notifications.accountRefreshed account
                 callback null
 
+# Public: fetch an account emails in two step
+# first 100 message in each of the favorites mailbox
+# then all messages
+#
+# Returns (callback) at task completion
 Account::imap_fetchMailsTwoSteps = (callback) ->
     log.debug "account#imap_fetchMails2Steps"
     @imap_fetchMails 100, true, true, (err) =>
@@ -392,7 +408,7 @@ Account::imap_fetchMailsTwoSteps = (callback) ->
 # box - the {Mailbox} to create mail into
 # message - a {Message} to create
 #
-# Returns a the box & UID of the created mail
+# Returns (callback) UID of the created mail
 Account::imap_createMail = (box, message, callback) ->
 
     # compile the message to text
@@ -412,6 +428,12 @@ Account::imap_createMail = (box, message, callback) ->
             return callback err if err
             callback null, uid
 
+# Public: set an account xxxMailbox attributes & favorites
+# from a list of mailbox
+#
+# boxes - an array of {Mailbox} to scan
+#
+# Returns (callback) the updated account
 Account::imap_scanBoxesForSpecialUse = (boxes, callback) ->
     useRFC6154 = false
     inboxMailbox = null

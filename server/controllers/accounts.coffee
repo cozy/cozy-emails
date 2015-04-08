@@ -1,33 +1,33 @@
 _ = require 'lodash'
 Account = require '../models/account'
-{AccountConfigError, HttpError, NotFound} = require '../utils/errors'
+{AccountConfigError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'accounts:controller')
-{NotFound} = require '../utils/errors'
 async = require 'async'
 notifications = require '../utils/notifications'
 
 
 
-# fetch an account by id, add it to the request
+# Middleware : fetch an account by id, add it to the request
 module.exports.fetch = (req, res, next) ->
     id = req.params.accountID or
          req.body.accountID or
          req.mailbox.accountID or
          req.message.accountID
 
-    Account.find id, (err, found) ->
-        return next new HttpError 404, err if err
-        return next new NotFound "Acccount #{id}" unless found
+    Account.findSafe id, (err, found) ->
+        return next err if err
         req.account = found
         next()
 
+# Middleware : format res.account for client usage
 module.exports.format = (req, res, next) ->
-    log.info "FORMATTING ACCOUNT"
+    log.debug "FORMATTING ACCOUNT"
     res.account.toClientObject (err, formated) ->
-        log.info "SENDING ACCOUNT"
+        log.debug "SENDING ACCOUNT"
         return next err if err
         res.send formated
 
+# Middleware : format res.accounts for client usage
 module.exports.formatList = (req, res, next) ->
     async.mapSeries res.accounts, (account, callback) ->
         account.toClientObject callback
@@ -66,7 +66,6 @@ module.exports.list = (req, res, next) ->
 
 # change an account
 module.exports.edit = (req, res, next) ->
-    # @TODO : may be only allow changes to label, unless connection broken
 
     changes = _.pick req.body,
         'label', 'login', 'password', 'name', 'account_type'
@@ -85,7 +84,6 @@ module.exports.edit = (req, res, next) ->
 
 # delete an account
 module.exports.remove = (req, res, next) ->
-    # @TODO, handle clean up of boxes & mails
     req.account.destroyEverything (err) ->
         return next err if err
         res.status(204).end()

@@ -36,16 +36,7 @@ describe 'Account creation', ->
 
     it "Wait for mails fetching", (done) ->
         @timeout 30000
-        lastFinished = false
-        checkIfDone = ->
-            client.get "/refreshes", (err, res, body) ->
-                finished = not body.some (task) -> not task.finished
-                if finished and lastFinished then return done()
-
-                lastFinished = finished
-                setTimeout checkIfDone, 1000
-
-        setTimeout checkIfDone, 1000
+        helpers.waitAllTaskComplete done
 
     it "When I query the /refreshes, they are all finished", (done) ->
         client.get "/refreshes", (err, res, body) =>

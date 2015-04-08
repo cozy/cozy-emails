@@ -54,7 +54,8 @@ module.exports =
                         emit ['subject', boxid, xflag, doc.normSubject], null
                     if doc.attachments?.length > 0
                         emit ['date', boxid, '\\Attachments', docDate], null
-                        emit ['subject', boxid, '\\Attachments', doc.normSubject], null
+                        emit ['subject', boxid, '\\Attachments', \
+                                                        doc.normSubject], null
                 undefined # prevent coffeescript comprehension
 
         # this map is used to dedup by message-id

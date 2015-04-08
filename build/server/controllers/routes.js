@@ -65,6 +65,9 @@ module.exports = {
   'message': {
     post: [messages.parseSendForm, accounts.fetch, messages.fetchMaybe, messages.send]
   },
+  'messages/batchTrash': {
+    put: [messages.batchTrash]
+  },
   'message/:messageID': {
     get: [messages.fetch, messages.details],
     patch: [messages.fetch, messages.patch]

@@ -150,7 +150,7 @@ baseHandler = americano.errorHandler();
 utils.errorHandler = function(err, req, res, next) {
   log.debug("ERROR HANDLER CALLED", err);
   if (err instanceof utils.AccountConfigError || err.textCode === 'AUTHENTICATIONFAILED') {
-    return res.send(400, {
+    return res.status(400).send({
       name: err.name,
       field: err.field,
       stack: err.stack,
@@ -159,7 +159,7 @@ utils.errorHandler = function(err, req, res, next) {
   } else if (err.message === 'Request aborted') {
     return log.warn("Request aborted");
   } else if (err instanceof utils.RefreshError) {
-    return res.send(err.status, {
+    return res.status(err.status).send({
       name: err.name,
       message: err.message,
       payload: err.payload

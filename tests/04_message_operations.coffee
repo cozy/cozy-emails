@@ -8,6 +8,7 @@ describe 'Message actions', ->
     it "Pick a message from the inbox", (done) ->
         client.get "/mailbox/#{store.inboxID}", (err, res, body) =>
             store.latestInboxMessageId = body.messages[0].id
+            store.someIds = body.messages[1..4].map (msg) -> msg.id
             done()
 
         # Cozy actions
@@ -248,3 +249,49 @@ describe 'Message actions', ->
 
         form = req.form()
         form.append 'body', JSON.stringify store.secondDraftStatus
+
+
+    it "Creates a trashBox", (done) ->
+
+        box =
+            accountID: store.accountID
+            label: 'trash'
+            parentID: null
+
+
+        client.post "/mailbox/", box, (err, res, body) =>
+            res.statusCode.should.equal 200
+            body.id.should.equal store.accountID
+            body.should.have.property('mailboxes').with.lengthOf(6)
+            for box in body.mailboxes when box.label is 'trash'
+                store.trashBoxID = box.id
+            should.exist store.trashBoxID
+
+            store.accountState.trashMailbox = store.trashBoxID
+            data = store.accountState
+            client.put "/account/#{store.accountID}", data, (err, res, body) =>
+                res.statusCode.should.equal 200
+                body.should.have.property 'trashMailbox', store.trashBoxID
+                done()
+
+
+    it "When I delete a batch of messages", (done) ->
+        data =
+            accountID: store.accountID
+            ids: store.someIds
+
+        req = client.put "/messages/batchTrash", data, (err, res, body) =>
+            should.not.exist err
+            res.statusCode.should.equal 202
+            store.batchTrashReporterId = body.id
+            done()
+
+    it "Wait for operation to complete", (done) ->
+        @timeout 5000
+        helpers.waitAllTaskComplete done
+
+    it "Then they have been moved to trash", (done) ->
+        client.get "/mailbox/#{store.trashBoxID}", (err, res, body) =>
+            should.not.exist err
+            body.messages.should.have.lengthOf 4
+            done()
