@@ -292,18 +292,19 @@ module.exports = Compose = React.createClass
             address: account.login
 
         message =
-            id          : @state.id
-            accountID   : @state.accountID
-            mailboxIDs  : @state.mailboxIDs
-            from        : [from]
-            to          : @state.to
-            cc          : @state.cc
-            bcc         : @state.bcc
-            subject     : @state.subject
-            isDraft     : isDraft
-            attachments : @state.attachments
-            inReplyTo   : @state.inReplyTo
-            references  : @state.references
+            id            : @state.id
+            accountID     : @state.accountID
+            conversationID: @state.conversationID
+            mailboxIDs    : @state.mailboxIDs
+            from          : [from]
+            to            : @state.to
+            cc            : @state.cc
+            bcc           : @state.bcc
+            subject       : @state.subject
+            isDraft       : isDraft
+            attachments   : @state.attachments
+            inReplyTo     : @state.inReplyTo
+            references    : @state.references
 
         valid = true
         if not isDraft
@@ -358,9 +359,10 @@ module.exports = Compose = React.createClass
                     if not @state.id?
                         MessageActionCreator.setCurrent message.id
 
-                    @setState message
 
-                    if not isDraft
+                    if isDraft
+                        @setState message
+                    else
                         if @props.callback?
                             @props.callback error
                         else

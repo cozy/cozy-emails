@@ -630,6 +630,7 @@ MessageItem = React.createClass
             className: classes
             key: @props.key
             'data-message-id': message.get('id')
+            'data-conversation-id': message.get('conversationID')
             draggable: not @props.edited
             onClick: @onMessageClick
             onDragStart: @onDragStart

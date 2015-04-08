@@ -61,7 +61,8 @@ module.exports = MessageUtils =
         quoteStyle += " border-left: 3px solid #34A6FF;"
 
         if inReplyTo
-            message.accountID = inReplyTo.get 'accountID'
+            message.accountID      = inReplyTo.get 'accountID'
+            message.conversationID = inReplyTo.get 'conversationID'
             dateHuman = @formatReplyDate inReplyTo.get 'createdAt'
             sender = @displayAddresses inReplyTo.get 'from'
 
@@ -125,8 +126,8 @@ module.exports = MessageUtils =
 
             when ComposeActions.FORWARD
                 addresses = inReplyTo.get('to')
-                   .map (address) -> address.address
-                   .join ', '
+                .map (address) -> address.address
+                .join ', '
 
                 separator = """
 
