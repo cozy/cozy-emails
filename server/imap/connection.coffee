@@ -206,6 +206,7 @@ Imap::multicopy = (uid, paths, callback) ->
 # remove message from multiple boxes
 Imap::multiremove = (paths, callback) ->
     async.eachSeries paths, ({path, uid}, cb) =>
+        return cb new Error 'no message to remove' unless uid?
         @deleteMessageInBox path, uid, cb
     , callback
 
