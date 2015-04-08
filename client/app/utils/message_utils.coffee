@@ -90,9 +90,7 @@ module.exports = MessageUtils =
                 message.to = @getReplyToAddress inReplyTo
                 message.cc = []
                 message.bcc = []
-                message.subject = """
-                    #{t 'compose reply prefix'}#{inReplyTo.get 'subject'}
-                    """
+                message.subject = @getReplySubject inReplyTo
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
                     <br /><br /><br />
@@ -113,9 +111,7 @@ module.exports = MessageUtils =
                     inReplyTo.get('cc')).filter (dest) ->
                     return dest? and toAddresses.indexOf(dest.address) is -1
                 message.bcc = []
-                message.subject = """
-                    #{t 'compose reply prefix'}#{inReplyTo.get 'subject'}
-                    """
+                message.subject = @getReplySubject inReplyTo
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
                     <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -353,3 +349,13 @@ module.exports = MessageUtils =
             #{html}
             """
 
+    # Add a reply prefix to the current subject. Do not add it again if it's
+    # already there.
+    getReplySubject: (inReplyTo) ->
+        subject =  """
+        #{inReplyTo.get 'subject'}
+        """
+        replyPrefix = t 'compose reply prefix'
+        if subject.indexOf(replyPrefix) isnt 0
+            subject = "#{replyPrefix}#{subject}"
+        subject
