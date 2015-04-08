@@ -4,7 +4,7 @@
 fixtures = require 'cozy-fixtures'
 {exec} = require 'child_process'
 DovecotTesting = require 'dovecot-testing'
-Imap = require 'imap'
+Imap = require '../server/imap/connection'
 _ = require 'lodash'
 
 module.exports = helpers = {}

@@ -1,9 +1,8 @@
 --name       "Cozy Mails"
 --readme     README.md
 --title      "Cozy Mails Documentation"
---private
---quiet
---output-dir ./doc
-server/
--
+--output-dir doc
+--
+.biscottoref.coffee
+server
 LICENSE

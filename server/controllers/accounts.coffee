@@ -52,7 +52,8 @@ module.exports.create = (req, res, next) ->
 
 # check account parameters
 module.exports.check = (req, res, next) ->
-    Account.checkParams req.body, (err) ->
+    tmpAccount = new Account req.body
+    tmpAccount.testConnection (err) ->
         return next err if err
         res.send check: 'ok'
 
@@ -67,17 +68,13 @@ module.exports.list = (req, res, next) ->
 # change an account
 module.exports.edit = (req, res, next) ->
 
-    changes = _.pick req.body,
-        'label', 'login', 'password', 'name', 'account_type'
-        'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
-        'smtpLogin', 'smtpPassword', 'smtpMethod',
-        'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
-        'draftMailbox', 'sentMailbox', 'trashMailbox'
+    updated = new Account req.body
 
     # check params before applying changes
-    Account.checkParams changes, (err) ->
+    updated.testConnections (err) ->
         return next err if err
 
+        changes = _.pick req.body, Object.keys Account.schema
         req.account.updateAttributes changes, (err, updated) ->
             res.account = updated
             next err
