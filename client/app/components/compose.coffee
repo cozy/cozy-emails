@@ -240,7 +240,7 @@ module.exports = Compose = React.createClass
                     LayoutActionCreator.alertError \
                         "#{t("message action delete ko")} #{error}"
                 else
-                    LayoutActionCreator.notify t('compose draft deleted')
+                    LayoutActionCreator.notify t('compose draft deleted'), autoclose: true
 
     getInitialState: (forceDefault) ->
 
@@ -345,14 +345,15 @@ module.exports = Compose = React.createClass
                     @setState sending: false
                 if isDraft
                     msgKo = t "message action draft ko"
-                    msgOk = t "message action draft ok"
                 else
                     msgKo = t "message action sent ko"
                     msgOk = t "message action sent ok"
                 if error?
                     LayoutActionCreator.alertError "#{msgKo} #{error}"
                 else
-                    LayoutActionCreator.notify msgOk, autoclose: true
+                    # don't display confirmation message when draft has been saved
+                    if not isDraft
+                        LayoutActionCreator.notify msgOk, autoclose: true
 
                     if not @state.id?
                         MessageActionCreator.setCurrent message.id
