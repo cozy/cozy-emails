@@ -7,7 +7,7 @@ notifications = require '../utils/notifications'
 
 
 
-# fetch an account by id, add it to the request
+# Middleware : fetch an account by id, add it to the request
 module.exports.fetch = (req, res, next) ->
     id = req.params.accountID or
          req.body.accountID or
@@ -19,13 +19,15 @@ module.exports.fetch = (req, res, next) ->
         req.account = found
         next()
 
+# Middleware : format res.account for client usage
 module.exports.format = (req, res, next) ->
-    log.info "FORMATTING ACCOUNT"
+    log.debug "FORMATTING ACCOUNT"
     res.account.toClientObject (err, formated) ->
-        log.info "SENDING ACCOUNT"
+        log.debug "SENDING ACCOUNT"
         return next err if err
         res.send formated
 
+# Middleware : format res.accounts for client usage
 module.exports.formatList = (req, res, next) ->
     async.mapSeries res.accounts, (account, callback) ->
         account.toClientObject callback
@@ -64,7 +66,6 @@ module.exports.list = (req, res, next) ->
 
 # change an account
 module.exports.edit = (req, res, next) ->
-    # @TODO : may be only allow changes to label, unless connection broken
 
     changes = _.pick req.body,
         'label', 'login', 'password', 'name', 'account_type'
@@ -83,7 +84,6 @@ module.exports.edit = (req, res, next) ->
 
 # delete an account
 module.exports.remove = (req, res, next) ->
-    # @TODO, handle clean up of boxes & mails
     req.account.destroyEverything (err) ->
         return next err if err
         res.status(204).end()

@@ -7,15 +7,15 @@ async        = require 'async'
 cozydb       = require 'cozydb'
 log          = require('../utils/logging')(prefix: 'controllers:index')
 
-
+# render the application index
+# with all necessary imports
 module.exports.main = (req, res, next) ->
 
     async.series [
         (cb) -> Settings.getDefault cb
         (cb) -> cozydb.api.getCozyLocale cb
         (cb) -> Account.clientList cb
-        (callback) ->
-            Contact.requestWithPictures 'all', {}, callback
+        (cb) -> Contact.requestWithPictures 'all', {}, cb
     ], (err, results) ->
 
         refreshes = ImapReporter.summary()
@@ -42,19 +42,8 @@ module.exports.main = (req, res, next) ->
 
         res.render 'index.jade', {imports}
 
-
-module.exports.loadFixtures = (req, res, next) ->
-    try fixtures = require 'cozy-fixtures'
-    catch e then return next new Error 'only in tests'
-
-    fixtures.load
-        silent: true,
-        callback: (err) ->
-            if err
-                return next err
-            else
-                res.send message: 'LOAD FIXTURES SUCCESS'
-
+# trigger a refresh of all accounts
+# query.all
 module.exports.refresh = (req, res, next) ->
     if req.query?.all
         limitByBox    = null
@@ -68,5 +57,6 @@ module.exports.refresh = (req, res, next) ->
         return next err if err
         res.send refresh: 'done'
 
+# get a list of all background operations on the server
 module.exports.refreshes = (req, res, next) ->
     res.send ImapReporter.summary()

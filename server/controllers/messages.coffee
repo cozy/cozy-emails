@@ -152,7 +152,7 @@ module.exports.listByMailbox = (req, res, next) ->
         res.send result
 
 
-
+# Middleware - parse the request form and buffer all its files
 module.exports.parseSendForm = (req, res, next) ->
     form = new multiparty.Form(autoFields: true)
 
@@ -183,7 +183,8 @@ module.exports.parseSendForm = (req, res, next) ->
     form.parse req
 
 
-
+# when editing a draft, some attachments are in the DS, some in RAM
+# put them all in RAM so we can build the draft to store in IMAP.
 contentToBuffer = (req, attachment, callback) ->
     filename = attachment.generatedFileName
 
@@ -363,39 +364,51 @@ module.exports.send = (req, res, next) ->
         out.isDraft = isDraft
         res.send out
 
-
+# move several message to trash with one request
+# expect body to con
 module.exports.batchTrash = (req, res, next) ->
     ids = req.body.ids
-    unless ids?.length and ids.length > 0
-        return next new BadRequest "no ids in request's body"
-
     accountID = req.body.accountID
-    unless accountID
-        return next new BadRequest "no accountID in request's body"
+
+    # make sure we have some ids
+    unless ids?.length and ids.length > 0
+        next new BadRequest "no ids in request's body"
+
+    # make sure we have an accountID
+    else unless accountID
+        next new BadRequest "no accountID in request's body"
+
+    else
+        Account.findSafe accountID, (err, account) ->
+            if err
+                next err
+
+            # the client should prevent this, but let's be safe
+            else unless account.trashMailbox
+                next new AccountConfigError 'trashMailbox'
+
+            else
+
+                # create a reporter to display a progress bar and
+                # multiple errors client side.
+                reporter = ImapReporter.batchMoveToTrash ids.length
+                # immediately send the reporter
+                res.status(202).send reporter.toObject()
+
+                # in background, proceed to move to trash
+                async.eachSeries ids, (id, cb) ->
+                    Message.moveToTrash account, id, (err) ->
+                        reporter.onError err if err
+                        reporter.addProgress 1
+                        cb null # loop anyway
+                , (err, messages) ->
+                    reporter.onDone()
+                    log.info "BATCH TRASH #{reporter.id} COMPLETE"
 
 
-    Account.findSafe accountID, (err, account) ->
-        return next err if err
-
-        unless account.trashMailbox
-            return next new AccountConfigError 'trashMailbox'
-
-        reporter = ImapReporter.batchMoveToTrash ids.length
-        # immediately send the reporter
-        res.status(202).send reporter.toObject()
-
-        # in background, proceed to delete
-        async.eachSeries ids, (id, cb) ->
-            Message.moveToTrash account, id, (err) ->
-                reporter.onError err if err
-                reporter.addProgress 1
-                cb null # loop anyway
-        , (err, messages) ->
-            reporter.onDone()
-            log.info "BATCH TRASH #{reporter.id} COMPLETE"
-
-
-
+# fetch all messages from a conversation
+# get the id from params.conversationID and save messages as array
+# in req.conversation
 module.exports.fetchConversation = (req, res, next) ->
     conversationID = req.params.conversationID
     Message.byConversationID conversationID, (err, messages) ->
@@ -410,9 +423,11 @@ module.exports.fetchConversation = (req, res, next) ->
             req.conversation = messages
             next()
 
+# send formatted req.conversation to the client
 module.exports.conversationGet = (req, res, next) ->
     res.send req.conversation.map (msg) -> msg.toClientObject()
 
+# move all messages in a conversation to the trash.
 module.exports.conversationDelete = (req, res, next) ->
     accountID = req.conversation[0].accountID
 
@@ -424,7 +439,7 @@ module.exports.conversationDelete = (req, res, next) ->
         else
             messages = []
             async.eachSeries req.conversation, (message, cb) ->
-                if message.mailboxIDs[trashMailbox]
+                if message.mailboxIDs[account.trashMailbox]
                     # one of the message is already in Trash
                     cb null
                 else
@@ -437,7 +452,7 @@ module.exports.conversationDelete = (req, res, next) ->
                 return next err if err
                 res.send messages
 
-
+# apply a transformation to all messages in a conversation
 module.exports.conversationPatch = (req, res, next) ->
 
     patch = req.body
@@ -452,6 +467,7 @@ module.exports.conversationPatch = (req, res, next) ->
         return next err if err
         res.send messages
 
+# fetch from IMAP and send the raw rfc822 message
 module.exports.raw = (req, res, next) ->
 
     boxID = Object.keys(req.message.mailboxIDs)[0]

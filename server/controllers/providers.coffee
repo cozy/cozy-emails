@@ -1,6 +1,8 @@
 https     = require 'https'
 DOMParser = require('xmldom').DOMParser
 
+# fetch account config for a domain
+# from prams.domain
 module.exports.get = (req, res, next) ->
     url = "https://autoconfig.thunderbird.net/v1.1/" + req.params.domain
     req = https.get url, (response) ->

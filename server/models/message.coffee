@@ -40,7 +40,7 @@ module.exports = Message = cozydb.getModel 'Message',
 mailutils = require '../utils/jwz_tools'
 CONSTANTS = require '../utils/constants'
 {MSGBYPAGE, LIMIT_DESTROY, LIMIT_UPDATE, CONCURRENT_DESTROY} = CONSTANTS
-{NotFound, BadRequest} = require '../utils/errors'
+{NotFound, BadRequest, AccountConfigError} = require '../utils/errors'
 uuid = require 'uuid'
 _ = require 'lodash'
 async = require 'async'
@@ -434,7 +434,9 @@ Message::applyPatchOperations = (patch, callback) ->
         else if operation.op is 'remove'
             boxOps.removeFrom.push boxid
             delete newmailboxIDs[boxid]
-        else throw new Error "modifying UID is not possible, bad operation #{operation.op}"
+        else return callback new Error """
+            modifying UID is not possible, bad operation #{operation.op}
+        """
 
     flagsOps = {add: [], remove: []}
     for operation in patch when operation.path.indexOf('/flags/') is 0
@@ -731,7 +733,7 @@ Message::moveToTrash = (account, callback) ->
     mailboxes = Object.keys(@mailboxIDs)
 
     unless trashBoxID
-        callback next new AccountConfigError 'trashMailbox'
+        callback new AccountConfigError 'trashMailbox'
 
     else if trashBoxID in mailboxes
         # message is already in trash

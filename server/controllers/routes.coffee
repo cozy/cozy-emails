@@ -82,13 +82,10 @@ module.exports =
     'message/:messageID/attachments/:attachment':
         get: [messages.fetch, messages.attachment]
 
+    'raw/:messageID':
+        get: [messages.fetch, messages.raw]
+
     'provider/:domain':
         get: providers.get
 
-    'load-fixtures':
-        get: index.loadFixtures
-
     'test': get: test.main
-
-    'raw/:messageID':
-        get: [messages.fetch, messages.raw]
