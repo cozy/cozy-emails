@@ -47,8 +47,9 @@ module.exports = React.createClass
         format = (user) ->
             items = []
             if user.name
+                key = user.address.replace(/\W/g, '')
                 items.push "#{user.name} "
-                items.push span className: 'contact-address',
+                items.push span className: 'contact-address', key: key,
                     i className: 'fa fa-angle-left'
                     user.address
                     i className: 'fa fa-angle-right'
@@ -102,7 +103,7 @@ module.exports = React.createClass
             i
                 className: 'btn fa fa-paperclip fa-flip-horizontal'
                 onClick: @toggleAttachments
-            div className: 'popup', 'aria-hidden': !@state.showAttachements,
+            div className: 'popup', 'aria-hidden': not @state.showAttachements,
                 ul className: null,
                     for file in attachments
                         AttachmentPreview
