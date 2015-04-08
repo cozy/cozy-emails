@@ -110,7 +110,6 @@ module.exports = MessageUtils =
                     inReplyTo.get('cc')).filter (dest) ->
                     return dest? and toAddresses.indexOf(dest.address) is -1
                 message.bcc = []
-                message.subject = @getReplySubject inReplyTo
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
                     <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -123,12 +122,23 @@ module.exports = MessageUtils =
                    .map (address) -> address.address
                    .join ', '
 
+                senderInfos = @getReplyToAddress inReplyTo
+                senderName = ""
+                senderAddress = ""
+                if senderInfos.length > 0
+                    senderName = senderInfos[0].name
+                    senderAddress = senderInfos[0].address
+
+                senderString = senderAddress
+                if senderName.length > 0
+                    fromField = "#{senderName} &lt;#{senderAddress}&gt;"
+
                 separator = """
 
 ----- #{t 'compose forward header'} ------
 #{t 'compose forward subject'} #{inReplyTo.get 'subject'}
 #{t 'compose forward date'} #{dateHuman}
-#{t 'compose forward from'} #{sender}
+#{t 'compose forward from'} #{fromField}
 #{t 'compose forward to'} #{addresses}
 
 """
