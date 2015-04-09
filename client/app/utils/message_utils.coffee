@@ -69,14 +69,16 @@ module.exports = MessageUtils =
             text = inReplyTo.get 'text'
             html = inReplyTo.get 'html'
 
-            if text and not html and inHTML
+            text = '' unless text? # Some message have no content, only attachements
+
+            if text? and not html? and inHTML
                 try
                     html = markdown.toHTML text
                 catch e
                     console.log "Error converting message to Markdown: #{e}"
                     html = "<div class='text'>#{text}</div>"
 
-            if html and not text and not inHTML
+            if html? and not text? and not inHTML
                 text = toMarkdown html
 
             message.inReplyTo  = [inReplyTo.get 'id']
