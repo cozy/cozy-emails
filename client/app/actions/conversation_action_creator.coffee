@@ -149,3 +149,8 @@ module.exports =
                     value: messages
             if callback?
                 callback error
+
+    fetch: (conversationID) ->
+        XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
+            if not err?
+                MessageActionCreator.receiveRawMessages rawMessages

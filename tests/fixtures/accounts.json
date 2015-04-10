@@ -35,7 +35,7 @@
        "imapPort": 993,
        "accountType": "TEST",
        "draftMailbox": "dovecot-ID-draft",
-       "senttMailbox": "dovecot-ID-folder2",
+       "sentMailbox": "dovecot-ID-folder2",
        "trashMailbox": "dovecot-ID-trash",
        "favorites": [
          "dovecot-ID-folder2",

@@ -58,9 +58,11 @@ module.exports = Topbar = React.createClass
         div id: 'quick-actions', className: 'row',
             # responsive menu icon
             if layout.secondPanel
-                a href: responsiveBackUrl, className: 'responsive-handler hidden-md hidden-lg',
-                    i className: 'fa fa-chevron-left hidden-md hidden-lg pull-left'
-                    t "app back"
+                a
+                    href: responsiveBackUrl,
+                    className: 'responsive-handler hidden-md hidden-lg',
+                        i className: 'fa fa-chevron-left hidden-md hidden-lg pull-left'
+                        t "app back"
 
             if layout.firstPanel.action is 'account.mailbox.messages' or
                layout.firstPanel.action is 'account.mailbox.messages'
@@ -74,10 +76,14 @@ module.exports = Topbar = React.createClass
 
             if layout.firstPanel.action is 'account.mailbox.messages' or
                layout.firstPanel.action is 'account.mailbox.messages'
-                div id: 'contextual-actions', className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
-                    a onClick: @refresh, className: 'btn btn-cozy-contrast',
-                        i className: 'fa fa-refresh'
-                    ReactCSSTransitionGroup transitionName: 'fade',
-                        if configMailboxUrl
-                            a href: configMailboxUrl, className: 'btn btn-cozy mailbox-config',
-                                i className: 'fa fa-cog'
+                div
+                    id: 'contextual-actions',
+                    className: 'col-md-6 hidden-xs hidden-sm pull-left text-right',
+                        a onClick: @refresh, className: 'btn btn-cozy-contrast',
+                            i className: 'fa fa-refresh'
+                        ReactCSSTransitionGroup transitionName: 'fade',
+                            if configMailboxUrl
+                                a
+                                    href: configMailboxUrl,
+                                    className: 'btn btn-cozy mailbox-config',
+                                        i className: 'fa fa-cog'

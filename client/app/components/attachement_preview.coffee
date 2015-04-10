@@ -22,7 +22,7 @@ module.exports = React.createClass
     render: ->
         url = encodeURIComponent @props.file.url
         if @props.previewLink
-             li key: @props.key,
+            li key: @props.key,
                 @renderIcon()
                 a
                     target: '_blank'

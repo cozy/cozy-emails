@@ -226,6 +226,7 @@ module.exports = class ImapConnection extends NodeImapConnection
     # Returns (callback) at completion
     multiremove: (paths, callback) ->
         async.eachSeries paths, ({path, uid}, cb) =>
+            return cb new Error 'no message to remove' unless uid?
             @deleteMessageInBox path, uid, cb
         , callback
 

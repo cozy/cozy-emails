@@ -22,6 +22,7 @@ module.exports = React.createClass
         mailboxes            : React.PropTypes.object.isRequired
         settings             : React.PropTypes.object.isRequired
         accounts             : React.PropTypes.object.isRequired
+        displayConversations : React.PropTypes.bool
 
 
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -56,6 +57,7 @@ module.exports = React.createClass
             selectedAccountLogin: @props.selectedAccountLogin
             selectedMailboxID   : @props.selectedMailboxID
             settings            : @props.settings
+            displayConversations: @props.displayConversation
 
 
     renderGroup: (messages, key) ->
@@ -85,7 +87,7 @@ module.exports = React.createClass
         # Sort messages in conversation to find seen messages and group them
         messages = []
         lastMessageIndex = @props.conversation.length - 1
-        @props.conversation.map((message, key) =>
+        @props.conversation.map((message, key) ->
             isSeen = MessageFlags.SEEN in message.get 'flags'
 
             if not isSeen or key is lastMessageIndex

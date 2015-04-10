@@ -30,9 +30,11 @@ module.exports = React.createClass
     ]
 
     getInitialState: ->
+        # if message is a draft, open the composing component
+        flags = @props.message.get('flags').slice()
         return {
             active: @props.active,
-            composing: false
+            composing: flags.indexOf(MessageFlags.DRAFT) > -1
             composeAction: ''
             headers: false
             messageDisplayHTML:   @props.settings.get 'messageDisplayHTML'
@@ -45,6 +47,7 @@ module.exports = React.createClass
         accounts               : React.PropTypes.object.isRequired
         active                 : React.PropTypes.bool
         inConversation         : React.PropTypes.bool
+        displayConversations   : React.PropTypes.bool
         key                    : React.PropTypes.string.isRequired
         mailboxes              : React.PropTypes.object.isRequired
         message                : React.PropTypes.object.isRequired
@@ -86,6 +89,9 @@ module.exports = React.createClass
         if html? and not text? and not @state.messageDisplayHTML
             text = toMarkdown html
 
+        mailboxes = message.get 'mailboxIDs'
+        trash = @props.accounts[@props.selectedAccountID]?.trashMailbox
+
         if text?
             rich = text.replace urls, '<a href="$1" target="_blank">$1</a>'
             rich = rich.replace /^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>'
@@ -94,12 +100,15 @@ module.exports = React.createClass
             rich = rich.replace /^>>[^>]?.*$/gim, '<span class="quote2">$&</span>'
             rich = rich.replace /^>[^>]?.*$/gim, '<span class="quote1">$&</span>'
 
+        flags = @props.message.get('flags').slice()
         return {
             attachments: message.get 'attachments'
             fullHeaders: fullHeaders
             text       : text
             rich       : rich
             html       : html
+            isDraft    : (flags.indexOf(MessageFlags.DRAFT) > -1)
+            isDeleted  : mailboxes[trash]?
         }
 
     componentWillMount: ->
@@ -110,9 +119,10 @@ module.exports = React.createClass
             active: props.active
         if props.message.get('id') isnt @props.message.get('id')
             @_markRead props.message
+            flags = @props.message.get('flags').slice()
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
             state.messageDisplayImages = props.settings.get 'messageDisplayImages'
-            state.composing            = false
+            state.composing            = flags.indexOf(MessageFlags.DRAFT) > -1
         @setState state
 
     _markRead: (message) ->
@@ -184,16 +194,18 @@ module.exports = React.createClass
         classes = classer
             message: true
             active: @state.active
+            isDraft: prepared.isDraft
+            isDeleted: prepared.isDeleted
 
         article
             className: classes,
             key: @props.key,
             'data-id': message.get('id'),
                 header
-                    onClick: => @setState active: !@state.active
+                    onClick: => @setState active: not @state.active
                     @renderHeaders()
                     @renderToolbox() if @state.active
-                @renderCompose() if @state.active
+                @renderCompose(prepared.isDraft) if @state.active
                 (div className: 'full-headers',
                     pre null, prepared?.fullHeaders?.join "\n") if @state.active
                 (MessageContent
@@ -222,6 +234,8 @@ module.exports = React.createClass
     renderHeaders: ->
         MessageHeader
             message: @props.message
+            isDraft: @state.prepared.isDraft
+            isDeleted: @state.prepared.isDeleted
 
     renderToolbox: (full = true) ->
         return if @state.composing
@@ -242,22 +256,36 @@ module.exports = React.createClass
         MessageFooter
             message: @props.message
 
-    renderCompose: ->
+    renderCompose: (isDraft) ->
         if @state.composing
-            Compose
-                ref             : 'compose'
-                inReplyTo       : @props.message
-                accounts        : @props.accounts
-                settings        : @props.settings
-                selectedAccountID    : @props.selectedAccountID
-                selectedAccountLogin : @props.selectedAccountLogin
-                action          : @state.composeAction
-                layout          : 'second'
-                callback: (error) =>
-                    if not error?
+            # If message is a draft, opens it, otherwise create a new message
+            if isDraft
+                Compose
+                    layout               : 'second'
+                    action               : null
+                    inReplyTo            : null
+                    settings             : @props.settings
+                    accounts             : @props.accounts
+                    selectedAccountID    : @props.selectedAccountID
+                    selectedAccountLogin : @props.selectedAccountLogin
+                    selectedMailboxID    : @props.selectedMailboxID
+                    message              : @props.message
+                    ref                  : 'compose'
+            else
+                Compose
+                    ref             : 'compose'
+                    inReplyTo       : @props.message
+                    accounts        : @props.accounts
+                    settings        : @props.settings
+                    selectedAccountID    : @props.selectedAccountID
+                    selectedAccountLogin : @props.selectedAccountLogin
+                    action          : @state.composeAction
+                    layout          : 'second'
+                    callback: (error) =>
+                        if not error?
+                            @setState composing: false
+                    onCancel: =>
                         @setState composing: false
-                onCancel: =>
-                    @setState composing: false
 
     toggleHeaders: (e) ->
         e.preventDefault()
@@ -285,7 +313,7 @@ module.exports = React.createClass
             nextMessageID      = @props.prevMessageID
             nextConversationID = @props.prevConversationID
         if nextMessageID
-            if @props.settings.get('displayConversation') and nextConversationID?
+            if @props.displayConversations and nextConversationID?
                 @redirect
                     direction: 'second'
                     action : 'conversation'
