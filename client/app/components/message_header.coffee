@@ -143,12 +143,12 @@ module.exports = React.createClass
             div className: 'popup', 'aria-hidden': not @state.showDetails,
                 table null,
                     tbody null,
-                        row 'from', @formatUsers(from), 'headers from'
-                        row 'to',   @formatUsers(to[0]), 'headers to', to.length if to.length
-                        row 'dest', @formatUsers(dest) for dest in to[1..] if to.length
-                        row 'cc',   @formatUsers(cc[0]), 'headers cc', cc.length if cc.length
-                        row 'dest', @formatUsers(dest) for dest in cc[1..] if cc.length
-                        row 'reply', @formatUsers(reply), 'headers reply-to' if reply?
+                        row 'from',    @formatUsers(from), 'headers from'
+                        row 'to',      @formatUsers(to[0]), 'headers to', to.length if to.length
+                        row 'destTo',  @formatUsers(dest) for dest in to[1..] if to.length
+                        row 'cc',      @formatUsers(cc[0]), 'headers cc', cc.length if cc.length
+                        row 'destCc',  @formatUsers(dest) for dest in cc[1..] if cc.length
+                        row 'reply',   @formatUsers(reply), 'headers reply-to' if reply?
                         row 'created', @props.message.get('createdAt'), 'headers date'
                         row 'subject', @props.message.get('subject'), 'headers subject'
 
