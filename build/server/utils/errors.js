@@ -141,6 +141,22 @@ utils.RefreshError = RefreshError = (function(superClass) {
 
 })(Error);
 
+utils.isMailboxDontExist = function(err) {
+  return err.message && ~err.message.indexOf("Mailbox doesn't exist");
+};
+
+utils.isFolderForbidden = function(err) {
+  return /Folder name (.*) is not allowed./.test(err.message);
+};
+
+utils.isFolderDuplicate = function(err) {
+  return /Duplicate folder name/.test(err.message);
+};
+
+utils.isFolderUndeletable = function(err) {
+  return /Internal folder cannot be deleted/.test(err.message);
+};
+
 log = require('../utils/logging')({
   prefix: 'errorhandler'
 });

@@ -47,7 +47,9 @@
     "simplesmtp": "0.3.33",
     "dovecot-testing": "0.0.3",
     "coffee-script": "1.9.1",
-    "brunch": "1.8.0"
+    "brunch": "1.8.0",
+    "biscotto": "2.3.1",
+    "opn":"1.0.1"
   },
   "scripts": {
     "test": "npm run test:server && npm run test:client",
@@ -62,6 +64,7 @@
     "build:client": "cd client && brunch b",
     "build:server": "cake build",
     "lint": "coffeelint -f coffeelint.json ./server/**/*.coffee",
+    "doc": "biscotto && opn ./doc/index.html",
     "lint2": "coffee-jshint -o node --globals MODEL_MODULE ./server/**/*.coffee",
     "start": "node build/server.js"
   },
