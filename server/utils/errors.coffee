@@ -92,6 +92,18 @@ utils.RefreshError = class RefreshError extends Error
         return this
 
 
+# Error predicates
+utils.isMailboxDontExist = (err) ->
+    err.message and ~err.message.indexOf "Mailbox doesn't exist"
+
+utils.isFolderForbidden = (err) ->
+    /Folder name (.*) is not allowed./.test err.message
+
+utils.isFolderDuplicate = (err) ->
+    /Duplicate folder name/.test err.message
+
+utils.isFolderUndeletable = (err) ->
+    /Internal folder cannot be deleted/.test err.message
 
 
 log = require('../utils/logging')(prefix: 'errorhandler')

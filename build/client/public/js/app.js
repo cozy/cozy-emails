@@ -1,42 +1,59 @@
-(function(/*! Brunch !*/) {
+(function() {
   'use strict';
 
-  var globals = typeof window !== 'undefined' ? window : global;
+  var globals = typeof window === 'undefined' ? global : window;
   if (typeof globals.require === 'function') return;
 
   var modules = {};
   var cache = {};
+  var has = ({}).hasOwnProperty;
 
-  var has = function(object, name) {
-    return ({}).hasOwnProperty.call(object, name);
+  var aliases = {};
+
+  var endsWith = function(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
   };
 
-  var expand = function(root, name) {
-    var results = [], parts, part;
-    if (/^\.\.?(\/|$)/.test(name)) {
-      parts = [root, name].join('/').split('/');
-    } else {
-      parts = name.split('/');
-    }
-    for (var i = 0, length = parts.length; i < length; i++) {
-      part = parts[i];
-      if (part === '..') {
-        results.pop();
-      } else if (part !== '.' && part !== '') {
-        results.push(part);
+  var unalias = function(alias, loaderPath) {
+    var start = 0;
+    if (loaderPath) {
+      if (loaderPath.indexOf('components/' === 0)) {
+        start = 'components/'.length;
+      }
+      if (loaderPath.indexOf('/', start) > 0) {
+        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
       }
     }
-    return results.join('/');
+    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
+    if (result) {
+      return 'components/' + result.substring(0, result.length - '.js'.length);
+    }
+    return alias;
   };
 
+  var expand = (function() {
+    var reg = /^\.\.?(\/|$)/;
+    return function(root, name) {
+      var results = [], parts, part;
+      parts = (reg.test(name) ? root + '/' + name : name).split('/');
+      for (var i = 0, length = parts.length; i < length; i++) {
+        part = parts[i];
+        if (part === '..') {
+          results.pop();
+        } else if (part !== '.' && part !== '') {
+          results.push(part);
+        }
+      }
+      return results.join('/');
+    };
+  })();
   var dirname = function(path) {
     return path.split('/').slice(0, -1).join('/');
   };
 
   var localRequire = function(path) {
     return function(name) {
-      var dir = dirname(path);
-      var absolute = expand(dir, name);
+      var absolute = expand(dirname(path), name);
       return globals.require(absolute, path);
     };
   };
@@ -51,21 +68,26 @@
   var require = function(name, loaderPath) {
     var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
+    path = unalias(name, loaderPath);
 
-    if (has(cache, path)) return cache[path].exports;
-    if (has(modules, path)) return initModule(path, modules[path]);
+    if (has.call(cache, path)) return cache[path].exports;
+    if (has.call(modules, path)) return initModule(path, modules[path]);
 
     var dirIndex = expand(path, './index');
-    if (has(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
+    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
 
     throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
   };
 
-  var define = function(bundle, fn) {
+  require.alias = function(from, to) {
+    aliases[to] = from;
+  };
+
+  require.register = require.define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
-        if (has(bundle, key)) {
+        if (has.call(bundle, key)) {
           modules[key] = bundle[key];
         }
       }
@@ -74,21 +96,18 @@
     }
   };
 
-  var list = function() {
+  require.list = function() {
     var result = [];
     for (var item in modules) {
-      if (has(modules, item)) {
+      if (has.call(modules, item)) {
         result.push(item);
       }
     }
     return result;
   };
 
+  require.brunch = true;
   globals.require = require;
-  globals.require.define = define;
-  globals.require.register = define;
-  globals.require.list = list;
-  globals.require.brunch = true;
 })();
 require.register("actions/account_action_creator", function(exports, require, module) {
 var AccountActionCreator, AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, XHRUtils;
@@ -3156,8 +3175,8 @@ module.exports = Compose = React.createClass({
     closeUrl = this.buildClosePanelUrl(this.props.layout);
     classLabel = 'compose-label';
     classInput = 'compose-input';
-    classCc = this.state.cc.length === 0 ? '' : ' shown';
-    classBcc = this.state.bcc.length === 0 ? '' : ' shown';
+    classCc = this.state.ccShown ? ' shown ' : '';
+    classBcc = this.state.bccShown ? ' shown ' : '';
     if (this.state.sending) {
       labelSend = t('compose action sending');
     } else {
@@ -3346,6 +3365,8 @@ module.exports = Compose = React.createClass({
     }
     state.sending = false;
     state.saving = false;
+    state.ccShown = false;
+    state.bccShown = false;
     return state;
   },
   componentWillReceiveProps: function(nextProps) {
@@ -3504,30 +3525,32 @@ module.exports = Compose = React.createClass({
     }
   },
   onToggleCc: function(e) {
-    var toggle, _i, _len, _ref2, _results;
+    var toggle, _i, _len, _ref2;
     toggle = function(e) {
       return e.classList.toggle('shown');
     };
     _ref2 = this.getDOMNode().querySelectorAll('.compose-cc');
-    _results = [];
     for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
       e = _ref2[_i];
-      _results.push(toggle(e));
+      toggle(e);
     }
-    return _results;
+    return this.setState({
+      ccShown: !this.state.ccShown
+    });
   },
   onToggleBcc: function(e) {
-    var toggle, _i, _len, _ref2, _results;
+    var toggle, _i, _len, _ref2;
     toggle = function(e) {
       return e.classList.toggle('shown');
     };
     _ref2 = this.getDOMNode().querySelectorAll('.compose-bcc');
-    _results = [];
     for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
       e = _ref2[_i];
-      _results.push(toggle(e));
+      toggle(e);
     }
-    return _results;
+    return this.setState({
+      bccShown: !this.state.bccShown
+    });
   }
 });
 
@@ -4305,13 +4328,15 @@ module.exports = MailsInput = React.createClass({
         onDragStart = function(event) {
           var data;
           event.stopPropagation();
-          data = {
-            name: address.name,
-            address: address.address
-          };
-          event.dataTransfer.setData('text', JSON.stringify(data));
-          event.dataTransfer.effectAllowed = 'move';
-          return event.dataTransfer.dropEffect = 'move';
+          if (address != null) {
+            data = {
+              name: address.name,
+              address: address.address
+            };
+            event.dataTransfer.setData('address', JSON.stringify(data));
+            event.dataTransfer.effectAllowed = 'all';
+            return event.dataTransfer.setData(_this.props.id, true);
+          }
         };
         onDragEnd = function(event) {
           if (event.dataTransfer.dropEffect === 'move') {
@@ -4341,11 +4366,12 @@ module.exports = MailsInput = React.createClass({
     knownContacts = this.state.known.map(renderTag);
     onChange = (function(_this) {
       return function(event) {
-        var value;
+        var known, value;
         value = event.target.value.split(',');
         if (value.length === 2) {
-          _this.state.known.push(MessageUtils.parseAddress(value[0]));
-          _this.props.valueLink.requestChange(_this.state.known);
+          known = _.clone(_this.state.known);
+          known.push(MessageUtils.parseAddress(value[0]));
+          _this.props.valueLink.requestChange(known);
           return _this.setState({
             unknown: value[1].trim()
           });
@@ -4363,9 +4389,18 @@ module.exports = MailsInput = React.createClass({
       open: this.state.open && ((_ref1 = this.state.contacts) != null ? _ref1.length : void 0) > 0
     });
     current = 0;
-    cancelDragEvent = function(event) {
-      return event.preventDefault();
-    };
+    cancelDragEvent = (function(_this) {
+      return function(event) {
+        var types;
+        event.preventDefault();
+        types = Array.prototype.slice.call(event.dataTransfer.types);
+        if (types.indexOf(_this.props.id) === -1) {
+          return event.dataTransfer.dropEffect = 'move';
+        } else {
+          return event.dataTransfer.dropEffect = 'none';
+        }
+      };
+    })(this);
     return div({
       className: className,
       onDrop: this.onDrop,
@@ -4541,13 +4576,14 @@ module.exports = MailsInput = React.createClass({
     }
   },
   onContact: function(contact) {
-    var address;
+    var address, known;
     address = {
       name: contact.get('fn'),
       address: contact.get('address')
     };
-    this.state.known.push(address);
-    this.props.valueLink.requestChange(this.state.known);
+    known = _.clone(this.state.known);
+    known.push(address);
+    this.props.valueLink.requestChange(known);
     this.setState({
       unknown: '',
       contacts: null,
@@ -4568,21 +4604,30 @@ module.exports = MailsInput = React.createClass({
     }
   },
   onDrop: function(event) {
-    var address, name, _ref1;
+    var address, exists, known, name, _ref1;
     event.preventDefault();
     event.stopPropagation();
-    _ref1 = JSON.parse(event.dataTransfer.getData('text')), name = _ref1.name, address = _ref1.address;
-    address = {
-      name: name,
-      address: address
-    };
-    this.state.known.push(address);
-    this.props.valueLink.requestChange(this.state.known);
-    return this.setState({
-      unknown: '',
-      contacts: null,
-      open: false
+    _ref1 = JSON.parse(event.dataTransfer.getData('address')), name = _ref1.name, address = _ref1.address;
+    exists = this.state.known.some(function(item) {
+      return item.name === name && item.address === address;
     });
+    if ((address != null) && !exists) {
+      address = {
+        name: name,
+        address: address
+      };
+      known = _.clone(this.state.known);
+      known.push(address);
+      this.props.valueLink.requestChange(known);
+      this.setState({
+        unknown: '',
+        contacts: null,
+        open: false
+      });
+      return event.dataTransfer.dropEffect = 'move';
+    } else {
+      return event.dataTransfer.dropEffect = 'none';
+    }
   }
 });
 });
@@ -9323,7 +9368,7 @@ module.exports = {
   "message undelete": "Undo message deletion",
   "message undelete ok": "Message undeleted",
   "message undelete error": "Error undoing some action",
-  "message undelete unnavalable": "Undo not available",
+  "message undelete unavalable": "Undo not available",
   "message preview title": "View attachments",
   "settings title": "Settings",
   "settings button save": "Save",
@@ -11188,6 +11233,11 @@ module.exports = {
     message = MessageStore.getByID(messageID);
     return message != null ? message.toJS() : void 0;
   },
+  getMessage: function(id) {
+    var message;
+    message = MessageStore.getByID(id);
+    return message != null ? message.toJS() : void 0;
+  },
   getCurrentConversation: function() {
     var conversationID, _ref;
     conversationID = MessageStore.getCurrentConversationID();
@@ -11417,8 +11467,8 @@ module.exports = {
       _ref = root.state;
       for (key in _ref) {
         value = _ref[key];
-        if (typeof root.state[key] === 'object') {
-          res.state[key] = '{object}';
+        if (typeof value === 'object') {
+          res.state[key] = _.clone(value);
         } else {
           res.state[key] = value;
         }
@@ -11426,8 +11476,8 @@ module.exports = {
       _ref1 = root.props;
       for (key in _ref1) {
         value = _ref1[key];
-        if (typeof root.props[key] === 'object') {
-          res.props[key] = '{object}';
+        if (typeof value === 'object') {
+          res.props[key] = _.clone(value);
         } else {
           res.props[key] = value;
         }
@@ -11538,7 +11588,7 @@ module.exports = MessageUtils = {
     }
   },
   makeReplyMessage: function(myAddress, inReplyTo, action, inHTML) {
-    var addresses, dateHuman, e, html, htmlSeparator, message, notMe, params, quoteStyle, sender, separator, text, toAddresses;
+    var addresses, dateHuman, e, fromField, html, htmlSeparator, message, notMe, params, quoteStyle, sender, senderAddress, senderInfos, senderName, senderString, separator, text, toAddresses;
     message = {
       composeInHTML: inHTML,
       attachments: Immutable.Vector.empty()
@@ -11577,9 +11627,9 @@ module.exports = MessageUtils = {
         message.to = this.getReplyToAddress(inReplyTo);
         message.cc = [];
         message.bcc = [];
-        message.subject = "" + (t('compose reply prefix')) + (inReplyTo.get('subject'));
+        message.subject = this.getReplySubject(inReplyTo);
         message.text = separator + this.generateReplyText(text) + "\n";
-        message.html = "<br /><br /><br />\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
+        message.html = "<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
         break;
       case ComposeActions.REPLY_ALL:
         params = {
@@ -11595,7 +11645,6 @@ module.exports = MessageUtils = {
           return (dest != null) && toAddresses.indexOf(dest.address) === -1;
         });
         message.bcc = [];
-        message.subject = "" + (t('compose reply prefix')) + (inReplyTo.get('subject'));
         message.text = separator + this.generateReplyText(text) + "\n";
         message.html = "<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
         break;
@@ -11603,7 +11652,18 @@ module.exports = MessageUtils = {
         addresses = inReplyTo.get('to').map(function(address) {
           return address.address;
         }).join(', ');
-        separator = "\n----- " + (t('compose forward header')) + " ------\n" + (t('compose forward subject')) + " " + (inReplyTo.get('subject')) + "\n" + (t('compose forward date')) + " " + dateHuman + "\n" + (t('compose forward from')) + " " + sender + "\n" + (t('compose forward to')) + " " + addresses + "\n";
+        senderInfos = this.getReplyToAddress(inReplyTo);
+        senderName = "";
+        senderAddress = "";
+        if (senderInfos.length > 0) {
+          senderName = senderInfos[0].name;
+          senderAddress = senderInfos[0].address;
+        }
+        senderString = senderAddress;
+        if (senderName.length > 0) {
+          fromField = "" + senderName + " &lt;" + senderAddress + "&gt;";
+        }
+        separator = "\n----- " + (t('compose forward header')) + " ------\n" + (t('compose forward subject')) + " " + (inReplyTo.get('subject')) + "\n" + (t('compose forward date')) + " " + dateHuman + "\n" + (t('compose forward from')) + " " + fromField + "\n" + (t('compose forward to')) + " " + addresses + "\n";
         message.to = [];
         message.cc = [];
         message.bcc = [];
@@ -11824,6 +11884,15 @@ module.exports = MessageUtils = {
   },
   wrapReplyHtml: function(html) {
     return "<style type=\"text/css\">\nblockquote {\n    margin: 0.8ex;\n    padding-left: 1ex;\n    border-left: 3px solid #34A6FF;\n}\n</style>\n" + html;
+  },
+  getReplySubject: function(inReplyTo) {
+    var replyPrefix, subject;
+    subject = "" + (inReplyTo.get('subject'));
+    replyPrefix = t('compose reply prefix');
+    if (subject.indexOf(replyPrefix) !== 0) {
+      subject = "" + replyPrefix + subject;
+    }
+    return subject;
   }
 };
 });
