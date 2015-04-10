@@ -344,7 +344,7 @@ module.exports = Compose = React.createClass
             # Add conversationID when sending message
             # we don't add conversationID to draft, otherwise the full
             # conversation would be updated, closing the compose panel
-            message.conversationID = @state.source.conversationID
+            message.conversationID = @state.originalConversationID
 
         valid = true
         if not isDraft
@@ -384,9 +384,13 @@ module.exports = Compose = React.createClass
                 if isDraft
                     state.saving = false
                 else
+                    state.isDraft = false
                     state.sending = false
                 state[key] = value for key, value of message
-                @setState state
+                # Sometime, when user cancel composing, the component has been
+                # unmounted before we come back from autosave, and setState fails
+                if @isMounted()
+                    @setState state
 
                 if isDraft
                     msgKo = t "message action draft ko"
