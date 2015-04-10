@@ -93,12 +93,9 @@ module.exports = MessageUtils =
                 message.to = @getReplyToAddress inReplyTo
                 message.cc = []
                 message.bcc = []
-                message.subject = """
-                    #{t 'compose reply prefix'}#{inReplyTo.get 'subject'}
-                    """
+                message.subject = @getReplySubject inReplyTo
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
-                    <br /><br /><br />
                     <p>#{separator}<span class="originalToggle"> … </span></p>
                     <blockquote style="#{quoteStyle}">#{html}</blockquote>
                     <p><br /></p>
@@ -116,9 +113,6 @@ module.exports = MessageUtils =
                     inReplyTo.get('cc')).filter (dest) ->
                     return dest? and toAddresses.indexOf(dest.address) is -1
                 message.bcc = []
-                message.subject = """
-                    #{t 'compose reply prefix'}#{inReplyTo.get 'subject'}
-                    """
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
                     <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -131,12 +125,23 @@ module.exports = MessageUtils =
                 .map (address) -> address.address
                 .join ', '
 
+                senderInfos = @getReplyToAddress inReplyTo
+                senderName = ""
+                senderAddress = ""
+                if senderInfos.length > 0
+                    senderName = senderInfos[0].name
+                    senderAddress = senderInfos[0].address
+
+                senderString = senderAddress
+                if senderName.length > 0
+                    fromField = "#{senderName} &lt;#{senderAddress}&gt;"
+
                 separator = """
 
 ----- #{t 'compose forward header'} ------
 #{t 'compose forward subject'} #{inReplyTo.get 'subject'}
 #{t 'compose forward date'} #{dateHuman}
-#{t 'compose forward from'} #{sender}
+#{t 'compose forward from'} #{fromField}
 #{t 'compose forward to'} #{addresses}
 
 """
@@ -356,3 +361,13 @@ module.exports = MessageUtils =
             #{html}
             """
 
+    # Add a reply prefix to the current subject. Do not add it again if it's
+    # already there.
+    getReplySubject: (inReplyTo) ->
+        subject =  """
+        #{inReplyTo.get 'subject'}
+        """
+        replyPrefix = t 'compose reply prefix'
+        if subject.indexOf(replyPrefix) isnt 0
+            subject = "#{replyPrefix}#{subject}"
+        subject

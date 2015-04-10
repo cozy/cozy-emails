@@ -2,11 +2,12 @@ async = require 'async'
 
 Account = require '../models/account'
 Mailbox = require '../models/mailbox'
-{BadRequest, NotFound} = require '../utils/errors'
+{BadRequest} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'mailbox:controller')
 _ = require 'lodash'
 async = require 'async'
 
+# fetch the mailbox and attach it to the request
 module.exports.fetch = (req, res, next) ->
     id = req.params.mailboxID
     Mailbox.find req.params.mailboxID, (err, mailbox) ->
@@ -14,6 +15,8 @@ module.exports.fetch = (req, res, next) ->
         req.mailbox = mailbox
         next()
 
+# fetch a mailbox by the body.parentID
+# attach it to the request as parentMailbox
 module.exports.fetchParent = (req, res, next) ->
     return async.nextTick next unless req.body.parentID
 
@@ -90,5 +93,6 @@ module.exports.expunge = (req, res, next) ->
             return next err if err
             res.account = account
             next null
-    else next new BadRequest 'You can only expunge trash mailbox'
+    else
+        next new BadRequest 'You can only expunge trash mailbox'
 

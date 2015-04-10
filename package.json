@@ -12,7 +12,7 @@
   },
   "main": "server.coffee",
   "dependencies": {
-    "americano": "0.3.10",
+    "americano": "0.4.1",
     "cozydb": "0.0.10",
     "printit": "0.1.3",
     "async": "0.9.0",
@@ -46,7 +46,10 @@
     "chai": "1.9.1",
     "simplesmtp": "0.3.33",
     "dovecot-testing": "0.0.3",
-    "coffee-script": "1.9.0"
+    "coffee-script": "1.9.1",
+    "brunch": "1.8.0",
+    "biscotto": "2.3.1",
+    "opn":"1.0.1"
   },
   "scripts": {
     "test": "npm run test:server && npm run test:client",
@@ -61,6 +64,7 @@
     "build:client": "cd client && brunch b",
     "build:server": "cake build",
     "lint": "coffeelint -f coffeelint.json ./server/**/*.coffee",
+    "doc": "biscotto && opn ./doc/index.html",
     "lint2": "coffee-jshint -o node --globals MODEL_MODULE ./server/**/*.coffee",
     "start": "node build/server.js"
   },

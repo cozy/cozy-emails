@@ -93,6 +93,11 @@ module.exports = class ImapReporter
         @sendtoclient()
 
 
+ImapReporter.batchMoveToTrash = (idsLength) ->
+    return new ImapReporter
+        code: 'batch-trash'
+        total: idsLength
+
 ImapReporter.accountFetch = (account, boxesLength, firstImport) ->
     return new ImapReporter
         total: boxesLength
