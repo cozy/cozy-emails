@@ -79,7 +79,7 @@ class LayoutStore extends Store
                 remove = =>
                     _tasks = _tasks.remove id
                     @emit 'change'
-                setTimeout remove, 3000
+                setTimeout remove, 5000
             @emit 'change'
 
         handle ActionTypes.RECEIVE_TASK_DELETE, (taskid) ->
