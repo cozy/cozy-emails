@@ -22,6 +22,7 @@ module.exports = React.createClass
         mailboxes            : React.PropTypes.object.isRequired
         settings             : React.PropTypes.object.isRequired
         accounts             : React.PropTypes.object.isRequired
+        displayConversations : React.PropTypes.bool
 
 
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -56,6 +57,7 @@ module.exports = React.createClass
             selectedAccountLogin: @props.selectedAccountLogin
             selectedMailboxID   : @props.selectedMailboxID
             settings            : @props.settings
+            displayConversations: @props.displayConversation
 
 
     renderGroup: (messages, key) ->

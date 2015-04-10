@@ -279,6 +279,7 @@ MessageList = React.createClass
                         edited: @state.edited
                         selected: @state.selected
                         allSelected: @state.allSelected
+                        displayConversations: @props.displayConversations
                         onSelect: (id, val) =>
                             selected = _.clone @state.selected
                             if val
@@ -322,7 +323,7 @@ MessageList = React.createClass
         # when displaying conversations, we have to sum the number of messages
         # inside each one to know if we have displayed all messages inside this
         # box
-        if @props.settings.get('displayConversation')
+        if @props.displayConversations
             nbInConv   = 0
             @props.messages.map (message) =>
                 length = @props.conversationLengths.get(message.get 'conversationID')
@@ -357,13 +358,12 @@ MessageList = React.createClass
 
     onDelete: (conv) ->
         selected = Object.keys @state.selected
-        settings = @props.settings
         if not conv?
-            conv = settings.get 'displayConversation'
+            conv = @props.displayConversations
         if selected.length is 0
             alertError t 'list mass no message'
         else
-            confirm = settings.get('messageConfirmDelete')
+            confirm = @props.settings.get('messageConfirmDelete')
             if confirm
                 if conv
                     confirmMessage = t 'list delete conv confirm',
@@ -386,7 +386,7 @@ MessageList = React.createClass
     onMove: (args, conv) ->
         selected = Object.keys @state.selected
         if not conv?
-            conv = @props.settings.get('displayConversation')
+            conv = @props.displayConversations
         if selected.length is 0
             alertError t 'list mass no message'
         else
@@ -530,7 +530,7 @@ MessageListBody = React.createClass
         messages = @props.messages.map (message, key) =>
             id = message.get('id')
             cid = message.get('conversationID')
-            if @props.settings.get('displayConversation') and cid?
+            if @props.displayConversations and cid?
                 isActive = @props.conversationID is cid
             else
                 isActive = @props.messageID is id
@@ -544,6 +544,7 @@ MessageListBody = React.createClass
                 settings: @props.settings,
                 selected: @props.selected[id]?,
                 login: @props.login
+                displayConversations: @props.displayConversations
                 onSelect: (val) =>
                     @props.onSelect id, val
 
@@ -602,7 +603,7 @@ MessageItem = React.createClass
                 messageID: message.get 'id'
         else
             conversationID = message.get 'conversationID'
-            if conversationID? and @props.settings.get('displayConversation')
+            if conversationID? and @props.displayConversations
                 action = 'conversation'
                 params =
                     conversationID: conversationID
@@ -656,7 +657,8 @@ MessageItem = React.createClass
                             i className: 'fa fa-user'
                     span className: 'participants', @getParticipants message
                     div className: 'preview',
-                        if @props.conversationLengths > 1
+                        if @props.displayConversations and
+                           @props.conversationLengths > 1
                             span className: 'badge conversation-length',
                                 @props.conversationLengths
                         span className: 'title',
@@ -710,7 +712,7 @@ MessageItem = React.createClass
         data =
             messageID: event.currentTarget.dataset.messageId
             mailboxID: @props.mailboxID
-            conversation: @props.settings.get 'displayConversation'
+            conversation: @props.displayConversations
         event.dataTransfer.setData 'text', JSON.stringify(data)
         event.dataTransfer.effectAllowed = 'move'
         event.dataTransfer.dropEffect = 'move'

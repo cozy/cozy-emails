@@ -47,6 +47,7 @@ module.exports = React.createClass
         accounts               : React.PropTypes.object.isRequired
         active                 : React.PropTypes.bool
         inConversation         : React.PropTypes.bool
+        displayConversations   : React.PropTypes.bool
         key                    : React.PropTypes.string.isRequired
         mailboxes              : React.PropTypes.object.isRequired
         message                : React.PropTypes.object.isRequired
@@ -312,7 +313,7 @@ module.exports = React.createClass
             nextMessageID      = @props.prevMessageID
             nextConversationID = @props.prevConversationID
         if nextMessageID
-            if @props.settings.get('displayConversation') and nextConversationID?
+            if @props.displayConversations and nextConversationID?
                 @redirect
                     direction: 'second'
                     action : 'conversation'

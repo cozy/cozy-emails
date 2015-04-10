@@ -187,13 +187,14 @@ module.exports = Application = React.createClass
         else
             disposition = LayoutStore.getDisposition()
             if disposition.type is Dispositions.HORIZONTAL
-                classes =
-                    firstPanel: "col-xs-12 col-md-12 hidden-xs hidden-sm row-#{disposition.height}"
-                    secondPanel: "col-xs-12 col-md-12 row-#{10 - disposition.height}"
+                firstClass  = "col-md-12 row-#{disposition.height}"
+                secondClass = "col-md-12 row-#{10 - disposition.height}"
             else
-                classes =
-                    firstPanel: "col-xs-12 col-md-#{disposition.width} hidden-xs hidden-sm row-10"
-                    secondPanel: "col-xs-12 col-md-#{12 - disposition.width} row-10"
+                firstClass  = "col-md-#{disposition.width} row-10"
+                secondClass = "col-md-#{12 - disposition.width} row-10"
+            classes =
+                firstPanel: "col-xs-12 hidden-xs hidden-sm #{firstClass}"
+                secondPanel: "col-xs-12 #{secondClass}"
 
             # we don't animate in the first render
             if previous?
@@ -279,7 +280,13 @@ module.exports = Application = React.createClass
             query.accountID = accountID
             query.mailboxID = mailboxID
 
+            # don't display conversations in Trash and Draft folders
+            isDraft = @state.selectedAccount?.get('draftMailbox') is mailboxID
             isTrash = @state.selectedAccount?.get('trashMailbox') is mailboxID
+            if isDraft or isTrash
+                displayConversations = false
+            else
+                displayConversations = @state.settings.get 'displayConversation'
 
             return MessageList
                 messages:      messages
@@ -295,11 +302,12 @@ module.exports = Application = React.createClass
                 refreshes:     @state.refreshes
                 query:         query
                 isTrash:       isTrash
-                conversationLengths: conversationLengths
-                emptyListMessage: emptyListMessage
-                counterMessage:   counterMessage
-                ref:           'messageList'
-                toggleMenu: @toggleMenu
+                conversationLengths:  conversationLengths
+                emptyListMessage:     emptyListMessage
+                counterMessage:       counterMessage
+                ref:                  'messageList'
+                toggleMenu:           @toggleMenu
+                displayConversations: displayConversations
 
         # -- Generates a configuration window for a given account
         else if panelInfo.action is 'account.config'
@@ -339,8 +347,17 @@ module.exports = Application = React.createClass
                 conversation = MessageStore.getConversation conversationID
                 selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
 
+            # don't display conversations in Trash and Draft folders
+            isDraft = @state.selectedAccount?.get('draftMailbox') is mailboxID
+            isTrash = @state.selectedAccount?.get('trashMailbox') is mailboxID
+            if isDraft or isTrash
+                displayConversations = false
+            else
+                displayConversations = @state.settings.get 'displayConversation'
+
             prevMessage = MessageStore.getPreviousMessage()
             nextMessage = MessageStore.getNextMessage()
+
             return Conversation
                 key: 'conversation-' + conversationID
                 layout               : layout
@@ -359,6 +376,7 @@ module.exports = Application = React.createClass
                 nextMessageID        : nextMessage?.get 'id'
                 nextConversationID   : nextMessage?.get 'conversationID'
                 ref                  : 'conversation'
+                displayConversations : displayConversations
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
