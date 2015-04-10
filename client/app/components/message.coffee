@@ -283,9 +283,13 @@ module.exports = React.createClass
                     layout          : 'second'
                     callback: (error) =>
                         if not error?
-                            @setState composing: false
+                            # component has probably already been unmounted due to conversation refresh
+                            if @isMounted()
+                                @setState composing: false
                     onCancel: =>
-                        @setState composing: false
+                        # component has probably already been unmounted due to conversation refresh
+                        if @isMounted()
+                            @setState composing: false
 
     toggleHeaders: (e) ->
         e.preventDefault()
