@@ -145,7 +145,7 @@ var toMarkdown = function(string) {
             innerHTML = innerHTML.replace(/^\s+/, '');
             innerHTML = innerHTML.replace(/\n\n/g, '\n\n    ');
             // indent nested lists
-            innerHTML = innerHTML.replace(/\n([ ]*)+(\*|\d+\.) /g, '\n$1    $2 ');
+            innerHTML = innerHTML.replace(/\n([ ]*)(\*|\d+\.) /g, '\n$1    $2 ');
             return prefix + innerHTML;
           });
         }
