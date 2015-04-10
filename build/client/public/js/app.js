@@ -3454,7 +3454,7 @@ module.exports = Compose = React.createClass({
       references: this.state.references
     };
     if (!isDraft) {
-      message.conversationID = this.state.source.conversationID;
+      message.conversationID = this.state.originalConversationID;
     }
     valid = true;
     if (!isDraft) {
@@ -3501,13 +3501,16 @@ module.exports = Compose = React.createClass({
           if (isDraft) {
             state.saving = false;
           } else {
+            state.isDraft = false;
             state.sending = false;
           }
           for (key in message) {
             value = message[key];
             state[key] = value;
           }
-          _this.setState(state);
+          if (_this.isMounted()) {
+            _this.setState(state);
+          }
           if (isDraft) {
             msgKo = t("message action draft ko");
           } else {
@@ -6432,17 +6435,21 @@ module.exports = React.createClass({
           callback: (function(_this) {
             return function(error) {
               if (error == null) {
-                return _this.setState({
-                  composing: false
-                });
+                if (_this.isMounted()) {
+                  return _this.setState({
+                    composing: false
+                  });
+                }
               }
             };
           })(this),
           onCancel: (function(_this) {
             return function() {
-              return _this.setState({
-                composing: false
-              });
+              if (_this.isMounted()) {
+                return _this.setState({
+                  composing: false
+                });
+              }
             };
           })(this)
         });
