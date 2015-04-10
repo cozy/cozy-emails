@@ -7,6 +7,7 @@ LayoutActionCreator       = require '../actions/layout_action_creator'
 
 module.exports = MessageUtils =
 
+
     displayAddress: (address, full = false) ->
         if full
             if address.name? and address.name isnt ""
@@ -19,6 +20,7 @@ module.exports = MessageUtils =
             else
                 return address.address.split('@')[0]
 
+
     displayAddresses: (addresses, full = false) ->
         if not addresses?
             return ""
@@ -30,6 +32,9 @@ module.exports = MessageUtils =
             res.push(MessageUtils.displayAddress item, full)
         return res.join ", "
 
+
+    # From a text, build an address object (name and address).
+    # Add a isValid field to
     parseAddress: (text) ->
         text = text.trim()
         if match = text.match /"{0,1}(.*)"{0,1} <(.*)>/
@@ -40,10 +45,12 @@ module.exports = MessageUtils =
             address =
                 address: text.replace(/^\s*/, '')
 
+        # Test email validity
         emailRe = /^([A-Za-z0-9_\-\.])+\@([A-Za-z0-9_\-\.])+\.([A-Za-z]{2,4})$/
         address.isValid = address.address.match emailRe
 
         address
+
 
     getReplyToAddress: (message) ->
         reply = message.get 'replyTo'
@@ -52,6 +59,7 @@ module.exports = MessageUtils =
             return reply
         else
             return from
+
 
     makeReplyMessage: (myAddress, inReplyTo, action, inHTML) ->
         message =

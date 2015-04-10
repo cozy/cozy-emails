@@ -226,9 +226,6 @@ module.exports = Compose = React.createClass
     componentDidMount: ->
         @_initCompose()
 
-    #componentDidUpdate: ->
-    #    @_initCompose()
-
     componentWillUnmount: ->
         if @_saveInterval
             window.clearInterval @_saveInterval

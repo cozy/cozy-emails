@@ -52,24 +52,30 @@ module.exports = class Router extends PanelRouter
     # Determines and gets the default parameters regarding a specific action
     _getDefaultParameters: (action) ->
         switch action
+
             when 'account.mailbox.messages'
             ,    'account.mailbox.messages.full'
                 defaultAccountID = AccountStore.getDefault()?.get 'id'
-                defaultMailboxID = AccountStore.getDefaultMailbox(defaultAccountID)?.get 'id'
+                mailbox = AccountStore.getDefaultMailbox defaultAccountID
+                defaultMailboxID = mailbox?.get 'id'
                 defaultParameters = _.clone(MessageStore.getParams())
                 defaultParameters.accountID = defaultAccountID
                 defaultParameters.mailboxID = defaultMailboxID
                 defaultParameters.sort = '-'
                 defaultParameters.pageAfter = '-'
+
             when 'account.config'
                 defaultAccount = AccountStore.getDefault()?.get 'id'
                 defaultParameters =
                     accountID: defaultAccount
                     tab: 'account'
+
             when 'search'
                 defaultParameters =
                     query: ""
                     page: 1
+
             else
                 defaultParameters = null
+
         return defaultParameters
