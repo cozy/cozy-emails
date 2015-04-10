@@ -429,6 +429,7 @@ module.exports = Application = React.createClass
                 name:  account.get 'name'
                 label: account.get 'label'
                 login: account.get 'login'
+                trashMailbox: account.get 'trashMailbox'
         .toJS()
 
         mailboxesFlat = {}
