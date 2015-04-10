@@ -82,7 +82,7 @@ class Mailbox extends cozydb.CozyModel
         Mailbox.getBoxes accountID, (err, boxes) ->
             return callback err if err
             boxIndex = {}
-            boxIndex[box.id] = path: box.path for box in boxes
+            boxIndex[box.id] = box for box in boxes
             callback null, boxIndex
 
     # Public: remove mailboxes linked to an account that doesn't exist
@@ -643,6 +643,15 @@ class Mailbox extends cozydb.CozyModel
             Message.createFromImapMessage mail, this, uid, (err) ->
                 return callback err if err
                 callback null, {shouldNotif}
+
+    # Public: whether this box messages should be ignored
+    # in the account's total (trash or junk)
+    #
+    # Returns {Boolean} true if this message should be ignored.
+    Mailbox::ignoreInCount = ->
+        return Mailbox.RFC6154.trashMailbox in @attribs or
+               Mailbox.RFC6154.junkMailbox  in @attribs or
+               @guessUse() in ['trashMailbox', 'junkMailbox']
 
 
 module.exports = Mailbox

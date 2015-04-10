@@ -33,6 +33,8 @@ module.exports = class Message extends cozydb.CozyModel
         html           : String          # message content as html
         date           : Date            # message date
         priority       : String          # message priority
+        ignoreInCount  : Boolean         # whether or not to count this message
+                                         # in account values
         binary         : cozydb.NoSchema
         attachments    : cozydb.NoSchema
         alternatives   : cozydb.NoSchema # for calendar content
@@ -642,6 +644,11 @@ module.exports = class Message extends cozydb.CozyModel
             for boxid in boxOps.addTo when not boxIndex[boxid]
                 return callback new Error "the box ID=#{boxid} doesn't exists"
 
+            shouldIgnoreAfterUpdate = Object.keys(newmailboxIDs)
+                                            .map (id) -> boxIndex[id]
+                                            .some (box) -> box.ignoreInCount()
+
+
             firstboxid = Object.keys(@mailboxIDs)[0]
             firstuid = @mailboxIDs[firstboxid]
 
@@ -707,6 +714,7 @@ module.exports = class Message extends cozydb.CozyModel
             , (err) ->
                 return callback err if err
                 callback null,
+                    ignoreInCount: shouldIgnoreAfterUpdate
                     mailboxIDs: newmailboxIDs
                     flags: newflags
 
@@ -725,6 +733,7 @@ module.exports = class Message extends cozydb.CozyModel
 
         # we store the box & account id
         mail.accountID = box.accountID
+        mail.ignoreInCount = box.ignoreInCount()
         mail.mailboxIDs = {}
         mail.mailboxIDs[box._id] = uid
 
