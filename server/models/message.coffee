@@ -351,9 +351,7 @@ module.exports = class Message extends cozydb.CozyModel
     # Returns (callback) the updated {Message}
     @applyFlagsChanges: (id, flags, callback) ->
         log.debug "applyFlagsChanges", id, flags
-        Message.find id, (err, message) ->
-            return callback err if err
-            message.updateAttributes {flags}, callback
+        Message.updateAttributes id, {flags}, callback
 
     # Public: remove messages from mailboxes that doesnt exist
     # anymore.
@@ -486,13 +484,18 @@ module.exports = class Message extends cozydb.CozyModel
             log.debug "create"
             Message.create message, callback
 
-    # Public: get number of messages in a box, depending on the query params
+    # Public: check if a message is already in cozy by its mid.
+    # If it is update it with {::markTwin} or {::addToMailbox}, else fetch it.
     #
-    # mailboxID - {String} the mailbox's ID
-    # params - query's options
+    # box - {Mailbox} the box to create this message in
+    # msg - {Object} the msg
+    #           :mid - {String} Message-id
+    #           :uid - {String} the uid
+    # ignoreInCount - {Boolean} mark this message as ignored in counts.
     #
-    # Returns (callback) {Number} of messages in the search
-    @fetchOrUpdate: (box, mid, uid, callback) ->
+    # Returns (callback) {Message} the updated Message
+    @fetchOrUpdate: (box, msg, callback) ->
+        {mid, uid} = msg
         log.debug "fetchOrUpdate", box.id, mid, uid
         Message.byMessageID box.accountID, mid, (err, existing) ->
             return callback err if err
@@ -506,9 +509,7 @@ module.exports = class Message extends cozydb.CozyModel
                 existing.markTwin box, callback
             else
                 log.debug "        fetch"
-                setTimeout ->
-                    box.imap_fetchOneMail uid, callback
-                , 50
+                box.imap_fetchOneMail uid, callback
 
 
     # Public: mark a message has having a twin (2 messages with same MID,

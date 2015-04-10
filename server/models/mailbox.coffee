@@ -364,7 +364,7 @@ class Mailbox extends cozydb.CozyModel
     imap_fetchMails: (options, callback) ->
         {limitByBox, firstImport} = options
         log.debug "imap_fetchMails", limitByBox
-        step = RefreshStep.initial limitByBox, firstImport
+        step = RefreshStep.initial options
 
         @imap_refreshStep step, (err, shouldNotif) =>
             log.debug "imap_fetchMailsEnd", limitByBox
@@ -487,13 +487,13 @@ class Mailbox extends cozydb.CozyModel
         toFetch.reverse()
         shouldNotif = false
         async.eachSeries toFetch, (msg, cb) ->
-            Message.fetchOrUpdate box, msg.mid, msg.uid, (err, result) ->
+            Message.fetchOrUpdate box, msg, (err, result) ->
                 reporter.onError err if err
                 reporter.addProgress 1
                 if result?.shouldNotif is true
                     shouldNotif = true
-                # dont stop
-                cb null
+                # loop anyway, let the DS breath
+                setTimeout (-> cb null), 50
         , (err) ->
             callback err, shouldNotif
 
@@ -686,15 +686,16 @@ class RefreshStep
     # Public: get the first step.
     # The first step is marked as .initial = true and doesnt have min or max
     #
-    # limitByBox - {Number} max number of message to fetch in a box or
+    # options - {Object}
+    #       :limitByBox - {Number} max number of message to fetch in a box or
     #              null for all
-    # firstImport - {Boolean}
+    #       :firstImport - {Boolean}
     #
     # Returns {RefreshStep} an initial step
-    @initial: (limitByBox, firstImport) ->
+    @initial: (options) ->
         step = new RefreshStep()
-        step.limitByBox = limitByBox
-        step.firstImport = firstImport
+        step.limitByBox = options.limitByBox
+        step.firstImport = options.firstImport
         step.shouldNotif = false
         step.initial = true
         return step
