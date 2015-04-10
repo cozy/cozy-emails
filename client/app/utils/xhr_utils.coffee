@@ -28,14 +28,16 @@ module.exports =
                 console.log "Error in fetchMessage", emailID, res.body?.error
                 callback t('app error')
 
-    fetchConversation: (emailID, callback) ->
-        request.get "conversation/#{emailID}"
+    fetchConversation: (conversationID, callback) ->
+        request.get "conversation/#{conversationID}"
         .set 'Accept', 'application/json'
         .end (res) ->
             if res.ok
+                res.body.conversationLengths = {}
+                res.body.conversationLengths[conversationID] = res.body.length
                 callback null, res.body
             else
-                console.log "Error in fetchConversation", emailID,
+                console.log "Error in fetchConversation", conversationID,
                     res.body?.error
                 callback t('app error')
 
