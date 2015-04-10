@@ -630,14 +630,9 @@ class Mailbox extends cozydb.CozyModel
 
     # Public: refresh part of a mailbox
     #
-    # laststep - {RefreshStep} can be null, step references
-    #               - min : min uid to fetch
-    #               - max : max uid to fetch
-    # callback - Function({Error} err, {Boolean} shouldNotif)
-    #               - err
-    #               - shouldNotif display a notification for it
+    # uid - uid to fetch
     #
-    # Returns a task completion
+    # Returns (callback) {Boolean} shouldNotif if the message is not read
     Mailbox::imap_fetchOneMail = (uid, callback) ->
         @doLaterWithBox (imap, imapbox, cb) ->
             imap.fetchOneMail uid, cb

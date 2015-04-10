@@ -463,12 +463,11 @@ module.exports = class Message extends cozydb.CozyModel
             return callback err if err
             callback null, rows[0]?.value or 0
 
-    # Public: get number of messages in a box, depending on the query params
+    # Public: create or update a message
     #
-    # mailboxID - {String} the mailbox's ID
-    # params - query's options
+    # message - {Message} the mailbox's ID
     #
-    # Returns (callback) {Number} of messages in the search
+    # Returns (callback) {Message} the updated / created message
     @updateOrCreate: (message, callback) ->
         log.debug "create or update"
         if message.id
