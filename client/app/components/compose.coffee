@@ -268,9 +268,11 @@ module.exports = Compose = React.createClass
                         conversationID: @state.originalConversationID
                     MessageActionCreator.send message, (error, message) ->
                         if error?
-                            LayoutActionCreator.alertError "#{t "message action draft ko"} #{error}"
+                            msg = "#{t "message action draft ko"} #{error}"
+                            LayoutActionCreator.alertError msg
                         else
-                            LayoutActionCreator.notify "#{t "message action draft ok"}", autoclose: true
+                            msg = "#{t "message action draft ok"}"
+                            LayoutActionCreator.notify msg, autoclose: true
                             if message.conversationID?
                                 # reload conversation to update its length
                                 ConversationActionCreator.fetch message.conversationID

@@ -12,8 +12,10 @@ module.exports = React.createClass
 
     render: ->
 
-        classLabel = 'col-sm-5 col-sm-offset-1 control-label'
-        classInput = 'col-sm-6'
+        classLabel  = 'col-sm-5 col-sm-offset-1 control-label'
+        classInput  = 'col-sm-6'
+        layoutStyle = @state.settings.layoutStyle or 'vertical'
+        listStyle   = @state.settings.listStyle   or 'default'
 
         div id: 'settings',
             h3 className: null, t "settings title"
@@ -73,26 +75,32 @@ module.exports = React.createClass
                                 className: "btn btn-default dropdown-toggle"
                                 type: "button"
                                 "data-toggle": "dropdown",
-                                t "settings label layoutStyle #{@state.settings.layoutStyle or 'vertical'}"
+                                t "settings label layoutStyle #{layoutStyle}"
                             ul className: "dropdown-menu", role: "menu",
                                 li
                                     role: "presentation",
                                     'data-target': 'layoutStyle',
                                     'data-style': Dispositions.VERTICAL,
                                     onClick: @handleChange,
-                                        a role: "menuitem", t "settings label layoutStyle vertical"
+                                        a
+                                            role: "menuitem",
+                                                t "settings label layoutStyle vertical"
                                 li
                                     role: "presentation",
                                     'data-target': 'layoutStyle',
                                     'data-style': Dispositions.HORIZONTAL,
                                     onClick: @handleChange,
-                                        a role: "menuitem", t "settings label layoutStyle horizontal"
+                                        a
+                                            role: "menuitem",
+                                            t "settings label layoutStyle horizontal"
                                 li
                                     role: "presentation",
                                     'data-target': 'layoutStyle',
                                     'data-style': Dispositions.THREE,
                                     onClick: @handleChange,
-                                        a role: "menuitem", t "settings label layoutStyle three"
+                                        a
+                                            role: "menuitem",
+                                            t "settings label layoutStyle three"
 
                 # List style
                 div className: 'form-group',
@@ -105,20 +113,24 @@ module.exports = React.createClass
                                 className: "btn btn-default dropdown-toggle"
                                 type: "button"
                                 "data-toggle": "dropdown",
-                                t "settings label listStyle #{@state.settings.listStyle or 'default'}"
+                                t "settings label listStyle #{listStyle}"
                             ul className: "dropdown-menu", role: "menu",
                                 li
                                     role: "presentation",
                                     'data-target': 'listStyle',
                                     'data-style': 'default',
                                     onClick: @handleChange,
-                                        a role: "menuitem", t "settings label listStyle default"
+                                        a
+                                            role: "menuitem",
+                                            t "settings label listStyle default"
                                 li
                                     role: "presentation",
                                     'data-target': 'listStyle',
                                     'data-style': 'compact',
                                     onClick: @handleChange,
-                                        a role: "menuitem", t "settings label listStyle compact"
+                                        a
+                                            role: "menuitem",
+                                            t "settings label listStyle compact"
 
             # SETTINGS
             @_renderOption 'displayConversation'
@@ -257,7 +269,7 @@ module.exports = React.createClass
                 else
                     PluginUtils.deactivate name
                 for own pluginName, pluginConf of settings.plugins
-                    settings.plugins[pluginName].active = window.plugins[pluginName].active
+                    pluginConf.active = window.plugins[pluginName].active
                 @setState({settings: settings})
                 SettingsActionCreator.edit settings
 
@@ -289,6 +301,13 @@ module.exports = React.createClass
         target = event.currentTarget
         pluginName = target.dataset.plugin
         window.plugins[pluginName].onHelp()
+
+    registerMailto: ->
+        loc = window.location
+        window.navigator.registerProtocolHandler "mailto",
+            "#{loc.origin}#{loc.pathname}#compose?mailto=%s",
+            "Cozy"
+
 
     getInitialState: (forceDefault) ->
         settings = @props.settings.toObject()

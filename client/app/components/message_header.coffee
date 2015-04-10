@@ -13,6 +13,8 @@ module.exports = React.createClass
 
     propTypes:
         message: React.PropTypes.object.isRequired
+        isDraft                : React.PropTypes.bool
+        isDeleted              : React.PropTypes.bool
 
 
     getInitialState: ->
@@ -36,6 +38,10 @@ module.exports = React.createClass
                         @renderAttachementsIndicator()
                     if MessageFlags.FLAGGED in @props.message.get('flags')
                         i className: 'fa fa-star'
+                    if @props.isDraft
+                        i className: 'fa fa-edit'
+                    if @props.isDeleted
+                        i className: 'fa fa-trash'
                 div className: 'date',
                     MessageUtils.formatDate @props.message.get 'createdAt'
                 @renderDetailsPopup()

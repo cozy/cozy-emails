@@ -233,6 +233,8 @@ module.exports = React.createClass
     renderHeaders: ->
         MessageHeader
             message: @props.message
+            isDraft: @state.prepared.isDraft
+            isDeleted: @state.prepared.isDeleted
 
     renderToolbox: (full = true) ->
         return if @state.composing

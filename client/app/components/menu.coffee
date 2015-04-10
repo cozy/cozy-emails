@@ -212,9 +212,14 @@ module.exports = Menu = React.createClass
                 if progress = refreshes.get(accountID)
                     if progress.get('errors').length
                         span className: 'refresh-error',
-                            i className: 'fa warning', onClick: @displayErrors.bind null, progress
+                            i
+                                className: 'fa warning',
+                                onClick: @displayErrors.bind null,
+                                progress
                     if progress.get('firstImport')
-                        ThinProgress done: progress.get('done'), total: progress.get('total')
+                        ThinProgress
+                            done: progress.get('done'),
+                            total: progress.get('total')
 
                 else if nbUnread > 0
                     span className: 'badge', nbUnread
@@ -223,7 +228,14 @@ module.exports = Menu = React.createClass
                 ul className: 'list-unstyled submenu mailbox-list',
                     mailboxes?.map (mailbox, key) =>
                         selectedMailboxID = @props.selectedMailboxID
-                        MenuMailboxItem { account, mailbox, key, selectedMailboxID, refreshes, displayErrors: @displayErrors, hideMenu: @_hideMenu}
+                        MenuMailboxItem
+                            account:           account,
+                            mailbox:           mailbox,
+                            key:               key,
+                            selectedMailboxID: selectedMailboxID,
+                            refreshes:         refreshes,
+                            displayErrors:     @displayErrors,
+                            hideMenu:          @_hideMenu
                     .toJS()
                     li null,
                         a
@@ -320,7 +332,9 @@ MenuMailboxItem = React.createClass
                         "#{pusher}#{@props.mailbox.get 'label'}"
 
                 if progress and progress.get('firstImport')
-                    ThinProgress done: progress.get('done'), total: progress.get('total')
+                    ThinProgress
+                        done: progress.get('done')
+                        total: progress.get('total')
 
                 if progress?.get('errors').length
                     span className: 'refresh-error', onClick: displayError,
@@ -338,7 +352,8 @@ MenuMailboxItem = React.createClass
         e.preventDefault()
 
     onDrop: (event) ->
-        {messageID, mailboxID, conversation} = JSON.parse(event.dataTransfer.getData 'text')
+        data = event.dataTransfer.getData 'text'
+        {messageID, mailboxID, conversation} = JSON.parse data
         newID = event.currentTarget.dataset.mailboxId
         @setState target: false
         MessageUtils.move messageID, conversation, mailboxID, newID

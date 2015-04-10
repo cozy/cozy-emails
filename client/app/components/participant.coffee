@@ -119,7 +119,11 @@ Participants = React.createClass
             if @props.participants
                 for address, key in @props.participants
                     span key: key, className: null,
-                        Participant {key, address, onAdd: @props.onAdd, tooltip: @props.tooltip}
+                        Participant
+                            key:     key,
+                            address: address,
+                            onAdd:   @props.onAdd,
+                            tooltip: @props.tooltip
                         if key < ( @props.participants.length - 1)
                             span null, ', '
 
