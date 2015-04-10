@@ -13,6 +13,8 @@ module.exports = React.createClass
 
     propTypes:
         message: React.PropTypes.object.isRequired
+        isDraft                : React.PropTypes.bool
+        isDeleted              : React.PropTypes.bool
 
 
     getInitialState: ->
@@ -36,6 +38,10 @@ module.exports = React.createClass
                         @renderAttachementsIndicator()
                     if MessageFlags.FLAGGED in @props.message.get('flags')
                         i className: 'fa fa-star'
+                    if @props.isDraft
+                        i className: 'fa fa-edit'
+                    if @props.isDeleted
+                        i className: 'fa fa-trash'
                 div className: 'date',
                     MessageUtils.formatDate @props.message.get 'createdAt'
                 @renderDetailsPopup()
@@ -47,8 +53,9 @@ module.exports = React.createClass
         format = (user) ->
             items = []
             if user.name
+                key = user.address.replace(/\W/g, '')
                 items.push "#{user.name} "
-                items.push span className: 'contact-address',
+                items.push span className: 'contact-address', key: key,
                     i className: 'fa fa-angle-left'
                     user.address
                     i className: 'fa fa-angle-right'
@@ -102,7 +109,7 @@ module.exports = React.createClass
             i
                 className: 'btn fa fa-paperclip fa-flip-horizontal'
                 onClick: @toggleAttachments
-            div className: 'popup', 'aria-hidden': !@state.showAttachements,
+            div className: 'popup', 'aria-hidden': not @state.showAttachements,
                 ul className: null,
                     for file in attachments
                         AttachmentPreview
@@ -136,12 +143,12 @@ module.exports = React.createClass
             div className: 'popup', 'aria-hidden': not @state.showDetails,
                 table null,
                     tbody null,
-                        row 'from', @formatUsers(from), 'headers from'
-                        row 'to',   @formatUsers(to[0]), 'headers to', to.length if to.length
-                        row 'dest', @formatUsers(dest) for dest in to[1..] if to.length
-                        row 'cc',   @formatUsers(cc[0]), 'headers cc', cc.length if cc.length
-                        row 'dest', @formatUsers(dest) for dest in cc[1..] if cc.length
-                        row 'reply', @formatUsers(reply), 'headers reply-to' if reply?
+                        row 'from',    @formatUsers(from), 'headers from'
+                        row 'to',      @formatUsers(to[0]), 'headers to', to.length if to.length
+                        row 'destTo',  @formatUsers(dest) for dest in to[1..] if to.length
+                        row 'cc',      @formatUsers(cc[0]), 'headers cc', cc.length if cc.length
+                        row 'destCc',  @formatUsers(dest) for dest in cc[1..] if cc.length
+                        row 'reply',   @formatUsers(reply), 'headers reply-to' if reply?
                         row 'created', @props.message.get('createdAt'), 'headers date'
                         row 'subject', @props.message.get('subject'), 'headers subject'
 

@@ -14,6 +14,7 @@ messageUtils = require '../utils/message_utils'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
+ConversationActionCreator = require '../actions/conversation_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
 
@@ -229,15 +230,49 @@ module.exports = Compose = React.createClass
     componentWillUnmount: ->
         if @_saveInterval
             window.clearInterval @_saveInterval
+        # If message has not been sent, ask if we sould keep it or not
+        #  - if yes, and the draft belongs to a conversation, add the
+        #    conversationID and save the draft
+        #  - if no, delete the draft
         if @state.isDraft and
-           @state.id? and
-           not window.confirm(t 'compose confirm keep draft')
-            MessageActionCreator.delete @state.id, (error) ->
-                if error?
-                    LayoutActionCreator.alertError \
-                        "#{t("message action delete ko")} #{error}"
-                else
-                    LayoutActionCreator.notify t('compose draft deleted')
+           @state.id?
+            if not window.confirm(t 'compose confirm keep draft')
+                MessageActionCreator.delete @state.id, (error) ->
+                    if error?
+                        LayoutActionCreator.alertError \
+                            "#{t("message action delete ko")} #{error}"
+                    else
+                        LayoutActionCreator.notify t('compose draft deleted'),
+                            autoclose: true
+            else
+                if @state.originalConversationID?
+                    # save one last time the draft, adding the conversationID
+                    message =
+                        id            : @state.id
+                        accountID     : @state.accountID
+                        mailboxIDs    : @state.mailboxIDs
+                        from          : @state.from
+                        to            : @state.to
+                        cc            : @state.cc
+                        bcc           : @state.bcc
+                        subject       : @state.subject
+                        isDraft       : true
+                        attachments   : @state.attachments
+                        inReplyTo     : @state.inReplyTo
+                        references    : @state.references
+                        text          : @state.text
+                        html          : @state.html
+                        conversationID: @state.originalConversationID
+                    MessageActionCreator.send message, (error, message) ->
+                        if error?
+                            msg = "#{t "message action draft ko"} #{error}"
+                            LayoutActionCreator.alertError msg
+                        else
+                            msg = "#{t "message action draft ok"}"
+                            LayoutActionCreator.notify msg, autoclose: true
+                            if message.conversationID?
+                                # reload conversation to update its length
+                                ConversationActionCreator.fetch message.conversationID
 
     getInitialState: (forceDefault) ->
 
@@ -259,6 +294,9 @@ module.exports = Compose = React.createClass
                 @props.inReplyTo, @props.action,
                 @props.settings.get('composeInHTML')
             state.accountID ?= @props.selectedAccountID
+            # use another field to prevent the empty conversationID of draft
+            # to override the original conversationID
+            state.originalConversationID = state.conversationID
 
         state.sending  = false
         state.saving   = false
@@ -289,18 +327,24 @@ module.exports = Compose = React.createClass
             address: account.login
 
         message =
-            id          : @state.id
-            accountID   : @state.accountID
-            mailboxIDs  : @state.mailboxIDs
-            from        : [from]
-            to          : @state.to
-            cc          : @state.cc
-            bcc         : @state.bcc
-            subject     : @state.subject
-            isDraft     : isDraft
-            attachments : @state.attachments
-            inReplyTo   : @state.inReplyTo
-            references  : @state.references
+            id            : @state.id
+            accountID     : @state.accountID
+            mailboxIDs    : @state.mailboxIDs
+            from          : [from]
+            to            : @state.to
+            cc            : @state.cc
+            bcc           : @state.bcc
+            subject       : @state.subject
+            isDraft       : isDraft
+            attachments   : @state.attachments
+            inReplyTo     : @state.inReplyTo
+            references    : @state.references
+
+        if not isDraft
+            # Add conversationID when sending message
+            # we don't add conversationID to draft, otherwise the full
+            # conversation would be updated, closing the compose panel
+            message.conversationID = @state.source.conversationID
 
         valid = true
         if not isDraft
@@ -336,27 +380,33 @@ module.exports = Compose = React.createClass
                 @setState sending: true
 
             MessageActionCreator.send message, (error, message) =>
+                state = _.clone @state
                 if isDraft
-                    @setState saving: false
+                    state.saving = false
                 else
-                    @setState sending: false
+                    state.sending = false
+                state[key] = value for key, value of message
+                @setState state
+
                 if isDraft
                     msgKo = t "message action draft ko"
-                    msgOk = t "message action draft ok"
                 else
                     msgKo = t "message action sent ko"
                     msgOk = t "message action sent ok"
                 if error?
                     LayoutActionCreator.alertError "#{msgKo} #{error}"
                 else
-                    LayoutActionCreator.notify msgOk, autoclose: true
+                    # don't display confirmation message when draft has been saved
+                    if not isDraft
+                        LayoutActionCreator.notify msgOk, autoclose: true
 
                     if not @state.id?
                         MessageActionCreator.setCurrent message.id
 
-                    @setState message
-
                     if not isDraft
+                        if message.conversationID?
+                            # reload conversation to update its length
+                            ConversationActionCreator.fetch message.conversationID
                         if @props.callback?
                             @props.callback error
                         else

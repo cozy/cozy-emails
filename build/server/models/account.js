@@ -420,7 +420,6 @@ Account = (function(superClass) {
       if (err) {
         return callback(err);
       }
-      console.log("NOW", toFetch, account);
       if (onlyFavorites) {
         toFetch = toFetch.filter(function(box) {
           var ref;
