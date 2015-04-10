@@ -7633,7 +7633,7 @@ module.exports = Toast = React.createClass({
       className: 'toast-actions'
     }, toast.actions.map(function(action, id) {
       return button({
-        className: "btn btn-default btn-xs",
+        className: "btn btn-cancel btn-cozy-non-default btn-xs",
         type: "button",
         key: id,
         onClick: action.onClick
