@@ -59,7 +59,7 @@ module.exports = {
     totalUnreadByAccount: {
       reduce: '_count',
       map: function(doc) {
-        if (-1 === doc.flags.indexOf('\\Seen')) {
+        if (!doc.ignoreInCount && -1 === doc.flags.indexOf('\\Seen')) {
           return emit(doc.accountID, null);
         }
       }
