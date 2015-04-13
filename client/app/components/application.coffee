@@ -160,7 +160,9 @@ module.exports = Application = React.createClass
                                     @getPanelComponent layout.secondPanel,
                                         'second'
 
-                # Hidden tooltips that other component will trigger.
+                # Tooltips' content is declared once at the application level.
+                # It's hidden so it doesn't break the layout. Other components
+                # can then reference the tooltips by their ID to trigger them.
                 Tooltips()
 
 
@@ -540,6 +542,8 @@ module.exports = Application = React.createClass
         Stores.forEach (store) =>
             store.on 'notify', @_notify
 
+        # AriaTips must bind the elements declared as tooltip to their
+        # respective tooltip when the component is mounted (DOM elements exist).
         AriaTips.bind()
 
 
@@ -551,6 +555,9 @@ module.exports = Application = React.createClass
 
 
     componentDidUpdate: ->
+        # AriaTips must bind the elements declared as tooltip to their
+        # respective tooltip, each time the application component (the root)
+        # is updated to make sure new tooltips are also bound.
         AriaTips.bind()
 
 

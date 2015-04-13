@@ -12,6 +12,9 @@ module.exports = React.createClass
     displayName: 'TooltipManager'
 
     render: ->
+
+        # Mounts all existing tooltips so they can be referenced by other
+        # components at any time.
         div null,
             @getTooltip Tooltips.REPLY, t('tooltip reply')
             @getTooltip Tooltips.REPLY_ALL, t('tooltip reply all')
@@ -24,11 +27,11 @@ module.exports = React.createClass
             @getTooltip Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')
 
 
+    # Generate default markup for a tooltip.
     getTooltip: (id, content) ->
         return p
             id: id
             role: "tooltip"
-            'data-tooltip-direction': "bottom"
             'aria-hidden': "true",
             content
 
