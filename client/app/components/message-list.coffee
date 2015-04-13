@@ -280,6 +280,7 @@ MessageList = React.createClass
                         selected: @state.selected
                         allSelected: @state.allSelected
                         displayConversations: @props.displayConversations
+                        isTrash: @props.isTrash
                         onSelect: (id, val) =>
                             selected = _.clone @state.selected
                             if val
@@ -545,6 +546,7 @@ MessageListBody = React.createClass
                 selected: @props.selected[id]?,
                 login: @props.login
                 displayConversations: @props.displayConversations
+                isTrash: @props.isTrash
                 onSelect: (val) =>
                     @props.onSelect id, val
 
@@ -595,9 +597,9 @@ MessageItem = React.createClass
             'has-attachments': message.get 'hasAttachments'
             'is-fav': flags.indexOf(MessageFlags.FLAGGED) isnt -1
 
-        isDraft = message.get('flags').indexOf(MessageFlags.DRAFT) isnt -1
+        isDraft   = message.get('flags').indexOf(MessageFlags.DRAFT) isnt -1
 
-        if isDraft
+        if isDraft and not @props.isTrash
             action = 'edit'
             params =
                 messageID: message.get 'id'
