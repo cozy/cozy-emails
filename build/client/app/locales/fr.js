@@ -290,5 +290,14 @@ module.exports = {
   'plugin name Keyboard shortcuts': 'Raccourcis clavier',
   'plugin name VCard': 'Affichage de VCard',
   'plugin modal close': 'Fermer',
-  'calendar unknown format': "Ce message contient une invitation à un évènement\ndans un format actuellement non pris en charge."
+  'calendar unknown format': "Ce message contient une invitation à un évènement\ndans un format actuellement non pris en charge.",
+  "tooltip reply": "Répondre",
+  "tooltip reply all": "Répondre à tous",
+  "tooltip forward": "Transférer",
+  "tooltip remove message": "Supprimer",
+  "tooltip open attachments": "Ouvrir la liste des pièces jointes",
+  "tooltip open attachment": "Ouvrir la pièce jointe",
+  "tooltip download attachment": "Télécharger la pièce jointe",
+  "tooltip previous conversation": "Aller à la conversation précédente",
+  "tooltip next conversation": "Aller à la conversation suivante"
 };

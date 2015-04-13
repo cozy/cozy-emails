@@ -2551,7 +2551,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/application", function(exports, require, module) {
-var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageFilter, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, Stores, ToastContainer, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref, _ref1;
+var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageFilter, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, Stores, ToastContainer, Tooltips, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref, _ref1;
 
 _ref = React.DOM, body = _ref.body, div = _ref.div, p = _ref.p, form = _ref.form, i = _ref.i, input = _ref.input, span = _ref.span, a = _ref.a, button = _ref.button, strong = _ref.strong;
 
@@ -2574,6 +2574,8 @@ MessageList = require('./message-list');
 Settings = require('./settings');
 
 SearchForm = require('./search-form');
+
+Tooltips = require('./tooltips-manager');
 
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -2695,7 +2697,7 @@ module.exports = Application = React.createClass({
     }, this.getPanelComponent(layout.firstPanel, firstPanelLayoutMode)), !isFullWidth && (layout.secondPanel != null) ? div({
       className: panelClasses.secondPanel,
       key: keySecond
-    }, this.getPanelComponent(layout.secondPanel, 'second')) : void 0))));
+    }, this.getPanelComponent(layout.secondPanel, 'second')) : void 0)), Tooltips()));
   },
   getPanelClasses: function(isFullWidth) {
     var classes, disposition, first, firstClass, layout, previous, second, secondClass, wasFullWidth;
@@ -3028,11 +3030,12 @@ module.exports = Application = React.createClass({
     return window.cozyMails.notify(title, options);
   },
   componentDidMount: function() {
-    return Stores.forEach((function(_this) {
+    Stores.forEach((function(_this) {
       return function(store) {
         return store.on('notify', _this._notify);
       };
     })(this));
+    return AriaTips.bind();
   },
   componentWillUnmount: function() {
     Stores.forEach((function(_this) {
@@ -3041,6 +3044,9 @@ module.exports = Application = React.createClass({
       };
     })(this));
     return this.props.router.off('fluxRoute', this.onRoute);
+  },
+  componentDidUpdate: function() {
+    return AriaTips.bind();
   },
   toggleMenu: function(event) {
     return this.setState({
@@ -3051,11 +3057,13 @@ module.exports = Application = React.createClass({
 });
 
 ;require.register("components/attachement_preview", function(exports, require, module) {
-var MessageUtils, a, i, img, li, _ref;
+var MessageUtils, Tooltips, a, i, img, li, _ref;
 
 _ref = React.DOM, li = _ref.li, img = _ref.img, a = _ref.a, i = _ref.i;
 
 MessageUtils = require('../utils/message_utils');
+
+Tooltips = require('../constants/app_constants').Tooltips;
 
 module.exports = React.createClass({
   displayName: 'AttachmentPreview',
@@ -3078,12 +3086,16 @@ module.exports = React.createClass({
         key: this.props.key
       }, this.renderIcon(), a({
         target: '_blank',
-        href: this.props.file.url
+        href: this.props.file.url,
+        'aria-describedby': Tooltips.OPEN_ATTACHMENT,
+        'data-tooltip-direction': 'top'
       }, this.props.preview ? img({
         width: 90,
         src: this.props.file.url
       }) : void 0, this.props.file.generatedFileName), ' - ', a({
-        href: "" + this.props.file.url + "?download=1"
+        href: "" + this.props.file.url + "?download=1",
+        'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT,
+        'data-tooltip-direction': 'top'
       }, i({
         className: 'fa fa-download'
       }), this.displayFilesize(this.props.file.length)));
@@ -3091,7 +3103,9 @@ module.exports = React.createClass({
       return li({
         key: this.props.key
       }, this.renderIcon(), a({
-        href: "" + this.props.file.url + "?download=1"
+        href: "" + this.props.file.url + "?download=1",
+        'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT,
+        'data-tooltip-direction': 'top'
       }, "" + this.props.file.generatedFileName + "\n(" + (this.displayFilesize(this.props.file.length)) + ")"));
     }
   },
@@ -6807,7 +6821,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message_header", function(exports, require, module) {
-var AttachmentPreview, ContactStore, MessageFlags, MessageUtils, a, div, i, img, li, span, table, tbody, td, tr, ul, _ref,
+var AttachmentPreview, ContactStore, MessageFlags, MessageUtils, Tooltips, a, div, i, img, li, span, table, tbody, td, tr, ul, _ref, _ref1,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice;
 
@@ -6819,7 +6833,7 @@ AttachmentPreview = require('./attachement_preview');
 
 ContactStore = require('../stores/contact_store');
 
-MessageFlags = require('../constants/app_constants').MessageFlags;
+_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, Tooltips = _ref1.Tooltips;
 
 module.exports = React.createClass({
   displayName: 'MessageHeader',
@@ -6835,7 +6849,7 @@ module.exports = React.createClass({
     };
   },
   render: function() {
-    var avatar, _ref1;
+    var avatar, _ref2;
     avatar = MessageUtils.getAvatar(this.props.message);
     return div({
       key: "message-header-" + (this.props.message.get('id'))
@@ -6848,7 +6862,7 @@ module.exports = React.createClass({
       className: 'infos'
     }, this.renderAddress('from'), this.renderAddress('to'), this.renderAddress('cc'), div({
       className: 'indicators'
-    }, this.props.message.get('attachments').length ? this.renderAttachementsIndicator() : void 0, (_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
+    }, this.props.message.get('attachments').length ? this.renderAttachementsIndicator() : void 0, (_ref2 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref2) >= 0) ? i({
       className: 'fa fa-star'
     }) : void 0, this.props.isDraft ? i({
       className: 'fa fa-edit'
@@ -6920,8 +6934,8 @@ module.exports = React.createClass({
     }, field !== 'from' ? span(null, t("mail " + field)) : void 0].concat(__slice.call(this.formatUsers(users))));
   },
   renderAttachementsIndicator: function() {
-    var attachments, file, _ref1;
-    attachments = ((_ref1 = this.props.message.get('attachments')) != null ? _ref1.toJS() : void 0) || [];
+    var attachments, file, _ref2;
+    attachments = ((_ref2 = this.props.message.get('attachments')) != null ? _ref2.toJS() : void 0) || [];
     return div({
       className: 'attachments',
       'aria-expanded': this.state.showAttachements,
@@ -6930,7 +6944,9 @@ module.exports = React.createClass({
       }
     }, i({
       className: 'btn fa fa-paperclip fa-flip-horizontal',
-      onClick: this.toggleAttachments
+      onClick: this.toggleAttachments,
+      'aria-describedby': Tooltips.OPEN_ATTACHMENTS,
+      'data-tooltip-direction': 'left'
     }), div({
       className: 'popup',
       'aria-hidden': !this.state.showAttachements
@@ -6952,11 +6968,11 @@ module.exports = React.createClass({
     })())));
   },
   renderDetailsPopup: function() {
-    var cc, dest, from, reply, row, to, _ref1;
+    var cc, dest, from, reply, row, to, _ref2;
     from = this.props.message.get('from')[0];
     to = this.props.message.get('to');
     cc = this.props.message.get('cc');
-    reply = (_ref1 = this.props.message.get('reply-to')) != null ? _ref1[0] : void 0;
+    reply = (_ref2 = this.props.message.get('reply-to')) != null ? _ref2[0] : void 0;
     row = function(id, value, label, rowSpan) {
       var attrs, items;
       if (label == null) {
@@ -6995,23 +7011,23 @@ module.exports = React.createClass({
       className: 'popup',
       'aria-hidden': !this.state.showDetails
     }, table(null, tbody(null, row('from', this.formatUsers(from), 'headers from'), to.length ? row('to', this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
-      var _i, _len, _ref2, _results;
+      var _i, _len, _ref3, _results;
       if (to.length) {
-        _ref2 = to.slice(1);
+        _ref3 = to.slice(1);
         _results = [];
-        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-          dest = _ref2[_i];
+        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+          dest = _ref3[_i];
           _results.push(row('destTo', this.formatUsers(dest)));
         }
         return _results;
       }
     }).call(this), cc.length ? row('cc', this.formatUsers(cc[0]), 'headers cc', cc.length) : void 0, (function() {
-      var _i, _len, _ref2, _results;
+      var _i, _len, _ref3, _results;
       if (cc.length) {
-        _ref2 = cc.slice(1);
+        _ref3 = cc.slice(1);
         _results = [];
-        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-          dest = _ref2[_i];
+        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+          dest = _ref3[_i];
           _results.push(row('destCc', this.formatUsers(dest)));
         }
         return _results;
@@ -7836,11 +7852,13 @@ module.exports.Container = ToastContainer = React.createClass({
 });
 
 ;require.register("components/toolbar_conversation", function(exports, require, module) {
-var LayoutActionCreator, RouterMixin, a, button, cBtn, div, nav, _ref;
+var LayoutActionCreator, RouterMixin, Tooltips, a, button, cBtn, div, nav, _ref;
 
 _ref = React.DOM, nav = _ref.nav, div = _ref.div, button = _ref.button, a = _ref.a;
 
 LayoutActionCreator = require('../actions/layout_action_creator');
+
+Tooltips = require('../constants/app_constants').Tooltips;
 
 RouterMixin = require('../mixins/router_mixin');
 
@@ -7883,13 +7901,19 @@ module.exports = React.createClass({
     }, this.renderNav('prev'), this.renderNav('next')), this.renderFullscreen());
   },
   renderNav: function(direction) {
-    var angle, conversationID, messageID, params, url, urlParams;
+    var angle, conversationID, messageID, params, tooltipID, url, urlParams;
     if (this.props["" + direction + "MessageID"] == null) {
       return;
     }
     messageID = this.props["" + direction + "MessageID"];
     conversationID = this.props["" + direction + "ConversationID"];
-    angle = direction === 'prev' ? 'left' : 'right';
+    if (direction === 'prev') {
+      tooltipID = Tooltips.PREVIOUS_CONVERSATION;
+      angle = 'left';
+    } else {
+      tooltipID = Tooltips.NEXT_CONVERSATION;
+      angle = 'right';
+    }
     params = this.getParams(messageID, conversationID);
     urlParams = {
       direction: 'second',
@@ -7904,7 +7928,9 @@ module.exports = React.createClass({
           return _this.redirect(urlParams);
         };
       })(this),
-      href: url
+      href: url,
+      'aria-describedby': tooltipID,
+      'data-tooltip-direction': 'left'
     });
   },
   renderFullscreen: function() {
@@ -7924,12 +7950,12 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/toolbar_message", function(exports, require, module) {
-var ConversationActionCreator, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageFlags, ToolboxActions, ToolboxMove, a, alertError, alertSuccess, button, cBtn, cBtnGroup, div, nav, _ref, _ref1,
+var ConversationActionCreator, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageFlags, ToolboxActions, ToolboxMove, Tooltips, a, alertError, alertSuccess, button, cBtn, cBtnGroup, div, nav, _ref, _ref1,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 _ref = React.DOM, nav = _ref.nav, div = _ref.div, button = _ref.button, a = _ref.a;
 
-_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, FlagsConstants = _ref1.FlagsConstants;
+_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, FlagsConstants = _ref1.FlagsConstants, Tooltips = _ref1.Tooltips;
 
 ToolboxActions = require('./toolbox_actions');
 
@@ -7977,13 +8003,19 @@ module.exports = React.createClass({
       className: cBtnGroup
     }, button({
       className: "" + cBtn + " fa-mail-reply mail-reply",
-      onClick: this.props.onReply
+      onClick: this.props.onReply,
+      'aria-describedby': Tooltips.REPLY,
+      'data-tooltip-direction': 'top'
     }), button({
       className: "" + cBtn + " fa-mail-reply-all mail-reply-all",
-      onClick: this.props.onReplyAll
+      onClick: this.props.onReplyAll,
+      'aria-describedby': Tooltips.REPLY_ALL,
+      'data-tooltip-direction': 'top'
     }), button({
       className: "" + cBtn + " fa-mail-forward mail-forward",
-      onClick: this.props.onForward
+      onClick: this.props.onForward,
+      'aria-describedby': Tooltips.FORWARD,
+      'data-tooltip-direction': 'top'
     }));
   },
   renderQuickActions: function() {
@@ -7991,7 +8023,9 @@ module.exports = React.createClass({
       className: cBtnGroup
     }, button({
       className: "" + cBtn + " fa-trash",
-      onClick: this.props.onDelete
+      onClick: this.props.onDelete,
+      'aria-describedby': Tooltips.REMOVE_MESSAGE,
+      'data-tooltip-direction': 'top'
     }));
   },
   renderToolboxActions: function() {
@@ -8291,6 +8325,35 @@ module.exports = ToolboxMove = React.createClass({
 });
 });
 
+;require.register("components/tooltips-manager", function(exports, require, module) {
+
+/*
+This component must be used to declare tooltips.
+They can't be then referenced from the other components.
+
+See https://github.com/m4dz/aria-tips#use
+ */
+var Tooltips, div, p, _ref;
+
+Tooltips = require('../constants/app_constants').Tooltips;
+
+_ref = React.DOM, div = _ref.div, p = _ref.p;
+
+module.exports = React.createClass({
+  displayName: 'TooltipManager',
+  render: function() {
+    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')));
+  },
+  getTooltip: function(id, content) {
+    return p({
+      id: id,
+      role: "tooltip",
+      'aria-hidden': "true"
+    }, content);
+  }
+});
+});
+
 ;require.register("components/topbar", function(exports, require, module) {
 var LayoutActionCreator, MailboxList, ReactCSSTransitionGroup, RouterMixin, SearchForm, Topbar, a, body, button, div, form, i, input, p, span, strong, _ref;
 
@@ -8491,6 +8554,17 @@ module.exports = {
     trashMailbox: 'fa-trash-o',
     junkMailbox: 'fa-exclamation',
     allMailbox: 'fa-archive'
+  },
+  Tooltips: {
+    REPLY: 'REPLY',
+    REPLY_ALL: 'REPLY_ALL',
+    FORWARD: 'FORWARD',
+    REMOVE_MESSAGE: 'REMOVE_MESSAGE',
+    OPEN_ATTACHMENTS: 'OPEN_ATTACHMENTS',
+    OPEN_ATTACHMENT: 'OPEN_ATTACHMENT',
+    DOWNLOAD_ATTACHMENT: 'DOWNLOAD_ATTACHMENT',
+    PREVIOUS_CONVERSATION: 'PREVIOUS_CONVERSATION',
+    NEXT_CONVERSATION: 'NEXT_CONVERSATION'
   }
 };
 });
@@ -9483,7 +9557,16 @@ module.exports = {
   'plugin name Keyboard shortcuts': 'Keyboard shortcuts',
   'plugin name VCard': 'Contacts VCards',
   'plugin modal close': 'Close',
-  'calendar unknown format': "This message contains an invite to an event in a currently unknown format."
+  'calendar unknown format': "This message contains an invite to an event in a currently unknown format.",
+  "tooltip reply": "Answer",
+  "tooltip reply all": "Answer to all",
+  "tooltip forward": "Forward",
+  "tooltip remove message": "Remove",
+  "tooltip open attachments": "Open attachments list",
+  "tooltip open attachments": "Open attachment",
+  "tooltip download attachment": "Download the attachment",
+  "tooltip previous conversation": "Go to previous conversation",
+  "tooltip next conversation": "Go to next conversation"
 };
 });
 
@@ -9779,7 +9862,16 @@ module.exports = {
   'plugin name Keyboard shortcuts': 'Raccourcis clavier',
   'plugin name VCard': 'Affichage de VCard',
   'plugin modal close': 'Fermer',
-  'calendar unknown format': "Ce message contient une invitation à un évènement\ndans un format actuellement non pris en charge."
+  'calendar unknown format': "Ce message contient une invitation à un évènement\ndans un format actuellement non pris en charge.",
+  "tooltip reply": "Répondre",
+  "tooltip reply all": "Répondre à tous",
+  "tooltip forward": "Transférer",
+  "tooltip remove message": "Supprimer",
+  "tooltip open attachments": "Ouvrir la liste des pièces jointes",
+  "tooltip open attachment": "Ouvrir la pièce jointe",
+  "tooltip download attachment": "Télécharger la pièce jointe",
+  "tooltip previous conversation": "Aller à la conversation précédente",
+  "tooltip next conversation": "Aller à la conversation suivante"
 };
 });
 
