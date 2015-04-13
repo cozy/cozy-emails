@@ -814,7 +814,8 @@ module.exports = class Message extends cozydb.CozyModel
         raw = @toObject()
 
         raw.attachments?.forEach (file) ->
-            file.url = "message/#{raw.id}/attachments/#{file.generatedFileName}"
+            encodedFileName = encodeURIComponent file.generatedFileName
+            file.url = "message/#{raw.id}/attachments/#{encodedFileName}"
 
         if raw.html?
             attachments = raw.attachments or []
