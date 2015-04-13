@@ -101,6 +101,10 @@ module.exports = Application = React.createClass
             # this need to be done here, so MessageList get the good message ID
             if layout.secondPanel.parameters.messageID?
                 MessageStore.setCurrentID layout.secondPanel.parameters.messageID
+            else
+                MessageStore.setCurrentID null
+        else
+            MessageStore.setCurrentID null
 
         # Actual layout
         div className: 'container-fluid',
