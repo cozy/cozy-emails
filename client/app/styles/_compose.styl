@@ -34,6 +34,15 @@
     color black
     cursor: text
 
+    // poor's man CSS reset, to apply default style to content of
+    // replied message
+    *
+      margin 0
+      padding 0
+    ul, ol, dl, li, dl
+      margin .5em
+      padding inherit
+
     &:hover
         border 1px solid actioncolor
 
