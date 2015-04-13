@@ -10,6 +10,7 @@ Menu          = require './menu'
 MessageList   = require './message-list'
 Settings      = require './settings'
 SearchForm    = require './search-form'
+Tooltips      = require './tooltips-manager'
 
 # React addons
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup
@@ -158,6 +159,11 @@ module.exports = Application = React.createClass
                                 key: keySecond,
                                     @getPanelComponent layout.secondPanel,
                                         'second'
+
+                # Tooltips' content is declared once at the application level.
+                # It's hidden so it doesn't break the layout. Other components
+                # can then reference the tooltips by their ID to trigger them.
+                Tooltips()
 
 
     # Panels CSS classes are a bit long so we get them from a this subfunction
@@ -527,18 +533,33 @@ module.exports = Application = React.createClass
                         fullWidth: true
                     LayoutActionCreator.alertError t 'account no special mailboxes'
 
+
     _notify: (title, options) ->
         window.cozyMails.notify title, options
+
 
     componentDidMount: ->
         Stores.forEach (store) =>
             store.on 'notify', @_notify
+
+        # AriaTips must bind the elements declared as tooltip to their
+        # respective tooltip when the component is mounted (DOM elements exist).
+        AriaTips.bind()
+
 
     componentWillUnmount: ->
         Stores.forEach (store) =>
             store.removeListener 'notify', @notify
         # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
+
+
+    componentDidUpdate: ->
+        # AriaTips must bind the elements declared as tooltip to their
+        # respective tooltip, each time the application component (the root)
+        # is updated to make sure new tooltips are also bound.
+        AriaTips.bind()
+
 
     # Toggle the menu in responsive mode
     toggleMenu: (event) ->

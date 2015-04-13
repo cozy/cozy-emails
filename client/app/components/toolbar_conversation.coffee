@@ -1,6 +1,7 @@
 {nav, div, button, a} = React.DOM
 
 LayoutActionCreator = require '../actions/layout_action_creator'
+{Tooltips} = require '../constants/app_constants'
 
 RouterMixin = require '../mixins/router_mixin'
 
@@ -47,7 +48,12 @@ module.exports = React.createClass
         messageID = @props["#{direction}MessageID"]
         conversationID = @props["#{direction}ConversationID"]
 
-        angle = if direction is 'prev' then 'left' else 'right'
+        if direction is 'prev'
+            tooltipID = Tooltips.PREVIOUS_CONVERSATION
+            angle = 'left'
+        else
+            tooltipID = Tooltips.NEXT_CONVERSATION
+            angle = 'right'
 
         params = @getParams messageID, conversationID
         urlParams =
@@ -60,6 +66,8 @@ module.exports = React.createClass
             className: "btn btn-default fa fa-angle-#{angle}"
             onClick: => @redirect urlParams
             href: url
+            'aria-describedby': tooltipID
+            'data-tooltip-direction': 'left'
 
 
     renderFullscreen: ->

@@ -372,3 +372,14 @@ module.exports =
             Ce message contient une invitation à un évènement
             dans un format actuellement non pris en charge.
             """
+
+      # Tooltips
+      "tooltip reply": "Répondre"
+      "tooltip reply all": "Répondre à tous"
+      "tooltip forward": "Transférer"
+      "tooltip remove message": "Supprimer"
+      "tooltip open attachments": "Ouvrir la liste des pièces jointes"
+      "tooltip open attachment": "Ouvrir la pièce jointe"
+      "tooltip download attachment": "Télécharger la pièce jointe"
+      "tooltip previous conversation": "Aller à la conversation précédente"
+      "tooltip next conversation": "Aller à la conversation suivante"

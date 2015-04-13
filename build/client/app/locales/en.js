@@ -291,5 +291,14 @@ module.exports = {
   'plugin name Keyboard shortcuts': 'Keyboard shortcuts',
   'plugin name VCard': 'Contacts VCards',
   'plugin modal close': 'Close',
-  'calendar unknown format': "This message contains an invite to an event in a currently unknown format."
+  'calendar unknown format': "This message contains an invite to an event in a currently unknown format.",
+  "tooltip reply": "Answer",
+  "tooltip reply all": "Answer to all",
+  "tooltip forward": "Forward",
+  "tooltip remove message": "Remove",
+  "tooltip open attachments": "Open attachments list",
+  "tooltip open attachments": "Open attachment",
+  "tooltip download attachment": "Download the attachment",
+  "tooltip previous conversation": "Go to previous conversation",
+  "tooltip next conversation": "Go to next conversation"
 };
