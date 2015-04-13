@@ -347,7 +347,7 @@ module.exports =
       "gmail security link": "Enable access for less secure apps."
 
       # Plugins
-      'plugin name Gallery'            : 'Attachments gallery'
+      'plugin name Gallery'            : 'Attachment gallery'
       'plugin name medium-editor'      : 'Medium editor'
       'plugin name MiniSlate'          : 'MiniSlate editor'
       'plugin name Sample JS'          : 'Sample'
@@ -365,7 +365,7 @@ module.exports =
       "tooltip reply all": "Answer to all"
       "tooltip forward": "Forward"
       "tooltip remove message": "Remove"
-      "tooltip open attachments": "Open attachments list"
+      "tooltip open attachments": "Open attachment list"
       "tooltip open attachments": "Open attachment"
       "tooltip download attachment": "Download the attachment"
       "tooltip previous conversation": "Go to previous conversation"
