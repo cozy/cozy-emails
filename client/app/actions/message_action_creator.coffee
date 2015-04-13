@@ -77,7 +77,7 @@ module.exports =
                                 onClick: => @undelete()
                             ]
                         notifOk = t 'message action delete ok',
-                            subject: msg.subject
+                            subject: msg.subject or ''
                         LAC.notify notifOk, options
                         if callback?
                             callback err
