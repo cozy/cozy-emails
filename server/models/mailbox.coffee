@@ -82,7 +82,7 @@ class Mailbox extends cozydb.CozyModel
         Mailbox.getBoxes accountID, (err, boxes) ->
             return callback err if err
             boxIndex = {}
-            boxIndex[box.id] = path: box.path for box in boxes
+            boxIndex[box.id] = box for box in boxes
             callback null, boxIndex
 
     # Public: remove mailboxes linked to an account that doesn't exist
@@ -364,7 +364,7 @@ class Mailbox extends cozydb.CozyModel
     imap_fetchMails: (options, callback) ->
         {limitByBox, firstImport} = options
         log.debug "imap_fetchMails", limitByBox
-        step = RefreshStep.initial limitByBox, firstImport
+        step = RefreshStep.initial options
 
         @imap_refreshStep step, (err, shouldNotif) =>
             log.debug "imap_fetchMailsEnd", limitByBox
@@ -487,13 +487,13 @@ class Mailbox extends cozydb.CozyModel
         toFetch.reverse()
         shouldNotif = false
         async.eachSeries toFetch, (msg, cb) ->
-            Message.fetchOrUpdate box, msg.mid, msg.uid, (err, result) ->
+            Message.fetchOrUpdate box, msg, (err, result) ->
                 reporter.onError err if err
                 reporter.addProgress 1
                 if result?.shouldNotif is true
                     shouldNotif = true
-                # dont stop
-                cb null
+                # loop anyway, let the DS breath
+                setTimeout (-> cb null), 50
         , (err) ->
             callback err, shouldNotif
 
@@ -630,14 +630,9 @@ class Mailbox extends cozydb.CozyModel
 
     # Public: refresh part of a mailbox
     #
-    # laststep - {RefreshStep} can be null, step references
-    #               - min : min uid to fetch
-    #               - max : max uid to fetch
-    # callback - Function({Error} err, {Boolean} shouldNotif)
-    #               - err
-    #               - shouldNotif display a notification for it
+    # uid - uid to fetch
     #
-    # Returns a task completion
+    # Returns (callback) {Boolean} shouldNotif if the message is not read
     Mailbox::imap_fetchOneMail = (uid, callback) ->
         @doLaterWithBox (imap, imapbox, cb) ->
             imap.fetchOneMail uid, cb
@@ -648,6 +643,15 @@ class Mailbox extends cozydb.CozyModel
             Message.createFromImapMessage mail, this, uid, (err) ->
                 return callback err if err
                 callback null, {shouldNotif}
+
+    # Public: whether this box messages should be ignored
+    # in the account's total (trash or junk)
+    #
+    # Returns {Boolean} true if this message should be ignored.
+    Mailbox::ignoreInCount = ->
+        return Mailbox.RFC6154.trashMailbox in @attribs or
+               Mailbox.RFC6154.junkMailbox  in @attribs or
+               @guessUse() in ['trashMailbox', 'junkMailbox']
 
 
 module.exports = Mailbox
@@ -691,15 +695,16 @@ class RefreshStep
     # Public: get the first step.
     # The first step is marked as .initial = true and doesnt have min or max
     #
-    # limitByBox - {Number} max number of message to fetch in a box or
+    # options - {Object}
+    #       :limitByBox - {Number} max number of message to fetch in a box or
     #              null for all
-    # firstImport - {Boolean}
+    #       :firstImport - {Boolean}
     #
     # Returns {RefreshStep} an initial step
-    @initial: (limitByBox, firstImport) ->
+    @initial: (options) ->
         step = new RefreshStep()
-        step.limitByBox = limitByBox
-        step.firstImport = firstImport
+        step.limitByBox = options.limitByBox
+        step.firstImport = options.firstImport
         step.shouldNotif = false
         step.initial = true
         return step
