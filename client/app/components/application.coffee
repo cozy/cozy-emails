@@ -10,6 +10,7 @@ Menu          = require './menu'
 MessageList   = require './message-list'
 Settings      = require './settings'
 SearchForm    = require './search-form'
+Tooltips      = require './tooltips-manager'
 
 # React addons
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup
@@ -158,6 +159,9 @@ module.exports = Application = React.createClass
                                 key: keySecond,
                                     @getPanelComponent layout.secondPanel,
                                         'second'
+
+                # Hidden tooltips that other component will trigger.
+                Tooltips()
 
 
     # Panels CSS classes are a bit long so we get them from a this subfunction
@@ -527,18 +531,28 @@ module.exports = Application = React.createClass
                         fullWidth: true
                     LayoutActionCreator.alertError t 'account no special mailboxes'
 
+
     _notify: (title, options) ->
         window.cozyMails.notify title, options
+
 
     componentDidMount: ->
         Stores.forEach (store) =>
             store.on 'notify', @_notify
+
+        AriaTips.bind()
+
 
     componentWillUnmount: ->
         Stores.forEach (store) =>
             store.removeListener 'notify', @notify
         # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
+
+
+    componentDidUpdate: ->
+        AriaTips.bind()
+
 
     # Toggle the menu in responsive mode
     toggleMenu: (event) ->

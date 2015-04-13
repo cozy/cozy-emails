@@ -125,3 +125,17 @@ module.exports =
         trashMailbox: 'fa-trash-o'
         junkMailbox: 'fa-exclamation'
         allMailbox: 'fa-archive'
+
+    Tooltips:
+        REPLY: 'REPLY'
+        REPLY_ALL: 'REPLY_ALL'
+        FORWARD: 'FORWARD'
+        REMOVE_MESSAGE: 'REMOVE_MESSAGE'
+        OPEN_ATTACHMENTS: 'OPEN_ATTACHMENTS'
+        OPEN_ATTACHMENT: 'OPEN_ATTACHMENT'
+        DOWNLOAD_ATTACHMENT: 'DOWNLOAD_ATTACHMENT'
+        PREVIOUS_CONVERSATION: 'PREVIOUS_CONVERSATION'
+        NEXT_CONVERSATION: 'NEXT_CONVERSATION'
+
+
+
