@@ -1,6 +1,6 @@
 {nav, div, button, a} = React.DOM
 
-{MessageFlags, FlagsConstants} = require '../constants/app_constants'
+{MessageFlags, FlagsConstants, Tooltips} = require '../constants/app_constants'
 
 ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'
@@ -48,12 +48,18 @@ module.exports = React.createClass
             button
                 className: "#{cBtn} fa-mail-reply mail-reply"
                 onClick: @props.onReply
+                'aria-describedby': Tooltips.REPLY
+                'data-tooltip-direction': 'top'
             button
                 className: "#{cBtn} fa-mail-reply-all mail-reply-all"
                 onClick: @props.onReplyAll
+                'aria-describedby': Tooltips.REPLY_ALL
+                'data-tooltip-direction': 'top'
             button
                 className: "#{cBtn} fa-mail-forward mail-forward"
                 onClick: @props.onForward
+                'aria-describedby': Tooltips.FORWARD
+                'data-tooltip-direction': 'top'
 
 
     renderQuickActions: ->
@@ -61,6 +67,8 @@ module.exports = React.createClass
             button
                 className: "#{cBtn} fa-trash"
                 onClick: @props.onDelete
+                'aria-describedby': Tooltips.REMOVE_MESSAGE
+                'data-tooltip-direction': 'top'
 
 
     renderToolboxActions: ->

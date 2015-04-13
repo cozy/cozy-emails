@@ -1,6 +1,6 @@
 {li, img, a, i} = React.DOM
 MessageUtils = require '../utils/message_utils'
-
+{Tooltips} = require '../constants/app_constants'
 
 module.exports = React.createClass
     displayName: 'AttachmentPreview'
@@ -25,18 +25,26 @@ module.exports = React.createClass
                 @renderIcon()
                 a
                     target: '_blank'
-                    href: @props.file.url,
+                    href: @props.file.url
+                    'aria-describedby': Tooltips.OPEN_ATTACHMENT
+                    'data-tooltip-direction': 'top',
                         # TODO: generate a thumb instead of loading raw file
                         img width: 90, src: @props.file.url if @props.preview
                         @props.file.generatedFileName
                 ' - '
-                a href: "#{@props.file.url}?download=1",
-                    i className: 'fa fa-download'
-                    @displayFilesize(@props.file.length)
+                a
+                    href: "#{@props.file.url}?download=1"
+                    'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT
+                    'data-tooltip-direction': 'top',
+                        i className: 'fa fa-download'
+                        @displayFilesize(@props.file.length)
         else
             li key: @props.key,
                 @renderIcon()
-                a href: "#{@props.file.url}?download=1",
+                a
+                    href: "#{@props.file.url}?download=1"
+                    'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT
+                    'data-tooltip-direction': 'top',
                     """#{@props.file.generatedFileName}
                     (#{@displayFilesize(@props.file.length)})"""
 
