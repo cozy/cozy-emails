@@ -1,5 +1,7 @@
 {div} = React.DOM
 
+
+# Small components used to display loading progression of a mailbox.
 module.exports = ThinProgress = React.createClass
     displayName: 'ThinProgress'
 
