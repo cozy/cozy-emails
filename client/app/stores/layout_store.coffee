@@ -72,10 +72,11 @@ class LayoutStore extends Store
             @emit 'change'
 
         handle ActionTypes.RECEIVE_TASK_UPDATE, (task) =>
+            console.log task
             task = Immutable.Map task
-            id = task.get('id')
+            id = task.get 'id'
             _tasks = _tasks.set id, task
-            if task.get('autoclose')
+            if task.get 'autoclose'
                 remove = =>
                     _tasks = _tasks.remove id
                     @emit 'change'

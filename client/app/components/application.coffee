@@ -3,7 +3,7 @@
 AccountConfig = require './account-config'
 Alert         = require './alert'
 Topbar        = require './topbar'
-ToastContainer = require('./toast').Container
+ToastContainer = require './toast_container'
 Compose       = require './compose'
 Conversation  = require './conversation'
 Menu          = require './menu'

@@ -545,14 +545,17 @@ AccountConfigMain = React.createClass
     toggleSMTPAdvanced: ->
         @setState smtpAdvanced: not @state.smtpAdvanced
 
+    # Ask to main layout manager to display error as notification toasters.
     renderError: ->
         if @props.error and @props.error.name is 'AccountConfigError'
             message = t 'config error ' + @props.error.field
-            div className: 'alert alert-warning', message
+            LAC.alertError message
+
         else if @props.error
-            div className: 'alert alert-warning', @props.error.message
+            LAC.alertError @props.error.message
+
         else if Object.keys(@state.errors).length isnt 0
-            div className: 'alert alert-warning', t 'account errors'
+            LAC.alertError t 'account errors'
 
     discover: (event) ->
         @props.validateForm event

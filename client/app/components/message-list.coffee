@@ -842,7 +842,3 @@ MessagesSort = React.createClass
         params.accountID = @props.accountID
         params.mailboxID = @props.mailboxID
         LayoutActionCreator.showMessageList parameters: params
-        #@redirect @buildUrl
-        #    direction: 'first'
-        #    action: 'account.mailbox.messages.full'
-        #    parameters: params

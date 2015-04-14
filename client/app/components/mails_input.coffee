@@ -4,6 +4,7 @@ MessageUtils    = require '../utils/message_utils'
 Modal           = require './modal'
 ContactStore    = require '../stores/contact_store'
 ContactActionCreator = require '../actions/contact_action_creator'
+LayoutActionCreator = require '../actions/layout_action_creator'
 
 classer = React.addons.classSet
 
@@ -259,13 +260,11 @@ module.exports = MailsInput = React.createClass
                     # twiced due to multiple blur and key down.
                     # Do not display anything when the field is blurred.
                     isContacts = @state.contacts?.length is 0
-                    if not @isShowingAlert and not isBlur and isContacts
-                        @isShowingAlert = true
-                        alert t('compose wrong email format',
-                            address: address.address)
-                        setTimeout =>
-                            @isShowingAlert = false
-                        , 200
+                    if not isBlur and isContacts
+
+                        msg = t 'compose wrong email format',
+                            address: address.address
+                        LayoutActionCreator.alertError msg
 
             else
                 @setState state

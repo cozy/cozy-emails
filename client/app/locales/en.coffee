@@ -313,7 +313,7 @@ module.exports =
       "modal please contribute"    : "Please contribute"
 
       # Validation
-      "validate must not be empty" : "Mandatory field"
+      "validate must not be empty" : "This field is required"
 
       # Toast
       "toast hide"      : "Hide alerts"
