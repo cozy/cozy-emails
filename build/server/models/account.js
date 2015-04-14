@@ -39,7 +39,8 @@ Account = (function(superClass) {
     trashMailbox: String,
     junkMailbox: String,
     allMailbox: String,
-    favorites: [String]
+    favorites: [String],
+    patchIgnored: Boolean
   };
 
   Account.findSafe = function(id, callback) {
@@ -71,33 +72,56 @@ Account = (function(superClass) {
   };
 
   Account.removeOrphansAndRefresh = function(limitByBox, onlyFavorites, callback) {
-    return Account.request('all', function(err, accounts) {
-      var existingIDs;
+    var allAccounts, existingAccountIDs, existingMailboxIDs, toIgnore;
+    allAccounts = [];
+    existingAccountIDs = [];
+    existingMailboxIDs = [];
+    toIgnore = [];
+    return async.series([
+      function(cb) {
+        return Account.all(function(err, accounts) {
+          if (err) {
+            return cb(err);
+          }
+          existingAccountIDs = accounts.map(function(account) {
+            return account.id;
+          });
+          allAccounts = accounts;
+          return cb(null);
+        });
+      }, function(cb) {
+        return Mailbox.removeOrphans(existingAccountIDs, function(err, existingIDs) {
+          if (err) {
+            return cb(err);
+          }
+          existingMailboxIDs = existingIDs;
+          return cb(null);
+        });
+      }, function(cb) {
+        return Message.removeOrphans(existingMailboxIDs, cb);
+      }, function(cb) {
+        return async.eachSeries(allAccounts, function(account, cbLoop) {
+          return account.applyPatchIgnored(function(err) {
+            if (err) {
+              log.error(err);
+            }
+            return cbLoop(null);
+          });
+        }, cb);
+      }
+    ], function(err) {
+      var options;
       if (err) {
         return callback(err);
       }
-      existingIDs = accounts.map(function(account) {
-        return account.id;
-      });
-      return Mailbox.removeOrphans(existingIDs, function(err, existingMailboxIDs) {
-        if (err) {
-          return callback(err);
-        }
-        return Message.removeOrphans(existingMailboxIDs, function(err) {
-          var options;
-          if (err) {
-            return callback(err);
-          }
-          options = {
-            accounts: accounts,
-            limitByBox: limitByBox,
-            onlyFavorites: onlyFavorites,
-            firstImport: false,
-            periodic: CONSTANTS.REFRESH_INTERVAL
-          };
-          return Account.refreshAccounts(options, callback);
-        });
-      });
+      options = {
+        accounts: allAccounts,
+        limitByBox: limitByBox,
+        onlyFavorites: onlyFavorites,
+        firstImport: false,
+        periodic: CONSTANTS.REFRESH_INTERVAL
+      };
+      return Account.refreshAccounts(options, callback);
     });
   };
 
@@ -210,6 +234,46 @@ Account = (function(superClass) {
 
   Account.prototype.setRefreshing = function(value) {
     return ImapPool.get(this.id).isRefreshing = value;
+  };
+
+  Account.prototype.applyPatchIgnored = function(callback) {
+    var boxes, hadError;
+    log.debug("applyPatchIgnored, already = ", this.patchIgnored);
+    if (this.patchIgnored) {
+      return callback(null);
+    }
+    boxes = [];
+    hadError = false;
+    if (this.trashMailbox) {
+      boxes.push(this.trashMailbox);
+    }
+    if (this.junkMailbox) {
+      boxes.push(this.junkMailbox);
+    }
+    log.debug("applyPatchIgnored", boxes);
+    return async.eachSeries(boxes, function(boxID, cb) {
+      return Mailbox.markAllMessagesAsIgnored(boxID, function(err) {
+        if (err) {
+          hadError = true;
+          log.error(err);
+        }
+        return cb(null);
+      });
+    }, (function(_this) {
+      return function(err) {
+        var changes;
+        if (hadError) {
+          log.debug("applyPatchIgnored:fail", _this.id);
+          return callback(null);
+        } else {
+          log.debug("applyPatchIgnored:success", _this.id);
+          changes = {
+            patchIgnored: true
+          };
+          return _this.updateAttributes(changes, callback);
+        }
+      };
+    })(this));
   };
 
   Account.prototype.testConnections = function(callback) {

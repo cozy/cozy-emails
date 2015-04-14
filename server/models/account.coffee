@@ -30,6 +30,7 @@ class Account extends cozydb.CozyModel
         junkMailbox: String         # \Junk Maibox id
         allMailbox: String          # \All Maibox id
         favorites: [String]         # [String] Maibox id of displayed boxes
+        patchIgnored: Boolean       # has patchIgnored been applied ?
 
     # Public: find an account by id
     # cozydb's find can return no error and no account (if id isnt an account)
@@ -67,20 +68,52 @@ class Account extends cozydb.CozyModel
     #
     # Returns (callback) at task completion
     @removeOrphansAndRefresh: (limitByBox, onlyFavorites, callback) ->
-        Account.request 'all', (err, accounts) ->
+
+        allAccounts = []
+        existingAccountIDs = []
+        existingMailboxIDs = []
+        toIgnore = []
+
+        async.series [
+            (cb) -> # first fetch all accounts
+                Account.all (err, accounts) ->
+                    return cb err if err
+                    existingAccountIDs = accounts.map (account) -> account.id
+                    allAccounts = accounts
+                    cb null
+
+            (cb) ->
+                # then remove all mailbox associated with a deleted account
+                Mailbox.removeOrphans existingAccountIDs, (err, existingIDs) ->
+                    return cb err if err
+                    existingMailboxIDs = existingIDs
+                    cb null
+
+            (cb) ->
+                # then remove all messages associated with a deleted box
+                Message.removeOrphans existingMailboxIDs, cb
+
+            (cb) ->
+                # then apply the ignored patch to all accounts
+                async.eachSeries allAccounts, (account, cbLoop) ->
+                    account.applyPatchIgnored (err) ->
+                        log.error err if err
+                        cbLoop null # loop anyway
+                , cb
+
+
+        ], (err) ->
             return callback err if err
-            existingIDs = accounts.map (account) -> account.id
-            Mailbox.removeOrphans existingIDs, (err, existingMailboxIDs) ->
-                return callback err if err
-                Message.removeOrphans existingMailboxIDs, (err) ->
-                    return callback err if err
-                    options =
-                        accounts: accounts
-                        limitByBox: limitByBox
-                        onlyFavorites: onlyFavorites
-                        firstImport: false
-                        periodic: CONSTANTS.REFRESH_INTERVAL
-                    Account.refreshAccounts options, callback
+            options =
+                accounts: allAccounts
+                limitByBox: limitByBox
+                onlyFavorites: onlyFavorites
+                firstImport: false
+                periodic: CONSTANTS.REFRESH_INTERVAL
+            Account.refreshAccounts options, callback
+
+
+
 
     # Public: refresh a list of accounts
     #
@@ -206,6 +239,36 @@ class Account extends cozydb.CozyModel
     # Returns void
     setRefreshing: (value) ->
         ImapPool.get(@id).isRefreshing = value
+
+    # Public: patch this account to mark its junk & spam message as ignored
+    #
+    #
+    # Returns (callback) at completion
+    applyPatchIgnored: (callback) ->
+        log.debug "applyPatchIgnored, already = ", @patchIgnored
+        return callback null if @patchIgnored
+
+        boxes = []
+        hadError = false
+        boxes.push @trashMailbox if @trashMailbox
+        boxes.push @junkMailbox if @junkMailbox
+        log.debug "applyPatchIgnored", boxes
+        async.eachSeries boxes, (boxID, cb) ->
+            Mailbox.markAllMessagesAsIgnored boxID, (err) ->
+                if err
+                    hadError = true
+                    log.error err
+                cb null
+        , (err) =>
+            if hadError
+                log.debug "applyPatchIgnored:fail", @id
+                callback null
+            else
+                log.debug "applyPatchIgnored:success", @id
+                # if there was no error, the account is patched
+                # note it so we dont apply patch again
+                changes = patchIgnored: true
+                @updateAttributes changes, callback
 
 
     # Public: test an account connection

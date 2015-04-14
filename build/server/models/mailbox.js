@@ -240,6 +240,44 @@ Mailbox = (function(superClass) {
     });
   };
 
+  Mailbox.getAllMessageIDs = function(boxID, callback) {
+    var options;
+    options = {
+      startkey: ['uid', boxID, 0],
+      endkey: ['uid', boxID, 'a'],
+      reduce: false
+    };
+    return Message.rawRequest('byMailboxRequest', options, function(err, rows) {
+      return callback(err, rows != null ? rows.map(function(row) {
+        return row.id;
+      }) : void 0);
+    });
+  };
+
+  Mailbox.markAllMessagesAsIgnored = function(boxID, callback) {
+    return Mailbox.getAllMessageIDs(boxID, function(err, ids) {
+      var changes, lastError;
+      if (err) {
+        return callback(err);
+      }
+      changes = {
+        ignoreInCount: true
+      };
+      lastError = null;
+      return async.eachSeries(ids, function(id, cbLoop) {
+        return Message.updateAttributes(id, changes, function(err) {
+          if (err) {
+            log.error(err);
+            lastError = err;
+          }
+          return cbLoop(null);
+        });
+      }, function(err) {
+        return callback(err || lastError);
+      });
+    });
+  };
+
   Mailbox.prototype.imapcozy_rename = function(newLabel, newPath, callback) {
     log.debug("imapcozy_rename", newLabel, newPath);
     return this.imap_rename(newLabel, newPath, (function(_this) {
@@ -711,14 +749,17 @@ RefreshStep = (function() {
     step = new RefreshStep();
     step.limitByBox = options.limitByBox;
     step.firstImport = options.firstImport;
-    step.shouldNotif = false;
     step.initial = true;
     return step;
   };
 
+  RefreshStep.prototype.inspect = function() {
+    return ("Step{ limit:" + this.limitByBox + " ") + (this.initial ? "initial" : "[" + this.min + ":" + this.max + "]") + (this.firstImport ? ' firstImport' : '') + '}';
+  };
+
   RefreshStep.prototype.getNext = function(uidnext) {
     var range, step;
-    log.debug("computeNextStep", this, uidnext, this.limitByBox);
+    log.debug("computeNextStep", this, "next", uidnext);
     if (this.initial) {
       this.min = uidnext + 1;
     }
@@ -732,7 +773,6 @@ RefreshStep = (function() {
     step = new RefreshStep();
     step.firstImport = this.firstImport;
     step.limitByBox = this.limitByBox;
-    step.shouldNotif = this.shouldNotif;
     step.max = Math.max(1, this.min - 1);
     step.min = Math.max(1, this.min - range);
     return step;
