@@ -19,6 +19,7 @@ classer = React.addons.classSet
 # React Mixins
 RouterMixin = require '../mixins/router_mixin'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
+TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 # Flux stores
 AccountStore  = require '../stores/account_store'
@@ -54,6 +55,7 @@ module.exports = Application = React.createClass
     mixins: [
         StoreWatchMixin Stores
         RouterMixin
+        TooltipRefesherMixin
     ]
 
     render: ->
@@ -69,7 +71,7 @@ module.exports = Application = React.createClass
         disposition = LayoutStore.getDisposition()
 
         panelsClasses = classer
-            row: true
+            # row: true
             horizontal: disposition.type is Dispositions.HORIZONTAL
             three: disposition.type is Dispositions.THREE
             vertical: disposition.type is Dispositions.VERTICAL
@@ -79,10 +81,10 @@ module.exports = Application = React.createClass
 
         # classes for page-content
         responsiveClasses = classer
-            'col-xs-12': true
-            'col-md-9':  disposition.type is Dispositions.THREE
-            'col-md-11': disposition.type isnt Dispositions.THREE
-            'pushed': @state.isResponsiveMenuShown
+            # 'col-xs-12': true
+            # 'col-md-9':  disposition.type is Dispositions.THREE
+            # 'col-md-11': disposition.type isnt Dispositions.THREE
+            # 'pushed': @state.isResponsiveMenuShown
 
         alert = @state.alertMessage
 
@@ -542,23 +544,12 @@ module.exports = Application = React.createClass
         Stores.forEach (store) =>
             store.on 'notify', @_notify
 
-        # AriaTips must bind the elements declared as tooltip to their
-        # respective tooltip when the component is mounted (DOM elements exist).
-        AriaTips.bind()
-
 
     componentWillUnmount: ->
         Stores.forEach (store) =>
             store.removeListener 'notify', @notify
         # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
-
-
-    componentDidUpdate: ->
-        # AriaTips must bind the elements declared as tooltip to their
-        # respective tooltip, each time the application component (the root)
-        # is updated to make sure new tooltips are also bound.
-        AriaTips.bind()
 
 
     # Toggle the menu in responsive mode

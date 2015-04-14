@@ -15,6 +15,7 @@ MessageActionCreator      = require '../actions/message_action_creator'
 ContactActionCreator      = require '../actions/contact_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
+TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
 Participants  = require './participant'
 
 classer = React.addons.classSet
@@ -27,6 +28,7 @@ module.exports = React.createClass
 
     mixins: [
         RouterMixin
+        TooltipRefresherMixin
     ]
 
     getInitialState: ->
