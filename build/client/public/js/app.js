@@ -10916,7 +10916,6 @@ LayoutStore = (function(_super) {
     handle(ActionTypes.RECEIVE_TASK_UPDATE, (function(_this) {
       return function(task) {
         var id, remove;
-        console.log(task);
         task = Immutable.Map(task);
         id = task.get('id');
         _tasks = _tasks.set(id, task);
