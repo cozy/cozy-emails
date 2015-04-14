@@ -72,7 +72,6 @@ class LayoutStore extends Store
             @emit 'change'
 
         handle ActionTypes.RECEIVE_TASK_UPDATE, (task) =>
-            console.log task
             task = Immutable.Map task
             id = task.get 'id'
             _tasks = _tasks.set id, task
