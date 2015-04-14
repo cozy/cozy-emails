@@ -1,42 +1,59 @@
-(function(/*! Brunch !*/) {
+(function() {
   'use strict';
 
-  var globals = typeof window !== 'undefined' ? window : global;
+  var globals = typeof window === 'undefined' ? global : window;
   if (typeof globals.require === 'function') return;
 
   var modules = {};
   var cache = {};
+  var has = ({}).hasOwnProperty;
 
-  var has = function(object, name) {
-    return ({}).hasOwnProperty.call(object, name);
+  var aliases = {};
+
+  var endsWith = function(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
   };
 
-  var expand = function(root, name) {
-    var results = [], parts, part;
-    if (/^\.\.?(\/|$)/.test(name)) {
-      parts = [root, name].join('/').split('/');
-    } else {
-      parts = name.split('/');
-    }
-    for (var i = 0, length = parts.length; i < length; i++) {
-      part = parts[i];
-      if (part === '..') {
-        results.pop();
-      } else if (part !== '.' && part !== '') {
-        results.push(part);
+  var unalias = function(alias, loaderPath) {
+    var start = 0;
+    if (loaderPath) {
+      if (loaderPath.indexOf('components/' === 0)) {
+        start = 'components/'.length;
+      }
+      if (loaderPath.indexOf('/', start) > 0) {
+        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
       }
     }
-    return results.join('/');
+    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
+    if (result) {
+      return 'components/' + result.substring(0, result.length - '.js'.length);
+    }
+    return alias;
   };
 
+  var expand = (function() {
+    var reg = /^\.\.?(\/|$)/;
+    return function(root, name) {
+      var results = [], parts, part;
+      parts = (reg.test(name) ? root + '/' + name : name).split('/');
+      for (var i = 0, length = parts.length; i < length; i++) {
+        part = parts[i];
+        if (part === '..') {
+          results.pop();
+        } else if (part !== '.' && part !== '') {
+          results.push(part);
+        }
+      }
+      return results.join('/');
+    };
+  })();
   var dirname = function(path) {
     return path.split('/').slice(0, -1).join('/');
   };
 
   var localRequire = function(path) {
     return function(name) {
-      var dir = dirname(path);
-      var absolute = expand(dir, name);
+      var absolute = expand(dirname(path), name);
       return globals.require(absolute, path);
     };
   };
@@ -51,21 +68,26 @@
   var require = function(name, loaderPath) {
     var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
+    path = unalias(name, loaderPath);
 
-    if (has(cache, path)) return cache[path].exports;
-    if (has(modules, path)) return initModule(path, modules[path]);
+    if (has.call(cache, path)) return cache[path].exports;
+    if (has.call(modules, path)) return initModule(path, modules[path]);
 
     var dirIndex = expand(path, './index');
-    if (has(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
+    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
 
     throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
   };
 
-  var define = function(bundle, fn) {
+  require.alias = function(from, to) {
+    aliases[to] = from;
+  };
+
+  require.register = require.define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
-        if (has(bundle, key)) {
+        if (has.call(bundle, key)) {
           modules[key] = bundle[key];
         }
       }
@@ -74,21 +96,18 @@
     }
   };
 
-  var list = function() {
+  require.list = function() {
     var result = [];
     for (var item in modules) {
-      if (has(modules, item)) {
+      if (has.call(modules, item)) {
         result.push(item);
       }
     }
     return result;
   };
 
+  require.brunch = true;
   globals.require = require;
-  globals.require.define = define;
-  globals.require.register = define;
-  globals.require.list = list;
-  globals.require.brunch = true;
 })();
 require.register("actions/account_action_creator", function(exports, require, module) {
 var AccountActionCreator, AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, XHRUtils;
@@ -582,37 +601,35 @@ module.exports = LayoutActionCreator = {
       });
     }
   },
-  alert: function(level, message) {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.DISPLAY_ALERT,
-      value: {
-        level: level,
-        message: message
-      }
-    });
-  },
-  alertHide: function(level, message) {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.HIDE_ALERT
-    });
-  },
   refresh: function() {
     return AppDispatcher.handleViewAction({
       type: ActionTypes.REFRESH,
       value: null
     });
   },
-  alertSuccess: function(message) {
-    return LayoutActionCreator.alert(AlertLevel.SUCCESS, message);
+  alert: function(message) {
+    return LayoutActionCreator.notify(message, {
+      level: AlertLevel.INFO,
+      autoclose: true
+    });
   },
-  alertInfo: function(message) {
-    return LayoutActionCreator.alert(AlertLevel.INFO, message);
+  alertSuccess: function(message) {
+    return LayoutActionCreator.notify(message, {
+      level: AlertLevel.SUCCESS,
+      autoclose: true
+    });
   },
   alertWarning: function(message) {
-    return LayoutActionCreator.alert(AlertLevel.WARNING, message);
+    return LayoutActionCreator.notify(message, {
+      level: AlertLevel.WARNING,
+      autoclose: true
+    });
   },
   alertError: function(message) {
-    return LayoutActionCreator.alert(AlertLevel.ERROR, message);
+    return LayoutActionCreator.notify(message, {
+      level: AlertLevel.ERROR,
+      autoclose: true
+    });
   },
   notify: function(message, options) {
     var task;
@@ -626,6 +643,7 @@ module.exports = LayoutActionCreator = {
       task.errors = options.errors;
       task.finished = options.finished;
       task.actions = options.actions;
+      task.level = options.level;
     }
     return AppDispatcher.handleViewAction({
       type: ActionTypes.RECEIVE_TASK_UPDATE,
@@ -1799,17 +1817,11 @@ AccountConfigMain = React.createClass({
     var message;
     if (this.props.error && this.props.error.name === 'AccountConfigError') {
       message = t('config error ' + this.props.error.field);
-      return div({
-        className: 'alert alert-warning'
-      }, message);
+      return LAC.alertError(message);
     } else if (this.props.error) {
-      return div({
-        className: 'alert alert-warning'
-      }, this.props.error.message);
+      return LAC.alertError(this.props.error.message);
     } else if (Object.keys(this.state.errors).length !== 0) {
-      return div({
-        className: 'alert alert-warning'
-      }, t('account errors'));
+      return LAC.alertError(t('account errors'));
     }
   },
   discover: function(event) {
@@ -2561,7 +2573,7 @@ Alert = require('./alert');
 
 Topbar = require('./topbar');
 
-ToastContainer = require('./toast').Container;
+ToastContainer = require('./toast_container');
 
 Compose = require('./compose');
 
@@ -4330,7 +4342,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/mails_input", function(exports, require, module) {
-var ContactActionCreator, ContactStore, MailsInput, MessageUtils, Modal, a, classer, div, i, img, label, li, span, textarea, ul, _ref;
+var ContactActionCreator, ContactStore, LayoutActionCreator, MailsInput, MessageUtils, Modal, a, classer, div, i, img, label, li, span, textarea, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, label = _ref.label, textarea = _ref.textarea, span = _ref.span, ul = _ref.ul, li = _ref.li, a = _ref.a, img = _ref.img, i = _ref.i;
 
@@ -4341,6 +4353,8 @@ Modal = require('./modal');
 ContactStore = require('../stores/contact_store');
 
 ContactActionCreator = require('../actions/contact_action_creator');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
 
 classer = React.addons.classSet;
 
@@ -4614,7 +4628,7 @@ module.exports = MailsInput = React.createClass({
     })(this), 100);
   },
   addContactFromInput: function(isBlur) {
-    var address, isContacts, state, value, _ref1;
+    var address, isContacts, msg, state, value, _ref1;
     if (isBlur == null) {
       isBlur = false;
     }
@@ -4632,16 +4646,11 @@ module.exports = MailsInput = React.createClass({
           return this.setState(state);
         } else {
           isContacts = ((_ref1 = this.state.contacts) != null ? _ref1.length : void 0) === 0;
-          if (!this.isShowingAlert && !isBlur && isContacts) {
-            this.isShowingAlert = true;
-            alert(t('compose wrong email format', {
+          if (!isBlur && isContacts) {
+            msg = t('compose wrong email format', {
               address: address.address
-            }));
-            return setTimeout((function(_this) {
-              return function() {
-                return _this.isShowingAlert = false;
-              };
-            })(this), 200);
+            });
+            return LayoutActionCreator.alertError(msg);
           }
         }
       } else {
@@ -7645,7 +7654,7 @@ module.exports = ThinProgress = React.createClass({
 });
 
 ;require.register("components/toast", function(exports, require, module) {
-var ActionTypes, AppDispatcher, CSSTransitionGroup, LayoutActionCreator, LayoutStore, Modal, SocketUtils, StoreWatchMixin, Toast, ToastContainer, a, button, classer, div, h4, i, pre, span, strong, _ref;
+var ActionTypes, AlertLevel, AppDispatcher, CSSTransitionGroup, LayoutActionCreator, LayoutStore, Modal, SocketUtils, StoreWatchMixin, Toast, a, button, classer, div, h4, i, pre, span, strong, _ref, _ref1;
 
 _ref = React.DOM, a = _ref.a, h4 = _ref.h4, pre = _ref.pre, div = _ref.div, button = _ref.button, span = _ref.span, strong = _ref.strong, i = _ref.i;
 
@@ -7661,7 +7670,7 @@ LayoutStore = require('../stores/layout_store');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
-ActionTypes = require('../constants/app_constants').ActionTypes;
+_ref1 = require('../constants/app_constants'), ActionTypes = _ref1.ActionTypes, AlertLevel = _ref1.AlertLevel;
 
 CSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -7674,21 +7683,48 @@ module.exports = Toast = React.createClass({
       modalErrors: false
     };
   },
-  closeModal: function() {
-    return this.setState({
-      modalErrors: false
+  render: function() {
+    var className, classes, hasErrors, showModal, toast;
+    toast = this.props.toast.toJS();
+    hasErrors = (toast.errors != null) && toast.errors.length;
+    classes = classer({
+      toast: true,
+      'alert-dismissible': toast.finished,
+      'toast-error': toast.level === AlertLevel.ERROR
     });
-  },
-  showModal: function(errors) {
-    return this.setState({
-      modalErrors: errors
-    });
-  },
-  acknowledge: function() {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.RECEIVE_TASK_DELETE,
-      value: this.props.toast.get('id')
-    });
+    if (hasErrors) {
+      showModal = this.showModal.bind(this, toast.errors);
+    }
+    return div({
+      className: classes,
+      role: "alert",
+      key: this.props.key
+    }, this.state.modalErrors ? this.renderModal() : void 0, toast.message ? div({
+      className: "message"
+    }, toast.message) : void 0, toast.finished ? button({
+      type: "button",
+      className: "close",
+      onClick: this.acknowledge
+    }, span({
+      'aria-hidden': "true"
+    }, "×"), span({
+      className: "sr-only"
+    }, t("app alert close"))) : void 0, toast.actions != null ? (className = "btn btn-cancel btn-cozy-non-default btn-xs", div({
+      className: 'toast-actions'
+    }, toast.actions.map(function(action, id) {
+      return button({
+        className: className,
+        type: "button",
+        key: id,
+        onClick: action.onClick
+      }, action.label);
+    }))) : void 0, hasErrors ? div({
+      className: 'toast-actions'
+    }, a({
+      onClick: showModal
+    }, t('there were errors', {
+      smart_count: toast.errors.length
+    }))) : void 0);
   },
   renderModal: function() {
     var closeLabel, closeModal, content, modalErrors, subtitle, title;
@@ -7711,70 +7747,45 @@ module.exports = Toast = React.createClass({
       closeLabel: closeLabel
     });
   },
-  render: function() {
-    var classes, hasErrors, percent, showModal, toast;
-    toast = this.props.toast.toJS();
-    hasErrors = (toast.errors != null) && toast.errors.length;
-    classes = classer({
-      toast: true,
-      'alert-dismissible': toast.finished,
-      'alert-info': !hasErrors,
-      'alert-warning': hasErrors
+  closeModal: function() {
+    return this.setState({
+      modalErrors: false
     });
-    if ((toast.done != null) && (toast.total != null)) {
-      percent = parseInt(100 * toast.done / toast.total) + '%';
-    }
-    if (hasErrors) {
-      showModal = this.showModal.bind(this, toast.errors);
-    }
-    return div({
-      className: classes,
-      role: "alert",
-      key: this.props.key
-    }, this.state.modalErrors ? this.renderModal() : void 0, percent != null ? div({
-      className: "progress"
-    }, div({
-      className: 'progress-bar',
-      style: {
-        width: percent
-      }
-    }), div({
-      className: 'progress-bar-label start',
-      style: {
-        width: percent
-      }
-    }, "" + (t("task " + toast.code, toast)) + " : " + percent), div({
-      className: 'progress-bar-label end'
-    }, "" + (t("task " + toast.code, toast)) + " : " + percent)) : void 0, toast.message ? div({
-      className: "message"
-    }, toast.message) : void 0, toast.finished ? button({
-      type: "button",
-      className: "close",
-      onClick: this.acknowledge
-    }, span({
-      'aria-hidden': "true"
-    }, "×"), span({
-      className: "sr-only"
-    }, t("app alert close"))) : void 0, toast.actions != null ? div({
-      className: 'toast-actions'
-    }, toast.actions.map(function(action, id) {
-      return button({
-        className: "btn btn-cancel btn-cozy-non-default btn-xs",
-        type: "button",
-        key: id,
-        onClick: action.onClick
-      }, action.label);
-    })) : void 0, hasErrors ? div({
-      className: 'toast-actions'
-    }, a({
-      onClick: showModal
-    }, t('there were errors', {
-      smart_count: toast.errors.length
-    }))) : void 0);
+  },
+  showModal: function(errors) {
+    return this.setState({
+      modalErrors: errors
+    });
+  },
+  acknowledge: function() {
+    return AppDispatcher.handleViewAction({
+      type: ActionTypes.RECEIVE_TASK_DELETE,
+      value: this.props.toast.get('id')
+    });
   }
 });
+});
 
-module.exports.Container = ToastContainer = React.createClass({
+;require.register("components/toast_container", function(exports, require, module) {
+var CSSTransitionGroup, LayoutActionCreator, LayoutStore, Modal, StoreWatchMixin, Toast, ToastContainer, classer, div;
+
+div = React.DOM.div;
+
+Modal = require('./modal');
+
+Toast = require('./toast');
+
+StoreWatchMixin = require('../mixins/store_watch_mixin');
+
+LayoutStore = require('../stores/layout_store');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
+
+CSSTransitionGroup = React.addons.CSSTransitionGroup;
+
+classer = React.addons.classSet;
+
+module.exports = ToastContainer = React.createClass({
   displayName: 'ToastContainer',
   mixins: [StoreWatchMixin([LayoutStore])],
   getStateFromStores: function() {
@@ -7784,7 +7795,10 @@ module.exports.Container = ToastContainer = React.createClass({
     };
   },
   shouldComponentUpdate: function(nextProps, nextState) {
-    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+    var isNextProps, isNextState;
+    isNextState = _.isEqual(nextState, this.state);
+    isNextProps = _.isEqual(nextProps, this.props);
+    return !(isNextState && isNextProps);
   },
   render: function() {
     var classes, toasts;
@@ -7803,27 +7817,7 @@ module.exports.Container = ToastContainer = React.createClass({
       className: classes
     }, CSSTransitionGroup({
       transitionName: "toast"
-    }, toasts), div({
-      className: 'alert alert-success toast toasts-actions'
-    }, span({
-      className: "toast-action hide-action",
-      title: t('toast hide'),
-      onClick: this.toggleHidden
-    }, i({
-      className: 'fa fa-eye-slash'
-    })), span({
-      className: "toast-action show-action",
-      title: t('toast show'),
-      onClick: this.toggleHidden
-    }, i({
-      className: 'fa fa-eye'
-    })), span({
-      className: "toast-action close-action",
-      title: t('toast close all'),
-      onClick: this.closeAll
-    }, i({
-      className: 'fa fa-times'
-    }))));
+    }, toasts));
   },
   toggleHidden: function() {
     if (this.state.hidden) {
@@ -7832,15 +7826,17 @@ module.exports.Container = ToastContainer = React.createClass({
       return LayoutActionCreator.toastsHide();
     }
   },
-  closeAll: function() {
-    return LayoutActionCreator.clearToasts();
-  },
   _clearToasts: function() {
     return setTimeout(function() {
-      return Array.prototype.forEach.call(document.querySelectorAll('.toast-enter'), function(e) {
+      var toasts;
+      toasts = document.querySelectorAll('.toast-enter');
+      return Array.prototype.forEach.call(toasts, function(e) {
         return e.classList.add('hidden');
       });
     }, 10000);
+  },
+  closeAll: function() {
+    return LayoutActionCreator.clearToasts();
   },
   componentDidMount: function() {
     return this._clearToasts();
@@ -8916,6 +8912,63 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
+require.register("libs/flux/store/Store", function(exports, require, module) {
+var AppDispatcher, Store,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+AppDispatcher = require('../../../app_dispatcher');
+
+module.exports = Store = (function(_super) {
+  var _addHandlers, _handlers, _nextUniqID, _processBinding;
+
+  __extends(Store, _super);
+
+  Store.prototype.uniqID = null;
+
+  _nextUniqID = 0;
+
+  _handlers = {};
+
+  _addHandlers = function(type, callback) {
+    if (_handlers[this.uniqID] == null) {
+      _handlers[this.uniqID] = {};
+    }
+    return _handlers[this.uniqID][type] = callback;
+  };
+
+  _processBinding = function() {
+    return this.dispatchToken = AppDispatcher.register((function(_this) {
+      return function(payload) {
+        var callback, type, value, _ref;
+        _ref = payload.action, type = _ref.type, value = _ref.value;
+        if ((callback = _handlers[_this.uniqID][type]) != null) {
+          return callback.call(_this, value);
+        }
+      };
+    })(this));
+  };
+
+  function Store() {
+    Store.__super__.constructor.call(this);
+    this.uniqID = _nextUniqID++;
+    this.__bindHandlers(_addHandlers.bind(this));
+    _processBinding.call(this);
+  }
+
+  Store.prototype.__bindHandlers = function(handle) {
+    var message;
+    if (__DEV__) {
+      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
+      throw new Error(message);
+    }
+  };
+
+  return Store;
+
+})(EventEmitter);
+});
+
 ;require.register("libs/flux/store/store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
@@ -9536,7 +9589,7 @@ module.exports = {
   "there were errors": '%{smart_count} error. |||| %{smart_count} errors.',
   "modal please report": "Please transmit this information to cozy.",
   "modal please contribute": "Please contribute",
-  "validate must not be empty": "Mandatory field",
+  "validate must not be empty": "This field is required",
   "toast hide": "Hide alerts",
   "toast show": "Display alerts",
   "toast close all": "Close all alerts",
@@ -9550,7 +9603,7 @@ module.exports = {
   "gmail security tile": "About Gmail security",
   "gmail security body": "Gmail considers connection using username and password not safe.\nPlease click on the following link, make sure\nyou are connected with your %{login} account and enable access for\nless secure apps.",
   "gmail security link": "Enable access for less secure apps.",
-  'plugin name Gallery': 'Attachments gallery',
+  'plugin name Gallery': 'Attachment gallery',
   'plugin name medium-editor': 'Medium editor',
   'plugin name MiniSlate': 'MiniSlate editor',
   'plugin name Sample JS': 'Sample',
@@ -9562,7 +9615,7 @@ module.exports = {
   "tooltip reply all": "Answer to all",
   "tooltip forward": "Forward",
   "tooltip remove message": "Remove",
-  "tooltip open attachments": "Open attachments list",
+  "tooltip open attachments": "Open attachment list",
   "tooltip open attachments": "Open attachment",
   "tooltip download attachment": "Download the attachment",
   "tooltip previous conversation": "Go to previous conversation",
