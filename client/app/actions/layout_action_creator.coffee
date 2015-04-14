@@ -40,40 +40,44 @@ module.exports = LayoutActionCreator =
                     type: _cachedDisposition.type
                     value: 0
 
-    alert: (level, message) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.DISPLAY_ALERT
-            value:
-                level: level
-                message: message
-
-    alertHide: (level, message) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.HIDE_ALERT
-
     refresh: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.REFRESH
             value: null
 
+    alert: (message) ->
+        LayoutActionCreator.notify message,
+            level: AlertLevel.INFO
+            autoclose: true
+
     alertSuccess: (message) ->
-        LayoutActionCreator.alert AlertLevel.SUCCESS, message
-    alertInfo:    (message) ->
-        LayoutActionCreator.alert AlertLevel.INFO, message
+        LayoutActionCreator.notify message,
+            level: AlertLevel.SUCCESS
+            autoclose: true
+
     alertWarning: (message) ->
-        LayoutActionCreator.alert AlertLevel.WARNING, message
-    alertError:   (message) ->
-        LayoutActionCreator.alert AlertLevel.ERROR, message
+        LayoutActionCreator.notify message,
+            level: AlertLevel.WARNING
+            autoclose: true
+
+    alertError: (message) ->
+        LayoutActionCreator.notify message,
+            level: AlertLevel.ERROR
+            autoclose: true
+
     notify: (message, options) ->
         task =
             id: Date.now()
             finished: true
             message: message
+
         if options?
             task.autoclose = options.autoclose
-            task.errors    = options.errors
-            task.finished  = options.finished
-            task.actions   = options.actions
+            task.errors = options.errors
+            task.finished = options.finished
+            task.actions = options.actions
+            task.level = options.level
+
         AppDispatcher.handleViewAction
             type: ActionTypes.RECEIVE_TASK_UPDATE
             value: task
@@ -220,7 +224,6 @@ module.exports = LayoutActionCreator =
                 SearchActionCreator.receiveRawSearchResults results
 
     showSettings: (panelInfo, direction) ->
-
 
     refreshMessages: ->
         XHRUtils.refresh true, (err, results) ->

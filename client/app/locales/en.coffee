@@ -292,6 +292,7 @@ module.exports =
       "settings lang"             : "Language"
       "settings lang en"          : "English"
       "settings lang fr"          : "Français"
+      "settings lang de"          : "Deutsch"
       "settings save error"       : "Unable to save settings, please try again"
 
       # File picker
@@ -313,7 +314,7 @@ module.exports =
       "modal please contribute"    : "Please contribute"
 
       # Validation
-      "validate must not be empty" : "Mandatory field"
+      "validate must not be empty" : "This field is required"
 
       # Toast
       "toast hide"      : "Hide alerts"
@@ -347,7 +348,7 @@ module.exports =
       "gmail security link": "Enable access for less secure apps."
 
       # Plugins
-      'plugin name Gallery'            : 'Attachments gallery'
+      'plugin name Gallery'            : 'Attachment gallery'
       'plugin name medium-editor'      : 'Medium editor'
       'plugin name MiniSlate'          : 'MiniSlate editor'
       'plugin name Sample JS'          : 'Sample'
@@ -359,3 +360,14 @@ module.exports =
       'calendar unknown format' : """
             This message contains an invite to an event in a currently unknown format.
             """
+
+      # Tooltips
+      "tooltip reply": "Answer"
+      "tooltip reply all": "Answer to all"
+      "tooltip forward": "Forward"
+      "tooltip remove message": "Remove"
+      "tooltip open attachments": "Open attachment list"
+      "tooltip open attachments": "Open attachment"
+      "tooltip download attachment": "Download the attachment"
+      "tooltip previous conversation": "Go to previous conversation"
+      "tooltip next conversation": "Go to next conversation"

@@ -582,37 +582,35 @@ module.exports = LayoutActionCreator = {
       });
     }
   },
-  alert: function(level, message) {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.DISPLAY_ALERT,
-      value: {
-        level: level,
-        message: message
-      }
-    });
-  },
-  alertHide: function(level, message) {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.HIDE_ALERT
-    });
-  },
   refresh: function() {
     return AppDispatcher.handleViewAction({
       type: ActionTypes.REFRESH,
       value: null
     });
   },
-  alertSuccess: function(message) {
-    return LayoutActionCreator.alert(AlertLevel.SUCCESS, message);
+  alert: function(message) {
+    return LayoutActionCreator.notify(message, {
+      level: AlertLevel.INFO,
+      autoclose: true
+    });
   },
-  alertInfo: function(message) {
-    return LayoutActionCreator.alert(AlertLevel.INFO, message);
+  alertSuccess: function(message) {
+    return LayoutActionCreator.notify(message, {
+      level: AlertLevel.SUCCESS,
+      autoclose: true
+    });
   },
   alertWarning: function(message) {
-    return LayoutActionCreator.alert(AlertLevel.WARNING, message);
+    return LayoutActionCreator.notify(message, {
+      level: AlertLevel.WARNING,
+      autoclose: true
+    });
   },
   alertError: function(message) {
-    return LayoutActionCreator.alert(AlertLevel.ERROR, message);
+    return LayoutActionCreator.notify(message, {
+      level: AlertLevel.ERROR,
+      autoclose: true
+    });
   },
   notify: function(message, options) {
     var task;
@@ -626,6 +624,7 @@ module.exports = LayoutActionCreator = {
       task.errors = options.errors;
       task.finished = options.finished;
       task.actions = options.actions;
+      task.level = options.level;
     }
     return AppDispatcher.handleViewAction({
       type: ActionTypes.RECEIVE_TASK_UPDATE,
@@ -1799,17 +1798,11 @@ AccountConfigMain = React.createClass({
     var message;
     if (this.props.error && this.props.error.name === 'AccountConfigError') {
       message = t('config error ' + this.props.error.field);
-      return div({
-        className: 'alert alert-warning'
-      }, message);
+      return LAC.alertError(message);
     } else if (this.props.error) {
-      return div({
-        className: 'alert alert-warning'
-      }, this.props.error.message);
+      return LAC.alertError(this.props.error.message);
     } else if (Object.keys(this.state.errors).length !== 0) {
-      return div({
-        className: 'alert alert-warning'
-      }, t('account errors'));
+      return LAC.alertError(t('account errors'));
     }
   },
   discover: function(event) {
@@ -2551,7 +2544,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/application", function(exports, require, module) {
-var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageFilter, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, Stores, ToastContainer, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref, _ref1;
+var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageFilter, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, Stores, ToastContainer, Tooltips, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref, _ref1;
 
 _ref = React.DOM, body = _ref.body, div = _ref.div, p = _ref.p, form = _ref.form, i = _ref.i, input = _ref.input, span = _ref.span, a = _ref.a, button = _ref.button, strong = _ref.strong;
 
@@ -2561,7 +2554,7 @@ Alert = require('./alert');
 
 Topbar = require('./topbar');
 
-ToastContainer = require('./toast').Container;
+ToastContainer = require('./toast_container');
 
 Compose = require('./compose');
 
@@ -2574,6 +2567,8 @@ MessageList = require('./message-list');
 Settings = require('./settings');
 
 SearchForm = require('./search-form');
+
+Tooltips = require('./tooltips-manager');
 
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -2659,7 +2654,11 @@ module.exports = Application = React.createClass({
       keySecond = 'right-panel-' + layout.secondPanel.action.split('.')[0];
       if (layout.secondPanel.parameters.messageID != null) {
         MessageStore.setCurrentID(layout.secondPanel.parameters.messageID);
+      } else {
+        MessageStore.setCurrentID(null);
       }
+    } else {
+      MessageStore.setCurrentID(null);
     }
     return div({
       className: 'container-fluid'
@@ -2691,7 +2690,7 @@ module.exports = Application = React.createClass({
     }, this.getPanelComponent(layout.firstPanel, firstPanelLayoutMode)), !isFullWidth && (layout.secondPanel != null) ? div({
       className: panelClasses.secondPanel,
       key: keySecond
-    }, this.getPanelComponent(layout.secondPanel, 'second')) : void 0))));
+    }, this.getPanelComponent(layout.secondPanel, 'second')) : void 0)), Tooltips()));
   },
   getPanelClasses: function(isFullWidth) {
     var classes, disposition, first, firstClass, layout, previous, second, secondClass, wasFullWidth;
@@ -3024,11 +3023,12 @@ module.exports = Application = React.createClass({
     return window.cozyMails.notify(title, options);
   },
   componentDidMount: function() {
-    return Stores.forEach((function(_this) {
+    Stores.forEach((function(_this) {
       return function(store) {
         return store.on('notify', _this._notify);
       };
     })(this));
+    return AriaTips.bind();
   },
   componentWillUnmount: function() {
     Stores.forEach((function(_this) {
@@ -3037,6 +3037,9 @@ module.exports = Application = React.createClass({
       };
     })(this));
     return this.props.router.off('fluxRoute', this.onRoute);
+  },
+  componentDidUpdate: function() {
+    return AriaTips.bind();
   },
   toggleMenu: function(event) {
     return this.setState({
@@ -3047,11 +3050,13 @@ module.exports = Application = React.createClass({
 });
 
 ;require.register("components/attachement_preview", function(exports, require, module) {
-var MessageUtils, a, i, img, li, _ref;
+var MessageUtils, Tooltips, a, i, img, li, _ref;
 
 _ref = React.DOM, li = _ref.li, img = _ref.img, a = _ref.a, i = _ref.i;
 
 MessageUtils = require('../utils/message_utils');
+
+Tooltips = require('../constants/app_constants').Tooltips;
 
 module.exports = React.createClass({
   displayName: 'AttachmentPreview',
@@ -3069,19 +3074,21 @@ module.exports = React.createClass({
     'word': 'fa-file-word-o'
   },
   render: function() {
-    var url;
-    url = encodeURIComponent(this.props.file.url);
     if (this.props.previewLink) {
       return li({
         key: this.props.key
       }, this.renderIcon(), a({
         target: '_blank',
-        href: this.props.file.url
+        href: this.props.file.url,
+        'aria-describedby': Tooltips.OPEN_ATTACHMENT,
+        'data-tooltip-direction': 'top'
       }, this.props.preview ? img({
         width: 90,
         src: this.props.file.url
       }) : void 0, this.props.file.generatedFileName), ' - ', a({
-        href: "" + url + "?download=1"
+        href: "" + this.props.file.url + "?download=1",
+        'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT,
+        'data-tooltip-direction': 'top'
       }, i({
         className: 'fa fa-download'
       }), this.displayFilesize(this.props.file.length)));
@@ -3089,7 +3096,9 @@ module.exports = React.createClass({
       return li({
         key: this.props.key
       }, this.renderIcon(), a({
-        href: "" + url + "?download=1"
+        href: "" + this.props.file.url + "?download=1",
+        'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT,
+        'data-tooltip-direction': 'top'
       }, "" + this.props.file.generatedFileName + "\n(" + (this.displayFilesize(this.props.file.length)) + ")"));
     }
   },
@@ -3454,7 +3463,7 @@ module.exports = Compose = React.createClass({
       references: this.state.references
     };
     if (!isDraft) {
-      message.conversationID = this.state.source.conversationID;
+      message.conversationID = this.state.originalConversationID;
     }
     valid = true;
     if (!isDraft) {
@@ -3501,13 +3510,16 @@ module.exports = Compose = React.createClass({
           if (isDraft) {
             state.saving = false;
           } else {
+            state.isDraft = false;
             state.sending = false;
           }
           for (key in message) {
             value = message[key];
             state[key] = value;
           }
-          _this.setState(state);
+          if (_this.isMounted()) {
+            _this.setState(state);
+          }
           if (isDraft) {
             msgKo = t("message action draft ko");
           } else {
@@ -4311,7 +4323,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/mails_input", function(exports, require, module) {
-var ContactActionCreator, ContactStore, MailsInput, MessageUtils, Modal, a, classer, div, i, img, label, li, span, textarea, ul, _ref;
+var ContactActionCreator, ContactStore, LayoutActionCreator, MailsInput, MessageUtils, Modal, a, classer, div, i, img, label, li, span, textarea, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, label = _ref.label, textarea = _ref.textarea, span = _ref.span, ul = _ref.ul, li = _ref.li, a = _ref.a, img = _ref.img, i = _ref.i;
 
@@ -4322,6 +4334,8 @@ Modal = require('./modal');
 ContactStore = require('../stores/contact_store');
 
 ContactActionCreator = require('../actions/contact_action_creator');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
 
 classer = React.addons.classSet;
 
@@ -4595,7 +4609,7 @@ module.exports = MailsInput = React.createClass({
     })(this), 100);
   },
   addContactFromInput: function(isBlur) {
-    var address, isContacts, state, value, _ref1;
+    var address, isContacts, msg, state, value, _ref1;
     if (isBlur == null) {
       isBlur = false;
     }
@@ -4613,16 +4627,11 @@ module.exports = MailsInput = React.createClass({
           return this.setState(state);
         } else {
           isContacts = ((_ref1 = this.state.contacts) != null ? _ref1.length : void 0) === 0;
-          if (!this.isShowingAlert && !isBlur && isContacts) {
-            this.isShowingAlert = true;
-            alert(t('compose wrong email format', {
+          if (!isBlur && isContacts) {
+            msg = t('compose wrong email format', {
               address: address.address
-            }));
-            return setTimeout((function(_this) {
-              return function() {
-                return _this.isShowingAlert = false;
-              };
-            })(this), 200);
+            });
+            return LayoutActionCreator.alertError(msg);
           }
         }
       } else {
@@ -6432,17 +6441,21 @@ module.exports = React.createClass({
           callback: (function(_this) {
             return function(error) {
               if (error == null) {
-                return _this.setState({
-                  composing: false
-                });
+                if (_this.isMounted()) {
+                  return _this.setState({
+                    composing: false
+                  });
+                }
               }
             };
           })(this),
           onCancel: (function(_this) {
             return function() {
-              return _this.setState({
-                composing: false
-              });
+              if (_this.isMounted()) {
+                return _this.setState({
+                  composing: false
+                });
+              }
             };
           })(this)
         });
@@ -6798,7 +6811,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message_header", function(exports, require, module) {
-var AttachmentPreview, ContactStore, MessageFlags, MessageUtils, a, div, i, img, li, span, table, tbody, td, tr, ul, _ref,
+var AttachmentPreview, ContactStore, MessageFlags, MessageUtils, Tooltips, a, div, i, img, li, span, table, tbody, td, tr, ul, _ref, _ref1,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice;
 
@@ -6810,7 +6823,7 @@ AttachmentPreview = require('./attachement_preview');
 
 ContactStore = require('../stores/contact_store');
 
-MessageFlags = require('../constants/app_constants').MessageFlags;
+_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, Tooltips = _ref1.Tooltips;
 
 module.exports = React.createClass({
   displayName: 'MessageHeader',
@@ -6826,7 +6839,7 @@ module.exports = React.createClass({
     };
   },
   render: function() {
-    var avatar, _ref1;
+    var avatar, _ref2;
     avatar = MessageUtils.getAvatar(this.props.message);
     return div({
       key: "message-header-" + (this.props.message.get('id'))
@@ -6839,7 +6852,7 @@ module.exports = React.createClass({
       className: 'infos'
     }, this.renderAddress('from'), this.renderAddress('to'), this.renderAddress('cc'), div({
       className: 'indicators'
-    }, this.props.message.get('attachments').length ? this.renderAttachementsIndicator() : void 0, (_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
+    }, this.props.message.get('attachments').length ? this.renderAttachementsIndicator() : void 0, (_ref2 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref2) >= 0) ? i({
       className: 'fa fa-star'
     }) : void 0, this.props.isDraft ? i({
       className: 'fa fa-edit'
@@ -6911,8 +6924,8 @@ module.exports = React.createClass({
     }, field !== 'from' ? span(null, t("mail " + field)) : void 0].concat(__slice.call(this.formatUsers(users))));
   },
   renderAttachementsIndicator: function() {
-    var attachments, file, _ref1;
-    attachments = ((_ref1 = this.props.message.get('attachments')) != null ? _ref1.toJS() : void 0) || [];
+    var attachments, file, _ref2;
+    attachments = ((_ref2 = this.props.message.get('attachments')) != null ? _ref2.toJS() : void 0) || [];
     return div({
       className: 'attachments',
       'aria-expanded': this.state.showAttachements,
@@ -6921,7 +6934,9 @@ module.exports = React.createClass({
       }
     }, i({
       className: 'btn fa fa-paperclip fa-flip-horizontal',
-      onClick: this.toggleAttachments
+      onClick: this.toggleAttachments,
+      'aria-describedby': Tooltips.OPEN_ATTACHMENTS,
+      'data-tooltip-direction': 'left'
     }), div({
       className: 'popup',
       'aria-hidden': !this.state.showAttachements
@@ -6943,11 +6958,11 @@ module.exports = React.createClass({
     })())));
   },
   renderDetailsPopup: function() {
-    var cc, dest, from, reply, row, to, _ref1;
+    var cc, dest, from, reply, row, to, _ref2;
     from = this.props.message.get('from')[0];
     to = this.props.message.get('to');
     cc = this.props.message.get('cc');
-    reply = (_ref1 = this.props.message.get('reply-to')) != null ? _ref1[0] : void 0;
+    reply = (_ref2 = this.props.message.get('reply-to')) != null ? _ref2[0] : void 0;
     row = function(id, value, label, rowSpan) {
       var attrs, items;
       if (label == null) {
@@ -6986,23 +7001,23 @@ module.exports = React.createClass({
       className: 'popup',
       'aria-hidden': !this.state.showDetails
     }, table(null, tbody(null, row('from', this.formatUsers(from), 'headers from'), to.length ? row('to', this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
-      var _i, _len, _ref2, _results;
+      var _i, _len, _ref3, _results;
       if (to.length) {
-        _ref2 = to.slice(1);
+        _ref3 = to.slice(1);
         _results = [];
-        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-          dest = _ref2[_i];
+        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+          dest = _ref3[_i];
           _results.push(row('destTo', this.formatUsers(dest)));
         }
         return _results;
       }
     }).call(this), cc.length ? row('cc', this.formatUsers(cc[0]), 'headers cc', cc.length) : void 0, (function() {
-      var _i, _len, _ref2, _results;
+      var _i, _len, _ref3, _results;
       if (cc.length) {
-        _ref2 = cc.slice(1);
+        _ref3 = cc.slice(1);
         _results = [];
-        for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
-          dest = _ref2[_i];
+        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+          dest = _ref3[_i];
           _results.push(row('destCc', this.formatUsers(dest)));
         }
         return _results;
@@ -7620,7 +7635,7 @@ module.exports = ThinProgress = React.createClass({
 });
 
 ;require.register("components/toast", function(exports, require, module) {
-var ActionTypes, AppDispatcher, CSSTransitionGroup, LayoutActionCreator, LayoutStore, Modal, SocketUtils, StoreWatchMixin, Toast, ToastContainer, a, button, classer, div, h4, i, pre, span, strong, _ref;
+var ActionTypes, AlertLevel, AppDispatcher, CSSTransitionGroup, LayoutActionCreator, LayoutStore, Modal, SocketUtils, StoreWatchMixin, Toast, a, button, classer, div, h4, i, pre, span, strong, _ref, _ref1;
 
 _ref = React.DOM, a = _ref.a, h4 = _ref.h4, pre = _ref.pre, div = _ref.div, button = _ref.button, span = _ref.span, strong = _ref.strong, i = _ref.i;
 
@@ -7636,7 +7651,7 @@ LayoutStore = require('../stores/layout_store');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
-ActionTypes = require('../constants/app_constants').ActionTypes;
+_ref1 = require('../constants/app_constants'), ActionTypes = _ref1.ActionTypes, AlertLevel = _ref1.AlertLevel;
 
 CSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -7649,21 +7664,48 @@ module.exports = Toast = React.createClass({
       modalErrors: false
     };
   },
-  closeModal: function() {
-    return this.setState({
-      modalErrors: false
+  render: function() {
+    var className, classes, hasErrors, showModal, toast;
+    toast = this.props.toast.toJS();
+    hasErrors = (toast.errors != null) && toast.errors.length;
+    classes = classer({
+      toast: true,
+      'alert-dismissible': toast.finished,
+      'toast-error': toast.level === AlertLevel.ERROR
     });
-  },
-  showModal: function(errors) {
-    return this.setState({
-      modalErrors: errors
-    });
-  },
-  acknowledge: function() {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.RECEIVE_TASK_DELETE,
-      value: this.props.toast.get('id')
-    });
+    if (hasErrors) {
+      showModal = this.showModal.bind(this, toast.errors);
+    }
+    return div({
+      className: classes,
+      role: "alert",
+      key: this.props.key
+    }, this.state.modalErrors ? this.renderModal() : void 0, toast.message ? div({
+      className: "message"
+    }, toast.message) : void 0, toast.finished ? button({
+      type: "button",
+      className: "close",
+      onClick: this.acknowledge
+    }, span({
+      'aria-hidden': "true"
+    }, "×"), span({
+      className: "sr-only"
+    }, t("app alert close"))) : void 0, toast.actions != null ? (className = "btn btn-cancel btn-cozy-non-default btn-xs", div({
+      className: 'toast-actions'
+    }, toast.actions.map(function(action, id) {
+      return button({
+        className: className,
+        type: "button",
+        key: id,
+        onClick: action.onClick
+      }, action.label);
+    }))) : void 0, hasErrors ? div({
+      className: 'toast-actions'
+    }, a({
+      onClick: showModal
+    }, t('there were errors', {
+      smart_count: toast.errors.length
+    }))) : void 0);
   },
   renderModal: function() {
     var closeLabel, closeModal, content, modalErrors, subtitle, title;
@@ -7686,70 +7728,45 @@ module.exports = Toast = React.createClass({
       closeLabel: closeLabel
     });
   },
-  render: function() {
-    var classes, hasErrors, percent, showModal, toast;
-    toast = this.props.toast.toJS();
-    hasErrors = (toast.errors != null) && toast.errors.length;
-    classes = classer({
-      toast: true,
-      'alert-dismissible': toast.finished,
-      'alert-info': !hasErrors,
-      'alert-warning': hasErrors
+  closeModal: function() {
+    return this.setState({
+      modalErrors: false
     });
-    if ((toast.done != null) && (toast.total != null)) {
-      percent = parseInt(100 * toast.done / toast.total) + '%';
-    }
-    if (hasErrors) {
-      showModal = this.showModal.bind(this, toast.errors);
-    }
-    return div({
-      className: classes,
-      role: "alert",
-      key: this.props.key
-    }, this.state.modalErrors ? this.renderModal() : void 0, percent != null ? div({
-      className: "progress"
-    }, div({
-      className: 'progress-bar',
-      style: {
-        width: percent
-      }
-    }), div({
-      className: 'progress-bar-label start',
-      style: {
-        width: percent
-      }
-    }, "" + (t("task " + toast.code, toast)) + " : " + percent), div({
-      className: 'progress-bar-label end'
-    }, "" + (t("task " + toast.code, toast)) + " : " + percent)) : void 0, toast.message ? div({
-      className: "message"
-    }, toast.message) : void 0, toast.finished ? button({
-      type: "button",
-      className: "close",
-      onClick: this.acknowledge
-    }, span({
-      'aria-hidden': "true"
-    }, "×"), span({
-      className: "sr-only"
-    }, t("app alert close"))) : void 0, toast.actions != null ? div({
-      className: 'toast-actions'
-    }, toast.actions.map(function(action, id) {
-      return button({
-        className: "btn btn-cancel btn-cozy-non-default btn-xs",
-        type: "button",
-        key: id,
-        onClick: action.onClick
-      }, action.label);
-    })) : void 0, hasErrors ? div({
-      className: 'toast-actions'
-    }, a({
-      onClick: showModal
-    }, t('there were errors', {
-      smart_count: toast.errors.length
-    }))) : void 0);
+  },
+  showModal: function(errors) {
+    return this.setState({
+      modalErrors: errors
+    });
+  },
+  acknowledge: function() {
+    return AppDispatcher.handleViewAction({
+      type: ActionTypes.RECEIVE_TASK_DELETE,
+      value: this.props.toast.get('id')
+    });
   }
 });
+});
 
-module.exports.Container = ToastContainer = React.createClass({
+;require.register("components/toast_container", function(exports, require, module) {
+var CSSTransitionGroup, LayoutActionCreator, LayoutStore, Modal, StoreWatchMixin, Toast, ToastContainer, classer, div;
+
+div = React.DOM.div;
+
+Modal = require('./modal');
+
+Toast = require('./toast');
+
+StoreWatchMixin = require('../mixins/store_watch_mixin');
+
+LayoutStore = require('../stores/layout_store');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
+
+CSSTransitionGroup = React.addons.CSSTransitionGroup;
+
+classer = React.addons.classSet;
+
+module.exports = ToastContainer = React.createClass({
   displayName: 'ToastContainer',
   mixins: [StoreWatchMixin([LayoutStore])],
   getStateFromStores: function() {
@@ -7759,7 +7776,10 @@ module.exports.Container = ToastContainer = React.createClass({
     };
   },
   shouldComponentUpdate: function(nextProps, nextState) {
-    return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+    var isNextProps, isNextState;
+    isNextState = _.isEqual(nextState, this.state);
+    isNextProps = _.isEqual(nextProps, this.props);
+    return !(isNextState && isNextProps);
   },
   render: function() {
     var classes, toasts;
@@ -7778,27 +7798,7 @@ module.exports.Container = ToastContainer = React.createClass({
       className: classes
     }, CSSTransitionGroup({
       transitionName: "toast"
-    }, toasts), div({
-      className: 'alert alert-success toast toasts-actions'
-    }, span({
-      className: "toast-action hide-action",
-      title: t('toast hide'),
-      onClick: this.toggleHidden
-    }, i({
-      className: 'fa fa-eye-slash'
-    })), span({
-      className: "toast-action show-action",
-      title: t('toast show'),
-      onClick: this.toggleHidden
-    }, i({
-      className: 'fa fa-eye'
-    })), span({
-      className: "toast-action close-action",
-      title: t('toast close all'),
-      onClick: this.closeAll
-    }, i({
-      className: 'fa fa-times'
-    }))));
+    }, toasts));
   },
   toggleHidden: function() {
     if (this.state.hidden) {
@@ -7807,15 +7807,17 @@ module.exports.Container = ToastContainer = React.createClass({
       return LayoutActionCreator.toastsHide();
     }
   },
-  closeAll: function() {
-    return LayoutActionCreator.clearToasts();
-  },
   _clearToasts: function() {
     return setTimeout(function() {
-      return Array.prototype.forEach.call(document.querySelectorAll('.toast-enter'), function(e) {
+      var toasts;
+      toasts = document.querySelectorAll('.toast-enter');
+      return Array.prototype.forEach.call(toasts, function(e) {
         return e.classList.add('hidden');
       });
     }, 10000);
+  },
+  closeAll: function() {
+    return LayoutActionCreator.clearToasts();
   },
   componentDidMount: function() {
     return this._clearToasts();
@@ -7827,11 +7829,13 @@ module.exports.Container = ToastContainer = React.createClass({
 });
 
 ;require.register("components/toolbar_conversation", function(exports, require, module) {
-var LayoutActionCreator, RouterMixin, a, button, cBtn, div, nav, _ref;
+var LayoutActionCreator, RouterMixin, Tooltips, a, button, cBtn, div, nav, _ref;
 
 _ref = React.DOM, nav = _ref.nav, div = _ref.div, button = _ref.button, a = _ref.a;
 
 LayoutActionCreator = require('../actions/layout_action_creator');
+
+Tooltips = require('../constants/app_constants').Tooltips;
 
 RouterMixin = require('../mixins/router_mixin');
 
@@ -7874,13 +7878,19 @@ module.exports = React.createClass({
     }, this.renderNav('prev'), this.renderNav('next')), this.renderFullscreen());
   },
   renderNav: function(direction) {
-    var angle, conversationID, messageID, params, url, urlParams;
+    var angle, conversationID, messageID, params, tooltipID, url, urlParams;
     if (this.props["" + direction + "MessageID"] == null) {
       return;
     }
     messageID = this.props["" + direction + "MessageID"];
     conversationID = this.props["" + direction + "ConversationID"];
-    angle = direction === 'prev' ? 'left' : 'right';
+    if (direction === 'prev') {
+      tooltipID = Tooltips.PREVIOUS_CONVERSATION;
+      angle = 'left';
+    } else {
+      tooltipID = Tooltips.NEXT_CONVERSATION;
+      angle = 'right';
+    }
     params = this.getParams(messageID, conversationID);
     urlParams = {
       direction: 'second',
@@ -7895,7 +7905,9 @@ module.exports = React.createClass({
           return _this.redirect(urlParams);
         };
       })(this),
-      href: url
+      href: url,
+      'aria-describedby': tooltipID,
+      'data-tooltip-direction': 'left'
     });
   },
   renderFullscreen: function() {
@@ -7915,12 +7927,12 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/toolbar_message", function(exports, require, module) {
-var ConversationActionCreator, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageFlags, ToolboxActions, ToolboxMove, a, alertError, alertSuccess, button, cBtn, cBtnGroup, div, nav, _ref, _ref1,
+var ConversationActionCreator, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageFlags, ToolboxActions, ToolboxMove, Tooltips, a, alertError, alertSuccess, button, cBtn, cBtnGroup, div, nav, _ref, _ref1,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 _ref = React.DOM, nav = _ref.nav, div = _ref.div, button = _ref.button, a = _ref.a;
 
-_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, FlagsConstants = _ref1.FlagsConstants;
+_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, FlagsConstants = _ref1.FlagsConstants, Tooltips = _ref1.Tooltips;
 
 ToolboxActions = require('./toolbox_actions');
 
@@ -7968,13 +7980,19 @@ module.exports = React.createClass({
       className: cBtnGroup
     }, button({
       className: "" + cBtn + " fa-mail-reply mail-reply",
-      onClick: this.props.onReply
+      onClick: this.props.onReply,
+      'aria-describedby': Tooltips.REPLY,
+      'data-tooltip-direction': 'top'
     }), button({
       className: "" + cBtn + " fa-mail-reply-all mail-reply-all",
-      onClick: this.props.onReplyAll
+      onClick: this.props.onReplyAll,
+      'aria-describedby': Tooltips.REPLY_ALL,
+      'data-tooltip-direction': 'top'
     }), button({
       className: "" + cBtn + " fa-mail-forward mail-forward",
-      onClick: this.props.onForward
+      onClick: this.props.onForward,
+      'aria-describedby': Tooltips.FORWARD,
+      'data-tooltip-direction': 'top'
     }));
   },
   renderQuickActions: function() {
@@ -7982,7 +8000,9 @@ module.exports = React.createClass({
       className: cBtnGroup
     }, button({
       className: "" + cBtn + " fa-trash",
-      onClick: this.props.onDelete
+      onClick: this.props.onDelete,
+      'aria-describedby': Tooltips.REMOVE_MESSAGE,
+      'data-tooltip-direction': 'top'
     }));
   },
   renderToolboxActions: function() {
@@ -8282,6 +8302,35 @@ module.exports = ToolboxMove = React.createClass({
 });
 });
 
+;require.register("components/tooltips-manager", function(exports, require, module) {
+
+/*
+This component must be used to declare tooltips.
+They can't be then referenced from the other components.
+
+See https://github.com/m4dz/aria-tips#use
+ */
+var Tooltips, div, p, _ref;
+
+Tooltips = require('../constants/app_constants').Tooltips;
+
+_ref = React.DOM, div = _ref.div, p = _ref.p;
+
+module.exports = React.createClass({
+  displayName: 'TooltipManager',
+  render: function() {
+    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')));
+  },
+  getTooltip: function(id, content) {
+    return p({
+      id: id,
+      role: "tooltip",
+      'aria-hidden': "true"
+    }, content);
+  }
+});
+});
+
 ;require.register("components/topbar", function(exports, require, module) {
 var LayoutActionCreator, MailboxList, ReactCSSTransitionGroup, RouterMixin, SearchForm, Topbar, a, body, button, div, form, i, input, p, span, strong, _ref;
 
@@ -8482,6 +8531,17 @@ module.exports = {
     trashMailbox: 'fa-trash-o',
     junkMailbox: 'fa-exclamation',
     allMailbox: 'fa-archive'
+  },
+  Tooltips: {
+    REPLY: 'REPLY',
+    REPLY_ALL: 'REPLY_ALL',
+    FORWARD: 'FORWARD',
+    REMOVE_MESSAGE: 'REMOVE_MESSAGE',
+    OPEN_ATTACHMENTS: 'OPEN_ATTACHMENTS',
+    OPEN_ATTACHMENT: 'OPEN_ATTACHMENT',
+    DOWNLOAD_ATTACHMENT: 'DOWNLOAD_ATTACHMENT',
+    PREVIOUS_CONVERSATION: 'PREVIOUS_CONVERSATION',
+    NEXT_CONVERSATION: 'NEXT_CONVERSATION'
   }
 };
 });
@@ -9238,6 +9298,303 @@ module.exports = Router = (function(_super) {
 })(Backbone.Router);
 });
 
+;require.register("locales/de", function(exports, require, module) {
+module.exports = {
+  "app loading": "Laden…",
+  "app back": "Zurück",
+  "app cancel": "Abbrechen",
+  "app menu": "Menü",
+  "app search": "Suchen…",
+  "app alert close": "Schließen",
+  "app unimplemented": "Noch nicht implementiert",
+  "app error": "Argh, Ich bin nicht fähig diese Aktion auszuführen, bitte probieren Sie es wieder",
+  "compose": "Neue E-Mail erstellen",
+  "compose default": 'Hallo, wie geht es Ihnen Heute?',
+  "compose from": "Von",
+  "compose to": "An",
+  "compose to help": "Empfänger Liste",
+  "compose cc": "Cc",
+  "compose cc help": "Kopie Liste",
+  "compose bcc": "Bcc",
+  "compose bcc help": "Verborgene Kopie Liste",
+  "compose subject": "Betreff",
+  "compose content": "Inhalt",
+  "compose subject help": "Nachrichten Betreff",
+  "compose reply prefix": "Re: ",
+  "compose reply separator": "\n\nOn %{date}, %{sender} hat geschrieben \n",
+  "compose forward prefix": "Fwd: ",
+  "compose forward separator": "\n\nOn %{date}, %{sender} hat geschrieben \n",
+  "compose action draft": "Entwurf speichern",
+  "compose action send": "Senden",
+  "compose action delete": "Entwurf löschen",
+  "compose action sending": "Sendet",
+  "compose toggle cc": "Cc",
+  "compose toggle bcc": "Bcc",
+  "compose error no dest": "Sie können keine Nachricht an Niemanden senden",
+  "compose error no subject": "Bitte vergeben Sie einen Betreff",
+  "compose confirm keep draft": "Nachricht wurde nicht gesandet, Entwurft behalten?",
+  "compose draft deleted": "Entwurf gelöscht",
+  "compose wrong email format": "Die vergebene E-Mail Adresse hat kein geeignes Format: %{address}.",
+  "compose forward header": "Gesendete Nachricht",
+  "compose forward subject": "Betreff:",
+  "compose forward date": "Datum:",
+  "compose forward from": "Von:",
+  "compose forward to": "An:",
+  "menu show": "Menü anzeigen",
+  "menu compose": "Erstellen",
+  "menu account new": "Neues Konto",
+  "menu settings": "Parameter",
+  "menu mailbox total": "%{smart_count} Nachricht |||| %{smart_count} Nachrichten",
+  "menu mailbox unread": ", %{smart_count} ungelesene Nachricht ||||, %{smart_count} ungelesene Nachrichten ",
+  "menu mailbox new": " und %{smart_count} neue Nachricht |||| und %{smart_count} neue Nachrichten ",
+  "menu favorites on": "Favoriten",
+  "menu favorites off": "Alle",
+  "menu toggle": "Menü umschalten",
+  "list empty": "Keine E-Mail in diesem Postfach.",
+  "no flagged message": "Keine wichtige E-Mail in diesem Postfach.",
+  "no unseen message": "Alle E-Mails in dieser Box wurden gelesen",
+  "no attach message": "Keine Nachrichten mit Anhängen",
+  "no filter message": "Keine E-Mail für diesen Filter.",
+  "list fetching": "Laden…",
+  "list search empty": "Keine Ergebnis für diese Regel gefundnen \"%{query}\".",
+  "list count": "%{smart_count} Nachricht in diesem Postfach |||| %{smart_count} NAchrichten in diesem Postfach",
+  "list search count": "%{smart_count} result found. |||| %{smart_count} results found.",
+  "list filter": "Filter",
+  "list filter all": "Alle",
+  "list filter unseen": "Ungelesen",
+  "list filter unseen title": "Nur ungelesene Nachrichten anzeigen",
+  "list filter flagged": "Wichtig",
+  "list filter flagged title": "Nur wichtige Nachrichten anzeigen",
+  "list filter attach": "Anhänge",
+  "list filter attach title": "Nur Nachrichten mit Anhängen anzeigen",
+  "list sort": "Sortieren",
+  "list sort date": "Datum",
+  "list sort subject": "Betreff",
+  "list option compact": "Kompact",
+  "list next page": "Mehr Nachrichten",
+  "list end": "Das ist das Ende der Liste",
+  "list mass no message": "Keine Nachrichten ausgewählt",
+  "list delete confirm": "Möchten Sie wirklich diese Nachricht löschen ? ||||\nMöchten Sie wirklich diese %{smart_count} Nachrichten löschen ?",
+  "list delete conv confirm": "Möchten Sie wirklich diese Unterhaltung löschen ? ||||\nMöchten Sie wirklich diese %{smart_count} Unterhaltungen löschen?",
+  "mail to": "An: ",
+  "mail cc": "Cc: ",
+  "headers from": "Von",
+  "headers to": "An",
+  "headers cc": "Cc",
+  "headers reply-to": "Antwort an",
+  "headers date": "Datum",
+  "headers subject": "Betreff",
+  "length bytes": "Bytes",
+  "length kbytes": "kB",
+  "length mbytes": "MB",
+  "mail action reply": "Anworten",
+  "mail action reply all": "Allen antworten",
+  "mail action forward": "Weiterleiten",
+  "mail action delete": "Löschen",
+  "mail action mark": "Markieren als",
+  "mail action copy": "Kopie",
+  "mail action move": "Verschieben",
+  "mail action more": "Mehr",
+  "mail action headers": "Headers",
+  "mail action raw": "Roh Nachricht",
+  "mail mark spam": "Spam",
+  "mail mark nospam": "Kein Spam",
+  "mail mark fav": "wichtig",
+  "mail mark nofav": "Nicht wichtig",
+  "mail mark read": "Gelesen",
+  "mail mark unread": "Ungelesen",
+  "mail confirm delete": "Möchten Sie wirklich die Nachricht löschen “%{subject}”?",
+  "mail confirm delete nosubject": "Möchten Sie wirklich diese Nachricht löschen?",
+  "mail action conversation delete": "Unterhaltung löschen",
+  "mail action conversation move": "Unterhaltung verschieben",
+  "mail action conversation seen": "Unterhaltung als gelesen markieren",
+  "mail action conversation unseen": "Unterhaltung als ungelesen markieren",
+  "mail conversation length": "%{smart_count} Nachricht in Unterhaltung. ||||\n%{smart_count} Nachrichten in Unterhaltung.",
+  "account new": "Neues Konto",
+  "account edit": "Konto bearbeiten",
+  "account add": "Hinzufügen",
+  "account save": "Speichern",
+  "account saving": "Speicherung",
+  "account check": "Verbindung prüfen",
+  "account accountType short": "IMAP",
+  "account accountType": "Konto Typ",
+  "account imapPort short": "993",
+  "account imapPort": "Port",
+  "account imapSSL": "SSL verwenden",
+  "account imapServer short": "imap.provider.tld",
+  "account imapServer": "IMAP Server",
+  "account imapTLS": "TLS verwenden",
+  "account label short": "Ein kurzer Postfach Name",
+  "account label": "Konto Name",
+  "account login short": "Ihre E-Mail Addresse",
+  "account login": "E-Mail Addresse",
+  "account name short": "Ihr Name, dieser wird angezeigt",
+  "account name": "Ihr Name",
+  "account password": "Passwort",
+  "account receiving server": "Postausgang Server",
+  "account sending server": "Posteingang Server",
+  "account smtpLogin short": "SMTP Benutzer",
+  "account smtpLogin": "SMTP Benutzer (wenn abweichend vom Haupt Login)",
+  "account smtpMethod": "Authentifizierungsmethode",
+  "account smtpMethod NONE": "Keine",
+  "account smtpMethod PLAIN": "Plain",
+  "account smtpMethod LOGIN": "Login",
+  "account smtpMethod CRAM-MD5": "Cram-MD5",
+  "account smtpPassword short": "SMTP Passwort",
+  "account smtpPassword": "SMTP Passwort (wenn abweichend vom Haupt Passwort)",
+  "account smtpPort short": "465",
+  "account smtpPort": "Port",
+  "account smtpSSL": "SSL verwenden",
+  "account smtpServer short": "smtp.provider.tld",
+  "account smtpServer": "SMTP Server",
+  "account smtpTLS": "STARTTLS verwenden",
+  "account remove": "Konto löschen",
+  "account remove confirm": "Möchten Sie dieses Konto wirklich löschen?",
+  "account draft mailbox": "Entwurffach",
+  "account sent mailbox": "Posteingang",
+  "account trash mailbox": "Papierkorb",
+  "account mailboxes": "Ordner",
+  "account special mailboxes": "Specielle Postfächer",
+  "account newmailbox label": "Neuer Ordner",
+  "account newmailbox placeholder": "Name",
+  "account newmailbox parent": "Parent:",
+  "account confirm delbox": "Möchten Sie wirklich alle Nachrichtenn in diesem Postfach löschen?",
+  "account tab account": "Konto",
+  "account tab mailboxes": "Ordner",
+  "account errors": "Einige Daten fehlen oder sind ungültig",
+  "account type": "Konto Typ",
+  "account updated": "Konto aktualisiert",
+  "account checked": "Parameter ok",
+  "account creation ok": "Yeah! Das Konot wurde erfolgreich erstellt. Wählen Sie nun die Postfächer, die Sie im Menü sehen möchten",
+  "account refreshed": "Konto aktualisiert",
+  "account refresh error": "Fehler beim aktualisieren der Konten, Parameter prüfen",
+  "account identifiers": "Identifikation",
+  "account actions": "Aktionen",
+  "account danger zone": "Danger Zone",
+  "account no special mailboxes": "Bitte konfigurieren Sie erst spezielle Ordner",
+  "account smtp hide advanced": "Erweiterte Parameter verbergen",
+  "account smtp show advanced": "Erweiterte Parameter anzeigen",
+  "mailbox create ok": "Ordner erstellt",
+  "mailbox create ko": "Fehler beim Ordner erstellen",
+  "mailbox update ok": "Ordner aktualisiert",
+  "mailbox update ko": "Fehler beim Ordner aktualisieren",
+  "mailbox delete ok": "Ordner gelöscht",
+  "mailbox delete ko": "Fehler beim Ordner löschen",
+  "mailbox expunge ok": "Papierkorb geleeren",
+  "mailbox expunge ko": "Fehler beim Papierkorb leeren",
+  "mailbox title edit": "Ordner umbennen",
+  "mailbox title delete": "Ordner löschen",
+  "mailbox title edit save": "Speichern",
+  "mailbox title edit cancel": "Abbrechen",
+  "mailbox title add": "Neuen Ordner hinzufügen",
+  "mailbox title add cancel": "Abbrechen",
+  "mailbox title favorite": "Ordner wird angezeigt",
+  "mailbox title not favorite": "Ordner wird nicht angezeigt",
+  "mailbox title total": "Zusammen",
+  "mailbox title unread": "Ungelesen",
+  "mailbox title new": "Neu",
+  "config error auth": "Falsche Verbindungsparameter",
+  "config error imapPort": "Falscher IMAP Port",
+  "config error imapServer": "Falscher IMAP Server",
+  "config error imapTLS": "Falscher IMAP TLS",
+  "config error smtpPort": "Falscher SMTP Port",
+  "config error smtpServer": "Falscher SMTP Server",
+  "config error nomailboxes": "Kein Ordner in diesem Konto, bitte erstellen Sie einen",
+  "message action sent ok": "Nachricht senden",
+  "message action sent ko": "Fehler beim Nachricht senden: ",
+  "message action draft ok": "Nachricht gespeichert",
+  "message action draft ko": "Fehler beim Nachricht speichern: ",
+  "message action delete ok": "Nachricht “%{subject}” gelöscht",
+  "message action delete ko": "Fehler bei Nachricht löschen: ",
+  "message action move ok": "Nachricht “%{subject}” wurde verschoben",
+  "message action move ko": "Fehler beim verschieben von Nachricht “%{subject}”: ",
+  "message action mark ok": "Nachricht markiert",
+  "message action mark ko": "Fehler beim Nachricht markieren: ",
+  "conversation move ok": "Unterhaltung “%{subject}” wurde verschoben",
+  "conversation move ko": "Fehler beim verschieben der Unterhaltung “%{subject}”",
+  "conversation delete ok": "Unterhaltung “%{subject}” wurde gelöscht",
+  "conversation delete ko": "Fehler beim löschen der Unterhaltung",
+  "conversation seen ok": "Unterhaltung markiert als gelesen",
+  "conversation seen ko": "Fehler beim gelesen markieren",
+  "conversation unseen ok": "Conversation marked as unread",
+  "conversation unseen ko": "Fehler beim ungelesen markieren",
+  "conversation undelete": "Rückgänig Unterhaltung löschen",
+  "message images warning": "Anzeige von Bildern innerhalb der Nachricht wurde geblockt",
+  "message images display": "Bilder anzeigen",
+  "message html display": "HTML anzeigen",
+  "message delete no trash": "Bitte wählen Sie einen Ordner als Papierkorb",
+  "message delete already": "Nachricht bereits im Papierkorb",
+  "message move already": "Nachricht bereits in diesem Ordner",
+  "message undelete": "Rückgängig Nachrichten löschen",
+  "message undelete ok": "Nachrichten wieder hergestellt",
+  "message undelete error": "Fehler beim Nachrichten Wiederherstellen",
+  "message undelete unavalable": "Rückgängig Nachrichten löschen nicht möglich",
+  "message preview title": "Anhänge ansehen",
+  "settings title": "Einstellungen",
+  "settings button save": "Speichern",
+  "settings plugins": "Plugins",
+  "settings plugins": "Ergänzende Module",
+  "settings plugin add": "Hinzufügen",
+  "settings plugin del": "Löschen",
+  "settings plugin help": "Hilfe",
+  "settings plugin new name": "Plugin Name",
+  "settings plugin new url": "Plugin URL",
+  "settings label composeInHTML": "Rich Nachrichten Editor",
+  "settings label composeOnTop": "Antwort am Anfang der Nachricht",
+  "settings label desktopNotifications": "Mitteilungen",
+  "settings label displayConversation": "Unterhaltungen anzeigen",
+  "settings label displayPreview": "Nachrichten Vorschau anzeigen",
+  "settings label messageDisplayHTML": "Nachricht in HTML anzeigen",
+  "settings label messageDisplayImages": "Bilder in der Nachrichten anzeigen",
+  "settings label messageConfirmDelete": "Bestätigung bevor Nachricht löschen",
+  "settings label layoutStyle": "Layout anzeigen",
+  "settings label layoutStyle horizontal": "Horizontal",
+  "settings label layoutStyle vertical": "Vertikal",
+  "settings label layoutStyle three": "Drei Spalten",
+  "settings label listStyle": "Nachrichten Listen Stil",
+  "settings label listStyle default": "Normal",
+  "settings label listStyle compact": "Kompact",
+  "settings lang": "Sprache",
+  "settings lang en": "English",
+  "settings lang fr": "Français",
+  "settings lang de": "Deutsch",
+  "settings save error": "Einstellungen können nicht gespeichert werden, bitte propieren Sie es erneut",
+  "picker drop here": "Dateien hier ablegen",
+  "mailbox pick one": "Eine auswählen",
+  "mailbox pick null": "Kein Postfach dafür",
+  "task account-fetch": 'Holen %{account}',
+  "task box-fetch": 'Holen %{box}',
+  "task apply-diff-fetch": 'Holen Nachrichtenn aus %{box} von %{account}',
+  "task apply-diff-remove": 'Löschen Nachrichten aus %{box} von %{account}',
+  "task recover-uidvalidity": 'Analysiere',
+  "there were errors": '%{smart_count} Fehler. |||| %{smart_count} Fehler.',
+  "modal please report": "Bitte übertragen Sie diese Information zum Cozy.",
+  "modal please contribute": "Bitte beitragen",
+  "validate must not be empty": "Pflichtfeld",
+  "toast hide": "Alarme verbergen",
+  "toast show": "Alarme anzeigen",
+  "toast close all": "Alle Alarme schließen",
+  "notif new title": 'CozyEmail',
+  "notif new": "%{smart_count} Nachricht nicht gelesen in Konto %{account}||||\n%{smart_count} Nachrichten nicht gelesen in Konto %{account}",
+  "notif complete": "Import des Kontos %{account} abgeschlossen.",
+  "contact form": "Kontakte auswählen",
+  "contact form placeholder": "Kontakt Name",
+  "contact create success": "%{contact} wurden zu Ihren Kontakten hinzu gefügt",
+  "contact create error": "Fehler beim Hinzufügen Ihrer Kontakte : {error}",
+  "gmail security tile": "Über GMAIL Sicherheit",
+  "gmail security body": "GMAIL betrachtet Verbindungen die Benutzername und Passwort verwenden nicht als sicher.\nBitte klicken Sie auf den folgenden Link, Stellen Sie sicher das\nSie sich mit Ihrem Konto %{login} angemelden und geben Sie Apps mit geringerer Sicherheit frei.",
+  "gmail security link": "Freigabe für Apps mit geringerer Sicherheit.",
+  'plugin name Gallery': 'Anhang Gallerie',
+  'plugin name medium-editor': 'Medium Editor',
+  'plugin name MiniSlate': 'MiniSlate Editor',
+  'plugin name Sample JS': 'Beispiel',
+  'plugin name Keyboard shortcuts': 'Tastaturkombinationen',
+  'plugin name VCard': 'Kontact VCards',
+  'plugin modal close': 'Schließen',
+  'calendar unknown format': "Diese Nachricht enthält eine Einladung für ein Ereignis in einem derzeitig unbekannten Format."
+};
+});
+
 ;require.register("locales/en", function(exports, require, module) {
 module.exports = {
   "app loading": "Loading…",
@@ -9498,6 +9855,7 @@ module.exports = {
   "settings lang": "Language",
   "settings lang en": "English",
   "settings lang fr": "Français",
+  "settings lang de": "Deutsch",
   "settings save error": "Unable to save settings, please try again",
   "picker drop here": "Drop files here",
   "mailbox pick one": "Pick one",
@@ -9510,7 +9868,7 @@ module.exports = {
   "there were errors": '%{smart_count} error. |||| %{smart_count} errors.',
   "modal please report": "Please transmit this information to cozy.",
   "modal please contribute": "Please contribute",
-  "validate must not be empty": "Mandatory field",
+  "validate must not be empty": "This field is required",
   "toast hide": "Hide alerts",
   "toast show": "Display alerts",
   "toast close all": "Close all alerts",
@@ -9524,14 +9882,23 @@ module.exports = {
   "gmail security tile": "About Gmail security",
   "gmail security body": "Gmail considers connection using username and password not safe.\nPlease click on the following link, make sure\nyou are connected with your %{login} account and enable access for\nless secure apps.",
   "gmail security link": "Enable access for less secure apps.",
-  'plugin name Gallery': 'Attachments gallery',
+  'plugin name Gallery': 'Attachment gallery',
   'plugin name medium-editor': 'Medium editor',
   'plugin name MiniSlate': 'MiniSlate editor',
   'plugin name Sample JS': 'Sample',
   'plugin name Keyboard shortcuts': 'Keyboard shortcuts',
   'plugin name VCard': 'Contacts VCards',
   'plugin modal close': 'Close',
-  'calendar unknown format': "This message contains an invite to an event in a currently unknown format."
+  'calendar unknown format': "This message contains an invite to an event in a currently unknown format.",
+  "tooltip reply": "Answer",
+  "tooltip reply all": "Answer to all",
+  "tooltip forward": "Forward",
+  "tooltip remove message": "Remove",
+  "tooltip open attachments": "Open attachment list",
+  "tooltip open attachments": "Open attachment",
+  "tooltip download attachment": "Download the attachment",
+  "tooltip previous conversation": "Go to previous conversation",
+  "tooltip next conversation": "Go to next conversation"
 };
 });
 
@@ -9794,6 +10161,7 @@ module.exports = {
   "settings lang": "Langue",
   "settings lang en": "English",
   "settings lang fr": "Français",
+  "settings lang de": "Deutsch",
   "settings save error": "Erreur d'enregistrement des paramètres, veuillez réessayer",
   "picker drop here": "Déposer les fichiers ici",
   "mailbox pick one": "Choisissez une boîte",
@@ -9827,7 +10195,16 @@ module.exports = {
   'plugin name Keyboard shortcuts': 'Raccourcis clavier',
   'plugin name VCard': 'Affichage de VCard',
   'plugin modal close': 'Fermer',
-  'calendar unknown format': "Ce message contient une invitation à un évènement\ndans un format actuellement non pris en charge."
+  'calendar unknown format': "Ce message contient une invitation à un évènement\ndans un format actuellement non pris en charge.",
+  "tooltip reply": "Répondre",
+  "tooltip reply all": "Répondre à tous",
+  "tooltip forward": "Transférer",
+  "tooltip remove message": "Supprimer",
+  "tooltip open attachments": "Ouvrir la liste des pièces jointes",
+  "tooltip open attachment": "Ouvrir la pièce jointe",
+  "tooltip download attachment": "Télécharger la pièce jointe",
+  "tooltip previous conversation": "Aller à la conversation précédente",
+  "tooltip next conversation": "Aller à la conversation suivante"
 };
 });
 

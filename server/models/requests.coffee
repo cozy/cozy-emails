@@ -33,7 +33,7 @@ module.exports =
         totalUnreadByAccount:
             reduce: '_count'
             map: (doc) ->
-                if -1 is doc.flags.indexOf '\\Seen'
+                if not doc.ignoreInCount and -1 is doc.flags.indexOf '\\Seen'
                     emit doc.accountID, null
 
         byMailboxRequest:

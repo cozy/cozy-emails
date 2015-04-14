@@ -87,9 +87,7 @@ Mailbox = (function(_super) {
       boxIndex = {};
       for (_i = 0, _len = boxes.length; _i < _len; _i++) {
         box = boxes[_i];
-        boxIndex[box.id] = {
-          path: box.path
-        };
+        boxIndex[box.id] = box;
       }
       return callback(null, boxIndex);
     });
@@ -357,7 +355,7 @@ Mailbox = (function(_super) {
     var firstImport, limitByBox, step;
     limitByBox = options.limitByBox, firstImport = options.firstImport;
     log.debug("imap_fetchMails", limitByBox);
-    step = RefreshStep.initial(limitByBox, firstImport);
+    step = RefreshStep.initial(options);
     return this.imap_refreshStep(step, (function(_this) {
       return function(err, shouldNotif) {
         var changes;
@@ -479,7 +477,7 @@ Mailbox = (function(_super) {
     toFetch.reverse();
     shouldNotif = false;
     return async.eachSeries(toFetch, function(msg, cb) {
-      return Message.fetchOrUpdate(box, msg.mid, msg.uid, function(err, result) {
+      return Message.fetchOrUpdate(box, msg, function(err, result) {
         if (err) {
           reporter.onError(err);
         }
@@ -487,7 +485,9 @@ Mailbox = (function(_super) {
         if ((result != null ? result.shouldNotif : void 0) === true) {
           shouldNotif = true;
         }
-        return cb(null);
+        return setTimeout((function() {
+          return cb(null);
+        }), 50);
       });
     }, function(err) {
       return callback(err, shouldNotif);
@@ -666,6 +666,11 @@ Mailbox = (function(_super) {
     })(this));
   };
 
+  Mailbox.prototype.ignoreInCount = function() {
+    var _ref, _ref1, _ref2;
+    return (_ref = Mailbox.RFC6154.trashMailbox, __indexOf.call(this.attribs, _ref) >= 0) || (_ref1 = Mailbox.RFC6154.junkMailbox, __indexOf.call(this.attribs, _ref1) >= 0) || ((_ref2 = this.guessUse()) === 'trashMailbox' || _ref2 === 'junkMailbox');
+  };
+
   return Mailbox;
 
 })(cozydb.CozyModel);
@@ -701,11 +706,11 @@ RefreshStep = (function() {
     symbol: 'DONE'
   };
 
-  RefreshStep.initial = function(limitByBox, firstImport) {
+  RefreshStep.initial = function(options) {
     var step;
     step = new RefreshStep();
-    step.limitByBox = limitByBox;
-    step.firstImport = firstImport;
+    step.limitByBox = options.limitByBox;
+    step.firstImport = options.firstImport;
     step.shouldNotif = false;
     step.initial = true;
     return step;

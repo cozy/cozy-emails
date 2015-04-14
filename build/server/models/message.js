@@ -52,6 +52,7 @@ module.exports = Message = (function(_super) {
     html: String,
     date: Date,
     priority: String,
+    ignoreInCount: Boolean,
     binary: cozydb.NoSchema,
     attachments: cozydb.NoSchema,
     alternatives: cozydb.NoSchema
@@ -347,14 +348,9 @@ module.exports = Message = (function(_super) {
 
   Message.applyFlagsChanges = function(id, flags, callback) {
     log.debug("applyFlagsChanges", id, flags);
-    return Message.find(id, function(err, message) {
-      if (err) {
-        return callback(err);
-      }
-      return message.updateAttributes({
-        flags: flags
-      }, callback);
-    });
+    return Message.updateAttributes(id, {
+      flags: flags
+    }, callback);
   };
 
   Message.removeOrphans = function(existings, callback) {
@@ -484,7 +480,9 @@ module.exports = Message = (function(_super) {
     }
   };
 
-  Message.fetchOrUpdate = function(box, mid, uid, callback) {
+  Message.fetchOrUpdate = function(box, msg, callback) {
+    var mid, uid;
+    mid = msg.mid, uid = msg.uid;
     log.debug("fetchOrUpdate", box.id, mid, uid);
     return Message.byMessageID(box.accountID, mid, function(err, existing) {
       if (err) {
@@ -498,9 +496,7 @@ module.exports = Message = (function(_super) {
         return existing.markTwin(box, callback);
       } else {
         log.debug("        fetch");
-        return setTimeout(function() {
-          return box.imap_fetchOneMail(uid, callback);
-        }, 50);
+        return box.imap_fetchOneMail(uid, callback);
       }
     });
   };
@@ -624,7 +620,7 @@ module.exports = Message = (function(_super) {
     oldflags = this.flags;
     return Mailbox.getBoxesIndexedByID(this.accountID, (function(_this) {
       return function(err, boxIndex) {
-        var box, boxID, boxid, firstboxid, firstuid, _i, _len, _ref;
+        var box, boxID, boxid, firstboxid, firstuid, shouldIgnoreAfterUpdate, _i, _len, _ref;
         if (err) {
           return callback(err);
         }
@@ -639,6 +635,11 @@ module.exports = Message = (function(_super) {
             return callback(new Error("the box ID=" + boxid + " doesn't exists"));
           }
         }
+        shouldIgnoreAfterUpdate = Object.keys(newmailboxIDs).map(function(id) {
+          return boxIndex[id];
+        }).some(function(box) {
+          return box.ignoreInCount();
+        });
         firstboxid = Object.keys(_this.mailboxIDs)[0];
         firstuid = _this.mailboxIDs[firstboxid];
         log.debug("CHANGING FLAGS OF ", firstboxid, firstuid, _this.mailboxIDs);
@@ -712,6 +713,7 @@ module.exports = Message = (function(_super) {
             return callback(err);
           }
           return callback(null, {
+            ignoreInCount: shouldIgnoreAfterUpdate,
             mailboxIDs: newmailboxIDs,
             flags: newflags
           });
@@ -725,6 +727,7 @@ module.exports = Message = (function(_super) {
     log.info("createFromImapMessage", box.label, uid);
     log.debug('flags = ', mail.flags);
     mail.accountID = box.accountID;
+    mail.ignoreInCount = box.ignoreInCount();
     mail.mailboxIDs = {};
     mail.mailboxIDs[box._id] = uid;
     messageID = mail.headers['message-id'];
@@ -802,7 +805,9 @@ module.exports = Message = (function(_super) {
     raw = this.toObject();
     if ((_ref = raw.attachments) != null) {
       _ref.forEach(function(file) {
-        return file.url = "message/" + raw.id + "/attachments/" + file.generatedFileName;
+        var encodedFileName;
+        encodedFileName = encodeURIComponent(file.generatedFileName);
+        return file.url = "message/" + raw.id + "/attachments/" + encodedFileName;
       });
     }
     if (raw.html != null) {

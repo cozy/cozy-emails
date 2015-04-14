@@ -42,6 +42,7 @@
     "casperjs": "1.1.0-beta3",
     "cozy-fixtures": "1.1.3",
     "coffeelint": "1.6.0",
+    "coffee-19-jshint": "2.3.1",
     "lorem-ipsum": "1.0.1",
     "chai": "1.9.1",
     "simplesmtp": "0.3.33",
@@ -63,8 +64,9 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && brunch b",
     "build:server": "cake build",
-    "lint": "coffeelint -f coffeelint.json ./server/**/*.coffee",
     "doc": "biscotto && opn ./doc/index.html",
+    "lint": "npm run lint1 && npm run lint2",
+    "lint1": "coffeelint -f coffeelint.json ./server/**/*.coffee",
     "lint2": "coffee-jshint -o node --globals MODEL_MODULE ./server/**/*.coffee",
     "start": "node build/server.js"
   },

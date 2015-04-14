@@ -5,7 +5,7 @@ AttachmentPreview = require './attachement_preview'
 
 ContactStore   = require '../stores/contact_store'
 
-{MessageFlags} = require '../constants/app_constants'
+{MessageFlags, Tooltips} = require '../constants/app_constants'
 
 
 module.exports = React.createClass
@@ -109,6 +109,9 @@ module.exports = React.createClass
             i
                 className: 'btn fa fa-paperclip fa-flip-horizontal'
                 onClick: @toggleAttachments
+                'aria-describedby': Tooltips.OPEN_ATTACHMENTS
+                'data-tooltip-direction': 'left'
+
             div className: 'popup', 'aria-hidden': not @state.showAttachements,
                 ul className: null,
                     for file in attachments
