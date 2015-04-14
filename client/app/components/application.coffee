@@ -19,6 +19,7 @@ classer = React.addons.classSet
 # React Mixins
 RouterMixin = require '../mixins/router_mixin'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
+TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
 # Flux stores
 AccountStore  = require '../stores/account_store'
@@ -54,6 +55,7 @@ module.exports = Application = React.createClass
     mixins: [
         StoreWatchMixin Stores
         RouterMixin
+        TooltipRefesherMixin
     ]
 
     render: ->
@@ -542,23 +544,12 @@ module.exports = Application = React.createClass
         Stores.forEach (store) =>
             store.on 'notify', @_notify
 
-        # AriaTips must bind the elements declared as tooltip to their
-        # respective tooltip when the component is mounted (DOM elements exist).
-        AriaTips.bind()
-
 
     componentWillUnmount: ->
         Stores.forEach (store) =>
             store.removeListener 'notify', @notify
         # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
-
-
-    componentDidUpdate: ->
-        # AriaTips must bind the elements declared as tooltip to their
-        # respective tooltip, each time the application component (the root)
-        # is updated to make sure new tooltips are also bound.
-        AriaTips.bind()
 
 
     # Toggle the menu in responsive mode

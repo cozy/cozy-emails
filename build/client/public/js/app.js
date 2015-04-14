@@ -2544,7 +2544,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/application", function(exports, require, module) {
-var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageFilter, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, Stores, ToastContainer, Tooltips, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref, _ref1;
+var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageFilter, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, Stores, ToastContainer, TooltipRefesherMixin, Tooltips, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref, _ref1;
 
 _ref = React.DOM, body = _ref.body, div = _ref.div, p = _ref.p, form = _ref.form, i = _ref.i, input = _ref.input, span = _ref.span, a = _ref.a, button = _ref.button, strong = _ref.strong;
 
@@ -2577,6 +2577,8 @@ classer = React.addons.classSet;
 RouterMixin = require('../mixins/router_mixin');
 
 StoreWatchMixin = require('../mixins/store_watch_mixin');
+
+TooltipRefesherMixin = require('../mixins/tooltip_refresher_mixin');
 
 AccountStore = require('../stores/account_store');
 
@@ -2614,7 +2616,7 @@ _ref1 = require('../constants/app_constants'), MessageFilter = _ref1.MessageFilt
 
 module.exports = Application = React.createClass({
   displayName: 'Application',
-  mixins: [StoreWatchMixin(Stores), RouterMixin],
+  mixins: [StoreWatchMixin(Stores), RouterMixin, TooltipRefesherMixin],
   render: function() {
     var alert, disposition, firstPanelLayoutMode, getUrl, isFullWidth, keyFirst, keySecond, layout, panelClasses, panelsClasses, responsiveClasses;
     layout = this.props.router.current;
@@ -3023,12 +3025,11 @@ module.exports = Application = React.createClass({
     return window.cozyMails.notify(title, options);
   },
   componentDidMount: function() {
-    Stores.forEach((function(_this) {
+    return Stores.forEach((function(_this) {
       return function(store) {
         return store.on('notify', _this._notify);
       };
     })(this));
-    return AriaTips.bind();
   },
   componentWillUnmount: function() {
     Stores.forEach((function(_this) {
@@ -3037,9 +3038,6 @@ module.exports = Application = React.createClass({
       };
     })(this));
     return this.props.router.off('fluxRoute', this.onRoute);
-  },
-  componentDidUpdate: function() {
-    return AriaTips.bind();
   },
   toggleMenu: function(event) {
     return this.setState({
@@ -6123,7 +6121,7 @@ MessagesSort = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, MessageUtils, Participants, RouterMixin, ToolbarMessage, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
+var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, MessageUtils, Participants, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img, h4 = _ref.h4;
 
@@ -6151,6 +6149,8 @@ ContactActionCreator = require('../actions/contact_action_creator');
 
 RouterMixin = require('../mixins/router_mixin');
 
+TooltipRefresherMixin = require('../mixins/tooltip_refresher_mixin');
+
 Participants = require('./participant');
 
 classer = React.addons.classSet;
@@ -6161,7 +6161,7 @@ alertSuccess = LayoutActionCreator.notify;
 
 module.exports = React.createClass({
   displayName: 'Message',
-  mixins: [RouterMixin],
+  mixins: [RouterMixin, TooltipRefresherMixin],
   getInitialState: function() {
     var flags;
     flags = this.props.message.get('flags').slice();
@@ -6958,7 +6958,7 @@ module.exports = React.createClass({
     })())));
   },
   renderDetailsPopup: function() {
-    var cc, dest, from, reply, row, to, _ref2;
+    var cc, dest, from, key, reply, row, to, _ref2;
     from = this.props.message.get('from')[0];
     to = this.props.message.get('to');
     cc = this.props.message.get('cc');
@@ -7005,9 +7005,9 @@ module.exports = React.createClass({
       if (to.length) {
         _ref3 = to.slice(1);
         _results = [];
-        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-          dest = _ref3[_i];
-          _results.push(row('destTo', this.formatUsers(dest)));
+        for (key = _i = 0, _len = _ref3.length; _i < _len; key = ++_i) {
+          dest = _ref3[key];
+          _results.push(row("destTo" + key, this.formatUsers(dest)));
         }
         return _results;
       }
@@ -7016,9 +7016,9 @@ module.exports = React.createClass({
       if (cc.length) {
         _ref3 = cc.slice(1);
         _results = [];
-        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-          dest = _ref3[_i];
-          _results.push(row('destCc', this.formatUsers(dest)));
+        for (key = _i = 0, _len = _ref3.length; _i < _len; key = ++_i) {
+          dest = _ref3[key];
+          _results.push(row("destCc" + key, this.formatUsers(dest)));
         }
         return _results;
       }
@@ -8533,15 +8533,15 @@ module.exports = {
     allMailbox: 'fa-archive'
   },
   Tooltips: {
-    REPLY: 'REPLY',
-    REPLY_ALL: 'REPLY_ALL',
-    FORWARD: 'FORWARD',
-    REMOVE_MESSAGE: 'REMOVE_MESSAGE',
-    OPEN_ATTACHMENTS: 'OPEN_ATTACHMENTS',
-    OPEN_ATTACHMENT: 'OPEN_ATTACHMENT',
-    DOWNLOAD_ATTACHMENT: 'DOWNLOAD_ATTACHMENT',
-    PREVIOUS_CONVERSATION: 'PREVIOUS_CONVERSATION',
-    NEXT_CONVERSATION: 'NEXT_CONVERSATION'
+    REPLY: 'TOOLTIP_REPLY',
+    REPLY_ALL: 'TOOLTIP_REPLY_ALL',
+    FORWARD: 'TOOLTIP_FORWARD',
+    REMOVE_MESSAGE: 'TOOLTIP_REMOVE_MESSAGE',
+    OPEN_ATTACHMENTS: 'TOOLTIP_OPEN_ATTACHMENTS',
+    OPEN_ATTACHMENT: 'TOOLTIP_OPEN_ATTACHMENT',
+    DOWNLOAD_ATTACHMENT: 'TOOLTIP_DOWNLOAD_ATTACHMENT',
+    PREVIOUS_CONVERSATION: 'TOOLTIP_PREVIOUS_CONVERSATION',
+    NEXT_CONVERSATION: 'TOOLTIP_NEXT_CONVERSATION'
   }
 };
 });
@@ -8891,63 +8891,6 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 };
 
 module.exports = invariant;
-});
-
-;require.register("libs/flux/store/Store", function(exports, require, module) {
-var AppDispatcher, Store,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-AppDispatcher = require('../../../app_dispatcher');
-
-module.exports = Store = (function(_super) {
-  var _addHandlers, _handlers, _nextUniqID, _processBinding;
-
-  __extends(Store, _super);
-
-  Store.prototype.uniqID = null;
-
-  _nextUniqID = 0;
-
-  _handlers = {};
-
-  _addHandlers = function(type, callback) {
-    if (_handlers[this.uniqID] == null) {
-      _handlers[this.uniqID] = {};
-    }
-    return _handlers[this.uniqID][type] = callback;
-  };
-
-  _processBinding = function() {
-    return this.dispatchToken = AppDispatcher.register((function(_this) {
-      return function(payload) {
-        var callback, type, value, _ref;
-        _ref = payload.action, type = _ref.type, value = _ref.value;
-        if ((callback = _handlers[_this.uniqID][type]) != null) {
-          return callback.call(_this, value);
-        }
-      };
-    })(this));
-  };
-
-  function Store() {
-    Store.__super__.constructor.call(this);
-    this.uniqID = _nextUniqID++;
-    this.__bindHandlers(_addHandlers.bind(this));
-    _processBinding.call(this);
-  }
-
-  Store.prototype.__bindHandlers = function(handle) {
-    var message;
-    if (__DEV__) {
-      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
-      throw new Error(message);
-    }
-  };
-
-  return Store;
-
-})(EventEmitter);
 });
 
 ;require.register("libs/flux/store/store", function(exports, require, module) {
@@ -10259,6 +10202,19 @@ module.exports = StoreWatchMixin = function(stores) {
       return this.setState(this.getStateFromStores());
     }
   };
+};
+});
+
+;require.register("mixins/tooltip_refresher_mixin", function(exports, require, module) {
+var TooltipRefresherMixin;
+
+module.exports = TooltipRefresherMixin = {
+  componentDidMount: function() {
+    return AriaTips.bind();
+  },
+  componentDidUpdate: function() {
+    return AriaTips.bind();
+  }
 };
 });
 
