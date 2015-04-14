@@ -300,8 +300,8 @@ module.exports = Compose = React.createClass
 
         state.sending  = false
         state.saving   = false
-        state.ccShown  = false
-        state.bccShown = false
+        state.ccShown  = Array.isArray(state.cc) and state.cc.length > 0
+        state.bccShown = Array.isArray(state.bcc) and state.bcc.length > 0
         return state
 
     componentWillReceiveProps: (nextProps) ->

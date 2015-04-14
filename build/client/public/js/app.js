@@ -1,42 +1,59 @@
-(function(/*! Brunch !*/) {
+(function() {
   'use strict';
 
-  var globals = typeof window !== 'undefined' ? window : global;
+  var globals = typeof window === 'undefined' ? global : window;
   if (typeof globals.require === 'function') return;
 
   var modules = {};
   var cache = {};
+  var has = ({}).hasOwnProperty;
 
-  var has = function(object, name) {
-    return ({}).hasOwnProperty.call(object, name);
+  var aliases = {};
+
+  var endsWith = function(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
   };
 
-  var expand = function(root, name) {
-    var results = [], parts, part;
-    if (/^\.\.?(\/|$)/.test(name)) {
-      parts = [root, name].join('/').split('/');
-    } else {
-      parts = name.split('/');
-    }
-    for (var i = 0, length = parts.length; i < length; i++) {
-      part = parts[i];
-      if (part === '..') {
-        results.pop();
-      } else if (part !== '.' && part !== '') {
-        results.push(part);
+  var unalias = function(alias, loaderPath) {
+    var start = 0;
+    if (loaderPath) {
+      if (loaderPath.indexOf('components/' === 0)) {
+        start = 'components/'.length;
+      }
+      if (loaderPath.indexOf('/', start) > 0) {
+        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
       }
     }
-    return results.join('/');
+    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
+    if (result) {
+      return 'components/' + result.substring(0, result.length - '.js'.length);
+    }
+    return alias;
   };
 
+  var expand = (function() {
+    var reg = /^\.\.?(\/|$)/;
+    return function(root, name) {
+      var results = [], parts, part;
+      parts = (reg.test(name) ? root + '/' + name : name).split('/');
+      for (var i = 0, length = parts.length; i < length; i++) {
+        part = parts[i];
+        if (part === '..') {
+          results.pop();
+        } else if (part !== '.' && part !== '') {
+          results.push(part);
+        }
+      }
+      return results.join('/');
+    };
+  })();
   var dirname = function(path) {
     return path.split('/').slice(0, -1).join('/');
   };
 
   var localRequire = function(path) {
     return function(name) {
-      var dir = dirname(path);
-      var absolute = expand(dir, name);
+      var absolute = expand(dirname(path), name);
       return globals.require(absolute, path);
     };
   };
@@ -51,21 +68,26 @@
   var require = function(name, loaderPath) {
     var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
+    path = unalias(name, loaderPath);
 
-    if (has(cache, path)) return cache[path].exports;
-    if (has(modules, path)) return initModule(path, modules[path]);
+    if (has.call(cache, path)) return cache[path].exports;
+    if (has.call(modules, path)) return initModule(path, modules[path]);
 
     var dirIndex = expand(path, './index');
-    if (has(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
+    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
 
     throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
   };
 
-  var define = function(bundle, fn) {
+  require.alias = function(from, to) {
+    aliases[to] = from;
+  };
+
+  require.register = require.define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
-        if (has(bundle, key)) {
+        if (has.call(bundle, key)) {
           modules[key] = bundle[key];
         }
       }
@@ -74,21 +96,18 @@
     }
   };
 
-  var list = function() {
+  require.list = function() {
     var result = [];
     for (var item in modules) {
-      if (has(modules, item)) {
+      if (has.call(modules, item)) {
         result.push(item);
       }
     }
     return result;
   };
 
+  require.brunch = true;
   globals.require = require;
-  globals.require.define = define;
-  globals.require.register = define;
-  globals.require.list = list;
-  globals.require.brunch = true;
 })();
 require.register("actions/account_action_creator", function(exports, require, module) {
 var AccountActionCreator, AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, XHRUtils;
@@ -917,7 +936,7 @@ module.exports = {
                 ]
               };
               notifOk = t('message action delete ok', {
-                subject: msg.subject
+                subject: msg.subject || ''
               });
               LAC.notify(notifOk, options);
               if (callback != null) {
@@ -2544,7 +2563,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/application", function(exports, require, module) {
-var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageFilter, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, Stores, ToastContainer, Tooltips, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref, _ref1;
+var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageFilter, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, Stores, ToastContainer, TooltipRefesherMixin, Tooltips, Topbar, a, body, button, classer, div, form, i, input, p, span, strong, _ref, _ref1;
 
 _ref = React.DOM, body = _ref.body, div = _ref.div, p = _ref.p, form = _ref.form, i = _ref.i, input = _ref.input, span = _ref.span, a = _ref.a, button = _ref.button, strong = _ref.strong;
 
@@ -2577,6 +2596,8 @@ classer = React.addons.classSet;
 RouterMixin = require('../mixins/router_mixin');
 
 StoreWatchMixin = require('../mixins/store_watch_mixin');
+
+TooltipRefesherMixin = require('../mixins/tooltip_refresher_mixin');
 
 AccountStore = require('../stores/account_store');
 
@@ -2614,7 +2635,7 @@ _ref1 = require('../constants/app_constants'), MessageFilter = _ref1.MessageFilt
 
 module.exports = Application = React.createClass({
   displayName: 'Application',
-  mixins: [StoreWatchMixin(Stores), RouterMixin],
+  mixins: [StoreWatchMixin(Stores), RouterMixin, TooltipRefesherMixin],
   render: function() {
     var alert, disposition, firstPanelLayoutMode, getUrl, isFullWidth, keyFirst, keySecond, layout, panelClasses, panelsClasses, responsiveClasses;
     layout = this.props.router.current;
@@ -3023,12 +3044,11 @@ module.exports = Application = React.createClass({
     return window.cozyMails.notify(title, options);
   },
   componentDidMount: function() {
-    Stores.forEach((function(_this) {
+    return Stores.forEach((function(_this) {
       return function(store) {
         return store.on('notify', _this._notify);
       };
     })(this));
-    return AriaTips.bind();
   },
   componentWillUnmount: function() {
     Stores.forEach((function(_this) {
@@ -3037,9 +3057,6 @@ module.exports = Application = React.createClass({
       };
     })(this));
     return this.props.router.off('fluxRoute', this.onRoute);
-  },
-  componentDidUpdate: function() {
-    return AriaTips.bind();
   },
   toggleMenu: function(event) {
     return this.setState({
@@ -3421,8 +3438,8 @@ module.exports = Compose = React.createClass({
     }
     state.sending = false;
     state.saving = false;
-    state.ccShown = false;
-    state.bccShown = false;
+    state.ccShown = Array.isArray(state.cc) && state.cc.length > 0;
+    state.bccShown = Array.isArray(state.bcc) && state.bcc.length > 0;
     return state;
   },
   componentWillReceiveProps: function(nextProps) {
@@ -5425,6 +5442,7 @@ MessageList = React.createClass({
       selected: this.state.selected,
       allSelected: this.state.allSelected,
       displayConversations: this.props.displayConversations,
+      isTrash: this.props.isTrash,
       onSelect: (function(_this) {
         return function(id, val) {
           var newState, selected;
@@ -5769,6 +5787,7 @@ MessageListBody = React.createClass({
           selected: _this.props.selected[id] != null,
           login: _this.props.login,
           displayConversations: _this.props.displayConversations,
+          isTrash: _this.props.isTrash,
           onSelect: function(val) {
             return _this.props.onSelect(id, val);
           }
@@ -5826,7 +5845,7 @@ MessageItem = React.createClass({
       'is-fav': flags.indexOf(MessageFlags.FLAGGED) !== -1
     });
     isDraft = message.get('flags').indexOf(MessageFlags.DRAFT) !== -1;
-    if (isDraft) {
+    if (isDraft && !this.props.isTrash) {
       action = 'edit';
       params = {
         messageID: message.get('id')
@@ -6123,7 +6142,7 @@ MessagesSort = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, MessageUtils, Participants, RouterMixin, ToolbarMessage, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
+var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, MessageUtils, Participants, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img, h4 = _ref.h4;
 
@@ -6151,6 +6170,8 @@ ContactActionCreator = require('../actions/contact_action_creator');
 
 RouterMixin = require('../mixins/router_mixin');
 
+TooltipRefresherMixin = require('../mixins/tooltip_refresher_mixin');
+
 Participants = require('./participant');
 
 classer = React.addons.classSet;
@@ -6161,13 +6182,11 @@ alertSuccess = LayoutActionCreator.notify;
 
 module.exports = React.createClass({
   displayName: 'Message',
-  mixins: [RouterMixin],
+  mixins: [RouterMixin, TooltipRefresherMixin],
   getInitialState: function() {
-    var flags;
-    flags = this.props.message.get('flags').slice();
     return {
       active: this.props.active,
-      composing: flags.indexOf(MessageFlags.DRAFT) > -1,
+      composing: this._shouldOpenCompose(this.props),
       composeAction: '',
       headers: false,
       messageDisplayHTML: this.props.settings.get('messageDisplayHTML'),
@@ -6193,6 +6212,14 @@ module.exports = React.createClass({
     var should;
     should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
     return should;
+  },
+  _shouldOpenCompose: function(props) {
+    var flags, isDeleted, isDraft, trash, _ref2;
+    flags = this.props.message.get('flags').slice();
+    trash = (_ref2 = this.props.accounts[this.props.selectedAccountID]) != null ? _ref2.trashMailbox : void 0;
+    isDraft = flags.indexOf(MessageFlags.DRAFT) > -1;
+    isDeleted = this.props.message.get('mailboxIDs')[trash] != null;
+    return isDraft && !isDeleted;
   },
   _prepareMessage: function(message) {
     var alternatives, e, flags, fullHeaders, html, key, mailboxes, rich, text, trash, urls, value, _ref2, _ref3;
@@ -6249,16 +6276,15 @@ module.exports = React.createClass({
     return this._markRead(this.props.message);
   },
   componentWillReceiveProps: function(props) {
-    var flags, state;
+    var state;
     state = {
       active: props.active
     };
     if (props.message.get('id') !== this.props.message.get('id')) {
       this._markRead(props.message);
-      flags = this.props.message.get('flags').slice();
       state.messageDisplayHTML = props.settings.get('messageDisplayHTML');
       state.messageDisplayImages = props.settings.get('messageDisplayImages');
-      state.composing = flags.indexOf(MessageFlags.DRAFT) > -1;
+      state.composing = this._shouldOpenCompose(props);
     }
     return this.setState(state);
   },
@@ -6958,7 +6984,7 @@ module.exports = React.createClass({
     })())));
   },
   renderDetailsPopup: function() {
-    var cc, dest, from, reply, row, to, _ref2;
+    var cc, dest, from, key, reply, row, to, _ref2;
     from = this.props.message.get('from')[0];
     to = this.props.message.get('to');
     cc = this.props.message.get('cc');
@@ -7005,9 +7031,9 @@ module.exports = React.createClass({
       if (to.length) {
         _ref3 = to.slice(1);
         _results = [];
-        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-          dest = _ref3[_i];
-          _results.push(row('destTo', this.formatUsers(dest)));
+        for (key = _i = 0, _len = _ref3.length; _i < _len; key = ++_i) {
+          dest = _ref3[key];
+          _results.push(row("destTo" + key, this.formatUsers(dest)));
         }
         return _results;
       }
@@ -7016,9 +7042,9 @@ module.exports = React.createClass({
       if (cc.length) {
         _ref3 = cc.slice(1);
         _results = [];
-        for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
-          dest = _ref3[_i];
-          _results.push(row('destCc', this.formatUsers(dest)));
+        for (key = _i = 0, _len = _ref3.length; _i < _len; key = ++_i) {
+          dest = _ref3[key];
+          _results.push(row("destCc" + key, this.formatUsers(dest)));
         }
         return _results;
       }
@@ -8533,15 +8559,15 @@ module.exports = {
     allMailbox: 'fa-archive'
   },
   Tooltips: {
-    REPLY: 'REPLY',
-    REPLY_ALL: 'REPLY_ALL',
-    FORWARD: 'FORWARD',
-    REMOVE_MESSAGE: 'REMOVE_MESSAGE',
-    OPEN_ATTACHMENTS: 'OPEN_ATTACHMENTS',
-    OPEN_ATTACHMENT: 'OPEN_ATTACHMENT',
-    DOWNLOAD_ATTACHMENT: 'DOWNLOAD_ATTACHMENT',
-    PREVIOUS_CONVERSATION: 'PREVIOUS_CONVERSATION',
-    NEXT_CONVERSATION: 'NEXT_CONVERSATION'
+    REPLY: 'TOOLTIP_REPLY',
+    REPLY_ALL: 'TOOLTIP_REPLY_ALL',
+    FORWARD: 'TOOLTIP_FORWARD',
+    REMOVE_MESSAGE: 'TOOLTIP_REMOVE_MESSAGE',
+    OPEN_ATTACHMENTS: 'TOOLTIP_OPEN_ATTACHMENTS',
+    OPEN_ATTACHMENT: 'TOOLTIP_OPEN_ATTACHMENT',
+    DOWNLOAD_ATTACHMENT: 'TOOLTIP_DOWNLOAD_ATTACHMENT',
+    PREVIOUS_CONVERSATION: 'TOOLTIP_PREVIOUS_CONVERSATION',
+    NEXT_CONVERSATION: 'TOOLTIP_NEXT_CONVERSATION'
   }
 };
 });
@@ -8893,7 +8919,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-;require.register("libs/flux/store/Store", function(exports, require, module) {
+require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -10259,6 +10285,19 @@ module.exports = StoreWatchMixin = function(stores) {
       return this.setState(this.getStateFromStores());
     }
   };
+};
+});
+
+;require.register("mixins/tooltip_refresher_mixin", function(exports, require, module) {
+var TooltipRefresherMixin;
+
+module.exports = TooltipRefresherMixin = {
+  componentDidMount: function() {
+    return AriaTips.bind();
+  },
+  componentDidUpdate: function() {
+    return AriaTips.bind();
+  }
 };
 });
 

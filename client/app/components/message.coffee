@@ -15,6 +15,7 @@ MessageActionCreator      = require '../actions/message_action_creator'
 ContactActionCreator      = require '../actions/contact_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
+TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
 Participants  = require './participant'
 
 classer = React.addons.classSet
@@ -27,14 +28,13 @@ module.exports = React.createClass
 
     mixins: [
         RouterMixin
+        TooltipRefresherMixin
     ]
 
     getInitialState: ->
-        # if message is a draft, open the composing component
-        flags = @props.message.get('flags').slice()
         return {
-            active: @props.active,
-            composing: flags.indexOf(MessageFlags.DRAFT) > -1
+            active: @props.active
+            composing: @_shouldOpenCompose(@props)
             composeAction: ''
             headers: false
             messageDisplayHTML:   @props.settings.get 'messageDisplayHTML'
@@ -59,6 +59,14 @@ module.exports = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         should = not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
         return should
+
+    _shouldOpenCompose: (props) ->
+        # if message is a draft, and not deleted, open the compose component
+        flags     = @props.message.get('flags').slice()
+        trash     = @props.accounts[@props.selectedAccountID]?.trashMailbox
+        isDraft   = flags.indexOf(MessageFlags.DRAFT) > -1
+        isDeleted = @props.message.get('mailboxIDs')[trash]?
+        return isDraft and not isDeleted
 
     _prepareMessage: (message) ->
         # display full headers
@@ -119,10 +127,9 @@ module.exports = React.createClass
             active: props.active
         if props.message.get('id') isnt @props.message.get('id')
             @_markRead props.message
-            flags = @props.message.get('flags').slice()
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
             state.messageDisplayImages = props.settings.get 'messageDisplayImages'
-            state.composing            = flags.indexOf(MessageFlags.DRAFT) > -1
+            state.composing            = @_shouldOpenCompose props
         @setState state
 
     _markRead: (message) ->
