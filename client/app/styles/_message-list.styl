@@ -189,7 +189,7 @@
 
     .message-list-actions + *
         clear both
-        margin-top 2.5em
+        margin-top 0em
 
 /* Fixed toolbar, see https://github.com/cozy/cozy-emails/issues/191
 #panels.three .message-list-actions
@@ -247,6 +247,18 @@
 
 .message-list-actions
 
+    .btn-toolbar
+        margin 0
+        width 100%
+
+        .btn-group:first-child
+            padding-top 0.3em
+
+        .message-list-option:nth-child(5)
+            border-left 1px solid #DDD
+            margin-left 0.4em
+            padding-left 0.4em
+
     .toggle-menu-button
         display none
 
@@ -262,6 +274,13 @@
     .btn.btn-default.dropdown-toggle.move:hover
     .btn.btn-default.dropdown-toggle.more:hover
         color: actioncolor
+
+.compose-action
+    float right
+    margin 0.5em
+
+    i
+        margin-right 0.7em
 
 .more-messages
     cursor pointer
