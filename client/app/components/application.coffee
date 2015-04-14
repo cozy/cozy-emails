@@ -71,7 +71,7 @@ module.exports = Application = React.createClass
         disposition = LayoutStore.getDisposition()
 
         panelsClasses = classer
-            row: true
+            # row: true
             horizontal: disposition.type is Dispositions.HORIZONTAL
             three: disposition.type is Dispositions.THREE
             vertical: disposition.type is Dispositions.VERTICAL
@@ -81,10 +81,10 @@ module.exports = Application = React.createClass
 
         # classes for page-content
         responsiveClasses = classer
-            'col-xs-12': true
-            'col-md-9':  disposition.type is Dispositions.THREE
-            'col-md-11': disposition.type isnt Dispositions.THREE
-            'pushed': @state.isResponsiveMenuShown
+            # 'col-xs-12': true
+            # 'col-md-9':  disposition.type is Dispositions.THREE
+            # 'col-md-11': disposition.type isnt Dispositions.THREE
+            # 'pushed': @state.isResponsiveMenuShown
 
         alert = @state.alertMessage
 
