@@ -133,6 +133,12 @@ MessageList = React.createClass
         btnClasses    = 'btn btn-default '
         btnGrpClasses = 'btn-group btn-group-sm message-list-option '
 
+        composeUrl = @buildUrl
+            direction: 'first'
+            action: 'compose'
+            parameters: null
+            fullWidth: true
+
         div
             className: 'message-list ' + classList,
             ref: 'list',
@@ -259,6 +265,13 @@ MessageList = React.createClass
                                     onClick: @expungeMailbox,
                                         span
                                             className: 'fa fa-recycle'
+
+                    a
+                        href: composeUrl
+                        className: 'menu-item compose-action btn btn-cozy-contrast btn-cozy',
+                            i className: 'fa fa-edit'
+                            span className: 'item-label', t 'menu compose'
+
 
             if @props.messages.count() is 0
                 if @props.fetching

@@ -30,7 +30,7 @@
 
         > a
         > span
-          padding 0 .25em
+          padding 0 
           display block
           outline none
 
@@ -61,7 +61,7 @@
         // Hard quickfix for chrome
         // FIXME: Remove when revamp message-list
         .avatar-wrapper
-          flex 1 90px
+          flex 0 90px
 
         .preview
             margin 0.25em .75em 0 auto
@@ -156,7 +156,7 @@
     .message.edited
        span.wrapper
            margin 0
-           padding 0em .25em 0em .25em
+           padding 0em 
 
         .participants
              margin-left 1em
@@ -189,7 +189,7 @@
 
     .message-list-actions + *
         clear both
-        margin-top 2.5em
+        margin-top 0em
 
 /* Fixed toolbar, see https://github.com/cozy/cozy-emails/issues/191
 #panels.three .message-list-actions
@@ -247,6 +247,18 @@
 
 .message-list-actions
 
+    .btn-toolbar
+        margin 0
+        width 100%
+
+        .btn-group:first-child
+            padding-top 0.3em
+
+        .message-list-option:nth-child(5)
+            border-left 1px solid #DDD
+            margin-left 0.4em
+            padding-left 0.4em
+
     .toggle-menu-button
         display none
 
@@ -262,6 +274,13 @@
     .btn.btn-default.dropdown-toggle.move:hover
     .btn.btn-default.dropdown-toggle.more:hover
         color: actioncolor
+
+.compose-action
+    float right
+    margin 0.5em
+
+    i
+        margin-right 0.7em
 
 .more-messages
     cursor pointer
