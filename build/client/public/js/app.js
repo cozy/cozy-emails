@@ -1,59 +1,42 @@
-(function() {
+(function(/*! Brunch !*/) {
   'use strict';
 
-  var globals = typeof window === 'undefined' ? global : window;
+  var globals = typeof window !== 'undefined' ? window : global;
   if (typeof globals.require === 'function') return;
 
   var modules = {};
   var cache = {};
-  var has = ({}).hasOwnProperty;
 
-  var aliases = {};
-
-  var endsWith = function(str, suffix) {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+  var has = function(object, name) {
+    return ({}).hasOwnProperty.call(object, name);
   };
 
-  var unalias = function(alias, loaderPath) {
-    var start = 0;
-    if (loaderPath) {
-      if (loaderPath.indexOf('components/' === 0)) {
-        start = 'components/'.length;
-      }
-      if (loaderPath.indexOf('/', start) > 0) {
-        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
+  var expand = function(root, name) {
+    var results = [], parts, part;
+    if (/^\.\.?(\/|$)/.test(name)) {
+      parts = [root, name].join('/').split('/');
+    } else {
+      parts = name.split('/');
+    }
+    for (var i = 0, length = parts.length; i < length; i++) {
+      part = parts[i];
+      if (part === '..') {
+        results.pop();
+      } else if (part !== '.' && part !== '') {
+        results.push(part);
       }
     }
-    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
-    if (result) {
-      return 'components/' + result.substring(0, result.length - '.js'.length);
-    }
-    return alias;
+    return results.join('/');
   };
 
-  var expand = (function() {
-    var reg = /^\.\.?(\/|$)/;
-    return function(root, name) {
-      var results = [], parts, part;
-      parts = (reg.test(name) ? root + '/' + name : name).split('/');
-      for (var i = 0, length = parts.length; i < length; i++) {
-        part = parts[i];
-        if (part === '..') {
-          results.pop();
-        } else if (part !== '.' && part !== '') {
-          results.push(part);
-        }
-      }
-      return results.join('/');
-    };
-  })();
   var dirname = function(path) {
     return path.split('/').slice(0, -1).join('/');
   };
 
   var localRequire = function(path) {
     return function(name) {
-      var absolute = expand(dirname(path), name);
+      var dir = dirname(path);
+      var absolute = expand(dir, name);
       return globals.require(absolute, path);
     };
   };
@@ -68,26 +51,21 @@
   var require = function(name, loaderPath) {
     var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
-    path = unalias(name, loaderPath);
 
-    if (has.call(cache, path)) return cache[path].exports;
-    if (has.call(modules, path)) return initModule(path, modules[path]);
+    if (has(cache, path)) return cache[path].exports;
+    if (has(modules, path)) return initModule(path, modules[path]);
 
     var dirIndex = expand(path, './index');
-    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+    if (has(cache, dirIndex)) return cache[dirIndex].exports;
+    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
 
     throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
   };
 
-  require.alias = function(from, to) {
-    aliases[to] = from;
-  };
-
-  require.register = require.define = function(bundle, fn) {
+  var define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
-        if (has.call(bundle, key)) {
+        if (has(bundle, key)) {
           modules[key] = bundle[key];
         }
       }
@@ -96,18 +74,21 @@
     }
   };
 
-  require.list = function() {
+  var list = function() {
     var result = [];
     for (var item in modules) {
-      if (has.call(modules, item)) {
+      if (has(modules, item)) {
         result.push(item);
       }
     }
     return result;
   };
 
-  require.brunch = true;
   globals.require = require;
+  globals.require.define = define;
+  globals.require.register = define;
+  globals.require.list = list;
+  globals.require.brunch = true;
 })();
 require.register("actions/account_action_creator", function(exports, require, module) {
 var AccountActionCreator, AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, XHRUtils;
@@ -2646,19 +2627,13 @@ module.exports = Application = React.createClass({
     firstPanelLayoutMode = isFullWidth ? 'full' : 'first';
     disposition = LayoutStore.getDisposition();
     panelsClasses = classer({
-      row: true,
       horizontal: disposition.type === Dispositions.HORIZONTAL,
       three: disposition.type === Dispositions.THREE,
       vertical: disposition.type === Dispositions.VERTICAL,
       full: isFullWidth
     });
     panelClasses = this.getPanelClasses(isFullWidth);
-    responsiveClasses = classer({
-      'col-xs-12': true,
-      'col-md-9': disposition.type === Dispositions.THREE,
-      'col-md-11': disposition.type !== Dispositions.THREE,
-      'pushed': this.state.isResponsiveMenuShown
-    });
+    responsiveClasses = classer;
     alert = this.state.alertMessage;
     getUrl = (function(_this) {
       return function(mailbox) {
@@ -4842,9 +4817,8 @@ module.exports = Menu = React.createClass({
     }
     classes = classer({
       'hidden-xs hidden-sm': !this.props.isResponsiveMenuShown,
-      'col-xs-4': true,
-      'col-md-1': this.props.disposition.type !== Dispositions.THREE,
-      'col-md-3': this.props.disposition.type === Dispositions.THREE,
+      'collapsed': this.props.disposition.type !== Dispositions.THREE,
+      'expanded': this.props.disposition.type === Dispositions.THREE,
       'three': this.props.disposition.type === Dispositions.THREE
     });
     return div({
@@ -8919,7 +8893,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-require.register("libs/flux/store/Store", function(exports, require, module) {
+;require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
