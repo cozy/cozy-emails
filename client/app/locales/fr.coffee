@@ -298,6 +298,7 @@ module.exports =
       "settings lang"             : "Langue"
       "settings lang en"          : "English"
       "settings lang fr"          : "Français"
+      "settings lang de"          : "Deutsch"
       "settings save error"       : "Erreur d'enregistrement des paramètres, veuillez réessayer"
 
       # File picker

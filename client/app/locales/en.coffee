@@ -292,6 +292,7 @@ module.exports =
       "settings lang"             : "Language"
       "settings lang en"          : "English"
       "settings lang fr"          : "Français"
+      "settings lang de"          : "Deutsch"
       "settings save error"       : "Unable to save settings, please try again"
 
       # File picker
