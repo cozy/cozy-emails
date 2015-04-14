@@ -705,9 +705,17 @@ class RefreshStep
         step = new RefreshStep()
         step.limitByBox = options.limitByBox
         step.firstImport = options.firstImport
-        step.shouldNotif = false
         step.initial = true
         return step
+
+    # Public: string representation of the step, used by console.log
+    #
+    # Returns {String} an human readable summary of the step
+    inspect: ->
+        "Step{ limit:#{@limitByBox} " +
+        (if @initial then "initial" else "[#{@min}:#{@max}]") +
+        (if @firstImport then ' firstImport' else '') + '}'
+
 
     # Public: compute the next step.
     # The step will have a [.min - .max] range of uid
@@ -718,7 +726,7 @@ class RefreshStep
     #
     # Returns {RefreshStep} the next step
     getNext: (uidnext) ->
-        log.debug "computeNextStep", this, uidnext, @limitByBox
+        log.debug "computeNextStep", this, "next", uidnext
 
         if @initial
             # pretend the last step was max: INFINITY, min: uidnext
@@ -737,7 +745,6 @@ class RefreshStep
         step = new RefreshStep()
         step.firstImport = @firstImport
         step.limitByBox = @limitByBox
-        step.shouldNotif = @shouldNotif
         # new max is old min
         step.max = Math.max 1, @min - 1
         # new min is old min - range
