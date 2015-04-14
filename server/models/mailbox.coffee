@@ -249,6 +249,41 @@ class Mailbox extends cozydb.CozyModel
                     cb null # ignore one faillure
             , callback
 
+    # Public: get all message ids in a box
+    #
+    # boxID - {String} the box id
+    #
+    # Returns (callback) a {Array} of {String}, ids of all message in the box
+    @getAllMessageIDs: (boxID, callback) ->
+        options =
+            startkey: ['uid', boxID, 0]
+            endkey: ['uid', boxID, 'a'] # = Infinity in couchdb collation
+            reduce: false
+
+        Message.rawRequest 'byMailboxRequest', options, (err, rows) ->
+            callback err, rows?.map (row) -> row.id
+
+    # Public: mark all messages in a box as ignoreInCount
+    # keep looping but throw an error if one fail
+    #
+    # boxID - {String} the box id
+    #
+    # Returns (callback) at completion
+    @markAllMessagesAsIgnored: (boxID, callback) ->
+        Mailbox.getAllMessageIDs boxID, (err, ids) ->
+            return callback err if err
+            changes = {ignoreInCount: true}
+            lastError = null
+            async.eachSeries ids, (id, cbLoop) ->
+                Message.updateAttributes id, changes, (err) ->
+                    if err
+                        log.error err
+                        lastError = err
+                    cbLoop null # loop anyway
+            , (err) ->
+                callback err or lastError
+
+
 
     # Public: rename a box in IMAP and Cozy
     #
