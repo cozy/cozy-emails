@@ -4744,7 +4744,7 @@ module.exports = Menu = React.createClass({
     });
   },
   render: function() {
-    var classes, closeLabel, closeModal, composeClass, composeUrl, content, modal, modalErrors, newMailboxClass, newMailboxUrl, selectedAccountUrl, settingsClass, settingsUrl, subtitle, title, _ref2, _ref3, _ref4;
+    var classes, closeLabel, closeModal, content, modal, modalErrors, newMailboxClass, newMailboxUrl, selectedAccountUrl, settingsClass, settingsUrl, subtitle, title, _ref2, _ref3;
     if (this.props.accounts.length) {
       selectedAccountUrl = this.buildUrl({
         direction: 'first',
@@ -4759,18 +4759,6 @@ module.exports = Menu = React.createClass({
         fullWidth: true
       });
     }
-    if (this.props.layout.firstPanel.action === 'compose' || ((_ref3 = this.props.layout.secondPanel) != null ? _ref3.action : void 0) === 'compose') {
-      composeClass = 'active';
-      composeUrl = selectedAccountUrl;
-    } else {
-      composeClass = '';
-      composeUrl = this.buildUrl({
-        direction: 'first',
-        action: 'compose',
-        parameters: null,
-        fullWidth: true
-      });
-    }
     if (this.props.layout.firstPanel.action === 'account.new') {
       newMailboxClass = 'active';
       newMailboxUrl = selectedAccountUrl;
@@ -4782,7 +4770,7 @@ module.exports = Menu = React.createClass({
         fullWidth: true
       });
     }
-    if (this.props.layout.firstPanel.action === 'settings' || ((_ref4 = this.props.layout.secondPanel) != null ? _ref4.action : void 0) === 'settings') {
+    if (this.props.layout.firstPanel.action === 'settings' || ((_ref3 = this.props.layout.secondPanel) != null ? _ref3.action : void 0) === 'settings') {
       settingsClass = 'active';
       settingsUrl = selectedAccountUrl;
     } else {
@@ -4824,15 +4812,7 @@ module.exports = Menu = React.createClass({
     return div({
       id: 'menu',
       className: classes
-    }, modal, this.props.accounts.length !== 0 ? a({
-      href: composeUrl,
-      onClick: this._hideMenu,
-      className: 'menu-item compose-action ' + composeClass
-    }, i({
-      className: 'fa fa-edit'
-    }), span({
-      className: 'item-label'
-    }, t('menu compose'))) : void 0, this.props.accounts.length !== 0 ? ul({
+    }, modal, this.props.accounts.length !== 0 ? ul({
       id: 'account-list',
       className: 'list-unstyled'
     }, this.props.accounts.map((function(_this) {
@@ -5176,7 +5156,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, configMailboxUrl, filterParams, getMailboxUrl, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, composeUrl, configMailboxUrl, filterParams, getMailboxUrl, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
     compact = this.props.settings.get('listStyle') === 'compact';
     filterParams = {
       accountID: this.props.accountID,
@@ -5285,6 +5265,12 @@ MessageList = React.createClass({
     });
     btnClasses = 'btn btn-default ';
     btnGrpClasses = 'btn-group btn-group-sm message-list-option ';
+    composeUrl = this.buildUrl({
+      direction: 'first',
+      action: 'compose',
+      parameters: null,
+      fullWidth: true
+    });
     return div({
       className: 'message-list ' + classList,
       ref: 'list',
@@ -5404,7 +5390,14 @@ MessageList = React.createClass({
       onClick: this.expungeMailbox
     }, span({
       className: 'fa fa-recycle'
-    }))) : void 0))), this.props.messages.count() === 0 ? this.props.fetching ? p(null, t('list fetching')) : p(null, this.props.emptyListMessage) : div(null, MessageListBody({
+    }))) : void 0), a({
+      href: composeUrl,
+      className: 'menu-item compose-action btn btn-cozy-contrast btn-cozy'
+    }, i({
+      className: 'fa fa-edit'
+    }), span({
+      className: 'item-label'
+    }, t('menu compose'))))), this.props.messages.count() === 0 ? this.props.fetching ? p(null, t('list fetching')) : p(null, this.props.emptyListMessage) : div(null, MessageListBody({
       messages: this.props.messages,
       settings: this.props.settings,
       mailboxID: this.props.mailboxID,
