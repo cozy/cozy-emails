@@ -365,7 +365,7 @@ module.exports = Compose = React.createClass
 
         if valid
             if @state.composeInHTML
-                message.html = @state.html
+                message.html = @_cleanHTML @state.html
                 message.text = messageUtils.cleanReplyText message.html
                 message.html = messageUtils.wrapReplyHtml message.html
             else
@@ -418,6 +418,28 @@ module.exports = Compose = React.createClass
 
     _autosave: ->
         @_doSend true
+
+    # set source of attached images
+    _cleanHTML: (html) ->
+        parser = new DOMParser()
+        doc    = parser.parseFromString html, "text/html"
+
+        if not doc
+            doc = document.implementation.createHTMLDocument("")
+            doc.documentElement.innerHTML = html
+
+        if doc
+            # the contentID of attached images will be in the data-src attribute
+            # override image source with this attribute
+            imageSrc = (image) ->
+                image.setAttribute 'src', "cid:#{image.dataset.src}"
+            images = doc.querySelectorAll 'IMG[data-src]'
+            imageSrc image for image in images
+
+            return doc.documentElement.innerHTML
+        else
+            console.error "Unable to parse HTML content of message"
+            return html
 
     onDelete: (e) ->
         e.preventDefault()
@@ -504,6 +526,10 @@ ComposeEditor = React.createClass
                 contentEditable: true,
                 onKeyDown: @onKeyDown,
                 onInput: onHTMLChange,
+                # when dropping an image, input is fired before the image has
+                # really been added to the DOM, so we need to also listen to
+                # blur event
+                onBlur: onHTMLChange,
                 dangerouslySetInnerHTML: {
                     __html: @state.html.value
                 }
