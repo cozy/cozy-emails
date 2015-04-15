@@ -1,42 +1,59 @@
-(function(/*! Brunch !*/) {
+(function() {
   'use strict';
 
-  var globals = typeof window !== 'undefined' ? window : global;
+  var globals = typeof window === 'undefined' ? global : window;
   if (typeof globals.require === 'function') return;
 
   var modules = {};
   var cache = {};
+  var has = ({}).hasOwnProperty;
 
-  var has = function(object, name) {
-    return ({}).hasOwnProperty.call(object, name);
+  var aliases = {};
+
+  var endsWith = function(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
   };
 
-  var expand = function(root, name) {
-    var results = [], parts, part;
-    if (/^\.\.?(\/|$)/.test(name)) {
-      parts = [root, name].join('/').split('/');
-    } else {
-      parts = name.split('/');
-    }
-    for (var i = 0, length = parts.length; i < length; i++) {
-      part = parts[i];
-      if (part === '..') {
-        results.pop();
-      } else if (part !== '.' && part !== '') {
-        results.push(part);
+  var unalias = function(alias, loaderPath) {
+    var start = 0;
+    if (loaderPath) {
+      if (loaderPath.indexOf('components/' === 0)) {
+        start = 'components/'.length;
+      }
+      if (loaderPath.indexOf('/', start) > 0) {
+        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
       }
     }
-    return results.join('/');
+    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
+    if (result) {
+      return 'components/' + result.substring(0, result.length - '.js'.length);
+    }
+    return alias;
   };
 
+  var expand = (function() {
+    var reg = /^\.\.?(\/|$)/;
+    return function(root, name) {
+      var results = [], parts, part;
+      parts = (reg.test(name) ? root + '/' + name : name).split('/');
+      for (var i = 0, length = parts.length; i < length; i++) {
+        part = parts[i];
+        if (part === '..') {
+          results.pop();
+        } else if (part !== '.' && part !== '') {
+          results.push(part);
+        }
+      }
+      return results.join('/');
+    };
+  })();
   var dirname = function(path) {
     return path.split('/').slice(0, -1).join('/');
   };
 
   var localRequire = function(path) {
     return function(name) {
-      var dir = dirname(path);
-      var absolute = expand(dir, name);
+      var absolute = expand(dirname(path), name);
       return globals.require(absolute, path);
     };
   };
@@ -51,21 +68,26 @@
   var require = function(name, loaderPath) {
     var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
+    path = unalias(name, loaderPath);
 
-    if (has(cache, path)) return cache[path].exports;
-    if (has(modules, path)) return initModule(path, modules[path]);
+    if (has.call(cache, path)) return cache[path].exports;
+    if (has.call(modules, path)) return initModule(path, modules[path]);
 
     var dirIndex = expand(path, './index');
-    if (has(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
+    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
 
     throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
   };
 
-  var define = function(bundle, fn) {
+  require.alias = function(from, to) {
+    aliases[to] = from;
+  };
+
+  require.register = require.define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
-        if (has(bundle, key)) {
+        if (has.call(bundle, key)) {
           modules[key] = bundle[key];
         }
       }
@@ -74,21 +96,18 @@
     }
   };
 
-  var list = function() {
+  require.list = function() {
     var result = [];
     for (var item in modules) {
-      if (has(modules, item)) {
+      if (has.call(modules, item)) {
         result.push(item);
       }
     }
     return result;
   };
 
+  require.brunch = true;
   globals.require = require;
-  globals.require.define = define;
-  globals.require.register = define;
-  globals.require.list = list;
-  globals.require.brunch = true;
 })();
 require.register("actions/account_action_creator", function(exports, require, module) {
 var AccountActionCreator, AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, XHRUtils;
@@ -1767,10 +1786,10 @@ AccountConfigMain = React.createClass({
     }, button({
       className: 'btn btn-cozy action-save',
       onClick: this.props.onSubmit
-    }, buttonLabel), this.state.id != null ? button({
+    }, buttonLabel), (this.state.id != null) && (this.state.id.value != null) ? button({
       className: 'btn btn-cozy-non-default action-check',
       onClick: this.onCheck
-    }, t('account check')) : void 0), this.state.id != null ? fieldset(null, legend(null, t('account danger zone')), div({
+    }, t('account check')) : void 0), (this.state.id != null) && (this.state.id.value != null) ? fieldset(null, legend(null, t('account danger zone')), div({
       className: 'col-sm-offset-4'
     }, button({
       className: 'btn btn-default btn-danger btn-remove',
@@ -3477,7 +3496,7 @@ module.exports = Compose = React.createClass({
     }
     if (valid) {
       if (this.state.composeInHTML) {
-        message.html = this.state.html;
+        message.html = this._cleanHTML(this.state.html);
         message.text = messageUtils.cleanReplyText(message.html);
         message.html = messageUtils.wrapReplyHtml(message.html);
       } else {
@@ -3546,6 +3565,29 @@ module.exports = Compose = React.createClass({
   },
   _autosave: function() {
     return this._doSend(true);
+  },
+  _cleanHTML: function(html) {
+    var doc, image, imageSrc, images, parser, _i, _len;
+    parser = new DOMParser();
+    doc = parser.parseFromString(html, "text/html");
+    if (!doc) {
+      doc = document.implementation.createHTMLDocument("");
+      doc.documentElement.innerHTML = html;
+    }
+    if (doc) {
+      imageSrc = function(image) {
+        return image.setAttribute('src', "cid:" + image.dataset.src);
+      };
+      images = doc.querySelectorAll('IMG[data-src]');
+      for (_i = 0, _len = images.length; _i < _len; _i++) {
+        image = images[_i];
+        imageSrc(image);
+      }
+      return doc.documentElement.innerHTML;
+    } else {
+      console.error("Unable to parse HTML content of message");
+      return html;
+    }
   },
   onDelete: function(e) {
     var confirmMessage, params, subject;
@@ -3657,6 +3699,7 @@ ComposeEditor = React.createClass({
         contentEditable: true,
         onKeyDown: this.onKeyDown,
         onInput: onHTMLChange,
+        onBlur: onHTMLChange,
         dangerouslySetInnerHTML: {
           __html: this.state.html.value
         }
@@ -4132,7 +4175,7 @@ FilePicker = React.createClass({
       rawFileObject: file,
       generatedFileName: name,
       contentDisposition: null,
-      contentId: null,
+      contentId: file.name,
       transferEncoding: null,
       content: null,
       url: null
@@ -8886,7 +8929,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-;require.register("libs/flux/store/Store", function(exports, require, module) {
+require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
