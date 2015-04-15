@@ -67,7 +67,7 @@ module.exports =
             allowedTags: allowedTags
             allowedAttributes: allowedAttributes
             allowedClasses: false
-            allowedSchemes: sanitizeHtml.defaults.allowedSchemes.concat ['cid']
+            allowedSchemes: sanitizeHtml.defaults.allowedSchemes.concat ['cid', 'data']
             transformTags:
                 'img': (tag, attribs) ->
                     if attribs.src? and 0 is attribs.src.indexOf 'cid:'
@@ -79,6 +79,11 @@ module.exports =
                             src = "message/#{messageId}/attachments/#{name}"
                             attribs.src = src
                         else
+                            attribs.src = ""
+                    # only allows inline images whose mimetype is image/*
+                    if attribs.src? and 0 is attribs.src.indexOf 'data:'
+                        mime = /data:([^\/]*)\/([^;]*);/.exec attribs.src
+                        if not mime? or mime[1] isnt 'image'
                             attribs.src = ""
                     return {tagName: 'img', attribs: attribs}
         html

@@ -132,7 +132,7 @@ FilePicker = React.createClass
             rawFileObject:      file
             generatedFileName:  name
             contentDisposition: null
-            contentId:          null
+            contentId:          file.name
             transferEncoding:   null
             content:            null
             url:                null
