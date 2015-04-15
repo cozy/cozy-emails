@@ -52,19 +52,6 @@ module.exports = Menu = React.createClass
                 action: 'account.new'
                 fullWidth: true
 
-        # the button toggles the "compose" screen
-        if @props.layout.firstPanel.action is 'compose' or
-           @props.layout.secondPanel?.action is 'compose'
-            composeClass = 'active'
-            composeUrl = selectedAccountUrl
-        else
-            composeClass = ''
-            composeUrl = @buildUrl
-                direction: 'first'
-                action: 'compose'
-                parameters: null
-                fullWidth: true
-
         # the button toggle the "new account" screen
         if @props.layout.firstPanel.action is 'account.new'
             newMailboxClass = 'active'
@@ -110,14 +97,6 @@ module.exports = Menu = React.createClass
         div id: 'menu', className: classes,
 
             modal
-
-            unless @props.accounts.length is 0
-                a
-                    href: composeUrl,
-                    onClick: @_hideMenu
-                    className: 'menu-item compose-action ' + composeClass,
-                        i className: 'fa fa-edit'
-                        span className: 'item-label', t 'menu compose'
 
             if @props.accounts.length isnt 0
                 ul id: 'account-list', className: 'list-unstyled',
