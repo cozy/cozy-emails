@@ -121,6 +121,7 @@ module.exports = MessageUtils =
                     inReplyTo.get('cc')).filter (dest) ->
                     return dest? and toAddresses.indexOf(dest.address) is -1
                 message.bcc = []
+                message.subject = @getReplySubject inReplyTo
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
                     <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -372,9 +373,7 @@ module.exports = MessageUtils =
     # Add a reply prefix to the current subject. Do not add it again if it's
     # already there.
     getReplySubject: (inReplyTo) ->
-        subject =  """
-        #{inReplyTo.get 'subject'}
-        """
+        subject =  inReplyTo.get('subject') or ''
         replyPrefix = t 'compose reply prefix'
         if subject.indexOf(replyPrefix) isnt 0
             subject = "#{replyPrefix}#{subject}"
