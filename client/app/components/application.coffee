@@ -1,6 +1,6 @@
 # React components
 {body, div, p, form, i, input, span, a, button, strong} = React.DOM
-AccountConfig = require './account-config'
+AccountConfig = require './account_config'
 Alert         = require './alert'
 Topbar        = require './topbar'
 ToastContainer = require './toast_container'
