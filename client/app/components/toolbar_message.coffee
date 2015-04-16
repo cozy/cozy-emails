@@ -89,6 +89,7 @@ module.exports = React.createClass
             onMove:         @props.onMove
             onHeaders:      @props.onHeaders
             direction:      'right'
+            displayConversations: false # to display messages actions
 
 
     renderToolboxMove: ->

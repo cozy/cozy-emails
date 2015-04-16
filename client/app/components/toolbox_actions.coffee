@@ -24,8 +24,11 @@ module.exports = ToolboxActions = React.createClass
             ul
                 className: "dropdown-menu dropdown-menu-#{direction}"
                 role: 'menu',
-                    @renderMarkActions()...
-                    li role: 'presentation', className: 'divider'
+                    # in conversation mode, only shows actions on conversation
+                    if not @props.displayConversations
+                        @renderMarkActions()
+                    if not @props.displayConversations
+                        li role: 'presentation', className: 'divider'
                     @renderRawActions()...
                     li role: 'presentation', className: 'divider'
                     li
@@ -75,10 +78,11 @@ module.exports = ToolboxActions = React.createClass
     renderRawActions: ->
         items = []
 
-        items.push li
-            role:      'presentation'
-            className: 'dropdown-header'
-            t 'mail action more'
+        if not @props.displayConversations
+            items.push li
+                role:      'presentation'
+                className: 'dropdown-header'
+                t 'mail action more'
 
         if @props.messageID?
             items.push li role: 'presentation',

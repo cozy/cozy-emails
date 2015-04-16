@@ -253,6 +253,7 @@ MessageList = React.createClass
                                 onMark: @onMark
                                 onConversation: @onConversation
                                 onMove: @onConversationMove
+                                displayConversations: @props.displayConversations
                                 onHeaders: @onHeaders
                                 direction: 'left'
 
