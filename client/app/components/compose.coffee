@@ -227,6 +227,20 @@ module.exports = Compose = React.createClass
     componentDidMount: ->
         @_initCompose()
 
+    componentDidUpdate: ->
+        switch @state.focus
+            when 'cc'
+                setTimeout ->
+                    document.getElementById('compose-cc').focus()
+                , 0
+                @setState focus: ''
+
+            when 'bcc'
+                setTimeout ->
+                    document.getElementById('compose-bcc').focus()
+                , 0
+                @setState focus: ''
+
     componentWillUnmount: ->
         if @_saveInterval
             window.clearInterval @_saveInterval
@@ -477,12 +491,14 @@ module.exports = Compose = React.createClass
     onToggleCc: (e) ->
         toggle = (e) -> e.classList.toggle 'shown'
         toggle e for e in @getDOMNode().querySelectorAll '.compose-cc'
-        @setState ccShown: not @state.ccShown
+        focus = if not @state.ccShown then 'cc' else ''
+        @setState ccShown: not @state.ccShown, focus: focus
 
     onToggleBcc: (e) ->
         toggle = (e) -> e.classList.toggle 'shown'
         toggle e for e in @getDOMNode().querySelectorAll '.compose-bcc'
-        @setState bccShown: not @state.bccShown
+        focus = if not @state.bccShown then 'bcc' else ''
+        @setState bccShown: not @state.bccShown, focus: focus
 
 
 ComposeEditor = React.createClass
