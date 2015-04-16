@@ -377,7 +377,7 @@ module.exports = Compose = React.createClass
             if isDraft
                 @setState saving: true
             else
-                @setState sending: true
+                @setState sending: true, isDraft: false
 
             MessageActionCreator.send message, (error, message) =>
                 state = _.clone @state
