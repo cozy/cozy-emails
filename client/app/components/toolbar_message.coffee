@@ -141,3 +141,11 @@ module.exports = React.createClass
                         alertError "#{t("conversation unseen ko")} #{error}"
                     else
                         alertSuccess t "conversation unseen ok"
+            when 'flagged'
+                ConversationActionCreator.flag id, (error) ->
+                    if error?
+                        alertError "#{t("conversation flagged ko ")} #{error}"
+            when 'noflag'
+                ConversationActionCreator.noflag id, (error) ->
+                    if error?
+                        alertError "#{t("conversation noflag ko")} #{error}"

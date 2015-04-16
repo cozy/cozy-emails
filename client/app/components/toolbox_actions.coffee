@@ -116,6 +116,18 @@ module.exports = ToolboxActions = React.createClass
                 'data-action': 'unseen',
                 t 'mail action conversation unseen'
 
+        items.push li role: 'presentation',
+            a
+                onClick:       @props.onConversation,
+                'data-action': 'flagged',
+                t 'mail action conversation flagged'
+
+        items.push li role: 'presentation',
+            a
+                onClick:       @props.onConversation,
+                'data-action': 'noflag',
+                t 'mail action conversation noflag'
+
         return items
 
 
