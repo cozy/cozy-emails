@@ -131,6 +131,8 @@ module.exports =
       "mail action conversation seen"   : "Marquer la conversation comme lue"
       "mail action conversation unseen" : "Marquer la conversation comme
                                             non lue"
+      "mail action conversation flagged": "Marquer la conversation comme importante"
+      "mail action conversation noflag" : "Marquer la conversation comme normale"
       "mail conversation length": """
             %{smart_count} message dans cette conversation. ||||
             %{smart_count} messages dans cette conversation.
@@ -255,6 +257,8 @@ module.exports =
       "conversation unseen ok"      : "Ok"
       "conversation unseen ko"      : "L'opération a échoué"
       "conversation undelete"       : "Annuler la suppression"
+      "conversation flagged ko"     : "L'opération a échoué"
+      "conversation noflag ko"      : "L'opération a échoué"
       "message images warning"      : "L'affichage des images du message a été
                                         bloqué"
       "message images display"      : "Afficher les images"

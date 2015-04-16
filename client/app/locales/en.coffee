@@ -128,6 +128,8 @@ module.exports =
       "mail action conversation move"   : "Move conversation"
       "mail action conversation seen"   : "Mark conversation as read"
       "mail action conversation unseen" : "Mark conversation as unread"
+      "mail action conversation flagged": "Mark conversation as important"
+      "mail action conversation noflag" : "Mark conversation as normal"
       "mail conversation length": """
             %{smart_count} message dans cette conversation. ||||
             %{smart_count} messages dans cette conversation.
@@ -249,6 +251,8 @@ module.exports =
       "conversation unseen ok"      : "Conversation marked as unread"
       "conversation unseen ko"      : "Error"
       "conversation undelete"       : "Undo conversation deletion"
+      "conversation flagged ko"     : "Error"
+      "conversation noflag ko"      : "Error"
       "message images warning"      : "Display of images inside message has
                                         been blocked"
       "message images display"      : "Display images"

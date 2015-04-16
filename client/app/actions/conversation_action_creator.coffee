@@ -7,6 +7,15 @@ MessageActionCreator = require '../actions/message_action_creator'
 AccountStore  = require "../stores/account_store"
 MessageStore  = require '../stores/message_store'
 
+doPatch = (conversationID, patches, callback) ->
+    XHRUtils.conversationPatch conversationID, patches, (error, messages) ->
+        if not error?
+            AppDispatcher.handleViewAction
+                type: ActionTypes.RECEIVE_RAW_MESSAGES
+                value: messages
+        if callback?
+            callback error
+
 module.exports =
 
     delete: (conversationID, callback) ->
@@ -122,33 +131,37 @@ module.exports =
                 type: ActionTypes.RECEIVE_RAW_MESSAGES
                 value: messages
 
-    seen: (conversationID, flags, callback) ->
+    seen: (conversationID, callback) ->
         conversation =
             flags: []
         observer = jsonpatch.observe conversation
         conversation.flags.push(MessageFlags.SEEN)
         patches = jsonpatch.generate observer
-        XHRUtils.conversationPatch conversationID, patches, (error, messages) ->
-            if not error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.RECEIVE_RAW_MESSAGES
-                    value: messages
-            if callback?
-                callback error
+        doPatch conversationID, patches, callback
 
-    unseen: (conversationID, flags, callback) ->
+    unseen: (conversationID, callback) ->
         conversation =
             flags: [MessageFlags.SEEN]
         observer = jsonpatch.observe conversation
         conversation.flags = []
         patches = jsonpatch.generate observer
-        XHRUtils.conversationPatch conversationID, patches, (error, messages) ->
-            if not error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.RECEIVE_RAW_MESSAGES
-                    value: messages
-            if callback?
-                callback error
+        doPatch conversationID, patches, callback
+
+    flag: (conversationID, callback) ->
+        conversation =
+            flags: []
+        observer = jsonpatch.observe conversation
+        conversation.flags.push(MessageFlags.FLAGGED)
+        patches = jsonpatch.generate observer
+        doPatch conversationID, patches, callback
+
+    noflag: (conversationID, callback) ->
+        conversation =
+            flags: [MessageFlags.FLAGGED]
+        observer = jsonpatch.observe conversation
+        conversation.flags = []
+        patches = jsonpatch.generate observer
+        doPatch conversationID, patches, callback
 
     fetch: (conversationID) ->
         XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
