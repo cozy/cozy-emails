@@ -313,7 +313,7 @@ module.exports = class Message extends cozydb.CozyModel
             return callback null if rows.length is 0
 
             async.eachLimit rows, CONCURRENT_DESTROY, (row, cb) ->
-                new Message(row.doc).removeFromMailbox(id: mailboxID, cb)
+                new Message(row.doc).removeFromMailbox(id: mailboxID, true, cb)
 
             , (err) ->
 
@@ -383,7 +383,18 @@ module.exports = class Message extends cozydb.CozyModel
                                 failed to remove message""", row.id, err
                         cb null
 
-            , callback
+            , (err) ->
+                options =
+                    key: ['nobox']
+                    reduce: false
+                Message.rawRequest 'byMailboxRequest', options, (err, rows) ->
+                    return callback err if err
+                    async.eachSeries rows, (row, cb) ->
+                        Message.destroy row.id, (err) ->
+                            log.error 'fail to destroy orphan', err
+                            cb null
+                    , callback
+
 
     # Public: get messages in a box depending on the query params
     #

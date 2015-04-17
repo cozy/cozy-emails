@@ -39,6 +39,9 @@ module.exports =
         byMailboxRequest:
             reduce: '_count'
             map: (doc) ->
+                if Object.keys(doc.mailboxIDs).length is 0
+                    emit ['nobox']
+
                 for boxid, uid of doc.mailboxIDs
                     docDate = doc.date or (new Date()).toISOString()
                     emit ['uid', boxid, uid], doc.flags
