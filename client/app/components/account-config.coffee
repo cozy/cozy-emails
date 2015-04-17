@@ -192,6 +192,8 @@ module.exports = React.createClass
                 setError = (error) ->
                     errors[error.property] = t "validate #{error.message}"
                 setError error for error in valid.errors
+                if Object.keys(errors).length > 0
+                    LAC.alertError t 'account errors'
                 @setState errors: errors
 
     onSubmit: (event, check) ->
@@ -224,6 +226,8 @@ module.exports = React.createClass
             setError = (error) ->
                 errors[error.property] = t "validate #{error.message}"
             setError error for error in valid.errors
+            if Object.keys(errors).length > 0
+                LAC.alertError t 'account errors'
             @setState errors: errors
 
     componentWillReceiveProps: (props) ->
@@ -345,7 +349,6 @@ AccountConfigMain = React.createClass
             'form-account': true
             'waiting': @props.isWaiting
         form className: formClass, method: 'POST',
-            @renderError()
             fieldset null,
                 legend null, t 'account identifiers'
 
@@ -544,18 +547,6 @@ AccountConfigMain = React.createClass
 
     toggleSMTPAdvanced: ->
         @setState smtpAdvanced: not @state.smtpAdvanced
-
-    # Ask to main layout manager to display error as notification toasters.
-    renderError: ->
-        if @props.error and @props.error.name is 'AccountConfigError'
-            message = t 'config error ' + @props.error.field
-            LAC.alertError message
-
-        else if @props.error
-            LAC.alertError @props.error.message
-
-        else if Object.keys(@state.errors).length isnt 0
-            LAC.alertError t 'account errors'
 
     discover: (event) ->
         @props.validateForm event

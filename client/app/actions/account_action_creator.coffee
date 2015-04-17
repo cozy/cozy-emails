@@ -5,6 +5,14 @@ AppDispatcher = require '../app_dispatcher'
 AccountStore = require '../stores/account_store'
 LayoutActionCreator = null
 
+alertError = (error) ->
+    LayoutActionCreator = require '../actions/layout_action_creator'
+    if error.name is 'AccountConfigError'
+        message = t "config error #{error.field}"
+        LayoutActionCreator.alertError message
+    else
+        LayoutActionCreator.alertError error.message
+
 module.exports = AccountActionCreator =
 
     create: (inputValues, afterCreation) ->
@@ -13,6 +21,8 @@ module.exports = AccountActionCreator =
         XHRUtils.createAccount inputValues, (error, account) ->
             if error? or not account?
                 AccountActionCreator._setNewAccountError error
+                if error?
+                    alertError error
             else
                 AppDispatcher.handleViewAction
                     type: ActionTypes.ADD_ACCOUNT
@@ -30,6 +40,7 @@ module.exports = AccountActionCreator =
         XHRUtils.editAccount newAccount, (error, rawAccount) ->
             if error?
                 AccountActionCreator._setNewAccountError error
+                alertError error
             else
                 AppDispatcher.handleViewAction
                     type: ActionTypes.EDIT_ACCOUNT
@@ -44,6 +55,7 @@ module.exports = AccountActionCreator =
         XHRUtils.checkAccount newAccount, (error, rawAccount) ->
             if error?
                 AccountActionCreator._setNewAccountError error
+                alertError error
             else
                 LayoutActionCreator = require '../actions/layout_action_creator'
                 LayoutActionCreator.notify t('account checked'), autoclose: true
