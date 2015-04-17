@@ -1,59 +1,42 @@
-(function() {
+(function(/*! Brunch !*/) {
   'use strict';
 
-  var globals = typeof window === 'undefined' ? global : window;
+  var globals = typeof window !== 'undefined' ? window : global;
   if (typeof globals.require === 'function') return;
 
   var modules = {};
   var cache = {};
-  var has = ({}).hasOwnProperty;
 
-  var aliases = {};
-
-  var endsWith = function(str, suffix) {
-    return str.indexOf(suffix, str.length - suffix.length) !== -1;
+  var has = function(object, name) {
+    return ({}).hasOwnProperty.call(object, name);
   };
 
-  var unalias = function(alias, loaderPath) {
-    var start = 0;
-    if (loaderPath) {
-      if (loaderPath.indexOf('components/' === 0)) {
-        start = 'components/'.length;
-      }
-      if (loaderPath.indexOf('/', start) > 0) {
-        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
+  var expand = function(root, name) {
+    var results = [], parts, part;
+    if (/^\.\.?(\/|$)/.test(name)) {
+      parts = [root, name].join('/').split('/');
+    } else {
+      parts = name.split('/');
+    }
+    for (var i = 0, length = parts.length; i < length; i++) {
+      part = parts[i];
+      if (part === '..') {
+        results.pop();
+      } else if (part !== '.' && part !== '') {
+        results.push(part);
       }
     }
-    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
-    if (result) {
-      return 'components/' + result.substring(0, result.length - '.js'.length);
-    }
-    return alias;
+    return results.join('/');
   };
 
-  var expand = (function() {
-    var reg = /^\.\.?(\/|$)/;
-    return function(root, name) {
-      var results = [], parts, part;
-      parts = (reg.test(name) ? root + '/' + name : name).split('/');
-      for (var i = 0, length = parts.length; i < length; i++) {
-        part = parts[i];
-        if (part === '..') {
-          results.pop();
-        } else if (part !== '.' && part !== '') {
-          results.push(part);
-        }
-      }
-      return results.join('/');
-    };
-  })();
   var dirname = function(path) {
     return path.split('/').slice(0, -1).join('/');
   };
 
   var localRequire = function(path) {
     return function(name) {
-      var absolute = expand(dirname(path), name);
+      var dir = dirname(path);
+      var absolute = expand(dir, name);
       return globals.require(absolute, path);
     };
   };
@@ -68,26 +51,21 @@
   var require = function(name, loaderPath) {
     var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
-    path = unalias(name, loaderPath);
 
-    if (has.call(cache, path)) return cache[path].exports;
-    if (has.call(modules, path)) return initModule(path, modules[path]);
+    if (has(cache, path)) return cache[path].exports;
+    if (has(modules, path)) return initModule(path, modules[path]);
 
     var dirIndex = expand(path, './index');
-    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+    if (has(cache, dirIndex)) return cache[dirIndex].exports;
+    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
 
     throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
   };
 
-  require.alias = function(from, to) {
-    aliases[to] = from;
-  };
-
-  require.register = require.define = function(bundle, fn) {
+  var define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
-        if (has.call(bundle, key)) {
+        if (has(bundle, key)) {
           modules[key] = bundle[key];
         }
       }
@@ -96,21 +74,24 @@
     }
   };
 
-  require.list = function() {
+  var list = function() {
     var result = [];
     for (var item in modules) {
-      if (has.call(modules, item)) {
+      if (has(modules, item)) {
         result.push(item);
       }
     }
     return result;
   };
 
-  require.brunch = true;
   globals.require = require;
+  globals.require.define = define;
+  globals.require.register = define;
+  globals.require.list = list;
+  globals.require.brunch = true;
 })();
 require.register("actions/account_action_creator", function(exports, require, module) {
-var AccountActionCreator, AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, XHRUtils;
+var AccountActionCreator, AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, XHRUtils, alertError;
 
 XHRUtils = require('../utils/xhr_utils');
 
@@ -122,12 +103,26 @@ AccountStore = require('../stores/account_store');
 
 LayoutActionCreator = null;
 
+alertError = function(error) {
+  var message;
+  LayoutActionCreator = require('../actions/layout_action_creator');
+  if (error.name === 'AccountConfigError') {
+    message = t("config error " + error.field);
+    return LayoutActionCreator.alertError(message);
+  } else {
+    return LayoutActionCreator.alertError(error.message);
+  }
+};
+
 module.exports = AccountActionCreator = {
   create: function(inputValues, afterCreation) {
     AccountActionCreator._setNewAccountWaitingStatus(true);
     return XHRUtils.createAccount(inputValues, function(error, account) {
       if ((error != null) || (account == null)) {
-        return AccountActionCreator._setNewAccountError(error);
+        AccountActionCreator._setNewAccountError(error);
+        if (error != null) {
+          return alertError(error);
+        }
       } else {
         AppDispatcher.handleViewAction({
           type: ActionTypes.ADD_ACCOUNT,
@@ -144,7 +139,8 @@ module.exports = AccountActionCreator = {
     newAccount = account.mergeDeep(inputValues);
     return XHRUtils.editAccount(newAccount, function(error, rawAccount) {
       if (error != null) {
-        return AccountActionCreator._setNewAccountError(error);
+        AccountActionCreator._setNewAccountError(error);
+        return alertError(error);
       } else {
         AppDispatcher.handleViewAction({
           type: ActionTypes.EDIT_ACCOUNT,
@@ -157,18 +153,26 @@ module.exports = AccountActionCreator = {
       }
     });
   },
-  check: function(inputValues, accountID) {
+  check: function(inputValues, accountID, cb) {
     var account, newAccount;
-    account = AccountStore.getByID(accountID);
-    newAccount = account.mergeDeep(inputValues);
+    if (accountID != null) {
+      account = AccountStore.getByID(accountID);
+      newAccount = account.mergeDeep(inputValues).toJS();
+    } else {
+      newAccount = inputValues;
+    }
     return XHRUtils.checkAccount(newAccount, function(error, rawAccount) {
       if (error != null) {
-        return AccountActionCreator._setNewAccountError(error);
+        AccountActionCreator._setNewAccountError(error);
+        alertError(error);
       } else {
         LayoutActionCreator = require('../actions/layout_action_creator');
-        return LayoutActionCreator.notify(t('account checked'), {
+        LayoutActionCreator.notify(t('account checked'), {
           autoclose: true
         });
+      }
+      if (cb != null) {
+        return cb(error, rawAccount);
       }
     });
   },
@@ -1213,9 +1217,9 @@ module.exports = new AppDispatcher();
 });
 
 ;require.register("components/account-config", function(exports, require, module) {
-var AccountActionCreator, AccountConfigMailboxes, AccountConfigMain, AccountInput, LAC, MailboxItem, MailboxList, RouterMixin, a, button, classer, div, fieldset, form, h3, h4, i, input, label, legend, li, p, span, ul, _ref;
+var AccountActionCreator, AccountConfigMailboxes, AccountConfigMain, AccountInput, LAC, MailboxItem, MailboxList, RouterMixin, a, button, classer, div, fieldset, form, h3, h4, i, img, input, label, legend, li, p, span, ul, _ref;
 
-_ref = React.DOM, div = _ref.div, p = _ref.p, h3 = _ref.h3, h4 = _ref.h4, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, fieldset = _ref.fieldset, legend = _ref.legend;
+_ref = React.DOM, div = _ref.div, p = _ref.p, h3 = _ref.h3, h4 = _ref.h4, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, fieldset = _ref.fieldset, legend = _ref.legend, img = _ref.img;
 
 classer = React.addons.classSet;
 
@@ -1233,7 +1237,7 @@ module.exports = React.createClass({
   displayName: 'AccountConfig',
   _lastDiscovered: '',
   mixins: [RouterMixin, React.addons.LinkedStateMixin],
-  _accountFields: ['id', 'label', 'name', 'login', 'password', 'imapServer', 'imapPort', 'imapSSL', 'imapTLS', 'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'smtpLogin', 'smtpPassword', 'smtpMethod', 'accountType'],
+  _accountFields: ['id', 'label', 'name', 'login', 'password', 'imapServer', 'imapPort', 'imapSSL', 'imapTLS', 'imapLogin', 'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS', 'smtpLogin', 'smtpPassword', 'smtpMethod', 'accountType'],
   _mailboxesFields: ['id', 'mailboxes', 'favoriteMailboxes', 'draftMailbox', 'sentMailbox', 'trashMailbox'],
   _accountSchema: {
     properties: {
@@ -1259,6 +1263,9 @@ module.exports = React.createClass({
         allowEmpty: true
       },
       'imapTLS': {
+        allowEmpty: true
+      },
+      'imapLogin': {
         allowEmpty: true
       },
       'smtpServer': {
@@ -1328,7 +1335,8 @@ module.exports = React.createClass({
       selectedAccount: this.props.selectedAccount,
       validateForm: this.validateForm,
       onSubmit: this.onSubmit,
-      errors: this.state.errors
+      errors: this.state.errors,
+      checking: this.state.checking
     };
     _ref1 = this._accountFields;
     for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -1424,6 +1432,9 @@ module.exports = React.createClass({
           error = _ref2[_i];
           setError(error);
         }
+        if (Object.keys(errors).length > 0) {
+          LAC.alertError(t('account errors'));
+        }
         return this.setState({
           errors: errors
         });
@@ -1437,26 +1448,35 @@ module.exports = React.createClass({
     }
     _ref1 = this.doValidate(), accountValue = _ref1.accountValue, valid = _ref1.valid;
     if (valid.valid) {
-      if (this.state.id != null) {
-        if (check === true) {
-          return AccountActionCreator.check(accountValue, this.state.id);
-        } else {
-          return AccountActionCreator.edit(accountValue, this.state.id);
-        }
-      } else {
-        return AccountActionCreator.create(accountValue, (function(_this) {
-          return function(account) {
-            LAC.notify(t("account creation ok"), {
-              autoclose: true
-            });
-            return _this.redirect({
-              direction: 'first',
-              action: 'account.config',
-              parameters: [account.get('id'), 'mailboxes'],
-              fullWidth: true
+      if (check === true) {
+        this.setState({
+          checking: true
+        });
+        return AccountActionCreator.check(accountValue, this.state.id, (function(_this) {
+          return function() {
+            return _this.setState({
+              checking: false
             });
           };
         })(this));
+      } else {
+        if (this.state.id != null) {
+          return AccountActionCreator.edit(accountValue, this.state.id);
+        } else {
+          return AccountActionCreator.create(accountValue, (function(_this) {
+            return function(account) {
+              LAC.notify(t("account creation ok"), {
+                autoclose: true
+              });
+              return _this.redirect({
+                direction: 'first',
+                action: 'account.config',
+                parameters: [account.get('id'), 'mailboxes'],
+                fullWidth: true
+              });
+            };
+          })(this));
+        }
       }
     } else {
       errors = {};
@@ -1467,6 +1487,9 @@ module.exports = React.createClass({
       for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
         error = _ref2[_i];
         setError(error);
+      }
+      if (Object.keys(errors).length > 0) {
+        LAC.alertError(t('account errors'));
       }
       return this.setState({
         errors: errors
@@ -1587,6 +1610,7 @@ AccountConfigMain = React.createClass({
   getInitialState: function() {
     var state;
     state = this._propsToState(this.props);
+    state.imapAdvanced = false;
     state.smtpAdvanced = false;
     return state;
   },
@@ -1640,7 +1664,7 @@ AccountConfigMain = React.createClass({
     return form({
       className: formClass,
       method: 'POST'
-    }, this.renderError(), fieldset(null, legend(null, t('account identifiers'))), AccountInput({
+    }, fieldset(null, legend(null, t('account identifiers'))), AccountInput({
       name: 'label',
       value: this.linkState('label').value,
       errors: this.state.errors,
@@ -1711,7 +1735,17 @@ AccountConfigMain = React.createClass({
           return _this._onServerParam(ev.target, 'imap', 'tls');
         };
       })(this)
-    })), fieldset(null, legend(null, t('account sending server')), AccountInput({
+    }), div({
+      className: "form-group"
+    }, a({
+      className: "col-sm-3 col-sm-offset-2 control-label clickable",
+      onClick: this.toggleIMAPAdvanced
+    }, t("account imap " + (this.state.imapAdvanced ? 'hide' : 'show') + " advanced"))), this.state.imapAdvanced ? AccountInput({
+      name: 'imapLogin',
+      value: this.linkState('imapLogin').value,
+      errors: this.state.errors,
+      errorField: ['imap', 'imapServer', 'imapPort', 'imapLogin']
+    }) : void 0), fieldset(null, legend(null, t('account sending server')), AccountInput({
       name: 'smtpServer',
       value: this.linkState('smtpServer').value,
       errors: this.state.errors,
@@ -1798,12 +1832,17 @@ AccountConfigMain = React.createClass({
     }, div({
       className: 'col-sm-offset-4'
     }, button({
-      className: 'btn btn-cozy action-save',
+      className: 'btn btn-cozy-contrast action-save',
       onClick: this.props.onSubmit
-    }, buttonLabel), (this.state.id != null) && (this.state.id.value != null) ? button({
-      className: 'btn btn-cozy-non-default action-check',
+    }, span({
+      className: 'fa fa-save'
+    }), span(null, buttonLabel)), button({
+      className: 'btn btn-cozy action-check',
       onClick: this.onCheck
-    }, t('account check')) : void 0), (this.state.id != null) && (this.state.id.value != null) ? fieldset(null, legend(null, t('account danger zone')), div({
+    }, this.props.checking ? span(null, img({
+      src: 'images/spinner-white.svg',
+      className: 'button-spinner'
+    })) : span(null, t('account check')))), (this.state.id != null) && (this.state.id.value != null) ? fieldset(null, legend(null, t('account danger zone')), div({
       className: 'col-sm-offset-4'
     }, button({
       className: 'btn btn-default btn-danger btn-remove',
@@ -1822,21 +1861,15 @@ AccountConfigMain = React.createClass({
       return AccountActionCreator.remove(this.props.selectedAccount.get('id'));
     }
   },
+  toggleIMAPAdvanced: function() {
+    return this.setState({
+      imapAdvanced: !this.state.imapAdvanced
+    });
+  },
   toggleSMTPAdvanced: function() {
     return this.setState({
       smtpAdvanced: !this.state.smtpAdvanced
     });
-  },
-  renderError: function() {
-    var message;
-    if (this.props.error && this.props.error.name === 'AccountConfigError') {
-      message = t('config error ' + this.props.error.field);
-      return LAC.alertError(message);
-    } else if (this.props.error) {
-      return LAC.alertError(this.props.error.message);
-    } else if (Object.keys(this.state.errors).length !== 0) {
-      return LAC.alertError(t('account errors'));
-    }
   },
   discover: function(event) {
     var login;
@@ -9837,6 +9870,8 @@ module.exports = {
   "account imapServer short": "imap.provider.tld",
   "account imapServer": "IMAP server",
   "account imapTLS": "Use TLS",
+  "account imapLogin short": "IMAP user",
+  "account imapLogin": "IMAP user (if different from login)",
   "account label short": "A short mailbox name",
   "account label": "Account label",
   "account login short": "Your email address",
@@ -9885,6 +9920,8 @@ module.exports = {
   "account actions": "Actions",
   "account danger zone": "Danger Zone",
   "account no special mailboxes": "Please configure special folders first",
+  "account imap hide advanced": "Hide advanced parameters",
+  "account imap show advanced": "Show advanced parameters",
   "account smtp hide advanced": "Hide advanced parameters",
   "account smtp show advanced": "Show advanced parameters",
   "mailbox create ok": "Folder created",
@@ -10148,6 +10185,8 @@ module.exports = {
   "account imapServer short": "imap.fournisseur.tld",
   "account imapServer": "Serveur IMAP",
   "account imapTLS": "Utiliser STARTTLS",
+  "account imapLogin short": "Utilisateur IMAP",
+  "account imapLogin": "Utilisateur IMAP (s'il est différent du login)",
   "account label short": "Nom abrégé",
   "account label": "Nom du compte",
   "account login short": "Votre adresse électronique",
@@ -10196,6 +10235,8 @@ module.exports = {
   "account danger zone": "Zone dangereuse",
   "account actions": "Actions",
   "account no special mailboxes": "Vous n'avez pas configuré les dossiers spéciaux",
+  "account imap hide advanced": "Masquer les paramètres avancés",
+  "account imap show advanced": "Afficher les paramètres avancés",
   "account smtp hide advanced": "Masquer les paramètres avancés",
   "account smtp show advanced": "Afficher les paramètres avancés",
   "mailbox create ok": "Dossier créé",
@@ -10564,18 +10605,20 @@ AccountStore = (function(_super) {
   setMailbox = function(accountID, boxID, boxData) {
     var account, mailboxes;
     account = _accounts.get(accountID);
-    mailboxes = account.get('mailboxes');
-    mailboxes = mailboxes.map(function(box) {
-      if (box.get('id') === boxID) {
-        boxData.weight = box.get('weight');
-        return AccountTranslator.mailboxToImmutable(boxData);
-      } else {
-        return box;
-      }
-    }).toOrderedMap();
-    account = account.set('mailboxes', mailboxes);
-    _accounts = _accounts.set(accountID, account);
-    return _refreshSelected();
+    if (account != null) {
+      mailboxes = account.get('mailboxes');
+      mailboxes = mailboxes.map(function(box) {
+        if (box.get('id') === boxID) {
+          boxData.weight = box.get('weight');
+          return AccountTranslator.mailboxToImmutable(boxData);
+        } else {
+          return box;
+        }
+      }).toOrderedMap();
+      account = account.set('mailboxes', mailboxes);
+      _accounts = _accounts.set(accountID, account);
+      return _refreshSelected();
+    }
   };
 
   _mailboxSort = function(mb1, mb2) {
@@ -13156,9 +13199,7 @@ module.exports = {
     });
   },
   checkAccount: function(account, callback) {
-    var rawAccount;
-    rawAccount = account.toJS();
-    return request.put("account/" + rawAccount.id + "/check").send(rawAccount).set('Accept', 'application/json').end(function(res) {
+    return request.put("accountUtil/check").send(account).set('Accept', 'application/json').end(function(res) {
       if (res.ok) {
         return callback(null, res.body);
       } else {
