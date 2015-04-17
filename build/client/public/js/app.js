@@ -1,42 +1,59 @@
-(function(/*! Brunch !*/) {
+(function() {
   'use strict';
 
-  var globals = typeof window !== 'undefined' ? window : global;
+  var globals = typeof window === 'undefined' ? global : window;
   if (typeof globals.require === 'function') return;
 
   var modules = {};
   var cache = {};
+  var has = ({}).hasOwnProperty;
 
-  var has = function(object, name) {
-    return ({}).hasOwnProperty.call(object, name);
+  var aliases = {};
+
+  var endsWith = function(str, suffix) {
+    return str.indexOf(suffix, str.length - suffix.length) !== -1;
   };
 
-  var expand = function(root, name) {
-    var results = [], parts, part;
-    if (/^\.\.?(\/|$)/.test(name)) {
-      parts = [root, name].join('/').split('/');
-    } else {
-      parts = name.split('/');
-    }
-    for (var i = 0, length = parts.length; i < length; i++) {
-      part = parts[i];
-      if (part === '..') {
-        results.pop();
-      } else if (part !== '.' && part !== '') {
-        results.push(part);
+  var unalias = function(alias, loaderPath) {
+    var start = 0;
+    if (loaderPath) {
+      if (loaderPath.indexOf('components/' === 0)) {
+        start = 'components/'.length;
+      }
+      if (loaderPath.indexOf('/', start) > 0) {
+        loaderPath = loaderPath.substring(start, loaderPath.indexOf('/', start));
       }
     }
-    return results.join('/');
+    var result = aliases[alias + '/index.js'] || aliases[loaderPath + '/deps/' + alias + '/index.js'];
+    if (result) {
+      return 'components/' + result.substring(0, result.length - '.js'.length);
+    }
+    return alias;
   };
 
+  var expand = (function() {
+    var reg = /^\.\.?(\/|$)/;
+    return function(root, name) {
+      var results = [], parts, part;
+      parts = (reg.test(name) ? root + '/' + name : name).split('/');
+      for (var i = 0, length = parts.length; i < length; i++) {
+        part = parts[i];
+        if (part === '..') {
+          results.pop();
+        } else if (part !== '.' && part !== '') {
+          results.push(part);
+        }
+      }
+      return results.join('/');
+    };
+  })();
   var dirname = function(path) {
     return path.split('/').slice(0, -1).join('/');
   };
 
   var localRequire = function(path) {
     return function(name) {
-      var dir = dirname(path);
-      var absolute = expand(dir, name);
+      var absolute = expand(dirname(path), name);
       return globals.require(absolute, path);
     };
   };
@@ -51,21 +68,26 @@
   var require = function(name, loaderPath) {
     var path = expand(name, '.');
     if (loaderPath == null) loaderPath = '/';
+    path = unalias(name, loaderPath);
 
-    if (has(cache, path)) return cache[path].exports;
-    if (has(modules, path)) return initModule(path, modules[path]);
+    if (has.call(cache, path)) return cache[path].exports;
+    if (has.call(modules, path)) return initModule(path, modules[path]);
 
     var dirIndex = expand(path, './index');
-    if (has(cache, dirIndex)) return cache[dirIndex].exports;
-    if (has(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
+    if (has.call(cache, dirIndex)) return cache[dirIndex].exports;
+    if (has.call(modules, dirIndex)) return initModule(dirIndex, modules[dirIndex]);
 
     throw new Error('Cannot find module "' + name + '" from '+ '"' + loaderPath + '"');
   };
 
-  var define = function(bundle, fn) {
+  require.alias = function(from, to) {
+    aliases[to] = from;
+  };
+
+  require.register = require.define = function(bundle, fn) {
     if (typeof bundle === 'object') {
       for (var key in bundle) {
-        if (has(bundle, key)) {
+        if (has.call(bundle, key)) {
           modules[key] = bundle[key];
         }
       }
@@ -74,21 +96,18 @@
     }
   };
 
-  var list = function() {
+  require.list = function() {
     var result = [];
     for (var item in modules) {
-      if (has(modules, item)) {
+      if (has.call(modules, item)) {
         result.push(item);
       }
     }
     return result;
   };
 
+  require.brunch = true;
   globals.require = require;
-  globals.require.define = define;
-  globals.require.register = define;
-  globals.require.list = list;
-  globals.require.brunch = true;
 })();
 require.register("actions/account_action_creator", function(exports, require, module) {
 var AccountActionCreator, AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, XHRUtils;
@@ -318,7 +337,7 @@ module.exports = ContactActionCreator = {
 });
 
 ;require.register("actions/conversation_action_creator", function(exports, require, module) {
-var AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, MessageActionCreator, MessageFlags, MessageStore, XHRUtils;
+var AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, MessageActionCreator, MessageFlags, MessageStore, XHRUtils, doPatch;
 
 AppDispatcher = require('../app_dispatcher');
 
@@ -335,6 +354,20 @@ MessageActionCreator = require('../actions/message_action_creator');
 AccountStore = require("../stores/account_store");
 
 MessageStore = require('../stores/message_store');
+
+doPatch = function(conversationID, patches, callback) {
+  return XHRUtils.conversationPatch(conversationID, patches, function(error, messages) {
+    if (error == null) {
+      AppDispatcher.handleViewAction({
+        type: ActionTypes.RECEIVE_RAW_MESSAGES,
+        value: messages
+      });
+    }
+    if (callback != null) {
+      return callback(error);
+    }
+  });
+};
 
 module.exports = {
   "delete": function(conversationID, callback) {
@@ -475,7 +508,7 @@ module.exports = {
       });
     }
   },
-  seen: function(conversationID, flags, callback) {
+  seen: function(conversationID, callback) {
     var conversation, observer, patches;
     conversation = {
       flags: []
@@ -483,19 +516,9 @@ module.exports = {
     observer = jsonpatch.observe(conversation);
     conversation.flags.push(MessageFlags.SEEN);
     patches = jsonpatch.generate(observer);
-    return XHRUtils.conversationPatch(conversationID, patches, function(error, messages) {
-      if (error == null) {
-        AppDispatcher.handleViewAction({
-          type: ActionTypes.RECEIVE_RAW_MESSAGES,
-          value: messages
-        });
-      }
-      if (callback != null) {
-        return callback(error);
-      }
-    });
+    return doPatch(conversationID, patches, callback);
   },
-  unseen: function(conversationID, flags, callback) {
+  unseen: function(conversationID, callback) {
     var conversation, observer, patches;
     conversation = {
       flags: [MessageFlags.SEEN]
@@ -503,17 +526,27 @@ module.exports = {
     observer = jsonpatch.observe(conversation);
     conversation.flags = [];
     patches = jsonpatch.generate(observer);
-    return XHRUtils.conversationPatch(conversationID, patches, function(error, messages) {
-      if (error == null) {
-        AppDispatcher.handleViewAction({
-          type: ActionTypes.RECEIVE_RAW_MESSAGES,
-          value: messages
-        });
-      }
-      if (callback != null) {
-        return callback(error);
-      }
-    });
+    return doPatch(conversationID, patches, callback);
+  },
+  flag: function(conversationID, callback) {
+    var conversation, observer, patches;
+    conversation = {
+      flags: []
+    };
+    observer = jsonpatch.observe(conversation);
+    conversation.flags.push(MessageFlags.FLAGGED);
+    patches = jsonpatch.generate(observer);
+    return doPatch(conversationID, patches, callback);
+  },
+  noflag: function(conversationID, callback) {
+    var conversation, observer, patches;
+    conversation = {
+      flags: [MessageFlags.FLAGGED]
+    };
+    observer = jsonpatch.observe(conversation);
+    conversation.flags = [];
+    patches = jsonpatch.generate(observer);
+    return doPatch(conversationID, patches, callback);
   },
   fetch: function(conversationID) {
     return XHRUtils.fetchConversation(conversationID, function(err, rawMessages) {
@@ -1767,10 +1800,10 @@ AccountConfigMain = React.createClass({
     }, button({
       className: 'btn btn-cozy action-save',
       onClick: this.props.onSubmit
-    }, buttonLabel), this.state.id != null ? button({
+    }, buttonLabel), (this.state.id != null) && (this.state.id.value != null) ? button({
       className: 'btn btn-cozy-non-default action-check',
       onClick: this.onCheck
-    }, t('account check')) : void 0), this.state.id != null ? fieldset(null, legend(null, t('account danger zone')), div({
+    }, t('account check')) : void 0), (this.state.id != null) && (this.state.id.value != null) ? fieldset(null, legend(null, t('account danger zone')), div({
       className: 'col-sm-offset-4'
     }, button({
       className: 'btn btn-default btn-danger btn-remove',
@@ -3335,6 +3368,24 @@ module.exports = Compose = React.createClass({
   componentDidMount: function() {
     return this._initCompose();
   },
+  componentDidUpdate: function() {
+    switch (this.state.focus) {
+      case 'cc':
+        setTimeout(function() {
+          return document.getElementById('compose-cc').focus();
+        }, 0);
+        return this.setState({
+          focus: ''
+        });
+      case 'bcc':
+        setTimeout(function() {
+          return document.getElementById('compose-bcc').focus();
+        }, 0);
+        return this.setState({
+          focus: ''
+        });
+    }
+  },
   componentWillUnmount: function() {
     var message;
     if (this._saveInterval) {
@@ -3477,7 +3528,7 @@ module.exports = Compose = React.createClass({
     }
     if (valid) {
       if (this.state.composeInHTML) {
-        message.html = this.state.html;
+        message.html = this._cleanHTML(this.state.html);
         message.text = messageUtils.cleanReplyText(message.html);
         message.html = messageUtils.wrapReplyHtml(message.html);
       } else {
@@ -3492,7 +3543,8 @@ module.exports = Compose = React.createClass({
         });
       } else {
         this.setState({
-          sending: true
+          sending: true,
+          isDraft: false
         });
       }
       return MessageActionCreator.send(message, (function(_this) {
@@ -3547,6 +3599,29 @@ module.exports = Compose = React.createClass({
   _autosave: function() {
     return this._doSend(true);
   },
+  _cleanHTML: function(html) {
+    var doc, image, imageSrc, images, parser, _i, _len;
+    parser = new DOMParser();
+    doc = parser.parseFromString(html, "text/html");
+    if (!doc) {
+      doc = document.implementation.createHTMLDocument("");
+      doc.documentElement.innerHTML = html;
+    }
+    if (doc) {
+      imageSrc = function(image) {
+        return image.setAttribute('src', "cid:" + image.dataset.src);
+      };
+      images = doc.querySelectorAll('IMG[data-src]');
+      for (_i = 0, _len = images.length; _i < _len; _i++) {
+        image = images[_i];
+        imageSrc(image);
+      }
+      return doc.documentElement.innerHTML;
+    } else {
+      console.error("Unable to parse HTML content of message");
+      return html;
+    }
+  },
   onDelete: function(e) {
     var confirmMessage, params, subject;
     e.preventDefault();
@@ -3584,7 +3659,7 @@ module.exports = Compose = React.createClass({
     }
   },
   onToggleCc: function(e) {
-    var toggle, _i, _len, _ref2;
+    var focus, toggle, _i, _len, _ref2;
     toggle = function(e) {
       return e.classList.toggle('shown');
     };
@@ -3593,12 +3668,14 @@ module.exports = Compose = React.createClass({
       e = _ref2[_i];
       toggle(e);
     }
+    focus = !this.state.ccShown ? 'cc' : '';
     return this.setState({
-      ccShown: !this.state.ccShown
+      ccShown: !this.state.ccShown,
+      focus: focus
     });
   },
   onToggleBcc: function(e) {
-    var toggle, _i, _len, _ref2;
+    var focus, toggle, _i, _len, _ref2;
     toggle = function(e) {
       return e.classList.toggle('shown');
     };
@@ -3607,8 +3684,10 @@ module.exports = Compose = React.createClass({
       e = _ref2[_i];
       toggle(e);
     }
+    focus = !this.state.bccShown ? 'bcc' : '';
     return this.setState({
-      bccShown: !this.state.bccShown
+      bccShown: !this.state.bccShown,
+      focus: focus
     });
   }
 });
@@ -3657,6 +3736,7 @@ ComposeEditor = React.createClass({
         contentEditable: true,
         onKeyDown: this.onKeyDown,
         onInput: onHTMLChange,
+        onBlur: onHTMLChange,
         dangerouslySetInnerHTML: {
           __html: this.state.html.value
         }
@@ -4132,7 +4212,7 @@ FilePicker = React.createClass({
       rawFileObject: file,
       generatedFileName: name,
       contentDisposition: null,
-      contentId: null,
+      contentId: file.name,
       transferEncoding: null,
       content: null,
       url: null
@@ -5379,6 +5459,7 @@ MessageList = React.createClass({
       onMark: this.onMark,
       onConversation: this.onConversation,
       onMove: this.onConversationMove,
+      displayConversations: this.props.displayConversations,
       onHeaders: this.onHeaders,
       direction: 'left'
     }) : void 0, this.props.isTrash && !this.state.edited ? div({
@@ -5624,6 +5705,18 @@ MessageList = React.createClass({
                 return ConversationActionCreator.unseen(conversationID, function(error) {
                   if (error != null) {
                     return alertError("" + (t("conversation unseen ko")) + " " + error);
+                  }
+                });
+              case 'flagged':
+                return ConversationActionCreator.flag(conversationID, function(error) {
+                  if (error != null) {
+                    return alertError("" + (t("conversation flagged ko ")) + " " + error);
+                  }
+                });
+              case 'noflag':
+                return ConversationActionCreator.noflag(conversationID, function(error) {
+                  if (error != null) {
+                    return alertError("" + (t("conversation noflag ko")) + " " + error);
                   }
                 });
             }
@@ -8015,7 +8108,8 @@ module.exports = React.createClass({
       onConversation: this.onConversation,
       onMove: this.props.onMove,
       onHeaders: this.props.onHeaders,
-      direction: 'right'
+      direction: 'right',
+      displayConversations: false
     });
   },
   renderToolboxMove: function() {
@@ -8084,6 +8178,18 @@ module.exports = React.createClass({
             return alertSuccess(t("conversation unseen ok"));
           }
         });
+      case 'flagged':
+        return ConversationActionCreator.flag(id, function(error) {
+          if (error != null) {
+            return alertError("" + (t("conversation flagged ko ")) + " " + error);
+          }
+        });
+      case 'noflag':
+        return ConversationActionCreator.noflag(id, function(error) {
+          if (error != null) {
+            return alertError("" + (t("conversation noflag ko")) + " " + error);
+          }
+        });
     }
   }
 });
@@ -8116,10 +8222,10 @@ module.exports = ToolboxActions = React.createClass({
     })), ul.apply(null, [{
       className: "dropdown-menu dropdown-menu-" + direction,
       role: 'menu'
-    }].concat(__slice.call(this.renderMarkActions()), [li({
+    }, !this.props.displayConversations ? this.renderMarkActions() : void 0, !this.props.displayConversations ? li({
       role: 'presentation',
       className: 'divider'
-    })], __slice.call(this.renderRawActions()), [li({
+    }) : void 0].concat(__slice.call(this.renderRawActions()), [li({
       role: 'presentation',
       className: 'divider'
     })], [li({
@@ -8174,10 +8280,12 @@ module.exports = ToolboxActions = React.createClass({
   renderRawActions: function() {
     var items;
     items = [];
-    items.push(li({
-      role: 'presentation',
-      className: 'dropdown-header'
-    }, t('mail action more')));
+    if (!this.props.displayConversations) {
+      items.push(li({
+        role: 'presentation',
+        className: 'dropdown-header'
+      }, t('mail action more')));
+    }
     if (this.props.messageID != null) {
       items.push(li({
         role: 'presentation'
@@ -8212,6 +8320,18 @@ module.exports = ToolboxActions = React.createClass({
       onClick: this.props.onConversation,
       'data-action': 'unseen'
     }, t('mail action conversation unseen'))));
+    items.push(li({
+      role: 'presentation'
+    }, a({
+      onClick: this.props.onConversation,
+      'data-action': 'flagged'
+    }, t('mail action conversation flagged'))));
+    items.push(li({
+      role: 'presentation'
+    }, a({
+      onClick: this.props.onConversation,
+      'data-action': 'noflag'
+    }, t('mail action conversation noflag'))));
     return items;
   },
   renderMailboxes: function() {
@@ -8886,7 +9006,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-;require.register("libs/flux/store/Store", function(exports, require, module) {
+require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -9700,6 +9820,8 @@ module.exports = {
   "mail action conversation move": "Move conversation",
   "mail action conversation seen": "Mark conversation as read",
   "mail action conversation unseen": "Mark conversation as unread",
+  "mail action conversation flagged": "Mark conversation as important",
+  "mail action conversation noflag": "Mark conversation as normal",
   "mail conversation length": "%{smart_count} message dans cette conversation. ||||\n%{smart_count} messages dans cette conversation.",
   "account new": "New account",
   "account edit": "Edit account",
@@ -9810,6 +9932,8 @@ module.exports = {
   "conversation unseen ok": "Conversation marked as unread",
   "conversation unseen ko": "Error",
   "conversation undelete": "Undo conversation deletion",
+  "conversation flagged ko": "Error",
+  "conversation noflag ko": "Error",
   "message images warning": "Display of images inside message has been blocked",
   "message images display": "Display images",
   "message html display": "Display HTML",
@@ -10007,6 +10131,8 @@ module.exports = {
   "mail action conversation move": "Déplacer la conversation",
   "mail action conversation seen": "Marquer la conversation comme lue",
   "mail action conversation unseen": "Marquer la conversation comme non lue",
+  "mail action conversation flagged": "Marquer la conversation comme importante",
+  "mail action conversation noflag": "Marquer la conversation comme normale",
   "mail conversation length": "%{smart_count} message dans cette conversation. ||||\n%{smart_count} messages dans cette conversation.",
   "account new": "Nouveau compte",
   "account edit": "Modifier le compte",
@@ -10117,6 +10243,8 @@ module.exports = {
   "conversation unseen ok": "Ok",
   "conversation unseen ko": "L'opération a échoué",
   "conversation undelete": "Annuler la suppression",
+  "conversation flagged ko": "L'opération a échoué",
+  "conversation noflag ko": "L'opération a échoué",
   "message images warning": "L'affichage des images du message a été bloqué",
   "message images display": "Afficher les images",
   "message html display": "Afficher en HTML",
@@ -12134,6 +12262,7 @@ module.exports = MessageUtils = {
           return (dest != null) && toAddresses.indexOf(dest.address) === -1;
         });
         message.bcc = [];
+        message.subject = this.getReplySubject(inReplyTo);
         message.text = separator + this.generateReplyText(text) + "\n";
         message.html = "<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + quoteStyle + "\">" + html + "</blockquote>\n<p><br /></p>";
         break;
@@ -12376,7 +12505,7 @@ module.exports = MessageUtils = {
   },
   getReplySubject: function(inReplyTo) {
     var replyPrefix, subject;
-    subject = "" + (inReplyTo.get('subject'));
+    subject = inReplyTo.get('subject') || '';
     replyPrefix = t('compose reply prefix');
     if (subject.indexOf(replyPrefix) !== 0) {
       subject = "" + replyPrefix + subject;
