@@ -11,6 +11,10 @@ log          = require('../utils/logging')(prefix: 'controllers:index')
 # with all necessary imports
 module.exports.main = (req, res, next) ->
 
+    progress = cozydb.getRequestsReindexingProgress()
+    if progress < 1
+        return res.render 'reindexing'
+
     async.series [
         (cb) -> Settings.getDefault cb
         (cb) -> cozydb.api.getCozyLocale cb
@@ -41,7 +45,7 @@ module.exports.main = (req, res, next) ->
                 window.app_env   = "#{process.env.NODE_ENV}";
             """
 
-        res.render 'index.jade', {imports}
+        res.render 'index', {imports}
 
 # trigger a refresh of all accounts
 # query.all
