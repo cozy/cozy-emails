@@ -49,8 +49,11 @@ module.exports = AccountActionCreator =
                 LayoutActionCreator.notify t('account updated'), autoclose: true
 
     check: (inputValues, accountID) ->
-        account = AccountStore.getByID accountID
-        newAccount = account.mergeDeep inputValues
+        if accountID?
+            account = AccountStore.getByID accountID
+            newAccount = account.mergeDeep(inputValues).toJS()
+        else
+            newAccount = inputValues
 
         XHRUtils.checkAccount newAccount, (error, rawAccount) ->
             if error?

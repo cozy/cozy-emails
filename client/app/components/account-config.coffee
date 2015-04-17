@@ -207,23 +207,23 @@ module.exports = React.createClass
         {accountValue, valid} = @doValidate()
 
         if valid.valid
-            if @state.id?
-                if check is true
-                    AccountActionCreator.check accountValue, @state.id
-                else
-                    AccountActionCreator.edit accountValue, @state.id
+            if check is true
+                AccountActionCreator.check accountValue, @state.id
             else
-                AccountActionCreator.create accountValue, (account) =>
-                    LAC.notify t("account creation ok"),
-                        autoclose: true
-                    @redirect
-                        direction: 'first'
-                        action: 'account.config'
-                        parameters: [
-                            account.get 'id'
-                            'mailboxes'
-                        ]
-                        fullWidth: true
+                if @state.id?
+                    AccountActionCreator.edit accountValue, @state.id
+                else
+                    AccountActionCreator.create accountValue, (account) =>
+                        LAC.notify t("account creation ok"),
+                            autoclose: true
+                        @redirect
+                            direction: 'first'
+                            action: 'account.config'
+                            parameters: [
+                                account.get 'id'
+                                'mailboxes'
+                            ]
+                            fullWidth: true
         else
             errors = {}
             setError = (error) ->
@@ -535,11 +535,10 @@ AccountConfigMain = React.createClass
                         className: 'btn btn-cozy action-save',
                         onClick: @props.onSubmit,
                         buttonLabel
-                    if @state.id? and @state.id.value?
-                        button
-                            className: 'btn btn-cozy-non-default action-check',
-                            onClick: @onCheck,
-                            t 'account check'
+                    button
+                        className: 'btn btn-cozy-non-default action-check',
+                        onClick: @onCheck,
+                        t 'account check'
                 if @state.id? and @state.id.value?
                     fieldset null,
                         legend null, t 'account danger zone'

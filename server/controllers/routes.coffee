@@ -32,7 +32,9 @@ module.exports =
         put: [accounts.fetch, accounts.edit, accounts.format]
         delete: [accounts.fetch, accounts.remove]
 
-    'account/:accountID/check':
+    # We want to allow to test parameters before saving the account
+    # so don't use accountID in this route
+    'accountUtil/check':
         put: [accounts.check]
 
     'conversation/:conversationID':
