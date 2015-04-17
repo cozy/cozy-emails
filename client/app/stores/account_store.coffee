@@ -45,19 +45,21 @@ class AccountStore extends Store
     setMailbox = (accountID, boxID, boxData) ->
 
         account = _accounts.get(accountID)
-        mailboxes = account.get('mailboxes')
-        mailboxes = mailboxes.map (box) ->
-            if box.get('id') is boxID
-                boxData.weight = box.get 'weight'
-                AccountTranslator.mailboxToImmutable boxData
-            else
-                box
-        .toOrderedMap()
+        # on account creation, sometime socket send mailboxes updates
+        # before the account has been saved locally
+        if account?
+            mailboxes = account.get('mailboxes')
+            mailboxes = mailboxes.map (box) ->
+                if box.get('id') is boxID
+                    boxData.weight = box.get 'weight'
+                    AccountTranslator.mailboxToImmutable boxData
+                else
+                    box
+            .toOrderedMap()
 
-        account = account.set 'mailboxes', mailboxes
-        _accounts = _accounts.set accountID, account
-        _refreshSelected()
-
+            account = account.set 'mailboxes', mailboxes
+            _accounts = _accounts.set accountID, account
+            _refreshSelected()
 
     _mailboxSort = (mb1, mb2) ->
         w1 = mb1.get 'weight'
