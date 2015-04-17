@@ -21,7 +21,7 @@ module.exports = React.createClass
 
     _accountFields: [
         'id', 'label', 'name', 'login', 'password',
-        'imapServer', 'imapPort', 'imapSSL', 'imapTLS',
+        'imapServer', 'imapPort', 'imapSSL', 'imapTLS', 'imapLogin',
         'smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS',
         'smtpLogin', 'smtpPassword', 'smtpMethod',
         'accountType'
@@ -56,6 +56,9 @@ module.exports = React.createClass
             'imapTLS':
                 allowEmpty: true
                 #type: 'boolean'
+            'imapLogin':
+                allowEmpty: true
+                #type: 'string'
             'smtpServer':
                 allowEmpty: false
                 #type: 'string'
@@ -315,6 +318,7 @@ AccountConfigMain = React.createClass
 
     getInitialState: ->
         state = @_propsToState(@props)
+        state.imapAdvanced = false
         state.smtpAdvanced = false
         return state
 
@@ -427,6 +431,20 @@ AccountConfigMain = React.createClass
                     type: 'checkbox'
                     onClick: (ev) =>
                         @_onServerParam ev.target, 'imap', 'tls'
+
+                div
+                    className: "form-group",
+                    a
+                        className: "col-sm-3 col-sm-offset-2 control-label clickable",
+                        onClick: @toggleIMAPAdvanced,
+                        t "account imap #{if @state.imapAdvanced then 'hide' else 'show'} advanced"
+
+                if @state.imapAdvanced
+                    AccountInput
+                        name: 'imapLogin'
+                        value: @linkState('imapLogin').value
+                        errors: @state.errors
+                        errorField: ['imap', 'imapServer', 'imapPort', 'imapLogin']
 
             fieldset null,
                 legend null, t 'account sending server'
@@ -544,6 +562,9 @@ AccountConfigMain = React.createClass
 
         if window.confirm(t 'account remove confirm')
             AccountActionCreator.remove @props.selectedAccount.get('id')
+
+    toggleIMAPAdvanced: ->
+        @setState imapAdvanced: not @state.imapAdvanced
 
     toggleSMTPAdvanced: ->
         @setState smtpAdvanced: not @state.smtpAdvanced

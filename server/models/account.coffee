@@ -18,6 +18,7 @@ class Account extends cozydb.CozyModel
         smtpLogin: String           # SMTP login, if different from default
         smtpPassword: String        # SMTP password, if different from default
         smtpMethod: String          # SMTP Auth Method
+        imapLogin: String           # IMAP login
         imapServer: String          # IMAP host
         imapPort: Number            # IMAP port
         imapSSL: Boolean            # Use SSL
