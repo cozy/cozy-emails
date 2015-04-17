@@ -48,7 +48,7 @@ module.exports = AccountActionCreator =
                 LayoutActionCreator = require '../actions/layout_action_creator'
                 LayoutActionCreator.notify t('account updated'), autoclose: true
 
-    check: (inputValues, accountID) ->
+    check: (inputValues, accountID, cb) ->
         if accountID?
             account = AccountStore.getByID accountID
             newAccount = account.mergeDeep(inputValues).toJS()
@@ -62,6 +62,8 @@ module.exports = AccountActionCreator =
             else
                 LayoutActionCreator = require '../actions/layout_action_creator'
                 LayoutActionCreator.notify t('account checked'), autoclose: true
+            if cb?
+                cb error, rawAccount
 
     remove: (accountID) ->
         AppDispatcher.handleViewAction

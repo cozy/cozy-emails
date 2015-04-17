@@ -1,5 +1,5 @@
 {div, p, h3, h4, form, label, input, button, ul, li, a, span, i,
-fieldset, legend} =
+fieldset, legend, img} =
     React.DOM
 classer = React.addons.classSet
 
@@ -126,6 +126,7 @@ module.exports = React.createClass
             validateForm: @validateForm
             onSubmit: @onSubmit
             errors: @state.errors
+            checking: @state.checking
         for field in @_accountFields
             mainOptions[field] = @linkState(field)
 
@@ -208,7 +209,9 @@ module.exports = React.createClass
 
         if valid.valid
             if check is true
-                AccountActionCreator.check accountValue, @state.id
+                @setState checking: true
+                AccountActionCreator.check accountValue, @state.id, =>
+                    @setState checking: false
             else
                 if @state.id?
                     AccountActionCreator.edit accountValue, @state.id
@@ -532,13 +535,20 @@ AccountConfigMain = React.createClass
             div className: '',
                 div className: 'col-sm-offset-4',
                     button
-                        className: 'btn btn-cozy action-save',
+                        className: 'btn btn-cozy-contrast action-save',
                         onClick: @props.onSubmit,
-                        buttonLabel
+                            span className: 'fa fa-save'
+                            span null, buttonLabel
                     button
-                        className: 'btn btn-cozy-non-default action-check',
+                        className: 'btn btn-cozy action-check',
                         onClick: @onCheck,
-                        t 'account check'
+                        if @props.checking
+                            span null,
+                                img
+                                    src: 'images/spinner-white.svg'
+                                    className: 'button-spinner'
+                        else
+                            span null, t 'account check'
                 if @state.id? and @state.id.value?
                     fieldset null,
                         legend null, t 'account danger zone'
