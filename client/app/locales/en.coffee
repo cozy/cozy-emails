@@ -375,7 +375,7 @@ module.exports =
       "tooltip forward": "Forward"
       "tooltip remove message": "Remove"
       "tooltip open attachments": "Open attachment list"
-      "tooltip open attachments": "Open attachment"
+      "tooltip open attachment": "Open attachment"
       "tooltip download attachment": "Download the attachment"
       "tooltip previous conversation": "Go to previous conversation"
       "tooltip next conversation": "Go to next conversation"
