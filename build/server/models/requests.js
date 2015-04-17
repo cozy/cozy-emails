@@ -68,6 +68,9 @@ module.exports = {
       reduce: '_count',
       map: function(doc) {
         var boxid, docDate, i, len, ref, ref1, ref2, uid, xflag;
+        if (Object.keys(doc.mailboxIDs).length === 0) {
+          emit(['nobox']);
+        }
         ref = doc.mailboxIDs;
         for (boxid in ref) {
           uid = ref[boxid];

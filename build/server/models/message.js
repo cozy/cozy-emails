@@ -317,7 +317,7 @@ module.exports = Message = (function(superClass) {
       return async.eachLimit(rows, CONCURRENT_DESTROY, function(row, cb) {
         return new Message(row.doc).removeFromMailbox({
           id: mailboxID
-        }, cb);
+        }, true, cb);
       }, function(err) {
         if (err && retries > 0) {
           log.warn("DS has crashed ? waiting 4s before try again", err);
@@ -378,7 +378,24 @@ module.exports = Message = (function(superClass) {
             return cb(null);
           });
         }
-      }, callback);
+      }, function(err) {
+        var options;
+        options = {
+          key: ['nobox'],
+          reduce: false
+        };
+        return Message.rawRequest('byMailboxRequest', options, function(err, rows) {
+          if (err) {
+            return callback(err);
+          }
+          return async.eachSeries(rows, function(row, cb) {
+            return Message.destroy(row.id, function(err) {
+              log.error('fail to destroy orphan', err);
+              return cb(null);
+            });
+          }, callback);
+        });
+      });
     });
   };
 
