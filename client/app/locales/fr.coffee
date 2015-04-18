@@ -284,6 +284,7 @@ module.exports =
       "settings plugin new name"   : "Nom du plugin"
       "settings plugin new url"    : "Url du plugin"
       # SETTINGS
+      "settings label autosaveDraft"        : "Enregistrer périodiquement les brouillons"
       "settings label composeInHTML"        : "Éditeur riche"
       "settings label composeOnTop"         : "Répondre au-dessus du message"
       "settings label desktopNotifications" : "Notifications"
