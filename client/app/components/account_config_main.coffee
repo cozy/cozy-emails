@@ -240,14 +240,20 @@ module.exports = AccountConfigMain = React.createClass
             div className: '',
                 div className: 'col-sm-offset-4',
                     button
-                        className: 'btn btn-cozy action-save',
+                        className: 'btn btn-cozy-contrast action-save',
                         onClick: @props.onSubmit,
-                        buttonLabel
-                    if @state.id? and @state.id.value?
-                        button
-                            className: 'btn btn-cozy-non-default action-check',
-                            onClick: @onCheck,
-                            t 'account check'
+                            span className: 'fa fa-save'
+                            span null, buttonLabel
+                    button
+                        className: 'btn btn-cozy action-check',
+                        onClick: @onCheck,
+                        if @props.checking
+                            span null,
+                                img
+                                    src: 'images/spinner-white.svg'
+                                    className: 'button-spinner'
+                        else
+                            span null, t 'account check'
                 if @state.id? and @state.id.value?
                     fieldset null,
                         legend null, t 'account danger zone'
@@ -278,6 +284,8 @@ module.exports = AccountConfigMain = React.createClass
     toggleSMTPAdvanced: ->
         @setState smtpAdvanced: not @state.smtpAdvanced
 
+    toggleIMAPAdvanced: ->
+        @setState imapAdvanced: not @state.imapAdvanced
 
     # Ask to main layout manager to display error as notification toasters.
     renderError: ->

@@ -171,7 +171,7 @@ module.exports = React.createClass
             titleLabel = t "account edit"
         else
             titleLabel = t "account new"
-        TitleLabel
+        titleLabel
 
 
     # Build tab navigation depending if we show the component for a new
