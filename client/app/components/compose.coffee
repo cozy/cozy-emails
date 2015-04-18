@@ -431,7 +431,8 @@ module.exports = Compose = React.createClass
                             @redirect @buildClosePanelUrl @props.layout
 
     _autosave: ->
-        @_doSend true
+        if @props.settings.get 'autosaveDraft'
+            @_doSend true
 
     # set source of attached images
     _cleanHTML: (html) ->

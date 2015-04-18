@@ -282,6 +282,7 @@ module.exports =
       "settings plugin new name"   : "Plugin Name"
       "settings plugin new url"    : "Plugin URL"
       # SETTINGS
+      "settings label autosaveDraft"        : "Save draft message while composing"
       "settings label composeInHTML"        : "Rich message editor"
       "settings label composeOnTop"         : "Reply on top of message"
       "settings label desktopNotifications" : "Notifications"
