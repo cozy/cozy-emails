@@ -28,6 +28,7 @@ Account = (function(superClass) {
     smtpLogin: String,
     smtpPassword: String,
     smtpMethod: String,
+    imapLogin: String,
     imapServer: String,
     imapPort: Number,
     imapSSL: Boolean,

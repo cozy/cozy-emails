@@ -101,7 +101,7 @@ ImapPool = (function() {
     log.debug(this.id, "makeConnection");
     this.connecting++;
     options = {
-      user: this.account.login,
+      user: this.account.imapLogin || this.account.login,
       password: this.account.password,
       host: this.account.imapServer,
       port: parseInt(this.account.imapPort),

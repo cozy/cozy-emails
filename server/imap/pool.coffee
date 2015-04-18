@@ -70,7 +70,7 @@ class ImapPool
         @connecting++
 
         options =
-            user       : @account.login
+            user       : @account.imapLogin or @account.login
             password   : @account.password
             host       : @account.imapServer
             port       : parseInt @account.imapPort

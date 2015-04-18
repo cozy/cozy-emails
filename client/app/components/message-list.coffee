@@ -253,6 +253,7 @@ MessageList = React.createClass
                                 onMark: @onMark
                                 onConversation: @onConversation
                                 onMove: @onConversationMove
+                                displayConversations: @props.displayConversations
                                 onHeaders: @onHeaders
                                 direction: 'left'
 
@@ -455,6 +456,14 @@ MessageList = React.createClass
                             ConversationActionCreator.unseen conversationID, (error) ->
                                 if error?
                                     alertError "#{t("conversation unseen ko")} #{error}"
+                        when 'flagged'
+                            ConversationActionCreator.flag conversationID, (error) ->
+                                if error?
+                                    alertError "#{t("conversation flagged ko ")} #{error}"
+                        when 'noflag'
+                            ConversationActionCreator.noflag conversationID, (error) ->
+                                if error?
+                                    alertError "#{t("conversation noflag ko")} #{error}"
 
     expungeMailbox: (e) ->
         e.preventDefault()

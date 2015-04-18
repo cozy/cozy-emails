@@ -70,7 +70,7 @@ module.exports.create = function(req, res, next) {
 module.exports.check = function(req, res, next) {
   var tmpAccount;
   tmpAccount = new Account(req.body);
-  return tmpAccount.testConnection(function(err) {
+  return tmpAccount.testConnections(function(err) {
     if (err) {
       return next(err);
     }

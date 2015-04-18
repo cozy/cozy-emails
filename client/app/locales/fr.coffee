@@ -131,6 +131,8 @@ module.exports =
       "mail action conversation seen"   : "Marquer la conversation comme lue"
       "mail action conversation unseen" : "Marquer la conversation comme
                                             non lue"
+      "mail action conversation flagged": "Marquer la conversation comme importante"
+      "mail action conversation noflag" : "Marquer la conversation comme normale"
       "mail conversation length": """
             %{smart_count} message dans cette conversation. ||||
             %{smart_count} messages dans cette conversation.
@@ -151,6 +153,8 @@ module.exports =
       "account imapServer short"    : "imap.fournisseur.tld"
       "account imapServer"          : "Serveur IMAP"
       "account imapTLS"             : "Utiliser STARTTLS"
+      "account imapLogin short"     : "Utilisateur IMAP"
+      "account imapLogin"           : "Utilisateur IMAP (s'il est différent du login)"
       "account label short"         : "Nom abrégé"
       "account label"               : "Nom du compte"
       "account login short"         : "Votre adresse électronique"
@@ -204,6 +208,8 @@ module.exports =
       "account danger zone"         : "Zone dangereuse"
       "account actions"             : "Actions"
       "account no special mailboxes": "Vous n'avez pas configuré les dossiers spéciaux"
+      "account imap hide advanced"  : "Masquer les paramètres avancés"
+      "account imap show advanced"  : "Afficher les paramètres avancés"
       "account smtp hide advanced"  : "Masquer les paramètres avancés"
       "account smtp show advanced"  : "Afficher les paramètres avancés"
       "mailbox create ok"           : "Dossier créé"
@@ -255,6 +261,8 @@ module.exports =
       "conversation unseen ok"      : "Ok"
       "conversation unseen ko"      : "L'opération a échoué"
       "conversation undelete"       : "Annuler la suppression"
+      "conversation flagged ko"     : "L'opération a échoué"
+      "conversation noflag ko"      : "L'opération a échoué"
       "message images warning"      : "L'affichage des images du message a été
                                         bloqué"
       "message images display"      : "Afficher les images"

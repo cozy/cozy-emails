@@ -183,10 +183,8 @@ module.exports =
 
     checkAccount: (account, callback) ->
 
-        rawAccount = account.toJS()
-
-        request.put "account/#{rawAccount.id}/check"
-        .send rawAccount
+        request.put "accountUtil/check"
+        .send account
         .set 'Accept', 'application/json'
         .end (res) ->
             if res.ok
