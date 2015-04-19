@@ -10,7 +10,7 @@ AccountInput = require './account_config_input'
 
 RouterMixin = require '../mixins/router_mixin'
 LayoutActionCreator = require '../actions/layout_action_creator'
-{Form, FieldSet, FormButtons} = require './basic_components'
+{Form, FieldSet, FormButtons, FormDropdown} = require './basic_components'
 
 
 state = null
@@ -194,31 +194,14 @@ module.exports = AccountConfigMain = React.createClass
                     t "account smtp #{if @state.smtpAdvanced then 'hide' else 'show'} advanced"
 
             if @state.smtpAdvanced
-                div
-                    key: "account-input-smtpMethod",
-                    className: "form-group account-item-smtpMethod ",
-                        label
-                            htmlFor: "mailbox-smtpMethod",
-                            className: "col-sm-2 col-sm-offset-2 control-label",
-                            t "account smtpMethod"
-                        div className: 'col-sm-3',
-                            div className: "dropdown",
-                                button
-                                    id: "mailbox-smtpMethod",
-                                    name: "mailbox-smtpMethod",
-                                    className: "btn btn-default dropdown-toggle"
-                                    type: "button"
-                                    "data-toggle": "dropdown",
-                                    t "account smtpMethod #{@state.smtpMethod.value}"
-                                ul className: "dropdown-menu", role: "menu",
-                                    ['PLAIN', 'NONE', 'LOGIN', 'CRAM-MD5'].map (method) =>
-                                        li
-                                            role: "presentation",
-                                                a
-                                                    'data-value': method,
-                                                    role: "menuitem",
-                                                    onClick: @onMethodChange,
-                                                    t "account smtpMethod #{method}"
+                FormDropdown
+                    prefix: 'mailbox'
+                    name: 'smtpMethod'
+                    labelText: t "account smtpMethod"
+                    defaultText: t "account smtpMethod #{@state.smtpMethod.value}"
+                    values: ['CRAM-MD5', 'LOGIN', 'NONE', 'PLAIN']
+                    onClick: @onMethodChange
+                    methodPrefix: "account smtpMethod"
 
             if @state.smtpAdvanced
                 AccountInput

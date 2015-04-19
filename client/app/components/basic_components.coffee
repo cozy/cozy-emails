@@ -1,4 +1,4 @@
-{div, h3, h4, ul, li, a, button, span, fieldset, legend} = React.DOM
+{div, h3, h4, ul, li, a, button, span, fieldset, legend, label} = React.DOM
 
 
 Container = React.createClass
@@ -110,7 +110,44 @@ FormButtons = React.createClass
                 FormButton formButton for formButton in @props.buttons
 
 
+FormDropdown = React.createClass
+
+    render: ->
+
+        div
+            key: "account-input-#{@props.name}"
+            className: "form-group account-item-#{@props.name} "
+        ,
+            label
+                htmlFor: "#{@props.prefix}-#{@props.name}",
+                className: "col-sm-2 col-sm-offset-2 control-label"
+            ,
+                @props.labelText
+            div className: 'col-sm-3',
+                div className: "dropdown",
+                    button
+                        id: "#{@props.prefix}-#{@props.name}"
+                        name: "#{@props.prefix}-#{@props.name}"
+                        className: "btn btn-default dropdown-toggle"
+                        type: "button"
+                        "data-toggle": "dropdown"
+                    ,
+                        @props.defaultText
+
+                    ul className: "dropdown-menu", role: "menu",
+                        @props.values.map (method) =>
+                            li
+                                role: "presentation",
+                                    a
+                                        'data-value': method
+                                        role: "menuitem"
+                                        onClick: @onClick
+                                    ,
+                                        t "#{@props.methodPrefix} #{method}"
+
+
+
 module.exports = {
     Title, Tabs, Container, ErrorLine, Form, FieldSet, FormButton, FormButtons,
-    SubTitle
+    SubTitle, FormDropdown
 }

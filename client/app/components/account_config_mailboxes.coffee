@@ -31,6 +31,8 @@ module.exports = AccountConfigMailboxes = React.createClass
         @setState @propsToState props
 
 
+    # Turn properties into a react state. It mainly set a n array of
+    # object for each mailbox set in the properties.
     propsToState: (props) ->
         state = props
         state.mailboxesFlat = {}
@@ -103,16 +105,19 @@ module.exports = AccountConfigMailboxes = React.createClass
                 mailboxes
 
                 li className: "row box new", key: 'new',
+
                     span
                         className: "col-xs-1 box-action add"
                         onClick: @addMailbox
                         title: t("mailbox title add"),
                             i className: 'fa fa-plus'
+
                     span
                         className: "col-xs-1 box-action cancel"
                         onClick: @undoMailbox
                         title: t("mailbox title add cancel"),
                             i className: 'fa fa-undo'
+
                     div className: 'col-xs-6',
                         input
                             id: 'newmailbox',
@@ -121,9 +126,10 @@ module.exports = AccountConfigMailboxes = React.createClass
                             className: 'form-control',
                             placeholder: t "account newmailbox placeholder"
                             onKeyDown: @onKeyDown
+
                     label
                         className: 'col-xs-2 text-center control-label',
-                        t "account newmailbox parent"
+                        T "account newmailbox parent"
 
                     div className: 'col-xs-2 text-center',
                         MailboxList
