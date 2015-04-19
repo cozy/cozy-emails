@@ -1,14 +1,12 @@
-{
-    div, p, h3, h4, form, label, input, button, ul, li, a, span, i,
-    fieldset, legend
-} = React.DOM
+{div, h4, ul, li, span, form, i, input, label} = React.DOM
 classer = React.addons.classSet
 
-MailboxList          = require './mailbox-list'
 AccountActionCreator = require '../actions/account_action_creator'
+LayoutActionCreator  = require '../actions/layout_action_creator'
 RouterMixin = require '../mixins/router_mixin'
-LAC  = require '../actions/layout_action_creator'
-classer = React.addons.classSet
+MailboxList = require './mailbox-list'
+MailboxItem = require './account_config_item'
+{SubTitle} = require './basic_components'
 
 
 module.exports = AccountConfigMailboxes = React.createClass
@@ -19,30 +17,39 @@ module.exports = AccountConfigMailboxes = React.createClass
         React.addons.LinkedStateMixin # two-way data binding
     ]
 
+
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
             not (_.isEqual(nextProps, @props))
 
-    _propsToState: (props) ->
+
+    getInitialState: ->
+        @propsToState @props
+
+
+    componentWillReceiveProps: (props) ->
+        @setState @propsToState props
+
+
+    propsToState: (props) ->
         state = props
         state.mailboxesFlat = {}
+
         if state.mailboxes.value isnt ''
+
             state.mailboxes.value.map (mailbox, key) ->
                 id = mailbox.get 'id'
                 state.mailboxesFlat[id] = {}
                 ['id', 'label', 'depth'].map (prop) ->
                     state.mailboxesFlat[id][prop] = mailbox.get prop
             .toJS()
+
         return state
 
-    getInitialState: ->
-        @_propsToState(@props)
-
-    componentWillReceiveProps: (props) ->
-        @setState @_propsToState(props)
 
     render: ->
         favorites = @state.favoriteMailboxes.value
+
         if @state.mailboxes.value isnt '' and favorites isnt ''
             mailboxes = @state.mailboxes.value.map (mailbox, key) =>
                 try
@@ -51,15 +58,23 @@ module.exports = AccountConfigMailboxes = React.createClass
                 catch error
                     console.error error, favorites
             .toJS()
+
         form className: 'form-horizontal',
 
             @renderError()
-            h4 className: 'config-title', t "account special mailboxes"
-            @_renderMailboxChoice t('account draft mailbox'), "draftMailbox"
-            @_renderMailboxChoice t('account sent mailbox'),  "sentMailbox"
-            @_renderMailboxChoice t('account trash mailbox'), "trashMailbox"
 
-            h4 className: 'config-title', t "account mailboxes"
+            SubTitle
+                className: 'config-title'
+                text: t "account special mailboxes"
+
+            @renderMailboxChoice t('account draft mailbox'), "draftMailbox"
+            @renderMailboxChoice t('account sent mailbox'),  "sentMailbox"
+            @renderMailboxChoice t('account trash mailbox'), "trashMailbox"
+
+            SubTitle
+                className: 'config-title'
+                t "account mailboxes"
+
             ul className: "folder-list list-unstyled boxes container",
                 if mailboxes?
                     li className: 'row box title', key: 'title',
@@ -84,7 +99,9 @@ module.exports = AccountConfigMailboxes = React.createClass
                         span
                             className: "col-xs-1 text-center",
                             t 'mailbox title new'
+
                 mailboxes
+
                 li className: "row box new", key: 'new',
                     span
                         className: "col-xs-1 box-action add"
@@ -107,6 +124,7 @@ module.exports = AccountConfigMailboxes = React.createClass
                     label
                         className: 'col-xs-2 text-center control-label',
                         t "account newmailbox parent"
+
                     div className: 'col-xs-2 text-center',
                         MailboxList
                             allowUndefined: true
@@ -114,6 +132,7 @@ module.exports = AccountConfigMailboxes = React.createClass
                             selectedMailboxID: @state.newMailboxParent
                             onChange: (mailbox) =>
                                 @setState newMailboxParent: mailbox
+
 
     renderError: ->
         if @props.error and @props.error.name is 'AccountConfigError'
@@ -124,7 +143,8 @@ module.exports = AccountConfigMailboxes = React.createClass
         else if Object.keys(@state.errors).length isnt 0
             div className: 'alert alert-warning', t 'account errors'
 
-    _renderMailboxChoice: (labelText, box) ->
+
+    renderMailboxChoice: (labelText, box) ->
         if @state.id? and @state.mailboxes.value isnt ''
             errorClass = if @state[box].value? then '' else 'has-error'
             div className: "form-group #{box} #{errorClass}",
@@ -147,11 +167,15 @@ module.exports = AccountConfigMailboxes = React.createClass
                             @setState newState, =>
                                 @props.onSubmit()
 
+
+    # Typing enter runs the mailbox creation process.
     onKeyDown: (evt) ->
         switch evt.key
             when "Enter"
                 @addMailbox()
 
+
+    # Save new mailbox information to the server.
     addMailbox: (event) ->
         event?.preventDefault()
 
@@ -162,16 +186,18 @@ module.exports = AccountConfigMailboxes = React.createClass
 
         AccountActionCreator.mailboxCreate mailbox, (error) =>
             if error?
-                LAC.alertError "#{t("mailbox create ko")} #{error}"
+                LayoutActionCreator.alertError "#{t("mailbox create ko")} #{error}"
             else
-                LAC.notify t("mailbox create ok"),
+                LayoutActionCreator.notify t("mailbox create ok"),
                     autoclose: true
                 @refs.newmailbox.getDOMNode().value = ''
 
+
+
+    # Undo mailbox creation (hide the mailbox creation widget).
     undoMailbox: (event) ->
         event.preventDefault()
 
         @refs.newmailbox.getDOMNode().value = ''
         @setState newMailboxParent: null
-
 

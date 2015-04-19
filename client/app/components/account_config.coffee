@@ -1,18 +1,10 @@
-{
-    div, p, h3, h4, form, label, input, button, ul, li, a, span, i,
-    fieldset, legend, img
-} = React.DOM
-classer = React.addons.classSet
-
 AccountActionCreator = require '../actions/account_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
-AccountConfigMain = require './account_config_main'
-
 {Container, Title, Tabs} = require './basic_components'
+AccountConfigMain = require './account_config_main'
 AccountConfigMailboxes = require './account_config_mailboxes'
-classer = React.addons.classSet
 
 
 module.exports = React.createClass
@@ -59,7 +51,7 @@ module.exports = React.createClass
     _accountSchema:
         properties:
             label: allowEmpty: false
-            name: aLlowEmpty: false
+            name: allowEmpty: false
             login: allowEmpty: false
             password: allowEmpty: false
             imapServer: allowEmpty: false
