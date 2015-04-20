@@ -253,13 +253,15 @@ module.exports = Compose = React.createClass
         if @state.isDraft and
            @state.id?
             if not window.confirm(t 'compose confirm keep draft')
-                MessageActionCreator.delete @state.id, (error) ->
-                    if error?
-                        LayoutActionCreator.alertError \
-                            "#{t("message action delete ko")} #{error}"
-                    else
-                        LayoutActionCreator.notify t('compose draft deleted'),
-                            autoclose: true
+                window.setTimeout =>
+                    MessageActionCreator.delete @state.id, (error) ->
+                        if error?
+                            LayoutActionCreator.alertError \
+                                "#{t("message action delete ko")} #{error}"
+                        else
+                            LayoutActionCreator.notify t('compose draft deleted'),
+                                autoclose: true
+                , 0
             else
                 if @state.originalConversationID?
                     # save one last time the draft, adding the conversationID
