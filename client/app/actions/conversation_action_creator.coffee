@@ -41,8 +41,8 @@ module.exports =
                     to: trash
                 messagesActions.push action
 
-                # move messages client-side to trash, to update UI without waiting
-                # for server response
+                # move messages client-side to trash, to update UI
+                # without waiting for server response
                 msg = message.toJS()
                 delete msg.mailboxIDs[id] for id of msg.mailboxIDs
                 msg.mailboxIDs[trash] = -1
@@ -110,10 +110,11 @@ module.exports =
                         options =
                             autoclose: true,
                             actions: [
-                                label: t 'conversation undelete'
+                                label: t 'action undo'
                                 onClick: -> MessageActionCreator.undelete()
                             ]
-                        msgOk = t('conversation move ok', subject: messages[0].subject)
+                        msgOk = t('conversation move ok',
+                            subject: messages[0].subject)
                         LayoutActionCreator.notify msgOk, options
                     if callback?
                         callback error

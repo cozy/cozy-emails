@@ -163,6 +163,7 @@ MessageList = React.createClass
                                     getUrl: getMailboxUrl
                                     mailboxes: @props.mailboxes
                                     selectedMailboxID: @props.mailboxID
+                                    ref: 'mailboxList'
 
                         # Responsive menu button
                         if not advanced and not @state.edited
@@ -243,12 +244,13 @@ MessageList = React.createClass
                                             className: 'fa fa-trash-o'
                         if @state.edited
                             ToolboxMove
+                                ref: 'listToolboxMove'
                                 mailboxes: @props.mailboxes
                                 onMove: @onMove
                                 direction: 'left'
                         if @state.edited
                             ToolboxActions
-                                ref: 'listeToolboxActions'
+                                ref: 'listToolboxActions'
                                 mailboxes: @props.mailboxes
                                 onMark: @onMark
                                 onConversation: @onConversation
@@ -295,6 +297,7 @@ MessageList = React.createClass
                         allSelected: @state.allSelected
                         displayConversations: @props.displayConversations
                         isTrash: @props.isTrash
+                        ref: 'listBody'
                         onSelect: (id, val) =>
                             selected = _.clone @state.selected
                             if val
@@ -569,6 +572,7 @@ MessageListBody = React.createClass
                 login: @props.login
                 displayConversations: @props.displayConversations
                 isTrash: @props.isTrash
+                ref: 'messageItem'
                 onSelect: (val) =>
                     @props.onSelect id, val
 
@@ -748,9 +752,15 @@ MessageItem = React.createClass
                 address.address isnt from[0]?.address
         separator = if to.length > 0 then ', ' else ' '
         span null,
-            Participants participants: from, onAdd: @addAddress
+            Participants
+                participants: from
+                onAdd: @addAddress
+                ref: 'from'
             span null, separator
-            Participants participants: to, onAdd: @addAddress
+            Participants
+                participants: to
+                onAdd: @addAddress
+                ref: 'to'
 
     addAddress: (address) ->
         ContactActionCreator.createContact address

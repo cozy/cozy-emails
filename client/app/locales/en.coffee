@@ -236,6 +236,9 @@ module.exports =
                                         one"
 
       # Message Action
+      "action undo"                 : "Undo"
+      "action undo ok"              : "Action cancelled"
+      "action undo ko"              : "Unable to undo action"
       "message action sent ok"      : "Message sent"
       "message action sent ko"      : "Error sending message: "
       "message action draft ok"     : "Message saved"
@@ -267,7 +270,7 @@ module.exports =
       "message undelete"            : "Undo message deletion"
       "message undelete ok"         : "Message undeleted"
       "message undelete error"      : "Error undoing some action"
-      "message undelete unavalable" : "Undo not available"
+      "message undelete unavailable": "Undo not available"
       "message preview title"       : "View attachments"
 
       # Settings
