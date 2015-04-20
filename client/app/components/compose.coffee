@@ -214,6 +214,8 @@ module.exports = Compose = React.createClass
         if @_saveInterval
             window.clearInterval @_saveInterval
         @_saveInterval = window.setInterval @_autosave, 30000
+        # First save of draft
+        @_autosave()
 
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
@@ -312,6 +314,7 @@ module.exports = Compose = React.createClass
             # to override the original conversationID
             state.originalConversationID = state.conversationID
 
+        state.isDraft  = true
         state.sending  = false
         state.saving   = false
         state.ccShown  = Array.isArray(state.cc) and state.cc.length > 0
