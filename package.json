@@ -1,6 +1,6 @@
 {
   "name": "cozy-emails",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "engines": [
     "node = 0.8.x"
   ],
@@ -50,7 +50,7 @@
     "coffee-script": "1.9.1",
     "brunch": "1.8.0",
     "biscotto": "2.3.1",
-    "opn":"1.0.1"
+    "opn": "1.0.1"
   },
   "scripts": {
     "test": "npm run test:server && npm run test:client",
