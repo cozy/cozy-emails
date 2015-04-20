@@ -124,6 +124,7 @@ module.exports = Compose = React.createClass
                     valueLink: @linkState 'cc'
                     label: t 'compose cc'
                     placeholder: t 'compose cc help'
+                    ref: 'cc'
 
                 MailsInput
                     id: 'compose-bcc'
@@ -131,6 +132,7 @@ module.exports = Compose = React.createClass
                     valueLink: @linkState 'bcc'
                     label: t 'compose bcc'
                     placeholder: t 'compose bcc help'
+                    ref: 'bcc'
 
                 div className: 'form-group',
                     label
@@ -159,6 +161,7 @@ module.exports = Compose = React.createClass
                         onSend: @onSend
                         composeInHTML: @state.composeInHTML
                         focus: focusEditor
+                        ref: 'editor'
 
                 div className: 'attachements',
                     FilePicker

@@ -5,7 +5,7 @@ MessageHeader  = require "./message_header"
 MessageFooter  = require "./message_footer"
 ToolbarMessage = require './toolbar_message'
 Compose        = require './compose'
-FilePicker     = require './file_picker'
+Participants   = require './participant'
 
 {ComposeActions, MessageFlags, FlagsConstants} = require '../constants/app_constants'
 
@@ -16,7 +16,6 @@ ContactActionCreator      = require '../actions/contact_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
 TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
-Participants  = require './participant'
 
 classer = React.addons.classSet
 alertError   = LayoutActionCreator.alertError
@@ -234,15 +233,24 @@ module.exports = React.createClass
         from = message.get 'from'
         to   = message.get('to').concat(message.get('cc'))
         span null,
-            Participants participants: from, onAdd: @addAddress, tooltip: true
+            Participants
+                participants: from
+                onAdd: @addAddress
+                tooltip: true
+                ref: 'from'
             span null, ', '
-            Participants participants: to, onAdd: @addAddress, tooltip: true
+            Participants
+                participants: to
+                onAdd: @addAddress
+                tooltip: true
+                ref: 'to'
 
     renderHeaders: ->
         MessageHeader
             message: @props.message
             isDraft: @state.prepared.isDraft
             isDeleted: @state.prepared.isDeleted
+            ref: 'header'
 
     renderToolbox: (full = true) ->
         return if @state.composing
@@ -258,10 +266,12 @@ module.exports = React.createClass
             onDelete:          @onDelete
             onMove:            @onMove
             onHeaders:         @onHeaders
+            ref:               'toolbarMessage'
 
     renderFooter: ->
         MessageFooter
             message: @props.message
+            ref: 'footer'
 
     renderCompose: (isDraft) ->
         if @state.composing

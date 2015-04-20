@@ -239,6 +239,9 @@ module.exports =
                                         commencez par en créer"
 
       # Message Action
+      "action undo"                 : "Annuler"
+      "action undo ok"              : "Action Annulée"
+      "action undo ko"              : "Impossible d'annuler l'action"
       "message action sent ok"      : "Message envoyé !"
       "message action sent ko"      : "Une erreur est survenue : "
       "message action draft ok"     : "Message sauvegardé !"
