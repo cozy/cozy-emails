@@ -538,7 +538,7 @@ ComposeEditor = React.createClass
 
         if @props.composeInHTML
             div
-                className: "rt-editor form-control #{folded}",
+                className: "form-control rt-editor #{folded}",
                 ref: 'html',
                 contentEditable: true,
                 onKeyDown: @onKeyDown,
