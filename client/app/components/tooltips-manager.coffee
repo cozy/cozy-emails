@@ -11,6 +11,9 @@ See https://github.com/m4dz/aria-tips#use
 module.exports = React.createClass
     displayName: 'TooltipManager'
 
+    # The tooltip's content should not change so we prevent any refresh.
+    shouldComponentUpdate: -> return false
+
     render: ->
 
         # Mounts all existing tooltips so they can be referenced by other
