@@ -107,7 +107,9 @@ module.exports = Application = React.createClass
             else
                 MessageStore.setCurrentID null
         else
-            MessageStore.setCurrentID null
+            if layout.firstPanel.action isnt 'compose'
+                # No message open, delete current message ID
+                MessageStore.setCurrentID null
 
         # Actual layout
         div className: 'container-fluid',

@@ -402,6 +402,9 @@ module.exports = Compose = React.createClass
                 @setState sending: true, isDraft: false
 
             MessageActionCreator.send message, (error, message) =>
+                if (not error?) and (not @state.id?)
+                    MessageActionCreator.setCurrent message.id
+
                 state = _.clone @state
                 if isDraft
                     state.saving = false

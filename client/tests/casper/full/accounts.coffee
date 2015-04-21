@@ -74,9 +74,9 @@ casper.test.begin 'Create account', (test) ->
             test.assertSelectorHasText "#mailbox-config h3", "New account"
             test.assertDoesntExist "#mailbox-config .nav-tabs", "No tabs"
             test.assertSelectorHasText "#mailbox-config button.action-save", "Add", "Add button"
-            test.assertDoesntExist "#mailbox-config .alert", "No error message"
+            test.assertDoesntExist ".toast-error", "No error message"
             casper.click "#mailbox-config button.action-save"
-            casper.waitForSelector "#mailbox-config .alert", ->
+            casper.waitForSelector ".toast-error", ->
                 test.pass "Error message displayed"
                 test.assertElementCount ".form-group.has-error", 6, "Errors are underlined"
                 casper.fillSelectors 'form', '#mailbox-label':  values['mailbox-label']

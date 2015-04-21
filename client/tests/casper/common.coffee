@@ -47,7 +47,7 @@ casper.cozy.selectAccount = (account, box, cb) ->
             infos = casper.getElementInfo "[data-reactid='#{id}'].active [data-mailbox-id]"
             mailboxID = infos.attributes['data-mailbox-id']
             casper.waitForSelector ".message-list[data-mailbox-id='#{mailboxID}'] li.message", ->
-                casper.waitWhileSelector ".list-footer .fa-spin", ->
+                casper.waitWhileSelector ".list-footer img", ->
                     if cb?
                         cb()
                 , ->
@@ -79,9 +79,10 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
             casper.click subjectSel
             casper.waitForSelector subjectDone, ->
                 if not (typeof messageID is 'string')
-                    infos = casper.getElementInfo subjectDone
+                    infos = casper.getElementInfo ".message-list li.active"
                     messageID = infos.attributes['data-message-id']
-                cb(subject, messageID)
+                    conversationID = infos.attributes['data-conversation-id']
+                cb(subject, messageID, conversationID)
             , ->
                 casper.test.fail "Error displaying #{subject}"
         , ->
@@ -125,28 +126,28 @@ exports.init = (casper) ->
             return
         accounts = casper.evaluate ->
             window.__tests = {}
-            if window.cozyMails?
+            #if window.cozyMails?
                 # ensure locale is english
-                window.cozyMails.setLocale 'en', true
+                #window.cozyMails.setLocale 'en', true
                 # hide toasts
-                document.querySelector(".toasts-container").classList.add 'hidden'
+                #document.querySelector(".toasts-container").classList.add 'hidden'
                 # deactivate all plugins
-                PluginUtils = require '../utils/plugin_utils'
-                for pluginName, pluginConf of window.plugins
-                    PluginUtils.deactivate pluginName
+                #PluginUtils = require '../utils/plugin_utils'
+                #for pluginName, pluginConf of window.plugins
+                #    PluginUtils.deactivate pluginName
                 # default settings
-                settings =
-                    composeInHTML        : true
-                    composeOnTop         : false
-                    desktopNotifications : false
-                    displayConversation  : true
-                    displayPreview       : true
-                    layoutStyle          : 'vertical'
-                    listStyle            : 'default'
-                    messageConfirmDelete : true
-                    messageDisplayHTML   : true
-                    messageDisplayImages : false
-                cozyMails.setSetting settings
+                #settings =
+                #    composeInHTML        : true
+                #    composeOnTop         : false
+                #    desktopNotifications : false
+                #    displayConversation  : true
+                #    displayPreview       : true
+                #    layoutStyle          : 'vertical'
+                #    listStyle            : 'default'
+                #    messageConfirmDelete : true
+                #    messageDisplayHTML   : true
+                #    messageDisplayImages : false
+                #cozyMails.setSetting settings
             return window.accounts
         if not accounts? or
         not Array.isArray accounts or
