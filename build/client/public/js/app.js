@@ -498,7 +498,7 @@ module.exports = {
             autoclose: true,
             actions: [
               {
-                label: t('conversation undelete'),
+                label: t('action undo'),
                 onClick: function() {
                   return MessageActionCreator.undelete();
                 }
@@ -2739,7 +2739,9 @@ module.exports = Application = React.createClass({
         MessageStore.setCurrentID(null);
       }
     } else {
-      MessageStore.setCurrentID(null);
+      if (layout.firstPanel.action !== 'compose') {
+        MessageStore.setCurrentID(null);
+      }
     }
     return div({
       className: 'container-fluid'
@@ -3323,13 +3325,15 @@ module.exports = Compose = React.createClass({
       className: 'compose-cc' + classCc,
       valueLink: this.linkState('cc'),
       label: t('compose cc'),
-      placeholder: t('compose cc help')
+      placeholder: t('compose cc help'),
+      ref: 'cc'
     }), MailsInput({
       id: 'compose-bcc',
       className: 'compose-bcc' + classBcc,
       valueLink: this.linkState('bcc'),
       label: t('compose bcc'),
-      placeholder: t('compose bcc help')
+      placeholder: t('compose bcc help'),
+      ref: 'bcc'
     }), div({
       className: 'form-group'
     }, label({
@@ -3357,7 +3361,8 @@ module.exports = Compose = React.createClass({
       settings: this.props.settings,
       onSend: this.onSend,
       composeInHTML: this.state.composeInHTML,
-      focus: focusEditor
+      focus: focusEditor,
+      ref: 'editor'
     })), div({
       className: 'attachements'
     }, FilePicker({
@@ -3410,6 +3415,7 @@ module.exports = Compose = React.createClass({
       window.clearInterval(this._saveInterval);
     }
     this._saveInterval = window.setInterval(this._autosave, 30000);
+    this._autosave();
     this.getDOMNode().scrollIntoView();
     if (!Array.isArray(this.state.to) || this.state.to.length === 0) {
       return setTimeout(function() {
@@ -3445,15 +3451,19 @@ module.exports = Compose = React.createClass({
     }
     if (this.state.isDraft && (this.state.id != null)) {
       if (!window.confirm(t('compose confirm keep draft'))) {
-        return MessageActionCreator["delete"](this.state.id, function(error) {
-          if (error != null) {
-            return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
-          } else {
-            return LayoutActionCreator.notify(t('compose draft deleted'), {
-              autoclose: true
+        return window.setTimeout((function(_this) {
+          return function() {
+            return MessageActionCreator["delete"](_this.state.id, function(error) {
+              if (error != null) {
+                return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
+              } else {
+                return LayoutActionCreator.notify(t('compose draft deleted'), {
+                  autoclose: true
+                });
+              }
             });
-          }
-        });
+          };
+        })(this), 0);
       } else {
         if (this.state.originalConversationID != null) {
           message = {
@@ -3514,6 +3524,7 @@ module.exports = Compose = React.createClass({
       }
       state.originalConversationID = state.conversationID;
     }
+    state.isDraft = true;
     state.sending = false;
     state.saving = false;
     state.ccShown = Array.isArray(state.cc) && state.cc.length > 0;
@@ -3602,6 +3613,9 @@ module.exports = Compose = React.createClass({
       return MessageActionCreator.send(message, (function(_this) {
         return function(error, message) {
           var key, msgKo, msgOk, state, value;
+          if ((error == null) && (_this.state.id == null)) {
+            MessageActionCreator.setCurrent(message.id);
+          }
           state = _.clone(_this.state);
           if (isDraft) {
             state.saving = false;
@@ -3649,7 +3663,9 @@ module.exports = Compose = React.createClass({
     }
   },
   _autosave: function() {
-    return this._doSend(true);
+    if (this.props.settings.get('autosaveDraft')) {
+      return this._doSend(true);
+    }
   },
   _cleanHTML: function(html) {
     var doc, image, imageSrc, images, parser, _i, _len;
@@ -3783,7 +3799,7 @@ ComposeEditor = React.createClass({
     }
     if (this.props.composeInHTML) {
       return div({
-        className: "rt-editor form-control " + folded,
+        className: "form-control rt-editor " + folded,
         ref: 'html',
         contentEditable: true,
         onKeyDown: this.onKeyDown,
@@ -5429,7 +5445,8 @@ MessageList = React.createClass({
     }, MailboxList({
       getUrl: getMailboxUrl,
       mailboxes: this.props.mailboxes,
-      selectedMailboxID: this.props.mailboxID
+      selectedMailboxID: this.props.mailboxID,
+      ref: 'mailboxList'
     })) : void 0, !advanced && !this.state.edited ? div({
       className: btnGrpClasses + ' toggle-menu-button'
     }, button({
@@ -5513,11 +5530,12 @@ MessageList = React.createClass({
     }, span({
       className: 'fa fa-trash-o'
     }))) : void 0, this.state.edited ? ToolboxMove({
+      ref: 'listToolboxMove',
       mailboxes: this.props.mailboxes,
       onMove: this.onMove,
       direction: 'left'
     }) : void 0, this.state.edited ? ToolboxActions({
-      ref: 'listeToolboxActions',
+      ref: 'listToolboxActions',
       mailboxes: this.props.mailboxes,
       onMark: this.onMark,
       onConversation: this.onConversation,
@@ -5554,6 +5572,7 @@ MessageList = React.createClass({
       allSelected: this.state.allSelected,
       displayConversations: this.props.displayConversations,
       isTrash: this.props.isTrash,
+      ref: 'listBody',
       onSelect: (function(_this) {
         return function(id, val) {
           var newState, selected;
@@ -5911,6 +5930,7 @@ MessageListBody = React.createClass({
           login: _this.props.login,
           displayConversations: _this.props.displayConversations,
           isTrash: _this.props.isTrash,
+          ref: 'messageItem',
           onSelect: function(val) {
             return _this.props.onSelect(id, val);
           }
@@ -6128,10 +6148,12 @@ MessageItem = React.createClass({
     separator = to.length > 0 ? ', ' : ' ';
     return span(null, Participants({
       participants: from,
-      onAdd: this.addAddress
+      onAdd: this.addAddress,
+      ref: 'from'
     }), span(null, separator), Participants({
       participants: to,
-      onAdd: this.addAddress
+      onAdd: this.addAddress,
+      ref: 'to'
     }));
   },
   addAddress: function(address) {
@@ -6265,7 +6287,7 @@ MessagesSort = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, MessageUtils, Participants, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
+var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, MessageUtils, Participants, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img, h4 = _ref.h4;
 
@@ -6279,7 +6301,7 @@ ToolbarMessage = require('./toolbar_message');
 
 Compose = require('./compose');
 
-FilePicker = require('./file_picker');
+Participants = require('./participant');
 
 _ref1 = require('../constants/app_constants'), ComposeActions = _ref1.ComposeActions, MessageFlags = _ref1.MessageFlags, FlagsConstants = _ref1.FlagsConstants;
 
@@ -6294,8 +6316,6 @@ ContactActionCreator = require('../actions/contact_action_creator');
 RouterMixin = require('../mixins/router_mixin');
 
 TooltipRefresherMixin = require('../mixins/tooltip_refresher_mixin');
-
-Participants = require('./participant');
 
 classer = React.addons.classSet;
 
@@ -6523,18 +6543,21 @@ module.exports = React.createClass({
     return span(null, Participants({
       participants: from,
       onAdd: this.addAddress,
-      tooltip: true
+      tooltip: true,
+      ref: 'from'
     }), span(null, ', '), Participants({
       participants: to,
       onAdd: this.addAddress,
-      tooltip: true
+      tooltip: true,
+      ref: 'to'
     }));
   },
   renderHeaders: function() {
     return MessageHeader({
       message: this.props.message,
       isDraft: this.state.prepared.isDraft,
-      isDeleted: this.state.prepared.isDeleted
+      isDeleted: this.state.prepared.isDeleted,
+      ref: 'header'
     });
   },
   renderToolbox: function(full) {
@@ -6554,12 +6577,14 @@ module.exports = React.createClass({
       onForward: this.onForward,
       onDelete: this.onDelete,
       onMove: this.onMove,
-      onHeaders: this.onHeaders
+      onHeaders: this.onHeaders,
+      ref: 'toolbarMessage'
     });
   },
   renderFooter: function() {
     return MessageFooter({
-      message: this.props.message
+      message: this.props.message,
+      ref: 'footer'
     });
   },
   renderCompose: function(isDraft) {
@@ -7524,7 +7549,7 @@ module.exports = React.createClass({
       onClick: this.handleChange
     }, a({
       role: "menuitem"
-    }, t("settings label listStyle compact")))))))), this._renderOption('displayConversation'), this._renderOption('composeInHTML'), this._renderOption('composeOnTop'), this._renderOption('messageDisplayHTML'), this._renderOption('messageDisplayImages'), this._renderOption('messageConfirmDelete'), this._renderOption('displayPreview'), this._renderOption('desktopNotifications'), fieldset(null, legend(null, t('settings plugins')), (function() {
+    }, t("settings label listStyle compact")))))))), this._renderOption('displayConversation'), this._renderOption('composeInHTML'), this._renderOption('composeOnTop'), this._renderOption('messageDisplayHTML'), this._renderOption('messageDisplayImages'), this._renderOption('messageConfirmDelete'), this._renderOption('displayPreview'), this._renderOption('desktopNotifications'), this._renderOption('autosaveDraft'), fieldset(null, legend(null, t('settings plugins')), (function() {
       var _ref1, _results;
       _ref1 = this.state.settings.plugins;
       _results = [];
@@ -7626,6 +7651,7 @@ module.exports = React.createClass({
     event.preventDefault();
     target = event.currentTarget;
     switch (target.dataset.target) {
+      case 'autosaveDraft':
       case 'composeInHTML':
       case 'composeOnTop':
       case 'desktopNotifications':
@@ -9976,6 +10002,9 @@ module.exports = {
   "config error smtpPort": "Wrong SMTP Port",
   "config error smtpServer": "Wrong SMTP Server",
   "config error nomailboxes": "No folder in this account, please create one",
+  "action undo": "Undo",
+  "action undo ok": "Action cancelled",
+  "action undo ko": "Unable to undo action",
   "message action sent ok": "Message sent",
   "message action sent ko": "Error sending message: ",
   "message action draft ok": "Message saved",
@@ -10006,7 +10035,7 @@ module.exports = {
   "message undelete": "Undo message deletion",
   "message undelete ok": "Message undeleted",
   "message undelete error": "Error undoing some action",
-  "message undelete unavalable": "Undo not available",
+  "message undelete unavailable": "Undo not available",
   "message preview title": "View attachments",
   "settings title": "Settings",
   "settings button save": "Save",
@@ -10017,6 +10046,7 @@ module.exports = {
   "settings plugin help": "Help",
   "settings plugin new name": "Plugin Name",
   "settings plugin new url": "Plugin URL",
+  "settings label autosaveDraft": "Save draft message while composing",
   "settings label composeInHTML": "Rich message editor",
   "settings label composeOnTop": "Reply on top of message",
   "settings label desktopNotifications": "Notifications",
@@ -10294,6 +10324,9 @@ module.exports = {
   "config error smtpPort": "Port du serveur d'envoi invalide",
   "config error smtpServer": "Serveur d'envoi invalide",
   "config error nomailboxes": "Ce compte n'a pas encore de dossier, commencez par en créer",
+  "action undo": "Annuler",
+  "action undo ok": "Action Annulée",
+  "action undo ko": "Impossible d'annuler l'action",
   "message action sent ok": "Message envoyé !",
   "message action sent ko": "Une erreur est survenue : ",
   "message action draft ok": "Message sauvegardé !",
@@ -10334,6 +10367,7 @@ module.exports = {
   "settings plugin help": "Documentation",
   "settings plugin new name": "Nom du plugin",
   "settings plugin new url": "Url du plugin",
+  "settings label autosaveDraft": "Enregistrer périodiquement les brouillons",
   "settings label composeInHTML": "Éditeur riche",
   "settings label composeOnTop": "Répondre au-dessus du message",
   "settings label desktopNotifications": "Notifications",
