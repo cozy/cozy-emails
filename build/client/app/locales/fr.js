@@ -62,11 +62,8 @@ module.exports = {
   "list filter": "Filtrer",
   "list filter all": "Tous",
   "list filter unseen": "Non lus",
-  "list filter unseen title": "N'afficher que les messages non lus",
   "list filter flagged": "Importants",
-  "list filter flagged title": "N'afficher que les messages importants",
   "list filter attach": "Pièces-jointes",
-  "list filter attach title": "N'afficher que les messages avec des pièces-jointes",
   "list sort": "Trier",
   "list sort date": "Date",
   "list sort subject": "Sujet",
@@ -308,5 +305,11 @@ module.exports = {
   "tooltip open attachment": "Ouvrir la pièce jointe",
   "tooltip download attachment": "Télécharger la pièce jointe",
   "tooltip previous conversation": "Aller à la conversation précédente",
-  "tooltip next conversation": "Aller à la conversation suivante"
+  "tooltip next conversation": "Aller à la conversation suivante",
+  "tooltip filter only unread": "Montrer seulement les messages non lus",
+  "tooltip filter only important": "Montrer seulement les messages importants",
+  "tooltip filter only attachment": "Montrer seulement les messages avec pièce jointe",
+  "tooltip trigger refresh": "Rafraîchir",
+  "tooltip account parameters": "Paramètres du compte",
+  "tooltip delete selection": "Supprimer les messages sélectionnés"
 };

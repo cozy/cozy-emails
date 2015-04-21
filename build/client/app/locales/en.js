@@ -62,11 +62,8 @@ module.exports = {
   "list filter": "Filter",
   "list filter all": "All",
   "list filter unseen": "Unseen",
-  "list filter unseen title": "Show only unread messages",
   "list filter flagged": "Important",
-  "list filter flagged title": "Show only Important messages",
   "list filter attach": "Attachments",
-  "list filter attach title": "Show only messages with attachments",
   "list sort": "Sort",
   "list sort date": "Date",
   "list sort subject": "Subject",
@@ -309,5 +306,11 @@ module.exports = {
   "tooltip open attachment": "Open attachment",
   "tooltip download attachment": "Download the attachment",
   "tooltip previous conversation": "Go to previous conversation",
-  "tooltip next conversation": "Go to next conversation"
+  "tooltip next conversation": "Go to next conversation",
+  "tooltip filter only unread": "Show only unread messages",
+  "tooltip filter only important": "Show only important messages",
+  "tooltip filter only attachment": "Show only messages with attachment",
+  "tooltip trigger refresh": "Refresh",
+  "tooltip account parameters": "Account parameters",
+  "tooltip delete selection": "Delete all selected messages"
 };

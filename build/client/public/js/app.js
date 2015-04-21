@@ -5205,7 +5205,7 @@ MenuMailboxItem = React.createClass({
 });
 
 ;require.register("components/message-list", function(exports, require, module) {
-var AccountActionCreator, ContactActionCreator, ConversationActionCreator, DomUtils, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageListBody, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, ToolboxActions, ToolboxMove, a, alertError, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
+var AccountActionCreator, ContactActionCreator, ConversationActionCreator, DomUtils, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageListBody, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, ToolboxActions, ToolboxMove, TooltipRefresherMixin, Tooltips, a, alertError, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p, button = _ref.button, input = _ref.input, img = _ref.img;
 
@@ -5213,13 +5213,15 @@ classer = React.addons.classSet;
 
 RouterMixin = require('../mixins/router_mixin');
 
+TooltipRefresherMixin = require('../mixins/tooltip_refresher_mixin');
+
 DomUtils = require('../utils/dom_utils');
 
 MessageUtils = require('../utils/message_utils');
 
 SocketUtils = require('../utils/socketio_utils');
 
-_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, MessageFilter = _ref1.MessageFilter, FlagsConstants = _ref1.FlagsConstants;
+_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, MessageFilter = _ref1.MessageFilter, FlagsConstants = _ref1.FlagsConstants, Tooltips = _ref1.Tooltips;
 
 AccountActionCreator = require('../actions/account_action_creator');
 
@@ -5245,7 +5247,7 @@ alertError = LayoutActionCreator.alertError;
 
 MessageList = React.createClass({
   displayName: 'MessageList',
-  mixins: [RouterMixin],
+  mixins: [RouterMixin, TooltipRefresherMixin],
   shouldComponentUpdate: function(nextProps, nextState) {
     var should;
     should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
@@ -5440,24 +5442,27 @@ MessageList = React.createClass({
       className: btnGrpClasses
     }, button({
       onClick: toggleFilterUnseen,
-      title: t('list filter unseen title'),
-      className: btnClasses + (this.state.filterUnseen ? ' shown' : void 0)
+      className: btnClasses + (this.state.filterUnseen ? ' shown' : void 0),
+      'aria-describedby': Tooltips.FILTER_ONLY_UNREAD,
+      'data-tooltip-direction': 'bottom'
     }, span({
       className: 'fa fa-envelope'
     }))) : void 0, !advanced && !this.state.edited ? div({
       className: btnGrpClasses
     }, button({
       onClick: toggleFilterFlag,
-      title: t('list filter flagged title'),
-      className: btnClasses + (this.state.filterFlag ? ' shown' : void 0)
+      className: btnClasses + (this.state.filterFlag ? ' shown' : void 0),
+      'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT,
+      'data-tooltip-direction': 'bottom'
     }, span({
       className: 'fa fa-star'
     }))) : void 0, !advanced && !this.state.edited ? div({
       className: btnGrpClasses
     }, button({
       onClick: toggleFilterAttach,
-      title: t('list filter attach title'),
-      className: btnClasses + (this.state.filterAttach ? ' shown' : void 0)
+      className: btnClasses + (this.state.filterAttach ? ' shown' : void 0),
+      'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT,
+      'data-tooltip-direction': 'bottom'
     }, span({
       className: 'fa fa-paperclip'
     }))) : void 0, advanced && !this.state.edited ? div({
@@ -5472,7 +5477,9 @@ MessageList = React.createClass({
       disabled: null,
       onClick: this.refresh
     }, span({
-      className: 'fa fa-refresh'
+      className: 'fa fa-refresh',
+      'aria-describedby': Tooltips.TRIGGER_REFRESH,
+      'data-tooltip-direction': 'bottom'
     })) : img({
       src: 'images/spinner.svg',
       alt: 'spinner',
@@ -5483,7 +5490,9 @@ MessageList = React.createClass({
       href: configMailboxUrl,
       className: btnClasses + 'mailbox-config'
     }, i({
-      className: 'fa fa-cog'
+      className: 'fa fa-cog',
+      'aria-describedby': Tooltips.ACCOUNT_PARAMETERS,
+      'data-tooltip-direction': 'bottom'
     }))) : void 0, this.state.edited ? div({
       className: btnGrpClasses
     }, button({
@@ -5495,10 +5504,12 @@ MessageList = React.createClass({
     }))) : void 0, this.state.edited ? div({
       className: btnGrpClasses
     }, button({
-      className: btnClasses + 'trash',
+      className: "" + btnClasses + "trash",
       type: 'button',
       disabled: nbSelected,
-      onClick: this.onDelete
+      onClick: this.onDelete,
+      'aria-describedby': Tooltips.DELETE_SELECTION,
+      'data-tooltip-direction': 'bottom'
     }, span({
       className: 'fa fa-trash-o'
     }))) : void 0, this.state.edited ? ToolboxMove({
@@ -8461,8 +8472,11 @@ _ref = React.DOM, div = _ref.div, p = _ref.p;
 
 module.exports = React.createClass({
   displayName: 'TooltipManager',
+  shouldComponentUpdate: function() {
+    return false;
+  },
   render: function() {
-    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')));
+    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')), this.getTooltip(Tooltips.FILTER_ONLY_UNREAD, t('tooltip filter only unread')), this.getTooltip(Tooltips.FILTER_ONLY_IMPORTANT, t('tooltip filter only important')), this.getTooltip(Tooltips.FILTER_ONLY_WITH_ATTACHMENT, t('tooltip filter only attachment')), this.getTooltip(Tooltips.TRIGGER_REFRESH, t('tooltip trigger refresh')), this.getTooltip(Tooltips.ACCOUNT_PARAMETERS, t('tooltip account parameters')), this.getTooltip(Tooltips.DELETE_SELECTION, t('tooltip delete selection')));
   },
   getTooltip: function(id, content) {
     return p({
@@ -8684,7 +8698,13 @@ module.exports = {
     OPEN_ATTACHMENT: 'TOOLTIP_OPEN_ATTACHMENT',
     DOWNLOAD_ATTACHMENT: 'TOOLTIP_DOWNLOAD_ATTACHMENT',
     PREVIOUS_CONVERSATION: 'TOOLTIP_PREVIOUS_CONVERSATION',
-    NEXT_CONVERSATION: 'TOOLTIP_NEXT_CONVERSATION'
+    NEXT_CONVERSATION: 'TOOLTIP_NEXT_CONVERSATION',
+    FILTER_ONLY_UNREAD: 'TOOLTIP_FILTER_ONLY_UNREAD',
+    FILTER_ONLY_IMPORTANT: 'TOOLTIP_FILTER_ONLY_IMPORTANT',
+    FILTER_ONLY_WITH_ATTACHMENT: 'TOOLTIP_FILTER_ONLY_WITH_ATTACHMENT',
+    TRIGGER_REFRESH: 'TOOLTIP_TRIGGER_REFRESH',
+    ACCOUNT_PARAMETERS: 'TOOLTIP_ACCOUNT_PARAMETERS',
+    DELETE_SELECTION: 'TOOLTIP_DELETE_SELECTION'
   }
 };
 });
@@ -9505,11 +9525,8 @@ module.exports = {
   "list filter": "Filter",
   "list filter all": "Alle",
   "list filter unseen": "Ungelesen",
-  "list filter unseen title": "Nur ungelesene Nachrichten anzeigen",
   "list filter flagged": "Wichtig",
-  "list filter flagged title": "Nur wichtige Nachrichten anzeigen",
   "list filter attach": "Anhänge",
-  "list filter attach title": "Nur Nachrichten mit Anhängen anzeigen",
   "list sort": "Sortieren",
   "list sort date": "Datum",
   "list sort subject": "Betreff",
@@ -9734,7 +9751,22 @@ module.exports = {
   'plugin name Keyboard shortcuts': 'Tastaturkombinationen',
   'plugin name VCard': 'Kontact VCards',
   'plugin modal close': 'Schließen',
-  'calendar unknown format': "Diese Nachricht enthält eine Einladung für ein Ereignis in einem derzeitig unbekannten Format."
+  'calendar unknown format': "Diese Nachricht enthält eine Einladung für ein Ereignis in einem derzeitig unbekannten Format.",
+  "tooltip reply": "Answer",
+  "tooltip reply all": "Answer to all",
+  "tooltip forward": "Forward",
+  "tooltip remove message": "Remove",
+  "tooltip open attachments": "Open attachment list",
+  "tooltip open attachment": "Open attachment",
+  "tooltip download attachment": "Download the attachment",
+  "tooltip previous conversation": "Go to previous conversation",
+  "tooltip next conversation": "Go to next conversation",
+  "tooltip filter only unread": "Nur ungelesene Nachrichten anzeigen",
+  "tooltip filter only important": "Nur wichtige Nachrichten anzeigen",
+  "tooltip filter only attachment": "Nur Nachrichten mit Anhängen anzeigen",
+  "tooltip trigger refresh": "Refresh",
+  "tooltip account parameters": "Account parameters",
+  "tooltip delete selection": "Delete all selected messages"
 };
 });
 
@@ -9802,11 +9834,8 @@ module.exports = {
   "list filter": "Filter",
   "list filter all": "All",
   "list filter unseen": "Unseen",
-  "list filter unseen title": "Show only unread messages",
   "list filter flagged": "Important",
-  "list filter flagged title": "Show only Important messages",
   "list filter attach": "Attachments",
-  "list filter attach title": "Show only messages with attachments",
   "list sort": "Sort",
   "list sort date": "Date",
   "list sort subject": "Subject",
@@ -10049,7 +10078,13 @@ module.exports = {
   "tooltip open attachment": "Open attachment",
   "tooltip download attachment": "Download the attachment",
   "tooltip previous conversation": "Go to previous conversation",
-  "tooltip next conversation": "Go to next conversation"
+  "tooltip next conversation": "Go to next conversation",
+  "tooltip filter only unread": "Show only unread messages",
+  "tooltip filter only important": "Show only important messages",
+  "tooltip filter only attachment": "Show only messages with attachment",
+  "tooltip trigger refresh": "Refresh",
+  "tooltip account parameters": "Account parameters",
+  "tooltip delete selection": "Delete all selected messages"
 };
 });
 
@@ -10117,11 +10152,8 @@ module.exports = {
   "list filter": "Filtrer",
   "list filter all": "Tous",
   "list filter unseen": "Non lus",
-  "list filter unseen title": "N'afficher que les messages non lus",
   "list filter flagged": "Importants",
-  "list filter flagged title": "N'afficher que les messages importants",
   "list filter attach": "Pièces-jointes",
-  "list filter attach title": "N'afficher que les messages avec des pièces-jointes",
   "list sort": "Trier",
   "list sort date": "Date",
   "list sort subject": "Sujet",
@@ -10363,7 +10395,13 @@ module.exports = {
   "tooltip open attachment": "Ouvrir la pièce jointe",
   "tooltip download attachment": "Télécharger la pièce jointe",
   "tooltip previous conversation": "Aller à la conversation précédente",
-  "tooltip next conversation": "Aller à la conversation suivante"
+  "tooltip next conversation": "Aller à la conversation suivante",
+  "tooltip filter only unread": "Montrer seulement les messages non lus",
+  "tooltip filter only important": "Montrer seulement les messages importants",
+  "tooltip filter only attachment": "Montrer seulement les messages avec pièce jointe",
+  "tooltip trigger refresh": "Rafraîchir",
+  "tooltip account parameters": "Paramètres du compte",
+  "tooltip delete selection": "Supprimer les messages sélectionnés"
 };
 });
 
