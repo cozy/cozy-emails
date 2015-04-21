@@ -2,10 +2,11 @@
 classer = React.addons.classSet
 
 RouterMixin    = require '../mixins/router_mixin'
+TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
 DomUtils       = require '../utils/dom_utils'
 MessageUtils   = require '../utils/message_utils'
 SocketUtils    = require '../utils/socketio_utils'
-{MessageFlags, MessageFilter, FlagsConstants} =
+{MessageFlags, MessageFilter, FlagsConstants, Tooltips} =
     require '../constants/app_constants'
 
 AccountActionCreator      = require '../actions/account_action_creator'
@@ -26,7 +27,7 @@ alertError   = LayoutActionCreator.alertError
 MessageList = React.createClass
     displayName: 'MessageList'
 
-    mixins: [RouterMixin]
+    mixins: [RouterMixin, TooltipRefresherMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
         should = not(_.isEqual(nextState, @state)) or
@@ -178,22 +179,25 @@ MessageList = React.createClass
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterUnseen
-                                    title: t 'list filter unseen title'
                                     className: btnClasses + if @state.filterUnseen then ' shown',
+                                    'aria-describedby': Tooltips.FILTER_ONLY_UNREAD
+                                    'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-envelope'
                         if not advanced and not @state.edited
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterFlag
-                                    title: t 'list filter flagged title'
                                     className: btnClasses + if @state.filterFlag then ' shown',
+                                    'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT
+                                    'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-star'
                         if not advanced and not @state.edited
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterAttach
-                                    title: t 'list filter attach title'
                                     className: btnClasses + if @state.filterAttach then ' shown',
+                                    'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT
+                                    'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-paperclip'
                         if advanced and not @state.edited
                             div className: btnGrpClasses,
@@ -212,7 +216,10 @@ MessageList = React.createClass
                                         type: 'button',
                                         disabled: null,
                                         onClick: @refresh,
-                                            span className: 'fa fa-refresh'
+                                            span
+                                                className: 'fa fa-refresh'
+                                                'aria-describedby': Tooltips.TRIGGER_REFRESH
+                                                'data-tooltip-direction': 'bottom'
                                 else
                                     img
                                         src: 'images/spinner.svg'
@@ -224,7 +231,10 @@ MessageList = React.createClass
                                 a
                                     href: configMailboxUrl
                                     className: btnClasses + 'mailbox-config',
-                                    i className: 'fa fa-cog'
+                                    i
+                                        className: 'fa fa-cog'
+                                        'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
+                                        'data-tooltip-direction': 'bottom'
                         if @state.edited
                             div className: btnGrpClasses,
                                 button
@@ -235,12 +245,13 @@ MessageList = React.createClass
                         if @state.edited
                             div className: btnGrpClasses,
                                 button
-                                    className: btnClasses + 'trash',
-                                    type: 'button',
+                                    className: "#{btnClasses}trash"
+                                    type: 'button'
                                     disabled: nbSelected
-                                    onClick: @onDelete,
-                                        span
-                                            className: 'fa fa-trash-o'
+                                    onClick: @onDelete
+                                    'aria-describedby': Tooltips.DELETE_SELECTION
+                                    'data-tooltip-direction': 'bottom',
+                                        span className: 'fa fa-trash-o'
                         if @state.edited
                             ToolboxMove
                                 mailboxes: @props.mailboxes
