@@ -3175,7 +3175,7 @@ module.exports = React.createClass({
       }, this.renderIcon(), a({
         href: "" + this.props.file.url + "?download=1",
         'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT,
-        'data-tooltip-direction': 'top'
+        'data-tooltip-direction': 'left'
       }, "" + this.props.file.generatedFileName + "\n(" + (this.displayFilesize(this.props.file.length)) + ")"));
     }
   },
@@ -6949,7 +6949,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message_header", function(exports, require, module) {
-var AttachmentPreview, ContactStore, MessageFlags, MessageUtils, Tooltips, a, div, i, img, li, span, table, tbody, td, tr, ul, _ref, _ref1,
+var AttachmentPreview, MessageFlags, MessageUtils, ParticipantMixin, PopupMessageDetails, Tooltips, a, div, i, img, li, span, table, tbody, td, tr, ul, _ref, _ref1,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice;
 
@@ -6959,12 +6959,15 @@ MessageUtils = require('../utils/message_utils');
 
 AttachmentPreview = require('./attachement_preview');
 
-ContactStore = require('../stores/contact_store');
+PopupMessageDetails = require('./popup_message_details');
+
+ParticipantMixin = require('../mixins/participant_mixin');
 
 _ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, Tooltips = _ref1.Tooltips;
 
 module.exports = React.createClass({
   displayName: 'MessageHeader',
+  mixins: [ParticipantMixin],
   propTypes: {
     message: React.PropTypes.object.isRequired,
     isDraft: React.PropTypes.bool,
@@ -6972,7 +6975,6 @@ module.exports = React.createClass({
   },
   getInitialState: function() {
     return {
-      showDetails: false,
       showAttachements: false
     };
   },
@@ -6998,57 +7000,9 @@ module.exports = React.createClass({
       className: 'fa fa-trash'
     }) : void 0), div({
       className: 'date'
-    }, MessageUtils.formatDate(this.props.message.get('createdAt'))), this.renderDetailsPopup()));
-  },
-  formatUsers: function(users) {
-    var contact, format, items, user, _i, _len;
-    if (users == null) {
-      return;
-    }
-    format = function(user) {
-      var items, key;
-      items = [];
-      if (user.name) {
-        key = user.address.replace(/\W/g, '');
-        items.push("" + user.name + " ");
-        items.push(span({
-          className: 'contact-address',
-          key: key
-        }, i({
-          className: 'fa fa-angle-left'
-        }), user.address, i({
-          className: 'fa fa-angle-right'
-        })));
-      } else {
-        items.push(user.address);
-      }
-      return items;
-    };
-    if (_.isArray(users)) {
-      items = [];
-      for (_i = 0, _len = users.length; _i < _len; _i++) {
-        user = users[_i];
-        contact = ContactStore.getByAddress(user.address);
-        items.push(contact != null ? a({
-          target: '_blank',
-          href: "/#apps/contacts/contact/" + (contact.get('id')),
-          onClick: function(event) {
-            return event.stopPropagation();
-          }
-        }, format(user)) : span({
-          className: 'participant',
-          onClick: function(event) {
-            return event.stopPropagation();
-          }
-        }, format(user)));
-        if (user !== _.last(users)) {
-          items.push(", ");
-        }
-      }
-      return items;
-    } else {
-      return format(users);
-    }
+    }, MessageUtils.formatDate(this.props.message.get('createdAt'))), PopupMessageDetails({
+      message: this.props.message
+    })));
   },
   renderAddress: function(field) {
     var users;
@@ -7094,78 +7048,6 @@ module.exports = React.createClass({
       }
       return _results;
     })())));
-  },
-  renderDetailsPopup: function() {
-    var cc, dest, from, key, reply, row, to, _ref2;
-    from = this.props.message.get('from')[0];
-    to = this.props.message.get('to');
-    cc = this.props.message.get('cc');
-    reply = (_ref2 = this.props.message.get('reply-to')) != null ? _ref2[0] : void 0;
-    row = function(id, value, label, rowSpan) {
-      var attrs, items;
-      if (label == null) {
-        label = false;
-      }
-      if (rowSpan == null) {
-        rowSpan = false;
-      }
-      items = [];
-      if (label) {
-        attrs = {
-          className: 'label'
-        };
-        if (rowSpan) {
-          attrs.rowSpan = rowSpan;
-        }
-        items.push(td(attrs, t(label)));
-      }
-      items.push(td({
-        key: "cell-" + id
-      }, value));
-      return tr.apply(null, [{
-        key: "row-" + id
-      }].concat(__slice.call(items)));
-    };
-    return div({
-      className: 'details',
-      'aria-expanded': this.state.showDetails,
-      onClick: function(event) {
-        return event.stopPropagation();
-      }
-    }, i({
-      className: 'btn fa fa-caret-down',
-      onClick: this.toggleDetails
-    }), div({
-      className: 'popup',
-      'aria-hidden': !this.state.showDetails
-    }, table(null, tbody(null, row('from', this.formatUsers(from), 'headers from'), to.length ? row('to', this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
-      var _i, _len, _ref3, _results;
-      if (to.length) {
-        _ref3 = to.slice(1);
-        _results = [];
-        for (key = _i = 0, _len = _ref3.length; _i < _len; key = ++_i) {
-          dest = _ref3[key];
-          _results.push(row("destTo" + key, this.formatUsers(dest)));
-        }
-        return _results;
-      }
-    }).call(this), cc.length ? row('cc', this.formatUsers(cc[0]), 'headers cc', cc.length) : void 0, (function() {
-      var _i, _len, _ref3, _results;
-      if (cc.length) {
-        _ref3 = cc.slice(1);
-        _results = [];
-        for (key = _i = 0, _len = _ref3.length; _i < _len; key = ++_i) {
-          dest = _ref3[key];
-          _results.push(row("destCc" + key, this.formatUsers(dest)));
-        }
-        return _results;
-      }
-    }).call(this), reply != null ? row('reply', this.formatUsers(reply), 'headers reply-to') : void 0, row('created', this.props.message.get('createdAt'), 'headers date'), row('subject', this.props.message.get('subject'), 'headers subject')))));
-  },
-  toggleDetails: function() {
-    return this.setState({
-      showDetails: !this.state.showDetails
-    });
   },
   toggleAttachments: function() {
     return this.setState({
@@ -7370,6 +7252,102 @@ Participants = React.createClass({
 });
 
 module.exports = Participants;
+});
+
+;require.register("components/popup_message_details", function(exports, require, module) {
+var ParticipantMixin, div, i, table, tbody, td, tr, _ref,
+  __slice = [].slice;
+
+_ref = React.DOM, div = _ref.div, table = _ref.table, tbody = _ref.tbody, tr = _ref.tr, td = _ref.td, i = _ref.i;
+
+ParticipantMixin = require('../mixins/participant_mixin');
+
+module.exports = React.createClass({
+  displayName: 'MessageDetailsPopup',
+  mixins: [ParticipantMixin, OnClickOutside],
+  getInitialState: function() {
+    return {
+      showDetails: false
+    };
+  },
+  toggleDetails: function() {
+    return this.setState({
+      showDetails: !this.state.showDetails
+    });
+  },
+  handleClickOutside: function() {
+    return this.setState({
+      showDetails: false
+    });
+  },
+  render: function() {
+    var cc, dest, from, key, reply, row, to, _ref1;
+    from = this.props.message.get('from')[0];
+    to = this.props.message.get('to');
+    cc = this.props.message.get('cc');
+    reply = (_ref1 = this.props.message.get('reply-to')) != null ? _ref1[0] : void 0;
+    row = function(id, value, label, rowSpan) {
+      var attrs, items;
+      if (label == null) {
+        label = false;
+      }
+      if (rowSpan == null) {
+        rowSpan = false;
+      }
+      items = [];
+      if (label) {
+        attrs = {
+          className: 'label'
+        };
+        if (rowSpan) {
+          attrs.rowSpan = rowSpan;
+        }
+        items.push(td(attrs, t(label)));
+      }
+      items.push(td({
+        key: "cell-" + id
+      }, value));
+      return tr.apply(null, [{
+        key: "row-" + id
+      }].concat(__slice.call(items)));
+    };
+    return div({
+      className: 'details',
+      'aria-expanded': this.state.showDetails,
+      onClick: function(event) {
+        return event.stopPropagation();
+      }
+    }, i({
+      className: 'btn fa fa-caret-down',
+      onClick: this.toggleDetails
+    }), div({
+      className: 'popup',
+      'aria-hidden': !this.state.showDetails
+    }, table(null, tbody(null, row('from', this.formatUsers(from), 'headers from'), to.length ? row('to', this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
+      var _i, _len, _ref2, _results;
+      if (to.length) {
+        _ref2 = to.slice(1);
+        _results = [];
+        for (key = _i = 0, _len = _ref2.length; _i < _len; key = ++_i) {
+          dest = _ref2[key];
+          _results.push(row("destTo" + key, this.formatUsers(dest)));
+        }
+        return _results;
+      }
+    }).call(this), cc.length ? row('cc', this.formatUsers(cc[0]), 'headers cc', cc.length) : void 0, (function() {
+      var _i, _len, _ref2, _results;
+      if (cc.length) {
+        _ref2 = cc.slice(1);
+        _results = [];
+        for (key = _i = 0, _len = _ref2.length; _i < _len; key = ++_i) {
+          dest = _ref2[key];
+          _results.push(row("destCc" + key, this.formatUsers(dest)));
+        }
+        return _results;
+      }
+    }).call(this), reply != null ? row('reply', this.formatUsers(reply), 'headers reply-to') : void 0, row('created', this.props.message.get('createdAt'), 'headers date'), row('subject', this.props.message.get('subject'), 'headers subject')))));
+  }
+});
 });
 
 ;require.register("components/search-form", function(exports, require, module) {
@@ -10068,7 +10046,7 @@ module.exports = {
   "tooltip forward": "Forward",
   "tooltip remove message": "Remove",
   "tooltip open attachments": "Open attachment list",
-  "tooltip open attachments": "Open attachment",
+  "tooltip open attachment": "Open attachment",
   "tooltip download attachment": "Download the attachment",
   "tooltip previous conversation": "Go to previous conversation",
   "tooltip next conversation": "Go to next conversation"
@@ -10386,6 +10364,71 @@ module.exports = {
   "tooltip download attachment": "Télécharger la pièce jointe",
   "tooltip previous conversation": "Aller à la conversation précédente",
   "tooltip next conversation": "Aller à la conversation suivante"
+};
+});
+
+;require.register("mixins/participant_mixin", function(exports, require, module) {
+
+/*
+    Participant mixin.
+ */
+var ContactStore, a, i, span, _ref;
+
+_ref = React.DOM, span = _ref.span, a = _ref.a, i = _ref.i;
+
+ContactStore = require('../stores/contact_store');
+
+module.exports = {
+  formatUsers: function(users) {
+    var contact, format, items, user, _i, _len;
+    if (users == null) {
+      return;
+    }
+    format = function(user) {
+      var items, key;
+      items = [];
+      if (user.name) {
+        key = user.address.replace(/\W/g, '');
+        items.push("" + user.name + " ");
+        items.push(span({
+          className: 'contact-address',
+          key: key
+        }, i({
+          className: 'fa fa-angle-left'
+        }), user.address, i({
+          className: 'fa fa-angle-right'
+        })));
+      } else {
+        items.push(user.address);
+      }
+      return items;
+    };
+    if (_.isArray(users)) {
+      items = [];
+      for (_i = 0, _len = users.length; _i < _len; _i++) {
+        user = users[_i];
+        contact = ContactStore.getByAddress(user.address);
+        items.push(contact != null ? a({
+          target: '_blank',
+          href: "/#apps/contacts/contact/" + (contact.get('id')),
+          onClick: function(event) {
+            return event.stopPropagation();
+          }
+        }, format(user)) : span({
+          className: 'participant',
+          onClick: function(event) {
+            return event.stopPropagation();
+          }
+        }, format(user)));
+        if (user !== _.last(users)) {
+          items.push(", ");
+        }
+      }
+      return items;
+    } else {
+      return format(users);
+    }
+  }
 };
 });
 
