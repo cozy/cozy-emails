@@ -18,10 +18,11 @@ module.exports = AccountConfigMailboxes = React.createClass
     ]
 
 
+    # Do not update component if nothing has changed.
     shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
-
+        isNextState = _.isEqual nextState, @state
+        isNextProps = _.isEqual nextProps, @props
+        return not (isNextState and isNextProps)
 
     getInitialState: ->
         @propsToState @props

@@ -75,6 +75,7 @@ module.exports = React.createClass
         return @accountToState null
 
 
+    # Do not update component if nothing has changed.
     shouldComponentUpdate: (nextProps, nextState) ->
         isNextState = _.isEqual nextState, @state
         isNextProps = _.isEqual nextProps, @props
@@ -231,21 +232,20 @@ module.exports = React.createClass
         valid = valid: null
         accountValue = null
 
-        if Object.keys(@state.errors).length isnt 0
-            {accountValue, valid} = @doValidate()
+        {accountValue, valid} = @doValidate()
 
-            if valid.valid
-                @setState errors: {}
+        if valid.valid
+            @setState errors: {}
 
-            else
-                errors = {}
-                for error in valid.errors
-                    errors[error.property] = t "validate #{error.message}"
+        else
+            errors = {}
+            for error in valid.errors
+                errors[error.property] = t "validate #{error.message}"
 
-                if Object.keys(errors).length > 0
-                    LayoutActionCreator.alertError t 'account errors'
+            if Object.keys(errors).length > 0
+                LayoutActionCreator.alertError t 'account errors'
 
-                @setState errors: errors
+            @setState errors: errors
 
         return {accountValue, valid}
 

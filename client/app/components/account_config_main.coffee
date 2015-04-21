@@ -24,10 +24,10 @@ module.exports = AccountConfigMain = React.createClass
     ]
 
 
-    # Do not update component twice if it is already updating.
+    # Do not update component if nothing has changed.
     shouldComponentUpdate: (nextProps, nextState) ->
-        isNextState = not _.isEqual nextState, @state
-        isNextProps = not _.isEqual nextProps, @props
+        isNextState = _.isEqual nextState, @state
+        isNextProps = _.isEqual nextProps, @props
         return not (isNextState and isNextProps)
 
 

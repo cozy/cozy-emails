@@ -1,4 +1,5 @@
 {div, label, input} = React.DOM
+{ErrorLine} = require './basic_components'
 classer = React.addons.classSet
 
 RouterMixin = require '../mixins/router_mixin'
@@ -58,9 +59,19 @@ module.exports = AccountInput = React.createClass
                         type: type
                         onClick: @props.onClick
 
-            if @state.errors[errorField]?
-                ErrorLine text: @state.errors[errorField]
+            @renderError errorField
 
+
+    renderError: (errorField) ->
+        result = []
+        if Array.isArray errorField
+            for error in errorField
+                if @state.errors?[error]?
+                    result.push ErrorLine text: @state.errors[error]
+        else
+            if @state.errors?[errorField]?
+                result.push ErrorLine text: @state.errors[errorField]
+        result
 
     # Add error class if errors are listed.
     buildMainClasses: (fields) ->
