@@ -19,13 +19,6 @@ module.exports = MailboxItem = React.createClass
         mailbox: React.PropTypes.object
 
 
-   # Do not update component if nothing has changed.
-   #shouldComponentUpdate: (nextProps, nextState) ->
-        #isNextState = _.isEqual nextState, @state
-        #isNextProps = _.isEqual nextProps, @props
-        #return not (isNextState and isNextProps)
-
-
     getInitialState: ->
         return {
             edited: false
