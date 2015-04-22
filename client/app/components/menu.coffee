@@ -1,4 +1,4 @@
-{div, ul, li, a, span, i} = React.DOM
+{div, aside, ul, li, a, span, i} = React.DOM
 
 classer = React.addons.classSet
 
@@ -88,13 +88,13 @@ module.exports = Menu = React.createClass
             modal = Modal {title, subtitle, content, closeModal, closeLabel}
         else
             modal = null
-        classes = classer
-            'hidden-xs hidden-sm': not @props.isResponsiveMenuShown
-            'collapsed': @props.disposition.type isnt Dispositions.THREE
-            'expanded': @props.disposition.type is Dispositions.THREE
-            'three': @props.disposition.type is Dispositions.THREE
+        # classes = classer
+        #     'hidden-xs hidden-sm': not @props.isResponsiveMenuShown
+        #     'collapsed': @props.disposition.type isnt Dispositions.THREE
+        #     'expanded': @props.disposition.type is Dispositions.THREE
+        #     'three': @props.disposition.type is Dispositions.THREE
 
-        div id: 'menu', className: classes,
+        aside 'aria-expanded': 'false',
 
             modal
 
@@ -110,14 +110,6 @@ module.exports = Menu = React.createClass
                 className: 'menu-item new-account-action ' + newMailboxClass,
                     i className: 'fa fa-inbox'
                     span className: 'item-label', t 'menu account new'
-
-            # #201: remove settings panel
-            #a
-            #    href: settingsUrl,
-            #    onClick: @_hideMenu
-            #    className: 'menu-item settings-action ' + settingsClass,
-            #        i className: 'fa fa-cog'
-            #        span className: 'item-label', t 'menu settings'
 
 
     # renders a single account and its submenu
