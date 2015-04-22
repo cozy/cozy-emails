@@ -75,13 +75,13 @@ module.exports = AccountConfigMain = React.createClass
                 name: 'label'
                 value: @linkState('label').value
                 errors: @state.errors
-                validateForm: @props.validateForm
+                onBlur: @props.onBlur
 
             AccountInput
                 name: 'name'
                 value: @linkState('name').value
                 errors: @state.errors
-                validateForm: @props.validateForm
+                onBlur: @props.onBlur
 
             AccountInput
                 name: 'login'
@@ -89,7 +89,6 @@ module.exports = AccountConfigMain = React.createClass
                 errors: @state.errors
                 type: 'email'
                 errorField: ['login', 'auth']
-                validateForm: @props.validateForm
                 onBlur: @discover
 
             AccountInput
@@ -98,7 +97,7 @@ module.exports = AccountConfigMain = React.createClass
                 errors: @state.errors
                 type: 'password'
                 errorField: ['password', 'auth']
-                validateForm: @props.validateForm
+                onBlur: @props.onBlur
 
             AccountInput
                 name: 'accountType'
@@ -106,13 +105,16 @@ module.exports = AccountConfigMain = React.createClass
                 errors: @state.errors
 
             if @state.displayGMAILSecurity
-                FieldSet text: t 'gmail security tile'
-                p null, t('gmail security body', login: @state.login.value)
-                p null,
-                    a
-                        target: '_blank',
-                        href: "https://www.google.com/settings/security/lesssecureapps"
-                        t 'gmail security link'
+                url = "https://www.google.com/settings/security/lesssecureapps"
+                [
+                    FieldSet text: t 'gmail security tile'
+                    p null, t('gmail security body', login: @state.login.value)
+                    p null,
+                        a
+                            target: '_blank',
+                            href: url
+                            t 'gmail security link'
+                ]
 
 
             FieldSet text: t 'account receiving server'
@@ -122,12 +124,15 @@ module.exports = AccountConfigMain = React.createClass
                 value: @linkState('imapServer').value
                 errors: @state.errors
                 errorField: ['imap', 'imapServer', 'imapPort']
+                onBlur: @props.onBlur
 
             AccountInput
                 name: 'imapPort'
                 value: @linkState('imapPort').value
                 errors: @state.errors
-                onBlur: @_onimapPort
+                onBlur: =>
+                    @_onimapPort
+                    @props.onBlur?()
                 onInput: =>
                     @setState imapManualPort: true
 
@@ -161,12 +166,15 @@ module.exports = AccountConfigMain = React.createClass
                     'smtpLogin'
                     'smtpPassword'
                 ]
+                onBlur: @props.onBlur
 
             AccountInput
                 name: 'smtpPort'
                 value: @linkState('smtpPort').value
                 errors: @state.errors
-                onBlur: @_onSMTPPort
+                onBlur: =>
+                    @props.onBlur()
+                    @_onSMTPPort
                 onInput: =>
                     @setState smtpManualPort: true
 
@@ -199,7 +207,7 @@ module.exports = AccountConfigMain = React.createClass
                     name: 'smtpMethod'
                     labelText: t "account smtpMethod"
                     defaultText: t "account smtpMethod #{@state.smtpMethod.value}"
-                    values: ['CRAM-MD5', 'LOGIN', 'NONE', 'PLAIN']
+                    values: ['NONE', 'CRAM-MD5', 'LOGIN', 'PLAIN']
                     onClick: @onMethodChange
                     methodPrefix: "account smtpMethod"
 
@@ -247,6 +255,7 @@ module.exports = AccountConfigMain = React.createClass
                     default: false
                     danger: false
                     spinner: @props.checking
+                    onClick: @onCheck
                     icon: 'ellipsis-h'
                     text: t 'account check'
                 ]
@@ -267,41 +276,28 @@ module.exports = AccountConfigMain = React.createClass
                         text: t "account remove"
                     ]
 
-    # Ask to main layout manager to display error as notification toasters.
-    renderError: ->
-        if @props?.error and @props.error.name is 'AccountConfigError'
-            message = t "config error #{@props.error.field}"
-            LayoutActionCreator.alertError message
-
-        else if @props?.error
-            LayoutActionCreator.alertError @props.error.message
-
-        else if Object.keys(@state.errors).length isnt 0
-            LayoutActionCreator.alertError t 'account errors'
-
 
     # Run form submission process described in parent component.
     # Check for errors before.
     onSubmit: (event) ->
-         @renderError()
-         @props.onSubmit event, false
+        @props.onSubmit event, false
 
 
     # Run form submission process described in parent component. This one
     # checks that current parameters are working well.
     # Check for errors before.
     onCheck: (event) ->
-        @renderError()
         @props.onSubmit event, true
 
 
     onMethodChange: (event) ->
+        console.log "blash"
         @state.smtpMethod.requestChange event.target.dataset.value
 
 
     # Ask for confirmation before running remove operation.
     onRemove: (event) ->
-        event.preventDefault() if event?
+        event?.preventDefault()
 
         if window.confirm(t 'account remove confirm')
             AccountActionCreator.remove @props.selectedAccount.get('id')
@@ -320,8 +316,6 @@ module.exports = AccountConfigMain = React.createClass
     # Attempt to discover default values depending on target server.
     # The target server is guessed by the email given by the user.
     discover: (event) ->
-        @props.validateForm event
-
         login = @state.login.value
         domain = login.split('@')[1] if login?.indexOf '@' >= 0
 
@@ -330,6 +324,8 @@ module.exports = AccountConfigMain = React.createClass
 
             AccountActionCreator.discover domain, (err, provider) =>
                 @setDefaultValues provider if not err?
+
+        @props.onBlur?()
 
 
     # Set default values based on ones given in parameter.
@@ -408,9 +404,6 @@ module.exports = AccountConfigMain = React.createClass
 
         # Apply built values to current state
         @state[key].requestChange val for key, val of infos
-
-        # Run form validation.
-        @props.validateForm()
 
 
     # Configure port automatically depending on selected paramerters.

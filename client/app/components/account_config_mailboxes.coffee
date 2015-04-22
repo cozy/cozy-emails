@@ -130,7 +130,7 @@ module.exports = AccountConfigMailboxes = React.createClass
 
                     label
                         className: 'col-xs-2 text-center control-label',
-                        T "account newmailbox parent"
+                        t "account newmailbox parent"
 
                     div className: 'col-xs-2 text-center',
                         MailboxList

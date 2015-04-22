@@ -53,6 +53,7 @@ module.exports.create = (req, res, next) ->
 # check account parameters
 module.exports.check = (req, res, next) ->
     tmpAccount = new Account req.body
+    console.log tmpAccount
     tmpAccount.testConnections (err) ->
         return next err if err
         res.send check: 'ok'

@@ -128,6 +128,11 @@ module.exports = React.createClass
                 AccountConfigMailboxes mailboxesOptions
 
 
+    # Ask to main layout manager to display error as notification toasters.
+    renderError: (errors) ->
+        LayoutActionCreator.alertError t 'account errors'
+
+
     # Build options shared by both tabs.
     buildMainOptions: (options) ->
 
@@ -136,6 +141,7 @@ module.exports = React.createClass
             selectedAccount: @props.selectedAccount
             validateForm: @validateForm
             onSubmit: @onSubmit
+            onBlur: @onFieldBlurred
             errors: @state.errors
             checking: @state.checking
 
@@ -197,8 +203,13 @@ module.exports = React.createClass
                 url: tabMailboxUrl
                 text: t "account tab mailboxes"
         ]
-
         return tabs
+
+
+    # When a field changes, if the form was not submitted, nothing happens,
+    # it the form was submitted on time, we run the whole validation again.
+    onFieldBlurred: ->
+        @validateForm() if @state.submitted
 
 
     # Form submission displays errors if form values are wrong.
@@ -208,7 +219,10 @@ module.exports = React.createClass
     onSubmit: (event, check) ->
         event.preventDefault() if event?
 
-        {accountValue, valid} = @validateForm()
+        {accountValue, valid, errors} = @validateForm()
+
+        if Object.keys(errors).length > 0
+            @renderError errors
 
         if valid.valid
 
@@ -228,9 +242,11 @@ module.exports = React.createClass
     # Returns form values and the valid object as result.
     validateForm: (event) ->
         event.preventDefault() if event?
+        @setState submitted: true
 
         valid = valid: null
         accountValue = null
+        errors = {}
 
         {accountValue, valid} = @doValidate()
 
@@ -242,12 +258,9 @@ module.exports = React.createClass
             for error in valid.errors
                 errors[error.property] = t "validate #{error.message}"
 
-            if Object.keys(errors).length > 0
-                LayoutActionCreator.alertError t 'account errors'
-
             @setState errors: errors
 
-        return {accountValue, valid}
+        return {accountValue, valid, errors}
 
 
     # Check if all fields are valid. It returns an object with field values and

@@ -1,4 +1,17 @@
-{div, h3, h4, ul, li, a, button, span, fieldset, legend, label} = React.DOM
+{
+    div
+    h3
+    h4
+    ul
+    li
+    a
+    button
+    span
+    fieldset
+    legend
+    label
+    img
+} = React.DOM
 
 
 Container = React.createClass
@@ -141,7 +154,7 @@ FormDropdown = React.createClass
                                     a
                                         'data-value': method
                                         role: "menuitem"
-                                        onClick: @onClick
+                                        onClick: @props.onClick
                                     ,
                                         t "#{@props.methodPrefix} #{method}"
 

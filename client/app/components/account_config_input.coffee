@@ -49,7 +49,7 @@ module.exports = AccountInput = React.createClass
                         type: type
                         className: 'form-control'
                         placeholder: placeHolder
-                        onBlur: @props.onBlur or null
+                        onBlur: @onBlur
                         onInput: @props.onInput or null
                 else
                     input
@@ -59,19 +59,24 @@ module.exports = AccountInput = React.createClass
                         type: type
                         onClick: @props.onClick
 
-            @renderError errorField
+            @renderError errorField, name
 
 
-    renderError: (errorField) ->
+    onBlur: ->
+        @props.onBlur?()
+
+
+    renderError: (errorField, name) ->
         result = []
         if Array.isArray errorField
             for error in errorField
-                if @state.errors?[error]?
+                if @state.errors?[error]? and error is name
                     result.push ErrorLine text: @state.errors[error]
         else
             if @state.errors?[errorField]?
                 result.push ErrorLine text: @state.errors[errorField]
         result
+
 
     # Add error class if errors are listed.
     buildMainClasses: (fields) ->
