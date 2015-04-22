@@ -68,8 +68,18 @@ module.exports = MessageUtils =
         quoteStyle = "margin-left: 0.8ex; padding-left: 1ex;"
         quoteStyle += " border-left: 3px solid #34A6FF;"
 
+        # Style is required to clean pre and p styling in compose editor.
+        # It is removed by the visulasation iframe that's why we need to put
+        # style at the p level too.
+        style = """
+        <style>
+        p {margin: 0;}
+        pre {background: transparent; border: 0}^8
+        </style>
+        """
+
         if inReplyTo
-            message.accountID      = inReplyTo.get 'accountID'
+            message.accountID = inReplyTo.get 'accountID'
             message.conversationID = inReplyTo.get 'conversationID'
             dateHuman = @formatReplyDate inReplyTo.get 'createdAt'
             sender = @displayAddresses inReplyTo.get 'from'
@@ -104,6 +114,7 @@ module.exports = MessageUtils =
                 message.subject = @getReplySubject inReplyTo
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
+                    #{style}
                     <p>#{separator}<span class="originalToggle"> … </span></p>
                     <blockquote style="#{quoteStyle}">#{html}</blockquote>
                     <p><br /></p>
@@ -124,6 +135,7 @@ module.exports = MessageUtils =
                 message.subject = @getReplySubject inReplyTo
                 message.text = separator + @generateReplyText(text) + "\n"
                 message.html = """
+                    #{style}
                     <p>#{separator}<span class="originalToggle"> … </span></p>
                     <blockquote style="#{quoteStyle}">#{html}</blockquote>
                     <p><br /></p>
@@ -162,7 +174,11 @@ module.exports = MessageUtils =
                     """
                 message.text = separator + text
                 htmlSeparator = separator.replace /(\n)+/g, '<br />'
-                html = "<p>#{htmlSeparator}</p><p><br /></p>#{html}"
+                html = """
+#{style}
+
+<p>#{htmlSeparator}</p><p><br /></p>#{html}
+"""
                 message.html = html
 
                 # Add original message attachments
@@ -358,7 +374,10 @@ module.exports = MessageUtils =
 
     # Add additional html tags to HTML replies:
     # * add style block to change the blockquotes styles.
+    # * make "pre" without background
+    # * remove margins to "p"
     wrapReplyHtml: (html) ->
+        html = html.replace /<p>/g, '<p style="margin: 0">'
         return """
             <style type="text/css">
             blockquote {
@@ -366,6 +385,8 @@ module.exports = MessageUtils =
                 padding-left: 1ex;
                 border-left: 3px solid #34A6FF;
             }
+            p {margin: 0;}
+            pre {background: transparent; border: 0}
             </style>
             #{html}
             """
