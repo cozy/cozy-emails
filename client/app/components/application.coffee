@@ -1,5 +1,5 @@
 # React components
-{body, div, p, form, i, input, span, a, button, strong} = React.DOM
+{div, section, main, p, span, a, i, strong, form, input, button} = React.DOM
 AccountConfig = require './account_config'
 Alert         = require './alert'
 Topbar        = require './topbar'
@@ -60,27 +60,27 @@ module.exports = Application = React.createClass
 
     render: ->
         # Shortcut
+        # TODO: Improve the way we display a loader when app isn't ready
         layout = @props.router.current
-        if not layout?
-            return div null, t "app loading"
+        return div null, t "app loading" unless layout?
 
         # is the layout a full-width panel or two panels sharing the width
-        isFullWidth = not layout.secondPanel?
+        # isFullWidth = not layout.secondPanel?
 
-        firstPanelLayoutMode = if isFullWidth then 'full' else 'first'
+        # firstPanelLayoutMode = if isFullWidth then 'full' else 'first'
         disposition = LayoutStore.getDisposition()
 
-        panelsClasses = classer
-            # row: true
-            horizontal: disposition.type is Dispositions.HORIZONTAL
-            three: disposition.type is Dispositions.THREE
-            vertical: disposition.type is Dispositions.VERTICAL
-            full: isFullWidth
+        # panelsClasses = classer
+        #     # row: true
+        #     horizontal: disposition.type is Dispositions.HORIZONTAL
+        #     three: disposition.type is Dispositions.THREE
+        #     vertical: disposition.type is Dispositions.VERTICAL
+        #     full: isFullWidth
         # css classes are a bit long so we use a subfunction to get them
-        panelClasses = @getPanelClasses isFullWidth
+        # panelClasses = @getPanelClasses isFullWidth
 
         # classes for page-content
-        responsiveClasses = classer
+        # responsiveClasses = classer
             # 'col-xs-12': true
             # 'col-md-9':  disposition.type is Dispositions.THREE
             # 'col-md-11': disposition.type isnt Dispositions.THREE
@@ -88,89 +88,60 @@ module.exports = Application = React.createClass
 
         alert = @state.alertMessage
 
-        getUrl = (mailbox) =>
-            @buildUrl
-                direction: 'first'
-                action: 'account.mailbox.messages'
-                parameters: [
-                    @state.selectedAccount?.get('id'),
-                    mailbox.get('id')
-                ]
+        # getUrl = (mailbox) =>
+        #     @buildUrl
+        #         direction: 'first'
+        #         action: 'account.mailbox.messages'
+        #         parameters: [
+        #             @state.selectedAccount?.get('id'),
+        #             mailbox.get('id')
+        #         ]
 
-        keyFirst = 'left-panel-' + layout.firstPanel.action.split('.')[0]
-        if layout.secondPanel?
-            keySecond = 'right-panel-' + layout.secondPanel.action.split('.')[0]
-            # update current message id
-            # this need to be done here, so MessageList get the good message ID
-            messageID = layout.secondPanel.parameters.messageID
-            if messageID?
-                MessageStore.setCurrentID messageID
-            else
-                MessageStore.setCurrentID null
+        # Store current message ID if selected
+        if layout.secondPanel? and layout.secondPanel.parameters.messageID?
+            MessageStore.setCurrentID layout.secondPanel.parameters.messageID
         else
-            if layout.firstPanel.action isnt 'compose'
-                # No message open, delete current message ID
-                MessageStore.setCurrentID null
+            MessageStore.setCurrentID null
 
-        # Actual layout
-        div className: 'container-fluid',
-            div className: 'row',
-
+        # F*** useless wrapper, just because of React limitations (╯°□°）╯︵ ┻━┻
+        # @see https://facebook.github.io/react/tips/maximum-number-of-jsx-root-nodes.html
+        div null,
+            # Actual layout
+            div className: 'app',
                 # Menu is self-managed because this part of the layout
                 # is always the same.
                 Menu
-                    ref: 'menu'
-                    accounts: @state.accounts
-                    refreshes: @state.refreshes
-                    selectedAccount: @state.selectedAccount
-                    selectedMailboxID: @state.selectedMailboxID
+                    ref:                   'menu'
+                    accounts:              @state.accounts
+                    refreshes:             @state.refreshes
+                    selectedAccount:       @state.selectedAccount
+                    selectedMailboxID:     @state.selectedMailboxID
                     isResponsiveMenuShown: @state.isResponsiveMenuShown
-                    layout: @props.router.current
-                    mailboxes: @state.mailboxesSorted
-                    favorites: @state.favoriteSorted
-                    disposition: disposition
-                    toggleMenu: @toggleMenu
+                    layout:                @props.router.current
+                    mailboxes:             @state.mailboxesSorted
+                    favorites:             @state.favoriteSorted
+                    disposition:           disposition
+                    toggleMenu:            @toggleMenu
 
-                div id: 'page-content', className: responsiveClasses,
+                main null,
+                    @getPanelComponent layout.firstPanel
+                    if layout.secondPanel?
+                        @getPanelComponent layout.secondPanel
+                    else
+                        section
+                            key:             'placeholder'
+                            'aria-expanded': false
 
-                    # Display feedback
-                    Alert { alert }
-                    ToastContainer()
+            # Display feedback
+            Alert { alert }
+            ToastContainer()
 
-                    #a onClick: @toggleMenu,
-                    #    className: 'responsive-handler hidden-md hidden-lg',
-                            #i className: 'fa fa-bars pull-left'
-                            #t "app menu"
-                    # The quick actions bar
-                    #Topbar
-                    #    ref: 'topbar'
-                    #    layout: @props.router.current
-                    #    mailboxes: @state.mailboxes
-                    #    selectedAccount: @state.selectedAccount
-                    #    selectedMailboxID: @state.selectedMailboxID
-                    #    searchQuery: @state.searchQuery
-                    #    isResponsiveMenuShown: @state.isResponsiveMenuShown
+            # Tooltips' content is declared once at the application level.
+            # It's hidden so it doesn't break the layout. Other components
+            # can then reference the tooltips by their ID to trigger them.
+            Tooltips()
 
-                    # Two layout modes: one full-width panel or two panels
-                    div id: 'panels', className: panelsClasses,
-                        div
-                            className: panelClasses.firstPanel,
-                            key: keyFirst,
-                                @getPanelComponent layout.firstPanel,
-                                    firstPanelLayoutMode
-                        if not isFullWidth and layout.secondPanel?
-                            div
-                                className: panelClasses.secondPanel,
-                                key: keySecond,
-                                    @getPanelComponent layout.secondPanel,
-                                        'second'
-
-                # Tooltips' content is declared once at the application level.
-                # It's hidden so it doesn't break the layout. Other components
-                # can then reference the tooltips by their ID to trigger them.
-                Tooltips()
-
-
+    ###
     # Panels CSS classes are a bit long so we get them from a this subfunction
     # Also, it manages transitions between screens by adding relevant classes
     getPanelClasses: (isFullWidth) ->
@@ -234,10 +205,11 @@ module.exports = Application = React.createClass
                     classes.secondPanel += ' slide-in-from-left'
 
         return classes
+    ###
 
 
     # Factory of React components for panels
-    getPanelComponent: (panelInfo, layout) ->
+    getPanelComponent: (panelInfo) ->
         # -- Generates a list of messages for a given account and mailbox
         if panelInfo.action is 'account.mailbox.messages' or
            panelInfo.action is 'account.mailbox.messages.full' or
@@ -278,8 +250,8 @@ module.exports = Application = React.createClass
 
             # gets the selected message if any
             messageID = MessageStore.getCurrentID()
-            direction = if layout is 'first' then 'secondPanel' \
-                else 'firstPanel'
+            # direction = if layout is 'first' then 'secondPanel' \
+            #     else 'firstPanel'
 
             fetching = MessageStore.isFetching()
             if @state.settings.get 'displayConversation'
@@ -373,7 +345,6 @@ module.exports = Application = React.createClass
 
             return Conversation
                 key: 'conversation-' + conversationID
-                layout               : layout
                 readability          : @state.readability
                 settings             : @state.settings
                 accounts             : @state.accountsFlat

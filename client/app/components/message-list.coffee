@@ -1,4 +1,4 @@
-{div, ul, li, a, span, i, p, button, input, img, form} = React.DOM
+{div, section, ul, li, a, span, i, p, button, input, img, form} = React.DOM
 classer = React.addons.classSet
 
 RouterMixin    = require '../mixins/router_mixin'
@@ -162,10 +162,13 @@ MessageList = React.createClass
             parameters: null
             fullWidth: true
 
-        div
-            className: 'message-list ' + classList,
-            ref: 'list',
-            'data-mailbox-id': @props.mailboxID,
+        section
+            key: 'messages-list'
+            ref: 'list'
+            'data-mailbox-id': @props.mailboxID
+            className: 'messages-list'
+            'aria-expanded': true,
+
             div className: 'message-list-actions',
                 div className: 'btn-toolbar', role: 'toolbar',
                     div className: 'btn-group',
