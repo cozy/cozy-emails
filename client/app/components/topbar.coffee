@@ -1,6 +1,6 @@
 # React components
 {body, div, p, form, i, input, span, a, button, strong} = React.DOM
-MailboxList   = require './mailbox-list'
+MailboxList   = require './mailbox_list'
 SearchForm = require './search-form'
 
 # mixins & action creator

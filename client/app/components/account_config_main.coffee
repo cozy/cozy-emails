@@ -4,7 +4,6 @@
 } = React.DOM
 classer = React.addons.classSet
 
-MailboxList          = require './mailbox-list'
 AccountActionCreator = require '../actions/account_action_creator'
 AccountInput = require './account_config_input'
 

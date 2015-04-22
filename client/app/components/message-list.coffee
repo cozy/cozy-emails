@@ -16,7 +16,7 @@ MessageActionCreator      = require '../actions/message_action_creator'
 
 MessageStore   = require '../stores/message_store'
 
-MailboxList    = require './mailbox-list'
+MailboxList    = require './mailbox_list'
 Participants   = require './participant'
 ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'

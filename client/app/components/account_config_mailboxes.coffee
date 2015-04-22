@@ -4,7 +4,7 @@ classer = React.addons.classSet
 AccountActionCreator = require '../actions/account_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 RouterMixin = require '../mixins/router_mixin'
-MailboxList = require './mailbox-list'
+MailboxList = require './mailbox_list'
 MailboxItem = require './account_config_item'
 {SubTitle} = require './basic_components'
 
