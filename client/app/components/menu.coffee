@@ -120,8 +120,8 @@ module.exports = Menu = React.createClass
                     mailboxes: @props.selectedAccount.get('mailboxes')
                     selectedMailboxID: @props.selectedMailboxID
 
-            if @props.accounts.length isnt 0
-                ul id: 'account-list', className: 'list-unstyled',
+            nav className: 'mainmenu',
+                if @props.accounts.length
                     @props.accounts.map (account, key) =>
                         @getAccountRender account, key
                     .toJS()

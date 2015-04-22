@@ -107,8 +107,8 @@ module.exports = Application = React.createClass
         # @see https://facebook.github.io/react/tips/maximum-number-of-jsx-root-nodes.html
         # So, use it for layout classes, at least…
         layoutClasses = ['layout'
-             "layout-#{LayoutStore.getDisposition()}"
-             "layout-preview-#{LayoutStore.getPreviewSize()}"].join(' ')
+            "layout-#{LayoutStore.getDisposition()}"
+            "layout-preview-#{LayoutStore.getPreviewSize()}"].join(' ')
         div className: layoutClasses,
             # Actual layout
             div className: 'app',
@@ -125,10 +125,9 @@ module.exports = Application = React.createClass
                     mailboxes:             @state.mailboxesSorted
                     favorites:             @state.favoriteSorted
                     disposition:           disposition
+                    toggleMenu:            @toggleMenu
 
-                main
-                    className: if layout.secondPanel? then null else 'full',
-
+                main null,
                     @getPanelComponent layout.firstPanel
                     if layout.secondPanel?
                         @getPanelComponent layout.secondPanel
