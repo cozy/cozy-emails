@@ -17,12 +17,10 @@ _cachedDisposition = null
 
 module.exports = LayoutActionCreator =
 
-    setDisposition: (type, value) ->
+    setDisposition: (type) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.SET_DISPOSITION
-            value:
-                type: type
-                value: value
+            value: type
 
     toggleFullscreen: ->
         if _cachedDisposition?
