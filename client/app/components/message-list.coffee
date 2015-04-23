@@ -15,7 +15,8 @@ ConversationActionCreator = require '../actions/conversation_action_creator'
 LayoutActionCreator       = require '../actions/layout_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 
-MessageStore   = require '../stores/message_store'
+MessageStore = require '../stores/message_store'
+LayoutStore  = require '../stores/layout_store'
 
 MailboxList    = require './mailbox_list'
 Participants   = require './participant'
@@ -171,12 +172,12 @@ MessageList = React.createClass
 
                         # Responsive menu button
                         if not advanced and not @state.edited
-                            div className: btnGrpClasses + ' toggle-menu-button',
+                            div className: "#{btnGrpClasses} drawer-toggle",
                                 button
-                                    onClick: @props.toggleMenu
+                                    onClick: LayoutActionCreator.drawerToggle
                                     title: t 'menu toggle'
                                     className: btnClasses,
-                                    span className: 'fa fa-inbox'
+                                    i className: 'fa fa-navicon'
 
                         # filters
                         if not advanced and not @state.edited
