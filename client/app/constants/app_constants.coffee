@@ -120,9 +120,9 @@ module.exports =
         NOFLAG : 'Noflag'
 
     Dispositions:
-        HORIZONTAL: 'horizontal'
-        VERTICAL: 'vertical'
-        THREE: 'three'
+        COL:  'column'
+        ROW:  'row'
+        RROW: 'row-reverse'
 
     SpecialBoxIcons:
         inboxMailbox: 'fa-inbox'

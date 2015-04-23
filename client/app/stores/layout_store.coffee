@@ -8,10 +8,8 @@ class LayoutStore extends Store
         Initialization.
         Defines private variables here.
     ###
-    _disposition =
-        type   : Dispositions.VERTICAL
-        height : 5
-        width  : 6
+    _disposition = Dispositions.COL
+
     _alert =
         level: null
         message: null
@@ -29,25 +27,7 @@ class LayoutStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.SET_DISPOSITION, (disposition) ->
-            if disposition.disposition?
-                _disposition = disposition.disposition
-            else
-                _disposition.type = disposition.type
-                if _disposition.type is Dispositions.VERTICAL
-                    if not disposition.value?
-                        disposition.value = _disposition.width
-                    _disposition.height = 5
-                    _disposition.width  = disposition.value
-                else if _disposition.type is Dispositions.HORIZONTAL
-                    if not disposition.value?
-                        disposition.value = _disposition.height
-                    _disposition.height = disposition.value
-                    _disposition.width  = 6
-                else if _disposition.type is Dispositions.THREE
-                    if not disposition.value?
-                        disposition.value = _disposition.width
-                    _disposition.height = 5
-                    _disposition.width  = disposition.value
+            _disposition = disposition
             @emit 'change'
 
         handle ActionTypes.DISPLAY_ALERT, (value) ->
