@@ -13,27 +13,35 @@ class ContactStore extends Store
 
     # all known contacts
     _contacts = Immutable.OrderedMap.empty()
+
     # result of last search
     _results  = Immutable.OrderedMap.empty()
 
     _import = (rawResults) ->
         _results = Immutable.OrderedMap.empty()
+
         if rawResults?
+
             if not Array.isArray rawResults
                 rawResults = [ rawResults ]
+
             convert = (map) ->
+
                 rawResults.forEach (rawResult) ->
                     addresses = []
+
                     rawResult.datapoints.forEach (point) ->
                         if point.name is 'email'
                             addresses.push point.value
                         if point.name is 'avatar'
                             rawResult.avatar = point.value
                     delete rawResult.docType
+
                     addresses.forEach (address) ->
                         rawResult.address = address
                         contact = Immutable.Map rawResult
                         map.set address, contact
+
             _results  = _results.withMutations convert
             _contacts = _contacts.withMutations convert
 
@@ -68,12 +76,17 @@ class ContactStore extends Store
     getResults: ->
         return _results
 
-    getQuery: -> return _query
+    getQuery: ->
+        return _query
 
-    getByAddress: (address) -> return _contacts.get(address)
+    getByAddress: (address) ->
+        return _contacts.get address
 
     getAvatar: (address) ->
         return _contacts.get(address)?.get 'avatar'
+
+    isExist: (address) ->
+        return @getByAddress(address)?
 
 module.exports = new ContactStore()
 

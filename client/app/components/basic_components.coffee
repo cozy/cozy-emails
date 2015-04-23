@@ -5,6 +5,7 @@
     ul
     li
     a
+    i
     button
     span
     fieldset
@@ -160,7 +161,40 @@ FormDropdown = React.createClass
 
 
 
+# Widget to display contact following these rules:
+# If a name is provided => Contact Name <address@contact.com>
+# If no name is provided => address@contact.com
+AddressLabel = React.createClass
+
+    render: ->
+
+        if @props.contact.name? and @props.contact.name.length > 0
+            key = @props.contact.address.replace /\W/g, ''
+
+            result = span null,
+                span null, "#{@props.contact.name} "
+                span
+                        className: 'contact-address'
+                        key: key
+                    ,
+                        "<#{@props.contact.address}>"
+
+        else
+            result = span null, @props.contact.address
+
+        return result
+
+
 module.exports = {
-    Title, Tabs, Container, ErrorLine, Form, FieldSet, FormButton, FormButtons,
-    SubTitle, FormDropdown
+    AddressLabel
+    Container
+    ErrorLine
+    Form
+    FieldSet
+    FormButton
+    FormButtons
+    FormDropdown
+    SubTitle
+    Title
+    Tabs
 }

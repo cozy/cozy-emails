@@ -31,17 +31,6 @@ module.exports = React.createClass
         TooltipRefresherMixin
     ]
 
-    getInitialState: ->
-        return {
-            active: @props.active
-            composing: @_shouldOpenCompose(@props)
-            composeAction: ''
-            headers: false
-            messageDisplayHTML:   @props.settings.get 'messageDisplayHTML'
-            messageDisplayImages: @props.settings.get 'messageDisplayImages'
-            currentMessageID: null
-            prepared: {}
-        }
 
     propTypes:
         accounts               : React.PropTypes.object.isRequired
@@ -56,9 +45,24 @@ module.exports = React.createClass
         selectedMailboxID      : React.PropTypes.string.isRequired
         settings               : React.PropTypes.object.isRequired
 
+
+    getInitialState: ->
+        return {
+            active: @props.active
+            composing: @_shouldOpenCompose(@props)
+            composeAction: ''
+            headers: false
+            messageDisplayHTML: @props.settings.get 'messageDisplayHTML'
+            messageDisplayImages: @props.settings.get 'messageDisplayImages'
+            currentMessageID: null
+            prepared: {}
+        }
+
+
     shouldComponentUpdate: (nextProps, nextState) ->
         should = not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
         return should
+
 
     _shouldOpenCompose: (props) ->
         # if message is a draft, and not deleted, open the compose component
@@ -67,6 +71,7 @@ module.exports = React.createClass
         isDraft   = flags.indexOf(MessageFlags.DRAFT) > -1
         isDeleted = @props.message.get('mailboxIDs')[trash]?
         return isDraft and not isDeleted
+
 
     _prepareMessage: (message) ->
         # display full headers
@@ -119,8 +124,10 @@ module.exports = React.createClass
             isDeleted  : mailboxes[trash]?
         }
 
+
     componentWillMount: ->
         @_markRead @props.message
+
 
     componentWillReceiveProps: (props) ->
         state =
@@ -131,6 +138,7 @@ module.exports = React.createClass
             state.messageDisplayImages = props.settings.get 'messageDisplayImages'
             state.composing            = @_shouldOpenCompose props
         @setState state
+
 
     _markRead: (message) ->
         # Hack to prevent infinite loop if server side mark as read fails
@@ -145,6 +153,7 @@ module.exports = React.createClass
                 flags.push MessageFlags.SEEN
                 MessageActionCreator.updateFlag message, flags
             @setState state
+
 
     prepareHTML: (html) ->
         messageDisplayHTML = true
@@ -185,6 +194,7 @@ module.exports = React.createClass
             @_htmlContent = html
 
         return {messageDisplayHTML, images}
+
 
     render: ->
         message  = @props.message
@@ -230,6 +240,7 @@ module.exports = React.createClass
                     @renderFooter()
                     @renderToolbox(false)) if @state.active
 
+
     getParticipants: (message) ->
         from = message.get 'from'
         to   = message.get('to').concat(message.get('cc'))
@@ -238,11 +249,13 @@ module.exports = React.createClass
             span null, ', '
             Participants participants: to, onAdd: @addAddress, tooltip: true
 
+
     renderHeaders: ->
         MessageHeader
             message: @props.message
             isDraft: @state.prepared.isDraft
             isDeleted: @state.prepared.isDeleted
+
 
     renderToolbox: (full = true) ->
         return if @state.composing
@@ -259,9 +272,11 @@ module.exports = React.createClass
             onMove:            @onMove
             onHeaders:         @onHeaders
 
+
     renderFooter: ->
         MessageFooter
             message: @props.message
+
 
     renderCompose: (isDraft) ->
         if @state.composing
@@ -298,6 +313,7 @@ module.exports = React.createClass
                         if @isMounted()
                             @setState composing: false
 
+
     toggleHeaders: (e) ->
         e.preventDefault()
         e.stopPropagation()
@@ -307,6 +323,7 @@ module.exports = React.createClass
             state.active = true
         @setState state
 
+
     toggleActive: (e) ->
         if @props.inConversation
             e.preventDefault()
@@ -315,6 +332,7 @@ module.exports = React.createClass
                 @setState { active: false, headers: false }
             else
                 @setState { active: true, headers: false }
+
 
     displayNextMessage: ->
         if @props.nextMessageID?
@@ -346,14 +364,18 @@ module.exports = React.createClass
                     mailboxID: @props.selectedMailboxID
                 fullWidth: true
 
+
     onReply: (args) ->
         @setState composing: true, composeAction: ComposeActions.REPLY
+
 
     onReplyAll: (args) ->
         @setState composing: true, composeAction: ComposeActions.REPLY_ALL
 
+
     onForward: (args) ->
         @setState composing: true, composeAction: ComposeActions.FORWARD
+
 
     onDelete: (args) ->
         message      = @props.message
@@ -364,8 +386,10 @@ module.exports = React.createClass
                 if error?
                     alertError "#{t("message action delete ko")} #{error}"
 
+
     onCopy: (args) ->
         LayoutActionCreator.alertWarning t "app unimplemented"
+
 
     onMove: (args) ->
         newbox  = args.target.dataset.value
@@ -386,18 +410,22 @@ module.exports = React.createClass
                     alertSuccess t("message action move ok", subject: subject)
                     @displayNextMessage()
 
+
     onHeaders: (event) ->
         event.preventDefault()
         messageID = event.target.dataset.messageId
         document.querySelector(".conversation [data-id='#{messageID}']")
             .classList.toggle('with-headers')
 
+
     addAddress: (address) ->
         ContactActionCreator.createContact address
+
 
     displayImages: (event) ->
         event.preventDefault()
         @setState messageDisplayImages: true
+
 
     displayHTML: (value) ->
         if not value?

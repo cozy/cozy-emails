@@ -232,10 +232,10 @@ module.exports =
       "config error imapTLS"        : "Wrong IMAP TLS"
       "config error smtpPort"       : "Wrong SMTP Port"
       "config error smtpServer"     : "Wrong SMTP Server"
-      "config error nomailboxes"    : "No folder in this account, please create
-                                        one"
+      "config error nomailboxes"    : "No folder in this account, please create one"
 
       # Message Action
+      "message contact creation"    : "Do you want to create a contact for %{contact}?"
       "message action sent ok"      : "Message sent"
       "message action sent ko"      : "Error sending message: "
       "message action draft ok"     : "Message saved"
