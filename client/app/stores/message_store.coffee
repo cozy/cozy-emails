@@ -138,17 +138,21 @@ class MessageStore extends Store
             if messages.mailboxID
                 SocketUtils.changeRealtimeScope messages.mailboxID
 
-            if messages.links?
-                if messages.links.next?
-                    # reinit params here for pagination on filtered lists
-                    _params = {}
-                    next   = decodeURIComponent(messages.links.next)
-                    url    = 'http://localhost' + next
-                    url.split('?')[1].split('&').forEach (p) ->
-                        [key, value] = p.split '='
-                        value = '-' if value is ''
-                        _params[key] = value
+            if messages.links? and messages.links.next?
+                # reinit params here for pagination on filtered lists
+                _params = {}
+                next   = decodeURIComponent(messages.links.next)
+                url    = 'http://localhost' + next
+                url.split('?')[1].split('&').forEach (p) ->
+                    [key, value] = p.split '='
+                    value = '-' if value is ''
+                    _params[key] = value
+            else
+                # We use pageAfter to know if there are more messages to
+                # load, so we need to set it to its default value
+                _params.pageAfter = '-'
 
+            if _params.pageAfter isnt '-'
                 SocketUtils.changeRealtimeScope messages.mailboxID,
                     _params.pageAfter
 
