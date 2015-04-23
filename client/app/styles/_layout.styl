@@ -23,6 +23,9 @@
         display     flex
         align-items stretch
 
+        section
+            overflow-y auto
+
 
     @media(max-width: 29.9375em)
         & > aside[aria-expanded=true] + main
@@ -80,10 +83,15 @@
                 &[aria-expanded=false]
                     flex-grow 0
 
-        &.layout-h
-            // horizontal split rules
-        &.layout-v
-            // vertical split rules
+
+            .layout-column &
+                flex-direction row
+
+            .layout-row &
+                flex-direction column
+
+            .layout-row-reverse &
+                flex-direction column-reverse
 
 
     @media(min-width: 80em)

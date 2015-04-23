@@ -45,7 +45,7 @@ if (typeof window.plugins !== "object") {
     var layoutStore  = require('stores/layout_store'),
         layoutAction = require('actions/layout_action_creator'),
         disposition  = layoutStore.getDisposition();
-    layoutAction.setDisposition('vertical', disposition.width - direction);
+    layoutAction.setDisposition('column');
     /*
     var panels, w1;
     panels = document.querySelectorAll('#panels > .panel');
@@ -71,7 +71,7 @@ if (typeof window.plugins !== "object") {
     var layoutStore  = require('stores/layout_store'),
         layoutAction = require('actions/layout_action_creator'),
         disposition  = layoutStore.getDisposition();
-    layoutAction.setDisposition('horizontal', disposition.height - direction);
+    layoutAction.setDisposition('row');
     /*
     var panels;
     panels = document.querySelectorAll('#panels > .panel');
@@ -259,17 +259,17 @@ if (typeof window.plugins !== "object") {
           e.preventDefault();
           var layoutStore  = require('stores/layout_store'),
               layoutAction = require('actions/layout_action_creator'),
-              disposition  = layoutStore.getDisposition();
+              dispositions = require('constants/app_constants').Dispositions;
 
-          switch (disposition.type) {
-          case 'horizontal':
-            layoutAction.setDisposition('three');
+          switch (layoutStore.getDisposition()) {
+          case dispositions.RROW:
+            layoutAction.setDisposition(dispositions.COL);
             break;
-          case 'vertical':
-            layoutAction.setDisposition('horizontal');
+          case dispositions.COL:
+            layoutAction.setDisposition(dispositions.ROW);
             break;
-          case 'three':
-            layoutAction.setDisposition('vertical');
+          case dispositions.ROW:
+            layoutAction.setDisposition(dispositions.RROW);
             break;
           }
 
