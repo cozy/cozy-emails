@@ -250,5 +250,18 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.INTENT_AVAILABLE
             value: availability
 
+    # Drawer
+    drawerShow: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_SHOW
+
+    drawerHide: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_HIDE
+
+    drawerToggle: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_TOGGLE
+
 # circular import, require after
 MessageActionCreator = require './message_action_creator'

@@ -1,4 +1,4 @@
-{div, aside, ul, li, a, span, i} = React.DOM
+{div, aside, ul, li, button, a, span, i} = React.DOM
 
 classer = React.addons.classSet
 

@@ -22,6 +22,8 @@ class LayoutStore extends Store
 
     _intentAvailable = false
 
+    _drawer = false
+
 
     ###
         Defines here the action handlers.
@@ -100,6 +102,21 @@ class LayoutStore extends Store
             _intentAvailable = avaibility
             @emit 'change'
 
+        handle ActionTypes.DRAWER_SHOW, ->
+            return if _drawer is true
+            _drawer = true
+            @emit 'change'
+
+        handle ActionTypes.DRAWER_HIDE, ->
+            return if _drawer is false
+            _drawer = false
+            @emit 'change'
+
+        handle ActionTypes.DRAWER_TOGGLE, ->
+            _drawer = not _drawer
+            @emit 'change'
+
+
     ###
         Public API
     ###
@@ -112,5 +129,7 @@ class LayoutStore extends Store
     isShown: -> return _shown
 
     intentAvailable: -> return _intentAvailable
+
+    isDrawerExpanded: -> return _drawer
 
 module.exports = new LayoutStore()

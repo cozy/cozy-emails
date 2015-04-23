@@ -72,6 +72,12 @@ module.exports =
         'TOASTS_SHOW'               : 'TOASTS_SHOW'
         'TOASTS_HIDE'               : 'TOASTS_HIDE'
 
+        # Drawer
+        'DRAWER_SHOW':   'DRAWER_SHOW'
+        'DRAWER_HIDE':   'DRAWER_HIDE'
+        'DRAWER_TOGGLE': 'DRAWER_TOGGLE'
+
+
     PayloadSources:
         'VIEW_ACTION'   : 'VIEW_ACTION'
         'SERVER_ACTION' : 'SERVER_ACTION'

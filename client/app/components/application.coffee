@@ -121,9 +121,10 @@ module.exports = Application = React.createClass
                     mailboxes:             @state.mailboxesSorted
                     favorites:             @state.favoriteSorted
                     disposition:           disposition
-                    toggleMenu:            @toggleMenu
 
-                main null,
+                main
+                    className: if layout.secondPanel? then null else 'full',
+
                     @getPanelComponent layout.firstPanel
                     if layout.secondPanel?
                         @getPanelComponent layout.secondPanel
@@ -274,24 +275,23 @@ module.exports = Application = React.createClass
                 displayConversations = @state.settings.get 'displayConversation'
 
             return MessageList
-                messages:      messages
-                messagesCount: messagesCount
-                accountID:     accountID
-                mailboxID:     mailboxID
-                messageID:     messageID
-                conversationID: conversationID
-                login:         AccountStore.getByID(accountID).get 'login'
-                mailboxes:     @state.mailboxesFlat
-                settings:      @state.settings
-                fetching:      fetching
-                refreshes:     @state.refreshes
-                query:         query
-                isTrash:       isTrash
+                messages:             messages
+                messagesCount:        messagesCount
+                accountID:            accountID
+                mailboxID:            mailboxID
+                messageID:            messageID
+                conversationID:       conversationID
+                login:                AccountStore.getByID(accountID).get 'login'
+                mailboxes:            @state.mailboxesFlat
+                settings:             @state.settings
+                fetching:             fetching
+                refreshes:            @state.refreshes
+                query:                query
+                isTrash:              isTrash
                 conversationLengths:  conversationLengths
                 emptyListMessage:     emptyListMessage
                 counterMessage:       counterMessage
                 ref:                  'messageList'
-                toggleMenu:           @toggleMenu
                 displayConversations: displayConversations
 
         # -- Generates a configuration window for a given account
@@ -527,9 +527,3 @@ module.exports = Application = React.createClass
             store.removeListener 'notify', @notify
         # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
-
-
-    # Toggle the menu in responsive mode
-    toggleMenu: (event) ->
-        @setState isResponsiveMenuShown: not @state.isResponsiveMenuShown
-
