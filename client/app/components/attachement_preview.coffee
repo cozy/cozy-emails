@@ -52,7 +52,7 @@ module.exports = React.createClass
 
     renderIcon: ->
         type = MessageUtils.getAttachmentType @props.file.contentType
-        i className: "fa #{@icons[type] or 'fa-file-o'}"
+        i className: "mime #{type} fa #{@icons[type] or 'fa-file-o'}"
 
 
     displayFilesize: (length) ->

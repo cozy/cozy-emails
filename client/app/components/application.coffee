@@ -286,8 +286,6 @@ module.exports = Application = React.createClass
                 conversationID = MessageStore.getCurrentConversationID()
                 if not conversationID? and messages.length > 0
                     conversationID = messages.first().get 'conversationID'
-                    if conversationID?
-                        conversation = MessageStore.getConversation conversationID
                 conversationLengths = MessageStore.getConversationsLength()
 
             query = _.clone(MessageStore.getParams())

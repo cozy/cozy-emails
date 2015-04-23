@@ -97,11 +97,16 @@ casper.getEngine = ->
 exports.init = (casper) ->
     dev = casper.cli.options.dev?
 
+    # check if Casper has already be initialized
+    if casper.__cozy
+        return
+    casper.__cozy = true
+
     if dev
         casper.options.verbose = true
         casper.options.logLevel = 'debug'
     casper.options.waitTimeout = 20000
-    casper.options.timeout = 200000
+    casper.options.timeout = 240000
     casper.options.viewportSize = {width: 1024, height: 768}
     casper.on 'exit', (res) ->
         if res isnt 0 or dev

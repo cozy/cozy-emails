@@ -2869,9 +2869,6 @@ module.exports = Application = React.createClass({
         conversationID = MessageStore.getCurrentConversationID();
         if ((conversationID == null) && messages.length > 0) {
           conversationID = messages.first().get('conversationID');
-          if (conversationID != null) {
-            conversation = MessageStore.getConversation(conversationID);
-          }
         }
         conversationLengths = MessageStore.getConversationsLength();
       }
@@ -3185,7 +3182,7 @@ module.exports = React.createClass({
     var type;
     type = MessageUtils.getAttachmentType(this.props.file.contentType);
     return i({
-      className: "fa " + (this.icons[type] || 'fa-file-o')
+      className: "mime " + type + " fa " + (this.icons[type] || 'fa-file-o')
     });
   },
   displayFilesize: function(length) {
