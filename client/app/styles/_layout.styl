@@ -74,8 +74,11 @@
 
     @media(min-width: 48em)
         & > main
+            section
+                transition flex 180ms ease-in
+
             &.full :first-of-type
-                flex-basis 100%
+                flex-basis 100% !important
 
                 & + [aria-expanded=false]
                     flex 0
