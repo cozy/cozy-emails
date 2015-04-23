@@ -42,6 +42,7 @@ module.exports =
 
         # Layout
         'SET_DISPOSITION'           : 'SET_DISPOSITION'
+        'RESIZE_PREVIEW_PANE'       : 'RESIZE_PREVIEW_PANE'
         'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
         'HIDE_ALERT'                : 'HIDE_ALERT'
         'REFRESH'                   : 'REFRESH'

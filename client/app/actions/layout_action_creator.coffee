@@ -22,6 +22,22 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.SET_DISPOSITION
             value: type
 
+    # TODO: use a global method to DRY this 3-ones
+    increasePreviewPanel: (factor = 1) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RESIZE_PREVIEW_PANE
+            value: Math.abs factor
+
+    decreasePreviewPanel: (factor = 1) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RESIZE_PREVIEW_PANE
+            value: -1 * Math.abs factor
+
+    resetPreviewPanel: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RESIZE_PREVIEW_PANE
+            value: null
+
     toggleFullscreen: ->
         if _cachedDisposition?
             AppDispatcher.handleViewAction
