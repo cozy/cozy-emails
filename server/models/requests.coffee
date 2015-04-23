@@ -59,6 +59,17 @@ module.exports =
                         emit ['date', boxid, '\\Attachments', docDate], null
                         emit ['subject', boxid, '\\Attachments', \
                                                         doc.normSubject], null
+
+                    for sender in doc.from
+                        if sender.name?
+                            emit ['from', boxid, null, sender.name], null
+                        emit ['from', boxid, null, sender.address], null
+
+                    for dest in doc.to.concat(doc.cc)
+                        if dest.name?
+                            emit ['dest', boxid, null, dest.name], null
+                        emit ['dest', boxid, null, dest.address], null
+
                 undefined # prevent coffeescript comprehension
 
         # this map is used to dedup by message-id

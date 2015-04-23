@@ -751,6 +751,39 @@ MessageItem = React.createClass
     addAddress: (address) ->
         ContactActionCreator.createContact address
 
+Dropdown = React.createClass
+    displayName: 'Dropdown'
+
+    getInitialState: ->
+        state=
+            label: @props.values[Object.keys(@props.values)[0]]
+
+    render: ->
+
+        renderFilter = (key, value) =>
+            onChange = =>
+                @setState label: value
+                @props.onChange key
+            li
+                role: 'presentation'
+                onClick: onChange
+                key: key,
+                    a
+                        role: 'menuitem'
+                        value
+
+        div
+            className: 'btn-group btn-group-sm dropdown pull-left',
+                button
+                    className: 'btn btn-default dropdown-toggle'
+                    type: 'button'
+                    'data-toggle': 'dropdown'
+                    @state.label
+                        span className: 'caret', ''
+                ul className: 'dropdown-menu', role: 'menu',
+                    for key, value of @props.values
+                        renderFilter key, t "list filter #{key}"
+
 MessagesQuickFilter = React.createClass
     displayName: 'MessagesQuickFilter'
 
@@ -760,24 +793,16 @@ MessagesQuickFilter = React.createClass
         return state
 
     render: ->
+
+        filters = {}
+        ['subject', 'from', 'dest'].map (filter) ->
+            filters[filter] = t "list filter #{filter}"
+
         div null,
             # Filter type
-            div
-                className: 'btn-group btn-group-sm dropdown pull-left',
-                    button
-                        className: 'btn btn-default dropdown-toggle'
-                        type: 'button'
-                        'data-toggle': 'dropdown'
-                        t "list filter #{@state.type}",
-                            span className: 'caret', ''
-                    ul className: 'dropdown-menu', role: 'menu',
-                        li
-                            role: 'presentation'
-                            onClick: @onChange.bind(this, 'subject')
-                            key: 'subject',
-                                a
-                                    role: 'menuitem',
-                                    t 'list filter subject'
+            Dropdown
+                values: filters
+                onChange: @onChange
             input
                 ref: 'value'
                 className: ""

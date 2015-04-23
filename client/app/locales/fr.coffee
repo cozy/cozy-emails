@@ -75,6 +75,8 @@ module.exports =
       "list filter unseen"        : "Non lus"
       "list filter flagged"       : "Importants"
       "list filter attach"        : "Pièces-jointes"
+      "list filter from"          : "Expédié par"
+      "list filter dest"          : "Destiné à"
       "list filter subject"       : "Subject commence par…"
       "list sort"                 : "Trier"
       "list sort date"            : "Date"
