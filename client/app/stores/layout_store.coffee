@@ -10,6 +10,9 @@ class LayoutStore extends Store
     ###
     _disposition = Dispositions.COL
 
+    # TODO: Use a constant for default value?
+    _previewSize = 50
+
     _alert =
         level: null
         message: null
@@ -28,6 +31,17 @@ class LayoutStore extends Store
 
         handle ActionTypes.SET_DISPOSITION, (disposition) ->
             _disposition = disposition
+            @emit 'change'
+
+        handle ActionTypes.RESIZE_PREVIEW_PANE, (factor) ->
+            console.debug factor
+            if factor
+                _previewSize += factor
+                # set limits
+                _previewSize = 20 if _previewSize < 20
+                _previewSize = 80 if _previewSize > 80
+            else
+                _previewSize = 50
             @emit 'change'
 
         handle ActionTypes.DISPLAY_ALERT, (value) ->
@@ -95,6 +109,8 @@ class LayoutStore extends Store
         Public API
     ###
     getDisposition: -> return _disposition
+
+    getPreviewSize: -> return _previewSize
 
     getAlert: -> return _alert
 
