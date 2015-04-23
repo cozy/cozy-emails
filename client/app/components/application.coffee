@@ -105,7 +105,11 @@ module.exports = Application = React.createClass
 
         # F*** useless wrapper, just because of React limitations (╯°□°）╯︵ ┻━┻
         # @see https://facebook.github.io/react/tips/maximum-number-of-jsx-root-nodes.html
-        div className: "layout layout-#{LayoutStore.getDisposition()}",
+        # So, use it for layout classes, at least…
+        layoutClasses = ['layout'
+             "layout-#{LayoutStore.getDisposition()}"
+             "layout-preview-#{LayoutStore.getPreviewSize()}"].join(' ')
+        div className: layoutClasses,
             # Actual layout
             div className: 'app',
                 # Menu is self-managed because this part of the layout

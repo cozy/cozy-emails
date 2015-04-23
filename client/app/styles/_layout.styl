@@ -77,11 +77,8 @@
             &.full :first-of-type
                 flex-basis 100%
 
-            section
-                flex 1 0 50%
-
-                &[aria-expanded=false]
-                    flex-grow 0
+                & + [aria-expanded=false]
+                    flex 0
 
 
             .layout-column &
@@ -92,6 +89,13 @@
 
             .layout-row-reverse &
                 flex-direction column-reverse
+
+            for ratio in (20..80)
+                .layout-preview-{ratio} &
+                    section:nth-child(1)
+                        flex 100 - ratio
+                    section:nth-child(2)
+                        flex ratio
 
 
     @media(min-width: 80em)
