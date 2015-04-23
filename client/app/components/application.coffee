@@ -125,9 +125,10 @@ module.exports = Application = React.createClass
                     mailboxes:             @state.mailboxesSorted
                     favorites:             @state.favoriteSorted
                     disposition:           disposition
-                    toggleMenu:            @toggleMenu
 
-                main null,
+                main
+                    className: if layout.secondPanel? then null else 'full',
+
                     @getPanelComponent layout.firstPanel
                     if layout.secondPanel?
                         @getPanelComponent layout.secondPanel
