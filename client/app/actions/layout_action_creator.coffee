@@ -247,3 +247,17 @@ module.exports = LayoutActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.TOASTS_HIDE
 
+
+    # Drawer
+    drawerShow: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_SHOW
+
+    drawerHide: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_HIDE
+
+    drawerToggle: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_TOGGLE
+

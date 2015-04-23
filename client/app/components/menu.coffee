@@ -1,15 +1,20 @@
-{div, aside, ul, li, a, span, i} = React.DOM
+{div, aside, ul, li, button, a, span, i} = React.DOM
 
 classer = React.addons.classSet
 
-RouterMixin          = require '../mixins/router_mixin'
-LayoutActionCreator  = require '../actions/layout_action_creator'
+RouterMixin     = require '../mixins/router_mixin'
+StoreWatchMixin = require '../mixins/store_watch_mixin'
+
+LayoutActionCreator       = require '../actions/layout_action_creator'
 ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
-AccountStore         = require '../stores/account_store'
-Modal                = require './modal'
-ThinProgress         = require './thin_progress'
-MessageUtils         = require '../utils/message_utils'
+
+AccountStore = require '../stores/account_store'
+LayoutStore  = require '../stores/layout_store'
+
+Modal        = require './modal'
+ThinProgress = require './thin_progress'
+MessageUtils = require '../utils/message_utils'
 
 RefreshIndicator = require './menu_refresh_indicator'
 
@@ -18,7 +23,10 @@ RefreshIndicator = require './menu_refresh_indicator'
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
-    mixins: [RouterMixin]
+    mixins: [
+        RouterMixin
+        StoreWatchMixin [LayoutStore]
+    ]
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
@@ -28,6 +36,9 @@ module.exports = Menu = React.createClass
         displayActiveAccount: true
         modalErrors: null
         onlyFavorites: true
+
+    getStateFromStores: ->
+            isDrawerExpanded: LayoutStore.isDrawerExpanded()
 
     componentWillReceiveProps: (props) ->
         if not Immutable.is(props.selectedAccount, @props.selectedAccount)
@@ -96,7 +107,9 @@ module.exports = Menu = React.createClass
         #     'expanded': @props.disposition.type is Dispositions.THREE
         #     'three': @props.disposition.type is Dispositions.THREE
 
-        aside 'aria-expanded': 'false',
+        aside
+            'aria-expanded': @state.isDrawerExpanded,
+
 
             modal
 
@@ -111,11 +124,18 @@ module.exports = Menu = React.createClass
 
             a
                 href: newMailboxUrl,
-                onClick: @_hideMenu
                 className: 'menu-item new-account-action ' + newMailboxClass,
-                    i className: 'fa fa-inbox'
+                    i className: 'fa fa-plus'
                     span className: 'item-label', t 'menu account new'
 
+            button
+                className: classer
+                    btn:               true
+                    fa:                true
+                    'drawer-toggle':   true
+                    'fa-toggle-right': not @state.isDrawerExpanded
+                    'fa-toggle-left':  @state.isDrawerExpanded
+                onClick: LayoutActionCreator.drawerToggle
 
     # renders a single account and its submenu
     getAccountRender: (account, key) ->
@@ -145,7 +165,6 @@ module.exports = Menu = React.createClass
         toggleActive = =>
             if not @state.displayActiveAccount
                 @setState displayActiveAccount: true
-            @_hideMenu()
 
         toggleDisplay = =>
             if isSelected
@@ -210,7 +229,6 @@ module.exports = Menu = React.createClass
                             selectedMailboxID: selectedMailboxID,
                             refreshes:         refreshes,
                             displayErrors:     @displayErrors,
-                            hideMenu:          @_hideMenu
                     .toJS()
                     li null,
                         a
@@ -222,10 +240,6 @@ module.exports = Menu = React.createClass
                                 span
                                     className: 'item-label',
                                     toggleFavoritesLabel
-
-    _hideMenu: ->
-        if @props.isResponsiveMenuShown
-            @props.toggleMenu()
 
     _initTooltips: ->
         #jQuery('#account-list [data-toggle="tooltip"]').tooltip()
