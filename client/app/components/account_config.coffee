@@ -1,5 +1,5 @@
 AccountActionCreator = require '../actions/account_action_creator'
-LayoutActionCreator = require '../actions/layout_action_creator'
+LayoutActions = require '../actions/layout_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
 {Container, Title, Tabs} = require './basic_components'
@@ -128,11 +128,6 @@ module.exports = React.createClass
                 AccountConfigMailboxes mailboxesOptions
 
 
-    # Ask to main layout manager to display error as notification toasters.
-    renderError: (errors) ->
-        LayoutActionCreator.alertError t 'account errors'
-
-
     # Build options shared by both tabs.
     buildMainOptions: (options) ->
 
@@ -170,7 +165,8 @@ module.exports = React.createClass
             titleLabel = t "account edit"
         else
             titleLabel = t "account new"
-        titleLabel
+
+        return titleLabel
 
 
     # Build tab navigation depending if we show the component for a new
@@ -222,7 +218,7 @@ module.exports = React.createClass
         {accountValue, valid, errors} = @validateForm()
 
         if Object.keys(errors).length > 0
-            @renderError errors
+            LayoutActions.alertError t 'account errors'
 
         if valid.valid
 
@@ -295,7 +291,7 @@ module.exports = React.createClass
         AccountActionCreator.create values, (account) =>
             msg = t("account creation ok")
 
-            LayoutActionCreator.notify msg,
+            LayoutActions.notify msg,
                 autoclose: true
 
             @redirect

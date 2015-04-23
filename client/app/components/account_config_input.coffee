@@ -75,7 +75,7 @@ module.exports = AccountInput = React.createClass
         else
             if @state.errors?[errorField]?
                 result.push ErrorLine text: @state.errors[errorField]
-        result
+        return result
 
 
     # Add error class if errors are listed.
@@ -83,7 +83,8 @@ module.exports = AccountInput = React.createClass
         fields = [fields] if not Array.isArray fields
         errors = fields.some (field) => @state.errors[field]?
         mainClasses =  "form-group account-item-#{name} "
-        mainClasses = "#{mainClasses} has-error" if errors
+        mainClasses = "#{mainClasses} has-error " if errors
+        mainClasses = "#{mainClasses} #{@props.className} " if @props.className
         return mainClasses
 
 
@@ -93,5 +94,5 @@ module.exports = AccountInput = React.createClass
         placeHolder = null
         if type is 'text' or type is 'email'
             placeHolder = t("account #{name} short")
-        placeHolder
+        return placeHolder
 

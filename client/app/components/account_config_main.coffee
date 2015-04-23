@@ -12,8 +12,6 @@ LayoutActionCreator = require '../actions/layout_action_creator'
 {Form, FieldSet, FormButtons, FormDropdown} = require './basic_components'
 
 
-state = null
-
 module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
 
@@ -30,19 +28,17 @@ module.exports = AccountConfigMain = React.createClass
         return not (isNextState and isNextProps)
 
 
-    _propsToState: (props) ->
-        state = props
-        return state
-
-
     getInitialState: ->
-        state = @_propsToState @props
+        state = {}
+        state[key] = value for key, value of @props
         state.smtpAdvanced = false
         return state
 
 
     componentWillReceiveProps: (props) ->
-        @setState @_propsToState(props)
+        state = {}
+        state[key] = value for key, value of props
+        @setState state
 
 
     buildButtonLabel: ->
@@ -100,6 +96,7 @@ module.exports = AccountConfigMain = React.createClass
 
             AccountInput
                 name: 'accountType'
+                className: 'hidden'
                 value: @linkState('accountType').value
                 errors: @state.errors
 
@@ -130,7 +127,7 @@ module.exports = AccountConfigMain = React.createClass
                 value: @linkState('imapPort').value
                 errors: @state.errors
                 onBlur: =>
-                    @_onimapPort
+                    @_onIMAPPort()
                     @props.onBlur?()
                 onInput: =>
                     @setState imapManualPort: true
@@ -172,8 +169,8 @@ module.exports = AccountConfigMain = React.createClass
                 value: @linkState('smtpPort').value
                 errors: @state.errors
                 onBlur: =>
+                    @_onSMTPPort()
                     @props.onBlur()
-                    @_onSMTPPort
                 onInput: =>
                     @setState smtpManualPort: true
 

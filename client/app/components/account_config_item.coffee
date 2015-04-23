@@ -30,20 +30,12 @@ module.exports = MailboxItem = React.createClass
     # properties like the name. Otherwise it displays box information and
     # button to switch to edit mode and button to delete the current mailbox.
     render: ->
-        pusher = ""
-        pusher += "    " for j in [1..@props.mailbox.get('depth')] by 1
-        key = @props.mailbox.get 'id'
-
-        if @state.favorite
-            favoriteClass = "fa fa-eye mailbox-visi-yes"
-            favoriteTitle = t "mailbox title favorite"
-        else
-            favoriteClass = "fa fa-eye-slash mailbox-visi-no"
-            favoriteTitle = t "mailbox title not favorite"
-
+        pusher = @buildIndentation()
+        {favoriteClass, favoriteTitle} = @buildFavoriteValues()
         nbTotal  = @props.mailbox.get('nbTotal') or 0
         nbUnread = @props.mailbox.get('nbUnread') or 0
         nbRecent = @props.mailbox.get('nbRecent') or 0
+        key = @props.mailbox.get 'id'
 
         classItem = classer
             'row': true
@@ -100,6 +92,24 @@ module.exports = MailboxItem = React.createClass
                 span
                     className: "col-xs-1 text-center box-count box-new",
                     nbRecent
+
+
+    # Build indentation based on the depth of the folder.
+    # A subfolder has a larger indentation than its parent.
+    buildIndentation: ->
+        ("    " for j in [1..@props.mailbox.get('depth')]).join ''
+
+
+    # Change title and icon when a folder is marked as favorite or not.
+    buildFavoriteValues: ->
+        if @state.favorite
+            favoriteClass = "fa fa-eye mailbox-visi-yes"
+            favoriteTitle = t "mailbox title favorite"
+        else
+            favoriteClass = "fa fa-eye-slash mailbox-visi-no"
+            favoriteTitle = t "mailbox title not favorite"
+
+        return {favoriteClass, favoriteTitle}
 
 
     # When enter key is typed, it updates the mailbox information.

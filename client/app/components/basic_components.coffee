@@ -11,6 +11,7 @@
     legend
     label
     img
+    form
 } = React.DOM
 
 
@@ -67,7 +68,7 @@ ErrorLine = React.createClass
 Form = React.createClass
 
     render: ->
-        div
+        form
             id: @props.id
             className: @props.className
             method: 'POST'

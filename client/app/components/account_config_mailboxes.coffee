@@ -6,7 +6,7 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 RouterMixin = require '../mixins/router_mixin'
 MailboxList = require './mailbox_list'
 MailboxItem = require './account_config_item'
-{SubTitle} = require './basic_components'
+{SubTitle, Form} = require './basic_components'
 
 
 module.exports = AccountConfigMailboxes = React.createClass
@@ -62,7 +62,7 @@ module.exports = AccountConfigMailboxes = React.createClass
                     console.error error, favorites
             .toJS()
 
-        form className: 'form-horizontal',
+        Form className: 'form-horizontal',
 
             @renderError()
 
@@ -163,16 +163,17 @@ module.exports = AccountConfigMailboxes = React.createClass
                         allowUndefined: true
                         mailboxes: @state.mailboxesFlat
                         selectedMailboxID: @state[box].value
-                        onChange: (mailbox) =>
-                            # requestChange is asynchroneous, so we need
-                            # to also call setState to only call onSubmet
-                            # once state has really been updated
-                            @state[box].requestChange mailbox
-                            newState = {}
-                            newState[box] =
-                                value = mailbox
-                            @setState newState, =>
-                                @props.onSubmit()
+                        onChange: @onMailboxChange
+
+
+    # requestChange is asynchroneous, so we need to also call setState to only
+    # call onSubmit once state has really been updated
+    onMailboxChange: (mailbox) =>
+        @state[box].requestChange mailbox
+        newState = {}
+        newState[box] = mailbox
+        @setState newState, =>
+            @props.onSubmit()
 
 
     # Typing enter runs the mailbox creation process.
@@ -198,7 +199,6 @@ module.exports = AccountConfigMailboxes = React.createClass
                 LayoutActionCreator.notify t("mailbox create ok"),
                     autoclose: true
                 @refs.newmailbox.getDOMNode().value = ''
-
 
 
     # Undo mailbox creation (hide the mailbox creation widget).
