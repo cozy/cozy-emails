@@ -145,8 +145,6 @@ MessageList = React.createClass
             ref: 'list',
             'data-mailbox-id': @props.mailboxID,
             div className: 'message-list-actions',
-                #if advanced and not @state.edited
-                #    MessagesQuickFilter {}
                 div className: 'btn-toolbar', role: 'toolbar',
                     div className: 'btn-group',
                         # Toggle edit
@@ -200,9 +198,6 @@ MessageList = React.createClass
                                     'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT
                                     'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-paperclip'
-                        if advanced and not @state.edited
-                            div className: btnGrpClasses,
-                                MessagesFilter filterParams
                         ## sort
                         if advanced and not @state.edited
                             div className: btnGrpClasses,
@@ -286,6 +281,10 @@ MessageList = React.createClass
                             i className: 'fa fa-edit'
                             span className: 'item-label', t 'menu compose'
 
+            div className: 'message-list-filters form-horizontal',
+                MessagesQuickFilter
+                    accountID: @props.accountID
+                    mailboxID: @props.mailboxID
 
             if @props.messages.count() is 0
                 if @props.fetching
@@ -755,70 +754,62 @@ MessageItem = React.createClass
 MessagesQuickFilter = React.createClass
     displayName: 'MessagesQuickFilter'
 
+    getInitialState: ->
+        state =
+            type: 'subject'
+        return state
+
     render: ->
-        div
-            className: "form-group message-list-action",
+        div null,
+            # Filter type
+            div
+                className: 'btn-group btn-group-sm dropdown pull-left',
+                    button
+                        className: 'btn btn-default dropdown-toggle'
+                        type: 'button'
+                        'data-toggle': 'dropdown'
+                        t "list filter #{@state.type}",
+                            span className: 'caret', ''
+                    ul className: 'dropdown-menu', role: 'menu',
+                        li
+                            role: 'presentation'
+                            onClick: @onChange.bind(this, 'subject')
+                            key: 'subject',
+                                a
+                                    role: 'menuitem',
+                                    t 'list filter subject'
             input
-                className: "form-control"
+                ref: 'value'
+                className: ""
                 type: "text"
-                onBlur: @onQuick
-
-    onQuick: (ev) ->
-        LayoutActionCreator.quickFilterMessages ev.target.value.trim()
-
-MessagesFilter = React.createClass
-    displayName: 'MessagesFilter'
-
-    mixins: [RouterMixin]
-
-    render: ->
-        filter = @props.query.flag
-        if not filter? or filter is '-'
-            title = i className: 'fa fa-filter'
-        else
-            title = t 'list filter ' + filter
-        div className: 'btn-group btn-group-sm dropdown filter-dropdown',
+                onKeyDown: @onKeyDown,
             button
-                className: 'btn btn-default dropdown-toggle message-list-action'
-                type: 'button'
-                'data-toggle': 'dropdown'
-                title
-                    span className: 'caret'
-            ul
-                className: 'dropdown-menu',
-                role: 'menu',
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.ALL,
-                            t 'list filter all'
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.UNSEEN,
-                            t 'list filter unseen'
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.FLAGGED,
-                            t 'list filter flagged'
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.ATTACH,
-                            t 'list filter attach'
+                onClick: @onFilter
+                className: 'btn btn-default'
+                'aria-describedby': Tooltips.FILTER
+                'data-tooltip-direction': 'bottom'
+                span className: 'fa fa-filter'
+
+    onChange: (filter) ->
+        @setState type: filter
 
     onFilter: (ev) ->
-        LayoutActionCreator.filterMessages ev.target.dataset.filter
+        value = @refs.value.getDOMNode().value
+
+        LayoutActionCreator.sortMessages
+            field:  @state.type
+            after:  "#{value}\uFFFF"
+            before: value
 
         params = _.clone(MessageStore.getParams())
         params.accountID = @props.accountID
         params.mailboxID = @props.mailboxID
         LayoutActionCreator.showMessageList parameters: params
-        #@redirect @buildUrl
-        #    direction: 'first'
-        #    action: 'account.mailbox.messages.full'
-        #    parameters: params
+
+    onKeyDown: (evt) ->
+        switch evt.key
+            when "Enter"
+                @onFilter()
 
 MessagesSort = React.createClass
     displayName: 'MessagesSort'

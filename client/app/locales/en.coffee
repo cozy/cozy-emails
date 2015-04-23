@@ -74,6 +74,7 @@ module.exports =
       "list filter unseen"        : "Unseen"
       "list filter flagged"       : "Important"
       "list filter attach"        : "Attachments"
+      "list filter subject"       : "Subject starts with…"
       "list sort"                 : "Sort"
       "list sort date"            : "Date"
       "list sort subject"         : "Subject"

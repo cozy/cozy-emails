@@ -215,9 +215,9 @@ class MessageStore extends Store
                 else
                     newOrder   = '+'
             _params =
-                after: '-'
+                after: sort.after or '-'
                 flag: _params.flag
-                before: '-'
+                before: sort.before or '-'
                 pageAfter: '-'
                 sort : newOrder + sort.field
 
