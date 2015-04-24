@@ -7433,29 +7433,6 @@ module.exports = React.createClass({
       className: 'date'
     }, messageUtils.formatDate(this.props.message.get('createdAt'))), this.renderDetailsPopup()));
   },
-  formatUsers: function(users) {
-    var items, user, _i, _len;
-    if (users == null) {
-      return;
-    }
-    if (_.isArray(users)) {
-      items = [];
-      for (_i = 0, _len = users.length; _i < _len; _i++) {
-        user = users[_i];
-        items.push(ContactLabel({
-          contact: user
-        }));
-        if (user !== _.last(users)) {
-          items.push(", ");
-        }
-      }
-      return items;
-    } else {
-      return ContactLabel({
-        contact: user
-      });
-    }
-  },
   renderAddress: function(field) {
     var users;
     users = this.props.message.get(field);
