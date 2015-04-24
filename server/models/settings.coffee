@@ -6,12 +6,13 @@ Any = (x) -> x
 module.exports = Settings = cozydb.getModel 'MailsSettings',
     # SETTINGS
     #messagesPerPage      : type : Number,  default : 25
+    autosaveDraft        : type : Boolean, default : true
     composeInHTML        : type : Boolean, default : true
     composeOnTop         : type : Boolean, default : false
     desktopNotifications : type : Boolean, default : false
     displayConversation  : type : Boolean, default : true
     displayPreview       : type : Boolean, default : true
-    layoutStyle          : type : String,  default : 'vertical'
+    layoutStyle          : type : String,  default : 'column'
     listStyle            : type : String,  default : 'default'
     messageConfirmDelete : type : Boolean, default : true
     messageDisplayHTML   : type : Boolean, default : true
@@ -33,12 +34,13 @@ Settings.get = (callback) ->
 
 Settings.getDefault = (callback) ->
     settings =
+        autosaveDraft        : true
         composeInHTML        : true
         composeOnTop         : false
         desktopNotifications : true
         displayConversation  : true
         displayPreview       : true
-        layoutStyle          : 'three'
+        layoutStyle          : 'column'
         listStyle            : 'default'
         messageConfirmDelete : true
         messageDisplayHTML   : true

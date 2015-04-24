@@ -43,6 +43,7 @@ module.exports =
 
         # Layout
         'SET_DISPOSITION'           : 'SET_DISPOSITION'
+        'RESIZE_PREVIEW_PANE'       : 'RESIZE_PREVIEW_PANE'
         'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
         'HIDE_ALERT'                : 'HIDE_ALERT'
         'REFRESH'                   : 'REFRESH'
@@ -72,6 +73,12 @@ module.exports =
         # Toasts
         'TOASTS_SHOW'               : 'TOASTS_SHOW'
         'TOASTS_HIDE'               : 'TOASTS_HIDE'
+
+        # Drawer
+        'DRAWER_SHOW':   'DRAWER_SHOW'
+        'DRAWER_HIDE':   'DRAWER_HIDE'
+        'DRAWER_TOGGLE': 'DRAWER_TOGGLE'
+
 
     PayloadSources:
         'VIEW_ACTION'   : 'VIEW_ACTION'
@@ -114,9 +121,9 @@ module.exports =
         NOFLAG : 'Noflag'
 
     Dispositions:
-        HORIZONTAL: 'horizontal'
-        VERTICAL: 'vertical'
-        THREE: 'three'
+        COL:  'column'
+        ROW:  'row'
+        RROW: 'row-reverse'
 
     SpecialBoxIcons:
         inboxMailbox: 'fa-inbox'
@@ -136,6 +143,13 @@ module.exports =
         DOWNLOAD_ATTACHMENT: 'TOOLTIP_DOWNLOAD_ATTACHMENT'
         PREVIOUS_CONVERSATION: 'TOOLTIP_PREVIOUS_CONVERSATION'
         NEXT_CONVERSATION: 'TOOLTIP_NEXT_CONVERSATION'
+        FILTER_ONLY_UNREAD: 'TOOLTIP_FILTER_ONLY_UNREAD'
+        FILTER_ONLY_IMPORTANT: 'TOOLTIP_FILTER_ONLY_IMPORTANT'
+        FILTER_ONLY_WITH_ATTACHMENT: 'TOOLTIP_FILTER_ONLY_WITH_ATTACHMENT'
+        TRIGGER_REFRESH: 'TOOLTIP_TRIGGER_REFRESH'
+        ACCOUNT_PARAMETERS: 'TOOLTIP_ACCOUNT_PARAMETERS'
+        DELETE_SELECTION: 'TOOLTIP_DELETE_SELECTION'
+
 
 
 

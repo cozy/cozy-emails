@@ -72,11 +72,8 @@ module.exports =
       "list filter"               : "Filter"
       "list filter all"           : "All"
       "list filter unseen"        : "Unseen"
-      "list filter unseen title"  : "Show only unread messages"
       "list filter flagged"       : "Important"
-      "list filter flagged title" : "Show only Important messages"
       "list filter attach"        : "Attachments"
-      "list filter attach title"  : "Show only messages with attachments"
       "list sort"                 : "Sort"
       "list sort date"            : "Date"
       "list sort subject"         : "Subject"
@@ -232,10 +229,13 @@ module.exports =
       "config error imapTLS"        : "Wrong IMAP TLS"
       "config error smtpPort"       : "Wrong SMTP Port"
       "config error smtpServer"     : "Wrong SMTP Server"
-      "config error nomailboxes"    : "No folder in this account, please create
-                                        one"
+      "config error nomailboxes"    : "No folder in this account, please create one"
 
       # Message Action
+      "action undo"                 : "Undo"
+      "action undo ok"              : "Action cancelled"
+      "action undo ko"              : "Unable to undo action"
+      "message contact creation"    : "Do you want to create a contact for %{contact}?"
       "message action sent ok"      : "Message sent"
       "message action sent ko"      : "Error sending message: "
       "message action draft ok"     : "Message saved"
@@ -267,7 +267,7 @@ module.exports =
       "message undelete"            : "Undo message deletion"
       "message undelete ok"         : "Message undeleted"
       "message undelete error"      : "Error undoing some action"
-      "message undelete unavalable" : "Undo not available"
+      "message undelete unavailable": "Undo not available"
       "message preview title"       : "View attachments"
 
       # Settings
@@ -282,6 +282,7 @@ module.exports =
       "settings plugin new name"   : "Plugin Name"
       "settings plugin new url"    : "Plugin URL"
       # SETTINGS
+      "settings label autosaveDraft"        : "Save draft message while composing"
       "settings label composeInHTML"        : "Rich message editor"
       "settings label composeOnTop"         : "Reply on top of message"
       "settings label desktopNotifications" : "Notifications"
@@ -379,3 +380,9 @@ module.exports =
       "tooltip download attachment": "Download the attachment"
       "tooltip previous conversation": "Go to previous conversation"
       "tooltip next conversation": "Go to next conversation"
+      "tooltip filter only unread": "Show only unread messages"
+      "tooltip filter only important": "Show only important messages"
+      "tooltip filter only attachment": "Show only messages with attachment"
+      "tooltip trigger refresh": "Refresh"
+      "tooltip account parameters": "Account parameters"
+      "tooltip delete selection": "Delete all selected messages"
