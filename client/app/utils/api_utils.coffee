@@ -5,6 +5,7 @@ SettingsStore = require '../stores/settings_store'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
+
 onMessageList = ->
     actions = [
         "account.mailbox.messages",
@@ -12,26 +13,34 @@ onMessageList = ->
     ]
     return router.current.firstPanel?.action in actions
 
+
 module.exports =
+
+
     getCurrentAccount: ->
         AccountStore.getSelected()?.toJS()
 
+
     getCurrentMailbox: ->
         AccountStore.getSelectedMailbox()?.toJS()
+
 
     getCurrentMessage: ->
         messageID = MessageStore.getCurrentID()
         message = MessageStore.getByID messageID
         return message?.toJS()
 
+
     getMessage: (id) ->
         message = MessageStore.getByID id
         return message?.toJS()
+
 
     getCurrentConversation: ->
         conversationID = MessageStore.getCurrentConversationID()
         if conversationID?
             return MessageStore.getConversation(conversationID)?.toJS()
+
 
     getCurrentActions: ->
         res = []
@@ -40,8 +49,10 @@ module.exports =
                 res.push router.current[panel].action
         return res
 
+
     messageNew: ->
         router.navigate('compose/', {trigger: true})
+
 
     # update locate (without saving it into settings)
     setLocale: (lang, refresh) ->
@@ -59,6 +70,7 @@ module.exports =
         window.t = polyglot.t.bind polyglot
         if refresh
             LayoutActionCreator.refresh()
+
 
     getAccountByLabel: (label) ->
         return AccountStore.getByLabel label
@@ -127,6 +139,7 @@ module.exports =
         url = window.router.buildUrl urlOptions
         window.router.navigate url, {trigger: true}
 
+
     messageClose: ->
         closeUrl = window.router.buildUrl
             direction: 'first'
@@ -136,6 +149,7 @@ module.exports =
                 mailboxID: AccountStore.getSelectedMailbox().get 'id'
             fullWidth: true
         window.router.navigate closeUrl, {trigger: true}
+
 
     messageDeleteCurrent: ->
         if not onMessageList()
@@ -157,12 +171,15 @@ module.exports =
         window.confirm confirmMessage
             MessageUtils.delete messageID, conversation
 
+
     messageUndo: ->
         MessageActionCreator.undelete()
+
 
     customEvent: (name, data) ->
         domEvent = new CustomEvent name, detail: data
         window.dispatchEvent domEvent
+
 
     simulateUpdate: ->
 
@@ -189,6 +206,7 @@ module.exports =
                 value: content
         , 5000
 
+
     notify: (title, options) ->
         if window.Notification? and SettingsStore.get 'desktopNotifications'
             new Notification title, options
@@ -202,12 +220,14 @@ module.exports =
                 LayoutActionCreator.notify "#{title} - #{options.body}"
             , 0
 
+
     # Send errors to serveur
     # Usage: window.cozyMails.log(new Error('message'))
     log: (error) ->
         url = error.stack.split('\n')[0].split('@')[1]
             .split(/:\d/)[0].split('/').slice(0, -2).join('/')
         window.onerror error.name, url, error.lineNumber, error.colNumber, error
+
 
     # Debug: allow to dump component tree
     dump: ->

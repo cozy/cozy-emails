@@ -16,6 +16,7 @@ FileShape = React.PropTypes.shape
     rawFileObject      : React.PropTypes.object
     url                : React.PropTypes.string
 
+
 ###
 # File picker
 #
