@@ -39,10 +39,10 @@ module.exports =
         byMailboxRequest:
             reduce: '_count'
             map: (doc) ->
-                if Object.keys(doc.mailboxIDs).length is 0
-                    emit ['nobox']
+                nobox = true
 
                 for boxid, uid of doc.mailboxIDs
+                    nobox = false
                     docDate = doc.date or (new Date()).toISOString()
                     emit ['uid', boxid, uid], doc.flags
 
@@ -71,6 +71,9 @@ module.exports =
                         emit ['dest', boxid, null, dest.address], null
 
                 undefined # prevent coffeescript comprehension
+
+                if nobox
+                    emit ['nobox']
 
         # this map is used to dedup by message-id
         dedupRequest: (doc) ->
