@@ -1,4 +1,4 @@
-{div, label, input} = React.DOM
+{div, label, input, textarea} = React.DOM
 {ErrorLine} = require './basic_components'
 classer = React.addons.classSet
 
@@ -41,7 +41,23 @@ module.exports = AccountInput = React.createClass
                 t "account #{name}"
 
             div className: 'col-sm-3',
-                if type isnt 'checkbox'
+                if type is 'checkbox'
+                    input
+                        id: "mailbox-#{name}"
+                        name: "mailbox-#{name}"
+                        checkedLink: @linkState('value').value
+                        type: type
+                        onClick: @props.onClick
+                else if type is 'textarea'
+                    textarea
+                        id: "mailbox-#{name}"
+                        name: "mailbox-#{name}"
+                        valueLink: @linkState('value').value
+                        className: 'form-control'
+                        placeholder: placeHolder
+                        onBlur: @onBlur
+                        onInput: @props.onInput or null
+                else
                     input
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
@@ -51,13 +67,6 @@ module.exports = AccountInput = React.createClass
                         placeholder: placeHolder
                         onBlur: @onBlur
                         onInput: @props.onInput or null
-                else
-                    input
-                        id: "mailbox-#{name}"
-                        name: "mailbox-#{name}"
-                        checkedLink: @linkState('value').value
-                        type: type
-                        onClick: @props.onClick
 
             @renderError errorField, name
 
@@ -92,7 +101,7 @@ module.exports = AccountInput = React.createClass
     # key and run translation process on it).
     buildPlaceHolder: (type, name) ->
         placeHolder = null
-        if type is 'text' or type is 'email'
-            placeHolder = t("account #{name} short")
+        if type in ['text', 'email'] or name is 'signature'
+            placeHolder = t "account #{name} short"
         return placeHolder
 

@@ -142,11 +142,14 @@ module.exports = AccountConfigMailboxes = React.createClass
 
 
     renderError: ->
+
         if @props.error and @props.error.name is 'AccountConfigError'
             message = t 'config error ' + @props.error.field
             div className: 'alert alert-warning', message
+
         else if @props.error
             div className: 'alert alert-warning', @props.error.message
+
         else if Object.keys(@state.errors).length isnt 0
             div className: 'alert alert-warning', t 'account errors'
 
