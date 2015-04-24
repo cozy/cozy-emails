@@ -387,6 +387,5 @@ module.exports =
       "tooltip filter only unread": "Show only unread messages"
       "tooltip filter only important": "Show only important messages"
       "tooltip filter only attachment": "Show only messages with attachment"
-      "tooltip trigger refresh": "Refresh"
       "tooltip account parameters": "Account parameters"
       "tooltip delete selection": "Delete all selected messages"

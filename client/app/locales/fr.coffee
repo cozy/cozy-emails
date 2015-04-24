@@ -401,6 +401,5 @@ module.exports =
       "tooltip filter only unread": "Montrer seulement les messages non lus"
       "tooltip filter only important": "Montrer seulement les messages importants"
       "tooltip filter only attachment": "Montrer seulement les messages avec pièce jointe"
-      "tooltip trigger refresh": "Rafraîchir"
       "tooltip account parameters": "Paramètres du compte"
       "tooltip delete selection": "Supprimer les messages sélectionnés"
