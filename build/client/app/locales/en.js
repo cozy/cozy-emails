@@ -207,6 +207,7 @@ module.exports = {
   "action undo": "Undo",
   "action undo ok": "Action cancelled",
   "action undo ko": "Unable to undo action",
+  "message contact creation": "Do you want to create a contact for %{contact}?",
   "message action sent ok": "Message sent",
   "message action sent ko": "Error sending message: ",
   "message action draft ok": "Message saved",
