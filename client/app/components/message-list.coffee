@@ -19,6 +19,7 @@ MessageStore   = require '../stores/message_store'
 
 MailboxList    = require './mailbox_list'
 Participants   = require './participant'
+{Spinner}      = require './basic_components'
 ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'
 
@@ -316,8 +317,7 @@ MessageList = React.createClass
                        @props.query.pageAfter?
                         p className: 'text-center list-footer',
                             if @props.fetching
-                                img
-                                    src: 'images/spinner.svg'
+                                Spinner()
                             else
                                 a
                                     className: 'more-messages'

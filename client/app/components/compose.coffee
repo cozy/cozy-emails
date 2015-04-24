@@ -5,6 +5,7 @@ classer = React.addons.classSet
 
 FilePicker = require './file_picker'
 MailsInput = require './mails_input'
+{Spinner} = require './basic_components'
 
 AccountPicker = require './account_picker'
 
@@ -179,10 +180,7 @@ module.exports = Compose = React.createClass
                                 disable: if @state.sending then true else null
                                 onClick: @onSend,
                                     if @state.sending
-                                        span null,
-                                            img
-                                                src: 'images/spinner-white.svg'
-                                                className: 'button-spinner'
+                                        span null, Spinner(white: true)
                                     else
                                         span className: 'fa fa-send'
                                     span null, labelSend
@@ -191,10 +189,7 @@ module.exports = Compose = React.createClass
                                 disable: if @state.saving then true else null
                                 type: 'button', onClick: @onDraft,
                                     if @state.saving
-                                        span null,
-                                            img
-                                                src: 'images/spinner-white.svg'
-                                                className: 'button-spinner'
+                                        span null, Spinner(white: true)
                                     else
                                         span className: 'fa fa-save'
                                     span null, t 'compose action draft'

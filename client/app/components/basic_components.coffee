@@ -107,10 +107,7 @@ FormButton = React.createClass
             onClick: @props.onClick
         ,
             if @props.spinner
-                span null,
-                    img
-                        src: 'images/spinner-white.svg'
-                        className: 'button-spinner'
+                span null, Spinner(white: true)
             else
                 span className: "fa fa-#{@props.icon}"
             span null, @props.text
