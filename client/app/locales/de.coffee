@@ -57,6 +57,7 @@ module.exports =
       "menu favorites off"      : "Alle"
       "menu toggle"             : "Menü umschalten"
 
+      "menu refresh label"      : "Refresh"
       "menu refresh initializing": "Initializing..."
       "menu refresh cleaning"   : "Cleaning..."
       "menu refresh indicator"  : "%{account}: %{mailbox} (%{progress}%)"

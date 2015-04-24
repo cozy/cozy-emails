@@ -20,7 +20,7 @@ module.exports = React.createClass
                     disabled: null,
                     onClick: @refresh,
                         span className: 'fa fa-refresh'
-                        span null, 'Refresh'
+                        span null, t("menu refresh label")
 
             # Or an indicator of the progress if a refresh is already occurring.
             else
