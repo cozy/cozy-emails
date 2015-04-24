@@ -335,7 +335,7 @@ module.exports = React.createClass
                     state.errors.password = t 'config error auth'
 
                 else
-                    state.errors[field] = "#{t('config error ')}#{field}"
+                    state.errors[field] = t "config error #{field}"
 
 
     # Build state based on current account values.
