@@ -50,10 +50,11 @@ Tabs = React.createClass
 
     render: ->
         ul className: "nav nav-tabs", role: "tablist",
-            for tab in @props.tabs
+            for tab, index in @props.tabs
                 li className: tab.class,
                     a
                         href: tab.url
+                        key: "tab-#{index}"
                     ,
                         tab.text
 
@@ -172,8 +173,8 @@ AddressLabel = React.createClass
             result = span null,
                 span null, "#{@props.contact.name} "
                 span
-                        className: 'contact-address'
-                        key: key
+                    className: 'contact-address'
+                    key: key
                     ,
                         "<#{@props.contact.address}>"
 
