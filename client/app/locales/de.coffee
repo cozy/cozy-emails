@@ -57,6 +57,11 @@ module.exports =
       "menu favorites off"      : "Alle"
       "menu toggle"             : "Menü umschalten"
 
+      "menu refresh label"      : "Refresh"
+      "menu refresh initializing": "Initializing..."
+      "menu refresh cleaning"   : "Cleaning..."
+      "menu refresh indicator"  : "%{account}: %{mailbox} (%{progress}%)"
+
       # List
       "list empty"              : "Keine E-Mail in diesem Postfach."
       "no flagged message"      : "Keine wichtige E-Mail in diesem Postfach."
@@ -363,7 +368,6 @@ module.exports =
       "tooltip filter only unread": "Nur ungelesene Nachrichten anzeigen"
       "tooltip filter only important": "Nur wichtige Nachrichten anzeigen"
       "tooltip filter only attachment": "Nur Nachrichten mit Anhängen anzeigen"
-      "tooltip trigger refresh": "Refresh"
       "tooltip account parameters": "Account parameters"
       "tooltip delete selection": "Delete all selected messages"
 

@@ -19,6 +19,7 @@ MessageStore   = require '../stores/message_store'
 
 MailboxList    = require './mailbox_list'
 Participants   = require './participant'
+{Spinner}      = require './basic_components'
 ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'
 
@@ -208,24 +209,6 @@ MessageList = React.createClass
                             div className: btnGrpClasses,
                                 MessagesSort filterParams
 
-                        # refresh
-                        if not @state.edited
-                            div className: btnGrpClasses,
-                                if @props.refreshes.length is 0
-                                    button
-                                        className: btnClasses,
-                                        type: 'button',
-                                        disabled: null,
-                                        onClick: @refresh,
-                                            span
-                                                className: 'fa fa-refresh'
-                                                'aria-describedby': Tooltips.TRIGGER_REFRESH
-                                                'data-tooltip-direction': 'bottom'
-                                else
-                                    img
-                                        src: 'images/spinner.svg'
-                                        alt: 'spinner'
-                                        className: 'spin'
                         # config
                         if not @state.edited
                             div className: btnGrpClasses,
@@ -334,8 +317,7 @@ MessageList = React.createClass
                        @props.query.pageAfter?
                         p className: 'text-center list-footer',
                             if @props.fetching
-                                img
-                                    src: 'images/spinner.svg'
+                                Spinner()
                             else
                                 a
                                     className: 'more-messages'
@@ -364,10 +346,6 @@ MessageList = React.createClass
         else
             return @props.messages.count() < nbMessages
 
-
-    refresh: (event) ->
-        event.preventDefault()
-        LayoutActionCreator.refreshMessages()
 
     toggleEdited: ->
         if @state.edited
