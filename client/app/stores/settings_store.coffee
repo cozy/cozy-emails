@@ -29,4 +29,5 @@ class SettingsStore extends Store
         else
             return _settings
 
+
 module.exports = new SettingsStore()
