@@ -203,17 +203,20 @@ class MessageStore extends Store
         handle ActionTypes.LIST_SORT, (sort) ->
             _messages    = _messages.clear()
             _sortField   = sort.field
-            currentField = _params.sort.substr(1)
-            currentOrder = _params.sort.substr(0, 1)
-            if currentField is sort.field
-                newOrder   = if currentOrder is '+' then '-' else '+'
-                _sortOrder = -1 * _sortOrder
+            if sort.order?
+                newOrder = sort.order
             else
-                _sortOrder = -1
-                if sort.field is 'date'
-                    newOrder   = '-'
+                currentField = _params.sort.substr(1)
+                currentOrder = _params.sort.substr(0, 1)
+                if currentField is sort.field
+                    newOrder   = if currentOrder is '+' then '-' else '+'
+                    _sortOrder = -1 * _sortOrder
                 else
-                    newOrder   = '+'
+                    _sortOrder = -1
+                    if sort.field is 'date'
+                        newOrder   = '-'
+                    else
+                        newOrder   = '+'
             _params =
                 after: sort.after or '-'
                 flag: _params.flag

@@ -62,13 +62,13 @@ module.exports =
 
                     for sender in doc.from
                         if sender.name?
-                            emit ['from', boxid, null, sender.name], null
-                        emit ['from', boxid, null, sender.address], null
+                            emit ['from', boxid, null, sender.name, docDate], null
+                        emit ['from', boxid, null, sender.address, docDate], null
 
                     for dest in doc.to.concat(doc.cc)
                         if dest.name?
-                            emit ['dest', boxid, null, dest.name], null
-                        emit ['dest', boxid, null, dest.address], null
+                            emit ['dest', boxid, null, dest.name, docDate], null
+                        emit ['dest', boxid, null, dest.address, docDate], null
 
                 undefined # prevent coffeescript comprehension
 

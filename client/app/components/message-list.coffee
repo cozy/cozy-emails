@@ -1,4 +1,4 @@
-{div, ul, li, a, span, i, p, button, input, img} = React.DOM
+{div, ul, li, a, span, i, p, button, input, img, form} = React.DOM
 classer = React.addons.classSet
 
 RouterMixin    = require '../mixins/router_mixin'
@@ -17,6 +17,7 @@ MessageActionCreator      = require '../actions/message_action_creator'
 
 MessageStore   = require '../stores/message_store'
 
+{Dropdown}     = require './basic_components'
 MailboxList    = require './mailbox_list'
 Participants   = require './participant'
 ToolboxActions = require './toolbox_actions'
@@ -751,80 +752,106 @@ MessageItem = React.createClass
     addAddress: (address) ->
         ContactActionCreator.createContact address
 
-Dropdown = React.createClass
-    displayName: 'Dropdown'
-
-    getInitialState: ->
-        state=
-            label: @props.values[Object.keys(@props.values)[0]]
-
-    render: ->
-
-        renderFilter = (key, value) =>
-            onChange = =>
-                @setState label: value
-                @props.onChange key
-            li
-                role: 'presentation'
-                onClick: onChange
-                key: key,
-                    a
-                        role: 'menuitem'
-                        value
-
-        div
-            className: 'btn-group btn-group-sm dropdown pull-left',
-                button
-                    className: 'btn btn-default dropdown-toggle'
-                    type: 'button'
-                    'data-toggle': 'dropdown'
-                    @state.label
-                        span className: 'caret', ''
-                ul className: 'dropdown-menu', role: 'menu',
-                    for key, value of @props.values
-                        renderFilter key, t "list filter #{key}"
 
 MessagesQuickFilter = React.createClass
     displayName: 'MessagesQuickFilter'
 
     getInitialState: ->
+        # default filter type: date
         state =
-            type: 'subject'
+            type: 'date'
         return state
+
+    shouldComponentUpdate: (nextProps, nextState) ->
+        should = not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
+        return should
 
     render: ->
 
         filters = {}
-        ['subject', 'from', 'dest'].map (filter) ->
+        ['subject', 'from', 'dest', 'date'].map (filter) ->
             filters[filter] = t "list filter #{filter}"
 
-        div null,
+        form null,
             # Filter type
             Dropdown
+                value: @state.type
                 values: filters
                 onChange: @onChange
-            input
-                ref: 'value'
-                className: ""
-                type: "text"
-                onKeyDown: @onKeyDown,
+            if @state.type is 'date'
+                [ input
+                    ref: 'dateStart'
+                    id: 'filterDateStart'
+                    key: 'filterDateStart'
+                    name: 'filterDateStart'
+                    className: ""
+                    type: "text",
+                span
+                    key: '-'
+                    '-',
+                input
+                    ref: 'dateEnd'
+                    id: 'filterDateEnd'
+                    key: 'filterDateEnd'
+                    name: 'filterDateEnd'
+                    className: ""
+                    type: "text"
+                ]
+            else
+                input
+                    ref: 'value'
+                    className: ""
+                    type: "text"
+                    onKeyDown: @onKeyDown
             button
                 onClick: @onFilter
                 className: 'btn btn-default'
                 'aria-describedby': Tooltips.FILTER
-                'data-tooltip-direction': 'bottom'
-                span className: 'fa fa-filter'
+                'data-tooltip-direction': 'bottom',
+                    span className: 'fa fa-filter'
+
+    initDatepicker: ->
+        if @refs.dateStart?
+            datePickerController.setDebug true
+            options =
+                formElements:
+                    filterDateStart: '%d/%m/%Y'
+            datePickerController.createDatePicker options
+            options =
+                formElements:
+                    filterDateEnd: '%d/%m/%Y'
+            datePickerController.createDatePicker options
+
+    componentDidMount: ->
+        @initDatepicker()
+
+    componentDidUpdate: ->
+        @initDatepicker()
 
     onChange: (filter) ->
         @setState type: filter
 
     onFilter: (ev) ->
-        value = @refs.value.getDOMNode().value
 
-        LayoutActionCreator.sortMessages
-            field:  @state.type
-            after:  "#{value}\uFFFF"
-            before: value
+        if ev?
+            ev.stopPropagation()
+            ev.preventDefault()
+
+        if @state.type is 'date'
+            start = @refs.dateStart.getDOMNode().value.split '/'
+            end   = @refs.dateEnd.getDOMNode().value.split '/'
+            LayoutActionCreator.sortMessages
+                order: '-'
+                field:  @state.type
+                before: "#{start[2]}-#{start[1]}-#{start[0]}T00:00:00.000Z"
+                after:  "#{end[2]}-#{end[1]}-#{end[0]}T23:59:59.999Z"
+        else
+            value = @refs.value.getDOMNode().value
+            LayoutActionCreator.sortMessages
+                field:  @state.type
+                after:  "#{value}\uFFFF"
+                before: value
 
         params = _.clone(MessageStore.getParams())
         params.accountID = @props.accountID

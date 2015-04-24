@@ -186,10 +186,47 @@ AddressLabel = React.createClass
 
         return result
 
+# Available properties:
+# - values: {key -> value}
+# - value: optional key of current value
+Dropdown = React.createClass
+    displayName: 'Dropdown'
+
+    getInitialState: ->
+        defaultKey = if @props.value? then @props.value else Object.keys(@props.values)[0]
+        state=
+            label: @props.values[defaultKey]
+
+    render: ->
+
+        renderFilter = (key, value) =>
+            onChange = =>
+                @setState label: value
+                @props.onChange key
+            li
+                role: 'presentation'
+                onClick: onChange
+                key: key,
+                    a
+                        role: 'menuitem'
+                        value
+
+        div
+            className: 'btn-group btn-group-sm dropdown pull-left',
+                button
+                    className: 'btn btn-default dropdown-toggle'
+                    type: 'button'
+                    'data-toggle': 'dropdown'
+                    @state.label
+                        span className: 'caret', ''
+                ul className: 'dropdown-menu', role: 'menu',
+                    for key, value of @props.values
+                        renderFilter key, t "list filter #{key}"
 
 module.exports = {
     AddressLabel
     Container
+    Dropdown
     ErrorLine
     Form
     FieldSet

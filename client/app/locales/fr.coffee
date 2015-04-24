@@ -76,6 +76,7 @@ module.exports =
       "list filter flagged"       : "Importants"
       "list filter attach"        : "Pièces-jointes"
       "list filter from"          : "Expédié par"
+      "list filter date"          : "Date entre"
       "list filter dest"          : "Destiné à"
       "list filter subject"       : "Subject commence par…"
       "list sort"                 : "Trier"
