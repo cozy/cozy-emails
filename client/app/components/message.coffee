@@ -301,18 +301,20 @@ module.exports = React.createClass
                     selectedAccountID    : @props.selectedAccountID
                     selectedAccountLogin : @props.selectedAccountLogin
                     selectedMailboxID    : @props.selectedMailboxID
+                    selectedAccount      : @props.selectedAccount
                     message              : @props.message
                     ref                  : 'compose'
             else
                 Compose
-                    ref             : 'compose'
-                    inReplyTo       : @props.message
-                    accounts        : @props.accounts
-                    settings        : @props.settings
-                    selectedAccountID    : @props.selectedAccountID
-                    selectedAccountLogin : @props.selectedAccountLogin
-                    action          : @state.composeAction
-                    layout          : 'second'
+                    ref: 'compose'
+                    inReplyTo: @props.message
+                    accounts: @props.accounts
+                    settings: @props.settings
+                    selectedAccountID: @props.selectedAccountID
+                    selectedAccountLogin: @props.selectedAccountLogin
+                    selectedAccount: @props.selectedAccount
+                    action: @state.composeAction
+                    layout: 'second'
                     callback: (error) =>
                         if not error?
                             # component has probably already been unmounted due to conversation refresh
