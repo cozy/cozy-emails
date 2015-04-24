@@ -22,7 +22,7 @@ module.exports = React.createClass
         isDeleted: React.PropTypes.bool
 
 
-   formatUsers: (users) ->
+    formatUsers: (users) ->
        return unless users?
 
        if _.isArray users

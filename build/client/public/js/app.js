@@ -7401,10 +7401,7 @@ module.exports = React.createClass({
     message: React.PropTypes.object.isRequired,
     isDraft: React.PropTypes.bool,
     isDeleted: React.PropTypes.bool
-  }
-});
-
-({
+  },
   formatUsers: function(users) {
     var items, user, _i, _len;
     if (users == null) {
