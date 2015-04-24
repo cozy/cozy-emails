@@ -30,10 +30,14 @@ module.exports = ToolboxActions = React.createClass
                     if not @props.displayConversations
                         li role: 'presentation', className: 'divider'
                     @renderRawActions()...
-                    li role: 'presentation', className: 'divider'
+                    li
+                        role: 'presentation'
+                        className: 'divider'
+                        key: 'divider'
                     li
                         role:      'presentation'
                         className: 'dropdown-header'
+                        key: 'header-move'
                         t 'mail action conversation move'
                     @renderMailboxes()
 
@@ -43,16 +47,19 @@ module.exports = ToolboxActions = React.createClass
         items.push li
             role:      'presentation'
             className: 'dropdown-header'
+            key: 'header-mark'
             t 'mail action mark'
 
         # TODO: Use a Factory to improve this ugly conditionnal nesting
         buildMenuItem = (args) =>
-            li role: 'presentation',
-                a
-                    role:         'menuitemu'
-                    onClick:      @props.onMark
-                    'data-value': args.value
-                    args.label
+            li
+                role: 'presentation'
+                key: args.value,
+                    a
+                        role:         'menuitemu'
+                        onClick:      @props.onMark
+                        'data-value': args.value
+                        args.label
 
         if not @props.isSeen? or not @props.isSeen
             items.push buildMenuItem
@@ -82,47 +89,48 @@ module.exports = ToolboxActions = React.createClass
             items.push li
                 role:      'presentation'
                 className: 'dropdown-header'
+                key:       'header-more'
                 t 'mail action more'
 
         if @props.messageID?
-            items.push li role: 'presentation',
+            items.push li role: 'presentation', key: 'action-headers',
                 a
                     onClick:           @props.onHeaders
                     'data-message-id': @props.messageID
                     t 'mail action headers'
 
         if @props.message?
-            items.push li role: 'presentation',
+            items.push li role: 'presentation', key: 'action-raw',
                 a
                     href:   "raw/#{@props.message.get 'id'}"
                     target: '_blank'
                     t 'mail action raw'
 
-        items.push li role: 'presentation',
+        items.push li role: 'presentation', key: 'conv-delete',
             a
                 onClick:       @props.onConversation,
                 'data-action': 'delete',
                 t 'mail action conversation delete'
 
-        items.push li role: 'presentation',
+        items.push li role: 'presentation', key: 'conv-seen',
             a
                 onClick:       @props.onConversation,
                 'data-action': 'seen',
                 t 'mail action conversation seen'
 
-        items.push li role: 'presentation',
+        items.push li role: 'presentation', key: 'conv-unseen',
             a
                 onClick:       @props.onConversation,
                 'data-action': 'unseen',
                 t 'mail action conversation unseen'
 
-        items.push li role: 'presentation',
+        items.push li role: 'presentation', key: 'conv-flagged',
             a
                 onClick:       @props.onConversation,
                 'data-action': 'flagged',
                 t 'mail action conversation flagged'
 
-        items.push li role: 'presentation',
+        items.push li role: 'presentation', key: 'conv-noflag',
             a
                 onClick:       @props.onConversation,
                 'data-action': 'noflag',
