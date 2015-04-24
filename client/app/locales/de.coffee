@@ -57,6 +57,10 @@ module.exports =
       "menu favorites off"      : "Alle"
       "menu toggle"             : "Menü umschalten"
 
+      "menu refresh initializing": "Initializing..."
+      "menu refresh cleaning"   : "Cleaning..."
+      "menu refresh indicator"  : "%{account}: %{mailbox} (%{progress}%)"
+
       # List
       "list empty"              : "Keine E-Mail in diesem Postfach."
       "no flagged message"      : "Keine wichtige E-Mail in diesem Postfach."

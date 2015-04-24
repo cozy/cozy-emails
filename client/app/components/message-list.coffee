@@ -208,24 +208,6 @@ MessageList = React.createClass
                             div className: btnGrpClasses,
                                 MessagesSort filterParams
 
-                        # refresh
-                        if not @state.edited
-                            div className: btnGrpClasses,
-                                if @props.refreshes.length is 0
-                                    button
-                                        className: btnClasses,
-                                        type: 'button',
-                                        disabled: null,
-                                        onClick: @refresh,
-                                            span
-                                                className: 'fa fa-refresh'
-                                                'aria-describedby': Tooltips.TRIGGER_REFRESH
-                                                'data-tooltip-direction': 'bottom'
-                                else
-                                    img
-                                        src: 'images/spinner.svg'
-                                        alt: 'spinner'
-                                        className: 'spin'
                         # config
                         if not @state.edited
                             div className: btnGrpClasses,
@@ -364,10 +346,6 @@ MessageList = React.createClass
         else
             return @props.messages.count() < nbMessages
 
-
-    refresh: (event) ->
-        event.preventDefault()
-        LayoutActionCreator.refreshMessages()
 
     toggleEdited: ->
         if @state.edited
