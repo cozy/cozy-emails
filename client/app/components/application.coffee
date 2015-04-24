@@ -107,7 +107,9 @@ module.exports = Application = React.createClass
             else
                 MessageStore.setCurrentID null
         else
-            MessageStore.setCurrentID null
+            if layout.firstPanel.action isnt 'compose'
+                # No message open, delete current message ID
+                MessageStore.setCurrentID null
 
         # Actual layout
         div className: 'container-fluid',
@@ -284,8 +286,6 @@ module.exports = Application = React.createClass
                 conversationID = MessageStore.getCurrentConversationID()
                 if not conversationID? and messages.length > 0
                     conversationID = messages.first().get 'conversationID'
-                    if conversationID?
-                        conversation = MessageStore.getConversation conversationID
                 conversationLengths = MessageStore.getConversationsLength()
 
             query = _.clone(MessageStore.getParams())

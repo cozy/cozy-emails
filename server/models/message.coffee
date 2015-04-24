@@ -391,7 +391,7 @@ module.exports = class Message extends cozydb.CozyModel
                     return callback err if err
                     async.eachSeries rows, (row, cb) ->
                         Message.destroy row.id, (err) ->
-                            log.error 'fail to destroy orphan', err
+                            log.error 'fail to destroy orphan', err if err
                             cb null
                     , callback
 

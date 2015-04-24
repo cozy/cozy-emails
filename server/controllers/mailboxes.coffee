@@ -2,6 +2,7 @@ async = require 'async'
 
 Account = require '../models/account'
 Mailbox = require '../models/mailbox'
+Message = require '../models/message'
 {BadRequest} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'mailbox:controller')
 _ = require 'lodash'
@@ -89,10 +90,16 @@ module.exports.expunge = (req, res, next) ->
 
     account = req.account
     if account.trashMailbox is req.params.mailboxID
-        req.mailbox.imap_expungeMails (err) ->
-            return next err if err
-            res.account = account
-            next null
+        if account.isTest()
+            Message.safeRemoveAllFromBox req.params.mailboxID, (err) ->
+                return next err if err
+                res.account = account
+                next null
+        else
+            req.mailbox.imap_expungeMails (err) ->
+                return next err if err
+                res.account = account
+                next null
     else
         next new BadRequest 'You can only expunge trash mailbox'
 

@@ -44,7 +44,7 @@ module.exports = React.createClass
                 a
                     href: "#{@props.file.url}?download=1"
                     'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT
-                    'data-tooltip-direction': 'top',
+                    'data-tooltip-direction': 'left',
                     """#{@props.file.generatedFileName}
                     (#{@displayFilesize(@props.file.length)})"""
 
@@ -52,7 +52,7 @@ module.exports = React.createClass
 
     renderIcon: ->
         type = MessageUtils.getAttachmentType @props.file.contentType
-        i className: "fa #{@icons[type] or 'fa-file-o'}"
+        i className: "mime #{type} fa #{@icons[type] or 'fa-file-o'}"
 
 
     displayFilesize: (length) ->

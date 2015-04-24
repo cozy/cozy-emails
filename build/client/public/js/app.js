@@ -498,7 +498,7 @@ module.exports = {
             autoclose: true,
             actions: [
               {
-                label: t('conversation undelete'),
+                label: t('action undo'),
                 onClick: function() {
                   return MessageActionCreator.undelete();
                 }
@@ -2739,7 +2739,9 @@ module.exports = Application = React.createClass({
         MessageStore.setCurrentID(null);
       }
     } else {
-      MessageStore.setCurrentID(null);
+      if (layout.firstPanel.action !== 'compose') {
+        MessageStore.setCurrentID(null);
+      }
     }
     return div({
       className: 'container-fluid'
@@ -2867,9 +2869,6 @@ module.exports = Application = React.createClass({
         conversationID = MessageStore.getCurrentConversationID();
         if ((conversationID == null) && messages.length > 0) {
           conversationID = messages.first().get('conversationID');
-          if (conversationID != null) {
-            conversation = MessageStore.getConversation(conversationID);
-          }
         }
         conversationLengths = MessageStore.getConversationsLength();
       }
@@ -3175,7 +3174,7 @@ module.exports = React.createClass({
       }, this.renderIcon(), a({
         href: "" + this.props.file.url + "?download=1",
         'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT,
-        'data-tooltip-direction': 'top'
+        'data-tooltip-direction': 'left'
       }, "" + this.props.file.generatedFileName + "\n(" + (this.displayFilesize(this.props.file.length)) + ")"));
     }
   },
@@ -3183,7 +3182,7 @@ module.exports = React.createClass({
     var type;
     type = MessageUtils.getAttachmentType(this.props.file.contentType);
     return i({
-      className: "fa " + (this.icons[type] || 'fa-file-o')
+      className: "mime " + type + " fa " + (this.icons[type] || 'fa-file-o')
     });
   },
   displayFilesize: function(length) {
@@ -3323,13 +3322,15 @@ module.exports = Compose = React.createClass({
       className: 'compose-cc' + classCc,
       valueLink: this.linkState('cc'),
       label: t('compose cc'),
-      placeholder: t('compose cc help')
+      placeholder: t('compose cc help'),
+      ref: 'cc'
     }), MailsInput({
       id: 'compose-bcc',
       className: 'compose-bcc' + classBcc,
       valueLink: this.linkState('bcc'),
       label: t('compose bcc'),
-      placeholder: t('compose bcc help')
+      placeholder: t('compose bcc help'),
+      ref: 'bcc'
     }), div({
       className: 'form-group'
     }, label({
@@ -3357,7 +3358,8 @@ module.exports = Compose = React.createClass({
       settings: this.props.settings,
       onSend: this.onSend,
       composeInHTML: this.state.composeInHTML,
-      focus: focusEditor
+      focus: focusEditor,
+      ref: 'editor'
     })), div({
       className: 'attachements'
     }, FilePicker({
@@ -3410,6 +3412,7 @@ module.exports = Compose = React.createClass({
       window.clearInterval(this._saveInterval);
     }
     this._saveInterval = window.setInterval(this._autosave, 30000);
+    this._autosave();
     this.getDOMNode().scrollIntoView();
     if (!Array.isArray(this.state.to) || this.state.to.length === 0) {
       return setTimeout(function() {
@@ -3445,15 +3448,19 @@ module.exports = Compose = React.createClass({
     }
     if (this.state.isDraft && (this.state.id != null)) {
       if (!window.confirm(t('compose confirm keep draft'))) {
-        return MessageActionCreator["delete"](this.state.id, function(error) {
-          if (error != null) {
-            return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
-          } else {
-            return LayoutActionCreator.notify(t('compose draft deleted'), {
-              autoclose: true
+        return window.setTimeout((function(_this) {
+          return function() {
+            return MessageActionCreator["delete"](_this.state.id, function(error) {
+              if (error != null) {
+                return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
+              } else {
+                return LayoutActionCreator.notify(t('compose draft deleted'), {
+                  autoclose: true
+                });
+              }
             });
-          }
-        });
+          };
+        })(this), 0);
       } else {
         if (this.state.originalConversationID != null) {
           message = {
@@ -3514,6 +3521,7 @@ module.exports = Compose = React.createClass({
       }
       state.originalConversationID = state.conversationID;
     }
+    state.isDraft = true;
     state.sending = false;
     state.saving = false;
     state.ccShown = Array.isArray(state.cc) && state.cc.length > 0;
@@ -3602,6 +3610,9 @@ module.exports = Compose = React.createClass({
       return MessageActionCreator.send(message, (function(_this) {
         return function(error, message) {
           var key, msgKo, msgOk, state, value;
+          if ((error == null) && (_this.state.id == null)) {
+            MessageActionCreator.setCurrent(message.id);
+          }
           state = _.clone(_this.state);
           if (isDraft) {
             state.saving = false;
@@ -3649,7 +3660,9 @@ module.exports = Compose = React.createClass({
     }
   },
   _autosave: function() {
-    return this._doSend(true);
+    if (this.props.settings.get('autosaveDraft')) {
+      return this._doSend(true);
+    }
   },
   _cleanHTML: function(html) {
     var doc, image, imageSrc, images, parser, _i, _len;
@@ -3783,7 +3796,7 @@ ComposeEditor = React.createClass({
     }
     if (this.props.composeInHTML) {
       return div({
-        className: "rt-editor form-control " + folded,
+        className: "form-control rt-editor " + folded,
         ref: 'html',
         contentEditable: true,
         onKeyDown: this.onKeyDown,
@@ -5205,7 +5218,7 @@ MenuMailboxItem = React.createClass({
 });
 
 ;require.register("components/message-list", function(exports, require, module) {
-var AccountActionCreator, ContactActionCreator, ConversationActionCreator, DomUtils, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageListBody, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, ToolboxActions, ToolboxMove, a, alertError, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
+var AccountActionCreator, ContactActionCreator, ConversationActionCreator, DomUtils, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageListBody, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, ToolboxActions, ToolboxMove, TooltipRefresherMixin, Tooltips, a, alertError, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p, button = _ref.button, input = _ref.input, img = _ref.img;
 
@@ -5213,13 +5226,15 @@ classer = React.addons.classSet;
 
 RouterMixin = require('../mixins/router_mixin');
 
+TooltipRefresherMixin = require('../mixins/tooltip_refresher_mixin');
+
 DomUtils = require('../utils/dom_utils');
 
 MessageUtils = require('../utils/message_utils');
 
 SocketUtils = require('../utils/socketio_utils');
 
-_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, MessageFilter = _ref1.MessageFilter, FlagsConstants = _ref1.FlagsConstants;
+_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, MessageFilter = _ref1.MessageFilter, FlagsConstants = _ref1.FlagsConstants, Tooltips = _ref1.Tooltips;
 
 AccountActionCreator = require('../actions/account_action_creator');
 
@@ -5245,7 +5260,7 @@ alertError = LayoutActionCreator.alertError;
 
 MessageList = React.createClass({
   displayName: 'MessageList',
-  mixins: [RouterMixin],
+  mixins: [RouterMixin, TooltipRefresherMixin],
   shouldComponentUpdate: function(nextProps, nextState) {
     var should;
     should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
@@ -5427,7 +5442,8 @@ MessageList = React.createClass({
     }, MailboxList({
       getUrl: getMailboxUrl,
       mailboxes: this.props.mailboxes,
-      selectedMailboxID: this.props.mailboxID
+      selectedMailboxID: this.props.mailboxID,
+      ref: 'mailboxList'
     })) : void 0, !advanced && !this.state.edited ? div({
       className: btnGrpClasses + ' toggle-menu-button'
     }, button({
@@ -5440,24 +5456,27 @@ MessageList = React.createClass({
       className: btnGrpClasses
     }, button({
       onClick: toggleFilterUnseen,
-      title: t('list filter unseen title'),
-      className: btnClasses + (this.state.filterUnseen ? ' shown' : void 0)
+      className: btnClasses + (this.state.filterUnseen ? ' shown' : void 0),
+      'aria-describedby': Tooltips.FILTER_ONLY_UNREAD,
+      'data-tooltip-direction': 'bottom'
     }, span({
       className: 'fa fa-envelope'
     }))) : void 0, !advanced && !this.state.edited ? div({
       className: btnGrpClasses
     }, button({
       onClick: toggleFilterFlag,
-      title: t('list filter flagged title'),
-      className: btnClasses + (this.state.filterFlag ? ' shown' : void 0)
+      className: btnClasses + (this.state.filterFlag ? ' shown' : void 0),
+      'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT,
+      'data-tooltip-direction': 'bottom'
     }, span({
       className: 'fa fa-star'
     }))) : void 0, !advanced && !this.state.edited ? div({
       className: btnGrpClasses
     }, button({
       onClick: toggleFilterAttach,
-      title: t('list filter attach title'),
-      className: btnClasses + (this.state.filterAttach ? ' shown' : void 0)
+      className: btnClasses + (this.state.filterAttach ? ' shown' : void 0),
+      'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT,
+      'data-tooltip-direction': 'bottom'
     }, span({
       className: 'fa fa-paperclip'
     }))) : void 0, advanced && !this.state.edited ? div({
@@ -5472,7 +5491,9 @@ MessageList = React.createClass({
       disabled: null,
       onClick: this.refresh
     }, span({
-      className: 'fa fa-refresh'
+      className: 'fa fa-refresh',
+      'aria-describedby': Tooltips.TRIGGER_REFRESH,
+      'data-tooltip-direction': 'bottom'
     })) : img({
       src: 'images/spinner.svg',
       alt: 'spinner',
@@ -5483,7 +5504,9 @@ MessageList = React.createClass({
       href: configMailboxUrl,
       className: btnClasses + 'mailbox-config'
     }, i({
-      className: 'fa fa-cog'
+      className: 'fa fa-cog',
+      'aria-describedby': Tooltips.ACCOUNT_PARAMETERS,
+      'data-tooltip-direction': 'bottom'
     }))) : void 0, this.state.edited ? div({
       className: btnGrpClasses
     }, button({
@@ -5495,18 +5518,21 @@ MessageList = React.createClass({
     }))) : void 0, this.state.edited ? div({
       className: btnGrpClasses
     }, button({
-      className: btnClasses + 'trash',
+      className: "" + btnClasses + "trash",
       type: 'button',
       disabled: nbSelected,
-      onClick: this.onDelete
+      onClick: this.onDelete,
+      'aria-describedby': Tooltips.DELETE_SELECTION,
+      'data-tooltip-direction': 'bottom'
     }, span({
       className: 'fa fa-trash-o'
     }))) : void 0, this.state.edited ? ToolboxMove({
+      ref: 'listToolboxMove',
       mailboxes: this.props.mailboxes,
       onMove: this.onMove,
       direction: 'left'
     }) : void 0, this.state.edited ? ToolboxActions({
-      ref: 'listeToolboxActions',
+      ref: 'listToolboxActions',
       mailboxes: this.props.mailboxes,
       onMark: this.onMark,
       onConversation: this.onConversation,
@@ -5543,6 +5569,7 @@ MessageList = React.createClass({
       allSelected: this.state.allSelected,
       displayConversations: this.props.displayConversations,
       isTrash: this.props.isTrash,
+      ref: 'listBody',
       onSelect: (function(_this) {
         return function(id, val) {
           var newState, selected;
@@ -5900,6 +5927,7 @@ MessageListBody = React.createClass({
           login: _this.props.login,
           displayConversations: _this.props.displayConversations,
           isTrash: _this.props.isTrash,
+          ref: 'messageItem',
           onSelect: function(val) {
             return _this.props.onSelect(id, val);
           }
@@ -6117,10 +6145,12 @@ MessageItem = React.createClass({
     separator = to.length > 0 ? ', ' : ' ';
     return span(null, Participants({
       participants: from,
-      onAdd: this.addAddress
+      onAdd: this.addAddress,
+      ref: 'from'
     }), span(null, separator), Participants({
       participants: to,
-      onAdd: this.addAddress
+      onAdd: this.addAddress,
+      ref: 'to'
     }));
   },
   addAddress: function(address) {
@@ -6254,7 +6284,7 @@ MessagesSort = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FilePicker, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, MessageUtils, Participants, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
+var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, MessageUtils, Participants, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img, h4 = _ref.h4;
 
@@ -6268,7 +6298,7 @@ ToolbarMessage = require('./toolbar_message');
 
 Compose = require('./compose');
 
-FilePicker = require('./file_picker');
+Participants = require('./participant');
 
 _ref1 = require('../constants/app_constants'), ComposeActions = _ref1.ComposeActions, MessageFlags = _ref1.MessageFlags, FlagsConstants = _ref1.FlagsConstants;
 
@@ -6283,8 +6313,6 @@ ContactActionCreator = require('../actions/contact_action_creator');
 RouterMixin = require('../mixins/router_mixin');
 
 TooltipRefresherMixin = require('../mixins/tooltip_refresher_mixin');
-
-Participants = require('./participant');
 
 classer = React.addons.classSet;
 
@@ -6512,18 +6540,21 @@ module.exports = React.createClass({
     return span(null, Participants({
       participants: from,
       onAdd: this.addAddress,
-      tooltip: true
+      tooltip: true,
+      ref: 'from'
     }), span(null, ', '), Participants({
       participants: to,
       onAdd: this.addAddress,
-      tooltip: true
+      tooltip: true,
+      ref: 'to'
     }));
   },
   renderHeaders: function() {
     return MessageHeader({
       message: this.props.message,
       isDraft: this.state.prepared.isDraft,
-      isDeleted: this.state.prepared.isDeleted
+      isDeleted: this.state.prepared.isDeleted,
+      ref: 'header'
     });
   },
   renderToolbox: function(full) {
@@ -6543,12 +6574,14 @@ module.exports = React.createClass({
       onForward: this.onForward,
       onDelete: this.onDelete,
       onMove: this.onMove,
-      onHeaders: this.onHeaders
+      onHeaders: this.onHeaders,
+      ref: 'toolbarMessage'
     });
   },
   renderFooter: function() {
     return MessageFooter({
-      message: this.props.message
+      message: this.props.message,
+      ref: 'footer'
     });
   },
   renderCompose: function(isDraft) {
@@ -6949,7 +6982,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message_header", function(exports, require, module) {
-var AttachmentPreview, ContactStore, MessageFlags, MessageUtils, Tooltips, a, div, i, img, li, span, table, tbody, td, tr, ul, _ref, _ref1,
+var AttachmentPreview, MessageFlags, MessageUtils, ParticipantMixin, PopupMessageDetails, Tooltips, a, div, i, img, li, span, table, tbody, td, tr, ul, _ref, _ref1,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice;
 
@@ -6959,12 +6992,15 @@ MessageUtils = require('../utils/message_utils');
 
 AttachmentPreview = require('./attachement_preview');
 
-ContactStore = require('../stores/contact_store');
+PopupMessageDetails = require('./popup_message_details');
+
+ParticipantMixin = require('../mixins/participant_mixin');
 
 _ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, Tooltips = _ref1.Tooltips;
 
 module.exports = React.createClass({
   displayName: 'MessageHeader',
+  mixins: [ParticipantMixin],
   propTypes: {
     message: React.PropTypes.object.isRequired,
     isDraft: React.PropTypes.bool,
@@ -6972,7 +7008,6 @@ module.exports = React.createClass({
   },
   getInitialState: function() {
     return {
-      showDetails: false,
       showAttachements: false
     };
   },
@@ -6998,57 +7033,9 @@ module.exports = React.createClass({
       className: 'fa fa-trash'
     }) : void 0), div({
       className: 'date'
-    }, MessageUtils.formatDate(this.props.message.get('createdAt'))), this.renderDetailsPopup()));
-  },
-  formatUsers: function(users) {
-    var contact, format, items, user, _i, _len;
-    if (users == null) {
-      return;
-    }
-    format = function(user) {
-      var items, key;
-      items = [];
-      if (user.name) {
-        key = user.address.replace(/\W/g, '');
-        items.push("" + user.name + " ");
-        items.push(span({
-          className: 'contact-address',
-          key: key
-        }, i({
-          className: 'fa fa-angle-left'
-        }), user.address, i({
-          className: 'fa fa-angle-right'
-        })));
-      } else {
-        items.push(user.address);
-      }
-      return items;
-    };
-    if (_.isArray(users)) {
-      items = [];
-      for (_i = 0, _len = users.length; _i < _len; _i++) {
-        user = users[_i];
-        contact = ContactStore.getByAddress(user.address);
-        items.push(contact != null ? a({
-          target: '_blank',
-          href: "/#apps/contacts/contact/" + (contact.get('id')),
-          onClick: function(event) {
-            return event.stopPropagation();
-          }
-        }, format(user)) : span({
-          className: 'participant',
-          onClick: function(event) {
-            return event.stopPropagation();
-          }
-        }, format(user)));
-        if (user !== _.last(users)) {
-          items.push(", ");
-        }
-      }
-      return items;
-    } else {
-      return format(users);
-    }
+    }, MessageUtils.formatDate(this.props.message.get('createdAt'))), PopupMessageDetails({
+      message: this.props.message
+    })));
   },
   renderAddress: function(field) {
     var users;
@@ -7094,78 +7081,6 @@ module.exports = React.createClass({
       }
       return _results;
     })())));
-  },
-  renderDetailsPopup: function() {
-    var cc, dest, from, key, reply, row, to, _ref2;
-    from = this.props.message.get('from')[0];
-    to = this.props.message.get('to');
-    cc = this.props.message.get('cc');
-    reply = (_ref2 = this.props.message.get('reply-to')) != null ? _ref2[0] : void 0;
-    row = function(id, value, label, rowSpan) {
-      var attrs, items;
-      if (label == null) {
-        label = false;
-      }
-      if (rowSpan == null) {
-        rowSpan = false;
-      }
-      items = [];
-      if (label) {
-        attrs = {
-          className: 'label'
-        };
-        if (rowSpan) {
-          attrs.rowSpan = rowSpan;
-        }
-        items.push(td(attrs, t(label)));
-      }
-      items.push(td({
-        key: "cell-" + id
-      }, value));
-      return tr.apply(null, [{
-        key: "row-" + id
-      }].concat(__slice.call(items)));
-    };
-    return div({
-      className: 'details',
-      'aria-expanded': this.state.showDetails,
-      onClick: function(event) {
-        return event.stopPropagation();
-      }
-    }, i({
-      className: 'btn fa fa-caret-down',
-      onClick: this.toggleDetails
-    }), div({
-      className: 'popup',
-      'aria-hidden': !this.state.showDetails
-    }, table(null, tbody(null, row('from', this.formatUsers(from), 'headers from'), to.length ? row('to', this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
-      var _i, _len, _ref3, _results;
-      if (to.length) {
-        _ref3 = to.slice(1);
-        _results = [];
-        for (key = _i = 0, _len = _ref3.length; _i < _len; key = ++_i) {
-          dest = _ref3[key];
-          _results.push(row("destTo" + key, this.formatUsers(dest)));
-        }
-        return _results;
-      }
-    }).call(this), cc.length ? row('cc', this.formatUsers(cc[0]), 'headers cc', cc.length) : void 0, (function() {
-      var _i, _len, _ref3, _results;
-      if (cc.length) {
-        _ref3 = cc.slice(1);
-        _results = [];
-        for (key = _i = 0, _len = _ref3.length; _i < _len; key = ++_i) {
-          dest = _ref3[key];
-          _results.push(row("destCc" + key, this.formatUsers(dest)));
-        }
-        return _results;
-      }
-    }).call(this), reply != null ? row('reply', this.formatUsers(reply), 'headers reply-to') : void 0, row('created', this.props.message.get('createdAt'), 'headers date'), row('subject', this.props.message.get('subject'), 'headers subject')))));
-  },
-  toggleDetails: function() {
-    return this.setState({
-      showDetails: !this.state.showDetails
-    });
   },
   toggleAttachments: function() {
     return this.setState({
@@ -7372,6 +7287,102 @@ Participants = React.createClass({
 module.exports = Participants;
 });
 
+;require.register("components/popup_message_details", function(exports, require, module) {
+var ParticipantMixin, div, i, table, tbody, td, tr, _ref,
+  __slice = [].slice;
+
+_ref = React.DOM, div = _ref.div, table = _ref.table, tbody = _ref.tbody, tr = _ref.tr, td = _ref.td, i = _ref.i;
+
+ParticipantMixin = require('../mixins/participant_mixin');
+
+module.exports = React.createClass({
+  displayName: 'MessageDetailsPopup',
+  mixins: [ParticipantMixin, OnClickOutside],
+  getInitialState: function() {
+    return {
+      showDetails: false
+    };
+  },
+  toggleDetails: function() {
+    return this.setState({
+      showDetails: !this.state.showDetails
+    });
+  },
+  handleClickOutside: function() {
+    return this.setState({
+      showDetails: false
+    });
+  },
+  render: function() {
+    var cc, dest, from, key, reply, row, to, _ref1;
+    from = this.props.message.get('from')[0];
+    to = this.props.message.get('to');
+    cc = this.props.message.get('cc');
+    reply = (_ref1 = this.props.message.get('reply-to')) != null ? _ref1[0] : void 0;
+    row = function(id, value, label, rowSpan) {
+      var attrs, items;
+      if (label == null) {
+        label = false;
+      }
+      if (rowSpan == null) {
+        rowSpan = false;
+      }
+      items = [];
+      if (label) {
+        attrs = {
+          className: 'label'
+        };
+        if (rowSpan) {
+          attrs.rowSpan = rowSpan;
+        }
+        items.push(td(attrs, t(label)));
+      }
+      items.push(td({
+        key: "cell-" + id
+      }, value));
+      return tr.apply(null, [{
+        key: "row-" + id
+      }].concat(__slice.call(items)));
+    };
+    return div({
+      className: 'details',
+      'aria-expanded': this.state.showDetails,
+      onClick: function(event) {
+        return event.stopPropagation();
+      }
+    }, i({
+      className: 'btn fa fa-caret-down',
+      onClick: this.toggleDetails
+    }), div({
+      className: 'popup',
+      'aria-hidden': !this.state.showDetails
+    }, table(null, tbody(null, row('from', this.formatUsers(from), 'headers from'), to.length ? row('to', this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
+      var _i, _len, _ref2, _results;
+      if (to.length) {
+        _ref2 = to.slice(1);
+        _results = [];
+        for (key = _i = 0, _len = _ref2.length; _i < _len; key = ++_i) {
+          dest = _ref2[key];
+          _results.push(row("destTo" + key, this.formatUsers(dest)));
+        }
+        return _results;
+      }
+    }).call(this), cc.length ? row('cc', this.formatUsers(cc[0]), 'headers cc', cc.length) : void 0, (function() {
+      var _i, _len, _ref2, _results;
+      if (cc.length) {
+        _ref2 = cc.slice(1);
+        _results = [];
+        for (key = _i = 0, _len = _ref2.length; _i < _len; key = ++_i) {
+          dest = _ref2[key];
+          _results.push(row("destCc" + key, this.formatUsers(dest)));
+        }
+        return _results;
+      }
+    }).call(this), reply != null ? row('reply', this.formatUsers(reply), 'headers reply-to') : void 0, row('created', this.props.message.get('createdAt'), 'headers date'), row('subject', this.props.message.get('subject'), 'headers subject')))));
+  }
+});
+});
+
 ;require.register("components/search-form", function(exports, require, module) {
 var ENTER_KEY, RouterMixin, SearchActionCreator, classer, div, input, span, _ref;
 
@@ -7535,7 +7546,7 @@ module.exports = React.createClass({
       onClick: this.handleChange
     }, a({
       role: "menuitem"
-    }, t("settings label listStyle compact")))))))), this._renderOption('displayConversation'), this._renderOption('composeInHTML'), this._renderOption('composeOnTop'), this._renderOption('messageDisplayHTML'), this._renderOption('messageDisplayImages'), this._renderOption('messageConfirmDelete'), this._renderOption('displayPreview'), this._renderOption('desktopNotifications'), fieldset(null, legend(null, t('settings plugins')), (function() {
+    }, t("settings label listStyle compact")))))))), this._renderOption('displayConversation'), this._renderOption('composeInHTML'), this._renderOption('composeOnTop'), this._renderOption('messageDisplayHTML'), this._renderOption('messageDisplayImages'), this._renderOption('messageConfirmDelete'), this._renderOption('displayPreview'), this._renderOption('desktopNotifications'), this._renderOption('autosaveDraft'), fieldset(null, legend(null, t('settings plugins')), (function() {
       var _ref1, _results;
       _ref1 = this.state.settings.plugins;
       _results = [];
@@ -7637,6 +7648,7 @@ module.exports = React.createClass({
     event.preventDefault();
     target = event.currentTarget;
     switch (target.dataset.target) {
+      case 'autosaveDraft':
       case 'composeInHTML':
       case 'composeOnTop':
       case 'desktopNotifications':
@@ -8483,8 +8495,11 @@ _ref = React.DOM, div = _ref.div, p = _ref.p;
 
 module.exports = React.createClass({
   displayName: 'TooltipManager',
+  shouldComponentUpdate: function() {
+    return false;
+  },
   render: function() {
-    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')));
+    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')), this.getTooltip(Tooltips.FILTER_ONLY_UNREAD, t('tooltip filter only unread')), this.getTooltip(Tooltips.FILTER_ONLY_IMPORTANT, t('tooltip filter only important')), this.getTooltip(Tooltips.FILTER_ONLY_WITH_ATTACHMENT, t('tooltip filter only attachment')), this.getTooltip(Tooltips.TRIGGER_REFRESH, t('tooltip trigger refresh')), this.getTooltip(Tooltips.ACCOUNT_PARAMETERS, t('tooltip account parameters')), this.getTooltip(Tooltips.DELETE_SELECTION, t('tooltip delete selection')));
   },
   getTooltip: function(id, content) {
     return p({
@@ -8706,7 +8721,13 @@ module.exports = {
     OPEN_ATTACHMENT: 'TOOLTIP_OPEN_ATTACHMENT',
     DOWNLOAD_ATTACHMENT: 'TOOLTIP_DOWNLOAD_ATTACHMENT',
     PREVIOUS_CONVERSATION: 'TOOLTIP_PREVIOUS_CONVERSATION',
-    NEXT_CONVERSATION: 'TOOLTIP_NEXT_CONVERSATION'
+    NEXT_CONVERSATION: 'TOOLTIP_NEXT_CONVERSATION',
+    FILTER_ONLY_UNREAD: 'TOOLTIP_FILTER_ONLY_UNREAD',
+    FILTER_ONLY_IMPORTANT: 'TOOLTIP_FILTER_ONLY_IMPORTANT',
+    FILTER_ONLY_WITH_ATTACHMENT: 'TOOLTIP_FILTER_ONLY_WITH_ATTACHMENT',
+    TRIGGER_REFRESH: 'TOOLTIP_TRIGGER_REFRESH',
+    ACCOUNT_PARAMETERS: 'TOOLTIP_ACCOUNT_PARAMETERS',
+    DELETE_SELECTION: 'TOOLTIP_DELETE_SELECTION'
   }
 };
 });
@@ -9527,11 +9548,8 @@ module.exports = {
   "list filter": "Filter",
   "list filter all": "Alle",
   "list filter unseen": "Ungelesen",
-  "list filter unseen title": "Nur ungelesene Nachrichten anzeigen",
   "list filter flagged": "Wichtig",
-  "list filter flagged title": "Nur wichtige Nachrichten anzeigen",
   "list filter attach": "Anhänge",
-  "list filter attach title": "Nur Nachrichten mit Anhängen anzeigen",
   "list sort": "Sortieren",
   "list sort date": "Datum",
   "list sort subject": "Betreff",
@@ -9756,7 +9774,22 @@ module.exports = {
   'plugin name Keyboard shortcuts': 'Tastaturkombinationen',
   'plugin name VCard': 'Kontact VCards',
   'plugin modal close': 'Schließen',
-  'calendar unknown format': "Diese Nachricht enthält eine Einladung für ein Ereignis in einem derzeitig unbekannten Format."
+  'calendar unknown format': "Diese Nachricht enthält eine Einladung für ein Ereignis in einem derzeitig unbekannten Format.",
+  "tooltip reply": "Answer",
+  "tooltip reply all": "Answer to all",
+  "tooltip forward": "Forward",
+  "tooltip remove message": "Remove",
+  "tooltip open attachments": "Open attachment list",
+  "tooltip open attachment": "Open attachment",
+  "tooltip download attachment": "Download the attachment",
+  "tooltip previous conversation": "Go to previous conversation",
+  "tooltip next conversation": "Go to next conversation",
+  "tooltip filter only unread": "Nur ungelesene Nachrichten anzeigen",
+  "tooltip filter only important": "Nur wichtige Nachrichten anzeigen",
+  "tooltip filter only attachment": "Nur Nachrichten mit Anhängen anzeigen",
+  "tooltip trigger refresh": "Refresh",
+  "tooltip account parameters": "Account parameters",
+  "tooltip delete selection": "Delete all selected messages"
 };
 });
 
@@ -9824,11 +9857,8 @@ module.exports = {
   "list filter": "Filter",
   "list filter all": "All",
   "list filter unseen": "Unseen",
-  "list filter unseen title": "Show only unread messages",
   "list filter flagged": "Important",
-  "list filter flagged title": "Show only Important messages",
   "list filter attach": "Attachments",
-  "list filter attach title": "Show only messages with attachments",
   "list sort": "Sort",
   "list sort date": "Date",
   "list sort subject": "Subject",
@@ -9969,6 +9999,9 @@ module.exports = {
   "config error smtpPort": "Wrong SMTP Port",
   "config error smtpServer": "Wrong SMTP Server",
   "config error nomailboxes": "No folder in this account, please create one",
+  "action undo": "Undo",
+  "action undo ok": "Action cancelled",
+  "action undo ko": "Unable to undo action",
   "message action sent ok": "Message sent",
   "message action sent ko": "Error sending message: ",
   "message action draft ok": "Message saved",
@@ -9999,7 +10032,7 @@ module.exports = {
   "message undelete": "Undo message deletion",
   "message undelete ok": "Message undeleted",
   "message undelete error": "Error undoing some action",
-  "message undelete unavalable": "Undo not available",
+  "message undelete unavailable": "Undo not available",
   "message preview title": "View attachments",
   "settings title": "Settings",
   "settings button save": "Save",
@@ -10010,6 +10043,7 @@ module.exports = {
   "settings plugin help": "Help",
   "settings plugin new name": "Plugin Name",
   "settings plugin new url": "Plugin URL",
+  "settings label autosaveDraft": "Save draft message while composing",
   "settings label composeInHTML": "Rich message editor",
   "settings label composeOnTop": "Reply on top of message",
   "settings label desktopNotifications": "Notifications",
@@ -10068,10 +10102,16 @@ module.exports = {
   "tooltip forward": "Forward",
   "tooltip remove message": "Remove",
   "tooltip open attachments": "Open attachment list",
-  "tooltip open attachments": "Open attachment",
+  "tooltip open attachment": "Open attachment",
   "tooltip download attachment": "Download the attachment",
   "tooltip previous conversation": "Go to previous conversation",
-  "tooltip next conversation": "Go to next conversation"
+  "tooltip next conversation": "Go to next conversation",
+  "tooltip filter only unread": "Show only unread messages",
+  "tooltip filter only important": "Show only important messages",
+  "tooltip filter only attachment": "Show only messages with attachment",
+  "tooltip trigger refresh": "Refresh",
+  "tooltip account parameters": "Account parameters",
+  "tooltip delete selection": "Delete all selected messages"
 };
 });
 
@@ -10139,11 +10179,8 @@ module.exports = {
   "list filter": "Filtrer",
   "list filter all": "Tous",
   "list filter unseen": "Non lus",
-  "list filter unseen title": "N'afficher que les messages non lus",
   "list filter flagged": "Importants",
-  "list filter flagged title": "N'afficher que les messages importants",
   "list filter attach": "Pièces-jointes",
-  "list filter attach title": "N'afficher que les messages avec des pièces-jointes",
   "list sort": "Trier",
   "list sort date": "Date",
   "list sort subject": "Sujet",
@@ -10284,6 +10321,9 @@ module.exports = {
   "config error smtpPort": "Port du serveur d'envoi invalide",
   "config error smtpServer": "Serveur d'envoi invalide",
   "config error nomailboxes": "Ce compte n'a pas encore de dossier, commencez par en créer",
+  "action undo": "Annuler",
+  "action undo ok": "Action Annulée",
+  "action undo ko": "Impossible d'annuler l'action",
   "message action sent ok": "Message envoyé !",
   "message action sent ko": "Une erreur est survenue : ",
   "message action draft ok": "Message sauvegardé !",
@@ -10324,6 +10364,7 @@ module.exports = {
   "settings plugin help": "Documentation",
   "settings plugin new name": "Nom du plugin",
   "settings plugin new url": "Url du plugin",
+  "settings label autosaveDraft": "Enregistrer périodiquement les brouillons",
   "settings label composeInHTML": "Éditeur riche",
   "settings label composeOnTop": "Répondre au-dessus du message",
   "settings label desktopNotifications": "Notifications",
@@ -10385,7 +10426,78 @@ module.exports = {
   "tooltip open attachment": "Ouvrir la pièce jointe",
   "tooltip download attachment": "Télécharger la pièce jointe",
   "tooltip previous conversation": "Aller à la conversation précédente",
-  "tooltip next conversation": "Aller à la conversation suivante"
+  "tooltip next conversation": "Aller à la conversation suivante",
+  "tooltip filter only unread": "Montrer seulement les messages non lus",
+  "tooltip filter only important": "Montrer seulement les messages importants",
+  "tooltip filter only attachment": "Montrer seulement les messages avec pièce jointe",
+  "tooltip trigger refresh": "Rafraîchir",
+  "tooltip account parameters": "Paramètres du compte",
+  "tooltip delete selection": "Supprimer les messages sélectionnés"
+};
+});
+
+;require.register("mixins/participant_mixin", function(exports, require, module) {
+
+/*
+    Participant mixin.
+ */
+var ContactStore, a, i, span, _ref;
+
+_ref = React.DOM, span = _ref.span, a = _ref.a, i = _ref.i;
+
+ContactStore = require('../stores/contact_store');
+
+module.exports = {
+  formatUsers: function(users) {
+    var contact, format, items, user, _i, _len;
+    if (users == null) {
+      return;
+    }
+    format = function(user) {
+      var items, key;
+      items = [];
+      if (user.name) {
+        key = user.address.replace(/\W/g, '');
+        items.push("" + user.name + " ");
+        items.push(span({
+          className: 'contact-address',
+          key: key
+        }, i({
+          className: 'fa fa-angle-left'
+        }), user.address, i({
+          className: 'fa fa-angle-right'
+        })));
+      } else {
+        items.push(user.address);
+      }
+      return items;
+    };
+    if (_.isArray(users)) {
+      items = [];
+      for (_i = 0, _len = users.length; _i < _len; _i++) {
+        user = users[_i];
+        contact = ContactStore.getByAddress(user.address);
+        items.push(contact != null ? a({
+          target: '_blank',
+          href: "/#apps/contacts/contact/" + (contact.get('id')),
+          onClick: function(event) {
+            return event.stopPropagation();
+          }
+        }, format(user)) : span({
+          className: 'participant',
+          onClick: function(event) {
+            return event.stopPropagation();
+          }
+        }, format(user)));
+        if (user !== _.last(users)) {
+          items.push(", ");
+        }
+      }
+      return items;
+    } else {
+      return format(users);
+    }
+  }
 };
 });
 
