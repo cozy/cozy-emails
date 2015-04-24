@@ -67,13 +67,12 @@ module.exports = {
     byMailboxRequest: {
       reduce: '_count',
       map: function(doc) {
-        var boxid, docDate, i, len, ref, ref1, ref2, uid, xflag;
-        if (Object.keys(doc.mailboxIDs).length === 0) {
-          emit(['nobox']);
-        }
+        var boxid, docDate, i, len, nobox, ref, ref1, ref2, uid, xflag;
+        nobox = true;
         ref = doc.mailboxIDs;
         for (boxid in ref) {
           uid = ref[boxid];
+          nobox = false;
           docDate = doc.date || (new Date()).toISOString();
           emit(['uid', boxid, uid], doc.flags);
           emit(['date', boxid, null, docDate], null);
@@ -92,7 +91,10 @@ module.exports = {
             emit(['subject', boxid, '\\Attachments', doc.normSubject], null);
           }
         }
-        return void 0;
+        void 0;
+        if (nobox) {
+          return emit(['nobox']);
+        }
       }
     },
     dedupRequest: function(doc) {
