@@ -4,6 +4,8 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 
 {Spinner} = require './basic_components'
 
+# This component is the refresh button, which is replaced by a progress
+# indicator if a refresh is running.
 module.exports = React.createClass
     displayName: 'RefreshIndicator'
 
