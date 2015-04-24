@@ -7397,11 +7397,36 @@ _ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags
 
 module.exports = React.createClass({
   displayName: 'MessageHeader',
-  mixins: [ParticipantMixin],
   propTypes: {
     message: React.PropTypes.object.isRequired,
     isDraft: React.PropTypes.bool,
     isDeleted: React.PropTypes.bool
+  }
+});
+
+({
+  formatUsers: function(users) {
+    var items, user, _i, _len;
+    if (users == null) {
+      return;
+    }
+    if (_.isArray(users)) {
+      items = [];
+      for (_i = 0, _len = users.length; _i < _len; _i++) {
+        user = users[_i];
+        items.push(ContactLabel({
+          contact: user
+        }));
+        if (user !== _.last(users)) {
+          items.push(", ");
+        }
+      }
+      return items;
+    } else {
+      return ContactLabel({
+        contact: user
+      });
+    }
   },
   getInitialState: function() {
     return {
