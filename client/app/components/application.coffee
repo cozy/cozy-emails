@@ -1,6 +1,6 @@
 # React components
 {body, div, p, form, i, input, span, a, button, strong} = React.DOM
-AccountConfig = require './account-config'
+AccountConfig = require './account_config'
 Alert         = require './alert'
 Topbar        = require './topbar'
 ToastContainer = require './toast_container'
@@ -107,7 +107,9 @@ module.exports = Application = React.createClass
             else
                 MessageStore.setCurrentID null
         else
-            MessageStore.setCurrentID null
+            if layout.firstPanel.action isnt 'compose'
+                # No message open, delete current message ID
+                MessageStore.setCurrentID null
 
         # Actual layout
         div className: 'container-fluid',
@@ -284,8 +286,6 @@ module.exports = Application = React.createClass
                 conversationID = MessageStore.getCurrentConversationID()
                 if not conversationID? and messages.length > 0
                     conversationID = messages.first().get 'conversationID'
-                    if conversationID?
-                        conversation = MessageStore.getConversation conversationID
                 conversationLengths = MessageStore.getConversationsLength()
 
             query = _.clone(MessageStore.getParams())

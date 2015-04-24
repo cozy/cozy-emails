@@ -6,6 +6,7 @@ Any = (x) -> x
 module.exports = Settings = cozydb.getModel 'MailsSettings',
     # SETTINGS
     #messagesPerPage      : type : Number,  default : 25
+    autosaveDraft        : type : Boolean, default : true
     composeInHTML        : type : Boolean, default : true
     composeOnTop         : type : Boolean, default : false
     desktopNotifications : type : Boolean, default : false
@@ -33,6 +34,7 @@ Settings.get = (callback) ->
 
 Settings.getDefault = (callback) ->
     settings =
+        autosaveDraft        : true
         composeInHTML        : true
         composeOnTop         : false
         desktopNotifications : true

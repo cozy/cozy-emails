@@ -1,9 +1,10 @@
 {div, span, ul, li, table, tbody, tr, td, img, a, i} = React.DOM
-MessageUtils = require '../utils/message_utils'
 
 AttachmentPreview = require './attachement_preview'
-
-ContactStore   = require '../stores/contact_store'
+PopupMessageDetails = require './popup_message_details'
+ParticipantMixin = require '../mixins/participant_mixin'
+ContactLabel = require './contact_label'
+messageUtils = require '../utils/message_utils'
 
 {MessageFlags, Tooltips} = require '../constants/app_constants'
 
@@ -11,19 +12,39 @@ ContactStore   = require '../stores/contact_store'
 module.exports = React.createClass
     displayName: 'MessageHeader'
 
+    #mixins: [
+        #ParticipantMixin
+    #]
+
     propTypes:
         message: React.PropTypes.object.isRequired
-        isDraft                : React.PropTypes.bool
-        isDeleted              : React.PropTypes.bool
+        isDraft: React.PropTypes.bool
+        isDeleted: React.PropTypes.bool
+
+
+   formatUsers: (users) ->
+       return unless users?
+
+       if _.isArray users
+           items = []
+           for user in users
+              items.push ContactLabel
+                   contact: user
+
+               items.push ", " if user isnt _.last users
+           return items
+       else
+           return ContactLabel
+               contact: user
 
 
     getInitialState: ->
-        showDetails:      false
+        showDetails: false
         showAttachements: false
 
 
     render: ->
-        avatar = MessageUtils.getAvatar @props.message
+        avatar = messageUtils.getAvatar @props.message
 
         div key: "message-header-#{@props.message.get 'id'}",
             if avatar
@@ -43,47 +64,8 @@ module.exports = React.createClass
                     if @props.isDeleted
                         i className: 'fa fa-trash'
                 div className: 'date',
-                    MessageUtils.formatDate @props.message.get 'createdAt'
+                    messageUtils.formatDate @props.message.get 'createdAt'
                 @renderDetailsPopup()
-
-
-    formatUsers: (users) ->
-        return unless users?
-
-        format = (user) ->
-            items = []
-            if user.name
-                key = user.address.replace /\W/g, ''
-                items.push "#{user.name} "
-                items.push span className: 'contact-address', key: key,
-                    i className: 'fa fa-angle-left'
-                    user.address
-                    i className: 'fa fa-angle-right'
-            else
-                items.push user.address
-            return items
-
-        if _.isArray users
-            items = []
-            for user in users
-                contact = ContactStore.getByAddress user.address
-                items.push if contact?
-                    a
-                        target: '_blank'
-                        href: "/#apps/contacts/contact/#{contact.get 'id'}"
-                        onClick: (event) -> event.stopPropagation()
-                        format(user)
-
-                else
-                    span
-                        className: 'participant'
-                        onClick: (event) -> event.stopPropagation()
-                        format(user)
-
-                items.push ", " if user isnt _.last(users)
-            return items
-        else
-            return format(users)
 
 
     renderAddress: (field) ->
@@ -155,8 +137,11 @@ module.exports = React.createClass
                         row 'created', @props.message.get('createdAt'), 'headers date'
                         row 'subject', @props.message.get('subject'), 'headers subject'
 
+
     toggleDetails: ->
         @setState showDetails: not @state.showDetails
 
+
     toggleAttachments: ->
         @setState showAttachements: not @state.showAttachements
+

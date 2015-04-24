@@ -71,11 +71,8 @@ module.exports =
       "list filter"               : "Filter"
       "list filter all"           : "Alle"
       "list filter unseen"        : "Ungelesen"
-      "list filter unseen title"  : "Nur ungelesene Nachrichten anzeigen"
       "list filter flagged"       : "Wichtig"
-      "list filter flagged title" : "Nur wichtige Nachrichten anzeigen"
       "list filter attach"        : "Anhänge"
-      "list filter attach title"  : "Nur Nachrichten mit Anhängen anzeigen"
       "list sort"                 : "Sortieren"
       "list sort date"            : "Datum"
       "list sort subject"         : "Betreff"
@@ -352,3 +349,21 @@ module.exports =
       'calendar unknown format' : """
             Diese Nachricht enthält eine Einladung für ein Ereignis in einem derzeitig unbekannten Format.
             """
+
+      # Tooltips
+      "tooltip reply": "Answer"
+      "tooltip reply all": "Answer to all"
+      "tooltip forward": "Forward"
+      "tooltip remove message": "Remove"
+      "tooltip open attachments": "Open attachment list"
+      "tooltip open attachment": "Open attachment"
+      "tooltip download attachment": "Download the attachment"
+      "tooltip previous conversation": "Go to previous conversation"
+      "tooltip next conversation": "Go to next conversation"
+      "tooltip filter only unread": "Nur ungelesene Nachrichten anzeigen"
+      "tooltip filter only important": "Nur wichtige Nachrichten anzeigen"
+      "tooltip filter only attachment": "Nur Nachrichten mit Anhängen anzeigen"
+      "tooltip trigger refresh": "Refresh"
+      "tooltip account parameters": "Account parameters"
+      "tooltip delete selection": "Delete all selected messages"
+

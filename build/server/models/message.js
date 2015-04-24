@@ -390,7 +390,9 @@ module.exports = Message = (function(superClass) {
           }
           return async.eachSeries(rows, function(row, cb) {
             return Message.destroy(row.id, function(err) {
-              log.error('fail to destroy orphan', err);
+              if (err) {
+                log.error('fail to destroy orphan', err);
+              }
               return cb(null);
             });
           }, callback);

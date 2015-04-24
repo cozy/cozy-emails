@@ -124,6 +124,7 @@ module.exports = Compose = React.createClass
                     valueLink: @linkState 'cc'
                     label: t 'compose cc'
                     placeholder: t 'compose cc help'
+                    ref: 'cc'
 
                 MailsInput
                     id: 'compose-bcc'
@@ -131,6 +132,7 @@ module.exports = Compose = React.createClass
                     valueLink: @linkState 'bcc'
                     label: t 'compose bcc'
                     placeholder: t 'compose bcc help'
+                    ref: 'bcc'
 
                 div className: 'form-group',
                     label
@@ -159,6 +161,7 @@ module.exports = Compose = React.createClass
                         onSend: @onSend
                         composeInHTML: @state.composeInHTML
                         focus: focusEditor
+                        ref: 'editor'
 
                 div className: 'attachements',
                     FilePicker
@@ -214,6 +217,8 @@ module.exports = Compose = React.createClass
         if @_saveInterval
             window.clearInterval @_saveInterval
         @_saveInterval = window.setInterval @_autosave, 30000
+        # First save of draft
+        @_autosave()
 
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
@@ -251,13 +256,15 @@ module.exports = Compose = React.createClass
         if @state.isDraft and
            @state.id?
             if not window.confirm(t 'compose confirm keep draft')
-                MessageActionCreator.delete @state.id, (error) ->
-                    if error?
-                        LayoutActionCreator.alertError \
-                            "#{t("message action delete ko")} #{error}"
-                    else
-                        LayoutActionCreator.notify t('compose draft deleted'),
-                            autoclose: true
+                window.setTimeout =>
+                    MessageActionCreator.delete @state.id, (error) ->
+                        if error?
+                            LayoutActionCreator.alertError \
+                                "#{t("message action delete ko")} #{error}"
+                        else
+                            LayoutActionCreator.notify t('compose draft deleted'),
+                                autoclose: true
+                , 0
             else
                 if @state.originalConversationID?
                     # save one last time the draft, adding the conversationID
@@ -312,6 +319,7 @@ module.exports = Compose = React.createClass
             # to override the original conversationID
             state.originalConversationID = state.conversationID
 
+        state.isDraft  = true
         state.sending  = false
         state.saving   = false
         state.ccShown  = Array.isArray(state.cc) and state.cc.length > 0
@@ -394,6 +402,9 @@ module.exports = Compose = React.createClass
                 @setState sending: true, isDraft: false
 
             MessageActionCreator.send message, (error, message) =>
+                if (not error?) and (not @state.id?)
+                    MessageActionCreator.setCurrent message.id
+
                 state = _.clone @state
                 if isDraft
                     state.saving = false
@@ -431,7 +442,8 @@ module.exports = Compose = React.createClass
                             @redirect @buildClosePanelUrl @props.layout
 
     _autosave: ->
-        @_doSend true
+        if @props.settings.get 'autosaveDraft'
+            @_doSend true
 
     # set source of attached images
     _cleanHTML: (html) ->
@@ -537,7 +549,7 @@ ComposeEditor = React.createClass
 
         if @props.composeInHTML
             div
-                className: "rt-editor form-control #{folded}",
+                className: "form-control rt-editor #{folded}",
                 ref: 'html',
                 contentEditable: true,
                 onKeyDown: @onKeyDown,
