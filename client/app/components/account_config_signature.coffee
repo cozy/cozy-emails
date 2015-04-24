@@ -8,6 +8,8 @@ AccountInput = require './account_config_input'
 {Form, FieldSet, FormButtons} = require './basic_components'
 
 
+# Component to handle account signature modification.
+# It's a form with a single textarea.
 module.exports = React.createClass
     displayName: 'AccountConfigSignature'
 
