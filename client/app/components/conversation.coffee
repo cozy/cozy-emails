@@ -16,7 +16,6 @@ module.exports = React.createClass
         conversation         : React.PropTypes.object
         selectedAccountID    : React.PropTypes.string.isRequired
         selectedAccountLogin : React.PropTypes.string.isRequired
-        selectedAccount      : React.PropTypes.object.isRequired
         layout               : React.PropTypes.string.isRequired
         readability          : React.PropTypes.bool.isRequired
         selectedMailboxID    : React.PropTypes.string
@@ -57,7 +56,6 @@ module.exports = React.createClass
             selectedAccountID   : @props.selectedAccountID
             selectedAccountLogin: @props.selectedAccountLogin
             selectedMailboxID   : @props.selectedMailboxID
-            selectedAccount     : @props.selectedAccount
             settings            : @props.settings
             displayConversations: @props.displayConversation
 

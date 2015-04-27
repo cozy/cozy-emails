@@ -75,5 +75,5 @@ module.exports = React.createClass
 
         @setState saving: true
         @props.editAccount signature: @state.signature, =>
-            @seTState saving: false
+            @setState saving: false
 

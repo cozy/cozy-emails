@@ -301,7 +301,6 @@ module.exports = React.createClass
                     selectedAccountID    : @props.selectedAccountID
                     selectedAccountLogin : @props.selectedAccountLogin
                     selectedMailboxID    : @props.selectedMailboxID
-                    selectedAccount      : @props.selectedAccount
                     message              : @props.message
                     ref                  : 'compose'
             else
@@ -312,7 +311,6 @@ module.exports = React.createClass
                     settings: @props.settings
                     selectedAccountID: @props.selectedAccountID
                     selectedAccountLogin: @props.selectedAccountLogin
-                    selectedAccount: @props.selectedAccount
                     action: @state.composeAction
                     layout: 'second'
                     callback: (error) =>

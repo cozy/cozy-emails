@@ -29,7 +29,6 @@ module.exports = Compose = React.createClass
     propTypes:
         selectedAccountID:    React.PropTypes.string.isRequired
         selectedAccountLogin: React.PropTypes.string.isRequired
-        selectedAccount:      React.PropTypes.object.isRequired
         layout:               React.PropTypes.string.isRequired
         accounts:             React.PropTypes.object.isRequired
         message:              React.PropTypes.object
@@ -312,12 +311,14 @@ module.exports = Compose = React.createClass
 
         # new draft
         else
+            account = @props.accounts[@props.selectedAccountID]
+            console.log account
             state = messageUtils.makeReplyMessage(
-                @props.selectedAccountLogin,
+                account.login,
                 @props.inReplyTo,
                 @props.action,
                 @props.settings.get('composeInHTML'),
-                @props.selectedAccount.get('signature')
+                account.signature
             )
             state.accountID ?= @props.selectedAccountID
             # use another field to prevent the empty conversationID of draft

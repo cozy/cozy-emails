@@ -379,7 +379,6 @@ module.exports = Application = React.createClass
                 mailboxes            : @state.mailboxesFlat
                 selectedAccountID    : @state.selectedAccount.get 'id'
                 selectedAccountLogin : @state.selectedAccount.get 'login'
-                selectedAccount      : @state.selectedAccount
                 selectedMailboxID    : selectedMailboxID
                 message              : message
                 conversation         : conversation
@@ -402,7 +401,6 @@ module.exports = Application = React.createClass
                 accounts             : @state.accountsFlat
                 selectedAccountID    : @state.selectedAccount.get 'id'
                 selectedAccountLogin : @state.selectedAccount.get 'login'
-                selectedAccount      : @state.selectedAccount
                 message              : null
                 ref                  : 'compose'
 
@@ -462,6 +460,7 @@ module.exports = Application = React.createClass
                 label: account.get 'label'
                 login: account.get 'login'
                 trashMailbox: account.get 'trashMailbox'
+                signature: account.get 'signature'
         .toJS()
 
         mailboxesFlat = {}
