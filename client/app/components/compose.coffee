@@ -579,40 +579,7 @@ ComposeEditor = React.createClass
     _initCompose: ->
 
         if @props.composeInHTML
-            if @props.focus
-                node = @refs.html?.getDOMNode()
-                if not node?
-                    return
-                document.querySelector(".rt-editor").focus()
-                if not @props.settings.get 'composeOnTop'
-
-                    account = @props.accounts[@props.selectedAccountID]
-
-                    signatureNode = document.getElementById "signature"
-                    if account.signature and signatureNode?
-                        node = signatureNode
-                        node.innerHTML = """
-                        <p><br /></p>
-                        #{node.innerHTML}
-                        """
-                        node = node.firstChild
-
-                    else
-                        node.innerHTML += "<p><br /></p><p><br /></p>"
-                        node = node.lastChild
-
-                    if node?
-                        # move cursor to the bottom
-                        node.scrollIntoView(false)
-                        node.innerHTML = "<br \>"
-                        selection = window.getSelection()
-                        range = document.createRange()
-                        range.selectNodeContents node
-                        selection.removeAllRanges()
-                        selection.addRange range
-                        document.execCommand 'delete', false, null
-                        node.focus()
-
+            @setCursorPosition()
 
             # Webkit/Blink and Gecko have some different behavior on
             # contentEditable, so we need to test the rendering engine
@@ -749,6 +716,44 @@ ComposeEditor = React.createClass
                 setTimeout ->
                     node.focus()
                 , 0
+
+
+    # Put the selection cursor at the bottom of the message. The cursor is set
+    # before the signature if there is one.
+    setCursorPosition: ->
+        if @props.focus
+            node = @refs.html?.getDOMNode()
+            if node?
+                document.querySelector(".rt-editor").focus()
+                if not @props.settings.get 'composeOnTop'
+
+                    account = @props.accounts[@props.selectedAccountID]
+
+                    signatureNode = document.getElementById "signature"
+                    if account.signature and signatureNode?
+                        node = signatureNode
+                        node.innerHTML = """
+                        <p><br /></p>
+                        #{node.innerHTML}
+                        """
+                        node = node.firstChild
+
+                    else
+                        node.innerHTML += "<p><br /></p><p><br /></p>"
+                        node = node.lastChild
+
+                    if node?
+                        # move cursor to the bottom
+                        node.scrollIntoView(false)
+                        node.innerHTML = "<br \>"
+                        selection = window.getSelection()
+                        range = document.createRange()
+                        range.selectNodeContents node
+                        selection.removeAllRanges()
+                        selection.addRange range
+                        document.execCommand 'delete', false, null
+                        node.focus()
+
 
     componentDidMount: ->
         @_initCompose()
