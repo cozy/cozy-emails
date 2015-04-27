@@ -125,12 +125,12 @@ module.exports =
         RROW: 'row-reverse'
 
     SpecialBoxIcons:
-        inboxMailbox : 'fa-inbox'
-        draftMailbox : 'fa-edit'
-        sentMailbox  : 'fa-share-square-o'
-        trashMailbox : 'fa-trash-o'
-        junkMailbox  : 'fa-exclamation'
-        allMailbox   : 'fa-archive'
+        inboxMailbox: 'fa-inbox'
+        draftMailbox: 'fa-file-text-o'
+        sentMailbox: 'fa-send-o'
+        trashMailbox: 'fa-trash-o'
+        junkMailbox: 'fa-fire'
+        allMailbox: 'fa-archive'
 
     Tooltips:
         REPLY                       : 'TOOLTIP_REPLY'

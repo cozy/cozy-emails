@@ -8,16 +8,7 @@
     .drawer-toggle
         display none
 
-    & > aside
-        white-space nowrap
-
-        @media(min-width: 20em)
-            // elements only visible on large screens (compose button, etc)
-            &[aria-expanded=false]
-                .item-label
-                    display none
-
-    & > main
+    main
         position    relative
         flex        1
         display     flex
@@ -28,10 +19,10 @@
 
 
     @media(max-width: 29.9375em)
-        & > aside[aria-expanded=true] + main
+        [role=menubar][aria-expanded=true] + main
             transform translateX(80vw)
 
-        & > main
+        main
             position absolute
             top      0
             left     0
@@ -44,7 +35,7 @@
 
 
     @media(max-width: 47.9375em)
-        & > main
+        main
             section
                 position absolute
                 top      0
@@ -59,7 +50,7 @@
                     transform translateX(-100%)
 
         // set rules for drawer
-        & > aside[aria-expanded=true]
+        [role=menubar][aria-expanded=true]
             min-width 80vw
 
             + main section
@@ -67,13 +58,16 @@
 
 
     @media(min-width: 30em)
-        & > aside
+        [role=menubar]
             .drawer-toggle
                 display block
 
 
     @media(min-width: 48em)
-        & > main
+        main
+            section
+                transition flex 180ms ease-in
+
             &.full :first-of-type
                 flex-basis 100% !important
 
