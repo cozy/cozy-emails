@@ -120,6 +120,8 @@ module.exports = MessageUtils =
             message.references = inReplyTo.get('references') or []
             message.references = message.references.concat message.inReplyTo
 
+        signature = "--\n#{signature}"
+
         options = {
             message
             inReplyTo
@@ -176,7 +178,7 @@ module.exports = MessageUtils =
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
         if signature
-            message.text += "\n\n--\n#{signature}"
+            message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -184,8 +186,9 @@ module.exports = MessageUtils =
             <p><br /></p>
             """
         if signature
+            signature = signature.replace /\n/g, '<br>'
             message.html += """
-            <p><br /></p><pre id="signature">--\n#{signature}</pre>
+            <p><br /></p><p id="signature">#{signature}</p>
             """
 
 
@@ -223,7 +226,7 @@ module.exports = MessageUtils =
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
         if signature
-            message.text += "\n\n--\n#{signature}"
+            message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -231,8 +234,9 @@ module.exports = MessageUtils =
             <p><br /></p>
             """
         if signature
+            signature = signature.replace /\n/g, '<br>'
             message.html += """
-            <p><br /></p><pre id="signature">--\n#{signature}</pre>
+            <p><br /></p><p id="signature">#{signature}</p>
             """
 
 
@@ -310,9 +314,10 @@ module.exports = MessageUtils =
             message.text += "\n\n--\n#{signature}"
         message.html = COMPOSE_STYLE
         if signature
+            signature = signature.replace /\n/g, '<br>'
             message.html += """
             <p><br /></p><p><br /></p>
-            <pre id="signature">--\n#{signature}</pre>
+            <p id="signature">--\n#{signature}</p>
             """
 
         return message
