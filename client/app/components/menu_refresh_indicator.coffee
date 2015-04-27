@@ -12,10 +12,20 @@ module.exports = React.createClass
     protoTypes:
         refreshes: React.PropTypes.object.isRequired
 
+    # Define a flag to know if the user has clicked in order to show the spinner
+    # immediately, otherwise there is a small time before it starts due to some
+    # actions being performed on the server before refresh actuall starts.
+    # See #332.
+    getInitialState: ->
+        isRefreshStarted: false
+
+
     render: ->
         span className: 'menu-item trigger-refresh-action',
-            # Show the button to trigger a refresh.
-            if @props.refreshes.length is 0
+
+            # Show the button to trigger a refresh if no refresh are occuring
+            # and the user has not triggered it.
+            if @props.refreshes.length is 0 and not @state.isRefreshStarted
                 button
                     className: '',
                     type: 'button',
@@ -24,7 +34,7 @@ module.exports = React.createClass
                         span className: 'fa fa-refresh'
                         span null, t("menu refresh label")
 
-            # Or an indicator of the progress if a refresh is already occurring.
+            # Or an indicator of the progress if a refresh is occurring.
             else
                 {account, mailbox} = @getRefreshInfo()
                 [
@@ -48,6 +58,12 @@ module.exports = React.createClass
                                 account: account.get('account')
                                 mailbox: mailbox.get('box')
                                 progress: progress
+
+                        # If refresh has been triggered, but the component is
+                        # waiting for data from the server.
+                        else if @state.isRefreshStarted
+                            span key: 'sync-box', t("menu refresh initializing")
+
                 ]
 
 
@@ -65,6 +81,15 @@ module.exports = React.createClass
         return {account, mailbox}
 
 
+    # Trigger the refresh action.
     refresh: (event) ->
+        @setState isRefreshStarted: true
         event.preventDefault()
         LayoutActionCreator.refreshMessages()
+
+
+    # Set the `isRefreshStarted` flag to false if it has been set to true
+    # and the actual refresh info are coming.
+    componentWillReceiveProps: (props) ->
+        if props.refreshes.length > 0 and @state.isRefreshStarted
+            @setState isRefreshStarted: false
