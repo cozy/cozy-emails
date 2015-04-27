@@ -1,31 +1,39 @@
 {
   "dependencies": {
-    "coffee-script-brunch": "1.8.0",
-    "css-brunch": "1.7.0",
-    "digest-brunch": "1.2.2",
-    "javascript-brunch": "1.7.1",
-    "stylus-brunch": "1.8.0",
     "backbone": "1.1.2",
     "bootstrap": "3.2.0",
     "clean-css-brunch": "1.7.1",
+    "coffee-script-brunch": "1.8.0",
+    "css-brunch": "1.7.0",
+    "digest-brunch": "1.2.2",
+    "glob": "4.0.6",
     "immutable": "2.0.15",
+    "javascript-brunch": "1.7.1",
     "jquery": "2.1.1",
     "moment": "2.8.1",
     "nib": "1.0.3",
+    "node-event-emitter": "0.0.1",
     "node-polyglot": "0.3.0",
     "pretty-hrtime": "0.2.1",
     "react": "0.11.1",
-    "superagent": "0.18.2",
+    "stylus-brunch": "1.8.0",
     "underscore": "1.6.0",
-    "watchify": "1.0.1",
-    "node-event-emitter": "0.0.1",
-    "glob": "4.0.6"
+    "watchify": "1.0.1"
   },
   "devDependencies": {
-    "coffeeify": "0.7.0",
-    "vinyl-source-stream": "0.1.1",
-    "vinyl-buffer": "0.0.0",
+    "chai": "1.9.1",
     "coffee-script": "1.7.1",
-    "chai": "1.9.1"
+    "coffeeify": "0.7.0",
+    "immutable": "^2.0.15",
+    "jsdom": "5.1.0",
+    "react": "0.11.1",
+    "should": "6.0.1",
+    "socket.io-browserify": "0.9.6",
+    "superagent": "0.18.2",
+    "vinyl-buffer": "0.0.0",
+    "vinyl-source-stream": "0.1.1"
+  },
+  "scripts": {
+    "test": "mocha -r unit-tests/setup.coffee --reporter spec --compilers coffee:coffee-script/register unit-tests"
   }
 }

@@ -1,4 +1,4 @@
-Store = require '../libs/flux/store/store'
+Store = require '../libs/flux/store/store' unless Immutable?
 
 {ActionTypes} = require '../constants/app_constants'
 

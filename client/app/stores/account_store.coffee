@@ -1,3 +1,4 @@
+Immutable = require 'immutable' unless Immutable?
 Store = require '../libs/flux/store/store'
 
 {ActionTypes} = require '../constants/app_constants'
@@ -21,7 +22,7 @@ class AccountStore extends Store
             else return 0
 
         # sets account ID as index
-        .mapKeys (_, account) -> return account.id
+        .mapKeys (_, account) -> return account?.id
 
         # makes account object an immutable Map
         .map (account) -> AccountTranslator.toImmutable account

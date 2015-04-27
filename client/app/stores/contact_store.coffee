@@ -1,6 +1,9 @@
+Immutable = require 'immutable' unless Immutable?
 Store = require '../libs/flux/store/store'
 
 {ActionTypes} = require '../constants/app_constants'
+
+
 
 class ContactStore extends Store
 
@@ -23,7 +26,7 @@ class ContactStore extends Store
         if rawResults?
 
             if not Array.isArray rawResults
-                rawResults = [ rawResults ]
+                rawResults = [rawResults]
 
             convert = (map) ->
 
