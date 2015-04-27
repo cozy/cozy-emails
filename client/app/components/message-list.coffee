@@ -40,6 +40,7 @@ MessageList = React.createClass
         filterFlag: false
         filterUnsead: false
         filterAttach: false
+        quickFilters: false
         selected: {}
         allSelected: false
 
@@ -99,6 +100,7 @@ MessageList = React.createClass
                 filterFlag:   not @state.filterFlag
                 filterUnseen: false
                 filterAttach: false
+                quickFilters: false
 
         toggleFilterUnseen = =>
             if @state.filterUnseen
@@ -111,6 +113,7 @@ MessageList = React.createClass
                 filterUnseen: not @state.filterUnseen
                 filterFlag:   false
                 filterAttach: false
+                quickFilters: false
 
         toggleFilterAttach = =>
             if @state.filterAttach
@@ -123,6 +126,14 @@ MessageList = React.createClass
                 filterAttach: not @state.filterAttach
                 filterFlag:   false
                 filterUnseen: false
+                quickFilters: false
+
+        toggleQuickFilter = =>
+            @setState
+                filterFlag:   false
+                filterUnseen: false
+                filterAttach: false
+                quickFilters: not @state.quickFilters
 
         classList = classer
             compact: compact
@@ -134,6 +145,9 @@ MessageList = React.createClass
 
         btnClasses    = 'btn btn-default '
         btnGrpClasses = 'btn-group btn-group-sm message-list-option '
+        getFilterClass = (filter) ->
+            shown = if filter then ' shown' else ''
+            return "#{btnClasses}#{shown}"
 
         composeUrl = @buildUrl
             direction: 'first'
@@ -179,7 +193,7 @@ MessageList = React.createClass
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterUnseen
-                                    className: btnClasses + if @state.filterUnseen then ' shown',
+                                    className: getFilterClass @state.filterUnseen
                                     'aria-describedby': Tooltips.FILTER_ONLY_UNREAD
                                     'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-envelope'
@@ -187,7 +201,7 @@ MessageList = React.createClass
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterFlag
-                                    className: btnClasses + if @state.filterFlag then ' shown',
+                                    className: getFilterClass @state.filterFlag
                                     'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT
                                     'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-star'
@@ -195,10 +209,18 @@ MessageList = React.createClass
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterAttach
-                                    className: btnClasses + if @state.filterAttach then ' shown',
+                                    className: getFilterClass @state.filterAttach
                                     'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT
                                     'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-paperclip'
+                        if not advanced and not @state.edited
+                            div className: btnGrpClasses,
+                                button
+                                    onClick: toggleQuickFilter
+                                    className: getFilterClass @state.quickFilters
+                                    'aria-describedby': Tooltips.QUICK_FILTER
+                                    'data-tooltip-direction': 'bottom'
+                                    span className: 'fa fa-filter'
                         ## sort
                         if advanced and not @state.edited
                             div className: btnGrpClasses,
@@ -206,7 +228,7 @@ MessageList = React.createClass
 
                         # refresh
                         if not @state.edited
-                            div className: btnGrpClasses,
+                            div className: "#{btnGrpClasses} actions",
                                 if @props.refreshes.length is 0
                                     button
                                         className: btnClasses,
@@ -282,10 +304,11 @@ MessageList = React.createClass
                             i className: 'fa fa-edit'
                             span className: 'item-label', t 'menu compose'
 
-            div className: 'message-list-filters form-horizontal',
-                MessagesQuickFilter
-                    accountID: @props.accountID
-                    mailboxID: @props.mailboxID
+            if @state.quickFilters
+                div className: 'message-list-filters form-horizontal',
+                    MessagesQuickFilter
+                        accountID: @props.accountID
+                        mailboxID: @props.mailboxID
 
             if @props.messages.count() is 0
                 if @props.fetching

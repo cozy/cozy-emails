@@ -404,3 +404,5 @@ module.exports =
       "tooltip trigger refresh": "Rafraîchir"
       "tooltip account parameters": "Paramètres du compte"
       "tooltip delete selection": "Supprimer les messages sélectionnés"
+      'tooltip filter': 'Filter'
+      'tooltip display filters': 'Display filters'
