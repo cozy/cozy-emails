@@ -50,7 +50,7 @@ Tabs = React.createClass
 
     render: ->
         ul className: "nav nav-tabs", role: "tablist",
-            for tab in @props.tabs
+            for tab, index of @props.tabs
                 if tab.class?.indexOf('active') >= 0
                     url = null
                 else
@@ -59,6 +59,7 @@ Tabs = React.createClass
                 li className: tab.class,
                     a
                         href: url
+                        key: "tab-#{index}"
                     ,
                         tab.text
 
@@ -112,10 +113,7 @@ FormButton = React.createClass
             onClick: @props.onClick
         ,
             if @props.spinner
-                span null,
-                    img
-                        src: 'images/spinner-white.svg'
-                        className: 'button-spinner'
+                span null, Spinner(white: true)
             else
                 span className: "fa fa-#{@props.icon}"
             span null, @props.text
@@ -180,8 +178,8 @@ AddressLabel = React.createClass
             result = span null,
                 span null, "#{@props.contact.name} "
                 span
-                        className: 'contact-address'
-                        key: key
+                    className: 'contact-address'
+                    key: key
                     ,
                         "<#{@props.contact.address}>"
 
@@ -190,16 +188,71 @@ AddressLabel = React.createClass
 
         return result
 
+# Available properties:
+# - values: {key -> value}
+# - value: optional key of current value
+Dropdown = React.createClass
+    displayName: 'Dropdown'
+
+    getInitialState: ->
+        defaultKey = if @props.value? then @props.value else Object.keys(@props.values)[0]
+        state=
+            label: @props.values[defaultKey]
+
+    render: ->
+
+        renderFilter = (key, value) =>
+            onChange = =>
+                @setState label: value
+                @props.onChange key
+            li
+                role: 'presentation'
+                onClick: onChange
+                key: key,
+                    a
+                        role: 'menuitem'
+                        value
+
+        div
+            className: 'btn-group btn-group-sm dropdown pull-left',
+                button
+                    className: 'btn btn-default dropdown-toggle'
+                    type: 'button'
+                    'data-toggle': 'dropdown'
+                    @state.label
+                        span className: 'caret', ''
+                ul className: 'dropdown-menu', role: 'menu',
+                    for key, value of @props.values
+                        renderFilter key, t "list filter #{key}"
+
+# Widget to display a spinner.
+# If property `white` is set to true, it will use the white version.
+Spinner = React.createClass
+    displayName: 'Spinner'
+
+    protoTypes:
+        white: React.PropTypes.bool
+
+    render: ->
+        suffix = if @props.white  then '-white' else ''
+
+        img
+            src: "images/spinner#{suffix}.svg"
+            alt: 'spinner'
+            className: 'button-spinner'
+
 
 module.exports = {
     AddressLabel
     Container
+    Dropdown
     ErrorLine
     Form
     FieldSet
     FormButton
     FormButtons
     FormDropdown
+    Spinner
     SubTitle
     Title
     Tabs

@@ -92,11 +92,6 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.LIST_FILTER
             value: filter
 
-    quickFilterMessages: (filter) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.LIST_QUICK_FILTER
-            value: filter
-
     sortMessages: (sort) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.LIST_SORT

@@ -11,6 +11,8 @@ Modal                = require './modal'
 ThinProgress         = require './thin_progress'
 MessageUtils         = require '../utils/message_utils'
 
+RefreshIndicator = require './menu_refresh_indicator'
+
 {Dispositions, SpecialBoxIcons} = require '../constants/app_constants'
 
 module.exports = Menu = React.createClass
@@ -103,6 +105,9 @@ module.exports = Menu = React.createClass
                     @props.accounts.map (account, key) =>
                         @getAccountRender account, key
                     .toJS()
+
+
+            RefreshIndicator refreshes: @props.refreshes
 
             a
                 href: newMailboxUrl,

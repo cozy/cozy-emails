@@ -138,17 +138,21 @@ class MessageStore extends Store
             if messages.mailboxID
                 SocketUtils.changeRealtimeScope messages.mailboxID
 
-            if messages.links?
-                if messages.links.next?
-                    # reinit params here for pagination on filtered lists
-                    _params = {}
-                    next   = decodeURIComponent(messages.links.next)
-                    url    = 'http://localhost' + next
-                    url.split('?')[1].split('&').forEach (p) ->
-                        [key, value] = p.split '='
-                        value = '-' if value is ''
-                        _params[key] = value
+            if messages.links? and messages.links.next?
+                # reinit params here for pagination on filtered lists
+                _params = {}
+                next   = decodeURIComponent(messages.links.next)
+                url    = 'http://localhost' + next
+                url.split('?')[1].split('&').forEach (p) ->
+                    [key, value] = p.split '='
+                    value = '-' if value is ''
+                    _params[key] = value
+            else
+                # We use pageAfter to know if there are more messages to
+                # load, so we need to set it to its default value
+                _params.pageAfter = '-'
 
+            if _params.pageAfter isnt '-'
                 SocketUtils.changeRealtimeScope messages.mailboxID,
                     _params.pageAfter
 
@@ -199,21 +203,24 @@ class MessageStore extends Store
         handle ActionTypes.LIST_SORT, (sort) ->
             _messages    = _messages.clear()
             _sortField   = sort.field
-            currentField = _params.sort.substr(1)
-            currentOrder = _params.sort.substr(0, 1)
-            if currentField is sort.field
-                newOrder   = if currentOrder is '+' then '-' else '+'
-                _sortOrder = -1 * _sortOrder
+            if sort.order?
+                newOrder = sort.order
             else
-                _sortOrder = -1
-                if sort.field is 'date'
-                    newOrder   = '-'
+                currentField = _params.sort.substr(1)
+                currentOrder = _params.sort.substr(0, 1)
+                if currentField is sort.field
+                    newOrder   = if currentOrder is '+' then '-' else '+'
+                    _sortOrder = -1 * _sortOrder
                 else
-                    newOrder   = '+'
+                    _sortOrder = -1
+                    if sort.field is 'date'
+                        newOrder   = '-'
+                    else
+                        newOrder   = '+'
             _params =
-                after: '-'
+                after: sort.after or '-'
                 flag: _params.flag
-                before: '-'
+                before: sort.before or '-'
                 pageAfter: '-'
                 sort : newOrder + sort.field
 

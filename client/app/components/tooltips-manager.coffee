@@ -31,9 +31,10 @@ module.exports = React.createClass
             @getTooltip Tooltips.FILTER_ONLY_UNREAD, t('tooltip filter only unread')
             @getTooltip Tooltips.FILTER_ONLY_IMPORTANT, t('tooltip filter only important')
             @getTooltip Tooltips.FILTER_ONLY_WITH_ATTACHMENT, t('tooltip filter only attachment')
-            @getTooltip Tooltips.TRIGGER_REFRESH, t('tooltip trigger refresh')
             @getTooltip Tooltips.ACCOUNT_PARAMETERS, t('tooltip account parameters')
             @getTooltip Tooltips.DELETE_SELECTION, t('tooltip delete selection')
+            @getTooltip Tooltips.FILTER, t('tooltip filter')
+            @getTooltip Tooltips.QUICK_FILTER, t('tooltip display filters')
 
 
     # Generate default markup for a tooltip.

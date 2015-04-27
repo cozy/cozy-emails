@@ -57,6 +57,11 @@ module.exports =
       "menu favorites off"      : "All"
       "menu toggle"             : "Toggle Menu"
 
+      "menu refresh label"      : "Refresh"
+      "menu refresh initializing": "Initializing..."
+      "menu refresh cleaning"   : "Cleaning..."
+      "menu refresh indicator"  : "%{account}: %{mailbox} (%{progress}%)"
+
       # List
       "list empty"              : "No email in this box."
       "no flagged message"      : "No Important email in this box."
@@ -74,6 +79,11 @@ module.exports =
       "list filter unseen"        : "Unseen"
       "list filter flagged"       : "Important"
       "list filter attach"        : "Attachments"
+      "list filter from"          : "Sender is"
+      "list filter date"          : "Date in"
+      "list filter date placeholder": "DD/MM/YYYY"
+      "list filter dest"          : "Recipient is"
+      "list filter subject"       : "Subject starts with…"
       "list sort"                 : "Sort"
       "list sort date"            : "Date"
       "list sort subject"         : "Subject"
@@ -383,6 +393,7 @@ module.exports =
       "tooltip filter only unread": "Show only unread messages"
       "tooltip filter only important": "Show only important messages"
       "tooltip filter only attachment": "Show only messages with attachment"
-      "tooltip trigger refresh": "Refresh"
       "tooltip account parameters": "Account parameters"
       "tooltip delete selection": "Delete all selected messages"
+      'tooltip filter': 'Filter'
+      'tooltip display filters': 'Display filters'

@@ -1,4 +1,4 @@
-{li, span, i} = React.DOM
+{li, span, i, input} = React.DOM
 classer = React.addons.classSet
 
 AccountActionCreator = require '../actions/account_action_creator'
@@ -184,6 +184,6 @@ module.exports = MailboxItem = React.createClass
                     message = "#{t("mailbox delete ko")} #{error}"
                     LayoutActionCreator.alertError message
                 else
-                    layoutActionCreator.notify t("mailbox delete ok"),
+                    LayoutActionCreator.notify t("mailbox delete ok"),
                         autoclose: true
 
