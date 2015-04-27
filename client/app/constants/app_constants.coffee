@@ -66,7 +66,6 @@ module.exports =
 
         # List
         'LIST_FILTER'               : 'LIST_FILTER'
-        'LIST_QUICK_FILTER'         : 'LIST_QUICK_FILTER'
         'LIST_SORT'                 : 'LIST_SORT'
 
         # Toasts

@@ -130,6 +130,11 @@ MessageList = React.createClass
                 quickFilters: false
 
         toggleQuickFilter = =>
+            if @state.quickFilters
+                # default sort
+                LayoutActionCreator.sortMessages field: 'date'
+                showList()
+
             @setState
                 filterFlag:   false
                 filterUnseen: false
@@ -761,8 +766,8 @@ MessagesQuickFilter = React.createClass
         # default filter type: date
         state =
             type: 'date'
-            startValid: true
-            endValid: true
+            startValid: true # valid start date
+            endValid: true   # valid end date
         return state
 
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -792,7 +797,7 @@ MessagesQuickFilter = React.createClass
                         id: 'filterDateStart'
                         key: 'filterDateStart'
                         name: 'filterDateStart'
-                        className: startClass
+                        className: "filter-date #{startClass or ''}"
                         placeholder: t 'list filter date placeholder'
                         onBlur: @doValidate
                         type: "text",
@@ -801,7 +806,7 @@ MessagesQuickFilter = React.createClass
                         id: 'filterDateEnd'
                         key: 'filterDateEnd'
                         name: 'filterDateEnd'
-                        className: endClass
+                        className: "filter-date #{endClass or ''}"
                         placeholder: t 'list filter date placeholder'
                         onBlur: @doValidate
                         type: "text"
@@ -818,6 +823,7 @@ MessagesQuickFilter = React.createClass
                 'data-tooltip-direction': 'bottom',
                     span className: 'fa fa-filter'
 
+    # Add third party datepicker to start and end date fields
     initDatepicker: ->
         if @state.type is 'date'
             datePickerController.setDebug true
@@ -839,6 +845,7 @@ MessagesQuickFilter = React.createClass
     componentDidUpdate: ->
         @initDatepicker()
 
+    # Return start date in ISO 8601 compliant format
     _getStartDate: ->
         start = @refs.dateStart.getDOMNode().value.trim()
         if start is ''
@@ -847,6 +854,7 @@ MessagesQuickFilter = React.createClass
             start = start.split '/'
             return "#{start[2]}-#{start[1]}-#{start[0]}T00:00:00.000Z"
 
+    # Return end date in ISO 8601 compliant format
     _getEndDate: ->
         end = @refs.dateEnd.getDOMNode().value.trim()
         if end is ''
@@ -865,11 +873,12 @@ MessagesQuickFilter = React.createClass
         @setState startValid: startValid, endValid: endValid
         return startValid and endValid
 
+    # Update filter type
     onChange: (filter) ->
         @setState type: filter, startValid: true, endValid: true
 
+    # Filter list
     onFilter: (ev) ->
-
         if ev?
             ev.stopPropagation()
             ev.preventDefault()

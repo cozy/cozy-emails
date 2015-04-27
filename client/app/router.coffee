@@ -61,7 +61,6 @@ module.exports = class Router extends PanelRouter
                 defaultParameters = _.clone(MessageStore.getParams())
                 defaultParameters.accountID = defaultAccountID
                 defaultParameters.mailboxID = defaultMailboxID
-                defaultParameters.sort = '-'
                 defaultParameters.pageAfter = '-'
 
             when 'account.config'
