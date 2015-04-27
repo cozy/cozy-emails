@@ -176,7 +176,7 @@ module.exports = MessageUtils =
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
         if signature
-            message.text += "\n\n#{signature}"
+            message.text += "\n\n--\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -184,7 +184,9 @@ module.exports = MessageUtils =
             <p><br /></p>
             """
         if signature
-            message.html += "<p><br /></p><pre>#{signature}</pre>"
+            message.html += """
+            <p><br /></p><pre class="signature">--\n#{signature}</pre>
+            """
 
 
     # Build message to display in composer in case of a reply to all message:
@@ -221,7 +223,7 @@ module.exports = MessageUtils =
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
         if signature
-            message.text += "\n\n#{signature}"
+            message.text += "\n\n--\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -229,7 +231,9 @@ module.exports = MessageUtils =
             <p><br /></p>
             """
         if signature
-            message.html += "<p><br /></p><pre>#{signature}</pre>"
+            message.html += """
+            <p><br /></p><pre>--\n#{signature}</pre>
+            """
 
 
     # Build message to display in composer in case of a message forwarding:
@@ -266,7 +270,7 @@ module.exports = MessageUtils =
             fromField = senderAddress
 
         separator = """
-<pre>#{signature}</pre>
+
 ----- #{t 'compose forward header'} ------
 #{t 'compose forward subject'} #{inReplyTo.get 'subject'}
 #{t 'compose forward date'} #{dateHuman}
@@ -303,10 +307,13 @@ module.exports = MessageUtils =
         message.subject = ''
         message.text = ''
         if signature
-            message.text += "\n\n#{signature}"
+            message.text += "\n\n--\n#{signature}"
         message.html = COMPOSE_STYLE
         if signature
-            message.html += "<p><br /></p><p><br /></p><pre>#{signature}</pre>"
+            message.html += """
+            <p><br /></p><p><br /></p>
+            <pre class="signature">--\n#{signature}</pre>
+            """
 
         return message
 
