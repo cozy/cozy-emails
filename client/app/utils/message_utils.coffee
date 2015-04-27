@@ -89,7 +89,8 @@ module.exports = MessageUtils =
     # (reply, reply to all, forward or simple message).
     # It add appropriate headers to the message. It adds style tags when
     # required too.
-    makeReplyMessage: (myAddress, inReplyTo, action, inHTML) ->
+    # It adds signature at the end of the zone where the user will type.
+    makeReplyMessage: (myAddress, inReplyTo, action, inHTML, signature) ->
         message =
             composeInHTML: inHTML
             attachments: Immutable.Vector.empty()
@@ -119,6 +120,8 @@ module.exports = MessageUtils =
             message.references = inReplyTo.get('references') or []
             message.references = message.references.concat message.inReplyTo
 
+        signature = "--\n#{signature}"
+
         options = {
             message
             inReplyTo
@@ -126,6 +129,7 @@ module.exports = MessageUtils =
             sender
             text
             html
+            signature
         }
 
         switch action
@@ -140,7 +144,7 @@ module.exports = MessageUtils =
                 @setMessageAsForward options
 
             when null
-                @setMessgeAsDefault message
+                @setMessageAsDefault message, signature
 
         # remove my address from dests
         notMe = (dest) -> return dest.address isnt myAddress
@@ -154,6 +158,7 @@ module.exports = MessageUtils =
     # * Set recipient based on sender
     # * add a style header for proper display
     # * Add quote of the previous message at the beginning of the message
+    # * adds a signature at the message end.
     setMessageAsReply: (options) ->
         {
             message
@@ -162,6 +167,7 @@ module.exports = MessageUtils =
             sender
             text
             html
+            signature
         } = options
 
         params = date: dateHuman, sender: sender
@@ -171,18 +177,27 @@ module.exports = MessageUtils =
         message.bcc = []
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
+        if signature
+            message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
             <p><br /></p>
             """
+        if signature
+            signature = signature.replace /\n/g, '<br>'
+            message.html += """
+            <p><br /></p><p id="signature">#{signature}</p>
+            """
+
 
     # Build message to display in composer in case of a reply to all message:
     # * set subject automatically (Re: previous subject)
     # * Set recipients based on all people set in the conversation.
     # * add a style header for proper display
     # * Add quote of the previous message at the beginning of the message
+    # * adds a signature at the message end.
     setMessageAsReplyAll: (options) ->
         {
             message
@@ -191,6 +206,7 @@ module.exports = MessageUtils =
             sender
             text
             html
+            signature
         } = options
 
         params = date: dateHuman, sender: sender
@@ -209,17 +225,26 @@ module.exports = MessageUtils =
 
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
+        if signature
+            message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
             <p><br /></p>
             """
+        if signature
+            signature = signature.replace /\n/g, '<br>'
+            message.html += """
+            <p><br /></p><p id="signature">#{signature}</p>
+            """
+
 
     # Build message to display in composer in case of a message forwarding:
     # * set subject automatically (fwd: previous subject)
     # * add a style header for proper display
     # * Add forward information at the beginning of the message
+    # We don't add signature here (see Thunderbird behavior)
     setMessageAsForward: (options) ->
         {
             message
@@ -228,6 +253,7 @@ module.exports = MessageUtils =
             sender
             text
             html
+            signature
         } = options
 
         addresses = inReplyTo.get('to')
@@ -257,6 +283,7 @@ module.exports = MessageUtils =
 
 """
         textSeparator = separator.replace('&lt;', '<').replace('&gt;', '>')
+        textSeparator = textSeparator.replace('<pre>', '').replace('</pre>', '')
         htmlSeparator = separator.replace /(\n)+/g, '<br />'
 
         @setMessageAsDefault message
@@ -276,13 +303,23 @@ module.exports = MessageUtils =
 
 
     # Clear all fields of the message object.
-    setMessageAsDefault: (message) ->
+    # Add signature if given.
+    setMessageAsDefault: (message, signature) ->
         message.to = []
         message.cc = []
         message.bcc = []
         message.subject = ''
         message.text = ''
-        message.html = ''
+        if signature
+            message.text += "\n\n--\n#{signature}"
+        message.html = COMPOSE_STYLE
+        if signature
+            signature = signature.replace /\n/g, '<br>'
+            message.html += """
+            <p><br /></p><p><br /></p>
+            <p id="signature">--\n#{signature}</p>
+            """
+
         return message
 
 

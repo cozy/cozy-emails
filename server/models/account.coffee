@@ -32,6 +32,7 @@ class Account extends cozydb.CozyModel
         allMailbox: String          # \All Maibox id
         favorites: [String]         # [String] Maibox id of displayed boxes
         patchIgnored: Boolean       # has patchIgnored been applied ?
+        signature: String            # Signature to add at the end of messages
 
     # Public: find an account by id
     # cozydb's find can return no error and no account (if id isnt an account)

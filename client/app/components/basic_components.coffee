@@ -50,10 +50,15 @@ Tabs = React.createClass
 
     render: ->
         ul className: "nav nav-tabs", role: "tablist",
-            for tab, index in @props.tabs
+            for tab, index of @props.tabs
+                if tab.class?.indexOf('active') >= 0
+                    url = null
+                else
+                    url = tab.url
+
                 li className: tab.class,
                     a
-                        href: tab.url
+                        href: url
                         key: "tab-#{index}"
                     ,
                         tab.text

@@ -5,6 +5,7 @@ RouterMixin = require '../mixins/router_mixin'
 {Container, Title, Tabs} = require './basic_components'
 AccountConfigMain = require './account_config_main'
 AccountConfigMailboxes = require './account_config_mailboxes'
+AccountConfigSignature = require './account_config_signature'
 
 
 module.exports = React.createClass
@@ -124,6 +125,10 @@ module.exports = React.createClass
                 Tabs tabs: tabParams
             if not @props.tab or @props.tab is 'account'
                 AccountConfigMain mainOptions
+            else if @props.tab is 'signature'
+                AccountConfigSignature
+                    account: @props.selectedAccount
+                    editAccount: @editAccount
             else
                 AccountConfigMailboxes mailboxesOptions
 
@@ -170,34 +175,39 @@ module.exports = React.createClass
 
 
     # Build tab navigation depending if we show the component for a new
-    # account or for an edition (no tab navigation if we are in a creation
-    # mode).
+    # account, for an edition or or changing account signaure
+    # (no tab navigation if we are in a creation mode).
     buildTabParams: ->
-        tabAccountClass = tabMailboxClass = ''
-        tabAccountUrl = tabMailboxUrl = null
+        tabAccountClass = tabMailboxClass = tabSignatureClass = ''
 
         if not @props.tab or @props.tab is 'account'
             tabAccountClass = 'active'
-            tabMailboxUrl = @buildUrl
-                direction: 'first'
-                action: 'account.config'
-                parameters: [@state.id, 'mailboxes']
-
-        else
+        else if @props.tab is 'mailboxes'
             tabMailboxClass = 'active'
-            tabAccountUrl = @buildUrl
-                direction: 'first'
-                action: 'account.config'
-                parameters: [@state.id, 'account']
+        else if @props.tab is 'signature'
+            tabSignatureClass = 'active'
 
         tabs = [
                 class: tabAccountClass
-                url: tabAccountUrl
+                url: @buildUrl
+                    direction: 'first'
+                    action: 'account.config'
+                    parameters: [@state.id, 'account']
                 text: t "account tab account"
             ,
                 class: tabMailboxClass
-                url: tabMailboxUrl
+                url: @buildUrl
+                    direction: 'first'
+                    action: 'account.config'
+                    parameters: [@state.id, 'mailboxes']
                 text: t "account tab mailboxes"
+            ,
+                class: tabSignatureClass
+                url:  @buildUrl
+                    direction: 'first'
+                    action: 'account.config'
+                    parameters: [@state.id, 'signature']
+                text: t "account tab signature"
         ]
         return tabs
 
@@ -281,8 +291,8 @@ module.exports = React.createClass
 
 
     # Save modification to the server.
-    editAccount: (values) ->
-        AccountActionCreator.edit values, @state.id
+    editAccount: (values, callback) ->
+        AccountActionCreator.edit values, @state.id, callback
 
 
     # Create a new account and redirect user to the message list of this
