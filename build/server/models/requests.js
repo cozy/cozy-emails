@@ -67,7 +67,7 @@ module.exports = {
     byMailboxRequest: {
       reduce: '_count',
       map: function(doc) {
-        var boxid, docDate, i, len, nobox, ref, ref1, ref2, uid, xflag;
+        var boxid, dest, docDate, i, j, k, len, len1, len2, nobox, ref, ref1, ref2, ref3, ref4, sender, uid, xflag;
         nobox = true;
         ref = doc.mailboxIDs;
         for (boxid in ref) {
@@ -89,6 +89,22 @@ module.exports = {
           if (((ref2 = doc.attachments) != null ? ref2.length : void 0) > 0) {
             emit(['date', boxid, '\\Attachments', docDate], null);
             emit(['subject', boxid, '\\Attachments', doc.normSubject], null);
+          }
+          ref3 = doc.from;
+          for (j = 0, len1 = ref3.length; j < len1; j++) {
+            sender = ref3[j];
+            if (sender.name != null) {
+              emit(['from', boxid, null, sender.name, docDate], null);
+            }
+            emit(['from', boxid, null, sender.address, docDate], null);
+          }
+          ref4 = doc.to.concat(doc.cc);
+          for (k = 0, len2 = ref4.length; k < len2; k++) {
+            dest = ref4[k];
+            if (dest.name != null) {
+              emit(['dest', boxid, null, dest.name, docDate], null);
+            }
+            emit(['dest', boxid, null, dest.address, docDate], null);
           }
         }
         void 0;

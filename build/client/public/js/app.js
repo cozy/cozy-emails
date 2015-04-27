@@ -151,7 +151,7 @@ module.exports = AccountActionCreator = {
       }
     });
   },
-  edit: function(inputValues, accountID) {
+  edit: function(inputValues, accountID, callback) {
     var account, newAccount;
     AccountActionCreator._setNewAccountWaitingStatus(true);
     account = AccountStore.getByID(accountID);
@@ -166,9 +166,10 @@ module.exports = AccountActionCreator = {
           value: rawAccount
         });
         LayoutActionCreator = require('../actions/layout_action_creator');
-        return LayoutActionCreator.notify(t('account updated'), {
+        LayoutActionCreator.notify(t('account updated'), {
           autoclose: true
         });
+        return typeof callback === "function" ? callback() : void 0;
       }
     });
   },
@@ -697,12 +698,6 @@ module.exports = LayoutActionCreator = {
   filterMessages: function(filter) {
     return AppDispatcher.handleViewAction({
       type: ActionTypes.LIST_FILTER,
-      value: filter
-    });
-  },
-  quickFilterMessages: function(filter) {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.LIST_QUICK_FILTER,
       value: filter
     });
   },
@@ -1237,7 +1232,7 @@ module.exports = new AppDispatcher();
 });
 
 ;require.register("components/account_config", function(exports, require, module) {
-var AccountActionCreator, AccountConfigMailboxes, AccountConfigMain, Container, LayoutActions, RouterMixin, Tabs, Title, _ref;
+var AccountActionCreator, AccountConfigMailboxes, AccountConfigMain, AccountConfigSignature, Container, LayoutActions, RouterMixin, Tabs, Title, _ref;
 
 AccountActionCreator = require('../actions/account_action_creator');
 
@@ -1250,6 +1245,8 @@ _ref = require('./basic_components'), Container = _ref.Container, Title = _ref.T
 AccountConfigMain = require('./account_config_main');
 
 AccountConfigMailboxes = require('./account_config_mailboxes');
+
+AccountConfigSignature = require('./account_config_signature');
 
 module.exports = React.createClass({
   displayName: 'AccountConfig',
@@ -1366,7 +1363,10 @@ module.exports = React.createClass({
       text: titleLabel
     }), this.props.tab != null ? Tabs({
       tabs: tabParams
-    }) : void 0, !this.props.tab || this.props.tab === 'account' ? AccountConfigMain(mainOptions) : AccountConfigMailboxes(mailboxesOptions));
+    }) : void 0, !this.props.tab || this.props.tab === 'account' ? AccountConfigMain(mainOptions) : this.props.tab === 'signature' ? AccountConfigSignature({
+      account: this.props.selectedAccount,
+      editAccount: this.editAccount
+    }) : AccountConfigMailboxes(mailboxesOptions));
   },
   buildMainOptions: function(options) {
     var field, _i, _len, _ref1;
@@ -1410,33 +1410,40 @@ module.exports = React.createClass({
     return titleLabel;
   },
   buildTabParams: function() {
-    var tabAccountClass, tabAccountUrl, tabMailboxClass, tabMailboxUrl, tabs;
-    tabAccountClass = tabMailboxClass = '';
-    tabAccountUrl = tabMailboxUrl = null;
+    var tabAccountClass, tabMailboxClass, tabSignatureClass, tabs;
+    tabAccountClass = tabMailboxClass = tabSignatureClass = '';
     if (!this.props.tab || this.props.tab === 'account') {
       tabAccountClass = 'active';
-      tabMailboxUrl = this.buildUrl({
-        direction: 'first',
-        action: 'account.config',
-        parameters: [this.state.id, 'mailboxes']
-      });
-    } else {
+    } else if (this.props.tab === 'mailboxes') {
       tabMailboxClass = 'active';
-      tabAccountUrl = this.buildUrl({
-        direction: 'first',
-        action: 'account.config',
-        parameters: [this.state.id, 'account']
-      });
+    } else if (this.props.tab === 'signature') {
+      tabSignatureClass = 'active';
     }
     tabs = [
       {
         "class": tabAccountClass,
-        url: tabAccountUrl,
+        url: this.buildUrl({
+          direction: 'first',
+          action: 'account.config',
+          parameters: [this.state.id, 'account']
+        }),
         text: t("account tab account")
       }, {
         "class": tabMailboxClass,
-        url: tabMailboxUrl,
+        url: this.buildUrl({
+          direction: 'first',
+          action: 'account.config',
+          parameters: [this.state.id, 'mailboxes']
+        }),
         text: t("account tab mailboxes")
+      }, {
+        "class": tabSignatureClass,
+        url: this.buildUrl({
+          direction: 'first',
+          action: 'account.config',
+          parameters: [this.state.id, 'signature']
+        }),
+        text: t("account tab signature")
       }
     ];
     return tabs;
@@ -1534,8 +1541,8 @@ module.exports = React.createClass({
       };
     })(this));
   },
-  editAccount: function(values) {
-    return AccountActionCreator.edit(values, this.state.id);
+  editAccount: function(values, callback) {
+    return AccountActionCreator.edit(values, this.state.id, callback);
   },
   createAccount: function(values) {
     return AccountActionCreator.create(values, (function(_this) {
@@ -1640,9 +1647,9 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/account_config_input", function(exports, require, module) {
-var AccountInput, ErrorLine, RouterMixin, classer, div, input, label, _ref;
+var AccountInput, ErrorLine, RouterMixin, classer, div, input, label, textarea, _ref;
 
-_ref = React.DOM, div = _ref.div, label = _ref.label, input = _ref.input;
+_ref = React.DOM, div = _ref.div, label = _ref.label, input = _ref.input, textarea = _ref.textarea;
 
 ErrorLine = require('./basic_components').ErrorLine;
 
@@ -1674,7 +1681,21 @@ module.exports = AccountInput = React.createClass({
       className: "col-sm-2 col-sm-offset-2 control-label"
     }, t("account " + name)), div({
       className: 'col-sm-3'
-    }, type !== 'checkbox' ? input({
+    }, type === 'checkbox' ? input({
+      id: "mailbox-" + name,
+      name: "mailbox-" + name,
+      checkedLink: this.linkState('value').value,
+      type: type,
+      onClick: this.props.onClick
+    }) : type === 'textarea' ? textarea({
+      id: "mailbox-" + name,
+      name: "mailbox-" + name,
+      valueLink: this.linkState('value').value,
+      className: 'form-control',
+      placeholder: placeHolder,
+      onBlur: this.onBlur,
+      onInput: this.props.onInput || null
+    }) : input({
       id: "mailbox-" + name,
       name: "mailbox-" + name,
       valueLink: this.linkState('value').value,
@@ -1683,12 +1704,6 @@ module.exports = AccountInput = React.createClass({
       placeholder: placeHolder,
       onBlur: this.onBlur,
       onInput: this.props.onInput || null
-    }) : input({
-      id: "mailbox-" + name,
-      name: "mailbox-" + name,
-      checkedLink: this.linkState('value').value,
-      type: type,
-      onClick: this.props.onClick
     })), this.renderError(errorField, name));
   },
   onBlur: function() {
@@ -1738,7 +1753,7 @@ module.exports = AccountInput = React.createClass({
   buildPlaceHolder: function(type, name) {
     var placeHolder;
     placeHolder = null;
-    if (type === 'text' || type === 'email') {
+    if ((type === 'text' || type === 'email') || name === 'signature') {
       placeHolder = t("account " + name + " short");
     }
     return placeHolder;
@@ -2635,6 +2650,95 @@ module.exports = AccountConfigMain = React.createClass({
 });
 });
 
+;require.register("components/account_config_signature", function(exports, require, module) {
+var AccountActionCreator, AccountInput, FieldSet, Form, FormButtons, LayoutActionCreator, RouterMixin, classer, div, form, h4, i, input, label, li, span, ul, _ref, _ref1;
+
+_ref = React.DOM, div = _ref.div, h4 = _ref.h4, ul = _ref.ul, li = _ref.li, span = _ref.span, form = _ref.form, i = _ref.i, input = _ref.input, label = _ref.label;
+
+classer = React.addons.classSet;
+
+AccountActionCreator = require('../actions/account_action_creator');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
+
+RouterMixin = require('../mixins/router_mixin');
+
+AccountInput = require('./account_config_input');
+
+_ref1 = require('./basic_components'), Form = _ref1.Form, FieldSet = _ref1.FieldSet, FormButtons = _ref1.FormButtons;
+
+module.exports = React.createClass({
+  displayName: 'AccountConfigSignature',
+  mixins: [React.addons.LinkedStateMixin],
+  shouldComponentUpdate: function(nextProps, nextState) {
+    var isNextProps, isNextState;
+    isNextState = _.isEqual(nextState, this.state);
+    isNextProps = _.isEqual(nextProps, this.props);
+    return !(isNextState && isNextProps);
+  },
+  getInitialState: function() {
+    return {
+      account: this.props.account,
+      saving: false,
+      errors: {},
+      signature: this.props.account.get('signature')
+    };
+  },
+  render: function() {
+    var formClass;
+    console.log(this.state.account.get('signature'));
+    formClass = classer({
+      'form-horizontal': true,
+      'form-account': true,
+      'account-signature-form': true
+    });
+    return Form({
+      className: formClass
+    }, FieldSet({
+      text: t('account signature')
+    }), AccountInput({
+      type: 'textarea',
+      name: 'signature',
+      value: this.linkState('signature'),
+      errors: this.state.errors,
+      onBlur: this.props.onBlur
+    }), FieldSet({
+      text: t('account actions')
+    }), FormButtons({
+      buttons: [
+        {
+          "class": 'signature-save',
+          contrast: false,
+          "default": false,
+          danger: false,
+          spinner: this.state.saving,
+          icon: 'save',
+          onClick: this.onSubmit,
+          text: t('save')
+        }
+      ]
+    }));
+  },
+  onSubmit: function(event) {
+    if (event != null) {
+      event.preventDefault();
+    }
+    this.setState({
+      saving: true
+    });
+    return this.props.editAccount({
+      signature: this.state.signature
+    }, (function(_this) {
+      return function() {
+        return _this.setState({
+          saving: false
+        });
+      };
+    })(this));
+  }
+});
+});
+
 ;require.register("components/account_picker", function(exports, require, module) {
 var RouterMixin, a, button, div, input, li, p, span, ul, _ref;
 
@@ -3176,7 +3280,8 @@ module.exports = Application = React.createClass({
         name: account.get('name'),
         label: account.get('label'),
         login: account.get('login'),
-        trashMailbox: account.get('trashMailbox')
+        trashMailbox: account.get('trashMailbox'),
+        signature: account.get('signature')
       };
     }).toJS();
     mailboxesFlat = {};
@@ -3342,7 +3447,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/basic_components", function(exports, require, module) {
-var AddressLabel, Container, ErrorLine, FieldSet, Form, FormButton, FormButtons, FormDropdown, Spinner, SubTitle, Tabs, Title, a, button, div, fieldset, form, h3, h4, i, img, label, legend, li, span, ul, _ref;
+var AddressLabel, Container, Dropdown, ErrorLine, FieldSet, Form, FormButton, FormButtons, FormDropdown, Spinner, SubTitle, Tabs, Title, a, button, div, fieldset, form, h3, h4, i, img, label, legend, li, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, h3 = _ref.h3, h4 = _ref.h4, ul = _ref.ul, li = _ref.li, a = _ref.a, i = _ref.i, button = _ref.button, span = _ref.span, fieldset = _ref.fieldset, legend = _ref.legend, label = _ref.label, img = _ref.img, form = _ref.form;
 
@@ -3375,20 +3480,25 @@ SubTitle = React.createClass({
 
 Tabs = React.createClass({
   render: function() {
-    var index, tab;
+    var index, tab, url;
     return ul({
       className: "nav nav-tabs",
       role: "tablist"
     }, (function() {
-      var _i, _len, _ref1, _results;
+      var _ref1, _ref2, _results;
       _ref1 = this.props.tabs;
       _results = [];
-      for (index = _i = 0, _len = _ref1.length; _i < _len; index = ++_i) {
-        tab = _ref1[index];
+      for (tab in _ref1) {
+        index = _ref1[tab];
+        if (((_ref2 = tab["class"]) != null ? _ref2.indexOf('active') : void 0) >= 0) {
+          url = null;
+        } else {
+          url = tab.url;
+        }
         _results.push(li({
           className: tab["class"]
         }, a({
-          href: tab.url,
+          href: url,
           key: "tab-" + index
         }, tab.text)));
       }
@@ -3518,6 +3628,59 @@ AddressLabel = React.createClass({
   }
 });
 
+Dropdown = React.createClass({
+  displayName: 'Dropdown',
+  getInitialState: function() {
+    var defaultKey, state;
+    defaultKey = this.props.value != null ? this.props.value : Object.keys(this.props.values)[0];
+    return state = {
+      label: this.props.values[defaultKey]
+    };
+  },
+  render: function() {
+    var key, renderFilter, value;
+    renderFilter = (function(_this) {
+      return function(key, value) {
+        var onChange;
+        onChange = function() {
+          _this.setState({
+            label: value
+          });
+          return _this.props.onChange(key);
+        };
+        return li({
+          role: 'presentation',
+          onClick: onChange,
+          key: key
+        }, a({
+          role: 'menuitem'
+        }, value));
+      };
+    })(this);
+    return div({
+      className: 'btn-group btn-group-sm dropdown pull-left'
+    }, button({
+      className: 'btn btn-default dropdown-toggle',
+      type: 'button',
+      'data-toggle': 'dropdown'
+    }, this.state.label, span({
+      className: 'caret'
+    }, '')), ul({
+      className: 'dropdown-menu',
+      role: 'menu'
+    }, (function() {
+      var _ref1, _results;
+      _ref1 = this.props.values;
+      _results = [];
+      for (key in _ref1) {
+        value = _ref1[key];
+        _results.push(renderFilter(key, t("list filter " + key)));
+      }
+      return _results;
+    }).call(this)));
+  }
+});
+
 Spinner = React.createClass({
   displayName: 'Spinner',
   protoTypes: {
@@ -3537,6 +3700,7 @@ Spinner = React.createClass({
 module.exports = {
   AddressLabel: AddressLabel,
   Container: Container,
+  Dropdown: Dropdown,
   ErrorLine: ErrorLine,
   Form: Form,
   FieldSet: FieldSet,
@@ -3710,6 +3874,8 @@ module.exports = Compose = React.createClass({
       messageID: (_ref3 = this.props.message) != null ? _ref3.get('id') : void 0,
       html: this.linkState('html'),
       text: this.linkState('text'),
+      accounts: this.props.accounts,
+      selectedAccountID: this.props.selectedAccountID,
       settings: this.props.settings,
       onSend: this.onSend,
       composeInHTML: this.state.composeInHTML,
@@ -3853,7 +4019,7 @@ module.exports = Compose = React.createClass({
     }
   },
   getInitialState: function(forceDefault) {
-    var key, message, state, value, _ref2;
+    var account, key, message, state, value, _ref2;
     if (message = this.props.message) {
       state = {
         composeInHTML: this.props.settings.get('composeInHTML')
@@ -3868,7 +4034,8 @@ module.exports = Compose = React.createClass({
       }
       state.attachments = message.get('attachments');
     } else {
-      state = messageUtils.makeReplyMessage(this.props.selectedAccountLogin, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'));
+      account = this.props.accounts[this.props.selectedAccountID];
+      state = messageUtils.makeReplyMessage(account.login, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'), account.signature);
       if (state.accountID == null) {
         state.accountID = this.props.selectedAccountID;
       }
@@ -4170,30 +4337,9 @@ ComposeEditor = React.createClass({
     }
   },
   _initCompose: function() {
-    var e, gecko, header, node, r, range, rect, s, _ref2;
+    var e, gecko, header, node, range, rect;
     if (this.props.composeInHTML) {
-      if (this.props.focus) {
-        node = (_ref2 = this.refs.html) != null ? _ref2.getDOMNode() : void 0;
-        if (node == null) {
-          return;
-        }
-        document.querySelector(".rt-editor").focus();
-        if (!this.props.settings.get('composeOnTop')) {
-          node.innerHTML += "<p><br /></p>";
-          node = node.lastChild;
-          if (node != null) {
-            node.scrollIntoView(false);
-            node.innerHTML = "<br \>";
-            s = window.getSelection();
-            r = document.createRange();
-            r.selectNodeContents(node);
-            s.removeAllRanges();
-            s.addRange(r);
-            document.execCommand('delete', false, null);
-            node.focus();
-          }
-        }
-      }
+      this.setCursorPosition();
       gecko = document.queryCommandEnabled('insertBrOnReturn');
       jQuery('.rt-editor').on('keypress', function(e) {
         var quote;
@@ -4201,7 +4347,7 @@ ComposeEditor = React.createClass({
           return;
         }
         quote = function() {
-          var br, depth, getPath, isInsideQuote, range, selection, target, targetElement;
+          var br, depth, getPath, isInsideQuote, node, range, selection, target, targetElement;
           isInsideQuote = function(node) {
             var matchesSelector;
             matchesSelector = document.documentElement.matches || document.documentElement.matchesSelector || document.documentElement.webkitMatchesSelector || document.documentElement.mozMatchesSelector || document.documentElement.oMatchesSelector || document.documentElement.msMatchesSelector;
@@ -4306,6 +4452,38 @@ ComposeEditor = React.createClass({
         return setTimeout(function() {
           return node.focus();
         }, 0);
+      }
+    }
+  },
+  setCursorPosition: function() {
+    var account, node, range, selection, signatureNode, _ref2;
+    if (this.props.focus) {
+      node = (_ref2 = this.refs.html) != null ? _ref2.getDOMNode() : void 0;
+      if (node != null) {
+        document.querySelector(".rt-editor").focus();
+        if (!this.props.settings.get('composeOnTop')) {
+          account = this.props.accounts[this.props.selectedAccountID];
+          signatureNode = document.getElementById("signature");
+          if (account.signature && (signatureNode != null)) {
+            node = signatureNode;
+            node.innerHTML = "<p><br /></p>\n" + node.innerHTML;
+            node = node.firstChild;
+          } else {
+            node.innerHTML += "<p><br /></p><p><br /></p>";
+            node = node.lastChild;
+          }
+          if (node != null) {
+            node.scrollIntoView(false);
+            node.innerHTML = "<br \>";
+            selection = window.getSelection();
+            range = document.createRange();
+            range.selectNodeContents(node);
+            selection.removeAllRanges();
+            selection.addRange(range);
+            document.execCommand('delete', false, null);
+            return node.focus();
+          }
+        }
       }
     }
   },
@@ -5378,9 +5556,11 @@ module.exports = Menu = React.createClass({
       return function(account, key) {
         return _this.getAccountRender(account, key);
       };
-    })(this)).toJS()) : void 0, RefreshIndicator({
-      refreshes: this.props.refreshes
-    }), a({
+    })(this)).toJS()) : void 0, this.props.selectedAccount != null ? RefreshIndicator({
+      refreshes: this.props.refreshes,
+      mailboxes: this.props.selectedAccount.get('mailboxes'),
+      selectedMailboxID: this.props.selectedMailboxID
+    }) : void 0, a({
       href: newMailboxUrl,
       onClick: this._hideMenu,
       className: 'menu-item new-account-action ' + newMailboxClass
@@ -5645,7 +5825,9 @@ Spinner = require('./basic_components').Spinner;
 module.exports = React.createClass({
   displayName: 'RefreshIndicator',
   protoTypes: {
-    refreshes: React.PropTypes.object.isRequired
+    refreshes: React.PropTypes.object.isRequired,
+    selectedAccount: React.PropTypes.object.isRequired,
+    selectedMailboxID: React.PropTypes.string
   },
   getInitialState: function() {
     return {
@@ -5660,6 +5842,9 @@ module.exports = React.createClass({
       className: '',
       type: 'button',
       disabled: null,
+      title: t("menu last refresh", {
+        date: this.getFormattedDate()
+      }),
       onClick: this.refresh
     }, span({
       className: 'fa fa-refresh'
@@ -5697,6 +5882,18 @@ module.exports = React.createClass({
       mailbox: mailbox
     };
   },
+  getFormattedDate: function() {
+    var date, formattedDate, formatter, mailbox;
+    if (this.props.selectedMailboxID != null) {
+      mailbox = this.props.mailboxes.get(this.props.selectedMailboxID);
+    } else {
+      mailbox = this.props.mailboxes.first();
+    }
+    date = mailbox.get('lastSync');
+    formatter = 'DD/MM/YYYY HH:mm:ss';
+    formattedDate = moment(date).format(formatter);
+    return formattedDate;
+  },
   refresh: function(event) {
     this.setState({
       isRefreshStarted: true
@@ -5715,9 +5912,9 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message-list", function(exports, require, module) {
-var AccountActionCreator, ContactActionCreator, ConversationActionCreator, DomUtils, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageListBody, MessageStore, MessageUtils, MessagesFilter, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, Spinner, ToolboxActions, ToolboxMove, TooltipRefresherMixin, Tooltips, a, alertError, button, classer, div, i, img, input, li, p, span, ul, _ref, _ref1;
+var AccountActionCreator, ContactActionCreator, ConversationActionCreator, DomUtils, Dropdown, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageListBody, MessageStore, MessageUtils, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, Spinner, ToolboxActions, ToolboxMove, TooltipRefresherMixin, Tooltips, a, alertError, button, classer, div, form, i, img, input, li, p, span, ul, _ref, _ref1;
 
-_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p, button = _ref.button, input = _ref.input, img = _ref.img;
+_ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p, button = _ref.button, input = _ref.input, img = _ref.img, form = _ref.form;
 
 classer = React.addons.classSet;
 
@@ -5745,6 +5942,8 @@ MessageActionCreator = require('../actions/message_action_creator');
 
 MessageStore = require('../stores/message_store');
 
+Dropdown = require('./basic_components').Dropdown;
+
 MailboxList = require('./mailbox_list');
 
 Participants = require('./participant');
@@ -5771,6 +5970,7 @@ MessageList = React.createClass({
       filterFlag: false,
       filterUnsead: false,
       filterAttach: false,
+      quickFilters: false,
       selected: {},
       allSelected: false
     };
@@ -5802,7 +6002,7 @@ MessageList = React.createClass({
     }
   },
   render: function() {
-    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, composeUrl, configMailboxUrl, filterParams, getMailboxUrl, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen;
+    var advanced, btnClasses, btnGrpClasses, classCompact, classEdited, classList, compact, composeUrl, configMailboxUrl, filterParams, getFilterClass, getMailboxUrl, nbSelected, nextPage, showList, toggleFilterAttach, toggleFilterFlag, toggleFilterUnseen, toggleQuickFilter;
     compact = this.props.settings.get('listStyle') === 'compact';
     filterParams = {
       accountID: this.props.accountID,
@@ -5861,7 +6061,8 @@ MessageList = React.createClass({
         return _this.setState({
           filterFlag: !_this.state.filterFlag,
           filterUnseen: false,
-          filterAttach: false
+          filterAttach: false,
+          quickFilters: false
         });
       };
     })(this);
@@ -5878,7 +6079,8 @@ MessageList = React.createClass({
         return _this.setState({
           filterUnseen: !_this.state.filterUnseen,
           filterFlag: false,
-          filterAttach: false
+          filterAttach: false,
+          quickFilters: false
         });
       };
     })(this);
@@ -5895,7 +6097,24 @@ MessageList = React.createClass({
         return _this.setState({
           filterAttach: !_this.state.filterAttach,
           filterFlag: false,
-          filterUnseen: false
+          filterUnseen: false,
+          quickFilters: false
+        });
+      };
+    })(this);
+    toggleQuickFilter = (function(_this) {
+      return function() {
+        if (_this.state.quickFilters) {
+          LayoutActionCreator.sortMessages({
+            field: 'date'
+          });
+          showList();
+        }
+        return _this.setState({
+          filterFlag: false,
+          filterUnseen: false,
+          filterAttach: false,
+          quickFilters: !_this.state.quickFilters
         });
       };
     })(this);
@@ -5911,6 +6130,11 @@ MessageList = React.createClass({
     });
     btnClasses = 'btn btn-default ';
     btnGrpClasses = 'btn-group btn-group-sm message-list-option ';
+    getFilterClass = function(filter) {
+      var shown;
+      shown = filter ? ' shown' : '';
+      return "" + btnClasses + shown;
+    };
     composeUrl = this.buildUrl({
       direction: 'first',
       action: 'compose',
@@ -5955,7 +6179,7 @@ MessageList = React.createClass({
       className: btnGrpClasses
     }, button({
       onClick: toggleFilterUnseen,
-      className: btnClasses + (this.state.filterUnseen ? ' shown' : void 0),
+      className: getFilterClass(this.state.filterUnseen),
       'aria-describedby': Tooltips.FILTER_ONLY_UNREAD,
       'data-tooltip-direction': 'bottom'
     }, span({
@@ -5964,7 +6188,7 @@ MessageList = React.createClass({
       className: btnGrpClasses
     }, button({
       onClick: toggleFilterFlag,
-      className: btnClasses + (this.state.filterFlag ? ' shown' : void 0),
+      className: getFilterClass(this.state.filterFlag),
       'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT,
       'data-tooltip-direction': 'bottom'
     }, span({
@@ -5973,14 +6197,21 @@ MessageList = React.createClass({
       className: btnGrpClasses
     }, button({
       onClick: toggleFilterAttach,
-      className: btnClasses + (this.state.filterAttach ? ' shown' : void 0),
+      className: getFilterClass(this.state.filterAttach),
       'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT,
       'data-tooltip-direction': 'bottom'
     }, span({
       className: 'fa fa-paperclip'
-    }))) : void 0, advanced && !this.state.edited ? div({
+    }))) : void 0, !advanced && !this.state.edited ? div({
       className: btnGrpClasses
-    }, MessagesFilter(filterParams)) : void 0, advanced && !this.state.edited ? div({
+    }, button({
+      onClick: toggleQuickFilter,
+      className: getFilterClass(this.state.quickFilters),
+      'aria-describedby': Tooltips.QUICK_FILTER,
+      'data-tooltip-direction': 'bottom'
+    }, span({
+      className: 'fa fa-filter'
+    }))) : void 0, advanced && !this.state.edited ? div({
       className: btnGrpClasses
     }, MessagesSort(filterParams)) : void 0, !this.state.edited ? div({
       className: btnGrpClasses
@@ -6040,7 +6271,12 @@ MessageList = React.createClass({
       className: 'fa fa-edit'
     }), span({
       className: 'item-label'
-    }, t('menu compose'))))), this.props.messages.count() === 0 ? this.props.fetching ? p(null, t('list fetching')) : p(null, this.props.emptyListMessage) : div(null, MessageListBody({
+    }, t('menu compose'))))), this.state.quickFilters ? div({
+      className: 'message-list-filters form-horizontal'
+    }, MessagesQuickFilter({
+      accountID: this.props.accountID,
+      mailboxID: this.props.mailboxID
+    })) : void 0, this.props.messages.count() === 0 ? this.props.fetching ? p(null, t('list fetching')) : p(null, this.props.emptyListMessage) : div(null, MessageListBody({
       messages: this.props.messages,
       settings: this.props.settings,
       mailboxID: this.props.mailboxID,
@@ -6078,7 +6314,7 @@ MessageList = React.createClass({
           return _this.setState(newState);
         };
       })(this)
-    }), this.moreToSee() && (this.props.query.pageAfter != null) ? p({
+    }), this.props.query.pageAfter !== '-' ? p({
       className: 'text-center list-footer'
     }, this.props.fetching ? Spinner() : a({
       className: 'more-messages',
@@ -6087,25 +6323,6 @@ MessageList = React.createClass({
     }, t('list next page'))) : p({
       ref: 'listEnd'
     }, t('list end'))));
-  },
-  moreToSee: function() {
-    var nbInConv, nbMessages;
-    nbMessages = parseInt(this.props.messagesCount, 10);
-    if (this.props.displayConversations) {
-      nbInConv = 0;
-      this.props.messages.map((function(_this) {
-        return function(message) {
-          var length;
-          length = _this.props.conversationLengths.get(message.get('conversationID'));
-          if (length != null) {
-            return nbInConv += _this.props.conversationLengths.get(message.get('conversationID'));
-          }
-        };
-      })(this)).toJS();
-      return nbInConv < nbMessages;
-    } else {
-      return this.props.messages.count() < nbMessages;
-    }
   },
   toggleEdited: function() {
     if (this.state.edited) {
@@ -6320,9 +6537,8 @@ MessageList = React.createClass({
     }
   },
   _handleRealtimeGrowth: function() {
-    var lastdate, nbMessages;
-    nbMessages = parseInt(this.props.messagesCount, 10);
-    if ((!this.moreToSee()) && (this.refs.listEnd != null) && !DomUtils.isVisible(this.refs.listEnd.getDOMNode())) {
+    var lastdate;
+    if (this.props.pageAfter !== '-' && (this.refs.listEnd != null) && !DomUtils.isVisible(this.refs.listEnd.getDOMNode())) {
       lastdate = this.props.messages.last().get('date');
       return SocketUtils.changeRealtimeScope(this.props.mailboxID, lastdate);
     }
@@ -6638,75 +6854,171 @@ MessageItem = React.createClass({
 
 MessagesQuickFilter = React.createClass({
   displayName: 'MessagesQuickFilter',
-  render: function() {
-    return div({
-      className: "form-group message-list-action"
-    }, input({
-      className: "form-control",
-      type: "text",
-      onBlur: this.onQuick
-    }));
+  getInitialState: function() {
+    var state;
+    state = {
+      type: 'date',
+      startValid: true,
+      endValid: true
+    };
+    return state;
   },
-  onQuick: function(ev) {
-    return LayoutActionCreator.quickFilterMessages(ev.target.value.trim());
-  }
-});
-
-MessagesFilter = React.createClass({
-  displayName: 'MessagesFilter',
-  mixins: [RouterMixin],
+  shouldComponentUpdate: function(nextProps, nextState) {
+    var should;
+    should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
+    return should;
+  },
   render: function() {
-    var filter, title;
-    filter = this.props.query.flag;
-    if ((filter == null) || filter === '-') {
-      title = i({
-        className: 'fa fa-filter'
-      });
-    } else {
-      title = t('list filter ' + filter);
+    var endClass, filters, startClass;
+    filters = {};
+    ['from', 'dest', 'date'].map(function(filter) {
+      return filters[filter] = t("list filter " + filter);
+    });
+    if (!this.state.startValid) {
+      startClass = 'error';
     }
-    return div({
-      className: 'btn-group btn-group-sm dropdown filter-dropdown'
-    }, button({
-      className: 'btn btn-default dropdown-toggle message-list-action',
-      type: 'button',
-      'data-toggle': 'dropdown'
-    }, title, span({
-      className: 'caret'
-    })), ul({
-      className: 'dropdown-menu',
-      role: 'menu'
-    }, li({
-      role: 'presentation'
-    }, a({
+    if (!this.state.endValid) {
+      endClass = 'error';
+    }
+    return form({
+      className: 'list-filters'
+    }, Dropdown({
+      value: this.state.type,
+      values: filters,
+      onChange: this.onChange
+    }), this.state.type === 'date' ? span(null, input({
+      ref: 'dateStart',
+      id: 'filterDateStart',
+      key: 'filterDateStart',
+      name: 'filterDateStart',
+      className: "filter-date " + (startClass || ''),
+      placeholder: t('list filter date placeholder'),
+      onBlur: this.doValidate,
+      type: "text"
+    }), input({
+      ref: 'dateEnd',
+      id: 'filterDateEnd',
+      key: 'filterDateEnd',
+      name: 'filterDateEnd',
+      className: "filter-date " + (endClass || ''),
+      placeholder: t('list filter date placeholder'),
+      onBlur: this.doValidate,
+      type: "text"
+    })) : input({
+      ref: 'value',
+      className: "",
+      type: "text",
+      onKeyDown: this.onKeyDown
+    }), button({
       onClick: this.onFilter,
-      'data-filter': MessageFilter.ALL
-    }, t('list filter all'))), li({
-      role: 'presentation'
-    }, a({
-      onClick: this.onFilter,
-      'data-filter': MessageFilter.UNSEEN
-    }, t('list filter unseen'))), li({
-      role: 'presentation'
-    }, a({
-      onClick: this.onFilter,
-      'data-filter': MessageFilter.FLAGGED
-    }, t('list filter flagged'))), li({
-      role: 'presentation'
-    }, a({
-      onClick: this.onFilter,
-      'data-filter': MessageFilter.ATTACH
-    }, t('list filter attach')))));
+      className: 'btn btn-default',
+      'aria-describedby': Tooltips.FILTER,
+      'data-tooltip-direction': 'bottom'
+    }, span({
+      className: 'fa fa-filter'
+    })));
+  },
+  initDatepicker: function() {
+    var options;
+    if (this.state.type === 'date') {
+      datePickerController.setDebug(true);
+      options = {
+        formElements: {
+          filterDateStart: '%d/%m/%Y'
+        }
+      };
+      datePickerController.createDatePicker(options);
+      options = {
+        formElements: {
+          filterDateEnd: '%d/%m/%Y'
+        }
+      };
+      return datePickerController.createDatePicker(options);
+    } else {
+      datePickerController.destroyDatePicker('filterDateStart');
+      return datePickerController.destroyDatePicker('filterDateEnd');
+    }
+  },
+  componentDidMount: function() {
+    return this.initDatepicker();
+  },
+  componentDidUpdate: function() {
+    return this.initDatepicker();
+  },
+  _getStartDate: function() {
+    var start;
+    start = this.refs.dateStart.getDOMNode().value.trim();
+    if (start === '') {
+      return '';
+    } else {
+      start = start.split('/');
+      return "" + start[2] + "-" + start[1] + "-" + start[0] + "T00:00:00.000Z";
+    }
+  },
+  _getEndDate: function() {
+    var end;
+    end = this.refs.dateEnd.getDOMNode().value.trim();
+    if (end === '') {
+      return '';
+    } else {
+      end = end.split('/');
+      return "" + end[2] + "-" + end[1] + "-" + end[0] + "T00:00:00.000Z";
+    }
+  },
+  doValidate: function() {
+    var end, endValid, start, startValid;
+    start = this._getStartDate();
+    end = this._getEndDate();
+    startValid = start === '' || !isNaN(Date.parse(start));
+    endValid = end === '' || !isNaN(Date.parse(end));
+    this.setState({
+      startValid: startValid,
+      endValid: endValid
+    });
+    return startValid && endValid;
+  },
+  onChange: function(filter) {
+    return this.setState({
+      type: filter,
+      startValid: true,
+      endValid: true
+    });
   },
   onFilter: function(ev) {
-    var params;
-    LayoutActionCreator.filterMessages(ev.target.dataset.filter);
+    var params, value;
+    if (ev != null) {
+      ev.stopPropagation();
+      ev.preventDefault();
+    }
+    if (this.state.type === 'date') {
+      if (this.doValidate()) {
+        LayoutActionCreator.sortMessages({
+          order: '-',
+          field: this.state.type,
+          before: this._getStartDate(),
+          after: this._getEndDate()
+        });
+      }
+    } else {
+      value = this.refs.value.getDOMNode().value;
+      LayoutActionCreator.sortMessages({
+        field: this.state.type,
+        after: "" + value + "\uFFFF",
+        before: value
+      });
+    }
     params = _.clone(MessageStore.getParams());
     params.accountID = this.props.accountID;
     params.mailboxID = this.props.mailboxID;
     return LayoutActionCreator.showMessageList({
       parameters: params
     });
+  },
+  onKeyDown: function(evt) {
+    switch (evt.key) {
+      case "Enter":
+        return this.onFilter();
+    }
   }
 });
 
@@ -9084,7 +9396,7 @@ module.exports = React.createClass({
     return false;
   },
   render: function() {
-    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')), this.getTooltip(Tooltips.FILTER_ONLY_UNREAD, t('tooltip filter only unread')), this.getTooltip(Tooltips.FILTER_ONLY_IMPORTANT, t('tooltip filter only important')), this.getTooltip(Tooltips.FILTER_ONLY_WITH_ATTACHMENT, t('tooltip filter only attachment')), this.getTooltip(Tooltips.ACCOUNT_PARAMETERS, t('tooltip account parameters')), this.getTooltip(Tooltips.DELETE_SELECTION, t('tooltip delete selection')));
+    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')), this.getTooltip(Tooltips.FILTER_ONLY_UNREAD, t('tooltip filter only unread')), this.getTooltip(Tooltips.FILTER_ONLY_IMPORTANT, t('tooltip filter only important')), this.getTooltip(Tooltips.FILTER_ONLY_WITH_ATTACHMENT, t('tooltip filter only attachment')), this.getTooltip(Tooltips.ACCOUNT_PARAMETERS, t('tooltip account parameters')), this.getTooltip(Tooltips.DELETE_SELECTION, t('tooltip delete selection')), this.getTooltip(Tooltips.FILTER, t('tooltip filter')), this.getTooltip(Tooltips.QUICK_FILTER, t('tooltip display filters')));
   },
   getTooltip: function(id, content) {
     return p({
@@ -9239,7 +9551,6 @@ module.exports = {
     'RECEIVE_REFRESH_DELETE': 'RECEIVE_REFRESH_DELETE',
     'RECEIVE_REFRESH_NOTIF': 'RECEIVE_REFRESH_NOTIF',
     'LIST_FILTER': 'LIST_FILTER',
-    'LIST_QUICK_FILTER': 'LIST_QUICK_FILTER',
     'LIST_SORT': 'LIST_SORT',
     'TOASTS_SHOW': 'TOASTS_SHOW',
     'TOASTS_HIDE': 'TOASTS_HIDE'
@@ -9311,7 +9622,9 @@ module.exports = {
     FILTER_ONLY_IMPORTANT: 'TOOLTIP_FILTER_ONLY_IMPORTANT',
     FILTER_ONLY_WITH_ATTACHMENT: 'TOOLTIP_FILTER_ONLY_WITH_ATTACHMENT',
     ACCOUNT_PARAMETERS: 'TOOLTIP_ACCOUNT_PARAMETERS',
-    DELETE_SELECTION: 'TOOLTIP_DELETE_SELECTION'
+    DELETE_SELECTION: 'TOOLTIP_DELETE_SELECTION',
+    FILTER: 'TOOLTIP_FILTER',
+    QUICK_FILTER: 'TOOLTIP_QUICK_FILTER'
   }
 };
 });
@@ -10124,6 +10437,7 @@ module.exports = {
   "menu refresh initializing": "Initializing...",
   "menu refresh cleaning": "Cleaning...",
   "menu refresh indicator": "%{account}: %{mailbox} (%{progress}%)",
+  "menu last refresh": "Last refresh on %{date}.",
   "list empty": "Keine E-Mail in diesem Postfach.",
   "no flagged message": "Keine wichtige E-Mail in diesem Postfach.",
   "no unseen message": "Alle E-Mails in dieser Box wurden gelesen",
@@ -10436,6 +10750,7 @@ module.exports = {
   "menu refresh initializing": "Initializing...",
   "menu refresh cleaning": "Cleaning...",
   "menu refresh indicator": "%{account}: %{mailbox} (%{progress}%)",
+  "menu last refresh": "Last refresh on %{date}.",
   "list empty": "No email in this box.",
   "no flagged message": "No Important email in this box.",
   "no unseen message": "All emails have been read in this box",
@@ -10450,6 +10765,11 @@ module.exports = {
   "list filter unseen": "Unseen",
   "list filter flagged": "Important",
   "list filter attach": "Attachments",
+  "list filter from": "Sender is",
+  "list filter date": "Date in",
+  "list filter date placeholder": "DD/MM/YYYY",
+  "list filter dest": "Recipient is",
+  "list filter subject": "Subject starts with…",
   "list sort": "Sort",
   "list sort date": "Date",
   "list sort subject": "Subject",
@@ -10702,7 +11022,9 @@ module.exports = {
   "tooltip filter only important": "Show only important messages",
   "tooltip filter only attachment": "Show only messages with attachment",
   "tooltip account parameters": "Account parameters",
-  "tooltip delete selection": "Delete all selected messages"
+  "tooltip delete selection": "Delete all selected messages",
+  'tooltip filter': 'Filter',
+  'tooltip display filters': 'Display filters'
 };
 });
 
@@ -10762,6 +11084,7 @@ module.exports = {
   "menu refresh initializing": "Initialisation...",
   "menu refresh cleaning": "Nettoyage...",
   "menu refresh indicator": "%{account} : %{mailbox} (%{progress}%)",
+  "menu last refresh": "Dernier rafraîchissement le %{date}.",
   "list empty": "Pas d'email dans cette boîte..",
   "no flagged message": "Pas d'email important dans cette boîte.",
   "no unseen message": "Pas d'email non-lu dans cette boîte.",
@@ -10776,6 +11099,11 @@ module.exports = {
   "list filter unseen": "Non lus",
   "list filter flagged": "Importants",
   "list filter attach": "Pièces-jointes",
+  "list filter from": "Expédié par",
+  "list filter date": "Date entre",
+  "list filter date placeholder": "JJ/MM/AAAA",
+  "list filter dest": "Destiné à",
+  "list filter subject": "Subject commence par…",
   "list sort": "Trier",
   "list sort date": "Date",
   "list sort subject": "Sujet",
@@ -11026,7 +11354,9 @@ module.exports = {
   "tooltip filter only important": "Montrer seulement les messages importants",
   "tooltip filter only attachment": "Montrer seulement les messages avec pièce jointe",
   "tooltip account parameters": "Paramètres du compte",
-  "tooltip delete selection": "Supprimer les messages sélectionnés"
+  "tooltip delete selection": "Supprimer les messages sélectionnés",
+  'tooltip filter': 'Filter',
+  'tooltip display filters': 'Display filters'
 };
 });
 
@@ -11242,7 +11572,6 @@ module.exports = Router = (function(_super) {
         defaultParameters = _.clone(MessageStore.getParams());
         defaultParameters.accountID = defaultAccountID;
         defaultParameters.mailboxID = defaultMailboxID;
-        defaultParameters.sort = '-';
         defaultParameters.pageAfter = '-';
         break;
       case 'account.config':
@@ -12056,20 +12385,22 @@ MessageStore = (function(_super) {
       if (messages.mailboxID) {
         SocketUtils.changeRealtimeScope(messages.mailboxID);
       }
-      if (messages.links != null) {
-        if (messages.links.next != null) {
-          _params = {};
-          next = decodeURIComponent(messages.links.next);
-          url = 'http://localhost' + next;
-          url.split('?')[1].split('&').forEach(function(p) {
-            var key, value, _ref1;
-            _ref1 = p.split('='), key = _ref1[0], value = _ref1[1];
-            if (value === '') {
-              value = '-';
-            }
-            return _params[key] = value;
-          });
-        }
+      if ((messages.links != null) && (messages.links.next != null)) {
+        _params = {};
+        next = decodeURIComponent(messages.links.next);
+        url = 'http://localhost' + next;
+        url.split('?')[1].split('&').forEach(function(p) {
+          var key, value, _ref1;
+          _ref1 = p.split('='), key = _ref1[0], value = _ref1[1];
+          if (value === '') {
+            value = '-';
+          }
+          return _params[key] = value;
+        });
+      } else {
+        _params.pageAfter = '-';
+      }
+      if (_params.pageAfter !== '-') {
         SocketUtils.changeRealtimeScope(messages.mailboxID, _params.pageAfter);
       }
       if (lengths = messages.conversationLengths) {
@@ -12122,23 +12453,27 @@ MessageStore = (function(_super) {
       var currentField, currentOrder, newOrder;
       _messages = _messages.clear();
       _sortField = sort.field;
-      currentField = _params.sort.substr(1);
-      currentOrder = _params.sort.substr(0, 1);
-      if (currentField === sort.field) {
-        newOrder = currentOrder === '+' ? '-' : '+';
-        _sortOrder = -1 * _sortOrder;
+      if (sort.order != null) {
+        newOrder = sort.order;
       } else {
-        _sortOrder = -1;
-        if (sort.field === 'date') {
-          newOrder = '-';
+        currentField = _params.sort.substr(1);
+        currentOrder = _params.sort.substr(0, 1);
+        if (currentField === sort.field) {
+          newOrder = currentOrder === '+' ? '-' : '+';
+          _sortOrder = -1 * _sortOrder;
         } else {
-          newOrder = '+';
+          _sortOrder = -1;
+          if (sort.field === 'date') {
+            newOrder = '-';
+          } else {
+            newOrder = '+';
+          }
         }
       }
       return _params = {
-        after: '-',
+        after: sort.after || '-',
         flag: _params.flag,
-        before: '-',
+        before: sort.before || '-',
         pageAfter: '-',
         sort: newOrder + sort.field
       };
@@ -12977,7 +13312,7 @@ module.exports = MessageUtils = {
       return from;
     }
   },
-  makeReplyMessage: function(myAddress, inReplyTo, action, inHTML) {
+  makeReplyMessage: function(myAddress, inReplyTo, action, inHTML, signature) {
     var dateHuman, e, html, message, notMe, options, sender, text;
     message = {
       composeInHTML: inHTML,
@@ -13009,13 +13344,15 @@ module.exports = MessageUtils = {
       message.references = inReplyTo.get('references') || [];
       message.references = message.references.concat(message.inReplyTo);
     }
+    signature = "--\n" + signature;
     options = {
       message: message,
       inReplyTo: inReplyTo,
       dateHuman: dateHuman,
       sender: sender,
       text: text,
-      html: html
+      html: html,
+      signature: signature
     };
     switch (action) {
       case ComposeActions.REPLY:
@@ -13028,7 +13365,7 @@ module.exports = MessageUtils = {
         this.setMessageAsForward(options);
         break;
       case null:
-        this.setMessgeAsDefault(message);
+        this.setMessageAsDefault(message, signature);
     }
     notMe = function(dest) {
       return dest.address !== myAddress;
@@ -13038,8 +13375,8 @@ module.exports = MessageUtils = {
     return message;
   },
   setMessageAsReply: function(options) {
-    var dateHuman, html, inReplyTo, message, params, sender, separator, text;
-    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html;
+    var dateHuman, html, inReplyTo, message, params, sender, separator, signature, text;
+    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html, signature = options.signature;
     params = {
       date: dateHuman,
       sender: sender
@@ -13050,11 +13387,18 @@ module.exports = MessageUtils = {
     message.bcc = [];
     message.subject = this.getReplySubject(inReplyTo);
     message.text = separator + this.generateReplyText(text) + "\n";
-    return message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br /></p>";
+    if (signature) {
+      message.text += "\n\n" + signature;
+    }
+    message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br /></p>";
+    if (signature) {
+      signature = signature.replace(/\n/g, '<br>');
+      return message.html += "<p><br /></p><p id=\"signature\">" + signature + "</p>";
+    }
   },
   setMessageAsReplyAll: function(options) {
-    var dateHuman, html, inReplyTo, message, params, sender, separator, text, toAddresses;
-    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html;
+    var dateHuman, html, inReplyTo, message, params, sender, separator, signature, text, toAddresses;
+    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html, signature = options.signature;
     params = {
       date: dateHuman,
       sender: sender
@@ -13070,11 +13414,18 @@ module.exports = MessageUtils = {
     message.bcc = [];
     message.subject = this.getReplySubject(inReplyTo);
     message.text = separator + this.generateReplyText(text) + "\n";
-    return message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br /></p>";
+    if (signature) {
+      message.text += "\n\n" + signature;
+    }
+    message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br /></p>";
+    if (signature) {
+      signature = signature.replace(/\n/g, '<br>');
+      return message.html += "<p><br /></p><p id=\"signature\">" + signature + "</p>";
+    }
   },
   setMessageAsForward: function(options) {
-    var addresses, dateHuman, fromField, html, htmlSeparator, inReplyTo, message, sender, senderAddress, senderInfos, senderName, separator, text, textSeparator;
-    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html;
+    var addresses, dateHuman, fromField, html, htmlSeparator, inReplyTo, message, sender, senderAddress, senderInfos, senderName, separator, signature, text, textSeparator;
+    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html, signature = options.signature;
     addresses = inReplyTo.get('to').map(function(address) {
       return address.address;
     }).join(', ');
@@ -13088,6 +13439,7 @@ module.exports = MessageUtils = {
     }
     separator = "\n----- " + (t('compose forward header')) + " ------\n" + (t('compose forward subject')) + " " + (inReplyTo.get('subject')) + "\n" + (t('compose forward date')) + " " + dateHuman + "\n" + (t('compose forward from')) + " " + fromField + "\n" + (t('compose forward to')) + " " + addresses + "\n";
     textSeparator = separator.replace('&lt;', '<').replace('&gt;', '>');
+    textSeparator = textSeparator.replace('<pre>', '').replace('</pre>', '');
     htmlSeparator = separator.replace(/(\n)+/g, '<br />');
     this.setMessageAsDefault(message);
     message.subject = "" + (t('compose forward prefix')) + (inReplyTo.get('subject'));
@@ -13096,13 +13448,20 @@ module.exports = MessageUtils = {
     message.attachments = inReplyTo.get('attachments');
     return message;
   },
-  setMessageAsDefault: function(message) {
+  setMessageAsDefault: function(message, signature) {
     message.to = [];
     message.cc = [];
     message.bcc = [];
     message.subject = '';
     message.text = '';
-    message.html = '';
+    if (signature) {
+      message.text += "\n\n--\n" + signature;
+    }
+    message.html = COMPOSE_STYLE;
+    if (signature) {
+      signature = signature.replace(/\n/g, '<br>');
+      message.html += "<p><br /></p><p><br /></p>\n<p id=\"signature\">--\n" + signature + "</p>";
+    }
     return message;
   },
   generateReplyText: function(text) {

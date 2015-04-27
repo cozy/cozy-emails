@@ -23,7 +23,8 @@ Mailbox = (function(superClass) {
     tree: [String],
     delimiter: String,
     uidvalidity: Number,
-    attribs: [String]
+    attribs: [String],
+    lastSync: String
   };
 
   Mailbox.RFC6154 = {

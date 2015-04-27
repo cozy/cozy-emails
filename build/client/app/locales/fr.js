@@ -54,6 +54,7 @@ module.exports = {
   "menu refresh initializing": "Initialisation...",
   "menu refresh cleaning": "Nettoyage...",
   "menu refresh indicator": "%{account} : %{mailbox} (%{progress}%)",
+  "menu last refresh": "Dernier rafraîchissement le %{date}.",
   "list empty": "Pas d'email dans cette boîte..",
   "no flagged message": "Pas d'email important dans cette boîte.",
   "no unseen message": "Pas d'email non-lu dans cette boîte.",
@@ -68,6 +69,11 @@ module.exports = {
   "list filter unseen": "Non lus",
   "list filter flagged": "Importants",
   "list filter attach": "Pièces-jointes",
+  "list filter from": "Expédié par",
+  "list filter date": "Date entre",
+  "list filter date placeholder": "JJ/MM/AAAA",
+  "list filter dest": "Destiné à",
+  "list filter subject": "Subject commence par…",
   "list sort": "Trier",
   "list sort date": "Date",
   "list sort subject": "Sujet",
@@ -318,5 +324,7 @@ module.exports = {
   "tooltip filter only important": "Montrer seulement les messages importants",
   "tooltip filter only attachment": "Montrer seulement les messages avec pièce jointe",
   "tooltip account parameters": "Paramètres du compte",
-  "tooltip delete selection": "Supprimer les messages sélectionnés"
+  "tooltip delete selection": "Supprimer les messages sélectionnés",
+  'tooltip filter': 'Filter',
+  'tooltip display filters': 'Display filters'
 };

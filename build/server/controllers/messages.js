@@ -107,7 +107,7 @@ module.exports.listByMailboxOptions = function(req, res, next) {
     if (new Date(before).toISOString() !== before || new Date(after).toISOString() !== after) {
       return next(new BadRequest("before & after should be a valid JS " + "date.toISOString()"));
     }
-  } else if (sortField === 'subject') {
+  } else if (sortField === 'subject' || sortField === 'from' || sortField === 'dest') {
     before = before ? decodeURIComponent(before) : '';
     after = after ? decodeURIComponent(after) : {};
     pageAfter = pageAfter ? decodeURIComponent(pageAfter) : void 0;

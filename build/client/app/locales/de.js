@@ -54,6 +54,7 @@ module.exports = {
   "menu refresh initializing": "Initializing...",
   "menu refresh cleaning": "Cleaning...",
   "menu refresh indicator": "%{account}: %{mailbox} (%{progress}%)",
+  "menu last refresh": "Last refresh on %{date}.",
   "list empty": "Keine E-Mail in diesem Postfach.",
   "no flagged message": "Keine wichtige E-Mail in diesem Postfach.",
   "no unseen message": "Alle E-Mails in dieser Box wurden gelesen",
