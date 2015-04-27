@@ -14,13 +14,14 @@
         display     flex
         align-items stretch
 
-        section
-            overflow-y auto
+    aside
+    section
+        overflow-y auto
 
 
     @media(max-width: 29.9375em)
         [role=menubar][aria-expanded=true] + main
-            transform translateX(80vw)
+            transform translateX(85vw)
 
         main
             position absolute
@@ -51,7 +52,7 @@
 
         // set rules for drawer
         [role=menubar][aria-expanded=true]
-            min-width 80vw
+            min-width 85vw
 
             + main section
                 width 100vw
