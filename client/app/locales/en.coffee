@@ -76,6 +76,7 @@ module.exports =
       "list filter attach"        : "Attachments"
       "list filter from"          : "Sender is"
       "list filter date"          : "Date in"
+      "list filter date placeholder": "DD/MM/YYYY"
       "list filter dest"          : "Recipient is"
       "list filter subject"       : "Subject starts with…"
       "list sort"                 : "Sort"

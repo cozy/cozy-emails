@@ -760,6 +760,8 @@ MessagesQuickFilter = React.createClass
         # default filter type: date
         state =
             type: 'date'
+            startValid: true
+            endValid: true
         return state
 
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -770,34 +772,38 @@ MessagesQuickFilter = React.createClass
     render: ->
 
         filters = {}
-        ['subject', 'from', 'dest', 'date'].map (filter) ->
+        ['from', 'dest', 'date'].map (filter) ->
             filters[filter] = t "list filter #{filter}"
 
-        form null,
+        startClass = 'error' if not @state.startValid
+        endClass   = 'error' if not @state.endValid
+
+        form className: 'list-filters',
             # Filter type
             Dropdown
                 value: @state.type
                 values: filters
                 onChange: @onChange
             if @state.type is 'date'
-                [ input
-                    ref: 'dateStart'
-                    id: 'filterDateStart'
-                    key: 'filterDateStart'
-                    name: 'filterDateStart'
-                    className: ""
-                    type: "text",
-                span
-                    key: '-'
-                    '-',
-                input
-                    ref: 'dateEnd'
-                    id: 'filterDateEnd'
-                    key: 'filterDateEnd'
-                    name: 'filterDateEnd'
-                    className: ""
-                    type: "text"
-                ]
+                span null,
+                    input
+                        ref: 'dateStart'
+                        id: 'filterDateStart'
+                        key: 'filterDateStart'
+                        name: 'filterDateStart'
+                        className: startClass
+                        placeholder: t 'list filter date placeholder'
+                        onBlur: @doValidate
+                        type: "text",
+                    input
+                        ref: 'dateEnd'
+                        id: 'filterDateEnd'
+                        key: 'filterDateEnd'
+                        name: 'filterDateEnd'
+                        className: endClass
+                        placeholder: t 'list filter date placeholder'
+                        onBlur: @doValidate
+                        type: "text"
             else
                 input
                     ref: 'value'
@@ -812,7 +818,7 @@ MessagesQuickFilter = React.createClass
                     span className: 'fa fa-filter'
 
     initDatepicker: ->
-        if @refs.dateStart?
+        if @state.type is 'date'
             datePickerController.setDebug true
             options =
                 formElements:
@@ -822,6 +828,9 @@ MessagesQuickFilter = React.createClass
                 formElements:
                     filterDateEnd: '%d/%m/%Y'
             datePickerController.createDatePicker options
+        else
+            datePickerController.destroyDatePicker 'filterDateStart'
+            datePickerController.destroyDatePicker 'filterDateEnd'
 
     componentDidMount: ->
         @initDatepicker()
@@ -829,8 +838,34 @@ MessagesQuickFilter = React.createClass
     componentDidUpdate: ->
         @initDatepicker()
 
+    _getStartDate: ->
+        start = @refs.dateStart.getDOMNode().value.trim()
+        if start is ''
+            return ''
+        else
+            start = start.split '/'
+            return "#{start[2]}-#{start[1]}-#{start[0]}T00:00:00.000Z"
+
+    _getEndDate: ->
+        end = @refs.dateEnd.getDOMNode().value.trim()
+        if end is ''
+            return ''
+        else
+            end = end.split '/'
+            return "#{end[2]}-#{end[1]}-#{end[0]}T00:00:00.000Z"
+
+    # Validate start and end dates
+    # update state and return true if both are valid
+    doValidate: ->
+        start = @_getStartDate()
+        end   = @_getEndDate()
+        startValid = start is '' or not isNaN(Date.parse start)
+        endValid   = end is '' or not isNaN(Date.parse end)
+        @setState startValid: startValid, endValid: endValid
+        return startValid and endValid
+
     onChange: (filter) ->
-        @setState type: filter
+        @setState type: filter, startValid: true, endValid: true
 
     onFilter: (ev) ->
 
@@ -839,13 +874,12 @@ MessagesQuickFilter = React.createClass
             ev.preventDefault()
 
         if @state.type is 'date'
-            start = @refs.dateStart.getDOMNode().value.split '/'
-            end   = @refs.dateEnd.getDOMNode().value.split '/'
-            LayoutActionCreator.sortMessages
-                order: '-'
-                field:  @state.type
-                before: "#{start[2]}-#{start[1]}-#{start[0]}T00:00:00.000Z"
-                after:  "#{end[2]}-#{end[1]}-#{end[0]}T23:59:59.999Z"
+            if @doValidate()
+                LayoutActionCreator.sortMessages
+                    order: '-'
+                    field:  @state.type
+                    before: @_getStartDate()
+                    after:  @_getEndDate()
         else
             value = @refs.value.getDOMNode().value
             LayoutActionCreator.sortMessages
