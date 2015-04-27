@@ -1,4 +1,4 @@
-{div, aside, ul, li, button, a, span, i} = React.DOM
+{div, aside, nav, ul, li, span, a, i, button} = React.DOM
 
 classer = React.addons.classSet
 
@@ -108,34 +108,35 @@ module.exports = Menu = React.createClass
         #     'three': @props.disposition.type is Dispositions.THREE
 
         aside
+            role: 'menubar'
             'aria-expanded': @state.isDrawerExpanded,
 
 
             modal
 
-            if @props.accounts.length isnt 0
-                ul id: 'account-list', className: 'list-unstyled',
+            nav className: 'mainmenu',
+                if @props.accounts.length
                     @props.accounts.map (account, key) =>
                         @getAccountRender account, key
                     .toJS()
 
+            nav className: 'submenu',
+                a
+                    href: newMailboxUrl
+                    role: 'menuitem'
+                    className: "btn new-account-action #{newMailboxClass}",
+                        i className: 'fa fa-plus'
+                        span className: 'item-label', t 'menu account new'
 
-            RefreshIndicator refreshes: @props.refreshes
-
-            a
-                href: newMailboxUrl,
-                className: 'menu-item new-account-action ' + newMailboxClass,
-                    i className: 'fa fa-plus'
-                    span className: 'item-label', t 'menu account new'
-
-            button
-                className: classer
-                    btn:               true
-                    fa:                true
-                    'drawer-toggle':   true
-                    'fa-toggle-right': not @state.isDrawerExpanded
-                    'fa-toggle-left':  @state.isDrawerExpanded
-                onClick: LayoutActionCreator.drawerToggle
+                button
+                    role: 'menuitem'
+                    className: classer
+                        btn:               true
+                        fa:                true
+                        'drawer-toggle':   true
+                        'fa-toggle-right': not @state.isDrawerExpanded
+                        'fa-toggle-left':  @state.isDrawerExpanded
+                    onClick: LayoutActionCreator.drawerToggle
 
     # renders a single account and its submenu
     getAccountRender: (account, key) ->
@@ -176,28 +177,35 @@ module.exports = Menu = React.createClass
             @setState onlyFavorites: not @state.onlyFavorites
 
 
+        isActive = (isSelected and @state.displayActiveAccount)
         accountClasses = classer
-            active: (isSelected and @state.displayActiveAccount)
+            active: isActive
+        accountIcon = [
+            'fa'
+            "fa-angle-#{if isActive then 'down' else 'right'}"
+        ].join(' ')
 
         if @state.onlyFavorites
             mailboxes = @props.favorites
-            icon = 'fa-toggle-down'
+            icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites off'
         else
             mailboxes = @props.mailboxes
-            icon = 'fa-toggle-up'
+            icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites on'
 
-        li className: accountClasses, key: key,
+        div
+            className: accountClasses, key: key,
             a
-                href: url,
-                className: 'menu-item account ' + accountClasses,
-                onClick: toggleActive,
-                onDoubleClick: toggleDisplay,
-                'data-toggle': 'tooltip',
-                'data-delay': '10000',
+                href: url
+                role: 'menuitem'
+                className: 'account ' + accountClasses,
+                onClick: toggleActive
+                onDoubleClick: toggleDisplay
+                'data-toggle': 'tooltip'
+                'data-delay': '10000'
                 'data-placement' : 'right',
-                    i className: 'fa fa-inbox'
+                    i className: accountIcon
                     span
                         'data-account-id': key,
                         className: 'item-label',
@@ -219,7 +227,9 @@ module.exports = Menu = React.createClass
                     span className: 'badge', nbUnread
 
             if isSelected
-                ul className: 'list-unstyled submenu mailbox-list',
+                ul
+                    role: 'group'
+                    className: 'list-unstyled mailbox-list',
                     mailboxes?.map (mailbox, key) =>
                         selectedMailboxID = @props.selectedMailboxID
                         MenuMailboxItem
@@ -230,9 +240,9 @@ module.exports = Menu = React.createClass
                             refreshes:         refreshes,
                             displayErrors:     @displayErrors,
                     .toJS()
-                    li null,
+                    li className: 'toggle-favorites',
                         a
-                            className: 'menu-item',
+                            role: 'menuitem',
                             tabIndex: 0,
                             onClick: toggleFavorites,
                             key: 'toggle',
@@ -279,38 +289,39 @@ MenuMailboxItem = React.createClass
         if nbRecent > 0
             title += t "menu mailbox new", nbRecent
 
+        mailboxIcon = 'fa-folder-o'
+        specialMailbox = false
+        for attrib, icon of SpecialBoxIcons
+            if @props.account.get(attrib) is mailboxID
+                mailboxIcon = icon
+                specialMailbox = true
+
         classesParent = classer
             active: mailboxID is @props.selectedMailboxID
             target: @state.target
         classesChild = classer
-            'menu-item': true
-            target: @state.target
-            news: nbRecent > 0
+            target:  @state.target
+            special: specialMailbox
+            news:    nbRecent > 0
 
-        mailboxIcon = 'fa-folder'
-        for attrib, icon of SpecialBoxIcons
-            if @props.account.get(attrib) is mailboxID
-                mailboxIcon = icon
 
         progress = @props.refreshes.get mailboxID
         displayError = @props.displayErrors.bind null, progress
 
-        pusher = ""
-        pusher += "   " for j in [1..@props.mailbox.get('depth')] by 1
-
         li className: classesParent,
             a
-                href: mailboxUrl,
-                onClick: @props.hideMenu,
-                className: classesChild,
-                'data-mailbox-id': mailboxID,
-                onDragEnter: @onDragEnter,
-                onDragLeave: @onDragLeave,
-                onDragOver: @onDragOver,
-                onDrop: @onDrop,
-                title: title,
-                'data-toggle': 'tooltip',
-                'data-placement' : 'right',
+                href: mailboxUrl
+                onClick: @props.hideMenu
+                className: "#{classesChild} lv-#{@props.mailbox.get('depth')}"
+                role: 'menuitem'
+                'data-mailbox-id': mailboxID
+                onDragEnter: @onDragEnter
+                onDragLeave: @onDragLeave
+                onDragOver: @onDragOver
+                onDrop: @onDrop
+                title: title
+                'data-toggle': 'tooltip'
+                'data-placement' : 'right'
                 key: @props.key,
                     # Something must be rethought about the icon
                     i className: 'fa ' + mailboxIcon
@@ -318,7 +329,7 @@ MenuMailboxItem = React.createClass
                         span className: 'badge', nbUnread
                     span
                         className: 'item-label',
-                        "#{pusher}#{@props.mailbox.get 'label'}"
+                        "#{@props.mailbox.get 'label'}"
 
                 if progress and progress.get('firstImport')
                     ThinProgress

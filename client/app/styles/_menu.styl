@@ -4,6 +4,88 @@
   -- Menu internal layout and styles
 */
 
+.app [role=menubar]
+    margin .5em
+    white-space nowrap
+    display flex
+    flex-direction column
+
+
+    .fa
+        vertical-align middle
+
+
+    .mainmenu
+        flex           1
+        display        flex
+        flex-direction column
+
+        .active
+            flex 1
+
+        .fa
+            font-size 1.5em
+
+
+    .submenu
+        display flex
+        border-top 1px solid #fff
+        box-shadow 0 -1px 0 #ccc
+
+        & :first-child
+            flex 1
+
+
+    .account
+        font-weight bold
+
+    .badge
+        display none
+
+
+    [role=group]
+        margin-bottom 2em
+
+
+    [role=menuitem]
+        display block
+        padding .5em
+
+        .item-label
+            margin-left 1em
+
+
+    for level in (1..10)
+        .lv-{level}:not(.special)
+            padding-left level * 2em
+
+
+    .drawer-toggle
+        background transparent
+
+
+    /*
+    Styles for Menu drawer in compact mode
+
+    */
+    @media(min-width: 20em)
+        &[aria-expanded=false]
+            .item-label
+            .toggle-favorites
+            .new-account-action
+                display none
+
+            .mainmenu
+                [role=menuitem]
+                    padding-left .5
+
+                    &:not(.special)
+                        display none
+
+            .drawer-toggle
+                flex 1
+
+
 #menu
     float left
     // We use a flexbox display so the #mailbox-list takes all the height left

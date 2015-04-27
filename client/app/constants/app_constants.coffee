@@ -127,10 +127,10 @@ module.exports =
 
     SpecialBoxIcons:
         inboxMailbox: 'fa-inbox'
-        draftMailbox: 'fa-edit'
-        sentMailbox: 'fa-share-square-o'
+        draftMailbox: 'fa-file-text-o'
+        sentMailbox: 'fa-send-o'
         trashMailbox: 'fa-trash-o'
-        junkMailbox: 'fa-exclamation'
+        junkMailbox: 'fa-fire'
         allMailbox: 'fa-archive'
 
     Tooltips:
