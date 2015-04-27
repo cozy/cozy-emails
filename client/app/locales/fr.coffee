@@ -61,6 +61,7 @@ module.exports =
       "menu refresh initializing": "Initialisation..."
       "menu refresh cleaning"   : "Nettoyage..."
       "menu refresh indicator"  : "%{account} : %{mailbox} (%{progress}%)"
+      "menu last refresh"       : "Dernier rafraîchissement le %{date}."
 
 
       # List
