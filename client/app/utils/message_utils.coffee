@@ -185,7 +185,7 @@ module.exports = MessageUtils =
             """
         if signature
             message.html += """
-            <p><br /></p><pre class="signature">--\n#{signature}</pre>
+            <p><br /></p><pre id="signature">--\n#{signature}</pre>
             """
 
 
@@ -232,7 +232,7 @@ module.exports = MessageUtils =
             """
         if signature
             message.html += """
-            <p><br /></p><pre>--\n#{signature}</pre>
+            <p><br /></p><pre id="signature">--\n#{signature}</pre>
             """
 
 
@@ -312,7 +312,7 @@ module.exports = MessageUtils =
         if signature
             message.html += """
             <p><br /></p><p><br /></p>
-            <pre class="signature">--\n#{signature}</pre>
+            <pre id="signature">--\n#{signature}</pre>
             """
 
         return message

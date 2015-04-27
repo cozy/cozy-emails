@@ -157,6 +157,8 @@ module.exports = Compose = React.createClass
                         messageID: @props.message?.get 'id'
                         html: @linkState('html')
                         text: @linkState('text')
+                        accounts: @props.accounts
+                        selectedAccountID: @props.selectedAccountID
                         settings: @props.settings
                         onSend: @onSend
                         composeInHTML: @state.composeInHTML
@@ -312,7 +314,6 @@ module.exports = Compose = React.createClass
         # new draft
         else
             account = @props.accounts[@props.selectedAccountID]
-            console.log account
             state = messageUtils.makeReplyMessage(
                 account.login,
                 @props.inReplyTo,
@@ -584,18 +585,32 @@ ComposeEditor = React.createClass
                     return
                 document.querySelector(".rt-editor").focus()
                 if not @props.settings.get 'composeOnTop'
-                    node.innerHTML += "<p><br /></p>"
-                    node = node.lastChild
+
+                    account = @props.accounts[@props.selectedAccountID]
+
+                    signatureNode = document.getElementById "signature"
+                    if account.signature and signatureNode?
+                        node = signatureNode
+                        node.innerHTML = """
+                        <p><br /></p>
+                        #{node.innerHTML}
+                        """
+                        node = node.firstChild
+
+                    else
+                        node.innerHTML += "<p><br /></p><p><br /></p>"
+                        node = node.lastChild
+
                     if node?
                         # move cursor to the bottom
                         node.scrollIntoView(false)
                         node.innerHTML = "<br \>"
-                        s = window.getSelection()
-                        r = document.createRange()
-                        r.selectNodeContents(node)
-                        s.removeAllRanges()
-                        s.addRange(r)
-                        document.execCommand('delete', false, null)
+                        selection = window.getSelection()
+                        range = document.createRange()
+                        range.selectNodeContents node
+                        selection.removeAllRanges()
+                        selection.addRange range
+                        document.execCommand 'delete', false, null
                         node.focus()
 
 
