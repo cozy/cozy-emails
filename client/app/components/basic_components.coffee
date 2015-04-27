@@ -108,10 +108,7 @@ FormButton = React.createClass
             onClick: @props.onClick
         ,
             if @props.spinner
-                span null,
-                    img
-                        src: 'images/spinner-white.svg'
-                        className: 'button-spinner'
+                span null, Spinner(white: true)
             else
                 span className: "fa fa-#{@props.icon}"
             span null, @props.text
@@ -223,6 +220,23 @@ Dropdown = React.createClass
                     for key, value of @props.values
                         renderFilter key, t "list filter #{key}"
 
+# Widget to display a spinner.
+# If property `white` is set to true, it will use the white version.
+Spinner = React.createClass
+    displayName: 'Spinner'
+
+    protoTypes:
+        white: React.PropTypes.bool
+
+    render: ->
+        suffix = if @props.white  then '-white' else ''
+
+        img
+            src: "images/spinner#{suffix}.svg"
+            alt: 'spinner'
+            className: 'button-spinner'
+
+
 module.exports = {
     AddressLabel
     Container
@@ -233,6 +247,7 @@ module.exports = {
     FormButton
     FormButtons
     FormDropdown
+    Spinner
     SubTitle
     Title
     Tabs

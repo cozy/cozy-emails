@@ -31,6 +31,7 @@
             padding 0 3.5em 0 1em
 
     .new-account-action
+    .trigger-refresh-action
         // Sets position at the bottom of the menu
         margin-top auto
 
@@ -160,3 +161,25 @@
 
         &:hover
             opacity 1
+
+    // Trigger refresh action button
+    // Temporary style, because m4dz is kinda burning everything to the ground
+    // at the moment :p
+    .trigger-refresh-action
+        width 100%
+        overflow hidden
+        text-overflow ellipsis
+        white-space nowrap
+
+        button
+            width 100%
+            text-align left
+            background transparent
+            border none
+
+            &:focus
+                outline none
+
+            span + span
+                margin-left 10px
+
