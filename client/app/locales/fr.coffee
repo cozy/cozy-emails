@@ -81,6 +81,11 @@ module.exports =
       "list filter unseen"        : "Non lus"
       "list filter flagged"       : "Importants"
       "list filter attach"        : "Pièces-jointes"
+      "list filter from"          : "Expédié par"
+      "list filter date"          : "Date entre"
+      "list filter date placeholder": "JJ/MM/AAAA"
+      "list filter dest"          : "Destiné à"
+      "list filter subject"       : "Subject commence par…"
       "list sort"                 : "Trier"
       "list sort date"            : "Date"
       "list sort subject"         : "Sujet"
@@ -404,3 +409,5 @@ module.exports =
       "tooltip filter only attachment": "Montrer seulement les messages avec pièce jointe"
       "tooltip account parameters": "Paramètres du compte"
       "tooltip delete selection": "Supprimer les messages sélectionnés"
+      'tooltip filter': 'Filter'
+      'tooltip display filters': 'Display filters'

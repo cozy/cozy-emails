@@ -1,4 +1,4 @@
-{div, ul, li, a, span, i, p, button, input, img} = React.DOM
+{div, ul, li, a, span, i, p, button, input, img, form} = React.DOM
 classer = React.addons.classSet
 
 RouterMixin    = require '../mixins/router_mixin'
@@ -17,6 +17,7 @@ MessageActionCreator      = require '../actions/message_action_creator'
 
 MessageStore   = require '../stores/message_store'
 
+{Dropdown}     = require './basic_components'
 MailboxList    = require './mailbox_list'
 Participants   = require './participant'
 {Spinner}      = require './basic_components'
@@ -40,6 +41,7 @@ MessageList = React.createClass
         filterFlag: false
         filterUnsead: false
         filterAttach: false
+        quickFilters: false
         selected: {}
         allSelected: false
 
@@ -99,6 +101,7 @@ MessageList = React.createClass
                 filterFlag:   not @state.filterFlag
                 filterUnseen: false
                 filterAttach: false
+                quickFilters: false
 
         toggleFilterUnseen = =>
             if @state.filterUnseen
@@ -111,6 +114,7 @@ MessageList = React.createClass
                 filterUnseen: not @state.filterUnseen
                 filterFlag:   false
                 filterAttach: false
+                quickFilters: false
 
         toggleFilterAttach = =>
             if @state.filterAttach
@@ -123,6 +127,19 @@ MessageList = React.createClass
                 filterAttach: not @state.filterAttach
                 filterFlag:   false
                 filterUnseen: false
+                quickFilters: false
+
+        toggleQuickFilter = =>
+            if @state.quickFilters
+                # default sort
+                LayoutActionCreator.sortMessages field: 'date'
+                showList()
+
+            @setState
+                filterFlag:   false
+                filterUnseen: false
+                filterAttach: false
+                quickFilters: not @state.quickFilters
 
         classList = classer
             compact: compact
@@ -134,6 +151,9 @@ MessageList = React.createClass
 
         btnClasses    = 'btn btn-default '
         btnGrpClasses = 'btn-group btn-group-sm message-list-option '
+        getFilterClass = (filter) ->
+            shown = if filter then ' shown' else ''
+            return "#{btnClasses}#{shown}"
 
         composeUrl = @buildUrl
             direction: 'first'
@@ -146,8 +166,6 @@ MessageList = React.createClass
             ref: 'list',
             'data-mailbox-id': @props.mailboxID,
             div className: 'message-list-actions',
-                #if advanced and not @state.edited
-                #    MessagesQuickFilter {}
                 div className: 'btn-toolbar', role: 'toolbar',
                     div className: 'btn-group',
                         # Toggle edit
@@ -181,7 +199,7 @@ MessageList = React.createClass
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterUnseen
-                                    className: btnClasses + if @state.filterUnseen then ' shown',
+                                    className: getFilterClass @state.filterUnseen
                                     'aria-describedby': Tooltips.FILTER_ONLY_UNREAD
                                     'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-envelope'
@@ -189,7 +207,7 @@ MessageList = React.createClass
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterFlag
-                                    className: btnClasses + if @state.filterFlag then ' shown',
+                                    className: getFilterClass @state.filterFlag
                                     'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT
                                     'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-star'
@@ -197,13 +215,18 @@ MessageList = React.createClass
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterAttach
-                                    className: btnClasses + if @state.filterAttach then ' shown',
+                                    className: getFilterClass @state.filterAttach
                                     'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT
                                     'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-paperclip'
-                        if advanced and not @state.edited
+                        if not advanced and not @state.edited
                             div className: btnGrpClasses,
-                                MessagesFilter filterParams
+                                button
+                                    onClick: toggleQuickFilter
+                                    className: getFilterClass @state.quickFilters
+                                    'aria-describedby': Tooltips.QUICK_FILTER
+                                    'data-tooltip-direction': 'bottom'
+                                    span className: 'fa fa-filter'
                         ## sort
                         if advanced and not @state.edited
                             div className: btnGrpClasses,
@@ -269,6 +292,11 @@ MessageList = React.createClass
                             i className: 'fa fa-edit'
                             span className: 'item-label', t 'menu compose'
 
+            if @state.quickFilters
+                div className: 'message-list-filters form-horizontal',
+                    MessagesQuickFilter
+                        accountID: @props.accountID
+                        mailboxID: @props.mailboxID
 
             if @props.messages.count() is 0
                 if @props.fetching
@@ -309,12 +337,7 @@ MessageList = React.createClass
                                     selected: {}
                             @setState newState
 
-                    # If message list is filtered, we can't only rely on
-                    # message count
-                    # So we assume that if query.pageAfter is null, there's
-                    # no more messages to display
-                    if @moreToSee() and
-                       @props.query.pageAfter?
+                    if @props.query.pageAfter isnt '-'
                         p className: 'text-center list-footer',
                             if @props.fetching
                                 Spinner()
@@ -326,25 +349,6 @@ MessageList = React.createClass
                                     t 'list next page'
                     else
                         p ref: 'listEnd', t 'list end'
-
-
-    # Check if we should display "More messages"
-    moreToSee: ->
-        nbMessages = parseInt(@props.messagesCount, 10)
-        # when displaying conversations, we have to sum the number of messages
-        # inside each one to know if we have displayed all messages inside this
-        # box
-        if @props.displayConversations
-            nbInConv   = 0
-            @props.messages.map (message) =>
-                length = @props.conversationLengths.get(message.get 'conversationID')
-                if length?
-                    nbInConv += @props.conversationLengths.get(message.get 'conversationID')
-            .toJS()
-
-            return nbInConv < nbMessages
-        else
-            return @props.messages.count() < nbMessages
 
 
     toggleEdited: ->
@@ -486,9 +490,9 @@ MessageList = React.createClass
             LayoutActionCreator.showMessageList parameters: @props.query
 
     _handleRealtimeGrowth: ->
-        nbMessages = parseInt @props.messagesCount, 10
-        if (not @moreToSee()) and @refs.listEnd? and
-        not DomUtils.isVisible(@refs.listEnd.getDOMNode())
+        if @props.pageAfter isnt '-' and
+           @refs.listEnd? and
+           not DomUtils.isVisible(@refs.listEnd.getDOMNode())
             lastdate = @props.messages.last().get('date')
             SocketUtils.changeRealtimeScope @props.mailboxID, lastdate
 
@@ -754,73 +758,154 @@ MessageItem = React.createClass
     addAddress: (address) ->
         ContactActionCreator.createContact address
 
+
 MessagesQuickFilter = React.createClass
     displayName: 'MessagesQuickFilter'
 
-    render: ->
-        div
-            className: "form-group message-list-action",
-            input
-                className: "form-control"
-                type: "text"
-                onBlur: @onQuick
+    getInitialState: ->
+        # default filter type: date
+        state =
+            type: 'date'
+            startValid: true # valid start date
+            endValid: true   # valid end date
+        return state
 
-    onQuick: (ev) ->
-        LayoutActionCreator.quickFilterMessages ev.target.value.trim()
-
-MessagesFilter = React.createClass
-    displayName: 'MessagesFilter'
-
-    mixins: [RouterMixin]
+    shouldComponentUpdate: (nextProps, nextState) ->
+        should = not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
+        return should
 
     render: ->
-        filter = @props.query.flag
-        if not filter? or filter is '-'
-            title = i className: 'fa fa-filter'
-        else
-            title = t 'list filter ' + filter
-        div className: 'btn-group btn-group-sm dropdown filter-dropdown',
+
+        filters = {}
+        ['from', 'dest', 'date'].map (filter) ->
+            filters[filter] = t "list filter #{filter}"
+
+        startClass = 'error' if not @state.startValid
+        endClass   = 'error' if not @state.endValid
+
+        form className: 'list-filters',
+            # Filter type
+            Dropdown
+                value: @state.type
+                values: filters
+                onChange: @onChange
+            if @state.type is 'date'
+                span null,
+                    input
+                        ref: 'dateStart'
+                        id: 'filterDateStart'
+                        key: 'filterDateStart'
+                        name: 'filterDateStart'
+                        className: "filter-date #{startClass or ''}"
+                        placeholder: t 'list filter date placeholder'
+                        onBlur: @doValidate
+                        type: "text",
+                    input
+                        ref: 'dateEnd'
+                        id: 'filterDateEnd'
+                        key: 'filterDateEnd'
+                        name: 'filterDateEnd'
+                        className: "filter-date #{endClass or ''}"
+                        placeholder: t 'list filter date placeholder'
+                        onBlur: @doValidate
+                        type: "text"
+            else
+                input
+                    ref: 'value'
+                    className: ""
+                    type: "text"
+                    onKeyDown: @onKeyDown
             button
-                className: 'btn btn-default dropdown-toggle message-list-action'
-                type: 'button'
-                'data-toggle': 'dropdown'
-                title
-                    span className: 'caret'
-            ul
-                className: 'dropdown-menu',
-                role: 'menu',
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.ALL,
-                            t 'list filter all'
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.UNSEEN,
-                            t 'list filter unseen'
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.FLAGGED,
-                            t 'list filter flagged'
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.ATTACH,
-                            t 'list filter attach'
+                onClick: @onFilter
+                className: 'btn btn-default'
+                'aria-describedby': Tooltips.FILTER
+                'data-tooltip-direction': 'bottom',
+                    span className: 'fa fa-filter'
 
+    # Add third party datepicker to start and end date fields
+    initDatepicker: ->
+        if @state.type is 'date'
+            datePickerController.setDebug true
+            options =
+                formElements:
+                    filterDateStart: '%d/%m/%Y'
+            datePickerController.createDatePicker options
+            options =
+                formElements:
+                    filterDateEnd: '%d/%m/%Y'
+            datePickerController.createDatePicker options
+        else
+            datePickerController.destroyDatePicker 'filterDateStart'
+            datePickerController.destroyDatePicker 'filterDateEnd'
+
+    componentDidMount: ->
+        @initDatepicker()
+
+    componentDidUpdate: ->
+        @initDatepicker()
+
+    # Return start date in ISO 8601 compliant format
+    _getStartDate: ->
+        start = @refs.dateStart.getDOMNode().value.trim()
+        if start is ''
+            return ''
+        else
+            start = start.split '/'
+            return "#{start[2]}-#{start[1]}-#{start[0]}T00:00:00.000Z"
+
+    # Return end date in ISO 8601 compliant format
+    _getEndDate: ->
+        end = @refs.dateEnd.getDOMNode().value.trim()
+        if end is ''
+            return ''
+        else
+            end = end.split '/'
+            return "#{end[2]}-#{end[1]}-#{end[0]}T00:00:00.000Z"
+
+    # Validate start and end dates
+    # update state and return true if both are valid
+    doValidate: ->
+        start = @_getStartDate()
+        end   = @_getEndDate()
+        startValid = start is '' or not isNaN(Date.parse start)
+        endValid   = end is '' or not isNaN(Date.parse end)
+        @setState startValid: startValid, endValid: endValid
+        return startValid and endValid
+
+    # Update filter type
+    onChange: (filter) ->
+        @setState type: filter, startValid: true, endValid: true
+
+    # Filter list
     onFilter: (ev) ->
-        LayoutActionCreator.filterMessages ev.target.dataset.filter
+        if ev?
+            ev.stopPropagation()
+            ev.preventDefault()
+
+        if @state.type is 'date'
+            if @doValidate()
+                LayoutActionCreator.sortMessages
+                    order: '-'
+                    field:  @state.type
+                    before: @_getStartDate()
+                    after:  @_getEndDate()
+        else
+            value = @refs.value.getDOMNode().value
+            LayoutActionCreator.sortMessages
+                field:  @state.type
+                after:  "#{value}\uFFFF"
+                before: value
 
         params = _.clone(MessageStore.getParams())
         params.accountID = @props.accountID
         params.mailboxID = @props.mailboxID
         LayoutActionCreator.showMessageList parameters: params
-        #@redirect @buildUrl
-        #    direction: 'first'
-        #    action: 'account.mailbox.messages.full'
-        #    parameters: params
+
+    onKeyDown: (evt) ->
+        switch evt.key
+            when "Enter"
+                @onFilter()
 
 MessagesSort = React.createClass
     displayName: 'MessagesSort'

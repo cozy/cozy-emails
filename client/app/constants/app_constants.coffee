@@ -66,7 +66,6 @@ module.exports =
 
         # List
         'LIST_FILTER'               : 'LIST_FILTER'
-        'LIST_QUICK_FILTER'         : 'LIST_QUICK_FILTER'
         'LIST_SORT'                 : 'LIST_SORT'
 
         # Toasts
@@ -141,6 +140,8 @@ module.exports =
         FILTER_ONLY_WITH_ATTACHMENT: 'TOOLTIP_FILTER_ONLY_WITH_ATTACHMENT'
         ACCOUNT_PARAMETERS: 'TOOLTIP_ACCOUNT_PARAMETERS'
         DELETE_SELECTION: 'TOOLTIP_DELETE_SELECTION'
+        FILTER: 'TOOLTIP_FILTER'
+        QUICK_FILTER: 'TOOLTIP_QUICK_FILTER'
 
 
 

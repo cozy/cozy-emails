@@ -73,7 +73,7 @@ module.exports.listByMailboxOptions = (req, res, next) ->
             return next new BadRequest "before & after should be a valid JS " +
                 "date.toISOString()"
 
-    else if sortField is 'subject'
+    else if sortField is 'subject' or sortField is 'from' or sortField is 'dest'
         before = if before then decodeURIComponent(before) else ''
         after = if after then decodeURIComponent(after) else {}
         pageAfter = if pageAfter then decodeURIComponent pageAfter

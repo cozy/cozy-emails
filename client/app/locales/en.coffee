@@ -79,6 +79,11 @@ module.exports =
       "list filter unseen"        : "Unseen"
       "list filter flagged"       : "Important"
       "list filter attach"        : "Attachments"
+      "list filter from"          : "Sender is"
+      "list filter date"          : "Date in"
+      "list filter date placeholder": "DD/MM/YYYY"
+      "list filter dest"          : "Recipient is"
+      "list filter subject"       : "Subject starts with…"
       "list sort"                 : "Sort"
       "list sort date"            : "Date"
       "list sort subject"         : "Subject"
@@ -390,3 +395,5 @@ module.exports =
       "tooltip filter only attachment": "Show only messages with attachment"
       "tooltip account parameters": "Account parameters"
       "tooltip delete selection": "Delete all selected messages"
+      'tooltip filter': 'Filter'
+      'tooltip display filters': 'Display filters'
