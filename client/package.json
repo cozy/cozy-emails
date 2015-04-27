@@ -32,7 +32,7 @@
     "superagent": "0.18.2",
     "vinyl-buffer": "0.0.0",
     "vinyl-source-stream": "0.1.1"
-  }
+  },
   "scripts": {
     "test": "mocha -r unit-tests/setup.coffee --reporter spec --compilers coffee:coffee-script/register unit-tests"
   }
