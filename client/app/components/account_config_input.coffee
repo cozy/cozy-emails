@@ -1,3 +1,6 @@
+React = require 'react' unless React?
+t = (text) -> text unless t?
+
 {div, label, input} = React.DOM
 {ErrorLine} = require './basic_components'
 classer = React.addons.classSet
@@ -28,7 +31,7 @@ module.exports = AccountInput = React.createClass
         name = @props.name
         type = @props.type or 'text'
         errorField = @props.errorField or name
-        mainClasses = @buildMainClasses errorField
+        mainClasses = @buildMainClasses errorField, name
         placeHolder = @buildPlaceHolder type, name
 
         div
@@ -79,7 +82,7 @@ module.exports = AccountInput = React.createClass
 
 
     # Add error class if errors are listed.
-    buildMainClasses: (fields) ->
+    buildMainClasses: (fields, name) ->
         fields = [fields] if not Array.isArray fields
         errors = fields.some (field) => @state.errors[field]?
         mainClasses =  "form-group account-item-#{name} "

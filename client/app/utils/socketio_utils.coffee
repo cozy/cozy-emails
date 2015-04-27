@@ -1,3 +1,5 @@
+io = require 'socket.io-browserify' unless io?
+
 AppDispatcher = require '../app_dispatcher'
 {ActionTypes} = require '../constants/app_constants'
 url = window.location.origin

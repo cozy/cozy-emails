@@ -1,4 +1,5 @@
 {MailboxFlags} = require '../../constants/app_constants'
+Immutable = require 'immutable' unless Immutable?
 
 module.exports = AccountTranslator =
 
@@ -17,6 +18,7 @@ module.exports = AccountTranslator =
         weight2 = 400
         # Try to detect special mailboxes, first with flags, then by name
         # Already done on server, except for TEST accounts
+        raw ?= {}
         raw.mailboxes ?= []
         if not raw.draftMailbox? or
            not raw.sentMailbox? or

@@ -1,3 +1,4 @@
+Immutable = require 'immutable' unless Immutable?
 Store = require '../libs/flux/store/store'
 ContactStore  = require './contact_store'
 AppDispatcher = require '../app_dispatcher'

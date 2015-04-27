@@ -1,5 +1,7 @@
 AppDispatcher = require '../../../app_dispatcher'
 
+console.log EventEmitter
+EventEmitter = require('node-event-emitter') unless EventEmitter?
 
 module.exports = class Store extends EventEmitter
 

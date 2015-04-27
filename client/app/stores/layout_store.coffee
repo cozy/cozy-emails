@@ -1,3 +1,4 @@
+Immutable = require 'immutable' unless Immutable?
 Store = require '../libs/flux/store/store'
 
 {ActionTypes, Dispositions} = require '../constants/app_constants'

@@ -1,3 +1,4 @@
+superagent = require 'superagent' unless superagent?
 request = superagent
 
 AccountTranslator = require './translators/account_translator'

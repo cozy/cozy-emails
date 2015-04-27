@@ -1,3 +1,5 @@
+React = require 'react' unless React?
+
 {
     div
     h3

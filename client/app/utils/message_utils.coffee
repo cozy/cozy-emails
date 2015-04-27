@@ -1,9 +1,9 @@
 {ComposeActions} = require '../constants/app_constants'
-ContactStore     = require '../stores/contact_store'
-MessageStore     = require '../stores/message_store'
+ContactStore = require '../stores/contact_store'
+MessageStore = require '../stores/message_store'
 ConversationActionCreator = require '../actions/conversation_action_creator'
-MessageActionCreator      = require '../actions/message_action_creator'
-LayoutActionCreator       = require '../actions/layout_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
+LayoutActionCreator = require '../actions/layout_action_creator'
 
 
 QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;"
