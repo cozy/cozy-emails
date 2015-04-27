@@ -102,5 +102,8 @@
 
 
     @media(min-width: 80em)
-        &.layout-v .message-list
-            // max-width for message list
+        .layout-column &
+            section
+                max-width 38em
+            .conversation[aria-expanded=true]
+                max-width none
