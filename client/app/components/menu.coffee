@@ -106,8 +106,10 @@ module.exports = Menu = React.createClass
                         @getAccountRender account, key
                     .toJS()
 
-
-            RefreshIndicator refreshes: @props.refreshes
+            RefreshIndicator
+                refreshes: @props.refreshes
+                mailboxes: @props.selectedAccount.get('mailboxes')
+                selectedMailboxID: @props.selectedMailboxID
 
             a
                 href: newMailboxUrl,

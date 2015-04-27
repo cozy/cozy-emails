@@ -372,6 +372,7 @@ class Account extends cozydb.CozyModel
                     nbTotal  : count?.total  or 0
                     nbUnread : count?.unread or 0
                     nbRecent : count?.recent or 0
+                    lastSync : box.lastSync
 
             callback null, rawObject
 

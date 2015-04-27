@@ -11,6 +11,8 @@ module.exports = React.createClass
 
     protoTypes:
         refreshes: React.PropTypes.object.isRequired
+        selectedAccount: React.PropTypes.object.isRequired
+        selectedMailboxID: React.PropTypes.string
 
     # Define a flag to know if the user has clicked in order to show the spinner
     # immediately, otherwise there is a small time before it starts due to some
@@ -27,12 +29,14 @@ module.exports = React.createClass
             # and the user has not triggered it.
             if @props.refreshes.length is 0 and not @state.isRefreshStarted
                 button
-                    className: '',
-                    type: 'button',
-                    disabled: null,
+                    className: ''
+                    type: 'button'
+                    disabled: null
+                    title: t("menu last refresh", date: @getFormattedDate())
                     onClick: @refresh,
                         span className: 'fa fa-refresh'
                         span null, t("menu refresh label")
+
 
             # Or an indicator of the progress if a refresh is occurring.
             else
@@ -79,6 +83,21 @@ module.exports = React.createClass
         mailbox = mailboxes.first()
 
         return {account, mailbox}
+
+
+    # Format the last refresh date based on selected mailbox. If none is
+    # selected, the first one of the account will be used.
+    getFormattedDate: ->
+        if @props.selectedMailboxID?
+            mailbox = @props.mailboxes.get @props.selectedMailboxID
+        else
+            mailbox = @props.mailboxes.first()
+
+        date = mailbox.get 'lastSync'
+        formatter = 'DD/MM/YYYY HH:mm:ss'
+        formattedDate = moment(date).format formatter
+
+        return formattedDate
 
 
     # Trigger the refresh action.
