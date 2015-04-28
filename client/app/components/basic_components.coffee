@@ -205,6 +205,7 @@ FormDropdown = React.createClass
 AddressLabel = React.createClass
 
     render: ->
+        meaninglessKey = 0
 
         if @props.contact.name?.length > 0 and @props.contact.address
             key = @props.contact.address.replace /\W/g, ''
@@ -218,7 +219,8 @@ AddressLabel = React.createClass
                         "<#{@props.contact.address}>"
 
         else if @props.contact.name?.length > 0
-            result = span key: Math.random(), @props.contact.name
+            result = span key: "label-#{meaninglessKey++}",
+                @props.contact.name
 
         else
             result = span null, @props.contact.address
