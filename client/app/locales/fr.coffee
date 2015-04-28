@@ -261,12 +261,12 @@ module.exports =
       "message action sent ko"      : "Une erreur est survenue : "
       "message action draft ok"     : "Message sauvegardé !"
       "message action draft ko"     : "Une erreur est survenue : "
-      "message action delete ok"    : "Message « %{subject} » supprimé"
-      "message action delete ko"    : "Impossible de supprimer le message : "
-      "message action move ok"      : "Message « %{subject} » déplacé"
-      "message action move ko"      : "Le déplacement de « %{subject} » a échoué"
-      "message action mark ok"      : "Le message a été mis à jour"
-      "message action mark ko"      : "L'opération a échoué"
+      "message delete ok"    : "Message « %{subject} » supprimé"
+      "message delete ko"    : "Impossible de supprimer le message : "
+      "message move ok"      : "Message « %{subject} » déplacé"
+      "message move ko"      : "Le déplacement de « %{subject} » a échoué"
+      "message mark ok"      : "Le message a été mis à jour"
+      "message mark ko"      : "L'opération a échoué"
       "conversation move ok"        : "Conversation « %{subject} » déplacée"
       "conversation move ko"        : "Le déplacement de « %{subject} » a échoué"
       "conversation delete ok"      : "Conversation « %{subject} » supprimée"
@@ -275,9 +275,51 @@ module.exports =
       "conversation seen ko"        : "L'opération a échoué"
       "conversation unseen ok"      : "Ok"
       "conversation unseen ko"      : "L'opération a échoué"
-      "conversation undelete"       : "Annuler la suppression"
+      "conversation undelete"       : "Annuler"
       "conversation flagged ko"     : "L'opération a échoué"
       "conversation noflag ko"      : "L'opération a échoué"
+      "conversations move ok"        : """
+            %{smart_count} conversation déplacée||||
+            %{smart_count} conversations déplacées"""
+      "conversations move ko"        : """
+            Erreur au déplacement de %{smart_count} conversation||||
+            Error au déplacement de %{smart_count} conversations"""
+      "conversations delete ok"      : """
+            %{smart_count} conversation supprimée||||
+            %{smart_count} conversations supprimées
+      """
+      "conversations delete ko"      : """
+            Erreur de suppression de %{smart_count} conversation ||||
+            Erreur de suppression de %{smart_count} conversations
+      """
+      "conversations seen ok"        : """
+            %{smart_count} conversation marquée lue||||
+            %{smart_count} conversations marquées lues
+      """
+      "conversations seen ko"        : """
+            Erreur en marquant %{smart_count} conversation lue||||
+            Erreur en marquant %{smart_count} conversations lues
+      """
+      "conversations unseen ok"      : """
+            %{smart_count} conversation marquée non-lue||||
+            %{smart_count} conversations marquées non-lues
+      """
+      "conversations unseen ko"      : """
+            Erreur en marquant %{smart_count} conversation non-lue||||
+            Erreur en marquant %{smart_count} conversations non-lues
+      """
+      "conversations undelete"       : """
+            Annuler %{smart_count} suppression de conversation||||
+            Annuler %{smart_count} suppressions de conversation
+      """
+      "conversations flagged ko"     : """
+            Erreur en marquant %{smart_count} conversation importante||||
+            Erreur en marquant %{smart_count} conversations importante
+      """
+      "conversations noflag ko"      : """
+            Erreur en marquant %{smart_count} conversation non importante||||
+            Erreur en marquant %{smart_count} conversations non importante
+      """
       "message images warning"      : "L'affichage des images du message a été
                                         bloqué"
       "message images display"      : "Afficher les images"
