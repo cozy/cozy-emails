@@ -224,12 +224,7 @@ class MessageStore extends Store
                 pageAfter: '-'
                 sort : newOrder + sort.field
 
-        handle ActionTypes.MESSAGE_ACTION, (action) ->
-            action.target = 'message'
-            _prevAction = action
-
-        handle ActionTypes.CONVERSATION_ACTION, (action) ->
-            action.target = 'conversation'
+        handle ActionTypes.LAST_ACTION, (action) ->
             _prevAction = action
 
         handle ActionTypes.MESSAGE_CURRENT, (value) ->
@@ -365,6 +360,9 @@ class MessageStore extends Store
             else
                 return _currentMessages.get keys[idx + 1]
 
+    getNextOrPrevious: (isConv) ->
+        @getNextMessage(isConv) or @getPreviousMessage(isConv)
+
     getConversation: (conversationID) ->
         _conversationMemoize = _messages
             .filter (message) ->
@@ -374,6 +372,21 @@ class MessageStore extends Store
         _conversationMemoizeID = conversationID
 
         return _conversationMemoize
+
+    getMixed: (target) ->
+        if target.messageID
+            return [_messages.get(target.messageID)]
+        else if target.messageIDs
+            return target.messageIDs.map (id) -> _messages.get id
+        else if target.conversationID
+            return _messages.filter (message) ->
+                message.get('conversationID') is target.conversationID
+            .toArray()
+        else if target.conversationIDs
+            return _messages.filter (message) ->
+                message.get('conversationID') in target.conversationIDs
+            .toArray()
+        else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
     getConversationsLength: -> return _conversationLengths
 
