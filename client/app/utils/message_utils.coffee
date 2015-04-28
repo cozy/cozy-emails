@@ -14,7 +14,7 @@ QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34
 COMPOSE_STYLE = """
 <style>
 p {margin: 0;}
-pre {background: transparent; border: 0}^8
+pre {background: transparent; border: 0}
 </style>
 """
 
@@ -438,9 +438,12 @@ module.exports = MessageUtils =
 
         # Convert HTML to markdown
         try
-            result = toMarkdown html
+            result = html.replace /<(style>)[^\1]*\1/gim, ''
+            result = toMarkdown result
         catch
-            result = html.replace /<[^>]*>/gi, '' if html?
+            if html?
+                result = html.replace /<(style>)[^\1]*\1/gim, ''
+                result = html.replace /<[^>]*>/gi, ''
 
         # convert HTML entities
         tmp = document.createElement 'div'
