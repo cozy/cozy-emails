@@ -62,7 +62,7 @@ module.exports = MessageUtils =
         text = text.trim()
         if match = text.match /"{0,1}(.*)"{0,1} <(.*)>/
             address =
-                optionsname: match[1]
+                name: match[1]
                 address: match[2]
         else
             address =
