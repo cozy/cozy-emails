@@ -8,7 +8,6 @@ async = require 'async'
 querystring = require 'querystring'
 multiparty = require 'multiparty'
 stream_to_buffer = require '../utils/stream_to_array'
-messageUtils = require '../utils/jwz_tools'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
 ImapReporter = require '../imap/reporter'
 
@@ -44,12 +43,6 @@ module.exports.attachment = (req, res, next) ->
         """
 
     stream.pipe res
-
-# patch a message
-module.exports.patch = (req, res, next) ->
-    req.message.applyPatchOperations req.body, (err, updated) ->
-        return next err if err
-        res.send updated.toClientObject()
 
 
 module.exports.listByMailboxOptions = (req, res, next) ->
@@ -364,108 +357,108 @@ module.exports.send = (req, res, next) ->
         out.isDraft = isDraft
         res.send out
 
-# move several message to trash with one request
-# expect body to con
-module.exports.batchTrash = (req, res, next) ->
-    ids = req.body.ids
-    accountID = req.body.accountID
+# fetch messages with various methods
+# expect one of conversationIDs, conversationID, or messageIDs in body
+# attach the messages to req.messages
+module.exports.batchFetch = (req, res, next) ->
 
-    # make sure we have some ids
-    unless ids?.length and ids.length > 0
-        next new BadRequest "no ids in request's body"
+    if Object.keys(req.body).length is 0
+        req.body = req.query
 
-    # make sure we have an accountID
-    else unless accountID
-        next new BadRequest "no accountID in request's body"
+    handleMessages = (err, messages) ->
+        return next err if err
+        req.messages = messages
+        next()
+
+    if req.body.messageID
+        Message.find req.body.messageID, (err, message) ->
+            handleMessages err, [message]
+
+    else if req.body.conversationID
+        Message.byConversationID req.body.conversationID, handleMessages
+
+    else if req.body.messageIDs
+        Message.findMultilple req.body.messageIDs, handleMessages
+
+    else if req.body.conversationIDs
+        Message.byConversationIDs req.body.conversationIDs, handleMessages
 
     else
-        Account.findSafe accountID, (err, account) ->
-            if err
-                next err
+        next new BadRequest """
+            No conversationIDs, conversationID, or messageIDs in body.
+        """
 
-            # the client should prevent this, but let's be safe
-            else unless account.trashMailbox
-                next new AccountConfigError 'trashMailbox'
+module.exports.batchSend = (req, res, next) ->
+    res.send req.messages
 
-            else
+# move several message to trash with one request
+# expect req.account & req.messages
+module.exports.batchTrash = (req, res, next) ->
+    # the client should prevent this, but let's be safe
+    unless req.account.trashMailbox
+        return next new AccountConfigError 'trashMailbox'
 
-                # create a reporter to display a progress bar and
-                # multiple errors client side.
-                reporter = ImapReporter.batchMoveToTrash ids.length
-                # immediately send the reporter
-                res.status(202).send reporter.toObject()
+    async.mapSeries req.messages, (message, cb) ->
+        if message.mailboxIDs[req.account.trashMailbox]?
+            # message is already in trash
+            cb null, message
 
-                # in background, proceed to move to trash
-                async.eachSeries ids, (id, cb) ->
-                    Message.moveToTrash account, id, (err) ->
-                        reporter.onError err if err
-                        reporter.addProgress 1
-                        cb null # loop anyway
-                , (err, messages) ->
-                    reporter.onDone()
-                    log.info "BATCH TRASH #{reporter.id} COMPLETE"
+        else if message.isDraft req.account.draftMailbox
+            # message is a draft
+            message.imapcozy_destroy (err) ->
+                cb err, {id: message.id, _deleted: true}
 
-
-# fetch all messages from a conversation
-# get the id from params.conversationID and save messages as array
-# in req.conversation
-module.exports.fetchConversation = (req, res, next) ->
-    conversationID = req.params.conversationID
-    Message.byConversationID conversationID, (err, messages) ->
-        return next err if err
-
-        # if there is no message, the conversationID is incorrect
-        if messages.length is 0
-            next NotFound "conversation##{conversationID}"
         else
-            # otherwise, store them with the request and move along
-            log.debug "conversation##{conversationID}", messages.length
-            req.conversation = messages
-            next()
+            # "normal" message, move it to trash
+            message.moveToTrash req.account, cb
 
-# send formatted req.conversation to the client
-module.exports.conversationGet = (req, res, next) ->
-    res.send req.conversation.map (msg) -> msg.toClientObject()
-
-# move all messages in a conversation to the trash.
-module.exports.conversationDelete = (req, res, next) ->
-    accountID = req.conversation[0].accountID
-
-    Account.findSafe accountID, (err, account) ->
+    , (err, updatedMessages) ->
         return next err if err
+        res.send updatedMessages
 
-        unless account.trashMailbox
-            next new AccountConfigError 'trashMailbox'
+# add a flag to several messages
+# expect req.body.flag
+module.exports.batchAddFlag = (req, res, next) ->
+
+    async.mapSeries req.messages, (message, cb) ->
+        message.addFlag req.body.flag, cb
+    , (err, updatedMessages) ->
+        return next err if err
+        res.send updatedMessages
+
+# remove a flag from several messages
+# expect req.body.flag
+module.exports.batchRemoveFlag = (req, res, next) ->
+    async.mapSeries req.messages, (message, cb) ->
+        message.removeFlag req.body.flag, cb
+    , (err, updatedMessages) ->
+        return next err if err
+        res.send updatedMessages
+
+# move several message to trash with one request
+# expect req.account & req.messages
+# aim :
+#   - the conversation should not appears in from
+#   - the conversation should appears in to
+#   - drafts should stay in drafts
+#   - messages in trash should stay in trash
+module.exports.batchMove = (req, res, next) ->
+
+    to = req.body.to
+    from = req.body.from
+
+    async.mapSeries req.messages, (message, cb) ->
+        # dont move message that are not in from box
+        unless message.mailboxIDs[from]?
+            cb null, message
+
         else
-            messages = []
-            async.eachSeries req.conversation, (message, cb) ->
-                if message.mailboxIDs[account.trashMailbox]
-                    # one of the message is already in Trash
-                    cb null
-                else
-                    message.moveToTrash account, (err, updated) ->
-                        if not err and updated?
-                            messages.push updated.toClientObject()
-                        cb err
+            message.move from, to, cb
 
-            , (err) ->
-                return next err if err
-                res.send messages
-
-# apply a transformation to all messages in a conversation
-module.exports.conversationPatch = (req, res, next) ->
-
-    patch = req.body
-
-    messages = []
-    async.eachSeries req.conversation, (message, cb) ->
-        message.applyPatchOperations patch, (err, updated) ->
-            messages.push updated.toClientObject() unless err
-            cb err
-
-    , (err) ->
+    , (err, updatedMessages) ->
         return next err if err
-        res.send messages
+        res.send updatedMessages
+
 
 # fetch from IMAP and send the raw rfc822 message
 module.exports.raw = (req, res, next) ->
