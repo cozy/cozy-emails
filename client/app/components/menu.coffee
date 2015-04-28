@@ -4,12 +4,10 @@ classer = React.addons.classSet
 
 RouterMixin          = require '../mixins/router_mixin'
 LayoutActionCreator  = require '../actions/layout_action_creator'
-ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 AccountStore         = require '../stores/account_store'
 Modal                = require './modal'
 ThinProgress         = require './thin_progress'
-MessageUtils         = require '../utils/message_utils'
 
 RefreshIndicator = require './menu_refresh_indicator'
 
@@ -306,7 +304,7 @@ MenuMailboxItem = React.createClass
                 onDragEnter: @onDragEnter,
                 onDragLeave: @onDragLeave,
                 onDragOver: @onDragOver,
-                onDrop: @onDrop,
+                onDrop: (event) => @onDrop event, mailboxID
                 title: title,
                 'data-toggle': 'tooltip',
                 'data-placement' : 'right',
@@ -339,9 +337,8 @@ MenuMailboxItem = React.createClass
     onDragOver: (e) ->
         e.preventDefault()
 
-    onDrop: (event) ->
-        data = event.dataTransfer.getData 'text'
-        {messageID, mailboxID, conversation} = JSON.parse data
-        newID = event.currentTarget.dataset.mailboxId
+    onDrop: (event, to) ->
+        data = event.dataTransfer.getData('text')
+        {messageID, mailboxID, conversationID} = JSON.parse data
         @setState target: false
-        MessageUtils.move messageID, conversation, mailboxID, newID
+        MessageActionCreator.move {messageID, conversationID}, mailboxID, to
