@@ -135,9 +135,6 @@ class MessageStore extends Store
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
 
-            if messages.mailboxID
-                SocketUtils.changeRealtimeScope messages.mailboxID
-
             if messages.links? and messages.links.next?
                 # reinit params here for pagination on filtered lists
                 _params = {}
@@ -147,14 +144,16 @@ class MessageStore extends Store
                     [key, value] = p.split '='
                     value = '-' if value is ''
                     _params[key] = value
-            else
+            else if messages.mailboxID
                 # We use pageAfter to know if there are more messages to
                 # load, so we need to set it to its default value
                 _params.pageAfter = '-'
 
-            if _params.pageAfter isnt '-'
-                SocketUtils.changeRealtimeScope messages.mailboxID,
-                    _params.pageAfter
+            if messages.mailboxID
+                before = if _params.pageAfter is '-' then undefined
+                else _params.pageAfter
+
+                SocketUtils.changeRealtimeScope messages.mailboxID, before
 
             if lengths = messages.conversationLengths
                 _conversationLengths = _conversationLengths.merge lengths
