@@ -275,7 +275,7 @@ module.exports =
       "conversation seen ko"        : "L'opération a échoué"
       "conversation unseen ok"      : "Ok"
       "conversation unseen ko"      : "L'opération a échoué"
-      "conversation undelete"       : "Annuler"
+      "undo last action"            : "Annuler"
       "conversation flagged ko"     : "L'opération a échoué"
       "conversation noflag ko"      : "L'opération a échoué"
       "conversations move ok"        : """
@@ -308,10 +308,6 @@ module.exports =
             Erreur en marquant %{smart_count} conversation non-lue||||
             Erreur en marquant %{smart_count} conversations non-lues
       """
-      "conversations undelete"       : """
-            Annuler %{smart_count} suppression de conversation||||
-            Annuler %{smart_count} suppressions de conversation
-      """
       "conversations flagged ko"     : """
             Erreur en marquant %{smart_count} conversation importante||||
             Erreur en marquant %{smart_count} conversations importante
@@ -327,10 +323,9 @@ module.exports =
       "message delete no trash"     : "Choisissez d'abord un dossier Corbeille"
       "message delete already"      : "Ce message est déjà dans la corbeille"
       "message move already"        : "Ce message est déjà dans ce dossier"
-      "message undelete"            : "Annuler la suppression"
-      "message undelete ok"         : "Message restauré"
-      "message undelete error"      : "Impossible d'annuler l'action"
-      "message undelete unavailable": "Impossible d'annuler l'action"
+      "undo ok"                     : "Action annulée"
+      "undo ko"                     : "Impossible d'annuler l'action"
+      "undo unavailable"            : "Impossible d'annuler l'action"
       "message preview title"       : "Voir les pièces jointes"
 
       # Settings

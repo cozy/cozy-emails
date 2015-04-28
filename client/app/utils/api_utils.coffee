@@ -172,7 +172,7 @@ module.exports =
 
 
     messageUndo: ->
-        MessageActionCreator.undelete()
+        MessageActionCreator.undo()
 
 
     customEvent: (name, data) ->

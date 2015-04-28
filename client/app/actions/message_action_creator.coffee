@@ -72,8 +72,8 @@ module.exports = MessageActionCreator =
                 LAC.notify alertMsg,
                     autoclose: true,
                     actions: [
-                        label: t 'conversation undelete'
-                        onClick: -> MessageActionCreator.undelete()
+                        label: t 'undo last action'
+                        onClick: -> MessageActionCreator.undo()
                     ]
 
             callback? err, updated
@@ -96,8 +96,8 @@ module.exports = MessageActionCreator =
                     LAC.notify alertMsg,
                         autoclose: true,
                         actions: [
-                            label: t 'conversation undelete'
-                            onClick: -> MessageActionCreator.undelete()
+                            label: t 'undo last action'
+                            onClick: -> MessageActionCreator.undo()
                         ]
 
             callback? err, updated
@@ -125,7 +125,7 @@ module.exports = MessageActionCreator =
         else
             throw new Error "Wrong usage : unrecognized FlagsConstants"
 
-    undelete: ->
+    undo: ->
         lastBatch = MessageStore.getPrevAction()
         if lastBatch
             done = 0
@@ -134,10 +134,12 @@ module.exports = MessageActionCreator =
                 done++
                 @move options, action.to, action.from, (err) ->
                     if err
-                        LAC.notify t('message undelete error')
+                        LAC.notify t('undo ko')
                     else if --done is 0
-                        LAC.notify t('message undelete ok'),
+                        LAC.notify t('undo ok'),
                             autoclose: true
+        else
+            LAC.notify t('undo unavailable')
 
 # circular, import after
 LAC = require './layout_action_creator'
@@ -319,7 +321,7 @@ _localDelete = (target) ->
         type: ActionTypes.RECEIVE_RAW_MESSAGES
         value: updated
 
-    # Store action to allow undelete
+    # Store action to allow undo
     AppDispatcher.handleViewAction
         type: ActionTypes.LAST_ACTION
         value: {actions}

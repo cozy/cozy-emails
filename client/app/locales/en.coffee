@@ -268,7 +268,7 @@ module.exports =
       "conversation seen ko"        : "Error"
       "conversation unseen ok"      : "Conversation marked as unread"
       "conversation unseen ko"      : "Error"
-      "conversation undelete"       : "Undo conversation deletion"
+      "undo last action"            : "Undo last action"
       "conversation flagged ko"     : "Error"
       "conversation noflag ko"      : "Error"
       "conversations move ok"        : """
@@ -301,10 +301,6 @@ module.exports =
             Error marking %{smart_count} conversations as unread||||
             Error marking %{smart_count} conversations as unread
       """
-      "conversations undelete"       : """
-            Undo %{smart_count} conversation deletion||||
-            Undo %{smart_count} conversations deletion
-      """
       "conversations flagged ko"     : """
             Error marking %{smart_count} conversation as flagged||||
             Error marking %{smart_count} conversations as flagged
@@ -320,10 +316,9 @@ module.exports =
       "message delete no trash"     : "Please select a Trash folder"
       "message delete already"      : "Message already in trash folder"
       "message move already"        : "Message already in this folder"
-      "message undelete"            : "Undo"
-      "message undelete ok"         : "Message undeleted"
-      "message undelete error"      : "Error undoing some action"
-      "message undelete unavailable": "Undo not available"
+      "undo ok"         : "Undone"
+      "undo ko"         : "Error undoing some action"
+      "undo unavailable": "Undo not available"
       "message preview title"       : "View attachments"
 
       # Settings
