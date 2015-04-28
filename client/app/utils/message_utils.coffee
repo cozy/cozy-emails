@@ -438,10 +438,11 @@ module.exports = MessageUtils =
 
         # Convert HTML to markdown
         try
-            result = html.replace(/<(style>)[^\1]*\1/gim, '')
+            result = html.replace /<(style>)[^\1]*\1/gim, ''
             result = toMarkdown result
         catch
             if html?
+                result = html.replace /<(style>)[^\1]*\1/gim, ''
                 result = html.replace /<[^>]*>/gi, ''
 
         # convert HTML entities
