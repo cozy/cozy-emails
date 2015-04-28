@@ -330,7 +330,7 @@ module.exports = MessageUtils =
         message.subject = ''
         message.text = ''
         if isSignature
-            message.text += "\n\n--\n#{signature}"
+            message.text += "\n\n#{signature}"
         message.html = COMPOSE_STYLE
         if isSignature
             signature = signature.replace /\n/g, '<br>'
