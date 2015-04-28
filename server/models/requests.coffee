@@ -87,5 +87,5 @@ module.exports =
         byConversationID:
             reduce: '_count'
             map: (doc) ->
-                if doc.conversationID
+                if doc.conversationID and not doc.ignoreInCount
                     emit doc.conversationID

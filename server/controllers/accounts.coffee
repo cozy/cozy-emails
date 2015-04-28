@@ -11,8 +11,8 @@ notifications = require '../utils/notifications'
 module.exports.fetch = (req, res, next) ->
     id = req.params.accountID or
          req.body.accountID or
-         req.mailbox.accountID or
-         req.message.accountID
+         req.mailbox?.accountID or
+         req.message?.accountID
 
     Account.findSafe id, (err, found) ->
         return next err if err

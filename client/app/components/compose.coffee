@@ -15,7 +15,7 @@ messageUtils = require '../utils/message_utils'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
-ConversationActionCreator = require '../actions/conversation_action_creator'
+
 
 RouterMixin = require '../mixins/router_mixin'
 
@@ -250,15 +250,12 @@ module.exports = Compose = React.createClass
         #  - if yes, and the draft belongs to a conversation, add the
         #    conversationID and save the draft
         #  - if no, delete the draft
-        if @state.isDraft and
-           @state.id?
+        if @state.isDraft and @state.id?
             if not window.confirm(t 'compose confirm keep draft')
                 window.setTimeout =>
-                    MessageActionCreator.delete @state.id, (error) ->
-                        if error?
-                            LayoutActionCreator.alertError \
-                                "#{t("message action delete ko")} #{error}"
-                        else
+                    messageID = @state.id
+                    MessageActionCreator.delete {messageID}, (error) ->
+                        unless error?
                             LayoutActionCreator.notify t('compose draft deleted'),
                                 autoclose: true
                 , 0
@@ -290,7 +287,8 @@ module.exports = Compose = React.createClass
                             LayoutActionCreator.notify msg, autoclose: true
                             if message.conversationID?
                                 # reload conversation to update its length
-                                ConversationActionCreator.fetch message.conversationID
+                                cid = message.conversationID
+                                MessageActionCreator.fetchConversation cid
 
     getInitialState: (forceDefault) ->
 
@@ -437,7 +435,8 @@ module.exports = Compose = React.createClass
                     if not isDraft
                         if message.conversationID?
                             # reload conversation to update its length
-                            ConversationActionCreator.fetch message.conversationID
+                            cid = message.conversationID
+                            MessageActionCreator.fetchConversation cid
                         if @props.callback?
                             @props.callback error
                         else
@@ -481,13 +480,9 @@ module.exports = Compose = React.createClass
             confirmMessage = t 'mail confirm delete nosubject'
 
         if window.confirm confirmMessage
-            MessageActionCreator.delete @props.message, (error) =>
-
-                if error?
-                    msg = "#{t("message action delete ko")} #{error}"
-                    LayoutActionCreator.alertError msg
-                else
-
+            messageID = @props.message.get('id')
+            MessageActionCreator.delete {messageID}, (error) =>
+                unless error?
                     if @props.callback
                         @props.callback()
                     else

@@ -10,7 +10,6 @@ AppDispatcher = require '../app_dispatcher'
 {ActionTypes, AlertLevel, MessageFlags} = require '../constants/app_constants'
 
 AccountActionCreator = require './account_action_creator'
-MessageActionCreator = require './message_action_creator'
 SearchActionCreator = require './search_action_creator'
 
 _cachedQuery = {}
@@ -242,3 +241,5 @@ module.exports = LayoutActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.TOASTS_HIDE
 
+# circular import, require after
+MessageActionCreator = require './message_action_creator'

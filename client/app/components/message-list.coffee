@@ -6,12 +6,11 @@ TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
 DomUtils       = require '../utils/dom_utils'
 MessageUtils   = require '../utils/message_utils'
 SocketUtils    = require '../utils/socketio_utils'
-{MessageFlags, MessageFilter, FlagsConstants, Tooltips} =
+{MessageFlags, MessageFilter, Tooltips} =
     require '../constants/app_constants'
 
 AccountActionCreator      = require '../actions/account_action_creator'
 ContactActionCreator      = require '../actions/contact_action_creator'
-ConversationActionCreator = require '../actions/conversation_action_creator'
 LayoutActionCreator       = require '../actions/layout_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 
@@ -50,9 +49,9 @@ MessageList = React.createClass
             @setState allSelected: false, edited: false, selected: {}
         else
             selected = @state.selected
-            Object.keys(selected).forEach (id) ->
-                if not props.messages.get(id)
-                    delete selected[id]
+            # remove selected messages that are not in view anymore
+            for id, isSelected of selected when not props.messages.get(id)
+                delete selected[id]
             @setState selected: selected
             if Object.keys(selected).length is 0
                 @setState allSelected: false, edited: false
@@ -259,7 +258,7 @@ MessageList = React.createClass
                                     'aria-describedby': Tooltips.DELETE_SELECTION
                                     'data-tooltip-direction': 'bottom',
                                         span className: 'fa fa-trash-o'
-                        if @state.edited
+                        if @state.edited and not @props.displayConversations
                             ToolboxMove
                                 ref: 'listToolboxMove'
                                 mailboxes: @props.mailboxes
@@ -270,10 +269,9 @@ MessageList = React.createClass
                                 ref: 'listToolboxActions'
                                 mailboxes: @props.mailboxes
                                 onMark: @onMark
-                                onConversation: @onConversation
-                                onMove: @onConversationMove
+                                onConversationMark: @onConversationMark
+                                onConversationMove: @onConversationMove
                                 displayConversations: @props.displayConversations
-                                onHeaders: @onHeaders
                                 direction: 'left'
 
                         if @props.isTrash and not @state.edited
@@ -367,99 +365,65 @@ MessageList = React.createClass
             .toJS()
             @setState allSelected: true, edited: true, selected: selected
 
-    onDelete: (conv) ->
+    _getSelectedAndMode: (applyToConversation) ->
         selected = Object.keys @state.selected
-        if not conv?
-            conv = @props.displayConversations
+        count = selected.length
+        applyToConversation = Boolean applyToConversation
+        applyToConversation ?= @props.displayConversations
         if selected.length is 0
             alertError t 'list mass no message'
+            return false
+
+        else if not applyToConversation
+            return {cout, messageIDs: selected, applyToConversation}
+
         else
-            confirm = @props.settings.get('messageConfirmDelete')
-            if confirm
-                if conv
-                    confirmMessage = t 'list delete conv confirm',
-                        smart_count: selected.length
-                else
-                    confirmMessage = t 'list delete confirm',
-                        smart_count: selected.length
+            conversationIDs = selected.map (id) =>
+                @props.messages.get(id).get('conversationID')
 
-            if (not confirm) or
-            window.confirm confirmMessage
-                MessageUtils.delete selected, conv, =>
-                    if selected.length > 0 and @props.messages.count() > 0
-                        firstMessageID = @props.messages.first().get('id')
-                        MessageActionCreator.setCurrent firstMessageID, true
+            return {count, conversationIDs, applyToConversation}
 
+    onConversationDelete: ->
+        onConversationDelete true
 
-    onConversationMove: (args) ->
-        @onMove args, true
+    onDelete: (applyToConversation) ->
+        return unless options = @_getSelectedAndMode(applyToConversation)
 
-    onMove: (args, conv) ->
-        selected = Object.keys @state.selected
-        if not conv?
-            conv = @props.displayConversations
-        if selected.length is 0
-            alertError t 'list mass no message'
+        if options.applyToConversation
+            msg = t 'list delete conv confirm', smart_count: options.count
         else
-            newbox = args.target.dataset.value
-            MessageUtils.move selected, conv, @props.mailboxID, newbox, =>
-                if selected.length > 0 and @props.messages.count() > 0
+            msg = t 'list delete confirm', smart_count: options.count
+
+        noConfirm = not @props.settings.get('messageConfirmDelete')
+        if noConfirm or window.confirm msg
+            MessageActionCreator.delete options, =>
+                if options.count > 0 and @props.messages.count() > 0
                     firstMessageID = @props.messages.first().get('id')
                     MessageActionCreator.setCurrent firstMessageID, true
 
-    onMark: (args) ->
-        selected = Object.keys @state.selected
-        if selected.length is 0
-            alertError t 'list mass no message'
-        else
-            flag = args.target.dataset.value
-            selected.forEach (id) =>
-                message = @props.messages.get id
-                flags = message.get('flags').slice()
-                switch flag
-                    when FlagsConstants.SEEN
-                        flags.push MessageFlags.SEEN
-                    when FlagsConstants.UNSEEN
-                        flags = flags.filter (e) ->
-                            return e isnt FlagsConstants.SEEN
-                    when FlagsConstants.FLAGGED
-                        flags.push MessageFlags.FLAGGED
-                    when FlagsConstants.NOFLAG
-                        flags = flags.filter (e) ->
-                            return e isnt FlagsConstants.FLAGGED
-                MessageActionCreator.updateFlag message, flags, (error) ->
-                    if error?
-                        alertError "#{t("message action mark ko")} #{error}"
 
-    onConversation: (args) ->
-        selected = Object.keys @state.selected
-        action = args.target.dataset.action
-        if action is 'delete'
-            @onDelete true
-        else
-            if selected.length is 0
-                alertError t 'list mass no message'
-            else
-                selected.forEach (id) =>
-                    message = @props.messages.get id
-                    conversationID = message.get 'conversationID'
-                    switch action
-                        when 'seen'
-                            ConversationActionCreator.seen conversationID, (error) ->
-                                if error?
-                                    alertError "#{t("conversation seen ko ")} #{error}"
-                        when 'unseen'
-                            ConversationActionCreator.unseen conversationID, (error) ->
-                                if error?
-                                    alertError "#{t("conversation unseen ko")} #{error}"
-                        when 'flagged'
-                            ConversationActionCreator.flag conversationID, (error) ->
-                                if error?
-                                    alertError "#{t("conversation flagged ko ")} #{error}"
-                        when 'noflag'
-                            ConversationActionCreator.noflag conversationID, (error) ->
-                                if error?
-                                    alertError "#{t("conversation noflag ko")} #{error}"
+
+    onConversationMove: (to) ->
+        @onMove to, true
+
+    onMove: (to, applyToConversation) ->
+        return unless options = @_getSelectedAndMode(applyToConversation)
+
+        from = @props.mailboxID
+
+        MessageActionCreator.move options, from, to, =>
+            if options.count > 0 and @props.messages.count() > 0
+                firstMessageID = @props.messages.first().get('id')
+                MessageActionCreator.setCurrent firstMessageID, true
+
+
+    onConversationMark: (flag) ->
+        @onMark flag, true
+
+    onMark: (flag, applyToConversation) ->
+        return unless options = @_getSelectedAndMode(applyToConversation)
+
+        MessageActionCreator.mark options, flag
 
     expungeMailbox: (e) ->
         e.preventDefault()
@@ -730,10 +694,13 @@ MessageItem = React.createClass
 
     onDragStart: (event) ->
         event.stopPropagation()
-        data =
-            messageID: event.currentTarget.dataset.messageId
-            mailboxID: @props.mailboxID
-            conversation: @props.displayConversations
+        data = mailboxID: @props.mailboxID
+
+        if @props.displayConversations
+            data.conversationID = event.currentTarget.dataset.conversationId
+        else
+            data.messageID = event.currentTarget.dataset.messageId
+
         event.dataTransfer.setData 'text', JSON.stringify(data)
         event.dataTransfer.effectAllowed = 'move'
         event.dataTransfer.dropEffect = 'move'

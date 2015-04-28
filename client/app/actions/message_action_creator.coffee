@@ -1,10 +1,12 @@
 AppDispatcher = require '../app_dispatcher'
-{ActionTypes} = require '../constants/app_constants'
+Constants = require '../constants/app_constants'
+{ActionTypes, MessageFlags, FlagsConstants} = Constants
 XHRUtils      = require '../utils/xhr_utils'
 AccountStore  = require "../stores/account_store"
 MessageStore  = require '../stores/message_store'
+LAC = undefined
 
-module.exports =
+module.exports = MessageActionCreator =
 
     receiveRawMessages: (messages) ->
         AppDispatcher.handleViewAction
@@ -27,149 +29,7 @@ module.exports =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_SEND
                     value: message
-            if callback?
-                callback error, message
-
-    ##
-    # Delete one or some messages
-    #
-    # @params {Message|MessageID|[Messages]|[MessageIDs]}
-    # @params {Function}
-    delete: (message, callback) ->
-        LAC = require './layout_action_creator'
-        doDelete = (message) =>
-            if typeof message is "string"
-                message = MessageStore.getByID message
-            # Move message to Trash folder
-            account = AccountStore.getByID(message.get 'accountID')
-            if not account?
-                console.log """
-                    No account with id #{message.get 'accountID'}
-                    for message #{message.get 'id'}
-                    """
-                LAC.alertError t 'app error'
-                return
-            trash = account.get 'trashMailbox'
-            msg = message.toJSON()
-            if not trash? or trash is ''
-                LAC.alertError t 'message delete no trash'
-            else if msg.mailboxIDs[trash]?
-                LAC.alertError t 'message delete already'
-            else
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_ACTION
-                    value:
-                        id: message.get 'id'
-                        from: Object.keys(msg.mailboxIDs)
-                        to: trash
-                observer = jsonpatch.observe msg
-                delete msg.mailboxIDs[id] for id of msg.mailboxIDs
-                msg.mailboxIDs[trash] = -1
-                patches = jsonpatch.generate observer
-                XHRUtils.messagePatch message.get('id'), patches, (err, res) =>
-                    if err?
-                        LAC.alertError "#{t("message action delete ko")} #{err}"
-                    if not mass
-                        options =
-                            autoclose: true,
-                            actions: [
-                                label: t 'message undelete'
-                                onClick: => @undelete()
-                            ]
-                        notifOk = t 'message action delete ok',
-                            subject: msg.subject or ''
-                        LAC.notify notifOk, options
-                        if callback?
-                            callback err
-
-                # Update datastore without waiting for server response
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.MESSAGE_DELETE
-                    value: msg
-
-        if Array.isArray message
-            mass = true
-            message.forEach doDelete
-            if callback?
-                callback()
-        else
-            mass = false
-            doDelete message
-
-    move: (message, from, to, callback) ->
-        LAC = require './layout_action_creator'
-        if from is to
-            LAC.alertWarning t 'message move already'
-            callback()
-            return
-        if typeof message is "string"
-            message = MessageStore.getByID message
-        msg = message.toJSON()
-        AppDispatcher.handleViewAction
-            type: ActionTypes.MESSAGE_ACTION
-            value:
-                id: message.get 'id'
-                from: from
-                to: to
-        observer = jsonpatch.observe msg
-        delete msg.mailboxIDs[from]
-        msg.mailboxIDs[to] = -1
-        patches = jsonpatch.generate observer
-        XHRUtils.messagePatch message.get('id'), patches, (error, message) ->
-            if not error?
-                AppDispatcher.handleViewAction
-                    type: ActionTypes.RECEIVE_RAW_MESSAGE
-                    value: msg
-            if callback?
-                callback error
-
-    undelete: ->
-        LAC = require './layout_action_creator'
-        action = MessageStore.getPrevAction()
-        if action?
-            if action.target is 'message'
-                message = MessageStore.getByID action.id
-                action.from.forEach (from) =>
-                    @move message, action.to, from, (err) ->
-                        if not err?
-                            LAC.notify t('message undelete ok'),
-                                autoclose: true
-                        else
-                            LAC.notify t('message undelete error')
-            else if action.target is 'conversation' and
-                    Array.isArray(action.messages)
-                action.messages.forEach (message) =>
-                    message.from.forEach (from) =>
-                        @move message.id, message.to, from, (err) ->
-                            if not err?
-                                LAC.notify t('message undelete ok'),
-                                    autoclose: true
-                            else
-                                LAC.notify t('message undelete error')
-            else
-                LAC.alertError t 'message undelete unavailable'
-
-    updateFlag: (message, flags, callback) ->
-        msg = message.toJSON()
-        patches = jsonpatch.compare {flags: msg.flags}, {flags}
-        XHRUtils.messagePatch message.get('id'), patches,
-            (error, messageUpdated) ->
-                if not error?
-                    if not _.isEqual(flags, messageUpdated.flags)
-                        AppDispatcher.handleViewAction
-                            type: ActionTypes.RECEIVE_RAW_MESSAGE
-                            value: messageUpdated
-                if callback?
-                    callback error
-
-        # dont wait for server response to display update
-        setTimeout ->
-            updated = message.toJS()
-            updated.flags = flags
-            AppDispatcher.handleViewAction
-                type: ActionTypes.RECEIVE_RAW_MESSAGE
-                value: updated
-        , 0
+            callback? error, message
 
     # set conv to true to update current conversation ID
     setCurrent: (messageID, conv) ->
@@ -180,3 +40,292 @@ module.exports =
             value:
                 messageID: messageID
                 conv: conv
+
+    fetchConversation: (conversationID) ->
+        XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
+            if not err?
+                MessageActionCreator.receiveRawMessages rawMessages
+
+    # Immediately synchronise some messages with the server
+    refresh: (target) ->
+        XHRUtils.batchFetch target, (err, messages) ->
+            if err
+                LAC.alertError err
+            else
+                MessageActionCreator.receiveRawMessages messages
+
+
+    delete: (target, callback) ->
+        messages = _localDelete target
+
+        # send request
+        XHRUtils.batchDelete target, (err, updated) ->
+
+            alertMsg = _getNotification target, messages, 'delete', err
+            if err
+                # we cant know which succeeded or not,
+                # refetch the batch from the server for update
+                MessageActionCreator.refresh target
+                LAC.alertError alertMsg
+            else
+                MessageActionCreator.receiveRawMessagesupdated
+                LAC.notify alertMsg,
+                    autoclose: true,
+                    actions: [
+                        label: t 'undo last action'
+                        onClick: -> MessageActionCreator.undo()
+                    ]
+
+            callback? err, updated
+
+
+    move: (target, from, to, callback) ->
+        messages = _localMove target, from, to
+
+        # send request
+        XHRUtils.batchMove target, from, to, (err, updated) ->
+            alertMsg = _getNotification target, messages, 'move', err
+            if err
+                # we cant know which succeeded or not,
+                # refetch the batch from the server for update
+                MessageActionCreator.refresh target
+                LAC.alertError alertMsg
+            else
+                MessageActionCreator.receiveRawMessages updated
+                unless target.undeleting
+                    LAC.notify alertMsg,
+                        autoclose: true,
+                        actions: [
+                            label: t 'undo last action'
+                            onClick: -> MessageActionCreator.undo()
+                        ]
+
+            callback? err, updated
+
+    mark: (target, flag, callback) ->
+        {op, flag} = _convertFlagToOp flag
+
+
+        _localMark target, op, flag
+
+
+        afterUpdate = (err, updated) ->
+            if err
+                MessageActionCreator.refresh target
+                LAC.alertError err
+            else
+                MessageActionCreator.receiveRawMessages updated
+
+            callback? err, updated
+
+        if op is 'add'
+            XHRUtils.batchAddFlag target, flag, afterUpdate
+        else if op is 'remove'
+            XHRUtils.batchRemoveFlag target, flag, afterUpdate
+        else
+            throw new Error "Wrong usage : unrecognized FlagsConstants"
+
+    undo: ->
+        lastBatch = MessageStore.getPrevAction()
+        if lastBatch
+            done = 0
+            for action in lastBatch.actions
+                options = {messageID: action.id, undeleting: true}
+                done++
+                @move options, action.to, action.from, (err) ->
+                    if err
+                        LAC.notify t('undo ko')
+                    else if --done is 0
+                        LAC.notify t('undo ok'),
+                            autoclose: true
+        else
+            LAC.notify t('undo unavailable')
+
+# circular, import after
+LAC = require './layout_action_creator'
+
+
+_getNotification = (target, messages, action, err) ->
+
+    first = messages[0]
+    subject = first?.get?('subject') or first?.subject
+
+    if target.messageID
+        type = 'message'
+    else if target.conversationID
+        type = 'conversation'
+    else if target.conversationIDs
+        type = 'conversations'
+        smart_count = target.conversationIDs.length
+    else if target.messageIDs
+        type = 'messages'
+        smart_count = target.messageIDs.length
+    else throw new Error 'Wrong Usage : unrecognized target MAC.getNotif'
+
+    if err
+        ok = 'ko'
+        errMsg = ': ' + err.message or err
+    else
+        ok = 'ok'
+        errMsg = ''
+
+
+    return t "#{type} #{action} #{ok}",
+        error: errMsg
+        subject: subject
+        smart_count: smart_count
+
+
+_convertFlagToOp = (flag) ->
+    if flag in [FlagsConstants.SEEN, FlagsConstants.FLAGGED]
+        op = 'add'
+    else if flag is FlagsConstants.NOFLAG
+        op = 'remove'
+        flag = FlagsConstants.FLAGGED
+    else if flag is FlagsConstants.UNSEEN
+        op = 'remove'
+        flag = FlagsConstants.SEEN
+
+    return {op, flag}
+
+
+_fixCurrentMessage = (target) ->
+    # open next message if the deleted / moved one was open ###
+    messageIDs = target.messageIDs or [target.messageID]
+    currentMessage = MessageStore.getCurrentID() or 'not-null'
+    conversationIDs = target.conversationIDs or [target.conversationID]
+    currentConversation = MessageStore.getCurrentConversationID() or 'not-null'
+    if currentMessage in messageIDs
+        next = MessageStore.getNextOrPrevious false
+        # MessageActionCreator.setCurrent next.get('id'), true
+        window.cozyMails.messageDisplay next, false
+    else if currentConversation in conversationIDs
+        next = MessageStore.getNextOrPrevious true
+        # MessageActionCreator.setCurrent next.get('id'), true
+        window.cozyMails.messageDisplay next, false
+
+
+
+_localMark = (target, op, flag) ->
+
+    messages = MessageStore.getMixed target
+    target.accountID = messages[0].get('accountID')
+    updated = []
+
+    for message in messages
+        flags = message.get('flags')
+        if op is 'add' and flag not in flags
+            flags = flags.concat [flag]
+
+        else if op is 'remove' and flag in flags
+            flags = _.without flags, flag
+
+        else continue
+
+        updated.push message.set('flags', flags).toJS()
+
+
+    # immediately apply change to refresh UI
+    # Update datastore
+    AppDispatcher.handleViewAction
+        type: ActionTypes.RECEIVE_RAW_MESSAGES
+        value: updated
+
+    return updated
+
+_isDraft = (message, draftMailbox) ->
+    mailboxIDs = message.get 'mailboxIDs'
+    mailboxIDs[draftMailbox] or MessageFlags.DRAFT in message.get('flags')
+
+_localMove = (target, from, to) ->
+
+    messages = MessageStore.getMixed target
+    target.accountID = messages[0].get('accountID')
+    actions = []
+    updated = []
+
+    for message in messages
+        mailboxIDs = message.get('mailboxIDs')
+        if mailboxIDs[from]
+
+            actions.push
+                id: message.get('id')
+                to: to
+                from: [from]
+
+            newMailboxIds = {}
+            newMailboxIds[key] = value for key, value of mailboxIDs
+            delete newMailboxIds[from]
+            newMailboxIds[to] = -1
+
+            updated.push message.set('mailboxIDs', newMailboxIds).toJS()
+
+    # immediately apply change to refresh UI
+    # Update datastore
+    AppDispatcher.handleViewAction
+        type: ActionTypes.RECEIVE_RAW_MESSAGES
+        value: updated
+
+    # Store action to allow unmove
+    AppDispatcher.handleViewAction
+        type: ActionTypes.LAST_ACTION
+        value: {actions}
+
+    _fixCurrentMessage target
+
+    return updated
+
+_localDelete = (target) ->
+
+    messages = MessageStore.getMixed target
+
+    accountID = messages[0].get('accountID')
+    account = AccountStore.getByID(accountID)
+    throw new Error 'Wrong State : no account' unless account
+    trashMailbox = account.get 'trashMailbox'
+    throw new Error 'Wrong State : no trashMailbox' unless trashMailbox
+    draftMailbox = account.get 'draftMailbox'
+    target.accountID = accountID
+
+
+    actions = []
+    updated = []
+
+    for message in messages
+        if accountID isnt message.get('accountID')
+            throw new Error """
+                Wrong Usage : delete message from various accounts
+            """
+
+        mailboxIDs = message.get('mailboxIDs')
+        if mailboxIDs[trashMailbox]
+            continue # already in trash
+        else if _isDraft message, draftMailbox
+            AppDispatcher.handleViewAction
+                type: ActionTypes.RECEIVE_MESSAGE_DELETE
+                value: message.get 'id'
+
+        unless mailboxIDs[trashMailbox]
+            actions.push
+                id: message.get 'id'
+                to: trashMailbox
+                from: Object.keys mailboxIDs
+
+            newMailboxIds = {}
+            newMailboxIds[trashMailbox] = -1
+            updated.push message.set 'mailboxIDs', newMailboxIds
+
+    # immediately apply change to refresh UI
+    # Update datastore
+    AppDispatcher.handleViewAction
+        type: ActionTypes.RECEIVE_RAW_MESSAGES
+        value: updated
+
+    # Store action to allow undo
+    AppDispatcher.handleViewAction
+        type: ActionTypes.LAST_ACTION
+        value: {actions}
+
+    _fixCurrentMessage target
+
+    return updated

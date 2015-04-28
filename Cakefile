@@ -12,6 +12,7 @@ task 'build', 'Build CoffeeScript to Javascript', ->
     logger.info "Start compilation..."
     command = "coffee -cb --output build/server server && " + \
               "coffee -cb --output build/ server.coffee && " + \
+              "mkdir -p build/server/views && " + \
               "cp server/views/* build/server/views/ && " + \
               "rm -rf build/client && mkdir build/client && " + \
               "cd client/ && brunch build --production && cd .. && " + \

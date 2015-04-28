@@ -1,4 +1,3 @@
-MessageUtils  = require './message_utils'
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 SettingsStore = require '../stores/settings_store'
@@ -169,11 +168,11 @@ module.exports =
                     smart_count: 1
         if (not confirm) or
         window.confirm confirmMessage
-            MessageUtils.delete messageID, conversation
+            MessageActionCreator.delete {messageID}
 
 
     messageUndo: ->
-        MessageActionCreator.undelete()
+        MessageActionCreator.undo()
 
 
     customEvent: (name, data) ->
