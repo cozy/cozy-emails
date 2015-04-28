@@ -3488,14 +3488,15 @@ Tabs = React.createClass({
       var _ref1, _ref2, _results;
       _ref1 = this.props.tabs;
       _results = [];
-      for (tab in _ref1) {
-        index = _ref1[tab];
+      for (index in _ref1) {
+        tab = _ref1[index];
         if (((_ref2 = tab["class"]) != null ? _ref2.indexOf('active') : void 0) >= 0) {
           url = null;
         } else {
           url = tab.url;
         }
         _results.push(li({
+          key: "tab-li-" + index,
           className: tab["class"]
         }, a({
           href: url,
@@ -4464,7 +4465,7 @@ ComposeEditor = React.createClass({
         if (!this.props.settings.get('composeOnTop')) {
           account = this.props.accounts[this.props.selectedAccountID];
           signatureNode = document.getElementById("signature");
-          if (account.signature && (signatureNode != null)) {
+          if ((account.signature != null) && account.signature.length > 0 && (signatureNode != null)) {
             node = signatureNode;
             node.innerHTML = "<p><br /></p>\n" + node.innerHTML;
             node = node.firstChild;
@@ -10884,6 +10885,9 @@ module.exports = {
   "account imap show advanced": "Show advanced parameters",
   "account smtp hide advanced": "Hide advanced parameters",
   "account smtp show advanced": "Show advanced parameters",
+  "account tab signature": "Signature",
+  "account signature short": "Type here the text that will be added to the bottom of all your emails.",
+  "account signature": "Email Signature",
   "mailbox create ok": "Folder created",
   "mailbox create ko": "Error creating folder",
   "mailbox update ok": "Folder updated",
@@ -11218,6 +11222,9 @@ module.exports = {
   "account imap show advanced": "Afficher les paramètres avancés",
   "account smtp hide advanced": "Masquer les paramètres avancés",
   "account smtp show advanced": "Afficher les paramètres avancés",
+  "account tab signature": "Signature",
+  "account signature short": "Tapez ici le texte qui sera ajouter à la fin de vos courriers.",
+  "account signature": "Signature des courriers",
   "mailbox create ok": "Dossier créé",
   "mailbox create ko": "Erreur de création du dossier",
   "mailbox update ok": "Dossier mis à jour",
@@ -13290,7 +13297,7 @@ module.exports = MessageUtils = {
     text = text.trim();
     if (match = text.match(/"{0,1}(.*)"{0,1} <(.*)>/)) {
       address = {
-        name: match[1],
+        optionsname: match[1],
         address: match[2]
       };
     } else {
@@ -13313,7 +13320,7 @@ module.exports = MessageUtils = {
     }
   },
   makeReplyMessage: function(myAddress, inReplyTo, action, inHTML, signature) {
-    var dateHuman, e, html, message, notMe, options, sender, text;
+    var dateHuman, e, html, isSignature, message, notMe, options, sender, text;
     message = {
       composeInHTML: inHTML,
       attachments: Immutable.Vector.empty()
@@ -13344,7 +13351,12 @@ module.exports = MessageUtils = {
       message.references = inReplyTo.get('references') || [];
       message.references = message.references.concat(message.inReplyTo);
     }
-    signature = "--\n" + signature;
+    if ((signature != null) && signature.length > 0) {
+      isSignature = true;
+      signature = "--\n" + signature;
+    } else {
+      isSignature = false;
+    }
     options = {
       message: message,
       inReplyTo: inReplyTo,
@@ -13352,7 +13364,8 @@ module.exports = MessageUtils = {
       sender: sender,
       text: text,
       html: html,
-      signature: signature
+      signature: signature,
+      isSignature: isSignature
     };
     switch (action) {
       case ComposeActions.REPLY:
@@ -13365,7 +13378,7 @@ module.exports = MessageUtils = {
         this.setMessageAsForward(options);
         break;
       case null:
-        this.setMessageAsDefault(message, signature);
+        this.setMessageAsDefault(options);
     }
     notMe = function(dest) {
       return dest.address !== myAddress;
@@ -13375,8 +13388,8 @@ module.exports = MessageUtils = {
     return message;
   },
   setMessageAsReply: function(options) {
-    var dateHuman, html, inReplyTo, message, params, sender, separator, signature, text;
-    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html, signature = options.signature;
+    var dateHuman, html, inReplyTo, isSignature, message, params, sender, separator, signature, text;
+    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html, signature = options.signature, isSignature = options.isSignature;
     params = {
       date: dateHuman,
       sender: sender
@@ -13387,18 +13400,18 @@ module.exports = MessageUtils = {
     message.bcc = [];
     message.subject = this.getReplySubject(inReplyTo);
     message.text = separator + this.generateReplyText(text) + "\n";
-    if (signature) {
+    if (isSignature) {
       message.text += "\n\n" + signature;
     }
     message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br /></p>";
-    if (signature) {
+    if (isSignature) {
       signature = signature.replace(/\n/g, '<br>');
       return message.html += "<p><br /></p><p id=\"signature\">" + signature + "</p>";
     }
   },
   setMessageAsReplyAll: function(options) {
-    var dateHuman, html, inReplyTo, message, params, sender, separator, signature, text, toAddresses;
-    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html, signature = options.signature;
+    var dateHuman, html, inReplyTo, isSignature, message, params, sender, separator, signature, text, toAddresses;
+    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html, signature = options.signature, isSignature = options.isSignature;
     params = {
       date: dateHuman,
       sender: sender
@@ -13414,18 +13427,18 @@ module.exports = MessageUtils = {
     message.bcc = [];
     message.subject = this.getReplySubject(inReplyTo);
     message.text = separator + this.generateReplyText(text) + "\n";
-    if (signature) {
+    if (isSignature) {
       message.text += "\n\n" + signature;
     }
     message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br /></p>";
-    if (signature) {
+    if (isSignature) {
       signature = signature.replace(/\n/g, '<br>');
       return message.html += "<p><br /></p><p id=\"signature\">" + signature + "</p>";
     }
   },
   setMessageAsForward: function(options) {
-    var addresses, dateHuman, fromField, html, htmlSeparator, inReplyTo, message, sender, senderAddress, senderInfos, senderName, separator, signature, text, textSeparator;
-    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html, signature = options.signature;
+    var addresses, dateHuman, fromField, html, htmlSeparator, inReplyTo, isSignature, message, sender, senderAddress, senderInfos, senderName, separator, signature, text, textSeparator;
+    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html, signature = options.signature, isSignature = options.isSignature;
     addresses = inReplyTo.get('to').map(function(address) {
       return address.address;
     }).join(', ');
@@ -13448,17 +13461,19 @@ module.exports = MessageUtils = {
     message.attachments = inReplyTo.get('attachments');
     return message;
   },
-  setMessageAsDefault: function(message, signature) {
+  setMessageAsDefault: function(options) {
+    var dateHuman, html, inReplyTo, isSignature, message, sender, signature, text;
+    message = options.message, inReplyTo = options.inReplyTo, dateHuman = options.dateHuman, sender = options.sender, text = options.text, html = options.html, signature = options.signature, isSignature = options.isSignature;
     message.to = [];
     message.cc = [];
     message.bcc = [];
     message.subject = '';
     message.text = '';
-    if (signature) {
+    if (isSignature) {
       message.text += "\n\n--\n" + signature;
     }
     message.html = COMPOSE_STYLE;
-    if (signature) {
+    if (isSignature) {
       signature = signature.replace(/\n/g, '<br>');
       message.html += "<p><br /></p><p><br /></p>\n<p id=\"signature\">--\n" + signature + "</p>";
     }
