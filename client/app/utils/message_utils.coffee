@@ -62,7 +62,7 @@ module.exports = MessageUtils =
         text = text.trim()
         if match = text.match /"{0,1}(.*)"{0,1} <(.*)>/
             address =
-                name: match[1]
+                optionsname: match[1]
                 address: match[2]
         else
             address =
@@ -120,7 +120,11 @@ module.exports = MessageUtils =
             message.references = inReplyTo.get('references') or []
             message.references = message.references.concat message.inReplyTo
 
-        signature = "--\n#{signature}"
+        if signature? and signature.length > 0
+            isSignature = true
+            signature = "--\n#{signature}"
+        else
+            isSignature = false
 
         options = {
             message
@@ -130,6 +134,7 @@ module.exports = MessageUtils =
             text
             html
             signature
+            isSignature
         }
 
         switch action
@@ -144,7 +149,7 @@ module.exports = MessageUtils =
                 @setMessageAsForward options
 
             when null
-                @setMessageAsDefault message, signature
+                @setMessageAsDefault options
 
         # remove my address from dests
         notMe = (dest) -> return dest.address isnt myAddress
@@ -168,6 +173,7 @@ module.exports = MessageUtils =
             text
             html
             signature
+            isSignature
         } = options
 
         params = date: dateHuman, sender: sender
@@ -177,7 +183,7 @@ module.exports = MessageUtils =
         message.bcc = []
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
-        if signature
+        if isSignature
             message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
@@ -185,7 +191,7 @@ module.exports = MessageUtils =
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
             <p><br /></p>
             """
-        if signature
+        if isSignature
             signature = signature.replace /\n/g, '<br>'
             message.html += """
             <p><br /></p><p id="signature">#{signature}</p>
@@ -207,6 +213,7 @@ module.exports = MessageUtils =
             text
             html
             signature
+            isSignature
         } = options
 
         params = date: dateHuman, sender: sender
@@ -225,7 +232,7 @@ module.exports = MessageUtils =
 
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
-        if signature
+        if isSignature
             message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
@@ -233,7 +240,7 @@ module.exports = MessageUtils =
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
             <p><br /></p>
             """
-        if signature
+        if isSignature
             signature = signature.replace /\n/g, '<br>'
             message.html += """
             <p><br /></p><p id="signature">#{signature}</p>
@@ -254,6 +261,7 @@ module.exports = MessageUtils =
             text
             html
             signature
+            isSignature
         } = options
 
         addresses = inReplyTo.get('to')
@@ -304,16 +312,27 @@ module.exports = MessageUtils =
 
     # Clear all fields of the message object.
     # Add signature if given.
-    setMessageAsDefault: (message, signature) ->
+    setMessageAsDefault: (options) ->
+        {
+            message
+            inReplyTo
+            dateHuman
+            sender
+            text
+            html
+            signature
+            isSignature
+        } = options
+
         message.to = []
         message.cc = []
         message.bcc = []
         message.subject = ''
         message.text = ''
-        if signature
+        if isSignature
             message.text += "\n\n--\n#{signature}"
         message.html = COMPOSE_STYLE
-        if signature
+        if isSignature
             signature = signature.replace /\n/g, '<br>'
             message.html += """
             <p><br /></p><p><br /></p>

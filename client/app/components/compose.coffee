@@ -725,7 +725,9 @@ ComposeEditor = React.createClass
                     account = @props.accounts[@props.selectedAccountID]
 
                     signatureNode = document.getElementById "signature"
-                    if account.signature and signatureNode?
+                    if account.signature? and
+                    account.signature.length > 0 and
+                    signatureNode?
                         node = signatureNode
                         node.innerHTML = """
                         <p><br /></p>
