@@ -213,11 +213,9 @@ ImapPool = (function() {
     full = this.connections.length + this.connecting >= this.parallelism;
     moreTasks = this.tasks.length > 0;
     if (!this.account) {
-      log.debug(this.id, "_deQueue/needaccount");
       return this._getAccount();
     }
     if (this.account.isTest()) {
-      log.debug(this.id, "_deQueue/test");
       if (moreTasks) {
         task = this.tasks.pop();
         if (typeof task.callback === "function") {
@@ -229,11 +227,9 @@ ImapPool = (function() {
     }
     if (moreTasks) {
       if (this.closingTimer) {
-        log.debug(this.id, "_deQueue/stopTimer");
         clearTimeout(this.closingTimer);
       }
       if (free) {
-        log.debug(this.id, "_deQueue/free");
         imap = this.freeConnections.pop();
         task = this.tasks.pop();
         this.pending[imap.connectionID] = task;
@@ -262,11 +258,9 @@ ImapPool = (function() {
           };
         })(this));
       } else if (!full) {
-        log.debug(this.id, "_deQueue/notfull");
         return this._makeConnection();
       }
     } else {
-      log.debug(this.id, "_deQueue/startTimer");
       return this.closingTimer != null ? this.closingTimer : this.closingTimer = setTimeout(this._closeConnections, 5000);
     }
   };

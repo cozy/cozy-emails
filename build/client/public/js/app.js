@@ -361,228 +361,6 @@ module.exports = ContactActionCreator = {
 };
 });
 
-;require.register("actions/conversation_action_creator", function(exports, require, module) {
-var AccountStore, ActionTypes, AppDispatcher, LayoutActionCreator, MessageActionCreator, MessageFlags, MessageStore, XHRUtils, doPatch;
-
-AppDispatcher = require('../app_dispatcher');
-
-ActionTypes = require('../constants/app_constants').ActionTypes;
-
-XHRUtils = require('../utils/xhr_utils');
-
-MessageFlags = require('../constants/app_constants').MessageFlags;
-
-LayoutActionCreator = require('./layout_action_creator');
-
-MessageActionCreator = require('../actions/message_action_creator');
-
-AccountStore = require("../stores/account_store");
-
-MessageStore = require('../stores/message_store');
-
-doPatch = function(conversationID, patches, callback) {
-  return XHRUtils.conversationPatch(conversationID, patches, function(error, messages) {
-    if (error == null) {
-      AppDispatcher.handleViewAction({
-        type: ActionTypes.RECEIVE_RAW_MESSAGES,
-        value: messages
-      });
-    }
-    if (callback != null) {
-      return callback(error);
-    }
-  });
-};
-
-module.exports = {
-  "delete": function(conversationID, callback) {
-    var account, conversation, error, messages, messagesActions, trash;
-    conversation = MessageStore.getConversation(conversationID);
-    account = AccountStore.getByID(conversation.get(0).get('accountID'));
-    trash = account.get('trashMailbox');
-    if ((trash == null) || trash === '') {
-      callback(t('message delete no trash'));
-      return;
-    }
-    messages = [];
-    messagesActions = [];
-    error = '';
-    conversation.map(function(message) {
-      var action, id, mailboxIDs, msg;
-      mailboxIDs = message.get('mailboxIDs');
-      if (mailboxIDs[trash] == null) {
-        action = {
-          id: message.get('id'),
-          from: Object.keys(mailboxIDs),
-          to: trash
-        };
-        messagesActions.push(action);
-        msg = message.toJS();
-        for (id in msg.mailboxIDs) {
-          delete msg.mailboxIDs[id];
-        }
-        msg.mailboxIDs[trash] = -1;
-        return messages.push(msg);
-      }
-    }).toJS();
-    if (error !== '') {
-      callback(error);
-      return;
-    }
-    XHRUtils.conversationDelete(conversationID, function(error, messages) {
-      var msgOk, options;
-      if (error == null) {
-        AppDispatcher.handleViewAction({
-          type: ActionTypes.RECEIVE_RAW_MESSAGES,
-          value: messages
-        });
-      }
-      options = {
-        autoclose: true,
-        actions: [
-          {
-            label: t('conversation undelete'),
-            onClick: function() {
-              return MessageActionCreator.undelete();
-            }
-          }
-        ]
-      };
-      msgOk = t('conversation delete ok', {
-        subject: messages[0].subject
-      });
-      LayoutActionCreator.notify(msgOk, options);
-      if (callback != null) {
-        return callback(error);
-      }
-    });
-    AppDispatcher.handleViewAction({
-      type: ActionTypes.RECEIVE_RAW_MESSAGES,
-      value: messages
-    });
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.CONVERSATION_ACTION,
-      value: {
-        messages: messagesActions
-      }
-    });
-  },
-  move: function(message, from, to, callback) {
-    var conversation, conversationID, messages, msg, observer, patches;
-    if (typeof message === 'string') {
-      message = MessageStore.getByID(message);
-    }
-    conversationID = message.get('conversationID');
-    if (conversationID == null) {
-      return MessageActionCreator.move(message, from, to, callback);
-    } else {
-      msg = message.toJSON();
-      AppDispatcher.handleViewAction({
-        type: ActionTypes.CONVERSATION_ACTION,
-        value: {
-          id: msg.conversationID,
-          from: from,
-          to: to
-        }
-      });
-      observer = jsonpatch.observe(msg);
-      delete msg.mailboxIDs[from];
-      msg.mailboxIDs[to] = -1;
-      patches = jsonpatch.generate(observer);
-      XHRUtils.conversationPatch(msg.conversationID, patches, function(error, messages) {
-        var msgOk, options;
-        if (error == null) {
-          AppDispatcher.handleViewAction({
-            type: ActionTypes.RECEIVE_RAW_MESSAGES,
-            value: messages
-          });
-          options = {
-            autoclose: true,
-            actions: [
-              {
-                label: t('action undo'),
-                onClick: function() {
-                  return MessageActionCreator.undelete();
-                }
-              }
-            ]
-          };
-          msgOk = t('conversation move ok', {
-            subject: messages[0].subject
-          });
-          LayoutActionCreator.notify(msgOk, options);
-        }
-        if (callback != null) {
-          return callback(error);
-        }
-      });
-      conversation = MessageStore.getConversation(conversationID);
-      messages = [];
-      conversation.map(function(message) {
-        var id;
-        msg = message.toJS();
-        for (id in msg.mailboxIDs) {
-          delete msg.mailboxIDs[from];
-        }
-        msg.mailboxIDs[to] = -1;
-        return messages.push(msg);
-      }).toJS();
-      return AppDispatcher.handleViewAction({
-        type: ActionTypes.RECEIVE_RAW_MESSAGES,
-        value: messages
-      });
-    }
-  },
-  seen: function(conversationID, callback) {
-    var conversation, observer, patches;
-    conversation = {
-      flags: []
-    };
-    observer = jsonpatch.observe(conversation);
-    conversation.flags.push(MessageFlags.SEEN);
-    patches = jsonpatch.generate(observer);
-    return doPatch(conversationID, patches, callback);
-  },
-  unseen: function(conversationID, callback) {
-    var conversation, observer, patches;
-    conversation = {
-      flags: [MessageFlags.SEEN]
-    };
-    observer = jsonpatch.observe(conversation);
-    conversation.flags = [];
-    patches = jsonpatch.generate(observer);
-    return doPatch(conversationID, patches, callback);
-  },
-  flag: function(conversationID, callback) {
-    var conversation, observer, patches;
-    conversation = {
-      flags: []
-    };
-    observer = jsonpatch.observe(conversation);
-    conversation.flags.push(MessageFlags.FLAGGED);
-    patches = jsonpatch.generate(observer);
-    return doPatch(conversationID, patches, callback);
-  },
-  noflag: function(conversationID, callback) {
-    var conversation, observer, patches;
-    conversation = {
-      flags: [MessageFlags.FLAGGED]
-    };
-    observer = jsonpatch.observe(conversation);
-    conversation.flags = [];
-    patches = jsonpatch.generate(observer);
-    return doPatch(conversationID, patches, callback);
-  },
-  fetch: function(conversationID) {
-    return XHRUtils.fetchConversation(conversationID, function(err, rawMessages) {
-      if (err == null) {
-        return MessageActionCreator.receiveRawMessages(rawMessages);
-      }
-    });
-  }
-};
-});
-
 ;require.register("actions/layout_action_creator", function(exports, require, module) {
 var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageFlags, MessageStore, SearchActionCreator, SocketUtils, XHRUtils, _cachedDisposition, _cachedQuery, _ref;
 
@@ -601,8 +379,6 @@ AppDispatcher = require('../app_dispatcher');
 _ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, AlertLevel = _ref.AlertLevel, MessageFlags = _ref.MessageFlags;
 
 AccountActionCreator = require('./account_action_creator');
-
-MessageActionCreator = require('./message_action_creator');
 
 SearchActionCreator = require('./search_action_creator');
 
@@ -868,14 +644,19 @@ module.exports = LayoutActionCreator = {
     });
   }
 };
+
+MessageActionCreator = require('./message_action_creator');
 });
 
 ;require.register("actions/message_action_creator", function(exports, require, module) {
-var AccountStore, ActionTypes, AppDispatcher, MessageStore, XHRUtils;
+var AccountStore, ActionTypes, AppDispatcher, Constants, FlagsConstants, LAC, MessageActionCreator, MessageFlags, MessageStore, XHRUtils, _convertFlagToOp, _fixCurrentMessage, _getNotification, _isDraft, _localDelete, _localMark, _localMove,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 AppDispatcher = require('../app_dispatcher');
 
-ActionTypes = require('../constants/app_constants').ActionTypes;
+Constants = require('../constants/app_constants');
+
+ActionTypes = Constants.ActionTypes, MessageFlags = Constants.MessageFlags, FlagsConstants = Constants.FlagsConstants;
 
 XHRUtils = require('../utils/xhr_utils');
 
@@ -883,7 +664,9 @@ AccountStore = require("../stores/account_store");
 
 MessageStore = require('../stores/message_store');
 
-module.exports = {
+LAC = void 0;
+
+module.exports = MessageActionCreator = {
   receiveRawMessages: function(messages) {
     return AppDispatcher.handleViewAction({
       type: ActionTypes.RECEIVE_RAW_MESSAGES,
@@ -910,198 +693,8 @@ module.exports = {
           value: message
         });
       }
-      if (callback != null) {
-        return callback(error, message);
-      }
+      return typeof callback === "function" ? callback(error, message) : void 0;
     });
-  },
-  "delete": function(message, callback) {
-    var LAC, doDelete, mass;
-    LAC = require('./layout_action_creator');
-    doDelete = (function(_this) {
-      return function(message) {
-        var account, id, msg, observer, patches, trash;
-        if (typeof message === "string") {
-          message = MessageStore.getByID(message);
-        }
-        account = AccountStore.getByID(message.get('accountID'));
-        if (account == null) {
-          console.log("No account with id " + (message.get('accountID')) + "\nfor message " + (message.get('id')));
-          LAC.alertError(t('app error'));
-          return;
-        }
-        trash = account.get('trashMailbox');
-        msg = message.toJSON();
-        if ((trash == null) || trash === '') {
-          return LAC.alertError(t('message delete no trash'));
-        } else if (msg.mailboxIDs[trash] != null) {
-          return LAC.alertError(t('message delete already'));
-        } else {
-          AppDispatcher.handleViewAction({
-            type: ActionTypes.MESSAGE_ACTION,
-            value: {
-              id: message.get('id'),
-              from: Object.keys(msg.mailboxIDs),
-              to: trash
-            }
-          });
-          observer = jsonpatch.observe(msg);
-          for (id in msg.mailboxIDs) {
-            delete msg.mailboxIDs[id];
-          }
-          msg.mailboxIDs[trash] = -1;
-          patches = jsonpatch.generate(observer);
-          XHRUtils.messagePatch(message.get('id'), patches, function(err, res) {
-            var notifOk, options;
-            if (err != null) {
-              LAC.alertError("" + (t("message action delete ko")) + " " + err);
-            }
-            if (!mass) {
-              options = {
-                autoclose: true,
-                actions: [
-                  {
-                    label: t('message undelete'),
-                    onClick: function() {
-                      return _this.undelete();
-                    }
-                  }
-                ]
-              };
-              notifOk = t('message action delete ok', {
-                subject: msg.subject || ''
-              });
-              LAC.notify(notifOk, options);
-              if (callback != null) {
-                return callback(err);
-              }
-            }
-          });
-          return AppDispatcher.handleViewAction({
-            type: ActionTypes.MESSAGE_DELETE,
-            value: msg
-          });
-        }
-      };
-    })(this);
-    if (Array.isArray(message)) {
-      mass = true;
-      message.forEach(doDelete);
-      if (callback != null) {
-        return callback();
-      }
-    } else {
-      mass = false;
-      return doDelete(message);
-    }
-  },
-  move: function(message, from, to, callback) {
-    var LAC, msg, observer, patches;
-    LAC = require('./layout_action_creator');
-    if (from === to) {
-      LAC.alertWarning(t('message move already'));
-      callback();
-      return;
-    }
-    if (typeof message === "string") {
-      message = MessageStore.getByID(message);
-    }
-    msg = message.toJSON();
-    AppDispatcher.handleViewAction({
-      type: ActionTypes.MESSAGE_ACTION,
-      value: {
-        id: message.get('id'),
-        from: from,
-        to: to
-      }
-    });
-    observer = jsonpatch.observe(msg);
-    delete msg.mailboxIDs[from];
-    msg.mailboxIDs[to] = -1;
-    patches = jsonpatch.generate(observer);
-    return XHRUtils.messagePatch(message.get('id'), patches, function(error, message) {
-      if (error == null) {
-        AppDispatcher.handleViewAction({
-          type: ActionTypes.RECEIVE_RAW_MESSAGE,
-          value: msg
-        });
-      }
-      if (callback != null) {
-        return callback(error);
-      }
-    });
-  },
-  undelete: function() {
-    var LAC, action, message;
-    LAC = require('./layout_action_creator');
-    action = MessageStore.getPrevAction();
-    if (action != null) {
-      if (action.target === 'message') {
-        message = MessageStore.getByID(action.id);
-        return action.from.forEach((function(_this) {
-          return function(from) {
-            return _this.move(message, action.to, from, function(err) {
-              if (err == null) {
-                return LAC.notify(t('message undelete ok'), {
-                  autoclose: true
-                });
-              } else {
-                return LAC.notify(t('message undelete error'));
-              }
-            });
-          };
-        })(this));
-      } else if (action.target === 'conversation' && Array.isArray(action.messages)) {
-        return action.messages.forEach((function(_this) {
-          return function(message) {
-            return message.from.forEach(function(from) {
-              return _this.move(message.id, message.to, from, function(err) {
-                if (err == null) {
-                  return LAC.notify(t('message undelete ok'), {
-                    autoclose: true
-                  });
-                } else {
-                  return LAC.notify(t('message undelete error'));
-                }
-              });
-            });
-          };
-        })(this));
-      } else {
-        return LAC.alertError(t('message undelete unavailable'));
-      }
-    }
-  },
-  updateFlag: function(message, flags, callback) {
-    var msg, patches;
-    msg = message.toJSON();
-    patches = jsonpatch.compare({
-      flags: msg.flags
-    }, {
-      flags: flags
-    });
-    XHRUtils.messagePatch(message.get('id'), patches, function(error, messageUpdated) {
-      if (error == null) {
-        if (!_.isEqual(flags, messageUpdated.flags)) {
-          AppDispatcher.handleViewAction({
-            type: ActionTypes.RECEIVE_RAW_MESSAGE,
-            value: messageUpdated
-          });
-        }
-      }
-      if (callback != null) {
-        return callback(error);
-      }
-    });
-    return setTimeout(function() {
-      var updated;
-      updated = message.toJS();
-      updated.flags = flags;
-      return AppDispatcher.handleViewAction({
-        type: ActionTypes.RECEIVE_RAW_MESSAGE,
-        value: updated
-      });
-    }, 0);
   },
   setCurrent: function(messageID, conv) {
     if (typeof messageID !== 'string') {
@@ -1114,7 +707,316 @@ module.exports = {
         conv: conv
       }
     });
+  },
+  fetchConversation: function(conversationID) {
+    return XHRUtils.fetchConversation(conversationID, function(err, rawMessages) {
+      if (err == null) {
+        return MessageActionCreator.receiveRawMessages(rawMessages);
+      }
+    });
+  },
+  refresh: function(target) {
+    return XHRUtils.batchFetch(target, function(err, messages) {
+      if (err) {
+        return LAC.alertError(err);
+      } else {
+        return MessageActionCreator.receiveRawMessages(messages);
+      }
+    });
+  },
+  "delete": function(target, callback) {
+    var messages;
+    messages = _localDelete(target);
+    return XHRUtils.batchDelete(target, function(err, updated) {
+      var alertMsg;
+      alertMsg = _getNotification(target, messages, 'delete', err);
+      if (err) {
+        MessageActionCreator.refresh(target);
+        LAC.alertError(alertMsg);
+      } else {
+        MessageActionCreator.receiveRawMessagesupdated;
+        LAC.notify(alertMsg, {
+          autoclose: true,
+          actions: [
+            {
+              label: t('undo last action'),
+              onClick: function() {
+                return MessageActionCreator.undo();
+              }
+            }
+          ]
+        });
+      }
+      return typeof callback === "function" ? callback(err, updated) : void 0;
+    });
+  },
+  move: function(target, from, to, callback) {
+    var messages;
+    messages = _localMove(target, from, to);
+    return XHRUtils.batchMove(target, from, to, function(err, updated) {
+      var alertMsg;
+      alertMsg = _getNotification(target, messages, 'move', err);
+      if (err) {
+        MessageActionCreator.refresh(target);
+        LAC.alertError(alertMsg);
+      } else {
+        MessageActionCreator.receiveRawMessages(updated);
+        if (!target.undeleting) {
+          LAC.notify(alertMsg, {
+            autoclose: true,
+            actions: [
+              {
+                label: t('undo last action'),
+                onClick: function() {
+                  return MessageActionCreator.undo();
+                }
+              }
+            ]
+          });
+        }
+      }
+      return typeof callback === "function" ? callback(err, updated) : void 0;
+    });
+  },
+  mark: function(target, flag, callback) {
+    var afterUpdate, op, _ref;
+    _ref = _convertFlagToOp(flag), op = _ref.op, flag = _ref.flag;
+    _localMark(target, op, flag);
+    afterUpdate = function(err, updated) {
+      if (err) {
+        MessageActionCreator.refresh(target);
+        LAC.alertError(err);
+      } else {
+        MessageActionCreator.receiveRawMessages(updated);
+      }
+      return typeof callback === "function" ? callback(err, updated) : void 0;
+    };
+    if (op === 'add') {
+      return XHRUtils.batchAddFlag(target, flag, afterUpdate);
+    } else if (op === 'remove') {
+      return XHRUtils.batchRemoveFlag(target, flag, afterUpdate);
+    } else {
+      throw new Error("Wrong usage : unrecognized FlagsConstants");
+    }
+  },
+  undo: function() {
+    var action, done, lastBatch, options, _i, _len, _ref, _results;
+    lastBatch = MessageStore.getPrevAction();
+    if (lastBatch) {
+      done = 0;
+      _ref = lastBatch.actions;
+      _results = [];
+      for (_i = 0, _len = _ref.length; _i < _len; _i++) {
+        action = _ref[_i];
+        options = {
+          messageID: action.id,
+          undeleting: true
+        };
+        done++;
+        _results.push(this.move(options, action.to, action.from, function(err) {
+          if (err) {
+            return LAC.notify(t('undo ko'));
+          } else if (--done === 0) {
+            return LAC.notify(t('undo ok'), {
+              autoclose: true
+            });
+          }
+        }));
+      }
+      return _results;
+    } else {
+      return LAC.notify(t('undo unavailable'));
+    }
   }
+};
+
+LAC = require('./layout_action_creator');
+
+_getNotification = function(target, messages, action, err) {
+  var errMsg, first, ok, smart_count, subject, type;
+  first = messages[0];
+  subject = (first != null ? typeof first.get === "function" ? first.get('subject') : void 0 : void 0) || (first != null ? first.subject : void 0);
+  if (target.messageID) {
+    type = 'message';
+  } else if (target.conversationID) {
+    type = 'conversation';
+  } else if (target.conversationIDs) {
+    type = 'conversations';
+    smart_count = target.conversationIDs.length;
+  } else if (target.messageIDs) {
+    type = 'messages';
+    smart_count = target.messageIDs.length;
+  } else {
+    throw new Error('Wrong Usage : unrecognized target MAC.getNotif');
+  }
+  if (err) {
+    ok = 'ko';
+    errMsg = ': ' + err.message || err;
+  } else {
+    ok = 'ok';
+    errMsg = '';
+  }
+  return t("" + type + " " + action + " " + ok, {
+    error: errMsg,
+    subject: subject,
+    smart_count: smart_count
+  });
+};
+
+_convertFlagToOp = function(flag) {
+  var op;
+  if (flag === FlagsConstants.SEEN || flag === FlagsConstants.FLAGGED) {
+    op = 'add';
+  } else if (flag === FlagsConstants.NOFLAG) {
+    op = 'remove';
+    flag = FlagsConstants.FLAGGED;
+  } else if (flag === FlagsConstants.UNSEEN) {
+    op = 'remove';
+    flag = FlagsConstants.SEEN;
+  }
+  return {
+    op: op,
+    flag: flag
+  };
+};
+
+_fixCurrentMessage = function(target) {
+  var conversationIDs, currentConversation, currentMessage, messageIDs, next;
+  messageIDs = target.messageIDs || [target.messageID];
+  currentMessage = MessageStore.getCurrentID() || 'not-null';
+  conversationIDs = target.conversationIDs || [target.conversationID];
+  currentConversation = MessageStore.getCurrentConversationID() || 'not-null';
+  if (__indexOf.call(messageIDs, currentMessage) >= 0) {
+    next = MessageStore.getNextOrPrevious(false);
+    return window.cozyMails.messageDisplay(next, false);
+  } else if (__indexOf.call(conversationIDs, currentConversation) >= 0) {
+    next = MessageStore.getNextOrPrevious(true);
+    return window.cozyMails.messageDisplay(next, false);
+  }
+};
+
+_localMark = function(target, op, flag) {
+  var flags, message, messages, updated, _i, _len;
+  messages = MessageStore.getMixed(target);
+  target.accountID = messages[0].get('accountID');
+  updated = [];
+  for (_i = 0, _len = messages.length; _i < _len; _i++) {
+    message = messages[_i];
+    flags = message.get('flags');
+    if (op === 'add' && __indexOf.call(flags, flag) < 0) {
+      flags = flags.concat([flag]);
+    } else if (op === 'remove' && __indexOf.call(flags, flag) >= 0) {
+      flags = _.without(flags, flag);
+    } else {
+      continue;
+    }
+    updated.push(message.set('flags', flags).toJS());
+  }
+  AppDispatcher.handleViewAction({
+    type: ActionTypes.RECEIVE_RAW_MESSAGES,
+    value: updated
+  });
+  return updated;
+};
+
+_isDraft = function(message, draftMailbox) {
+  var mailboxIDs, _ref;
+  mailboxIDs = message.get('mailboxIDs');
+  return mailboxIDs[draftMailbox] || (_ref = MessageFlags.DRAFT, __indexOf.call(message.get('flags'), _ref) >= 0);
+};
+
+_localMove = function(target, from, to) {
+  var actions, key, mailboxIDs, message, messages, newMailboxIds, updated, value, _i, _len;
+  messages = MessageStore.getMixed(target);
+  target.accountID = messages[0].get('accountID');
+  actions = [];
+  updated = [];
+  for (_i = 0, _len = messages.length; _i < _len; _i++) {
+    message = messages[_i];
+    mailboxIDs = message.get('mailboxIDs');
+    if (mailboxIDs[from]) {
+      actions.push({
+        id: message.get('id'),
+        to: to,
+        from: [from]
+      });
+      newMailboxIds = {};
+      for (key in mailboxIDs) {
+        value = mailboxIDs[key];
+        newMailboxIds[key] = value;
+      }
+      delete newMailboxIds[from];
+      newMailboxIds[to] = -1;
+      updated.push(message.set('mailboxIDs', newMailboxIds).toJS());
+    }
+  }
+  AppDispatcher.handleViewAction({
+    type: ActionTypes.RECEIVE_RAW_MESSAGES,
+    value: updated
+  });
+  AppDispatcher.handleViewAction({
+    type: ActionTypes.LAST_ACTION,
+    value: {
+      actions: actions
+    }
+  });
+  _fixCurrentMessage(target);
+  return updated;
+};
+
+_localDelete = function(target) {
+  var account, accountID, actions, draftMailbox, mailboxIDs, message, messages, newMailboxIds, trashMailbox, updated, _i, _len;
+  messages = MessageStore.getMixed(target);
+  accountID = messages[0].get('accountID');
+  account = AccountStore.getByID(accountID);
+  if (!account) {
+    throw new Error('Wrong State : no account');
+  }
+  trashMailbox = account.get('trashMailbox');
+  if (!trashMailbox) {
+    throw new Error('Wrong State : no trashMailbox');
+  }
+  draftMailbox = account.get('draftMailbox');
+  target.accountID = accountID;
+  actions = [];
+  updated = [];
+  for (_i = 0, _len = messages.length; _i < _len; _i++) {
+    message = messages[_i];
+    if (accountID !== message.get('accountID')) {
+      throw new Error("Wrong Usage : delete message from various accounts");
+    }
+    mailboxIDs = message.get('mailboxIDs');
+    if (mailboxIDs[trashMailbox]) {
+      continue;
+    } else if (_isDraft(message, draftMailbox)) {
+      AppDispatcher.handleViewAction({
+        type: ActionTypes.RECEIVE_MESSAGE_DELETE,
+        value: message.get('id')
+      });
+    }
+    if (!mailboxIDs[trashMailbox]) {
+      actions.push({
+        id: message.get('id'),
+        to: trashMailbox,
+        from: Object.keys(mailboxIDs)
+      });
+      newMailboxIds = {};
+      newMailboxIds[trashMailbox] = -1;
+      updated.push(message.set('mailboxIDs', newMailboxIds));
+    }
+  }
+  AppDispatcher.handleViewAction({
+    type: ActionTypes.RECEIVE_RAW_MESSAGES,
+    value: updated
+  });
+  AppDispatcher.handleViewAction({
+    type: ActionTypes.LAST_ACTION,
+    value: {
+      actions: actions
+    }
+  });
+  _fixCurrentMessage(target);
+  return updated;
 };
 });
 
@@ -3447,7 +3349,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/basic_components", function(exports, require, module) {
-var AddressLabel, Container, Dropdown, ErrorLine, FieldSet, Form, FormButton, FormButtons, FormDropdown, Spinner, SubTitle, Tabs, Title, a, button, div, fieldset, form, h3, h4, i, img, label, legend, li, span, ul, _ref;
+var AddressLabel, Container, Dropdown, ErrorLine, FieldSet, Form, FormButton, FormButtons, FormDropdown, MenuDivider, MenuHeader, MenuItem, Spinner, SubTitle, Tabs, Title, a, button, div, fieldset, form, h3, h4, i, img, label, legend, li, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, h3 = _ref.h3, h4 = _ref.h4, ul = _ref.ul, li = _ref.li, a = _ref.a, i = _ref.i, button = _ref.button, span = _ref.span, fieldset = _ref.fieldset, legend = _ref.legend, label = _ref.label, img = _ref.img, form = _ref.form;
 
@@ -3562,19 +3464,71 @@ FormButton = React.createClass({
 
 FormButtons = React.createClass({
   render: function() {
-    var formButton;
+    var formButton, index;
     return div(null, div({
       className: 'col-sm-offset-4'
     }, (function() {
       var _i, _len, _ref1, _results;
       _ref1 = this.props.buttons;
       _results = [];
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        formButton = _ref1[_i];
+      for (index = _i = 0, _len = _ref1.length; _i < _len; index = ++_i) {
+        formButton = _ref1[index];
+        formButton.key = index;
         _results.push(FormButton(formButton));
       }
       return _results;
     }).call(this)));
+  }
+});
+
+MenuItem = React.createClass({
+  render: function() {
+    var aOptions, liOptions;
+    liOptions = {
+      role: 'presentation'
+    };
+    if (this.props.key) {
+      liOptions.key = this.props.key;
+    }
+    if (this.props.liClassName) {
+      liOptions.className = this.props.liClassName;
+    }
+    aOptions = {
+      role: 'menuitemu',
+      onClick: this.props.onClick
+    };
+    if (this.props.className) {
+      aOptions.className = this.props.className;
+    }
+    return li(liOptions, a(aOptions, this.props.children));
+  }
+});
+
+MenuHeader = React.createClass({
+  render: function() {
+    var liOptions;
+    liOptions = {
+      role: 'presentation',
+      className: 'dropdown-header'
+    };
+    if (this.props.key) {
+      liOptions.key = this.props.key;
+    }
+    return li(liOptions, this.props.children);
+  }
+});
+
+MenuDivider = React.createClass({
+  render: function() {
+    var liOptions;
+    liOptions = {
+      role: 'presentation',
+      className: 'divider'
+    };
+    if (this.props.key) {
+      liOptions.key = this.props.key;
+    }
+    return li(liOptions);
   }
 });
 
@@ -3615,13 +3569,18 @@ FormDropdown = React.createClass({
 
 AddressLabel = React.createClass({
   render: function() {
-    var key, result;
-    if ((this.props.contact.name != null) && this.props.contact.name.length > 0) {
+    var key, meaninglessKey, result, _ref1, _ref2;
+    meaninglessKey = 0;
+    if (((_ref1 = this.props.contact.name) != null ? _ref1.length : void 0) > 0 && this.props.contact.address) {
       key = this.props.contact.address.replace(/\W/g, '');
       result = span(null, span(null, "" + this.props.contact.name + " "), span({
         className: 'contact-address',
         key: key
       }, "<" + this.props.contact.address + ">"));
+    } else if (((_ref2 = this.props.contact.name) != null ? _ref2.length : void 0) > 0) {
+      result = span({
+        key: "label-" + (meaninglessKey++)
+      }, this.props.contact.name);
     } else {
       result = span(null, this.props.contact.address);
     }
@@ -3708,6 +3667,9 @@ module.exports = {
   FormButton: FormButton,
   FormButtons: FormButtons,
   FormDropdown: FormDropdown,
+  MenuItem: MenuItem,
+  MenuHeader: MenuHeader,
+  MenuDivider: MenuDivider,
   Spinner: Spinner,
   SubTitle: SubTitle,
   Title: Title,
@@ -3716,7 +3678,7 @@ module.exports = {
 });
 
 ;require.register("components/compose", function(exports, require, module) {
-var AccountPicker, Compose, ComposeActions, ComposeEditor, ConversationActionCreator, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, RouterMixin, Spinner, a, button, classer, div, form, h3, i, img, input, label, li, messageUtils, span, textarea, ul, _ref, _ref1;
+var AccountPicker, Compose, ComposeActions, ComposeEditor, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, RouterMixin, Spinner, a, button, classer, div, form, h3, i, img, input, label, li, messageUtils, span, textarea, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label, button = _ref.button;
 
@@ -3739,8 +3701,6 @@ messageUtils = require('../utils/message_utils');
 LayoutActionCreator = require('../actions/layout_action_creator');
 
 MessageActionCreator = require('../actions/message_action_creator');
-
-ConversationActionCreator = require('../actions/conversation_action_creator');
 
 RouterMixin = require('../mixins/router_mixin');
 
@@ -3970,10 +3930,12 @@ module.exports = Compose = React.createClass({
       if (!window.confirm(t('compose confirm keep draft'))) {
         return window.setTimeout((function(_this) {
           return function() {
-            return MessageActionCreator["delete"](_this.state.id, function(error) {
-              if (error != null) {
-                return LayoutActionCreator.alertError("" + (t("message action delete ko")) + " " + error);
-              } else {
+            var messageID;
+            messageID = _this.state.id;
+            return MessageActionCreator["delete"]({
+              messageID: messageID
+            }, function(error) {
+              if (error == null) {
                 return LayoutActionCreator.notify(t('compose draft deleted'), {
                   autoclose: true
                 });
@@ -4001,7 +3963,7 @@ module.exports = Compose = React.createClass({
             conversationID: this.state.originalConversationID
           };
           return MessageActionCreator.send(message, function(error, message) {
-            var msg;
+            var cid, msg;
             if (error != null) {
               msg = "" + (t("message action draft ko")) + " " + error;
               return LayoutActionCreator.alertError(msg);
@@ -4011,7 +3973,8 @@ module.exports = Compose = React.createClass({
                 autoclose: true
               });
               if (message.conversationID != null) {
-                return ConversationActionCreator.fetch(message.conversationID);
+                cid = message.conversationID;
+                return MessageActionCreator.fetchConversation(cid);
               }
             }
           });
@@ -4130,7 +4093,7 @@ module.exports = Compose = React.createClass({
       }
       return MessageActionCreator.send(message, (function(_this) {
         return function(error, message) {
-          var key, msgKo, msgOk, state, value;
+          var cid, key, msgKo, msgOk, state, value;
           if ((error == null) && (_this.state.id == null)) {
             MessageActionCreator.setCurrent(message.id);
           }
@@ -4167,7 +4130,8 @@ module.exports = Compose = React.createClass({
             }
             if (!isDraft) {
               if (message.conversationID != null) {
-                ConversationActionCreator.fetch(message.conversationID);
+                cid = message.conversationID;
+                MessageActionCreator.fetchConversation(cid);
               }
               if (_this.props.callback != null) {
                 return _this.props.callback(error);
@@ -4209,7 +4173,7 @@ module.exports = Compose = React.createClass({
     }
   },
   onDelete: function(e) {
-    var confirmMessage, params, subject;
+    var confirmMessage, messageID, params, subject;
     e.preventDefault();
     subject = this.props.message.get('subject');
     if ((subject != null) && subject !== '') {
@@ -4221,13 +4185,13 @@ module.exports = Compose = React.createClass({
       confirmMessage = t('mail confirm delete nosubject');
     }
     if (window.confirm(confirmMessage)) {
-      return MessageActionCreator["delete"](this.props.message, (function(_this) {
+      messageID = this.props.message.get('id');
+      return MessageActionCreator["delete"]({
+        messageID: messageID
+      }, (function(_this) {
         return function(error) {
-          var msg, parameters;
-          if (error != null) {
-            msg = "" + (t("message action delete ko")) + " " + error;
-            return LayoutActionCreator.alertError(msg);
-          } else {
+          var parameters;
+          if (error == null) {
             if (_this.props.callback) {
               return _this.props.callback();
             } else {
@@ -5425,7 +5389,7 @@ module.exports = MailsInput = React.createClass({
 });
 
 ;require.register("components/menu", function(exports, require, module) {
-var AccountStore, ConversationActionCreator, Dispositions, LayoutActionCreator, Menu, MenuMailboxItem, MessageActionCreator, MessageUtils, Modal, RefreshIndicator, RouterMixin, SpecialBoxIcons, ThinProgress, a, classer, div, i, li, span, ul, _ref, _ref1;
+var AccountStore, Dispositions, LayoutActionCreator, Menu, MenuMailboxItem, MessageActionCreator, Modal, RefreshIndicator, RouterMixin, SpecialBoxIcons, ThinProgress, a, classer, div, i, li, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i;
 
@@ -5435,8 +5399,6 @@ RouterMixin = require('../mixins/router_mixin');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
-ConversationActionCreator = require('../actions/conversation_action_creator');
-
 MessageActionCreator = require('../actions/message_action_creator');
 
 AccountStore = require('../stores/account_store');
@@ -5444,8 +5406,6 @@ AccountStore = require('../stores/account_store');
 Modal = require('./modal');
 
 ThinProgress = require('./thin_progress');
-
-MessageUtils = require('../utils/message_utils');
 
 RefreshIndicator = require('./menu_refresh_indicator');
 
@@ -5763,7 +5723,11 @@ MenuMailboxItem = React.createClass({
       onDragEnter: this.onDragEnter,
       onDragLeave: this.onDragLeave,
       onDragOver: this.onDragOver,
-      onDrop: this.onDrop,
+      onDrop: (function(_this) {
+        return function(event) {
+          return _this.onDrop(event, mailboxID);
+        };
+      })(this),
       title: title,
       'data-toggle': 'tooltip',
       'data-placement': 'right',
@@ -5801,15 +5765,17 @@ MenuMailboxItem = React.createClass({
   onDragOver: function(e) {
     return e.preventDefault();
   },
-  onDrop: function(event) {
-    var conversation, data, mailboxID, messageID, newID, _ref2;
+  onDrop: function(event, to) {
+    var conversationID, data, mailboxID, messageID, _ref2;
     data = event.dataTransfer.getData('text');
-    _ref2 = JSON.parse(data), messageID = _ref2.messageID, mailboxID = _ref2.mailboxID, conversation = _ref2.conversation;
-    newID = event.currentTarget.dataset.mailboxId;
+    _ref2 = JSON.parse(data), messageID = _ref2.messageID, mailboxID = _ref2.mailboxID, conversationID = _ref2.conversationID;
     this.setState({
       target: false
     });
-    return MessageUtils.move(messageID, conversation, mailboxID, newID);
+    return MessageActionCreator.move({
+      messageID: messageID,
+      conversationID: conversationID
+    }, mailboxID, to);
   }
 });
 });
@@ -5913,7 +5879,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message-list", function(exports, require, module) {
-var AccountActionCreator, ContactActionCreator, ConversationActionCreator, DomUtils, Dropdown, FlagsConstants, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageListBody, MessageStore, MessageUtils, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, Spinner, ToolboxActions, ToolboxMove, TooltipRefresherMixin, Tooltips, a, alertError, button, classer, div, form, i, img, input, li, p, span, ul, _ref, _ref1;
+var AccountActionCreator, ContactActionCreator, DomUtils, Dropdown, LayoutActionCreator, MailboxList, MessageActionCreator, MessageFilter, MessageFlags, MessageItem, MessageList, MessageListBody, MessageStore, MessageUtils, MessagesQuickFilter, MessagesSort, Participants, RouterMixin, SocketUtils, Spinner, ToolboxActions, ToolboxMove, TooltipRefresherMixin, Tooltips, a, alertError, button, classer, div, form, i, img, input, li, p, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, p = _ref.p, button = _ref.button, input = _ref.input, img = _ref.img, form = _ref.form;
 
@@ -5929,13 +5895,11 @@ MessageUtils = require('../utils/message_utils');
 
 SocketUtils = require('../utils/socketio_utils');
 
-_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, MessageFilter = _ref1.MessageFilter, FlagsConstants = _ref1.FlagsConstants, Tooltips = _ref1.Tooltips;
+_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, MessageFilter = _ref1.MessageFilter, Tooltips = _ref1.Tooltips;
 
 AccountActionCreator = require('../actions/account_action_creator');
 
 ContactActionCreator = require('../actions/contact_action_creator');
-
-ConversationActionCreator = require('../actions/conversation_action_creator');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
@@ -5977,7 +5941,7 @@ MessageList = React.createClass({
     };
   },
   componentWillReceiveProps: function(props) {
-    var selected;
+    var id, isSelected, selected;
     if (props.mailboxID !== this.props.mailboxID) {
       return this.setState({
         allSelected: false,
@@ -5986,11 +5950,12 @@ MessageList = React.createClass({
       });
     } else {
       selected = this.state.selected;
-      Object.keys(selected).forEach(function(id) {
+      for (id in selected) {
+        isSelected = selected[id];
         if (!props.messages.get(id)) {
-          return delete selected[id];
+          delete selected[id];
         }
-      });
+      }
       this.setState({
         selected: selected
       });
@@ -6242,7 +6207,7 @@ MessageList = React.createClass({
       'data-tooltip-direction': 'bottom'
     }, span({
       className: 'fa fa-trash-o'
-    }))) : void 0, this.state.edited ? ToolboxMove({
+    }))) : void 0, this.state.edited && !this.props.displayConversations ? ToolboxMove({
       ref: 'listToolboxMove',
       mailboxes: this.props.mailboxes,
       onMove: this.onMove,
@@ -6251,10 +6216,9 @@ MessageList = React.createClass({
       ref: 'listToolboxActions',
       mailboxes: this.props.mailboxes,
       onMark: this.onMark,
-      onConversation: this.onConversation,
-      onMove: this.onConversationMove,
+      onConversationMark: this.onConversationMark,
+      onConversationMove: this.onConversationMove,
       displayConversations: this.props.displayConversations,
-      onHeaders: this.onHeaders,
       direction: 'left'
     }) : void 0, this.props.isTrash && !this.state.edited ? div({
       className: btnGrpClasses
@@ -6358,57 +6322,59 @@ MessageList = React.createClass({
       });
     }
   },
-  onDelete: function(conv) {
-    var confirm, confirmMessage, selected;
+  _getSelectedAndMode: function(applyToConversation) {
+    var conversationIDs, count, selected;
     selected = Object.keys(this.state.selected);
-    if (conv == null) {
-      conv = this.props.displayConversations;
+    count = selected.length;
+    applyToConversation = Boolean(applyToConversation);
+    if (applyToConversation == null) {
+      applyToConversation = this.props.displayConversations;
     }
     if (selected.length === 0) {
-      return alertError(t('list mass no message'));
+      alertError(t('list mass no message'));
+      return false;
+    } else if (!applyToConversation) {
+      return {
+        cout: cout,
+        messageIDs: selected,
+        applyToConversation: applyToConversation
+      };
     } else {
-      confirm = this.props.settings.get('messageConfirmDelete');
-      if (confirm) {
-        if (conv) {
-          confirmMessage = t('list delete conv confirm', {
-            smart_count: selected.length
-          });
-        } else {
-          confirmMessage = t('list delete confirm', {
-            smart_count: selected.length
-          });
-        }
-      }
-      if ((!confirm) || window.confirm(confirmMessage)) {
-        return MessageUtils["delete"](selected, conv, (function(_this) {
-          return function() {
-            var firstMessageID;
-            if (selected.length > 0 && _this.props.messages.count() > 0) {
-              firstMessageID = _this.props.messages.first().get('id');
-              return MessageActionCreator.setCurrent(firstMessageID, true);
-            }
-          };
-        })(this));
-      }
+      conversationIDs = selected.map((function(_this) {
+        return function(id) {
+          return _this.props.messages.get(id).get('conversationID');
+        };
+      })(this));
+      return {
+        count: count,
+        conversationIDs: conversationIDs,
+        applyToConversation: applyToConversation
+      };
     }
   },
-  onConversationMove: function(args) {
-    return this.onMove(args, true);
+  onConversationDelete: function() {
+    return onConversationDelete(true);
   },
-  onMove: function(args, conv) {
-    var newbox, selected;
-    selected = Object.keys(this.state.selected);
-    if (conv == null) {
-      conv = this.props.displayConversations;
+  onDelete: function(applyToConversation) {
+    var msg, noConfirm, options;
+    if (!(options = this._getSelectedAndMode(applyToConversation))) {
+      return;
     }
-    if (selected.length === 0) {
-      return alertError(t('list mass no message'));
+    if (options.applyToConversation) {
+      msg = t('list delete conv confirm', {
+        smart_count: options.count
+      });
     } else {
-      newbox = args.target.dataset.value;
-      return MessageUtils.move(selected, conv, this.props.mailboxID, newbox, (function(_this) {
+      msg = t('list delete confirm', {
+        smart_count: options.count
+      });
+    }
+    noConfirm = !this.props.settings.get('messageConfirmDelete');
+    if (noConfirm || window.confirm(msg)) {
+      return MessageActionCreator["delete"](options, (function(_this) {
         return function() {
           var firstMessageID;
-          if (selected.length > 0 && _this.props.messages.count() > 0) {
+          if (options.count > 0 && _this.props.messages.count() > 0) {
             firstMessageID = _this.props.messages.first().get('id');
             return MessageActionCreator.setCurrent(firstMessageID, true);
           }
@@ -6416,89 +6382,34 @@ MessageList = React.createClass({
       })(this));
     }
   },
-  onMark: function(args) {
-    var flag, selected;
-    selected = Object.keys(this.state.selected);
-    if (selected.length === 0) {
-      return alertError(t('list mass no message'));
-    } else {
-      flag = args.target.dataset.value;
-      return selected.forEach((function(_this) {
-        return function(id) {
-          var flags, message;
-          message = _this.props.messages.get(id);
-          flags = message.get('flags').slice();
-          switch (flag) {
-            case FlagsConstants.SEEN:
-              flags.push(MessageFlags.SEEN);
-              break;
-            case FlagsConstants.UNSEEN:
-              flags = flags.filter(function(e) {
-                return e !== FlagsConstants.SEEN;
-              });
-              break;
-            case FlagsConstants.FLAGGED:
-              flags.push(MessageFlags.FLAGGED);
-              break;
-            case FlagsConstants.NOFLAG:
-              flags = flags.filter(function(e) {
-                return e !== FlagsConstants.FLAGGED;
-              });
-          }
-          return MessageActionCreator.updateFlag(message, flags, function(error) {
-            if (error != null) {
-              return alertError("" + (t("message action mark ko")) + " " + error);
-            }
-          });
-        };
-      })(this));
-    }
+  onConversationMove: function(to) {
+    return this.onMove(to, true);
   },
-  onConversation: function(args) {
-    var action, selected;
-    selected = Object.keys(this.state.selected);
-    action = args.target.dataset.action;
-    if (action === 'delete') {
-      return this.onDelete(true);
-    } else {
-      if (selected.length === 0) {
-        return alertError(t('list mass no message'));
-      } else {
-        return selected.forEach((function(_this) {
-          return function(id) {
-            var conversationID, message;
-            message = _this.props.messages.get(id);
-            conversationID = message.get('conversationID');
-            switch (action) {
-              case 'seen':
-                return ConversationActionCreator.seen(conversationID, function(error) {
-                  if (error != null) {
-                    return alertError("" + (t("conversation seen ko ")) + " " + error);
-                  }
-                });
-              case 'unseen':
-                return ConversationActionCreator.unseen(conversationID, function(error) {
-                  if (error != null) {
-                    return alertError("" + (t("conversation unseen ko")) + " " + error);
-                  }
-                });
-              case 'flagged':
-                return ConversationActionCreator.flag(conversationID, function(error) {
-                  if (error != null) {
-                    return alertError("" + (t("conversation flagged ko ")) + " " + error);
-                  }
-                });
-              case 'noflag':
-                return ConversationActionCreator.noflag(conversationID, function(error) {
-                  if (error != null) {
-                    return alertError("" + (t("conversation noflag ko")) + " " + error);
-                  }
-                });
-            }
-          };
-        })(this));
-      }
+  onMove: function(to, applyToConversation) {
+    var from, options;
+    if (!(options = this._getSelectedAndMode(applyToConversation))) {
+      return;
     }
+    from = this.props.mailboxID;
+    return MessageActionCreator.move(options, from, to, (function(_this) {
+      return function() {
+        var firstMessageID;
+        if (options.count > 0 && _this.props.messages.count() > 0) {
+          firstMessageID = _this.props.messages.first().get('id');
+          return MessageActionCreator.setCurrent(firstMessageID, true);
+        }
+      };
+    })(this));
+  },
+  onConversationMark: function(flag) {
+    return this.onMark(flag, true);
+  },
+  onMark: function(flag, applyToConversation) {
+    var options;
+    if (!(options = this._getSelectedAndMode(applyToConversation))) {
+      return;
+    }
+    return MessageActionCreator.mark(options, flag);
   },
   expungeMailbox: function(e) {
     var mailbox;
@@ -6820,10 +6731,13 @@ MessageItem = React.createClass({
     var data;
     event.stopPropagation();
     data = {
-      messageID: event.currentTarget.dataset.messageId,
-      mailboxID: this.props.mailboxID,
-      conversation: this.props.displayConversations
+      mailboxID: this.props.mailboxID
     };
+    if (this.props.displayConversations) {
+      data.conversationID = event.currentTarget.dataset.conversationId;
+    } else {
+      data.messageID = event.currentTarget.dataset.messageId;
+    }
     event.dataTransfer.setData('text', JSON.stringify(data));
     event.dataTransfer.effectAllowed = 'move';
     return event.dataTransfer.dropEffect = 'move';
@@ -7075,11 +6989,9 @@ MessagesSort = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var Compose, ComposeActions, ContactActionCreator, ConversationActionCreator, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, MessageUtils, Participants, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
+var Compose, ComposeActions, ContactActionCreator, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, Participants, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img, h4 = _ref.h4;
-
-MessageUtils = require('../utils/message_utils');
 
 MessageHeader = require("./message_header");
 
@@ -7091,11 +7003,9 @@ Compose = require('./compose');
 
 Participants = require('./participant');
 
-_ref1 = require('../constants/app_constants'), ComposeActions = _ref1.ComposeActions, MessageFlags = _ref1.MessageFlags, FlagsConstants = _ref1.FlagsConstants;
+_ref1 = require('../constants/app_constants'), ComposeActions = _ref1.ComposeActions, MessageFlags = _ref1.MessageFlags;
 
 LayoutActionCreator = require('../actions/layout_action_creator');
-
-ConversationActionCreator = require('../actions/conversation_action_creator');
 
 MessageActionCreator = require('../actions/message_action_creator');
 
@@ -7220,18 +7130,18 @@ module.exports = React.createClass({
     return this.setState(state);
   },
   _markRead: function(message) {
-    var flags, messageID, state;
+    var messageID, state;
     messageID = message.get('id');
     if (this.state.currentMessageID !== messageID) {
       state = {
         currentMessageID: messageID,
         prepared: this._prepareMessage(message)
       };
-      flags = message.get('flags').slice();
-      if (flags.indexOf(MessageFlags.SEEN) === -1) {
-        flags.push(MessageFlags.SEEN);
-        MessageActionCreator.updateFlag(message, flags);
-      }
+      setTimeout(function() {
+        return MessageActionCreator.mark({
+          messageID: messageID
+        }, MessageFlags.SEEN);
+      }, 1);
       return this.setState(state);
     }
   },
@@ -7364,8 +7274,12 @@ module.exports = React.createClass({
       onReplyAll: this.onReplyAll,
       onForward: this.onForward,
       onDelete: this.onDelete,
-      onMove: this.onMove,
       onHeaders: this.onHeaders,
+      onMove: this.onMove,
+      onMark: this.onMark,
+      onConversationDelete: this.onConversationDelete,
+      onConversationMark: this.onConversationMark,
+      onConversationMove: this.onConversationMove,
       ref: 'toolbarMessage'
     });
   },
@@ -7453,46 +7367,6 @@ module.exports = React.createClass({
       }
     }
   },
-  displayNextMessage: function() {
-    var nextConversationID, nextMessageID;
-    if (this.props.nextMessageID != null) {
-      nextMessageID = this.props.nextMessageID;
-      nextConversationID = this.props.nextConversationID;
-    } else {
-      nextMessageID = this.props.prevMessageID;
-      nextConversationID = this.props.prevConversationID;
-    }
-    if (nextMessageID) {
-      if (this.props.displayConversations && (nextConversationID != null)) {
-        return this.redirect({
-          direction: 'second',
-          action: 'conversation',
-          parameters: {
-            messageID: nextMessageID,
-            conversationID: nextConversationID
-          }
-        });
-      } else {
-        return this.redirect({
-          direction: 'second',
-          action: 'message',
-          parameters: {
-            messageID: nextMessageID
-          }
-        });
-      }
-    } else {
-      return this.redirect({
-        direction: 'first',
-        action: 'account.mailbox.messages',
-        parameters: {
-          accountID: this.props.message.get('accountID'),
-          mailboxID: this.props.selectedMailboxID
-        },
-        fullWidth: true
-      });
-    }
-  },
   onReply: function(args) {
     return this.setState({
       composing: true,
@@ -7512,64 +7386,65 @@ module.exports = React.createClass({
     });
   },
   onDelete: function(args) {
-    var message;
-    message = this.props.message;
-    if ((!this.props.settings.get('messageConfirmDelete')) || window.confirm(t('mail confirm delete', {
-      subject: message.get('subject')
-    }))) {
-      this.displayNextMessage();
-      return MessageActionCreator["delete"](message, function(error) {
-        if (error != null) {
-          return alertError("" + (t("message action delete ko")) + " " + error);
-        }
+    var confirmMessage, messageID, needConfirmation;
+    needConfirmation = this.props.settings.get('messageConfirmDelete');
+    messageID = this.props.message.get('id');
+    confirmMessage = t('mail confirm delete', {
+      subject: this.props.message.get('subject')
+    });
+    if (!needConfirmation || window.confirm(confirmMessage)) {
+      return MessageActionCreator["delete"]({
+        messageID: messageID
       });
     }
+  },
+  onConversationDelete: function() {
+    var conversationID;
+    conversationID = this.props.message.get('conversationID');
+    return MessageActionCreator["delete"]({
+      conversationID: conversationID
+    });
+  },
+  onMark: function(flag) {
+    var messageID;
+    messageID = this.props.message.get('id');
+    return MessageActionCreator.mark({
+      messageID: messageID
+    }, flag);
+  },
+  onConversationMark: function(flag) {
+    var conversationID;
+    conversationID = this.props.message.get('conversationID');
+    return MessageActionCreator.mark({
+      conversationID: conversationID
+    }, flag);
+  },
+  onMove: function(to) {
+    var from, messageID, subject;
+    messageID = this.props.message.get('id');
+    from = this.props.selectedMailboxID;
+    subject = this.props.message.get('subject');
+    return MessageActionCreator.move({
+      messageID: messageID
+    }, from, to);
+  },
+  onConversationMove: function(to) {
+    var conversationID, from, subject;
+    conversationID = this.props.message.get('conversationID');
+    from = this.props.selectedMailboxID;
+    subject = this.props.message.get('subject');
+    return MessageActionCreator.move({
+      conversationID: conversationID
+    }, from, to);
   },
   onCopy: function(args) {
     return LayoutActionCreator.alertWarning(t("app unimplemented"));
   },
-  onMove: function(args) {
-    var newbox, oldbox, subject;
-    newbox = args.target.dataset.value;
-    oldbox = this.props.selectedMailboxID;
-    subject = this.props.message.get('subject');
-    if (args.target.dataset.conversation != null) {
-      return ConversationActionCreator.move(this.props.message, oldbox, newbox, (function(_this) {
-        return function(error) {
-          if (error != null) {
-            return alertError("" + (t("conversation move ko", {
-              subject: subject
-            })) + " " + error);
-          } else {
-            alertSuccess(t("conversation move ok", {
-              subject: subject
-            }));
-            return _this.displayNextMessage();
-          }
-        };
-      })(this));
-    } else {
-      return MessageActionCreator.move(this.props.message, oldbox, newbox, (function(_this) {
-        return function(error) {
-          if (error != null) {
-            return alertError("" + (t("message action move ko", {
-              subject: subject
-            })) + " " + error);
-          } else {
-            alertSuccess(t("message action move ok", {
-              subject: subject
-            }));
-            return _this.displayNextMessage();
-          }
-        };
-      })(this));
-    }
-  },
   onHeaders: function(event) {
-    var messageID;
+    var id;
     event.preventDefault();
-    messageID = event.target.dataset.messageId;
-    return document.querySelector(".conversation [data-id='" + messageID + "']").classList.toggle('with-headers');
+    id = this.props.message.get('id');
+    return document.querySelector(".conversation [data-id='" + id + "']").classList.toggle('with-headers');
   },
   addAddress: function(address) {
     return ContactActionCreator.createContact(address);
@@ -8963,7 +8838,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/toolbar_message", function(exports, require, module) {
-var ConversationActionCreator, FlagsConstants, LayoutActionCreator, MessageActionCreator, MessageFlags, ToolboxActions, ToolboxMove, Tooltips, a, alertError, alertSuccess, button, cBtn, cBtnGroup, div, nav, _ref, _ref1,
+var FlagsConstants, LayoutActionCreator, MessageFlags, ToolboxActions, ToolboxMove, Tooltips, a, alertError, alertSuccess, button, cBtn, cBtnGroup, div, nav, _ref, _ref1,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 _ref = React.DOM, nav = _ref.nav, div = _ref.div, button = _ref.button, a = _ref.a;
@@ -8975,10 +8850,6 @@ ToolboxActions = require('./toolbox_actions');
 ToolboxMove = require('./toolbox_move');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
-
-ConversationActionCreator = require('../actions/conversation_action_creator');
-
-MessageActionCreator = require('../actions/message_action_creator');
 
 alertError = LayoutActionCreator.alertError;
 
@@ -9054,10 +8925,11 @@ module.exports = React.createClass({
       mailboxID: this.props.selectedMailboxID,
       messageID: this.props.message.get('id'),
       message: this.props.message,
-      onMark: this.onMark,
-      onConversation: this.onConversation,
-      onMove: this.props.onMove,
+      onMark: this.props.onMark,
       onHeaders: this.props.onHeaders,
+      onConversationMark: this.props.onConversationMark,
+      onConversationMove: this.props.onConversationMove,
+      onConversationDelete: this.props.onConversationMove,
       direction: 'right',
       displayConversations: false
     });
@@ -9069,87 +8941,17 @@ module.exports = React.createClass({
       onMove: this.props.onMove,
       direction: 'right'
     });
-  },
-  onMark: function(args) {
-    var flag, flags;
-    flags = this.props.message.get('flags').slice();
-    flag = args.target.dataset.value;
-    switch (flag) {
-      case FlagsConstants.SEEN:
-        flags.push(MessageFlags.SEEN);
-        break;
-      case FlagsConstants.UNSEEN:
-        flags = flags.filter(function(e) {
-          return e !== FlagsConstants.SEEN;
-        });
-        break;
-      case FlagsConstants.FLAGGED:
-        flags.push(MessageFlags.FLAGGED);
-        break;
-      case FlagsConstants.NOFLAG:
-        flags = flags.filter(function(e) {
-          return e !== FlagsConstants.FLAGGED;
-        });
-    }
-    return MessageActionCreator.updateFlag(this.props.message, flags, function(error) {
-      if (error != null) {
-        return alertError("" + (t("message action mark ko")) + " " + error);
-      } else {
-        return alertSuccess(t("message action mark ok"));
-      }
-    });
-  },
-  onConversation: function(args) {
-    var action, id;
-    id = this.props.message.get('conversationID');
-    action = args.target.dataset.action;
-    switch (action) {
-      case 'delete':
-        return ConversationActionCreator["delete"](id, function(error) {
-          if (error != null) {
-            return alertError("" + (t("conversation delete ko")) + " " + error);
-          } else {
-            return alertSuccess(t("conversation delete ok"));
-          }
-        });
-      case 'seen':
-        return ConversationActionCreator.seen(id, function(error) {
-          if (error != null) {
-            return alertError("" + (t("conversation seen ko")) + " " + error);
-          } else {
-            return alertSuccess(t("conversation seen ok"));
-          }
-        });
-      case 'unseen':
-        return ConversationActionCreator.unseen(id, function(error) {
-          if (error != null) {
-            return alertError("" + (t("conversation unseen ko")) + " " + error);
-          } else {
-            return alertSuccess(t("conversation unseen ok"));
-          }
-        });
-      case 'flagged':
-        return ConversationActionCreator.flag(id, function(error) {
-          if (error != null) {
-            return alertError("" + (t("conversation flagged ko ")) + " " + error);
-          }
-        });
-      case 'noflag':
-        return ConversationActionCreator.noflag(id, function(error) {
-          if (error != null) {
-            return alertError("" + (t("conversation noflag ko")) + " " + error);
-          }
-        });
-    }
   }
 });
 });
 
 ;require.register("components/toolbox_actions", function(exports, require, module) {
-var FlagsConstants, ToolboxActions, a, button, div, li, span, ul, _ref,
+var FlagsConstants, MenuDivider, MenuHeader, MenuItem, ToolboxActions, a, button, div, li, span, ul, _ref, _ref1,
   __slice = [].slice;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, a = _ref.a, button = _ref.button;
+
+_ref1 = require('./basic_components'), MenuHeader = _ref1.MenuHeader, MenuItem = _ref1.MenuItem, MenuDivider = _ref1.MenuDivider;
 
 FlagsConstants = require('../constants/app_constants').FlagsConstants;
 
@@ -9172,160 +8974,131 @@ module.exports = ToolboxActions = React.createClass({
     })), ul.apply(null, [{
       className: "dropdown-menu dropdown-menu-" + direction,
       role: 'menu'
-    }, !this.props.displayConversations ? this.renderMarkActions() : void 0, !this.props.displayConversations ? li({
-      role: 'presentation',
-      className: 'divider'
-    }) : void 0].concat(__slice.call(this.renderRawActions()), [li({
-      role: 'presentation',
-      className: 'divider',
+    }, !this.props.displayConversations ? this.renderMarkActions() : void 0, !this.props.displayConversations ? MenuDivider() : void 0].concat(__slice.call(this.renderRawActions()), [MenuDivider({
       key: 'divider'
-    })], [li({
-      role: 'presentation',
-      className: 'dropdown-header',
+    })], [MenuHeader({
       key: 'header-move'
     }, t('mail action conversation move'))], [this.renderMailboxes()])));
   },
   renderMarkActions: function() {
-    var buildMenuItem, items;
-    items = [];
-    items.push(li({
-      role: 'presentation',
-      className: 'dropdown-header',
-      key: 'header-mark'
-    }, t('mail action mark')));
-    buildMenuItem = (function(_this) {
-      return function(args) {
-        return li({
-          role: 'presentation',
-          key: args.value
-        }, a({
-          role: 'menuitemu',
-          onClick: _this.props.onMark,
-          'data-value': args.value
-        }, args.label));
-      };
-    })(this);
-    if ((this.props.isSeen == null) || !this.props.isSeen) {
-      items.push(buildMenuItem({
-        value: FlagsConstants.SEEN,
-        label: t('mail mark read')
-      }));
-    }
-    if ((this.props.isSeen == null) || this.props.isSeen) {
-      items.push(buildMenuItem({
-        value: FlagsConstants.UNSEEN,
-        label: t('mail mark unread')
-      }));
-    }
-    if ((this.props.isFlagged == null) || this.props.isFlagged) {
-      items.push(buildMenuItem({
-        value: FlagsConstants.NOFLAG,
-        label: t('mail mark nofav')
-      }));
-    }
-    if ((this.props.isFlagged == null) || !this.props.isFlagged) {
-      items.push(buildMenuItem({
-        value: FlagsConstants.FLAGGED,
-        label: t('mail mark fav')
-      }));
-    }
-    return items;
+    var items;
+    items = [
+      MenuHeader({
+        key: 'header-mark'
+      }, t('mail action mark')), (this.props.isSeen == null) || !this.props.isSeen ? MenuItem({
+        key: 'action-mark-seen',
+        onClick: (function(_this) {
+          return function() {
+            return _this.props.onMark(FlagsConstants.SEEN);
+          };
+        })(this)
+      }, t('mail mark read')) : void 0, (this.props.isSeen == null) || this.props.isSeen ? MenuItem({
+        key: 'action-mark-unseen',
+        onClick: (function(_this) {
+          return function() {
+            return _this.props.onMark(FlagsConstants.UNSEEN);
+          };
+        })(this)
+      }, t('mail mark unread')) : void 0, (this.props.isFlagged == null) || this.props.isFlagged ? MenuItem({
+        key: 'action-mark-noflag',
+        onClick: (function(_this) {
+          return function() {
+            return _this.props.onMark(FlagsConstants.NOFLAG);
+          };
+        })(this)
+      }, t('mail mark nofav')) : void 0, (this.props.isFlagged == null) || !this.props.isFlagged ? MenuItem({
+        key: 'action-mark-flagged',
+        onClick: (function(_this) {
+          return function() {
+            return _this.props.onMark(FlagsConstants.FLAGGED);
+          };
+        })(this)
+      }, t('mail mark fav')) : void 0
+    ];
+    return items.filter(function(child) {
+      return Boolean(child);
+    });
   },
   renderRawActions: function() {
     var items;
-    items = [];
-    if (!this.props.displayConversations) {
-      items.push(li({
-        role: 'presentation',
-        className: 'dropdown-header',
+    items = [
+      !this.props.displayConversations ? MenuHeader({
         key: 'header-more'
-      }, t('mail action more')));
-    }
-    if (this.props.messageID != null) {
-      items.push(li({
-        role: 'presentation',
-        key: 'action-headers'
-      }, a({
-        onClick: this.props.onHeaders,
-        'data-message-id': this.props.messageID
-      }, t('mail action headers'))));
-    }
-    if (this.props.message != null) {
-      items.push(li({
-        role: 'presentation',
-        key: 'action-raw'
-      }, a({
+      }, t('mail action more')) : void 0, this.props.messageID != null ? MenuItem({
+        key: 'action-headers',
+        onClick: this.props.onHeaders
+      }, t('mail action headers')) : void 0, this.props.message != null ? MenuItem({
+        key: 'action-raw',
         href: "raw/" + (this.props.message.get('id')),
         target: '_blank'
-      }, t('mail action raw'))));
-    }
-    items.push(li({
-      role: 'presentation',
-      key: 'conv-delete'
-    }, a({
-      onClick: this.props.onConversation,
-      'data-action': 'delete'
-    }, t('mail action conversation delete'))));
-    items.push(li({
-      role: 'presentation',
-      key: 'conv-seen'
-    }, a({
-      onClick: this.props.onConversation,
-      'data-action': 'seen'
-    }, t('mail action conversation seen'))));
-    items.push(li({
-      role: 'presentation',
-      key: 'conv-unseen'
-    }, a({
-      onClick: this.props.onConversation,
-      'data-action': 'unseen'
-    }, t('mail action conversation unseen'))));
-    items.push(li({
-      role: 'presentation',
-      key: 'conv-flagged'
-    }, a({
-      onClick: this.props.onConversation,
-      'data-action': 'flagged'
-    }, t('mail action conversation flagged'))));
-    items.push(li({
-      role: 'presentation',
-      key: 'conv-noflag'
-    }, a({
-      onClick: this.props.onConversation,
-      'data-action': 'noflag'
-    }, t('mail action conversation noflag'))));
-    return items;
+      }, t('mail action raw')) : void 0, MenuItem({
+        key: 'conv-delete',
+        onClick: this.props.onConversationDelete
+      }, t('mail action conversation delete')), MenuItem({
+        key: 'conv-seen',
+        onClick: (function(_this) {
+          return function() {
+            return _this.props.onConversationMark(FlagsConstants.SEEN);
+          };
+        })(this)
+      }, t('mail action conversation seen')), MenuItem({
+        key: 'conv-unseen',
+        onClick: (function(_this) {
+          return function() {
+            return _this.props.onConversationMark(FlagsConstants.UNSEEN);
+          };
+        })(this)
+      }, t('mail action conversation unseen')), MenuItem({
+        key: 'conv-flagged',
+        onClick: (function(_this) {
+          return function() {
+            return _this.props.onConversationMark(FlagsConstants.FLAGGED);
+          };
+        })(this)
+      }, t('mail action conversation flagged')), MenuItem({
+        key: 'conv-noflag',
+        onClick: (function(_this) {
+          return function() {
+            return _this.props.onConversationMark(FlagsConstants.NOFLAG);
+          };
+        })(this)
+      }, t('mail action conversation noflag'))
+    ];
+    return items.filter(function(child) {
+      return Boolean(child);
+    });
   },
   renderMailboxes: function() {
-    var id, mbox, _ref1, _results;
-    _ref1 = this.props.mailboxes;
+    var id, mbox, _ref2, _results;
+    _ref2 = this.props.mailboxes;
     _results = [];
-    for (id in _ref1) {
-      mbox = _ref1[id];
+    for (id in _ref2) {
+      mbox = _ref2[id];
       if (id !== this.props.selectedMailboxID) {
-        _results.push(this.renderMailbox(mbox, id));
+        _results.push((function(_this) {
+          return function(id) {
+            return MenuItem({
+              key: id,
+              className: "pusher pusher-" + mbox.depth,
+              onClick: function() {
+                return _this.props.onConversationMove(id);
+              }
+            }, mbox.label);
+          };
+        })(this)(id));
       }
     }
     return _results;
-  },
-  renderMailbox: function(mbox, id) {
-    return li({
-      role: 'presentation',
-      key: id
-    }, a({
-      className: "pusher pusher-" + mbox.depth,
-      role: 'menuitem',
-      onClick: this.props.onMove,
-      'data-value': id
-    }, mbox.label));
   }
 });
 });
 
 ;require.register("components/toolbox_move", function(exports, require, module) {
-var ToolboxMove, a, button, div, i, li, p, span, ul, _ref;
+var MenuHeader, MenuItem, ToolboxMove, a, button, div, i, li, p, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button;
+
+_ref1 = require('./basic_components'), MenuHeader = _ref1.MenuHeader, MenuItem = _ref1.MenuItem;
 
 module.exports = ToolboxMove = React.createClass({
   displayName: 'ToolboxMove',
@@ -9346,33 +9119,29 @@ module.exports = ToolboxMove = React.createClass({
     })), ul({
       className: "dropdown-menu dropdown-menu-" + direction,
       role: 'menu'
-    }, li({
-      role: 'presentation',
-      className: 'dropdown-header'
-    }, t('mail action move')), this.renderMailboxes()));
+    }, MenuHeader(null, t('mail action move')), this.renderMailboxes()));
   },
   renderMailboxes: function() {
-    var id, mbox, _ref1, _results;
-    _ref1 = this.props.mailboxes;
+    var id, mbox, _ref2, _results;
+    _ref2 = this.props.mailboxes;
     _results = [];
-    for (id in _ref1) {
-      mbox = _ref1[id];
+    for (id in _ref2) {
+      mbox = _ref2[id];
       if (id !== this.props.selectedMailboxID) {
-        _results.push(this.renderMailbox(mbox, id));
+        _results.push((function(_this) {
+          return function(id) {
+            return MenuItem({
+              key: id,
+              className: "pusher pusher-" + mbox.depth,
+              onClick: function() {
+                return _this.props.onMove(id);
+              }
+            }, mbox.label);
+          };
+        })(this)(id));
       }
     }
     return _results;
-  },
-  renderMailbox: function(mbox, id) {
-    return li({
-      role: 'presentation',
-      key: id
-    }, a({
-      className: "pusher pusher-" + mbox.depth,
-      role: 'menuitem',
-      onClick: this.props.onMove,
-      'data-value': id
-    }, mbox.label));
   }
 });
 });
@@ -9525,8 +9294,7 @@ module.exports = {
     'MESSAGE_DELETE': 'MESSAGE_DELETE',
     'MESSAGE_BOXES': 'MESSAGE_BOXES',
     'MESSAGE_FLAG': 'MESSAGE_FLAG',
-    'MESSAGE_ACTION': 'MESSAGE_ACTION',
-    'CONVERSATION_ACTION': 'CONVERSATION_ACTION',
+    'LAST_ACTION': 'LAST_ACTION',
     'MESSAGE_CURRENT': 'MESSAGE_CURRENT',
     'RECEIVE_MESSAGE_DELETE': 'RECEIVE_MESSAGE_DELETE',
     'RECEIVE_MAILBOX_UPDATE': 'RECEIVE_MAILBOX_UPDATE',
@@ -10590,12 +10358,12 @@ module.exports = {
   "message action sent ko": "Fehler beim Nachricht senden: ",
   "message action draft ok": "Nachricht gespeichert",
   "message action draft ko": "Fehler beim Nachricht speichern: ",
-  "message action delete ok": "Nachricht “%{subject}” gelöscht",
-  "message action delete ko": "Fehler bei Nachricht löschen: ",
-  "message action move ok": "Nachricht “%{subject}” wurde verschoben",
-  "message action move ko": "Fehler beim verschieben von Nachricht “%{subject}”: ",
-  "message action mark ok": "Nachricht markiert",
-  "message action mark ko": "Fehler beim Nachricht markieren: ",
+  "message delete ok": "Nachricht “%{subject}” gelöscht",
+  "message delete ko": "Fehler bei Nachricht löschen: ",
+  "message move ok": "Nachricht “%{subject}” wurde verschoben",
+  "message move ko": "Fehler beim verschieben von Nachricht “%{subject}”: ",
+  "message mark ok": "Nachricht markiert",
+  "message mark ko": "Fehler beim Nachricht markieren: ",
   "conversation move ok": "Unterhaltung “%{subject}” wurde verschoben",
   "conversation move ko": "Fehler beim verschieben der Unterhaltung “%{subject}”",
   "conversation delete ok": "Unterhaltung “%{subject}” wurde gelöscht",
@@ -10604,17 +10372,16 @@ module.exports = {
   "conversation seen ko": "Fehler beim gelesen markieren",
   "conversation unseen ok": "Conversation marked as unread",
   "conversation unseen ko": "Fehler beim ungelesen markieren",
-  "conversation undelete": "Rückgänig Unterhaltung löschen",
+  "undo last action": "Rückgänig",
   "message images warning": "Anzeige von Bildern innerhalb der Nachricht wurde geblockt",
   "message images display": "Bilder anzeigen",
   "message html display": "HTML anzeigen",
   "message delete no trash": "Bitte wählen Sie einen Ordner als Papierkorb",
   "message delete already": "Nachricht bereits im Papierkorb",
   "message move already": "Nachricht bereits in diesem Ordner",
-  "message undelete": "Rückgängig Nachrichten löschen",
-  "message undelete ok": "Nachrichten wieder hergestellt",
-  "message undelete error": "Fehler beim Nachrichten Wiederherstellen",
-  "message undelete unavalable": "Rückgängig Nachrichten löschen nicht möglich",
+  "undo ok": "Nachrichten wieder hergestellt",
+  "undo ko": "Fehler beim Nachrichten Wiederherstellen",
+  "undo unavalable": "Rückgängig Nachrichten löschen nicht möglich",
   "message preview title": "Anhänge ansehen",
   "settings title": "Einstellungen",
   "settings button save": "Speichern",
@@ -10922,12 +10689,12 @@ module.exports = {
   "message action sent ko": "Error sending message: ",
   "message action draft ok": "Message saved",
   "message action draft ko": "Error saving message: ",
-  "message action delete ok": "Message “%{subject}” deleted",
-  "message action delete ko": "Error deleting message: ",
-  "message action move ok": "Message “%{subject}” moved",
-  "message action move ko": "Error moving message “%{subject}”: ",
-  "message action mark ok": "Message marked",
-  "message action mark ko": "Error marking message: ",
+  "message delete ok": "Message “%{subject}” deleted",
+  "message delete ko": "Error deleting message: ",
+  "message move ok": "Message “%{subject}” moved",
+  "message move ko": "Error moving message “%{subject}”: ",
+  "message mark ok": "Message marked",
+  "message mark ko": "Error marking message: ",
   "conversation move ok": "Conversation “%{subject}” moved",
   "conversation move ko": "Error moving conversation “%{subject}”",
   "conversation delete ok": "Conversation “%{subject}” deleted",
@@ -10936,19 +10703,28 @@ module.exports = {
   "conversation seen ko": "Error",
   "conversation unseen ok": "Conversation marked as unread",
   "conversation unseen ko": "Error",
-  "conversation undelete": "Undo conversation deletion",
+  "undo last action": "Undo last action",
   "conversation flagged ko": "Error",
   "conversation noflag ko": "Error",
+  "conversations move ok": "%{smart_count} conversation moved||||\n%{smart_count} conversations moved",
+  "conversations move ko": "Error moving %{smart_count} conversation||||\nError moving %{smart_count} conversations",
+  "conversations delete ok": "%{smart_count} conversation deleted||||\n%{smart_count} conversations deleted",
+  "conversations delete ko": "Error deleting %{smart_count} conversation ||||\nError deleting %{smart_count} conversations",
+  "conversations seen ok": "%{smart_count} conversation moved||||\n%{smart_count} conversations moved",
+  "conversations seen ko": "Error marking %{smart_count} as read||||\nError marking %{smart_count} as read",
+  "conversations unseen ok": "%{smart_count} conversation marked as unread||||\n%{smart_count} conversations marked as unread",
+  "conversations unseen ko": "Error marking %{smart_count} conversations as unread||||\nError marking %{smart_count} conversations as unread",
+  "conversations flagged ko": "Error marking %{smart_count} conversation as flagged||||\nError marking %{smart_count} conversations as flagged",
+  "conversations noflag ko": "%{smart_count} conversation unflagged||||\n%{smart_count} conversations unflagged",
   "message images warning": "Display of images inside message has been blocked",
   "message images display": "Display images",
   "message html display": "Display HTML",
   "message delete no trash": "Please select a Trash folder",
   "message delete already": "Message already in trash folder",
   "message move already": "Message already in this folder",
-  "message undelete": "Undo message deletion",
-  "message undelete ok": "Message undeleted",
-  "message undelete error": "Error undoing some action",
-  "message undelete unavailable": "Undo not available",
+  "undo ok": "Undone",
+  "undo ko": "Error undoing some action",
+  "undo unavailable": "Undo not available",
   "message preview title": "View attachments",
   "settings title": "Settings",
   "settings button save": "Save",
@@ -11258,12 +11034,12 @@ module.exports = {
   "message action sent ko": "Une erreur est survenue : ",
   "message action draft ok": "Message sauvegardé !",
   "message action draft ko": "Une erreur est survenue : ",
-  "message action delete ok": "Message « %{subject} » supprimé",
-  "message action delete ko": "Impossible de supprimer le message : ",
-  "message action move ok": "Message « %{subject} » déplacé",
-  "message action move ko": "Le déplacement de « %{subject} » a échoué",
-  "message action mark ok": "Le message a été mis à jour",
-  "message action mark ko": "L'opération a échoué",
+  "message delete ok": "Message « %{subject} » supprimé",
+  "message delete ko": "Impossible de supprimer le message : ",
+  "message move ok": "Message « %{subject} » déplacé",
+  "message move ko": "Le déplacement de « %{subject} » a échoué",
+  "message mark ok": "Le message a été mis à jour",
+  "message mark ko": "L'opération a échoué",
   "conversation move ok": "Conversation « %{subject} » déplacée",
   "conversation move ko": "Le déplacement de « %{subject} » a échoué",
   "conversation delete ok": "Conversation « %{subject} » supprimée",
@@ -11272,19 +11048,28 @@ module.exports = {
   "conversation seen ko": "L'opération a échoué",
   "conversation unseen ok": "Ok",
   "conversation unseen ko": "L'opération a échoué",
-  "conversation undelete": "Annuler la suppression",
+  "undo last action": "Annuler",
   "conversation flagged ko": "L'opération a échoué",
   "conversation noflag ko": "L'opération a échoué",
+  "conversations move ok": "%{smart_count} conversation déplacée||||\n%{smart_count} conversations déplacées",
+  "conversations move ko": "Erreur au déplacement de %{smart_count} conversation||||\nError au déplacement de %{smart_count} conversations",
+  "conversations delete ok": "%{smart_count} conversation supprimée||||\n%{smart_count} conversations supprimées",
+  "conversations delete ko": "Erreur de suppression de %{smart_count} conversation ||||\nErreur de suppression de %{smart_count} conversations",
+  "conversations seen ok": "%{smart_count} conversation marquée lue||||\n%{smart_count} conversations marquées lues",
+  "conversations seen ko": "Erreur en marquant %{smart_count} conversation lue||||\nErreur en marquant %{smart_count} conversations lues",
+  "conversations unseen ok": "%{smart_count} conversation marquée non-lue||||\n%{smart_count} conversations marquées non-lues",
+  "conversations unseen ko": "Erreur en marquant %{smart_count} conversation non-lue||||\nErreur en marquant %{smart_count} conversations non-lues",
+  "conversations flagged ko": "Erreur en marquant %{smart_count} conversation importante||||\nErreur en marquant %{smart_count} conversations importante",
+  "conversations noflag ko": "Erreur en marquant %{smart_count} conversation non importante||||\nErreur en marquant %{smart_count} conversations non importante",
   "message images warning": "L'affichage des images du message a été bloqué",
   "message images display": "Afficher les images",
   "message html display": "Afficher en HTML",
   "message delete no trash": "Choisissez d'abord un dossier Corbeille",
   "message delete already": "Ce message est déjà dans la corbeille",
   "message move already": "Ce message est déjà dans ce dossier",
-  "message undelete": "Annuler la suppression",
-  "message undelete ok": "Message restauré",
-  "message undelete error": "Impossible d'annuler l'action",
-  "message undelete unavailable": "Impossible d'annuler l'action",
+  "undo ok": "Action annulée",
+  "undo ko": "Impossible d'annuler l'action",
+  "undo unavailable": "Impossible d'annuler l'action",
   "message preview title": "Voir les pièces jointes",
   "settings title": "Paramètres",
   "settings button save": "Enregistrer",
@@ -12388,10 +12173,7 @@ MessageStore = (function(_super) {
       return this.emit('change');
     });
     handle(ActionTypes.RECEIVE_RAW_MESSAGES, function(messages) {
-      var lengths, message, next, url, _i, _len;
-      if (messages.mailboxID) {
-        SocketUtils.changeRealtimeScope(messages.mailboxID);
-      }
+      var before, lengths, message, next, url, _i, _len;
       if ((messages.links != null) && (messages.links.next != null)) {
         _params = {};
         next = decodeURIComponent(messages.links.next);
@@ -12404,11 +12186,12 @@ MessageStore = (function(_super) {
           }
           return _params[key] = value;
         });
-      } else {
+      } else if (messages.mailboxID) {
         _params.pageAfter = '-';
       }
-      if (_params.pageAfter !== '-') {
-        SocketUtils.changeRealtimeScope(messages.mailboxID, _params.pageAfter);
+      if (messages.mailboxID) {
+        before = _params.pageAfter === '-' ? void 0 : _params.pageAfter;
+        SocketUtils.changeRealtimeScope(messages.mailboxID, before);
       }
       if (lengths = messages.conversationLengths) {
         _conversationLengths = _conversationLengths.merge(lengths);
@@ -12485,12 +12268,7 @@ MessageStore = (function(_super) {
         sort: newOrder + sort.field
       };
     });
-    handle(ActionTypes.MESSAGE_ACTION, function(action) {
-      action.target = 'message';
-      return _prevAction = action;
-    });
-    handle(ActionTypes.CONVERSATION_ACTION, function(action) {
-      action.target = 'conversation';
+    handle(ActionTypes.LAST_ACTION, function(action) {
       return _prevAction = action;
     });
     handle(ActionTypes.MESSAGE_CURRENT, function(value) {
@@ -12656,12 +12434,37 @@ MessageStore = (function(_super) {
     }
   };
 
+  MessageStore.prototype.getNextOrPrevious = function(isConv) {
+    return this.getNextMessage(isConv) || this.getPreviousMessage(isConv);
+  };
+
   MessageStore.prototype.getConversation = function(conversationID) {
     _conversationMemoize = _messages.filter(function(message) {
       return message.get('conversationID') === conversationID;
     }).sort(reverseDateSort).toVector();
     _conversationMemoizeID = conversationID;
     return _conversationMemoize;
+  };
+
+  MessageStore.prototype.getMixed = function(target) {
+    if (target.messageID) {
+      return [_messages.get(target.messageID)];
+    } else if (target.messageIDs) {
+      return target.messageIDs.map(function(id) {
+        return _messages.get(id);
+      });
+    } else if (target.conversationID) {
+      return _messages.filter(function(message) {
+        return message.get('conversationID') === target.conversationID;
+      }).toArray();
+    } else if (target.conversationIDs) {
+      return _messages.filter(function(message) {
+        var _ref1;
+        return _ref1 = message.get('conversationID'), __indexOf.call(target.conversationIDs, _ref1) >= 0;
+      }).toArray();
+    } else {
+      throw new Error('Wrong Usage : unrecognized target AS.getMixed');
+    }
   };
 
   MessageStore.prototype.getConversationsLength = function() {
@@ -12923,11 +12726,9 @@ module.exports = ActivityUtils;
 });
 
 ;require.register("utils/api_utils", function(exports, require, module) {
-var AccountStore, LayoutActionCreator, MessageActionCreator, MessageStore, MessageUtils, SettingsStore, onMessageList,
+var AccountStore, LayoutActionCreator, MessageActionCreator, MessageStore, SettingsStore, onMessageList,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __hasProp = {}.hasOwnProperty;
-
-MessageUtils = require('./message_utils');
 
 AccountStore = require('../stores/account_store');
 
@@ -13122,11 +12923,13 @@ module.exports = {
       }
     }
     if ((!confirm) || window.confirm(confirmMessage)) {
-      return MessageUtils["delete"](messageID, conversation);
+      return MessageActionCreator["delete"]({
+        messageID: messageID
+      });
     }
   },
   messageUndo: function() {
-    return MessageActionCreator.undelete();
+    return MessageActionCreator.undo();
   },
   customEvent: function(name, data) {
     var domEvent;
@@ -13236,23 +13039,15 @@ module.exports = DomUtils = {
 });
 
 ;require.register("utils/message_utils", function(exports, require, module) {
-var COMPOSE_STYLE, ComposeActions, ContactStore, ConversationActionCreator, LayoutActionCreator, MessageActionCreator, MessageStore, MessageUtils, QUOTE_STYLE;
+var COMPOSE_STYLE, ComposeActions, ContactStore, MessageUtils, QUOTE_STYLE;
 
 ComposeActions = require('../constants/app_constants').ComposeActions;
 
 ContactStore = require('../stores/contact_store');
 
-MessageStore = require('../stores/message_store');
-
-ConversationActionCreator = require('../actions/conversation_action_creator');
-
-MessageActionCreator = require('../actions/message_action_creator');
-
-LayoutActionCreator = require('../actions/layout_action_creator');
-
 QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;";
 
-COMPOSE_STYLE = "<style>\np {margin: 0;}\npre {background: transparent; border: 0}^8\n</style>";
+COMPOSE_STYLE = "<style>\np {margin: 0;}\npre {background: transparent; border: 0}\n</style>";
 
 module.exports = MessageUtils = {
   displayAddress: function(address, full) {
@@ -13470,7 +13265,7 @@ module.exports = MessageUtils = {
     message.subject = '';
     message.text = '';
     if (isSignature) {
-      message.text += "\n\n--\n" + signature;
+      message.text += "\n\n" + signature;
     }
     message.html = COMPOSE_STYLE;
     if (isSignature) {
@@ -13561,9 +13356,11 @@ module.exports = MessageUtils = {
   cleanReplyText: function(html) {
     var result, tmp;
     try {
-      result = toMarkdown(html);
+      result = html.replace(/<(style>)[^\1]*\1/gim, '');
+      result = toMarkdown(result);
     } catch (_error) {
       if (html != null) {
+        result = html.replace(/<(style>)[^\1]*\1/gim, '');
         result = html.replace(/<[^>]*>/gi, '');
       }
     }
@@ -13586,114 +13383,6 @@ module.exports = MessageUtils = {
       subject = "" + replyPrefix + subject;
     }
     return subject;
-  },
-  "delete": function(ids, conversation, cb) {
-    return this.action('delete', ids, conversation, null, cb);
-  },
-  move: function(ids, conversation, from, to, cb) {
-    var options;
-    options = {
-      from: from,
-      to: to
-    };
-    return this.action('move', ids, conversation, options, cb);
-  },
-  action: function(action, ids, conversation, options, cb) {
-    var handleConversation, handleMessage, mass, next, onDone, selected;
-    if (Array.isArray(ids)) {
-      mass = ids.length;
-      selected = ids;
-    } else {
-      mass = 1;
-      selected = [ids];
-    }
-    if (selected.length > 1) {
-      window.cozyMails.messageClose();
-    } else {
-      next = MessageStore.getNextMessage(conversation);
-    }
-    onDone = _.after(selected.length, function() {
-      if (typeof cb === 'function') {
-        return cb();
-      }
-    });
-    handleMessage = function(id) {
-      var from, to;
-      switch (action) {
-        case 'move':
-          from = options.from, to = options.to;
-          return MessageActionCreator.move(id, from, to, function(error) {
-            var msg;
-            if (error != null) {
-              msg = "" + (t("message action move ko")) + " " + error;
-              LayoutActionCreator.alertError(msg);
-            }
-            return onDone();
-          });
-        case 'delete':
-          return MessageActionCreator["delete"](id, function(error) {
-            var msg;
-            if (error != null) {
-              msg = "" + (t("message action delete ko")) + " : " + error;
-              LayoutActionCreator.alertError(msg);
-            }
-            return onDone();
-          });
-      }
-    };
-    handleConversation = function(message) {
-      var conversationID, from, messageID, params, to;
-      messageID = message.get('id');
-      conversationID = message.get('conversationID');
-      if (conversationID != null) {
-        params = {
-          subject: message.get('subject')
-        };
-        switch (action) {
-          case 'move':
-            from = options.from, to = options.to;
-            return ConversationActionCreator.move(message, from, to, function(error) {
-              var msg;
-              if (error != null) {
-                msg = "" + (t("message action move ko", params)) + " " + error;
-                LayoutActionCreator.alertError(msg);
-              }
-              return onDone();
-            });
-          case 'delete':
-            return ConversationActionCreator["delete"](conversationID, function(error) {
-              var msg;
-              if (error != null) {
-                msg = "" + (t("conversation delete ko", params)) + " : " + error;
-                LayoutActionCreator.alertError(msg);
-              }
-              return onDone();
-            });
-        }
-      } else {
-        return handleMessage(messageID);
-      }
-    };
-    selected.forEach(function(id) {
-      var message;
-      if (conversation) {
-        if (typeof id === 'string') {
-          message = MessageStore.getByID(id);
-        } else {
-          message = id;
-        }
-        return handleConversation(message);
-      } else {
-        if (typeof id !== 'string') {
-          id = id.get('id');
-        }
-        return handleMessage(id);
-      }
-    });
-    if (next != null) {
-      MessageActionCreator.setCurrent(next.get('id'), true);
-      return window.cozyMails.messageDisplay(next, false);
-    }
   }
 };
 });
@@ -14181,7 +13870,7 @@ module.exports = {
     });
   },
   fetchConversation: function(conversationID, callback) {
-    return request.get("conversation/" + conversationID).set('Accept', 'application/json').end(function(res) {
+    return request.get("messages/batchFetch?conversationID=" + conversationID).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         res.body.conversationLengths = {};
@@ -14281,36 +13970,88 @@ module.exports = {
       }
     });
   },
-  messagePatch: function(messageID, patch, callback) {
-    return request.patch("message/" + messageID, patch).set('Accept', 'application/json').end(function(res) {
-      var _ref;
+  batchFetch: function(target, callback) {
+    return request.get("messages/batchFetch").end(function(res) {
+      var err, _ref;
       if (res.ok) {
         return callback(null, res.body);
       } else {
-        console.log("Error in messagePatch", messageID, (_ref = res.body) != null ? _ref.error : void 0);
-        return callback(t('app error'));
+        err = (_ref = res.body) != null ? _ref.error.message : void 0;
+        if (err == null) {
+          err = new Error('Network batchAddFlag');
+        }
+        return callback(err);
       }
     });
   },
-  conversationDelete: function(conversationID, callback) {
-    return request.del("conversation/" + conversationID).set('Accept', 'application/json').end(function(res) {
-      var _ref;
+  batchAddFlag: function(target, flag, callback) {
+    var body;
+    body = _.extend({
+      flag: flag
+    }, target);
+    return request.put("messages/batchAddFlag").send(body).end(function(res) {
+      var err, _ref;
       if (res.ok) {
         return callback(null, res.body);
       } else {
-        console.log("Error in conversationDelete", conversationID, (_ref = res.body) != null ? _ref.error : void 0);
-        return callback(t('app error'));
+        err = (_ref = res.body) != null ? _ref.error.message : void 0;
+        if (err == null) {
+          err = new Error('Network batchAddFlag');
+        }
+        return callback(err);
       }
     });
   },
-  conversationPatch: function(conversationID, patch, callback) {
-    return request.patch("conversation/" + conversationID, patch).set('Accept', 'application/json').end(function(res) {
-      var _ref;
+  batchRemoveFlag: function(target, flag, callback) {
+    var body;
+    body = _.extend({
+      flag: flag
+    }, target);
+    return request.put("messages/batchRemoveFlag").send(body).end(function(res) {
+      var err, _ref;
       if (res.ok) {
         return callback(null, res.body);
       } else {
-        console.log("Error in conversationPatch", conversationID, (_ref = res.body) != null ? _ref.error : void 0);
-        return callback(t('app error'));
+        err = (_ref = res.body) != null ? _ref.error.message : void 0;
+        if (err == null) {
+          err = new Error('Network batchRemoveFlag');
+        }
+        return callback(err);
+      }
+    });
+  },
+  batchDelete: function(target, callback) {
+    var body;
+    body = _.extend({}, target);
+    return request.put("messages/batchTrash").send(target).end(function(res) {
+      var err, _ref;
+      if (res.ok) {
+        return callback(null, res.body);
+      } else {
+        err = (_ref = res.body) != null ? _ref.error.message : void 0;
+        if (err == null) {
+          err = new Error('Network batchDelete');
+        }
+        return callback(err);
+      }
+    });
+  },
+  batchMove: function(target, from, to, callback) {
+    var body;
+    body = _.extend({
+      from: from,
+      to: to
+    }, target);
+    return request.put("messages/batchMove").send(body).end(function(res) {
+      var err, _ref;
+      if (res.ok) {
+        return callback(null, res.body);
+      } else {
+        err = (_ref = res.body) != null ? _ref.error.message : void 0;
+        if (err == null) {
+          err = new Error('Network batchMove');
+        }
+        return callback(err);
       }
     });
   },

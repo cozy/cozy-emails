@@ -16,8 +16,8 @@ async = require('async');
 notifications = require('../utils/notifications');
 
 module.exports.fetch = function(req, res, next) {
-  var id;
-  id = req.params.accountID || req.body.accountID || req.mailbox.accountID || req.message.accountID;
+  var id, ref, ref1;
+  id = req.params.accountID || req.body.accountID || ((ref = req.mailbox) != null ? ref.accountID : void 0) || ((ref1 = req.message) != null ? ref1.accountID : void 0);
   return Account.findSafe(id, function(err, found) {
     if (err) {
       return next(err);

@@ -124,7 +124,7 @@ module.exports = {
     byConversationID: {
       reduce: '_count',
       map: function(doc) {
-        if (doc.conversationID) {
+        if (doc.conversationID && !doc.ignoreInCount) {
           return emit(doc.conversationID);
         }
       }
