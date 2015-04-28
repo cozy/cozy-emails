@@ -125,7 +125,41 @@ FormButtons = React.createClass
 
         div null,
             div className: 'col-sm-offset-4',
-                FormButton formButton for formButton in @props.buttons
+                for formButton, index in @props.buttons
+                    formButton.key = index
+                    FormButton formButton
+
+MenuItem = React.createClass
+
+    render: ->
+
+        liOptions = role: 'presentation'
+        liOptions.key = @props.key if @props.key
+        liOptions.className = @props.liClassName if @props.liClassName
+
+        aOptions =
+            role: 'menuitemu'
+            onClick: @props.onClick
+        aOptions.className = @props.className if @props.className
+
+        li liOptions,
+            a aOptions,
+                @props.children
+
+MenuHeader = React.createClass
+
+    render: ->
+        liOptions = role: 'presentation', className: 'dropdown-header'
+        liOptions.key = @props.key if @props.key
+        li liOptions, @props.children
+
+
+MenuDivider = React.createClass
+
+    render: ->
+        liOptions = role: 'presentation', className: 'divider'
+        liOptions.key = @props.key if @props.key
+        li liOptions
 
 
 FormDropdown = React.createClass
@@ -172,7 +206,7 @@ AddressLabel = React.createClass
 
     render: ->
 
-        if @props.contact.name? and @props.contact.name.length > 0
+        if @props.contact.name?.length > 0 and @props.contact.address
             key = @props.contact.address.replace /\W/g, ''
 
             result = span null,
@@ -182,6 +216,9 @@ AddressLabel = React.createClass
                     key: key
                     ,
                         "<#{@props.contact.address}>"
+
+        else if @props.contact.name?.length > 0
+            result = span key: Math.random(), @props.contact.name
 
         else
             result = span null, @props.contact.address
@@ -252,6 +289,9 @@ module.exports = {
     FormButton
     FormButtons
     FormDropdown
+    MenuItem
+    MenuHeader
+    MenuDivider
     Spinner
     SubTitle
     Title
