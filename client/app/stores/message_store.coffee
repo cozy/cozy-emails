@@ -372,6 +372,11 @@ class MessageStore extends Store
 
         return _conversationMemoize
 
+    # Retrieve a batch of message with various criteria
+    # target - is an {Object} with a property messageID or messageIDs or
+    #          conversationID or conversationIDs
+    #
+    # Returns an {Array} of {Immutable.Map} messages
     getMixed: (target) ->
         if target.messageID
             return [_messages.get(target.messageID)]
