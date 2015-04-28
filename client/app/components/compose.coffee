@@ -163,6 +163,7 @@ module.exports = Compose = React.createClass
                         composeInHTML: @state.composeInHTML
                         focus: focusEditor
                         ref: 'editor'
+                        getPicker: @getPicker
 
                 div className: 'attachements',
                     FilePicker
@@ -406,7 +407,8 @@ module.exports = Compose = React.createClass
                 else
                     state.isDraft = false
                     state.sending = false
-                state[key] = value for key, value of message
+                # Don't override local attachments
+                state[key] = value for key, value of message when key isnt 'attachments'
                 # Sometime, when user cancel composing, the component has been
                 # unmounted before we come back from autosave, and setState fails
                 if @isMounted()
@@ -507,6 +509,10 @@ module.exports = Compose = React.createClass
         focus = if not @state.bccShown then 'bcc' else ''
         @setState bccShown: not @state.bccShown, focus: focus
 
+    # Get the file picker component (method used to pass it to the editor)
+    getPicker: ->
+        return @refs.attachments
+
 
 ComposeEditor = React.createClass
     displayName: 'ComposeEditor'
@@ -519,6 +525,7 @@ ComposeEditor = React.createClass
         return {
             html: @props.html
             text: @props.text
+            target: false     # true when hovering with a file
         }
 
     componentWillReceiveProps: (nextProps) ->
@@ -538,17 +545,22 @@ ComposeEditor = React.createClass
             @props.text.requestChange @refs.content.getDOMNode().value
 
         if @props.settings.get 'composeOnTop'
-            folded = 'folded'
+            classFolded = 'folded'
         else
-            folded = ''
+            classFolded = ''
+        classTarget = if @state.target then 'target' else ''
 
         if @props.composeInHTML
             div
-                className: "form-control rt-editor #{folded}",
+                className: "form-control rt-editor #{classFolded} #{classTarget}",
                 ref: 'html',
                 contentEditable: true,
                 onKeyDown: @onKeyDown,
                 onInput: onHTMLChange,
+                onDragOver: @allowDrop,
+                onDragEnter: @onDragEnter,
+                onDragLeave: @onDragLeave,
+                onDrop: @handleFiles,
                 # when dropping an image, input is fired before the image has
                 # really been added to the DOM, so we need to also listen to
                 # blur event
@@ -558,11 +570,15 @@ ComposeEditor = React.createClass
                 }
         else
             textarea
-                className: 'editor',
+                className: "editor #{classTarget}",
                 ref: 'content',
                 onKeyDown: @onKeyDown,
                 onChange: onTextChange,
                 defaultValue: @state.text.value
+                onDragOver: @allowDrop,
+                onDragEnter: @onDragEnter,
+                onDragLeave: @onDragLeave,
+                onDrop: @handleFiles,
 
     _initCompose: ->
 
@@ -734,3 +750,41 @@ ComposeEditor = React.createClass
     onKeyDown: (evt) ->
         if evt.ctrlKey and evt.key is 'Enter'
             @props.onSend()
+
+    ###
+    # Handle dropping of images inside editor
+    ###
+    allowDrop: (e) ->
+        e.preventDefault()
+
+    onDragEnter: (e) ->
+        if not @state.target
+            @setState target: true
+
+    onDragLeave: (e) ->
+        if @state.target
+            @setState target: false
+
+    handleFiles: (e) ->
+        e.preventDefault()
+        files = e.target.files or e.dataTransfer.files
+        # Add files to Compose file picker
+        @props.getPicker().addFiles files
+        if @props.composeInHTML
+            for file in files
+                # for every image, insert it into the HTML compose editor
+                # Set the file name to data-src so it can be converted to cid: url on send
+                # Convert the file to a data-uri to display the image inside the editor
+                if file.type.split('/')[0] is 'image'
+                    id  = "editor-img-#{new Date()}"
+                    img = "<img data-src='#{file.name}' id='#{id}'>"
+                    document.execCommand 'insertHTML', false, img
+                    fileReader = new FileReader()
+                    fileReader.readAsDataURL file
+                    fileReader.onload = ->
+                        img = document.getElementById id
+                        if img
+                            img.removeAttribute 'id'
+                            img.removeAttribute 'class'
+                            img.src = fileReader.result
+        @setState target: false
