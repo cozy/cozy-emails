@@ -378,7 +378,7 @@ module.exports.batchFetch = (req, res, next) ->
         Message.byConversationID req.body.conversationID, handleMessages
 
     else if req.body.messageIDs
-        Message.findMultilple req.body.messageIDs, handleMessages
+        Message.findMultiple req.body.messageIDs, handleMessages
 
     else if req.body.conversationIDs
         Message.byConversationIDs req.body.conversationIDs, handleMessages
