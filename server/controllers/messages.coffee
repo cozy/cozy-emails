@@ -435,7 +435,7 @@ module.exports.batchRemoveFlag = (req, res, next) ->
         return next err if err
         res.send updatedMessages
 
-# move several message to trash with one request
+# move several message with one request
 # expect req.account & req.messages
 # aim :
 #   - the conversation should not appears in from
