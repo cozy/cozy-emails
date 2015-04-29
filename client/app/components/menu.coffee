@@ -98,12 +98,6 @@ module.exports = Menu = React.createClass
 
             modal
 
-            if @props.accounts.length isnt 0
-                ul id: 'account-list', className: 'list-unstyled',
-                    @props.accounts.map (account, key) =>
-                        @getAccountRender account, key
-                    .toJS()
-
             # This component doesn't make sense if there is no account. There is
             # always a selected account if there is an account.
             if @props.selectedAccount?
@@ -111,6 +105,12 @@ module.exports = Menu = React.createClass
                     refreshes: @props.refreshes
                     mailboxes: @props.selectedAccount.get('mailboxes')
                     selectedMailboxID: @props.selectedMailboxID
+
+            if @props.accounts.length isnt 0
+                ul id: 'account-list', className: 'list-unstyled',
+                    @props.accounts.map (account, key) =>
+                        @getAccountRender account, key
+                    .toJS()
 
             a
                 href: newMailboxUrl,
