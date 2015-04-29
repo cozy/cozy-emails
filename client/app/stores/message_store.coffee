@@ -161,8 +161,6 @@ class MessageStore extends Store
             if messages.count? and messages.mailboxID?
                 messages = messages.messages.sort __sortFunction
 
-
-
             onReceiveRawMessage message for message in messages
             @emit 'change'
 
@@ -313,14 +311,17 @@ class MessageStore extends Store
             # Conversations displayed
             idx = _conversationMemoize.findIndex (message) ->
                 return _currentID is message.get 'id'
-            if idx is _conversationMemoize.length - 1
+            if idx < 0
+                return null
+            else if idx is _conversationMemoize.length - 1
                 # We need first message of previous conversation
                 keys = Object.keys _currentMessages.toJS()
                 idx = keys.indexOf(_conversationMemoize.last().get('id'))
                 if idx < 1
                     return null
                 else
-                    convID = _currentMessages.get(keys[idx - 1])?.get('conversationID')
+                    currentMessage = _currentMessages.get(keys[idx - 1])
+                    convID = currentMessage?.get('conversationID')
                     return null if not convID?
                     prev = _messages.filter (message) ->
                         message.get('conversationID') is convID
@@ -332,7 +333,8 @@ class MessageStore extends Store
         else
             keys = Object.keys _currentMessages.toJS()
             idx = keys.indexOf _currentID
-            return if idx is -1 then null else _currentMessages.get keys[idx - 1]
+            return if idx is -1 then null
+            else _currentMessages.get keys[idx - 1]
 
     getNextMessage: (isConv) ->
         if isConv? and isConv
@@ -341,7 +343,9 @@ class MessageStore extends Store
             # Conversations displayed
             idx = _conversationMemoize.findIndex (message) ->
                 return _currentID is message.get 'id'
-            if idx is 0
+            if idx < 0
+                return null
+            else if idx is 0
                 # We need first message of next conversation
                 keys = Object.keys _currentMessages.toJS()
                 idx = keys.indexOf(_conversationMemoize.last().get('id'))
