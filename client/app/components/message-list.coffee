@@ -132,7 +132,9 @@ MessageList = React.createClass
         toggleQuickFilter = =>
             if @state.quickFilters
                 # default sort
-                LayoutActionCreator.sortMessages field: 'date'
+                LayoutActionCreator.sortMessages
+                    order: '-'
+                    field: 'date'
                 showList()
 
             @setState
@@ -893,6 +895,7 @@ MessagesQuickFilter = React.createClass
         else
             value = @refs.value.getDOMNode().value
             LayoutActionCreator.sortMessages
+                order:  '-'
                 field:  @state.type
                 after:  "#{value}\uFFFF"
                 before: value
