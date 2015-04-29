@@ -76,7 +76,7 @@ class ImapPool
             port       : parseInt @account.imapPort
             tls        : not @account.imapSSL? or @account.imapSSL
             tlsOptions : rejectUnauthorized : false
-            # debug      : (content) -> rawImapLog.debug content
+            debug      : (content) -> rawImapLog.debug content
 
         imap = new Imap options
 
