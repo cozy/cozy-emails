@@ -5510,18 +5510,18 @@ module.exports = Menu = React.createClass({
     return div({
       id: 'menu',
       className: classes
-    }, modal, this.props.accounts.length !== 0 ? ul({
+    }, modal, this.props.selectedAccount != null ? RefreshIndicator({
+      refreshes: this.props.refreshes,
+      mailboxes: this.props.selectedAccount.get('mailboxes'),
+      selectedMailboxID: this.props.selectedMailboxID
+    }) : void 0, this.props.accounts.length !== 0 ? ul({
       id: 'account-list',
       className: 'list-unstyled'
     }, this.props.accounts.map((function(_this) {
       return function(account, key) {
         return _this.getAccountRender(account, key);
       };
-    })(this)).toJS()) : void 0, this.props.selectedAccount != null ? RefreshIndicator({
-      refreshes: this.props.refreshes,
-      mailboxes: this.props.selectedAccount.get('mailboxes'),
-      selectedMailboxID: this.props.selectedMailboxID
-    }) : void 0, a({
+    })(this)).toJS()) : void 0, a({
       href: newMailboxUrl,
       onClick: this._hideMenu,
       className: 'menu-item new-account-action ' + newMailboxClass
@@ -12366,7 +12366,7 @@ MessageStore = (function(_super) {
   };
 
   MessageStore.prototype.getPreviousMessage = function(isConv) {
-    var convID, idx, keys, prev, _ref1;
+    var convID, currentMessage, idx, keys, prev;
     if ((isConv != null) && isConv) {
       if (_conversationMemoize == null) {
         return null;
@@ -12374,13 +12374,16 @@ MessageStore = (function(_super) {
       idx = _conversationMemoize.findIndex(function(message) {
         return _currentID === message.get('id');
       });
-      if (idx === _conversationMemoize.length - 1) {
+      if (idx < 0) {
+        return null;
+      } else if (idx === _conversationMemoize.length - 1) {
         keys = Object.keys(_currentMessages.toJS());
         idx = keys.indexOf(_conversationMemoize.last().get('id'));
         if (idx < 1) {
           return null;
         } else {
-          convID = (_ref1 = _currentMessages.get(keys[idx - 1])) != null ? _ref1.get('conversationID') : void 0;
+          currentMessage = _currentMessages.get(keys[idx - 1]);
+          convID = currentMessage != null ? currentMessage.get('conversationID') : void 0;
           if (convID == null) {
             return null;
           }
@@ -12412,7 +12415,9 @@ MessageStore = (function(_super) {
       idx = _conversationMemoize.findIndex(function(message) {
         return _currentID === message.get('id');
       });
-      if (idx === 0) {
+      if (idx < 0) {
+        return null;
+      } else if (idx === 0) {
         keys = Object.keys(_currentMessages.toJS());
         idx = keys.indexOf(_conversationMemoize.last().get('id'));
         if (idx === -1 || idx === (keys.length - 1)) {
