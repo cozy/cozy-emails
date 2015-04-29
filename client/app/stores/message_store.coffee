@@ -205,6 +205,7 @@ class MessageStore extends Store
             _sortField   = sort.field
             if sort.order?
                 newOrder = sort.order
+                _sortOrder = if sort.order is '-' then 1 else -1
             else
                 currentField = _params.sort.substr(1)
                 currentOrder = _params.sort.substr(0, 1)
