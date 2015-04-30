@@ -13252,7 +13252,7 @@ module.exports = MessageUtils = {
     }
     if ((signature != null) && signature.length > 0) {
       isSignature = true;
-      signature = "--\n" + signature;
+      signature = "-- \n" + signature;
     } else {
       isSignature = false;
     }
@@ -13374,7 +13374,7 @@ module.exports = MessageUtils = {
     message.html = COMPOSE_STYLE;
     if (isSignature) {
       signature = signature.replace(/\n/g, '<br>');
-      message.html += "<p><br /></p><p><br /></p>\n<p id=\"signature\">--\n" + signature + "</p>";
+      message.html += "<p><br /></p><p><br /></p>\n<p id=\"signature\">" + signature + "</p>";
     }
     return message;
   },
