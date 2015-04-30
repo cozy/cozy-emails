@@ -29,7 +29,7 @@ module.exports =
                 callback t('app error')
 
     fetchConversation: (conversationID, callback) ->
-        request.get "conversation/#{conversationID}"
+        request.get "messages/batchFetch?conversationID=#{conversationID}"
         .set 'Accept', 'application/json'
         .end (res) ->
             if res.ok
@@ -120,37 +120,64 @@ module.exports =
                 console.log "Error in messageSend", message, res.body?.error
                 callback res.body?.error?.message
 
-    messagePatch: (messageID, patch, callback) ->
-        request.patch "message/#{messageID}", patch
-        .set 'Accept', 'application/json'
-        .end (res) ->
-            if res.ok
-                callback null, res.body
-            else
-                console.log "Error in messagePatch", messageID, res.body?.error
-                callback t('app error')
 
-    conversationDelete: (conversationID, callback) ->
-        request.del "conversation/#{conversationID}"
-        .set 'Accept', 'application/json'
+    batchFetch: (target, callback) ->
+        request.get "messages/batchFetch"
         .end (res) ->
             if res.ok
                 callback null, res.body
             else
-                console.log "Error in conversationDelete", conversationID,
-                    res.body?.error
-                callback t('app error')
+                err = res.body?.error.message
+                err ?= new Error 'Network batchAddFlag'
+                callback err
 
-    conversationPatch: (conversationID, patch, callback) ->
-        request.patch "conversation/#{conversationID}", patch
-        .set 'Accept', 'application/json'
+    batchAddFlag: (target, flag, callback) ->
+        body = _.extend {flag}, target
+        request.put "messages/batchAddFlag"
+        .send body
         .end (res) ->
             if res.ok
                 callback null, res.body
             else
-                console.log "Error in conversationPatch", conversationID,
-                    res.body?.error
-                callback t('app error')
+                err = res.body?.error.message
+                err ?= new Error 'Network batchAddFlag'
+                callback err
+
+    batchRemoveFlag: (target, flag, callback) ->
+        body = _.extend {flag}, target
+        request.put "messages/batchRemoveFlag"
+        .send body
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                err = res.body?.error.message
+                err ?= new Error 'Network batchRemoveFlag'
+                callback err
+
+    batchDelete: (target, callback) ->
+        body = _.extend {}, target
+        request.put "messages/batchTrash"
+        .send target
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                err = res.body?.error.message
+                err ?= new Error 'Network batchDelete'
+                callback err
+
+    batchMove: (target, from, to, callback) ->
+        body = _.extend {from, to}, target
+        request.put "messages/batchMove"
+        .send body
+        .end (res) ->
+            if res.ok
+                callback null, res.body
+            else
+                err = res.body?.error.message
+                err ?= new Error 'Network batchMove'
+                callback err
 
     createAccount: (account, callback) ->
 

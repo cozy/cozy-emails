@@ -6,8 +6,6 @@ ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'
 
 LayoutActionCreator       = require '../actions/layout_action_creator'
-ConversationActionCreator = require '../actions/conversation_action_creator'
-MessageActionCreator      = require '../actions/message_action_creator'
 alertError                = LayoutActionCreator.alertError
 alertSuccess              = LayoutActionCreator.notify
 
@@ -84,10 +82,11 @@ module.exports = React.createClass
             mailboxID:      @props.selectedMailboxID
             messageID:      @props.message.get 'id'
             message:        @props.message
-            onMark:         @onMark
-            onConversation: @onConversation
-            onMove:         @props.onMove
+            onMark:         @props.onMark
             onHeaders:      @props.onHeaders
+            onConversationMark: @props.onConversationMark
+            onConversationMove: @props.onConversationMove
+            onConversationDelete: @props.onConversationMove
             direction:      'right'
             displayConversations: false # to display messages actions
 
@@ -99,53 +98,3 @@ module.exports = React.createClass
             onMove:    @props.onMove
             direction: 'right'
 
-
-    onMark: (args) ->
-        flags = @props.message.get('flags').slice()
-        flag = args.target.dataset.value
-        switch flag
-            when FlagsConstants.SEEN
-                flags.push MessageFlags.SEEN
-            when FlagsConstants.UNSEEN
-                flags = flags.filter (e) -> return e isnt FlagsConstants.SEEN
-            when FlagsConstants.FLAGGED
-                flags.push MessageFlags.FLAGGED
-            when FlagsConstants.NOFLAG
-                flags = flags.filter (e) -> return e isnt FlagsConstants.FLAGGED
-        MessageActionCreator.updateFlag @props.message, flags, (error) ->
-            if error?
-                alertError "#{t("message action mark ko")} #{error}"
-            else
-                alertSuccess t "message action mark ok"
-
-
-    onConversation: (args) ->
-        id     = @props.message.get 'conversationID'
-        action = args.target.dataset.action
-        switch action
-            when 'delete'
-                ConversationActionCreator.delete id, (error) ->
-                    if error?
-                        alertError "#{t("conversation delete ko")} #{error}"
-                    else
-                        alertSuccess t "conversation delete ok"
-            when 'seen'
-                ConversationActionCreator.seen id, (error) ->
-                    if error?
-                        alertError "#{t("conversation seen ko")} #{error}"
-                    else
-                        alertSuccess t "conversation seen ok"
-            when 'unseen'
-                ConversationActionCreator.unseen id, (error) ->
-                    if error?
-                        alertError "#{t("conversation unseen ko")} #{error}"
-                    else
-                        alertSuccess t "conversation unseen ok"
-            when 'flagged'
-                ConversationActionCreator.flag id, (error) ->
-                    if error?
-                        alertError "#{t("conversation flagged ko ")} #{error}"
-            when 'noflag'
-                ConversationActionCreator.noflag id, (error) ->
-                    if error?
-                        alertError "#{t("conversation noflag ko")} #{error}"

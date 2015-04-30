@@ -1,23 +1,25 @@
-{div, ul, li, a, span, i, p, button, input, img} = React.DOM
+{div, ul, li, a, span, i, p, button, input, img, form} = React.DOM
 classer = React.addons.classSet
 
 RouterMixin    = require '../mixins/router_mixin'
+TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
 DomUtils       = require '../utils/dom_utils'
 MessageUtils   = require '../utils/message_utils'
 SocketUtils    = require '../utils/socketio_utils'
-{MessageFlags, MessageFilter, FlagsConstants} =
+{MessageFlags, MessageFilter, Tooltips} =
     require '../constants/app_constants'
 
 AccountActionCreator      = require '../actions/account_action_creator'
 ContactActionCreator      = require '../actions/contact_action_creator'
-ConversationActionCreator = require '../actions/conversation_action_creator'
 LayoutActionCreator       = require '../actions/layout_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 
 MessageStore   = require '../stores/message_store'
 
-MailboxList    = require './mailbox-list'
+{Dropdown}     = require './basic_components'
+MailboxList    = require './mailbox_list'
 Participants   = require './participant'
+{Spinner}      = require './basic_components'
 ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'
 
@@ -26,7 +28,7 @@ alertError   = LayoutActionCreator.alertError
 MessageList = React.createClass
     displayName: 'MessageList'
 
-    mixins: [RouterMixin]
+    mixins: [RouterMixin, TooltipRefresherMixin]
 
     shouldComponentUpdate: (nextProps, nextState) ->
         should = not(_.isEqual(nextState, @state)) or
@@ -38,6 +40,7 @@ MessageList = React.createClass
         filterFlag: false
         filterUnsead: false
         filterAttach: false
+        quickFilters: false
         selected: {}
         allSelected: false
 
@@ -46,9 +49,9 @@ MessageList = React.createClass
             @setState allSelected: false, edited: false, selected: {}
         else
             selected = @state.selected
-            Object.keys(selected).forEach (id) ->
-                if not props.messages.get(id)
-                    delete selected[id]
+            # remove selected messages that are not in view anymore
+            for id, isSelected of selected when not props.messages.get(id)
+                delete selected[id]
             @setState selected: selected
             if Object.keys(selected).length is 0
                 @setState allSelected: false, edited: false
@@ -97,6 +100,7 @@ MessageList = React.createClass
                 filterFlag:   not @state.filterFlag
                 filterUnseen: false
                 filterAttach: false
+                quickFilters: false
 
         toggleFilterUnseen = =>
             if @state.filterUnseen
@@ -109,6 +113,7 @@ MessageList = React.createClass
                 filterUnseen: not @state.filterUnseen
                 filterFlag:   false
                 filterAttach: false
+                quickFilters: false
 
         toggleFilterAttach = =>
             if @state.filterAttach
@@ -121,6 +126,21 @@ MessageList = React.createClass
                 filterAttach: not @state.filterAttach
                 filterFlag:   false
                 filterUnseen: false
+                quickFilters: false
+
+        toggleQuickFilter = =>
+            if @state.quickFilters
+                # default sort
+                LayoutActionCreator.sortMessages
+                    order: '-'
+                    field: 'date'
+                showList()
+
+            @setState
+                filterFlag:   false
+                filterUnseen: false
+                filterAttach: false
+                quickFilters: not @state.quickFilters
 
         classList = classer
             compact: compact
@@ -132,6 +152,9 @@ MessageList = React.createClass
 
         btnClasses    = 'btn btn-default '
         btnGrpClasses = 'btn-group btn-group-sm message-list-option '
+        getFilterClass = (filter) ->
+            shown = if filter then ' shown' else ''
+            return "#{btnClasses}#{shown}"
 
         composeUrl = @buildUrl
             direction: 'first'
@@ -144,8 +167,6 @@ MessageList = React.createClass
             ref: 'list',
             'data-mailbox-id': @props.mailboxID,
             div className: 'message-list-actions',
-                #if advanced and not @state.edited
-                #    MessagesQuickFilter {}
                 div className: 'btn-toolbar', role: 'toolbar',
                     div className: 'btn-group',
                         # Toggle edit
@@ -163,6 +184,7 @@ MessageList = React.createClass
                                     getUrl: getMailboxUrl
                                     mailboxes: @props.mailboxes
                                     selectedMailboxID: @props.mailboxID
+                                    ref: 'mailboxList'
 
                         # Responsive menu button
                         if not advanced and not @state.edited
@@ -178,53 +200,49 @@ MessageList = React.createClass
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterUnseen
-                                    title: t 'list filter unseen title'
-                                    className: btnClasses + if @state.filterUnseen then ' shown',
+                                    className: getFilterClass @state.filterUnseen
+                                    'aria-describedby': Tooltips.FILTER_ONLY_UNREAD
+                                    'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-envelope'
                         if not advanced and not @state.edited
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterFlag
-                                    title: t 'list filter flagged title'
-                                    className: btnClasses + if @state.filterFlag then ' shown',
+                                    className: getFilterClass @state.filterFlag
+                                    'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT
+                                    'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-star'
                         if not advanced and not @state.edited
                             div className: btnGrpClasses,
                                 button
                                     onClick: toggleFilterAttach
-                                    title: t 'list filter attach title'
-                                    className: btnClasses + if @state.filterAttach then ' shown',
+                                    className: getFilterClass @state.filterAttach
+                                    'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT
+                                    'data-tooltip-direction': 'bottom'
                                     span className: 'fa fa-paperclip'
-                        if advanced and not @state.edited
+                        if not advanced and not @state.edited
                             div className: btnGrpClasses,
-                                MessagesFilter filterParams
+                                button
+                                    onClick: toggleQuickFilter
+                                    className: getFilterClass @state.quickFilters
+                                    'aria-describedby': Tooltips.QUICK_FILTER
+                                    'data-tooltip-direction': 'bottom'
+                                    span className: 'fa fa-filter'
                         ## sort
                         if advanced and not @state.edited
                             div className: btnGrpClasses,
                                 MessagesSort filterParams
 
-                        # refresh
-                        if not @state.edited
-                            div className: btnGrpClasses,
-                                if @props.refreshes.length is 0
-                                    button
-                                        className: btnClasses,
-                                        type: 'button',
-                                        disabled: null,
-                                        onClick: @refresh,
-                                            span className: 'fa fa-refresh'
-                                else
-                                    img
-                                        src: 'images/spinner.svg'
-                                        alt: 'spinner'
-                                        className: 'spin'
                         # config
                         if not @state.edited
                             div className: btnGrpClasses,
                                 a
                                     href: configMailboxUrl
                                     className: btnClasses + 'mailbox-config',
-                                    i className: 'fa fa-cog'
+                                    i
+                                        className: 'fa fa-cog'
+                                        'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
+                                        'data-tooltip-direction': 'bottom'
                         if @state.edited
                             div className: btnGrpClasses,
                                 button
@@ -235,26 +253,27 @@ MessageList = React.createClass
                         if @state.edited
                             div className: btnGrpClasses,
                                 button
-                                    className: btnClasses + 'trash',
-                                    type: 'button',
+                                    className: "#{btnClasses}trash"
+                                    type: 'button'
                                     disabled: nbSelected
-                                    onClick: @onDelete,
-                                        span
-                                            className: 'fa fa-trash-o'
-                        if @state.edited
+                                    onClick: @onDelete
+                                    'aria-describedby': Tooltips.DELETE_SELECTION
+                                    'data-tooltip-direction': 'bottom',
+                                        span className: 'fa fa-trash-o'
+                        if @state.edited and not @props.displayConversations
                             ToolboxMove
+                                ref: 'listToolboxMove'
                                 mailboxes: @props.mailboxes
                                 onMove: @onMove
                                 direction: 'left'
                         if @state.edited
                             ToolboxActions
-                                ref: 'listeToolboxActions'
+                                ref: 'listToolboxActions'
                                 mailboxes: @props.mailboxes
                                 onMark: @onMark
-                                onConversation: @onConversation
-                                onMove: @onConversationMove
+                                onConversationMark: @onConversationMark
+                                onConversationMove: @onConversationMove
                                 displayConversations: @props.displayConversations
-                                onHeaders: @onHeaders
                                 direction: 'left'
 
                         if @props.isTrash and not @state.edited
@@ -273,6 +292,11 @@ MessageList = React.createClass
                             i className: 'fa fa-edit'
                             span className: 'item-label', t 'menu compose'
 
+            if @state.quickFilters
+                div className: 'message-list-filters form-horizontal',
+                    MessagesQuickFilter
+                        accountID: @props.accountID
+                        mailboxID: @props.mailboxID
 
             if @props.messages.count() is 0
                 if @props.fetching
@@ -295,6 +319,7 @@ MessageList = React.createClass
                         allSelected: @state.allSelected
                         displayConversations: @props.displayConversations
                         isTrash: @props.isTrash
+                        ref: 'listBody'
                         onSelect: (id, val) =>
                             selected = _.clone @state.selected
                             if val
@@ -312,16 +337,10 @@ MessageList = React.createClass
                                     selected: {}
                             @setState newState
 
-                    # If message list is filtered, we can't only rely on
-                    # message count
-                    # So we assume that if query.pageAfter is null, there's
-                    # no more messages to display
-                    if @moreToSee() and
-                       @props.query.pageAfter?
+                    if @props.query.pageAfter isnt '-'
                         p className: 'text-center list-footer',
                             if @props.fetching
-                                img
-                                    src: 'images/spinner.svg'
+                                Spinner()
                             else
                                 a
                                     className: 'more-messages'
@@ -331,29 +350,6 @@ MessageList = React.createClass
                     else
                         p ref: 'listEnd', t 'list end'
 
-
-    # Check if we should display "More messages"
-    moreToSee: ->
-        nbMessages = parseInt(@props.messagesCount, 10)
-        # when displaying conversations, we have to sum the number of messages
-        # inside each one to know if we have displayed all messages inside this
-        # box
-        if @props.displayConversations
-            nbInConv   = 0
-            @props.messages.map (message) =>
-                length = @props.conversationLengths.get(message.get 'conversationID')
-                if length?
-                    nbInConv += @props.conversationLengths.get(message.get 'conversationID')
-            .toJS()
-
-            return nbInConv < nbMessages
-        else
-            return @props.messages.count() < nbMessages
-
-
-    refresh: (event) ->
-        event.preventDefault()
-        LayoutActionCreator.refreshMessages()
 
     toggleEdited: ->
         if @state.edited
@@ -371,99 +367,65 @@ MessageList = React.createClass
             .toJS()
             @setState allSelected: true, edited: true, selected: selected
 
-    onDelete: (conv) ->
+    _getSelectedAndMode: (applyToConversation) ->
         selected = Object.keys @state.selected
-        if not conv?
-            conv = @props.displayConversations
+        count = selected.length
+        applyToConversation = Boolean applyToConversation
+        applyToConversation ?= @props.displayConversations
         if selected.length is 0
             alertError t 'list mass no message'
+            return false
+
+        else if not applyToConversation
+            return {cout, messageIDs: selected, applyToConversation}
+
         else
-            confirm = @props.settings.get('messageConfirmDelete')
-            if confirm
-                if conv
-                    confirmMessage = t 'list delete conv confirm',
-                        smart_count: selected.length
-                else
-                    confirmMessage = t 'list delete confirm',
-                        smart_count: selected.length
+            conversationIDs = selected.map (id) =>
+                @props.messages.get(id).get('conversationID')
 
-            if (not confirm) or
-            window.confirm confirmMessage
-                MessageUtils.delete selected, conv, =>
-                    if selected.length > 0 and @props.messages.count() > 0
-                        firstMessageID = @props.messages.first().get('id')
-                        MessageActionCreator.setCurrent firstMessageID, true
+            return {count, conversationIDs, applyToConversation}
 
+    onConversationDelete: ->
+        onConversationDelete true
 
-    onConversationMove: (args) ->
-        @onMove args, true
+    onDelete: (applyToConversation) ->
+        return unless options = @_getSelectedAndMode(applyToConversation)
 
-    onMove: (args, conv) ->
-        selected = Object.keys @state.selected
-        if not conv?
-            conv = @props.displayConversations
-        if selected.length is 0
-            alertError t 'list mass no message'
+        if options.applyToConversation
+            msg = t 'list delete conv confirm', smart_count: options.count
         else
-            newbox = args.target.dataset.value
-            MessageUtils.move selected, conv, @props.mailboxID, newbox, =>
-                if selected.length > 0 and @props.messages.count() > 0
+            msg = t 'list delete confirm', smart_count: options.count
+
+        noConfirm = not @props.settings.get('messageConfirmDelete')
+        if noConfirm or window.confirm msg
+            MessageActionCreator.delete options, =>
+                if options.count > 0 and @props.messages.count() > 0
                     firstMessageID = @props.messages.first().get('id')
                     MessageActionCreator.setCurrent firstMessageID, true
 
-    onMark: (args) ->
-        selected = Object.keys @state.selected
-        if selected.length is 0
-            alertError t 'list mass no message'
-        else
-            flag = args.target.dataset.value
-            selected.forEach (id) =>
-                message = @props.messages.get id
-                flags = message.get('flags').slice()
-                switch flag
-                    when FlagsConstants.SEEN
-                        flags.push MessageFlags.SEEN
-                    when FlagsConstants.UNSEEN
-                        flags = flags.filter (e) ->
-                            return e isnt FlagsConstants.SEEN
-                    when FlagsConstants.FLAGGED
-                        flags.push MessageFlags.FLAGGED
-                    when FlagsConstants.NOFLAG
-                        flags = flags.filter (e) ->
-                            return e isnt FlagsConstants.FLAGGED
-                MessageActionCreator.updateFlag message, flags, (error) ->
-                    if error?
-                        alertError "#{t("message action mark ko")} #{error}"
 
-    onConversation: (args) ->
-        selected = Object.keys @state.selected
-        action = args.target.dataset.action
-        if action is 'delete'
-            @onDelete true
-        else
-            if selected.length is 0
-                alertError t 'list mass no message'
-            else
-                selected.forEach (id) =>
-                    message = @props.messages.get id
-                    conversationID = message.get 'conversationID'
-                    switch action
-                        when 'seen'
-                            ConversationActionCreator.seen conversationID, (error) ->
-                                if error?
-                                    alertError "#{t("conversation seen ko ")} #{error}"
-                        when 'unseen'
-                            ConversationActionCreator.unseen conversationID, (error) ->
-                                if error?
-                                    alertError "#{t("conversation unseen ko")} #{error}"
-                        when 'flagged'
-                            ConversationActionCreator.flag conversationID, (error) ->
-                                if error?
-                                    alertError "#{t("conversation flagged ko ")} #{error}"
-                        when 'noflag'
-                            ConversationActionCreator.noflag conversationID, (error) ->
-                                if error?
-                                    alertError "#{t("conversation noflag ko")} #{error}"
+
+    onConversationMove: (to) ->
+        @onMove to, true
+
+    onMove: (to, applyToConversation) ->
+        return unless options = @_getSelectedAndMode(applyToConversation)
+
+        from = @props.mailboxID
+
+        MessageActionCreator.move options, from, to, =>
+            if options.count > 0 and @props.messages.count() > 0
+                firstMessageID = @props.messages.first().get('id')
+                MessageActionCreator.setCurrent firstMessageID, true
+
+
+    onConversationMark: (flag) ->
+        @onMark flag, true
+
+    onMark: (flag, applyToConversation) ->
+        return unless options = @_getSelectedAndMode(applyToConversation)
+
+        MessageActionCreator.mark options, flag
 
     expungeMailbox: (e) ->
         e.preventDefault()
@@ -494,9 +456,9 @@ MessageList = React.createClass
             LayoutActionCreator.showMessageList parameters: @props.query
 
     _handleRealtimeGrowth: ->
-        nbMessages = parseInt @props.messagesCount, 10
-        if (not @moreToSee()) and @refs.listEnd? and
-        not DomUtils.isVisible(@refs.listEnd.getDOMNode())
+        if @props.pageAfter isnt '-' and
+           @refs.listEnd? and
+           not DomUtils.isVisible(@refs.listEnd.getDOMNode())
             lastdate = @props.messages.last().get('date')
             SocketUtils.changeRealtimeScope @props.mailboxID, lastdate
 
@@ -569,6 +531,7 @@ MessageListBody = React.createClass
                 login: @props.login
                 displayConversations: @props.displayConversations
                 isTrash: @props.isTrash
+                ref: 'messageItem'
                 onSelect: (val) =>
                     @props.onSelect id, val
 
@@ -733,10 +696,13 @@ MessageItem = React.createClass
 
     onDragStart: (event) ->
         event.stopPropagation()
-        data =
-            messageID: event.currentTarget.dataset.messageId
-            mailboxID: @props.mailboxID
-            conversation: @props.displayConversations
+        data = mailboxID: @props.mailboxID
+
+        if @props.displayConversations
+            data.conversationID = event.currentTarget.dataset.conversationId
+        else
+            data.messageID = event.currentTarget.dataset.messageId
+
         event.dataTransfer.setData 'text', JSON.stringify(data)
         event.dataTransfer.effectAllowed = 'move'
         event.dataTransfer.dropEffect = 'move'
@@ -748,80 +714,168 @@ MessageItem = React.createClass
                 address.address isnt from[0]?.address
         separator = if to.length > 0 then ', ' else ' '
         span null,
-            Participants participants: from, onAdd: @addAddress
+            Participants
+                participants: from
+                onAdd: @addAddress
+                ref: 'from'
             span null, separator
-            Participants participants: to, onAdd: @addAddress
+            Participants
+                participants: to
+                onAdd: @addAddress
+                ref: 'to'
 
     addAddress: (address) ->
         ContactActionCreator.createContact address
 
+
 MessagesQuickFilter = React.createClass
     displayName: 'MessagesQuickFilter'
 
-    render: ->
-        div
-            className: "form-group message-list-action",
-            input
-                className: "form-control"
-                type: "text"
-                onBlur: @onQuick
+    getInitialState: ->
+        # default filter type: date
+        state =
+            type: 'date'
+            startValid: true # valid start date
+            endValid: true   # valid end date
+        return state
 
-    onQuick: (ev) ->
-        LayoutActionCreator.quickFilterMessages ev.target.value.trim()
-
-MessagesFilter = React.createClass
-    displayName: 'MessagesFilter'
-
-    mixins: [RouterMixin]
+    shouldComponentUpdate: (nextProps, nextState) ->
+        should = not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
+        return should
 
     render: ->
-        filter = @props.query.flag
-        if not filter? or filter is '-'
-            title = i className: 'fa fa-filter'
-        else
-            title = t 'list filter ' + filter
-        div className: 'btn-group btn-group-sm dropdown filter-dropdown',
+
+        filters = {}
+        ['from', 'dest', 'date'].map (filter) ->
+            filters[filter] = t "list filter #{filter}"
+
+        startClass = 'error' if not @state.startValid
+        endClass   = 'error' if not @state.endValid
+
+        form className: 'list-filters',
+            # Filter type
+            Dropdown
+                value: @state.type
+                values: filters
+                onChange: @onChange
+            if @state.type is 'date'
+                span null,
+                    input
+                        ref: 'dateStart'
+                        id: 'filterDateStart'
+                        key: 'filterDateStart'
+                        name: 'filterDateStart'
+                        className: "filter-date #{startClass or ''}"
+                        placeholder: t 'list filter date placeholder'
+                        onBlur: @doValidate
+                        type: "text",
+                    input
+                        ref: 'dateEnd'
+                        id: 'filterDateEnd'
+                        key: 'filterDateEnd'
+                        name: 'filterDateEnd'
+                        className: "filter-date #{endClass or ''}"
+                        placeholder: t 'list filter date placeholder'
+                        onBlur: @doValidate
+                        type: "text"
+            else
+                input
+                    ref: 'value'
+                    className: ""
+                    type: "text"
+                    onKeyDown: @onKeyDown
             button
-                className: 'btn btn-default dropdown-toggle message-list-action'
-                type: 'button'
-                'data-toggle': 'dropdown'
-                title
-                    span className: 'caret'
-            ul
-                className: 'dropdown-menu',
-                role: 'menu',
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.ALL,
-                            t 'list filter all'
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.UNSEEN,
-                            t 'list filter unseen'
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.FLAGGED,
-                            t 'list filter flagged'
-                    li role: 'presentation',
-                        a
-                            onClick: @onFilter,
-                            'data-filter': MessageFilter.ATTACH,
-                            t 'list filter attach'
+                onClick: @onFilter
+                className: 'btn btn-default'
+                'aria-describedby': Tooltips.FILTER
+                'data-tooltip-direction': 'bottom',
+                    span className: 'fa fa-filter'
 
+    # Add third party datepicker to start and end date fields
+    initDatepicker: ->
+        if @state.type is 'date'
+            datePickerController.setDebug true
+            options =
+                formElements:
+                    filterDateStart: '%d/%m/%Y'
+            datePickerController.createDatePicker options
+            options =
+                formElements:
+                    filterDateEnd: '%d/%m/%Y'
+            datePickerController.createDatePicker options
+        else
+            datePickerController.destroyDatePicker 'filterDateStart'
+            datePickerController.destroyDatePicker 'filterDateEnd'
+
+    componentDidMount: ->
+        @initDatepicker()
+
+    componentDidUpdate: ->
+        @initDatepicker()
+
+    # Return start date in ISO 8601 compliant format
+    _getStartDate: ->
+        start = @refs.dateStart.getDOMNode().value.trim()
+        if start is ''
+            return ''
+        else
+            start = start.split '/'
+            return "#{start[2]}-#{start[1]}-#{start[0]}T00:00:00.000Z"
+
+    # Return end date in ISO 8601 compliant format
+    _getEndDate: ->
+        end = @refs.dateEnd.getDOMNode().value.trim()
+        if end is ''
+            return ''
+        else
+            end = end.split '/'
+            return "#{end[2]}-#{end[1]}-#{end[0]}T23:59:59.999Z"
+
+    # Validate start and end dates
+    # update state and return true if both are valid
+    doValidate: ->
+        start = @_getStartDate()
+        end   = @_getEndDate()
+        startValid = start is '' or not isNaN(Date.parse start)
+        endValid   = end is '' or not isNaN(Date.parse end)
+        @setState startValid: startValid, endValid: endValid
+        return startValid and endValid
+
+    # Update filter type
+    onChange: (filter) ->
+        @setState type: filter, startValid: true, endValid: true
+
+    # Filter list
     onFilter: (ev) ->
-        LayoutActionCreator.filterMessages ev.target.dataset.filter
+        if ev?
+            ev.stopPropagation()
+            ev.preventDefault()
+
+        if @state.type is 'date'
+            if @doValidate()
+                LayoutActionCreator.sortMessages
+                    order: '-'
+                    field:  @state.type
+                    before: @_getStartDate()
+                    after:  @_getEndDate()
+        else
+            value = @refs.value.getDOMNode().value
+            LayoutActionCreator.sortMessages
+                order:  '-'
+                field:  @state.type
+                after:  "#{value}\uFFFF"
+                before: value
 
         params = _.clone(MessageStore.getParams())
         params.accountID = @props.accountID
         params.mailboxID = @props.mailboxID
         LayoutActionCreator.showMessageList parameters: params
-        #@redirect @buildUrl
-        #    direction: 'first'
-        #    action: 'account.mailbox.messages.full'
-        #    parameters: params
+
+    onKeyDown: (evt) ->
+        switch evt.key
+            when "Enter"
+                @onFilter()
 
 MessagesSort = React.createClass
     displayName: 'MessagesSort'

@@ -141,6 +141,7 @@ module.exports = React.createClass
             @_renderOption 'messageConfirmDelete'
             @_renderOption 'displayPreview'
             @_renderOption 'desktopNotifications'
+            @_renderOption 'autosaveDraft'
 
             fieldset null,
                 legend null, t 'settings plugins'
@@ -226,7 +227,8 @@ module.exports = React.createClass
             #    @setState({settings: settings})
             #    SettingsActionCreator.edit settings
             # SETTINGS
-            when 'composeInHTML'
+            when 'autosaveDraft'
+            ,    'composeInHTML'
             ,    'composeOnTop'
             ,    'desktopNotifications'
             ,    'displayConversation'

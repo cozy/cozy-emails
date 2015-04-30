@@ -11,6 +11,9 @@ See https://github.com/m4dz/aria-tips#use
 module.exports = React.createClass
     displayName: 'TooltipManager'
 
+    # The tooltip's content should not change so we prevent any refresh.
+    shouldComponentUpdate: -> return false
+
     render: ->
 
         # Mounts all existing tooltips so they can be referenced by other
@@ -25,6 +28,13 @@ module.exports = React.createClass
             @getTooltip Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')
             @getTooltip Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')
             @getTooltip Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')
+            @getTooltip Tooltips.FILTER_ONLY_UNREAD, t('tooltip filter only unread')
+            @getTooltip Tooltips.FILTER_ONLY_IMPORTANT, t('tooltip filter only important')
+            @getTooltip Tooltips.FILTER_ONLY_WITH_ATTACHMENT, t('tooltip filter only attachment')
+            @getTooltip Tooltips.ACCOUNT_PARAMETERS, t('tooltip account parameters')
+            @getTooltip Tooltips.DELETE_SELECTION, t('tooltip delete selection')
+            @getTooltip Tooltips.FILTER, t('tooltip filter')
+            @getTooltip Tooltips.QUICK_FILTER, t('tooltip display filters')
 
 
     # Generate default markup for a tooltip.

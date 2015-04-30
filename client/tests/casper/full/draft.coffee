@@ -25,38 +25,40 @@ casper.test.begin 'Test draft', (test) ->
 
     casper.start casper.cozy.startUrl, ->
         test.comment "Compose Draft"
-        initSettings()
+        #initSettings()
         casper.waitFor ->
             casper.evaluate ->
                 window.cozyMails.getSetting 'composeInHTML'
 
     casper.then ->
-        casper.click "#menu .compose-action"
+        casper.click ".message-list .compose-action"
         casper.waitForSelector "#email-compose .rt-editor", ->
-            casper.click '.form-compose [data-value=dovecot-ID]'
-            casper.click '.form-compose .compose-toggle-cc'
-            casper.click '.form-compose .compose-toggle-bcc'
-            casper.fillSelectors 'form',
-                "#compose-subject": messageSubject,
-            casper.sendKeys "#compose-bcc", "bcc@cozy.io,",
-            casper.sendKeys "#compose-cc", "cc@cozy.io,",
-            casper.sendKeys "#compose-to", "to@cozy.io,"
-            casper.evaluate ->
-                editor = document.querySelector('.rt-editor')
-                editor.innerHTML = "<div><em>Hello,</em><br>Join us now and share the software</div>"
-                evt = document.createEvent 'HTMLEvents'
-                evt.initEvent 'input', true, true
-                editor.dispatchEvent evt
-            casper.click '.composeToolbox .btn-save'
-            casper.waitForSelector '.composeToolbox .fa-refresh', ->
-                casper.waitWhileSelector '.composeToolbox .fa-refresh', ->
-                    messageID = casper.evaluate ->
-                        window.cozyMails.getCurrentMessage().id
-                    test.pass "Message is saved: #{messageID}"
+            casper.waitWhileSelector '.composeToolbox .button-spinner', ->
+                casper.click '.form-compose [data-value=dovecot-ID]'
+                casper.click '.form-compose .compose-toggle-cc'
+                casper.click '.form-compose .compose-toggle-bcc'
+                casper.fillSelectors 'form',
+                    "#compose-subject": messageSubject,
+                casper.sendKeys "#compose-bcc", "bcc@cozy.io,",
+                casper.sendKeys "#compose-cc", "cc@cozy.io,",
+                casper.sendKeys "#compose-to", "to@cozy.io,"
+                casper.evaluate ->
+                    editor = document.querySelector('.rt-editor')
+                    editor.innerHTML = "<div><em>Hello,</em><br>Join us now and share the software</div>"
+                    evt = document.createEvent 'HTMLEvents'
+                    evt.initEvent 'input', true, true
+                    editor.dispatchEvent evt
+                casper.click '.composeToolbox .btn-save'
+                casper.waitForSelector '.composeToolbox .button-spinner', ->
+                    casper.waitWhileSelector '.composeToolbox .button-spinner', ->
+                        message = casper.evaluate ->
+                            window.cozyMails.getCurrentMessage()
+                        messageID = message.id
+                        test.pass "Message '#{message.subject}' is saved: #{messageID}"
 
     casper.then ->
         test.comment "Edit draft"
-        initSettings()
+        #initSettings()
         confirm = ''
         casper.evaluate ->
             window.cozytest = {}
@@ -73,7 +75,7 @@ casper.test.begin 'Test draft', (test) ->
                 test.assertEquals casper.fetchText(".compose-cc .address-tag"), "cc@cozy.io", "Cc dests"
                 test.assertEquals casper.fetchText(".compose-to .address-tag"), "to@cozy.io", "To dests"
                 test.assertEquals values["compose-subject"], messageSubject, "Subject"
-                test.assertEquals casper.fetchText('.rt-editor'), "Hello,Join us now and share the software", "message HTML"
+                test.assertEquals casper.fetchText('.rt-editor'), "\nHello,Join us now and share the software", "message HTML"
                 message = casper.evaluate ->
                     return window.cozyMails.getCurrentMessage()
                 test.assertEquals message.text, "_Hello,_\nJoin us now and share the software", "messageText"

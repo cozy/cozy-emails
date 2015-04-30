@@ -26,7 +26,8 @@ casper.test.begin 'Test Actions on conversations', (test) ->
         else
             test.comment "Move Message"
 
-            casper.cozy.selectMessage "DoveCot", "Test Folder", "Re: troll", (subject, messageID) ->
+            casper.cozy.selectMessage "DoveCot", "Test Folder", "Re: troll", (subject, messageID, conversationID) ->
+                test.assertExist ".message-list li[data-conversation-id='#{conversationID}']"
                 nbMessages = casper.getElementsInfo(".message-list li.message").length
                 nbInConv = casper.fetchText ".message-list li.message.active .badge.conversation-length"
                 casper.mouse.move ".message-list li.message.active .fa-user"
@@ -35,20 +36,23 @@ casper.test.begin 'Test Actions on conversations', (test) ->
                     casper.click '.message-list-actions .menu-move button'
                     casper.waitUntilVisible '.message-list-actions .menu-move a[data-value="0b3a2b31-7acb-dbab-d57f-3050ae2c78c5"]', ->
                         casper.click '.message-list-actions .menu-move a[data-value="0b3a2b31-7acb-dbab-d57f-3050ae2c78c5"]'
-                        casper.waitWhileVisible ".message-list li[data-message-id='#{messageID}']", ->
-                            test.assertEquals casper.getElementsInfo(".message-list li.message").length, nbMessages - 1,
-                                "Message no more in folder"
+                        casper.waitFor ->
+                            casper.evaluate ->
+                                isPresent  = document.querySelectorAll('.message-list li[data-conversation-id="20141106092130.GF5642@mail.cozy.io"]').length
+                                nbMessages = document.querySelectorAll('.message-list li.message').length
+                                return (isPresent is 0 and nbMessages is 2)
+                            test.pass "Message no more in folder"
                             casper.evaluate ->
                                 window.cozyMails.messageClose()
                             casper.cozy.selectMessage "DoveCot", "Flagged Email", "Re: troll", (subject, messageID) ->
                                 test.pass "Message Moved"
-                                test.assertEquals casper.fetchText(".message-list li.message[data-message-id='#{messageID}'] .badge.conversation-length"),
+                                test.assertEquals casper.fetchText(".message-list li.message[data-conversation-id='#{conversationID}'] .badge.conversation-length"),
                                     nbInConv, "All messages in conv moved"
                                 casper.click ".conversation .message.active .messageToolbox button.move"
                                 boxSelector = ".conversation .message.active .messageToolbox [data-value='f5cbd722-c3f9-4f6e-73d0-c75ddf65a2f1']"
                                 casper.waitUntilVisible boxSelector, ->
                                     casper.click boxSelector
-                                    casper.waitWhileSelector ".message-list li.message[data-message-id='#{messageID}']", ->
+                                    casper.waitWhileSelector ".message-list li.message[data-conversation-id='#{conversationID}']", ->
                                         test.pass "Message no more in folder"
                                         casper.cozy.selectMessage "DoveCot", "Test Folder", subject, messageID, ->
                                             test.pass "Message moved back to original folder"

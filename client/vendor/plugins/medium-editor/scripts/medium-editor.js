@@ -2833,6 +2833,7 @@ function MediumEditor(elements, options) {
     // Event handlers that shouldn't be exposed externally
 
     function handleDisabledEnterKeydown(event, element) {
+        /* Cozy: don't insert paragraphs
         if (this.options.disableReturn || element.getAttribute('data-disable-return')) {
             event.preventDefault();
         } else if (this.options.disableDoubleReturn || this.getAttribute('data-disable-double-return')) {
@@ -2841,6 +2842,9 @@ function MediumEditor(elements, options) {
                 event.preventDefault();
             }
         }
+        */
+        event.preventDefault();
+        self.options.ownerDocument.execCommand('insertHTML', false, "\n<br>\n<br>\n");
     }
 
     function handleTabKeydown(event, element) {
@@ -3013,7 +3017,8 @@ function MediumEditor(elements, options) {
         }
 
         if (node.getAttribute('data-medium-element') && node.children.length === 0) {
-            this.options.ownerDocument.execCommand('formatBlock', false, 'p');
+            // Cozy: don't insert paragraphs
+            //this.options.ownerDocument.execCommand('formatBlock', false, 'p');
         }
 
         if (event.which === Util.keyCode.ENTER && !Util.isListItem(node)) {
@@ -3024,8 +3029,11 @@ function MediumEditor(elements, options) {
             } else if (!event.shiftKey) {
                 // only format block if this is not a header tag
                 if (!/h\d/.test(tagName)) {
-                    this.options.ownerDocument.execCommand('formatBlock', false, 'p');
+                    // Cozy: don't insert paragraphs
+                    //this.options.ownerDocument.execCommand('formatBlock', false, 'p');
                 }
+                // Cozy: don't insert paragraphs
+                event.preventDefault();
             }
         }
     }

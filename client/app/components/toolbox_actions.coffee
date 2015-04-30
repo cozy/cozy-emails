@@ -1,5 +1,5 @@
 {div, ul, li, span, a, button} = React.DOM
-
+{MenuHeader, MenuItem, MenuDivider} = require './basic_components'
 {FlagsConstants} = require '../constants/app_constants'
 
 
@@ -28,121 +28,101 @@ module.exports = ToolboxActions = React.createClass
                     if not @props.displayConversations
                         @renderMarkActions()
                     if not @props.displayConversations
-                        li role: 'presentation', className: 'divider'
+                        MenuDivider()
                     @renderRawActions()...
-                    li role: 'presentation', className: 'divider'
-                    li
-                        role:      'presentation'
-                        className: 'dropdown-header'
+                    MenuDivider key: 'divider'
+                    MenuHeader key: 'header-move',
                         t 'mail action conversation move'
                     @renderMailboxes()
 
 
     renderMarkActions: ->
-        items = []
-        items.push li
-            role:      'presentation'
-            className: 'dropdown-header'
-            t 'mail action mark'
+        items = [
+            MenuHeader key: 'header-mark', t 'mail action mark'
 
-        # TODO: Use a Factory to improve this ugly conditionnal nesting
-        buildMenuItem = (args) =>
-            li role: 'presentation',
-                a
-                    role:         'menuitemu'
-                    onClick:      @props.onMark
-                    'data-value': args.value
-                    args.label
+            if not @props.isSeen? or not @props.isSeen
+                MenuItem
+                    key: 'action-mark-seen'
+                    onClick: => @props.onMark FlagsConstants.SEEN
+                    t 'mail mark read'
+            if not @props.isSeen? or @props.isSeen
+                MenuItem
+                    key: 'action-mark-unseen'
+                    onClick: => @props.onMark FlagsConstants.UNSEEN
+                    t 'mail mark unread'
 
-        if not @props.isSeen? or not @props.isSeen
-            items.push buildMenuItem
-                value: FlagsConstants.SEEN
-                label: t 'mail mark read'
-        if not @props.isSeen? or @props.isSeen
-            items.push buildMenuItem
-                value: FlagsConstants.UNSEEN
-                label: t 'mail mark unread'
+            if not @props.isFlagged? or @props.isFlagged
+                MenuItem
+                    key: 'action-mark-noflag'
+                    onClick: => @props.onMark FlagsConstants.NOFLAG
+                    t 'mail mark nofav'
+            if not @props.isFlagged? or not @props.isFlagged
+                MenuItem
+                    key: 'action-mark-flagged'
+                    onClick: => @props.onMark FlagsConstants.FLAGGED
+                    t 'mail mark fav'
 
-        if not @props.isFlagged? or @props.isFlagged
-            items.push buildMenuItem
-                value: FlagsConstants.NOFLAG
-                label: t 'mail mark nofav'
-        if not @props.isFlagged? or not @props.isFlagged
-            items.push buildMenuItem
-                value: FlagsConstants.FLAGGED
-                label: t 'mail mark fav'
+        ]
 
-        return items
+        # remove undefined values from the array
+        return items.filter (child) -> Boolean child
 
 
     renderRawActions: ->
-        items = []
+        items = [
 
-        if not @props.displayConversations
-            items.push li
-                role:      'presentation'
-                className: 'dropdown-header'
-                t 'mail action more'
+            if not @props.displayConversations
+                MenuHeader key: 'header-more', t 'mail action more'
 
-        if @props.messageID?
-            items.push li role: 'presentation',
-                a
-                    onClick:           @props.onHeaders
-                    'data-message-id': @props.messageID
+            if @props.messageID?
+                MenuItem
+                    key: 'action-headers'
+                    onClick: @props.onHeaders,
                     t 'mail action headers'
 
-        if @props.message?
-            items.push li role: 'presentation',
-                a
+            if @props.message?
+                MenuItem
+                    key: 'action-raw'
                     href:   "raw/#{@props.message.get 'id'}"
                     target: '_blank'
                     t 'mail action raw'
 
-        items.push li role: 'presentation',
-            a
-                onClick:       @props.onConversation,
-                'data-action': 'delete',
+            MenuItem
+                key: 'conv-delete'
+                onClick: @props.onConversationDelete,
                 t 'mail action conversation delete'
 
-        items.push li role: 'presentation',
-            a
-                onClick:       @props.onConversation,
-                'data-action': 'seen',
+            MenuItem
+                key: 'conv-seen'
+                onClick: => @props.onConversationMark FlagsConstants.SEEN
                 t 'mail action conversation seen'
 
-        items.push li role: 'presentation',
-            a
-                onClick:       @props.onConversation,
-                'data-action': 'unseen',
+            MenuItem
+                key: 'conv-unseen'
+                onClick: => @props.onConversationMark FlagsConstants.UNSEEN
                 t 'mail action conversation unseen'
 
-        items.push li role: 'presentation',
-            a
-                onClick:       @props.onConversation,
-                'data-action': 'flagged',
+            MenuItem
+                key: 'conv-flagged'
+                onClick: => @props.onConversationMark FlagsConstants.FLAGGED
                 t 'mail action conversation flagged'
 
-        items.push li role: 'presentation',
-            a
-                onClick:       @props.onConversation,
-                'data-action': 'noflag',
+            MenuItem
+                key: 'conv-noflag'
+                onClick: => @props.onConversationMark FlagsConstants.NOFLAG
                 t 'mail action conversation noflag'
+        ]
 
-        return items
+        # remove undefined values from the array
+        return items.filter (child) -> Boolean child
 
 
     renderMailboxes: ->
         for id, mbox of @props.mailboxes when id isnt @props.selectedMailboxID
-            @renderMailbox mbox, id
-
-
-    renderMailbox: (mbox, id) ->
-        li
-            role: 'presentation'
-            key: id,
-                a
+            # bind id
+            do (id) =>
+                MenuItem
+                    key: id
                     className: "pusher pusher-#{mbox.depth}"
-                    role: 'menuitem'
-                    onClick: @props.onMove
-                    'data-value': id
+                    onClick: => @props.onConversationMove id
                     mbox.label

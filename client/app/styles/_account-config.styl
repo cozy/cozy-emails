@@ -22,6 +22,11 @@
         li:not(.active) a
             cursor pointer
 
+        li
+            a:active
+            a:focus
+                outline 0
+
     button
         margin-left .5em
 
@@ -105,3 +110,14 @@
 
     .presentation
         test-align left
+
+.has-error .form-control
+    &:focus
+    &:active
+        box-shadow none
+        border-color basecolor
+
+.account-signature-form
+    textarea
+        min-height 200px
+        min-width 450px

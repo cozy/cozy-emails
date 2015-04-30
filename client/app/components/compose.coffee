@@ -5,6 +5,7 @@ classer = React.addons.classSet
 
 FilePicker = require './file_picker'
 MailsInput = require './mails_input'
+{Spinner} = require './basic_components'
 
 AccountPicker = require './account_picker'
 
@@ -14,7 +15,7 @@ messageUtils = require '../utils/message_utils'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
-ConversationActionCreator = require '../actions/conversation_action_creator'
+
 
 RouterMixin = require '../mixins/router_mixin'
 
@@ -124,6 +125,7 @@ module.exports = Compose = React.createClass
                     valueLink: @linkState 'cc'
                     label: t 'compose cc'
                     placeholder: t 'compose cc help'
+                    ref: 'cc'
 
                 MailsInput
                     id: 'compose-bcc'
@@ -131,6 +133,7 @@ module.exports = Compose = React.createClass
                     valueLink: @linkState 'bcc'
                     label: t 'compose bcc'
                     placeholder: t 'compose bcc help'
+                    ref: 'bcc'
 
                 div className: 'form-group',
                     label
@@ -155,10 +158,14 @@ module.exports = Compose = React.createClass
                         messageID: @props.message?.get 'id'
                         html: @linkState('html')
                         text: @linkState('text')
+                        accounts: @props.accounts
+                        selectedAccountID: @props.selectedAccountID
                         settings: @props.settings
                         onSend: @onSend
                         composeInHTML: @state.composeInHTML
                         focus: focusEditor
+                        ref: 'editor'
+                        getPicker: @getPicker
 
                 div className: 'attachements',
                     FilePicker
@@ -176,10 +183,7 @@ module.exports = Compose = React.createClass
                                 disable: if @state.sending then true else null
                                 onClick: @onSend,
                                     if @state.sending
-                                        span null,
-                                            img
-                                                src: 'images/spinner-white.svg'
-                                                className: 'button-spinner'
+                                        span null, Spinner(white: true)
                                     else
                                         span className: 'fa fa-send'
                                     span null, labelSend
@@ -188,10 +192,7 @@ module.exports = Compose = React.createClass
                                 disable: if @state.saving then true else null
                                 type: 'button', onClick: @onDraft,
                                     if @state.saving
-                                        span null,
-                                            img
-                                                src: 'images/spinner-white.svg'
-                                                className: 'button-spinner'
+                                        span null, Spinner(white: true)
                                     else
                                         span className: 'fa fa-save'
                                     span null, t 'compose action draft'
@@ -214,6 +215,8 @@ module.exports = Compose = React.createClass
         if @_saveInterval
             window.clearInterval @_saveInterval
         @_saveInterval = window.setInterval @_autosave, 30000
+        # First save of draft
+        @_autosave()
 
         # scroll compose window into view
         @getDOMNode().scrollIntoView()
@@ -248,16 +251,15 @@ module.exports = Compose = React.createClass
         #  - if yes, and the draft belongs to a conversation, add the
         #    conversationID and save the draft
         #  - if no, delete the draft
-        if @state.isDraft and
-           @state.id?
+        if @state.isDraft and @state.id?
             if not window.confirm(t 'compose confirm keep draft')
-                MessageActionCreator.delete @state.id, (error) ->
-                    if error?
-                        LayoutActionCreator.alertError \
-                            "#{t("message action delete ko")} #{error}"
-                    else
-                        LayoutActionCreator.notify t('compose draft deleted'),
-                            autoclose: true
+                window.setTimeout =>
+                    messageID = @state.id
+                    MessageActionCreator.delete {messageID}, (error) ->
+                        unless error?
+                            LayoutActionCreator.notify t('compose draft deleted'),
+                                autoclose: true
+                , 0
             else
                 if @state.originalConversationID?
                     # save one last time the draft, adding the conversationID
@@ -286,7 +288,8 @@ module.exports = Compose = React.createClass
                             LayoutActionCreator.notify msg, autoclose: true
                             if message.conversationID?
                                 # reload conversation to update its length
-                                ConversationActionCreator.fetch message.conversationID
+                                cid = message.conversationID
+                                MessageActionCreator.fetchConversation cid
 
     getInitialState: (forceDefault) ->
 
@@ -304,14 +307,20 @@ module.exports = Compose = React.createClass
 
         # new draft
         else
-            state = messageUtils.makeReplyMessage @props.selectedAccountLogin,
-                @props.inReplyTo, @props.action,
-                @props.settings.get('composeInHTML')
+            account = @props.accounts[@props.selectedAccountID]
+            state = messageUtils.makeReplyMessage(
+                account.login,
+                @props.inReplyTo,
+                @props.action,
+                @props.settings.get('composeInHTML'),
+                account.signature
+            )
             state.accountID ?= @props.selectedAccountID
             # use another field to prevent the empty conversationID of draft
             # to override the original conversationID
             state.originalConversationID = state.conversationID
 
+        state.isDraft  = true
         state.sending  = false
         state.saving   = false
         state.ccShown  = Array.isArray(state.cc) and state.cc.length > 0
@@ -394,13 +403,17 @@ module.exports = Compose = React.createClass
                 @setState sending: true, isDraft: false
 
             MessageActionCreator.send message, (error, message) =>
+                if (not error?) and (not @state.id?)
+                    MessageActionCreator.setCurrent message.id
+
                 state = _.clone @state
                 if isDraft
                     state.saving = false
                 else
                     state.isDraft = false
                     state.sending = false
-                state[key] = value for key, value of message
+                # Don't override local attachments
+                state[key] = value for key, value of message when key isnt 'attachments'
                 # Sometime, when user cancel composing, the component has been
                 # unmounted before we come back from autosave, and setState fails
                 if @isMounted()
@@ -424,14 +437,16 @@ module.exports = Compose = React.createClass
                     if not isDraft
                         if message.conversationID?
                             # reload conversation to update its length
-                            ConversationActionCreator.fetch message.conversationID
+                            cid = message.conversationID
+                            MessageActionCreator.fetchConversation cid
                         if @props.callback?
                             @props.callback error
                         else
                             @redirect @buildClosePanelUrl @props.layout
 
     _autosave: ->
-        @_doSend true
+        if @props.settings.get 'autosaveDraft'
+            @_doSend true
 
     # set source of attached images
     _cleanHTML: (html) ->
@@ -467,13 +482,9 @@ module.exports = Compose = React.createClass
             confirmMessage = t 'mail confirm delete nosubject'
 
         if window.confirm confirmMessage
-            MessageActionCreator.delete @props.message, (error) =>
-
-                if error?
-                    msg = "#{t("message action delete ko")} #{error}"
-                    LayoutActionCreator.alertError msg
-                else
-
+            messageID = @props.message.get('id')
+            MessageActionCreator.delete {messageID}, (error) =>
+                unless error?
                     if @props.callback
                         @props.callback()
                     else
@@ -500,6 +511,10 @@ module.exports = Compose = React.createClass
         focus = if not @state.bccShown then 'bcc' else ''
         @setState bccShown: not @state.bccShown, focus: focus
 
+    # Get the file picker component (method used to pass it to the editor)
+    getPicker: ->
+        return @refs.attachments
+
 
 ComposeEditor = React.createClass
     displayName: 'ComposeEditor'
@@ -512,6 +527,7 @@ ComposeEditor = React.createClass
         return {
             html: @props.html
             text: @props.text
+            target: false     # true when hovering with a file
         }
 
     componentWillReceiveProps: (nextProps) ->
@@ -531,17 +547,22 @@ ComposeEditor = React.createClass
             @props.text.requestChange @refs.content.getDOMNode().value
 
         if @props.settings.get 'composeOnTop'
-            folded = 'folded'
+            classFolded = 'folded'
         else
-            folded = ''
+            classFolded = ''
+        classTarget = if @state.target then 'target' else ''
 
         if @props.composeInHTML
             div
-                className: "rt-editor form-control #{folded}",
+                className: "form-control rt-editor #{classFolded} #{classTarget}",
                 ref: 'html',
                 contentEditable: true,
                 onKeyDown: @onKeyDown,
                 onInput: onHTMLChange,
+                onDragOver: @allowDrop,
+                onDragEnter: @onDragEnter,
+                onDragLeave: @onDragLeave,
+                onDrop: @handleFiles,
                 # when dropping an image, input is fired before the image has
                 # really been added to the DOM, so we need to also listen to
                 # blur event
@@ -551,35 +572,20 @@ ComposeEditor = React.createClass
                 }
         else
             textarea
-                className: 'editor',
+                className: "editor #{classTarget}",
                 ref: 'content',
                 onKeyDown: @onKeyDown,
                 onChange: onTextChange,
                 defaultValue: @state.text.value
+                onDragOver: @allowDrop,
+                onDragEnter: @onDragEnter,
+                onDragLeave: @onDragLeave,
+                onDrop: @handleFiles,
 
     _initCompose: ->
 
         if @props.composeInHTML
-            if @props.focus
-                node = @refs.html?.getDOMNode()
-                if not node?
-                    return
-                document.querySelector(".rt-editor").focus()
-                if not @props.settings.get 'composeOnTop'
-                    node.innerHTML += "<p><br /></p>"
-                    node = node.lastChild
-                    if node?
-                        # move cursor to the bottom
-                        node.scrollIntoView(false)
-                        node.innerHTML = "<br \>"
-                        s = window.getSelection()
-                        r = document.createRange()
-                        r.selectNodeContents(node)
-                        s.removeAllRanges()
-                        s.addRange(r)
-                        document.execCommand('delete', false, null)
-                        node.focus()
-
+            @setCursorPosition()
 
             # Webkit/Blink and Gecko have some different behavior on
             # contentEditable, so we need to test the rendering engine
@@ -717,6 +723,46 @@ ComposeEditor = React.createClass
                     node.focus()
                 , 0
 
+
+    # Put the selection cursor at the bottom of the message. The cursor is set
+    # before the signature if there is one.
+    setCursorPosition: ->
+        if @props.focus
+            node = @refs.html?.getDOMNode()
+            if node?
+                document.querySelector(".rt-editor").focus()
+                if not @props.settings.get 'composeOnTop'
+
+                    account = @props.accounts[@props.selectedAccountID]
+
+                    signatureNode = document.getElementById "signature"
+                    if account.signature? and
+                    account.signature.length > 0 and
+                    signatureNode?
+                        node = signatureNode
+                        node.innerHTML = """
+                        <p><br /></p>
+                        #{node.innerHTML}
+                        """
+                        node = node.firstChild
+
+                    else
+                        node.innerHTML += "<p><br /></p><p><br /></p>"
+                        node = node.lastChild
+
+                    if node?
+                        # move cursor to the bottom
+                        node.scrollIntoView(false)
+                        node.innerHTML = "<br \>"
+                        selection = window.getSelection()
+                        range = document.createRange()
+                        range.selectNodeContents node
+                        selection.removeAllRanges()
+                        selection.addRange range
+                        document.execCommand 'delete', false, null
+                        node.focus()
+
+
     componentDidMount: ->
         @_initCompose()
 
@@ -727,3 +773,46 @@ ComposeEditor = React.createClass
     onKeyDown: (evt) ->
         if evt.ctrlKey and evt.key is 'Enter'
             @props.onSend()
+
+    ###
+    # Handle dropping of images inside editor
+    ###
+    allowDrop: (e) ->
+        e.preventDefault()
+
+    onDragEnter: (e) ->
+        if not @state.target
+            @setState target: true
+
+    onDragLeave: (e) ->
+        if @state.target
+            @setState target: false
+
+    handleFiles: (e) ->
+        e.preventDefault()
+        files = e.target.files or e.dataTransfer.files
+        # Add files to Compose file picker
+        @props.getPicker().addFiles files
+        if @props.composeInHTML
+            for file in files
+                # for every image, insert it into the HTML compose editor
+                # Set the file name to data-src so it can be converted to cid: url on send
+                # Convert the file to a data-uri to display the image inside the editor
+                if file.type.split('/')[0] is 'image'
+                    id  = "editor-img-#{new Date()}"
+                    img = "<img data-src='#{file.name}' id='#{id}'>"
+                    # if editor has not the focus, insert image at the end
+                    # otherwise at cursor position
+                    if not document.activeElement.classList.contains 'rt-editor'
+                        document.querySelector('.rt-editor').innerHTML += img
+                    else
+                        document.execCommand 'insertHTML', false, img
+                    fileReader = new FileReader()
+                    fileReader.readAsDataURL file
+                    fileReader.onload = ->
+                        img = document.getElementById id
+                        if img
+                            img.removeAttribute 'id'
+                            img.removeAttribute 'class'
+                            img.src = fileReader.result
+        @setState target: false

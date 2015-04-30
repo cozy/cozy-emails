@@ -1,22 +1,19 @@
 {div, article, header, footer, ul, li, span, i, p, a, button, pre, iframe, img, h4} = React.DOM
-MessageUtils = require '../utils/message_utils'
 
 MessageHeader  = require "./message_header"
 MessageFooter  = require "./message_footer"
 ToolbarMessage = require './toolbar_message'
 Compose        = require './compose'
-FilePicker     = require './file_picker'
+Participants   = require './participant'
 
-{ComposeActions, MessageFlags, FlagsConstants} = require '../constants/app_constants'
+{ComposeActions, MessageFlags} = require '../constants/app_constants'
 
 LayoutActionCreator       = require '../actions/layout_action_creator'
-ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 ContactActionCreator      = require '../actions/contact_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
 TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
-Participants  = require './participant'
 
 classer = React.addons.classSet
 alertError   = LayoutActionCreator.alertError
@@ -31,17 +28,6 @@ module.exports = React.createClass
         TooltipRefresherMixin
     ]
 
-    getInitialState: ->
-        return {
-            active: @props.active
-            composing: @_shouldOpenCompose(@props)
-            composeAction: ''
-            headers: false
-            messageDisplayHTML:   @props.settings.get 'messageDisplayHTML'
-            messageDisplayImages: @props.settings.get 'messageDisplayImages'
-            currentMessageID: null
-            prepared: {}
-        }
 
     propTypes:
         accounts               : React.PropTypes.object.isRequired
@@ -56,9 +42,24 @@ module.exports = React.createClass
         selectedMailboxID      : React.PropTypes.string.isRequired
         settings               : React.PropTypes.object.isRequired
 
+
+    getInitialState: ->
+        return {
+            active: @props.active
+            composing: @_shouldOpenCompose(@props)
+            composeAction: ''
+            headers: false
+            messageDisplayHTML: @props.settings.get 'messageDisplayHTML'
+            messageDisplayImages: @props.settings.get 'messageDisplayImages'
+            currentMessageID: null
+            prepared: {}
+        }
+
+
     shouldComponentUpdate: (nextProps, nextState) ->
         should = not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
         return should
+
 
     _shouldOpenCompose: (props) ->
         # if message is a draft, and not deleted, open the compose component
@@ -67,6 +68,7 @@ module.exports = React.createClass
         isDraft   = flags.indexOf(MessageFlags.DRAFT) > -1
         isDeleted = @props.message.get('mailboxIDs')[trash]?
         return isDraft and not isDeleted
+
 
     _prepareMessage: (message) ->
         # display full headers
@@ -119,8 +121,10 @@ module.exports = React.createClass
             isDeleted  : mailboxes[trash]?
         }
 
+
     componentWillMount: ->
         @_markRead @props.message
+
 
     componentWillReceiveProps: (props) ->
         state =
@@ -132,6 +136,7 @@ module.exports = React.createClass
             state.composing            = @_shouldOpenCompose props
         @setState state
 
+
     _markRead: (message) ->
         # Hack to prevent infinite loop if server side mark as read fails
         messageID = message.get 'id'
@@ -139,12 +144,12 @@ module.exports = React.createClass
             state =
                 currentMessageID: messageID
                 prepared: @_prepareMessage message
-            # Mark message as seen if needed
-            flags = message.get('flags').slice()
-            if flags.indexOf(MessageFlags.SEEN) is -1
-                flags.push MessageFlags.SEEN
-                MessageActionCreator.updateFlag message, flags
+
+            setTimeout ->
+                MessageActionCreator.mark {messageID}, MessageFlags.SEEN
+            , 1
             @setState state
+
 
     prepareHTML: (html) ->
         messageDisplayHTML = true
@@ -185,6 +190,7 @@ module.exports = React.createClass
             @_htmlContent = html
 
         return {messageDisplayHTML, images}
+
 
     render: ->
         message  = @props.message
@@ -230,38 +236,58 @@ module.exports = React.createClass
                     @renderFooter()
                     @renderToolbox(false)) if @state.active
 
+
     getParticipants: (message) ->
         from = message.get 'from'
         to   = message.get('to').concat(message.get('cc'))
         span null,
-            Participants participants: from, onAdd: @addAddress, tooltip: true
+            Participants
+                participants: from
+                onAdd: @addAddress
+                tooltip: true
+                ref: 'from'
             span null, ', '
-            Participants participants: to, onAdd: @addAddress, tooltip: true
+            Participants
+                participants: to
+                onAdd: @addAddress
+                tooltip: true
+                ref: 'to'
+
 
     renderHeaders: ->
         MessageHeader
             message: @props.message
             isDraft: @state.prepared.isDraft
             isDeleted: @state.prepared.isDeleted
+            ref: 'header'
+
 
     renderToolbox: (full = true) ->
         return if @state.composing
 
         ToolbarMessage
-            full:              full
-            message:           @props.message
-            mailboxes:         @props.mailboxes
-            selectedMailboxID: @props.selectedMailboxID
-            onReply:           @onReply
-            onReplyAll:        @onReplyAll
-            onForward:         @onForward
-            onDelete:          @onDelete
-            onMove:            @onMove
-            onHeaders:         @onHeaders
+            full                 : full
+            message              : @props.message
+            mailboxes            : @props.mailboxes
+            selectedMailboxID    : @props.selectedMailboxID
+            onReply              : @onReply
+            onReplyAll           : @onReplyAll
+            onForward            : @onForward
+            onDelete             : @onDelete
+            onHeaders            : @onHeaders
+            onMove               : @onMove
+            onMark               : @onMark
+            onConversationDelete : @onConversationDelete
+            onConversationMark   : @onConversationMark
+            onConversationMove   : @onConversationMove
+            ref                  : 'toolbarMessage'
+
 
     renderFooter: ->
         MessageFooter
             message: @props.message
+            ref: 'footer'
+
 
     renderCompose: (isDraft) ->
         if @state.composing
@@ -280,14 +306,14 @@ module.exports = React.createClass
                     ref                  : 'compose'
             else
                 Compose
-                    ref             : 'compose'
-                    inReplyTo       : @props.message
-                    accounts        : @props.accounts
-                    settings        : @props.settings
-                    selectedAccountID    : @props.selectedAccountID
-                    selectedAccountLogin : @props.selectedAccountLogin
-                    action          : @state.composeAction
-                    layout          : 'second'
+                    ref: 'compose'
+                    inReplyTo: @props.message
+                    accounts: @props.accounts
+                    settings: @props.settings
+                    selectedAccountID: @props.selectedAccountID
+                    selectedAccountLogin: @props.selectedAccountLogin
+                    action: @state.composeAction
+                    layout: 'second'
                     callback: (error) =>
                         if not error?
                             # component has probably already been unmounted due to conversation refresh
@@ -298,6 +324,7 @@ module.exports = React.createClass
                         if @isMounted()
                             @setState composing: false
 
+
     toggleHeaders: (e) ->
         e.preventDefault()
         e.stopPropagation()
@@ -306,6 +333,7 @@ module.exports = React.createClass
         if @props.inConversation and not @state.active
             state.active = true
         @setState state
+
 
     toggleActive: (e) ->
         if @props.inConversation
@@ -316,88 +344,70 @@ module.exports = React.createClass
             else
                 @setState { active: true, headers: false }
 
-    displayNextMessage: ->
-        if @props.nextMessageID?
-            nextMessageID      = @props.nextMessageID
-            nextConversationID = @props.nextConversationID
-        else
-            nextMessageID      = @props.prevMessageID
-            nextConversationID = @props.prevConversationID
-        if nextMessageID
-            if @props.displayConversations and nextConversationID?
-                @redirect
-                    direction: 'second'
-                    action : 'conversation'
-                    parameters:
-                        messageID : nextMessageID
-                        conversationID: nextConversationID
-            else
-                @redirect
-                    direction: 'second'
-                    action : 'message'
-                    parameters:
-                        messageID : nextMessageID
-        else
-            @redirect
-                direction: 'first'
-                action: 'account.mailbox.messages'
-                parameters:
-                    accountID: @props.message.get 'accountID'
-                    mailboxID: @props.selectedMailboxID
-                fullWidth: true
-
     onReply: (args) ->
         @setState composing: true, composeAction: ComposeActions.REPLY
+
 
     onReplyAll: (args) ->
         @setState composing: true, composeAction: ComposeActions.REPLY_ALL
 
+
     onForward: (args) ->
         @setState composing: true, composeAction: ComposeActions.FORWARD
 
+
     onDelete: (args) ->
-        message      = @props.message
-        if (not @props.settings.get('messageConfirmDelete')) or
-        window.confirm(t 'mail confirm delete', {subject: message.get('subject')})
-            @displayNextMessage()
-            MessageActionCreator.delete message, (error) ->
-                if error?
-                    alertError "#{t("message action delete ko")} #{error}"
+        needConfirmation = @props.settings.get('messageConfirmDelete')
+        messageID = @props.message.get('id')
+        confirmMessage = t 'mail confirm delete',
+            subject: @props.message.get('subject')
+
+        if not needConfirmation or window.confirm confirmMessage
+            MessageActionCreator.delete {messageID}
+
+    onConversationDelete: () ->
+        conversationID = @props.message.get('conversationID')
+        MessageActionCreator.delete {conversationID}
+
+    onMark: (flag) ->
+        messageID = @props.message.get('id')
+        MessageActionCreator.mark {messageID}, flag
+
+    onConversationMark: (flag) ->
+        conversationID = @props.message.get('conversationID')
+        MessageActionCreator.mark {conversationID}, flag
+
+    onMove: (to) ->
+        messageID = @props.message.get('id')
+        from = @props.selectedMailboxID
+        subject = @props.message.get 'subject'
+        MessageActionCreator.move {messageID}, from, to
+
+    onConversationMove: (to) ->
+        conversationID = @props.message.get('conversationID')
+        from = @props.selectedMailboxID
+        subject = @props.message.get 'subject'
+        MessageActionCreator.move {conversationID}, from, to
 
     onCopy: (args) ->
         LayoutActionCreator.alertWarning t "app unimplemented"
 
-    onMove: (args) ->
-        newbox  = args.target.dataset.value
-        oldbox  = @props.selectedMailboxID
-        subject = @props.message.get 'subject'
-        if args.target.dataset.conversation?
-            ConversationActionCreator.move @props.message, oldbox, newbox, (error) =>
-                if error?
-                    alertError "#{t("conversation move ko", subject: subject)} #{error}"
-                else
-                    alertSuccess t("conversation move ok", subject: subject)
-                    @displayNextMessage()
-        else
-            MessageActionCreator.move @props.message, oldbox, newbox, (error) =>
-                if error?
-                    alertError "#{t("message action move ko", subject: subject)} #{error}"
-                else
-                    alertSuccess t("message action move ok", subject: subject)
-                    @displayNextMessage()
 
     onHeaders: (event) ->
         event.preventDefault()
-        messageID = event.target.dataset.messageId
-        document.querySelector(".conversation [data-id='#{messageID}']")
+        id = @props.message.get 'id'
+        document.querySelector(".conversation [data-id='#{id}']")
             .classList.toggle('with-headers')
+
 
     addAddress: (address) ->
         ContactActionCreator.createContact address
 
+
     displayImages: (event) ->
         event.preventDefault()
         @setState messageDisplayImages: true
+
 
     displayHTML: (value) ->
         if not value?

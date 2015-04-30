@@ -12,6 +12,7 @@ class Mailbox extends cozydb.CozyModel
         delimiter: String        # delimiter between this box and its children
         uidvalidity: Number      # Imap UIDValidity
         attribs: [String]        # [String] Attributes of this folder
+        lastSync: String         # Date.ISOString of last full box synchro
 
     # map of account's attributes -> RFC6154 special use box attributes
     @RFC6154:

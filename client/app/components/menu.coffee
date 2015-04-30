@@ -4,12 +4,12 @@ classer = React.addons.classSet
 
 RouterMixin          = require '../mixins/router_mixin'
 LayoutActionCreator  = require '../actions/layout_action_creator'
-ConversationActionCreator = require '../actions/conversation_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 AccountStore         = require '../stores/account_store'
 Modal                = require './modal'
 ThinProgress         = require './thin_progress'
-MessageUtils         = require '../utils/message_utils'
+
+RefreshIndicator = require './menu_refresh_indicator'
 
 {Dispositions, SpecialBoxIcons} = require '../constants/app_constants'
 
@@ -97,6 +97,14 @@ module.exports = Menu = React.createClass
         div id: 'menu', className: classes,
 
             modal
+
+            # This component doesn't make sense if there is no account. There is
+            # always a selected account if there is an account.
+            if @props.selectedAccount?
+                RefreshIndicator
+                    refreshes: @props.refreshes
+                    mailboxes: @props.selectedAccount.get('mailboxes')
+                    selectedMailboxID: @props.selectedMailboxID
 
             if @props.accounts.length isnt 0
                 ul id: 'account-list', className: 'list-unstyled',
@@ -296,7 +304,7 @@ MenuMailboxItem = React.createClass
                 onDragEnter: @onDragEnter,
                 onDragLeave: @onDragLeave,
                 onDragOver: @onDragOver,
-                onDrop: @onDrop,
+                onDrop: (event) => @onDrop event, mailboxID
                 title: title,
                 'data-toggle': 'tooltip',
                 'data-placement' : 'right',
@@ -329,9 +337,8 @@ MenuMailboxItem = React.createClass
     onDragOver: (e) ->
         e.preventDefault()
 
-    onDrop: (event) ->
-        data = event.dataTransfer.getData 'text'
-        {messageID, mailboxID, conversation} = JSON.parse data
-        newID = event.currentTarget.dataset.mailboxId
+    onDrop: (event, to) ->
+        data = event.dataTransfer.getData('text')
+        {messageID, mailboxID, conversationID} = JSON.parse data
         @setState target: false
-        MessageUtils.move messageID, conversation, mailboxID, newID
+        MessageActionCreator.move {messageID, conversationID}, mailboxID, to
