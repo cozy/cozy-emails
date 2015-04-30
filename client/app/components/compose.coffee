@@ -801,7 +801,12 @@ ComposeEditor = React.createClass
                 if file.type.split('/')[0] is 'image'
                     id  = "editor-img-#{new Date()}"
                     img = "<img data-src='#{file.name}' id='#{id}'>"
-                    document.execCommand 'insertHTML', false, img
+                    # if editor has not the focus, insert image at the end
+                    # otherwise at cursor position
+                    if not document.activeElement.classList.contains 'rt-editor'
+                        document.querySelector('.rt-editor').innerHTML += img
+                    else
+                        document.execCommand 'insertHTML', false, img
                     fileReader = new FileReader()
                     fileReader.readAsDataURL file
                     fileReader.onload = ->
