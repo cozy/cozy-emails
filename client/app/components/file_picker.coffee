@@ -49,11 +49,13 @@ FilePicker = React.createClass
 
     getInitialState: ->
         files: @props.value or @props.valueLink.value
+        target: false
 
     componentWillReceiveProps: (props) ->
         @setState files: props.value or props.valueLink.value
 
     addFiles: (files) ->
+        files = (@_fromDOM file for file in files)
         files = @state.files.concat(files).toVector()
 
         @props.valueLink.requestChange files
@@ -73,9 +75,11 @@ FilePicker = React.createClass
         else console.log "broken file : ", file
 
     render: ->
-        className = 'file-picker'
-        className += " #{@props.className}" if @props.className
-        div className: className,
+        classMain = 'file-picker'
+        classMain += " #{@props.className}" if @props.className
+        classZone = 'dropzone'
+        classZone += " target" if @state.target
+        div className: classMain,
             ul className: 'files list-unstyled',
                 @state.files.toJS().map (file) =>
                     FileItem
@@ -96,9 +100,11 @@ FilePicker = React.createClass
                             ref: "file",
                             onChange: @handleFiles
                     div
-                        className: "dropzone",
+                        className: classZone
                         ref: "dropzone",
                         onDragOver: @allowDrop,
+                        onDragEnter: @onDragEnter,
+                        onDragLeave: @onDragLeave,
                         onDrop: @handleFiles,
                         onClick: @onOpenFile,
                             i className: "fa fa-paperclip"
@@ -111,10 +117,19 @@ FilePicker = React.createClass
     allowDrop: (e) ->
         e.preventDefault()
 
+    onDragEnter: (e) ->
+        if not @state.target
+            @setState target: true
+
+    onDragLeave: (e) ->
+        if @state.target
+            @setState target: false
+
     handleFiles: (e) ->
         e.preventDefault()
         files = e.target.files or e.dataTransfer.files
-        @addFiles (@_fromDOM file for file in files)
+        @addFiles files
+        @setState target: false
 
     # convert from DOM Files to file picker format
     _fromDOM: (file) ->
