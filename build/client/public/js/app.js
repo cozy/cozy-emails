@@ -3841,7 +3841,8 @@ module.exports = Compose = React.createClass({
       onSend: this.onSend,
       composeInHTML: this.state.composeInHTML,
       focus: focusEditor,
-      ref: 'editor'
+      ref: 'editor',
+      getPicker: this.getPicker
     })), div({
       className: 'attachements'
     }, FilePicker({
@@ -4106,7 +4107,9 @@ module.exports = Compose = React.createClass({
           }
           for (key in message) {
             value = message[key];
-            state[key] = value;
+            if (key !== 'attachments') {
+              state[key] = value;
+            }
           }
           if (_this.isMounted()) {
             _this.setState(state);
@@ -4239,6 +4242,9 @@ module.exports = Compose = React.createClass({
       bccShown: !this.state.bccShown,
       focus: focus
     });
+  },
+  getPicker: function() {
+    return this.refs.attachments;
   }
 });
 
@@ -4248,7 +4254,8 @@ ComposeEditor = React.createClass({
   getInitialState: function() {
     return {
       html: this.props.html,
-      text: this.props.text
+      text: this.props.text,
+      target: false
     };
   },
   componentWillReceiveProps: function(nextProps) {
@@ -4263,7 +4270,7 @@ ComposeEditor = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var folded, onHTMLChange, onTextChange;
+    var classFolded, classTarget, onHTMLChange, onTextChange;
     onHTMLChange = (function(_this) {
       return function(event) {
         return _this.props.html.requestChange(_this.refs.html.getDOMNode().innerHTML);
@@ -4275,17 +4282,22 @@ ComposeEditor = React.createClass({
       };
     })(this);
     if (this.props.settings.get('composeOnTop')) {
-      folded = 'folded';
+      classFolded = 'folded';
     } else {
-      folded = '';
+      classFolded = '';
     }
+    classTarget = this.state.target ? 'target' : '';
     if (this.props.composeInHTML) {
       return div({
-        className: "form-control rt-editor " + folded,
+        className: "form-control rt-editor " + classFolded + " " + classTarget,
         ref: 'html',
         contentEditable: true,
         onKeyDown: this.onKeyDown,
         onInput: onHTMLChange,
+        onDragOver: this.allowDrop,
+        onDragEnter: this.onDragEnter,
+        onDragLeave: this.onDragLeave,
+        onDrop: this.handleFiles,
         onBlur: onHTMLChange,
         dangerouslySetInnerHTML: {
           __html: this.state.html.value
@@ -4293,11 +4305,15 @@ ComposeEditor = React.createClass({
       });
     } else {
       return textarea({
-        className: 'editor',
+        className: "editor " + classTarget,
         ref: 'content',
         onKeyDown: this.onKeyDown,
         onChange: onTextChange,
-        defaultValue: this.state.text.value
+        defaultValue: this.state.text.value,
+        onDragOver: this.allowDrop,
+        onDragEnter: this.onDragEnter,
+        onDragLeave: this.onDragLeave,
+        onDrop: this.handleFiles
       });
     }
   },
@@ -4464,6 +4480,60 @@ ComposeEditor = React.createClass({
     if (evt.ctrlKey && evt.key === 'Enter') {
       return this.props.onSend();
     }
+  },
+
+  /*
+   * Handle dropping of images inside editor
+   */
+  allowDrop: function(e) {
+    return e.preventDefault();
+  },
+  onDragEnter: function(e) {
+    if (!this.state.target) {
+      return this.setState({
+        target: true
+      });
+    }
+  },
+  onDragLeave: function(e) {
+    if (this.state.target) {
+      return this.setState({
+        target: false
+      });
+    }
+  },
+  handleFiles: function(e) {
+    var file, fileReader, files, id, _i, _len;
+    e.preventDefault();
+    files = e.target.files || e.dataTransfer.files;
+    this.props.getPicker().addFiles(files);
+    if (this.props.composeInHTML) {
+      for (_i = 0, _len = files.length; _i < _len; _i++) {
+        file = files[_i];
+        if (file.type.split('/')[0] === 'image') {
+          id = "editor-img-" + (new Date());
+          img = "<img data-src='" + file.name + "' id='" + id + "'>";
+          if (!document.activeElement.classList.contains('rt-editor')) {
+            document.querySelector('.rt-editor').innerHTML += img;
+          } else {
+            document.execCommand('insertHTML', false, img);
+          }
+          fileReader = new FileReader();
+          fileReader.readAsDataURL(file);
+          fileReader.onload = function() {
+            img = document.getElementById(id);
+            if (img) {
+              img.removeAttribute('id');
+              img.removeAttribute('class');
+              return img.src = fileReader.result;
+            }
+          };
+        }
+      }
+    }
+    return this.setState({
+      target: false
+    });
   }
 });
 });
@@ -4724,7 +4794,8 @@ FilePicker = React.createClass({
   },
   getInitialState: function() {
     return {
-      files: this.props.value || this.props.valueLink.value
+      files: this.props.value || this.props.valueLink.value,
+      target: false
     };
   },
   componentWillReceiveProps: function(props) {
@@ -4733,6 +4804,16 @@ FilePicker = React.createClass({
     });
   },
   addFiles: function(files) {
+    var file;
+    files = (function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = files.length; _i < _len; _i++) {
+        file = files[_i];
+        _results.push(this._fromDOM(file));
+      }
+      return _results;
+    }).call(this);
     files = this.state.files.concat(files).toVector();
     return this.props.valueLink.requestChange(files);
   },
@@ -4753,13 +4834,17 @@ FilePicker = React.createClass({
     }
   },
   render: function() {
-    var className;
-    className = 'file-picker';
+    var classMain, classZone;
+    classMain = 'file-picker';
     if (this.props.className) {
-      className += " " + this.props.className;
+      classMain += " " + this.props.className;
+    }
+    classZone = 'dropzone';
+    if (this.state.target) {
+      classZone += " target";
     }
     return div({
-      className: className
+      className: classMain
     }, ul({
       className: 'files list-unstyled'
     }, this.state.files.toJS().map((function(_this) {
@@ -4785,9 +4870,11 @@ FilePicker = React.createClass({
       ref: "file",
       onChange: this.handleFiles
     })), div({
-      className: "dropzone",
+      className: classZone,
       ref: "dropzone",
       onDragOver: this.allowDrop,
+      onDragEnter: this.onDragEnter,
+      onDragLeave: this.onDragLeave,
       onDrop: this.handleFiles,
       onClick: this.onOpenFile
     }, i({
@@ -4801,19 +4888,28 @@ FilePicker = React.createClass({
   allowDrop: function(e) {
     return e.preventDefault();
   },
+  onDragEnter: function(e) {
+    if (!this.state.target) {
+      return this.setState({
+        target: true
+      });
+    }
+  },
+  onDragLeave: function(e) {
+    if (this.state.target) {
+      return this.setState({
+        target: false
+      });
+    }
+  },
   handleFiles: function(e) {
-    var file, files;
+    var files;
     e.preventDefault();
     files = e.target.files || e.dataTransfer.files;
-    return this.addFiles((function() {
-      var _i, _len, _results;
-      _results = [];
-      for (_i = 0, _len = files.length; _i < _len; _i++) {
-        file = files[_i];
-        _results.push(this._fromDOM(file));
-      }
-      return _results;
-    }).call(this));
+    this.addFiles(files);
+    return this.setState({
+      target: false
+    });
   },
   _fromDOM: function(file) {
     var dotpos, idx, name;
