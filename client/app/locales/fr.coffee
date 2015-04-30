@@ -60,6 +60,7 @@ module.exports =
       "menu refresh label"      : "Rafraîchir"
       "menu refresh initializing": "Initialisation..."
       "menu refresh cleaning"   : "Nettoyage..."
+      "menu refresh waiting"    : "En attente du serveur..."
       "menu refresh indicator"  : "%{account} : %{mailbox} (%{progress}%)"
       "menu last refresh"       : "Dernier rafraîchissement le %{date}."
 

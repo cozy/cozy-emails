@@ -68,6 +68,12 @@ module.exports = React.createClass
                         else if @state.isRefreshStarted
                             span key: 'sync-box', t("menu refresh initializing")
 
+                        # This is a weird state that should not occur, why it
+                        # happens has not been figured out yet. A placeholder
+                        # string is used in the meantime.
+                        else
+                            span key: 'waiting', t("menu refresh waiting")
+
                 ]
 
 
