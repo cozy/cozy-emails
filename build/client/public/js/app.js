@@ -6072,6 +6072,7 @@ MessageList = React.createClass({
       return function() {
         if (_this.state.quickFilters) {
           LayoutActionCreator.sortMessages({
+            order: '-',
             field: 'date'
           });
           showList();
@@ -6877,7 +6878,7 @@ MessagesQuickFilter = React.createClass({
       return '';
     } else {
       end = end.split('/');
-      return "" + end[2] + "-" + end[1] + "-" + end[0] + "T00:00:00.000Z";
+      return "" + end[2] + "-" + end[1] + "-" + end[0] + "T23:59:59.999Z";
     }
   },
   doValidate: function() {
@@ -6917,6 +6918,7 @@ MessagesQuickFilter = React.createClass({
     } else {
       value = this.refs.value.getDOMNode().value;
       LayoutActionCreator.sortMessages({
+        order: '-',
         field: this.state.type,
         after: "" + value + "\uFFFF",
         before: value
@@ -12245,6 +12247,7 @@ MessageStore = (function(_super) {
       _sortField = sort.field;
       if (sort.order != null) {
         newOrder = sort.order;
+        _sortOrder = sort.order === '-' ? 1 : -1;
       } else {
         currentField = _params.sort.substr(1);
         currentOrder = _params.sort.substr(0, 1);
@@ -12858,7 +12861,7 @@ module.exports = {
   messageDisplay: function(message, force) {
     var action, conversationID, params, url, urlOptions;
     if (message == null) {
-      message = MessageStore.getById(MessageStore.getCurrentID());
+      message = MessageStore.getByID(MessageStore.getCurrentID());
     }
     if (message == null) {
       return;
