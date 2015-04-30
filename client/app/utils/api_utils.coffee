@@ -115,7 +115,7 @@ module.exports =
     # @params {Boolean}   force   if false do nothing if right panel is not open
     messageDisplay: (message, force) ->
         if not message?
-            message = MessageStore.getById(MessageStore.getCurrentID())
+            message = MessageStore.getByID(MessageStore.getCurrentID())
         if not message?
             return
         # return if second panel isn't already open
