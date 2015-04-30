@@ -14,12 +14,16 @@ describe 'Message actions', ->
         # Cozy actions
     it "When I send a request to add flag \\Seen", (done) ->
 
-        path = "/message/#{store.latestInboxMessageId}"
-        patch = [ op: 'add', path:'/flags/0', value:'\\Seen' ]
-        client.patch path, patch, (err, res, body) =>
+        path = "/messages/batchAddFlag"
+        body =
+            messageID: store.latestInboxMessageId
+            flag: '\\Seen'
+        client.put path, body, (err, res, body) =>
             res.statusCode.should.equal 200
-            body.flags.should.containEql '\\Seen'
-            store.uid = body.mailboxIDs[store.inboxID]
+            body.should.be.instanceof(Array).and.have.lengthOf(1)
+            body[0].id.should.equal store.latestInboxMessageId
+            body[0].flags.should.containEql '\\Seen'
+            store.uid = body[0].mailboxIDs[store.inboxID]
             done()
 
     it "The flags has been changed on the server", (done) ->
@@ -29,39 +33,23 @@ describe 'Message actions', ->
                     msg.flags.should.containEql '\\Seen'
                     @end()
 
-    it "When I send a request to copy and move (more add)", (done) ->
-        path = "/message/#{store.latestInboxMessageId}"
-        patch = [
-            { op: 'remove', path: "/mailboxIDs/#{store.inboxID}" }
-            { op: 'add', path: "/mailboxIDs/#{store.testBoxID}", value: -1 }
-            { op: 'add', path: "/mailboxIDs/#{store.sentBoxID}", value: -1 }
-        ]
+    it "When I send a request to move", (done) ->
+        path = "/messages/batchMove"
+        body =
+            accountID: store.accountID
+            messageID: store.latestInboxMessageId,
+            from: store.inboxID
+            to: [store.testBoxID, store.sentBoxID]
 
-        client.patch path, patch, (err, res, body) =>
+        client.put path, body, (err, res, body) =>
             res.statusCode.should.equal 200
-            body.flags.should.containEql '\\Seen'
-            should.exist body.mailboxIDs[store.testBoxID]
-            should.exist body.mailboxIDs[store.sentBoxID]
-            should.not.exist body.mailboxIDs[store.inboxID]
+            body.should.be.instanceof(Array).and.have.lengthOf(1)
+            body[0].id.should.equal store.latestInboxMessageId
+            body[0].flags.should.containEql '\\Seen'
+            should.exist body[0].mailboxIDs[store.testBoxID]
+            should.exist body[0].mailboxIDs[store.sentBoxID]
+            should.not.exist body[0].mailboxIDs[store.inboxID]
             done()
-
-
-    it "When I send a request to copy and move (more remove)", (done) ->
-        path = "/message/#{store.latestInboxMessageId}"
-        patch = [
-            { op: 'add', path: "/mailboxIDs/#{store.inboxID}", value: -1 }
-            { op: 'remove', path: "/mailboxIDs/#{store.testBoxID}" }
-            { op: 'remove', path: "/mailboxIDs/#{store.sentBoxID}" }
-        ]
-
-        client.patch path, patch, (err, res, body) =>
-            res.statusCode.should.equal 200
-            body.flags.should.containEql '\\Seen'
-            should.not.exist body.mailboxIDs[store.testBoxID]
-            should.not.exist body.mailboxIDs[store.sentBoxID]
-            should.exist body.mailboxIDs[store.inboxID]
-            done()
-
 
     it "When I create a Draft", (done) ->
 
@@ -278,17 +266,12 @@ describe 'Message actions', ->
     it "When I delete a batch of messages", (done) ->
         data =
             accountID: store.accountID
-            ids: store.someIds
+            messageIDs: store.someIds
 
         req = client.put "/messages/batchTrash", data, (err, res, body) =>
             should.not.exist err
-            res.statusCode.should.equal 202
-            store.batchTrashReporterId = body.id
+            res.statusCode.should.equal 200
             done()
-
-    it "Wait for operation to complete", (done) ->
-        @timeout 5000
-        helpers.waitAllTaskComplete done
 
     it "Then they have been moved to trash", (done) ->
         client.get "/mailbox/#{store.trashBoxID}", (err, res, body) =>

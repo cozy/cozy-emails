@@ -39,17 +39,11 @@ module.exports = {
     get: [accounts.list, accounts.formatList]
   },
   'account/:accountID': {
-    get: [accounts.fetch, accounts.format],
     put: [accounts.fetch, accounts.edit, accounts.format],
     "delete": [accounts.fetch, accounts.remove]
   },
   'accountUtil/check': {
     put: [accounts.check]
-  },
-  'conversation/:conversationID': {
-    get: [messages.fetchConversation, messages.conversationGet],
-    "delete": [messages.fetchConversation, messages.conversationDelete],
-    patch: [messages.fetchConversation, messages.conversationPatch]
   },
   'mailbox': {
     post: [accounts.fetch, mailboxes.fetchParent, mailboxes.create, accounts.format]
@@ -65,12 +59,23 @@ module.exports = {
   'message': {
     post: [messages.parseSendForm, accounts.fetch, messages.fetchMaybe, messages.send]
   },
+  'messages/batchFetch': {
+    get: [messages.batchFetch, messages.batchSend]
+  },
   'messages/batchTrash': {
-    put: [messages.batchTrash]
+    put: [messages.batchFetch, accounts.fetch, messages.batchTrash]
+  },
+  'messages/batchMove': {
+    put: [messages.batchFetch, accounts.fetch, messages.batchMove]
+  },
+  'messages/batchAddFlag': {
+    put: [messages.batchFetch, messages.batchAddFlag]
+  },
+  'messages/batchRemoveFlag': {
+    put: [messages.batchFetch, messages.batchRemoveFlag]
   },
   'message/:messageID': {
-    get: [messages.fetch, messages.details],
-    patch: [messages.fetch, messages.patch]
+    get: [messages.fetch, messages.details]
   },
   'message/:messageID/attachments/:attachment': {
     get: [messages.fetch, messages.attachment]

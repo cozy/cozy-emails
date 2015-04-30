@@ -79,18 +79,10 @@ module.exports = Message = (function(superClass) {
     });
   };
 
-  Message.moveToTrash = function(account, id, callback) {
-    return Message.find(id, function(err, message) {
-      if (err) {
-        return callback(err);
-      } else if (!message) {
-        return callback(new NotFound("Message#" + id));
-      } else if (account.id !== message.accountID) {
-        return callback(new BadRequest("Message#" + id + " not in account " + account.id));
-      } else {
-        return message.moveToTrash(account, callback);
-      }
-    });
+  Message.findMultiple = function(ids, callback) {
+    return async.mapSeries(ids, function(id, cb) {
+      return Message.find(id, cb);
+    }, callback);
   };
 
   Message.pickConversationID = function(rows, callback) {
@@ -238,8 +230,12 @@ module.exports = Message = (function(superClass) {
   };
 
   Message.byConversationID = function(conversationID, callback) {
+    return Message.byConversationIDs([conversationID], callback);
+  };
+
+  Message.byConversationIDs = function(conversationIDs, callback) {
     return Message.rawRequest('byConversationID', {
-      key: conversationID,
+      keys: conversationIDs,
       reduce: false,
       include_docs: true
     }, function(err, rows) {
@@ -528,9 +524,7 @@ module.exports = Message = (function(superClass) {
     }
     hasTwin.push(box.id);
     return this.updateAttributes({
-      changes: {
-        hasTwin: hasTwin
-      }
+      hasTwin: hasTwin
     }, callback);
   };
 
@@ -628,7 +622,11 @@ module.exports = Message = (function(superClass) {
         if (err) {
           return callback(err);
         }
-        return _this.updateAttributes(changes, callback);
+        if (Object.keys(changes.mailboxIDs).length === 0) {
+          return _this.destroy(callback);
+        } else {
+          return _this.updateAttributes(changes, callback);
+        }
       };
     })(this));
   };
@@ -708,6 +706,7 @@ module.exports = Message = (function(superClass) {
               paths = boxOps.addTo.map(function(destID) {
                 return boxIndex[destID].path;
               });
+              log.debug("add TO", paths);
               return imap.multicopy(firstuid, paths, function(err, uids) {
                 var destID, i, k, ref1;
                 if (err) {
@@ -722,8 +721,14 @@ module.exports = Message = (function(superClass) {
             }, function(cb) {
               var paths;
               paths = boxOps.removeFrom.map(function(boxid) {
-                return boxIndex[boxid];
+                var path, ref1, uid;
+                ref1 = boxIndex[boxid], path = ref1.path, uid = ref1.uid;
+                return {
+                  path: path,
+                  uid: uid
+                };
               });
+              log.debug("remove FROM", paths);
               return imap.multiremove(paths, cb);
             }
           ], releaseImap);
@@ -870,6 +875,75 @@ module.exports = Message = (function(superClass) {
       });
       return this.applyPatchOperations(patch, callback);
     }
+  };
+
+  Message.prototype.addFlag = function(flag, callback) {
+    var patch;
+    patch = [
+      {
+        op: 'add',
+        path: "/flags/",
+        value: flag
+      }
+    ];
+    return this.applyPatchOperations(patch, callback);
+  };
+
+  Message.prototype.removeFlag = function(flag, callback) {
+    var index, patch;
+    index = this.flags.indexOf(flag);
+    if (index === -1) {
+      return callback(null, this);
+    }
+    patch = [
+      {
+        op: 'remove',
+        path: "/flags/" + index
+      }
+    ];
+    return this.applyPatchOperations(patch, callback);
+  };
+
+  Message.prototype.move = function(from, to, callback) {
+    var patch;
+    if (!Array.isArray(to)) {
+      to = [to];
+    }
+    patch = [
+      {
+        op: 'remove',
+        path: "/mailboxIDs/" + from
+      }
+    ].concat(to.map(function(boxID) {
+      return {
+        op: 'add',
+        path: "/mailboxIDs/" + boxID,
+        value: -1
+      };
+    }));
+    return this.applyPatchOperations(patch, callback);
+  };
+
+  Message.prototype.imapcozy_destroy = function(callback) {
+    var boxid, mailboxes, patch;
+    mailboxes = Object.keys(this.mailboxIDs);
+    patch = (function() {
+      var j, len, results1;
+      results1 = [];
+      for (j = 0, len = mailboxes.length; j < len; j++) {
+        boxid = mailboxes[j];
+        results1.push({
+          op: 'remove',
+          path: "/mailboxIDs/" + boxid
+        });
+      }
+      return results1;
+    })();
+    return this.applyPatchOperations(patch, callback);
+  };
+
+  Message.prototype.isDraft = function(draftBoxID) {
+    return (this.mailboxIDs[draftBoxID] != null) || indexOf.call(this.flags, '\\Draft') >= 0;
   };
 
   Message.prototype.doASAP = function(operation, callback) {

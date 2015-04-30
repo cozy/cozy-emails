@@ -61,6 +61,7 @@ module.exports =
       "menu refresh initializing": "Initializing..."
       "menu refresh cleaning"   : "Cleaning..."
       "menu refresh indicator"  : "%{account}: %{mailbox} (%{progress}%)"
+      "menu last refresh"       : "Last refresh on %{date}."
 
       # List
       "list empty"              : "No email in this box."
@@ -214,6 +215,9 @@ module.exports =
       "account imap show advanced"  : "Show advanced parameters"
       "account smtp hide advanced"  : "Hide advanced parameters"
       "account smtp show advanced"  : "Show advanced parameters"
+      "account tab signature"       : "Signature"
+      "account signature short"     : "Type here the text that will be added to the bottom of all your emails."
+      "account signature"           : "Email Signature"
       "mailbox create ok"           : "Folder created"
       "mailbox create ko"           : "Error creating folder"
       "mailbox update ok"           : "Folder updated"
@@ -250,12 +254,12 @@ module.exports =
       "message action sent ko"      : "Error sending message: "
       "message action draft ok"     : "Message saved"
       "message action draft ko"     : "Error saving message: "
-      "message action delete ok"    : "Message “%{subject}” deleted"
-      "message action delete ko"    : "Error deleting message: "
-      "message action move ok"      : "Message “%{subject}” moved"
-      "message action move ko"      : "Error moving message “%{subject}”: "
-      "message action mark ok"      : "Message marked"
-      "message action mark ko"      : "Error marking message: "
+      "message delete ok"    : "Message “%{subject}” deleted"
+      "message delete ko"    : "Error deleting message: "
+      "message move ok"      : "Message “%{subject}” moved"
+      "message move ko"      : "Error moving message “%{subject}”: "
+      "message mark ok"      : "Message marked"
+      "message mark ko"      : "Error marking message: "
       "conversation move ok"        : "Conversation “%{subject}” moved"
       "conversation move ko"        : "Error moving conversation “%{subject}”"
       "conversation delete ok"      : "Conversation “%{subject}” deleted"
@@ -264,9 +268,47 @@ module.exports =
       "conversation seen ko"        : "Error"
       "conversation unseen ok"      : "Conversation marked as unread"
       "conversation unseen ko"      : "Error"
-      "conversation undelete"       : "Undo conversation deletion"
+      "undo last action"            : "Undo last action"
       "conversation flagged ko"     : "Error"
       "conversation noflag ko"      : "Error"
+      "conversations move ok"        : """
+            %{smart_count} conversation moved||||
+            %{smart_count} conversations moved"""
+      "conversations move ko"        : """
+            Error moving %{smart_count} conversation||||
+            Error moving %{smart_count} conversations"""
+      "conversations delete ok"      : """
+            %{smart_count} conversation deleted||||
+            %{smart_count} conversations deleted
+      """
+      "conversations delete ko"      : """
+            Error deleting %{smart_count} conversation ||||
+            Error deleting %{smart_count} conversations
+      """
+      "conversations seen ok"        : """
+            %{smart_count} conversation moved||||
+            %{smart_count} conversations moved
+      """
+      "conversations seen ko"        : """
+            Error marking %{smart_count} as read||||
+            Error marking %{smart_count} as read
+      """
+      "conversations unseen ok"      : """
+            %{smart_count} conversation marked as unread||||
+            %{smart_count} conversations marked as unread
+      """
+      "conversations unseen ko"      : """
+            Error marking %{smart_count} conversations as unread||||
+            Error marking %{smart_count} conversations as unread
+      """
+      "conversations flagged ko"     : """
+            Error marking %{smart_count} conversation as flagged||||
+            Error marking %{smart_count} conversations as flagged
+      """
+      "conversations noflag ko"      : """
+            %{smart_count} conversation unflagged||||
+            %{smart_count} conversations unflagged
+      """
       "message images warning"      : "Display of images inside message has
                                         been blocked"
       "message images display"      : "Display images"
@@ -274,10 +316,9 @@ module.exports =
       "message delete no trash"     : "Please select a Trash folder"
       "message delete already"      : "Message already in trash folder"
       "message move already"        : "Message already in this folder"
-      "message undelete"            : "Undo message deletion"
-      "message undelete ok"         : "Message undeleted"
-      "message undelete error"      : "Error undoing some action"
-      "message undelete unavailable": "Undo not available"
+      "undo ok"         : "Undone"
+      "undo ko"         : "Error undoing some action"
+      "undo unavailable": "Undo not available"
       "message preview title"       : "View attachments"
 
       # Settings

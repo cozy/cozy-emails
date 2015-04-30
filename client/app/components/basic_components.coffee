@@ -50,10 +50,15 @@ Tabs = React.createClass
 
     render: ->
         ul className: "nav nav-tabs", role: "tablist",
-            for tab, index in @props.tabs
-                li className: tab.class,
+            for index, tab of @props.tabs
+                if tab.class?.indexOf('active') >= 0
+                    url = null
+                else
+                    url = tab.url
+
+                li key: "tab-li-#{index}", className: tab.class,
                     a
-                        href: tab.url
+                        href: url
                         key: "tab-#{index}"
                     ,
                         tab.text
@@ -120,7 +125,41 @@ FormButtons = React.createClass
 
         div null,
             div className: 'col-sm-offset-4',
-                FormButton formButton for formButton in @props.buttons
+                for formButton, index in @props.buttons
+                    formButton.key = index
+                    FormButton formButton
+
+MenuItem = React.createClass
+
+    render: ->
+
+        liOptions = role: 'presentation'
+        liOptions.key = @props.key if @props.key
+        liOptions.className = @props.liClassName if @props.liClassName
+
+        aOptions =
+            role: 'menuitemu'
+            onClick: @props.onClick
+        aOptions.className = @props.className if @props.className
+
+        li liOptions,
+            a aOptions,
+                @props.children
+
+MenuHeader = React.createClass
+
+    render: ->
+        liOptions = role: 'presentation', className: 'dropdown-header'
+        liOptions.key = @props.key if @props.key
+        li liOptions, @props.children
+
+
+MenuDivider = React.createClass
+
+    render: ->
+        liOptions = role: 'presentation', className: 'divider'
+        liOptions.key = @props.key if @props.key
+        li liOptions
 
 
 FormDropdown = React.createClass
@@ -166,8 +205,9 @@ FormDropdown = React.createClass
 AddressLabel = React.createClass
 
     render: ->
+        meaninglessKey = 0
 
-        if @props.contact.name? and @props.contact.name.length > 0
+        if @props.contact.name?.length > 0 and @props.contact.address
             key = @props.contact.address.replace /\W/g, ''
 
             result = span null,
@@ -177,6 +217,10 @@ AddressLabel = React.createClass
                     key: key
                     ,
                         "<#{@props.contact.address}>"
+
+        else if @props.contact.name?.length > 0
+            result = span key: "label-#{meaninglessKey++}",
+                @props.contact.name
 
         else
             result = span null, @props.contact.address
@@ -247,6 +291,9 @@ module.exports = {
     FormButton
     FormButtons
     FormDropdown
+    MenuItem
+    MenuHeader
+    MenuDivider
     Spinner
     SubTitle
     Title

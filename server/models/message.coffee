@@ -58,24 +58,16 @@ module.exports = class Message extends cozydb.CozyModel
             mailboxIDs[box.id] = newUID
             message.updateAttributes {mailboxIDs}, callback
 
-    # Public: move a message to trash from its id.
-    # Find the message then use {::moveToTrash}.
+
+    # Public: fetch a list of message
     #
-    # account - {Account} this message belongs to
-    # id - {String} the message id
+    # ids - {Array} of {String} message ids
     #
-    # Returns (callback) {Message} the updated message
-    @moveToTrash: (account, id, callback) ->
-        Message.find id, (err, message) ->
-            if err
-                callback err
-            else if not message
-                callback new NotFound "Message##{id}"
-            else if account.id isnt message.accountID
-                callback new BadRequest """
-                    Message##{id} not in account #{account.id}"""
-            else
-                message.moveToTrash account, callback
+    # Returns (callback) {Array} of {Message} the fetched messages in same order
+    @findMultiple: (ids, callback) ->
+        async.mapSeries ids, (id, cb) ->
+            Message.find id, cb
+        , callback
 
     # Public: from a list of messages, choses the conversation ID
     # Take a list of messageid -> conversationID, pick the most used
@@ -231,8 +223,16 @@ module.exports = class Message extends cozydb.CozyModel
     #
     # Returns (callback) an {Array} of {Message}
     @byConversationID: (conversationID, callback) ->
+        Message.byConversationIDs [conversationID], callback
+
+    # Public: find messages by multiple conversation-id
+    #
+    # conversationIDs - {Array} of {String} id of the conversations to fetch
+    #
+    # Returns (callback) an {Array} of {Message}
+    @byConversationIDs: (conversationIDs, callback) ->
         Message.rawRequest 'byConversationID',
-            key: conversationID
+            keys: conversationIDs
             reduce: false
             include_docs: true
 
@@ -536,7 +536,7 @@ module.exports = class Message extends cozydb.CozyModel
         hasTwin = @hasTwin or []
         return callback null unless box.id in hasTwin
         hasTwin.push box.id
-        @updateAttributes changes: {hasTwin}, callback
+        @updateAttributes {hasTwin}, callback
 
 
     # Public: add the message to a mailbox in the cozy
@@ -630,7 +630,10 @@ module.exports = class Message extends cozydb.CozyModel
         # applyMessageChanges will perform operation in IMAP
         @imap_applyChanges newflags, newmailboxIDs, boxOps, (err, changes) =>
             return callback err if err
-            @updateAttributes changes, callback
+            if Object.keys(changes.mailboxIDs).length is 0
+                @destroy callback
+            else
+                @updateAttributes changes, callback
 
     # Public: apply changes of flags and boxes to a message in imap, properly
     # set flags and keywords, then copy and remove the message as appropriate.
@@ -706,6 +709,7 @@ module.exports = class Message extends cozydb.CozyModel
                     (cb) ->
                         paths = boxOps.addTo.map (destID) ->
                             boxIndex[destID].path
+                        log.debug "add TO", paths
 
                         imap.multicopy firstuid, paths, (err, uids) ->
                             return callback err if err
@@ -717,7 +721,9 @@ module.exports = class Message extends cozydb.CozyModel
                     (cb) ->
                         #paths = [{path:xxx, uid:xxx},{path:xxx, uid:xxx}]
                         paths = boxOps.removeFrom.map (boxid) ->
-                            boxIndex[boxid]
+                            {path, uid} = boxIndex[boxid]
+                            return {path, uid}
+                        log.debug "remove FROM", paths
                         imap.multiremove paths, cb
 
                 ], releaseImap
@@ -868,6 +874,80 @@ module.exports = class Message extends cozydb.CozyModel
                 value: -1
 
             @applyPatchOperations patch, callback
+
+    # Public: add a flag to this message in cozy & imap
+    #
+    # flag - {String} the flag to add
+    #
+    # Returns (callback) {Message} the updated message
+    addFlag: (flag, callback) ->
+        patch = [
+            op: 'add'
+            path: "/flags/"
+            value: flag
+        ]
+
+        @applyPatchOperations patch, callback
+
+    # Public: removeFlag
+    #
+    # flag - {String} the flag to add
+    #
+    # Returns (callback) {Message} the updated message
+    removeFlag: (flag, callback) ->
+
+        index = @flags.indexOf flag
+        if index is -1
+            return callback null, this
+
+        patch = [
+            op: 'remove'
+            path: "/flags/#{index}"
+        ]
+
+        @applyPatchOperations patch, callback
+
+    # Public: move
+    #
+    # from - {String} mailboxID to remove from
+    # to - {String} or {Array} of {Strin} mailboxID to add to
+    #
+    # Returns (callback) {Message} the updated message
+    move: (from, to, callback) ->
+
+        to = [to] unless Array.isArray to
+
+        patch = [
+            op: 'remove'
+            path: "/mailboxIDs/#{from}"
+        ].concat to.map (boxID) ->
+            op: 'add'
+            path: "/mailboxIDs/#{boxID}"
+            value: -1
+
+        @applyPatchOperations patch, callback
+
+    # Public: destroy a message from imap & cozy
+    # the message can not be recovered
+    #
+    # Retruns (callback) at completion
+    imapcozy_destroy: (callback) ->
+        # make a patch that remove from all box
+        # {::applyPatchOperations} will destroy the message
+        mailboxes = Object.keys @mailboxIDs
+        patch = for boxid in mailboxes
+            op: 'remove'
+            path: "/mailboxIDs/#{boxid}"
+
+        @applyPatchOperations patch, callback
+
+    # Public: wether or not this message
+    # is a draft. Consider a message a draft if it is in Draftbox or has
+    # the \\Draft flag
+    #
+    # Returns {Bollean} is this message a draft ?
+    isDraft: (draftBoxID) ->
+        @mailboxIDs[draftBoxID]? or '\\Draft' in @flags
 
 
     # Public: wrap an async function (the operation) to get a connection from

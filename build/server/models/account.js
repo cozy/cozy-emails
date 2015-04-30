@@ -41,7 +41,8 @@ Account = (function(superClass) {
     junkMailbox: String,
     allMailbox: String,
     favorites: [String],
-    patchIgnored: Boolean
+    patchIgnored: Boolean,
+    signature: String
   };
 
   Account.findSafe = function(id, callback) {
@@ -394,7 +395,8 @@ Account = (function(superClass) {
           attribs: box.attribs,
           nbTotal: (count != null ? count.total : void 0) || 0,
           nbUnread: (count != null ? count.unread : void 0) || 0,
-          nbRecent: (count != null ? count.recent : void 0) || 0
+          nbRecent: (count != null ? count.recent : void 0) || 0,
+          lastSync: box.lastSync
         };
       });
       return callback(null, rawObject);

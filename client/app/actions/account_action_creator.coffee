@@ -31,7 +31,7 @@ module.exports = AccountActionCreator =
                 afterCreation(AccountStore.getByID account.id)
 
 
-    edit: (inputValues, accountID) ->
+    edit: (inputValues, accountID, callback) ->
         AccountActionCreator._setNewAccountWaitingStatus true
 
         account = AccountStore.getByID accountID
@@ -47,6 +47,7 @@ module.exports = AccountActionCreator =
                     value: rawAccount
                 LayoutActionCreator = require '../actions/layout_action_creator'
                 LayoutActionCreator.notify t('account updated'), autoclose: true
+                callback?()
 
     check: (inputValues, accountID, cb) ->
         if accountID?

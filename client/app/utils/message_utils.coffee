@@ -1,9 +1,5 @@
 {ComposeActions} = require '../constants/app_constants'
 ContactStore     = require '../stores/contact_store'
-MessageStore     = require '../stores/message_store'
-ConversationActionCreator = require '../actions/conversation_action_creator'
-MessageActionCreator      = require '../actions/message_action_creator'
-LayoutActionCreator       = require '../actions/layout_action_creator'
 
 
 QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;"
@@ -14,7 +10,7 @@ QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34
 COMPOSE_STYLE = """
 <style>
 p {margin: 0;}
-pre {background: transparent; border: 0}^8
+pre {background: transparent; border: 0}
 </style>
 """
 
@@ -89,7 +85,8 @@ module.exports = MessageUtils =
     # (reply, reply to all, forward or simple message).
     # It add appropriate headers to the message. It adds style tags when
     # required too.
-    makeReplyMessage: (myAddress, inReplyTo, action, inHTML) ->
+    # It adds signature at the end of the zone where the user will type.
+    makeReplyMessage: (myAddress, inReplyTo, action, inHTML, signature) ->
         message =
             composeInHTML: inHTML
             attachments: Immutable.Vector.empty()
@@ -119,6 +116,12 @@ module.exports = MessageUtils =
             message.references = inReplyTo.get('references') or []
             message.references = message.references.concat message.inReplyTo
 
+        if signature? and signature.length > 0
+            isSignature = true
+            signature = "--\n#{signature}"
+        else
+            isSignature = false
+
         options = {
             message
             inReplyTo
@@ -126,6 +129,8 @@ module.exports = MessageUtils =
             sender
             text
             html
+            signature
+            isSignature
         }
 
         switch action
@@ -140,7 +145,7 @@ module.exports = MessageUtils =
                 @setMessageAsForward options
 
             when null
-                @setMessgeAsDefault message
+                @setMessageAsDefault options
 
         # remove my address from dests
         notMe = (dest) -> return dest.address isnt myAddress
@@ -154,6 +159,7 @@ module.exports = MessageUtils =
     # * Set recipient based on sender
     # * add a style header for proper display
     # * Add quote of the previous message at the beginning of the message
+    # * adds a signature at the message end.
     setMessageAsReply: (options) ->
         {
             message
@@ -162,6 +168,8 @@ module.exports = MessageUtils =
             sender
             text
             html
+            signature
+            isSignature
         } = options
 
         params = date: dateHuman, sender: sender
@@ -171,18 +179,27 @@ module.exports = MessageUtils =
         message.bcc = []
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
+        if isSignature
+            message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
             <p><br /></p>
             """
+        if isSignature
+            signature = signature.replace /\n/g, '<br>'
+            message.html += """
+            <p><br /></p><p id="signature">#{signature}</p>
+            """
+
 
     # Build message to display in composer in case of a reply to all message:
     # * set subject automatically (Re: previous subject)
     # * Set recipients based on all people set in the conversation.
     # * add a style header for proper display
     # * Add quote of the previous message at the beginning of the message
+    # * adds a signature at the message end.
     setMessageAsReplyAll: (options) ->
         {
             message
@@ -191,6 +208,8 @@ module.exports = MessageUtils =
             sender
             text
             html
+            signature
+            isSignature
         } = options
 
         params = date: dateHuman, sender: sender
@@ -209,17 +228,26 @@ module.exports = MessageUtils =
 
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
+        if isSignature
+            message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
             <p><br /></p>
             """
+        if isSignature
+            signature = signature.replace /\n/g, '<br>'
+            message.html += """
+            <p><br /></p><p id="signature">#{signature}</p>
+            """
+
 
     # Build message to display in composer in case of a message forwarding:
     # * set subject automatically (fwd: previous subject)
     # * add a style header for proper display
     # * Add forward information at the beginning of the message
+    # We don't add signature here (see Thunderbird behavior)
     setMessageAsForward: (options) ->
         {
             message
@@ -228,6 +256,8 @@ module.exports = MessageUtils =
             sender
             text
             html
+            signature
+            isSignature
         } = options
 
         addresses = inReplyTo.get('to')
@@ -257,6 +287,7 @@ module.exports = MessageUtils =
 
 """
         textSeparator = separator.replace('&lt;', '<').replace('&gt;', '>')
+        textSeparator = textSeparator.replace('<pre>', '').replace('</pre>', '')
         htmlSeparator = separator.replace /(\n)+/g, '<br />'
 
         @setMessageAsDefault message
@@ -276,13 +307,34 @@ module.exports = MessageUtils =
 
 
     # Clear all fields of the message object.
-    setMessageAsDefault: (message) ->
+    # Add signature if given.
+    setMessageAsDefault: (options) ->
+        {
+            message
+            inReplyTo
+            dateHuman
+            sender
+            text
+            html
+            signature
+            isSignature
+        } = options
+
         message.to = []
         message.cc = []
         message.bcc = []
         message.subject = ''
         message.text = ''
-        message.html = ''
+        if isSignature
+            message.text += "\n\n#{signature}"
+        message.html = COMPOSE_STYLE
+        if isSignature
+            signature = signature.replace /\n/g, '<br>'
+            message.html += """
+            <p><br /></p><p><br /></p>
+            <p id="signature">--\n#{signature}</p>
+            """
+
         return message
 
 
@@ -382,9 +434,12 @@ module.exports = MessageUtils =
 
         # Convert HTML to markdown
         try
-            result = toMarkdown html
+            result = html.replace /<(style>)[^\1]*\1/gim, ''
+            result = toMarkdown result
         catch
-            result = html.replace /<[^>]*>/gi, '' if html?
+            if html?
+                result = html.replace /<(style>)[^\1]*\1/gim, ''
+                result = html.replace /<[^>]*>/gi, ''
 
         # convert HTML entities
         tmp = document.createElement 'div'
@@ -424,121 +479,3 @@ module.exports = MessageUtils =
         if subject.indexOf(replyPrefix) isnt 0
             subject = "#{replyPrefix}#{subject}"
         subject
-
-    # TODO put functions below in an other module.
-
-    # Delete message(s) or conversations.
-    #
-    # @params {Mixed}    ids          messageID or Message or array of
-    #                                 messageIDs or Messages
-    # @params {Boolean}  conversation true to delete whole conversation
-    # @params {Function} cb           callback
-    delete: (ids, conversation, cb) ->
-        @action 'delete', ids, conversation, null, cb
-
-
-    # Perform a move operation on given conversation.
-    move: (ids, conversation, from, to, cb) ->
-        options =
-            from: from
-            to: to
-        @action 'move', ids, conversation, options, cb
-
-
-    action: (action, ids, conversation, options, cb) ->
-
-        if Array.isArray ids
-            mass = ids.length
-            selected = ids
-        else
-            mass = 1
-            selected = [ids]
-
-        # If we deleted only one message, we'll navigate to the next one,
-        # otherwise close preview panel and select first message
-        if selected.length > 1
-            window.cozyMails.messageClose()
-        else
-            next = MessageStore.getNextMessage conversation
-
-
-        # Called once every message has been deleted
-        onDone = _.after selected.length, ->
-            if typeof cb is 'function'
-                cb()
-
-
-        # Handle one message
-        handleMessage = (id) ->
-            switch action
-
-                when 'move'
-
-                    {from, to} = options
-                    MessageActionCreator.move id, from, to, (error) ->
-                        if error?
-                            msg = "#{t("message action move ko")} #{error}"
-                            LayoutActionCreator.alertError msg
-                        onDone()
-
-                when 'delete'
-                    MessageActionCreator.delete id, (error) ->
-                        if error?
-                            msg = "#{t("message action delete ko")} : #{error}"
-                            LayoutActionCreator.alertError msg
-                        onDone()
-
-
-        # Handle one conversation
-        handleConversation = (message) ->
-
-            messageID = message.get 'id'
-
-            # sometime, draft messages don't have a conversationID
-            conversationID = message.get 'conversationID'
-
-            if conversationID?
-                params = subject: message.get('subject')
-
-                switch action
-
-                    when 'move'
-                        {from, to} = options
-                        ConversationActionCreator.move message, from, to, (error) ->
-                            if error?
-                                msg = "#{t("message action move ko", params)} #{error}"
-                                LayoutActionCreator.alertError msg
-                            onDone()
-
-                    when 'delete'
-                        ConversationActionCreator.delete conversationID, (error) ->
-                            if error?
-                                msg = "#{t("conversation delete ko", params)} : #{error}"
-                                LayoutActionCreator.alertError msg
-                            onDone()
-            else
-                handleMessage(messageID)
-
-
-        selected.forEach (id) ->
-
-            if conversation
-                if typeof id is 'string'
-                    message = MessageStore.getByID id
-                else
-                    message = id
-                handleConversation message
-
-            else
-                if typeof id isnt 'string'
-                    id = id.get 'id'
-                handleMessage id
-
-
-        if next?
-            MessageActionCreator.setCurrent next.get('id'), true
-
-            # open next message if the deleted one was open
-            window.cozyMails.messageDisplay next, false
-
-

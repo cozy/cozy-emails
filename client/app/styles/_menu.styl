@@ -31,7 +31,6 @@
             padding 0 3.5em 0 1em
 
     .new-account-action
-    .trigger-refresh-action
         // Sets position at the bottom of the menu
         margin-top auto
 
@@ -167,9 +166,13 @@
     // at the moment :p
     .trigger-refresh-action
         width 100%
-        overflow hidden
-        text-overflow ellipsis
-        white-space nowrap
+        padding-top 0.5em !important
+        padding-bottom 0.5em !important
+
+        *
+            overflow hidden
+            text-overflow ellipsis
+            white-space nowrap
 
         button
             width 100%

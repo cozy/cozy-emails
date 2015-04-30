@@ -168,11 +168,11 @@ class ImapPool
         moreTasks = @tasks.length > 0
 
         unless @account
-            log.debug @id, "_deQueue/needaccount"
+            # log.debug @id, "_deQueue/needaccount"
             return @_getAccount()
 
         if @account.isTest()
-            log.debug @id, "_deQueue/test"
+            # log.debug @id, "_deQueue/test"
             if moreTasks
                 task = @tasks.pop()
                 task.callback? null
@@ -182,11 +182,11 @@ class ImapPool
 
         if moreTasks
             if @closingTimer
-                log.debug @id, "_deQueue/stopTimer"
+                # log.debug @id, "_deQueue/stopTimer"
                 clearTimeout @closingTimer
 
             if free
-                log.debug @id, "_deQueue/free"
+                # log.debug @id, "_deQueue/free"
                 imap = @freeConnections.pop()
                 task = @tasks.pop()
 
@@ -206,13 +206,13 @@ class ImapPool
                     process.nextTick @_deQueue
 
             else if not full
-                log.debug @id, "_deQueue/notfull"
+                # log.debug @id, "_deQueue/notfull"
                 @_makeConnection()
 
             # else queue is full, just wait
 
         else
-            log.debug @id, "_deQueue/startTimer"
+            # log.debug @id, "_deQueue/startTimer"
             @closingTimer ?= setTimeout @_closeConnections, 5000
 
 

@@ -135,9 +135,6 @@ class MessageStore extends Store
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
 
-            if messages.mailboxID
-                SocketUtils.changeRealtimeScope messages.mailboxID
-
             if messages.links? and messages.links.next?
                 # reinit params here for pagination on filtered lists
                 _params = {}
@@ -147,22 +144,22 @@ class MessageStore extends Store
                     [key, value] = p.split '='
                     value = '-' if value is ''
                     _params[key] = value
-            else
+            else if messages.mailboxID
                 # We use pageAfter to know if there are more messages to
                 # load, so we need to set it to its default value
                 _params.pageAfter = '-'
 
-            if _params.pageAfter isnt '-'
-                SocketUtils.changeRealtimeScope messages.mailboxID,
-                    _params.pageAfter
+            if messages.mailboxID
+                before = if _params.pageAfter is '-' then undefined
+                else _params.pageAfter
+
+                SocketUtils.changeRealtimeScope messages.mailboxID, before
 
             if lengths = messages.conversationLengths
                 _conversationLengths = _conversationLengths.merge lengths
 
             if messages.count? and messages.mailboxID?
                 messages = messages.messages.sort __sortFunction
-
-
 
             onReceiveRawMessage message for message in messages
             @emit 'change'
@@ -224,12 +221,7 @@ class MessageStore extends Store
                 pageAfter: '-'
                 sort : newOrder + sort.field
 
-        handle ActionTypes.MESSAGE_ACTION, (action) ->
-            action.target = 'message'
-            _prevAction = action
-
-        handle ActionTypes.CONVERSATION_ACTION, (action) ->
-            action.target = 'conversation'
+        handle ActionTypes.LAST_ACTION, (action) ->
             _prevAction = action
 
         handle ActionTypes.MESSAGE_CURRENT, (value) ->
@@ -319,14 +311,17 @@ class MessageStore extends Store
             # Conversations displayed
             idx = _conversationMemoize.findIndex (message) ->
                 return _currentID is message.get 'id'
-            if idx is _conversationMemoize.length - 1
+            if idx < 0
+                return null
+            else if idx is _conversationMemoize.length - 1
                 # We need first message of previous conversation
                 keys = Object.keys _currentMessages.toJS()
                 idx = keys.indexOf(_conversationMemoize.last().get('id'))
                 if idx < 1
                     return null
                 else
-                    convID = _currentMessages.get(keys[idx - 1])?.get('conversationID')
+                    currentMessage = _currentMessages.get(keys[idx - 1])
+                    convID = currentMessage?.get('conversationID')
                     return null if not convID?
                     prev = _messages.filter (message) ->
                         message.get('conversationID') is convID
@@ -338,7 +333,8 @@ class MessageStore extends Store
         else
             keys = Object.keys _currentMessages.toJS()
             idx = keys.indexOf _currentID
-            return if idx is -1 then null else _currentMessages.get keys[idx - 1]
+            return if idx is -1 then null
+            else _currentMessages.get keys[idx - 1]
 
     getNextMessage: (isConv) ->
         if isConv? and isConv
@@ -347,7 +343,9 @@ class MessageStore extends Store
             # Conversations displayed
             idx = _conversationMemoize.findIndex (message) ->
                 return _currentID is message.get 'id'
-            if idx is 0
+            if idx < 0
+                return null
+            else if idx is 0
                 # We need first message of next conversation
                 keys = Object.keys _currentMessages.toJS()
                 idx = keys.indexOf(_conversationMemoize.last().get('id'))
@@ -365,6 +363,9 @@ class MessageStore extends Store
             else
                 return _currentMessages.get keys[idx + 1]
 
+    getNextOrPrevious: (isConv) ->
+        @getNextMessage(isConv) or @getPreviousMessage(isConv)
+
     getConversation: (conversationID) ->
         _conversationMemoize = _messages
             .filter (message) ->
@@ -374,6 +375,26 @@ class MessageStore extends Store
         _conversationMemoizeID = conversationID
 
         return _conversationMemoize
+
+    # Retrieve a batch of message with various criteria
+    # target - is an {Object} with a property messageID or messageIDs or
+    #          conversationID or conversationIDs
+    #
+    # Returns an {Array} of {Immutable.Map} messages
+    getMixed: (target) ->
+        if target.messageID
+            return [_messages.get(target.messageID)]
+        else if target.messageIDs
+            return target.messageIDs.map (id) -> _messages.get id
+        else if target.conversationID
+            return _messages.filter (message) ->
+                message.get('conversationID') is target.conversationID
+            .toArray()
+        else if target.conversationIDs
+            return _messages.filter (message) ->
+                message.get('conversationID') in target.conversationIDs
+            .toArray()
+        else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
 
     getConversationsLength: -> return _conversationLengths
 

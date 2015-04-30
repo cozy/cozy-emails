@@ -1,4 +1,5 @@
 {div, ul, li, span, i, p, a, button} = React.DOM
+{MenuHeader, MenuItem} = require './basic_components'
 
 
 module.exports = ToolboxMove = React.createClass
@@ -22,26 +23,15 @@ module.exports = ToolboxMove = React.createClass
             ul
                 className: "dropdown-menu dropdown-menu-#{direction}"
                 role: 'menu',
-                    li
-                        role:      'presentation'
-                        className: 'dropdown-header'
-                        t 'mail action move'
+                    MenuHeader null, t 'mail action move'
                     @renderMailboxes()
 
 
     renderMailboxes: ->
         for id, mbox of @props.mailboxes when id isnt @props.selectedMailboxID
-            @renderMailbox mbox, id
-
-
-    renderMailbox: (mbox, id) ->
-        li
-            role: 'presentation'
-            key: id,
-                a
+            do (id) => # bind id to each mailbox
+                MenuItem
+                    key: id
                     className: "pusher pusher-#{mbox.depth}"
-                    role: 'menuitem'
-                    onClick: @props.onMove
-                    'data-value': id
+                    onClick: => @props.onMove id
                     mbox.label
-
