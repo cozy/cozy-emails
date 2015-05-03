@@ -451,8 +451,9 @@ module.exports =
       "tooltip account parameters": "Paramètres du compte"
       "tooltip delete selection": "Supprimer les messages sélectionnés"
       'tooltip filter': 'Filtrer'
-      'tooltip display filters': 'Montrer les filtres'
+      'tooltip display filters': 'Afficher les filtres'
       'tooltip expunge mailbox': 'Vider la boite'
+
 
       # Filters
       'filters unseen': 'non-lus'
