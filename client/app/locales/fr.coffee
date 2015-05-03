@@ -69,7 +69,7 @@ module.exports =
       "list empty"              : "Pas d'email dans cette boîte.."
       "no flagged message"      : "Pas d'email important dans cette boîte."
       "no unseen message"       : "Pas d'email non-lu dans cette boîte."
-      "no attach message"       : "Pas d'email avec des pièces-jointes."
+      "no attach message"       : "Pas d'email avec des pièces jointes."
       "no filter message"       : "Pas d'email pour ce filtre."
       "list fetching"           : "Chargement…"
       "list search empty"       : "Aucun résultat trouvé pour la requête
@@ -82,7 +82,7 @@ module.exports =
       "list filter all"           : "Tous"
       "list filter unseen"        : "Non lus"
       "list filter flagged"       : "Importants"
-      "list filter attach"        : "Pièces-jointes"
+      "list filter attach"        : "Pièces jointes"
       "list filter from"          : "Expédié par"
       "list filter date"          : "Date entre"
       "list filter date placeholder": "JJ/MM/AAAA"
@@ -451,5 +451,5 @@ module.exports =
       "tooltip filter only attachment": "Montrer seulement les messages avec pièce jointe"
       "tooltip account parameters": "Paramètres du compte"
       "tooltip delete selection": "Supprimer les messages sélectionnés"
-      'tooltip filter': 'Filter'
-      'tooltip display filters': 'Display filters'
+      'tooltip filter': 'Filtrer'
+      'tooltip display filters': 'Afficher les filtres'
