@@ -65,7 +65,13 @@ module.exports =
                             emit ['from', boxid, null, sender.name, docDate], null
                         emit ['from', boxid, null, sender.address, docDate], null
 
-                    for dest in doc.to.concat(doc.cc)
+                    # some messages may not have to or cc fields
+                    dests = []
+                    if doc.to?
+                        dests = dests.concat(doc.to)
+                    if doc.cc?
+                        dests = dests.concat(doc.cc)
+                    for dest in dests
                         if dest.name?
                             emit ['dest', boxid, null, dest.name, docDate], null
                         emit ['dest', boxid, null, dest.address, docDate], null
