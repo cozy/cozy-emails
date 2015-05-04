@@ -255,10 +255,7 @@ module.exports = Compose = React.createClass
             if not window.confirm(t 'compose confirm keep draft')
                 window.setTimeout =>
                     messageID = @state.id
-                    MessageActionCreator.delete {messageID}, (error) ->
-                        unless error?
-                            LayoutActionCreator.notify t('compose draft deleted'),
-                                autoclose: true
+                    MessageActionCreator.delete {messageID}
                 , 0
             else
                 if @state.originalConversationID?
