@@ -439,18 +439,29 @@ module.exports = class Message extends cozydb.CozyModel
 
         skip = 0
 
-        if params.resultsAfter
-            before = params.resultsAfter
-            skip = 1
 
-        Message.rawRequest 'byMailboxRequest',
+        if sortField is 'from' or sortField is 'dest'
+            if params.resultsAfter?
+                skip = params.resultsAfter
+            startkey = [sortField, mailboxID, flag, before, null]
+            endkey   = [sortField, mailboxID, flag, after, null]
+        else
+            if params.resultsAfter?
+                startkey = [sortField, mailboxID, flag, params.resultsAfter]
+            else
+                startkey = [sortField, mailboxID, flag, before]
+            endkey = [sortField, mailboxID, flag, after]
+
+        requestOptions =
             descending: descending
-            startkey: [sortField, mailboxID, flag, before]
-            endkey: [sortField, mailboxID, flag, after]
+            startkey: startkey
+            endkey: endkey
             reduce: false
-            skipe: skip
+            skip: skip
             include_docs: true
             limit: MSGBYPAGE
+
+        Message.rawRequest 'byMailboxRequest', requestOptions
         , (err, rows) ->
             return callback err if err
             callback null, rows.map (row) -> new Message row.doc

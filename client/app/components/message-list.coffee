@@ -131,7 +131,9 @@ MessageList = React.createClass
         toggleQuickFilter = =>
             if @state.quickFilters
                 # default sort
-                LayoutActionCreator.sortMessages field: 'date'
+                LayoutActionCreator.sortMessages
+                    order: '-'
+                    field: 'date'
                 showList()
 
             @setState
@@ -828,7 +830,7 @@ MessagesQuickFilter = React.createClass
             return ''
         else
             end = end.split '/'
-            return "#{end[2]}-#{end[1]}-#{end[0]}T00:00:00.000Z"
+            return "#{end[2]}-#{end[1]}-#{end[0]}T23:59:59.999Z"
 
     # Validate start and end dates
     # update state and return true if both are valid
@@ -860,6 +862,7 @@ MessagesQuickFilter = React.createClass
         else
             value = @refs.value.getDOMNode().value
             LayoutActionCreator.sortMessages
+                order:  '-'
                 field:  @state.type
                 after:  "#{value}\uFFFF"
                 before: value

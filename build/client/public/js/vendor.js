@@ -47662,7 +47662,7 @@ function MediumEditor(elements, options) {
                     //this.options.ownerDocument.execCommand('formatBlock', false, 'p');
                 }
                 // Cozy: don't insert paragraphs
-                e.preventDefault();
+                event.preventDefault();
             }
         }
     }
