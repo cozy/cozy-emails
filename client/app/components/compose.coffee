@@ -807,7 +807,12 @@ ComposeEditor = React.createClass
                     # if editor has not the focus, insert image at the end
                     # otherwise at cursor position
                     if not document.activeElement.classList.contains 'rt-editor'
-                        document.querySelector('.rt-editor').innerHTML += img
+                        # if there is a signature, insert image juste before
+                        signature = document.getElementById 'signature'
+                        if signature?
+                            signature.previousElementSibling.innerHTML += img
+                        else
+                            document.querySelector('.rt-editor').innerHTML += img
                     else
                         document.execCommand 'insertHTML', false, img
                     fileReader = new FileReader()
