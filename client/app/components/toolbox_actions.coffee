@@ -7,6 +7,22 @@ module.exports = ToolboxActions = React.createClass
     displayName: 'ToolboxActions'
 
 
+    propTypes:
+
+        direction            : React.PropTypes.string.isRequired
+        displayConversations : React.PropTypes.bool.isRequired
+        isFlagged            : React.PropTypes.bool
+        isSeen               : React.PropTypes.bool
+        mailboxes            : React.PropTypes.object.isRequired
+        message              : React.PropTypes.object
+        messageID            : React.PropTypes.string
+        onConversationDelete : React.PropTypes.func.isRequired
+        onConversationMark   : React.PropTypes.func.isRequired
+        onConversationMove   : React.PropTypes.func.isRequired
+        onHeaders            : React.PropTypes.func
+        onMark               : React.PropTypes.func.isRequired
+
+
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
                not(_.isEqual(nextProps, @props))
