@@ -31,6 +31,7 @@ module.exports = AccountConfigMain = React.createClass
     getInitialState: ->
         state = {}
         state[key] = value for key, value of @props
+        state.imapAdvanced = false
         state.smtpAdvanced = false
         return state
 
@@ -148,6 +149,19 @@ module.exports = AccountConfigMain = React.createClass
                 onClick: (event) =>
                     @_onServerParam event.target, 'imap', 'tls'
 
+            div
+                className: "form-group",
+                a
+                    className: "col-sm-3 col-sm-offset-2 control-label clickable",
+                    onClick: @toggleIMAPAdvanced,
+                    t "account imap #{if @state.imapAdvanced then 'hide' else 'show'} advanced"
+
+            if @state.imapAdvanced
+                AccountInput
+                    name: 'imapLogin'
+                    value: @linkState('imapLogin').value
+                    errors: @state.errors
+                    errorField: ['imap', 'imapServer', 'imapPort', 'imapLogin']
 
             FieldSet text: t 'account sending server'
 

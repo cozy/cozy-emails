@@ -59,6 +59,7 @@ module.exports = React.createClass
             imapPort: allowEmpty: false
             imapSSL: allowEmpty: true
             imapTLS: allowEmpty: true
+            imapLogin: allowEmpty: true
             smtpServer: allowEmpty: false
             smtpPort: allowEmpty: false
             smtpSSL: allowEmpty: true
