@@ -5927,7 +5927,9 @@ module.exports = React.createClass({
         progress: progress
       }))) : this.state.isRefreshStarted ? span({
         key: 'sync-box'
-      }, t("menu refresh initializing")) : void 0
+      }, t("menu refresh initializing")) : span({
+        key: 'waiting'
+      }, t("menu refresh waiting"))
     ]));
   },
   getRefreshInfo: function() {
@@ -10303,6 +10305,7 @@ module.exports = {
   "menu refresh label": "Refresh",
   "menu refresh initializing": "Initializing...",
   "menu refresh cleaning": "Cleaning...",
+  "menu refresh waiting": "Waiting for server...",
   "menu refresh indicator": "%{account}: %{mailbox} (%{progress}%)",
   "menu last refresh": "Last refresh on %{date}.",
   "list empty": "Keine E-Mail in diesem Postfach.",
@@ -10615,6 +10618,7 @@ module.exports = {
   "menu refresh label": "Refresh",
   "menu refresh initializing": "Initializing...",
   "menu refresh cleaning": "Cleaning...",
+  "menu refresh waiting": "Waiting for server...",
   "menu refresh indicator": "%{account}: %{mailbox} (%{progress}%)",
   "menu last refresh": "Last refresh on %{date}.",
   "list empty": "No email in this box.",
@@ -10961,6 +10965,7 @@ module.exports = {
   "menu refresh label": "Rafraîchir",
   "menu refresh initializing": "Initialisation...",
   "menu refresh cleaning": "Nettoyage...",
+  "menu refresh waiting": "En attente du serveur...",
   "menu refresh indicator": "%{account} : %{mailbox} (%{progress}%)",
   "menu last refresh": "Dernier rafraîchissement le %{date}.",
   "list empty": "Pas d'email dans cette boîte..",
