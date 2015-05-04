@@ -118,7 +118,6 @@ module.exports = MessageUtils =
 
         if signature? and signature.length > 0
             isSignature = true
-            signature = "--\n#{signature}"
         else
             isSignature = false
 
@@ -326,13 +325,13 @@ module.exports = MessageUtils =
         message.subject = ''
         message.text = ''
         if isSignature
-            message.text += "\n\n#{signature}"
+            message.text += "-- \n#{signature}"
         message.html = COMPOSE_STYLE
         if isSignature
             signature = signature.replace /\n/g, '<br>'
             message.html += """
             <p><br /></p><p><br /></p>
-            <p id="signature">--\n#{signature}</p>
+            <p id="signature">-- \n<br>#{signature}</p>
             """
 
         return message
