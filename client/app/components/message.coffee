@@ -93,8 +93,9 @@ module.exports = React.createClass
         if text? and not html? and @state.messageDisplayHTML
             try
                 html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
+                html = "<div class='textOnly'>#{html}</div>"
             catch e
-                html = "<div class='text'>#{text}</div>" #markdown.toHTML text
+                html = "<div class='textOnly'>#{text}</div>"
 
         if html? and not text? and not @state.messageDisplayHTML
             text = toMarkdown html
@@ -365,7 +366,7 @@ module.exports = React.createClass
         if not needConfirmation or window.confirm confirmMessage
             MessageActionCreator.delete {messageID}
 
-    onConversationDelete: () ->
+    onConversationDelete: ->
         conversationID = @props.message.get('conversationID')
         MessageActionCreator.delete {conversationID}
 
