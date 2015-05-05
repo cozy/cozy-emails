@@ -378,7 +378,7 @@ MessageList = React.createClass
             return false
 
         else if not applyToConversation
-            return {cout, messageIDs: selected, applyToConversation}
+            return {count, messageIDs: selected, applyToConversation}
 
         else
             conversationIDs = selected.map (id) =>
