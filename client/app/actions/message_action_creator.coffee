@@ -172,7 +172,7 @@ _getNotification = (target, messages, action, err) ->
 
     return t "#{type} #{action} #{ok}",
         error: errMsg
-        subject: subject
+        subject: subject or ''
         smart_count: smart_count
 
 
