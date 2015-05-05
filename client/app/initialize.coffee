@@ -70,6 +70,10 @@ window.onload = ->
 
         window.cozyMails.setSetting 'plugins', window.settings.plugins
 
+        # Web Intents
+        IntentManager = require "./utils/intent_manager"
+        window.intentManager = new IntentManager()
+
         # Flux initialization (must be called at the begining)
         AccountStore  = require './stores/account_store'
         ContactStore  = require './stores/contact_store'

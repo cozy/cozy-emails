@@ -9,9 +9,11 @@ MailsInput = require './mails_input'
 
 AccountPicker = require './account_picker'
 
-{ComposeActions} = require '../constants/app_constants'
+{ComposeActions, Tooltips} = require '../constants/app_constants'
 
-messageUtils = require '../utils/message_utils'
+FileUtils    = require '../utils/file_utils'
+MessageUtils = require '../utils/message_utils'
+
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
@@ -305,7 +307,7 @@ module.exports = Compose = React.createClass
         # new draft
         else
             account = @props.accounts[@props.selectedAccountID]
-            state = messageUtils.makeReplyMessage(
+            state = MessageUtils.makeReplyMessage(
                 account.login,
                 @props.inReplyTo,
                 @props.action,
@@ -386,8 +388,8 @@ module.exports = Compose = React.createClass
         if valid
             if @state.composeInHTML
                 message.html = @_cleanHTML @state.html
-                message.text = messageUtils.cleanReplyText message.html
-                message.html = messageUtils.wrapReplyHtml message.html
+                message.text = MessageUtils.cleanReplyText message.html
+                message.html = MessageUtils.wrapReplyHtml message.html
             else
                 message.text = @state.text.trim()
 
@@ -552,23 +554,37 @@ ComposeEditor = React.createClass
         classTarget = if @state.target then 'target' else ''
 
         if @props.composeInHTML
-            div
-                className: "form-control rt-editor #{classFolded} #{classTarget}",
-                ref: 'html',
-                contentEditable: true,
-                onKeyDown: @onKeyDown,
-                onInput: @onHTMLChange,
-                onDragOver: @allowDrop,
-                onDragEnter: @onDragEnter,
-                onDragLeave: @onDragLeave,
-                onDrop: @handleFiles,
-                # when dropping an image, input is fired before the image has
-                # really been added to the DOM, so we need to also listen to
-                # blur event
-                onBlur: @onHTMLChange,
-                dangerouslySetInnerHTML: {
-                    __html: @state.html.value
-                }
+            div null,
+                div className: "editor-actions",
+                    a
+                        onClick: @choosePhoto,
+                            i
+                                className:'fa fa-image'
+                                'aria-describedby': Tooltips.COMPOSE_IMAGE
+                                'data-tooltip-direction': 'top'
+                    a
+                        onClick: @choosePhotoMock,
+                            i
+                                className:'fa fa-cloud-download'
+                                'aria-describedby': Tooltips.COMPOSE_MOCK
+                                'data-tooltip-direction': 'top'
+                div
+                    className: "form-control rt-editor #{classFolded} #{classTarget}",
+                    ref: 'html',
+                    contentEditable: true,
+                    onKeyDown: @onKeyDown,
+                    onInput: @onHTMLChange,
+                    onDragOver: @allowDrop,
+                    onDragEnter: @onDragEnter,
+                    onDragLeave: @onDragLeave,
+                    onDrop: @handleFiles,
+                    # when dropping an image, input is fired before the image has
+                    # really been added to the DOM, so we need to also listen to
+                    # blur event
+                    onBlur: @onHTMLChange,
+                    dangerouslySetInnerHTML: {
+                        __html: @state.html.value
+                    }
         else
             textarea
                 className: "editor #{classTarget}",
@@ -812,13 +828,62 @@ ComposeEditor = React.createClass
                             document.querySelector('.rt-editor').innerHTML += img
                     else
                         document.execCommand 'insertHTML', false, img
-                    fileReader = new FileReader()
-                    fileReader.readAsDataURL file
-                    fileReader.onload = =>
+                    FileUtils.fileToDataURI file, (result) =>
                         img = document.getElementById id
                         if img
                             img.removeAttribute 'id'
-                            img.src = fileReader.result
+                            img.src = result
                             # force update of React component
                             @onHTMLChange()
         @setState target: false
+
+
+    choosePhoto: ->
+        intent =
+            type  : 'pickObject'
+            params:
+                objectType : 'singlePhoto'
+                isCropped  : true
+                proportion : 1
+                maxWidth   : 10
+                minWidth   : 10
+        timeout = 30000 # 30 seconds
+
+        window.intentManager.send('nameSpace', intent, timeout)
+            .then @choosePhoto_answer, (error) ->
+                console.log 'response in error : ', error
+
+
+    choosePhotoMock: ->
+        message =
+            data:
+                newPhotoChosen: true
+                name: 'mockPhoto.gif'
+                dataUrl: 'data:image/gif;base64,R0lGOD lhCwAOAMQfAP////7+/vj4+Hh4eHd3d/v7+/Dw8HV1dfLy8ubm5vX19e3t7fr 6+nl5edra2nZ2dnx8fMHBwYODg/b29np6eujo6JGRkeHh4eTk5LCwsN3d3dfX 13Jycp2dnevr6////yH5BAEAAB8ALAAAAAALAA4AAAVq4NFw1DNAX/o9imAsB tKpxKRd1+YEWUoIiUoiEWEAApIDMLGoRCyWiKThenkwDgeGMiggDLEXQkDoTh CKNLpQDgjeAsY7MHgECgx8YR8oHwNHfwADBACGh4EDA4iGAYAEBAcQIg0Dk gcEIQA7'
+        @choosePhoto_answer message
+
+
+    choosePhoto_answer : (message) ->
+        answer = message.data
+        if answer.newPhotoChosen
+            data      = FileUtils.dataURItoBlob answer.dataUrl
+            blob      = new Blob([data.blob, {type: data.mime}])
+            blob.name = answer.name
+            picker    = @props.getPicker()
+            picker.addFiles [blob]
+            if document.activeElement.classList.contains 'rt-editor'
+                # editor has focus, insert image at cursor position
+                document.execCommand('insertHTML', false, '<img src="' + answer.dataUrl + '" data-src="' + answer.name + '">')
+            else
+                # otherwise, insert at end
+                # if there is a signature, insert image juste before
+                img = document.createElement 'img'
+                img.src = answer.dataUrl
+                img.dataset.src = answer.name
+                signature = document.getElementById 'signature'
+                if signature?
+                    signature.parentNode.insertBefore img, signature
+                else
+                    document.querySelector('.rt-editor').appendChild img
+            # force update of React component
+            @onHTMLChange()
