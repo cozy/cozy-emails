@@ -601,6 +601,10 @@ class Account extends cozydb.CozyModel
     # Returns (callback) {Object} info, the nodemailer infos
     sendMessage: (message, callback) ->
         return callback null, messageId: 66 if @isTest()
+        # In NodeMailer, inReplyTo header should be a string, so we only keep
+        # the first message ID (if replying to more than one message, others
+        # ID will be in references header)
+        message.inReplyTo = message.inReplyTo.shift()
         options =
             port: @smtpPort
             host: @smtpServer

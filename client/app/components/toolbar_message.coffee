@@ -79,7 +79,6 @@ module.exports = React.createClass
             mailboxes:      @props.mailboxes
             isSeen:         isSeen
             isFlagged:      isFlagged
-            mailboxID:      @props.selectedMailboxID
             messageID:      @props.message.get 'id'
             message:        @props.message
             onMark:         @props.onMark

@@ -7,7 +7,7 @@ module.exports.get = (req, res, next) ->
     url = "https://autoconfig.thunderbird.net/v1.1/" + req.params.domain
     req = https.get url, (response) ->
         if response.statusCode isnt 200
-            res.send response.statusCode, ''
+            res.status(response.statusCode).send('')
         else
             body = ''
             response.on 'data', (data) ->

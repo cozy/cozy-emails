@@ -255,10 +255,7 @@ module.exports = Compose = React.createClass
             if not window.confirm(t 'compose confirm keep draft')
                 window.setTimeout =>
                     messageID = @state.id
-                    MessageActionCreator.delete {messageID}, (error) ->
-                        unless error?
-                            LayoutActionCreator.notify t('compose draft deleted'),
-                                autoclose: true
+                    MessageActionCreator.delete {messageID}
                 , 0
             else
                 if @state.originalConversationID?
@@ -538,13 +535,15 @@ ComposeEditor = React.createClass
         return not(_.isEqual(nextState, @state)) or
             not (_.isEqual(nextProps, @props))
 
+    # Update parent component when content has been updated
+    onHTMLChange: (event) ->
+        @props.html.requestChange @refs.html.getDOMNode().innerHTML
+
+    # Update parent component when content has been updated
+    onTextChange: (event) ->
+        @props.text.requestChange @refs.content.getDOMNode().value
+
     render: ->
-
-        onHTMLChange = (event) =>
-            @props.html.requestChange @refs.html.getDOMNode().innerHTML
-
-        onTextChange = (event) =>
-            @props.text.requestChange @refs.content.getDOMNode().value
 
         if @props.settings.get 'composeOnTop'
             classFolded = 'folded'
@@ -558,7 +557,7 @@ ComposeEditor = React.createClass
                 ref: 'html',
                 contentEditable: true,
                 onKeyDown: @onKeyDown,
-                onInput: onHTMLChange,
+                onInput: @onHTMLChange,
                 onDragOver: @allowDrop,
                 onDragEnter: @onDragEnter,
                 onDragLeave: @onDragLeave,
@@ -566,7 +565,7 @@ ComposeEditor = React.createClass
                 # when dropping an image, input is fired before the image has
                 # really been added to the DOM, so we need to also listen to
                 # blur event
-                onBlur: onHTMLChange,
+                onBlur: @onHTMLChange,
                 dangerouslySetInnerHTML: {
                     __html: @state.html.value
                 }
@@ -575,7 +574,8 @@ ComposeEditor = React.createClass
                 className: "editor #{classTarget}",
                 ref: 'content',
                 onKeyDown: @onKeyDown,
-                onChange: onTextChange,
+                onChange: @onTextChange,
+                onBlur: @onTextChange,
                 defaultValue: @state.text.value
                 onDragOver: @allowDrop,
                 onDragEnter: @onDragEnter,
@@ -804,15 +804,21 @@ ComposeEditor = React.createClass
                     # if editor has not the focus, insert image at the end
                     # otherwise at cursor position
                     if not document.activeElement.classList.contains 'rt-editor'
-                        document.querySelector('.rt-editor').innerHTML += img
+                        # if there is a signature, insert image juste before
+                        signature = document.getElementById 'signature'
+                        if signature?
+                            signature.previousElementSibling.innerHTML += img
+                        else
+                            document.querySelector('.rt-editor').innerHTML += img
                     else
                         document.execCommand 'insertHTML', false, img
                     fileReader = new FileReader()
                     fileReader.readAsDataURL file
-                    fileReader.onload = ->
+                    fileReader.onload = =>
                         img = document.getElementById id
                         if img
                             img.removeAttribute 'id'
-                            img.removeAttribute 'class'
                             img.src = fileReader.result
+                            # force update of React component
+                            @onHTMLChange()
         @setState target: false
