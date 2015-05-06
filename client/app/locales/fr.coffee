@@ -52,7 +52,7 @@ module.exports =
       "menu mailbox total"      : "%{smart_count} message |||| %{smart_count} messages "
       "menu mailbox unread"     : " dont %{smart_count} non lu |||| dont %{smart_count} non lus "
       "menu mailbox new"        : " et %{smart_count} nouveaux |||| et %{smart_count} nouveaux "
-      "menu favorites on"       : "Favorites"
+      "menu favorites on"       : "Favoris"
       "menu favorites off"      : "Toutes"
       "menu toggle"             : "Menu"
 
@@ -68,7 +68,7 @@ module.exports =
       "list empty"              : "Pas d'email dans cette boîte.."
       "no flagged message"      : "Pas d'email important dans cette boîte."
       "no unseen message"       : "Pas d'email non-lu dans cette boîte."
-      "no attach message"       : "Pas d'email avec des pièces-jointes."
+      "no attach message"       : "Pas d'email avec des pièces jointes."
       "no filter message"       : "Pas d'email pour ce filtre."
       "list fetching"           : "Chargement…"
       "list search empty"       : "Aucun résultat trouvé pour la requête
@@ -81,12 +81,12 @@ module.exports =
       "list filter all"           : "Tous"
       "list filter unseen"        : "Non lus"
       "list filter flagged"       : "Importants"
-      "list filter attach"        : "Pièces-jointes"
+      "list filter attach"        : "Pièces jointes"
       "list filter from"          : "Expédié par"
       "list filter date"          : "Date entre"
       "list filter date placeholder": "JJ/MM/AAAA"
       "list filter dest"          : "Destiné à"
-      "list filter subject"       : "Subject commence par…"
+      "list filter subject"       : "Sujet commence par…"
       "list sort"                 : "Trier"
       "list sort date"            : "Date"
       "list sort subject"         : "Sujet"
@@ -177,7 +177,7 @@ module.exports =
       "account smtpLogin"           : "Utilisateur SMTP (s'il est différent)"
       "account smtpMethod"          : "Méthode d'authentification"
       "account smtpMethod NONE"     : "Aucune"
-      "account smtpMethod PLAIN"    : "Plain"
+      "account smtpMethod PLAIN"    : "Simple"
       "account smtpMethod LOGIN"    : "Login"
       "account smtpMethod CRAM-MD5" : "Cram-MD5"
       "account smtpPassword short"  : "Mot de passe SMTP"
@@ -222,7 +222,7 @@ module.exports =
       "account smtp hide advanced"  : "Masquer les paramètres avancés"
       "account smtp show advanced"  : "Afficher les paramètres avancés"
       "account tab signature"       : "Signature"
-      "account signature short"     : "Tapez ici le texte qui sera ajouter à la fin de vos courriers."
+      "account signature short"     : "Saisissez ici le texte qui sera ajouté à la fin de vos courriers."
       "account signature"           : "Signature des courriers"
       "mailbox create ok"           : "Dossier créé"
       "mailbox create ko"           : "Erreur de création du dossier"
@@ -310,11 +310,11 @@ module.exports =
       """
       "conversations flagged ko"     : """
             Erreur en marquant %{smart_count} conversation importante||||
-            Erreur en marquant %{smart_count} conversations importante
+            Erreur en marquant %{smart_count} conversations importantes
       """
       "conversations noflag ko"      : """
             Erreur en marquant %{smart_count} conversation non importante||||
-            Erreur en marquant %{smart_count} conversations non importante
+            Erreur en marquant %{smart_count} conversations non importantes
       """
       "message images warning"      : "L'affichage des images du message a été
                                         bloqué"
@@ -450,5 +450,5 @@ module.exports =
       "tooltip filter only attachment": "Montrer seulement les messages avec pièce jointe"
       "tooltip account parameters": "Paramètres du compte"
       "tooltip delete selection": "Supprimer les messages sélectionnés"
-      'tooltip filter': 'Filter'
-      'tooltip display filters': 'Display filters'
+      'tooltip filter': 'Filtrer'
+      'tooltip display filters': 'Montrer les filtres'
