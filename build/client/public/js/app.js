@@ -858,7 +858,7 @@ _getNotification = function(target, messages, action, err) {
   }
   return t("" + type + " " + action + " " + ok, {
     error: errMsg,
-    subject: subject,
+    subject: subject || '',
     smart_count: smart_count
   });
 };
@@ -1180,6 +1180,9 @@ module.exports = React.createClass({
         allowEmpty: true
       },
       imapTLS: {
+        allowEmpty: true
+      },
+      imapLogin: {
         allowEmpty: true
       },
       smtpServer: {
@@ -2134,6 +2137,7 @@ module.exports = AccountConfigMain = React.createClass({
       value = _ref2[key];
       state[key] = value;
     }
+    state.imapAdvanced = false;
     state.smtpAdvanced = false;
     return state;
   },
@@ -2253,7 +2257,17 @@ module.exports = AccountConfigMain = React.createClass({
           return _this._onServerParam(event.target, 'imap', 'tls');
         };
       })(this)
-    }), FieldSet({
+    }), div({
+      className: "form-group"
+    }, a({
+      className: "col-sm-3 col-sm-offset-2 control-label clickable",
+      onClick: this.toggleIMAPAdvanced
+    }, t("account imap " + (this.state.imapAdvanced ? 'hide' : 'show') + " advanced"))), this.state.imapAdvanced ? AccountInput({
+      name: 'imapLogin',
+      value: this.linkState('imapLogin').value,
+      errors: this.state.errors,
+      errorField: ['imap', 'imapServer', 'imapPort', 'imapLogin']
+    }) : void 0, FieldSet({
       text: t('account sending server')
     }), AccountInput({
       name: 'smtpServer',
@@ -3500,6 +3514,12 @@ MenuItem = React.createClass({
     if (this.props.className) {
       aOptions.className = this.props.className;
     }
+    if (this.props.href) {
+      aOptions.href = this.props.href;
+    }
+    if (this.props.target) {
+      aOptions.target = this.props.href;
+    }
     return li(liOptions, a(aOptions, this.props.children));
   }
 });
@@ -3935,12 +3955,6 @@ module.exports = Compose = React.createClass({
             messageID = _this.state.id;
             return MessageActionCreator["delete"]({
               messageID: messageID
-            }, function(error) {
-              if (error == null) {
-                return LayoutActionCreator.notify(t('compose draft deleted'), {
-                  autoclose: true
-                });
-              }
             });
           };
         })(this), 0);
@@ -4269,18 +4283,14 @@ ComposeEditor = React.createClass({
   shouldComponentUpdate: function(nextProps, nextState) {
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
+  onHTMLChange: function(event) {
+    return this.props.html.requestChange(this.refs.html.getDOMNode().innerHTML);
+  },
+  onTextChange: function(event) {
+    return this.props.text.requestChange(this.refs.content.getDOMNode().value);
+  },
   render: function() {
-    var classFolded, classTarget, onHTMLChange, onTextChange;
-    onHTMLChange = (function(_this) {
-      return function(event) {
-        return _this.props.html.requestChange(_this.refs.html.getDOMNode().innerHTML);
-      };
-    })(this);
-    onTextChange = (function(_this) {
-      return function(event) {
-        return _this.props.text.requestChange(_this.refs.content.getDOMNode().value);
-      };
-    })(this);
+    var classFolded, classTarget;
     if (this.props.settings.get('composeOnTop')) {
       classFolded = 'folded';
     } else {
@@ -4293,12 +4303,12 @@ ComposeEditor = React.createClass({
         ref: 'html',
         contentEditable: true,
         onKeyDown: this.onKeyDown,
-        onInput: onHTMLChange,
+        onInput: this.onHTMLChange,
         onDragOver: this.allowDrop,
         onDragEnter: this.onDragEnter,
         onDragLeave: this.onDragLeave,
         onDrop: this.handleFiles,
-        onBlur: onHTMLChange,
+        onBlur: this.onHTMLChange,
         dangerouslySetInnerHTML: {
           __html: this.state.html.value
         }
@@ -4308,7 +4318,8 @@ ComposeEditor = React.createClass({
         className: "editor " + classTarget,
         ref: 'content',
         onKeyDown: this.onKeyDown,
-        onChange: onTextChange,
+        onChange: this.onTextChange,
+        onBlur: this.onTextChange,
         defaultValue: this.state.text.value,
         onDragOver: this.allowDrop,
         onDragEnter: this.onDragEnter,
@@ -4503,7 +4514,7 @@ ComposeEditor = React.createClass({
     }
   },
   handleFiles: function(e) {
-    var file, fileReader, files, id, _i, _len;
+    var file, fileReader, files, id, signature, _i, _len;
     e.preventDefault();
     files = e.target.files || e.dataTransfer.files;
     this.props.getPicker().addFiles(files);
@@ -4514,20 +4525,27 @@ ComposeEditor = React.createClass({
           id = "editor-img-" + (new Date());
           img = "<img data-src='" + file.name + "' id='" + id + "'>";
           if (!document.activeElement.classList.contains('rt-editor')) {
-            document.querySelector('.rt-editor').innerHTML += img;
+            signature = document.getElementById('signature');
+            if (signature != null) {
+              signature.previousElementSibling.innerHTML += img;
+            } else {
+              document.querySelector('.rt-editor').innerHTML += img;
+            }
           } else {
             document.execCommand('insertHTML', false, img);
           }
           fileReader = new FileReader();
           fileReader.readAsDataURL(file);
-          fileReader.onload = function() {
-            img = document.getElementById(id);
-            if (img) {
-              img.removeAttribute('id');
-              img.removeAttribute('class');
-              return img.src = fileReader.result;
-            }
-          };
+          fileReader.onload = (function(_this) {
+            return function() {
+              img = document.getElementById(id);
+              if (img) {
+                img.removeAttribute('id');
+                img.src = fileReader.result;
+                return _this.onHTMLChange();
+              }
+            };
+          })(this);
         }
       }
     }
@@ -6315,6 +6333,7 @@ MessageList = React.createClass({
       ref: 'listToolboxActions',
       mailboxes: this.props.mailboxes,
       onMark: this.onMark,
+      onConversationDelete: this.onConversationDelete,
       onConversationMark: this.onConversationMark,
       onConversationMove: this.onConversationMove,
       displayConversations: this.props.displayConversations,
@@ -6434,7 +6453,7 @@ MessageList = React.createClass({
       return false;
     } else if (!applyToConversation) {
       return {
-        cout: cout,
+        count: count,
         messageIDs: selected,
         applyToConversation: applyToConversation
       };
@@ -6452,7 +6471,7 @@ MessageList = React.createClass({
     }
   },
   onConversationDelete: function() {
-    return onConversationDelete(true);
+    return this.onDelete(true);
   },
   onDelete: function(applyToConversation) {
     var msg, noConfirm, options;
@@ -7184,9 +7203,10 @@ module.exports = React.createClass({
     if ((text != null) && (html == null) && this.state.messageDisplayHTML) {
       try {
         html = markdown.toHTML(text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2"));
+        html = "<div class='textOnly'>" + html + "</div>";
       } catch (_error) {
         e = _error;
-        html = "<div class='text'>" + text + "</div>";
+        html = "<div class='textOnly'>" + text + "</div>";
       }
     }
     if ((html != null) && (text == null) && !this.state.messageDisplayHTML) {
@@ -9022,7 +9042,6 @@ module.exports = React.createClass({
       mailboxes: this.props.mailboxes,
       isSeen: isSeen,
       isFlagged: isFlagged,
-      mailboxID: this.props.selectedMailboxID,
       messageID: this.props.message.get('id'),
       message: this.props.message,
       onMark: this.props.onMark,
@@ -9057,6 +9076,20 @@ FlagsConstants = require('../constants/app_constants').FlagsConstants;
 
 module.exports = ToolboxActions = React.createClass({
   displayName: 'ToolboxActions',
+  propTypes: {
+    direction: React.PropTypes.string.isRequired,
+    displayConversations: React.PropTypes.bool.isRequired,
+    isFlagged: React.PropTypes.bool,
+    isSeen: React.PropTypes.bool,
+    mailboxes: React.PropTypes.object.isRequired,
+    message: React.PropTypes.object,
+    messageID: React.PropTypes.string,
+    onConversationDelete: React.PropTypes.func.isRequired,
+    onConversationMark: React.PropTypes.func.isRequired,
+    onConversationMove: React.PropTypes.func.isRequired,
+    onHeaders: React.PropTypes.func,
+    onMark: React.PropTypes.func.isRequired
+  },
   shouldComponentUpdate: function(nextProps, nextState) {
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
@@ -10285,7 +10318,6 @@ module.exports = {
   "compose error no dest": "Sie können keine Nachricht an Niemanden senden",
   "compose error no subject": "Bitte vergeben Sie einen Betreff",
   "compose confirm keep draft": "Nachricht wurde nicht gesandet, Entwurft behalten?",
-  "compose draft deleted": "Entwurf gelöscht",
   "compose wrong email format": "Die vergebene E-Mail Adresse hat kein geeignes Format: %{address}.",
   "compose forward header": "Gesendete Nachricht",
   "compose forward subject": "Betreff:",
@@ -10598,7 +10630,6 @@ module.exports = {
   "compose error no dest": "You can not send a message to nobody",
   "compose error no subject": "Please set a subject",
   "compose confirm keep draft": "Message not sent, keep the draft?",
-  "compose draft deleted": "Draft deleted",
   "compose wrong email format": "The given email is unproperly formatted: %{address}.",
   "compose forward header": "Forwarded message",
   "compose forward subject": "Subject:",
@@ -10945,7 +10976,6 @@ module.exports = {
   "compose error no dest": "Vous n'avez pas saisi de destinataires",
   "compose error no subject": "Vous n'avez pas saisi de sujet",
   "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?",
-  "compose draft deleted": "Brouillon supprimé",
   "compose wrong email format": "L'addresse mail donnée n'est pas bien formattée : %{address}.",
   "compose forward header": "Message transféré",
   "compose forward subject": "Sujet :",
@@ -10959,7 +10989,7 @@ module.exports = {
   "menu mailbox total": "%{smart_count} message |||| %{smart_count} messages ",
   "menu mailbox unread": " dont %{smart_count} non lu |||| dont %{smart_count} non lus ",
   "menu mailbox new": " et %{smart_count} nouveaux |||| et %{smart_count} nouveaux ",
-  "menu favorites on": "Favorites",
+  "menu favorites on": "Favoris",
   "menu favorites off": "Toutes",
   "menu toggle": "Menu",
   "menu refresh label": "Rafraîchir",
@@ -10971,7 +11001,7 @@ module.exports = {
   "list empty": "Pas d'email dans cette boîte..",
   "no flagged message": "Pas d'email important dans cette boîte.",
   "no unseen message": "Pas d'email non-lu dans cette boîte.",
-  "no attach message": "Pas d'email avec des pièces-jointes.",
+  "no attach message": "Pas d'email avec des pièces jointes.",
   "no filter message": "Pas d'email pour ce filtre.",
   "list fetching": "Chargement…",
   "list search empty": "Aucun résultat trouvé pour la requête \"%{query}\".",
@@ -10981,12 +11011,12 @@ module.exports = {
   "list filter all": "Tous",
   "list filter unseen": "Non lus",
   "list filter flagged": "Importants",
-  "list filter attach": "Pièces-jointes",
+  "list filter attach": "Pièces jointes",
   "list filter from": "Expédié par",
   "list filter date": "Date entre",
   "list filter date placeholder": "JJ/MM/AAAA",
   "list filter dest": "Destiné à",
-  "list filter subject": "Subject commence par…",
+  "list filter subject": "Sujet commence par…",
   "list sort": "Trier",
   "list sort date": "Date",
   "list sort subject": "Sujet",
@@ -11062,7 +11092,7 @@ module.exports = {
   "account smtpLogin": "Utilisateur SMTP (s'il est différent)",
   "account smtpMethod": "Méthode d'authentification",
   "account smtpMethod NONE": "Aucune",
-  "account smtpMethod PLAIN": "Plain",
+  "account smtpMethod PLAIN": "Simple",
   "account smtpMethod LOGIN": "Login",
   "account smtpMethod CRAM-MD5": "Cram-MD5",
   "account smtpPassword short": "Mot de passe SMTP",
@@ -11102,7 +11132,7 @@ module.exports = {
   "account smtp hide advanced": "Masquer les paramètres avancés",
   "account smtp show advanced": "Afficher les paramètres avancés",
   "account tab signature": "Signature",
-  "account signature short": "Tapez ici le texte qui sera ajouter à la fin de vos courriers.",
+  "account signature short": "Saisissez ici le texte qui sera ajouté à la fin de vos courriers.",
   "account signature": "Signature des courriers",
   "mailbox create ok": "Dossier créé",
   "mailbox create ko": "Erreur de création du dossier",
@@ -11162,8 +11192,8 @@ module.exports = {
   "conversations seen ko": "Erreur en marquant %{smart_count} conversation lue||||\nErreur en marquant %{smart_count} conversations lues",
   "conversations unseen ok": "%{smart_count} conversation marquée non-lue||||\n%{smart_count} conversations marquées non-lues",
   "conversations unseen ko": "Erreur en marquant %{smart_count} conversation non-lue||||\nErreur en marquant %{smart_count} conversations non-lues",
-  "conversations flagged ko": "Erreur en marquant %{smart_count} conversation importante||||\nErreur en marquant %{smart_count} conversations importante",
-  "conversations noflag ko": "Erreur en marquant %{smart_count} conversation non importante||||\nErreur en marquant %{smart_count} conversations non importante",
+  "conversations flagged ko": "Erreur en marquant %{smart_count} conversation importante||||\nErreur en marquant %{smart_count} conversations importantes",
+  "conversations noflag ko": "Erreur en marquant %{smart_count} conversation non importante||||\nErreur en marquant %{smart_count} conversations non importantes",
   "message images warning": "L'affichage des images du message a été bloqué",
   "message images display": "Afficher les images",
   "message html display": "Afficher en HTML",
@@ -11250,8 +11280,8 @@ module.exports = {
   "tooltip filter only attachment": "Montrer seulement les messages avec pièce jointe",
   "tooltip account parameters": "Paramètres du compte",
   "tooltip delete selection": "Supprimer les messages sélectionnés",
-  'tooltip filter': 'Filter',
-  'tooltip display filters': 'Display filters'
+  'tooltip filter': 'Filtrer',
+  'tooltip display filters': 'Montrer les filtres'
 };
 });
 
@@ -13257,7 +13287,6 @@ module.exports = MessageUtils = {
     }
     if ((signature != null) && signature.length > 0) {
       isSignature = true;
-      signature = "-- \n" + signature;
     } else {
       isSignature = false;
     }
@@ -13374,12 +13403,12 @@ module.exports = MessageUtils = {
     message.subject = '';
     message.text = '';
     if (isSignature) {
-      message.text += "\n\n" + signature;
+      message.text += "-- \n" + signature;
     }
     message.html = COMPOSE_STYLE;
     if (isSignature) {
       signature = signature.replace(/\n/g, '<br>');
-      message.html += "<p><br /></p><p><br /></p>\n<p id=\"signature\">" + signature + "</p>";
+      message.html += "<p><br /></p><p><br /></p>\n<p id=\"signature\">-- \n<br>" + signature + "</p>";
     }
     return message;
   },
