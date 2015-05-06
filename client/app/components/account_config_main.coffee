@@ -39,6 +39,14 @@ module.exports = AccountConfigMain = React.createClass
     componentWillReceiveProps: (props) ->
         state = {}
         state[key] = value for key, value of props
+
+        if not @_lastDiscovered?
+            # If editing account, init @_lastDiscovered with current domain
+            # so we don't try to discover parameters if domain doesn't change
+            login = state.login.value
+            if state.id?.value? and login?.indexOf('@') >= 0
+                @_lastDiscovered = login.split('@')[1]
+
         @setState state
 
 
