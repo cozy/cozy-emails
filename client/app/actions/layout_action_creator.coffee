@@ -65,21 +65,25 @@ module.exports = LayoutActionCreator =
             autoclose: true
 
     notify: (message, options) ->
-        task =
-            id: Date.now()
-            finished: true
-            message: message
+        if not message? or message.trim() is ''
+            # Throw an error to get the stack trace in server logs
+            throw new Error 'Empty notification'
+        else
+            task =
+                id: Date.now()
+                finished: true
+                message: message
 
-        if options?
-            task.autoclose = options.autoclose
-            task.errors = options.errors
-            task.finished = options.finished
-            task.actions = options.actions
-            task.level = options.level
+            if options?
+                task.autoclose = options.autoclose
+                task.errors = options.errors
+                task.finished = options.finished
+                task.actions = options.actions
+                task.level = options.level
 
-        AppDispatcher.handleViewAction
-            type: ActionTypes.RECEIVE_TASK_UPDATE
-            value: task
+            AppDispatcher.handleViewAction
+                type: ActionTypes.RECEIVE_TASK_UPDATE
+                value: task
 
     clearToasts: ->
         AppDispatcher.handleViewAction
