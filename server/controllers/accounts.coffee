@@ -52,6 +52,11 @@ module.exports.create = (req, res, next) ->
 
 # check account parameters
 module.exports.check = (req, res, next) ->
+    # when checking, we try to connect to IMAP server with the raw
+    # data sent by client, so we need to override here login with
+    # imapLogin if present
+    if req.body.imapLogin
+        req.body.login = req.body.imapLogin
     tmpAccount = new Account req.body
     tmpAccount.testConnections (err) ->
         return next err if err
