@@ -11,7 +11,9 @@ alertError = (error) ->
         message = t "config error #{error.field}"
         LayoutActionCreator.alertError message
     else
-        LayoutActionCreator.alertError error.message
+        # try to handle every possible case
+        message = error.message or error.name or error
+        LayoutActionCreator.alertError message
 
 module.exports = AccountActionCreator =
 

@@ -141,3 +141,21 @@
       a
         font-size .75em
         padding-left .5em
+
+  .editor-actions
+    .btn.btn-default
+        font-size: 1.1em
+        transition: color 0.2s ease
+        background: none
+        box-shadow: none
+        border: 0
+        color: basecolor
+
+        &:active
+            color actioncolor - 10%
+
+    .btn.btn-default:hover
+        color: actioncolor
+
+        &:active
+            color actioncolor - 10%
