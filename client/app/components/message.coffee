@@ -129,32 +129,35 @@ module.exports = React.createClass
 
 
     componentWillMount: ->
-        @_markRead @props.message
+        @_markRead(@props.message, @props.active)
 
 
     componentWillReceiveProps: (props) ->
         state =
             active: props.active
         if props.message.get('id') isnt @props.message.get('id')
-            @_markRead props.message
+            @_markRead(props.message, props.active)
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
             state.messageDisplayImages = props.settings.get 'messageDisplayImages'
             state.composing            = @_shouldOpenCompose props
         @setState state
 
 
-    _markRead: (message) ->
+    _markRead: (message, active) ->
         # Hack to prevent infinite loop if server side mark as read fails
         messageID = message.get 'id'
         if @state.currentMessageID isnt messageID
             state =
                 currentMessageID: messageID
                 prepared: @_prepareMessage message
-
-            setTimeout ->
-                MessageActionCreator.mark {messageID}, MessageFlags.SEEN
-            , 1
             @setState state
+
+            # Only mark as read current active message if unseen
+            flags = message.get('flags').slice()
+            if active and flags.indexOf(MessageFlags.SEEN) is -1
+                setTimeout ->
+                    MessageActionCreator.mark {messageID}, MessageFlags.SEEN
+                , 1
 
 
     prepareHTML: (html) ->
