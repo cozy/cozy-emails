@@ -20,6 +20,8 @@ class LayoutStore extends Store
 
     _shown = true
 
+    _intentAvailable = false
+
 
     ###
         Defines here the action handlers.
@@ -94,6 +96,10 @@ class LayoutStore extends Store
             _shown = false
             @emit 'change'
 
+        handle ActionTypes.INTENT_AVAILABLE, (avaibility) ->
+            _intentAvailable = avaibility
+            @emit 'change'
+
     ###
         Public API
     ###
@@ -104,5 +110,7 @@ class LayoutStore extends Store
     getToasts: -> return _tasks
 
     isShown: -> return _shown
+
+    intentAvailable: -> return _intentAvailable
 
 module.exports = new LayoutStore()

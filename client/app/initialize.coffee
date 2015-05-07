@@ -1,7 +1,7 @@
 # Waits for the DOM to be ready
 # Send client side errors to server
 window.onerror = (msg, url, line, col, error) ->
-    console.error msg, url, line, col, error
+    console.error msg, url, line, col, error, error?.stack
     exception = error?.toString() or msg
     if exception isnt window.lastError
         data =
@@ -70,9 +70,15 @@ window.onload = ->
 
         window.cozyMails.setSetting 'plugins', window.settings.plugins
 
-        # Web Intents
+        # Init Web Intents
         IntentManager = require "./utils/intent_manager"
         window.intentManager = new IntentManager()
+        window.intentManager.send 'ping', from: 'mails'
+        .then (message) ->
+            LayoutActionCreator.intentAvailability true
+        , (error) ->
+            console.error "Intents not available"
+            LayoutActionCreator.intentAvailability true
 
         # Flux initialization (must be called at the begining)
         AccountStore  = require './stores/account_store'

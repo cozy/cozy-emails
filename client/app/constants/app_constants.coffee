@@ -45,6 +45,7 @@ module.exports =
         'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
         'HIDE_ALERT'                : 'HIDE_ALERT'
         'REFRESH'                   : 'REFRESH'
+        'INTENT_AVAILABLE'          : 'INTENT_AVAILABLE'
 
         # Mailbox
         'RECEIVE_RAW_MAILBOXES'     : 'RECEIVE_RAW_MAILBOXES'

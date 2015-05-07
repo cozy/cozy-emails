@@ -245,5 +245,10 @@ module.exports = LayoutActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.TOASTS_HIDE
 
+    intentAvailability: (availability) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.INTENT_AVAILABLE
+            value: availability
+
 # circular import, require after
 MessageActionCreator = require './message_action_creator'

@@ -39,6 +39,7 @@ module.exports = Compose = React.createClass
         callback:             React.PropTypes.func
         onCancel:             React.PropTypes.func
         settings:             React.PropTypes.object.isRequired
+        useIntents:           React.PropTypes.bool.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
@@ -157,17 +158,18 @@ module.exports = Compose = React.createClass
                         className: classLabel,
                         t "compose content"
                     ComposeEditor
-                        messageID: @props.message?.get 'id'
-                        html: @linkState('html')
-                        text: @linkState('text')
-                        accounts: @props.accounts
-                        selectedAccountID: @props.selectedAccountID
-                        settings: @props.settings
-                        onSend: @onSend
-                        composeInHTML: @state.composeInHTML
-                        focus: focusEditor
-                        ref: 'editor'
-                        getPicker: @getPicker
+                        messageID         : @props.message?.get 'id'
+                        html              : @linkState('html')
+                        text              : @linkState('text')
+                        accounts          : @props.accounts
+                        selectedAccountID : @props.selectedAccountID
+                        settings          : @props.settings
+                        onSend            : @onSend
+                        composeInHTML     : @state.composeInHTML
+                        focus             : focusEditor
+                        ref               : 'editor'
+                        getPicker         : @getPicker
+                        useIntents        : @props.useIntents
 
                 div className: 'attachements',
                     FilePicker
@@ -553,21 +555,25 @@ ComposeEditor = React.createClass
             classFolded = ''
         classTarget = if @state.target then 'target' else ''
 
-        if @props.composeInHTML
-            div null,
-                div className: "editor-actions",
-                    a
+        div null,
+            if @props.useIntents
+                div className: "btn-group editor-actions",
+                    button
+                        className: "btn btn-default"
                         onClick: @choosePhoto,
-                            i
+                            span
                                 className:'fa fa-image'
                                 'aria-describedby': Tooltips.COMPOSE_IMAGE
                                 'data-tooltip-direction': 'top'
-                    a
+                    # @TODO Remove this Mock code once Web intents are really plugged
+                    button
+                        className: "btn btn-default"
                         onClick: @choosePhotoMock,
-                            i
-                                className:'fa fa-cloud-download'
+                            span
+                                className:'fa fa-puzzle-piece'
                                 'aria-describedby': Tooltips.COMPOSE_MOCK
                                 'data-tooltip-direction': 'top'
+            if @props.composeInHTML
                 div
                     className: "form-control rt-editor #{classFolded} #{classTarget}",
                     ref: 'html',
@@ -585,18 +591,18 @@ ComposeEditor = React.createClass
                     dangerouslySetInnerHTML: {
                         __html: @state.html.value
                     }
-        else
-            textarea
-                className: "editor #{classTarget}",
-                ref: 'content',
-                onKeyDown: @onKeyDown,
-                onChange: @onTextChange,
-                onBlur: @onTextChange,
-                defaultValue: @state.text.value
-                onDragOver: @allowDrop,
-                onDragEnter: @onDragEnter,
-                onDragLeave: @onDragLeave,
-                onDrop: @handleFiles,
+            else
+                textarea
+                    className: "editor #{classTarget}",
+                    ref: 'content',
+                    onKeyDown: @onKeyDown,
+                    onChange: @onTextChange,
+                    onBlur: @onTextChange,
+                    defaultValue: @state.text.value
+                    onDragOver: @allowDrop,
+                    onDragEnter: @onDragEnter,
+                    onDragLeave: @onDragLeave,
+                    onDrop: @handleFiles,
 
     _initCompose: ->
 
@@ -838,15 +844,16 @@ ComposeEditor = React.createClass
         @setState target: false
 
 
-    choosePhoto: ->
+    choosePhoto: (e) ->
+        e.preventDefault()
         intent =
             type  : 'pickObject'
             params:
                 objectType : 'singlePhoto'
-                isCropped  : true
-                proportion : 1
-                maxWidth   : 10
-                minWidth   : 10
+                isCropped  : false
+                #proportion : 1
+                #maxWidth   : 10
+                #minWidth   : 10
         timeout = 30000 # 30 seconds
 
         window.intentManager.send('nameSpace', intent, timeout)
@@ -854,7 +861,9 @@ ComposeEditor = React.createClass
                 console.log 'response in error : ', error
 
 
-    choosePhotoMock: ->
+    # @TODO Remove this Mock code once Web intents are really plugged
+    choosePhotoMock: (e) ->
+        e.preventDefault()
         message =
             data:
                 newPhotoChosen: true
@@ -871,19 +880,22 @@ ComposeEditor = React.createClass
             blob.name = answer.name
             picker    = @props.getPicker()
             picker.addFiles [blob]
-            if document.activeElement.classList.contains 'rt-editor'
-                # editor has focus, insert image at cursor position
-                document.execCommand('insertHTML', false, '<img src="' + answer.dataUrl + '" data-src="' + answer.name + '">')
-            else
-                # otherwise, insert at end
-                # if there is a signature, insert image juste before
-                img = document.createElement 'img'
-                img.src = answer.dataUrl
-                img.dataset.src = answer.name
-                signature = document.getElementById 'signature'
-                if signature?
-                    signature.parentNode.insertBefore img, signature
+            if @props.composeInHTML
+                if document.activeElement.classList.contains 'rt-editor'
+                    # editor has focus, insert image at cursor position
+                    document.execCommand('insertHTML', false, '<img src="' + answer.dataUrl + '" data-src="' + answer.name + '">')
                 else
-                    document.querySelector('.rt-editor').appendChild img
-            # force update of React component
-            @onHTMLChange()
+                    # otherwise, insert at end
+                    # if there is a signature, insert image juste before
+                    img = document.createElement 'img'
+                    img.src = answer.dataUrl
+                    img.dataset.src = answer.name
+                    signature = document.getElementById 'signature'
+                    if signature?
+                        signature.parentNode.insertBefore img, signature
+                    else
+                        editor = document.querySelector('.rt-editor')
+                        if editor?
+                            editor.appendChild img
+                # force update of React component
+                @onHTMLChange()
