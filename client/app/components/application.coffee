@@ -102,7 +102,7 @@ module.exports = Application = React.createClass
             keySecond = 'right-panel-' + layout.secondPanel.action.split('.')[0]
             # update current message id
             # this need to be done here, so MessageList get the good message ID
-            messageID = layout.secondPanel.parameters.messageID?
+            messageID = layout.secondPanel.parameters.messageID
             if messageID?
                 MessageStore.setCurrentID messageID
             else
