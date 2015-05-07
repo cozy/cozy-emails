@@ -42,6 +42,7 @@ module.exports = React.createClass
         selectedMailboxID      : React.PropTypes.string.isRequired
         settings               : React.PropTypes.object.isRequired
         useIntents             : React.PropTypes.bool.isRequired
+        setActive              : React.PropTypes.func.isRequired
 
 
     getInitialState: ->
@@ -209,18 +210,25 @@ module.exports = React.createClass
             messageDisplayHTML = false
             imagesWarning      = false
 
+        isUnread = message.get('flags').slice().indexOf(MessageFlags.SEEN) is -1
+
         classes = classer
             message: true
             active: @state.active
             isDraft: prepared.isDraft
             isDeleted: prepared.isDeleted
+            isUnread: isUnread
 
         article
             className: classes,
             key: @props.key,
             'data-id': message.get('id'),
                 header
-                    onClick: => @setState active: not @state.active
+                    onClick: =>
+                        if isUnread and not @state.active
+                            @_markRead message
+                            @props.setActive message.get('id')
+                        @setState active: not @state.active
                     @renderHeaders()
                     @renderToolbox() if @state.active
                 @renderCompose(prepared.isDraft) if @state.active

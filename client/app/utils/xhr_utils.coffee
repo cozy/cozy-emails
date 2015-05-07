@@ -128,7 +128,7 @@ module.exports =
                 callback null, res.body
             else
                 err = res.body?.error.message
-                err ?= new Error 'Network batchAddFlag'
+                err ?= new Error 'Network batchFetch'
                 callback err
 
     batchAddFlag: (target, flag, callback) ->
