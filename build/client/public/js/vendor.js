@@ -44097,7 +44097,800 @@ if("undefined"==typeof jQuery)throw new Error("Bootstrap's JavaScript requires j
 
 })(typeof module === 'object' && module && module.exports ? module.exports : window);
 
-/* This Source Code Form is subject to the terms of the Mozilla Public
+//jshint browser: true, maxstatements: 40
+/*eslint no-use-before-define: 0 */
+/*global eio, io */
+/*exported Acthesis */
+function ActivityOptions(name, data) {
+  "use strict";
+  this.name = name;
+  this.data = data;
+}
+function ActivityHandlerDescription(name, href, disposition, returnValue, filters) {
+  "use strict";
+  this.name        = name;
+  this.href        = href || window.location.toString().split(/[\?#]/)[0];
+  this.disposition = disposition;
+  this.returnValue = returnValue;
+  this.filters     = filters;
+}
+function ActivityRequestHandler(source, postResult, postError) {
+  "use strict";
+  if (!source instanceof ActivityOptions) {
+    console.error("source should be an ActivityOptions");
+  }
+  this.source     = source;
+  this.postResult = postResult;
+  this.postError  = postError;
+}
+
+// @src http://blog.snowfinch.net/post/3254029029/uuid-v4-js
+// @licence Public domain
+function uuid() {
+  "use strict";
+  /*jshint bitwise: false */
+  var id = "", i, random;
+  for (i = 0; i < 32; i++) {
+    random = Math.random() * 16 | 0;
+    if (i === 8 || i === 12 || i === 16 || i === 20) {
+      id += "-";
+    }
+    id += (i === 12 ? 4 : (i === 16 ? (random & 3 | 8) : random)).toString(16);
+  }
+  return id;
+}
+
+/**
+ * Create modal window
+ *
+ * @param {HTML} content - The HTML content of the modal window
+ *
+ * @return {function} - a function to close the modal window
+ */
+function modal(content) {
+  "use strict";
+  [document.children[0], document.body].forEach(function (e) {
+    e.style.height  = "100%";
+    e.style.width   = "100%";
+    e.style.padding = "0";
+    e.style.margin  = "0";
+  });
+  var mod  = document.createElement('div'),
+      cell = document.createElement('div'),
+      overlay = document.createElement('div');
+  mod.setAttribute('style', 'display: inline-block; max-width: 50%; max-height: 90vh; background: white; padding: 1em; border-radius: .5em; overflow: auto; box-shadow: .5em .5em .5em #000;');
+  cell.setAttribute('style', 'display:table-cell; vertical-align:middle; text-align:center');
+  overlay.setAttribute('style', 'position: fixed; top: 0; left: 0;display:table; width: 100%; height: 100%; background: rgba(0,0,0,.5)');
+  if (content instanceof Element) {
+    mod.appendChild(content);
+  } else {
+    mod.innerHTML = content;
+  }
+  cell.appendChild(mod);
+  overlay.appendChild(cell);
+  document.body.appendChild(overlay);
+  return function () {
+    document.body.removeChild(overlay);
+  };
+}
+
+function Acthesis(opt, manifest) {
+  //jshint maxcomplexity: 15
+  "use strict";
+  var acthesis   = this,
+      _options   = opt,
+      _manifest  = manifest,
+      handlers   = {},
+      registered = {},
+      selfUrl    = window.location.toString().split(/[\?#]/)[0],
+      _isRegistered = false,
+      reply, clientMessage, ws, socket;
+
+  registered = {
+    activity: [],
+    alarm: [],
+    notification: [],
+    push: []
+  };
+  /**
+   * XHR wrapper
+   *
+   * @param {String}   url Url.
+   * @param {Function} cb  Callback.
+   *
+   * @returns {undefined} undefined
+   */
+  function get(url, cb) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.onload = function () {
+      if (typeof cb === 'function') {
+        cb(null, xhr);
+      }
+    };
+    xhr.onerror = function (e) {
+      var err = "Request failed : " + e.target.status;
+      if (typeof cb === 'function') {
+        cb(err, xhr);
+      }
+    };
+    xhr.setRequestHeader("X-Requester", selfUrl);
+    xhr.send();
+  }
+  function post(url, data, cb) {
+    if (typeof data === 'object') {
+      data = JSON.stringify(data);
+    }
+    var xhr = new XMLHttpRequest();
+    xhr.open('POST', url, true);
+    xhr.onload = function () {
+      if (typeof cb === 'function') {
+        cb(null, xhr);
+      }
+    };
+    xhr.onerror = function (e) {
+      var err = "Request failed : " + e.target.status;
+      if (typeof cb === 'function') {
+        cb(err, xhr);
+      }
+    };
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.setRequestHeader("X-Requester", selfUrl);
+    xhr.send(data);
+  }
+
+  // Default options values {{{
+  if (_options === null || typeof _options === 'undefined') {
+    _options = {};
+  }
+  if (typeof _options.server === 'undefined') {
+    _options.server = window.location.protocol + "//" + window.location.host;
+  }
+  if (typeof _options.ws === 'undefined') {
+    // allow to use ws for http and wss for https
+    _options.ws = _options.server.replace(/^http/, 'ws');
+  }
+  // }}}
+
+  // Create polyfills {{{
+  function DOMRequest() {
+    var request = this;
+    request.readyState = 'pending';
+    request.result = null;
+    request.error  = null;
+    request.onsuccess = undefined;
+    request.onerror   = undefined;
+  }
+  window.MozActivity = function (options) {
+    DOMRequest.call(this, options);
+    var self = this, iframe, iframeContainer, targetWindow; //wait, cleared;
+    options.id   = uuid();
+    options.type = 'activity';
+    function onResponse(response) {
+      var result;//, xhr;
+      if (self.readyState === 'done') {
+        return;
+      }
+      self.readyState = 'done';
+      if (iframeContainer) {
+        iframeContainer.style.display = 'none';
+      }
+      //if (targetWindow) {
+      //  targetWindow.close();
+      //}
+      try {
+        if (typeof response === 'string') {
+          result = JSON.parse(response);
+        } else {
+          result = response;
+        }
+      } catch (e) {
+        console.debug("[client] INVALID response: ", response);
+        self.error = "INVALID response";
+        if (typeof self.onerror === 'function') {
+          self.onerror.call(self);
+        } else {
+          console.error('Activity has no `onerror` method');
+        }
+        return;
+      }
+      //xhr = new XMLHttpRequest();
+      //xhr.open('DELETE', _options.server + '/activity/pending/' + options.id, false);
+      //xhr.setRequestHeader("X-Requester", options.handler);
+      //xhr.send(null);
+      if (result.type === 'success') {
+        self.result = result.data;
+        if (typeof self.onsuccess === 'function') {
+          self.onsuccess.call(self);
+        } else {
+          console.error('Activity has no `onsuccess` method');
+        }
+      } else {
+        self.error = result.data;
+        if (typeof self.onerror === 'function') {
+          self.onerror.call(self);
+        } else {
+          console.error('Activity has no `onerror` method');
+        }
+      }
+    }
+    function onXhr(err, xhr) {
+      if (err) {
+        console.error(err);
+      }
+      var result, doSend, form, win, btnCancel;
+      function send(num) {
+        if (typeof result[num] !== 'undefined') {
+          options.handler = result[num].href;
+          doSend = function () {
+            console.log("postMessage", options);
+            targetWindow.postMessage(options, options.handler);
+          };
+          iframe = document.querySelector("iframe[src='" + options.handler + "']");
+          if (iframe === null) {
+            iframe = document.createElement('iframe');
+            iframe.addEventListener('targetLoaded', doSend);
+            iframe.src = options.handler;
+            iframe.setAttribute("style", "position: fixed; top: 0px; left: 0px; width: 100vw; height: 100vh; padding: 1em; background: rgba(127, 127, 127, .5)");
+            document.body.appendChild(iframe);
+            iframeContainer = iframe;
+          } else {
+            iframeContainer = iframe;
+          }
+          if (result[num].disposition === 'inline') {
+            iframeContainer.style.display = 'block';
+          } else {
+            iframeContainer.style.display = 'none';
+          }
+          targetWindow = iframe.contentWindow;
+          if (typeof targetWindow !== 'undefined' && targetWindow !== null) {
+            doSend();
+          } else {
+            console.error("Unable to open target application");
+            self.onerror.call(self);
+          }
+          // Try until response {
+          /*
+          wait = window.setInterval(doSend, 100);
+          window.setTimeout(function () {
+            window.clearInterval(wait);
+            if (cleared !== true) {
+              onResponse({type: 'error', data: 'NO RESPONSE'});
+            }
+            cleared = true;
+          }, 10000);
+          */
+          // }
+          /*
+          // XHR
+          post(_options.server + '/activity', options, function (errAct, xhrAct) {
+            if (errAct) {
+              console.error(errAct);
+            }
+            onResponse(xhrAct.responseText);
+          });
+          */
+        }
+      }
+      try {
+        result = JSON.parse(xhr.responseText);
+      } catch (e) {
+        console.debug("INVALID response: " + xhr.responseText);
+        console.debug(xhr.responseText);
+        onResponse({type: 'error', data: 'INVALID response'});
+        return;
+      }
+      if (result.length === 0) {
+        self.readyState = 'done';
+        window.alert('No handler registered for this activity');
+        onResponse({type: 'error', data: 'No handler registered for this activity'});
+        return;
+      } else {
+        if (result.length > 1) {
+          form = document.createElement('form');
+          result.forEach(function (handler, i) {
+            var button = document.createElement('button');
+            button.innerHTML = handler.fullname || handler.href;
+            button.style = "display: block; width: 100%;border-width: 0px;";
+            button.onclick = function () {
+              send(i);
+              win();
+            };
+            form.appendChild(button);
+          });
+          btnCancel = document.createElement('button');
+          btnCancel.innerHTML = 'Cancel';
+          btnCancel.style = "display: block; width: 100%;border-width: 0px;";
+          btnCancel.onclick = function () {
+            send();
+            win();
+          };
+          form.appendChild(btnCancel);
+          win = modal(form);
+        } else {
+          send(0);
+        }
+      }
+    }
+    function onMessage(message) {
+      var loadEvent, target;
+      //console.log("Message Received:", message.data);
+      if (message.data.action === "loaded") {
+        target = document.querySelector("iframe[src='" + message.data.url + "']");
+        if (target) {
+          loadEvent = new CustomEvent("targetLoaded", {"detail": {action: "loaded"}});
+          iframe.dispatchEvent(loadEvent);
+        }
+      } else {
+        onResponse(message.data);
+      }
+    }
+    // Activity client
+    window.addEventListener("message", onMessage, false);
+    post(_options.server + '/activity', options, onXhr);
+  };
+
+  // /!\ This function makes a synchroneous XHR
+  navigator.mozHasPendingMessage = function (type) {
+    try {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', _options.server + '/activity/pending?has=true&type=' + type, false);
+      xhr.setRequestHeader("X-Requester", selfUrl);
+      xhr.send(null);
+      if (xhr.status === 200) {
+        return JSON.parse(xhr.responseText).result;
+      } else {
+        return false;
+      }
+    } catch (e) {
+      console.error(e);
+      return false;
+    }
+  };
+
+  navigator.mozSetMessageHandler = function (type, handler) {
+    handlers[type] = handler;
+    function getPending(pendingType) {
+      if (_options.postMethod === 'message') {
+        try {
+          var xhr = new XMLHttpRequest();
+          xhr.onload = function (e) {
+            var activities = JSON.parse(xhr.responseText).result;
+            activities.forEach(handleActivity);
+          };
+          xhr.onerror = function (e) {
+            console.error("Error setting message handler:", e);
+          };
+          xhr.open('GET', _options.server + '/activity/pending?type=' + pendingType, false);
+          xhr.setRequestHeader("X-Requester", selfUrl);
+          xhr.send(null);
+        } catch (e) {
+          console.error(e);
+        }
+      } else {
+        if (navigator.mozHasPendingMessage(pendingType)) {
+          socket.send(JSON.stringify({type: 'getPending', subtype: pendingType}));
+        }
+      }
+    }
+    if (_options.postMethod === 'message' || _isRegistered) {
+      getPending(type);
+    } else {
+      var waitRegistered = window.setInterval(function () {
+        if (_isRegistered) {
+          window.clearInterval(waitRegistered);
+          getPending(type);
+        }
+      }, 100);
+    }
+  };
+
+  // {{ push
+  // @See https://developer.mozilla.org/en-US/docs/Web/API/Simple_Push_API
+  (function () {
+    function PushRegistration(url) {
+      this.pushEndpoint = url;
+      this.version = undefined;
+    }
+    var endpoints = [];
+    navigator.push = {
+      register: function () {
+        var req = new DOMRequest();
+        get(_options.server + '/push/register', function (err, xhr) {
+          if (err) {
+            console.error(err);
+            req.error = {name: err};
+            req.onerror.call(req);
+          } else {
+            var endpoint = JSON.parse(xhr.responseText).endpoint;
+            endpoints.push(new PushRegistration(endpoint));
+            req.result = endpoint;
+            req.onsuccess();
+          }
+        });
+        return req;
+      },
+      unregister: function (endPoint) {
+        var req = new DOMRequest();
+        /* @TODO
+        setTimeout(function () {
+          var res;
+          endpoints = endpoints.filter(function (e) {
+            if (e.pushEndpoint === endPoint) {
+              res = e;
+              return false;
+            } else {
+              return true;
+            }
+          });
+          req.result = res;
+          delete endpoints[endPoint];
+          req.onsuccess();
+        }, 1000);
+        */
+        return req;
+      },
+      registrations: function () {
+        var req = new DOMRequest();
+        setTimeout(function () {
+          req.result = endpoints;
+          req.onsuccess();
+        }, 1000);
+        return req;
+      }
+    };
+  }());
+  // }}
+
+  // Alarms {{
+  (function () {
+    function MozAlarmManager() {
+
+      function getAll() {
+        var req = new DOMRequest();
+        get(_options.server + '/alarm', function (err, xhr) {
+          if (err) {
+            console.error(err);
+            req.error = {name: err};
+            req.onerror.call(req);
+          } else {
+            var alarms = JSON.parse(xhr.responseText);
+            req.result = alarms.data;
+            req.onsuccess();
+          }
+        });
+        return req;
+      }
+      function add(date, respectTimezone, data) {
+        var req = new DOMRequest(),
+            alarm;
+        alarm = {
+          date: date,
+          respectTimezone: respectTimezone,
+          data: data
+        };
+        post(_options.server + '/alarm', alarm, function (err, xhr) {
+          if (err) {
+            console.error(err);
+          }
+          req.result = JSON.parse(xhr.responseText).data;
+          req.onsuccess();
+        });
+        return req;
+      }
+      function remove(id) {
+      }
+      return {
+        getAll: getAll,
+        add: add,
+        remove: remove
+      };
+    }
+    navigator.mozAlarms = new MozAlarmManager();
+  }());
+  // }}
+
+  // }}}
+
+  this.registerActivityHandler = function (description) {
+    description.fullname = document.title;
+    post(_options.server + '/activity/register', description, function (err, xhr) {
+      if (err) {
+        console.error("Error registering handler '" + description.name + "' : ", err);
+      }
+    });
+    if (!description.disposition) {
+      description.disposition = 'inline';
+    }
+    registered.activity.push(description);
+  };
+
+  // Register handlers
+  if (_manifest && _manifest.activities) {
+    Object.keys(manifest.activities).forEach(function (name) {
+      var activity = manifest.activities[name];
+      acthesis.registerActivityHandler(new ActivityHandlerDescription(name, activity.href, activity.disposition, activity.returnValue, activity.filters));
+    });
+  }
+  function handleActivity(activity) {
+    var arh, onsuccess, onerror;
+    if (typeof handlers[activity.type] === 'undefined') {
+      console.error("[provider] No handler for " + activity.type);
+      reply(JSON.stringify({type: 'error', data: "No handler for " + activity.type}));
+    } else {
+      onsuccess = function (result) {
+        //console.log("PROVIDER success", JSON.stringify(this));
+        reply(JSON.stringify({type: 'success', data: result}));
+      };
+      onerror = function (result) {
+        //console.log("PROVIDER error", JSON.stringify(this));
+        reply(JSON.stringify({type: 'error', data: result}));
+      };
+      //options = new ActivityOptions(activity.data.name, activity.data.data);
+      arh = new ActivityRequestHandler(activity, onsuccess, onerror);
+      handlers[activity.type](arh);
+    }
+  }
+  function onServerMessage(message) {
+    clientMessage = message;
+    //console.log('[provider]', message);
+    //reply('ack');
+    // If type is undefined, it's an answer
+    if (typeof message.data.type !== 'undefined') {
+      handleActivity(message.data);
+    }
+  }
+  if (Object.keys(registered).length > 0) {
+    if (_options.postMethod === 'message') {
+      reply = function (response) {
+        if (typeof clientMessage === 'undefined') {
+          post(_options.server + '/activity/result', response);
+        } else {
+          clientMessage.source.postMessage(response, clientMessage.origin);
+        }
+      };
+      window.addEventListener("message", onServerMessage, false);
+      if (parent && parent.frames && parent.frames[0] && parent.frames[0].content) {
+        parent.frames[0].content.postMessage({ action: "loaded", url: window.location.toString()}, '*');
+      }
+    } else {
+      window.WebSocket = window.WebSocket || window.mozWebSocket || window.webkitWebSocket;
+      if (typeof window.WebSocket !== 'undefined') {
+        ws = new window.WebSocket(_options.ws, '/engine.io/');
+        socket = {
+          events: {},
+          send: function (message) {
+            ws.send(message);
+          },
+          on: function (event, cb) {
+            this.events[event] = cb;
+          }
+        };
+        ws.onopen = function () {
+          socket.events.open();
+        };
+        ws.onmessage = function (event) {
+          socket.events.message(event.data);
+        };
+      } else if (typeof io !== 'undefined') {
+        socket = io.connect(_options.ws, '/engine.io/');
+      } else if (typeof eio !== 'undefined') {
+        socket = new eio.Socket(_options.ws);
+      } else {
+        throw "Unable to find Socket.io";
+      }
+      reply = function (response) {
+        socket.send(response);
+      };
+      socket.on('open', function () {
+        reply(JSON.stringify({type: 'providerUrl', data: {url: selfUrl}}));
+        _isRegistered = true;
+        socket.on('message', function (message) {
+          var activities;
+          message = JSON.parse(message);
+          switch (message.type) {
+          case 'activity':
+            activities = message.data;
+            if (!Array.isArray(activities)) {
+              console.error("[provider] Activities should be an array");
+              reply(JSON.stringify({type: 'error', data: "Internal error"}));
+            }
+            activities.forEach(handleActivity);
+            break;
+          case 'alarm':
+            if (handlers.alarm) {
+              message.data.forEach(function (alarm) {
+                handlers.alarm(alarm);
+                // Delete pending alarms
+                var xhr = new XMLHttpRequest();
+                xhr.open('DELETE', _options.server + '/activity/pending/' + alarm.id, false);
+                xhr.setRequestHeader("X-Requester", selfUrl);
+                xhr.send(null);
+              });
+            } else {
+              console.log('Alarm received but no handler defined');
+            }
+            break;
+          case 'push':
+            handlers.push(message.data);
+            break;
+          }
+        });
+      });
+    }
+  }
+}
+window.Acthesis = Acthesis;
+
+//jshint browser: true, strict: false
+if (typeof window.plugins !== "object") {
+  window.plugins = {};
+}
+(function () {
+  "use strict";
+  window.plugins.activity = {
+    name: "Web Activities",
+    active: true,
+    onActivate: function () {
+      if (typeof window.MozActivity === 'undefined' && typeof window.Acthesis !== 'undefined') {
+        var manifest, options;
+        options = {
+          postMethod: 'message'
+        };
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          options.server = 'http://localhost:9250';
+        } else {
+          options.server =  window.location.protocol + "//" + window.location.hostname + "/apps/acthesis";
+        }
+        manifest = {
+          "activities": {
+            "share": {
+              "disposition": 'window',
+              "filters": {
+                "type": []
+              },
+              "returnValue": false
+            }
+          }
+        };
+        window.Acthesis(options, manifest);
+      }
+      function handler(message) {
+        var wait, editor;
+        function share() {
+          window.cozyMails.messageNew();
+          editor = document.querySelector("#email-compose .editor, #email-compose .rt-editor");
+          if (!editor) {
+            wait = window.setInterval(function () {
+              editor = document.querySelector("#email-compose .editor, #email-compose .rt-editor");
+              if (editor) {
+                window.clearInterval(wait);
+                editor.innerHTML = message.source.url;
+              }
+            }, 100);
+          } else {
+            editor.innerHTML = message.source.url;
+          }
+        }
+        switch (message.source.name) {
+          case 'share':
+            share();
+            break;
+          default:
+            message.postError("WRONG ACTIVITY");
+        }
+      }
+      navigator.mozSetMessageHandler('activity', handler);
+    },
+    onAdd: {
+      condition: function (node) {
+        return node.querySelectorAll("[data-file-url], .file-picker").length > 0;
+      },
+      action: function (node) {
+        var attachments, pickers;
+        attachments = node.querySelectorAll("[data-file-url]");
+        Array.prototype.forEach.call(attachments, function (elmt) {
+          var icon = document.createElement('a');
+          icon.style.paddingLeft = '.5em';
+          icon.innerHTML = "<i class='fa fa-cloud-upload' data-gallery></i>";
+          icon.addEventListener('click', function (event) {
+            event.stopPropagation();
+            event.preventDefault();
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", elmt.dataset.fileUrl, true);
+            xhr.responseType = "blob";
+            xhr.onload = function () {
+              var activity, reader;
+              reader  = new FileReader();
+              reader.onloadend = function () {
+                activity = new window.MozActivity({
+                  name: "save",
+                  data: {
+                    url: elmt.dataset.fileUrl,
+                    fileName: elmt.dataset.fileName,
+                    fileType: elmt.dataset.fileType,
+                    blob: reader.result
+                  }
+                });
+                activity.onsuccess = function () {
+                  console.log("[client] Activity successfuly handled");
+                  console.log('[client]', this.result);
+                };
+                activity.onerror = function () {
+                  console.error("[client] The activity got an error: " + this.error);
+                  console.log(this.error);
+                };
+              };
+              reader.readAsDataURL(xhr.response);
+
+            };
+            xhr.send();
+          });
+          elmt.parentNode.querySelector('.file-actions').appendChild(icon);
+
+        });
+        pickers = node.querySelectorAll(".file-picker");
+        Array.prototype.forEach.call(pickers, function (elmt) {
+          if (!elmt.querySelector('.file-wrapper') || elmt.querySelector('.files-activity')) {
+            return;
+          }
+          var icon = document.createElement('a');
+          icon.classList.add('clickable');
+          icon.style.paddingLeft = '.5em';
+          icon.innerHTML = "<i class='fa fa-cloud-download files-activity'></i>";
+          icon.addEventListener('click', function () {
+            var activity;
+            activity = new window.MozActivity({
+              name: "pick",
+              data: { }
+            });
+            activity.onsuccess = function () {
+              console.log("[client] Activity successfuly handled");
+              console.log('[client]', this.result);
+              function dataURItoBlob(dataURI) {
+                var byteString, mimeString, res, i;
+                if (dataURI.split(',')[0].indexOf('base64') >= 0) {
+                  byteString = atob(dataURI.split(',')[1]);
+                } else {
+                  byteString = window.unescape(dataURI.split(',')[1]);
+                }
+                res = {
+                  mime: dataURI.split(',')[0].split(':')[1].split(';')[0],
+                  blob: new Uint8Array(byteString.length)
+                }
+                for (i = 0; i < byteString.length; i++) {
+                  res.blob[i] = byteString.charCodeAt(i);
+                }
+                return res;
+              }
+
+              var component = window.rootComponent.refs.compose.refs.attachments,
+                  data      = dataURItoBlob(this.result.data),
+                  blob      = new Blob([data.blob, {type: this.result.type}]);
+              blob.name = this.result.name;
+              component.addFiles([blob]);
+              if (data.mime.split('/')[0] === 'image') {
+                document.querySelector('.rt-editor').focus();
+                document.execCommand('insertHTML', false, '<img src="' + this.result.data + '" data-src="' + this.result.name + '">');
+              }
+            };
+            activity.onerror = function () {
+              console.error("[client] The activity got an error: " + this.error);
+              console.log(this.error);
+            };
+          });
+          elmt.appendChild(icon);
+
+        });
+      }
+    }
+  };
+}());
+if (typeof window.pluginUtils !== 'undefined') {
+  window.pluginUtils.activate('activity');
+}
+
+;/* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  * Portions Copyright (C) Philipp Kewisch, 2011-2012 */
@@ -50925,6 +51718,9 @@ if (typeof window.plugins !== "object") {
     listeners: {
       'MESSAGE_LOADED': function () {
         var message = window.cozyMails.getCurrentMessage();
+        if (!message) {
+          return;
+        }
         //console.log(message);
         if (Array.isArray(message.alternatives) && message.alternatives.length > 0) {
           message.alternatives.forEach(function (alternative) {
@@ -72829,7 +73625,397 @@ function toArray(list, index) {
 (1)
 });
 
+/*!
+ * © 2014 Second Street, MIT License <http://opensource.org/licenses/MIT>
+ * Talker.js 1.0.1 <http://github.com/secondstreet/talker.js>
+ */
+//region Constants
+var TALKER_TYPE = 'application/x-talkerjs-v1+json';
+var TALKER_ERR_TIMEOUT = 'timeout';
+//endregion Constants
+
+//region Third-Party Libraries
 /*
+ * PinkySwear.js 2.1 - Minimalistic implementation of the Promises/A+ spec
+ * Modified slightly for embedding in Talker.js
+ *
+ * Public Domain. Use, modify and distribute it any way you like. No attribution required.
+ *
+ * NO WARRANTY EXPRESSED OR IMPLIED. USE AT YOUR OWN RISK.
+ *
+ * PinkySwear is a very small implementation of the Promises/A+ specification. After compilation with the
+ * Google Closure Compiler and gzipping it weighs less than 500 bytes. It is based on the implementation for
+ * Minified.js and should be perfect for embedding.
+ *
+ * https://github.com/timjansen/PinkySwear.js
+ */
+var pinkySwearPromise = (function() {
+  var undef;
+
+  function isFunction(f) {
+    return typeof f == 'function';
+  }
+  function isObject(f) {
+    return typeof f == 'object';
+  }
+  function defer(callback) {
+    if (typeof setImmediate != 'undefined')
+  setImmediate(callback);
+    else if (typeof process != 'undefined' && process['nextTick'])
+  process['nextTick'](callback);
+    else
+  setTimeout(callback, 0);
+  }
+
+  return function pinkySwear() {
+    var state;           // undefined/null = pending, true = fulfilled, false = rejected
+    var values = [];     // an array of values as arguments for the then() handlers
+    var deferred = [];   // functions to call when set() is invoked
+
+    var set = function(newState, newValues) {
+      if (state == null && newState != null) {
+        state = newState;
+        values = newValues;
+        if (deferred.length)
+          defer(function() {
+            for (var i = 0; i < deferred.length; i++)
+            deferred[i]();
+          });
+      }
+      return state;
+    };
+
+    set['then'] = function (onFulfilled, onRejected) {
+      var promise2 = pinkySwear();
+      var callCallbacks = function() {
+        try {
+          var f = (state ? onFulfilled : onRejected);
+          if (isFunction(f)) {
+            function resolve(x) {
+              var then, cbCalled = 0;
+              try {
+                if (x && (isObject(x) || isFunction(x)) && isFunction(then = x['then'])) {
+                  if (x === promise2)
+                    throw new TypeError();
+                  then['call'](x,
+                      function() { if (!cbCalled++) resolve.apply(undef,arguments); } ,
+                      function(value){ if (!cbCalled++) promise2(false,[value]);});
+                }
+                else
+                  promise2(true, arguments);
+              }
+              catch(e) {
+                if (!cbCalled++)
+                  promise2(false, [e]);
+              }
+            }
+            resolve(f.apply(undef, values || []));
+          }
+          else
+            promise2(state, values);
+        }
+        catch (e) {
+          promise2(false, [e]);
+        }
+      };
+      if (state != null)
+        defer(callCallbacks);
+      else
+        deferred.push(callCallbacks);
+      return promise2;
+    };
+    return set;
+  };
+})();
+/**
+ * Object Create
+ */
+var objectCreate = function(proto) {
+    function ctor () { }
+    ctor.prototype = proto;
+    return new ctor();
+};
+//endregion
+
+//region Public Methods
+/**
+ * Talker
+ * Used to open a communication line between this window and a remote window via postMessage.
+ * @param remoteWindow - The remote `window` object to post/receive messages to/from.
+ * @property {Window} remoteWindow - The remote window object this Talker is communicating with
+ * @property {string} remoteOrigin - The protocol, host, and port you expect the remote to be
+ * @property {number} timeout - The number of milliseconds to wait before assuming no response will be received.
+ * @property {boolean} handshaken - Whether we've received a handshake from the remote window
+ * @property {function(Talker.Message)} onMessage - Will be called with every non-handshake, non-response message from the remote window
+ * @property {Promise} handshake - Will be resolved when a handshake is newly established with the remote window.
+ * @returns {Talker}
+ * @constructor
+ */
+var Talker = function(remoteWindow, remoteOrigin) {
+    this.remoteWindow = remoteWindow;
+    this.remoteOrigin = remoteOrigin;
+    this.timeout = 3000;
+
+    this.handshaken = false;
+    this.handshake = pinkySwearPromise();
+    this._id = 0;
+    this._queue = [];
+    this._sent = {};
+
+    var _this = this;
+    window.addEventListener('message', function(messageEvent) { _this._receiveMessage(messageEvent) }, false);
+    this._sendHandshake();
+
+    return this;
+};
+
+/**
+ * Send
+ * Sends a message and returns a promise
+ * @param namespace - The namespace the message is in
+ * @param data - The data to send, must be a JSON.stringify-able object
+ * @param [responseToId=null] - If this is a response to a previous message, its ID.
+ * @public
+ * @returns {Promise} - May resolve with a {@link Talker.IncomingMessage}, or rejects with an Error
+ */
+Talker.prototype.send = function(namespace, data, responseToId) {
+    var message = new Talker.OutgoingMessage(this, namespace, data, responseToId);
+
+    var promise = pinkySwearPromise();
+    this._sent[message.id] = promise;
+
+    this._queue.push(message);
+    this._flushQueue();
+
+    setTimeout(function() {
+        promise(false, [new Error(TALKER_ERR_TIMEOUT)]); // Reject the promise
+    }, this.timeout);
+
+    return promise;
+};
+//endregion Public Methods
+
+//region Private Methods
+/**
+ * Handles receipt of a message via postMessage
+ * @param {MessageEvent} messageEvent
+ * @private
+ */
+Talker.prototype._receiveMessage = function(messageEvent) {
+    var object, isHandshake;
+
+    try {
+        object = JSON.parse(messageEvent.data);
+    }
+    catch (e) {
+        object = {};
+    }
+    if (!this._isSafeMessage(messageEvent.source, messageEvent.origin, object.type)) { return false; }
+
+    isHandshake = object.handshake || object.handshakeConfirmation;
+    return isHandshake ? this._handleHandshake(object) : this._handleMessage(object);
+};
+
+/**
+ * Determines whether it is safe and appropriate to parse a postMessage messageEvent
+ * @param {Window} source - Source window object
+ * @param {string} origin - Protocol, host, and port
+ * @param {string} type - Internet Media Type
+ * @returns {boolean}
+ * @private
+ */
+Talker.prototype._isSafeMessage = function(source, origin, type) {
+    var safeSource, safeOrigin, safeType;
+
+    safeSource = source === this.remoteWindow;
+    safeOrigin = (this.remoteOrigin === '*') || (origin === this.remoteOrigin);
+    safeType = type === TALKER_TYPE;
+
+    return safeSource && safeOrigin && safeType;
+};
+
+/**
+ * Handle a handshake message
+ * @param {Object} object - The postMessage content, parsed into an Object
+ * @private
+ */
+Talker.prototype._handleHandshake = function(object) {
+    if (object.handshake) { this._sendHandshake(this.handshaken); } // One last handshake in case the remote window (which we now know is ready) hasn't seen ours yet
+    this.handshaken = true;
+    this.handshake(true, [this.handshaken]);
+    this._flushQueue();
+};
+
+/**
+ * Handle a non-handshake message
+ * @param {Object} rawObject - The postMessage content, parsed into an Object
+ * @private
+ */
+Talker.prototype._handleMessage = function(rawObject) {
+    var message = new Talker.IncomingMessage(this, rawObject.namespace, rawObject.data, rawObject.id);
+    var responseId = rawObject.responseToId;
+    return responseId ? this._respondToMessage(responseId, message) : this._broadcastMessage(message);
+};
+
+/**
+ * Send a response message back to an awaiting promise
+ * @param {number} id - Message ID of the waiting promise
+ * @param {Talker.Message} message - Message that is responding to that ID
+ * @private
+ */
+Talker.prototype._respondToMessage = function(id, message) {
+    if (this._sent[id]) {
+        this._sent[id](true, [message]); // Resolve the promise
+        delete this._sent[id];
+    }
+};
+
+/**
+ * Send a non-response message to awaiting hooks/callbacks
+ * @param {Talker.Message} message - Message that arrived
+ * @private
+ */
+Talker.prototype._broadcastMessage = function(message) {
+    if (this.onMessage) { this.onMessage.call(this, message); }
+};
+
+/**
+ * Send a handshake message to the remote window
+ * @param {boolean} [confirmation] - Is this a confirmation handshake?
+ * @private
+ */
+Talker.prototype._sendHandshake = function(confirmation) {
+    var message = { type: TALKER_TYPE };
+    var handshakeType = confirmation ? 'handshakeConfirmation' : 'handshake';
+    message[handshakeType] = true;
+    this._postMessage(message);
+};
+
+/**
+ * Increment the internal ID and return a new one.
+ * @returns {number}
+ * @private
+ */
+Talker.prototype._nextId = function() {
+    return this._id += 1;
+};
+
+/**
+ * Wrapper around window.postMessage to only send if we have the necessary objects
+ * @param {Object} data - A JSON.stringify'able object
+ * @private
+ */
+Talker.prototype._postMessage = function(data) {
+    if (this.remoteWindow && this.remoteOrigin) {
+        this.remoteWindow.postMessage(JSON.stringify(data), this.remoteOrigin);
+    }
+};
+
+/**
+ * Flushes the internal queue of outgoing messages, sending each one.
+ * @returns {Array} - Returns the queue for recursion
+ * @private
+ */
+Talker.prototype._flushQueue = function() {
+    if (this.handshaken) {
+        var message = this._queue.shift();
+        if (!message) { return this._queue; }
+        this._postMessage(message);
+        if (this._queue.length > 0) { return this._flushQueue(); }
+    }
+    return this._queue;
+};
+//endregion Private Methods
+
+//region Talker Message
+/**
+ * Talker Message
+ * Used to wrap a message for Talker with some extra metadata and methods
+ * @param {Talker} talker - A {@link Talker} instance that will be used to send responses
+ * @param {string} namespace - A namespace to with which to categorize messages
+ * @param {Object} data - A JSON.stringify-able object
+ * @property {number} id
+ * @property {number} responseToId
+ * @property {string} namespace
+ * @property {Object} data
+ * @property {string} type
+ * @property {Talker} talker
+ * @returns {Talker.Message}
+ * @constructor
+ */
+Talker.Message = function(talker, namespace, data) {
+    this.talker = talker;
+    this.namespace = namespace;
+    this.data = data;
+    this.type = TALKER_TYPE;
+
+    return this;
+};
+//endregion Talker Message
+
+//region Talker Outgoing Message
+/**
+ * Talker Outgoing Message
+ * @extends Talker.Message
+ * @param {Talker} talker - A {@link Talker} instance that will be used to send responses
+ * @param {string} namespace - A namespace to with which to categorize messages
+ * @param {Object} data - A JSON.stringify-able object
+ * @param [responseToId=null] - If this is a response to a previous message, its ID.
+ * @constructor
+ */
+Talker.OutgoingMessage = function(talker, namespace, data, responseToId) {
+    Talker.Message.call(this, talker, namespace, data);
+    this.responseToId = responseToId || null;
+    this.id = this.talker._nextId();
+};
+Talker.OutgoingMessage.prototype = objectCreate(Talker.Message.prototype);
+Talker.OutgoingMessage.prototype.constructor = Talker.Message;
+
+/**
+ * @returns {Object}
+ * @public
+ */
+Talker.OutgoingMessage.prototype.toJSON = function() {
+    return {
+        id: this.id,
+        responseToId: this.responseToId,
+        namespace: this.namespace,
+        data: this.data,
+        type: this.type
+    };
+};
+//endregion Talker Outgoing Message
+
+//region Talker Incoming Message
+/**
+ * Talker Incoming Message
+ * @extends Talker.Message
+ * @param {Talker} talker - A {@link Talker} instance that will be used to send responses
+ * @param {string} namespace - A namespace to with which to categorize messages
+ * @param {Object} data - A JSON.stringify-able object
+ * @param {number} id - The ID received from the other side
+ * @constructor
+ */
+Talker.IncomingMessage = function(talker, namespace, data, id) {
+    Talker.Message.call(this, talker, namespace, data);
+    this.id = id;
+};
+Talker.IncomingMessage.prototype = objectCreate(Talker.Message.prototype);
+Talker.IncomingMessage.prototype.constructor = Talker.Message;
+
+/**
+ * Respond
+ * Responds to a message
+ * @param {Object} data - A JSON.stringify-able object
+ * @public
+ * @returns {Promise} - Resolves with a {@link Talker.IncomingMessage}, or rejects with an Error
+ */
+Talker.IncomingMessage.prototype.respond = function(data) {
+    return this.talker.send(null, data, this.id);
+};
+//endregion Talker Incoming Message
+
+;/*
  * to-markdown - an HTML to Markdown converter
  *
  * Copyright 2011, Dom Christie

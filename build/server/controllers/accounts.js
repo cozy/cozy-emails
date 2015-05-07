@@ -69,6 +69,9 @@ module.exports.create = function(req, res, next) {
 
 module.exports.check = function(req, res, next) {
   var tmpAccount;
+  if (req.body.imapLogin) {
+    req.body.login = req.body.imapLogin;
+  }
   tmpAccount = new Account(req.body);
   return tmpAccount.testConnections(function(err) {
     if (err) {
