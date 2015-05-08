@@ -851,9 +851,6 @@ ComposeEditor = React.createClass
             params:
                 objectType : 'singlePhoto'
                 isCropped  : false
-                #proportion : 1
-                #maxWidth   : 10
-                #minWidth   : 10
         timeout = 30000 # 30 seconds
 
         window.intentManager.send('nameSpace', intent, timeout)
