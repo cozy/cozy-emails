@@ -9654,13 +9654,14 @@ window.onload = function() {
     window.cozyMails.setSetting('plugins', window.settings.plugins);
     IntentManager = require("./utils/intent_manager");
     window.intentManager = new IntentManager();
-    window.intentManager.send('ping', {
+    window.intentManager.send('nameSpace', {
+      type: 'ping',
       from: 'mails'
     }).then(function(message) {
       return LayoutActionCreator.intentAvailability(true);
     }, function(error) {
       console.error("Intents not available");
-      return LayoutActionCreator.intentAvailability(true);
+      return LayoutActionCreator.intentAvailability(false);
     });
     AccountStore = require('./stores/account_store');
     ContactStore = require('./stores/contact_store');
@@ -9937,64 +9938,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-require.register("libs/flux/store/Store", function(exports, require, module) {
-var AppDispatcher, Store,
-  __hasProp = {}.hasOwnProperty,
-  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
-
-AppDispatcher = require('../../../app_dispatcher');
-
-module.exports = Store = (function(_super) {
-  var _addHandlers, _handlers, _nextUniqID, _processBinding;
-
-  __extends(Store, _super);
-
-  Store.prototype.uniqID = null;
-
-  _nextUniqID = 0;
-
-  _handlers = {};
-
-  _addHandlers = function(type, callback) {
-    if (_handlers[this.uniqID] == null) {
-      _handlers[this.uniqID] = {};
-    }
-    return _handlers[this.uniqID][type] = callback;
-  };
-
-  _processBinding = function() {
-    return this.dispatchToken = AppDispatcher.register((function(_this) {
-      return function(payload) {
-        var callback, type, value, _ref;
-        _ref = payload.action, type = _ref.type, value = _ref.value;
-        if ((callback = _handlers[_this.uniqID][type]) != null) {
-          return callback.call(_this, value);
-        }
-      };
-    })(this));
-  };
-
-  function Store() {
-    Store.__super__.constructor.call(this);
-    this.uniqID = _nextUniqID++;
-    this.__bindHandlers(_addHandlers.bind(this));
-    _processBinding.call(this);
-  }
-
-  Store.prototype.__bindHandlers = function(handle) {
-    var message;
-    if (__DEV__) {
-      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
-      throw new Error(message);
-    }
-  };
-
-  return Store;
-
-})(EventEmitter);
-});
-
-;require.register("libs/flux/store/store", function(exports, require, module) {
+require.register("libs/flux/store/store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -11349,7 +11293,7 @@ module.exports = {
   "tooltip account parameters": "Paramètres du compte",
   "tooltip delete selection": "Supprimer les messages sélectionnés",
   'tooltip filter': 'Filtrer',
-  'tooltip display filters': 'Montrer les filtres',
+  'tooltip display filters': 'Afficher les filtres',
   'tooltip expunge mailbox': 'Vider la boite',
   'filters unseen': 'non-lus',
   'filters flagged': 'favoris',
