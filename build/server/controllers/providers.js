@@ -11,7 +11,7 @@ module.exports.get = function(req, res, next) {
   req = https.get(url, function(response) {
     var body;
     if (response.statusCode !== 200) {
-      return res.send(response.statusCode, '');
+      return res.status(response.statusCode).send('');
     } else {
       body = '';
       response.on('data', function(data) {

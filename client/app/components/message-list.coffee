@@ -271,6 +271,7 @@ MessageList = React.createClass
                                 ref: 'listToolboxActions'
                                 mailboxes: @props.mailboxes
                                 onMark: @onMark
+                                onConversationDelete: @onConversationDelete
                                 onConversationMark: @onConversationMark
                                 onConversationMove: @onConversationMove
                                 displayConversations: @props.displayConversations
@@ -377,7 +378,7 @@ MessageList = React.createClass
             return false
 
         else if not applyToConversation
-            return {cout, messageIDs: selected, applyToConversation}
+            return {count, messageIDs: selected, applyToConversation}
 
         else
             conversationIDs = selected.map (id) =>
@@ -386,7 +387,7 @@ MessageList = React.createClass
             return {count, conversationIDs, applyToConversation}
 
     onConversationDelete: ->
-        onConversationDelete true
+        @onDelete true
 
     onDelete: (applyToConversation) ->
         return unless options = @_getSelectedAndMode(applyToConversation)

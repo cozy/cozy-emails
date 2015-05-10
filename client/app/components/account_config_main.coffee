@@ -31,6 +31,7 @@ module.exports = AccountConfigMain = React.createClass
     getInitialState: ->
         state = {}
         state[key] = value for key, value of @props
+        state.imapAdvanced = false
         state.smtpAdvanced = false
         return state
 
@@ -38,6 +39,14 @@ module.exports = AccountConfigMain = React.createClass
     componentWillReceiveProps: (props) ->
         state = {}
         state[key] = value for key, value of props
+
+        if not @_lastDiscovered?
+            # If editing account, init @_lastDiscovered with current domain
+            # so we don't try to discover parameters if domain doesn't change
+            login = state.login.value
+            if state.id?.value? and login?.indexOf('@') >= 0
+                @_lastDiscovered = login.split('@')[1]
+
         @setState state
 
 
@@ -148,6 +157,19 @@ module.exports = AccountConfigMain = React.createClass
                 onClick: (event) =>
                     @_onServerParam event.target, 'imap', 'tls'
 
+            div
+                className: "form-group",
+                a
+                    className: "col-sm-3 col-sm-offset-2 control-label clickable",
+                    onClick: @toggleIMAPAdvanced,
+                    t "account imap #{if @state.imapAdvanced then 'hide' else 'show'} advanced"
+
+            if @state.imapAdvanced
+                AccountInput
+                    name: 'imapLogin'
+                    value: @linkState('imapLogin').value
+                    errors: @state.errors
+                    errorField: ['imap', 'imapServer', 'imapPort', 'imapLogin']
 
             FieldSet text: t 'account sending server'
 

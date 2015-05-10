@@ -141,6 +141,8 @@ MenuItem = React.createClass
             role: 'menuitemu'
             onClick: @props.onClick
         aOptions.className = @props.className if @props.className
+        aOptions.href      = @props.href if @props.href
+        aOptions.target    = @props.href if @props.target
 
         li liOptions,
             a aOptions,

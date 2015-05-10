@@ -652,6 +652,7 @@ Account = (function(_super) {
         messageId: 66
       });
     }
+    message.inReplyTo = message.inReplyTo.shift();
     options = {
       port: this.smtpPort,
       host: this.smtpServer,

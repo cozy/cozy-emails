@@ -9,9 +9,11 @@ MailsInput = require './mails_input'
 
 AccountPicker = require './account_picker'
 
-{ComposeActions} = require '../constants/app_constants'
+{ComposeActions, Tooltips} = require '../constants/app_constants'
 
-messageUtils = require '../utils/message_utils'
+FileUtils    = require '../utils/file_utils'
+MessageUtils = require '../utils/message_utils'
+
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
@@ -37,6 +39,7 @@ module.exports = Compose = React.createClass
         callback:             React.PropTypes.func
         onCancel:             React.PropTypes.func
         settings:             React.PropTypes.object.isRequired
+        useIntents:           React.PropTypes.bool.isRequired
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
@@ -155,17 +158,18 @@ module.exports = Compose = React.createClass
                         className: classLabel,
                         t "compose content"
                     ComposeEditor
-                        messageID: @props.message?.get 'id'
-                        html: @linkState('html')
-                        text: @linkState('text')
-                        accounts: @props.accounts
-                        selectedAccountID: @props.selectedAccountID
-                        settings: @props.settings
-                        onSend: @onSend
-                        composeInHTML: @state.composeInHTML
-                        focus: focusEditor
-                        ref: 'editor'
-                        getPicker: @getPicker
+                        messageID         : @props.message?.get 'id'
+                        html              : @linkState('html')
+                        text              : @linkState('text')
+                        accounts          : @props.accounts
+                        selectedAccountID : @props.selectedAccountID
+                        settings          : @props.settings
+                        onSend            : @onSend
+                        composeInHTML     : @state.composeInHTML
+                        focus             : focusEditor
+                        ref               : 'editor'
+                        getPicker         : @getPicker
+                        useIntents        : @props.useIntents
 
                 div className: 'attachements',
                     FilePicker
@@ -255,10 +259,7 @@ module.exports = Compose = React.createClass
             if not window.confirm(t 'compose confirm keep draft')
                 window.setTimeout =>
                     messageID = @state.id
-                    MessageActionCreator.delete {messageID}, (error) ->
-                        unless error?
-                            LayoutActionCreator.notify t('compose draft deleted'),
-                                autoclose: true
+                    MessageActionCreator.delete {messageID}
                 , 0
             else
                 if @state.originalConversationID?
@@ -308,7 +309,7 @@ module.exports = Compose = React.createClass
         # new draft
         else
             account = @props.accounts[@props.selectedAccountID]
-            state = messageUtils.makeReplyMessage(
+            state = MessageUtils.makeReplyMessage(
                 account.login,
                 @props.inReplyTo,
                 @props.action,
@@ -389,8 +390,8 @@ module.exports = Compose = React.createClass
         if valid
             if @state.composeInHTML
                 message.html = @_cleanHTML @state.html
-                message.text = messageUtils.cleanReplyText message.html
-                message.html = messageUtils.wrapReplyHtml message.html
+                message.text = MessageUtils.cleanReplyText message.html
+                message.html = MessageUtils.wrapReplyHtml message.html
             else
                 message.text = @state.text.trim()
 
@@ -538,13 +539,15 @@ ComposeEditor = React.createClass
         return not(_.isEqual(nextState, @state)) or
             not (_.isEqual(nextProps, @props))
 
+    # Update parent component when content has been updated
+    onHTMLChange: (event) ->
+        @props.html.requestChange @refs.html.getDOMNode().innerHTML
+
+    # Update parent component when content has been updated
+    onTextChange: (event) ->
+        @props.text.requestChange @refs.content.getDOMNode().value
+
     render: ->
-
-        onHTMLChange = (event) =>
-            @props.html.requestChange @refs.html.getDOMNode().innerHTML
-
-        onTextChange = (event) =>
-            @props.text.requestChange @refs.content.getDOMNode().value
 
         if @props.settings.get 'composeOnTop'
             classFolded = 'folded'
@@ -552,35 +555,54 @@ ComposeEditor = React.createClass
             classFolded = ''
         classTarget = if @state.target then 'target' else ''
 
-        if @props.composeInHTML
-            div
-                className: "form-control rt-editor #{classFolded} #{classTarget}",
-                ref: 'html',
-                contentEditable: true,
-                onKeyDown: @onKeyDown,
-                onInput: onHTMLChange,
-                onDragOver: @allowDrop,
-                onDragEnter: @onDragEnter,
-                onDragLeave: @onDragLeave,
-                onDrop: @handleFiles,
-                # when dropping an image, input is fired before the image has
-                # really been added to the DOM, so we need to also listen to
-                # blur event
-                onBlur: onHTMLChange,
-                dangerouslySetInnerHTML: {
-                    __html: @state.html.value
-                }
-        else
-            textarea
-                className: "editor #{classTarget}",
-                ref: 'content',
-                onKeyDown: @onKeyDown,
-                onChange: onTextChange,
-                defaultValue: @state.text.value
-                onDragOver: @allowDrop,
-                onDragEnter: @onDragEnter,
-                onDragLeave: @onDragLeave,
-                onDrop: @handleFiles,
+        div null,
+            if @props.useIntents
+                div className: "btn-group editor-actions",
+                    button
+                        className: "btn btn-default"
+                        onClick: @choosePhoto,
+                            span
+                                className:'fa fa-image'
+                                'aria-describedby': Tooltips.COMPOSE_IMAGE
+                                'data-tooltip-direction': 'top'
+                    # @TODO Remove this Mock code once Web intents are really plugged
+                    button
+                        className: "btn btn-default"
+                        onClick: @choosePhotoMock,
+                            span
+                                className:'fa fa-puzzle-piece'
+                                'aria-describedby': Tooltips.COMPOSE_MOCK
+                                'data-tooltip-direction': 'top'
+            if @props.composeInHTML
+                div
+                    className: "form-control rt-editor #{classFolded} #{classTarget}",
+                    ref: 'html',
+                    contentEditable: true,
+                    onKeyDown: @onKeyDown,
+                    onInput: @onHTMLChange,
+                    onDragOver: @allowDrop,
+                    onDragEnter: @onDragEnter,
+                    onDragLeave: @onDragLeave,
+                    onDrop: @handleFiles,
+                    # when dropping an image, input is fired before the image has
+                    # really been added to the DOM, so we need to also listen to
+                    # blur event
+                    onBlur: @onHTMLChange,
+                    dangerouslySetInnerHTML: {
+                        __html: @state.html.value
+                    }
+            else
+                textarea
+                    className: "editor #{classTarget}",
+                    ref: 'content',
+                    onKeyDown: @onKeyDown,
+                    onChange: @onTextChange,
+                    onBlur: @onTextChange,
+                    defaultValue: @state.text.value
+                    onDragOver: @allowDrop,
+                    onDragEnter: @onDragEnter,
+                    onDragLeave: @onDragLeave,
+                    onDrop: @handleFiles,
 
     _initCompose: ->
 
@@ -804,15 +826,73 @@ ComposeEditor = React.createClass
                     # if editor has not the focus, insert image at the end
                     # otherwise at cursor position
                     if not document.activeElement.classList.contains 'rt-editor'
-                        document.querySelector('.rt-editor').innerHTML += img
+                        # if there is a signature, insert image juste before
+                        signature = document.getElementById 'signature'
+                        if signature?
+                            signature.previousElementSibling.innerHTML += img
+                        else
+                            document.querySelector('.rt-editor').innerHTML += img
                     else
                         document.execCommand 'insertHTML', false, img
-                    fileReader = new FileReader()
-                    fileReader.readAsDataURL file
-                    fileReader.onload = ->
+                    FileUtils.fileToDataURI file, (result) =>
                         img = document.getElementById id
                         if img
                             img.removeAttribute 'id'
-                            img.removeAttribute 'class'
-                            img.src = fileReader.result
+                            img.src = result
+                            # force update of React component
+                            @onHTMLChange()
         @setState target: false
+
+
+    choosePhoto: (e) ->
+        e.preventDefault()
+        intent =
+            type  : 'pickObject'
+            params:
+                objectType : 'singlePhoto'
+                isCropped  : false
+        timeout = 30000 # 30 seconds
+
+        window.intentManager.send('nameSpace', intent, timeout)
+            .then @choosePhoto_answer, (error) ->
+                console.log 'response in error : ', error
+
+
+    # @TODO Remove this Mock code once Web intents are really plugged
+    choosePhotoMock: (e) ->
+        e.preventDefault()
+        message =
+            data:
+                newPhotoChosen: true
+                name: 'mockPhoto.gif'
+                dataUrl: 'data:image/gif;base64,R0lGOD lhCwAOAMQfAP////7+/vj4+Hh4eHd3d/v7+/Dw8HV1dfLy8ubm5vX19e3t7fr 6+nl5edra2nZ2dnx8fMHBwYODg/b29np6eujo6JGRkeHh4eTk5LCwsN3d3dfX 13Jycp2dnevr6////yH5BAEAAB8ALAAAAAALAA4AAAVq4NFw1DNAX/o9imAsB tKpxKRd1+YEWUoIiUoiEWEAApIDMLGoRCyWiKThenkwDgeGMiggDLEXQkDoTh CKNLpQDgjeAsY7MHgECgx8YR8oHwNHfwADBACGh4EDA4iGAYAEBAcQIg0Dk gcEIQA7'
+        @choosePhoto_answer message
+
+
+    choosePhoto_answer : (message) ->
+        answer = message.data
+        if answer.newPhotoChosen
+            data      = FileUtils.dataURItoBlob answer.dataUrl
+            blob      = new Blob([data.blob, {type: data.mime}])
+            blob.name = answer.name
+            picker    = @props.getPicker()
+            picker.addFiles [blob]
+            if @props.composeInHTML
+                if document.activeElement.classList.contains 'rt-editor'
+                    # editor has focus, insert image at cursor position
+                    document.execCommand('insertHTML', false, '<img src="' + answer.dataUrl + '" data-src="' + answer.name + '">')
+                else
+                    # otherwise, insert at end
+                    # if there is a signature, insert image juste before
+                    img = document.createElement 'img'
+                    img.src = answer.dataUrl
+                    img.dataset.src = answer.name
+                    signature = document.getElementById 'signature'
+                    if signature?
+                        signature.parentNode.insertBefore img, signature
+                    else
+                        editor = document.querySelector('.rt-editor')
+                        if editor?
+                            editor.appendChild img
+                # force update of React component
+                @onHTMLChange()

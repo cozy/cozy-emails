@@ -102,8 +102,9 @@ module.exports = Application = React.createClass
             keySecond = 'right-panel-' + layout.secondPanel.action.split('.')[0]
             # update current message id
             # this need to be done here, so MessageList get the good message ID
-            if layout.secondPanel.parameters.messageID?
-                MessageStore.setCurrentID layout.secondPanel.parameters.messageID
+            messageID = layout.secondPanel.parameters.messageID
+            if messageID?
+                MessageStore.setCurrentID messageID
             else
                 MessageStore.setCurrentID null
         else
@@ -389,6 +390,7 @@ module.exports = Application = React.createClass
                 nextConversationID   : nextMessage?.get 'conversationID'
                 ref                  : 'conversation'
                 displayConversations : displayConversations
+                useIntents           : LayoutStore.intentAvailable()
 
         # -- Generates the new message composition form
         else if panelInfo.action is 'compose'
@@ -402,6 +404,7 @@ module.exports = Application = React.createClass
                 selectedAccountID    : @state.selectedAccount.get 'id'
                 selectedAccountLogin : @state.selectedAccount.get 'login'
                 message              : null
+                useIntents           : LayoutStore.intentAvailable()
                 ref                  : 'compose'
 
         # -- Generates the edit draft composition form
@@ -420,6 +423,7 @@ module.exports = Application = React.createClass
                 selectedAccountLogin : @state.selectedAccount.get 'login'
                 selectedMailboxID    : @state.selectedMailboxID
                 message              : message
+                useIntents           : LayoutStore.intentAvailable()
                 ref                  : 'compose'
 
         # -- Display the settings form
@@ -534,7 +538,8 @@ module.exports = Application = React.createClass
                             'mailboxes'
                         ]
                         fullWidth: true
-                    LayoutActionCreator.alertError t 'account no special mailboxes'
+                    errorMsg = t 'account no special mailboxes'
+                    LayoutActionCreator.alertError errorMsg
 
 
     _notify: (title, options) ->

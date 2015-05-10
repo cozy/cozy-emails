@@ -37,7 +37,6 @@ module.exports =
       "compose error no dest"     : "Sie können keine Nachricht an Niemanden senden"
       "compose error no subject"  : "Bitte vergeben Sie einen Betreff"
       "compose confirm keep draft": "Nachricht wurde nicht gesandet, Entwurft behalten?"
-      "compose draft deleted"     : "Entwurf gelöscht"
       "compose wrong email format": "Die vergebene E-Mail Adresse hat kein geeignes Format: %{address}."
       "compose forward header"    : "Gesendete Nachricht"
       "compose forward subject"   : "Betreff:"

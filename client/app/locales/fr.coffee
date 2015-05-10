@@ -37,7 +37,6 @@ module.exports =
       "compose error no dest"     : "Vous n'avez pas saisi de destinataires"
       "compose error no subject"  : "Vous n'avez pas saisi de sujet"
       "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?"
-      "compose draft deleted"     : "Brouillon supprimé"
       "compose wrong email format": "L'addresse mail donnée n'est pas bien formattée : %{address}."
       "compose forward header"    : "Message transféré"
       "compose forward subject"   : "Sujet :"
@@ -53,7 +52,7 @@ module.exports =
       "menu mailbox total"      : "%{smart_count} message |||| %{smart_count} messages "
       "menu mailbox unread"     : " dont %{smart_count} non lu |||| dont %{smart_count} non lus "
       "menu mailbox new"        : " et %{smart_count} nouveaux |||| et %{smart_count} nouveaux "
-      "menu favorites on"       : "Favorites"
+      "menu favorites on"       : "Favoris"
       "menu favorites off"      : "Toutes"
       "menu toggle"             : "Menu"
 
@@ -87,7 +86,7 @@ module.exports =
       "list filter date"          : "Date entre"
       "list filter date placeholder": "JJ/MM/AAAA"
       "list filter dest"          : "Destiné à"
-      "list filter subject"       : "Subject commence par…"
+      "list filter subject"       : "Sujet commence par…"
       "list sort"                 : "Trier"
       "list sort date"            : "Date"
       "list sort subject"         : "Sujet"
@@ -164,7 +163,7 @@ module.exports =
       "account imapServer"          : "Serveur IMAP"
       "account imapTLS"             : "Utiliser STARTTLS"
       "account imapLogin short"     : "Utilisateur IMAP"
-      "account imapLogin"           : "Utilisateur IMAP (s'il est différent du login)"
+      "account imapLogin"           : "Utilisateur IMAP (s'il est différent de l'adresse mail)"
       "account label short"         : "Nom abrégé"
       "account label"               : "Nom du compte"
       "account login short"         : "Votre adresse électronique"
@@ -175,14 +174,14 @@ module.exports =
       "account receiving server"    : "Serveur de réception"
       "account sending server"      : "Serveur d'envoi"
       "account smtpLogin short"     : "Utilisateur SMTP"
-      "account smtpLogin"           : "Utilisateur SMTP (s'il est différent)"
+      "account smtpLogin"           : "Utilisateur SMTP (s'il est différent de l'adresse Mail)"
       "account smtpMethod"          : "Méthode d'authentification"
       "account smtpMethod NONE"     : "Aucune"
-      "account smtpMethod PLAIN"    : "Plain"
+      "account smtpMethod PLAIN"    : "Simple"
       "account smtpMethod LOGIN"    : "Login"
       "account smtpMethod CRAM-MD5" : "Cram-MD5"
       "account smtpPassword short"  : "Mot de passe SMTP"
-      "account smtpPassword"        : "Mot de passe SMTP (s'il est différent)"
+      "account smtpPassword"        : "Mot de passe SMTP (s'il est différent de celui du serveur IMAP)"
       "account smtpPort short"      : "465"
       "account smtpPort"            : "Port"
       "account smtpSSL"             : "Utiliser SSL"
@@ -223,7 +222,7 @@ module.exports =
       "account smtp hide advanced"  : "Masquer les paramètres avancés"
       "account smtp show advanced"  : "Afficher les paramètres avancés"
       "account tab signature"       : "Signature"
-      "account signature short"     : "Tapez ici le texte qui sera ajouter à la fin de vos courriers."
+      "account signature short"     : "Saisissez ici le texte qui sera ajouté à la fin de vos courriers."
       "account signature"           : "Signature des courriers"
       "mailbox create ok"           : "Dossier créé"
       "mailbox create ko"           : "Erreur de création du dossier"
@@ -246,7 +245,7 @@ module.exports =
       "mailbox title new"           : "Nouveaux"
       "config error auth"           : "Impossible de se connecter avec ces
                                         paramètres"
-      "config error imapPort"       : "Port du serveur IMAP invalide"
+      "config error imapPort"       : "Paramètres du serveur IMAP invalides"
       "config error imapServer"     : "Serveur IMAP invalide"
       "config error imapTLS"        : "Erreur IMAP TLS"
       "config error smtpPort"       : "Port du serveur d'envoi invalide"
@@ -311,11 +310,11 @@ module.exports =
       """
       "conversations flagged ko"     : """
             Erreur en marquant %{smart_count} conversation importante||||
-            Erreur en marquant %{smart_count} conversations importante
+            Erreur en marquant %{smart_count} conversations importantes
       """
       "conversations noflag ko"      : """
             Erreur en marquant %{smart_count} conversation non importante||||
-            Erreur en marquant %{smart_count} conversations non importante
+            Erreur en marquant %{smart_count} conversations non importantes
       """
       "message images warning"      : "L'affichage des images du message a été
                                         bloqué"
@@ -452,4 +451,4 @@ module.exports =
       "tooltip account parameters": "Paramètres du compte"
       "tooltip delete selection": "Supprimer les messages sélectionnés"
       'tooltip filter': 'Filtrer'
-      'tooltip display filters': 'Afficher les filtres'
+      'tooltip display filters': 'Montrer les filtres'

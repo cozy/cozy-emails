@@ -41,6 +41,8 @@ module.exports = React.createClass
         selectedAccountLogin   : React.PropTypes.string.isRequired
         selectedMailboxID      : React.PropTypes.string.isRequired
         settings               : React.PropTypes.object.isRequired
+        useIntents             : React.PropTypes.bool.isRequired
+        setActive              : React.PropTypes.func.isRequired
 
 
     getInitialState: ->
@@ -83,9 +85,12 @@ module.exports = React.createClass
         html = message.get 'html'
         alternatives = message.get 'alternatives'
         urls = /((([A-Za-z]{3,9}:(?:\/\/)?)(?:[-;:&=\+\$,\w]+@)?[A-Za-z0-9.-]+|(?:www.|[-;:&=\+\$,\w]+@)[A-Za-z0-9.-]+)((?:\/[\+~%\/.\w-_]*)?\??(?:[-\+=&;%@.\w_]*)#?(?:[\w]*))?)/gim
-        # Some calendar invite may contain neither text nor HTML part
-        if not text? and not html? and alternatives?.length > 0
-            text = t 'calendar unknown format'
+        if not text? and not html?
+            # Some calendar invite may contain neither text nor HTML part
+            if alternatives?.length > 0
+                text = t 'calendar unknown format'
+            else
+                text = ''
 
         # TODO: Do we want to convert text only messages to HTML ?
         # /!\ if messageDisplayHTML is set, this method should always return
@@ -93,8 +98,9 @@ module.exports = React.createClass
         if text? and not html? and @state.messageDisplayHTML
             try
                 html = markdown.toHTML text.replace(/(^>.*$)([^>]+)/gm, "$1\n$2")
+                html = "<div class='textOnly'>#{html}</div>"
             catch e
-                html = "<div class='text'>#{text}</div>" #markdown.toHTML text
+                html = "<div class='textOnly'>#{text}</div>"
 
         if html? and not text? and not @state.messageDisplayHTML
             text = toMarkdown html
@@ -123,32 +129,35 @@ module.exports = React.createClass
 
 
     componentWillMount: ->
-        @_markRead @props.message
+        @_markRead(@props.message, @props.active)
 
 
     componentWillReceiveProps: (props) ->
         state =
             active: props.active
         if props.message.get('id') isnt @props.message.get('id')
-            @_markRead props.message
+            @_markRead(props.message, props.active)
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
             state.messageDisplayImages = props.settings.get 'messageDisplayImages'
             state.composing            = @_shouldOpenCompose props
         @setState state
 
 
-    _markRead: (message) ->
+    _markRead: (message, active) ->
         # Hack to prevent infinite loop if server side mark as read fails
         messageID = message.get 'id'
         if @state.currentMessageID isnt messageID
             state =
                 currentMessageID: messageID
                 prepared: @_prepareMessage message
-
-            setTimeout ->
-                MessageActionCreator.mark {messageID}, MessageFlags.SEEN
-            , 1
             @setState state
+
+            # Only mark as read current active message if unseen
+            flags = message.get('flags').slice()
+            if active and flags.indexOf(MessageFlags.SEEN) is -1
+                setTimeout ->
+                    MessageActionCreator.mark {messageID}, MessageFlags.SEEN
+                , 1
 
 
     prepareHTML: (html) ->
@@ -204,18 +213,25 @@ module.exports = React.createClass
             messageDisplayHTML = false
             imagesWarning      = false
 
+        isUnread = message.get('flags').slice().indexOf(MessageFlags.SEEN) is -1
+
         classes = classer
             message: true
             active: @state.active
             isDraft: prepared.isDraft
             isDeleted: prepared.isDeleted
+            isUnread: isUnread
 
         article
             className: classes,
             key: @props.key,
             'data-id': message.get('id'),
                 header
-                    onClick: => @setState active: not @state.active
+                    onClick: =>
+                        if isUnread and not @state.active
+                            @_markRead message
+                            @props.setActive message.get('id')
+                        @setState active: not @state.active
                     @renderHeaders()
                     @renderToolbox() if @state.active
                 @renderCompose(prepared.isDraft) if @state.active
@@ -303,17 +319,19 @@ module.exports = React.createClass
                     selectedAccountLogin : @props.selectedAccountLogin
                     selectedMailboxID    : @props.selectedMailboxID
                     message              : @props.message
+                    useIntents           : @props.useIntents
                     ref                  : 'compose'
             else
                 Compose
-                    ref: 'compose'
-                    inReplyTo: @props.message
-                    accounts: @props.accounts
-                    settings: @props.settings
-                    selectedAccountID: @props.selectedAccountID
-                    selectedAccountLogin: @props.selectedAccountLogin
-                    action: @state.composeAction
-                    layout: 'second'
+                    ref                  : 'compose'
+                    inReplyTo            : @props.message
+                    accounts             : @props.accounts
+                    settings             : @props.settings
+                    selectedAccountID    : @props.selectedAccountID
+                    selectedAccountLogin : @props.selectedAccountLogin
+                    action               : @state.composeAction
+                    layout               : 'second'
+                    useIntents           : @props.useIntents
                     callback: (error) =>
                         if not error?
                             # component has probably already been unmounted due to conversation refresh
@@ -365,7 +383,7 @@ module.exports = React.createClass
         if not needConfirmation or window.confirm confirmMessage
             MessageActionCreator.delete {messageID}
 
-    onConversationDelete: () ->
+    onConversationDelete: ->
         conversationID = @props.message.get('conversationID')
         MessageActionCreator.delete {conversationID}
 

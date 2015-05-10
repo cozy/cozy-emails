@@ -23,6 +23,7 @@ module.exports = React.createClass
         settings             : React.PropTypes.object.isRequired
         accounts             : React.PropTypes.object.isRequired
         displayConversations : React.PropTypes.bool
+        useIntents           : React.PropTypes.bool.isRequired
 
 
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -45,6 +46,15 @@ module.exports = React.createClass
 
 
     renderMessage: (key, active) ->
+        # allow the Message component to update current active message
+        # in conversation. Needed to open the first unread message when
+        # opening a conversation
+        setActive = (id) =>
+            @props.conversation.map((message, key) =>
+                console.log message.get('id'), id
+                @_activeKey = key if message.get('id') is id
+            ).toJS()
+
         Message
             ref                 : 'message'
             accounts            : @props.accounts
@@ -58,6 +68,8 @@ module.exports = React.createClass
             selectedMailboxID   : @props.selectedMailboxID
             settings            : @props.settings
             displayConversations: @props.displayConversation
+            useIntents          : @props.useIntents
+            setActive           : setActive
 
 
     renderGroup: (messages, key) ->
@@ -87,11 +99,14 @@ module.exports = React.createClass
         # Sort messages in conversation to find seen messages and group them
         messages = []
         lastMessageIndex = @props.conversation.length - 1
-        @props.conversation.map((message, key) ->
+        @props.conversation.map((message, key) =>
             isSeen = MessageFlags.SEEN in message.get 'flags'
 
-            if not isSeen or key is lastMessageIndex
+            # set first active message: first unseen or last of conversation
+            if (not @_activeKey? and (not isSeen or key is lastMessageIndex)) or
+            key is @_activeKey
                 messages.push key
+                @_activeKey = key
             else
                 [..., last] = messages
                 messages.push(last = []) unless _.isArray(last)
