@@ -4147,7 +4147,7 @@ module.exports = Compose = React.createClass({
           }
           for (key in message) {
             value = message[key];
-            if (key !== 'attachments') {
+            if (key !== 'attachments' && key !== 'html' && key !== 'text') {
               state[key] = value;
             }
           }
