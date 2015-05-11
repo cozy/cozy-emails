@@ -64,38 +64,9 @@ module.exports = Application = React.createClass
         layout = @props.router.current
         return div null, t "app loading" unless layout?
 
-        # is the layout a full-width panel or two panels sharing the width
-        # isFullWidth = not layout.secondPanel?
-
-        # firstPanelLayoutMode = if isFullWidth then 'full' else 'first'
         disposition = LayoutStore.getDisposition()
 
-        # panelsClasses = classer
-        #     # row: true
-        #     horizontal: disposition.type is Dispositions.HORIZONTAL
-        #     three: disposition.type is Dispositions.THREE
-        #     vertical: disposition.type is Dispositions.VERTICAL
-        #     full: isFullWidth
-        # css classes are a bit long so we use a subfunction to get them
-        # panelClasses = @getPanelClasses isFullWidth
-
-        # classes for page-content
-        # responsiveClasses = classer
-            # 'col-xs-12': true
-            # 'col-md-9':  disposition.type is Dispositions.THREE
-            # 'col-md-11': disposition.type isnt Dispositions.THREE
-            # 'pushed': @state.isResponsiveMenuShown
-
         alert = @state.alertMessage
-
-        # getUrl = (mailbox) =>
-        #     @buildUrl
-        #         direction: 'first'
-        #         action: 'account.mailbox.messages'
-        #         parameters: [
-        #             @state.selectedAccount?.get('id'),
-        #             mailbox.get('id')
-        #         ]
 
         # Store current message ID if selected
         if layout.secondPanel? and layout.secondPanel.parameters.messageID?
@@ -145,73 +116,6 @@ module.exports = Application = React.createClass
             # It's hidden so it doesn't break the layout. Other components
             # can then reference the tooltips by their ID to trigger them.
             Tooltips()
-
-    ###
-    # Panels CSS classes are a bit long so we get them from a this subfunction
-    # Also, it manages transitions between screens by adding relevant classes
-    getPanelClasses: (isFullWidth) ->
-        previous = @props.router.previous
-        layout   = @props.router.current
-        first    = layout.firstPanel
-        second   = layout.secondPanel
-
-        # Two cases: the layout has a full-width panel...
-        if isFullWidth
-            classes = firstPanel: 'panel col-xs-12 col-md-12 row-10'
-
-            # (default) when full-width panel is shown after
-            # a two-panels structure
-            if previous? and previous.secondPanel
-
-                # if the full-width panel was on right right before, it expands
-                if previous.secondPanel.action is layout.firstPanel.action and
-                   _.difference(previous.secondPanel.parameters,
-                        layout.firstPanel.parameters).length is 0
-                    classes.firstPanel += ' expandFromRight'
-
-            # (default) when full-width panel is shown after a full-width panel
-            else if previous?
-                classes.firstPanel += ' moveFromLeft'
-
-
-        # ... or a two panels layout.
-        else
-            disposition = LayoutStore.getDisposition()
-            if disposition.type is Dispositions.HORIZONTAL
-                firstClass  = "col-md-12 row-#{disposition.height}"
-                secondClass = "col-md-12 row-#{10 - disposition.height}"
-            else
-                firstClass  = "col-md-#{disposition.width} row-10"
-                secondClass = "col-md-#{12 - disposition.width} row-10"
-            classes =
-                firstPanel: "col-xs-12 hidden-xs hidden-sm #{firstClass}"
-                secondPanel: "col-xs-12 #{secondClass}"
-
-            # we don't animate in the first render
-            if previous?
-                wasFullWidth = not previous.secondPanel?
-
-                # transition from full-width to two-panels layout
-                if wasFullWidth and not isFullWidth
-
-                    # expanded second panel collapses
-                    if previous.firstPanel.action is second.action and
-                       _.difference(previous.firstPanel.parameters,
-                            second.parameters).length is 0
-                        classes.firstPanel += ' moveFromLeft'
-                        classes.secondPanel += ' slide-in-from-left'
-
-                    # (default) opens second panel sliding from the right
-                    else
-                        classes.secondPanel += ' slide-in-from-right'
-
-                # (default) opens second panel sliding from the left
-                else if not isFullWidth
-                    classes.secondPanel += ' slide-in-from-left'
-
-        return classes
-    ###
-
 
     # Factory of React components for panels
     getPanelComponent: (panelInfo) ->
