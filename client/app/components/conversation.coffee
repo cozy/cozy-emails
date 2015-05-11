@@ -51,7 +51,6 @@ module.exports = React.createClass
         # opening a conversation
         setActive = (id) =>
             @props.conversation.map((message, key) =>
-                console.log message.get('id'), id
                 @_activeKey = key if message.get('id') is id
             ).toJS()
 

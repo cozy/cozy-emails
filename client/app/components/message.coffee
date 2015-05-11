@@ -215,6 +215,13 @@ module.exports = React.createClass
 
         isUnread = message.get('flags').slice().indexOf(MessageFlags.SEEN) is -1
 
+        setActive = =>
+            if isUnread and not @state.active
+                messageID = message.get('id')
+                MessageActionCreator.mark {messageID}, MessageFlags.SEEN
+                @props.setActive message.get('id')
+            @setState active: not @state.active
+
         classes = classer
             message: true
             active: @state.active
@@ -227,11 +234,7 @@ module.exports = React.createClass
             key: @props.key,
             'data-id': message.get('id'),
                 header
-                    onClick: =>
-                        if isUnread and not @state.active
-                            @_markRead message
-                            @props.setActive message.get('id')
-                        @setState active: not @state.active
+                    onClick: setActive,
                     @renderHeaders()
                     @renderToolbox() if @state.active
                 @renderCompose(prepared.isDraft) if @state.active
