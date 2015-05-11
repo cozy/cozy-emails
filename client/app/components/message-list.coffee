@@ -244,57 +244,56 @@ MessageList = React.createClass
             #             accountID: @props.accountID
             #             mailboxID: @props.mailboxID
 
-            # if @props.messages.count() is 0
-            #     if @props.fetching
-            #         p null, t 'list fetching'
-            #     else
-            #         p null, @props.emptyListMessage
-            # else
-            #     div null,
-            #         #p null, @props.counterMessage
-            #         MessageListBody
-            #             messages: @props.messages
-            #             settings: @props.settings
-            #             mailboxID: @props.mailboxID
-            #             messageID: @props.messageID
-            #             conversationID: @props.conversationID
-            #             conversationLengths: @props.conversationLengths
-            #             login: @props.login
-            #             edited: @state.edited
-            #             selected: @state.selected
-            #             allSelected: @state.allSelected
-            #             displayConversations: @props.displayConversations
-            #             isTrash: @props.isTrash
-            #             ref: 'listBody'
-            #             onSelect: (id, val) =>
-            #                 selected = _.clone @state.selected
-            #                 if val
-            #                     selected[id] = val
-            #                 else
-            #                     delete selected[id]
-            #                 if Object.keys(selected).length > 0
-            #                     newState =
-            #                         edited: true
-            #                         selected: selected
-            #                 else
-            #                     newState =
-            #                         allSelected: false
-            #                         edited: false
-            #                         selected: {}
-            #                 @setState newState
+            if @props.messages.count() is 0
+                if @props.fetching
+                    p null, t 'list fetching'
+                else
+                    p null, @props.emptyListMessage
+            else
+                div className: 'mainContent',
+                    MessageListBody
+                        messages: @props.messages
+                        settings: @props.settings
+                        mailboxID: @props.mailboxID
+                        messageID: @props.messageID
+                        conversationID: @props.conversationID
+                        conversationLengths: @props.conversationLengths
+                        login: @props.login
+                        edited: @state.edited
+                        selected: @state.selected
+                        allSelected: @state.allSelected
+                        displayConversations: @props.displayConversations
+                        isTrash: @props.isTrash
+                        ref: 'listBody'
+                        onSelect: (id, val) =>
+                            selected = _.clone @state.selected
+                            if val
+                                selected[id] = val
+                            else
+                                delete selected[id]
+                            if Object.keys(selected).length > 0
+                                newState =
+                                    edited: true
+                                    selected: selected
+                            else
+                                newState =
+                                    allSelected: false
+                                    edited: false
+                                    selected: {}
+                            @setState newState
 
-            #         if @props.query.pageAfter isnt '-'
-            #             p className: 'text-center list-footer',
-            #                 if @props.fetching
-            #                     Spinner()
-            #                 else
-            #                     a
-            #                         className: 'more-messages'
-            #                         onClick: nextPage,
-            #                         ref: 'nextPage',
-            #                         t 'list next page'
-            #         else
-            #             p ref: 'listEnd', t 'list end'
+                    if @props.query.pageAfter isnt '-'
+                        p className: 'text-center list-footer',
+                            if @props.fetching
+                                Spinner()
+                            else
+                                a
+                                    className: 'more-messages'
+                                    onClick: nextPage,
+                                    ref: 'nextPage',
+                                    t 'list next page'
+                    else
+                        p ref: 'listEnd', t 'list end'
 
     toggleEdited: ->
         if @state.edited
@@ -434,16 +433,14 @@ MessageItem = React.createClass
     render: ->
         message = @props.message
         flags = message.get('flags')
+
         classes = classer
             message: true
-            read: message.get 'isRead'
-            active: @props.isActive
-            edited: @props.edited
-            'unseen': flags.indexOf(MessageFlags.SEEN) is -1
-            'has-attachments': message.get 'hasAttachments'
-            'is-fav': flags.indexOf(MessageFlags.FLAGGED) isnt -1
+            read:    message.get 'isRead'
+            active:  @props.isActive
+            edited:  @props.edited
 
-        isDraft   = message.get('flags').indexOf(MessageFlags.DRAFT) isnt -1
+        isDraft = MessageFlags.DRAFT in flags
 
         if isDraft and not @props.isTrash
             action = 'edit'
@@ -460,10 +457,12 @@ MessageItem = React.createClass
                 action = 'message'
                 params =
                     messageID: message.get 'id'
+
         url = @buildUrl
             direction: 'second'
             action: action
             parameters: params
+
         if not @props.edited
             tag = a
         else
@@ -473,49 +472,63 @@ MessageItem = React.createClass
         date    = MessageUtils.formatDate message.get('createdAt'), compact
         avatar  = MessageUtils.getAvatar message
         text    = message.get('text')
-        preview = if text? then text.substr(0, 100) + "…" else ''
 
         li
-            className: classes
-            key: @props.key
-            'data-message-id': message.get('id')
+            className:              classes
+            key:                    @props.key
+            'data-message-id':      message.get('id')
             'data-conversation-id': message.get('conversationID')
-            draggable: not @props.edited
-            onClick: @onMessageClick
-            onDragStart: @onDragStart
-        ,
+            draggable:              not @props.edited
+            onClick:                @onMessageClick
+            onDragStart:            @onDragStart,
+
             tag
-                href: url,
-                className: 'wrapper',
-                'data-message-id': message.get('id'),
-                onClick: @onMessageClick,
-                onDoubleClick: @onMessageDblClick,
-                ref: 'target',
-                    div
-                        className: 'avatar-wrapper select-target',
-                        input
-                            ref: 'select'
-                            className: 'select select-target',
-                            type: 'checkbox',
-                            checked: @props.selected,
-                            onChange: @onSelect
-                        if avatar?
-                            img className: 'avatar', src: avatar
-                        else
-                            i className: 'fa fa-user'
-                    span className: 'participants', @getParticipants message
+                href:              url
+                className:         'wrapper'
+                'data-message-id': message.get('id')
+                onClick:           @onMessageClick
+                onDoubleClick:     @onMessageDblClick
+                ref:               'target'
+
+                div className: 'markers-wrapper',
+                    if MessageFlags.SEEN in flags
+                        i className: 'fa fa-circle-thin'
+                    else
+                        i className: 'fa fa-circle'
+                    if MessageFlags.FLAGGED in flags
+                        i className: 'fa fa-star'
+
+                div className: 'avatar-wrapper select-target',
+                    input
+                        ref:       'select'
+                        className: 'select select-target',
+                        type:      'checkbox',
+                        checked:   @props.selected,
+                        onChange:  @onSelect
+
+                    if avatar?
+                        img className: 'avatar', src: avatar
+                    else
+                        i className: 'avatar placeholder',
+                            message.get('from')[0].name[0]
+
+                div className: 'metas-wrapper',
+                    div className: 'participants',
+                        @getParticipants message
+                    div className: 'subject',
+                        message.get 'subject'
+                    div className: 'date',
+                        # TODO: use time-elements component here for the date
+                        date
+                    div className: 'extras',
+                        if message.get 'hasAttachments'
+                            i className: 'attachments fa fa-paperclip'
+                        if  @props.displayConversations and
+                            @props.conversationLengths > 1
+                                div className: 'badge conversation-length',
+                                    @props.conversationLengths
                     div className: 'preview',
-                        if @props.displayConversations and
-                           @props.conversationLengths > 1
-                            span className: 'badge conversation-length',
-                                @props.conversationLengths
-                        span className: 'title',
-                            message.get 'subject'
-                        p null, preview
-                    span className: 'hour', date
-                    span className: "flags",
-                        i className: 'attach fa fa-paperclip'
-                        i className: 'fav fa fa-star'
+                        text.substr(0, 1024)
 
     _doCheck: ->
         # please don't ask me why this **** react needs this
