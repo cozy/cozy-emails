@@ -17,7 +17,7 @@ MessageUtils = require '../utils/message_utils'
 
 RefreshIndicator = require './menu_refresh_indicator'
 
-{Dispositions, SpecialBoxIcons} = require '../constants/app_constants'
+{Dispositions, SpecialBoxIcons, Tooltips} = require '../constants/app_constants'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
@@ -100,12 +100,14 @@ module.exports = Menu = React.createClass
             modal = Modal {title, subtitle, content, closeModal, closeLabel}
         else
             modal = null
-        # classes = classer
-        #     'hidden-xs hidden-sm': not @props.isResponsiveMenuShown
-        #     'collapsed': @props.disposition.type isnt Dispositions.THREE
-        #     'expanded': @props.disposition.type is Dispositions.THREE
-        #     'three': @props.disposition.type is Dispositions.THREE
 
+        composeUrl = @buildUrl
+            direction: 'first'
+            action: 'compose'
+            parameters: null
+            fullWidth: true
+
+        # Starts DOM rendering
         aside
             role: 'menubar'
             'aria-expanded': @state.isDrawerExpanded,
@@ -113,13 +115,11 @@ module.exports = Menu = React.createClass
 
             modal
 
-            # This component doesn't make sense if there is no account. There is
-            # always a selected account if there is an account.
-            if @props.selectedAccount?
-                RefreshIndicator
-                    refreshes: @props.refreshes
-                    mailboxes: @props.selectedAccount.get('mailboxes')
-                    selectedMailboxID: @props.selectedMailboxID
+            a
+                href: composeUrl
+                className: 'menu-item compose-action btn btn-cozy-contrast btn-cozy',
+                    i className: 'fa fa-edit'
+                    span className: 'item-label', t 'menu compose'
 
             nav className: 'mainmenu',
                 if @props.accounts.length
@@ -134,6 +134,14 @@ module.exports = Menu = React.createClass
                     className: "btn new-account-action #{newMailboxClass}",
                         i className: 'fa fa-plus'
                         span className: 'item-label', t 'menu account new'
+
+                # This component doesn't make sense if there is no account. There is
+                # always a selected account if there is an account.
+                if @props.selectedAccount?
+                    RefreshIndicator
+                        refreshes: @props.refreshes
+                        mailboxes: @props.selectedAccount.get('mailboxes')
+                        selectedMailboxID: @props.selectedMailboxID
 
                 button
                     role: 'menuitem'
@@ -201,6 +209,12 @@ module.exports = Menu = React.createClass
             icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites on'
 
+        configMailboxUrl = @buildUrl
+            direction: 'first'
+            action: 'account.config'
+            parameters: [accountID, 'account']
+            fullWidth: true
+
         div
             className: accountClasses, key: key,
             a
@@ -232,6 +246,15 @@ module.exports = Menu = React.createClass
 
                 else if nbUnread > 0
                     span className: 'badge', nbUnread
+
+            if isSelected
+                a
+                    href: configMailboxUrl
+                    className: 'btn btn-default mailbox-config',
+                    i
+                        className: 'fa fa-cog'
+                        'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
+                        'data-tooltip-direction': 'bottom'
 
             if isSelected
                 ul

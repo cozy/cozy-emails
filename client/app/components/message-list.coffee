@@ -1,4 +1,4 @@
-{div, section, ul, li, a, span, i, p, button, input, img, form} = React.DOM
+{div, section, aside, ul, li, a, span, i, p, button, input, img, form} = React.DOM
 classer = React.addons.classSet
 
 RouterMixin    = require '../mixins/router_mixin'
@@ -17,12 +17,11 @@ MessageActionCreator      = require '../actions/message_action_creator'
 MessageStore = require '../stores/message_store'
 LayoutStore  = require '../stores/layout_store'
 
-{Dropdown}     = require './basic_components'
-MailboxList    = require './mailbox_list'
-Participants   = require './participant'
-{Spinner}      = require './basic_components'
-ToolboxActions = require './toolbox_actions'
-ToolboxMove    = require './toolbox_move'
+{Dropdown}          = require './basic_components'
+MailboxList         = require './mailbox_list'
+Participants        = require './participant'
+{Spinner}           = require './basic_components'
+ToolbarMessagesList = require './toolbar_messageslist'
 
 alertError   = LayoutActionCreator.alertError
 
@@ -38,9 +37,6 @@ MessageList = React.createClass
 
     getInitialState: ->
         edited: false
-        filterFlag: false
-        filterUnsead: false
-        filterAttach: false
         quickFilters: false
         selected: {}
         allSelected: false
@@ -72,76 +68,11 @@ MessageList = React.createClass
                 action: 'account.mailbox.messages'
                 parameters: [@props.accountID, mailbox.id]
 
-        configMailboxUrl = @buildUrl
-            direction: 'first'
-            action: 'account.config'
-            parameters: [@props.accountID, 'account']
-            fullWidth: true
-
         advanced   = @props.settings.get('advanced')
         if Object.keys(@state.selected).length > 0
             nbSelected = null
         else
             nbSelected = true
-
-        showList = =>
-            params = _.clone(MessageStore.getParams())
-            params.accountID = @props.accountID
-            params.mailboxID = @props.mailboxID
-            LayoutActionCreator.showMessageList parameters: params
-
-        toggleFilterFlag = =>
-            if @state.filterFlag
-                filter = MessageFilter.ALL
-            else
-                filter = MessageFilter.FLAGGED
-            LayoutActionCreator.filterMessages filter
-            showList()
-            @setState
-                filterFlag:   not @state.filterFlag
-                filterUnseen: false
-                filterAttach: false
-                quickFilters: false
-
-        toggleFilterUnseen = =>
-            if @state.filterUnseen
-                filter = MessageFilter.ALL
-            else
-                filter = MessageFilter.UNSEEN
-            LayoutActionCreator.filterMessages filter
-            showList()
-            @setState
-                filterUnseen: not @state.filterUnseen
-                filterFlag:   false
-                filterAttach: false
-                quickFilters: false
-
-        toggleFilterAttach = =>
-            if @state.filterAttach
-                filter = MessageFilter.ALL
-            else
-                filter = MessageFilter.ATTACH
-            LayoutActionCreator.filterMessages filter
-            showList()
-            @setState
-                filterAttach: not @state.filterAttach
-                filterFlag:   false
-                filterUnseen: false
-                quickFilters: false
-
-        toggleQuickFilter = =>
-            if @state.quickFilters
-                # default sort
-                LayoutActionCreator.sortMessages
-                    order: '-'
-                    field: 'date'
-                showList()
-
-            @setState
-                filterFlag:   false
-                filterUnseen: false
-                filterAttach: false
-                quickFilters: not @state.quickFilters
 
         classList = classer
             compact: compact
@@ -153,208 +84,217 @@ MessageList = React.createClass
 
         btnClasses    = 'btn btn-default '
         btnGrpClasses = 'btn-group btn-group-sm message-list-option '
-        getFilterClass = (filter) ->
-            shown = if filter then ' shown' else ''
-            return "#{btnClasses}#{shown}"
-
-        composeUrl = @buildUrl
-            direction: 'first'
-            action: 'compose'
-            parameters: null
-            fullWidth: true
 
         section
-            key: 'messages-list'
-            ref: 'list'
+            key:               'messages-list'
+            ref:               'list'
             'data-mailbox-id': @props.mailboxID
-            className: 'messages-list'
-            'aria-expanded': true,
+            className:         'messages-list'
+            'aria-expanded':   true
 
-            div className: 'message-list-actions',
-                div className: 'btn-toolbar', role: 'toolbar',
-                    div className: 'btn-group',
-                        # Toggle edit
-                        if advanced
-                            div className: btnGrpClasses,
-                                button
-                                    type: "button"
-                                    className: btnClasses + classEdited
-                                    onClick: @toggleEdited,
-                                        i className: 'fa fa-square-o'
-                        # mailbox-list
-                        if advanced and not @state.edited
-                            div className: btnGrpClasses,
-                                MailboxList
-                                    getUrl: getMailboxUrl
-                                    mailboxes: @props.mailboxes
-                                    selectedMailboxID: @props.mailboxID
-                                    ref: 'mailboxList'
+            # Drawer toggler
+            button
+                onClick:     LayoutActionCreator.drawerToggle
+                title:       t 'menu toggle'
 
-                        # Responsive menu button
-                        if not advanced and not @state.edited
-                            div className: "#{btnGrpClasses} drawer-toggle",
-                                button
-                                    onClick: LayoutActionCreator.drawerToggle
-                                    title: t 'menu toggle'
-                                    className: btnClasses,
-                                    i className: 'fa fa-navicon'
+                i className: 'fa fa-navicon'
 
-                        # filters
-                        if not advanced and not @state.edited
-                            div className: btnGrpClasses,
-                                button
-                                    onClick: toggleFilterUnseen
-                                    className: getFilterClass @state.filterUnseen
-                                    'aria-describedby': Tooltips.FILTER_ONLY_UNREAD
-                                    'data-tooltip-direction': 'bottom'
-                                    span className: 'fa fa-envelope'
-                        if not advanced and not @state.edited
-                            div className: btnGrpClasses,
-                                button
-                                    onClick: toggleFilterFlag
-                                    className: getFilterClass @state.filterFlag
-                                    'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT
-                                    'data-tooltip-direction': 'bottom'
-                                    span className: 'fa fa-star'
-                        if not advanced and not @state.edited
-                            div className: btnGrpClasses,
-                                button
-                                    onClick: toggleFilterAttach
-                                    className: getFilterClass @state.filterAttach
-                                    'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT
-                                    'data-tooltip-direction': 'bottom'
-                                    span className: 'fa fa-paperclip'
-                        if not advanced and not @state.edited
-                            div className: btnGrpClasses,
-                                button
-                                    onClick: toggleQuickFilter
-                                    className: getFilterClass @state.quickFilters
-                                    'aria-describedby': Tooltips.QUICK_FILTER
-                                    'data-tooltip-direction': 'bottom'
-                                    span className: 'fa fa-filter'
-                        ## sort
-                        if advanced and not @state.edited
-                            div className: btnGrpClasses,
-                                MessagesSort filterParams
+            # Toolbar
+            ToolbarMessagesList
+                accountID:            @props.accountID
+                mailboxID:            @props.mailboxID
+                mailboxes:            @props.mailboxes
+                messages:             @props.messages
+                edited:               @state.edited
+                selected:             @state.selected
+                displayConversations: @props.displayConversations
+                toggleEdited:         @toggleEdited
+                toggleAll:            @toggleAll
 
-                        # config
-                        if not @state.edited
-                            div className: btnGrpClasses,
-                                a
-                                    href: configMailboxUrl
-                                    className: btnClasses + 'mailbox-config',
-                                    i
-                                        className: 'fa fa-cog'
-                                        'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
-                                        'data-tooltip-direction': 'bottom'
-                        if @state.edited
-                            div className: btnGrpClasses,
-                                button
-                                    type: "button"
-                                    className: btnClasses + classEdited
-                                    onClick: @toggleAll,
-                                        i className: 'fa fa-square-o'
-                        if @state.edited
-                            div className: btnGrpClasses,
-                                button
-                                    className: "#{btnClasses}trash"
-                                    type: 'button'
-                                    disabled: nbSelected
-                                    onClick: @onDelete
-                                    'aria-describedby': Tooltips.DELETE_SELECTION
-                                    'data-tooltip-direction': 'bottom',
-                                        span className: 'fa fa-trash-o'
-                        if @state.edited and not @props.displayConversations
-                            ToolboxMove
-                                ref: 'listToolboxMove'
-                                mailboxes: @props.mailboxes
-                                onMove: @onMove
-                                direction: 'left'
-                        if @state.edited
-                            ToolboxActions
-                                ref: 'listToolboxActions'
-                                mailboxes: @props.mailboxes
-                                onMark: @onMark
-                                onConversationDelete: @onConversationDelete
-                                onConversationMark: @onConversationMark
-                                onConversationMove: @onConversationMove
-                                displayConversations: @props.displayConversations
-                                direction: 'left'
+            # div className: 'message-list-actions',
+            #     div className: 'btn-toolbar', role: 'toolbar',
+            #         div className: 'btn-group',
+            #             # Toggle edit
+            #             if advanced
+            #                 div className: btnGrpClasses,
+            #                     button
+            #                         type: "button"
+            #                         className: btnClasses + classEdited
+            #                         onClick: @toggleEdited,
+            #                             i className: 'fa fa-square-o'
+            #             # mailbox-list
+            #             if advanced and not @state.edited
+            #                 div className: btnGrpClasses,
+            #                     MailboxList
+            #                         getUrl: getMailboxUrl
+            #                         mailboxes: @props.mailboxes
+            #                         selectedMailboxID: @props.mailboxID
+            #                         ref: 'mailboxList'
 
-                        if @props.isTrash and not @state.edited
-                            div className: btnGrpClasses,
-                                button
-                                    className: btnClasses,
-                                    type: 'button',
-                                    disabled: null,
-                                    onClick: @expungeMailbox,
-                                        span
-                                            className: 'fa fa-recycle'
+            #             # Responsive menu button
+            #             if not advanced and not @state.edited
+            #                 div className: "#{btnGrpClasses} drawer-toggle",
+            #                     button
+            #                         onClick: LayoutActionCreator.drawerToggle
+            #                         title: t 'menu toggle'
+            #                         className: btnClasses,
+            #                         i className: 'fa fa-navicon'
 
-                    a
-                        href: composeUrl
-                        className: 'menu-item compose-action btn btn-cozy-contrast btn-cozy',
-                            i className: 'fa fa-edit'
-                            span className: 'item-label', t 'menu compose'
+            #             # filters
+            #             if not advanced and not @state.edited
+            #                 div className: btnGrpClasses,
+            #                     button
+            #                         onClick: toggleFilterUnseen
+            #                         className: getFilterClass @state.filterUnseen
+            #                         'aria-describedby': Tooltips.FILTER_ONLY_UNREAD
+            #                         'data-tooltip-direction': 'bottom'
+            #                         span className: 'fa fa-envelope'
+            #             if not advanced and not @state.edited
+            #                 div className: btnGrpClasses,
+            #                     button
+            #                         onClick: toggleFilterFlag
+            #                         className: getFilterClass @state.filterFlag
+            #                         'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT
+            #                         'data-tooltip-direction': 'bottom'
+            #                         span className: 'fa fa-star'
+            #             if not advanced and not @state.edited
+            #                 div className: btnGrpClasses,
+            #                     button
+            #                         onClick: toggleFilterAttach
+            #                         className: getFilterClass @state.filterAttach
+            #                         'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT
+            #                         'data-tooltip-direction': 'bottom'
+            #                         span className: 'fa fa-paperclip'
+            #             if not advanced and not @state.edited
+            #                 div className: btnGrpClasses,
+            #                     button
+            #                         onClick: toggleQuickFilter
+            #                         className: getFilterClass @state.quickFilters
+            #                         'aria-describedby': Tooltips.QUICK_FILTER
+            #                         'data-tooltip-direction': 'bottom'
+            #                         span className: 'fa fa-filter'
+            #             ## sort
+            #             if advanced and not @state.edited
+            #                 div className: btnGrpClasses,
+            #                     MessagesSort filterParams
 
-            if @state.quickFilters
-                div className: 'message-list-filters form-horizontal',
-                    MessagesQuickFilter
-                        accountID: @props.accountID
-                        mailboxID: @props.mailboxID
+            #             # config
+            #             if not @state.edited
+            #                 div className: btnGrpClasses,
+            #                     a
+            #                         href: configMailboxUrl
+            #                         className: btnClasses + 'mailbox-config',
+            #                         i
+            #                             className: 'fa fa-cog'
+            #                             'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
+            #                             'data-tooltip-direction': 'bottom'
+            #             if @state.edited
+            #                 div className: btnGrpClasses,
+            #                     button
+            #                         type: "button"
+            #                         className: btnClasses + classEdited
+            #                         onClick: @toggleAll,
+            #                             i className: 'fa fa-square-o'
+            #             if @state.edited
+            #                 div className: btnGrpClasses,
+            #                     button
+            #                         className: "#{btnClasses}trash"
+            #                         type: 'button'
+            #                         disabled: nbSelected
+            #                         onClick: @onDelete
+            #                         'aria-describedby': Tooltips.DELETE_SELECTION
+            #                         'data-tooltip-direction': 'bottom',
+            #                             span className: 'fa fa-trash-o'
+            #             if @state.edited and not @props.displayConversations
+            #                 ToolboxMove
+            #                     ref: 'listToolboxMove'
+            #                     mailboxes: @props.mailboxes
+            #                     onMove: @onMove
+            #                     direction: 'left'
+            #             if @state.edited
+            #                 ToolboxActions
+            #                     ref: 'listToolboxActions'
+            #                     mailboxes: @props.mailboxes
+            #                     onMark: @onMark
+            #                     onConversationDelete: @onConversationDelete
+            #                     onConversationMark: @onConversationMark
+            #                     onConversationMove: @onConversationMove
+            #                     displayConversations: @props.displayConversations
+            #                     direction: 'left'
 
-            if @props.messages.count() is 0
-                if @props.fetching
-                    p null, t 'list fetching'
-                else
-                    p null, @props.emptyListMessage
-            else
-                div null,
-                    #p null, @props.counterMessage
-                    MessageListBody
-                        messages: @props.messages
-                        settings: @props.settings
-                        mailboxID: @props.mailboxID
-                        messageID: @props.messageID
-                        conversationID: @props.conversationID
-                        conversationLengths: @props.conversationLengths
-                        login: @props.login
-                        edited: @state.edited
-                        selected: @state.selected
-                        allSelected: @state.allSelected
-                        displayConversations: @props.displayConversations
-                        isTrash: @props.isTrash
-                        ref: 'listBody'
-                        onSelect: (id, val) =>
-                            selected = _.clone @state.selected
-                            if val
-                                selected[id] = val
-                            else
-                                delete selected[id]
-                            if Object.keys(selected).length > 0
-                                newState =
-                                    edited: true
-                                    selected: selected
-                            else
-                                newState =
-                                    allSelected: false
-                                    edited: false
-                                    selected: {}
-                            @setState newState
+            #             if @props.isTrash and not @state.edited
+            #                 div className: btnGrpClasses,
+            #                     button
+            #                         className: btnClasses,
+            #                         type: 'button',
+            #                         disabled: null,
+            #                         onClick: @expungeMailbox,
+            #                             span
+            #                                 className: 'fa fa-recycle'
 
-                    if @props.query.pageAfter isnt '-'
-                        p className: 'text-center list-footer',
-                            if @props.fetching
-                                Spinner()
-                            else
-                                a
-                                    className: 'more-messages'
-                                    onClick: nextPage,
-                                    ref: 'nextPage',
-                                    t 'list next page'
-                    else
-                        p ref: 'listEnd', t 'list end'
+            #         a
+            #             href: composeUrl
+            #             className: 'menu-item compose-action btn btn-cozy-contrast btn-cozy',
+            #                 i className: 'fa fa-edit'
+            #                 span className: 'item-label', t 'menu compose'
 
+            # if @state.quickFilters
+            #     div className: 'message-list-filters form-horizontal',
+            #         MessagesQuickFilter
+            #             accountID: @props.accountID
+            #             mailboxID: @props.mailboxID
+
+            # if @props.messages.count() is 0
+            #     if @props.fetching
+            #         p null, t 'list fetching'
+            #     else
+            #         p null, @props.emptyListMessage
+            # else
+            #     div null,
+            #         #p null, @props.counterMessage
+            #         MessageListBody
+            #             messages: @props.messages
+            #             settings: @props.settings
+            #             mailboxID: @props.mailboxID
+            #             messageID: @props.messageID
+            #             conversationID: @props.conversationID
+            #             conversationLengths: @props.conversationLengths
+            #             login: @props.login
+            #             edited: @state.edited
+            #             selected: @state.selected
+            #             allSelected: @state.allSelected
+            #             displayConversations: @props.displayConversations
+            #             isTrash: @props.isTrash
+            #             ref: 'listBody'
+            #             onSelect: (id, val) =>
+            #                 selected = _.clone @state.selected
+            #                 if val
+            #                     selected[id] = val
+            #                 else
+            #                     delete selected[id]
+            #                 if Object.keys(selected).length > 0
+            #                     newState =
+            #                         edited: true
+            #                         selected: selected
+            #                 else
+            #                     newState =
+            #                         allSelected: false
+            #                         edited: false
+            #                         selected: {}
+            #                 @setState newState
+
+            #         if @props.query.pageAfter isnt '-'
+            #             p className: 'text-center list-footer',
+            #                 if @props.fetching
+            #                     Spinner()
+            #                 else
+            #                     a
+            #                         className: 'more-messages'
+            #                         onClick: nextPage,
+            #                         ref: 'nextPage',
+            #                         t 'list next page'
+            #         else
+            #             p ref: 'listEnd', t 'list end'
 
     toggleEdited: ->
         if @state.edited
@@ -372,65 +312,6 @@ MessageList = React.createClass
             .toJS()
             @setState allSelected: true, edited: true, selected: selected
 
-    _getSelectedAndMode: (applyToConversation) ->
-        selected = Object.keys @state.selected
-        count = selected.length
-        applyToConversation = Boolean applyToConversation
-        applyToConversation ?= @props.displayConversations
-        if selected.length is 0
-            alertError t 'list mass no message'
-            return false
-
-        else if not applyToConversation
-            return {count, messageIDs: selected, applyToConversation}
-
-        else
-            conversationIDs = selected.map (id) =>
-                @props.messages.get(id).get('conversationID')
-
-            return {count, conversationIDs, applyToConversation}
-
-    onConversationDelete: ->
-        @onDelete true
-
-    onDelete: (applyToConversation) ->
-        return unless options = @_getSelectedAndMode(applyToConversation)
-
-        if options.applyToConversation
-            msg = t 'list delete conv confirm', smart_count: options.count
-        else
-            msg = t 'list delete confirm', smart_count: options.count
-
-        noConfirm = not @props.settings.get('messageConfirmDelete')
-        if noConfirm or window.confirm msg
-            MessageActionCreator.delete options, =>
-                if options.count > 0 and @props.messages.count() > 0
-                    firstMessageID = @props.messages.first().get('id')
-                    MessageActionCreator.setCurrent firstMessageID, true
-
-
-
-    onConversationMove: (to) ->
-        @onMove to, true
-
-    onMove: (to, applyToConversation) ->
-        return unless options = @_getSelectedAndMode(applyToConversation)
-
-        from = @props.mailboxID
-
-        MessageActionCreator.move options, from, to, =>
-            if options.count > 0 and @props.messages.count() > 0
-                firstMessageID = @props.messages.first().get('id')
-                MessageActionCreator.setCurrent firstMessageID, true
-
-
-    onConversationMark: (flag) ->
-        @onMark flag, true
-
-    onMark: (flag, applyToConversation) ->
-        return unless options = @_getSelectedAndMode(applyToConversation)
-
-        MessageActionCreator.mark options, flag
 
     expungeMailbox: (e) ->
         e.preventDefault()
@@ -731,7 +612,6 @@ MessageItem = React.createClass
 
     addAddress: (address) ->
         ContactActionCreator.createContact address
-
 
 MessagesQuickFilter = React.createClass
     displayName: 'MessagesQuickFilter'
