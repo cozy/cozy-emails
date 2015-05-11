@@ -5,6 +5,7 @@ classer = React.addons.classSet
 RouterMixin     = require '../mixins/router_mixin'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 
+AccountActionCreator      = require '../actions/account_action_creator'
 LayoutActionCreator       = require '../actions/layout_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 
@@ -252,7 +253,8 @@ module.exports = Menu = React.createClass
                     href: configMailboxUrl
                     className: 'btn btn-default mailbox-config',
                     i
-                        className: 'fa fa-cog'
+                        className:
+                            'fa fa-cog'
                         'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
                         'data-tooltip-direction': 'bottom'
 
@@ -370,6 +372,13 @@ MenuMailboxItem = React.createClass
                     span className: 'refresh-error', onClick: displayError,
                         i className: 'fa fa-warning', null
 
+            if @props.account.get('trashMailbox') is mailboxID
+                button
+                    onClick: @expungeMailbox
+
+                    span className: 'fa fa-eraser'
+
+
     onDragEnter: (e) ->
         if not @state.target
             @setState target: true
@@ -386,3 +395,29 @@ MenuMailboxItem = React.createClass
         {messageID, mailboxID, conversationID} = JSON.parse data
         @setState target: false
         MessageActionCreator.move {messageID, conversationID}, mailboxID, to
+
+    expungeMailbox: (e) ->
+        accountID = @props.account.get 'id'
+        mailboxID = @props.mailbox.get 'id'
+
+        e.preventDefault()
+
+        if window.confirm(t 'account confirm delbox')
+            mailbox =
+                accountID: accountID
+                mailboxID: mailboxID
+
+            AccountActionCreator.mailboxExpunge mailbox, (error) =>
+                if error?
+                    # if user hasn't switched to another box, refresh display
+                    if accountID is mailbox.accountID and
+                       mailboxID is mailbox.mailboxID
+                        params = _.clone(MessageStore.getParams())
+                        params.accountID = accountID
+                        params.mailboxID = mailboxID
+                        LayoutActionCreator.showMessageList parameters: params
+
+                    LayoutActionCreator.alertError "#{t("mailbox expunge ko")} #{error}"
+                else
+                    LayoutActionCreator.notify t("mailbox expunge ok"),
+                        autoclose: true
