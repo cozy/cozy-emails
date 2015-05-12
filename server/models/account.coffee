@@ -604,7 +604,7 @@ class Account extends cozydb.CozyModel
         # In NodeMailer, inReplyTo header should be a string, so we only keep
         # the first message ID (if replying to more than one message, others
         # ID will be in references header)
-        message.inReplyTo = message.inReplyTo.shift()
+        message.inReplyTo = message.inReplyTo?.shift()
         options =
             port: @smtpPort
             host: @smtpServer

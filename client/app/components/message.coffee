@@ -42,6 +42,7 @@ module.exports = React.createClass
         selectedMailboxID      : React.PropTypes.string.isRequired
         settings               : React.PropTypes.object.isRequired
         useIntents             : React.PropTypes.bool.isRequired
+        setActive              : React.PropTypes.func.isRequired
 
 
     getInitialState: ->
@@ -128,32 +129,35 @@ module.exports = React.createClass
 
 
     componentWillMount: ->
-        @_markRead @props.message
+        @_markRead(@props.message, @props.active)
 
 
     componentWillReceiveProps: (props) ->
         state =
             active: props.active
         if props.message.get('id') isnt @props.message.get('id')
-            @_markRead props.message
+            @_markRead(props.message, props.active)
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
             state.messageDisplayImages = props.settings.get 'messageDisplayImages'
             state.composing            = @_shouldOpenCompose props
         @setState state
 
 
-    _markRead: (message) ->
+    _markRead: (message, active) ->
         # Hack to prevent infinite loop if server side mark as read fails
         messageID = message.get 'id'
         if @state.currentMessageID isnt messageID
             state =
                 currentMessageID: messageID
                 prepared: @_prepareMessage message
-
-            setTimeout ->
-                MessageActionCreator.mark {messageID}, MessageFlags.SEEN
-            , 1
             @setState state
+
+            # Only mark as read current active message if unseen
+            flags = message.get('flags').slice()
+            if active and flags.indexOf(MessageFlags.SEEN) is -1
+                setTimeout ->
+                    MessageActionCreator.mark {messageID}, MessageFlags.SEEN
+                , 1
 
 
     prepareHTML: (html) ->
@@ -209,18 +213,28 @@ module.exports = React.createClass
             messageDisplayHTML = false
             imagesWarning      = false
 
+        isUnread = message.get('flags').slice().indexOf(MessageFlags.SEEN) is -1
+
+        setActive = =>
+            if isUnread and not @state.active
+                messageID = message.get('id')
+                MessageActionCreator.mark {messageID}, MessageFlags.SEEN
+                @props.setActive message.get('id')
+            @setState active: not @state.active
+
         classes = classer
             message: true
             active: @state.active
             isDraft: prepared.isDraft
             isDeleted: prepared.isDeleted
+            isUnread: isUnread
 
         article
             className: classes,
             key: @props.key,
             'data-id': message.get('id'),
                 header
-                    onClick: => @setState active: not @state.active
+                    onClick: setActive,
                     @renderHeaders()
                     @renderToolbox() if @state.active
                 @renderCompose(prepared.isDraft) if @state.active

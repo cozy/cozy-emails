@@ -413,8 +413,10 @@ module.exports = Compose = React.createClass
                 else
                     state.isDraft = false
                     state.sending = false
-                # Don't override local attachments
-                state[key] = value for key, value of message when key isnt 'attachments'
+                # Don't override local attachments nor message content
+                # (server override cid: URLs with relative URLs)
+                state[key] = value for key, value of message when key isnt 'attachments' and
+                    key isnt 'html' and key isnt 'text'
                 # Sometime, when user cancel composing, the component has been
                 # unmounted before we come back from autosave, and setState fails
                 if @isMounted()

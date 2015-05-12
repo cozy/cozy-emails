@@ -128,11 +128,16 @@ module.exports = LayoutActionCreator =
 
         if not cached
             MessageActionCreator.setFetching true
+            updated = Date.now()
             XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMsg) ->
                 MessageActionCreator.setFetching false
                 if err?
                     LayoutActionCreator.alertError err
                 else
+                    # This prevent to override local updates with older ones from
+                    # server
+                    rawMsg.messages.forEach (msg) ->
+                        msg.updated = updated
                     MessageActionCreator.receiveRawMessages rawMsg
 
     showMessage: (panelInfo, direction) ->
@@ -167,21 +172,16 @@ module.exports = LayoutActionCreator =
         message        = MessageStore.getByID messageID
         if message?
             onMessage message
+        updated = Date.now()
         XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
 
             if err?
                 LayoutActionCreator.alertError err
             else
-                # prevent flashing of message in message list when first
-                # marking as read a new message. If it has been flagged Seen
-                # in local cache but not on server, ignore server value
-                if rawMessages.length is 1
-                    message = MessageStore.getByID rawMessages[0].id
-                    if message? and
-                       rawMessages[0].flags.length is 0 and
-                       message.get('flags').length is 1 and
-                       message.get('flags')[0] is MessageFlags.SEEN
-                        rawMessages[0].flags = MessageFlags.SEEN
+                # This prevent to override local updates with older ones from
+                # server
+                rawMessages.forEach (msg) ->
+                    msg.updated = updated
                 MessageActionCreator.receiveRawMessages rawMessages
                 onMessage rawMessages[0]
 

@@ -646,13 +646,13 @@ Account = (function(superClass) {
   };
 
   Account.prototype.sendMessage = function(message, callback) {
-    var options, transport;
+    var options, ref, transport;
     if (this.isTest()) {
       return callback(null, {
         messageId: 66
       });
     }
-    message.inReplyTo = message.inReplyTo.shift();
+    message.inReplyTo = (ref = message.inReplyTo) != null ? ref.shift() : void 0;
     options = {
       port: this.smtpPort,
       host: this.smtpServer,
