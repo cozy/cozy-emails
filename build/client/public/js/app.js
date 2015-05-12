@@ -496,7 +496,7 @@ module.exports = LayoutActionCreator = {
     }
   },
   showMessageList: function(panelInfo) {
-    var accountID, cached, mailboxID, query, selectedAccount, selectedMailbox, _ref1;
+    var accountID, cached, mailboxID, query, selectedAccount, selectedMailbox, updated, _ref1;
     _ref1 = panelInfo.parameters, accountID = _ref1.accountID, mailboxID = _ref1.mailboxID;
     selectedAccount = AccountStore.getSelected();
     selectedMailbox = AccountStore.getSelectedMailbox();
@@ -519,11 +519,15 @@ module.exports = LayoutActionCreator = {
     _cachedQuery.mailboxID = mailboxID;
     if (!cached) {
       MessageActionCreator.setFetching(true);
+      updated = Date.now();
       return XHRUtils.fetchMessagesByFolder(mailboxID, query, function(err, rawMsg) {
         MessageActionCreator.setFetching(false);
         if (err != null) {
           return LayoutActionCreator.alertError(err);
         } else {
+          rawMsg.messages.forEach(function(msg) {
+            return msg.updated = updated;
+          });
           return MessageActionCreator.receiveRawMessages(rawMsg);
         }
       });
@@ -554,7 +558,7 @@ module.exports = LayoutActionCreator = {
     }
   },
   showConversation: function(panelInfo, direction) {
-    var conversationID, message, messageID, onMessage;
+    var conversationID, message, messageID, onMessage, updated;
     onMessage = function(msg) {
       var selectedAccount;
       selectedAccount = AccountStore.getSelected();
@@ -568,16 +572,14 @@ module.exports = LayoutActionCreator = {
     if (message != null) {
       onMessage(message);
     }
+    updated = Date.now();
     return XHRUtils.fetchConversation(conversationID, function(err, rawMessages) {
       if (err != null) {
         return LayoutActionCreator.alertError(err);
       } else {
-        if (rawMessages.length === 1) {
-          message = MessageStore.getByID(rawMessages[0].id);
-          if ((message != null) && rawMessages[0].flags.length === 0 && message.get('flags').length === 1 && message.get('flags')[0] === MessageFlags.SEEN) {
-            rawMessages[0].flags = MessageFlags.SEEN;
-          }
-        }
+        rawMessages.forEach(function(msg) {
+          return msg.updated = updated;
+        });
         MessageActionCreator.receiveRawMessages(rawMessages);
         return onMessage(rawMessages[0]);
       }
@@ -2914,7 +2916,7 @@ module.exports = Application = React.createClass({
     keyFirst = 'left-panel-' + layout.firstPanel.action.split('.')[0];
     if (layout.secondPanel != null) {
       keySecond = 'right-panel-' + layout.secondPanel.action.split('.')[0];
-      messageID = layout.secondPanel.parameters.messageID != null;
+      messageID = layout.secondPanel.parameters.messageID;
       if (messageID != null) {
         MessageStore.setCurrentID(messageID);
       } else {
@@ -4147,7 +4149,7 @@ module.exports = Compose = React.createClass({
           }
           for (key in message) {
             value = message[key];
-            if (key !== 'attachments') {
+            if (key !== 'attachments' && key !== 'html' && key !== 'text') {
               state[key] = value;
             }
           }
@@ -4764,6 +4766,16 @@ module.exports = React.createClass({
     });
   },
   renderMessage: function(key, active) {
+    var setActive;
+    setActive = (function(_this) {
+      return function(id) {
+        return _this.props.conversation.map(function(message, key) {
+          if (message.get('id') === id) {
+            return _this._activeKey = key;
+          }
+        }).toJS();
+      };
+    })(this);
     return Message({
       ref: 'message',
       accounts: this.props.accounts,
@@ -4777,7 +4789,8 @@ module.exports = React.createClass({
       selectedMailboxID: this.props.selectedMailboxID,
       settings: this.props.settings,
       displayConversations: this.props.displayConversation,
-      useIntents: this.props.useIntents
+      useIntents: this.props.useIntents,
+      setActive: setActive
     });
   },
   renderGroup: function(messages, key) {
@@ -4822,19 +4835,22 @@ module.exports = React.createClass({
     }
     messages = [];
     lastMessageIndex = this.props.conversation.length - 1;
-    this.props.conversation.map(function(message, key) {
-      var isSeen, last, _ref1;
-      isSeen = (_ref1 = MessageFlags.SEEN, __indexOf.call(message.get('flags'), _ref1) >= 0);
-      if (!isSeen || key === lastMessageIndex) {
-        return messages.push(key);
-      } else {
-        last = messages[messages.length - 1];
-        if (!_.isArray(last)) {
-          messages.push(last = []);
+    this.props.conversation.map((function(_this) {
+      return function(message, key) {
+        var isSeen, last, _ref1;
+        isSeen = (_ref1 = MessageFlags.SEEN, __indexOf.call(message.get('flags'), _ref1) >= 0);
+        if (((_this._activeKey == null) && (!isSeen || key === lastMessageIndex)) || key === _this._activeKey) {
+          messages.push(key);
+          return _this._activeKey = key;
+        } else {
+          last = messages[messages.length - 1];
+          if (!_.isArray(last)) {
+            messages.push(last = []);
+          }
+          return last.push(key);
         }
-        return last.push(key);
-      }
-    }).toJS();
+      };
+    })(this)).toJS();
     return section({
       className: 'conversation'
     }, header(null, this.renderToolbar(), h3({
@@ -7254,7 +7270,8 @@ module.exports = React.createClass({
     selectedAccountLogin: React.PropTypes.string.isRequired,
     selectedMailboxID: React.PropTypes.string.isRequired,
     settings: React.PropTypes.object.isRequired,
-    useIntents: React.PropTypes.bool.isRequired
+    useIntents: React.PropTypes.bool.isRequired,
+    setActive: React.PropTypes.func.isRequired
   },
   getInitialState: function() {
     return {
@@ -7338,7 +7355,7 @@ module.exports = React.createClass({
     };
   },
   componentWillMount: function() {
-    return this._markRead(this.props.message);
+    return this._markRead(this.props.message, this.props.active);
   },
   componentWillReceiveProps: function(props) {
     var state;
@@ -7346,27 +7363,30 @@ module.exports = React.createClass({
       active: props.active
     };
     if (props.message.get('id') !== this.props.message.get('id')) {
-      this._markRead(props.message);
+      this._markRead(props.message, props.active);
       state.messageDisplayHTML = props.settings.get('messageDisplayHTML');
       state.messageDisplayImages = props.settings.get('messageDisplayImages');
       state.composing = this._shouldOpenCompose(props);
     }
     return this.setState(state);
   },
-  _markRead: function(message) {
-    var messageID, state;
+  _markRead: function(message, active) {
+    var flags, messageID, state;
     messageID = message.get('id');
     if (this.state.currentMessageID !== messageID) {
       state = {
         currentMessageID: messageID,
         prepared: this._prepareMessage(message)
       };
-      setTimeout(function() {
-        return MessageActionCreator.mark({
-          messageID: messageID
-        }, MessageFlags.SEEN);
-      }, 1);
-      return this.setState(state);
+      this.setState(state);
+      flags = message.get('flags').slice();
+      if (active && flags.indexOf(MessageFlags.SEEN) === -1) {
+        return setTimeout(function() {
+          return MessageActionCreator.mark({
+            messageID: messageID
+          }, MessageFlags.SEEN);
+        }, 1);
+      }
     }
   },
   prepareHTML: function(html) {
@@ -7415,7 +7435,7 @@ module.exports = React.createClass({
     };
   },
   render: function() {
-    var classes, images, imagesWarning, message, messageDisplayHTML, prepared, _ref2, _ref3;
+    var classes, images, imagesWarning, isUnread, message, messageDisplayHTML, prepared, setActive, _ref2, _ref3;
     message = this.props.message;
     prepared = this.state.prepared;
     if (this.state.messageDisplayHTML && (prepared.html != null)) {
@@ -7425,24 +7445,35 @@ module.exports = React.createClass({
       messageDisplayHTML = false;
       imagesWarning = false;
     }
+    isUnread = message.get('flags').slice().indexOf(MessageFlags.SEEN) === -1;
+    setActive = (function(_this) {
+      return function() {
+        var messageID;
+        if (isUnread && !_this.state.active) {
+          messageID = message.get('id');
+          MessageActionCreator.mark({
+            messageID: messageID
+          }, MessageFlags.SEEN);
+          _this.props.setActive(message.get('id'));
+        }
+        return _this.setState({
+          active: !_this.state.active
+        });
+      };
+    })(this);
     classes = classer({
       message: true,
       active: this.state.active,
       isDraft: prepared.isDraft,
-      isDeleted: prepared.isDeleted
+      isDeleted: prepared.isDeleted,
+      isUnread: isUnread
     });
     return article({
       className: classes,
       key: this.props.key,
       'data-id': message.get('id')
     }, header({
-      onClick: (function(_this) {
-        return function() {
-          return _this.setState({
-            active: !_this.state.active
-          });
-        };
-      })(this)
+      onClick: setActive
     }, this.renderHeaders(), this.state.active ? this.renderToolbox() : void 0), this.state.active ? this.renderCompose(prepared.isDraft) : void 0, this.state.active ? div({
       className: 'full-headers'
     }, pre(null, prepared != null ? (_ref3 = prepared.fullHeaders) != null ? _ref3.join("\n") : void 0 : void 0)) : void 0, this.state.active ? MessageContent({
@@ -12397,30 +12428,37 @@ MessageStore = (function(_super) {
   };
 
   onReceiveRawMessage = function(message) {
-    var diff, oldmsg;
-    if (message.attachments == null) {
-      message.attachments = [];
-    }
-    if (message.date == null) {
-      message.date = new Date().toISOString();
-    }
-    if (message.createdAt == null) {
-      message.createdAt = message.date;
-    }
-    message.hasAttachments = message.attachments.length > 0;
-    message.attachments = message.attachments.map(function(file) {
-      return Immutable.Map(file);
-    });
-    message.attachments = Immutable.Vector.from(message.attachments);
-    if (message.flags == null) {
-      message.flags = [];
-    }
-    delete message.docType;
-    message = Immutable.Map(message);
-    oldmsg = _messages.get(message.get('id'));
-    _messages = _messages.set(message.get('id'), message);
-    if (diff = computeMailboxDiff(oldmsg, message)) {
-      return AccountStore._applyMailboxDiff(message.get('accountID'), diff);
+    var diff, messageMap, oldmsg, updated;
+    oldmsg = _messages.get(message.id);
+    updated = oldmsg != null ? oldmsg.get('updated') : void 0;
+    if (!((message.updated != null) && (updated != null) && updated > message.updated)) {
+      if (message.attachments == null) {
+        message.attachments = [];
+      }
+      if (message.date == null) {
+        message.date = new Date().toISOString();
+      }
+      if (message.createdAt == null) {
+        message.createdAt = message.date;
+      }
+      message.hasAttachments = message.attachments.length > 0;
+      message.attachments = message.attachments.map(function(file) {
+        return Immutable.Map(file);
+      });
+      message.attachments = Immutable.Vector.from(message.attachments);
+      if (message.flags == null) {
+        message.flags = [];
+      }
+      delete message.docType;
+      message.updated = Date.now();
+      messageMap = Immutable.Map(message);
+      messageMap.prettyPrint = function() {
+        return "" + message.id + " \"" + message.from[0].name + "\" \"" + message.subject + "\"";
+      };
+      _messages = _messages.set(message.id, messageMap);
+      if (diff = computeMailboxDiff(oldmsg, messageMap)) {
+        return AccountStore._applyMailboxDiff(message.accountID, diff);
+      }
     }
   };
 
@@ -13773,7 +13811,7 @@ module.exports = {
       onMutation = function(mutations) {
         var check, checkNode, mutation, _i, _len, _results;
         checkNode = function(node, action) {
-          var listeners, pluginConf, pluginName, _ref, _results;
+          var listener, pluginConf, pluginName, _ref, _results;
           if (node.nodeType !== Node.ELEMENT_NODE) {
             return;
           }
@@ -13784,20 +13822,13 @@ module.exports = {
             pluginConf = _ref[pluginName];
             if (pluginConf.active) {
               if (action === 'add') {
-                listeners = pluginConf.onAdd;
+                listener = pluginConf.onAdd;
               }
               if (action === 'delete') {
-                listeners = pluginConf.onDelete;
+                listener = pluginConf.onDelete;
               }
-              if (listeners != null) {
-                if (!Array.isArray(listeners)) {
-                  listeners = [listeners];
-                }
-                _results.push(listeners.forEach(function(listener) {
-                  if (listener.condition.bind(pluginConf)(node)) {
-                    return listener.action.bind(pluginConf)(node);
-                  }
-                }));
+              if ((listener != null) && listener.condition.bind(pluginConf)(node)) {
+                _results.push(listener.action.bind(pluginConf)(node));
               } else {
                 _results.push(void 0);
               }
@@ -14303,7 +14334,7 @@ module.exports = {
       } else {
         err = (_ref = res.body) != null ? _ref.error.message : void 0;
         if (err == null) {
-          err = new Error('Network batchAddFlag');
+          err = new Error('Network batchFetch');
         }
         return callback(err);
       }
