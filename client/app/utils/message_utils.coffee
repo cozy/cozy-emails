@@ -289,7 +289,7 @@ module.exports = MessageUtils =
         textSeparator = textSeparator.replace('<pre>', '').replace('</pre>', '')
         htmlSeparator = separator.replace /(\n)+/g, '<br />'
 
-        @setMessageAsDefault message
+        @setMessageAsDefault options
         message.subject = """
             #{t 'compose forward prefix'}#{inReplyTo.get 'subject'}
             """
