@@ -23,11 +23,14 @@ module.exports = React.createClass
 
 
     render: ->
+
+        unfinishedRefreshes = @getUnfinishedRefreshes()
+
         span className: 'menu-item trigger-refresh-action',
 
             # Show the button to trigger a refresh if no refresh are occuring
             # and the user has not triggered it.
-            if @props.refreshes.length is 0 and not @state.isRefreshStarted
+            if unfinishedRefreshes.length is 0 and not @state.isRefreshStarted
                 button
                     className: ''
                     type: 'button'
@@ -72,7 +75,7 @@ module.exports = React.createClass
                         # happens has not been figured out yet. A placeholder
                         # string is used in the meantime.
                         else
-                            span key: 'waiting', t("menu refresh waiting")
+                            span key: 'waiting', t("menu refrsh waiting")
 
                 ]
 
@@ -89,6 +92,14 @@ module.exports = React.createClass
         mailbox = mailboxes.first()
 
         return {account, mailbox}
+
+
+    # Get unfinished refreshes to avoid that errored refreshes block the refresh
+    # button.
+    getUnfinishedRefreshes: ->
+        return  @props.refreshes
+            .filter (refresh) -> not refresh.get('finished')
+            .toOrderedMap()
 
 
     # Format the last refresh date based on selected mailbox. If none is
