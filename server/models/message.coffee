@@ -238,7 +238,12 @@ module.exports = class Message extends cozydb.CozyModel
 
         , (err, rows) ->
             return callback err if err
-            messages = rows.map (row) -> new Message row.doc
+            messages = rows.map (row) ->
+                try
+                    new Message row.doc
+                catch err
+                    log.error "Wrong message", err, row.doc
+                    return null
             callback null, messages
 
 
