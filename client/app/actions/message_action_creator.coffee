@@ -313,7 +313,7 @@ _localDelete = (target) ->
 
             newMailboxIds = {}
             newMailboxIds[trashMailbox] = -1
-            updated.push message.set 'mailboxIDs', newMailboxIds
+            updated.push(message.set('mailboxIDs', newMailboxIds).toJS())
 
     # immediately apply change to refresh UI
     # Update datastore
