@@ -189,7 +189,7 @@ module.exports = MessageUtils =
         if isSignature
             signature = signature.replace /\n/g, '<br>'
             message.html += """
-            <p><br /></p><p id="signature">#{signature}</p>
+            <p><br /></p><p id="signature">-- \n<br>#{signature}</p>
             """
 
 
@@ -238,7 +238,7 @@ module.exports = MessageUtils =
         if isSignature
             signature = signature.replace /\n/g, '<br>'
             message.html += """
-            <p><br /></p><p id="signature">#{signature}</p>
+            <p><br /></p><p id="signature">-- \n<br>#{signature}</p>
             """
 
 
@@ -294,8 +294,13 @@ module.exports = MessageUtils =
             #{t 'compose forward prefix'}#{inReplyTo.get 'subject'}
             """
         message.text = textSeparator + text
-        message.html = """
-#{COMPOSE_STYLE}
+        message.html = "#{COMPOSE_STYLE}"
+        if isSignature
+            signature = signature.replace /\n/g, '<br>'
+            message.html += """
+            <p><br /></p><p id="signature">-- \n<br>#{signature}</p>
+            """
+        message.html += """
 
 <p>#{htmlSeparator}</p><p><br /></p>#{html}
 """
