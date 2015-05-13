@@ -1,3 +1,10 @@
+###
+ColorHash
+
+This file exports a simple method that return an hex color from a given string.
+A same string will always returns the same color.
+###
+
 hue2rgb = (p,q,t) ->
     if t < 0 then t += 1
     if t > 1 then t -= 1
