@@ -8,6 +8,7 @@ classer      = React.addons.classSet
 DomUtils     = require '../utils/dom_utils'
 MessageUtils = require '../utils/message_utils'
 SocketUtils  = require '../utils/socketio_utils'
+colorhash    = require '../utils/colorhash'
 
 ContactActionCreator = require '../actions/contact_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
@@ -91,7 +92,7 @@ module.exports = MessageList = React.createClass
                 else
                     p null, @props.emptyListMessage
             else
-                div className: 'mainContent',
+                div className: 'main-content',
                     MessageListBody
                         messages: @props.messages
                         settings: @props.settings
@@ -276,7 +277,7 @@ MessageItem = React.createClass
 
         classes = classer
             message: true
-            read:    message.get 'isRead'
+            unseen:  MessageFlags.SEEN not in flags
             active:  @props.isActive
             edited:  @props.edited
 
@@ -343,8 +344,13 @@ MessageItem = React.createClass
                     if avatar?
                         img className: 'avatar', src: avatar
                     else
-                        i className: 'avatar placeholder',
-                            message.get('from')[0].name[0]
+                        from  = message.get('from')[0]
+                        cHash = "#{from.name} <#{from.address}>"
+                        i
+                            className: 'avatar placeholder'
+                            style:
+                                'background-color': colorhash(cHash)
+                            from.name[0]
 
                 div className: 'metas-wrapper',
                     div className: 'participants',
@@ -359,7 +365,7 @@ MessageItem = React.createClass
                             i className: 'attachments fa fa-paperclip'
                         if  @props.displayConversations and
                             @props.conversationLengths > 1
-                                div className: 'badge conversation-length',
+                                i className: 'conversation-length fa fa-chevron-right',
                                     @props.conversationLengths
                     div className: 'preview',
                         text.substr(0, 1024)
