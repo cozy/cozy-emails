@@ -114,7 +114,7 @@ module.exports = React.createClass
         # Starts components rendering
         section
             key: 'conversation'
-            className: 'conversation'
+            className: 'conversation panel'
             'aria-expanded': true,
 
             header null,

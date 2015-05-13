@@ -49,7 +49,6 @@ module.exports = Compose = React.createClass
             not (_.isEqual(nextProps, @props))
 
     render: ->
-
         return unless @props.accounts
 
         onCancel = (e) =>
@@ -81,19 +80,11 @@ module.exports = Compose = React.createClass
             @state.subject isnt ''
 
         section
-            className: 'compose'
+            className: classer
+                compose: true
+                panel:   @props.layout is 'full'
             'aria-expanded': true,
 
-            if @props.layout isnt 'full'
-                a
-                    onClick: toggleFullscreen,
-                    className: 'expand pull-right clickable',
-                        i className: 'fa fa-arrows-h'
-            else
-                a
-                    onClick: toggleFullscreen,
-                    className: 'close-email pull-right clickable',
-                        i className:'fa fa-compress'
             h3
                 'data-message-id': @props.message?.get('id') or ''
                 @state.subject or t 'compose'

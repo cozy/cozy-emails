@@ -62,7 +62,7 @@ module.exports = MessageList = React.createClass
             key:               'messages-list'
             ref:               'list'
             'data-mailbox-id': @props.mailboxID
-            className:         'messages-list'
+            className:         'messages-list panel'
             'aria-expanded':   true
 
             # Drawer toggler
