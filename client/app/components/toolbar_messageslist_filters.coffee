@@ -47,7 +47,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
 
     render: ->
-        div role: 'group',
+        div role: 'group', className: 'filters',
             i
                 role:      'presentation'
                 className: 'fa fa-filter'
@@ -59,7 +59,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass
                 'data-tooltip-direction': 'bottom'
 
                 i className: 'fa fa-circle'
-                span className: 'label', t 'filters unseen'
+                span className: 'btn-label', t 'filters unseen'
                 # span className: 'badge', '##'
 
             button
@@ -70,7 +70,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass
                 'data-tooltip-direction': 'bottom'
 
                 i className: 'fa fa-star'
-                span className: 'label', t 'filters flagged'
+                span className: 'btn-label', t 'filters flagged'
                 # span className: 'badge', '##'
 
             button
@@ -81,7 +81,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass
                 'data-tooltip-direction': 'bottom'
 
                 i className: 'fa fa-paperclip'
-                span className: 'label', t 'filters attach'
+                span className: 'btn-label', t 'filters attach'
                 # span className: 'badge', '##'
 
             DateRangePicker()

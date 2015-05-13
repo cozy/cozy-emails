@@ -66,8 +66,9 @@ module.exports = MessageList = React.createClass
 
             # Drawer toggler
             button
-                onClick:     LayoutActionCreator.drawerToggle
-                title:       t 'menu toggle'
+                className: 'drawer-toggle'
+                onClick:   LayoutActionCreator.drawerToggle
+                title:     t 'menu toggle'
 
                 i className: 'fa fa-navicon'
 

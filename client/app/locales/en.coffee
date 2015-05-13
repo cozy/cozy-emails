@@ -438,3 +438,13 @@ module.exports =
       "tooltip delete selection": "Delete all selected messages"
       'tooltip filter': 'Filter'
       'tooltip display filters': 'Display filters'
+
+      # Filters
+      'filters unseen': 'unread'
+      'filters flagged': 'stared'
+      'filters attach': 'attachments'
+      'filters search placeholder': 'search terms'
+      'daterangepicker placeholder': 'by date'
+      'daterangepicker presets yesterday': 'yesterday'
+      'daterangepicker presets last week': 'last week'
+      'daterangepicker presets last month': 'last month'

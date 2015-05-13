@@ -12,7 +12,7 @@ module.exports = DateRangePicker = React.createClass
     render: ->
         div
             role:                     'menuitem'
-            className:                'dropdown'
+            className:                'dropdown date-range-picker'
             'aria-describedby':       Tooltips.FILTER_DATE_RANGE
             'data-tooltip-direction': 'bottom'
 
@@ -21,11 +21,12 @@ module.exports = DateRangePicker = React.createClass
                 'data-toggle': 'dropdown'
 
                 i className: 'fa fa-calendar'
-                "#{@state.label} "
+                span className: 'btn-label',
+                    "#{@state.label} "
                 span className: 'caret'
 
             div className: 'dropdown-menu',
-                ul className: 'presets',
+                ul className: 'presets list-unstyled',
                     li role: 'presentation',
                         button
                             role: 'menuitem'

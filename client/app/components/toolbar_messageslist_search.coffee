@@ -46,7 +46,7 @@ module.exports = SearchToolbarMessagesList = React.createClass
 
 
     render: ->
-        div role: 'group',
+        div role: 'group', className: 'search',
             i
                 role:      'presentation'
                 className: 'fa fa-search'
@@ -56,6 +56,6 @@ module.exports = SearchToolbarMessagesList = React.createClass
                 onChange: @onTypeChange
             input
                     ref: 'searchterms'
-                    className: ""
-                    type: "text"
+                    type: 'text'
+                    placeholder: t 'filters search placeholder'
                     onKeyDown: @onKeyDown

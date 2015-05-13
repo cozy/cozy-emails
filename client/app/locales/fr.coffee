@@ -452,3 +452,13 @@ module.exports =
       "tooltip delete selection": "Supprimer les messages sélectionnés"
       'tooltip filter': 'Filtrer'
       'tooltip display filters': 'Montrer les filtres'
+
+      # Filters
+      'filters unseen': 'non-lus'
+      'filters flagged': 'favoris'
+      'filters attach': 'pièces jointes'
+      'filters search placeholder': 'rechercher…'
+      'daterangepicker placeholder': 'par date'
+      'daterangepicker presets yesterday': 'hier'
+      'daterangepicker presets last week': 'semaine dernière'
+      'daterangepicker presets last month': 'mois dernier'
