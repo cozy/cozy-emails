@@ -1,133 +1,101 @@
-/*
-  LAYOUT
+.app
+    display     flex
+    width       100vw
+    height      100vh
+    align-items stretch
+    overflow    hidden
 
-  Positions the boxes that compose the layout.
-    -- No styling (colors, ...), just positionning
+    .drawer-toggle
+        display none
 
-  The overall positionning is handled by Bootstrap Grid.
+    main
+        position    relative
+        flex        1
+        display     flex
+        align-items stretch
 
-    - left sidebar is the mailbox menu (nav#menu)
-    - the left space is filled with the (#page-content)
-      - top bar for quick actions (#quick-actions)
-      - left panel (section#left-panel)
-      - right panel (section#right-panel)
-
-  Left and right panel can hold several type of content.
-
-  We use a lot `display flex`, here is how it works (FR):
-  http://www.alsacreations.com/tuto/lire/1493-css3-flexbox-layout-module.html
-*/
-
-// Makes the #menu div and the application main row be at screen height.
-.container-fluid, .container-fluid > .row
-  height 100%
-
-/*
-  MENU
-
-  Menu positionning is handled by Bootstrap grid, except for smaller devices
-*/
-@media (max-width 992px)
-  #menu
-    position absolute
-    z-index 150
-
-/*
-  PAGE CONTENT
-*/
-#page-content
-
-    // We use a flexbox display so the #panels take all the height left
-    display flex
-    flex-direction column
-
-    position relative
-    height 100%
-    overflow hidden
-
-    // when menu is open on smaller devices
-    &.pushed
-        transform translate(33%)
-
-    /*
-    Quick actions bar
-    */
-    #quick-actions
-        margin 1em 0
-
-// We want the panel to be scrollable independantly but not their parent
-#panels
-    flex 1
-    overflow-y hidden
-    height 100%
-    position relative
-
-    // layout
-    & > div
+    [role=menubar]
+    section
         overflow-y auto
-        padding 0
 
-        // left panel
-        &:first-of-type
-            border-right 1px solid #e4e4e4
 
-.row-1
-    height 9%
-.row-2
-    height 19%
-.row-3
-    height 29%
-.row-4
-    height 39%
-.row-5
-    height 49%
-.row-6
-    height 59%
-.row-7
-    height 69%
-.row-8
-    height 79%
-.row-9
-    height 89%
-.row-10
-    height 100%
-.row-offset-1
-    top 10%
-.row-offset-2
-    top 20%
-.row-offset-3
-    top 30%
-.row-offset-4
-    top 40%
-.row-offset-5
-    top 50%
-.row-offset-6
-    top 60%
-.row-offset-7
-    top 70%
-.row-offset-8
-    top 80%
-.row-offset-9
-    top 90%
-.col-offset-1
-    left: 8%
-.col-offset-2
-    left: 17%
-.col-offset-3
-    left: 25%
-.col-offset-4
-    left: 34%
-.col-offset-5
-    left: 42%
-.col-offset-6
-    left: 50%
-.col-offset-7
-    left: 58%
-.col-offset-8
-    left: 66%
-.col-offset-9
-    left: 75%
-.col-offset-10
-    left: 83%
-.col-offset-11
-    left: 91%
+    @media(max-width: 29.9375em)
+        [role=menubar][aria-expanded=true] + main
+            transform translateX(85vw)
+
+        main
+            position absolute
+            top      0
+            left     0
+            width    100%
+            height   100%
+
+        .messages-list
+            .drawer-toggle
+                display block
+
+
+    @media(max-width: 47.9375em)
+        main
+            section
+                position absolute
+                top      0
+                left     100%
+                width    100%
+                height   100%
+
+            & :first-of-type
+                left 0
+
+                & + [aria-expanded=true]
+                    transform translateX(-100%)
+
+        // set rules for drawer
+        [role=menubar][aria-expanded=true]
+            min-width 85vw
+
+            + main section
+                width 100vw
+
+
+    @media(min-width: 30em)
+        [role=menubar]
+            .drawer-toggle
+                display block
+
+
+    @media(min-width: 48em)
+        main
+            section
+                transition flex 180ms ease-in
+
+            &.full section:first-of-type
+                flex-basis 100% !important
+
+                & + [aria-expanded=false]
+                    flex 0
+
+
+            .layout-column &
+                flex-direction row
+
+            .layout-row &
+                flex-direction column
+
+            .layout-row-reverse &
+                flex-direction column-reverse
+
+            for ratio in (20..80)
+                .layout-preview-{ratio} &
+                    section:nth-child(1)
+                        flex 100 - ratio
+                    section:nth-child(2)
+                        flex ratio
+
+
+    @media(min-width: 80em)
+        .layout-column & :not(.full)
+            section
+                max-width 38em
+            .conversation[aria-expanded=true]
+                max-width none

@@ -1,22 +1,32 @@
-{div, ul, li, a, span, i} = React.DOM
+{div, aside, nav, ul, li, span, a, i, button} = React.DOM
 
 classer = React.addons.classSet
 
-RouterMixin          = require '../mixins/router_mixin'
-LayoutActionCreator  = require '../actions/layout_action_creator'
+RouterMixin     = require '../mixins/router_mixin'
+StoreWatchMixin = require '../mixins/store_watch_mixin'
+
+AccountActionCreator      = require '../actions/account_action_creator'
+LayoutActionCreator       = require '../actions/layout_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
-AccountStore         = require '../stores/account_store'
-Modal                = require './modal'
-ThinProgress         = require './thin_progress'
+
+AccountStore = require '../stores/account_store'
+LayoutStore  = require '../stores/layout_store'
+
+Modal        = require './modal'
+ThinProgress = require './thin_progress'
+MessageUtils = require '../utils/message_utils'
 
 RefreshIndicator = require './menu_refresh_indicator'
 
-{Dispositions, SpecialBoxIcons} = require '../constants/app_constants'
+{Dispositions, SpecialBoxIcons, Tooltips} = require '../constants/app_constants'
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
-    mixins: [RouterMixin]
+    mixins: [
+        RouterMixin
+        StoreWatchMixin [LayoutStore]
+    ]
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
@@ -26,6 +36,9 @@ module.exports = Menu = React.createClass
         displayActiveAccount: true
         modalErrors: null
         onlyFavorites: true
+
+    getStateFromStores: ->
+            isDrawerExpanded: LayoutStore.isDrawerExpanded()
 
     componentWillReceiveProps: (props) ->
         if not Immutable.is(props.selectedAccount, @props.selectedAccount)
@@ -88,45 +101,58 @@ module.exports = Menu = React.createClass
             modal = Modal {title, subtitle, content, closeModal, closeLabel}
         else
             modal = null
-        classes = classer
-            'hidden-xs hidden-sm': not @props.isResponsiveMenuShown
-            'collapsed': @props.disposition.type isnt Dispositions.THREE
-            'expanded': @props.disposition.type is Dispositions.THREE
-            'three': @props.disposition.type is Dispositions.THREE
 
-        div id: 'menu', className: classes,
+        composeUrl = @buildUrl
+            direction: 'first'
+            action: 'compose'
+            parameters: null
+            fullWidth: true
+
+        # Starts DOM rendering
+        aside
+            role: 'menubar'
+            'aria-expanded': @state.isDrawerExpanded,
+
 
             modal
 
-            # This component doesn't make sense if there is no account. There is
-            # always a selected account if there is an account.
-            if @props.selectedAccount?
-                RefreshIndicator
-                    refreshes: @props.refreshes
-                    mailboxes: @props.selectedAccount.get('mailboxes')
-                    selectedMailboxID: @props.selectedMailboxID
+            a
+                href: composeUrl
+                className: 'menu-item compose-action btn btn-cozy-contrast btn-cozy',
+                    i className: 'fa fa-edit'
+                    span className: 'item-label', t 'menu compose'
 
-            if @props.accounts.length isnt 0
-                ul id: 'account-list', className: 'list-unstyled',
+            nav className: 'mainmenu',
+                if @props.accounts.length
                     @props.accounts.map (account, key) =>
                         @getAccountRender account, key
                     .toJS()
 
-            a
-                href: newMailboxUrl,
-                onClick: @_hideMenu
-                className: 'menu-item new-account-action ' + newMailboxClass,
-                    i className: 'fa fa-inbox'
-                    span className: 'item-label', t 'menu account new'
+            nav className: 'submenu',
+                a
+                    href: newMailboxUrl
+                    role: 'menuitem'
+                    className: "btn new-account-action #{newMailboxClass}",
+                        i className: 'fa fa-plus'
+                        span className: 'item-label', t 'menu account new'
 
-            # #201: remove settings panel
-            #a
-            #    href: settingsUrl,
-            #    onClick: @_hideMenu
-            #    className: 'menu-item settings-action ' + settingsClass,
-            #        i className: 'fa fa-cog'
-            #        span className: 'item-label', t 'menu settings'
+                # This component doesn't make sense if there is no account. There is
+                # always a selected account if there is an account.
+                if @props.selectedAccount?
+                    RefreshIndicator
+                        refreshes: @props.refreshes
+                        mailboxes: @props.selectedAccount.get('mailboxes')
+                        selectedMailboxID: @props.selectedMailboxID
 
+                button
+                    role: 'menuitem'
+                    className: classer
+                        btn:               true
+                        fa:                true
+                        'drawer-toggle':   true
+                        'fa-toggle-right': not @state.isDrawerExpanded
+                        'fa-toggle-left':  @state.isDrawerExpanded
+                    onClick: LayoutActionCreator.drawerToggle
 
     # renders a single account and its submenu
     getAccountRender: (account, key) ->
@@ -156,7 +182,6 @@ module.exports = Menu = React.createClass
         toggleActive = =>
             if not @state.displayActiveAccount
                 @setState displayActiveAccount: true
-            @_hideMenu()
 
         toggleDisplay = =>
             if isSelected
@@ -168,28 +193,41 @@ module.exports = Menu = React.createClass
             @setState onlyFavorites: not @state.onlyFavorites
 
 
+        isActive = (isSelected and @state.displayActiveAccount)
         accountClasses = classer
-            active: (isSelected and @state.displayActiveAccount)
+            active: isActive
+        accountIcon = [
+            'fa'
+            "fa-angle-#{if isActive then 'down' else 'right'}"
+        ].join(' ')
 
         if @state.onlyFavorites
             mailboxes = @props.favorites
-            icon = 'fa-toggle-down'
+            icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites off'
         else
             mailboxes = @props.mailboxes
-            icon = 'fa-toggle-up'
+            icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites on'
 
-        li className: accountClasses, key: key,
+        configMailboxUrl = @buildUrl
+            direction: 'first'
+            action: 'account.config'
+            parameters: [accountID, 'account']
+            fullWidth: true
+
+        div
+            className: accountClasses, key: key,
             a
-                href: url,
-                className: 'menu-item account ' + accountClasses,
-                onClick: toggleActive,
-                onDoubleClick: toggleDisplay,
-                'data-toggle': 'tooltip',
-                'data-delay': '10000',
+                href: url
+                role: 'menuitem'
+                className: 'account ' + accountClasses,
+                onClick: toggleActive
+                onDoubleClick: toggleDisplay
+                'data-toggle': 'tooltip'
+                'data-delay': '10000'
                 'data-placement' : 'right',
-                    i className: 'fa fa-inbox'
+                    i className: accountIcon
                     span
                         'data-account-id': key,
                         className: 'item-label',
@@ -211,7 +249,19 @@ module.exports = Menu = React.createClass
                     span className: 'badge', nbUnread
 
             if isSelected
-                ul className: 'list-unstyled submenu mailbox-list',
+                a
+                    href: configMailboxUrl
+                    className: 'btn btn-default mailbox-config',
+                    i
+                        className:
+                            'fa fa-cog'
+                        'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
+                        'data-tooltip-direction': 'bottom'
+
+            if isSelected
+                ul
+                    role: 'group'
+                    className: 'list-unstyled mailbox-list',
                     mailboxes?.map (mailbox, key) =>
                         selectedMailboxID = @props.selectedMailboxID
                         MenuMailboxItem
@@ -221,11 +271,10 @@ module.exports = Menu = React.createClass
                             selectedMailboxID: selectedMailboxID,
                             refreshes:         refreshes,
                             displayErrors:     @displayErrors,
-                            hideMenu:          @_hideMenu
                     .toJS()
-                    li null,
+                    li className: 'toggle-favorites',
                         a
-                            className: 'menu-item',
+                            role: 'menuitem',
                             tabIndex: 0,
                             onClick: toggleFavorites,
                             key: 'toggle',
@@ -233,10 +282,6 @@ module.exports = Menu = React.createClass
                                 span
                                     className: 'item-label',
                                     toggleFavoritesLabel
-
-    _hideMenu: ->
-        if @props.isResponsiveMenuShown
-            @props.toggleMenu()
 
     _initTooltips: ->
         #jQuery('#account-list [data-toggle="tooltip"]').tooltip()
@@ -276,38 +321,39 @@ MenuMailboxItem = React.createClass
         if nbRecent > 0
             title += t "menu mailbox new", nbRecent
 
+        mailboxIcon = 'fa-folder-o'
+        specialMailbox = false
+        for attrib, icon of SpecialBoxIcons
+            if @props.account.get(attrib) is mailboxID
+                mailboxIcon = icon
+                specialMailbox = true
+
         classesParent = classer
             active: mailboxID is @props.selectedMailboxID
             target: @state.target
         classesChild = classer
-            'menu-item': true
-            target: @state.target
-            news: nbRecent > 0
+            target:  @state.target
+            special: specialMailbox
+            news:    nbRecent > 0
 
-        mailboxIcon = 'fa-folder'
-        for attrib, icon of SpecialBoxIcons
-            if @props.account.get(attrib) is mailboxID
-                mailboxIcon = icon
 
         progress = @props.refreshes.get mailboxID
         displayError = @props.displayErrors.bind null, progress
 
-        pusher = ""
-        pusher += "   " for j in [1..@props.mailbox.get('depth')] by 1
-
         li className: classesParent,
             a
-                href: mailboxUrl,
-                onClick: @props.hideMenu,
-                className: classesChild,
-                'data-mailbox-id': mailboxID,
-                onDragEnter: @onDragEnter,
-                onDragLeave: @onDragLeave,
-                onDragOver: @onDragOver,
-                onDrop: (event) => @onDrop event, mailboxID
-                title: title,
-                'data-toggle': 'tooltip',
-                'data-placement' : 'right',
+                href: mailboxUrl
+                onClick: @props.hideMenu
+                className: "#{classesChild} lv-#{@props.mailbox.get('depth')}"
+                role: 'menuitem'
+                'data-mailbox-id': mailboxID
+                onDragEnter: @onDragEnter
+                onDragLeave: @onDragLeave
+                onDragOver: @onDragOver
+                onDrop: @onDrop
+                title: title
+                'data-toggle': 'tooltip'
+                'data-placement' : 'right'
                 key: @props.key,
                     # Something must be rethought about the icon
                     i className: 'fa ' + mailboxIcon
@@ -315,7 +361,7 @@ MenuMailboxItem = React.createClass
                         span className: 'badge', nbUnread
                     span
                         className: 'item-label',
-                        "#{pusher}#{@props.mailbox.get 'label'}"
+                        "#{@props.mailbox.get 'label'}"
 
                 if progress and progress.get('firstImport')
                     ThinProgress
@@ -325,6 +371,13 @@ MenuMailboxItem = React.createClass
                 if progress?.get('errors').length
                     span className: 'refresh-error', onClick: displayError,
                         i className: 'fa fa-warning', null
+
+            if @props.account.get('trashMailbox') is mailboxID
+                button
+                    onClick: @expungeMailbox
+
+                    span className: 'fa fa-eraser'
+
 
     onDragEnter: (e) ->
         if not @state.target
@@ -342,3 +395,29 @@ MenuMailboxItem = React.createClass
         {messageID, mailboxID, conversationID} = JSON.parse data
         @setState target: false
         MessageActionCreator.move {messageID, conversationID}, mailboxID, to
+
+    expungeMailbox: (e) ->
+        accountID = @props.account.get 'id'
+        mailboxID = @props.mailbox.get 'id'
+
+        e.preventDefault()
+
+        if window.confirm(t 'account confirm delbox')
+            mailbox =
+                accountID: accountID
+                mailboxID: mailboxID
+
+            AccountActionCreator.mailboxExpunge mailbox, (error) =>
+                if error?
+                    # if user hasn't switched to another box, refresh display
+                    if accountID is mailbox.accountID and
+                       mailboxID is mailbox.mailboxID
+                        params = _.clone(MessageStore.getParams())
+                        params.accountID = accountID
+                        params.mailboxID = mailboxID
+                        LayoutActionCreator.showMessageList parameters: params
+
+                    LayoutActionCreator.alertError "#{t("mailbox expunge ko")} #{error}"
+                else
+                    LayoutActionCreator.notify t("mailbox expunge ok"),
+                        autoclose: true

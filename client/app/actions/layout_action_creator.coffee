@@ -17,12 +17,26 @@ _cachedDisposition = null
 
 module.exports = LayoutActionCreator =
 
-    setDisposition: (type, value) ->
+    setDisposition: (type) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.SET_DISPOSITION
-            value:
-                type: type
-                value: value
+            value: type
+
+    # TODO: use a global method to DRY this 3-ones
+    increasePreviewPanel: (factor = 1) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RESIZE_PREVIEW_PANE
+            value: Math.abs factor
+
+    decreasePreviewPanel: (factor = 1) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RESIZE_PREVIEW_PANE
+            value: -1 * Math.abs factor
+
+    resetPreviewPanel: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RESIZE_PREVIEW_PANE
+            value: null
 
     toggleFullscreen: ->
         if _cachedDisposition?
@@ -249,6 +263,19 @@ module.exports = LayoutActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.INTENT_AVAILABLE
             value: availability
+
+    # Drawer
+    drawerShow: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_SHOW
+
+    drawerHide: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_HIDE
+
+    drawerToggle: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_TOGGLE
 
 # circular import, require after
 MessageActionCreator = require './message_action_creator'

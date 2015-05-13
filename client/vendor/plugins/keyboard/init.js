@@ -38,65 +38,15 @@ if (typeof window.plugins !== "object") {
     container.addEventListener('click', closeHelp);
     Mousetrap.bind("esc", closeHelp);
   }
-  function layoutWidth(direction) {
-    if (direction !== 1 && direction !== -1) {
-      direction = 1;
+  function layoutRatio(direction) {
+    var layoutAction = require('actions/layout_action_creator');
+    if (direction > 0) {
+      layoutAction.increasePreviewPanel(direction);
+    } else if (direction < 0) {
+      layoutAction.decreasePreviewPanel(direction);
+    } else {
+      layoutAction.resetPreviewPanel();
     }
-    var layoutStore  = require('stores/layout_store'),
-        layoutAction = require('actions/layout_action_creator'),
-        disposition  = layoutStore.getDisposition();
-    layoutAction.setDisposition('vertical', disposition.width - direction);
-    /*
-    var panels, w1;
-    panels = document.querySelectorAll('#panels > .panel');
-    function updateClass(panel, nb) {
-      var cl, res;
-      cl = Array.prototype.slice.call(panel.classList).filter(function (c) {
-        return c.substr(0, 6) === 'col-md';
-      })[0];
-      panel.classList.remove(cl);
-      res = (parseInt(cl.split('-')[2], 10) + nb);
-      panel.classList.add('col-md-' + res);
-      return res;
-    }
-    w1 = updateClass(panels[0], -1 * direction);
-    updateClass(panels[1], 1 * direction);
-    panels[1].style.left = (100 / 12 * w1) + '%';
-    */
-  }
-  function layoutHeight(direction) {
-    if (direction !== 1 && direction !== -1) {
-      direction = 1;
-    }
-    var layoutStore  = require('stores/layout_store'),
-        layoutAction = require('actions/layout_action_creator'),
-        disposition  = layoutStore.getDisposition();
-    layoutAction.setDisposition('horizontal', disposition.height - direction);
-    /*
-    var panels;
-    panels = document.querySelectorAll('#panels > .panel');
-    function updateClass(panel, nb) {
-      var cl, res;
-      cl = Array.prototype.slice.call(panel.classList).filter(function (c) {
-        return c.substr(0, 4) === 'row-';
-      })[0];
-      panel.classList.remove(cl);
-      res = (parseInt(cl.split('-')[1], 10) + nb);
-      panel.classList.add('row-' + res);
-      cl = Array.prototype.slice.call(panel.classList).filter(function (c) {
-        return c.substr(0, 11) === 'row-offset-';
-      })[0];
-      if (cl) {
-        panel.classList.remove(cl);
-        res = (parseInt(cl.split('-')[2], 10) - nb);
-        panel.classList.add('row-offset-' + res);
-      }
-      return res;
-    }
-    var height = updateClass(panels[0], -1 * direction);
-    updateClass(panels[1], 1 * direction);
-    require('actions/layout_action_creator').setDisposition('vertical', height);
-    */
   }
   function mailAction(action) {
     var current, btn;
@@ -218,32 +168,40 @@ if (typeof window.plugins !== "object") {
           }
         }
       },
-      'alt+left': {
-        name: 'Increase message layout width',
+      '(': {
+        name: 'Increase message layout size',
         action: function (e) {
           e.preventDefault();
-          layoutWidth(1);
+          layoutRatio(1);
         }
       },
-      'alt+right': {
-        name: 'Decrease message layout width',
+      'alt+(': {
+        name: 'Increase by 10 message layout size',
         action: function (e) {
           e.preventDefault();
-          layoutWidth(-1);
+          layoutRatio(10);
         }
       },
-      'alt+up': {
-        name: 'Increase message layout height',
+      ')': {
+        name: 'Decrease message layout size',
         action: function (e) {
           e.preventDefault();
-          layoutHeight(1);
+          layoutRatio(-1);
         }
       },
-      'alt+down': {
-        name: 'Decrease message layout height',
+      'alt+)': {
+        name: 'Decrease by 10 message layout size',
         action: function (e) {
           e.preventDefault();
-          layoutHeight(-1);
+          console.log('foo');
+          layoutRatio(-10);
+        }
+      },
+      '=': {
+        name: 'Reset message layout size',
+        action: function (e) {
+          e.preventDefault();
+          layoutRatio();
         }
       },
       'F': {
@@ -259,17 +217,17 @@ if (typeof window.plugins !== "object") {
           e.preventDefault();
           var layoutStore  = require('stores/layout_store'),
               layoutAction = require('actions/layout_action_creator'),
-              disposition  = layoutStore.getDisposition();
+              dispositions = require('constants/app_constants').Dispositions;
 
-          switch (disposition.type) {
-          case 'horizontal':
-            layoutAction.setDisposition('three');
+          switch (layoutStore.getDisposition()) {
+          case dispositions.RROW:
+            layoutAction.setDisposition(dispositions.COL);
             break;
-          case 'vertical':
-            layoutAction.setDisposition('horizontal');
+          case dispositions.COL:
+            layoutAction.setDisposition(dispositions.ROW);
             break;
-          case 'three':
-            layoutAction.setDisposition('vertical');
+          case dispositions.ROW:
+            layoutAction.setDisposition(dispositions.RROW);
             break;
           }
 

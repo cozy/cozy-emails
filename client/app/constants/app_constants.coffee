@@ -42,6 +42,7 @@ module.exports =
 
         # Layout
         'SET_DISPOSITION'           : 'SET_DISPOSITION'
+        'RESIZE_PREVIEW_PANE'       : 'RESIZE_PREVIEW_PANE'
         'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
         'HIDE_ALERT'                : 'HIDE_ALERT'
         'REFRESH'                   : 'REFRESH'
@@ -71,6 +72,12 @@ module.exports =
         # Toasts
         'TOASTS_SHOW'               : 'TOASTS_SHOW'
         'TOASTS_HIDE'               : 'TOASTS_HIDE'
+
+        # Drawer
+        'DRAWER_SHOW':   'DRAWER_SHOW'
+        'DRAWER_HIDE':   'DRAWER_HIDE'
+        'DRAWER_TOGGLE': 'DRAWER_TOGGLE'
+
 
     PayloadSources:
         'VIEW_ACTION'   : 'VIEW_ACTION'
@@ -113,17 +120,17 @@ module.exports =
         NOFLAG : 'Noflag'
 
     Dispositions:
-        HORIZONTAL : 'horizontal'
-        VERTICAL   : 'vertical'
-        THREE      : 'three'
+        COL:  'column'
+        ROW:  'row'
+        RROW: 'row-reverse'
 
     SpecialBoxIcons:
-        inboxMailbox : 'fa-inbox'
-        draftMailbox : 'fa-edit'
-        sentMailbox  : 'fa-share-square-o'
-        trashMailbox : 'fa-trash-o'
-        junkMailbox  : 'fa-exclamation'
-        allMailbox   : 'fa-archive'
+        inboxMailbox: 'fa-inbox'
+        draftMailbox: 'fa-file-text-o'
+        sentMailbox: 'fa-send-o'
+        trashMailbox: 'fa-trash-o'
+        junkMailbox: 'fa-fire'
+        allMailbox: 'fa-archive'
 
     Tooltips:
         REPLY                       : 'TOOLTIP_REPLY'

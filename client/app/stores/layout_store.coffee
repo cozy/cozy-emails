@@ -8,10 +8,11 @@ class LayoutStore extends Store
         Initialization.
         Defines private variables here.
     ###
-    _disposition =
-        type   : Dispositions.VERTICAL
-        height : 5
-        width  : 6
+    _disposition = Dispositions.COL
+
+    # TODO: Use a constant for default value?
+    _previewSize = 50
+
     _alert =
         level: null
         message: null
@@ -22,6 +23,8 @@ class LayoutStore extends Store
 
     _intentAvailable = false
 
+    _drawer = false
+
 
     ###
         Defines here the action handlers.
@@ -29,25 +32,18 @@ class LayoutStore extends Store
     __bindHandlers: (handle) ->
 
         handle ActionTypes.SET_DISPOSITION, (disposition) ->
-            if disposition.disposition?
-                _disposition = disposition.disposition
+            _disposition = disposition
+            @emit 'change'
+
+        handle ActionTypes.RESIZE_PREVIEW_PANE, (factor) ->
+            console.debug factor
+            if factor
+                _previewSize += factor
+                # set limits
+                _previewSize = 20 if _previewSize < 20
+                _previewSize = 80 if _previewSize > 80
             else
-                _disposition.type = disposition.type
-                if _disposition.type is Dispositions.VERTICAL
-                    if not disposition.value?
-                        disposition.value = _disposition.width
-                    _disposition.height = 5
-                    _disposition.width  = disposition.value
-                else if _disposition.type is Dispositions.HORIZONTAL
-                    if not disposition.value?
-                        disposition.value = _disposition.height
-                    _disposition.height = disposition.value
-                    _disposition.width  = 6
-                else if _disposition.type is Dispositions.THREE
-                    if not disposition.value?
-                        disposition.value = _disposition.width
-                    _disposition.height = 5
-                    _disposition.width  = disposition.value
+                _previewSize = 50
             @emit 'change'
 
         handle ActionTypes.DISPLAY_ALERT, (value) ->
@@ -100,10 +96,27 @@ class LayoutStore extends Store
             _intentAvailable = avaibility
             @emit 'change'
 
+        handle ActionTypes.DRAWER_SHOW, ->
+            return if _drawer is true
+            _drawer = true
+            @emit 'change'
+
+        handle ActionTypes.DRAWER_HIDE, ->
+            return if _drawer is false
+            _drawer = false
+            @emit 'change'
+
+        handle ActionTypes.DRAWER_TOGGLE, ->
+            _drawer = not _drawer
+            @emit 'change'
+
+
     ###
         Public API
     ###
     getDisposition: -> return _disposition
+
+    getPreviewSize: -> return _previewSize
 
     getAlert: -> return _alert
 
@@ -112,5 +125,7 @@ class LayoutStore extends Store
     isShown: -> return _shown
 
     intentAvailable: -> return _intentAvailable
+
+    isDrawerExpanded: -> return _drawer
 
 module.exports = new LayoutStore()

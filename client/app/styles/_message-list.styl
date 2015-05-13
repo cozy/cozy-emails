@@ -4,294 +4,240 @@
   -- Message list bar internal layout and styles
 */
 
-.message-list
-    padding 0
+.messages-list
+    display          flex
+    flex-direction   column
+    background-color white
 
-    &.disable
-        display none
+    // defaults
+    button
+        background transparent
+        border     none
 
-    .pagination-box
-        text-align center
+    .drawer-toggle
+        float left
 
-    .pagination
-        margin .5em 0 1em 0
+    // TOOLBAR (filters / search / actions)
+    //--------------------------------------------------------------------------
+    // Layouts
+    [role=toolbar]
+        display       flex
 
-    .pagination > li > a, .pagination > li > span
-        border-width 0
+        & > [role=menuitem]
+            padding 0 .75em
 
-    .pagination > li.current
-        font-weight bold
+        [role=group]:last-child
+            flex 1
 
-    .message
-        cursor pointer
-        font-size 0.8em
-        border 0
-        height 2.4rem
+        .dropdown
+            display flex
 
-        > a
-        > span
-          padding 0 
-          display block
-          outline none
+    [role=group]
+        display flex
 
-          // We use a flexbox display so the message preview takes all the width left
-          display flex
-          justify-content flex-start
-          align-items center
+    .filters
+        margin-right 1em
 
-          text-decoration none
+        i
+            padding-left .5em
 
-        input[type="checkbox"]
-            height auto
-            width auto
-            margin 0 0.3em 0 0.5em
-            cursor pointer
-
-        .participants
-        .preview
-            margin 0.25em 2em 0 1em
-        .participants
-            flex-grow 2
-        .preview
-            flex-grow 4
-            width 100%
-        .hour
-          flex-grow 1
-
-        // Hard quickfix for chrome
-        // FIXME: Remove when revamp message-list
-        .avatar-wrapper
-          flex 0 90px
-
-        .preview
-            margin 0.25em .75em 0 auto
-            overflow hidden
-            white-space nowrap
-            text-overflow ellipsis
-            color mediumcolor // for ellipsis + p
-
-            .conversation-length
-                margin-right 5px
-
-            .title
-                color darkcolor
-            p
-                margin 0
-                display inline
-
-        .participants
-            width 12em
-            min-width 12em
-            max-width 12em
-            color darkcolor
-            white-space pre
-            overflow hidden
-            text-overflow ellipsis
-
-        .title
-            margin-top: 0.25em
-            min-width 200px
-            &:after
-                content ' - '
-
-        .hour
-            margin-left auto
-            color darkcolor
-            text-align right
-            width 6em
-
-        // placeholder until we have images
-        .fa-user
-        .avatar
-        .select
-            margin 0
-            color #aaa
-            font-size 2em
-            width 1.5em
-            height 1.5em
-            padding-top 0.25em
-            text-align center
-
-        img.avatar
-            padding-top 0
-
-        .select
+        .btn-label
             display none
 
-      .fav
-        color lightorange
-        display none
+        @media(min-width: 50em)
+            .full & > [role=menuitem]
+                i
+                    padding-left 0
 
-      .attach
-        display none
+                .btn-label
+                    display inline
 
-    .message:nth-child(2n+1)
-       background-color lightcolor
-       //background linear-gradient(to bottom, #fff 0%, lightcolor 15%, lightcolor 85%, #fff 100%)
+    .search
+        display flex
 
-    .message.active
-       background lightblue
+        input
+            flex 1
 
-    .message.unseen
-      font-weight bold
 
-    .message .flags
-        width 3em
+    // Styles and colors
+    [role=toolbar]
+        background-color #f5f5f5
+        box-shadow       0 1px 2px 0 rgba(0, 0, 0, 0.15)
+        font-size        .875em
 
-    .message.has-attachments .attach
-      display inline
-      padding 0 .5em
+        i
+            color basecolor
 
-    .message.is-fav .fav
-      display inline
-      padding 0 .5em
+    [role=group]
+            color basecolor
 
-    .message:hover
-      background lightorange
+            i
+                vertical-align baseline
+                padding-right  .5em
 
-      .fav
-      .attach
-        color white
+        i[role=presentation]
+            padding          .5em
+            background-color basecolor
+            color            white
 
-    .message.edited
-       span.wrapper
-           margin 0
-           padding 0em 
+    .filters
+        [role=menuitem]
+            border-right 1px solid rgba(0, 0, 0, 0.15)
 
-        .participants
-             margin-left 1em
+            &:not(.dropdown)[aria-selected=false]:hover
+                i
+                .btn-label
+                    color actioncolor
 
-    .message.edited
-    .avatar-wrapper:hover
-        .select
-             display inherit
-             margin 0.49em
+            &[aria-selected=true]
+                background-color actioncolor
 
-        .fa-user
-        .avatar
-             display none
+                i
+                .btn-label
+                    color white
 
-    .avatar-wrapper:hover
-        .participants
-             margin-left 1.4em
+    .search
+        input
+            padding 0 .5em
+            border none
 
-    .message-list-actions
-      display flex
-      justify-content flex-start
-      align-items left
-      /* Fixed toolbar, see https://github.com/cozy/cozy-emails/issues/191
-      position fixed
-      background-color white
-      top 0
-      padding .5em 0
-      z-index 1000
-      */
 
-    .message-list-actions + *
-        clear both
-        margin-top 0em
+    // LIST ITEMS
+    //--------------------------------------------------------------------------
+    .main-content
+        flex       1
+        overflow-y auto
+        padding    .5em 0
 
-    .list-filters
-        input.error
-            border-color #a94442
-        > *
-            margin 0 .25em
-        .date-picker-control
-            margin 0 1em 0 .5em
+        // `end of the road`
+        & > p
+            text-align center
+            font-size .875em
 
-        .filter-date
-            width 7em
-
-/* Fixed toolbar, see https://github.com/cozy/cozy-emails/issues/191
-#panels.three .message-list-actions
-  width 34%
-#panels.three.full .message-list-actions
-  width 72%
-#panels.vertical .message-list-actions
-  width 43%
-#panels.horizontal .message-list-actions,
-#panels.vertical.full .message-list-actions
-  width 89%
-*/
-
-.message-list.compact
     .message
-        height 1.75em
-    .message a.wrapper
-    .message span.wrapper
-        padding 1px 0
-    .fa-user
-    .avatar
-    .select
-        font-size 1.5em
-        width 1.2em
-        height 1.2em
-        margin -.1em 0
-        padding-top 0.1em
-    input[type="checkbox"]
-    .message.edited .select
-    .avatar-wrapper:hover .select
-        height auto
-        width auto
-        margin 0 0.2em 0 0.3em
-        cursor pointer
+        // defaults
+        border-bottom 1px solid #f5f5f5
 
-.message-list-option
+        // Layouts
+        .wrapper
+            display flex
+            padding .3125em 0
 
-    .btn.btn-default
-        font-size: 1.1em
-        transition: color 0.2s ease
-        background: none
-        box-shadow: none
-        border: 0
-        color: basecolor
+            & > div
+                margin auto .5em
 
-        &:active
-            color actioncolor - 10%
+        .markers-wrapper
+            display         flex
+            flex-direction  column
+            justify-content space-around
+            margin          0 .5em !important
 
-    .btn.btn-default.shown
-    .btn.btn-default:hover
-        color: actioncolor
+        .avatar-wrapper
+            width         3em
+            height        3em
+            position      relative
 
-        &:active
-            color actioncolor - 10%
+            input
+            .avatar
+                position absolute
 
-.message-list-actions
+            .avatar
+                top           0
+                left          0
+                display       block
+                width         100%
+                height        100%
+                border-radius 50%
 
-    .btn-toolbar
-        margin 0
-        width 100%
+            input
+                top       0
+                left      50%
+                transform translateX(-50%)
 
-        .btn-group:first-child
-            padding-top 0.3em
+        .metas-wrapper
+            flex        1
+            display     flex
+            flex-wrap   wrap
+            line-height 1.4em
 
-        .message-list-option .actions
-            border-left 1px solid #DDD
-            margin-left 0.4em
-            padding-left 0.4em
+            .participants
+                order 1
 
-    .toggle-menu-button
-        display none
+            .date
+                order 2
 
-    .btn.btn-default.dropdown-toggle.move
-    .btn.btn-default.dropdown-toggle.more
-        font-size: 1em
-        transition: color 0.2s ease
-        background: none
-        box-shadow: none
-        border: 0
-        color: basecolor
+            .subject
+                order 3
 
-    .btn.btn-default.dropdown-toggle.move:hover
-    .btn.btn-default.dropdown-toggle.more:hover
-        color: actioncolor
+            .extras
+                order 4
 
-.compose-action
-    float right
-    margin 0.5em
+                i
+                    margin-left .75em
 
-    i
-        margin-right 0.7em
+            .participants
+            .subject
+                flex 1 0 70%
 
-.more-messages
-    cursor pointer
+            .preview
+                order    5
+                flex     1 0 100%
+                height   1.4em
+                overflow hidden
+
+        // Styles
+        .wrapper
+            color           darkcolor
+            text-decoration none
+
+        .avatar
+            line-height    2em
+            text-align     center
+            font-size      1.5em
+            font-style     normal
+            font-weight    bold
+            text-transform uppercase
+            color          white
+
+        .preview
+        .fa-circle-thin
+            color mediumcolor
+
+        .fa-circle
+            color basecolor
+
+        .fa-star
+            color actioncolor
+
+        .preview
+            font-weight normal
+            font-size   .875em
+
+        .conversation-length
+            color       basecolor
+            font-family 'Source Sans Pro'
+            font-style  normal
+            font-weight normal
+
+            &:before
+                float       right
+                font-family 'FontAwesome'
+                font-size   .875em
+                padding     .125em 0 0 .3125em
+
+        .date
+        .extras
+            font-size .875em
+
+
+        // Unread styles
+        &.unseen
+            .metas-wrapper
+                font-weight bold
+
+
+        // Hover / Edited styles
+        &.edited
+        &:hover
+            .avatar
+                display none
