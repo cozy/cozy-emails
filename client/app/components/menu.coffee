@@ -15,6 +15,7 @@ LayoutStore  = require '../stores/layout_store'
 Modal        = require './modal'
 ThinProgress = require './thin_progress'
 MessageUtils = require '../utils/message_utils'
+colorhash    = require '../utils/colorhash'
 
 RefreshIndicator = require './menu_refresh_indicator'
 
@@ -196,10 +197,6 @@ module.exports = Menu = React.createClass
         isActive = (isSelected and @state.displayActiveAccount)
         accountClasses = classer
             active: isActive
-        accountIcon = [
-            'fa'
-            "fa-angle-#{if isActive then 'down' else 'right'}"
-        ].join(' ')
 
         if @state.onlyFavorites
             mailboxes = @props.favorites
@@ -218,45 +215,50 @@ module.exports = Menu = React.createClass
 
         div
             className: accountClasses, key: key,
-            a
-                href: url
-                role: 'menuitem'
-                className: 'account ' + accountClasses,
-                onClick: toggleActive
-                onDoubleClick: toggleDisplay
-                'data-toggle': 'tooltip'
-                'data-delay': '10000'
-                'data-placement' : 'right',
-                    i className: accountIcon
-                    span
-                        'data-account-id': key,
-                        className: 'item-label',
-                        account.get 'label'
-
-                if progress = refreshes.get(accountID)
-                    if progress.get('errors').length
-                        span className: 'refresh-error',
-                            i
-                                className: 'fa warning',
-                                onClick: @displayErrors.bind null,
-                                progress
-                    if progress.get('firstImport')
-                        ThinProgress
-                            done: progress.get('done'),
-                            total: progress.get('total')
-
-                else if nbUnread > 0
-                    span className: 'badge', nbUnread
-
-            if isSelected
+            div className: 'account-title',
                 a
-                    href: configMailboxUrl
-                    className: 'btn btn-default mailbox-config',
-                    i
-                        className:
-                            'fa fa-cog'
-                        'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
-                        'data-tooltip-direction': 'bottom'
+                    href: url
+                    role: 'menuitem'
+                    className: 'account ' + accountClasses,
+                    onClick: toggleActive
+                    onDoubleClick: toggleDisplay
+                    'data-toggle': 'tooltip'
+                    'data-delay': '10000'
+                    'data-placement' : 'right',
+                        i
+                            className: 'avatar'
+                            style:
+                                'background-color': colorhash(account.get 'label')
+                            account.get('label')[0]
+                        span
+                            'data-account-id': key,
+                            className: 'item-label',
+                            account.get 'label'
+
+                    if progress = refreshes.get(accountID)
+                        if progress.get('errors').length
+                            span className: 'refresh-error',
+                                i
+                                    className: 'fa warning',
+                                    onClick: @displayErrors.bind null,
+                                    progress
+                        if progress.get('firstImport')
+                            ThinProgress
+                                done: progress.get('done'),
+                                total: progress.get('total')
+
+                    else if nbUnread > 0
+                        span className: 'badge', nbUnread
+
+                if isSelected
+                    a
+                        href: configMailboxUrl
+                        className: 'mailbox-config',
+                        i
+                            className:
+                                'fa fa-cog'
+                            'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
+                            'data-tooltip-direction': 'right'
 
             if isSelected
                 ul
@@ -374,9 +376,11 @@ MenuMailboxItem = React.createClass
 
             if @props.account.get('trashMailbox') is mailboxID
                 button
+                    'aria-describedby':       Tooltips.EXPUNGE_MAILBOX
+                    'data-tooltip-direction': 'right'
                     onClick: @expungeMailbox
 
-                    span className: 'fa fa-eraser'
+                    span className: 'fa fa-recycle'
 
 
     onDragEnter: (e) ->
