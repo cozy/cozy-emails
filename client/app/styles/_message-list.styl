@@ -38,13 +38,19 @@
     .filters
         margin-right 1em
 
-        @media(max-width: 56em)
-            & > [role=menuitem]
+        i
+            padding-left .5em
+
+        .btn-label
+            display none
+
+        @media(min-width: 50em)
+            .full & > [role=menuitem]
                 i
-                    padding-left .5em
+                    padding-left 0
 
                 .btn-label
-                    display none
+                    display inline
 
     .search
         display flex
