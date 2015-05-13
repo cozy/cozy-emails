@@ -35,6 +35,7 @@ module.exports = React.createClass
             @getTooltip Tooltips.DELETE_SELECTION, t('tooltip delete selection')
             @getTooltip Tooltips.FILTER, t('tooltip filter')
             @getTooltip Tooltips.QUICK_FILTER, t('tooltip display filters')
+            @getTooltip Tooltips.EXPUNGE_MAILBOX, t('tooltip expunge mailbox')
 
 
     # Generate default markup for a tooltip.

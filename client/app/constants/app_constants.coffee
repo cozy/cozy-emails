@@ -151,6 +151,7 @@ module.exports =
         QUICK_FILTER                : 'TOOLTIP_QUICK_FILTER'
         COMPOSE_IMAGE               : 'TOOLTIP_COMPOSE_IMAGE'
         COMPOSE_MOCK                : 'TOOLTIP_COMPOSE_MOCK'
+        EXPUNGE_MAILBOX             : 'TOOLTIP_EXPUNGE_MAILBOX'
 
 
 

@@ -374,9 +374,11 @@ MenuMailboxItem = React.createClass
 
             if @props.account.get('trashMailbox') is mailboxID
                 button
+                    'aria-describedby':       Tooltips.EXPUNGE_MAILBOX
+                    'data-tooltip-direction': 'right'
                     onClick: @expungeMailbox
 
-                    span className: 'fa fa-eraser'
+                    span className: 'fa fa-recycle'
 
 
     onDragEnter: (e) ->
