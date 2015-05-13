@@ -64,6 +64,60 @@
         background transparent
 
 
+    .avatar
+        width          2.25em
+        height         2.25em
+        display        inline-block
+        border-radius  50%
+        line-height    2.25em
+        text-align     center
+        font-size      1.25em
+        font-style     normal
+        text-transform uppercase
+        color          white
+        vertical-align middle
+
+    .account-title
+        display flex
+
+        .account
+            flex 1
+
+        .mailbox-config
+            display    none
+            margin     auto 0
+            background transparent
+            border     none
+
+        &:hover
+            .mailbox-config
+                display block
+
+
+    .mailbox-list
+        padding-left .5em
+
+        li
+            display flex
+
+            a
+                flex 1
+
+            button
+                display none
+                margin auto 0
+                color basecolor
+                background transparent
+                border none
+
+                &:hover
+                    color actioncolor
+
+            &:hover
+                button
+                    display block
+
+
     /*
     Styles for Menu drawer in compact mode
 
@@ -79,11 +133,14 @@
                 [role=menuitem]
                     padding-left .5
 
-                    &:not(.special)
+                    & ul :not(.special)
                         display none
 
             .drawer-toggle
                 flex 1
+
+            .mailbox-config
+                display none !important
 
 
 #menu
