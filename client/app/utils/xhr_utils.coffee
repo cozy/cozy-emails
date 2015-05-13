@@ -122,7 +122,9 @@ module.exports =
 
 
     batchFetch: (target, callback) ->
-        request.get "messages/batchFetch"
+        body = _.extend {}, target
+        request.put "messages/batchFetch"
+        .send target
         .end (res) ->
             if res.ok
                 callback null, res.body
