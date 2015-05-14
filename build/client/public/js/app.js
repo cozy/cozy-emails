@@ -3112,7 +3112,7 @@ module.exports = Application = React.createClass({
       });
     } else if (panelInfo.action === 'compose') {
       return Compose({
-        layout: layout,
+        layout: 'full',
         action: null,
         inReplyTo: null,
         settings: this.state.settings,
@@ -3127,7 +3127,7 @@ module.exports = Application = React.createClass({
       messageID = panelInfo.parameters.messageID;
       message = MessageStore.getByID(messageID);
       return Compose({
-        layout: layout,
+        layout: 'full',
         action: null,
         inReplyTo: null,
         settings: this.state.settings,
@@ -3753,19 +3753,12 @@ module.exports = Compose = React.createClass({
     }
     focusEditor = Array.isArray(this.state.to) && this.state.to.length > 0 && this.state.subject !== '';
     return section({
-      className: 'compose',
+      className: classer({
+        compose: true,
+        panel: this.props.layout === 'full'
+      }),
       'aria-expanded': true
-    }, this.props.layout !== 'full' ? a({
-      onClick: toggleFullscreen,
-      className: 'expand pull-right clickable'
-    }, i({
-      className: 'fa fa-arrows-h'
-    })) : a({
-      onClick: toggleFullscreen,
-      className: 'close-email pull-right clickable'
-    }, i({
-      className: 'fa fa-compress'
-    })), h3({
+    }, h3({
       'data-message-id': ((_ref3 = this.props.message) != null ? _ref3.get('id') : void 0) || ''
     }, this.state.subject || t('compose')), form({
       className: 'form-compose',
@@ -4804,7 +4797,7 @@ module.exports = React.createClass({
     })(this)).toJS();
     return section({
       key: 'conversation',
-      className: 'conversation',
+      className: 'conversation panel',
       'aria-expanded': true
     }, header(null, this.renderToolbar(), h3({
       className: 'conversation-title',
@@ -5655,7 +5648,7 @@ module.exports = MailsInput = React.createClass({
 });
 
 ;require.register("components/menu", function(exports, require, module) {
-var AccountActionCreator, AccountStore, Dispositions, LayoutActionCreator, LayoutStore, Menu, MenuMailboxItem, MessageActionCreator, MessageUtils, Modal, RefreshIndicator, RouterMixin, SpecialBoxIcons, StoreWatchMixin, ThinProgress, Tooltips, a, aside, button, classer, div, i, li, nav, span, ul, _ref, _ref1;
+var AccountActionCreator, AccountStore, Dispositions, LayoutActionCreator, LayoutStore, Menu, MenuMailboxItem, MessageActionCreator, MessageUtils, Modal, RefreshIndicator, RouterMixin, SpecialBoxIcons, StoreWatchMixin, ThinProgress, Tooltips, a, aside, button, classer, colorhash, div, i, li, nav, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, aside = _ref.aside, nav = _ref.nav, ul = _ref.ul, li = _ref.li, span = _ref.span, a = _ref.a, i = _ref.i, button = _ref.button;
 
@@ -5680,6 +5673,8 @@ Modal = require('./modal');
 ThinProgress = require('./thin_progress');
 
 MessageUtils = require('../utils/message_utils');
+
+colorhash = require('../utils/colorhash');
 
 RefreshIndicator = require('./menu_refresh_indicator');
 
@@ -5829,7 +5824,7 @@ module.exports = Menu = React.createClass({
     })));
   },
   getAccountRender: function(account, key) {
-    var accountClasses, accountID, accountIcon, configMailboxUrl, defaultMailbox, icon, isActive, isSelected, mailboxes, nbUnread, progress, refreshes, toggleActive, toggleDisplay, toggleFavorites, toggleFavoritesLabel, url, _ref2;
+    var accountClasses, accountID, configMailboxUrl, defaultMailbox, icon, isActive, isSelected, mailboxes, nbUnread, progress, refreshes, toggleActive, toggleDisplay, toggleFavorites, toggleFavoritesLabel, url, _ref2;
     isSelected = ((this.props.selectedAccount == null) && key === 0) || ((_ref2 = this.props.selectedAccount) != null ? _ref2.get('id') : void 0) === account.get('id');
     accountID = account.get('id');
     nbUnread = account.get('totalUnread');
@@ -5883,7 +5878,6 @@ module.exports = Menu = React.createClass({
     accountClasses = classer({
       active: isActive
     });
-    accountIcon = ['fa', "fa-angle-" + (isActive ? 'down' : 'right')].join(' ');
     if (this.state.onlyFavorites) {
       mailboxes = this.props.favorites;
       icon = 'fa-ellipsis-h';
@@ -5902,6 +5896,8 @@ module.exports = Menu = React.createClass({
     return div({
       className: accountClasses,
       key: key
+    }, div({
+      className: 'account-title'
     }, a({
       href: url,
       role: 'menuitem',
@@ -5912,8 +5908,11 @@ module.exports = Menu = React.createClass({
       'data-delay': '10000',
       'data-placement': 'right'
     }, i({
-      className: accountIcon
-    }), span({
+      className: 'avatar',
+      style: {
+        'background-color': colorhash(account.get('label'))
+      }
+    }, account.get('label')[0]), span({
       'data-account-id': key,
       className: 'item-label'
     }, account.get('label')), (progress = refreshes.get(accountID)) ? (progress.get('errors').length ? span({
@@ -5928,12 +5927,12 @@ module.exports = Menu = React.createClass({
       className: 'badge'
     }, nbUnread) : void 0), isSelected ? a({
       href: configMailboxUrl,
-      className: 'btn btn-default mailbox-config'
+      className: 'mailbox-config'
     }, i({
       className: 'fa fa-cog',
       'aria-describedby': Tooltips.ACCOUNT_PARAMETERS,
-      'data-tooltip-direction': 'bottom'
-    })) : void 0, isSelected ? ul({
+      'data-tooltip-direction': 'right'
+    })) : void 0), isSelected ? ul({
       role: 'group',
       className: 'list-unstyled mailbox-list'
     }, mailboxes != null ? mailboxes.map((function(_this) {
@@ -6051,9 +6050,11 @@ MenuMailboxItem = React.createClass({
     }, i({
       className: 'fa fa-warning'
     }, null)) : void 0), this.props.account.get('trashMailbox') === mailboxID ? button({
+      'aria-describedby': Tooltips.EXPUNGE_MAILBOX,
+      'data-tooltip-direction': 'right',
       onClick: this.expungeMailbox
     }, span({
-      className: 'fa fa-eraser'
+      className: 'fa fa-recycle'
     })) : void 0);
   },
   onDragEnter: function(e) {
@@ -6316,7 +6317,7 @@ module.exports = MessageList = React.createClass({
       key: 'messages-list',
       ref: 'list',
       'data-mailbox-id': this.props.mailboxID,
-      className: 'messages-list',
+      className: 'messages-list panel',
       'aria-expanded': true
     }, button({
       className: 'drawer-toggle',
@@ -9325,7 +9326,7 @@ module.exports = React.createClass({
     return false;
   },
   render: function() {
-    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')), this.getTooltip(Tooltips.FILTER_ONLY_UNREAD, t('tooltip filter only unread')), this.getTooltip(Tooltips.FILTER_ONLY_IMPORTANT, t('tooltip filter only important')), this.getTooltip(Tooltips.FILTER_ONLY_WITH_ATTACHMENT, t('tooltip filter only attachment')), this.getTooltip(Tooltips.ACCOUNT_PARAMETERS, t('tooltip account parameters')), this.getTooltip(Tooltips.DELETE_SELECTION, t('tooltip delete selection')), this.getTooltip(Tooltips.FILTER, t('tooltip filter')), this.getTooltip(Tooltips.QUICK_FILTER, t('tooltip display filters')));
+    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')), this.getTooltip(Tooltips.FILTER_ONLY_UNREAD, t('tooltip filter only unread')), this.getTooltip(Tooltips.FILTER_ONLY_IMPORTANT, t('tooltip filter only important')), this.getTooltip(Tooltips.FILTER_ONLY_WITH_ATTACHMENT, t('tooltip filter only attachment')), this.getTooltip(Tooltips.ACCOUNT_PARAMETERS, t('tooltip account parameters')), this.getTooltip(Tooltips.DELETE_SELECTION, t('tooltip delete selection')), this.getTooltip(Tooltips.FILTER, t('tooltip filter')), this.getTooltip(Tooltips.QUICK_FILTER, t('tooltip display filters')), this.getTooltip(Tooltips.EXPUNGE_MAILBOX, t('tooltip expunge mailbox')));
   },
   getTooltip: function(id, content) {
     return p({
@@ -9559,7 +9560,8 @@ module.exports = {
     FILTER: 'TOOLTIP_FILTER',
     QUICK_FILTER: 'TOOLTIP_QUICK_FILTER',
     COMPOSE_IMAGE: 'TOOLTIP_COMPOSE_IMAGE',
-    COMPOSE_MOCK: 'TOOLTIP_COMPOSE_MOCK'
+    COMPOSE_MOCK: 'TOOLTIP_COMPOSE_MOCK',
+    EXPUNGE_MAILBOX: 'TOOLTIP_EXPUNGE_MAILBOX'
   }
 };
 });
@@ -10981,6 +10983,7 @@ module.exports = {
   "tooltip delete selection": "Delete all selected messages",
   'tooltip filter': 'Filter',
   'tooltip display filters': 'Display filters',
+  'tooltip expunge mailbox': 'Expunge mailbox',
   'filters unseen': 'unread',
   'filters flagged': 'stared',
   'filters attach': 'attachments',
@@ -11333,6 +11336,7 @@ module.exports = {
   "tooltip delete selection": "Supprimer les messages sélectionnés",
   'tooltip filter': 'Filtrer',
   'tooltip display filters': 'Montrer les filtres',
+  'tooltip expunge mailbox': 'Vider la boite',
   'filters unseen': 'non-lus',
   'filters flagged': 'favoris',
   'filters attach': 'pièces jointes',

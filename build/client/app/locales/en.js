@@ -341,6 +341,7 @@ module.exports = {
   "tooltip delete selection": "Delete all selected messages",
   'tooltip filter': 'Filter',
   'tooltip display filters': 'Display filters',
+  'tooltip expunge mailbox': 'Expunge mailbox',
   'filters unseen': 'unread',
   'filters flagged': 'stared',
   'filters attach': 'attachments',
