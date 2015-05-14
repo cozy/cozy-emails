@@ -3333,15 +3333,16 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/basic_components", function(exports, require, module) {
-var AddressLabel, Container, Dropdown, ErrorLine, FieldSet, Form, FormButton, FormButtons, FormDropdown, MenuDivider, MenuHeader, MenuItem, Spinner, SubTitle, Tabs, Title, a, button, div, fieldset, form, h3, h4, i, img, label, legend, li, span, ul, _ref;
+var AddressLabel, Container, Dropdown, ErrorLine, FieldSet, Form, FormButton, FormButtons, FormDropdown, MenuDivider, MenuHeader, MenuItem, Spinner, SubTitle, Tabs, Title, a, button, div, fieldset, form, h3, h4, i, img, label, legend, li, section, span, ul, _ref;
 
-_ref = React.DOM, div = _ref.div, h3 = _ref.h3, h4 = _ref.h4, ul = _ref.ul, li = _ref.li, a = _ref.a, i = _ref.i, button = _ref.button, span = _ref.span, fieldset = _ref.fieldset, legend = _ref.legend, label = _ref.label, img = _ref.img, form = _ref.form;
+_ref = React.DOM, div = _ref.div, section = _ref.section, h3 = _ref.h3, h4 = _ref.h4, ul = _ref.ul, li = _ref.li, a = _ref.a, i = _ref.i, button = _ref.button, span = _ref.span, fieldset = _ref.fieldset, legend = _ref.legend, label = _ref.label, img = _ref.img, form = _ref.form;
 
 Container = React.createClass({
   render: function() {
-    return div({
+    return section({
       id: this.props.id,
-      key: this.props.key
+      key: this.props.key,
+      className: 'panel'
     }, this.props.children);
   }
 });
@@ -5788,10 +5789,10 @@ module.exports = Menu = React.createClass({
       href: composeUrl,
       className: 'menu-item compose-action btn btn-cozy-contrast btn-cozy'
     }, i({
-      className: 'fa fa-edit'
+      className: 'fa fa-pencil'
     }), span({
       className: 'item-label'
-    }, t('menu compose'))), nav({
+    }, " " + (t('menu compose')))), nav({
       className: 'mainmenu'
     }, this.props.accounts.length ? this.props.accounts.map((function(_this) {
       return function(account, key) {
@@ -6322,13 +6323,7 @@ module.exports = MessageList = React.createClass({
       'data-mailbox-id': this.props.mailboxID,
       className: 'messages-list panel',
       'aria-expanded': true
-    }, button({
-      className: 'drawer-toggle',
-      onClick: LayoutActionCreator.drawerToggle,
-      title: t('menu toggle')
-    }, i({
-      className: 'fa fa-navicon'
-    })), ToolbarMessagesList({
+    }, ToolbarMessagesList({
       accountID: this.props.accountID,
       mailboxID: this.props.mailboxID,
       mailboxes: this.props.mailboxes,
@@ -8725,7 +8720,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/toolbar_messageslist", function(exports, require, module) {
-var ActionsToolbarMessagesList, FiltersToolbarMessagesList, SearchToolbarMessagesList, ToolbarMessagesList, aside, button, classer, i, _ref;
+var ActionsToolbarMessagesList, FiltersToolbarMessagesList, LayoutActionCreator, SearchToolbarMessagesList, ToolbarMessagesList, aside, button, classer, i, _ref;
 
 _ref = React.DOM, aside = _ref.aside, i = _ref.i, button = _ref.button;
 
@@ -8736,6 +8731,8 @@ FiltersToolbarMessagesList = require('./toolbar_messageslist_filters');
 SearchToolbarMessagesList = require('./toolbar_messageslist_search');
 
 ActionsToolbarMessagesList = require('./toolbar_messageslist_actions');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
 
 module.exports = ToolbarMessagesList = React.createClass({
   displayName: 'ToolbarMessagesList',
@@ -8754,6 +8751,12 @@ module.exports = ToolbarMessagesList = React.createClass({
     return aside({
       role: 'toolbar'
     }, button({
+      className: 'drawer-toggle',
+      onClick: LayoutActionCreator.drawerToggle,
+      title: t('menu toggle')
+    }, i({
+      className: 'fa fa-navicon'
+    })), button({
       role: 'menuitem',
       'aria-selected': this.props.edited,
       onClick: this.props.toggleEdited
@@ -8948,7 +8951,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
       flagged: false,
       unseen: false,
       attach: false,
-      date: false
+      date: false,
+      expanded: false
     };
   },
   _resetFiltersState: function(name) {
@@ -8980,10 +8984,12 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
   render: function() {
     return div({
       role: 'group',
-      className: 'filters'
+      className: 'filters',
+      'aria-expanded': this.state.expanded
     }, i({
       role: 'presentation',
-      className: 'fa fa-filter'
+      className: 'fa fa-filter',
+      onClick: this.toggleExpandState
     }), button({
       role: 'menuitem',
       'aria-selected': this.state.unseen,
@@ -9015,6 +9021,11 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
     }), span({
       className: 'btn-label'
     }, t('filters attach'))), DateRangePicker());
+  },
+  toggleExpandState: function() {
+    return this.setState({
+      expanded: !this.state.expanded
+    });
   }
 });
 });
@@ -10685,7 +10696,7 @@ module.exports = {
   "compose forward from": "From:",
   "compose forward to": "To:",
   "menu show": "Show menu",
-  "menu compose": "Compose",
+  "menu compose": "Write",
   "menu account new": "New Mailbox",
   "menu settings": "Parameters",
   "menu mailbox total": "%{smart_count} message|||| %{smart_count} messages",
@@ -11040,7 +11051,7 @@ module.exports = {
   "compose forward from": "De :",
   "compose forward to": "Pour :",
   "menu show": "Montrer le menu",
-  "menu compose": "Nouveau",
+  "menu compose": "Écrire",
   "menu account new": "Ajouter un compte",
   "menu settings": "Paramètres",
   "menu mailbox total": "%{smart_count} message |||| %{smart_count} messages ",

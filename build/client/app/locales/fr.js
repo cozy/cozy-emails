@@ -40,7 +40,7 @@ module.exports = {
   "compose forward from": "De :",
   "compose forward to": "Pour :",
   "menu show": "Montrer le menu",
-  "menu compose": "Nouveau",
+  "menu compose": "Écrire",
   "menu account new": "Ajouter un compte",
   "menu settings": "Paramètres",
   "menu mailbox total": "%{smart_count} message |||| %{smart_count} messages ",
