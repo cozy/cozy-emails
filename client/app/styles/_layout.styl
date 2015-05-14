@@ -54,8 +54,12 @@
         [role=menubar][aria-expanded=true]
             min-width 85vw
 
-            + main section
-                width 100vw
+            + main
+                section
+                    width 100vw
+
+                & :first-of-type + [aria-expanded=true]
+                    transform translateX(-15%)
 
 
     @media(min-width: 30.0625em)
