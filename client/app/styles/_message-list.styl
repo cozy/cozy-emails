@@ -52,6 +52,22 @@
                 .btn-label
                     display inline
 
+        // Toggling mode for filter under < 600px
+        @media(max-width: 37.5em)
+            margin-right
+            [role=presentation]
+                cursor pointer
+
+            [role=menuitem]
+                display none
+
+            &[aria-expanded=true] [role=menuitem]
+                display block
+
+            &[aria-expanded=false]
+                margin-right 1px
+
+
     .search
         display flex
 

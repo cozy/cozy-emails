@@ -16,10 +16,11 @@ module.exports = FiltersToolbarMessagesList = React.createClass
         mailboxID: React.PropTypes.string.isRequired
 
     getInitialState: ->
-        flagged: false
-        unseen:  false
-        attach:  false
-        date:    false
+        flagged:  false
+        unseen:   false
+        attach:   false
+        date:     false
+        expanded: false
 
 
     _resetFiltersState: (name) ->
@@ -47,10 +48,16 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
 
     render: ->
-        div role: 'group', className: 'filters',
+        div
+            role:            'group'
+            className:       'filters'
+            'aria-expanded': @state.expanded
+
             i
                 role:      'presentation'
                 className: 'fa fa-filter'
+                onClick:   @toggleExpandState
+
             button
                 role:                     'menuitem'
                 'aria-selected':          @state.unseen
@@ -85,3 +92,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass
                 # span className: 'badge', '##'
 
             DateRangePicker()
+
+
+    toggleExpandState: ->
+        @setState expanded: not @state.expanded
