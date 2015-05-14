@@ -136,10 +136,14 @@
 
             .mainmenu
                 [role=menuitem]
+                    display none
+
                     padding-left .5
 
-                    & ul :not(.special)
-                        display none
+                    &.account
+                    &.inboxMailbox
+                    &.sentMailbox
+                        display flex
 
             .drawer-toggle
                 flex 1

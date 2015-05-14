@@ -328,7 +328,7 @@ MenuMailboxItem = React.createClass
         for attrib, icon of SpecialBoxIcons
             if @props.account.get(attrib) is mailboxID
                 mailboxIcon = icon
-                specialMailbox = true
+                specialMailbox = attrib
 
         classesParent = classer
             active: mailboxID is @props.selectedMailboxID
@@ -337,6 +337,7 @@ MenuMailboxItem = React.createClass
             target:  @state.target
             special: specialMailbox
             news:    nbRecent > 0
+        classesChild += " #{specialMailbox}" if specialMailbox
 
 
         progress = @props.refreshes.get mailboxID
