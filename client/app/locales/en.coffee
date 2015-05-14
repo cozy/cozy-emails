@@ -46,7 +46,7 @@ module.exports =
 
       # Menu
       "menu show"               : "Show menu"
-      "menu compose"            : "Compose"
+      "menu compose"            : "Write"
       "menu account new"        : "New Mailbox"
       "menu settings"           : "Parameters"
       "menu mailbox total"      : "%{smart_count} message|||| %{smart_count} messages"
