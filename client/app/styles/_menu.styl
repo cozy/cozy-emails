@@ -6,7 +6,6 @@
 
 .app [role=menubar]
     padding .5em
-    white-space nowrap
     display flex
     flex-direction column
 
@@ -21,7 +20,8 @@
         flex-direction column
 
         .active
-            flex 1
+            flex       1
+            overflow-y auto
 
         .fa
             font-size 1.5em
@@ -39,20 +39,24 @@
     .account
         font-weight bold
 
-    .badge
-        display none
-
 
     [role=group]
         margin-bottom 2em
 
 
-    [role=menuitem]:not(.drawer-toggle)
-        display block
-        padding .5em
+    [role=menuitem]
+        align-items center
 
-        .item-label
-            margin-left 1em
+        .badge
+            order       1
+            margin-left auto
+
+        &:not(.drawer-toggle)
+            display flex
+            padding .5em
+
+            .item-label
+                margin-left 1em
 
 
     for level in (1..10)
@@ -122,7 +126,7 @@
     Styles for Menu drawer in compact mode
 
     */
-    @media(min-width: 20em)
+    @media(min-width: 20.0625em)
         &[aria-expanded=false]
             .item-label
             .toggle-favorites
@@ -131,10 +135,14 @@
 
             .mainmenu
                 [role=menuitem]
+                    display none
+
                     padding-left .5
 
-                    & ul :not(.special)
-                        display none
+                    &.account
+                    &.inboxMailbox
+                    &.sentMailbox
+                        display flex
 
             .drawer-toggle
                 flex 1

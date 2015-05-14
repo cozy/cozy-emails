@@ -18,8 +18,11 @@
     .panel
         overflow-y auto
 
+    [role=menubar]
+        min-width 8em
 
-    @media(max-width: 29.9375em)
+
+    @media(max-width: 30em)
         [role=menubar][aria-expanded=true] + main
             transform translateX(85vw)
 
@@ -35,7 +38,7 @@
                 display block
 
 
-    @media(max-width: 47.9375em)
+    @media(max-width: 48em)
         main
             .panel
                 position absolute
@@ -54,17 +57,21 @@
         [role=menubar][aria-expanded=true]
             min-width 85vw
 
-            + main .panel
-                width 100vw
+            + main
+                section
+                    width 100vw
+
+                & :first-of-type + [aria-expanded=true]
+                    transform translateX(-15%)
 
 
-    @media(min-width: 30em)
+    @media(min-width: 30.0625em)
         [role=menubar]
             .drawer-toggle
                 display block
 
 
-    @media(min-width: 48em)
+    @media(min-width: 48.0625em)
         main
             .panel
                 transition flex 180ms ease-in
@@ -93,7 +100,7 @@
                         flex ratio
 
 
-    @media(min-width: 80em)
+    @media(min-width: 80.0625em)
         .layout-column & :not(.full)
             .panel
                 max-width 38em
