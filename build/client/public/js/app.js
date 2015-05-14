@@ -6005,7 +6005,7 @@ MenuMailboxItem = React.createClass({
       icon = SpecialBoxIcons[attrib];
       if (this.props.account.get(attrib) === mailboxID) {
         mailboxIcon = icon;
-        specialMailbox = true;
+        specialMailbox = attrib;
       }
     }
     classesParent = classer({
@@ -6017,6 +6017,9 @@ MenuMailboxItem = React.createClass({
       special: specialMailbox,
       news: nbRecent > 0
     });
+    if (specialMailbox) {
+      classesChild += " " + specialMailbox;
+    }
     progress = this.props.refreshes.get(mailboxID);
     displayError = this.props.displayErrors.bind(null, progress);
     return li({
