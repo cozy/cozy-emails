@@ -99,7 +99,6 @@ module.exports = Application = React.createClass
 
                 main
                     className: if layout.secondPanel? then null else 'full',
-
                     @getPanelComponent layout.firstPanel
                     if layout.secondPanel?
                         @getPanelComponent layout.secondPanel
@@ -275,7 +274,7 @@ module.exports = Application = React.createClass
         else if panelInfo.action is 'compose'
 
             return Compose
-                layout               : layout
+                layout               : 'full'
                 action               : null
                 inReplyTo            : null
                 settings             : @state.settings
@@ -288,12 +287,11 @@ module.exports = Application = React.createClass
 
         # -- Generates the edit draft composition form
         else if panelInfo.action is 'edit'
-
             messageID = panelInfo.parameters.messageID
             message = MessageStore.getByID messageID
 
             return Compose
-                layout               : layout
+                layout               : 'full'
                 action               : null
                 inReplyTo            : null
                 settings             : @state.settings

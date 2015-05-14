@@ -15,7 +15,7 @@
         align-items stretch
 
     [role=menubar]
-    section
+    .panel
         overflow-y auto
 
 
@@ -37,7 +37,7 @@
 
     @media(max-width: 47.9375em)
         main
-            section
+            .panel
                 position absolute
                 top      0
                 left     100%
@@ -54,7 +54,7 @@
         [role=menubar][aria-expanded=true]
             min-width 85vw
 
-            + main section
+            + main .panel
                 width 100vw
 
 
@@ -66,10 +66,10 @@
 
     @media(min-width: 48em)
         main
-            section
+            .panel
                 transition flex 180ms ease-in
 
-            &.full section:first-of-type
+            &.full .panel:first-of-type
                 flex-basis 100% !important
 
                 & + [aria-expanded=false]
@@ -87,15 +87,15 @@
 
             for ratio in (20..80)
                 .layout-preview-{ratio} &
-                    section:nth-child(1)
+                    .panel:nth-child(1)
                         flex 100 - ratio
-                    section:nth-child(2)
+                    .panel:nth-child(2)
                         flex ratio
 
 
     @media(min-width: 80em)
         .layout-column & :not(.full)
-            section
+            .panel
                 max-width 38em
             .conversation[aria-expanded=true]
                 max-width none
