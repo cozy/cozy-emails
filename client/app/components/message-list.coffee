@@ -65,14 +65,6 @@ module.exports = MessageList = React.createClass
             className:         'messages-list panel'
             'aria-expanded':   true
 
-            # Drawer toggler
-            button
-                className: 'drawer-toggle'
-                onClick:   LayoutActionCreator.drawerToggle
-                title:     t 'menu toggle'
-
-                i className: 'fa fa-navicon'
-
             # Toolbar
             ToolbarMessagesList
                 accountID:            @props.accountID
