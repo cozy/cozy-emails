@@ -40,20 +40,24 @@
     .account
         font-weight bold
 
-    .badge
-        display none
-
 
     [role=group]
         margin-bottom 2em
 
 
-    [role=menuitem]:not(.drawer-toggle)
-        display block
-        padding .5em
+    [role=menuitem]
+        align-items center
 
-        .item-label
-            margin-left 1em
+        .badge
+            order       1
+            margin-left auto
+
+        &:not(.drawer-toggle)
+            display flex
+            padding .5em
+
+            .item-label
+                margin-left 1em
 
 
     for level in (1..10)
@@ -123,7 +127,7 @@
     Styles for Menu drawer in compact mode
 
     */
-    @media(min-width: 20em)
+    @media(min-width: 20.0625em)
         &[aria-expanded=false]
             .item-label
             .toggle-favorites
