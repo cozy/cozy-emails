@@ -120,8 +120,8 @@ module.exports = Menu = React.createClass
             a
                 href: composeUrl
                 className: 'menu-item compose-action btn btn-cozy-contrast btn-cozy',
-                    i className: 'fa fa-edit'
-                    span className: 'item-label', t 'menu compose'
+                    i className: 'fa fa-pencil'
+                    span className: 'item-label', " #{t 'menu compose'}"
 
             nav className: 'mainmenu',
                 if @props.accounts.length

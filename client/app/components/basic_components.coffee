@@ -1,5 +1,6 @@
 {
     div
+    section
     h3
     h4
     ul
@@ -19,9 +20,10 @@
 Container = React.createClass
 
     render: ->
-        div
+        section
             id: @props.id
             key: @props.key
+            className: 'panel'
         ,
             @props.children
 

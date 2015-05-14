@@ -5,6 +5,8 @@ FiltersToolbarMessagesList = require './toolbar_messageslist_filters'
 SearchToolbarMessagesList  = require './toolbar_messageslist_search'
 ActionsToolbarMessagesList = require './toolbar_messageslist_actions'
 
+LayoutActionCreator  = require '../actions/layout_action_creator'
+
 
 module.exports = ToolbarMessagesList = React.createClass
     displayName: 'ToolbarMessagesList'
@@ -23,6 +25,15 @@ module.exports = ToolbarMessagesList = React.createClass
 
     render: ->
         aside role: 'toolbar',
+            # Drawer toggler
+            button
+                className: 'drawer-toggle'
+                onClick:   LayoutActionCreator.drawerToggle
+                title:     t 'menu toggle'
+
+                i className: 'fa fa-navicon'
+
+            # Select all Checkbox
             button
                 role:                     'menuitem'
                 'aria-selected':          @props.edited
