@@ -114,7 +114,7 @@ subaction()
         vertical-align middle
 
     .account .avatar
-        border-radius .375rem
+        border-radius .25rem
 
 
     .account-title
@@ -126,30 +126,47 @@ subaction()
         .mailbox-config
             subaction()
 
+        .badge
+            margin-right 1em
+
         &:hover
             .mailbox-config
                 opacity 1
 
 
     .mailbox-list
-        padding-left .75em
+        padding 0 .5em
 
         li
-            display flex
+            display       flex
+            padding-left  .2em
+            border-radius .25rem
+
+            &.active
+                background-color lightblue
 
             a
                 flex 1
+
+            .badge
+                margin-right .5em
 
             button
                 subaction()
                 color      basecolor
 
-                &:hover
-                    color actioncolor
-
             &:hover
+                background-color lightorange
+
+                a
+                    color basecolor
+
                 button
                     opacity 1
+
+        .toggle-favorites
+            background-color transparent !important
+            cursor           pointer
 
 
     /*
@@ -182,6 +199,7 @@ subaction()
 
 
             .badge
-                position absolute
-                top      -.15em
-                right    0
+                position     absolute
+                top          -.15em
+                right        0
+                margin-right 0 !important
