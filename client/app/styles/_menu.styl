@@ -5,8 +5,8 @@
 */
 
 .app [role=menubar]
-    padding .5em
-    display flex
+    padding        .5em
+    display        flex
     flex-direction column
 
 
@@ -35,9 +35,10 @@
 
 
     .submenu
-        display flex
-        border-top 1px solid #fff
-        box-shadow 0 -1px 0 #ccc
+        display         flex
+        justify-content space-around
+        border-top      1px solid #fff
+        box-shadow      0 -1px 0 #ccc
 
         & :first-child
             flex 1
@@ -150,9 +151,6 @@
                     &.inboxMailbox
                     &.sentMailbox
                         display flex
-
-            .drawer-toggle
-                flex 1
 
             .mailbox-config
                 display none !important
