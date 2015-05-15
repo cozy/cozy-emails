@@ -470,13 +470,13 @@ module.exports = LayoutActionCreator = {
   },
   notify: function(message, options) {
     var task;
-    if ((message == null) || message.trim() === '') {
+    if ((message == null) || message.toString().trim() === '') {
       throw new Error('Empty notification');
     } else {
       task = {
         id: Date.now(),
         finished: true,
-        message: message
+        message: message.toString()
       };
       if (options != null) {
         task.autoclose = options.autoclose;
@@ -1054,7 +1054,7 @@ _localDelete = function(target) {
       });
       newMailboxIds = {};
       newMailboxIds[trashMailbox] = -1;
-      updated.push(message.set('mailboxIDs', newMailboxIds));
+      updated.push(message.set('mailboxIDs', newMailboxIds).toJS());
     }
   }
   AppDispatcher.handleViewAction({
@@ -6514,7 +6514,7 @@ MessageItem = React.createClass({
     return shouldUpdate;
   },
   render: function() {
-    var action, avatar, cHash, classes, compact, conversationID, date, flags, from, message, params, text, url, _ref2, _ref3, _ref4, _ref5;
+    var action, avatar, cHash, classes, compact, conversationID, date, flags, from, html, message, params, text, url, _ref2, _ref3, _ref4, _ref5;
     message = this.props.message;
     flags = message.get('flags');
     classes = classer({
@@ -6552,6 +6552,13 @@ MessageItem = React.createClass({
     date = MessageUtils.formatDate(message.get('createdAt'), compact);
     avatar = MessageUtils.getAvatar(message);
     text = message.get('text');
+    html = message.get('html');
+    if ((text == null) && (html != null)) {
+      text = toMarkdown(html);
+    }
+    if (text == null) {
+      text = '';
+    }
     return li({
       className: classes,
       key: this.props.key,
@@ -6593,7 +6600,7 @@ MessageItem = React.createClass({
       style: {
         'background-color': colorhash(cHash)
       }
-    }, from.name ? from.name[0] : fron.address[0]))), div({
+    }, from.name ? from.name[0] : from.address[0]))), div({
       className: 'metas-wrapper'
     }, div({
       className: 'participants'
@@ -8777,7 +8784,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
   },
   _getSelectedAndMode: function(applyToConversation) {
     var conversationIDs, count, selected;
-    selected = Object.keys(this.state.selected);
+    selected = Object.keys(this.props.selected);
     count = selected.length;
     applyToConversation = Boolean(applyToConversation);
     if (applyToConversation == null) {
@@ -13516,7 +13523,7 @@ module.exports = MessageUtils = {
     message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br /></p>";
     if (isSignature) {
       signature = signature.replace(/\n/g, '<br>');
-      return message.html += "<p><br /></p><p id=\"signature\">" + signature + "</p>";
+      return message.html += "<p><br /></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
     }
   },
   setMessageAsReplyAll: function(options) {
@@ -13543,7 +13550,7 @@ module.exports = MessageUtils = {
     message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br /></p>";
     if (isSignature) {
       signature = signature.replace(/\n/g, '<br>');
-      return message.html += "<p><br /></p><p id=\"signature\">" + signature + "</p>";
+      return message.html += "<p><br /></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
     }
   },
   setMessageAsForward: function(options) {
@@ -13564,10 +13571,15 @@ module.exports = MessageUtils = {
     textSeparator = separator.replace('&lt;', '<').replace('&gt;', '>');
     textSeparator = textSeparator.replace('<pre>', '').replace('</pre>', '');
     htmlSeparator = separator.replace(/(\n)+/g, '<br />');
-    this.setMessageAsDefault(message);
+    this.setMessageAsDefault(options);
     message.subject = "" + (t('compose forward prefix')) + (inReplyTo.get('subject'));
     message.text = textSeparator + text;
-    message.html = "" + COMPOSE_STYLE + "\n\n<p>" + htmlSeparator + "</p><p><br /></p>" + html;
+    message.html = "" + COMPOSE_STYLE;
+    if (isSignature) {
+      signature = signature.replace(/\n/g, '<br>');
+      message.html += "<p><br /></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
+    }
+    message.html += "\n<p>" + htmlSeparator + "</p><p><br /></p>" + html;
     message.attachments = inReplyTo.get('attachments');
     return message;
   },
@@ -14286,7 +14298,9 @@ module.exports = {
     });
   },
   batchFetch: function(target, callback) {
-    return request.get("messages/batchFetch").end(function(res) {
+    var body;
+    body = _.extend({}, target);
+    return request.put("messages/batchFetch").send(target).end(function(res) {
       var err, _ref;
       if (res.ok) {
         return callback(null, res.body);
