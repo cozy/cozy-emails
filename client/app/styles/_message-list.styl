@@ -129,16 +129,13 @@
             border-right 1px solid rgba(0, 0, 0, 0.15)
 
             &:not(.dropdown)[aria-selected=false]:hover
+            &[aria-selected=true]:hover
                 i
                 .btn-label
                     color actioncolor
 
             &[aria-selected=true]
-                background-color actioncolor
-
-                i
-                .btn-label
-                    color white
+                background-color lightblue
 
     .search
         input
