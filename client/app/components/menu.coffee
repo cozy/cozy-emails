@@ -137,14 +137,6 @@ module.exports = Menu = React.createClass
                         i className: 'fa fa-plus'
                         span className: 'item-label', t 'menu account new'
 
-                # This component doesn't make sense if there is no account. There is
-                # always a selected account if there is an account.
-                if @props.selectedAccount?
-                    RefreshIndicator
-                        refreshes: @props.refreshes
-                        mailboxes: @props.selectedAccount.get('mailboxes')
-                        selectedMailboxID: @props.selectedMailboxID
-
                 button
                     role: 'menuitem'
                     className: classer
@@ -247,9 +239,6 @@ module.exports = Menu = React.createClass
                                 done: progress.get('done'),
                                 total: progress.get('total')
 
-                    else if nbUnread > 0
-                        span className: 'badge', nbUnread
-
                 if isSelected
                     a
                         href: configMailboxUrl
@@ -259,6 +248,9 @@ module.exports = Menu = React.createClass
                                 'fa fa-cog'
                             'aria-describedby': Tooltips.ACCOUNT_PARAMETERS
                             'data-tooltip-direction': 'right'
+
+                if nbUnread > 0 and not progress
+                        span className: 'badge', nbUnread
 
             if isSelected
                 ul
@@ -360,8 +352,6 @@ MenuMailboxItem = React.createClass
                 key: @props.key,
                     # Something must be rethought about the icon
                     i className: 'fa ' + mailboxIcon
-                    if not progress and nbUnread and nbUnread > 0
-                        span className: 'badge', nbUnread
                     span
                         className: 'item-label',
                         "#{@props.mailbox.get 'label'}"
@@ -382,6 +372,9 @@ MenuMailboxItem = React.createClass
                     onClick: @expungeMailbox
 
                     span className: 'fa fa-recycle'
+
+            if not progress and nbUnread and nbUnread > 0
+                span className: 'badge', nbUnread
 
 
     onDragEnter: (e) ->

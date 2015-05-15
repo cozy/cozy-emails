@@ -4,16 +4,33 @@
   -- Menu internal layout and styles
 */
 
+// Helpers mixins
+subaction()
+    order      1
+    opacity    0
+    margin     auto .5em auto 0
+    background transparent
+    border     none
+    transition opacity 150ms
+
+
+// App rules
 .app [role=menubar]
-    padding        .5em
+    padding        .5em 0
     display        flex
     flex-direction column
 
+    a
+        text-decoration none
 
     .fa
         vertical-align middle
 
+
     .compose-action
+        margin      0 .5em 1.5em
+        line-height 2em
+
         i
             vertical-align baseline
 
@@ -40,12 +57,23 @@
         border-top      1px solid #fff
         box-shadow      0 -1px 0 #ccc
 
-        & :first-child
+        & > :first-child
             flex 1
 
 
     .account
         font-weight bold
+
+
+    .account-title
+    .mailbox-list li
+        position    relative
+        align-items center
+
+    .badge
+            order       2
+            margin-left auto
+            border      2px solid #f5f5f5
 
 
     [role=group]
@@ -55,16 +83,12 @@
     [role=menuitem]
         align-items center
 
-        .badge
-            order       1
-            margin-left auto
-
         &:not(.drawer-toggle)
             display flex
             padding .5em
 
             .item-label
-                margin-left 1em
+                margin 0 1em
 
 
     for level in (1..10)
@@ -89,6 +113,10 @@
         color          white
         vertical-align middle
 
+    .account .avatar
+        border-radius .25rem
+
+
     .account-title
         display flex
 
@@ -96,38 +124,49 @@
             flex 1
 
         .mailbox-config
-            display    none
-            margin     auto 0
-            background transparent
-            border     none
+            subaction()
+
+        .badge
+            margin-right 1em
 
         &:hover
             .mailbox-config
-                display block
+                opacity 1
 
 
     .mailbox-list
-        padding-left .5em
+        padding 0 .5em
 
         li
-            display flex
+            display       flex
+            padding-left  .2em
+            border-radius .25rem
+
+            &.active
+                background-color lightblue
 
             a
                 flex 1
 
-            button
-                display none
-                margin auto 0
-                color basecolor
-                background transparent
-                border none
+            .badge
+                margin-right .5em
 
-                &:hover
-                    color actioncolor
+            button
+                subaction()
+                color      basecolor
 
             &:hover
+                background-color lightorange
+
+                a
+                    color basecolor
+
                 button
-                    display block
+                    opacity 1
+
+        .toggle-favorites
+            background-color transparent !important
+            cursor           pointer
 
 
     /*
@@ -139,6 +178,9 @@
             .item-label
             .toggle-favorites
             .new-account-action
+            // badge associated to a masked mailbox
+            // TODO: Improve markup or please kill me :)
+            [role=menuitem]:not(.account):not(.inboxMailbox):not(.sentMailbox) ~ .badge
                 display none
 
             .mainmenu
@@ -156,185 +198,8 @@
                 display none !important
 
 
-#menu
-    float left
-    // We use a flexbox display so the #mailbox-list takes all the height left
-    display flex
-    flex-direction column
-
-    height 100%
-    padding 0
-
-    background homeheadercolor
-
-    /*
-        Menu layout
-    */
-    #account-list
-        flex 1 // Takes all height left
-        overflow auto
-        margin 0
-
-
-        li
-            position relative // for badge positionning
-
-        ul li
-            padding 0 3.5em 0 1em
-
-    .new-account-action
-        // Sets position at the bottom of the menu
-        margin-top auto
-
-    /*
-        Styles
-    */
-
-    .progress-thin
-        height 2px
-        width 100%
-        position absolute
-        margin 0px
-        bottom 0px
-        left 0px
-        .progress-bar
-            background-color orange
-            background-image none
-
-    .refresh-error
-        font-size 14px
-        display block
-        position absolute
-        right 5px
-        bottom 5px
-        color: orange
-
-    .refresh-error:hover
-        color: red
-
-    // Clickable menu elements
-    .menu-item
-        display inline-block // used for non flexed elements (within .account-list)
-        width 100%
-        padding .75em .25em
-        margin 0
-        font-size 1em
-        font-family 'Maven Pro', sans-serif
-        color mediumcolor
-        text-align center
-        vertical-align middle
-        text-decoration none
-        transition: background 0.3s ease
-
-        i
-        .item-label
-        .badge
-            vertical-align middle
-
-        // icon
-        i
-            font-size 1.25em
-
-        .item-label
-            display block
-            overflow hidden
-            text-overflow ellipsis
-            white-space nowrap
-
-        .badge
-            position absolute
-            top .4em
-            right .5em
-            color white
-            background homeheadercolor + 20%
-            font-size 0.9em
-            margin-left .25em
-            font-family 'Source Sans Pro', sans-serif
-
-        &:hover
-        &.active
-            background #363a46 + 10%
-            color #fff
-
-        &.news
             .badge
-                color red
-                background yellow
-
-    &.three
-        .menu-item
-            padding 0.2em 0.5em
-            text-align left
-        i
-            font-size 1em
-        .item-label
-            display inline
-            padding-left .5em
-
-    // Account list
-    #account-list
-        li
-            .submenu
-                display none
-
-                background #363a46 + 5%
-
-                // submenu icons
-                //.menu-item i
-                //  font-size 1.25em
-
-            border-left .25em solid transparent
-
-            &:hover
-                border-left .25em solid #363a46 + 10%
-
-            &.active
-                border-left .25em solid mediumcolor-contrast - 30%
-                .menu-item
-                    color #fff
-
-                .submenu
-                    display block
-            a.menu-item *
-                // this is needed for dragenter and dragleave events to work
-                pointer-events none
-
-                &.refresh-error
-                    pointer-events auto
-            &.target
-                border 1px dashed white
-
-
-    // New account action button
-    .new-account-action
-        font-size 1em
-        opacity 0.5
-
-        &:hover
-            opacity 1
-
-    // Trigger refresh action button
-    // Temporary style, because m4dz is kinda burning everything to the ground
-    // at the moment :p
-    .trigger-refresh-action
-        width 100%
-        padding-top 0.5em !important
-        padding-bottom 0.5em !important
-
-        *
-            overflow hidden
-            text-overflow ellipsis
-            white-space nowrap
-
-        button
-            width 100%
-            text-align left
-            background transparent
-            border none
-
-            &:focus
-                outline none
-
-            span + span
-                margin-left 10px
-
+                position     absolute
+                top          -.15em
+                right        0
+                margin-right 0 !important

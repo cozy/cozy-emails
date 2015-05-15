@@ -67,6 +67,7 @@ module.exports = MessageList = React.createClass
 
             # Toolbar
             ToolbarMessagesList
+                settings:             @props.settings
                 accountID:            @props.accountID
                 mailboxID:            @props.mailboxID
                 mailboxes:            @props.mailboxes
@@ -322,15 +323,15 @@ MessageItem = React.createClass
                 onDoubleClick:     @onMessageDblClick
                 ref:               'target'
 
-                div className: 'checkbox-wrapper',
-                    input
-                        ref:       'select'
-                        className: 'select select-target',
-                        type:      'checkbox',
-                        checked:   @props.selected,
-                        onChange:  @onSelect
-
                 div className: 'markers-wrapper',
+                    i
+                        className: classer
+                            select:              true
+                            fa:                  true
+                            'fa-check-square-o': @props.selected
+                            'fa-square-o':       not @props.selected
+                        onClick:   @onSelect
+
                     if MessageFlags.SEEN in flags
                         i className: 'fa fa-circle-thin'
                     else
@@ -363,8 +364,8 @@ MessageItem = React.createClass
                             i className: 'attachments fa fa-paperclip'
                         if  @props.displayConversations and
                             @props.conversationLengths > 1
-                                i className: 'conversation-length fa fa-chevron-right',
-                                    @props.conversationLengths
+                                span className: 'conversation-length',
+                                    "[#{@props.conversationLengths}]"
                     div className: 'preview',
                         text.substr(0, 1024)
 

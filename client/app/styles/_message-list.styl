@@ -26,6 +26,7 @@
 
         & > [role=menuitem]
             padding 0 .75em
+            margin-left -.0625em
 
         [role=group]:last-child
             flex 1
@@ -37,7 +38,7 @@
         display flex
 
     .filters
-        margin-right 1em
+        margin-right .5em
 
         i
             padding-left .5em
@@ -54,10 +55,13 @@
                     display inline
 
         // Toggling mode for filter under < 600px
+        [role=presentation]
+            display none
+
         @media(max-width: 37.5em)
-            margin-right
             [role=presentation]
-                cursor pointer
+                display block
+                cursor  pointer
 
             [role=menuitem]
                 display none
@@ -93,6 +97,9 @@
         i
             color basecolor
 
+        > button
+            border-right 1px solid rgba(0, 0, 0, 0.15)
+
     [role=group]
             color basecolor
 
@@ -104,6 +111,10 @@
             padding          .65em
             background-color basecolor
             color            white
+
+            &:hover
+                background-color actioncolor
+
 
     .filters
         [role=menuitem]
@@ -146,7 +157,7 @@
         // Layouts
         .wrapper
             display flex
-            padding .3125em 0
+            padding .5em 0 1em
 
             & > div
                 margin auto .5em
@@ -155,7 +166,13 @@
             display         flex
             flex-direction  column
             justify-content space-around
-            margin          0 .5em !important
+            margin          0 0 0 .5em !important
+            align-items     center
+            min-width       1em
+
+            i
+                font-size .75em
+                color     darkcolor +30%
 
         .avatar-wrapper
             width         3em
@@ -224,15 +241,14 @@
             text-transform uppercase
             color          white
 
-        .preview
-        .fa-circle-thin
-            color mediumcolor
+        i.avatar
+            opacity .7
 
-        .fa-circle
-            color basecolor
+        .preview
+            color darkcolor +30%
 
         .fa-star
-            color actioncolor
+            color lightorange !important
 
         .preview
             font-weight normal
@@ -255,16 +271,42 @@
             font-size .875em
 
 
+        // hover
+        &:hover
+            background-color lightorange
+
+            .preview
+                color darkcolor
+
+
         // Unread styles
         &.unseen
             .metas-wrapper
                 font-weight bold
 
+        &:not(.unseen)
+            background-color lightcolor
+
 
         // Currently selected message
         main:not(.full) &.active
-            background-color basecolor
+            background-color lightblue
 
-            a
             .preview
-                color white
+                color darkcolor
+
+
+        // Edited mode
+        .markers-wrapper
+            .select
+                cursor  pointer
+                display none
+
+        &:hover
+        &.edited
+            .markers-wrapper
+                .select
+                    display block
+
+                i
+                    display none

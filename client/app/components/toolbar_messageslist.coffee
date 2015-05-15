@@ -12,6 +12,7 @@ module.exports = ToolbarMessagesList = React.createClass
     displayName: 'ToolbarMessagesList'
 
     propTypes:
+        settings:             React.PropTypes.object.isRequired
         accountID:            React.PropTypes.string.isRequired
         mailboxID:            React.PropTypes.string.isRequired
         mailboxes:            React.PropTypes.object.isRequired
@@ -46,6 +47,7 @@ module.exports = ToolbarMessagesList = React.createClass
 
             if @props.edited
                 ActionsToolbarMessagesList
+                    settings:             @props.settings
                     mailboxID:            @props.mailboxID
                     mailboxes:            @props.mailboxes
                     messages:             @props.messages
