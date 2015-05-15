@@ -642,11 +642,11 @@ module.exports = LayoutActionCreator = {
     });
   },
   showSettings: function(panelInfo, direction) {},
-  refreshMessages: function() {
+  refreshMessages: function(callback) {
     return XHRUtils.refresh(true, function(err, results) {
       if (err != null) {
         console.log(err);
-        return LayoutActionCreator.notify(t('account refresh error'), {
+        LayoutActionCreator.notify(t('account refresh error'), {
           autoclose: false,
           finished: true,
           errors: [JSON.stringify(err)]
@@ -654,11 +654,12 @@ module.exports = LayoutActionCreator = {
       } else {
         if (results === "done") {
           MessageActionCreator.receiveRawMessages(null);
-          return LayoutActionCreator.notify(t('account refreshed'), {
+          LayoutActionCreator.notify(t('account refreshed'), {
             autoclose: true
           });
         }
       }
+      return callback();
     });
   },
   toastsShow: function() {
@@ -6143,84 +6144,39 @@ module.exports = React.createClass({
   },
   getInitialState: function() {
     return {
-      isRefreshStarted: false
+      isRefreshing: false
     };
   },
   render: function() {
-    var account, done, mailbox, progress, total, _ref1;
     return span({
       className: 'menu-item trigger-refresh-action'
-    }, this.props.refreshes.length === 0 && !this.state.isRefreshStarted ? button({
+    }, !this.state.isRefreshing ? button({
       className: '',
       type: 'button',
       disabled: null,
-      title: t("menu last refresh", {
-        date: this.getFormattedDate()
-      }),
+      title: t("menu refresh label"),
       onClick: this.refresh
     }, span({
       className: 'fa fa-refresh'
-    }), span(null, t("menu refresh label"))) : ((_ref1 = this.getRefreshInfo(), account = _ref1.account, mailbox = _ref1.mailbox, _ref1), [
+    }), span(null, t("menu refresh label"))) : [
       Spinner({
         key: 'spinner',
         white: true
-      }), account && !mailbox ? account.get('done') < account.get('total') ? span({
-        key: 'init'
-      }, t("menu refresh initializing")) : span({
-        key: 'clean'
-      }, t("menu refresh cleaning")) : account && mailbox ? (done = mailbox.get('done'), total = mailbox.get('total'), progress = Math.round(done * 100 / total), span({
-        key: 'progress'
-      }, t("menu refresh indicator", {
-        account: account.get('account'),
-        mailbox: mailbox.get('box'),
-        progress: progress
-      }))) : this.state.isRefreshStarted ? span({
-        key: 'sync-box'
-      }, t("menu refresh initializing")) : span({
-        key: 'waiting'
-      }, t("menu refresh waiting"))
-    ]));
-  },
-  getRefreshInfo: function() {
-    var account, accounts, mailbox, mailboxes;
-    accounts = this.props.refreshes.filter(function(refresh) {
-      return refresh.get('code') === 'account-fetch';
-    });
-    mailboxes = this.props.refreshes.filter(function(refresh) {
-      return refresh.get('code') === 'box-fetch';
-    });
-    account = accounts.first();
-    mailbox = mailboxes.first();
-    return {
-      account: account,
-      mailbox: mailbox
-    };
-  },
-  getFormattedDate: function() {
-    var date, formattedDate, formatter, mailbox;
-    if (this.props.selectedMailboxID != null) {
-      mailbox = this.props.mailboxes.get(this.props.selectedMailboxID);
-    } else {
-      mailbox = this.props.mailboxes.first();
-    }
-    date = mailbox.get('lastSync');
-    formatter = 'DD/MM/YYYY HH:mm:ss';
-    formattedDate = moment(date).format(formatter);
-    return formattedDate;
+      }), t("menu refreshing")
+    ]);
   },
   refresh: function(event) {
     this.setState({
-      isRefreshStarted: true
+      isRefreshing: true
     });
     event.preventDefault();
-    return LayoutActionCreator.refreshMessages();
-  },
-  componentWillReceiveProps: function(props) {
-    if (props.refreshes.length > 0 && this.state.isRefreshStarted) {
-      return this.setState({
-        isRefreshStarted: false
-      });
-    }
+    return LayoutActionCreator.refreshMessages((function(_this) {
+      return function() {
+        return _this.setState({
+          isRefreshing: false
+        });
+      };
+    })(this));
   }
 });
 });
@@ -10338,11 +10294,7 @@ module.exports = {
   "menu favorites off": "Alle",
   "menu toggle": "Menü umschalten",
   "menu refresh label": "Refresh",
-  "menu refresh initializing": "Initializing...",
-  "menu refresh cleaning": "Cleaning...",
-  "menu refresh waiting": "Waiting for server...",
-  "menu refresh indicator": "%{account}: %{mailbox} (%{progress}%)",
-  "menu last refresh": "Last refresh on %{date}.",
+  "menu refreshing": "Refreshing...",
   "list empty": "Keine E-Mail in diesem Postfach.",
   "no flagged message": "Keine wichtige E-Mail in diesem Postfach.",
   "no unseen message": "Alle E-Mails in dieser Box wurden gelesen",
@@ -10650,11 +10602,7 @@ module.exports = {
   "menu favorites off": "All",
   "menu toggle": "Toggle Menu",
   "menu refresh label": "Refresh",
-  "menu refresh initializing": "Initializing...",
-  "menu refresh cleaning": "Cleaning...",
-  "menu refresh waiting": "Waiting for server...",
-  "menu refresh indicator": "%{account}: %{mailbox} (%{progress}%)",
-  "menu last refresh": "Last refresh on %{date}.",
+  "menu refreshing": "Refreshing...",
   "list empty": "No email in this box.",
   "no flagged message": "No Important email in this box.",
   "no unseen message": "All emails have been read in this box",
@@ -11005,11 +10953,7 @@ module.exports = {
   "menu favorites off": "Toutes",
   "menu toggle": "Menu",
   "menu refresh label": "Rafraîchir",
-  "menu refresh initializing": "Initialisation...",
-  "menu refresh cleaning": "Nettoyage...",
-  "menu refresh waiting": "En attente du serveur...",
-  "menu refresh indicator": "%{account} : %{mailbox} (%{progress}%)",
-  "menu last refresh": "Dernier rafraîchissement le %{date}.",
+  "menu refreshing": "Rafraîchissement en cours...",
   "list empty": "Pas d'email dans cette boîte..",
   "no flagged message": "Pas d'email important dans cette boîte.",
   "no unseen message": "Pas d'email non-lu dans cette boîte.",
