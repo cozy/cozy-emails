@@ -57,11 +57,7 @@ module.exports =
       "menu toggle"             : "Menu"
 
       "menu refresh label"      : "Rafraîchir"
-      "menu refresh initializing": "Initialisation..."
-      "menu refresh cleaning"   : "Nettoyage..."
-      "menu refresh waiting"    : "En attente du serveur..."
-      "menu refresh indicator"  : "%{account} : %{mailbox} (%{progress}%)"
-      "menu last refresh"       : "Dernier rafraîchissement le %{date}."
+      "menu refreshing"         : "Rafraîchissement en cours..."
 
 
       # List
@@ -451,8 +447,9 @@ module.exports =
       "tooltip account parameters": "Paramètres du compte"
       "tooltip delete selection": "Supprimer les messages sélectionnés"
       'tooltip filter': 'Filtrer'
-      'tooltip display filters': 'Montrer les filtres'
+      'tooltip display filters': 'Afficher les filtres'
       'tooltip expunge mailbox': 'Vider la boite'
+
 
       # Filters
       'filters unseen': 'non-lus'

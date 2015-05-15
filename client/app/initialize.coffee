@@ -73,12 +73,14 @@ window.onload = ->
         # Init Web Intents
         IntentManager = require "./utils/intent_manager"
         window.intentManager = new IntentManager()
-        window.intentManager.send 'ping', from: 'mails'
+        window.intentManager.send 'nameSpace',
+            type: 'ping'
+            from: 'mails'
         .then (message) ->
             LayoutActionCreator.intentAvailability true
         , (error) ->
             console.error "Intents not available"
-            LayoutActionCreator.intentAvailability true
+            LayoutActionCreator.intentAvailability false
 
         # Flux initialization (must be called at the begining)
         AccountStore  = require './stores/account_store'
