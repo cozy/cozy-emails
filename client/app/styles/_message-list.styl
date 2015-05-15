@@ -21,7 +21,8 @@
     //--------------------------------------------------------------------------
     // Layouts
     [role=toolbar]
-        display       flex
+        position relative    // set root positionning for dropdowns
+        display  flex
 
         & > [role=menuitem]
             padding 0 .75em
@@ -73,6 +74,14 @@
 
         input
             flex 1
+
+
+    .date-range-picker
+        position static
+
+        .dropdown-menu
+            left      50%
+            transform translateX(-50%)
 
 
     // Styles and colors
