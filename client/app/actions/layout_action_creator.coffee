@@ -79,14 +79,14 @@ module.exports = LayoutActionCreator =
             autoclose: true
 
     notify: (message, options) ->
-        if not message? or message.trim() is ''
+        if not message? or message.toString().trim() is ''
             # Throw an error to get the stack trace in server logs
             throw new Error 'Empty notification'
         else
             task =
                 id: Date.now()
                 finished: true
-                message: message
+                message: message.toString()
 
             if options?
                 task.autoclose = options.autoclose

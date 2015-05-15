@@ -23,7 +23,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
 
 
     _getSelectedAndMode: (applyToConversation) ->
-        selected = Object.keys @state.selected
+        selected = Object.keys @props.selected
         count = selected.length
         applyToConversation = Boolean applyToConversation
         applyToConversation ?= @props.displayConversations

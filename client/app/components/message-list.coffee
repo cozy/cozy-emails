@@ -298,6 +298,11 @@ MessageItem = React.createClass
         date    = MessageUtils.formatDate message.get('createdAt'), compact
         avatar  = MessageUtils.getAvatar message
         text    = message.get('text')
+        html    = message.get('html')
+        if not text? and html?
+            text = toMarkdown html
+        if not text?
+            text = ''
 
         li
             className:              classes
@@ -343,7 +348,7 @@ MessageItem = React.createClass
                             className: 'avatar placeholder'
                             style:
                                 'background-color': colorhash(cHash)
-                            if from.name then from.name[0] else fron.address[0]
+                            if from.name then from.name[0] else from.address[0]
 
                 div className: 'metas-wrapper',
                     div className: 'participants',
