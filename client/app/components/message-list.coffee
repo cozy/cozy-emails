@@ -322,15 +322,15 @@ MessageItem = React.createClass
                 onDoubleClick:     @onMessageDblClick
                 ref:               'target'
 
-                div className: 'checkbox-wrapper',
-                    input
-                        ref:       'select'
-                        className: 'select select-target',
-                        type:      'checkbox',
-                        checked:   @props.selected,
-                        onChange:  @onSelect
-
                 div className: 'markers-wrapper',
+                    i
+                        className: classer
+                            select:              true
+                            fa:                  true
+                            'fa-check-square-o': @props.selected
+                            'fa-square-o':       not @props.selected
+                        onClick:   @onSelect
+
                     if MessageFlags.SEEN in flags
                         i className: 'fa fa-circle-thin'
                     else
