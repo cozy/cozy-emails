@@ -146,7 +146,7 @@
         // Layouts
         .wrapper
             display flex
-            padding .3125em 0
+            padding .5em 0 1em
 
             & > div
                 margin auto .5em
@@ -155,7 +155,13 @@
             display         flex
             flex-direction  column
             justify-content space-around
-            margin          0 .5em !important
+            margin          0 0 0 .5em !important
+            align-items     center
+            min-width       1em
+
+            i
+                font-size .75em
+                color     darkcolor +30%
 
         .avatar-wrapper
             width         3em
@@ -225,14 +231,10 @@
             color          white
 
         .preview
-        .fa-circle-thin
-            color mediumcolor
-
-        .fa-circle
-            color basecolor
+            color darkcolor +30%
 
         .fa-star
-            color actioncolor
+            color lightorange !important
 
         .preview
             font-weight normal
@@ -255,19 +257,29 @@
             font-size .875em
 
 
+        // hover
+        &:hover
+            background-color lightorange
+
+            .preview
+                color darkcolor
+
+
         // Unread styles
         &.unseen
             .metas-wrapper
                 font-weight bold
 
+        &:not(.unseen)
+            background-color lightcolor
+
 
         // Currently selected message
         main:not(.full) &.active
-            background-color basecolor
+            background-color lightblue
 
-            a
             .preview
-                color white
+                color darkcolor
 
 
         // Edited mode
