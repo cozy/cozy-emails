@@ -342,7 +342,7 @@ MessageItem = React.createClass
                             className: 'avatar placeholder'
                             style:
                                 'background-color': colorhash(cHash)
-                            from.name[0]
+                            if from.name then from.name[0] else fron.address[0]
 
                 div className: 'metas-wrapper',
                     div className: 'participants',
