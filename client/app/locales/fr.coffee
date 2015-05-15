@@ -46,7 +46,7 @@ module.exports =
 
       # Menu
       "menu show"               : "Montrer le menu"
-      "menu compose"            : "Nouveau"
+      "menu compose"            : "Écrire"
       "menu account new"        : "Ajouter un compte"
       "menu settings"           : "Paramètres"
       "menu mailbox total"      : "%{smart_count} message |||| %{smart_count} messages "
@@ -57,11 +57,7 @@ module.exports =
       "menu toggle"             : "Menu"
 
       "menu refresh label"      : "Rafraîchir"
-      "menu refresh initializing": "Initialisation..."
-      "menu refresh cleaning"   : "Nettoyage..."
-      "menu refresh waiting"    : "En attente du serveur..."
-      "menu refresh indicator"  : "%{account} : %{mailbox} (%{progress}%)"
-      "menu last refresh"       : "Dernier rafraîchissement le %{date}."
+      "menu refreshing"         : "Rafraîchissement en cours..."
 
 
       # List
@@ -402,11 +398,13 @@ module.exports =
       "
 
       # Contacts
+      #
       "contact form"             : "Sélectionnez des contacts"
       "contact form placeholder" : "Nom"
       "contact create success"   : "%{contact} a été ajouté(e) à vos contacts"
       "contact create error"     : "L'ajout à votre carnet d'adresses a
                                         échoué : {error}"
+      "message contact creation"    : "Voulez vous ajouter %{contact} à votre carnet d'adresse ?"
 
       # GMail security
       "gmail security tile": "Sécurité Gmail"
@@ -451,4 +449,16 @@ module.exports =
       "tooltip account parameters": "Paramètres du compte"
       "tooltip delete selection": "Supprimer les messages sélectionnés"
       'tooltip filter': 'Filtrer'
-      'tooltip display filters': 'Montrer les filtres'
+      'tooltip display filters': 'Afficher les filtres'
+      'tooltip expunge mailbox': 'Vider la boite'
+
+
+      # Filters
+      'filters unseen': 'non-lus'
+      'filters flagged': 'favoris'
+      'filters attach': 'pièces jointes'
+      'filters search placeholder': 'rechercher…'
+      'daterangepicker placeholder': 'par date'
+      'daterangepicker presets yesterday': 'hier'
+      'daterangepicker presets last week': 'semaine dernière'
+      'daterangepicker presets last month': 'mois dernier'

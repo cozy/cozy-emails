@@ -70,6 +70,7 @@ module.exports =
 
     'messages/batchFetch':
         get: [messages.batchFetch, messages.batchSend]
+        put: [messages.batchFetch, messages.batchSend]
 
     'messages/batchTrash':
         put: [messages.batchFetch, accounts.fetch, messages.batchTrash]

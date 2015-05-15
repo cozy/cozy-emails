@@ -238,7 +238,12 @@ module.exports = class Message extends cozydb.CozyModel
 
         , (err, rows) ->
             return callback err if err
-            messages = rows.map (row) -> new Message row.doc
+            messages = rows.map (row) ->
+                try
+                    new Message row.doc
+                catch err
+                    log.error "Wrong message", err, row.doc
+                    return null
             callback null, messages
 
 
@@ -673,71 +678,72 @@ module.exports = class Message extends cozydb.CozyModel
                                             .map (id) -> boxIndex[id]
                                             .some (box) -> box.ignoreInCount()
 
+            @doASAP (imap, releaseImap) =>
 
-            firstboxid = Object.keys(@mailboxIDs)[0]
-            firstuid = @mailboxIDs[firstboxid]
+                operations = []
+                Object.keys(@mailboxIDs).forEach (boxid) =>
+                    uidInBox  = @mailboxIDs[boxid]
+                    permFlags = null
 
-            log.debug "CHANGING FLAGS OF ", firstboxid, firstuid, @mailboxIDs
+                    operations = operations.concat [
 
-            @doASAP (imap, releaseImap) ->
+                        # step 1 - open one box at random
+                        (cb) =>
+                            path = boxIndex[boxid].path
+                            log.debug "CHANGING FLAGS OF #{@id} (#{@subject}) in #{boxid} #{path}"
+                            imap.openBox path, (err, imapBox) ->
+                                return cb err if err
+                                permFlags = imapBox.permFlags
+                                log.debug "SUPPORTED FLAGS", permFlags
+                                cb null
 
-                permFlags = null
+                        # step 2a - set keywords
+                        (cb) ->
+                            keywords = _.difference newflags, permFlags
+                            if keywords.length is 0
+                                oldkeywords = _.difference oldflags, permFlags
+                                if oldkeywords.length isnt 0
+                                    imap.delKeywords uidInBox, oldkeywords, cb
+                                else cb null
+                            else
+                                imap.setKeywords uidInBox, keywords, cb
 
-                async.series [
+                        # step 2b - set flags
+                        (cb) ->
+                            flags = _.intersection newflags, permFlags
+                            if flags.length is 0
+                                oldpflags = _.intersection oldflags, permFlags
+                                if oldpflags.length isnt 0
+                                    imap.delFlags uidInBox, oldpflags, cb
+                                else cb null
+                            else
+                                imap.setFlags uidInBox, flags, cb
 
-                    # step 1 - open one box at random
-                    (cb) ->
-                        path = boxIndex[firstboxid].path
-                        imap.openBox path, (err, imapBox) ->
-                            return cb err if err
-                            permFlags = imapBox.permFlags
-                            log.debug "SUPPORTED FLAGS", permFlags
-                            cb null
+                        # step 3 - copy the message to all addTo
+                        (cb) ->
+                            paths = boxOps.addTo.map (destID) ->
+                                boxIndex[destID].path
+                            log.debug "add TO", paths
 
-                    # step 2a - set flags
-                    (cb) ->
-                        flags = _.intersection newflags, permFlags
-                        if flags.length is 0
-                            oldpflags = _.intersection oldflags, permFlags
-                            if oldpflags.length isnt 0
-                                imap.delFlags firstuid, oldpflags, cb
-                            else cb null
-                        else
-                            imap.setFlags firstuid, flags, cb
+                            imap.multicopy uidInBox, paths, (err, uids) ->
+                                return callback err if err
+                                for i in [0..uids.length - 1] by 1
+                                    destID = boxOps.addTo[i]
+                                    newmailboxIDs[destID] = uids[i]
+                                cb null
+                        # step 4 - remove the message from all removeFrom
+                        (cb) ->
+                            #paths = [{path:xxx, uid:xxx},{path:xxx, uid:xxx}]
+                            paths = boxOps.removeFrom.map (removeboxid) ->
+                                {path, uid} = boxIndex[removeboxid]
+                                return {path, uid}
+                            log.debug "remove FROM", paths
+                            imap.multiremove paths, cb
 
-                    # step 2b - set keywords
-                    (cb) ->
-                        keywords = _.difference newflags, permFlags
-                        if keywords.length is 0
-                            oldkeywords = _.difference oldflags, permFlags
-                            if oldkeywords.length isnt 0
-                                imap.delKeywords firstuid, oldkeywords, cb
-                            else cb null
-                        else
-                            imap.setKeywords firstuid, keywords, cb
+                    ]
 
-                    # step 3 - copy the message to all addTo
-                    (cb) ->
-                        paths = boxOps.addTo.map (destID) ->
-                            boxIndex[destID].path
-                        log.debug "add TO", paths
 
-                        imap.multicopy firstuid, paths, (err, uids) ->
-                            return callback err if err
-                            for i in [0..uids.length - 1] by 1
-                                destID = boxOps.addTo[i]
-                                newmailboxIDs[destID] = uids[i]
-                            cb null
-                    # step 4 - remove the message from all removeFrom
-                    (cb) ->
-                        #paths = [{path:xxx, uid:xxx},{path:xxx, uid:xxx}]
-                        paths = boxOps.removeFrom.map (boxid) ->
-                            {path, uid} = boxIndex[boxid]
-                            return {path, uid}
-                        log.debug "remove FROM", paths
-                        imap.multiremove paths, cb
-
-                ], releaseImap
+                async.series operations, releaseImap
 
             , (err) ->
                 return callback err if err

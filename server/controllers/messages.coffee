@@ -394,7 +394,8 @@ module.exports.batchFetch = (req, res, next) ->
         """
 
 module.exports.batchSend = (req, res, next) ->
-    res.send req.messages
+    messages = req.messages.map (msg) -> msg?.toClientObject()
+    res.send messages
 
 # move several message to trash with one request
 # expect req.account & req.messages

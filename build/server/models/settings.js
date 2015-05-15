@@ -36,7 +36,7 @@ module.exports = Settings = cozydb.getModel('MailsSettings', {
   },
   layoutStyle: {
     type: String,
-    "default": 'vertical'
+    "default": 'column'
   },
   listStyle: {
     type: String,
@@ -90,7 +90,7 @@ Settings.getDefault = function(callback) {
     desktopNotifications: true,
     displayConversation: true,
     displayPreview: true,
-    layoutStyle: 'three',
+    layoutStyle: 'column',
     listStyle: 'default',
     messageConfirmDelete: true,
     messageDisplayHTML: true,

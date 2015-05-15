@@ -1,4 +1,3 @@
-module.exports =
 
       # Application
       "app loading"             : "Loading…"
@@ -46,7 +45,7 @@ module.exports =
 
       # Menu
       "menu show"               : "Show menu"
-      "menu compose"            : "Compose"
+      "menu compose"            : "Write"
       "menu account new"        : "New Mailbox"
       "menu settings"           : "Parameters"
       "menu mailbox total"      : "%{smart_count} message|||| %{smart_count} messages"
@@ -57,11 +56,7 @@ module.exports =
       "menu toggle"             : "Toggle Menu"
 
       "menu refresh label"      : "Refresh"
-      "menu refresh initializing": "Initializing..."
-      "menu refresh cleaning"   : "Cleaning..."
-      "menu refresh waiting"    : "Waiting for server..."
-      "menu refresh indicator"  : "%{account}: %{mailbox} (%{progress}%)"
-      "menu last refresh"       : "Last refresh on %{date}."
+      "menu refreshing"         : "Refreshing..."
 
       # List
       "list empty"              : "No email in this box."
@@ -249,7 +244,6 @@ module.exports =
       "action undo"                 : "Undo"
       "action undo ok"              : "Action cancelled"
       "action undo ko"              : "Unable to undo action"
-      "message contact creation"    : "Do you want to create a contact for %{contact}?"
       "message action sent ok"      : "Message sent"
       "message action sent ko"      : "Error sending message: "
       "message action draft ok"     : "Message saved"
@@ -396,6 +390,7 @@ module.exports =
       "contact form placeholder" : "contact name"
       "contact create success"   : "%{contact} has been added to your contacts"
       "contact create error"     : "Error adding to your contacts : {error}"
+      "message contact creation"    : "Do you want to create a contact for %{contact}?"
 
       # GMail security
       "gmail security tile": "About Gmail security"
@@ -438,3 +433,14 @@ module.exports =
       "tooltip delete selection": "Delete all selected messages"
       'tooltip filter': 'Filter'
       'tooltip display filters': 'Display filters'
+      'tooltip expunge mailbox': 'Expunge mailbox'
+
+      # Filters
+      'filters unseen': 'unread'
+      'filters flagged': 'stared'
+      'filters attach': 'attachments'
+      'filters search placeholder': 'Search...'
+      'daterangepicker placeholder': 'by date'
+      'daterangepicker presets yesterday': 'yesterday'
+      'daterangepicker presets last week': 'last week'
+      'daterangepicker presets last month': 'last month'

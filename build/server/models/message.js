@@ -244,7 +244,13 @@ module.exports = Message = (function(_super) {
         return callback(err);
       }
       messages = rows.map(function(row) {
-        return new Message(row.doc);
+        try {
+          return new Message(row.doc);
+        } catch (_error) {
+          err = _error;
+          log.error("Wrong message", err, row.doc);
+          return null;
+        }
       });
       return callback(null, messages);
     });
@@ -648,7 +654,7 @@ module.exports = Message = (function(_super) {
     oldflags = this.flags;
     return Mailbox.getBoxesIndexedByID(this.accountID, (function(_this) {
       return function(err, boxIndex) {
-        var box, boxID, boxid, firstboxid, firstuid, shouldIgnoreAfterUpdate, _i, _len, _ref;
+        var box, boxID, boxid, shouldIgnoreAfterUpdate, _i, _len, _ref;
         if (err) {
           return callback(err);
         }
@@ -668,81 +674,85 @@ module.exports = Message = (function(_super) {
         }).some(function(box) {
           return box.ignoreInCount();
         });
-        firstboxid = Object.keys(_this.mailboxIDs)[0];
-        firstuid = _this.mailboxIDs[firstboxid];
-        log.debug("CHANGING FLAGS OF ", firstboxid, firstuid, _this.mailboxIDs);
         return _this.doASAP(function(imap, releaseImap) {
-          var permFlags;
-          permFlags = null;
-          return async.series([
-            function(cb) {
-              var path;
-              path = boxIndex[firstboxid].path;
-              return imap.openBox(path, function(err, imapBox) {
-                if (err) {
-                  return cb(err);
-                }
-                permFlags = imapBox.permFlags;
-                log.debug("SUPPORTED FLAGS", permFlags);
-                return cb(null);
-              });
-            }, function(cb) {
-              var flags, oldpflags;
-              flags = _.intersection(newflags, permFlags);
-              if (flags.length === 0) {
-                oldpflags = _.intersection(oldflags, permFlags);
-                if (oldpflags.length !== 0) {
-                  return imap.delFlags(firstuid, oldpflags, cb);
-                } else {
+          var operations;
+          operations = [];
+          Object.keys(_this.mailboxIDs).forEach(function(boxid) {
+            var permFlags, uidInBox;
+            uidInBox = _this.mailboxIDs[boxid];
+            permFlags = null;
+            return operations = operations.concat([
+              function(cb) {
+                var path;
+                path = boxIndex[boxid].path;
+                log.debug("CHANGING FLAGS OF " + _this.id + " (" + _this.subject + ") in " + boxid + " " + path);
+                return imap.openBox(path, function(err, imapBox) {
+                  if (err) {
+                    return cb(err);
+                  }
+                  permFlags = imapBox.permFlags;
+                  log.debug("SUPPORTED FLAGS", permFlags);
                   return cb(null);
-                }
-              } else {
-                return imap.setFlags(firstuid, flags, cb);
-              }
-            }, function(cb) {
-              var keywords, oldkeywords;
-              keywords = _.difference(newflags, permFlags);
-              if (keywords.length === 0) {
-                oldkeywords = _.difference(oldflags, permFlags);
-                if (oldkeywords.length !== 0) {
-                  return imap.delKeywords(firstuid, oldkeywords, cb);
+                });
+              }, function(cb) {
+                var keywords, oldkeywords;
+                keywords = _.difference(newflags, permFlags);
+                if (keywords.length === 0) {
+                  oldkeywords = _.difference(oldflags, permFlags);
+                  if (oldkeywords.length !== 0) {
+                    return imap.delKeywords(uidInBox, oldkeywords, cb);
+                  } else {
+                    return cb(null);
+                  }
                 } else {
+                  return imap.setKeywords(uidInBox, keywords, cb);
+                }
+              }, function(cb) {
+                var flags, oldpflags;
+                flags = _.intersection(newflags, permFlags);
+                if (flags.length === 0) {
+                  oldpflags = _.intersection(oldflags, permFlags);
+                  if (oldpflags.length !== 0) {
+                    return imap.delFlags(uidInBox, oldpflags, cb);
+                  } else {
+                    return cb(null);
+                  }
+                } else {
+                  return imap.setFlags(uidInBox, flags, cb);
+                }
+              }, function(cb) {
+                var paths;
+                paths = boxOps.addTo.map(function(destID) {
+                  return boxIndex[destID].path;
+                });
+                log.debug("add TO", paths);
+                return imap.multicopy(uidInBox, paths, function(err, uids) {
+                  var destID, i, _j, _ref1;
+                  if (err) {
+                    return callback(err);
+                  }
+                  for (i = _j = 0, _ref1 = uids.length - 1; _j <= _ref1; i = _j += 1) {
+                    destID = boxOps.addTo[i];
+                    newmailboxIDs[destID] = uids[i];
+                  }
                   return cb(null);
-                }
-              } else {
-                return imap.setKeywords(firstuid, keywords, cb);
+                });
+              }, function(cb) {
+                var paths;
+                paths = boxOps.removeFrom.map(function(removeboxid) {
+                  var path, uid, _ref1;
+                  _ref1 = boxIndex[removeboxid], path = _ref1.path, uid = _ref1.uid;
+                  return {
+                    path: path,
+                    uid: uid
+                  };
+                });
+                log.debug("remove FROM", paths);
+                return imap.multiremove(paths, cb);
               }
-            }, function(cb) {
-              var paths;
-              paths = boxOps.addTo.map(function(destID) {
-                return boxIndex[destID].path;
-              });
-              log.debug("add TO", paths);
-              return imap.multicopy(firstuid, paths, function(err, uids) {
-                var destID, i, _j, _ref1;
-                if (err) {
-                  return callback(err);
-                }
-                for (i = _j = 0, _ref1 = uids.length - 1; _j <= _ref1; i = _j += 1) {
-                  destID = boxOps.addTo[i];
-                  newmailboxIDs[destID] = uids[i];
-                }
-                return cb(null);
-              });
-            }, function(cb) {
-              var paths;
-              paths = boxOps.removeFrom.map(function(boxid) {
-                var path, uid, _ref1;
-                _ref1 = boxIndex[boxid], path = _ref1.path, uid = _ref1.uid;
-                return {
-                  path: path,
-                  uid: uid
-                };
-              });
-              log.debug("remove FROM", paths);
-              return imap.multiremove(paths, cb);
-            }
-          ], releaseImap);
+            ]);
+          });
+          return async.series(operations, releaseImap);
         }, function(err) {
           if (err) {
             return callback(err);

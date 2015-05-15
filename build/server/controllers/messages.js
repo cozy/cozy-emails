@@ -448,7 +448,11 @@ module.exports.batchFetch = function(req, res, next) {
 };
 
 module.exports.batchSend = function(req, res, next) {
-  return res.send(req.messages);
+  var messages;
+  messages = req.messages.map(function(msg) {
+    return msg != null ? msg.toClientObject() : void 0;
+  });
+  return res.send(messages);
 };
 
 module.exports.batchTrash = function(req, res, next) {

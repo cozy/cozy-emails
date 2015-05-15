@@ -97,32 +97,43 @@ class MessageStore extends Store
 
 
     onReceiveRawMessage = (message) ->
-        # create or update
-        if not message.attachments?
-            message.attachments = []
-        if not message.date?
-            message.date = new Date().toISOString()
-        if not message.createdAt?
-            message.createdAt = message.date
-        # Add messageID to every attachment
+        oldmsg = _messages.get message.id
+        updated = oldmsg?.get 'updated'
+        # only update message if new version is newer that the one currently stored
+        if not (message.updated? and updated? and updated > message.updated)
+            # create or update
+            if not message.attachments?
+                message.attachments = []
+            if not message.date?
+                message.date = new Date().toISOString()
+            if not message.createdAt?
+                message.createdAt = message.date
+            # Add messageID to every attachment
 
-        message.hasAttachments = message.attachments.length > 0
-        message.attachments = message.attachments.map (file) ->
-            Immutable.Map file
-        message.attachments = Immutable.Vector.from message.attachments
+            message.hasAttachments = message.attachments.length > 0
+            message.attachments = message.attachments.map (file) ->
+                Immutable.Map file
+            message.attachments = Immutable.Vector.from message.attachments
 
-        if not message.flags?
-            message.flags = []
+            if not message.flags?
+                message.flags = []
 
-        # message loaded from fixtures for test purpose have a docType
-        # that may cause some troubles
-        delete message.docType
-        message = Immutable.Map message
+            # message loaded from fixtures for test purpose have a docType
+            # that may cause some troubles
+            delete message.docType
 
-        oldmsg = _messages.get message.get('id')
-        _messages = _messages.set message.get('id'), message
-        if diff = computeMailboxDiff(oldmsg, message)
-            AccountStore._applyMailboxDiff message.get('accountID'), diff
+            message.updated = Date.now()
+
+            messageMap = Immutable.Map message
+
+            messageMap.prettyPrint = ->
+                return """
+                    #{message.id} "#{message.from[0].name}" "#{message.subject}"
+                """
+
+            _messages = _messages.set message.id, messageMap
+            if diff = computeMailboxDiff(oldmsg, messageMap)
+                AccountStore._applyMailboxDiff message.accountID, diff
 
     ###
         Defines here the action handlers.

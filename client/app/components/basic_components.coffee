@@ -1,5 +1,6 @@
 {
     div
+    section
     h3
     h4
     ul
@@ -19,9 +20,10 @@
 Container = React.createClass
 
     render: ->
-        div
+        section
             id: @props.id
             key: @props.key
+            className: 'panel'
         ,
             @props.children
 
@@ -255,12 +257,12 @@ Dropdown = React.createClass
                         value
 
         div
-            className: 'btn-group btn-group-sm dropdown pull-left',
+            className: 'dropdown',
                 button
-                    className: 'btn btn-default dropdown-toggle'
+                    className: 'dropdown-toggle'
                     type: 'button'
                     'data-toggle': 'dropdown'
-                    @state.label
+                    "#{@state.label} "
                         span className: 'caret', ''
                 ul className: 'dropdown-menu', role: 'menu',
                     for key, value of @props.values

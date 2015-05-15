@@ -17,12 +17,26 @@ _cachedDisposition = null
 
 module.exports = LayoutActionCreator =
 
-    setDisposition: (type, value) ->
+    setDisposition: (type) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.SET_DISPOSITION
-            value:
-                type: type
-                value: value
+            value: type
+
+    # TODO: use a global method to DRY this 3-ones
+    increasePreviewPanel: (factor = 1) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RESIZE_PREVIEW_PANE
+            value: Math.abs factor
+
+    decreasePreviewPanel: (factor = 1) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RESIZE_PREVIEW_PANE
+            value: -1 * Math.abs factor
+
+    resetPreviewPanel: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.RESIZE_PREVIEW_PANE
+            value: null
 
     toggleFullscreen: ->
         if _cachedDisposition?
@@ -65,14 +79,14 @@ module.exports = LayoutActionCreator =
             autoclose: true
 
     notify: (message, options) ->
-        if not message? or message.trim() is ''
+        if not message? or message.toString().trim() is ''
             # Throw an error to get the stack trace in server logs
             throw new Error 'Empty notification'
         else
             task =
                 id: Date.now()
                 finished: true
-                message: message
+                message: message.toString()
 
             if options?
                 task.autoclose = options.autoclose
@@ -128,11 +142,16 @@ module.exports = LayoutActionCreator =
 
         if not cached
             MessageActionCreator.setFetching true
+            updated = Date.now()
             XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMsg) ->
                 MessageActionCreator.setFetching false
                 if err?
                     LayoutActionCreator.alertError err
                 else
+                    # This prevent to override local updates with older ones from
+                    # server
+                    rawMsg.messages.forEach (msg) ->
+                        msg.updated = updated
                     MessageActionCreator.receiveRawMessages rawMsg
 
     showMessage: (panelInfo, direction) ->
@@ -167,21 +186,16 @@ module.exports = LayoutActionCreator =
         message        = MessageStore.getByID messageID
         if message?
             onMessage message
+        updated = Date.now()
         XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
 
             if err?
                 LayoutActionCreator.alertError err
             else
-                # prevent flashing of message in message list when first
-                # marking as read a new message. If it has been flagged Seen
-                # in local cache but not on server, ignore server value
-                if rawMessages.length is 1
-                    message = MessageStore.getByID rawMessages[0].id
-                    if message? and
-                       rawMessages[0].flags.length is 0 and
-                       message.get('flags').length is 1 and
-                       message.get('flags')[0] is MessageFlags.SEEN
-                        rawMessages[0].flags = MessageFlags.SEEN
+                # This prevent to override local updates with older ones from
+                # server
+                rawMessages.forEach (msg) ->
+                    msg.updated = updated
                 MessageActionCreator.receiveRawMessages rawMessages
                 onMessage rawMessages[0]
 
@@ -223,7 +237,7 @@ module.exports = LayoutActionCreator =
 
     showSettings: (panelInfo, direction) ->
 
-    refreshMessages: ->
+    refreshMessages: (callback) ->
         XHRUtils.refresh true, (err, results) ->
             if err?
                 console.log err
@@ -236,6 +250,8 @@ module.exports = LayoutActionCreator =
                     MessageActionCreator.receiveRawMessages null
                     LayoutActionCreator.notify t('account refreshed'),
                         autoclose: true
+            callback() if callback?
+
 
     toastsShow: ->
         AppDispatcher.handleViewAction
@@ -249,6 +265,19 @@ module.exports = LayoutActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.INTENT_AVAILABLE
             value: availability
+
+    # Drawer
+    drawerShow: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_SHOW
+
+    drawerHide: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_HIDE
+
+    drawerToggle: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DRAWER_TOGGLE
 
 # circular import, require after
 MessageActionCreator = require './message_action_creator'

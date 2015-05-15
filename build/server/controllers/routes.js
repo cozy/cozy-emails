@@ -60,7 +60,8 @@ module.exports = {
     post: [messages.parseSendForm, accounts.fetch, messages.fetchMaybe, messages.send]
   },
   'messages/batchFetch': {
-    get: [messages.batchFetch, messages.batchSend]
+    get: [messages.batchFetch, messages.batchSend],
+    put: [messages.batchFetch, messages.batchSend]
   },
   'messages/batchTrash': {
     put: [messages.batchFetch, accounts.fetch, messages.batchTrash]

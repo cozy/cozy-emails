@@ -16,7 +16,6 @@ module.exports = React.createClass
         conversation         : React.PropTypes.object
         selectedAccountID    : React.PropTypes.string.isRequired
         selectedAccountLogin : React.PropTypes.string.isRequired
-        layout               : React.PropTypes.string.isRequired
         readability          : React.PropTypes.bool.isRequired
         selectedMailboxID    : React.PropTypes.string
         mailboxes            : React.PropTypes.object.isRequired
@@ -51,7 +50,6 @@ module.exports = React.createClass
         # opening a conversation
         setActive = (id) =>
             @props.conversation.map((message, key) =>
-                console.log message.get('id'), id
                 @_activeKey = key if message.get('id') is id
             ).toJS()
 
@@ -114,7 +112,10 @@ module.exports = React.createClass
         ).toJS()
 
         # Starts components rendering
-        section className: 'conversation',
+        section
+            key: 'conversation'
+            className: 'conversation panel'
+            'aria-expanded': true,
 
             header null,
                 @renderToolbar()

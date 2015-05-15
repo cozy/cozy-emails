@@ -1,4 +1,4 @@
-{div, h3, a, i, textarea, form, label, button} = React.DOM
+{div, section, h3, a, i, textarea, form, label, button} = React.DOM
 {span, ul, li, input, img} = React.DOM
 
 classer = React.addons.classSet
@@ -32,7 +32,7 @@ module.exports = Compose = React.createClass
     propTypes:
         selectedAccountID:    React.PropTypes.string.isRequired
         selectedAccountLogin: React.PropTypes.string.isRequired
-        layout:               React.PropTypes.string.isRequired
+        layout:               React.PropTypes.string
         accounts:             React.PropTypes.object.isRequired
         message:              React.PropTypes.object
         action:               React.PropTypes.string
@@ -41,12 +41,14 @@ module.exports = Compose = React.createClass
         settings:             React.PropTypes.object.isRequired
         useIntents:           React.PropTypes.bool.isRequired
 
+    getDefaultProps: ->
+        layout: 'full'
+
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
             not (_.isEqual(nextProps, @props))
 
     render: ->
-
         return unless @props.accounts
 
         onCancel = (e) =>
@@ -77,17 +79,12 @@ module.exports = Compose = React.createClass
             @state.to.length > 0 and
             @state.subject isnt ''
 
-        div id: 'email-compose',
-            if @props.layout isnt 'full'
-                a
-                    onClick: toggleFullscreen,
-                    className: 'expand pull-right clickable',
-                        i className: 'fa fa-arrows-h'
-            else
-                a
-                    onClick: toggleFullscreen,
-                    className: 'close-email pull-right clickable',
-                        i className:'fa fa-compress'
+        section
+            className: classer
+                compose: true
+                panel:   @props.layout is 'full'
+            'aria-expanded': true,
+
             h3
                 'data-message-id': @props.message?.get('id') or ''
                 @state.subject or t 'compose'

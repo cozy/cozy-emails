@@ -12,10 +12,6 @@ messageUtils = require '../utils/message_utils'
 module.exports = React.createClass
     displayName: 'MessageHeader'
 
-    #mixins: [
-        #ParticipantMixin
-    #]
-
     propTypes:
         message: React.PropTypes.object.isRequired
         isDraft: React.PropTypes.bool

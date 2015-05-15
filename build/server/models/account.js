@@ -646,13 +646,14 @@ Account = (function(_super) {
   };
 
   Account.prototype.sendMessage = function(message, callback) {
-    var options, transport;
+    var inReplyTo, options, transport;
     if (this.isTest()) {
       return callback(null, {
         messageId: 66
       });
     }
-    message.inReplyTo = message.inReplyTo.shift();
+    inReplyTo = message.inReplyTo;
+    message.inReplyTo = inReplyTo != null ? inReplyTo.shift() : void 0;
     options = {
       port: this.smtpPort,
       host: this.smtpServer,
@@ -672,7 +673,10 @@ Account = (function(_super) {
       };
     }
     transport = nodemailer.createTransport(options);
-    return transport.sendMail(message, callback);
+    return transport.sendMail(message, function(err, info) {
+      message.inReplyTo = inReplyTo;
+      return callback(err, info);
+    });
   };
 
   Account.prototype.testSMTPConnection = function(callback) {
