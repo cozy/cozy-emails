@@ -55,10 +55,13 @@
                     display inline
 
         // Toggling mode for filter under < 600px
+        [role=presentation]
+            display none
+
         @media(max-width: 37.5em)
-            margin-right
             [role=presentation]
-                cursor pointer
+                display block
+                cursor  pointer
 
             [role=menuitem]
                 display none
@@ -105,6 +108,9 @@
             padding          .65em
             background-color basecolor
             color            white
+
+            &:hover
+                background-color actioncolor
 
     .filters
         [role=menuitem]

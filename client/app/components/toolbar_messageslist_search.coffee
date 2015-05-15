@@ -47,9 +47,6 @@ module.exports = SearchToolbarMessagesList = React.createClass
 
     render: ->
         div role: 'group', className: 'search',
-            i
-                role:      'presentation'
-                className: 'fa fa-search'
             Dropdown
                 value:    @state.type
                 values:   filters
