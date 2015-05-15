@@ -91,7 +91,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass
                 span className: 'btn-label', t 'filters attach'
                 # span className: 'badge', '##'
 
-            DateRangePicker()
+            # DateRangePicker()
 
 
     toggleExpandState: ->
