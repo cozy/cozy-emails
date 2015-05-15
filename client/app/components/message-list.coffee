@@ -363,8 +363,8 @@ MessageItem = React.createClass
                             i className: 'attachments fa fa-paperclip'
                         if  @props.displayConversations and
                             @props.conversationLengths > 1
-                                i className: 'conversation-length fa fa-chevron-right',
-                                    @props.conversationLengths
+                                span className: 'conversation-length',
+                                    "[#{@props.conversationLengths}]"
                     div className: 'preview',
                         text.substr(0, 1024)
 
