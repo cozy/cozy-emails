@@ -1,4 +1,3 @@
-module.exports =
 
       # Application
       "app loading"             : "Loading…"
@@ -245,7 +244,6 @@ module.exports =
       "action undo"                 : "Undo"
       "action undo ok"              : "Action cancelled"
       "action undo ko"              : "Unable to undo action"
-      "message contact creation"    : "Do you want to create a contact for %{contact}?"
       "message action sent ok"      : "Message sent"
       "message action sent ko"      : "Error sending message: "
       "message action draft ok"     : "Message saved"
@@ -392,6 +390,7 @@ module.exports =
       "contact form placeholder" : "contact name"
       "contact create success"   : "%{contact} has been added to your contacts"
       "contact create error"     : "Error adding to your contacts : {error}"
+      "message contact creation"    : "Do you want to create a contact for %{contact}?"
 
       # GMail security
       "gmail security tile": "About Gmail security"
@@ -440,7 +439,7 @@ module.exports =
       'filters unseen': 'unread'
       'filters flagged': 'stared'
       'filters attach': 'attachments'
-      'filters search placeholder': 'search terms'
+      'filters search placeholder': 'Search...'
       'daterangepicker placeholder': 'by date'
       'daterangepicker presets yesterday': 'yesterday'
       'daterangepicker presets last week': 'last week'
