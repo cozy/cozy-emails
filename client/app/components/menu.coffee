@@ -137,14 +137,6 @@ module.exports = Menu = React.createClass
                         i className: 'fa fa-plus'
                         span className: 'item-label', t 'menu account new'
 
-                # This component doesn't make sense if there is no account. There is
-                # always a selected account if there is an account.
-                if @props.selectedAccount?
-                    RefreshIndicator
-                        refreshes: @props.refreshes
-                        mailboxes: @props.selectedAccount.get('mailboxes')
-                        selectedMailboxID: @props.selectedMailboxID
-
                 button
                     role: 'menuitem'
                     className: classer
