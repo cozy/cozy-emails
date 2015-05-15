@@ -659,7 +659,9 @@ module.exports = LayoutActionCreator = {
           });
         }
       }
-      return callback();
+      if (callback != null) {
+        return callback();
+      }
     });
   },
   toastsShow: function() {
@@ -6148,22 +6150,29 @@ module.exports = React.createClass({
     };
   },
   render: function() {
-    return span({
-      className: 'menu-item trigger-refresh-action'
-    }, !this.state.isRefreshing ? button({
-      className: '',
-      type: 'button',
-      disabled: null,
-      title: t("menu refresh label"),
-      onClick: this.refresh
-    }, span({
-      className: 'fa fa-refresh'
-    }), span(null, t("menu refresh label"))) : [
-      Spinner({
-        key: 'spinner',
-        white: true
-      }), t("menu refreshing")
-    ]);
+    if (!this.state.isRefreshing) {
+      return button({
+        className: 'btn',
+        type: 'button',
+        role: 'menuitem',
+        disabled: null,
+        title: t("menu refresh label"),
+        onClick: this.refresh
+      }, span({
+        className: 'fa fa-refresh'
+      }));
+    } else {
+      return button({
+        className: 'btn',
+        type: 'button',
+        role: 'menuitem',
+        disabled: true,
+        title: t("menu refreshing"),
+        onClick: this.refresh
+      }, span({
+        className: 'fa fa-refresh fa-spin'
+      }));
+    }
   },
   refresh: function(event) {
     this.setState({
@@ -6559,6 +6568,14 @@ MessageItem = React.createClass({
       onDoubleClick: this.onMessageDblClick,
       ref: 'target'
     }, div({
+      className: 'checkbox-wrapper'
+    }, input({
+      ref: 'select',
+      className: 'select select-target',
+      type: 'checkbox',
+      checked: this.props.selected,
+      onChange: this.onSelect
+    })), div({
       className: 'markers-wrapper'
     }, (_ref4 = MessageFlags.SEEN, __indexOf.call(flags, _ref4) >= 0) ? i({
       className: 'fa fa-circle-thin'
@@ -6568,13 +6585,7 @@ MessageItem = React.createClass({
       className: 'fa fa-star'
     }) : void 0), div({
       className: 'avatar-wrapper select-target'
-    }, input({
-      ref: 'select',
-      className: 'select select-target',
-      type: 'checkbox',
-      checked: this.props.selected,
-      onChange: this.onSelect
-    }), avatar != null ? img({
+    }, avatar != null ? img({
       className: 'avatar',
       src: avatar
     }) : (from = message.get('from')[0], cHash = "" + from.name + " <" + from.address + ">", i({
@@ -6582,7 +6593,7 @@ MessageItem = React.createClass({
       style: {
         'background-color': colorhash(cHash)
       }
-    }, from.name[0]))), div({
+    }, from.name ? from.name[0] : fron.address[0]))), div({
       className: 'metas-wrapper'
     }, div({
       className: 'participants'
@@ -9894,7 +9905,64 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-require.register("libs/flux/store/store", function(exports, require, module) {
+require.register("libs/flux/store/Store", function(exports, require, module) {
+var AppDispatcher, Store,
+  __hasProp = {}.hasOwnProperty,
+  __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
+
+AppDispatcher = require('../../../app_dispatcher');
+
+module.exports = Store = (function(_super) {
+  var _addHandlers, _handlers, _nextUniqID, _processBinding;
+
+  __extends(Store, _super);
+
+  Store.prototype.uniqID = null;
+
+  _nextUniqID = 0;
+
+  _handlers = {};
+
+  _addHandlers = function(type, callback) {
+    if (_handlers[this.uniqID] == null) {
+      _handlers[this.uniqID] = {};
+    }
+    return _handlers[this.uniqID][type] = callback;
+  };
+
+  _processBinding = function() {
+    return this.dispatchToken = AppDispatcher.register((function(_this) {
+      return function(payload) {
+        var callback, type, value, _ref;
+        _ref = payload.action, type = _ref.type, value = _ref.value;
+        if ((callback = _handlers[_this.uniqID][type]) != null) {
+          return callback.call(_this, value);
+        }
+      };
+    })(this));
+  };
+
+  function Store() {
+    Store.__super__.constructor.call(this);
+    this.uniqID = _nextUniqID++;
+    this.__bindHandlers(_addHandlers.bind(this));
+    _processBinding.call(this);
+  }
+
+  Store.prototype.__bindHandlers = function(handle) {
+    var message;
+    if (__DEV__) {
+      message = ("The store " + this.constructor.name + " must define a ") + "`__bindHandlers` method";
+      throw new Error(message);
+    }
+  };
+
+  return Store;
+
+})(EventEmitter);
+});
+
+;require.register("libs/flux/store/store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
