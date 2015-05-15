@@ -317,6 +317,14 @@ MessageItem = React.createClass
                 onDoubleClick:     @onMessageDblClick
                 ref:               'target'
 
+                div className: 'checkbox-wrapper',
+                    input
+                        ref:       'select'
+                        className: 'select select-target',
+                        type:      'checkbox',
+                        checked:   @props.selected,
+                        onChange:  @onSelect
+
                 div className: 'markers-wrapper',
                     if MessageFlags.SEEN in flags
                         i className: 'fa fa-circle-thin'
@@ -326,13 +334,6 @@ MessageItem = React.createClass
                         i className: 'fa fa-star'
 
                 div className: 'avatar-wrapper select-target',
-                    input
-                        ref:       'select'
-                        className: 'select select-target',
-                        type:      'checkbox',
-                        checked:   @props.selected,
-                        onChange:  @onSelect
-
                     if avatar?
                         img className: 'avatar', src: avatar
                     else
@@ -342,7 +343,7 @@ MessageItem = React.createClass
                             className: 'avatar placeholder'
                             style:
                                 'background-color': colorhash(cHash)
-                            from.name[0]
+                            if from.name then from.name[0] else fron.address[0]
 
                 div className: 'metas-wrapper',
                     div className: 'participants',

@@ -21,7 +21,8 @@
     //--------------------------------------------------------------------------
     // Layouts
     [role=toolbar]
-        display       flex
+        position relative    // set root positionning for dropdowns
+        display  flex
 
         & > [role=menuitem]
             padding 0 .75em
@@ -75,6 +76,14 @@
             flex 1
 
 
+    .date-range-picker
+        position static
+
+        .dropdown-menu
+            left      50%
+            transform translateX(-50%)
+
+
     // Styles and colors
     [role=toolbar]
         background-color #f5f5f5
@@ -92,7 +101,7 @@
                 padding-right  .5em
 
         i[role=presentation]
-            padding          .5em
+            padding          .65em
             background-color basecolor
             color            white
 
@@ -252,15 +261,8 @@
                 font-weight bold
 
 
-        // Hover / Edited styles
-        &.edited
-        &:hover
-            .avatar
-                display none
-
-
         // Currently selected message
-        &.active
+        main:not(.full) &.active
             background-color basecolor
 
             a

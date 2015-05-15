@@ -20,28 +20,28 @@ module.exports = React.createClass
 
 
     render: ->
-
-        span className: 'menu-item trigger-refresh-action',
-
-            # Show the button to trigger a refresh if no refresh is occuring.
-            if not @state.isRefreshing
-                button
-                    className: ''
-                    type: 'button'
-                    disabled: null
-                    title: t("menu refresh label")
-                    onClick: @refresh,
-                        span className: 'fa fa-refresh'
-                        span null, t("menu refresh label")
+        # Show the button to trigger a refresh if no refresh is occuring.
+        if not @state.isRefreshing
+            button
+                className: 'btn'
+                type: 'button'
+                role: 'menuitem'
+                disabled: null
+                title: t("menu refresh label")
+                onClick: @refresh,
+                    span className: 'fa fa-refresh'
 
 
-            # Or an indicator of the progress if a refresh is occurring.
-            else
-                [
-                        Spinner key: 'spinner', white: true
-                    ,
-                        t("menu refreshing")
-                ]
+        # Or an indicator of the progress if a refresh is occurring.
+        else
+            button
+                className: 'btn'
+                type: 'button'
+                role: 'menuitem'
+                disabled: true
+                title: t("menu refreshing")
+                onClick: @refresh,
+                    span className: 'fa fa-refresh fa-spin'
 
 
     # Trigger the refresh action.
