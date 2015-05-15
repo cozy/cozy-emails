@@ -237,7 +237,7 @@ module.exports = LayoutActionCreator =
 
     showSettings: (panelInfo, direction) ->
 
-    refreshMessages: ->
+    refreshMessages: (callback) ->
         XHRUtils.refresh true, (err, results) ->
             if err?
                 console.log err
@@ -250,6 +250,8 @@ module.exports = LayoutActionCreator =
                     MessageActionCreator.receiveRawMessages null
                     LayoutActionCreator.notify t('account refreshed'),
                         autoclose: true
+            callback() if callback?
+
 
     toastsShow: ->
         AppDispatcher.handleViewAction

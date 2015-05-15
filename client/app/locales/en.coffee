@@ -57,11 +57,7 @@ module.exports =
       "menu toggle"             : "Toggle Menu"
 
       "menu refresh label"      : "Refresh"
-      "menu refresh initializing": "Initializing..."
-      "menu refresh cleaning"   : "Cleaning..."
-      "menu refresh waiting"    : "Waiting for server..."
-      "menu refresh indicator"  : "%{account}: %{mailbox} (%{progress}%)"
-      "menu last refresh"       : "Last refresh on %{date}."
+      "menu refreshing"         : "Refreshing..."
 
       # List
       "list empty"              : "No email in this box."
