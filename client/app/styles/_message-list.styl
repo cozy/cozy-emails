@@ -4,6 +4,14 @@
   -- Message list bar internal layout and styles
 */
 
+// Temporary limit preview due to box model / flexbox issues
+.messages-list .preview
+    max-width 30vw
+
+.full .messages-list .preview
+    max-width 85vw
+
+
 .messages-list
     display          flex
     flex-direction   column
