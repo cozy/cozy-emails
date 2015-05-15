@@ -67,6 +67,7 @@ module.exports = MessageList = React.createClass
 
             # Toolbar
             ToolbarMessagesList
+                settings:             @props.settings
                 accountID:            @props.accountID
                 mailboxID:            @props.mailboxID
                 mailboxes:            @props.mailboxes

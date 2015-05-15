@@ -11,6 +11,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
     displayName: 'ActionsToolbarMessagesList'
 
     propTypes:
+        settings:             React.PropTypes.object.isRequired
         mailboxID:            React.PropTypes.string.isRequired
         mailboxes:            React.PropTypes.object.isRequired
         messages:             React.PropTypes.object.isRequired
