@@ -128,7 +128,7 @@ module.exports = MessageList = React.createClass
                                     ref: 'nextPage',
                                     t 'list next page'
                     else
-                        p ref: 'listEnd', t 'list end'
+                        p ref: 'listEnd', ''
 
     toggleEdited: ->
         if @state.edited
