@@ -5788,14 +5788,14 @@ module.exports = Menu = React.createClass({
     return aside({
       role: 'menubar',
       'aria-expanded': this.state.isDrawerExpanded
-    }, modal, a({
+    }, modal, this.props.accounts.length ? a({
       href: composeUrl,
-      className: 'menu-item compose-action btn btn-cozy-contrast btn-cozy'
+      className: 'compose-action btn btn-cozy-contrast btn-cozy'
     }, i({
       className: 'fa fa-pencil'
     }), span({
       className: 'item-label'
-    }, " " + (t('menu compose')))), nav({
+    }, " " + (t('menu compose')))) : void 0, nav({
       className: 'mainmenu'
     }, this.props.accounts.length ? this.props.accounts.map((function(_this) {
       return function(account, key) {
@@ -5811,11 +5811,7 @@ module.exports = Menu = React.createClass({
       className: 'fa fa-plus'
     }), span({
       className: 'item-label'
-    }, t('menu account new'))), this.props.selectedAccount != null ? RefreshIndicator({
-      refreshes: this.props.refreshes,
-      mailboxes: this.props.selectedAccount.get('mailboxes'),
-      selectedMailboxID: this.props.selectedMailboxID
-    }) : void 0, button({
+    }, t('menu account new'))), button({
       role: 'menuitem',
       className: classer({
         btn: true,
@@ -5927,16 +5923,16 @@ module.exports = Menu = React.createClass({
     })) : void 0, progress.get('firstImport') ? ThinProgress({
       done: progress.get('done'),
       total: progress.get('total')
-    }) : void 0) : nbUnread > 0 ? span({
-      className: 'badge'
-    }, nbUnread) : void 0), isSelected ? a({
+    }) : void 0) : void 0), isSelected ? a({
       href: configMailboxUrl,
       className: 'mailbox-config'
     }, i({
       className: 'fa fa-cog',
       'aria-describedby': Tooltips.ACCOUNT_PARAMETERS,
       'data-tooltip-direction': 'right'
-    })) : void 0), isSelected ? ul({
+    })) : void 0, nbUnread > 0 && !progress ? span({
+      className: 'badge'
+    }, nbUnread) : void 0), isSelected ? ul({
       role: 'group',
       className: 'list-unstyled mailbox-list'
     }, mailboxes != null ? mailboxes.map((function(_this) {
@@ -6044,9 +6040,7 @@ MenuMailboxItem = React.createClass({
       key: this.props.key
     }, i({
       className: 'fa ' + mailboxIcon
-    }), !progress && nbUnread && nbUnread > 0 ? span({
-      className: 'badge'
-    }, nbUnread) : void 0, span({
+    }), span({
       className: 'item-label'
     }, "" + (this.props.mailbox.get('label'))), progress && progress.get('firstImport') ? ThinProgress({
       done: progress.get('done'),
@@ -6062,7 +6056,9 @@ MenuMailboxItem = React.createClass({
       onClick: this.expungeMailbox
     }, span({
       className: 'fa fa-recycle'
-    })) : void 0);
+    })) : void 0, !progress && nbUnread && nbUnread > 0 ? span({
+      className: 'badge'
+    }, nbUnread) : void 0);
   },
   onDragEnter: function(e) {
     if (!this.state.target) {
@@ -6289,6 +6285,7 @@ module.exports = MessageList = React.createClass({
       className: 'messages-list panel',
       'aria-expanded': true
     }, ToolbarMessagesList({
+      settings: this.props.settings,
       accountID: this.props.accountID,
       mailboxID: this.props.mailboxID,
       mailboxes: this.props.mailboxes,
@@ -6346,7 +6343,7 @@ module.exports = MessageList = React.createClass({
       ref: 'nextPage'
     }, t('list next page'))) : p({
       ref: 'listEnd'
-    }, t('list end'))));
+    }, '')));
   },
   toggleEdited: function() {
     if (this.state.edited) {
@@ -6575,16 +6572,16 @@ MessageItem = React.createClass({
       onDoubleClick: this.onMessageDblClick,
       ref: 'target'
     }, div({
-      className: 'checkbox-wrapper'
-    }, input({
-      ref: 'select',
-      className: 'select select-target',
-      type: 'checkbox',
-      checked: this.props.selected,
-      onChange: this.onSelect
-    })), div({
       className: 'markers-wrapper'
-    }, (_ref4 = MessageFlags.SEEN, __indexOf.call(flags, _ref4) >= 0) ? i({
+    }, i({
+      className: classer({
+        select: true,
+        fa: true,
+        'fa-check-square-o': this.props.selected,
+        'fa-square-o': !this.props.selected
+      }),
+      onClick: this.onSelect
+    }), (_ref4 = MessageFlags.SEEN, __indexOf.call(flags, _ref4) >= 0) ? i({
       className: 'fa fa-circle-thin'
     }) : i({
       className: 'fa fa-circle'
@@ -6612,9 +6609,9 @@ MessageItem = React.createClass({
       className: 'extras'
     }, message.get('hasAttachments') ? i({
       className: 'attachments fa fa-paperclip'
-    }) : void 0, this.props.displayConversations && this.props.conversationLengths > 1 ? i({
-      className: 'conversation-length fa fa-chevron-right'
-    }, this.props.conversationLengths) : void 0), div({
+    }) : void 0, this.props.displayConversations && this.props.conversationLengths > 1 ? span({
+      className: 'conversation-length'
+    }, "[" + this.props.conversationLengths + "]") : void 0), div({
       className: 'preview'
     }, text.substr(0, 1024)))));
   },
@@ -8711,6 +8708,7 @@ LayoutActionCreator = require('../actions/layout_action_creator');
 module.exports = ToolbarMessagesList = React.createClass({
   displayName: 'ToolbarMessagesList',
   propTypes: {
+    settings: React.PropTypes.object.isRequired,
     accountID: React.PropTypes.string.isRequired,
     mailboxID: React.PropTypes.string.isRequired,
     mailboxes: React.PropTypes.object.isRequired,
@@ -8741,6 +8739,7 @@ module.exports = ToolbarMessagesList = React.createClass({
         'fa-check-square-o': this.props.edited
       })
     })), this.props.edited ? ActionsToolbarMessagesList({
+      settings: this.props.settings,
       mailboxID: this.props.mailboxID,
       mailboxes: this.props.mailboxes,
       messages: this.props.messages,
@@ -8773,6 +8772,7 @@ MessageActionCreator = require('../actions/message_action_creator');
 module.exports = ActionsToolbarMessagesList = React.createClass({
   displayName: 'ActionsToolbarMessagesList',
   propTypes: {
+    settings: React.PropTypes.object.isRequired,
     mailboxID: React.PropTypes.string.isRequired,
     mailboxes: React.PropTypes.object.isRequired,
     messages: React.PropTypes.object.isRequired,
@@ -8994,7 +8994,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
       className: 'fa fa-paperclip'
     }), span({
       className: 'btn-label'
-    }, t('filters attach'))), DateRangePicker());
+    }, t('filters attach'))));
   },
   toggleExpandState: function() {
     return this.setState({
@@ -9062,10 +9062,7 @@ module.exports = SearchToolbarMessagesList = React.createClass({
     return div({
       role: 'group',
       className: 'search'
-    }, i({
-      role: 'presentation',
-      className: 'fa fa-search'
-    }), Dropdown({
+    }, Dropdown({
       value: this.state.type,
       values: filters,
       onChange: this.onTypeChange
@@ -10626,7 +10623,7 @@ module.exports = {
 });
 
 ;require.register("locales/en", function(exports, require, module) {
-module.exports = {
+({
   "app loading": "Loading…",
   "app back": "Back",
   "app cancel": "Cancel",
@@ -10843,7 +10840,6 @@ module.exports = {
   "action undo": "Undo",
   "action undo ok": "Action cancelled",
   "action undo ko": "Unable to undo action",
-  "message contact creation": "Do you want to create a contact for %{contact}?",
   "message action sent ok": "Message sent",
   "message action sent ko": "Error sending message: ",
   "message action draft ok": "Message saved",
@@ -10937,6 +10933,7 @@ module.exports = {
   "contact form placeholder": "contact name",
   "contact create success": "%{contact} has been added to your contacts",
   "contact create error": "Error adding to your contacts : {error}",
+  "message contact creation": "Do you want to create a contact for %{contact}?",
   "gmail security tile": "About Gmail security",
   "gmail security body": "Gmail considers connection using username and password not safe.\nPlease click on the following link, make sure\nyou are connected with your %{login} account and enable access for\nless secure apps.",
   "gmail security link": "Enable access for less secure apps.",
@@ -10968,12 +10965,12 @@ module.exports = {
   'filters unseen': 'unread',
   'filters flagged': 'stared',
   'filters attach': 'attachments',
-  'filters search placeholder': 'search terms',
+  'filters search placeholder': 'Search...',
   'daterangepicker placeholder': 'by date',
   'daterangepicker presets yesterday': 'yesterday',
   'daterangepicker presets last week': 'last week',
   'daterangepicker presets last month': 'last month'
-};
+});
 });
 
 ;require.register("locales/fr", function(exports, require, module) {
@@ -11286,6 +11283,7 @@ module.exports = {
   "contact form placeholder": "Nom",
   "contact create success": "%{contact} a été ajouté(e) à vos contacts",
   "contact create error": "L'ajout à votre carnet d'adresses a échoué : {error}",
+  "message contact creation": "Voulez vous ajouter %{contact} à votre carnet d'adresse ?",
   "gmail security tile": "Sécurité Gmail",
   "gmail security body": "Gmail considère les connexions par nom d'utilisateur et mot de passe\ncomme non sécurisées. Veuillez cliquer sur le lien ci-dessous, assurez-vous\nd'être connecté avec le compte %{login} et activez l'accès\npour les applications moins sécurisées.",
   "gmail security link": "Activer l'accès pour les applications moins sécurisées",
