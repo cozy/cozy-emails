@@ -195,12 +195,10 @@ _fixCurrentMessage = (target) ->
     currentMessage = MessageStore.getCurrentID() or 'not-null'
     conversationIDs = target.conversationIDs or [target.conversationID]
     currentConversation = MessageStore.getCurrentConversationID() or 'not-null'
-    if currentMessage in messageIDs
-        next = MessageStore.getNextOrPrevious false
-        # MessageActionCreator.setCurrent next.get('id'), true
-        window.cozyMails.messageDisplay next, false
-    else if currentConversation in conversationIDs
-        next = MessageStore.getNextOrPrevious true
+    isConv = currentMessage not in messageIDs
+    isConv = true
+    next = MessageStore.getNextOrPrevious isConv
+    if next?
         # MessageActionCreator.setCurrent next.get('id'), true
         window.cozyMails.messageDisplay next, false
 
@@ -260,6 +258,8 @@ _localMove = (target, from, to) ->
 
             updated.push message.set('mailboxIDs', newMailboxIds).toJS()
 
+    _fixCurrentMessage target
+
     # immediately apply change to refresh UI
     # Update datastore
     AppDispatcher.handleViewAction
@@ -270,8 +270,6 @@ _localMove = (target, from, to) ->
     AppDispatcher.handleViewAction
         type: ActionTypes.LAST_ACTION
         value: {actions}
-
-    _fixCurrentMessage target
 
     return updated
 
@@ -315,6 +313,8 @@ _localDelete = (target) ->
             newMailboxIds[trashMailbox] = -1
             updated.push(message.set('mailboxIDs', newMailboxIds).toJS())
 
+    _fixCurrentMessage target
+
     # immediately apply change to refresh UI
     # Update datastore
     AppDispatcher.handleViewAction
@@ -325,7 +325,5 @@ _localDelete = (target) ->
     AppDispatcher.handleViewAction
         type: ActionTypes.LAST_ACTION
         value: {actions}
-
-    _fixCurrentMessage target
 
     return updated
