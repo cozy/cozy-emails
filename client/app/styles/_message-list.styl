@@ -227,10 +227,26 @@
                 flex 1 0 70%
 
             .preview
-                order    5
-                flex     1 0 100%
-                height   1.4em
-                overflow hidden
+                order        5
+                flex         1 0 100%
+                // This is the most tricky and weird way I have found to bypass
+                // flexbox calculation for internal sizes and permit an overflow
+                // rendering. It's based on the padded-top responsive images
+                // trick.
+                height       1.6em
+                white-space  nowrap
+                position     relative
+                max-width    0
+                padding-left 100%
+
+                p
+                    position      absolute
+                    left          0
+                    width         100%
+                    margin        0
+                    overflow      hidden
+                    text-overflow ellipsis
+
 
         // Styles
         .wrapper

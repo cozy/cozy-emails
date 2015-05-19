@@ -367,7 +367,7 @@ MessageItem = React.createClass
                                 span className: 'conversation-length',
                                     "[#{@props.conversationLengths}]"
                     div className: 'preview',
-                        text.substr(0, 1024)
+                        p null, text.substr(0, 1024)
 
     _doCheck: ->
         # please don't ask me why this **** react needs this
