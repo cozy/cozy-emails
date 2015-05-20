@@ -13,7 +13,7 @@ module.exports = React.createClass
 
 
     getInitialState: ->
-        showDetails:      false
+        showDetails: false
 
 
     toggleDetails: ->

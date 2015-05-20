@@ -1,12 +1,10 @@
-{div, span, ul, li, table, tbody, tr, td, img, a, i} = React.DOM
+{div, span, i} = React.DOM
+{MessageFlags} = require '../constants/app_constants'
 
-AttachmentPreview = require './attachement_preview'
-PopupMessageDetails = require './popup_message_details'
-ParticipantMixin = require '../mixins/participant_mixin'
-ContactLabel = require './contact_label'
-messageUtils = require '../utils/message_utils'
-
-{MessageFlags, Tooltips} = require '../constants/app_constants'
+PopupMessageDetails     = require './popup_message_details'
+PopupMessageAttachments = require './popup_message_attachments'
+ParticipantMixin        = require '../mixins/participant_mixin'
+messageUtils            = require '../utils/message_utils'
 
 
 module.exports = React.createClass
@@ -22,11 +20,6 @@ module.exports = React.createClass
     ]
 
 
-    getInitialState: ->
-        showDetails: false
-        showAttachements: false
-
-
     render: ->
         avatar = messageUtils.getAvatar @props.message
 
@@ -40,7 +33,8 @@ module.exports = React.createClass
                 @renderAddress 'cc'
                 div className: 'metas indicators',
                     if @props.message.get('attachments').length
-                        @renderAttachementsIndicator()
+                        PopupMessageAttachments
+                            message: @props.message
                     if MessageFlags.FLAGGED in @props.message.get('flags')
                         i className: 'fa fa-star'
                     if @props.isDraft
@@ -66,30 +60,3 @@ module.exports = React.createClass
                     span null,
                         t "mail #{field}"
                 @formatUsers(users)...
-
-
-    renderAttachementsIndicator: ->
-        attachments = @props.message.get('attachments')?.toJS() or []
-
-        div
-            className: 'attachments'
-            'aria-expanded': @state.showAttachements
-            onClick: (event) -> event.stopPropagation()
-            i
-                className: 'btn fa fa-paperclip fa-flip-horizontal'
-                onClick: @toggleAttachments
-                'aria-describedby': Tooltips.OPEN_ATTACHMENTS
-                'data-tooltip-direction': 'left'
-
-            div className: 'popup', 'aria-hidden': not @state.showAttachements,
-                ul className: null,
-                    for file in attachments
-                        AttachmentPreview
-                            ref: 'attachmentPreview'
-                            file: file
-                            key: file.checksum
-                            preview: false
-
-
-    toggleAttachments: ->
-        @setState showAttachements: not @state.showAttachements
