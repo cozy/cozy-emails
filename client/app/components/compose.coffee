@@ -564,14 +564,6 @@ ComposeEditor = React.createClass
                                 className:'fa fa-image'
                                 'aria-describedby': Tooltips.COMPOSE_IMAGE
                                 'data-tooltip-direction': 'top'
-                    # @TODO Remove this Mock code once Web intents are really plugged
-                    button
-                        className: "btn btn-default"
-                        onClick: @choosePhotoMock,
-                            span
-                                className:'fa fa-puzzle-piece'
-                                'aria-describedby': Tooltips.COMPOSE_MOCK
-                                'data-tooltip-direction': 'top'
             if @props.composeInHTML
                 div
                     className: "form-control rt-editor #{classFolded} #{classTarget}",
@@ -855,17 +847,6 @@ ComposeEditor = React.createClass
         window.intentManager.send('nameSpace', intent, timeout)
             .then @choosePhoto_answer, (error) ->
                 console.log 'response in error : ', error
-
-
-    # @TODO Remove this Mock code once Web intents are really plugged
-    choosePhotoMock: (e) ->
-        e.preventDefault()
-        message =
-            data:
-                newPhotoChosen: true
-                name: 'mockPhoto.gif'
-                dataUrl: 'data:image/gif;base64,R0lGOD lhCwAOAMQfAP////7+/vj4+Hh4eHd3d/v7+/Dw8HV1dfLy8ubm5vX19e3t7fr 6+nl5edra2nZ2dnx8fMHBwYODg/b29np6eujo6JGRkeHh4eTk5LCwsN3d3dfX 13Jycp2dnevr6////yH5BAEAAB8ALAAAAAALAA4AAAVq4NFw1DNAX/o9imAsB tKpxKRd1+YEWUoIiUoiEWEAApIDMLGoRCyWiKThenkwDgeGMiggDLEXQkDoTh CKNLpQDgjeAsY7MHgECgx8YR8oHwNHfwADBACGh4EDA4iGAYAEBAcQIg0Dk gcEIQA7'
-        @choosePhoto_answer message
 
 
     choosePhoto_answer : (message) ->
