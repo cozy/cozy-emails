@@ -53,9 +53,8 @@
     "opn": "1.0.1"
   },
   "scripts": {
-    "test": "npm run test:server && npm run test:client",
+    "test": "npm run test:server",
     "test:server": "mocha tests/index.coffee --bail --reporter spec --compilers coffee:coffee-script/register --colors",
-    "test:client": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
     "test:build": "USEJS=true npm run test:server",
     "fixtures": "npm run fixtures:generate && npm run fixtures:loader && npm run fixtures:load",
     "fixtures:generate": "coffee tests/fixtures/generator.coffee 1000",
