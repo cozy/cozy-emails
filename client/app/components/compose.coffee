@@ -253,7 +253,15 @@ module.exports = Compose = React.createClass
         #    conversationID and save the draft
         #  - if no, delete the draft
         if @state.isDraft and @state.id?
-            if not window.confirm(t 'compose confirm keep draft')
+            if @state.composeInHTML
+                newContent = MessageUtils.cleanReplyText(@state.html).replace /\s/gim, ''
+                oldContent = MessageUtils.cleanReplyText(@state.initHtml).replace /\s/gim, ''
+                updated = newContent isnt oldContent
+            else
+                updated = @state.text isnt @state.initText
+            # if draft has not been updated, deleted without asking confirmation
+            if (@state.isNew and not updated) or
+            not window.confirm(t 'compose confirm keep draft')
                 window.setTimeout =>
                     messageID = @state.id
                     MessageActionCreator.delete {messageID}
@@ -289,12 +297,13 @@ module.exports = Compose = React.createClass
                                 cid = message.conversationID
                                 MessageActionCreator.fetchConversation cid
 
-    getInitialState: (forceDefault) ->
+    getInitialState: ->
 
         # edition of an existing draft
         if message = @props.message
             state =
                 composeInHTML: @props.settings.get 'composeInHTML'
+                isNew: false
             if (not message.get('html')?) and message.get('text')
                 state.conposeInHTML = false
 
@@ -313,6 +322,7 @@ module.exports = Compose = React.createClass
                 @props.settings.get('composeInHTML'),
                 account.signature
             )
+            state.isNew = true
             state.accountID ?= @props.selectedAccountID
             # use another field to prevent the empty conversationID of draft
             # to override the original conversationID
@@ -323,6 +333,10 @@ module.exports = Compose = React.createClass
         state.saving   = false
         state.ccShown  = Array.isArray(state.cc) and state.cc.length > 0
         state.bccShown = Array.isArray(state.bcc) and state.bcc.length > 0
+        # save initial message content, to don't ask confirmation if
+        # it has not been updated
+        state.initHtml = state.html
+        state.initText = state.text
         return state
 
     componentWillReceiveProps: (nextProps) ->
