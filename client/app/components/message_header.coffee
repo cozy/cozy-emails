@@ -38,7 +38,7 @@ module.exports = React.createClass
                 @renderAddress 'from'
                 @renderAddress 'to'
                 @renderAddress 'cc'
-                div className: 'indicators',
+                div className: 'metas indicators',
                     if @props.message.get('attachments').length
                         @renderAttachementsIndicator()
                     if MessageFlags.FLAGGED in @props.message.get('flags')
@@ -47,7 +47,7 @@ module.exports = React.createClass
                         i className: 'fa fa-edit'
                     if @props.isDeleted
                         i className: 'fa fa-trash'
-                div className: 'date',
+                div className: 'metas date',
                     messageUtils.formatDate @props.message.get 'createdAt'
                 PopupMessageDetails
                     message: @props.message

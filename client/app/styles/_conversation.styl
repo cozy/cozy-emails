@@ -162,14 +162,15 @@
                 i
                     padding 0 .2em
 
-            .indicators
-            .date
-                padding-left 10px
+            .indicators i
+                margin-left .5em
 
             .from
                 order 1
             .indicators
-                order 2
+                order       2
+                display     flex
+                align-items center
             .date
                 order 3
             .to
@@ -178,6 +179,9 @@
                 order 6
             .details
                 order 4
+
+            .metas
+                margin-left 1em
 
         .fa-star
             color lightorange
@@ -197,6 +201,7 @@
                 position absolute
                 top 100%
                 right 0
+                min-width 18em
                 padding 0.5em 10px
                 border 1px solid lightgrey
                 border-radius 2px
@@ -217,14 +222,8 @@
             [aria-hidden=true]
                 display none
 
-        .details
-            margin-left 5px
-            .btn
-                padding 0 5px
-                color mediumcolor
-
         .attachments .popup
-            right 5px
+                right .25em !important
 
         .alert-success
         .alert-info
@@ -239,9 +238,6 @@
             background lightgrey
             color grey
             border 0
-
-        i
-            padding-right .75em
 
         .btn-success
         .btn-info
