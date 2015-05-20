@@ -397,13 +397,13 @@ class Mailbox extends cozydb.CozyModel
     #
     # Returns (callback) {Boolean} shouldNotif whether or not new unread mails
     # have been fetched in this fetch
-    imap_fetchMails: (options, callback) ->
+    imap_refreshDeep: (options, callback) ->
         {limitByBox, firstImport} = options
-        log.debug "imap_fetchMails", limitByBox
+        log.debug "imap_refreshDeep", limitByBox
         step = RefreshStep.initial options
 
         @imap_refreshStep step, (err, shouldNotif) =>
-            log.debug "imap_fetchMailsEnd", limitByBox
+            log.debug "imap_refreshDeepEnd", limitByBox
             return callback err if err
             unless limitByBox
                 changes = lastSync: new Date().toISOString()

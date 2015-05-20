@@ -471,7 +471,7 @@ class Account extends cozydb.CozyModel
 
             async.eachSeries toFetch, (box, cb) ->
                 boxOptions = {limitByBox, firstImport}
-                box.imap_fetchMails boxOptions, (err, shouldNotif) ->
+                box.imap_refreshDeep boxOptions, (err, shouldNotif) ->
                     # @TODO : Figure out how to distinguish a mailbox that
                     # is not selectable but not marked as such. In the meantime
                     # dont pop the error to the client
