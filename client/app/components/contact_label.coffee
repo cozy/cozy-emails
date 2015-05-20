@@ -25,7 +25,6 @@ module.exports = ContactLabel = React.createClass
     # exists, else it displays it as a clickable span than allows to create
     # a contact object in the Cozy for this contact.
     render: ->
-
         if @props.contact?
 
             contactModel = ContactStore.getByAddress @props.contact.address
