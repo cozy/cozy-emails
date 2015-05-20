@@ -2100,21 +2100,25 @@ module.exports = AccountConfigMailboxes = React.createClass({
         allowUndefined: true,
         mailboxes: this.state.mailboxesFlat,
         selectedMailboxID: this.state[box].value,
-        onChange: this.onMailboxChange
+        onChange: (function(_this) {
+          return function(mailbox) {
+            return _this.onMailboxChange(mailbox, box);
+          };
+        })(this)
       })));
     }
   },
-  onMailboxChange: (function(_this) {
-    return function(mailbox) {
-      var newState;
-      _this.state[box].requestChange(mailbox);
-      newState = {};
-      newState[box] = mailbox;
-      return _this.setState(newState, function() {
+  onMailboxChange: function(mailbox, box) {
+    var newState;
+    this.state[box].requestChange(mailbox);
+    newState = {};
+    newState[box] = mailbox;
+    return this.setState(newState, (function(_this) {
+      return function() {
         return _this.props.onSubmit();
-      });
-    };
-  })(this),
+      };
+    })(this));
+  },
   onKeyDown: function(evt) {
     switch (evt.key) {
       case "Enter":
@@ -3569,7 +3573,11 @@ AddressLabel = React.createClass({
       result = span(null, span(null, "" + this.props.contact.name + " "), span({
         className: 'contact-address',
         key: key
-      }, "<" + this.props.contact.address + ">"));
+      }, i({
+        className: 'fa fa-angle-left'
+      }), this.props.contact.address, i({
+        className: 'fa fa-angle-right'
+      })));
     } else if (((_ref2 = this.props.contact.name) != null ? _ref2.length : void 0) > 0) {
       result = span({
         key: "label-" + (meaninglessKey++)
@@ -3671,11 +3679,11 @@ module.exports = {
 });
 
 ;require.register("components/compose", function(exports, require, module) {
-var AccountPicker, Compose, ComposeActions, ComposeEditor, FilePicker, FileUtils, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, Spinner, Tooltips, a, button, classer, div, form, h3, i, img, input, label, li, section, span, textarea, ul, _ref, _ref1, _ref2;
+var AccountPicker, Compose, ComposeActions, ComposeEditor, FilePicker, FileUtils, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, Spinner, Tooltips, a, button, classer, div, form, h3, i, input, label, li, section, span, textarea, ul, _ref, _ref1, _ref2;
 
 _ref = React.DOM, div = _ref.div, section = _ref.section, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label, button = _ref.button;
 
-_ref1 = React.DOM, span = _ref1.span, ul = _ref1.ul, li = _ref1.li, input = _ref1.input, img = _ref1.img;
+_ref1 = React.DOM, span = _ref1.span, ul = _ref1.ul, li = _ref1.li, input = _ref1.input;
 
 classer = React.addons.classSet;
 
@@ -4502,7 +4510,7 @@ ComposeEditor = React.createClass({
     }
   },
   handleFiles: function(e) {
-    var file, files, id, signature, _i, _len;
+    var file, files, id, img, signature, _i, _len;
     e.preventDefault();
     files = e.target.files || e.dataTransfer.files;
     this.props.getPicker().addFiles(files);
@@ -4567,7 +4575,7 @@ ComposeEditor = React.createClass({
     return this.choosePhoto_answer(message);
   },
   choosePhoto_answer: function(message) {
-    var answer, blob, data, editor, picker, signature;
+    var answer, blob, data, editor, img, picker, signature;
     answer = message.data;
     if (answer.newPhotoChosen) {
       data = FileUtils.dataURItoBlob(answer.dataUrl);
@@ -6124,9 +6132,9 @@ MenuMailboxItem = React.createClass({
 });
 
 ;require.register("components/menu_refresh_indicator", function(exports, require, module) {
-var LayoutActionCreator, Spinner, button, img, span, _ref;
+var LayoutActionCreator, Spinner, button, span, _ref;
 
-_ref = React.DOM, span = _ref.span, button = _ref.button, img = _ref.img;
+_ref = React.DOM, span = _ref.span, button = _ref.button;
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
@@ -6712,9 +6720,9 @@ MessageItem = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var Compose, ComposeActions, ContactActionCreator, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, Participants, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, img, li, p, pre, span, ul, _ref, _ref1;
+var Compose, ComposeActions, ContactActionCreator, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, Participants, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, h4, header, i, iframe, li, p, pre, span, ul, _ref, _ref1;
 
-_ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, img = _ref.img, h4 = _ref.h4;
+_ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe, h4 = _ref.h4;
 
 MessageHeader = require("./message_header");
 
@@ -7321,9 +7329,9 @@ MessageContent = React.createClass({
 });
 
 ;require.register("components/message_footer", function(exports, require, module) {
-var AttachmentPreview, MessageUtils, a, div, i, img, li, span, ul, _ref;
+var AttachmentPreview, MessageUtils, a, div, i, li, span, ul, _ref;
 
-_ref = React.DOM, div = _ref.div, span = _ref.span, ul = _ref.ul, li = _ref.li, img = _ref.img, a = _ref.a, i = _ref.i;
+_ref = React.DOM, div = _ref.div, span = _ref.span, ul = _ref.ul, li = _ref.li, a = _ref.a, i = _ref.i;
 
 MessageUtils = require('../utils/message_utils');
 
@@ -7394,11 +7402,11 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message_header", function(exports, require, module) {
-var MessageFlags, ParticipantMixin, PopupMessageAttachments, PopupMessageDetails, div, i, messageUtils, span, _ref,
+var MessageFlags, ParticipantMixin, PopupMessageAttachments, PopupMessageDetails, div, i, img, messageUtils, span, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice;
 
-_ref = React.DOM, div = _ref.div, span = _ref.span, i = _ref.i;
+_ref = React.DOM, div = _ref.div, span = _ref.span, i = _ref.i, img = _ref.img;
 
 MessageFlags = require('../constants/app_constants').MessageFlags;
 
@@ -11259,61 +11267,36 @@ module.exports = {
 /*
     Participant mixin.
  */
-var ContactStore, a, i, span, _ref;
+var ContactLabel, ContactStore, a, i, span, _ref;
 
 _ref = React.DOM, span = _ref.span, a = _ref.a, i = _ref.i;
 
 ContactStore = require('../stores/contact_store');
 
+ContactLabel = require('../components/contact_label');
+
 module.exports = {
   formatUsers: function(users) {
-    var contact, format, items, user, _i, _len;
+    var items, user, _i, _len;
     if (users == null) {
       return;
     }
-    format = function(user) {
-      var items, key;
-      items = [];
-      if (user.name) {
-        key = user.address.replace(/\W/g, '');
-        items.push("" + user.name + " ");
-        items.push(span({
-          className: 'contact-address',
-          key: key
-        }, i({
-          className: 'fa fa-angle-left'
-        }), user.address, i({
-          className: 'fa fa-angle-right'
-        })));
-      } else {
-        items.push(user.address);
-      }
-      return items;
-    };
     if (_.isArray(users)) {
       items = [];
       for (_i = 0, _len = users.length; _i < _len; _i++) {
         user = users[_i];
-        contact = ContactStore.getByAddress(user.address);
-        items.push(contact != null ? a({
-          target: '_blank',
-          href: "/#apps/contacts/contact/" + (contact.get('id')),
-          onClick: function(event) {
-            return event.stopPropagation();
-          }
-        }, format(user)) : span({
-          className: 'participant',
-          onClick: function(event) {
-            return event.stopPropagation();
-          }
-        }, format(user)));
+        items.push(ContactLabel({
+          contact: user
+        }));
         if (user !== _.last(users)) {
           items.push(", ");
         }
       }
       return items;
     } else {
-      return format(users);
+      return ContactLabel({
+        contact: users
+      });
     }
   }
 };
