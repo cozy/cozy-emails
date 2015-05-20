@@ -149,7 +149,12 @@ module.exports = MessageList = React.createClass
             @setState allSelected: true, edited: true, selected: selected
 
     _loadNext: ->
-        if @refs.nextPage? and DomUtils.isVisible(@refs.nextPage.getDOMNode())
+        # load next message if last one is displayed (useful when navigating
+        # with keyboard)
+        lastMessage = @refs.listBody?.getDOMNode().lastElementChild
+        if @refs.nextPage? and
+           lastMessage? and
+           DomUtils.isVisible(lastMessage)
             LayoutActionCreator.showMessageList parameters: @props.query
 
     _handleRealtimeGrowth: ->

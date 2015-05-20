@@ -134,6 +134,10 @@ if (typeof window.plugins !== "object") {
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageNavigate('next');
+          // Check whether we should load next page
+          window.setTimeout(function () {
+            window.rootComponent.refs.messageList._loadNext();
+          }, 2000);
         }
       },
       'right': {
@@ -141,6 +145,10 @@ if (typeof window.plugins !== "object") {
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageNavigate('next', true);
+          // Check whether we should load next page
+          window.setTimeout(function () {
+            window.rootComponent.refs.messageList._loadNext();
+          }, 2000);
         }
       },
       'k': {
