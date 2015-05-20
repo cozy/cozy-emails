@@ -503,7 +503,7 @@ class Mailbox extends cozydb.CozyModel
     #
     # Returns (callback) at completion
     applyFlagsChanges: (flagsChange, reporter, callback) ->
-        log.debug "applyFlagsChange", flagsChange.length
+        log.debug "applyFlagsChanges", flagsChange.length
         async.eachSeries flagsChange, (change, cb) ->
             Message.applyFlagsChanges change.id, change.flags, (err) ->
                 reporter.onError err if err
