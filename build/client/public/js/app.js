@@ -933,16 +933,15 @@ _convertFlagToOp = function(flag) {
 };
 
 _fixCurrentMessage = function(target) {
-  var conversationIDs, currentConversation, currentMessage, messageIDs, next;
+  var conversationIDs, currentConversation, currentMessage, isConv, messageIDs, next;
   messageIDs = target.messageIDs || [target.messageID];
   currentMessage = MessageStore.getCurrentID() || 'not-null';
   conversationIDs = target.conversationIDs || [target.conversationID];
   currentConversation = MessageStore.getCurrentConversationID() || 'not-null';
-  if (__indexOf.call(messageIDs, currentMessage) >= 0) {
-    next = MessageStore.getNextOrPrevious(false);
-    return window.cozyMails.messageDisplay(next, false);
-  } else if (__indexOf.call(conversationIDs, currentConversation) >= 0) {
-    next = MessageStore.getNextOrPrevious(true);
+  isConv = __indexOf.call(messageIDs, currentMessage) < 0;
+  isConv = true;
+  next = MessageStore.getNextOrPrevious(isConv);
+  if (next != null) {
     return window.cozyMails.messageDisplay(next, false);
   }
 };
@@ -1002,6 +1001,7 @@ _localMove = function(target, from, to) {
       updated.push(message.set('mailboxIDs', newMailboxIds).toJS());
     }
   }
+  _fixCurrentMessage(target);
   AppDispatcher.handleViewAction({
     type: ActionTypes.RECEIVE_RAW_MESSAGES,
     value: updated
@@ -1012,7 +1012,6 @@ _localMove = function(target, from, to) {
       actions: actions
     }
   });
-  _fixCurrentMessage(target);
   return updated;
 };
 
@@ -1057,6 +1056,7 @@ _localDelete = function(target) {
       updated.push(message.set('mailboxIDs', newMailboxIds).toJS());
     }
   }
+  _fixCurrentMessage(target);
   AppDispatcher.handleViewAction({
     type: ActionTypes.RECEIVE_RAW_MESSAGES,
     value: updated
@@ -1067,7 +1067,6 @@ _localDelete = function(target) {
       actions: actions
     }
   });
-  _fixCurrentMessage(target);
   return updated;
 };
 });
