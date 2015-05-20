@@ -13,7 +13,7 @@ module.exports = React.createClass
 
 
     getInitialState: ->
-        showDetails:      false
+        showDetails: false
 
 
     toggleDetails: ->
@@ -39,12 +39,11 @@ module.exports = React.createClass
             items.push td key: "cell-#{id}", value
             return tr key: "row-#{id}", items...
 
-
         div
-            className: 'details'
+            className: 'metas details'
             'aria-expanded': @state.showDetails
             onClick: (event) -> event.stopPropagation()
-            i className: 'btn fa fa-caret-down', onClick: @toggleDetails
+            i className: 'fa fa-caret-down', onClick: @toggleDetails
             div className: 'popup', 'aria-hidden': not @state.showDetails,
                 table null,
                     tbody null,

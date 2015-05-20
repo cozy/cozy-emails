@@ -130,13 +130,24 @@
 
             .addresses
                 flex 1 1 55%
-                line-height 1.632653063
-                overflow hidden
-                text-overflow ellipsis
-                white-space nowrap
+                min-height 1.63265em
 
                 + .addresses
-                    display none
+                    // Mask addresses (except from, 1st one) when message isnt
+                    // active (so collpased)
+                    display      none
+                    // Set the "special wrapping trick" for flex-items
+                    padding-left 100%
+                    max-width    0
+                    position     relative
+
+                    .addresses-wrapper
+                        position      absolute
+                        left          0
+                        width         100%
+                        overflow      hidden
+                        text-overflow ellipsis
+                        white-space   nowrap
 
                 a:hover
                     text-decoration none
@@ -145,19 +156,21 @@
                 color darkcolor
 
             .contact-address
-                color mediumcolor
+                color       mediumcolor
+                white-space nowrap
 
                 i
                     padding 0 .2em
 
-            .indicators
-            .date
-                padding-left 10px
+            .indicators i
+                margin-left .5em
 
             .from
                 order 1
             .indicators
-                order 2
+                order       2
+                display     flex
+                align-items center
             .date
                 order 3
             .to
@@ -166,6 +179,9 @@
                 order 6
             .details
                 order 4
+
+            .metas
+                margin-left 1em
 
         .fa-star
             color lightorange
@@ -185,6 +201,7 @@
                 position absolute
                 top 100%
                 right 0
+                min-width 18em
                 padding 0.5em 10px
                 border 1px solid lightgrey
                 border-radius 2px
@@ -197,10 +214,6 @@
                     font-size 1em
                     vertical-align baseline
 
-                td
-                li
-                    white-space nowrap
-
             .label
                 text-align right
                 font-weight normal
@@ -209,14 +222,8 @@
             [aria-hidden=true]
                 display none
 
-        .details
-            margin-left 5px
-            .btn
-                padding 0 5px
-                color mediumcolor
-
         .attachments .popup
-            right 5px
+                right .25em !important
 
         .alert-success
         .alert-info
@@ -231,9 +238,6 @@
             background lightgrey
             color grey
             border 0
-
-        i
-            padding-right .75em
 
         .btn-success
         .btn-info
@@ -294,6 +298,3 @@
         padding-bottom 1em
         border-top 1px solid #CCC
         border-bottom 1px solid #CCC
-
-
-
