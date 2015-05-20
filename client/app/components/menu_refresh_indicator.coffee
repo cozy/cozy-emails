@@ -1,4 +1,4 @@
-{span, button, img} = React.DOM
+{span, button} = React.DOM
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 

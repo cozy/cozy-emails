@@ -1,5 +1,5 @@
 {div, section, h3, a, i, textarea, form, label, button} = React.DOM
-{span, ul, li, input, img} = React.DOM
+{span, ul, li, input} = React.DOM
 
 classer = React.addons.classSet
 

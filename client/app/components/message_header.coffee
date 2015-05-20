@@ -1,4 +1,4 @@
-{div, span, i} = React.DOM
+{div, span, i, img} = React.DOM
 {MessageFlags} = require '../constants/app_constants'
 
 PopupMessageDetails     = require './popup_message_details'
