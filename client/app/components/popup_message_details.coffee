@@ -39,7 +39,7 @@ module.exports = React.createClass
             items.push td key: "cell-#{id}", value
             return tr key: "row-#{id}", items...
 
-
+        console.debug 'foo'
         div
             className: 'details'
             'aria-expanded': @state.showDetails
