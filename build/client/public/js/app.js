@@ -10622,7 +10622,7 @@ module.exports = {
 });
 
 ;require.register("locales/en", function(exports, require, module) {
-({
+module.exports = {
   "app loading": "Loading…",
   "app back": "Back",
   "app cancel": "Cancel",
@@ -10969,7 +10969,7 @@ module.exports = {
   'daterangepicker presets yesterday': 'yesterday',
   'daterangepicker presets last week': 'last week',
   'daterangepicker presets last month': 'last month'
-});
+};
 });
 
 ;require.register("locales/fr", function(exports, require, module) {
