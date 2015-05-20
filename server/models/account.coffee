@@ -32,6 +32,7 @@ class Account extends cozydb.CozyModel
         allMailbox: String          # \All Maibox id
         favorites: [String]         # [String] Maibox id of displayed boxes
         patchIgnored: Boolean       # has patchIgnored been applied ?
+        supportRFC4551: Boolean     # does the account support CONDSTORE ?
         signature: String            # Signature to add at the end of messages
 
     # Public: find an account by id
@@ -378,14 +379,25 @@ class Account extends cozydb.CozyModel
             callback null, rawObject
 
     # Public: get the account's mailboxes in imap
+    # also update the account supportRFC4551 attribute if needed
     #
     # Returns (callback) {Array} of nodeimap mailbox raw {Object}s
     imap_getBoxes: (callback) ->
         log.debug "getBoxes"
+        supportRFC4551 = null
         @doASAP (imap, cb) ->
+            supportRFC4551 = imap.serverSupports 'CONDSTORE'
             imap.getBoxesArray cb
-        , (err, boxes) ->
-            return callback err, boxes or []
+        , (err, boxes) =>
+            return callback err, [] if err
+
+            if supportRFC4551 isnt @supportRFC4551
+                log.debug "UPDATING ACCOUNT #{@id} rfc4551=#{@supportRFC4551}"
+                @updateAttributes {supportRFC4551}, (err) ->
+                    log.warn "fail to update account #{err.stack}" if err
+                    callback null, boxes or []
+            else
+                callback null, boxes or []
 
     # Public: refresh the account's mailboxes
     #
@@ -469,9 +481,11 @@ class Account extends cozydb.CozyModel
                 return if a.label is 'INBOX' then -1
                 else return 1
 
+            supportRFC4551 = account.supportRFC4551
+
             async.eachSeries toFetch, (box, cb) ->
-                boxOptions = {limitByBox, firstImport}
-                box.imap_refreshDeep boxOptions, (err, shouldNotif) ->
+                boxOptions = {limitByBox, firstImport, supportRFC4551}
+                box.imap_refresh boxOptions, (err, shouldNotif) ->
                     # @TODO : Figure out how to distinguish a mailbox that
                     # is not selectable but not marked as such. In the meantime
                     # dont pop the error to the client

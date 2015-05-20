@@ -177,6 +177,61 @@ module.exports = class Message extends cozydb.CozyModel
                 result[uid] = [row.id, row.value]
             callback null, result
 
+    # Public: get messages ids in cozy by their uids
+    #
+    # mailboxID - {String} id of the mailbox to check
+    # uids - {Array} of {String}  uids to fetch
+    #
+    # Returns (callback) an {Object} with uids as keys and
+    #                    couchdbid as values
+    @indexedByUIDs: (mailboxID, uids, callback) ->
+        keys = uids.map (uid) -> ['uid', mailboxID, parseInt(uid)]
+        Message.rawRequest 'byMailboxRequest',
+            reduce: false
+            keys: keys
+            include_docs: true
+        , (err, rows) ->
+            return callback err if err
+            result = {}
+            for row in rows
+                uid = row.key[2]
+                result[uid] = new Message(row.doc)
+            callback null, result
+
+    # Public: get messages in cozy by their uids
+    #
+    # mailboxID - {String} id of the mailbox to check
+    # uids - {Array} of {String}  uids to fetch
+    #
+    # Returns (callback) an {Array} of {Messages}
+    @byUIDs: (mailboxID, uids, callback) ->
+        keys = uids.map (uid) -> ['uid', mailboxID, uid]
+        Message.rawRequest 'byMailboxRequest',
+            reduce: false
+            keys: keys
+            include_docs: true
+        , (err, rows) ->
+            return callback err if err
+            messages = rows.map (row) -> new Message row.doc
+            callback null, messages
+
+
+    # Public: get messages in cozy by their uids
+    #
+    # mailboxID - {String} id of the mailbox to check
+    #
+    # Returns (callback) an {Array} of {String} uids in the cozy
+    @UIDsInCozy: (mailboxID, callback) ->
+        Message.rawRequest 'byMailboxRequest',
+            startkey: ['uid', mailboxID]
+            endkey: ['uid', mailboxID, {}]
+            reduce: true
+            group_level: 3
+         , (err, rows) ->
+            return callback err if err
+            uids = (row.key[2] for row in rows)
+            callback null, uids
+
     # Public: find a message by its message id
     #
     # accountID - id of the account to scan
@@ -575,7 +630,8 @@ module.exports = class Message extends cozydb.CozyModel
     #           :actuallyAdded - {Boolean} always true
     addToMailbox: (box, uid, callback) ->
         log.info "MAIL #{box.path}:#{uid} ADDED TO BOX"
-        mailboxIDs = @mailboxIDs or {}
+        mailboxIDs = {}
+        mailboxIDs[key] = value for key, value of @mailboxIDs or {}
         mailboxIDs[box.id] = uid
         @updateAttributes {mailboxIDs}, (err) ->
             callback err, {shouldNotif: false, actuallyAdded: true}
@@ -599,7 +655,8 @@ module.exports = class Message extends cozydb.CozyModel
         log.debug ".removeFromMailbox", @id, box.label
         callback = noDestroy unless callback
 
-        mailboxIDs = @mailboxIDs
+        mailboxIDs = {}
+        mailboxIDs[key] = value for key, value of @mailboxIDs or {}
         delete mailboxIDs[box.id]
 
         isOrphan = Object.keys(mailboxIDs).length is 0
