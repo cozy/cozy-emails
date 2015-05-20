@@ -668,7 +668,9 @@ class Mailbox extends cozydb.CozyModel
     #
     # uid - uid to fetch
     #
-    # Returns (callback) {Boolean} shouldNotif if the message is not read
+    # Returns (callback) {Object}
+    #        :shouldNotif - {Boolean} if the message was not read
+    #        :actuallyAdded - {Boolean} always true
     Mailbox::imap_fetchOneMail = (uid, callback) ->
         @doLaterWithBox (imap, imapbox, cb) ->
             imap.fetchOneMail uid, cb
@@ -678,7 +680,7 @@ class Mailbox extends cozydb.CozyModel
             shouldNotif = '\\Seen' in mail.flags
             Message.createFromImapMessage mail, this, uid, (err) ->
                 return callback err if err
-                callback null, {shouldNotif}
+                callback null, {shouldNotif: shouldNotif, actuallyAdded: true}
 
     # Public: whether this box messages should be ignored
     # in the account's total (trash or junk)

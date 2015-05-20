@@ -522,7 +522,9 @@ module.exports = class Message extends cozydb.CozyModel
     #           :uid - {String} the uid
     # ignoreInCount - {Boolean} mark this message as ignored in counts.
     #
-    # Returns (callback) {Message} the updated Message
+    # Returns (callback) {Object} information about what happened
+    #           :shouldNotif - {Boolean} whether a new unread message was added
+    #           :actuallyAdded - {Boolean} wheter a message was actually added
     @fetchOrUpdate: (box, msg, callback) ->
         {mid, uid} = msg
         log.debug "fetchOrUpdate", box.id, mid, uid
@@ -547,12 +549,19 @@ module.exports = class Message extends cozydb.CozyModel
     #
     # box - {Mailbox} the mailbox
     #
-    # Returns (callback) {Number} of messages in the search
+    # Returns (callback) {Object} information about what happened
+    #           :shouldNotif - {Boolean} always false
+    #           :actuallyAdded - {Boolean} wheter a message was actually added
     markTwin: (box, callback) ->
         hasTwin = @hasTwin or []
-        return callback null unless box.id in hasTwin
-        hasTwin.push box.id
-        @updateAttributes {hasTwin}, callback
+        if box.id in hasTwin
+            # already noted
+            callback null, {shouldNotif: false, actuallyAdded: false}
+
+        else
+            hasTwin.push box.id
+            @updateAttributes {hasTwin}, (err) ->
+                callback err, {shouldNotif: false, actuallyAdded: true}
 
 
     # Public: add the message to a mailbox in the cozy
@@ -561,12 +570,15 @@ module.exports = class Message extends cozydb.CozyModel
     # uid - {Number} uid of the message in the mailbox
     # callback - Function(err, {Message} updated)
     #
-    # Returns void
+    # Returns (callback) {Object} information about what happened
+    #           :shouldNotif - {Boolean} always false
+    #           :actuallyAdded - {Boolean} always true
     addToMailbox: (box, uid, callback) ->
         log.info "MAIL #{box.path}:#{uid} ADDED TO BOX"
         mailboxIDs = @mailboxIDs or {}
         mailboxIDs[box.id] = uid
-        @updateAttributes {mailboxIDs}, callback
+        @updateAttributes {mailboxIDs}, (err) ->
+            callback err, {shouldNotif: false, actuallyAdded: true}
 
     # Public: helper to check if a message is in a box
     #
