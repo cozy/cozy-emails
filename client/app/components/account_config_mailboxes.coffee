@@ -166,12 +166,12 @@ module.exports = AccountConfigMailboxes = React.createClass
                         allowUndefined: true
                         mailboxes: @state.mailboxesFlat
                         selectedMailboxID: @state[box].value
-                        onChange: @onMailboxChange
+                        onChange: (mailbox) => @onMailboxChange mailbox, box
 
 
     # requestChange is asynchroneous, so we need to also call setState to only
     # call onSubmit once state has really been updated
-    onMailboxChange: (mailbox) =>
+    onMailboxChange: (mailbox, box) ->
         @state[box].requestChange mailbox
         newState = {}
         newState[box] = mailbox
