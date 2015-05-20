@@ -58,8 +58,10 @@ module.exports = React.createClass
         return unless users.length
 
         div
-            className: "addresses #{field}",
+            className: "addresses #{field}"
             key: "address-#{field}",
+
+            div className: 'addresses-wrapper',
                 if field isnt 'from'
                     span null,
                         t "mail #{field}"

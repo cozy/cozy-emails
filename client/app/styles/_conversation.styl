@@ -130,13 +130,24 @@
 
             .addresses
                 flex 1 1 55%
-                line-height 1.632653063
-                overflow hidden
-                text-overflow ellipsis
-                white-space nowrap
+                min-height 1.63265em
 
                 + .addresses
-                    display none
+                    // Mask addresses (except from, 1st one) when message isnt
+                    // active (so collpased)
+                    display      none
+                    // Set the "special wrapping trick" for flex-items
+                    padding-left 100%
+                    max-width    0
+                    position     relative
+
+                    .addresses-wrapper
+                        position      absolute
+                        left          0
+                        width         100%
+                        overflow      hidden
+                        text-overflow ellipsis
+                        white-space   nowrap
 
                 a:hover
                     text-decoration none
