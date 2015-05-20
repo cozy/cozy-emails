@@ -47,24 +47,25 @@ module.exports.main = function(req, res, next) {
 };
 
 module.exports.refresh = function(req, res, next) {
-
-  /*
-  if req.query?.all
-      limitByBox    = null
-      onlyFavorites = false
-  else
-      limitByBox    = CONSTANTS.LIMIT_BY_BOX
-      onlyFavorites = true
-  Account.refreshAllAccounts limitByBox, onlyFavorites, (err) ->
-      log.error "REFRESHING ACCOUNT FAILED", err if err
-      return next err if err
-      res.send refresh: 'done'
-   */
-  return setTimeout(function() {
+  var limitByBox, onlyFavorites, ref;
+  if ((ref = req.query) != null ? ref.all : void 0) {
+    limitByBox = null;
+    onlyFavorites = false;
+  } else {
+    limitByBox = CONSTANTS.LIMIT_BY_BOX;
+    onlyFavorites = true;
+  }
+  return Account.refreshAllAccounts(limitByBox, onlyFavorites, function(err) {
+    if (err) {
+      log.error("REFRESHING ACCOUNT FAILED", err);
+    }
+    if (err) {
+      return next(err);
+    }
     return res.send({
       refresh: 'done'
     });
-  }, 2000);
+  });
 };
 
 module.exports.refreshes = function(req, res, next) {

@@ -6291,6 +6291,7 @@ module.exports = MessageList = React.createClass({
       messages: this.props.messages,
       edited: this.state.edited,
       selected: this.state.selected,
+      allSelected: this.state.allSelected,
       displayConversations: this.props.displayConversations,
       toggleEdited: this.toggleEdited,
       toggleAll: this.toggleAll
@@ -6612,7 +6613,7 @@ MessageItem = React.createClass({
       className: 'conversation-length'
     }, "[" + this.props.conversationLengths + "]") : void 0), div({
       className: 'preview'
-    }, text.substr(0, 1024)))));
+    }, p(null, text.substr(0, 1024))))));
   },
   _doCheck: function() {
     if (this.props.selected) {
@@ -7393,23 +7394,21 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message_header", function(exports, require, module) {
-var AttachmentPreview, ContactLabel, MessageFlags, ParticipantMixin, PopupMessageDetails, Tooltips, a, div, i, img, li, messageUtils, span, table, tbody, td, tr, ul, _ref, _ref1,
+var MessageFlags, ParticipantMixin, PopupMessageAttachments, PopupMessageDetails, div, i, messageUtils, span, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice;
 
-_ref = React.DOM, div = _ref.div, span = _ref.span, ul = _ref.ul, li = _ref.li, table = _ref.table, tbody = _ref.tbody, tr = _ref.tr, td = _ref.td, img = _ref.img, a = _ref.a, i = _ref.i;
+_ref = React.DOM, div = _ref.div, span = _ref.span, i = _ref.i;
 
-AttachmentPreview = require('./attachement_preview');
+MessageFlags = require('../constants/app_constants').MessageFlags;
 
 PopupMessageDetails = require('./popup_message_details');
 
+PopupMessageAttachments = require('./popup_message_attachments');
+
 ParticipantMixin = require('../mixins/participant_mixin');
 
-ContactLabel = require('./contact_label');
-
 messageUtils = require('../utils/message_utils');
-
-_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, Tooltips = _ref1.Tooltips;
 
 module.exports = React.createClass({
   displayName: 'MessageHeader',
@@ -7418,37 +7417,9 @@ module.exports = React.createClass({
     isDraft: React.PropTypes.bool,
     isDeleted: React.PropTypes.bool
   },
-  formatUsers: function(users) {
-    var items, user, _i, _len;
-    if (users == null) {
-      return;
-    }
-    if (_.isArray(users)) {
-      items = [];
-      for (_i = 0, _len = users.length; _i < _len; _i++) {
-        user = users[_i];
-        items.push(ContactLabel({
-          contact: user
-        }));
-        if (user !== _.last(users)) {
-          items.push(", ");
-        }
-      }
-      return items;
-    } else {
-      return ContactLabel({
-        contact: user
-      });
-    }
-  },
-  getInitialState: function() {
-    return {
-      showDetails: false,
-      showAttachements: false
-    };
-  },
+  mixins: [ParticipantMixin],
   render: function() {
-    var avatar, _ref2;
+    var avatar, _ref1;
     avatar = messageUtils.getAvatar(this.props.message);
     return div({
       key: "message-header-" + (this.props.message.get('id'))
@@ -7460,16 +7431,20 @@ module.exports = React.createClass({
     })) : void 0, div({
       className: 'infos'
     }, this.renderAddress('from'), this.renderAddress('to'), this.renderAddress('cc'), div({
-      className: 'indicators'
-    }, this.props.message.get('attachments').length ? this.renderAttachementsIndicator() : void 0, (_ref2 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref2) >= 0) ? i({
+      className: 'metas indicators'
+    }, this.props.message.get('attachments').length ? PopupMessageAttachments({
+      message: this.props.message
+    }) : void 0, (_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
       className: 'fa fa-star'
     }) : void 0, this.props.isDraft ? i({
       className: 'fa fa-edit'
     }) : void 0, this.props.isDeleted ? i({
       className: 'fa fa-trash'
     }) : void 0), div({
-      className: 'date'
-    }, messageUtils.formatDate(this.props.message.get('createdAt'))), this.renderDetailsPopup()));
+      className: 'metas date'
+    }, messageUtils.formatDate(this.props.message.get('createdAt'))), PopupMessageDetails({
+      message: this.props.message
+    })));
   },
   renderAddress: function(field) {
     var users;
@@ -7477,121 +7452,12 @@ module.exports = React.createClass({
     if (!users.length) {
       return;
     }
-    return div.apply(null, [{
+    return div({
       className: "addresses " + field,
       key: "address-" + field
-    }, field !== 'from' ? span(null, t("mail " + field)) : void 0].concat(__slice.call(this.formatUsers(users))));
-  },
-  renderAttachementsIndicator: function() {
-    var attachments, file, _ref2;
-    attachments = ((_ref2 = this.props.message.get('attachments')) != null ? _ref2.toJS() : void 0) || [];
-    return div({
-      className: 'attachments',
-      'aria-expanded': this.state.showAttachements,
-      onClick: function(event) {
-        return event.stopPropagation();
-      }
-    }, i({
-      className: 'btn fa fa-paperclip fa-flip-horizontal',
-      onClick: this.toggleAttachments,
-      'aria-describedby': Tooltips.OPEN_ATTACHMENTS,
-      'data-tooltip-direction': 'left'
-    }), div({
-      className: 'popup',
-      'aria-hidden': !this.state.showAttachements
-    }, ul({
-      className: null
-    }, (function() {
-      var _i, _len, _results;
-      _results = [];
-      for (_i = 0, _len = attachments.length; _i < _len; _i++) {
-        file = attachments[_i];
-        _results.push(AttachmentPreview({
-          ref: 'attachmentPreview',
-          file: file,
-          key: file.checksum,
-          preview: false
-        }));
-      }
-      return _results;
-    })())));
-  },
-  renderDetailsPopup: function() {
-    var cc, dest, from, key, reply, row, to, _ref2;
-    from = this.props.message.get('from')[0];
-    to = this.props.message.get('to');
-    cc = this.props.message.get('cc');
-    reply = (_ref2 = this.props.message.get('reply-to')) != null ? _ref2[0] : void 0;
-    row = function(id, value, label, rowSpan) {
-      var attrs, items;
-      if (label == null) {
-        label = false;
-      }
-      if (rowSpan == null) {
-        rowSpan = false;
-      }
-      items = [];
-      if (label) {
-        attrs = {
-          className: 'label'
-        };
-        if (rowSpan) {
-          attrs.rowSpan = rowSpan;
-        }
-        items.push(td(attrs, t(label)));
-      }
-      items.push(td({
-        key: "cell-" + id
-      }, value));
-      return tr.apply(null, [{
-        key: "row-" + id
-      }].concat(__slice.call(items)));
-    };
-    return div({
-      className: 'details',
-      'aria-expanded': this.state.showDetails,
-      onClick: function(event) {
-        return event.stopPropagation();
-      }
-    }, i({
-      className: 'btn fa fa-caret-down',
-      onClick: this.toggleDetails
-    }), div({
-      className: 'popup',
-      'aria-hidden': !this.state.showDetails
-    }, table(null, tbody(null, row('from', this.formatUsers(from), 'headers from'), to.length ? row('to', this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
-      var _i, _len, _ref3, _results;
-      if (to.length) {
-        _ref3 = to.slice(1);
-        _results = [];
-        for (key = _i = 0, _len = _ref3.length; _i < _len; key = ++_i) {
-          dest = _ref3[key];
-          _results.push(row("destTo" + key, this.formatUsers(dest)));
-        }
-        return _results;
-      }
-    }).call(this), cc.length ? row('cc', this.formatUsers(cc[0]), 'headers cc', cc.length) : void 0, (function() {
-      var _i, _len, _ref3, _results;
-      if (cc.length) {
-        _ref3 = cc.slice(1);
-        _results = [];
-        for (key = _i = 0, _len = _ref3.length; _i < _len; key = ++_i) {
-          dest = _ref3[key];
-          _results.push(row("destCc" + key, this.formatUsers(dest)));
-        }
-        return _results;
-      }
-    }).call(this), reply != null ? row('reply', this.formatUsers(reply), 'headers reply-to') : void 0, row('created', this.props.message.get('createdAt'), 'headers date'), row('subject', this.props.message.get('subject'), 'headers subject')))));
-  },
-  toggleDetails: function() {
-    return this.setState({
-      showDetails: !this.state.showDetails
-    });
-  },
-  toggleAttachments: function() {
-    return this.setState({
-      showAttachements: !this.state.showAttachements
-    });
+    }, div.apply(null, [{
+      className: 'addresses-wrapper'
+    }, field !== 'from' ? span(null, t("mail " + field)) : void 0].concat(__slice.call(this.formatUsers(users)))));
   }
 });
 });
@@ -7793,6 +7659,70 @@ Participants = React.createClass({
 module.exports = Participants;
 });
 
+;require.register("components/popup_message_attachments", function(exports, require, module) {
+var AttachmentPreview, Tooltips, div, i, ul, _ref;
+
+_ref = React.DOM, div = _ref.div, ul = _ref.ul, i = _ref.i;
+
+Tooltips = require('../constants/app_constants').Tooltips;
+
+AttachmentPreview = require('./attachement_preview');
+
+module.exports = React.createClass({
+  displayName: 'MessageAttachmentsPopup',
+  mixins: [OnClickOutside],
+  getInitialState: function() {
+    return {
+      showAttachements: false
+    };
+  },
+  toggleAttachments: function() {
+    return this.setState({
+      showAttachements: !this.state.showAttachements
+    });
+  },
+  handleClickOutside: function() {
+    return this.setState({
+      showAttachements: false
+    });
+  },
+  render: function() {
+    var attachments, file, _ref1;
+    attachments = ((_ref1 = this.props.message.get('attachments')) != null ? _ref1.toJS() : void 0) || [];
+    return div({
+      className: 'attachments',
+      'aria-expanded': this.state.showAttachements,
+      onClick: function(event) {
+        return event.stopPropagation();
+      }
+    }, i({
+      className: 'btn fa fa-paperclip fa-flip-horizontal',
+      onClick: this.toggleAttachments,
+      'aria-describedby': Tooltips.OPEN_ATTACHMENTS,
+      'data-tooltip-direction': 'left'
+    }), div({
+      className: 'popup',
+      'aria-hidden': !this.state.showAttachements
+    }, ul({
+      className: null
+    }, (function() {
+      var _i, _len, _results;
+      _results = [];
+      for (_i = 0, _len = attachments.length; _i < _len; _i++) {
+        file = attachments[_i];
+        _results.push(AttachmentPreview({
+          ref: 'attachmentPreview',
+          file: file,
+          key: file.checksum,
+          preview: false
+        }));
+      }
+      return _results;
+    })())));
+  }
+});
+});
+
 ;require.register("components/popup_message_details", function(exports, require, module) {
 var ParticipantMixin, div, i, table, tbody, td, tr, _ref,
   __slice = [].slice;
@@ -7851,13 +7781,13 @@ module.exports = React.createClass({
       }].concat(__slice.call(items)));
     };
     return div({
-      className: 'details',
+      className: 'metas details',
       'aria-expanded': this.state.showDetails,
       onClick: function(event) {
         return event.stopPropagation();
       }
     }, i({
-      className: 'btn fa fa-caret-down',
+      className: 'fa fa-caret-down',
       onClick: this.toggleDetails
     }), div({
       className: 'popup',
@@ -8714,6 +8644,7 @@ module.exports = ToolbarMessagesList = React.createClass({
     messages: React.PropTypes.object.isRequired,
     edited: React.PropTypes.bool.isRequired,
     selected: React.PropTypes.object.isRequired,
+    allSelected: React.PropTypes.bool.isRequired,
     displayConversations: React.PropTypes.bool.isRequired,
     toggleEdited: React.PropTypes.func.isRequired,
     toggleAll: React.PropTypes.func.isRequired
@@ -8730,12 +8661,13 @@ module.exports = ToolbarMessagesList = React.createClass({
     })), button({
       role: 'menuitem',
       'aria-selected': this.props.edited,
-      onClick: this.props.toggleEdited
+      onClick: this.props.toggleAll
     }, i({
       className: classer({
         fa: true,
         'fa-square-o': !this.props.edited,
-        'fa-check-square-o': this.props.edited
+        'fa-check-square-o': this.props.allSelected,
+        'fa-minus-square-o': this.props.edited && !this.props.allSelected
       })
     })), this.props.edited ? ActionsToolbarMessagesList({
       settings: this.props.settings,
