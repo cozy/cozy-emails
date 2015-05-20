@@ -85,7 +85,9 @@ module.exports = MessageList = React.createClass
                 else
                     p null, @props.emptyListMessage
             else
-                div className: 'main-content',
+                div
+                    className: 'main-content'
+                    ref: 'scrollable',
                     MessageListBody
                         messages: @props.messages
                         settings: @props.settings
@@ -162,7 +164,7 @@ module.exports = MessageList = React.createClass
             return
 
         # listen to scroll events
-        scrollable = @refs.list.getDOMNode().parentNode
+        scrollable = @refs.scrollable.getDOMNode()
         setTimeout =>
             scrollable.removeEventListener 'scroll', @_loadNext
             scrollable.addEventListener 'scroll', @_loadNext
@@ -181,7 +183,7 @@ module.exports = MessageList = React.createClass
         @_handleRealtimeGrowth()
 
     componentWillUnmount: ->
-        scrollable = @refs.list.getDOMNode().parentNode
+        scrollable = @refs.scrollable.getDOMNode()
         scrollable.removeEventListener 'scroll', @_loadNext
         if @_checkNextInterval?
             window.clearInterval @_checkNextInterval
@@ -362,10 +364,10 @@ MessageItem = React.createClass
                     div className: 'extras',
                         if message.get 'hasAttachments'
                             i className: 'attachments fa fa-paperclip'
-                        if  @props.displayConversations and
-                            @props.conversationLengths > 1
-                                span className: 'conversation-length',
-                                    "[#{@props.conversationLengths}]"
+                        if @props.displayConversations and
+                           @props.conversationLengths > 1
+                            span className: 'conversation-length',
+                                "[#{@props.conversationLengths}]"
                     div className: 'preview',
                         text.substr(0, 1024)
 
