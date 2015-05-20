@@ -49,7 +49,6 @@ module.exports.refresh = (req, res, next) ->
     # Experiment: the refresh button is now used to refresh browser's data
     # with server's data, not for an actual imap refresh.
 
-    ###
     if req.query?.all
         limitByBox    = null
         onlyFavorites = false
@@ -60,11 +59,6 @@ module.exports.refresh = (req, res, next) ->
         log.error "REFRESHING ACCOUNT FAILED", err if err
         return next err if err
         res.send refresh: 'done'
-    ###
-
-    setTimeout ->
-        res.send refresh: 'done'
-    , 2000
 
 
 # get a list of all background operations on the server
