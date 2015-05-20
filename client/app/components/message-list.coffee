@@ -74,6 +74,7 @@ module.exports = MessageList = React.createClass
                 messages:             @props.messages
                 edited:               @state.edited
                 selected:             @state.selected
+                allSelected:          @state.allSelected
                 displayConversations: @props.displayConversations
                 toggleEdited:         @toggleEdited
                 toggleAll:            @toggleAll
