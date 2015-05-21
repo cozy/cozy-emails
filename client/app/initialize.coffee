@@ -1,4 +1,44 @@
-# Waits for the DOM to be ready
+# expose an API for performance
+# performance is not defined in phantomJS
+initPerformances = ->
+    referencePoint = 0
+    window.start = ->
+        referencePoint = performance.now() if performance?.now?
+        React.addons.Perf.start()
+    window.stop = ->
+        console.log performance.now() - referencePoint if performance?.now?
+        React.addons.Perf.stop()
+    window.printWasted = ->
+        stop()
+        React.addons.Perf.printWasted()
+    window.printInclusive = ->
+        stop()
+        React.addons.Perf.printInclusive()
+    window.printExclusive = ->
+        stop()
+        React.addons.Perf.printExclusive()
+
+# Init Web Intents
+initIntent = ->
+    IntentManager = require "./utils/intent_manager"
+    window.intentManager = new IntentManager()
+    window.intentManager.send 'nameSpace',
+        type: 'ping'
+        from: 'mails'
+    .then (message) ->
+        LayoutActionCreator.intentAvailability true
+    , (error) ->
+        console.error "Intents not available"
+        LayoutActionCreator.intentAvailability false
+
+# init plugins
+initPlugins = ->
+    PluginUtils = require "./utils/plugin_utils"
+    if not window.settings.plugins?
+        window.settings.plugins = {}
+    PluginUtils.merge window.settings.plugins
+    PluginUtils.init()
+
 # Send client side errors to server
 window.onerror = (msg, url, line, col, error) ->
     console.error msg, url, line, col, error, error?.stack
@@ -21,29 +61,13 @@ window.onerror = (msg, url, line, col, error) ->
         xhr.send JSON.stringify(data)
         window.lastError = exception
 
+# Waits for the DOM to be ready
 window.onload = ->
 
     try
         window.__DEV__ = window.location.hostname is 'localhost'
 
-        # expose an APi for performance
-        # performance is not defined in phantomJS
-        referencePoint = 0
-        window.start = ->
-            referencePoint = performance.now() if performance?.now?
-            React.addons.Perf.start()
-        window.stop = ->
-            console.log performance.now() - referencePoint if performance?.now?
-            React.addons.Perf.stop()
-        window.printWasted = ->
-            stop()
-            React.addons.Perf.printWasted()
-        window.printInclusive = ->
-            stop()
-            React.addons.Perf.printInclusive()
-        window.printExclusive = ->
-            stop()
-            React.addons.Perf.printExclusive()
+        initPerformances()
 
         # expose an API
         window.cozyMails = require './utils/api_utils'
@@ -71,16 +95,7 @@ window.onload = ->
         window.cozyMails.setSetting 'plugins', window.settings.plugins
 
         # Init Web Intents
-        IntentManager = require "./utils/intent_manager"
-        window.intentManager = new IntentManager()
-        window.intentManager.send 'nameSpace',
-            type: 'ping'
-            from: 'mails'
-        .then (message) ->
-            LayoutActionCreator.intentAvailability true
-        , (error) ->
-            console.error "Intents not available"
-            LayoutActionCreator.intentAvailability false
+        initIntent()
 
         # Flux initialization (must be called at the begining)
         AccountStore  = require './stores/account_store'
@@ -124,6 +139,7 @@ window.onload = ->
                     exception: exception
             xhr = new XMLHttpRequest()
             xhr.open 'POST', 'activity', true
-            xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
+            xhr.setRequestHeader "Content-Type",
+                "application/json;charset=UTF-8"
             xhr.send JSON.stringify(data)
             window.lastError = exception
