@@ -183,7 +183,6 @@ module.exports = Application = React.createClass
 
             return MessageList
                 messages:             messages
-                messagesCount:        messagesCount
                 accountID:            accountID
                 mailboxID:            mailboxID
                 messageID:            messageID
@@ -192,12 +191,10 @@ module.exports = Application = React.createClass
                 mailboxes:            @state.mailboxesFlat
                 settings:             @state.settings
                 fetching:             fetching
-                refreshes:            @state.refreshes
                 query:                query
                 isTrash:              isTrash
                 conversationLengths:  conversationLengths
                 emptyListMessage:     emptyListMessage
-                counterMessage:       counterMessage
                 ref:                  'messageList'
                 displayConversations: displayConversations
 
