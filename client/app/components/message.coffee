@@ -1,4 +1,4 @@
-{div, article, header, footer, ul, li, span, i, p, a, button, pre, iframe, img, h4} = React.DOM
+{div, article, header, footer, ul, li, span, i, p, a, button, pre, iframe, h4} = React.DOM
 
 MessageHeader  = require "./message_header"
 MessageFooter  = require "./message_footer"

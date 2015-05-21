@@ -220,7 +220,9 @@ AddressLabel = React.createClass
                     className: 'contact-address'
                     key: key
                     ,
-                        "<#{@props.contact.address}>"
+                        i className: 'fa fa-angle-left'
+                        @props.contact.address
+                        i className: 'fa fa-angle-right'
 
         else if @props.contact.name?.length > 0
             result = span key: "label-#{meaninglessKey++}",
