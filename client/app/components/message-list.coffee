@@ -55,6 +55,20 @@ module.exports = MessageList = React.createClass
             mailboxID: @props.mailboxID
             query:     @props.query
 
+        hasMore = @props.query.pageAfter isnt '-'
+        # This allow to load next messages if needed after we remove messages
+        # from this mailbox by moving or deleting them.
+        # (if we delete all messages, the list is empty and listEmpty displayed)
+        if hasMore
+            afterAction = =>
+                # ugly setTimeout to wait until localDelete occured
+                setTimeout =>
+                    listEnd = @refs.nextPage or @refs.listEnd or @refs.listEmpty
+                    if listEnd? and
+                       DomUtils.isVisible(listEnd.getDOMNode())
+                        LayoutActionCreator.showMessageList parameters: @props.query
+                , 100
+
         nextPage = =>
             LayoutActionCreator.showMessageList parameters: @props.query
 
@@ -78,13 +92,14 @@ module.exports = MessageList = React.createClass
                 displayConversations: @props.displayConversations
                 toggleEdited:         @toggleEdited
                 toggleAll:            @toggleAll
+                afterAction:          afterAction
 
             # Message List
             if @props.messages.count() is 0
                 if @props.fetching
                     p null, t 'list fetching'
                 else
-                    p null, @props.emptyListMessage
+                    p ref: 'listEmpty', @props.emptyListMessage
             else
                 div
                     className: 'main-content'
@@ -120,7 +135,7 @@ module.exports = MessageList = React.createClass
                                     selected: {}
                             @setState newState
 
-                    if @props.query.pageAfter isnt '-'
+                    if hasMore
                         p className: 'text-center list-footer',
                             if @props.fetching
                                 Spinner()
@@ -131,7 +146,7 @@ module.exports = MessageList = React.createClass
                                     ref: 'nextPage',
                                     t 'list next page'
                     else
-                        p ref: 'listEnd', ''
+                        p ref: 'listEnd', t 'list end'
 
     toggleEdited: ->
         if @state.edited
