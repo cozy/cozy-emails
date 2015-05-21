@@ -123,8 +123,9 @@ module.exports = React.createClass
                     'data-message-id': @props.message.get 'id'
                     @props.message.get 'subject'
                 @renderToolbar()
-                button
+                a
                     className: 'clickable btn btn-default fa fa-close'
+                    href: @buildClosePanelUrl 'second'
 
             for glob, index in messages
                 if _.isArray glob
