@@ -63,7 +63,7 @@ module.exports = React.createClass
         url =  @buildUrl urlParams
 
         a
-            className: "btn btn-default fa fa-angle-#{angle}"
+            className: "btn btn-default fa fa-chevron-#{angle}"
             onClick: => @redirect urlParams
             href: url
             'aria-describedby': tooltipID

@@ -118,11 +118,13 @@ module.exports = React.createClass
             'aria-expanded': true,
 
             header null,
-                @renderToolbar()
                 h3
                     className: 'conversation-title'
                     'data-message-id': @props.message.get 'id'
                     @props.message.get 'subject'
+                @renderToolbar()
+                button
+                    className: 'clickable btn btn-default fa fa-close'
 
             for glob, index in messages
                 if _.isArray glob

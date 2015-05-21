@@ -8,23 +8,39 @@
     padding 1em
 
     & > header
-        display flex
+        display       flex
+        align-items   center
+        margin-bottom 1em
+
+        .fa-close
+            order 1
+
+        h3
+            flex 1
+            order 2
 
         nav
-            order 2
+            order 3
 
         .btn-group
             float none
 
-        h3
-            flex 1
+        .btn
+            border           none
+            color            basecolor
+            background-color transparent
+            text-shadow      none
+            box-shadow       none
+
+            &:hover
+                color actioncolor
 
 
     &.enable
         display block
 
     .conversation-title
-        margin 0 0 0.5em 0
+        margin 0
         font 20px/1.4 'Source Sans Pro', sans-serif
         color #444
 
