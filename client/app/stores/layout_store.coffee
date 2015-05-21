@@ -13,6 +13,8 @@ class LayoutStore extends Store
     # TODO: Use a constant for default value?
     _previewSize = 50
 
+    _previewFullscreen = false
+
     _alert =
         level: null
         message: null
@@ -36,7 +38,6 @@ class LayoutStore extends Store
             @emit 'change'
 
         handle ActionTypes.RESIZE_PREVIEW_PANE, (factor) ->
-            console.debug factor
             if factor
                 _previewSize += factor
                 # set limits
@@ -44,6 +45,14 @@ class LayoutStore extends Store
                 _previewSize = 80 if _previewSize > 80
             else
                 _previewSize = 50
+            @emit 'change'
+
+        handle ActionTypes.MINIMIZE_PREVIEW_PANE, ->
+            _previewFullscreen = false
+            @emit 'change'
+
+        handle ActionTypes.MAXIMIZE_PREVIEW_PANE, ->
+            _previewFullscreen = true
             @emit 'change'
 
         handle ActionTypes.DISPLAY_ALERT, (value) ->
@@ -117,6 +126,8 @@ class LayoutStore extends Store
     getDisposition: -> return _disposition
 
     getPreviewSize: -> return _previewSize
+
+    isPreviewFullscreen: -> return _previewFullscreen
 
     getAlert: -> return _alert
 

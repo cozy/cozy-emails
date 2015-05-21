@@ -6,6 +6,9 @@ classer = React.addons.classSet
 RouterMixin = require '../mixins/router_mixin'
 {MessageFlags} = require '../constants/app_constants'
 
+LayoutActionCreator = require '../actions/layout_action_creator'
+
+
 module.exports = React.createClass
     displayName: 'Conversation'
 
@@ -16,7 +19,6 @@ module.exports = React.createClass
         conversation         : React.PropTypes.object
         selectedAccountID    : React.PropTypes.string.isRequired
         selectedAccountLogin : React.PropTypes.string.isRequired
-        readability          : React.PropTypes.bool.isRequired
         selectedMailboxID    : React.PropTypes.string
         mailboxes            : React.PropTypes.object.isRequired
         settings             : React.PropTypes.object.isRequired
@@ -126,6 +128,7 @@ module.exports = React.createClass
                 a
                     className: 'clickable btn btn-default fa fa-close'
                     href: @buildClosePanelUrl 'second'
+                    onClick: LayoutActionCreator.minimizePreview
 
             for glob, index in messages
                 if _.isArray glob

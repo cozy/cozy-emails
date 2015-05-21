@@ -9,7 +9,7 @@
 
     & > header
         display       flex
-        align-items   center
+        align-items   flex-start
         margin-bottom 1em
 
         .fa-close
@@ -34,6 +34,12 @@
 
             &:hover
                 color actioncolor
+
+        // Mask the fullscreen toggle below 768px, because the conversation view
+        // is always fullscreen for those resolutions.
+        @media(max-width: 48em)
+            .fullscreen
+                display none
 
 
     &.enable
