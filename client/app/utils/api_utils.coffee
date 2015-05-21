@@ -252,3 +252,14 @@ module.exports =
 
         _dump window.rootComponent
 
+    # Log message into server logs
+    logInfo: (message) ->
+        data =
+            data:
+                type: 'debug'
+                message: message
+        xhr = new XMLHttpRequest()
+        xhr.open 'POST', 'activity', true
+        xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
+        xhr.send JSON.stringify(data)
+        console.log message

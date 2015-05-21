@@ -18,6 +18,17 @@ initPerformances = ->
         stop()
         React.addons.Perf.printExclusive()
 
+logPerformances = ->
+    timing = window.performance?.timing
+    now = Math.ceil window.performance?.now()
+    if timing?
+        message = """
+Response at #{timing.responseEnd - timing.navigationStart}ms
+Onload at #{timing.loadEventStart - timing.navigationStart}ms
+Page loaded in #{now}ms
+"""
+        window.cozyMails.logInfo message
+
 # Init Web Intents
 initIntent = ->
     IntentManager = require "./utils/intent_manager"
@@ -28,7 +39,7 @@ initIntent = ->
     .then (message) ->
         LayoutActionCreator.intentAvailability true
     , (error) ->
-        console.error "Intents not available"
+        console.log "Intents not available"
         LayoutActionCreator.intentAvailability false
 
 # init plugins
@@ -127,6 +138,8 @@ window.onload = ->
                 # This allows to use Notification.permission with Chrome/Safari
                 if Notification.permission isnt status
                     Notification.permission = status
+
+        logPerformances()
 
     catch e
         console.error e
