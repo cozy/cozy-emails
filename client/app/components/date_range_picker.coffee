@@ -10,12 +10,18 @@ module.exports = DateRangePicker = React.createClass
     displayName: 'DateRangePicker'
 
     propTypes:
+        active:       React.PropTypes.bool
         onDateFilter: React.PropTypes.func.isRequired
 
     getInitialState: ->
+        isActive:  @props.active
         label:     t 'daterangepicker placeholder'
         startDate: ''
         endDate:   ''
+
+
+    componentWillReceiveProps: (nextProps) ->
+        @reset() if @state.isActive and not nextProps.active
 
 
     onStartChange: (obj) ->
@@ -41,11 +47,13 @@ module.exports = DateRangePicker = React.createClass
             [d, m, y] = @state.endDate.split '/'
             "#{y}-#{m}-#{d}T23:59:59.999Z"
 
+        @setState isActive: !!@state.startDate and !!@state.endDate
         @props.onDateFilter start, end
 
 
     reset: ->
         @setState
+            isActive:  false
             startDate: ''
             endDate:   '',
             @filterize
@@ -82,7 +90,7 @@ module.exports = DateRangePicker = React.createClass
                 className:       'dropdown-toggle'
                 role:            'menuitem'
                 'data-toggle':   'dropdown'
-                'aria-selected': !!@state.startDate and !!@state.endDate
+                'aria-selected': @state.isActive
 
                 i className: 'fa fa-calendar'
                 span className: 'btn-label',
