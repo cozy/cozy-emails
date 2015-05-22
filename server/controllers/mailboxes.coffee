@@ -26,6 +26,19 @@ module.exports.fetchParent = (req, res, next) ->
         req.parentMailbox = mailbox
         next()
 
+# refresh a mailbox
+module.exports.refresh = (req, res, next) ->
+    account = req.account
+    req.mailbox.imap_refresh
+        limitByBox: null
+        firstImport:false
+        supportRFC4551: account.supportRFC4551
+    , (err, shouldNotif) ->
+       return next err if err
+       res.send req.mailbox
+
+
+
 # create a mailbox
 module.exports.create = (req, res, next) ->
     log.info "Creating #{req.body.label} under #{req.body.parentID}" +
