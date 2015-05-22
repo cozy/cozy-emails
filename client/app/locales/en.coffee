@@ -214,6 +214,7 @@ module.exports =
       "account tab signature"       : "Signature"
       "account signature short"     : "Type here the text that will be added to the bottom of all your emails."
       "account signature"           : "Email Signature"
+      "account signature save"      : "Save"
       "mailbox create ok"           : "Folder created"
       "mailbox create ko"           : "Error creating folder"
       "mailbox update ok"           : "Folder updated"

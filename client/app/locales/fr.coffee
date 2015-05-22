@@ -220,6 +220,7 @@ module.exports =
       "account tab signature"       : "Signature"
       "account signature short"     : "Saisissez ici le texte qui sera ajouté à la fin de vos courriers."
       "account signature"           : "Signature des courriers"
+      "account signature save"      : "Enregistrer"
       "mailbox create ok"           : "Dossier créé"
       "mailbox create ko"           : "Erreur de création du dossier"
       "mailbox update ok"           : "Dossier mis à jour"
