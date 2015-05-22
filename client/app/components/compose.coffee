@@ -265,7 +265,7 @@ module.exports = Compose = React.createClass
             not window.confirm(t 'compose confirm keep draft')
                 window.setTimeout =>
                     messageID = @state.id
-                    MessageActionCreator.delete {messageID, silent, isDraft: true}
+                    MessageActionCreator.delete {messageID, silent, isDraft: true, inReplyTo: @props.inReplyTo}
                 , 0
             else
                 if @state.originalConversationID?
