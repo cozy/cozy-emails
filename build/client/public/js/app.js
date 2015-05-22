@@ -363,15 +363,15 @@ module.exports = ContactActionCreator = {
 });
 
 ;require.register("actions/layout_action_creator", function(exports, require, module) {
-var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageFlags, MessageStore, SearchActionCreator, SocketUtils, XHRUtils, _cachedDisposition, _cachedQuery, _ref;
+var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageFlags, MessageStore, SearchActionCreator, SocketUtils, XHRUtils, _cachedQuery, _ref;
 
 XHRUtils = require('../utils/xhr_utils');
 
 SocketUtils = require('../utils/socketio_utils');
 
-AccountStore = require('../stores/account_store');
-
 LayoutStore = require('../stores/layout_store');
+
+AccountStore = require('../stores/account_store');
 
 MessageStore = require('../stores/message_store');
 
@@ -384,8 +384,6 @@ AccountActionCreator = require('./account_action_creator');
 SearchActionCreator = require('./search_action_creator');
 
 _cachedQuery = {};
-
-_cachedDisposition = null;
 
 module.exports = LayoutActionCreator = {
   setDisposition: function(type) {
@@ -419,24 +417,16 @@ module.exports = LayoutActionCreator = {
     });
   },
   toggleFullscreen: function() {
-    if (_cachedDisposition != null) {
-      AppDispatcher.handleViewAction({
-        type: ActionTypes.SET_DISPOSITION,
-        value: {
-          disposition: _cachedDisposition
-        }
-      });
-      return _cachedDisposition = null;
-    } else {
-      _cachedDisposition = _.clone(LayoutStore.getDisposition());
-      return AppDispatcher.handleViewAction({
-        type: ActionTypes.SET_DISPOSITION,
-        value: {
-          type: _cachedDisposition.type,
-          value: 0
-        }
-      });
-    }
+    var type;
+    type = LayoutStore.isPreviewFullscreen() ? ActionTypes.MINIMIZE_PREVIEW_PANE : ActionTypes.MAXIMIZE_PREVIEW_PANE;
+    return AppDispatcher.handleViewAction({
+      type: type
+    });
+  },
+  minimizePreview: function() {
+    return AppDispatcher.handleViewAction({
+      type: ActionTypes.MINIMIZE_PREVIEW_PANE
+    });
   },
   refresh: function() {
     return AppDispatcher.handleViewAction({
@@ -786,18 +776,20 @@ module.exports = MessageActionCreator = {
         MessageActionCreator.refresh(target);
         LAC.alertError(alertMsg);
       } else {
-        MessageActionCreator.receiveRawMessagesupdated;
-        LAC.notify(alertMsg, {
-          autoclose: true,
-          actions: [
-            {
-              label: t('undo last action'),
-              onClick: function() {
-                return MessageActionCreator.undo();
+        if (target.silent !== true) {
+          MessageActionCreator.receiveRawMessagesupdated;
+          LAC.notify(alertMsg, {
+            autoclose: true,
+            actions: [
+              {
+                label: t('undo last action'),
+                onClick: function() {
+                  return MessageActionCreator.undo();
+                }
               }
-            }
-          ]
-        });
+            ]
+          });
+        }
       }
       return typeof callback === "function" ? callback(err, updated) : void 0;
     });
@@ -890,6 +882,9 @@ _getNotification = function(target, messages, action, err) {
   subject = (first != null ? typeof first.get === "function" ? first.get('subject') : void 0 : void 0) || (first != null ? first.subject : void 0);
   if (target.messageID) {
     type = 'message';
+    if (target.isDraft) {
+      type = 'draft';
+    }
   } else if (target.conversationID) {
     type = 'conversation';
   } else if (target.conversationIDs) {
@@ -2691,7 +2686,7 @@ module.exports = React.createClass({
           spinner: this.state.saving,
           icon: 'save',
           onClick: this.onSubmit,
-          text: t('save')
+          text: t('account signature save')
         }
       ]
     }));
@@ -2928,19 +2923,20 @@ module.exports = Application = React.createClass({
   displayName: 'Application',
   mixins: [StoreWatchMixin(Stores), RouterMixin, TooltipRefesherMixin],
   render: function() {
-    var alert, disposition, layout, layoutClasses;
+    var alert, disposition, fullscreen, layout, layoutClasses;
     layout = this.props.router.current;
     if (layout == null) {
       return div(null, t("app loading"));
     }
     disposition = LayoutStore.getDisposition();
+    fullscreen = LayoutStore.isPreviewFullscreen();
     alert = this.state.alertMessage;
     if ((layout.secondPanel != null) && (layout.secondPanel.parameters.messageID != null)) {
       MessageStore.setCurrentID(layout.secondPanel.parameters.messageID);
     } else {
       MessageStore.setCurrentID(null);
     }
-    layoutClasses = ['layout', "layout-" + (LayoutStore.getDisposition()), "layout-preview-" + (LayoutStore.getPreviewSize())].join(' ');
+    layoutClasses = ['layout', "layout-" + (LayoutStore.getDisposition()), fullscreen ? "layout-preview-fullscreen" : void 0, "layout-preview-" + (LayoutStore.getPreviewSize())].join(' ');
     return div({
       className: layoutClasses
     }, div({
@@ -3027,7 +3023,6 @@ module.exports = Application = React.createClass({
       }
       return MessageList({
         messages: messages,
-        messagesCount: messagesCount,
         accountID: accountID,
         mailboxID: mailboxID,
         messageID: messageID,
@@ -3036,12 +3031,10 @@ module.exports = Application = React.createClass({
         mailboxes: this.state.mailboxesFlat,
         settings: this.state.settings,
         fetching: fetching,
-        refreshes: this.state.refreshes,
         query: query,
         isTrash: isTrash,
         conversationLengths: conversationLengths,
         emptyListMessage: emptyListMessage,
-        counterMessage: counterMessage,
         ref: 'messageList',
         displayConversations: displayConversations
       });
@@ -3098,7 +3091,6 @@ module.exports = Application = React.createClass({
       nextMessage = MessageStore.getNextMessage();
       return Conversation({
         key: 'conversation-' + conversationID,
-        readability: this.state.readability,
         settings: this.state.settings,
         accounts: this.state.accountsFlat,
         mailboxes: this.state.mailboxesFlat,
@@ -3156,7 +3148,7 @@ module.exports = Application = React.createClass({
     }
   },
   getStateFromStores: function() {
-    var accounts, accountsFlat, disposition, firstPanelInfo, mailboxes, mailboxesFlat, readability, selectedAccount, selectedAccountID, selectedMailboxID, _ref2;
+    var accounts, accountsFlat, disposition, firstPanelInfo, mailboxes, mailboxesFlat, selectedAccount, selectedAccountID, selectedMailboxID, _ref2;
     selectedAccount = AccountStore.getSelected();
     if (selectedAccount == null) {
       selectedAccount = AccountStore.getDefault();
@@ -3190,7 +3182,6 @@ module.exports = Application = React.createClass({
       });
     }).toJS();
     disposition = LayoutStore.getDisposition();
-    readability = 0 === disposition.width || 0 === disposition.height;
     return {
       accounts: accounts,
       accountsFlat: accountsFlat,
@@ -3206,7 +3197,6 @@ module.exports = Application = React.createClass({
       favoriteSorted: AccountStore.getSelectedFavorites(true),
       searchQuery: SearchStore.getQuery(),
       refreshes: RefreshesStore.getRefreshing(),
-      readability: readability,
       settings: SettingsStore.get(),
       plugins: window.plugins
     };
@@ -3927,18 +3917,28 @@ module.exports = Compose = React.createClass({
     }
   },
   componentWillUnmount: function() {
-    var message;
+    var message, newContent, oldContent, silent, updated;
     if (this._saveInterval) {
       window.clearInterval(this._saveInterval);
     }
     if (this.state.isDraft && (this.state.id != null)) {
-      if (!window.confirm(t('compose confirm keep draft'))) {
+      if (this.state.composeInHTML) {
+        newContent = MessageUtils.cleanReplyText(this.state.html).replace(/\s/gim, '');
+        oldContent = MessageUtils.cleanReplyText(this.state.initHtml).replace(/\s/gim, '');
+        updated = newContent !== oldContent;
+      } else {
+        updated = this.state.text !== this.state.initText;
+      }
+      silent = this.state.isNew && !updated;
+      if (silent || !window.confirm(t('compose confirm keep draft'))) {
         return window.setTimeout((function(_this) {
           return function() {
             var messageID;
             messageID = _this.state.id;
             return MessageActionCreator["delete"]({
-              messageID: messageID
+              messageID: messageID,
+              silent: silent,
+              isDraft: true
             });
           };
         })(this), 0);
@@ -3981,11 +3981,12 @@ module.exports = Compose = React.createClass({
       }
     }
   },
-  getInitialState: function(forceDefault) {
+  getInitialState: function() {
     var account, key, message, state, value, _ref3;
     if (message = this.props.message) {
       state = {
-        composeInHTML: this.props.settings.get('composeInHTML')
+        composeInHTML: this.props.settings.get('composeInHTML'),
+        isNew: false
       };
       if ((message.get('html') == null) && message.get('text')) {
         state.conposeInHTML = false;
@@ -3999,6 +4000,7 @@ module.exports = Compose = React.createClass({
     } else {
       account = this.props.accounts[this.props.selectedAccountID];
       state = MessageUtils.makeReplyMessage(account.login, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'), account.signature);
+      state.isNew = true;
       if (state.accountID == null) {
         state.accountID = this.props.selectedAccountID;
       }
@@ -4009,6 +4011,8 @@ module.exports = Compose = React.createClass({
     state.saving = false;
     state.ccShown = Array.isArray(state.cc) && state.cc.length > 0;
     state.bccShown = Array.isArray(state.bcc) && state.bcc.length > 0;
+    state.initHtml = state.html;
+    state.initText = state.text;
     return state;
   },
   componentWillReceiveProps: function(nextProps) {
@@ -4290,13 +4294,6 @@ ComposeEditor = React.createClass({
       className: 'fa fa-image',
       'aria-describedby': Tooltips.COMPOSE_IMAGE,
       'data-tooltip-direction': 'top'
-    })), button({
-      className: "btn btn-default",
-      onClick: this.choosePhotoMock
-    }, span({
-      className: 'fa fa-puzzle-piece',
-      'aria-describedby': Tooltips.COMPOSE_MOCK,
-      'data-tooltip-direction': 'top'
     }))) : void 0, this.props.composeInHTML ? div({
       className: "form-control rt-editor " + classFolded + " " + classTarget,
       ref: 'html',
@@ -4562,18 +4559,6 @@ ComposeEditor = React.createClass({
       return console.log('response in error : ', error);
     });
   },
-  choosePhotoMock: function(e) {
-    var message;
-    e.preventDefault();
-    message = {
-      data: {
-        newPhotoChosen: true,
-        name: 'mockPhoto.gif',
-        dataUrl: 'data:image/gif;base64,R0lGOD lhCwAOAMQfAP////7+/vj4+Hh4eHd3d/v7+/Dw8HV1dfLy8ubm5vX19e3t7fr 6+nl5edra2nZ2dnx8fMHBwYODg/b29np6eujo6JGRkeHh4eTk5LCwsN3d3dfX 13Jycp2dnevr6////yH5BAEAAB8ALAAAAAALAA4AAAVq4NFw1DNAX/o9imAsB tKpxKRd1+YEWUoIiUoiEWEAApIDMLGoRCyWiKThenkwDgeGMiggDLEXQkDoTh CKNLpQDgjeAsY7MHgECgx8YR8oHwNHfwADBACGh4EDA4iGAYAEBAcQIg0Dk gcEIQA7'
-      }
-    };
-    return this.choosePhoto_answer(message);
-  },
   choosePhoto_answer: function(message) {
     var answer, blob, data, editor, img, picker, signature;
     answer = message.data;
@@ -4671,7 +4656,7 @@ module.exports = ContactLabel = React.createClass({
 });
 
 ;require.register("components/conversation", function(exports, require, module) {
-var Message, MessageFlags, RouterMixin, Toolbar, a, button, classer, h3, header, i, li, p, section, span, ul, _ref,
+var LayoutActionCreator, Message, MessageFlags, RouterMixin, Toolbar, a, button, classer, h3, header, i, li, p, section, span, ul, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 _ref = React.DOM, section = _ref.section, header = _ref.header, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button;
@@ -4686,6 +4671,8 @@ RouterMixin = require('../mixins/router_mixin');
 
 MessageFlags = require('../constants/app_constants').MessageFlags;
 
+LayoutActionCreator = require('../actions/layout_action_creator');
+
 module.exports = React.createClass({
   displayName: 'Conversation',
   mixins: [RouterMixin],
@@ -4694,7 +4681,6 @@ module.exports = React.createClass({
     conversation: React.PropTypes.object,
     selectedAccountID: React.PropTypes.string.isRequired,
     selectedAccountLogin: React.PropTypes.string.isRequired,
-    readability: React.PropTypes.bool.isRequired,
     selectedMailboxID: React.PropTypes.string,
     mailboxes: React.PropTypes.object.isRequired,
     settings: React.PropTypes.object.isRequired,
@@ -4810,10 +4796,14 @@ module.exports = React.createClass({
       key: 'conversation',
       className: 'conversation panel',
       'aria-expanded': true
-    }, header(null, this.renderToolbar(), h3({
+    }, header(null, h3({
       className: 'conversation-title',
       'data-message-id': this.props.message.get('id')
-    }, this.props.message.get('subject'))), (function() {
+    }, this.props.message.get('subject')), this.renderToolbar(), a({
+      className: 'clickable btn btn-default fa fa-close',
+      href: this.buildClosePanelUrl('second'),
+      onClick: LayoutActionCreator.minimizePreview
+    })), (function() {
       var _i, _len, _results;
       _results = [];
       for (index = _i = 0, _len = messages.length; _i < _len; index = ++_i) {
@@ -6194,7 +6184,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message-list", function(exports, require, module) {
-var ContactActionCreator, DomUtils, LayoutActionCreator, MessageActionCreator, MessageFlags, MessageItem, MessageList, MessageListBody, MessageUtils, Participants, RouterMixin, SocketUtils, Spinner, ToolbarMessagesList, TooltipRefresherMixin, Tooltips, a, button, classer, colorhash, div, i, img, input, li, p, section, span, ul, _ref, _ref1,
+var ContactActionCreator, DomUtils, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageFlags, MessageItem, MessageList, MessageListBody, MessageUtils, Participants, RouterMixin, SocketUtils, Spinner, StoreWatchMixin, ToolbarMessagesList, TooltipRefresherMixin, Tooltips, a, button, classer, colorhash, div, i, img, input, li, p, section, span, ul, _ref, _ref1,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 _ref = React.DOM, div = _ref.div, section = _ref.section, p = _ref.p, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, button = _ref.button, input = _ref.input, img = _ref.img;
@@ -6204,6 +6194,10 @@ _ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags
 RouterMixin = require('../mixins/router_mixin');
 
 TooltipRefresherMixin = require('../mixins/tooltip_refresher_mixin');
+
+StoreWatchMixin = require('../mixins/store_watch_mixin');
+
+LayoutStore = require('../stores/layout_store');
 
 classer = React.addons.classSet;
 
@@ -6229,7 +6223,7 @@ ToolbarMessagesList = require('./toolbar_messageslist');
 
 module.exports = MessageList = React.createClass({
   displayName: 'MessageList',
-  mixins: [RouterMixin, TooltipRefresherMixin],
+  mixins: [RouterMixin, TooltipRefresherMixin, StoreWatchMixin([LayoutStore])],
   shouldComponentUpdate: function(nextProps, nextState) {
     var should;
     should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
@@ -6241,6 +6235,11 @@ module.exports = MessageList = React.createClass({
       quickFilters: false,
       selected: {},
       allSelected: false
+    };
+  },
+  getStateFromStores: function() {
+    return {
+      fullscreen: LayoutStore.isPreviewFullscreen()
     };
   },
   componentWillReceiveProps: function(props) {
@@ -6271,13 +6270,29 @@ module.exports = MessageList = React.createClass({
     }
   },
   render: function() {
-    var compact, filterParams, nextPage;
+    var afterAction, compact, filterParams, hasMore, nextPage;
     compact = this.props.settings.get('listStyle') === 'compact';
     filterParams = {
       accountID: this.props.accountID,
       mailboxID: this.props.mailboxID,
       query: this.props.query
     };
+    hasMore = this.props.query.pageAfter !== '-';
+    if (hasMore) {
+      afterAction = (function(_this) {
+        return function() {
+          return setTimeout(function() {
+            var listEnd;
+            listEnd = _this.refs.nextPage || _this.refs.listEnd || _this.refs.listEmpty;
+            if ((listEnd != null) && DomUtils.isVisible(listEnd.getDOMNode())) {
+              return LayoutActionCreator.showMessageList({
+                parameters: _this.props.query
+              });
+            }
+          }, 100);
+        };
+      })(this);
+    }
     nextPage = (function(_this) {
       return function() {
         return LayoutActionCreator.showMessageList({
@@ -6290,7 +6305,7 @@ module.exports = MessageList = React.createClass({
       ref: 'list',
       'data-mailbox-id': this.props.mailboxID,
       className: 'messages-list panel',
-      'aria-expanded': true
+      'aria-expanded': !this.state.fullscreen
     }, ToolbarMessagesList({
       settings: this.props.settings,
       accountID: this.props.accountID,
@@ -6302,9 +6317,13 @@ module.exports = MessageList = React.createClass({
       allSelected: this.state.allSelected,
       displayConversations: this.props.displayConversations,
       toggleEdited: this.toggleEdited,
-      toggleAll: this.toggleAll
-    }), this.props.messages.count() === 0 ? this.props.fetching ? p(null, t('list fetching')) : p(null, this.props.emptyListMessage) : div({
-      className: 'main-content'
+      toggleAll: this.toggleAll,
+      afterAction: afterAction
+    }), this.props.messages.count() === 0 ? this.props.fetching ? p(null, t('list fetching')) : p({
+      ref: 'listEmpty'
+    }, this.props.emptyListMessage) : div({
+      className: 'main-content',
+      ref: 'scrollable'
     }, MessageListBody({
       messages: this.props.messages,
       settings: this.props.settings,
@@ -6343,7 +6362,7 @@ module.exports = MessageList = React.createClass({
           return _this.setState(newState);
         };
       })(this)
-    }), this.props.query.pageAfter !== '-' ? p({
+    }), hasMore ? p({
       className: 'text-center list-footer'
     }, this.props.fetching ? Spinner() : a({
       className: 'more-messages',
@@ -6351,7 +6370,7 @@ module.exports = MessageList = React.createClass({
       ref: 'nextPage'
     }, t('list next page'))) : p({
       ref: 'listEnd'
-    }, '')));
+    }, t('list end'))));
   },
   toggleEdited: function() {
     if (this.state.edited) {
@@ -6387,7 +6406,9 @@ module.exports = MessageList = React.createClass({
     }
   },
   _loadNext: function() {
-    if ((this.refs.nextPage != null) && DomUtils.isVisible(this.refs.nextPage.getDOMNode())) {
+    var lastMessage, _ref2;
+    lastMessage = (_ref2 = this.refs.listBody) != null ? _ref2.getDOMNode().lastElementChild : void 0;
+    if ((this.refs.nextPage != null) && (lastMessage != null) && DomUtils.isVisible(lastMessage)) {
       return LayoutActionCreator.showMessageList({
         parameters: this.props.query
       });
@@ -6405,17 +6426,19 @@ module.exports = MessageList = React.createClass({
     if (this.refs.nextPage == null) {
       return;
     }
-    scrollable = this.refs.list.getDOMNode().parentNode;
-    return setTimeout((function(_this) {
-      return function() {
-        scrollable.removeEventListener('scroll', _this._loadNext);
-        scrollable.addEventListener('scroll', _this._loadNext);
-        _this._loadNext();
-        if (_this._checkNextInterval == null) {
-          return _this._checkNextInterval = window.setInterval(_this._loadNext, 10000);
-        }
-      };
-    })(this), 0);
+    if (this.refs.scrollable != null) {
+      scrollable = this.refs.scrollable.getDOMNode();
+      return setTimeout((function(_this) {
+        return function() {
+          scrollable.removeEventListener('scroll', _this._loadNext);
+          scrollable.addEventListener('scroll', _this._loadNext);
+          _this._loadNext();
+          if (_this._checkNextInterval == null) {
+            return _this._checkNextInterval = window.setInterval(_this._loadNext, 10000);
+          }
+        };
+      })(this), 0);
+    }
   },
   componentDidMount: function() {
     return this._initScroll();
@@ -6426,10 +6449,12 @@ module.exports = MessageList = React.createClass({
   },
   componentWillUnmount: function() {
     var scrollable;
-    scrollable = this.refs.list.getDOMNode().parentNode;
-    scrollable.removeEventListener('scroll', this._loadNext);
-    if (this._checkNextInterval != null) {
-      return window.clearInterval(this._checkNextInterval);
+    if (this.refs.scrollable != null) {
+      scrollable = this.refs.scrollable.getDOMNode();
+      scrollable.removeEventListener('scroll', this._loadNext);
+      if (this._checkNextInterval != null) {
+        return window.clearInterval(this._checkNextInterval);
+      }
     }
   }
 });
@@ -8423,28 +8448,36 @@ module.exports = ToastContainer = React.createClass({
 });
 
 ;require.register("components/toolbar_conversation", function(exports, require, module) {
-var LayoutActionCreator, RouterMixin, Tooltips, a, button, cBtn, div, nav, _ref;
+var LayoutActionCreator, LayoutStore, RouterMixin, StoreWatchMixin, Tooltips, a, button, classer, div, nav, _ref;
 
 _ref = React.DOM, nav = _ref.nav, div = _ref.div, button = _ref.button, a = _ref.a;
 
-LayoutActionCreator = require('../actions/layout_action_creator');
-
 Tooltips = require('../constants/app_constants').Tooltips;
+
+classer = React.addons.classSet;
+
+LayoutStore = require('../stores/layout_store');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
 
 RouterMixin = require('../mixins/router_mixin');
 
-cBtn = 'btn btn-default fa';
+StoreWatchMixin = require('../mixins/store_watch_mixin');
 
 module.exports = React.createClass({
   displayName: 'ToolbarConversation',
-  mixins: [RouterMixin],
+  mixins: [RouterMixin, StoreWatchMixin([LayoutStore])],
   propTypes: {
-    readability: React.PropTypes.bool.isRequired,
     nextMessageID: React.PropTypes.string,
     nextConversationID: React.PropTypes.string,
     prevMessageID: React.PropTypes.string,
     prevConversationID: React.PropTypes.string,
     settings: React.PropTypes.object.isRequired
+  },
+  getStateFromStores: function() {
+    return {
+      fullscreen: LayoutStore.isPreviewFullscreen()
+    };
   },
   getParams: function(messageID, conversationID) {
     if (this.props.settings.get('displayConversation' && (conversationID != null))) {
@@ -8493,7 +8526,7 @@ module.exports = React.createClass({
     };
     url = this.buildUrl(urlParams);
     return a({
-      className: "btn btn-default fa fa-angle-" + angle,
+      className: "btn btn-default fa fa-chevron-" + angle,
       onClick: (function(_this) {
         return function() {
           return _this.redirect(urlParams);
@@ -8505,17 +8538,18 @@ module.exports = React.createClass({
     });
   },
   renderFullscreen: function() {
-    if (this.props.readability) {
-      return button({
-        onClick: LayoutActionCreator.toggleFullscreen,
-        className: "clickable " + cBtn + " fa-compress"
-      });
-    } else {
-      return button({
-        onClick: LayoutActionCreator.toggleFullscreen,
-        className: "hidden-xs hidden-sm clickable " + cBtn + " fa-expand"
-      });
-    }
+    return button({
+      onClick: LayoutActionCreator.toggleFullscreen,
+      className: classer({
+        clickable: true,
+        btn: true,
+        'btn-default': true,
+        fa: true,
+        fullscreen: true,
+        'fa-compress': this.state.fullscreen,
+        'fa-expand': !this.state.fullscreen
+      })
+    });
   }
 });
 });
@@ -8655,7 +8689,8 @@ module.exports = ToolbarMessagesList = React.createClass({
     allSelected: React.PropTypes.bool.isRequired,
     displayConversations: React.PropTypes.bool.isRequired,
     toggleEdited: React.PropTypes.func.isRequired,
-    toggleAll: React.PropTypes.func.isRequired
+    toggleAll: React.PropTypes.func.isRequired,
+    afterAction: React.PropTypes.func
   },
   render: function() {
     return aside({
@@ -8683,7 +8718,8 @@ module.exports = ToolbarMessagesList = React.createClass({
       mailboxes: this.props.mailboxes,
       messages: this.props.messages,
       selected: this.props.selected,
-      displayConversations: this.props.displayConversations
+      displayConversations: this.props.displayConversations,
+      afterAction: this.props.afterAction
     }) : void 0, !this.props.edited ? FiltersToolbarMessagesList({
       accountID: this.props.accountID,
       mailboxID: this.props.mailboxID
@@ -8716,7 +8752,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
     mailboxes: React.PropTypes.object.isRequired,
     messages: React.PropTypes.object.isRequired,
     selected: React.PropTypes.object.isRequired,
-    displayConversations: React.PropTypes.bool.isRequired
+    displayConversations: React.PropTypes.bool.isRequired,
+    afterAction: React.PropTypes.func
   },
   _hasSelection: function() {
     return Object.keys(this.props.selected).length > 0;
@@ -8730,7 +8767,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
       applyToConversation = this.props.displayConversations;
     }
     if (selected.length === 0) {
-      alertError(t('list mass no message'));
+      LayoutActionCreator.alertError(t('list mass no message'));
       return false;
     } else if (!applyToConversation) {
       return {
@@ -8794,7 +8831,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
     }
     noConfirm = !this.props.settings.get('messageConfirmDelete');
     if (noConfirm || window.confirm(msg)) {
-      return MessageActionCreator["delete"](options, (function(_this) {
+      MessageActionCreator["delete"](options, (function(_this) {
         return function() {
           var firstMessageID;
           if (options.count > 0 && _this.props.messages.count() > 0) {
@@ -8803,6 +8840,9 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
           }
         };
       })(this));
+      if (this.props.afterAction != null) {
+        return this.props.afterAction();
+      }
     }
   },
   onMove: function(to, applyToConversation) {
@@ -8811,7 +8851,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
       return;
     }
     from = this.props.mailboxID;
-    return MessageActionCreator.move(options, from, to, (function(_this) {
+    MessageActionCreator.move(options, from, to, (function(_this) {
       return function() {
         var firstMessageID;
         if (options.count > 0 && _this.props.messages.count() > 0) {
@@ -8820,6 +8860,9 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
         }
       };
     })(this));
+    if (this.props.afterAction != null) {
+      return this.props.afterAction();
+    }
   },
   onMark: function(flag, applyToConversation) {
     var options;
@@ -8967,17 +9010,18 @@ module.exports = SearchToolbarMessagesList = React.createClass({
   },
   getInitialState: function() {
     return {
-      type: 'from'
+      type: 'from',
+      value: '',
+      isEmpty: true
     };
   },
   showList: function() {
-    var params, value;
-    value = this.refs.searchterms.getDOMNode().value;
+    var params;
     LayoutActionCreator.sortMessages({
       order: '-',
       field: this.state.type,
-      after: "" + value + "\uFFFF",
-      before: value
+      after: "" + this.state.value + "\uFFFF",
+      before: this.state.value
     });
     params = _.clone(MessageStore.getParams());
     params.accountID = this.props.accountID;
@@ -8991,11 +9035,22 @@ module.exports = SearchToolbarMessagesList = React.createClass({
       type: filter
     });
   },
-  onKeyDown: function(event) {
-    switch (event.key) {
-      case "Enter":
-        return this.showList();
+  onChange: function(event) {
+    return this.setState({
+      value: event.target.value,
+      isEmpty: event.target.value.length === 0
+    });
+  },
+  onKeyUp: function(event) {
+    if (event.key === "Enter" || this.state.isEmpty) {
+      return this.showList();
     }
+  },
+  reset: function() {
+    return this.setState({
+      value: '',
+      isEmpty: true
+    }, this.showList);
   },
   render: function() {
     return div({
@@ -9005,12 +9060,24 @@ module.exports = SearchToolbarMessagesList = React.createClass({
       value: this.state.type,
       values: filters,
       onChange: this.onTypeChange
-    }), input({
+    }), div({
+      role: 'search'
+    }, input({
       ref: 'searchterms',
       type: 'text',
       placeholder: t('filters search placeholder'),
-      onKeyDown: this.onKeyDown
-    }));
+      value: this.state.value,
+      onChange: this.onChange,
+      onKeyUp: this.onKeyUp
+    }), !this.state.isEmpty ? div({
+      className: 'btn-group'
+    }, button({
+      className: 'btn fa fa-check',
+      onClick: this.showList
+    }), button({
+      className: 'btn fa fa-close',
+      onClick: this.reset
+    })) : void 0));
   }
 });
 });
@@ -9392,6 +9459,8 @@ module.exports = {
     'CONTACT_LOCAL_SEARCH': 'CONTACT_LOCAL_SEARCH',
     'SET_DISPOSITION': 'SET_DISPOSITION',
     'RESIZE_PREVIEW_PANE': 'RESIZE_PREVIEW_PANE',
+    'MAXIMIZE_PREVIEW_PANE': 'MAXIMIZE_PREVIEW_PANE',
+    'MINIMIZE_PREVIEW_PANE': 'MINIMIZE_PREVIEW_PANE',
     'DISPLAY_ALERT': 'DISPLAY_ALERT',
     'HIDE_ALERT': 'HIDE_ALERT',
     'REFRESH': 'REFRESH',
@@ -9491,6 +9560,72 @@ module.exports = {
 });
 
 ;require.register("initialize", function(exports, require, module) {
+var initIntent, initPerformances, initPlugins, logPerformances;
+
+initPerformances = function() {
+  var referencePoint;
+  referencePoint = 0;
+  window.start = function() {
+    if ((typeof performance !== "undefined" && performance !== null ? performance.now : void 0) != null) {
+      referencePoint = performance.now();
+    }
+    return React.addons.Perf.start();
+  };
+  window.stop = function() {
+    if ((typeof performance !== "undefined" && performance !== null ? performance.now : void 0) != null) {
+      console.log(performance.now() - referencePoint);
+    }
+    return React.addons.Perf.stop();
+  };
+  window.printWasted = function() {
+    stop();
+    return React.addons.Perf.printWasted();
+  };
+  window.printInclusive = function() {
+    stop();
+    return React.addons.Perf.printInclusive();
+  };
+  return window.printExclusive = function() {
+    stop();
+    return React.addons.Perf.printExclusive();
+  };
+};
+
+logPerformances = function() {
+  var message, now, timing, _ref, _ref1;
+  timing = (_ref = window.performance) != null ? _ref.timing : void 0;
+  now = Math.ceil((_ref1 = window.performance) != null ? _ref1.now() : void 0);
+  if (timing != null) {
+    message = "Response at " + (timing.responseEnd - timing.navigationStart) + "ms\nOnload at " + (timing.loadEventStart - timing.navigationStart) + "ms\nPage loaded in " + now + "ms";
+    return window.cozyMails.logInfo(message);
+  }
+};
+
+initIntent = function() {
+  var IntentManager;
+  IntentManager = require("./utils/intent_manager");
+  window.intentManager = new IntentManager();
+  return window.intentManager.send('nameSpace', {
+    type: 'ping',
+    from: 'mails'
+  }).then(function(message) {
+    return LayoutActionCreator.intentAvailability(true);
+  }, function(error) {
+    console.log("Intents not available");
+    return LayoutActionCreator.intentAvailability(false);
+  });
+};
+
+initPlugins = function() {
+  var PluginUtils;
+  PluginUtils = require("./utils/plugin_utils");
+  if (window.settings.plugins == null) {
+    window.settings.plugins = {};
+  }
+  PluginUtils.merge(window.settings.plugins);
+  return PluginUtils.init();
+};
+
 window.onerror = function(msg, url, line, col, error) {
   var data, exception, xhr;
   console.error(msg, url, line, col, error, error != null ? error.stack : void 0);
@@ -9519,34 +9654,10 @@ window.onerror = function(msg, url, line, col, error) {
 };
 
 window.onload = function() {
-  var AccountStore, Application, ContactStore, IntentManager, LayoutActionCreator, LayoutStore, MessageStore, PluginUtils, Router, SearchStore, SettingsStore, application, data, e, exception, locale, referencePoint, xhr;
+  var AccountStore, Application, ContactStore, LayoutActionCreator, LayoutStore, MessageStore, PluginUtils, Router, SearchStore, SettingsStore, application, data, e, exception, locale, xhr;
   try {
     window.__DEV__ = window.location.hostname === 'localhost';
-    referencePoint = 0;
-    window.start = function() {
-      if ((typeof performance !== "undefined" && performance !== null ? performance.now : void 0) != null) {
-        referencePoint = performance.now();
-      }
-      return React.addons.Perf.start();
-    };
-    window.stop = function() {
-      if ((typeof performance !== "undefined" && performance !== null ? performance.now : void 0) != null) {
-        console.log(performance.now() - referencePoint);
-      }
-      return React.addons.Perf.stop();
-    };
-    window.printWasted = function() {
-      stop();
-      return React.addons.Perf.printWasted();
-    };
-    window.printInclusive = function() {
-      stop();
-      return React.addons.Perf.printInclusive();
-    };
-    window.printExclusive = function() {
-      stop();
-      return React.addons.Perf.printExclusive();
-    };
+    initPerformances();
     window.cozyMails = require('./utils/api_utils');
     if (window.settings == null) {
       window.settings = {};
@@ -9562,17 +9673,7 @@ window.onload = function() {
     PluginUtils.merge(window.settings.plugins);
     PluginUtils.init();
     window.cozyMails.setSetting('plugins', window.settings.plugins);
-    IntentManager = require("./utils/intent_manager");
-    window.intentManager = new IntentManager();
-    window.intentManager.send('nameSpace', {
-      type: 'ping',
-      from: 'mails'
-    }).then(function(message) {
-      return LayoutActionCreator.intentAvailability(true);
-    }, function(error) {
-      console.error("Intents not available");
-      return LayoutActionCreator.intentAvailability(false);
-    });
+    initIntent();
     AccountStore = require('./stores/account_store');
     ContactStore = require('./stores/contact_store');
     LayoutStore = require('./stores/layout_store');
@@ -9590,12 +9691,13 @@ window.onload = function() {
     Backbone.history.start();
     require('./utils/socketio_utils');
     if (window.settings.desktopNotifications && (window.Notification != null)) {
-      return Notification.requestPermission(function(status) {
+      Notification.requestPermission(function(status) {
         if (Notification.permission !== status) {
           return Notification.permission = status;
         }
       });
     }
+    return logPerformances();
   } catch (_error) {
     e = _error;
     console.error(e);
@@ -10750,6 +10852,7 @@ module.exports = {
   "account tab signature": "Signature",
   "account signature short": "Type here the text that will be added to the bottom of all your emails.",
   "account signature": "Email Signature",
+  "account signature save": "Save",
   "mailbox create ok": "Folder created",
   "mailbox create ko": "Error creating folder",
   "mailbox update ok": "Folder updated",
@@ -10789,6 +10892,12 @@ module.exports = {
   "message move ko": "Error moving message “%{subject}”: ",
   "message mark ok": "Message marked",
   "message mark ko": "Error marking message: ",
+  "draft delete ok": "Draft “%{subject}” deleted",
+  "draft delete ko": "Error deleting draft: ",
+  "draft move ok": "Draft “%{subject}” moved",
+  "draft move ko": "Error moving draft “%{subject}”: ",
+  "draft mark ok": "Draft marked",
+  "draft mark ko": "Error marking message: ",
   "conversation move ok": "Conversation “%{subject}” moved",
   "conversation move ko": "Error moving conversation “%{subject}”",
   "conversation delete ok": "Conversation “%{subject}” deleted",
@@ -11101,6 +11210,7 @@ module.exports = {
   "account tab signature": "Signature",
   "account signature short": "Saisissez ici le texte qui sera ajouté à la fin de vos courriers.",
   "account signature": "Signature des courriers",
+  "account signature save": "Enregistrer",
   "mailbox create ok": "Dossier créé",
   "mailbox create ko": "Erreur de création du dossier",
   "mailbox update ok": "Dossier mis à jour",
@@ -11140,6 +11250,12 @@ module.exports = {
   "message move ko": "Le déplacement de « %{subject} » a échoué",
   "message mark ok": "Le message a été mis à jour",
   "message mark ko": "L'opération a échoué",
+  "draft delete ok": "Le brouillon « %{subject} » a été supprimé",
+  "draft delete ko": "Erreur lors de la suppression du brouillon « %{subject} » : ",
+  "draft move ok": "Le brouillon a été « %{subject} » déplacé",
+  "draft move ko": "Erreur lors du déplacement du brouillon « %{subject} » : ",
+  "draft mark ok": "Brouillon « %{subject} » mis à jour",
+  "draft mark ko": "Erreur de mise à jour du brouillon « %{subject} » : ",
   "conversation move ok": "Conversation « %{subject} » déplacée",
   "conversation move ko": "Le déplacement de « %{subject} » a échoué",
   "conversation delete ok": "Conversation « %{subject} » supprimée",
@@ -11947,7 +12063,7 @@ LayoutStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var _alert, _disposition, _drawer, _intentAvailable, _previewSize, _shown, _tasks;
+  var _alert, _disposition, _drawer, _intentAvailable, _previewFullscreen, _previewSize, _shown, _tasks;
 
   __extends(LayoutStore, _super);
 
@@ -11958,6 +12074,8 @@ LayoutStore = (function(_super) {
   _disposition = Dispositions.COL;
 
   _previewSize = 50;
+
+  _previewFullscreen = false;
 
   _alert = {
     level: null,
@@ -11983,7 +12101,6 @@ LayoutStore = (function(_super) {
       return this.emit('change');
     });
     handle(ActionTypes.RESIZE_PREVIEW_PANE, function(factor) {
-      console.debug(factor);
       if (factor) {
         _previewSize += factor;
         if (_previewSize < 20) {
@@ -11995,6 +12112,14 @@ LayoutStore = (function(_super) {
       } else {
         _previewSize = 50;
       }
+      return this.emit('change');
+    });
+    handle(ActionTypes.MINIMIZE_PREVIEW_PANE, function() {
+      _previewFullscreen = false;
+      return this.emit('change');
+    });
+    handle(ActionTypes.MAXIMIZE_PREVIEW_PANE, function() {
+      _previewFullscreen = true;
       return this.emit('change');
     });
     handle(ActionTypes.DISPLAY_ALERT, function(value) {
@@ -12082,6 +12207,10 @@ LayoutStore = (function(_super) {
 
   LayoutStore.prototype.getPreviewSize = function() {
     return _previewSize;
+  };
+
+  LayoutStore.prototype.isPreviewFullscreen = function() {
+    return _previewFullscreen;
   };
 
   LayoutStore.prototype.getAlert = function() {
@@ -13146,6 +13275,20 @@ module.exports = {
       return res;
     };
     return _dump(window.rootComponent);
+  },
+  logInfo: function(message) {
+    var data, xhr;
+    data = {
+      data: {
+        type: 'debug',
+        message: message
+      }
+    };
+    xhr = new XMLHttpRequest();
+    xhr.open('POST', 'activity', true);
+    xhr.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+    xhr.send(JSON.stringify(data));
+    return console.log(message);
   }
 };
 });
@@ -13217,7 +13360,11 @@ module.exports = DomUtils = {
     rect = node.getBoundingClientRect();
     height = window.innerHeight || document.documentElement.clientHeight;
     width = window.innerWidth || document.documentElement.clientWidth;
-    return rect.bottom <= (height + 0) && rect.top >= 0;
+    if (height === 0 || width === 0) {
+      return false;
+    } else {
+      return rect.bottom <= (height + 0) && rect.top >= 0;
+    }
   }
 };
 });
@@ -13432,10 +13579,10 @@ module.exports = MessageUtils = {
     if (isSignature) {
       message.text += "\n\n" + signature;
     }
-    message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br /></p>";
+    message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br></p>";
     if (isSignature) {
       signature = signature.replace(/\n/g, '<br>');
-      return message.html += "<p><br /></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
+      return message.html += "<p><br></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
     }
   },
   setMessageAsReplyAll: function(options) {
@@ -13459,10 +13606,10 @@ module.exports = MessageUtils = {
     if (isSignature) {
       message.text += "\n\n" + signature;
     }
-    message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br /></p>";
+    message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br></p>";
     if (isSignature) {
       signature = signature.replace(/\n/g, '<br>');
-      return message.html += "<p><br /></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
+      return message.html += "<p><br></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
     }
   },
   setMessageAsForward: function(options) {
@@ -13482,16 +13629,16 @@ module.exports = MessageUtils = {
     separator = "\n----- " + (t('compose forward header')) + " ------\n" + (t('compose forward subject')) + " " + (inReplyTo.get('subject')) + "\n" + (t('compose forward date')) + " " + dateHuman + "\n" + (t('compose forward from')) + " " + fromField + "\n" + (t('compose forward to')) + " " + addresses + "\n";
     textSeparator = separator.replace('&lt;', '<').replace('&gt;', '>');
     textSeparator = textSeparator.replace('<pre>', '').replace('</pre>', '');
-    htmlSeparator = separator.replace(/(\n)+/g, '<br />');
+    htmlSeparator = separator.replace(/(\n)+/g, '<br>');
     this.setMessageAsDefault(options);
     message.subject = "" + (t('compose forward prefix')) + (inReplyTo.get('subject'));
     message.text = textSeparator + text;
     message.html = "" + COMPOSE_STYLE;
     if (isSignature) {
       signature = signature.replace(/\n/g, '<br>');
-      message.html += "<p><br /></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
+      message.html += "<p><br></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
     }
-    message.html += "\n<p>" + htmlSeparator + "</p><p><br /></p>" + html;
+    message.html += "\n<p>" + htmlSeparator + "</p><p><br></p>" + html;
     message.attachments = inReplyTo.get('attachments');
     return message;
   },
@@ -13509,7 +13656,7 @@ module.exports = MessageUtils = {
     message.html = COMPOSE_STYLE;
     if (isSignature) {
       signature = signature.replace(/\n/g, '<br>');
-      message.html += "<p><br /></p><p><br /></p>\n<p id=\"signature\">-- \n<br>" + signature + "</p>";
+      message.html += "<p><br></p><p><br></p>\n<p id=\"signature\">-- \n<br>" + signature + "</p>";
     }
     return message;
   },
