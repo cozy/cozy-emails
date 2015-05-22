@@ -3,6 +3,9 @@
 
 RouterMixin           = require '../mixins/router_mixin'
 TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
+StoreWatchMixin       = require '../mixins/store_watch_mixin'
+
+LayoutStore = require '../stores/layout_store'
 
 classer      = React.addons.classSet
 DomUtils     = require '../utils/dom_utils'
@@ -22,7 +25,11 @@ ToolbarMessagesList = require './toolbar_messageslist'
 module.exports = MessageList = React.createClass
     displayName: 'MessageList'
 
-    mixins: [RouterMixin, TooltipRefresherMixin]
+    mixins: [
+        RouterMixin,
+        TooltipRefresherMixin
+        StoreWatchMixin [LayoutStore]
+    ]
 
     shouldComponentUpdate: (nextProps, nextState) ->
         should = not(_.isEqual(nextState, @state)) or
@@ -34,6 +41,9 @@ module.exports = MessageList = React.createClass
         quickFilters: false
         selected: {}
         allSelected: false
+
+    getStateFromStores: ->
+        fullscreen: LayoutStore.isPreviewFullscreen()
 
     componentWillReceiveProps: (props) ->
         if props.mailboxID isnt @props.mailboxID
@@ -63,7 +73,7 @@ module.exports = MessageList = React.createClass
             ref:               'list'
             'data-mailbox-id': @props.mailboxID
             className:         'messages-list panel'
-            'aria-expanded':   true
+            'aria-expanded':   not @state.fullscreen
 
             # Toolbar
             ToolbarMessagesList
