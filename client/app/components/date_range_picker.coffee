@@ -80,8 +80,10 @@ module.exports = DateRangePicker = React.createClass
             'data-tooltip-direction': 'bottom'
 
             button
-                className:     'dropdown-toggle'
-                'data-toggle': 'dropdown'
+                className:       'dropdown-toggle'
+                role:            'menuitem'
+                'data-toggle':   'dropdown'
+                'aria-selected': !!@state.startDate and !!@state.endDate
 
                 i className: 'fa fa-calendar'
                 span className: 'btn-label',
