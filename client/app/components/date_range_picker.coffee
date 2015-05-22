@@ -74,7 +74,6 @@ module.exports = DateRangePicker = React.createClass
 
     render: ->
         div
-            role:                     'menuitem'
             className:                'dropdown date-range-picker'
             'aria-describedby':       Tooltips.FILTER_DATE_RANGE
             'data-tooltip-direction': 'bottom'
