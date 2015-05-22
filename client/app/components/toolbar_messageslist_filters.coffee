@@ -29,7 +29,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass
             unseen:  false
             attach:  false
 
-        filters[name] = not @state[name]
+        filters[name] = not @state[name] if name
         @setState filters
 
 
@@ -40,11 +40,21 @@ module.exports = FiltersToolbarMessagesList = React.createClass
         LayoutActionCreator.showMessageList parameters: params
 
 
+    onDateFilter: (start, end) ->
+        @_resetFiltersState()
+        LayoutActionCreator.sortMessages
+            order:  '-'
+            field:  'date'
+            before: start
+            after:  end
+        @showList()
+
+
     toggleFilters: (name) ->
         filter = MessageFilter[if @state[name] then 'ALL' else name.toUpperCase()]
         LayoutActionCreator.filterMessages filter
-        @showList()
         @_resetFiltersState name
+        @showList()
 
 
     render: ->
@@ -91,7 +101,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass
                 span className: 'btn-label', t 'filters attach'
                 # span className: 'badge', '##'
 
-            # DateRangePicker()
+            DateRangePicker
+                onDateFilter: @onDateFilter
 
 
     toggleExpandState: ->

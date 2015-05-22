@@ -63,11 +63,11 @@
                     display inline
 
         // Toggling mode for filter under < 600px
-        [role=presentation]
+        & > [role=presentation]
             display none
 
         @media(max-width: 37.5em)
-            [role=presentation]
+            & > [role=presentation]
                 display block
                 cursor  pointer
 
@@ -98,14 +98,6 @@
         .btn:hover
             color actioncolor
 
-
-
-    .date-range-picker
-        position static
-
-        .dropdown-menu
-            left      50%
-            transform translateX(-50%)
 
 
     // Styles and colors
