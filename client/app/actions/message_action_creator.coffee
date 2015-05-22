@@ -55,6 +55,11 @@ module.exports = MessageActionCreator =
                 MessageActionCreator.receiveRawMessages messages
 
 
+    # Delete message(s)
+    # target:
+    #  - messageID or messageIDs or conversationIDs or conversationIDs
+    #  - isDraft?
+    #  - silent? (don't display confirmation message when deleting an empty draft)
     delete: (target, callback) ->
         messages = _localDelete target
 
@@ -68,13 +73,14 @@ module.exports = MessageActionCreator =
                 MessageActionCreator.refresh target
                 LAC.alertError alertMsg
             else
-                MessageActionCreator.receiveRawMessagesupdated
-                LAC.notify alertMsg,
-                    autoclose: true,
-                    actions: [
-                        label: t 'undo last action'
-                        onClick: -> MessageActionCreator.undo()
-                    ]
+                if target.silent isnt true
+                    MessageActionCreator.receiveRawMessagesupdated
+                    LAC.notify alertMsg,
+                        autoclose: true,
+                        actions: [
+                            label: t 'undo last action'
+                            onClick: -> MessageActionCreator.undo()
+                        ]
 
             callback? err, updated
 
@@ -152,6 +158,8 @@ _getNotification = (target, messages, action, err) ->
 
     if target.messageID
         type = 'message'
+        if target.isDraft
+            type = 'draft'
     else if target.conversationID
         type = 'conversation'
     else if target.conversationIDs

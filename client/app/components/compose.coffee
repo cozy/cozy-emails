@@ -260,11 +260,12 @@ module.exports = Compose = React.createClass
             else
                 updated = @state.text isnt @state.initText
             # if draft has not been updated, deleted without asking confirmation
-            if (@state.isNew and not updated) or
+            silent = @state.isNew and not updated
+            if silent or
             not window.confirm(t 'compose confirm keep draft')
                 window.setTimeout =>
                     messageID = @state.id
-                    MessageActionCreator.delete {messageID}
+                    MessageActionCreator.delete {messageID, silent, isDraft: true}
                 , 0
             else
                 if @state.originalConversationID?
