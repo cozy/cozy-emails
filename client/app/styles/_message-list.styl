@@ -81,11 +81,23 @@
                 margin-right 1px
 
 
-    .search
-        display flex
+    [role=search]
+        flex     1
+        display  flex
+        position relative
 
         input
-            flex 1
+            flex    1
+            display flex
+
+        .btn-group
+            position absolute
+            top      0
+            right    0
+
+        .btn:hover
+            color actioncolor
+
 
 
     .date-range-picker

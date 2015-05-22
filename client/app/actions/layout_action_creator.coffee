@@ -1,9 +1,9 @@
 XHRUtils = require '../utils/xhr_utils'
 SocketUtils = require '../utils/socketio_utils'
 
-AccountStore  = require '../stores/account_store'
-LayoutStore   = require '../stores/layout_store'
-MessageStore  = require '../stores/message_store'
+LayoutStore  = require '../stores/layout_store'
+AccountStore = require '../stores/account_store'
+MessageStore = require '../stores/message_store'
 
 AppDispatcher = require '../app_dispatcher'
 
@@ -13,7 +13,6 @@ AccountActionCreator = require './account_action_creator'
 SearchActionCreator = require './search_action_creator'
 
 _cachedQuery = {}
-_cachedDisposition = null
 
 module.exports = LayoutActionCreator =
 
@@ -39,19 +38,17 @@ module.exports = LayoutActionCreator =
             value: null
 
     toggleFullscreen: ->
-        if _cachedDisposition?
-            AppDispatcher.handleViewAction
-                type: ActionTypes.SET_DISPOSITION
-                value:
-                    disposition: _cachedDisposition
-            _cachedDisposition = null
+        type = if LayoutStore.isPreviewFullscreen()
+            ActionTypes.MINIMIZE_PREVIEW_PANE
         else
-            _cachedDisposition = _.clone LayoutStore.getDisposition()
-            AppDispatcher.handleViewAction
-                type: ActionTypes.SET_DISPOSITION
-                value:
-                    type: _cachedDisposition.type
-                    value: 0
+            ActionTypes.MAXIMIZE_PREVIEW_PANE
+
+        AppDispatcher.handleViewAction
+            type: type
+
+    minimizePreview: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MINIMIZE_PREVIEW_PANE
 
     refresh: ->
         AppDispatcher.handleViewAction

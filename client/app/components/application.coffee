@@ -65,6 +65,7 @@ module.exports = Application = React.createClass
         return div null, t "app loading" unless layout?
 
         disposition = LayoutStore.getDisposition()
+        fullscreen  = LayoutStore.isPreviewFullscreen()
 
         alert = @state.alertMessage
 
@@ -79,7 +80,9 @@ module.exports = Application = React.createClass
         # So, use it for layout classes, at least…
         layoutClasses = ['layout'
             "layout-#{LayoutStore.getDisposition()}"
+            if fullscreen then "layout-preview-fullscreen"
             "layout-preview-#{LayoutStore.getPreviewSize()}"].join(' ')
+
         div className: layoutClasses,
             # Actual layout
             div className: 'app',
@@ -249,7 +252,6 @@ module.exports = Application = React.createClass
 
             return Conversation
                 key: 'conversation-' + conversationID
-                readability          : @state.readability
                 settings             : @state.settings
                 accounts             : @state.accountsFlat
                 mailboxes            : @state.mailboxesFlat
@@ -351,7 +353,6 @@ module.exports = Application = React.createClass
 
         # Test if the message view is currently displayed in large mode or not
         disposition = LayoutStore.getDisposition()
-        readability = 0 in [disposition.width, disposition.height]
 
         return {
             accounts: accounts
@@ -368,7 +369,6 @@ module.exports = Application = React.createClass
             favoriteSorted: AccountStore.getSelectedFavorites true
             searchQuery: SearchStore.getQuery()
             refreshes: RefreshesStore.getRefreshing()
-            readability: readability
             settings: SettingsStore.get()
             plugins: window.plugins
         }
