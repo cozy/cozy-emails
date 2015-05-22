@@ -253,10 +253,19 @@ module.exports = Compose = React.createClass
         #    conversationID and save the draft
         #  - if no, delete the draft
         if @state.isDraft and @state.id?
-            if not window.confirm(t 'compose confirm keep draft')
+            if @state.composeInHTML
+                newContent = MessageUtils.cleanReplyText(@state.html).replace /\s/gim, ''
+                oldContent = MessageUtils.cleanReplyText(@state.initHtml).replace /\s/gim, ''
+                updated = newContent isnt oldContent
+            else
+                updated = @state.text isnt @state.initText
+            # if draft has not been updated, deleted without asking confirmation
+            silent = @state.isNew and not updated
+            if silent or
+            not window.confirm(t 'compose confirm keep draft')
                 window.setTimeout =>
                     messageID = @state.id
-                    MessageActionCreator.delete {messageID}
+                    MessageActionCreator.delete {messageID, silent, isDraft: true}
                 , 0
             else
                 if @state.originalConversationID?
@@ -289,12 +298,13 @@ module.exports = Compose = React.createClass
                                 cid = message.conversationID
                                 MessageActionCreator.fetchConversation cid
 
-    getInitialState: (forceDefault) ->
+    getInitialState: ->
 
         # edition of an existing draft
         if message = @props.message
             state =
                 composeInHTML: @props.settings.get 'composeInHTML'
+                isNew: false
             if (not message.get('html')?) and message.get('text')
                 state.conposeInHTML = false
 
@@ -313,6 +323,7 @@ module.exports = Compose = React.createClass
                 @props.settings.get('composeInHTML'),
                 account.signature
             )
+            state.isNew = true
             state.accountID ?= @props.selectedAccountID
             # use another field to prevent the empty conversationID of draft
             # to override the original conversationID
@@ -323,6 +334,10 @@ module.exports = Compose = React.createClass
         state.saving   = false
         state.ccShown  = Array.isArray(state.cc) and state.cc.length > 0
         state.bccShown = Array.isArray(state.bcc) and state.bcc.length > 0
+        # save initial message content, to don't ask confirmation if
+        # it has not been updated
+        state.initHtml = state.html
+        state.initText = state.text
         return state
 
     componentWillReceiveProps: (nextProps) ->
@@ -563,14 +578,6 @@ ComposeEditor = React.createClass
                             span
                                 className:'fa fa-image'
                                 'aria-describedby': Tooltips.COMPOSE_IMAGE
-                                'data-tooltip-direction': 'top'
-                    # @TODO Remove this Mock code once Web intents are really plugged
-                    button
-                        className: "btn btn-default"
-                        onClick: @choosePhotoMock,
-                            span
-                                className:'fa fa-puzzle-piece'
-                                'aria-describedby': Tooltips.COMPOSE_MOCK
                                 'data-tooltip-direction': 'top'
             if @props.composeInHTML
                 div
@@ -855,17 +862,6 @@ ComposeEditor = React.createClass
         window.intentManager.send('nameSpace', intent, timeout)
             .then @choosePhoto_answer, (error) ->
                 console.log 'response in error : ', error
-
-
-    # @TODO Remove this Mock code once Web intents are really plugged
-    choosePhotoMock: (e) ->
-        e.preventDefault()
-        message =
-            data:
-                newPhotoChosen: true
-                name: 'mockPhoto.gif'
-                dataUrl: 'data:image/gif;base64,R0lGOD lhCwAOAMQfAP////7+/vj4+Hh4eHd3d/v7+/Dw8HV1dfLy8ubm5vX19e3t7fr 6+nl5edra2nZ2dnx8fMHBwYODg/b29np6eujo6JGRkeHh4eTk5LCwsN3d3dfX 13Jycp2dnevr6////yH5BAEAAB8ALAAAAAALAA4AAAVq4NFw1DNAX/o9imAsB tKpxKRd1+YEWUoIiUoiEWEAApIDMLGoRCyWiKThenkwDgeGMiggDLEXQkDoTh CKNLpQDgjeAsY7MHgECgx8YR8oHwNHfwADBACGh4EDA4iGAYAEBAcQIg0Dk gcEIQA7'
-        @choosePhoto_answer message
 
 
     choosePhoto_answer : (message) ->

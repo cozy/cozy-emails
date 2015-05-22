@@ -65,6 +65,20 @@ module.exports = MessageList = React.createClass
             mailboxID: @props.mailboxID
             query:     @props.query
 
+        hasMore = @props.query.pageAfter isnt '-'
+        # This allow to load next messages if needed after we remove messages
+        # from this mailbox by moving or deleting them.
+        # (if we delete all messages, the list is empty and listEmpty displayed)
+        if hasMore
+            afterAction = =>
+                # ugly setTimeout to wait until localDelete occured
+                setTimeout =>
+                    listEnd = @refs.nextPage or @refs.listEnd or @refs.listEmpty
+                    if listEnd? and
+                       DomUtils.isVisible(listEnd.getDOMNode())
+                        LayoutActionCreator.showMessageList parameters: @props.query
+                , 100
+
         nextPage = =>
             LayoutActionCreator.showMessageList parameters: @props.query
 
@@ -88,15 +102,18 @@ module.exports = MessageList = React.createClass
                 displayConversations: @props.displayConversations
                 toggleEdited:         @toggleEdited
                 toggleAll:            @toggleAll
+                afterAction:          afterAction
 
             # Message List
             if @props.messages.count() is 0
                 if @props.fetching
                     p null, t 'list fetching'
                 else
-                    p null, @props.emptyListMessage
+                    p ref: 'listEmpty', @props.emptyListMessage
             else
-                div className: 'main-content',
+                div
+                    className: 'main-content'
+                    ref: 'scrollable',
                     MessageListBody
                         messages: @props.messages
                         settings: @props.settings
@@ -128,7 +145,7 @@ module.exports = MessageList = React.createClass
                                     selected: {}
                             @setState newState
 
-                    if @props.query.pageAfter isnt '-'
+                    if hasMore
                         p className: 'text-center list-footer',
                             if @props.fetching
                                 Spinner()
@@ -139,7 +156,7 @@ module.exports = MessageList = React.createClass
                                     ref: 'nextPage',
                                     t 'list next page'
                     else
-                        p ref: 'listEnd', ''
+                        p ref: 'listEnd', t 'list end'
 
     toggleEdited: ->
         if @state.edited
@@ -158,7 +175,12 @@ module.exports = MessageList = React.createClass
             @setState allSelected: true, edited: true, selected: selected
 
     _loadNext: ->
-        if @refs.nextPage? and DomUtils.isVisible(@refs.nextPage.getDOMNode())
+        # load next message if last one is displayed (useful when navigating
+        # with keyboard)
+        lastMessage = @refs.listBody?.getDOMNode().lastElementChild
+        if @refs.nextPage? and
+           lastMessage? and
+           DomUtils.isVisible(lastMessage)
             LayoutActionCreator.showMessageList parameters: @props.query
 
     _handleRealtimeGrowth: ->
@@ -173,16 +195,17 @@ module.exports = MessageList = React.createClass
             return
 
         # listen to scroll events
-        scrollable = @refs.list.getDOMNode().parentNode
-        setTimeout =>
-            scrollable.removeEventListener 'scroll', @_loadNext
-            scrollable.addEventListener 'scroll', @_loadNext
-            @_loadNext()
-            # a lot of event can make the "more messages" label visible,
-            # so we check every few seconds
-            if not @_checkNextInterval?
-                @_checkNextInterval = window.setInterval @_loadNext, 10000
-        , 0
+        if @refs.scrollable?
+            scrollable = @refs.scrollable.getDOMNode()
+            setTimeout =>
+                scrollable.removeEventListener 'scroll', @_loadNext
+                scrollable.addEventListener 'scroll', @_loadNext
+                @_loadNext()
+                # a lot of event can make the "more messages" label visible,
+                # so we check every few seconds
+                if not @_checkNextInterval?
+                    @_checkNextInterval = window.setInterval @_loadNext, 10000
+            , 0
 
     componentDidMount: ->
         @_initScroll()
@@ -192,10 +215,11 @@ module.exports = MessageList = React.createClass
         @_handleRealtimeGrowth()
 
     componentWillUnmount: ->
-        scrollable = @refs.list.getDOMNode().parentNode
-        scrollable.removeEventListener 'scroll', @_loadNext
-        if @_checkNextInterval?
-            window.clearInterval @_checkNextInterval
+        if @refs.scrollable?
+            scrollable = @refs.scrollable.getDOMNode()
+            scrollable.removeEventListener 'scroll', @_loadNext
+            if @_checkNextInterval?
+                window.clearInterval @_checkNextInterval
 
 
 
@@ -373,10 +397,10 @@ MessageItem = React.createClass
                     div className: 'extras',
                         if message.get 'hasAttachments'
                             i className: 'attachments fa fa-paperclip'
-                        if  @props.displayConversations and
-                            @props.conversationLengths > 1
-                                span className: 'conversation-length',
-                                    "[#{@props.conversationLengths}]"
+                        if @props.displayConversations and
+                           @props.conversationLengths > 1
+                            span className: 'conversation-length',
+                                "[#{@props.conversationLengths}]"
                     div className: 'preview',
                         p null, text.substr(0, 1024)
 

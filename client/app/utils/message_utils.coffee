@@ -184,12 +184,12 @@ module.exports = MessageUtils =
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
-            <p><br /></p>
+            <p><br></p>
             """
         if isSignature
             signature = signature.replace /\n/g, '<br>'
             message.html += """
-            <p><br /></p><p id="signature">-- \n<br>#{signature}</p>
+            <p><br></p><p id="signature">-- \n<br>#{signature}</p>
             """
 
 
@@ -233,12 +233,12 @@ module.exports = MessageUtils =
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
-            <p><br /></p>
+            <p><br></p>
             """
         if isSignature
             signature = signature.replace /\n/g, '<br>'
             message.html += """
-            <p><br /></p><p id="signature">-- \n<br>#{signature}</p>
+            <p><br></p><p id="signature">-- \n<br>#{signature}</p>
             """
 
 
@@ -287,7 +287,7 @@ module.exports = MessageUtils =
 """
         textSeparator = separator.replace('&lt;', '<').replace('&gt;', '>')
         textSeparator = textSeparator.replace('<pre>', '').replace('</pre>', '')
-        htmlSeparator = separator.replace /(\n)+/g, '<br />'
+        htmlSeparator = separator.replace /(\n)+/g, '<br>'
 
         @setMessageAsDefault options
         message.subject = """
@@ -298,11 +298,11 @@ module.exports = MessageUtils =
         if isSignature
             signature = signature.replace /\n/g, '<br>'
             message.html += """
-            <p><br /></p><p id="signature">-- \n<br>#{signature}</p>
+            <p><br></p><p id="signature">-- \n<br>#{signature}</p>
             """
         message.html += """
 
-<p>#{htmlSeparator}</p><p><br /></p>#{html}
+<p>#{htmlSeparator}</p><p><br></p>#{html}
 """
         message.attachments = inReplyTo.get 'attachments'
 
@@ -335,7 +335,7 @@ module.exports = MessageUtils =
         if isSignature
             signature = signature.replace /\n/g, '<br>'
             message.html += """
-            <p><br /></p><p><br /></p>
+            <p><br></p><p><br></p>
             <p id="signature">-- \n<br>#{signature}</p>
             """
 

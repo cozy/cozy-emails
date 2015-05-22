@@ -17,6 +17,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         messages:             React.PropTypes.object.isRequired
         selected:             React.PropTypes.object.isRequired
         displayConversations: React.PropTypes.bool.isRequired
+        afterAction:          React.PropTypes.func
 
 
     _hasSelection: ->
@@ -29,7 +30,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         applyToConversation = Boolean applyToConversation
         applyToConversation ?= @props.displayConversations
         if selected.length is 0
-            alertError t 'list mass no message'
+            LayoutActionCreator.alertError t 'list mass no message'
             return false
 
         else if not applyToConversation
@@ -85,6 +86,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                 if options.count > 0 and @props.messages.count() > 0
                     firstMessageID = @props.messages.first().get('id')
                     MessageActionCreator.setCurrent firstMessageID, true
+            if @props.afterAction?
+                @props.afterAction()
 
 
     onMove: (to, applyToConversation) ->
@@ -96,6 +99,8 @@ module.exports = ActionsToolbarMessagesList = React.createClass
             if options.count > 0 and @props.messages.count() > 0
                 firstMessageID = @props.messages.first().get('id')
                 MessageActionCreator.setCurrent firstMessageID, true
+        if @props.afterAction?
+            @props.afterAction()
 
 
     onMark: (flag, applyToConversation) ->

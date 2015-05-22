@@ -23,6 +23,7 @@ module.exports = ToolbarMessagesList = React.createClass
         displayConversations: React.PropTypes.bool.isRequired
         toggleEdited:         React.PropTypes.func.isRequired
         toggleAll:            React.PropTypes.func.isRequired
+        afterAction:          React.PropTypes.func
 
 
     render: ->
@@ -56,6 +57,7 @@ module.exports = ToolbarMessagesList = React.createClass
                     messages:             @props.messages
                     selected:             @props.selected
                     displayConversations: @props.displayConversations
+                    afterAction:          @props.afterAction
             unless @props.edited
                 FiltersToolbarMessagesList
                     accountID: @props.accountID

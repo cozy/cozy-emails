@@ -4,23 +4,23 @@ if (typeof window.plugins !== "object") {
   window.plugins = {};
 }
 (function (root) {
+  "use strict";
   function bindingNew(e) {
     e.preventDefault();
     window.cozyMails.messageNew();
   }
   function bindingHelp() {
-    var self, container, help;
+    var container, help;
     container = document.getElementById('mailkeysHelp');
     if (container) {
       document.body.removeChild(container);
       return;
     }
-    self      = this;
     container = document.createElement('div');
     help      = document.createElement('dl');
     container.id = 'mailkeysHelp';
-    Object.keys(this._binding).forEach(function (key) {
-      var binding = self._binding[key],
+    Object.keys(root.mailkeys._binding).forEach(function (key) {
+      var binding = root.mailkeys._binding[key],
           name = [key];
       if (Array.isArray(binding.alias)) {
         name = name.concat(binding.alias);
@@ -52,7 +52,7 @@ if (typeof window.plugins !== "object") {
     var current, btn;
     Array.prototype.forEach.call(document.querySelectorAll('article.message .content, article.message .preview'), function (e) {
       var rect = e.getBoundingClientRect(),
-          visible = rect.bottom >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight)
+          visible = rect.bottom >= 0 && rect.top <= (window.innerHeight || document.documentElement.clientHeight);
       if (visible) {
         current = e;
       }
@@ -60,7 +60,7 @@ if (typeof window.plugins !== "object") {
     if (typeof current !== 'undefined') {
       btn = document.querySelector("section.conversation article.message[data-id='" + current.dataset.messageId + "'] button.btn.mail-" + action);
       if (btn !== null) {
-          btn.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
+        btn.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
       }
     }
   }
@@ -134,6 +134,10 @@ if (typeof window.plugins !== "object") {
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageNavigate('next');
+          // Check whether we should load next page
+          window.setTimeout(function () {
+            window.rootComponent.refs.messageList._loadNext();
+          }, 2000);
         }
       },
       'right': {
@@ -141,6 +145,10 @@ if (typeof window.plugins !== "object") {
         action: function (e) {
           e.preventDefault();
           window.cozyMails.messageNavigate('next', true);
+          // Check whether we should load next page
+          window.setTimeout(function () {
+            window.rootComponent.refs.messageList._loadNext();
+          }, 2000);
         }
       },
       'k': {
@@ -293,39 +301,21 @@ if (typeof window.plugins !== "object") {
     },
     name: "Keyboard shortcuts",
     active: true,
-    onAdd: {
-      /**
-       * Should return true if plugin applies on added subtree
-       *
-       * @param {DOMNode} root node of added subtree
-       */
-      condition: function (node) {
-        return false;
-      },
-      /**
-       * Perform action on added subtree
-       *
-       * @param {DOMNode} root node of added subtree
-       */
-      action: function (node) {
-      }
-    },
-    /**
+    /*
      * Called when plugin is activated
      */
     onActivate: function () {
-      var self = this;
-      Object.keys(this._binding).forEach(function (key) {
-        var binding = self._binding[key];
-        Mousetrap.bind(key, binding.action.bind(self));
+      Object.keys(root.mailkeys._binding).forEach(function (key) {
+        var binding = root.mailkeys._binding[key];
+        Mousetrap.bind(key, binding.action.bind(root.mailkeys));
         if (Array.isArray(binding.alias)) {
           binding.alias.forEach(function (alias) {
-            Mousetrap.bind(alias, binding.action.bind(self));
+            Mousetrap.bind(alias, binding.action.bind(root.mailkeys));
           });
         }
       });
     },
-    /**
+    /*
      * Called when plugin is deactivated
      */
     onDeactivate: function () {
