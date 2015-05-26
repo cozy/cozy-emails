@@ -152,7 +152,8 @@ module.exports = LayoutActionCreator =
                     MessageActionCreator.receiveRawMessages rawMsg
 
         else
-            XHRUtils.refreshMailbox mailboxID
+            XHRUtils.refreshMailbox mailboxID, (err) ->
+                console.log "#{mailboxID} refreshed", err
 
     showMessage: (panelInfo, direction) ->
         onMessage = (msg) ->
