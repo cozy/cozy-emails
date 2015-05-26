@@ -469,3 +469,4 @@ module.exports =
       'daterangepicker presets yesterday': 'hier'
       'daterangepicker presets last week': 'semaine dernière'
       'daterangepicker presets last month': 'mois dernier'
+      'daterangepicker clear': 'effacer'
