@@ -159,7 +159,7 @@ module.exports = Compose = React.createClass
                         html              : @linkState('html')
                         text              : @linkState('text')
                         accounts          : @props.accounts
-                        selectedAccountID : @props.selectedAccountID
+                        accountID         : @state.accountID
                         settings          : @props.settings
                         onSend            : @onSend
                         composeInHTML     : @state.composeInHTML
@@ -265,7 +265,7 @@ module.exports = Compose = React.createClass
             not window.confirm(t 'compose confirm keep draft')
                 window.setTimeout =>
                     messageID = @state.id
-                    MessageActionCreator.delete {messageID, silent, isDraft: true}
+                    MessageActionCreator.delete {messageID, silent, isDraft: true, inReplyTo: @props.inReplyTo}
                 , 0
             else
                 if @state.originalConversationID?
@@ -761,7 +761,7 @@ ComposeEditor = React.createClass
                 document.querySelector(".rt-editor").focus()
                 if not @props.settings.get 'composeOnTop'
 
-                    account = @props.accounts[@props.selectedAccountID]
+                    account = @props.accounts[@props.accountID]
 
                     signatureNode = document.getElementById "signature"
                     if account.signature? and
@@ -794,9 +794,50 @@ ComposeEditor = React.createClass
     componentDidMount: ->
         @_initCompose()
 
-    componentDidUpdate: (nextProps, nextState) ->
-        if nextProps.messageID isnt @props.messageID
+    componentDidUpdate: (oldProps, oldState) ->
+        if oldProps.messageID isnt @props.messageID
             @_initCompose()
+
+        # On account change, update message signature
+        if oldProps.accountID isnt @props.accountID
+            signature = @props.accounts[@props.accountID].signature
+            if @refs.html?
+                signatureNode = document.getElementById "signature"
+                if signature? and signature.length > 0
+                    signatureHtml = signature.replace /\n/g, '<br>'
+                    if signatureNode?
+                        # replace old signature by new one
+                        signatureNode.innerHTML = "-- \n<br>#{signatureHtml}</p>"
+                    else
+                        # append new signature at the end of message
+                        @refs.html.getDOMNode().innerHTML += """
+                    <p><br></p><p id="signature">-- \n<br>#{signatureHtml}</p>
+                        """
+                else
+                    # new account has no signature
+                    if signatureNode?
+                        # delete old signature
+                        signatureNode.parentNode.removeChild signatureNode
+                # force update of React component
+                @onHTMLChange()
+            else if @refs.content?
+                node = @refs.content.getDOMNode()
+                oldSig = @props.accounts[oldProps.accountID].signature
+                if signature? and signature.length > 0
+                    if oldSig and oldSig.length > 0
+                        # replace old signature by new one
+                        node.textContent = node.textContent.replace oldSig, signature
+                    else
+                        # add signature at the end of message
+                        node.textContent += "\n\n-- \n#{signature}"
+                else
+                    # new account has no signature
+                    if oldSig and oldSig.length > 0
+                        # delete old signature
+                        oldSig = "-- \n#{signature}"
+                        node.textContent = node.textContent.replace oldSig, ''
+                # force update of React component
+                @onTextChange()
 
     onKeyDown: (evt) ->
         if evt.ctrlKey and evt.key is 'Enter'

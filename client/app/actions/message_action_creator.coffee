@@ -321,7 +321,10 @@ _localDelete = (target) ->
             newMailboxIds[trashMailbox] = -1
             updated.push(message.set('mailboxIDs', newMailboxIds).toJS())
 
-    _fixCurrentMessage target
+    # If target.inReplyTo is set, we are removing a reply, so stay
+    # on current message
+    if not target.inReplyTo?
+        _fixCurrentMessage target
 
     # immediately apply change to refresh UI
     # Update datastore

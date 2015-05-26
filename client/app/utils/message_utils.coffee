@@ -80,6 +80,13 @@ module.exports = MessageUtils =
         else
             return from
 
+    # Add signature at the end of the message
+    addSignature: (message, signature) ->
+        message.text += "\n\n-- \n#{signature}"
+        signatureHtml = signature.replace /\n/g, '<br>'
+        message.html += """
+        <p><br></p><p id="signature">-- \n<br>#{signatureHtml}</p>
+            """
 
     # Build message to put in the email composer depending on the context
     # (reply, reply to all, forward or simple message).
@@ -178,8 +185,6 @@ module.exports = MessageUtils =
         message.bcc = []
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
-        if isSignature
-            message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -187,11 +192,7 @@ module.exports = MessageUtils =
             <p><br></p>
             """
         if isSignature
-            signature = signature.replace /\n/g, '<br>'
-            message.html += """
-            <p><br></p><p id="signature">-- \n<br>#{signature}</p>
-            """
-
+            @addSignature message, signature
 
     # Build message to display in composer in case of a reply to all message:
     # * set subject automatically (Re: previous subject)
@@ -227,8 +228,6 @@ module.exports = MessageUtils =
 
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
-        if isSignature
-            message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
@@ -236,10 +235,7 @@ module.exports = MessageUtils =
             <p><br></p>
             """
         if isSignature
-            signature = signature.replace /\n/g, '<br>'
-            message.html += """
-            <p><br></p><p id="signature">-- \n<br>#{signature}</p>
-            """
+            @addSignature message, signature
 
 
     # Build message to display in composer in case of a message forwarding:
@@ -295,11 +291,10 @@ module.exports = MessageUtils =
             """
         message.text = textSeparator + text
         message.html = "#{COMPOSE_STYLE}"
+
         if isSignature
-            signature = signature.replace /\n/g, '<br>'
-            message.html += """
-            <p><br></p><p id="signature">-- \n<br>#{signature}</p>
-            """
+            @addSignature message, signature
+
         message.html += """
 
 <p>#{htmlSeparator}</p><p><br></p>#{html}
@@ -329,15 +324,10 @@ module.exports = MessageUtils =
         message.bcc = []
         message.subject = ''
         message.text = ''
+        message.html = "#{COMPOSE_STYLE}\n<p><br></p>"
+
         if isSignature
-            message.text += "-- \n#{signature}"
-        message.html = COMPOSE_STYLE
-        if isSignature
-            signature = signature.replace /\n/g, '<br>'
-            message.html += """
-            <p><br></p><p><br></p>
-            <p id="signature">-- \n<br>#{signature}</p>
-            """
+            @addSignature message, signature
 
         return message
 
