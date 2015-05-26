@@ -29,13 +29,16 @@ module.exports.fetchParent = (req, res, next) ->
 # refresh a mailbox
 module.exports.refresh = (req, res, next) ->
     account = req.account
-    req.mailbox.imap_refresh
-        limitByBox: null
-        firstImport:false
-        supportRFC4551: account.supportRFC4551
-    , (err, shouldNotif) ->
-       return next err if err
-       res.send req.mailbox
+    if account.isRefreshing()
+        return res.status(202).send info: 'in progress'
+    else
+        req.mailbox.imap_refresh
+            limitByBox: null
+            firstImport:false
+            supportRFC4551: account.supportRFC4551
+        , (err, shouldNotif) ->
+           return next err if err
+           res.send req.mailbox
 
 
 
