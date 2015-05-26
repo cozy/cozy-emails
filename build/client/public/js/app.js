@@ -1051,7 +1051,9 @@ _localDelete = function(target) {
       updated.push(message.set('mailboxIDs', newMailboxIds).toJS());
     }
   }
-  _fixCurrentMessage(target);
+  if (target.inReplyTo == null) {
+    _fixCurrentMessage(target);
+  }
   AppDispatcher.handleViewAction({
     type: ActionTypes.RECEIVE_RAW_MESSAGES,
     value: updated
@@ -3829,7 +3831,7 @@ module.exports = Compose = React.createClass({
       html: this.linkState('html'),
       text: this.linkState('text'),
       accounts: this.props.accounts,
-      selectedAccountID: this.props.selectedAccountID,
+      accountID: this.state.accountID,
       settings: this.props.settings,
       onSend: this.onSend,
       composeInHTML: this.state.composeInHTML,
@@ -3938,7 +3940,8 @@ module.exports = Compose = React.createClass({
             return MessageActionCreator["delete"]({
               messageID: messageID,
               silent: silent,
-              isDraft: true
+              isDraft: true,
+              inReplyTo: _this.props.inReplyTo
             });
           };
         })(this), 0);
@@ -4447,7 +4450,7 @@ ComposeEditor = React.createClass({
       if (node != null) {
         document.querySelector(".rt-editor").focus();
         if (!this.props.settings.get('composeOnTop')) {
-          account = this.props.accounts[this.props.selectedAccountID];
+          account = this.props.accounts[this.props.accountID];
           signatureNode = document.getElementById("signature");
           if ((account.signature != null) && account.signature.length > 0 && (signatureNode != null)) {
             node = signatureNode;
@@ -4475,9 +4478,45 @@ ComposeEditor = React.createClass({
   componentDidMount: function() {
     return this._initCompose();
   },
-  componentDidUpdate: function(nextProps, nextState) {
-    if (nextProps.messageID !== this.props.messageID) {
-      return this._initCompose();
+  componentDidUpdate: function(oldProps, oldState) {
+    var node, oldSig, signature, signatureHtml, signatureNode;
+    if (oldProps.messageID !== this.props.messageID) {
+      this._initCompose();
+    }
+    if (oldProps.accountID !== this.props.accountID) {
+      signature = this.props.accounts[this.props.accountID].signature;
+      if (this.refs.html != null) {
+        signatureNode = document.getElementById("signature");
+        if ((signature != null) && signature.length > 0) {
+          signatureHtml = signature.replace(/\n/g, '<br>');
+          if (signatureNode != null) {
+            signatureNode.innerHTML = "-- \n<br>" + signatureHtml + "</p>";
+          } else {
+            this.refs.html.getDOMNode().innerHTML += "<p><br></p><p id=\"signature\">-- \n<br>" + signatureHtml + "</p>";
+          }
+        } else {
+          if (signatureNode != null) {
+            signatureNode.parentNode.removeChild(signatureNode);
+          }
+        }
+        return this.onHTMLChange();
+      } else if (this.refs.content != null) {
+        node = this.refs.content.getDOMNode();
+        oldSig = this.props.accounts[oldProps.accountID].signature;
+        if ((signature != null) && signature.length > 0) {
+          if (oldSig && oldSig.length > 0) {
+            node.textContent = node.textContent.replace(oldSig, signature);
+          } else {
+            node.textContent += "\n\n-- \n" + signature;
+          }
+        } else {
+          if (oldSig && oldSig.length > 0) {
+            oldSig = "-- \n" + signature;
+            node.textContent = node.textContent.replace(oldSig, '');
+          }
+        }
+        return this.onTextChange();
+      }
     }
   },
   onKeyDown: function(evt) {
@@ -4821,28 +4860,96 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/date_range_picker", function(exports, require, module) {
-var DateRangePicker, Tooltips, button, div, i, input, li, span, ul, _ref;
+var DateRangePicker, Tooltips, button, datePickerFormat, div, i, input, li, momentFormat, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, button = _ref.button, input = _ref.input;
 
 Tooltips = require('../constants/app_constants').Tooltips;
 
+momentFormat = 'DD/MM/YYYY';
+
+datePickerFormat = '%d/%m/%Y';
+
 module.exports = DateRangePicker = React.createClass({
   displayName: 'DateRangePicker',
+  propTypes: {
+    active: React.PropTypes.bool,
+    onDateFilter: React.PropTypes.func.isRequired
+  },
   getInitialState: function() {
     return {
-      label: t('daterangepicker placeholder')
+      isActive: this.props.active,
+      label: t('daterangepicker placeholder'),
+      startDate: '',
+      endDate: ''
     };
+  },
+  componentWillReceiveProps: function(nextProps) {
+    if (this.state.isActive && !nextProps.active) {
+      return this.reset();
+    }
+  },
+  onStartChange: function(obj) {
+    var date;
+    date = obj.target != null ? obj.target.value : "" + obj.dd + "/" + obj.mm + "/" + obj.yyyy;
+    return this.setState({
+      startDate: date
+    }, this.filterize);
+  },
+  onEndChange: function(obj) {
+    var date;
+    date = obj.target ? obj.target.value : "" + obj.dd + "/" + obj.mm + "/" + obj.yyyy;
+    return this.setState({
+      endDate: date
+    }, this.filterize);
+  },
+  filterize: function() {
+    var d, end, m, start, y, _ref1, _ref2;
+    if (!this.state.startDate ^ !this.state.endDate) {
+      return;
+    }
+    start = this.state.startDate ? ((_ref1 = this.state.startDate.split('/'), d = _ref1[0], m = _ref1[1], y = _ref1[2], _ref1), "" + y + "-" + m + "-" + d + "T00:00:00.000Z") : void 0;
+    end = this.state.endDate ? ((_ref2 = this.state.endDate.split('/'), d = _ref2[0], m = _ref2[1], y = _ref2[2], _ref2), "" + y + "-" + m + "-" + d + "T23:59:59.999Z") : void 0;
+    this.setState({
+      isActive: !!this.state.startDate && !!this.state.endDate
+    });
+    return this.props.onDateFilter(start, end);
+  },
+  reset: function() {
+    return this.setState({
+      isActive: false,
+      startDate: '',
+      endDate: ''
+    }, this.filterize);
+  },
+  presetYesterday: function() {
+    return this.setState({
+      startDate: moment().subtract(1, 'day').format(momentFormat),
+      endDate: moment().subtract(1, 'day').format(momentFormat)
+    }, this.filterize);
+  },
+  presetLastWeek: function() {
+    return this.setState({
+      startDate: moment().subtract(1, 'week').format(momentFormat),
+      endDate: moment().format(momentFormat)
+    }, this.filterize);
+  },
+  presetLastMonth: function() {
+    return this.setState({
+      startDate: moment().subtract(1, 'month').format(momentFormat),
+      endDate: moment().format(momentFormat)
+    }, this.filterize);
   },
   render: function() {
     return div({
-      role: 'menuitem',
       className: 'dropdown date-range-picker',
       'aria-describedby': Tooltips.FILTER_DATE_RANGE,
       'data-tooltip-direction': 'bottom'
     }, button({
       className: 'dropdown-toggle',
-      'data-toggle': 'dropdown'
+      role: 'menuitem',
+      'data-toggle': 'dropdown',
+      'aria-selected': this.state.isActive
     }, i({
       className: 'fa fa-calendar'
     }), span({
@@ -4856,26 +4963,40 @@ module.exports = DateRangePicker = React.createClass({
     }, li({
       role: 'presentation'
     }, button({
-      role: 'menuitem'
+      role: 'menuitem',
+      onClick: this.presetYesterday
     }, t('daterangepicker presets yesterday'))), li({
       role: 'presentation'
     }, button({
-      role: 'menuitem'
+      role: 'menuitem',
+      onClick: this.presetLastWeek
     }, t('daterangepicker presets last week'))), li({
       role: 'presentation'
     }, button({
-      role: 'menuitem'
-    }, t('daterangepicker presets last month')))), input({
+      role: 'menuitem',
+      onClick: this.presetLastMonth
+    }, t('daterangepicker presets last month'))), li({
+      role: 'presentation'
+    }, button({
+      role: 'menuitem',
+      onClick: this.reset
+    }, t('daterangepicker clear')))), div({
+      className: 'date-pickers'
+    }, input({
       ref: "date-range-picker-start",
       id: "date-range-picker-start",
+      type: 'text',
       name: "date-range-picker-start",
-      type: 'date'
+      value: this.state.startDate,
+      onChange: this.onStartChange
     }), input({
       ref: "date-range-picker-end",
       id: "date-range-picker-end",
+      type: 'text',
       name: "date-range-picker-end",
-      type: 'date'
-    })));
+      value: this.state.endDate,
+      onChange: this.onEndChange
+    }))));
   },
   initDatepicker: function() {
     var options;
@@ -4886,12 +5007,18 @@ module.exports = DateRangePicker = React.createClass({
     };
     datePickerController.createDatePicker(_.extend({}, options, {
       formElements: {
-        'date-range-picker-start': '%d/%m/%Y'
+        'date-range-picker-start': datePickerFormat
+      },
+      callbackFunctions: {
+        datereturned: [this.onStartChange]
       }
     }));
     return datePickerController.createDatePicker(_.extend({}, options, {
       formElements: {
-        'date-range-picker-end': '%d/%m/%Y'
+        'date-range-picker-end': datePickerFormat
+      },
+      callbackFunctions: {
+        datereturned: [this.onEndChange]
       }
     }));
   },
@@ -4899,7 +5026,8 @@ module.exports = DateRangePicker = React.createClass({
     return this.initDatepicker();
   },
   componentDidUpdate: function() {
-    return this.initDatepicker();
+    datePickerController.setDateFromInput('date-range-picker-start');
+    return datePickerController.setDateFromInput('date-range-picker-end');
   }
 });
 });
@@ -8904,25 +9032,25 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
   },
   getInitialState: function() {
     return {
-      flagged: false,
-      unseen: false,
-      attach: false,
-      date: false,
+      flag: 'ALL',
+      filter: false,
       expanded: false
     };
   },
-  _resetFiltersState: function(name) {
-    var filters;
-    filters = {
-      flagged: false,
-      unseen: false,
-      attach: false
-    };
-    filters[name] = !this.state[name];
-    return this.setState(filters);
-  },
   showList: function() {
-    var params;
+    var end, params, start, _ref2;
+    LayoutActionCreator.filterMessages(MessageFilter[this.state.flag]);
+    if (this.state.filter) {
+      _ref2 = this.state.filter, start = _ref2[0], end = _ref2[1];
+    } else {
+      start = end = '';
+    }
+    LayoutActionCreator.sortMessages({
+      order: '-',
+      field: 'date',
+      before: start,
+      after: end
+    });
     params = _.clone(MessageStore.getParams());
     params.accountID = this.props.accountID;
     params.mailboxID = this.props.mailboxID;
@@ -8930,12 +9058,25 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
       parameters: params
     });
   },
+  onDateFilter: function(start, end) {
+    var params;
+    params = !!start && !!end ? {
+      flag: false,
+      filter: [start, end]
+    } : {
+      filter: false
+    };
+    return this.setState(params, this.showList);
+  },
   toggleFilters: function(name) {
-    var filter;
-    filter = MessageFilter[this.state[name] ? 'ALL' : name.toUpperCase()];
-    LayoutActionCreator.filterMessages(filter);
-    this.showList();
-    return this._resetFiltersState(name);
+    var params;
+    params = this.state.flag === name ? {
+      flag: 'ALL'
+    } : {
+      flag: name,
+      filter: false
+    };
+    return this.setState(params, this.showList);
   },
   render: function() {
     return div({
@@ -8948,8 +9089,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
       onClick: this.toggleExpandState
     }), button({
       role: 'menuitem',
-      'aria-selected': this.state.unseen,
-      onClick: this.toggleFilters.bind(this, 'unseen'),
+      'aria-selected': this.state.flag === 'UNSEEN',
+      onClick: this.toggleFilters.bind(this, 'UNSEEN'),
       'aria-describedby': Tooltips.FILTER_ONLY_UNREAD,
       'data-tooltip-direction': 'bottom'
     }, i({
@@ -8958,8 +9099,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
       className: 'btn-label'
     }, t('filters unseen'))), button({
       role: 'menuitem',
-      'aria-selected': this.state.flagged,
-      onClick: this.toggleFilters.bind(this, 'flagged'),
+      'aria-selected': this.state.flag === 'FLAGGED',
+      onClick: this.toggleFilters.bind(this, 'FLAGGED'),
       'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT,
       'data-tooltip-direction': 'bottom'
     }, i({
@@ -8968,15 +9109,18 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
       className: 'btn-label'
     }, t('filters flagged'))), button({
       role: 'menuitem',
-      'aria-selected': this.state.attach,
-      onClick: this.toggleFilters.bind(this, 'attach'),
+      'aria-selected': this.state.flag === 'ATTACH',
+      onClick: this.toggleFilters.bind(this, 'ATTACH'),
       'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT,
       'data-tooltip-direction': 'bottom'
     }, i({
       className: 'fa fa-paperclip'
     }), span({
       className: 'btn-label'
-    }, t('filters attach'))));
+    }, t('filters attach'))), DateRangePicker({
+      active: !!this.state.filter,
+      onDateFilter: this.onDateFilter
+    }));
   },
   toggleExpandState: function() {
     return this.setState({
@@ -11017,7 +11161,8 @@ module.exports = {
   'daterangepicker placeholder': 'by date',
   'daterangepicker presets yesterday': 'yesterday',
   'daterangepicker presets last week': 'last week',
-  'daterangepicker presets last month': 'last month'
+  'daterangepicker presets last month': 'last month',
+  'daterangepicker clear': 'clear'
 };
 });
 
@@ -11374,7 +11519,8 @@ module.exports = {
   'daterangepicker placeholder': 'par date',
   'daterangepicker presets yesterday': 'hier',
   'daterangepicker presets last week': 'semaine dernière',
-  'daterangepicker presets last month': 'mois dernier'
+  'daterangepicker presets last month': 'mois dernier',
+  'daterangepicker clear': 'effacer'
 };
 });
 
@@ -13496,6 +13642,12 @@ module.exports = MessageUtils = {
       return from;
     }
   },
+  addSignature: function(message, signature) {
+    var signatureHtml;
+    message.text += "\n\n-- \n" + signature;
+    signatureHtml = signature.replace(/\n/g, '<br>');
+    return message.html += "<p><br></p><p id=\"signature\">-- \n<br>" + signatureHtml + "</p>";
+  },
   makeReplyMessage: function(myAddress, inReplyTo, action, inHTML, signature) {
     var dateHuman, e, html, isSignature, message, notMe, options, sender, text;
     message = {
@@ -13576,13 +13728,9 @@ module.exports = MessageUtils = {
     message.bcc = [];
     message.subject = this.getReplySubject(inReplyTo);
     message.text = separator + this.generateReplyText(text) + "\n";
-    if (isSignature) {
-      message.text += "\n\n" + signature;
-    }
     message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br></p>";
     if (isSignature) {
-      signature = signature.replace(/\n/g, '<br>');
-      return message.html += "<p><br></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
+      return this.addSignature(message, signature);
     }
   },
   setMessageAsReplyAll: function(options) {
@@ -13603,13 +13751,9 @@ module.exports = MessageUtils = {
     message.bcc = [];
     message.subject = this.getReplySubject(inReplyTo);
     message.text = separator + this.generateReplyText(text) + "\n";
-    if (isSignature) {
-      message.text += "\n\n" + signature;
-    }
     message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br></p>";
     if (isSignature) {
-      signature = signature.replace(/\n/g, '<br>');
-      return message.html += "<p><br></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
+      return this.addSignature(message, signature);
     }
   },
   setMessageAsForward: function(options) {
@@ -13635,8 +13779,7 @@ module.exports = MessageUtils = {
     message.text = textSeparator + text;
     message.html = "" + COMPOSE_STYLE;
     if (isSignature) {
-      signature = signature.replace(/\n/g, '<br>');
-      message.html += "<p><br></p><p id=\"signature\">-- \n<br>" + signature + "</p>";
+      this.addSignature(message, signature);
     }
     message.html += "\n<p>" + htmlSeparator + "</p><p><br></p>" + html;
     message.attachments = inReplyTo.get('attachments');
@@ -13650,13 +13793,9 @@ module.exports = MessageUtils = {
     message.bcc = [];
     message.subject = '';
     message.text = '';
+    message.html = "" + COMPOSE_STYLE + "\n<p><br></p>";
     if (isSignature) {
-      message.text += "-- \n" + signature;
-    }
-    message.html = COMPOSE_STYLE;
-    if (isSignature) {
-      signature = signature.replace(/\n/g, '<br>');
-      message.html += "<p><br></p><p><br></p>\n<p id=\"signature\">-- \n<br>" + signature + "</p>";
+      this.addSignature(message, signature);
     }
     return message;
   },

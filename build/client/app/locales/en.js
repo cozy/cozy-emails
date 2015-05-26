@@ -352,5 +352,6 @@ module.exports = {
   'daterangepicker placeholder': 'by date',
   'daterangepicker presets yesterday': 'yesterday',
   'daterangepicker presets last week': 'last week',
-  'daterangepicker presets last month': 'last month'
+  'daterangepicker presets last month': 'last month',
+  'daterangepicker clear': 'clear'
 };
