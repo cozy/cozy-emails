@@ -21,6 +21,19 @@ RefreshIndicator = require './menu_refresh_indicator'
 
 {Dispositions, SpecialBoxIcons, Tooltips} = require '../constants/app_constants'
 
+
+# This is here for a convenient way to fond special mailboxes names.
+# NOTE: should we externalize them in app_constants?
+specialMailboxes = [
+    'inboxMailbox'
+    'draftMailbox'
+    'sentMailbox'
+    'trashMailbox'
+    'junkMailbox'
+    'allMailbox'
+]
+
+
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
@@ -206,6 +219,8 @@ module.exports = Menu = React.createClass
             parameters: [accountID, 'account']
             fullWidth: true
 
+        specialMboxes = specialMailboxes.map (mbox) -> account.get mbox
+
         div
             className: accountClasses, key: key,
             div className: 'account-title',
@@ -257,7 +272,21 @@ module.exports = Menu = React.createClass
                 ul
                     role: 'group'
                     className: 'list-unstyled mailbox-list',
-                    mailboxes?.map (mailbox, key) =>
+                    mailboxes?.filter (mailbox) =>
+                        mailbox.get('id') in specialMboxes
+                    .map (mailbox, key) =>
+                        selectedMailboxID = @props.selectedMailboxID
+                        MenuMailboxItem
+                            account:           account,
+                            mailbox:           mailbox,
+                            key:               key,
+                            selectedMailboxID: selectedMailboxID,
+                            refreshes:         refreshes,
+                            displayErrors:     @displayErrors,
+                    .toJS()
+                    mailboxes?.filter (mailbox) =>
+                        mailbox.get('id') not in specialMboxes
+                    .map (mailbox, key) =>
                         selectedMailboxID = @props.selectedMailboxID
                         MenuMailboxItem
                             account:           account,
