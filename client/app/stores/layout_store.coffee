@@ -27,6 +27,8 @@ class LayoutStore extends Store
 
     _drawer = false
 
+    _modal  = null
+
 
     ###
         Defines here the action handlers.
@@ -63,6 +65,14 @@ class LayoutStore extends Store
         handle ActionTypes.HIDE_ALERT, (value) ->
             _alert.level   = null
             _alert.message = null
+            @emit 'change'
+
+        handle ActionTypes.DISPLAY_MODAL, (value) ->
+            _modal = value
+            @emit 'change'
+
+        handle ActionTypes.HIDE_MODAL, (value) ->
+            _modal = null
             @emit 'change'
 
         # Hide alerts on mailbox / account change
@@ -130,6 +140,8 @@ class LayoutStore extends Store
     isPreviewFullscreen: -> return _previewFullscreen
 
     getAlert: -> return _alert
+
+    getModal: -> return _modal
 
     getToasts: -> return _tasks
 

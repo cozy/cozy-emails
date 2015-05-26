@@ -4,6 +4,7 @@ module.exports =
       "app loading"             : "Chargement…"
       "app back"                : "Retour"
       "app cancel"              : "Annuler"
+      "app confirm"             : "Oui"
       "app menu"                : "Menu"
       "app search"              : "Rechercher…"
       "app alert close"         : "Fermer"

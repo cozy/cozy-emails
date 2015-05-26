@@ -1,16 +1,17 @@
 # React components
 {div, section, main, p, span, a, i, strong, form, input, button} = React.DOM
-AccountConfig = require './account_config'
-Alert         = require './alert'
-Topbar        = require './topbar'
+AccountConfig  = require './account_config'
+Alert          = require './alert'
+Compose        = require './compose'
+Conversation   = require './conversation'
+Menu           = require './menu'
+MessageList    = require './message-list'
+Modal          = require './modal'
+SearchForm     = require './search-form'
+Settings       = require './settings'
 ToastContainer = require './toast_container'
-Compose       = require './compose'
-Conversation  = require './conversation'
-Menu          = require './menu'
-MessageList   = require './message-list'
-Settings      = require './settings'
-SearchForm    = require './search-form'
-Tooltips      = require './tooltips-manager'
+Tooltips       = require './tooltips-manager'
+Topbar         = require './topbar'
 
 # React addons
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup
@@ -68,6 +69,7 @@ module.exports = Application = React.createClass
         fullscreen  = LayoutStore.isPreviewFullscreen()
 
         alert = @state.alertMessage
+        modal = @state.modal
 
         # Store current message ID if selected
         if layout.secondPanel? and layout.secondPanel.parameters.messageID?
@@ -112,6 +114,8 @@ module.exports = Application = React.createClass
 
             # Display feedback
             Alert { alert }
+            if modal?
+                Modal modal
             ToastContainer()
 
             # Tooltips' content is declared once at the application level.
@@ -355,22 +359,23 @@ module.exports = Application = React.createClass
         disposition = LayoutStore.getDisposition()
 
         return {
-            accounts: accounts
-            accountsFlat: accountsFlat
-            selectedAccount: selectedAccount
-            isResponsiveMenuShown: false
-            alertMessage: LayoutStore.getAlert()
-            mailboxes: mailboxes
-            mailboxesSorted: AccountStore.getSelectedMailboxes true
-            mailboxesFlat: mailboxesFlat
-            selectedMailboxID: selectedMailboxID
-            selectedMailbox: AccountStore.getSelectedMailbox selectedMailboxID
-            favoriteMailboxes: AccountStore.getSelectedFavorites()
-            favoriteSorted: AccountStore.getSelectedFavorites true
-            searchQuery: SearchStore.getQuery()
-            refreshes: RefreshesStore.getRefreshing()
-            settings: SettingsStore.get()
-            plugins: window.plugins
+            accounts              : accounts
+            accountsFlat          : accountsFlat
+            selectedAccount       : selectedAccount
+            isResponsiveMenuShown : false
+            alertMessage          : LayoutStore.getAlert()
+            modal                 : LayoutStore.getModal()
+            mailboxes             : mailboxes
+            mailboxesSorted       : AccountStore.getSelectedMailboxes true
+            mailboxesFlat         : mailboxesFlat
+            selectedMailboxID     : selectedMailboxID
+            selectedMailbox       : AccountStore.getSelectedMailbox selectedMailboxID
+            favoriteMailboxes     : AccountStore.getSelectedFavorites()
+            favoriteSorted        : AccountStore.getSelectedFavorites true
+            searchQuery           : SearchStore.getQuery()
+            refreshes             : RefreshesStore.getRefreshing()
+            settings              : SettingsStore.get()
+            plugins               : window.plugins
         }
 
 
