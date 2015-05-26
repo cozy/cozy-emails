@@ -52,7 +52,7 @@ module.exports = Menu = React.createClass
         onlyFavorites: true
 
     getStateFromStores: ->
-            isDrawerExpanded: LayoutStore.isDrawerExpanded()
+        isDrawerExpanded: LayoutStore.isDrawerExpanded()
 
     componentWillReceiveProps: (props) ->
         if not Immutable.is(props.selectedAccount, @props.selectedAccount)
@@ -266,7 +266,7 @@ module.exports = Menu = React.createClass
                             'data-tooltip-direction': 'right'
 
                 if nbUnread > 0 and not progress
-                        span className: 'badge', nbUnread
+                    span className: 'badge', nbUnread
 
             if isSelected
                 ul
@@ -430,12 +430,12 @@ MenuMailboxItem = React.createClass
 
         e.preventDefault()
 
-        if window.confirm(t 'account confirm delbox')
+        doExpunge = ->
             mailbox =
                 accountID: accountID
                 mailboxID: mailboxID
 
-            AccountActionCreator.mailboxExpunge mailbox, (error) =>
+            AccountActionCreator.mailboxExpunge mailbox, (error) ->
                 if error?
                     # if user hasn't switched to another box, refresh display
                     if accountID is mailbox.accountID and
@@ -449,3 +449,14 @@ MenuMailboxItem = React.createClass
                 else
                     LayoutActionCreator.notify t("mailbox expunge ok"),
                         autoclose: true
+            LayoutActionCreator.hideModal()
+
+        modal =
+            title       : t 'account confirm delbox'
+            subtitle    : t 'account confirm delbox'
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'app cancel'
+            actionLabel : t 'app confirm'
+            action      : doExpunge
+        LayoutActionCreator.displayModal modal
