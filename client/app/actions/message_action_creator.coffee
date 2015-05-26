@@ -74,7 +74,7 @@ module.exports = MessageActionCreator =
                 LAC.alertError alertMsg
             else
                 if target.silent isnt true
-                    MessageActionCreator.receiveRawMessagesupdated
+                    MessageActionCreator.receiveRawMessages updated
                     LAC.notify alertMsg,
                         autoclose: true,
                         actions: [
