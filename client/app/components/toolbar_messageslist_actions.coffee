@@ -4,7 +4,8 @@
 ToolboxActions = require './toolbox_actions'
 ToolboxMove    = require './toolbox_move'
 
-MessageActionCreator      = require '../actions/message_action_creator'
+LayoutActionCreator  = require '../actions/layout_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
 
 
 module.exports = ActionsToolbarMessagesList = React.createClass
@@ -80,14 +81,29 @@ module.exports = ActionsToolbarMessagesList = React.createClass
         else
             msg = t 'list delete confirm', smart_count: options.count
 
-        noConfirm = not @props.settings.get('messageConfirmDelete')
-        if noConfirm or window.confirm msg
+        doDelete = =>
             MessageActionCreator.delete options, =>
                 if options.count > 0 and @props.messages.count() > 0
                     firstMessageID = @props.messages.first().get('id')
                     MessageActionCreator.setCurrent firstMessageID, true
             if @props.afterAction?
                 @props.afterAction()
+
+        noConfirm = not @props.settings.get('messageConfirmDelete')
+        if noConfirm
+            doDelete()
+        else
+            modal =
+                title       : msg
+                subtitle    : msg
+                closeModal  : ->
+                    LayoutActionCreator.hideModal()
+                closeLabel  : t 'app cancel'
+                actionLabel : t 'app confirm'
+                action      : ->
+                    doDelete()
+                    LayoutActionCreator.hideModal()
+            LayoutActionCreator.displayModal modal
 
 
     onMove: (to, applyToConversation) ->
