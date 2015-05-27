@@ -12,7 +12,6 @@ MessageActionCreator      = require '../actions/message_action_creator'
 AccountStore = require '../stores/account_store'
 LayoutStore  = require '../stores/layout_store'
 
-Modal        = require './modal'
 ThinProgress = require './thin_progress'
 MessageUtils = require '../utils/message_utils'
 colorhash    = require '../utils/colorhash'
@@ -48,7 +47,6 @@ module.exports = Menu = React.createClass
 
     getInitialState: ->
         displayActiveAccount: true
-        modalErrors: null
         onlyFavorites: true
 
     getStateFromStores: ->
@@ -60,10 +58,18 @@ module.exports = Menu = React.createClass
 
 
     displayErrors: (refreshee) ->
-        @setState modalErrors: refreshee.get 'errors'
-
-    hideErrors: ->
-        @setState modalErrors: null
+        errors = refreshee.get 'errors'
+        modal =
+            title       : t 'modal please contribute'
+            subtitle    : t 'modal please report'
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'app alert close'
+            content     : React.DOM.pre
+                style: "max-height": "300px",
+                "word-wrap": "normal",
+                    errors.join "\n\n"
+        LayoutActionCreator.displayModal modal
 
     render: ->
 
@@ -102,20 +108,6 @@ module.exports = Menu = React.createClass
                 action: 'settings'
                 fullWidth: true
 
-        if @state.modalErrors
-            title       = t 'modal please contribute'
-            subtitle    = t 'modal please report'
-            modalErrors = @state.modalErrors
-            closeModal  = @hideErrors
-            closeLabel  = t 'app alert close'
-            content = React.DOM.pre
-                style: "max-height": "300px",
-                "word-wrap": "normal",
-                    @state.modalErrors.join "\n\n"
-            modal = Modal {title, subtitle, content, closeModal, closeLabel}
-        else
-            modal = null
-
         composeUrl = @buildUrl
             direction: 'first'
             action: 'compose'
@@ -126,9 +118,6 @@ module.exports = Menu = React.createClass
         aside
             role: 'menubar'
             'aria-expanded': @state.isDrawerExpanded,
-
-
-            modal
 
             if @props.accounts.length
                 a

@@ -39,7 +39,6 @@ initIntent = ->
     .then (message) ->
         LayoutActionCreator.intentAvailability true
     , (error) ->
-        console.log "Intents not available"
         LayoutActionCreator.intentAvailability false
 
 # init plugins
