@@ -68,10 +68,10 @@ module.exports.create = (req, res, next) ->
         when 'error'
             log.error activity.data
             log.error activity.data.error?.stack
-            res.send null
+            res.send 'ok'
         when 'debug'
             log.info activity.data.message
-            res.send null
+            res.send 'ok'
         else
             res.status(400).send
                 name: "Unknown activity data type",
