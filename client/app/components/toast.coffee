@@ -42,7 +42,7 @@ module.exports = Toast = React.createClass
             if toast.message
                 div className: "message", toast.message
 
-            if toast.finished
+            if toast.finished or hasErrors
                 button
                     type: "button",
                     className: "close",
@@ -62,8 +62,13 @@ module.exports = Toast = React.createClass
                             action.label
 
             if hasErrors
+                className = "btn btn-cancel btn-cozy-non-default btn-xs"
                 div className: 'toast-actions',
-                    a onClick: showModal,
+                    button
+                        className: className,
+                        type: "button",
+                        key: 'errors'
+                        onClick: showModal,
                         t 'there were errors', smart_count: toast.errors.length
 
 
