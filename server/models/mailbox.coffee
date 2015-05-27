@@ -399,7 +399,7 @@ class Mailbox extends cozydb.CozyModel
     imap_refresh: (options, callback) ->
         log.debug "refreshing box"
         if not options.supportRFC4551
-            log.debug "accoutn doesnt support RFC4551"
+            log.debug "account doesnt support RFC4551"
             @imap_refreshDeep options, callback
 
         else if @lastHighestModSeq
@@ -421,6 +421,20 @@ class Mailbox extends cozydb.CozyModel
 
     # Public: refresh mails in this box using rfc4551. This is similar to
     # {::imap_refreshDeep} but faster if the server supports RFC4551.
+    #
+    # First, we ask the server for all updated messages since last
+    # refresh. {Mailbox::_refreshGetImapStatus}
+    #
+    # Then we apply these changes in {Mailbox::_refreshCreatedAndUpdated}
+    #
+    # Because RFC4551 doesnt give a way for the server to indicate expunged
+    # messages, at this point, we have all new and updated messages, but we
+    # may still have messages in cozy that were expungeds in IMAP.
+    # We refresh deletion if needed in {Mailbox::_refreshDeleted}
+    #
+    # Finally we store the new highestmodseq, so we can ask for changes
+    # since this refresh. We also store the IMAP number of message because
+    # it can be different from the cozy one due to twin messages.
     #
     # Returns (callback) {Boolean} shouldNotif whether or not new unread mails
     # have been fetched in this fetch
@@ -543,7 +557,7 @@ class Mailbox extends cozydb.CozyModel
                 (cb) -> box.imap_UIDs cb
             ], (err, results) ->
                 [cozyUIDs, imapUIDs] = results
-                log.debug "refreshDeleted#uids", cozyUIDs.lenght,
+                log.debug "refreshDeleted#uids", cozyUIDs.length,
                                                                 imapUIDs.length
 
                 deleted = (uid for uid in cozyUIDs when uid not in imapUIDs)
@@ -704,6 +718,42 @@ class Mailbox extends cozydb.CozyModel
         , (err) ->
             callback err, shouldNotif
 
+    # Public: apply a mixed bundle of ops
+    #
+    # ops - a operation bundle
+    #       :toFetch - {Array} of {Object}(mid, uid) msg to fetch
+    #       :toRemove - {Array} of {String} ids of cozy messages to remove
+    #       :flagsChange - {Array} of {Object}(id, flags) changes to make
+    # isFirstImport - {Boolean} is this part of the first import of account
+    #
+    # Returns (callback) shouldNotif - {Boolean} was a new unread message
+    # imported
+    applyOperations: (ops, isFirstImport, callback) ->
+        {toFetch, toRemove, flagsChange} = ops
+        nbTasks = toFetch.length + toRemove.length + flagsChange.length
+
+        outShouldNotif = false
+
+        if nbTasks > 0
+            isFirstImport = laststep.firstImport
+            reporter = ImapReporter.boxFetch @, nbTasks, isFirstImport
+
+            async.series [
+                (cb) => @applyToRemove     toRemove,    reporter, cb
+                (cb) => @applyFlagsChanges flagsChange, reporter, cb
+                (cb) =>
+                    @applyToFetch toFetch, reporter, (err, shouldNotif) ->
+                        return cb err if err
+                        outShouldNotif = shouldNotif
+                        cb null
+            ], (err) =>
+                if err
+                    reporter.onError err
+                reporter.onDone()
+                callback err, outShouldNotif
+        else
+            callback null, outShouldNotif
+
     # Public: refresh part of a mailbox
     # @TODO : recursion is complicated, refactor this using async.while
     #
@@ -725,32 +775,16 @@ class Mailbox extends cozydb.CozyModel
                 total: step.total
                 highestmodseq: step.highestmodseq
 
-            return callback null, info unless ops
+            unless ops
+                return callback null, info
+            else
+                firstImport = laststep.firstImport
+                @applyOperations ops, firstImport, (err, shouldNotif) ->
+                    return callback err if err
 
-            nbTasks = ops.toFetch.length + ops.toRemove.length +
-                                                        ops.flagsChange.length
-            if nbTasks > 0
-                isFirstImport = laststep.firstImport
-                reporter = ImapReporter.boxFetch @, nbTasks, isFirstImport
-
-            async.series [
-                (cb) => @applyToRemove     ops.toRemove,    reporter, cb
-                (cb) => @applyFlagsChanges ops.flagsChange, reporter, cb
-                (cb) =>
-                    @applyToFetch ops.toFetch, reporter, (err, shouldNotif) ->
-                        return cb err if err
-                        info.shouldNotif = shouldNotif
-                        cb null
-            ], (err) =>
-                reporter?.onDone()
-
-                if err
-                    reporter.onError err if err
-                    return callback err
-
-                else # next step
+                    # next step
                     @imap_refreshStep step, (err, infoNext) ->
-                        info.shouldNotif or= infoNext.shouldNotif
+                        info.shouldNotif = shouldNotif or infoNext.shouldNotif
                         callback err, info
 
 

@@ -579,7 +579,7 @@ module.exports = class Message extends cozydb.CozyModel
     #
     # Returns (callback) {Object} information about what happened
     #           :shouldNotif - {Boolean} whether a new unread message was added
-    #           :actuallyAdded - {Boolean} wheter a message was actually added
+    #           :actuallyAdded - {Boolean} whether a message was actually added
     @fetchOrUpdate: (box, msg, callback) ->
         {mid, uid} = msg
         log.debug "fetchOrUpdate", box.id, mid, uid

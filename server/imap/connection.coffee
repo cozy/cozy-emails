@@ -131,7 +131,7 @@ module.exports = class ImapConnection extends NodeImapConnection
                 flags = null # message flags
                 mid = null # message id
                 msg.on 'error', (err) -> results.error = err
-                msg.on 'end', -> results[uid] = [ mid, flags ]
+                msg.on 'end', -> results[uid] = [mid, flags]
                 msg.on 'attributes', (attrs) ->
                     {flags, uid} = attrs
                 msg.on 'body', (stream) ->
@@ -165,7 +165,7 @@ module.exports = class ImapConnection extends NodeImapConnection
                 flags = null # message flags
                 mid = null # message id
                 msg.on 'error', (err) -> results.error = err
-                msg.on 'end', -> results[uid] = [ mid, flags ]
+                msg.on 'end', -> results[uid] = [mid, flags]
                 msg.on 'attributes', (attrs) ->
                     {flags, uid} = attrs
                 msg.on 'body', (stream) ->
