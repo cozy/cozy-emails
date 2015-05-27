@@ -759,7 +759,8 @@ module.exports = class Message extends cozydb.CozyModel
                         # step 1 - open one box at random
                         (cb) =>
                             path = boxIndex[boxid].path
-                            log.debug "CHANGING FLAGS OF #{@id} (#{@subject}) in #{boxid} #{path}"
+                            log.debug "CHANGING FLAGS OF #{@id} " +
+                            "(#{@subject}) in #{boxid} #{path}"
                             imap.openBox path, (err, imapBox) ->
                                 return cb err if err
                                 permFlags = imapBox.permFlags

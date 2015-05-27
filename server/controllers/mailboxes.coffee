@@ -41,8 +41,8 @@ module.exports.refresh = (req, res, next) ->
             firstImport: false
             supportRFC4551: true
         , (err, shouldNotif) ->
-           return next err if err
-           res.send req.mailbox
+            return next err if err
+            res.send req.mailbox
 
 
 

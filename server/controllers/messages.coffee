@@ -125,7 +125,8 @@ module.exports.listByMailbox = (req, res, next) ->
             last = messages[messages.length - 1]
             if req.sortField is 'subject'
                 pageAfter = last.normSubject
-            # for 'from' and 'dest', we use pageAfter as the number of records to skip
+            # for 'from' and 'dest', we use pageAfter as the number of records
+            # to skip
             else if req.sortField is 'from' or req.sortField is 'dest'
                 pageAfter = messages.length + (parseInt(req.pageAfter, 10) or 0)
             else

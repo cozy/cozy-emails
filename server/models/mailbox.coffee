@@ -12,7 +12,6 @@ class Mailbox extends cozydb.CozyModel
         delimiter: String        # delimiter between this box and its children
         uidvalidity: Number      # Imap UIDValidity
         attribs: [String]        # [String] Attributes of this folder
-        lastSync: String         # Date.ISOString of last full box synchro
         lastHighestModSeq: String # Last highestmodseq successfully synced
         lastTotal: Number         # Last imap total number of messages in box
 
@@ -735,7 +734,6 @@ class Mailbox extends cozydb.CozyModel
         outShouldNotif = false
 
         if nbTasks > 0
-            isFirstImport = laststep.firstImport
             reporter = ImapReporter.boxFetch @, nbTasks, isFirstImport
 
             async.series [
@@ -746,7 +744,7 @@ class Mailbox extends cozydb.CozyModel
                         return cb err if err
                         outShouldNotif = shouldNotif
                         cb null
-            ], (err) =>
+            ], (err) ->
                 if err
                     reporter.onError err
                 reporter.onDone()

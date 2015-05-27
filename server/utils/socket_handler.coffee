@@ -46,8 +46,8 @@ _toClientObject = (docType, raw, callback) ->
         callback null, raw.toClientObject()
     else if docType is 'account'
         raw.toClientObject (err, clientRaw) ->
-             if err then callback null, raw
-             else callback null, clientRaw
+            if err then callback null, raw
+            else callback null, clientRaw
     else
         callback null, raw.toObject()
 
