@@ -51,15 +51,6 @@ module.exports = Compose = React.createClass
     render: ->
         return unless @props.accounts
 
-        onCancel = (e) =>
-            e.preventDefault()
-            if @props.onCancel?
-                @props.onCancel()
-            else
-                @redirect @buildUrl
-                    direction: 'first'
-                    action: 'default'
-                    fullWidth: true
 
         toggleFullscreen = ->
             LayoutActionCreator.toggleFullscreen()
@@ -88,6 +79,7 @@ module.exports = Compose = React.createClass
             h3
                 'data-message-id': @props.message?.get('id') or ''
                 @state.subject or t 'compose'
+
             form className: 'form-compose', method: 'POST',
                 div className: 'form-group account',
                     label
@@ -205,11 +197,24 @@ module.exports = Compose = React.createClass
                                         span className: 'fa fa-trash-o'
                                         span null, t 'compose action delete'
                             button
-                                onClick: onCancel
+                                onClick: @onCancel
                                 className: 'btn btn-cozy-non-default btn-cancel',
                                 t 'app cancel'
 
                 div className: 'clearfix', null
+
+    onCancel: (e) ->
+        e.preventDefault()
+
+        # Action after cancelation : call @props.onCancel
+        # or navigate to message list
+        if @props.onCancel?
+            @props.onCancel()
+        else
+            @redirect @buildUrl
+                direction: 'first'
+                action: 'default'
+                fullWidth: true
 
     _initCompose: ->
 
@@ -248,55 +253,81 @@ module.exports = Compose = React.createClass
     componentWillUnmount: ->
         if @_saveInterval
             window.clearInterval @_saveInterval
-        # If message has not been sent, ask if we sould keep it or not
+
+        # delete draft
+        doDelete = =>
+            window.setTimeout =>
+                LayoutActionCreator.hideModal()
+                messageID = @state.id
+                MessageActionCreator.delete {messageID, silent, isDraft: true, inReplyTo: @props.inReplyTo}
+            , 5
+
+        # save draft one last time
+        doSave = =>
+            if @state.originalConversationID?
+                # save one last time the draft, adding the conversationID
+                message =
+                    id            : @state.id
+                    accountID     : @state.accountID
+                    mailboxIDs    : @state.mailboxIDs
+                    from          : @state.from
+                    to            : @state.to
+                    cc            : @state.cc
+                    bcc           : @state.bcc
+                    subject       : @state.subject
+                    isDraft       : true
+                    attachments   : @state.attachments
+                    inReplyTo     : @state.inReplyTo
+                    references    : @state.references
+                    text          : @state.text
+                    html          : @state.html
+                    conversationID: @state.originalConversationID
+                MessageActionCreator.send message, (error, message) ->
+                    if error?
+                        msg = "#{t "message action draft ko"} #{error}"
+                        LayoutActionCreator.alertError msg
+                    else
+                        msg = "#{t "message action draft ok"}"
+                        LayoutActionCreator.notify msg, autoclose: true
+                        if message.conversationID?
+                            # reload conversation to update its length
+                            cid = message.conversationID
+                            MessageActionCreator.fetchConversation cid
+            else
+
+
+        # If message has not been sent, ask if we should keep it or not
         #  - if yes, and the draft belongs to a conversation, add the
         #    conversationID and save the draft
         #  - if no, delete the draft
-        if @state.isDraft and @state.id?
+        if not @state.isDeleted and @state.isDraft and @state.id?
+
             if @state.composeInHTML
                 newContent = MessageUtils.cleanReplyText(@state.html).replace /\s/gim, ''
                 oldContent = MessageUtils.cleanReplyText(@state.initHtml).replace /\s/gim, ''
                 updated = newContent isnt oldContent
             else
                 updated = @state.text isnt @state.initText
-            # if draft has not been updated, deleted without asking confirmation
+
+            # if draft has not been updated, delete without asking confirmation
             silent = @state.isNew and not updated
-            if silent or
-            not window.confirm(t 'compose confirm keep draft')
-                window.setTimeout =>
-                    messageID = @state.id
-                    MessageActionCreator.delete {messageID, silent, isDraft: true, inReplyTo: @props.inReplyTo}
-                , 0
+            if silent
+                doDelete()
             else
-                if @state.originalConversationID?
-                    # save one last time the draft, adding the conversationID
-                    message =
-                        id            : @state.id
-                        accountID     : @state.accountID
-                        mailboxIDs    : @state.mailboxIDs
-                        from          : @state.from
-                        to            : @state.to
-                        cc            : @state.cc
-                        bcc           : @state.bcc
-                        subject       : @state.subject
-                        isDraft       : true
-                        attachments   : @state.attachments
-                        inReplyTo     : @state.inReplyTo
-                        references    : @state.references
-                        text          : @state.text
-                        html          : @state.html
-                        conversationID: @state.originalConversationID
-                    MessageActionCreator.send message, (error, message) ->
-                        if error?
-                            msg = "#{t "message action draft ko"} #{error}"
-                            LayoutActionCreator.alertError msg
-                        else
-                            msg = "#{t "message action draft ok"}"
-                            LayoutActionCreator.notify msg, autoclose: true
-                            if message.conversationID?
-                                # reload conversation to update its length
-                                cid = message.conversationID
-                                MessageActionCreator.fetchConversation cid
+                # we need a timeout because of React's components life cycle
+                setTimeout ->
+                    # display a modal asking if we should keep or delete the draft
+                    modal =
+                        title       : t 'compose confirm keep draft'
+                        subtitle    : t 'compose confirm keep draft'
+                        closeModal  : ->
+                            doSave()
+                            LayoutActionCreator.hideModal()
+                        closeLabel  : t 'compose confirm draft keep'
+                        actionLabel : t 'compose confirm draft delete'
+                        action      : doDelete
+                    LayoutActionCreator.displayModal modal
+                , 0
 
     getInitialState: ->
 
@@ -496,23 +527,36 @@ module.exports = Compose = React.createClass
         else
             confirmMessage = t 'mail confirm delete nosubject'
 
-        if window.confirm confirmMessage
+        doDelete = =>
+            LayoutActionCreator.hideModal()
             messageID = @props.message.get('id')
-            MessageActionCreator.delete {messageID}, (error) =>
-                unless error?
-                    if @props.callback
-                        @props.callback()
-                    else
-                        parameters = [
-                            @props.selectedAccountID
-                            @props.selectedMailboxID
-                        ]
+            # this will prevent asking a second time when unmounting component
+            @setState isDeleted: true, =>
+                MessageActionCreator.delete {messageID}, (error) =>
+                    unless error?
+                        if @props.callback
+                            @props.callback()
+                        else
+                            parameters = [
+                                @props.selectedAccountID
+                                @props.selectedMailboxID
+                            ]
 
-                        @redirect
-                            direction: 'first'
-                            action: 'account.mailbox.messages'
-                            parameters: parameters
-                            fullWidth: true
+                            @redirect
+                                direction: 'first'
+                                action: 'account.mailbox.messages'
+                                parameters: parameters
+                                fullWidth: true
+
+        modal =
+            title       : t 'mail confirm delete title'
+            subtitle    : confirmMessage
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'mail confirm delete cancel'
+            actionLabel : t 'mail confirm delete delete'
+            action      : doDelete
+        LayoutActionCreator.displayModal modal
 
     onToggleCc: (e) ->
         toggle = (e) -> e.classList.toggle 'shown'
@@ -902,7 +946,7 @@ ComposeEditor = React.createClass
 
         window.intentManager.send('nameSpace', intent, timeout)
             .then @choosePhoto_answer, (error) ->
-                console.log 'response in error : ', error
+                console.error 'response in error : ', error
 
 
     choosePhoto_answer : (message) ->
