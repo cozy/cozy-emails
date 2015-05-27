@@ -100,7 +100,8 @@ class MessageStore extends Store
         oldmsg = _messages.get message.id
         updated = oldmsg?.get 'updated'
         # only update message if new version is newer that the one currently stored
-        if not (message.updated? and updated? and updated > message.updated)
+        if not (message.updated? and updated? and updated > message.updated) and
+           not message._deleted # deleted draft are empty, don't update them
             # create or update
             if not message.attachments?
                 message.attachments = []
@@ -132,7 +133,7 @@ class MessageStore extends Store
                 """
 
             _messages = _messages.set message.id, messageMap
-            if diff = computeMailboxDiff(oldmsg, messageMap)
+            if message.accountID? and diff = computeMailboxDiff(oldmsg, messageMap)
                 AccountStore._applyMailboxDiff message.accountID, diff
 
     ###
