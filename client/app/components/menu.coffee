@@ -261,7 +261,7 @@ module.exports = Menu = React.createClass
                 ul
                     role: 'group'
                     className: 'list-unstyled mailbox-list',
-                    mailboxes?.filter (mailbox) =>
+                    mailboxes?.filter (mailbox) ->
                         mailbox.get('id') in specialMboxes
                     .map (mailbox, key) =>
                         selectedMailboxID = @props.selectedMailboxID
@@ -273,7 +273,7 @@ module.exports = Menu = React.createClass
                             refreshes:         refreshes,
                             displayErrors:     @displayErrors,
                     .toJS()
-                    mailboxes?.filter (mailbox) =>
+                    mailboxes?.filter (mailbox) ->
                         mailbox.get('id') not in specialMboxes
                     .map (mailbox, key) =>
                         selectedMailboxID = @props.selectedMailboxID
@@ -364,7 +364,8 @@ MenuMailboxItem = React.createClass
                 onDragEnter: @onDragEnter
                 onDragLeave: @onDragLeave
                 onDragOver: @onDragOver
-                onDrop: @onDrop
+                onDrop: (e) =>
+                    @onDrop e, mailboxID
                 title: title
                 'data-toggle': 'tooltip'
                 'data-placement' : 'right'
