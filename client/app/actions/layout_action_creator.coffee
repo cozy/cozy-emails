@@ -151,10 +151,6 @@ module.exports = LayoutActionCreator =
                         msg.updated = updated
                     MessageActionCreator.receiveRawMessages rawMsg
 
-        else
-            XHRUtils.refreshMailbox mailboxID, (err) ->
-                console.log "#{mailboxID} refreshed", err
-
     showMessage: (panelInfo, direction) ->
         onMessage = (msg) ->
             # if there isn't a selected account (page loaded directly),

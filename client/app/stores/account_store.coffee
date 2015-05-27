@@ -212,6 +212,11 @@ class AccountStore extends Store
 
         return result
 
+    selectedIsDifferentThan: (accountID, mailboxID) ->
+        differentSelected = _selectedAccount?.get('id') isnt accountID or
+        _selectedMailbox?.get('id') isnt mailboxID
+
+        return differentSelected and _selectedAccount.get('supportRFC4551')
 
     getSelectedMailbox: (selectedID) ->
         mailboxes = @getSelectedMailboxes()

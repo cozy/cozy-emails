@@ -92,6 +92,10 @@ module.exports = AccountActionCreator =
                 accountID: accountID
                 mailboxID: mailboxID
 
+        if AccountStore.selectedIsDifferentThan accountID, mailboxID
+            XHRUtils.refreshMailbox mailboxID, (err) ->
+                console.log "#{mailboxID} refreshed", err
+
     discover: (domain, callback) ->
         XHRUtils.accountDiscover domain, (err, infos) ->
             if not infos?
