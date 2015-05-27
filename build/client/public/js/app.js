@@ -777,7 +777,7 @@ module.exports = MessageActionCreator = {
         LAC.alertError(alertMsg);
       } else {
         if (target.silent !== true) {
-          MessageActionCreator.receiveRawMessagesupdated;
+          MessageActionCreator.receiveRawMessages(updated);
           LAC.notify(alertMsg, {
             autoclose: true,
             actions: [
@@ -5777,7 +5777,8 @@ module.exports = MailsInput = React.createClass({
 });
 
 ;require.register("components/menu", function(exports, require, module) {
-var AccountActionCreator, AccountStore, Dispositions, LayoutActionCreator, LayoutStore, Menu, MenuMailboxItem, MessageActionCreator, MessageUtils, Modal, RefreshIndicator, RouterMixin, SpecialBoxIcons, StoreWatchMixin, ThinProgress, Tooltips, a, aside, button, classer, colorhash, div, i, li, nav, span, ul, _ref, _ref1;
+var AccountActionCreator, AccountStore, Dispositions, LayoutActionCreator, LayoutStore, Menu, MenuMailboxItem, MessageActionCreator, MessageUtils, Modal, RefreshIndicator, RouterMixin, SpecialBoxIcons, StoreWatchMixin, ThinProgress, Tooltips, a, aside, button, classer, colorhash, div, i, li, nav, span, specialMailboxes, ul, _ref, _ref1,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 _ref = React.DOM, div = _ref.div, aside = _ref.aside, nav = _ref.nav, ul = _ref.ul, li = _ref.li, span = _ref.span, a = _ref.a, i = _ref.i, button = _ref.button;
 
@@ -5808,6 +5809,8 @@ colorhash = require('../utils/colorhash');
 RefreshIndicator = require('./menu_refresh_indicator');
 
 _ref1 = require('../constants/app_constants'), Dispositions = _ref1.Dispositions, SpecialBoxIcons = _ref1.SpecialBoxIcons, Tooltips = _ref1.Tooltips;
+
+specialMailboxes = ['inboxMailbox', 'draftMailbox', 'sentMailbox', 'trashMailbox', 'junkMailbox', 'allMailbox'];
 
 module.exports = Menu = React.createClass({
   displayName: 'Menu',
@@ -5949,7 +5952,7 @@ module.exports = Menu = React.createClass({
     })));
   },
   getAccountRender: function(account, key) {
-    var accountClasses, accountID, configMailboxUrl, defaultMailbox, icon, isActive, isSelected, mailboxes, nbUnread, progress, refreshes, toggleActive, toggleDisplay, toggleFavorites, toggleFavoritesLabel, url, _ref2;
+    var accountClasses, accountID, configMailboxUrl, defaultMailbox, icon, isActive, isSelected, mailboxes, nbUnread, progress, refreshes, specialMboxes, toggleActive, toggleDisplay, toggleFavorites, toggleFavoritesLabel, url, _ref2;
     isSelected = ((this.props.selectedAccount == null) && key === 0) || ((_ref2 = this.props.selectedAccount) != null ? _ref2.get('id') : void 0) === account.get('id');
     accountID = account.get('id');
     nbUnread = account.get('totalUnread');
@@ -6018,6 +6021,9 @@ module.exports = Menu = React.createClass({
       parameters: [accountID, 'account'],
       fullWidth: true
     });
+    specialMboxes = specialMailboxes.map(function(mbox) {
+      return account.get(mbox);
+    });
     return div({
       className: accountClasses,
       key: key
@@ -6060,7 +6066,30 @@ module.exports = Menu = React.createClass({
     }, nbUnread) : void 0), isSelected ? ul({
       role: 'group',
       className: 'list-unstyled mailbox-list'
-    }, mailboxes != null ? mailboxes.map((function(_this) {
+    }, mailboxes != null ? mailboxes.filter((function(_this) {
+      return function(mailbox) {
+        var _ref3;
+        return _ref3 = mailbox.get('id'), __indexOf.call(specialMboxes, _ref3) >= 0;
+      };
+    })(this)).map((function(_this) {
+      return function(mailbox, key) {
+        var selectedMailboxID;
+        selectedMailboxID = _this.props.selectedMailboxID;
+        return MenuMailboxItem({
+          account: account,
+          mailbox: mailbox,
+          key: key,
+          selectedMailboxID: selectedMailboxID,
+          refreshes: refreshes,
+          displayErrors: _this.displayErrors
+        });
+      };
+    })(this)).toJS() : void 0, mailboxes != null ? mailboxes.filter((function(_this) {
+      return function(mailbox) {
+        var _ref3;
+        return _ref3 = mailbox.get('id'), __indexOf.call(specialMboxes, _ref3) < 0;
+      };
+    })(this)).map((function(_this) {
       return function(mailbox, key) {
         var selectedMailboxID;
         selectedMailboxID = _this.props.selectedMailboxID;
