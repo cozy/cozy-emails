@@ -12,7 +12,8 @@ class Mailbox extends cozydb.CozyModel
         delimiter: String        # delimiter between this box and its children
         uidvalidity: Number      # Imap UIDValidity
         attribs: [String]        # [String] Attributes of this folder
-        lastSync: String         # Date.ISOString of last full box synchro
+        lastHighestModSeq: String # Last highestmodseq successfully synced
+        lastTotal: Number         # Last imap total number of messages in box
 
     # map of account's attributes -> RFC6154 special use box attributes
     @RFC6154:
@@ -389,6 +390,184 @@ class Mailbox extends cozydb.CozyModel
                         cb()
             , callback
 
+
+    # Public: refresh mails in this box
+    #
+    # Returns (callback) {Boolean} shouldNotif whether or not new unread mails
+    # have been fetched in this fetch
+    imap_refresh: (options, callback) ->
+        log.debug "refreshing box"
+        if not options.supportRFC4551
+            log.debug "account doesnt support RFC4551"
+            @imap_refreshDeep options, callback
+
+        else if @lastHighestModSeq
+            @imap_refreshFast options, (err, shouldNotif) =>
+                if err
+                    log.warn "refreshFast fail (#{err.stack}), trying deep"
+                    options.storeHighestModSeq = true
+                    @imap_refreshDeep options, callback
+
+                else
+                    log.debug "refreshFastWorked"
+                    callback null, shouldNotif
+
+        else
+            log.debug "no highestmodseq, first refresh ?"
+            options.storeHighestModSeq = true
+            @imap_refreshDeep options, callback
+
+
+    # Public: refresh mails in this box using rfc4551. This is similar to
+    # {::imap_refreshDeep} but faster if the server supports RFC4551.
+    #
+    # First, we ask the server for all updated messages since last
+    # refresh. {Mailbox::_refreshGetImapStatus}
+    #
+    # Then we apply these changes in {Mailbox::_refreshCreatedAndUpdated}
+    #
+    # Because RFC4551 doesnt give a way for the server to indicate expunged
+    # messages, at this point, we have all new and updated messages, but we
+    # may still have messages in cozy that were expungeds in IMAP.
+    # We refresh deletion if needed in {Mailbox::_refreshDeleted}
+    #
+    # Finally we store the new highestmodseq, so we can ask for changes
+    # since this refresh. We also store the IMAP number of message because
+    # it can be different from the cozy one due to twin messages.
+    #
+    # Returns (callback) {Boolean} shouldNotif whether or not new unread mails
+    # have been fetched in this fetch
+    imap_refreshFast: (options, callback) ->
+        box = this
+
+        noChange = false
+        box._refreshGetImapStatus box.lastHighestModSeq, (err, status) ->
+            return callback err if err
+            {changes, highestmodseq, total} = status
+
+            box._refreshCreatedAndUpdated changes, (err, info) ->
+                return callback err if err
+                log.debug "_refreshFast#aftercreates", info
+                shouldNotif = info.shouldNotif
+                nbAdded = info.nbAdded
+                noChange or= info.noChange
+
+                box._refreshDeleted total, info.nbAdded, (err, info) ->
+                    return callback err if err
+                    log.debug "_refreshFast#afterdelete", info
+                    noChange or= info.noChange
+
+                    if noChange
+                        #@TODO : may be we should store lastSync
+                        callback null, false
+
+                    else
+                        changes =
+                            lastHighestModSeq: highestmodseq
+                            lastTotal: total
+                            lastSync: new Date().toISOString()
+
+                        box.updateAttributes changes, (err) ->
+                            callback err, shouldNotif
+
+    # Private: Fetch some information from recent changes to the box
+    #
+    # modseqno - {String} the last checkpointed modification sequence
+    #
+    # Returns (callback) an {Object} with properties
+    #       :changes - an {Object} with keys=uid, values=[mid, flags]
+    #       :highestmodseq - the highest modification sequence of this box
+    #       :total - total number of messages in this box
+    _refreshGetImapStatus: (modseqno, callback) ->
+        @doLaterWithBox (imap, imapbox, cbReleaseImap) ->
+            highestmodseq = imapbox.highestmodseq
+            total = imapbox.messages.total
+            changes = {}
+            if highestmodseq is modseqno
+                cbReleaseImap null, {changes, highestmodseq, total}
+            else
+                imap.fetchMetadataSince modseqno, (err, changes) ->
+                    cbReleaseImap err, {changes, highestmodseq, total}
+
+        , callback
+
+    # Private: Apply creation & updates from IMAP to the cozy
+    #
+    # changes - the {Object} from {::_refreshGetImapStatus}
+    #
+    # Returns (callback) at completion
+    _refreshCreatedAndUpdated: (changes, callback) ->
+        box = this
+        uids = Object.keys changes
+        if uids.length is 0
+            callback null, {shouldNotif: false, nbAdded: 0, noChange: true}
+        else
+            nbAdded = 0
+            shouldNotif = false
+            Message.indexedByUIDs box.id, uids, (err, messages) ->
+                return callback err if err
+                async.eachSeries uids, (uid, next) ->
+                    [mid, flags] = changes[uid]
+                    uid = parseInt uid
+                    message = messages[uid]
+                    if message
+                        message.updateAttributes {flags}, next
+                    else
+                        Message.fetchOrUpdate box, {mid, uid}, (err, info) ->
+                            shouldNotif = shouldNotif or info.shouldNotif
+                            nbAdded += 1 if info?.actuallyAdded
+                            next err
+                , (err) ->
+                    return callback err if err
+                    callback null, {shouldNotif, nbAdded}
+
+
+    # Private: Apply deletions from IMAP to the cozy
+    #
+    # imapTotal - {Number} total number of message in the IMAP box
+    # nbAdded - {Number} total number of message in the IMAP box
+    #
+    # Returns (callback) at completion
+    _refreshDeleted: (imapTotal, nbAdded, callback) ->
+
+        lastTotal = @lastTotal or 0
+
+        log.debug "refreshDeleted L=#{lastTotal} A=#{nbAdded} I=#{imapTotal}"
+
+        # if the last message count + number of messages added is equal
+        # to the current count, no message have been deleted
+        if lastTotal + nbAdded is imapTotal
+            error = "    NOTHING TO DO"
+            callback null, {noChange: true}
+
+        # else if it is inferior, it means our algo broke somewhere
+        # throw an error, and let {::imap_refresh} do a deep refresh
+        else if lastTotal + nbAdded < imapTotal
+            error = "    WRONG STATE"
+            callback new Error(error), noChange: true
+
+        # else if it is superior, this means some messages has been deleted
+        # in imap. We delete them in cozy too.
+        else
+            error = "    NEED DELETION"
+            box = this
+            async.series [
+                (cb) -> Message.UIDsInCozy box.id, cb
+                (cb) -> box.imap_UIDs cb
+            ], (err, results) ->
+                [cozyUIDs, imapUIDs] = results
+                log.debug "refreshDeleted#uids", cozyUIDs.length,
+                                                                imapUIDs.length
+
+                deleted = (uid for uid in cozyUIDs when uid not in imapUIDs)
+                log.debug "refreshDeleted#toDelete", deleted
+                Message.byUIDs box.id, deleted, (err, messages) ->
+                    log.debug "refreshDeleted#toDeleteMsgs", messages.length
+                    async.eachSeries messages, (message, next) ->
+                        message.removeFromMailbox box, false, next
+                    , (err) ->
+                        callback err, {noChange: false}
+
     # Public: refresh some mails from this box
     #
     # options - the parameter {Object}
@@ -397,19 +576,22 @@ class Mailbox extends cozydb.CozyModel
     #
     # Returns (callback) {Boolean} shouldNotif whether or not new unread mails
     # have been fetched in this fetch
-    imap_fetchMails: (options, callback) ->
-        {limitByBox, firstImport} = options
-        log.debug "imap_fetchMails", limitByBox
+    imap_refreshDeep: (options, callback) ->
+        {limitByBox, firstImport, storeHighestModSeq} = options
+        log.debug "imap_refreshDeep", limitByBox
         step = RefreshStep.initial options
 
-        @imap_refreshStep step, (err, shouldNotif) =>
-            log.debug "imap_fetchMailsEnd", limitByBox
+        @imap_refreshStep step, (err, info) =>
+            log.debug "imap_refreshDeepEnd", limitByBox
             return callback err if err
             unless limitByBox
                 changes = lastSync: new Date().toISOString()
+                if storeHighestModSeq
+                    changes.lastHighestModSeq = info.highestmodseq
+                    changes.lastTotal = info.total
                 @updateAttributes changes, callback
             else
-                callback null, shouldNotif
+                callback null, info.shouldNotif
 
 
     # Public: compute the diff between the imap box and the cozy one
@@ -430,6 +612,8 @@ class Mailbox extends cozydb.CozyModel
         @doLaterWithBox (imap, imapbox, cbRelease) ->
 
             step = laststep.getNext(imapbox.uidnext)
+            step.highestmodseq = imapbox.highestmodseq
+            step.total = imapbox.messages.total
             if step is RefreshStep.finished
                 return cbRelease null
 
@@ -443,7 +627,7 @@ class Mailbox extends cozydb.CozyModel
         ,  (err, results) ->
             log.debug "diff#results"
             return callback err if err
-            return callback null, null unless results
+            return callback null, null, step unless results
             [cozyIDs, imapUIDs] = results
 
 
@@ -503,7 +687,7 @@ class Mailbox extends cozydb.CozyModel
     #
     # Returns (callback) at completion
     applyFlagsChanges: (flagsChange, reporter, callback) ->
-        log.debug "applyFlagsChange", flagsChange.length
+        log.debug "applyFlagsChanges", flagsChange.length
         async.eachSeries flagsChange, (change, cb) ->
             Message.applyFlagsChanges change.id, change.flags, (err) ->
                 reporter.onError err if err
@@ -533,11 +717,49 @@ class Mailbox extends cozydb.CozyModel
         , (err) ->
             callback err, shouldNotif
 
+    # Public: apply a mixed bundle of ops
+    #
+    # ops - a operation bundle
+    #       :toFetch - {Array} of {Object}(mid, uid) msg to fetch
+    #       :toRemove - {Array} of {String} ids of cozy messages to remove
+    #       :flagsChange - {Array} of {Object}(id, flags) changes to make
+    # isFirstImport - {Boolean} is this part of the first import of account
+    #
+    # Returns (callback) shouldNotif - {Boolean} was a new unread message
+    # imported
+    applyOperations: (ops, isFirstImport, callback) ->
+        {toFetch, toRemove, flagsChange} = ops
+        nbTasks = toFetch.length + toRemove.length + flagsChange.length
+
+        outShouldNotif = false
+
+        if nbTasks > 0
+            reporter = ImapReporter.boxFetch @, nbTasks, isFirstImport
+
+            async.series [
+                (cb) => @applyToRemove     toRemove,    reporter, cb
+                (cb) => @applyFlagsChanges flagsChange, reporter, cb
+                (cb) =>
+                    @applyToFetch toFetch, reporter, (err, shouldNotif) ->
+                        return cb err if err
+                        outShouldNotif = shouldNotif
+                        cb null
+            ], (err) ->
+                if err
+                    reporter.onError err
+                reporter.onDone()
+                callback err, outShouldNotif
+        else
+            callback null, outShouldNotif
+
     # Public: refresh part of a mailbox
+    # @TODO : recursion is complicated, refactor this using async.while
     #
     # laststep - {RefreshStep} can be null, step references            -
     #
-    # Returns (callback) {Boolean} shouldNotif display a notification for it
+    # Returns (callback) an info {Object} with properties
+    #       :shouldNotif - {Boolean} was a new unread message imported
+    #       :highestmodseq - {String} the box highestmodseq at begining
     imap_refreshStep: (laststep, callback) ->
         log.debug "imap_refreshStep", laststep
         box = this
@@ -545,34 +767,23 @@ class Mailbox extends cozydb.CozyModel
             log.debug "imap_refreshStep#diff", err, ops
 
             return callback err if err
-            return callback null, false unless ops
 
-            nbTasks = ops.toFetch.length + ops.toRemove.length +
-                                                        ops.flagsChange.length
-            if nbTasks > 0
-                isFirstImport = laststep.firstImport
-                reporter = ImapReporter.boxFetch @, nbTasks, isFirstImport
+            info =
+                shouldNotif: false
+                total: step.total
+                highestmodseq: step.highestmodseq
 
-            shouldNotifStep = false
+            unless ops
+                return callback null, info
+            else
+                firstImport = laststep.firstImport
+                @applyOperations ops, firstImport, (err, shouldNotif) =>
+                    return callback err if err
 
-            async.series [
-                (cb) => @applyToRemove     ops.toRemove,    reporter, cb
-                (cb) => @applyFlagsChanges ops.flagsChange, reporter, cb
-                (cb) =>
-                    @applyToFetch ops.toFetch, reporter, (err, shouldNotif) ->
-                        return cb err if err
-                        shouldNotifStep = shouldNotif
-                        cb null
-            ], (err) =>
-                reporter?.onDone()
-
-                if err
-                    reporter.onError err if err
-                    return callback err
-
-                else # next step
-                    @imap_refreshStep step, (err, shouldNotifNext) ->
-                        callback err, shouldNotifStep or shouldNotifNext
+                    # next step
+                    @imap_refreshStep step, (err, infoNext) ->
+                        info.shouldNotif = shouldNotif or infoNext.shouldNotif
+                        callback err, info
 
 
     # Public: get a message UID from its message id in IMAP
@@ -585,6 +796,15 @@ class Mailbox extends cozydb.CozyModel
             imap.search [['HEADER', 'MESSAGE-ID', messageID]], cb
         , (err, uids) ->
             callback err, uids?[0]
+
+    # Public: get all message UIDs in IMAP
+    #
+    # Returns (callback) {Array} of {String} all uids
+    imap_UIDs: (callback) ->
+        @doLaterWithBox (imap, imapbox, cb) ->
+            imap.fetchBoxMessageUIDs cb
+        , (err, uids) ->
+            callback err, uids
 
     # Public: create a mail in IMAP if it doesnt exist yet
     # use for sent mail
@@ -668,17 +888,19 @@ class Mailbox extends cozydb.CozyModel
     #
     # uid - uid to fetch
     #
-    # Returns (callback) {Boolean} shouldNotif if the message is not read
+    # Returns (callback) {Object}
+    #        :shouldNotif - {Boolean} if the message was not read
+    #        :actuallyAdded - {Boolean} always true
     Mailbox::imap_fetchOneMail = (uid, callback) ->
         @doLaterWithBox (imap, imapbox, cb) ->
             imap.fetchOneMail uid, cb
 
         , (err, mail) =>
             return callback err if err
-            shouldNotif = '\\Seen' in mail.flags
+            shouldNotif = '\\Seen' in (mail.flags or [])
             Message.createFromImapMessage mail, this, uid, (err) ->
                 return callback err if err
-                callback null, {shouldNotif}
+                callback null, {shouldNotif: shouldNotif, actuallyAdded: true}
 
     # Public: whether this box messages should be ignored
     # in the account's total (trash or junk)

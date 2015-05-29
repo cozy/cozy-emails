@@ -3,6 +3,7 @@ log = require('../utils/logging')('sockethandler')
 ioServer = require 'socket.io'
 Mailbox = require '../models/mailbox'
 stream = require 'stream'
+_ = require 'lodash'
 
 io = null
 sockets = []
@@ -16,13 +17,14 @@ SocketHandler.setup = (app, server) ->
 
 
 SocketHandler.notify = (type, data, olddata) ->
-    log.debug "notify", type, data.toString()
+    log.debug "notify", type
     if type in ['message.update', 'message.create']
         # we cant just spam the client with all
         # message events, check if the message is in
         # client current's view
         for socket in sockets
             if inScope(socket, data) or (olddata and inScope(socket, olddata))
+                log.debug "notify2", type
                 socket.emit type, data
 
     else if type is 'mailbox.update'
@@ -39,6 +41,27 @@ SocketHandler.notify = (type, data, olddata) ->
         io?.emit type, data
 
 
+_toClientObject = (docType, raw, callback) ->
+    if docType is 'message'
+        callback null, raw.toClientObject()
+    else if docType is 'account'
+        raw.toClientObject (err, clientRaw) ->
+            if err then callback null, raw
+            else callback null, clientRaw
+    else
+        callback null, raw.toObject()
+
+_onObjectCreated = (docType, created) ->
+    _toClientObject docType, created, ->
+        SocketHandler.notify "#{docType}.create", created
+
+_onObjectUpdated = (docType, updated, old) ->
+    _toClientObject docType, updated, ->
+        SocketHandler.notify "#{docType}.update", updated, old
+
+_onObjectDeleted = (docType, id, old) ->
+    SocketHandler.notify "#{docType}.delete", id, old
+
 # using DS events imply one more query for each update
 # instead we monkeypatch JDB
 SocketHandler.wrapModel = (Model, docType) ->
@@ -46,26 +69,14 @@ SocketHandler.wrapModel = (Model, docType) ->
     _oldCreate = Model.create
     Model.create = (data, callback) ->
         _oldCreate.call Model, data, (err, created) ->
-            unless err
-                raw = created.toObject()
-                SocketHandler.notify "#{docType}.create", raw
+            _onObjectCreated docType, created unless err
             callback err, created
 
     _oldUpdateAttributes = Model::updateAttributes
     Model::updateAttributes = (data, callback) ->
-        old = @toObject()
+        old = _.cloneDeep @toObject()
         _oldUpdateAttributes.call this, data, (err, updated) ->
-            unless err
-                if docType is 'message'
-                    raw = updated.toClientObject()
-                    SocketHandler.notify "#{docType}.update", raw, old
-                else if docType is 'account'
-                    updated.toClientObject (err, raw) ->
-                        if not err?
-                            SocketHandler.notify "#{docType}.update", raw, old
-                else
-                    raw = updated.toObject()
-                    SocketHandler.notify "#{docType}.update", raw, old
+            _onObjectUpdated docType, updated, old unless err
             callback err, updated
 
     _oldDestroy = Model::destroy
@@ -77,11 +88,8 @@ SocketHandler.wrapModel = (Model, docType) ->
                 SocketHandler.notify "#{docType}.delete", id, old
             callback err
 
-
-
-
 inScope = (socket, data) ->
-    # log.info "inscope", socket.scope_mailboxID, Object.keys data.mailboxIDs
+    log.info "inscope", socket.scope_mailboxID, Object.keys data.mailboxIDs
     (socket.scope_mailboxID in Object.keys data.mailboxIDs) and
     socket.scope_before < data.date
 

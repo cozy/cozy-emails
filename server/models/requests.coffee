@@ -62,8 +62,10 @@ module.exports =
 
                     for sender in doc.from
                         if sender.name?
-                            emit ['from', boxid, null, sender.name, docDate], null
-                        emit ['from', boxid, null, sender.address, docDate], null
+                            emit ['from', boxid, null, sender.name, docDate], \
+                                                                           null
+                        emit ['from', boxid, null, sender.address, docDate], \
+                                                                           null
 
                     # some messages may not have to or cc fields
                     dests = []

@@ -9,6 +9,7 @@ querystring = require 'querystring'
 multiparty = require 'multiparty'
 stream_to_buffer = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
+{normalizeMessageID} = require('../utils/jwz_tools')
 ImapReporter = require '../imap/reporter'
 
 # get a message and attach it to req.message
@@ -125,7 +126,8 @@ module.exports.listByMailbox = (req, res, next) ->
             last = messages[messages.length - 1]
             if req.sortField is 'subject'
                 pageAfter = last.normSubject
-            # for 'from' and 'dest', we use pageAfter as the number of records to skip
+            # for 'from' and 'dest', we use pageAfter as the number of records
+            # to skip
             else if req.sortField is 'from' or req.sortField is 'dest'
                 pageAfter = messages.length + (parseInt(req.pageAfter, 10) or 0)
             else
@@ -259,6 +261,7 @@ module.exports.send = (req, res, next) ->
             account.sendMessage message, (err, info) ->
                 return cb err if err
                 message.headers['message-id'] = info.messageId
+                message.messageID = normalizeMessageID info.messageId
                 cb null
 
         #  Get the sent box
