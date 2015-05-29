@@ -33,6 +33,7 @@ module.exports = AccountConfigMain = React.createClass
         state[key] = value for key, value of @props
         state.imapAdvanced = false
         state.smtpAdvanced = false
+        state.deleting     = false
         return state
 
 
@@ -289,7 +290,7 @@ module.exports = AccountConfigMain = React.createClass
                         default: true
                         danger: true
                         onClick: @onRemove
-                        spinner: false
+                        spinner: @state.deleting
                         icon: 'trash'
                         text: t "account remove"
                     ]

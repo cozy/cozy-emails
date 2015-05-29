@@ -192,6 +192,7 @@ module.exports =
       "account smtpServer"          : "Serveur sortant"
       "account smtpTLS"             : "Utiliser STARTTLS"
       "account remove"              : "Supprimer ce compte"
+      "account removed"             : "Compte supprimé"
       "account remove confirm"      : "Voulez-vous vraiment supprimer
                                         ce compte ?"
       "account draft mailbox"       : "Enregistrer les brouillons dans"

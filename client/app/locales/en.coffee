@@ -188,6 +188,7 @@ module.exports =
       "account smtpServer"          : "SMTP server"
       "account smtpTLS"             : "Use STARTTLS"
       "account remove"              : "Remove this account"
+      "account removed"             : "Account removed"
       "account remove confirm"      : "Do you really want to remove this
                                         account?"
       "account draft mailbox"       : "Draft box"
