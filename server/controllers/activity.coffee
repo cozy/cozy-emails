@@ -4,26 +4,6 @@ log = require('../utils/logging')(prefix: 'controllers:activity')
 {BadRequest, NotFound} = require '../utils/errors'
 
 
-includePictures = (contacts, callback) ->
-    async.eachSeries contacts, (contact, cb)  ->
-        if contact._attachments?.picture
-            stream = contact.getFile 'picture', (err) ->
-                log.error err if err?
-            bufs = []
-            stream.on 'data', (d) -> bufs.push d
-            stream.on 'end', ->
-                buf = Buffer.concat bufs
-                avatar = "data:image/jpeg;base64," +
-                    buf.toString('base64')
-                contact.datapoints.push
-                    name: 'avatar'
-                    value: avatar
-                cb null, contact
-        else
-            cb null, contact
-
-    , callback
-
 ContactActivity =
     search: (data, callback) ->
 

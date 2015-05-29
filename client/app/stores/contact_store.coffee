@@ -35,7 +35,12 @@ class ContactStore extends Store
                             addresses.push point.value
                         if point.name is 'avatar'
                             rawResult.avatar = point.value
+
                     delete rawResult.docType
+                    if rawResult._attachments?.picture
+                        rawResult.avatar = """
+                            contacts/#{rawResult.id}/picture.jpg
+                        """
 
                     addresses.forEach (address) ->
                         rawResult.address = address

@@ -15,7 +15,7 @@ module.exports.main = (req, res, next) ->
         (cb) -> Settings.getDefault cb
         (cb) -> cozydb.api.getCozyLocale cb
         (cb) -> Account.clientList cb
-        (cb) -> Contact.requestWithPictures 'all', {}, cb
+        (cb) -> Contact.list cb
     ], (err, results) ->
 
         refreshes = ImapReporter.summary()
