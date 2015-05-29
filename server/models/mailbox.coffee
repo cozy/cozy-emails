@@ -777,7 +777,7 @@ class Mailbox extends cozydb.CozyModel
                 return callback null, info
             else
                 firstImport = laststep.firstImport
-                @applyOperations ops, firstImport, (err, shouldNotif) ->
+                @applyOperations ops, firstImport, (err, shouldNotif) =>
                     return callback err if err
 
                     # next step
@@ -897,7 +897,7 @@ class Mailbox extends cozydb.CozyModel
 
         , (err, mail) =>
             return callback err if err
-            shouldNotif = '\\Seen' in mail.flags
+            shouldNotif = '\\Seen' in (mail.flags or [])
             Message.createFromImapMessage mail, this, uid, (err) ->
                 return callback err if err
                 callback null, {shouldNotif: shouldNotif, actuallyAdded: true}
