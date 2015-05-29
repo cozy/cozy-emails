@@ -290,7 +290,7 @@ module.exports = Compose = React.createClass
                 setTimeout ->
                     # display a modal asking if we should keep or delete the draft
                     modal =
-                        title       : t 'compose confirm keep draft'
+                        title       : t 'app confirm delete'
                         subtitle    : t 'compose confirm keep draft'
                         closeModal  : ->
                             doSave()

@@ -11,6 +11,7 @@ module.exports =
       "app unimplemented"       : "Not implemented yet"
       "app error"               : "Argh, I'm unable to perform this action,
                                     please try again"
+      "app confirm delete"      : "Confirm delete"
 
       # Compose window
       "compose"                   : "Compose new email"

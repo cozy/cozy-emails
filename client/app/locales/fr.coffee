@@ -11,6 +11,7 @@ module.exports =
       "app unimplemented"       : "Non implémenté"
       "app error"               : "Oups, une erreur est survenue,
                                     veuillez réessayer"
+      "app confirm delete"      : "Confirmation de suppression"
 
       # Compose window
       "compose"                   : "Écrire un nouveau message"

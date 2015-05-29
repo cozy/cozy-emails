@@ -166,9 +166,20 @@ module.exports =
             else
                 confirmMessage = t 'list delete confirm',
                     smart_count: 1
-        if (not confirm) or
-        window.confirm confirmMessage
+        if (not confirm)
             MessageActionCreator.delete {messageID}
+        else
+            modal =
+                title       : t 'app confirm delete'
+                subtitle    : confirmMessage
+                closeModal  : ->
+                    LayoutActionCreator.hideModal()
+                closeLabel  : t 'app cancel'
+                actionLabel : t 'app confirm'
+                action      : ->
+                    MessageActionCreator.delete {messageID}
+                    LayoutActionCreator.hideModal()
+            LayoutActionCreator.displayModal modal
 
 
     messageUndo: ->
