@@ -218,13 +218,18 @@ module.exports = AccountActionCreator = {
     });
   },
   selectAccount: function(accountID, mailboxID) {
-    return AppDispatcher.handleViewAction({
+    AppDispatcher.handleViewAction({
       type: ActionTypes.SELECT_ACCOUNT,
       value: {
         accountID: accountID,
         mailboxID: mailboxID
       }
     });
+    if (AccountStore.selectedIsDifferentThan(accountID, mailboxID)) {
+      return XHRUtils.refreshMailbox(mailboxID, function(err) {
+        return console.log("" + mailboxID + " refreshed", err);
+      });
+    }
   },
   discover: function(domain, callback) {
     return XHRUtils.accountDiscover(domain, function(err, infos) {
@@ -12146,6 +12151,12 @@ AccountStore = (function(_super) {
     return result;
   };
 
+  AccountStore.prototype.selectedIsDifferentThan = function(accountID, mailboxID) {
+    var differentSelected;
+    differentSelected = (_selectedAccount != null ? _selectedAccount.get('id') : void 0) !== accountID || (_selectedMailbox != null ? _selectedMailbox.get('id') : void 0) !== mailboxID;
+    return differentSelected && _selectedAccount.get('supportRFC4551');
+  };
+
   AccountStore.prototype.getSelectedMailbox = function(selectedID) {
     var mailboxes;
     mailboxes = this.getSelectedMailboxes();
@@ -14786,6 +14797,15 @@ module.exports = {
     var url;
     url = hard ? "refresh?all=true" : "refresh";
     return request.get(url).end(function(res) {
+      if (res.ok) {
+        return callback(null, res.text);
+      } else {
+        return callback(res.body);
+      }
+    });
+  },
+  refreshMailbox: function(mailboxID, callback) {
+    return request.get("refresh/" + mailboxID).end(function(res) {
       if (res.ok) {
         return callback(null, res.text);
       } else {

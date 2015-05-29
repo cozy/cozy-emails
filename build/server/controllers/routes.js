@@ -27,6 +27,9 @@ module.exports = {
   'refresh': {
     get: index.refresh
   },
+  'refresh/:mailboxID': {
+    get: [mailboxes.fetch, accounts.fetch, mailboxes.refresh]
+  },
   'settings': {
     get: settings.get,
     put: settings.change

@@ -192,6 +192,75 @@ module.exports = Message = (function(superClass) {
     });
   };
 
+  Message.indexedByUIDs = function(mailboxID, uids, callback) {
+    var keys;
+    keys = uids.map(function(uid) {
+      return ['uid', mailboxID, parseInt(uid)];
+    });
+    return Message.rawRequest('byMailboxRequest', {
+      reduce: false,
+      keys: keys,
+      include_docs: true
+    }, function(err, rows) {
+      var j, len, result, row, uid;
+      if (err) {
+        return callback(err);
+      }
+      result = {};
+      for (j = 0, len = rows.length; j < len; j++) {
+        row = rows[j];
+        uid = row.key[2];
+        result[uid] = new Message(row.doc);
+      }
+      return callback(null, result);
+    });
+  };
+
+  Message.byUIDs = function(mailboxID, uids, callback) {
+    var keys;
+    keys = uids.map(function(uid) {
+      return ['uid', mailboxID, uid];
+    });
+    return Message.rawRequest('byMailboxRequest', {
+      reduce: false,
+      keys: keys,
+      include_docs: true
+    }, function(err, rows) {
+      var messages;
+      if (err) {
+        return callback(err);
+      }
+      messages = rows.map(function(row) {
+        return new Message(row.doc);
+      });
+      return callback(null, messages);
+    });
+  };
+
+  Message.UIDsInCozy = function(mailboxID, callback) {
+    return Message.rawRequest('byMailboxRequest', {
+      startkey: ['uid', mailboxID],
+      endkey: ['uid', mailboxID, {}],
+      reduce: true,
+      group_level: 3
+    }, function(err, rows) {
+      var row, uids;
+      if (err) {
+        return callback(err);
+      }
+      uids = (function() {
+        var j, len, results1;
+        results1 = [];
+        for (j = 0, len = rows.length; j < len; j++) {
+          row = rows[j];
+          results1.push(row.key[2]);
+        }
+        return results1;
+      })();
+      return callback(null, uids);
+    });
+  };
+
   Message.byMessageID = function(accountID, messageID, callback) {
     messageID = mailutils.normalizeMessageID(messageID);
     return Message.rawRequest('dedupRequest', {
@@ -536,23 +605,42 @@ module.exports = Message = (function(superClass) {
   Message.prototype.markTwin = function(box, callback) {
     var hasTwin, ref;
     hasTwin = this.hasTwin || [];
-    if (ref = box.id, indexOf.call(hasTwin, ref) < 0) {
-      return callback(null);
+    if (ref = box.id, indexOf.call(hasTwin, ref) >= 0) {
+      return callback(null, {
+        shouldNotif: false,
+        actuallyAdded: false
+      });
+    } else {
+      hasTwin.push(box.id);
+      return this.updateAttributes({
+        hasTwin: hasTwin
+      }, function(err) {
+        return callback(err, {
+          shouldNotif: false,
+          actuallyAdded: true
+        });
+      });
     }
-    hasTwin.push(box.id);
-    return this.updateAttributes({
-      hasTwin: hasTwin
-    }, callback);
   };
 
   Message.prototype.addToMailbox = function(box, uid, callback) {
-    var mailboxIDs;
+    var key, mailboxIDs, ref, value;
     log.info("MAIL " + box.path + ":" + uid + " ADDED TO BOX");
-    mailboxIDs = this.mailboxIDs || {};
+    mailboxIDs = {};
+    ref = this.mailboxIDs || {};
+    for (key in ref) {
+      value = ref[key];
+      mailboxIDs[key] = value;
+    }
     mailboxIDs[box.id] = uid;
     return this.updateAttributes({
       mailboxIDs: mailboxIDs
-    }, callback);
+    }, function(err) {
+      return callback(err, {
+        shouldNotif: false,
+        actuallyAdded: true
+      });
+    });
   };
 
   Message.prototype.isInMailbox = function(box) {
@@ -560,7 +648,7 @@ module.exports = Message = (function(superClass) {
   };
 
   Message.prototype.removeFromMailbox = function(box, noDestroy, callback) {
-    var isOrphan, mailboxIDs;
+    var isOrphan, key, mailboxIDs, ref, value;
     if (noDestroy == null) {
       noDestroy = false;
     }
@@ -568,7 +656,12 @@ module.exports = Message = (function(superClass) {
     if (!callback) {
       callback = noDestroy;
     }
-    mailboxIDs = this.mailboxIDs;
+    mailboxIDs = {};
+    ref = this.mailboxIDs || {};
+    for (key in ref) {
+      value = ref[key];
+      mailboxIDs[key] = value;
+    }
     delete mailboxIDs[box.id];
     isOrphan = Object.keys(mailboxIDs).length === 0;
     log.debug("REMOVING " + this.id + ", NOW ORPHAN = ", isOrphan);
@@ -685,7 +778,7 @@ module.exports = Message = (function(superClass) {
               function(cb) {
                 var path;
                 path = boxIndex[boxid].path;
-                log.debug("CHANGING FLAGS OF " + _this.id + " (" + _this.subject + ") in " + boxid + " " + path);
+                log.debug(("CHANGING FLAGS OF " + _this.id + " ") + ("(" + _this.subject + ") in " + boxid + " " + path));
                 return imap.openBox(path, function(err, imapBox) {
                   if (err) {
                     return cb(err);

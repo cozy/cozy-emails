@@ -137,11 +137,59 @@ module.exports = ImapConnection = (function(superClass) {
   ImapConnection.prototype.fetchBoxMessageUIDs = function(callback) {
     log.debug("imap#fetchBoxMessageUIDs");
     return this.search([['ALL']], function(err, uids) {
-      log.debug("imap#fetchBoxMessageUIDs#result", uids);
+      log.debug("imap#fetchBoxMessageUIDs#result", uids.length);
       if (err) {
         return callback(err);
       }
       return callback(null, uids);
+    });
+  };
+
+  ImapConnection.prototype.fetchMetadataSince = function(modseqno, callback) {
+    log.debug("imap#fetchBoxMessageSince", modseqno);
+    return this.search([['MODSEQ', modseqno]], function(err, uids) {
+      var fetch, results;
+      log.debug("imap#fetchBoxMessageSince#result", uids);
+      if (err) {
+        return callback(err);
+      }
+      if (!uids.length) {
+        return callback(null, {});
+      }
+      uids.sort().reverse();
+      results = {};
+      fetch = this.fetch(uids, {
+        bodies: 'HEADER.FIELDS (MESSAGE-ID)'
+      });
+      fetch.on('error', callback);
+      fetch.on('message', function(msg) {
+        var flags, mid, uid;
+        uid = null;
+        flags = null;
+        mid = null;
+        msg.on('error', function(err) {
+          return results.error = err;
+        });
+        msg.on('end', function() {
+          return results[uid] = [mid, flags];
+        });
+        msg.on('attributes', function(attrs) {
+          return flags = attrs.flags, uid = attrs.uid, attrs;
+        });
+        return msg.on('body', function(stream) {
+          return stream_to_buffer_array(stream, function(err, parts) {
+            var header;
+            if (err) {
+              return callback(err);
+            }
+            header = Buffer.concat(parts).toString('utf8').trim();
+            return mid = header.substring(header.indexOf(':') + 1);
+          });
+        });
+      });
+      return fetch.on('end', function() {
+        return callback(null, results);
+      });
     });
   };
 

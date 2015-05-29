@@ -42,6 +42,7 @@ Account = (function(superClass) {
     allMailbox: String,
     favorites: [String],
     patchIgnored: Boolean,
+    supportRFC4551: Boolean,
     signature: String
   };
 
@@ -404,12 +405,32 @@ Account = (function(superClass) {
   };
 
   Account.prototype.imap_getBoxes = function(callback) {
+    var supportRFC4551;
     log.debug("getBoxes");
+    supportRFC4551 = null;
     return this.doASAP(function(imap, cb) {
+      supportRFC4551 = imap.serverSupports('CONDSTORE');
       return imap.getBoxesArray(cb);
-    }, function(err, boxes) {
-      return callback(err, boxes || []);
-    });
+    }, (function(_this) {
+      return function(err, boxes) {
+        if (err) {
+          return callback(err, []);
+        }
+        if (supportRFC4551 !== _this.supportRFC4551) {
+          log.debug("UPDATING ACCOUNT " + _this.id + " rfc4551=" + _this.supportRFC4551);
+          return _this.updateAttributes({
+            supportRFC4551: supportRFC4551
+          }, function(err) {
+            if (err) {
+              log.warn("fail to update account " + err.stack);
+            }
+            return callback(null, boxes || []);
+          });
+        } else {
+          return callback(null, boxes || []);
+        }
+      };
+    })(this));
   };
 
   Account.prototype.imap_refreshBoxes = function(callback) {
@@ -480,7 +501,7 @@ Account = (function(superClass) {
       onlyFavorites = false;
     }
     return this.imap_refreshBoxes(function(err, toFetch, toDestroy) {
-      var nb, reporter, shouldNotifAccount;
+      var nb, reporter, shouldNotifAccount, supportRFC4551;
       if (err) {
         account.setRefreshing(false);
       }
@@ -508,13 +529,15 @@ Account = (function(superClass) {
           return 1;
         }
       });
+      supportRFC4551 = account.supportRFC4551;
       return async.eachSeries(toFetch, function(box, cb) {
         var boxOptions;
         boxOptions = {
           limitByBox: limitByBox,
-          firstImport: firstImport
+          firstImport: firstImport,
+          supportRFC4551: supportRFC4551
         };
-        return box.imap_fetchMails(boxOptions, function(err, shouldNotif) {
+        return box.imap_refresh(boxOptions, function(err, shouldNotif) {
           if (err && !isMailboxDontExist(err)) {
             reporter.onError(err);
           }
