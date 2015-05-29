@@ -73,6 +73,7 @@ module.exports = AccountActionCreator =
             type: ActionTypes.REMOVE_ACCOUNT
             value: accountID
         XHRUtils.removeAccount accountID
+        LayoutActionCreator.notify t('account removed'), autoclose: true
         window.router.navigate '', true
 
     _setNewAccountWaitingStatus: (status) ->

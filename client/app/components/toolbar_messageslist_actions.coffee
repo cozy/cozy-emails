@@ -94,7 +94,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
             doDelete()
         else
             modal =
-                title       : msg
+                title       : t 'app confirm delete'
                 subtitle    : msg
                 closeModal  : ->
                     LayoutActionCreator.hideModal()

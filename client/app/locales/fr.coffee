@@ -11,6 +11,7 @@ module.exports =
       "app unimplemented"       : "Non implémenté"
       "app error"               : "Oups, une erreur est survenue,
                                     veuillez réessayer"
+      "app confirm delete"      : "Confirmation de suppression"
 
       # Compose window
       "compose"                   : "Écrire un nouveau message"
@@ -191,6 +192,7 @@ module.exports =
       "account smtpServer"          : "Serveur sortant"
       "account smtpTLS"             : "Utiliser STARTTLS"
       "account remove"              : "Supprimer ce compte"
+      "account removed"             : "Compte supprimé"
       "account remove confirm"      : "Voulez-vous vraiment supprimer
                                         ce compte ?"
       "account draft mailbox"       : "Enregistrer les brouillons dans"

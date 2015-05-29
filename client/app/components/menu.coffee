@@ -442,7 +442,7 @@ MenuMailboxItem = React.createClass
             LayoutActionCreator.hideModal()
 
         modal =
-            title       : t 'account confirm delbox'
+            title       : t 'app confirm delete'
             subtitle    : t 'account confirm delbox'
             closeModal  : ->
                 LayoutActionCreator.hideModal()

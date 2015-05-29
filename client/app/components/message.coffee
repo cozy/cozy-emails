@@ -387,8 +387,8 @@ module.exports = React.createClass
             MessageActionCreator.delete {messageID}
         else
             modal =
-                title       : t 'account confirm delbox'
-                subtitle    : t 'account confirm delbox'
+                title       : t 'app confirm delete'
+                subtitle    : confirmMessage
                 closeModal  : ->
                     LayoutActionCreator.hideModal()
                 closeLabel  : t 'app cancel'
