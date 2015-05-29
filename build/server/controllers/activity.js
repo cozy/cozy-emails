@@ -104,10 +104,10 @@ module.exports.create = function(req, res, next) {
     case 'error':
       log.error(activity.data);
       log.error((ref1 = activity.data.error) != null ? ref1.stack : void 0);
-      return res.send(null);
+      return res.send('ok');
     case 'debug':
       log.info(activity.data.message);
-      return res.send(null);
+      return res.send('ok');
     default:
       return res.status(400).send({
         name: "Unknown activity data type",

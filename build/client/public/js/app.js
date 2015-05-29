@@ -684,6 +684,17 @@ module.exports = LayoutActionCreator = {
     return AppDispatcher.handleViewAction({
       type: ActionTypes.DRAWER_TOGGLE
     });
+  },
+  displayModal: function(params) {
+    return AppDispatcher.handleViewAction({
+      type: ActionTypes.DISPLAY_MODAL,
+      value: params
+    });
+  },
+  hideModal: function() {
+    return AppDispatcher.handleViewAction({
+      type: ActionTypes.HIDE_MODAL
+    });
   }
 };
 
@@ -2851,17 +2862,13 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/application", function(exports, require, module) {
-var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageFilter, MessageList, MessageStore, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, Stores, ToastContainer, TooltipRefesherMixin, Tooltips, Topbar, a, button, classer, div, form, i, input, main, p, section, span, strong, _ref, _ref1;
+var AccountConfig, AccountStore, Alert, Application, Compose, ContactStore, Conversation, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageFilter, MessageList, MessageStore, Modal, ReactCSSTransitionGroup, RefreshesStore, RouterMixin, SearchForm, SearchStore, Settings, SettingsStore, StoreWatchMixin, Stores, ToastContainer, TooltipRefesherMixin, Tooltips, Topbar, a, button, classer, div, form, i, input, main, p, section, span, strong, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, section = _ref.section, main = _ref.main, p = _ref.p, span = _ref.span, a = _ref.a, i = _ref.i, strong = _ref.strong, form = _ref.form, input = _ref.input, button = _ref.button;
 
 AccountConfig = require('./account_config');
 
 Alert = require('./alert');
-
-Topbar = require('./topbar');
-
-ToastContainer = require('./toast_container');
 
 Compose = require('./compose');
 
@@ -2871,11 +2878,17 @@ Menu = require('./menu');
 
 MessageList = require('./message-list');
 
-Settings = require('./settings');
+Modal = require('./modal');
 
 SearchForm = require('./search-form');
 
+Settings = require('./settings');
+
+ToastContainer = require('./toast_container');
+
 Tooltips = require('./tooltips-manager');
+
+Topbar = require('./topbar');
 
 ReactCSSTransitionGroup = React.addons.CSSTransitionGroup;
 
@@ -2925,7 +2938,7 @@ module.exports = Application = React.createClass({
   displayName: 'Application',
   mixins: [StoreWatchMixin(Stores), RouterMixin, TooltipRefesherMixin],
   render: function() {
-    var alert, disposition, fullscreen, layout, layoutClasses;
+    var alert, disposition, fullscreen, layout, layoutClasses, modal;
     layout = this.props.router.current;
     if (layout == null) {
       return div(null, t("app loading"));
@@ -2933,6 +2946,7 @@ module.exports = Application = React.createClass({
     disposition = LayoutStore.getDisposition();
     fullscreen = LayoutStore.isPreviewFullscreen();
     alert = this.state.alertMessage;
+    modal = this.state.modal;
     if ((layout.secondPanel != null) && (layout.secondPanel.parameters.messageID != null)) {
       MessageStore.setCurrentID(layout.secondPanel.parameters.messageID);
     } else {
@@ -2961,7 +2975,7 @@ module.exports = Application = React.createClass({
       'aria-expanded': false
     }))), Alert({
       alert: alert
-    }), ToastContainer(), Tooltips());
+    }), modal != null ? Modal(modal) : void 0, ToastContainer(), Tooltips());
   },
   getPanelComponent: function(panelInfo) {
     var account, accountID, conversation, conversationID, conversationLength, conversationLengths, counterMessage, displayConversations, emptyListMessage, error, favoriteMailboxes, fetching, isDraft, isTrash, isWaiting, lengths, mailbox, mailboxID, mailboxes, message, messageID, messages, messagesCount, nextMessage, prevMessage, query, ref, selectedAccount, selectedMailboxID, settings, tab, _ref2, _ref3, _ref4, _ref5;
@@ -3190,6 +3204,7 @@ module.exports = Application = React.createClass({
       selectedAccount: selectedAccount,
       isResponsiveMenuShown: false,
       alertMessage: LayoutStore.getAlert(),
+      modal: LayoutStore.getModal(),
       mailboxes: mailboxes,
       mailboxesSorted: AccountStore.getSelectedMailboxes(true),
       mailboxesFlat: mailboxesFlat,
@@ -3723,24 +3738,10 @@ module.exports = Compose = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, labelSend, onCancel, toggleFullscreen, _ref3, _ref4;
+    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, labelSend, toggleFullscreen, _ref3, _ref4;
     if (!this.props.accounts) {
       return;
     }
-    onCancel = (function(_this) {
-      return function(e) {
-        e.preventDefault();
-        if (_this.props.onCancel != null) {
-          return _this.props.onCancel();
-        } else {
-          return _this.redirect(_this.buildUrl({
-            direction: 'first',
-            action: 'default',
-            fullWidth: true
-          }));
-        }
-      };
-    })(this);
     toggleFullscreen = function() {
       return LayoutActionCreator.toggleFullscreen();
     };
@@ -3878,11 +3879,23 @@ module.exports = Compose = React.createClass({
     }, span({
       className: 'fa fa-trash-o'
     }), span(null, t('compose action delete'))) : void 0, button({
-      onClick: onCancel,
+      onClick: this.onCancel,
       className: 'btn btn-cozy-non-default btn-cancel'
     }, t('app cancel'))))), div({
       className: 'clearfix'
     }, null)));
+  },
+  onCancel: function(e) {
+    e.preventDefault();
+    if (this.props.onCancel != null) {
+      return this.props.onCancel();
+    } else {
+      return this.redirect(this.buildUrl({
+        direction: 'first',
+        action: 'default',
+        fullWidth: true
+      }));
+    }
   },
   _initCompose: function() {
     if (this._saveInterval) {
@@ -3919,50 +3932,45 @@ module.exports = Compose = React.createClass({
     }
   },
   componentWillUnmount: function() {
-    var message, newContent, oldContent, silent, updated;
+    var doDelete, doSave, newContent, oldContent, silent, updated;
     if (this._saveInterval) {
       window.clearInterval(this._saveInterval);
     }
-    if (this.state.isDraft && (this.state.id != null)) {
-      if (this.state.composeInHTML) {
-        newContent = MessageUtils.cleanReplyText(this.state.html).replace(/\s/gim, '');
-        oldContent = MessageUtils.cleanReplyText(this.state.initHtml).replace(/\s/gim, '');
-        updated = newContent !== oldContent;
-      } else {
-        updated = this.state.text !== this.state.initText;
-      }
-      silent = this.state.isNew && !updated;
-      if (silent || !window.confirm(t('compose confirm keep draft'))) {
-        return window.setTimeout((function(_this) {
-          return function() {
-            var messageID;
-            messageID = _this.state.id;
-            return MessageActionCreator["delete"]({
-              messageID: messageID,
-              silent: silent,
-              isDraft: true,
-              inReplyTo: _this.props.inReplyTo
-            });
-          };
-        })(this), 0);
-      } else {
-        if (this.state.originalConversationID != null) {
-          message = {
-            id: this.state.id,
-            accountID: this.state.accountID,
-            mailboxIDs: this.state.mailboxIDs,
-            from: this.state.from,
-            to: this.state.to,
-            cc: this.state.cc,
-            bcc: this.state.bcc,
-            subject: this.state.subject,
+    doDelete = (function(_this) {
+      return function() {
+        return window.setTimeout(function() {
+          var messageID;
+          LayoutActionCreator.hideModal();
+          messageID = _this.state.id;
+          return MessageActionCreator["delete"]({
+            messageID: messageID,
+            silent: silent,
             isDraft: true,
-            attachments: this.state.attachments,
-            inReplyTo: this.state.inReplyTo,
-            references: this.state.references,
-            text: this.state.text,
-            html: this.state.html,
-            conversationID: this.state.originalConversationID
+            inReplyTo: _this.props.inReplyTo
+          });
+        }, 5);
+      };
+    })(this);
+    doSave = (function(_this) {
+      return function() {
+        var message;
+        if (_this.state.originalConversationID != null) {
+          message = {
+            id: _this.state.id,
+            accountID: _this.state.accountID,
+            mailboxIDs: _this.state.mailboxIDs,
+            from: _this.state.from,
+            to: _this.state.to,
+            cc: _this.state.cc,
+            bcc: _this.state.bcc,
+            subject: _this.state.subject,
+            isDraft: true,
+            attachments: _this.state.attachments,
+            inReplyTo: _this.state.inReplyTo,
+            references: _this.state.references,
+            text: _this.state.text,
+            html: _this.state.html,
+            conversationID: _this.state.originalConversationID
           };
           return MessageActionCreator.send(message, function(error, message) {
             var cid, msg;
@@ -3980,7 +3988,38 @@ module.exports = Compose = React.createClass({
               }
             }
           });
+        } else {
+
         }
+      };
+    })(this);
+    if (!this.state.isDeleted && this.state.isDraft && (this.state.id != null)) {
+      if (this.state.composeInHTML) {
+        newContent = MessageUtils.cleanReplyText(this.state.html).replace(/\s/gim, '');
+        oldContent = MessageUtils.cleanReplyText(this.state.initHtml).replace(/\s/gim, '');
+        updated = newContent !== oldContent;
+      } else {
+        updated = this.state.text !== this.state.initText;
+      }
+      silent = this.state.isNew && !updated;
+      if (silent) {
+        return doDelete();
+      } else {
+        return setTimeout(function() {
+          var modal;
+          modal = {
+            title: t('compose confirm keep draft'),
+            subtitle: t('compose confirm keep draft'),
+            closeModal: function() {
+              doSave();
+              return LayoutActionCreator.hideModal();
+            },
+            closeLabel: t('compose confirm draft keep'),
+            actionLabel: t('compose confirm draft delete'),
+            action: doDelete
+          };
+          return LayoutActionCreator.displayModal(modal);
+        }, 0);
       }
     }
   },
@@ -4181,7 +4220,7 @@ module.exports = Compose = React.createClass({
     }
   },
   onDelete: function(e) {
-    var confirmMessage, messageID, params, subject;
+    var confirmMessage, doDelete, modal, params, subject;
     e.preventDefault();
     subject = this.props.message.get('subject');
     if ((subject != null) && subject !== '') {
@@ -4192,29 +4231,46 @@ module.exports = Compose = React.createClass({
     } else {
       confirmMessage = t('mail confirm delete nosubject');
     }
-    if (window.confirm(confirmMessage)) {
-      messageID = this.props.message.get('id');
-      return MessageActionCreator["delete"]({
-        messageID: messageID
-      }, (function(_this) {
-        return function(error) {
-          var parameters;
-          if (error == null) {
-            if (_this.props.callback) {
-              return _this.props.callback();
-            } else {
-              parameters = [_this.props.selectedAccountID, _this.props.selectedMailboxID];
-              return _this.redirect({
-                direction: 'first',
-                action: 'account.mailbox.messages',
-                parameters: parameters,
-                fullWidth: true
-              });
+    doDelete = (function(_this) {
+      return function() {
+        var messageID;
+        LayoutActionCreator.hideModal();
+        messageID = _this.props.message.get('id');
+        return _this.setState({
+          isDeleted: true
+        }, function() {
+          return MessageActionCreator["delete"]({
+            messageID: messageID
+          }, function(error) {
+            var parameters;
+            if (error == null) {
+              if (_this.props.callback) {
+                return _this.props.callback();
+              } else {
+                parameters = [_this.props.selectedAccountID, _this.props.selectedMailboxID];
+                return _this.redirect({
+                  direction: 'first',
+                  action: 'account.mailbox.messages',
+                  parameters: parameters,
+                  fullWidth: true
+                });
+              }
             }
-          }
-        };
-      })(this));
-    }
+          });
+        });
+      };
+    })(this);
+    modal = {
+      title: t('mail confirm delete title'),
+      subtitle: confirmMessage,
+      closeModal: function() {
+        return LayoutActionCreator.hideModal();
+      },
+      closeLabel: t('mail confirm delete cancel'),
+      actionLabel: t('mail confirm delete delete'),
+      action: doDelete
+    };
+    return LayoutActionCreator.displayModal(modal);
   },
   onToggleCc: function(e) {
     var focus, toggle, _i, _len, _ref3;
@@ -4595,7 +4651,7 @@ ComposeEditor = React.createClass({
     };
     timeout = 30000;
     return window.intentManager.send('nameSpace', intent, timeout).then(this.choosePhoto_answer, function(error) {
-      return console.log('response in error : ', error);
+      return console.error('response in error : ', error);
     });
   },
   choosePhoto_answer: function(message) {
@@ -5403,13 +5459,11 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/mails_input", function(exports, require, module) {
-var ContactActionCreator, ContactStore, LayoutActionCreator, MailsInput, MessageUtils, Modal, a, classer, div, i, img, label, li, span, textarea, ul, _ref;
+var ContactActionCreator, ContactStore, LayoutActionCreator, MailsInput, MessageUtils, a, classer, div, i, img, label, li, span, textarea, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, label = _ref.label, textarea = _ref.textarea, span = _ref.span, ul = _ref.ul, li = _ref.li, a = _ref.a, img = _ref.img, i = _ref.i;
 
 MessageUtils = require('../utils/message_utils');
-
-Modal = require('./modal');
 
 ContactStore = require('../stores/contact_store');
 
@@ -5777,7 +5831,7 @@ module.exports = MailsInput = React.createClass({
 });
 
 ;require.register("components/menu", function(exports, require, module) {
-var AccountActionCreator, AccountStore, Dispositions, LayoutActionCreator, LayoutStore, Menu, MenuMailboxItem, MessageActionCreator, MessageUtils, Modal, RefreshIndicator, RouterMixin, SpecialBoxIcons, StoreWatchMixin, ThinProgress, Tooltips, a, aside, button, classer, colorhash, div, i, li, nav, span, specialMailboxes, ul, _ref, _ref1,
+var AccountActionCreator, AccountStore, Dispositions, LayoutActionCreator, LayoutStore, Menu, MenuMailboxItem, MessageActionCreator, MessageUtils, RefreshIndicator, RouterMixin, SpecialBoxIcons, StoreWatchMixin, ThinProgress, Tooltips, a, aside, button, classer, colorhash, div, i, li, nav, span, specialMailboxes, ul, _ref, _ref1,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 _ref = React.DOM, div = _ref.div, aside = _ref.aside, nav = _ref.nav, ul = _ref.ul, li = _ref.li, span = _ref.span, a = _ref.a, i = _ref.i, button = _ref.button;
@@ -5797,8 +5851,6 @@ MessageActionCreator = require('../actions/message_action_creator');
 AccountStore = require('../stores/account_store');
 
 LayoutStore = require('../stores/layout_store');
-
-Modal = require('./modal');
 
 ThinProgress = require('./thin_progress');
 
@@ -5821,7 +5873,6 @@ module.exports = Menu = React.createClass({
   getInitialState: function() {
     return {
       displayActiveAccount: true,
-      modalErrors: null,
       onlyFavorites: true
     };
   },
@@ -5838,17 +5889,26 @@ module.exports = Menu = React.createClass({
     }
   },
   displayErrors: function(refreshee) {
-    return this.setState({
-      modalErrors: refreshee.get('errors')
-    });
-  },
-  hideErrors: function() {
-    return this.setState({
-      modalErrors: null
-    });
+    var errors, modal;
+    errors = refreshee.get('errors');
+    modal = {
+      title: t('modal please contribute'),
+      subtitle: t('modal please report'),
+      closeModal: function() {
+        return LayoutActionCreator.hideModal();
+      },
+      closeLabel: t('app alert close'),
+      content: React.DOM.pre({
+        style: {
+          "max-height": "300px",
+          "word-wrap": "normal"
+        }
+      }, errors.join("\n\n"))
+    };
+    return LayoutActionCreator.displayModal(modal);
   },
   render: function() {
-    var closeLabel, closeModal, composeUrl, content, modal, modalErrors, newMailboxClass, newMailboxUrl, selectedAccountUrl, settingsClass, settingsUrl, subtitle, title, _ref2, _ref3;
+    var composeUrl, newMailboxClass, newMailboxUrl, selectedAccountUrl, settingsClass, settingsUrl, _ref2, _ref3;
     if (this.props.accounts.length) {
       selectedAccountUrl = this.buildUrl({
         direction: 'first',
@@ -5885,28 +5945,6 @@ module.exports = Menu = React.createClass({
         fullWidth: true
       });
     }
-    if (this.state.modalErrors) {
-      title = t('modal please contribute');
-      subtitle = t('modal please report');
-      modalErrors = this.state.modalErrors;
-      closeModal = this.hideErrors;
-      closeLabel = t('app alert close');
-      content = React.DOM.pre({
-        style: {
-          "max-height": "300px",
-          "word-wrap": "normal"
-        }
-      }, this.state.modalErrors.join("\n\n"));
-      modal = Modal({
-        title: title,
-        subtitle: subtitle,
-        content: content,
-        closeModal: closeModal,
-        closeLabel: closeLabel
-      });
-    } else {
-      modal = null;
-    }
     composeUrl = this.buildUrl({
       direction: 'first',
       action: 'compose',
@@ -5916,7 +5954,7 @@ module.exports = Menu = React.createClass({
     return aside({
       role: 'menubar',
       'aria-expanded': this.state.isDrawerExpanded
-    }, modal, this.props.accounts.length ? a({
+    }, this.props.accounts.length ? a({
       href: composeUrl,
       className: 'compose-action btn btn-cozy-contrast btn-cozy'
     }, i({
@@ -6066,12 +6104,10 @@ module.exports = Menu = React.createClass({
     }, nbUnread) : void 0), isSelected ? ul({
       role: 'group',
       className: 'list-unstyled mailbox-list'
-    }, mailboxes != null ? mailboxes.filter((function(_this) {
-      return function(mailbox) {
-        var _ref3;
-        return _ref3 = mailbox.get('id'), __indexOf.call(specialMboxes, _ref3) >= 0;
-      };
-    })(this)).map((function(_this) {
+    }, mailboxes != null ? mailboxes.filter(function(mailbox) {
+      var _ref3;
+      return _ref3 = mailbox.get('id'), __indexOf.call(specialMboxes, _ref3) >= 0;
+    }).map((function(_this) {
       return function(mailbox, key) {
         var selectedMailboxID;
         selectedMailboxID = _this.props.selectedMailboxID;
@@ -6084,12 +6120,10 @@ module.exports = Menu = React.createClass({
           displayErrors: _this.displayErrors
         });
       };
-    })(this)).toJS() : void 0, mailboxes != null ? mailboxes.filter((function(_this) {
-      return function(mailbox) {
-        var _ref3;
-        return _ref3 = mailbox.get('id'), __indexOf.call(specialMboxes, _ref3) < 0;
-      };
-    })(this)).map((function(_this) {
+    })(this)).toJS() : void 0, mailboxes != null ? mailboxes.filter(function(mailbox) {
+      var _ref3;
+      return _ref3 = mailbox.get('id'), __indexOf.call(specialMboxes, _ref3) < 0;
+    }).map((function(_this) {
       return function(mailbox, key) {
         var selectedMailboxID;
         selectedMailboxID = _this.props.selectedMailboxID;
@@ -6187,7 +6221,11 @@ MenuMailboxItem = React.createClass({
       onDragEnter: this.onDragEnter,
       onDragLeave: this.onDragLeave,
       onDragOver: this.onDragOver,
-      onDrop: this.onDrop,
+      onDrop: (function(_this) {
+        return function(e) {
+          return _this.onDrop(e, mailboxID);
+        };
+      })(this),
       title: title,
       'data-toggle': 'tooltip',
       'data-placement': 'right',
@@ -6244,36 +6282,47 @@ MenuMailboxItem = React.createClass({
     }, mailboxID, to);
   },
   expungeMailbox: function(e) {
-    var accountID, mailbox, mailboxID;
+    var accountID, doExpunge, mailboxID, modal;
     accountID = this.props.account.get('id');
     mailboxID = this.props.mailbox.get('id');
     e.preventDefault();
-    if (window.confirm(t('account confirm delbox'))) {
+    doExpunge = function() {
+      var mailbox;
       mailbox = {
         accountID: accountID,
         mailboxID: mailboxID
       };
-      return AccountActionCreator.mailboxExpunge(mailbox, (function(_this) {
-        return function(error) {
-          var params;
-          if (error != null) {
-            if (accountID === mailbox.accountID && mailboxID === mailbox.mailboxID) {
-              params = _.clone(MessageStore.getParams());
-              params.accountID = accountID;
-              params.mailboxID = mailboxID;
-              LayoutActionCreator.showMessageList({
-                parameters: params
-              });
-            }
-            return LayoutActionCreator.alertError("" + (t("mailbox expunge ko")) + " " + error);
-          } else {
-            return LayoutActionCreator.notify(t("mailbox expunge ok"), {
-              autoclose: true
+      AccountActionCreator.mailboxExpunge(mailbox, function(error) {
+        var params;
+        if (error != null) {
+          if (accountID === mailbox.accountID && mailboxID === mailbox.mailboxID) {
+            params = _.clone(MessageStore.getParams());
+            params.accountID = accountID;
+            params.mailboxID = mailboxID;
+            LayoutActionCreator.showMessageList({
+              parameters: params
             });
           }
-        };
-      })(this));
-    }
+          return LayoutActionCreator.alertError("" + (t("mailbox expunge ko")) + " " + error);
+        } else {
+          return LayoutActionCreator.notify(t("mailbox expunge ok"), {
+            autoclose: true
+          });
+        }
+      });
+      return LayoutActionCreator.hideModal();
+    };
+    modal = {
+      title: t('account confirm delbox'),
+      subtitle: t('account confirm delbox'),
+      closeModal: function() {
+        return LayoutActionCreator.hideModal();
+      },
+      closeLabel: t('app cancel'),
+      actionLabel: t('app confirm'),
+      action: doExpunge
+    };
+    return LayoutActionCreator.displayModal(modal);
   }
 });
 });
@@ -6636,7 +6685,8 @@ MessageListBody = React.createClass({
   },
   render: function() {
     return ul({
-      className: 'list-unstyled'
+      className: 'list-unstyled',
+      ref: 'messageList'
     }, this.props.messages.map((function(_this) {
       return function(message, key) {
         var cid, id, isActive, _ref2;
@@ -6674,11 +6724,18 @@ MessageListBody = React.createClass({
     return this._onMount();
   },
   _onMount: function() {
-    var active;
+    var active, scroll, scrollable, _ref2, _ref3, _ref4, _ref5;
     if (this.state.messageID !== this.props.messageID) {
+      scrollable = (_ref2 = this.refs.messageList) != null ? (_ref3 = _ref2.getDOMNode()) != null ? _ref3.parentNode : void 0 : void 0;
       active = document.querySelector("[data-message-id='" + this.props.messageID + "']");
       if ((active != null) && !DomUtils.isVisible(active)) {
+        scroll = scrollable != null ? scrollable.scrollTop : void 0;
         active.scrollIntoView(false);
+        if (scroll !== ((_ref4 = this.refs.scrollable) != null ? (_ref5 = _ref4.getDOMNode()) != null ? _ref5.scrollTop : void 0 : void 0)) {
+          if (scrollable != null) {
+            scrollable.scrollTop += active.getBoundingClientRect().height / 2;
+          }
+        }
       }
       return this.setState({
         messageID: this.props.messageID
@@ -7322,16 +7379,33 @@ module.exports = React.createClass({
     });
   },
   onDelete: function(args) {
-    var confirmMessage, messageID, needConfirmation;
+    var confirmMessage, messageID, modal, needConfirmation;
     needConfirmation = this.props.settings.get('messageConfirmDelete');
     messageID = this.props.message.get('id');
     confirmMessage = t('mail confirm delete', {
       subject: this.props.message.get('subject')
     });
-    if (!needConfirmation || window.confirm(confirmMessage)) {
+    if (!needConfirmation) {
       return MessageActionCreator["delete"]({
         messageID: messageID
       });
+    } else {
+      modal = {
+        title: t('account confirm delbox'),
+        subtitle: t('account confirm delbox'),
+        closeModal: function() {
+          return LayoutActionCreator.hideModal();
+        },
+        closeLabel: t('app cancel'),
+        actionLabel: t('app confirm'),
+        action: function() {
+          MessageActionCreator["delete"]({
+            messageID: messageID
+          });
+          return LayoutActionCreator.hideModal();
+        }
+      };
+      return LayoutActionCreator.displayModal(modal);
     }
   },
   onConversationDelete: function() {
@@ -7658,6 +7732,11 @@ var Modal;
 module.exports = Modal = React.createClass({
   displayName: 'Modal',
   render: function() {
+    var contentClass;
+    contentClass = '';
+    if (!this.props.content) {
+      contentClass = 'no-content';
+    }
     return React.DOM.div({
       className: "modal fade in",
       role: "dialog",
@@ -7679,14 +7758,18 @@ module.exports = Modal = React.createClass({
     })) : void 0, React.DOM.h4({
       className: "modal-title"
     }, this.props.title)) : void 0, React.DOM.div({
-      className: "modal-body"
-    }, this.props.subtitle != null ? React.DOM.span(null, this.props.subtitle) : void 0, this.props.content), this.props.closeLabel != null ? React.DOM.div({
+      className: "modal-body " + contentClass
+    }, this.props.subtitle != null ? React.DOM.span(null, this.props.subtitle) : void 0, this.props.content != null ? this.props.content : void 0), React.DOM.div({
       className: "modal-footer"
-    }, React.DOM.button({
+    }, (this.props.actionLabel != null) && this.props.action ? React.DOM.button({
       type: 'button',
-      className: 'btn',
+      className: 'btn btn-cozy',
+      onClick: this.props.action
+    }, this.props.actionLabel) : void 0, this.props.closeLabel != null ? React.DOM.button({
+      type: 'button',
+      className: 'btn btn-cozy-non-default',
       onClick: this.props.closeModal
-    }, this.props.closeLabel)) : void 0)));
+    }, this.props.closeLabel) : void 0))));
   }
 });
 });
@@ -8411,15 +8494,13 @@ module.exports = ThinProgress = React.createClass({
 });
 
 ;require.register("components/toast", function(exports, require, module) {
-var ActionTypes, AlertLevel, AppDispatcher, CSSTransitionGroup, LayoutActionCreator, LayoutStore, Modal, SocketUtils, StoreWatchMixin, Toast, a, button, classer, div, h4, i, pre, span, strong, _ref, _ref1;
+var ActionTypes, AlertLevel, AppDispatcher, CSSTransitionGroup, LayoutActionCreator, LayoutStore, SocketUtils, StoreWatchMixin, Toast, a, button, classer, div, h4, i, pre, span, strong, _ref, _ref1;
 
 _ref = React.DOM, a = _ref.a, h4 = _ref.h4, pre = _ref.pre, div = _ref.div, button = _ref.button, span = _ref.span, strong = _ref.strong, i = _ref.i;
 
 SocketUtils = require('../utils/socketio_utils');
 
 AppDispatcher = require('../app_dispatcher');
-
-Modal = require('./modal');
 
 StoreWatchMixin = require('../mixins/store_watch_mixin');
 
@@ -8435,11 +8516,6 @@ classer = React.addons.classSet;
 
 module.exports = Toast = React.createClass({
   displayName: 'Toast',
-  getInitialState: function() {
-    return {
-      modalErrors: false
-    };
-  },
   render: function() {
     var className, classes, hasErrors, showModal, toast;
     toast = this.props.toast.toJS();
@@ -8456,9 +8532,9 @@ module.exports = Toast = React.createClass({
       className: classes,
       role: "alert",
       key: this.props.key
-    }, this.state.modalErrors ? this.renderModal() : void 0, toast.message ? div({
+    }, toast.message ? div({
       className: "message"
-    }, toast.message) : void 0, toast.finished ? button({
+    }, toast.message) : void 0, toast.finished || hasErrors ? button({
       type: "button",
       className: "close",
       onClick: this.acknowledge
@@ -8475,44 +8551,34 @@ module.exports = Toast = React.createClass({
         key: id,
         onClick: action.onClick
       }, action.label);
-    }))) : void 0, hasErrors ? div({
+    }))) : void 0, hasErrors ? (className = "btn btn-cancel btn-cozy-non-default btn-xs", div({
       className: 'toast-actions'
-    }, a({
+    }, button({
+      className: className,
+      type: "button",
+      key: 'errors',
       onClick: showModal
     }, t('there were errors', {
       smart_count: toast.errors.length
-    }))) : void 0);
-  },
-  renderModal: function() {
-    var closeLabel, closeModal, content, modalErrors, subtitle, title;
-    title = t('modal please contribute');
-    subtitle = t('modal please report');
-    modalErrors = this.state.modalErrors;
-    closeModal = this.closeModal;
-    closeLabel = t('app alert close');
-    content = React.DOM.pre({
-      style: {
-        "max-height": "300px",
-        "word-wrap": "normal"
-      }
-    }, this.state.modalErrors.join("\n\n"));
-    return Modal({
-      title: title,
-      subtitle: subtitle,
-      content: content,
-      closeModal: closeModal,
-      closeLabel: closeLabel
-    });
-  },
-  closeModal: function() {
-    return this.setState({
-      modalErrors: false
-    });
+    })))) : void 0);
   },
   showModal: function(errors) {
-    return this.setState({
-      modalErrors: errors
-    });
+    var modal;
+    modal = {
+      title: t('modal please contribute'),
+      subtitle: t('modal please report'),
+      closeModal: function() {
+        return LayoutActionCreator.hideModal();
+      },
+      closeLabel: t('app alert close'),
+      content: React.DOM.pre({
+        style: {
+          "max-height": "300px",
+          "word-wrap": "normal"
+        }
+      }, errors.join("\n\n"))
+    };
+    return LayoutActionCreator.displayModal(modal);
   },
   acknowledge: function() {
     return AppDispatcher.handleViewAction({
@@ -8524,11 +8590,9 @@ module.exports = Toast = React.createClass({
 });
 
 ;require.register("components/toast_container", function(exports, require, module) {
-var CSSTransitionGroup, LayoutActionCreator, LayoutStore, Modal, StoreWatchMixin, Toast, ToastContainer, classer, div;
+var CSSTransitionGroup, LayoutActionCreator, LayoutStore, StoreWatchMixin, Toast, ToastContainer, classer, div;
 
 div = React.DOM.div;
-
-Modal = require('./modal');
 
 Toast = require('./toast');
 
@@ -8889,7 +8953,7 @@ module.exports = ToolbarMessagesList = React.createClass({
 });
 
 ;require.register("components/toolbar_messageslist_actions", function(exports, require, module) {
-var ActionsToolbarMessagesList, MessageActionCreator, ToolboxActions, ToolboxMove, Tooltips, button, div, i, _ref;
+var ActionsToolbarMessagesList, LayoutActionCreator, MessageActionCreator, ToolboxActions, ToolboxMove, Tooltips, button, div, i, _ref;
 
 _ref = React.DOM, div = _ref.div, i = _ref.i, button = _ref.button;
 
@@ -8898,6 +8962,8 @@ Tooltips = require('../constants/app_constants').Tooltips;
 ToolboxActions = require('./toolbox_actions');
 
 ToolboxMove = require('./toolbox_move');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
 
 MessageActionCreator = require('../actions/message_action_creator');
 
@@ -8973,7 +9039,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
     }));
   },
   onDelete: function(applyToConversation) {
-    var msg, noConfirm, options;
+    var doDelete, modal, msg, noConfirm, options;
     if (!(options = this._getSelectedAndMode(applyToConversation))) {
       return;
     }
@@ -8986,20 +9052,38 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
         smart_count: options.count
       });
     }
-    noConfirm = !this.props.settings.get('messageConfirmDelete');
-    if (noConfirm || window.confirm(msg)) {
-      MessageActionCreator["delete"](options, (function(_this) {
-        return function() {
+    doDelete = (function(_this) {
+      return function() {
+        MessageActionCreator["delete"](options, function() {
           var firstMessageID;
           if (options.count > 0 && _this.props.messages.count() > 0) {
             firstMessageID = _this.props.messages.first().get('id');
             return MessageActionCreator.setCurrent(firstMessageID, true);
           }
-        };
-      })(this));
-      if (this.props.afterAction != null) {
-        return this.props.afterAction();
-      }
+        });
+        if (_this.props.afterAction != null) {
+          return _this.props.afterAction();
+        }
+      };
+    })(this);
+    noConfirm = !this.props.settings.get('messageConfirmDelete');
+    if (noConfirm) {
+      return doDelete();
+    } else {
+      modal = {
+        title: msg,
+        subtitle: msg,
+        closeModal: function() {
+          return LayoutActionCreator.hideModal();
+        },
+        closeLabel: t('app cancel'),
+        actionLabel: t('app confirm'),
+        action: function() {
+          doDelete();
+          return LayoutActionCreator.hideModal();
+        }
+      };
+      return LayoutActionCreator.displayModal(modal);
     }
   },
   onMove: function(to, applyToConversation) {
@@ -9636,6 +9720,8 @@ module.exports = {
     'MINIMIZE_PREVIEW_PANE': 'MINIMIZE_PREVIEW_PANE',
     'DISPLAY_ALERT': 'DISPLAY_ALERT',
     'HIDE_ALERT': 'HIDE_ALERT',
+    'DISPLAY_MODAL': 'DISPLAY_MODAL',
+    'HIDE_MODAL': 'HIDE_MODAL',
     'REFRESH': 'REFRESH',
     'INTENT_AVAILABLE': 'INTENT_AVAILABLE',
     'RECEIVE_RAW_MAILBOXES': 'RECEIVE_RAW_MAILBOXES',
@@ -9784,7 +9870,6 @@ initIntent = function() {
   }).then(function(message) {
     return LayoutActionCreator.intentAvailability(true);
   }, function(error) {
-    console.log("Intents not available");
     return LayoutActionCreator.intentAvailability(false);
   });
 };
@@ -10841,6 +10926,7 @@ module.exports = {
   "app loading": "Loading…",
   "app back": "Back",
   "app cancel": "Cancel",
+  "app confirm": "Confirm",
   "app menu": "Menu",
   "app search": "Search…",
   "app alert close": "Close",
@@ -10871,6 +10957,8 @@ module.exports = {
   "compose error no dest": "You can not send a message to nobody",
   "compose error no subject": "Please set a subject",
   "compose confirm keep draft": "Message not sent, keep the draft?",
+  "compose confirm draft keep": "Keep draft",
+  "compose confirm draft delete": "Delete draft",
   "compose wrong email format": "The given email is unproperly formatted: %{address}.",
   "compose forward header": "Forwarded message",
   "compose forward subject": "Subject:",
@@ -10945,8 +11033,11 @@ module.exports = {
   "mail mark nofav": "Not important",
   "mail mark read": "Read",
   "mail mark unread": "Unread",
+  "mail confirm delete title": "Delete message",
   "mail confirm delete": "Do you really want to delete message “%{subject}”?",
   "mail confirm delete nosubject": "Do you really want to delete this message?",
+  "mail confirm delete cancel": "Cancel",
+  "mail confirm delete delete": "Delete",
   "mail action conversation delete": "Delete conversation",
   "mail action conversation move": "Move conversation",
   "mail action conversation seen": "Mark conversation as read",
@@ -11200,6 +11291,7 @@ module.exports = {
   "app loading": "Chargement…",
   "app back": "Retour",
   "app cancel": "Annuler",
+  "app confirm": "Oui",
   "app menu": "Menu",
   "app search": "Rechercher…",
   "app alert close": "Fermer",
@@ -11230,6 +11322,8 @@ module.exports = {
   "compose error no dest": "Vous n'avez pas saisi de destinataires",
   "compose error no subject": "Vous n'avez pas saisi de sujet",
   "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?",
+  "compose confirm draft keep": "Conserver le brouillon",
+  "compose confirm draft delete": "Supprimer le brouillon",
   "compose wrong email format": "L'addresse mail donnée n'est pas bien formattée : %{address}.",
   "compose forward header": "Message transféré",
   "compose forward subject": "Sujet :",
@@ -11304,8 +11398,11 @@ module.exports = {
   "mail mark nofav": "Normal",
   "mail mark read": "Lu",
   "mail mark unread": "Non lu",
+  "mail confirm delete title": "Supprimer le message",
   "mail confirm delete": "Voulez-vous vraiment supprimer le message « %{subject} » ?",
   "mail confirm delete nosubject": "Voulez-vous vraiment supprimer ce message",
+  "mail confirm delete cancel": "Annuler",
+  "mail confirm delete delete": "Supprimer",
   "mail action conversation delete": "Supprimer la conversation",
   "mail action conversation move": "Déplacer la conversation",
   "mail action conversation seen": "Marquer la conversation comme lue",
@@ -12238,7 +12335,7 @@ LayoutStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var _alert, _disposition, _drawer, _intentAvailable, _previewFullscreen, _previewSize, _shown, _tasks;
+  var _alert, _disposition, _drawer, _intentAvailable, _modal, _previewFullscreen, _previewSize, _shown, _tasks;
 
   __extends(LayoutStore, _super);
 
@@ -12264,6 +12361,8 @@ LayoutStore = (function(_super) {
   _intentAvailable = false;
 
   _drawer = false;
+
+  _modal = null;
 
 
   /*
@@ -12305,6 +12404,14 @@ LayoutStore = (function(_super) {
     handle(ActionTypes.HIDE_ALERT, function(value) {
       _alert.level = null;
       _alert.message = null;
+      return this.emit('change');
+    });
+    handle(ActionTypes.DISPLAY_MODAL, function(value) {
+      _modal = value;
+      return this.emit('change');
+    });
+    handle(ActionTypes.HIDE_MODAL, function(value) {
+      _modal = null;
       return this.emit('change');
     });
     handle(ActionTypes.SELECT_ACCOUNT, function(value) {
@@ -12390,6 +12497,10 @@ LayoutStore = (function(_super) {
 
   LayoutStore.prototype.getAlert = function() {
     return _alert;
+  };
+
+  LayoutStore.prototype.getModal = function() {
+    return _modal;
   };
 
   LayoutStore.prototype.getToasts = function() {
@@ -12555,7 +12666,7 @@ MessageStore = (function(_super) {
     var diff, messageMap, oldmsg, updated;
     oldmsg = _messages.get(message.id);
     updated = oldmsg != null ? oldmsg.get('updated') : void 0;
-    if (!((message.updated != null) && (updated != null) && updated > message.updated)) {
+    if (!((message.updated != null) && (updated != null) && updated > message.updated) && !message._deleted) {
       if (message.attachments == null) {
         message.attachments = [];
       }
@@ -12580,7 +12691,7 @@ MessageStore = (function(_super) {
         return "" + message.id + " \"" + message.from[0].name + "\" \"" + message.subject + "\"";
       };
       _messages = _messages.set(message.id, messageMap);
-      if (diff = computeMailboxDiff(oldmsg, messageMap)) {
+      if ((message.accountID != null) && (diff = computeMailboxDiff(oldmsg, messageMap))) {
         return AccountStore._applyMailboxDiff(message.accountID, diff);
       }
     }
