@@ -9,6 +9,7 @@ querystring = require 'querystring'
 multiparty = require 'multiparty'
 stream_to_buffer = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
+{normalizeMessageID} = require('../utils/jwz_tools')
 ImapReporter = require '../imap/reporter'
 
 # get a message and attach it to req.message
@@ -260,6 +261,7 @@ module.exports.send = (req, res, next) ->
             account.sendMessage message, (err, info) ->
                 return cb err if err
                 message.headers['message-id'] = info.messageId
+                message.messageID = normalizeMessageID info.messageId
                 cb null
 
         #  Get the sent box
