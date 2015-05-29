@@ -47,6 +47,8 @@ module.exports =
         'MINIMIZE_PREVIEW_PANE'     : 'MINIMIZE_PREVIEW_PANE'
         'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
         'HIDE_ALERT'                : 'HIDE_ALERT'
+        'DISPLAY_MODAL'             : 'DISPLAY_MODAL'
+        'HIDE_MODAL'                : 'HIDE_MODAL'
         'REFRESH'                   : 'REFRESH'
         'INTENT_AVAILABLE'          : 'INTENT_AVAILABLE'
 

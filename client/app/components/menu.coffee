@@ -12,7 +12,6 @@ MessageActionCreator      = require '../actions/message_action_creator'
 AccountStore = require '../stores/account_store'
 LayoutStore  = require '../stores/layout_store'
 
-Modal        = require './modal'
 ThinProgress = require './thin_progress'
 MessageUtils = require '../utils/message_utils'
 colorhash    = require '../utils/colorhash'
@@ -48,11 +47,10 @@ module.exports = Menu = React.createClass
 
     getInitialState: ->
         displayActiveAccount: true
-        modalErrors: null
         onlyFavorites: true
 
     getStateFromStores: ->
-            isDrawerExpanded: LayoutStore.isDrawerExpanded()
+        isDrawerExpanded: LayoutStore.isDrawerExpanded()
 
     componentWillReceiveProps: (props) ->
         if not Immutable.is(props.selectedAccount, @props.selectedAccount)
@@ -60,10 +58,18 @@ module.exports = Menu = React.createClass
 
 
     displayErrors: (refreshee) ->
-        @setState modalErrors: refreshee.get 'errors'
-
-    hideErrors: ->
-        @setState modalErrors: null
+        errors = refreshee.get 'errors'
+        modal =
+            title       : t 'modal please contribute'
+            subtitle    : t 'modal please report'
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'app alert close'
+            content     : React.DOM.pre
+                style: "max-height": "300px",
+                "word-wrap": "normal",
+                    errors.join "\n\n"
+        LayoutActionCreator.displayModal modal
 
     render: ->
 
@@ -102,20 +108,6 @@ module.exports = Menu = React.createClass
                 action: 'settings'
                 fullWidth: true
 
-        if @state.modalErrors
-            title       = t 'modal please contribute'
-            subtitle    = t 'modal please report'
-            modalErrors = @state.modalErrors
-            closeModal  = @hideErrors
-            closeLabel  = t 'app alert close'
-            content = React.DOM.pre
-                style: "max-height": "300px",
-                "word-wrap": "normal",
-                    @state.modalErrors.join "\n\n"
-            modal = Modal {title, subtitle, content, closeModal, closeLabel}
-        else
-            modal = null
-
         composeUrl = @buildUrl
             direction: 'first'
             action: 'compose'
@@ -126,9 +118,6 @@ module.exports = Menu = React.createClass
         aside
             role: 'menubar'
             'aria-expanded': @state.isDrawerExpanded,
-
-
-            modal
 
             if @props.accounts.length
                 a
@@ -266,13 +255,13 @@ module.exports = Menu = React.createClass
                             'data-tooltip-direction': 'right'
 
                 if nbUnread > 0 and not progress
-                        span className: 'badge', nbUnread
+                    span className: 'badge', nbUnread
 
             if isSelected
                 ul
                     role: 'group'
                     className: 'list-unstyled mailbox-list',
-                    mailboxes?.filter (mailbox) =>
+                    mailboxes?.filter (mailbox) ->
                         mailbox.get('id') in specialMboxes
                     .map (mailbox, key) =>
                         selectedMailboxID = @props.selectedMailboxID
@@ -284,7 +273,7 @@ module.exports = Menu = React.createClass
                             refreshes:         refreshes,
                             displayErrors:     @displayErrors,
                     .toJS()
-                    mailboxes?.filter (mailbox) =>
+                    mailboxes?.filter (mailbox) ->
                         mailbox.get('id') not in specialMboxes
                     .map (mailbox, key) =>
                         selectedMailboxID = @props.selectedMailboxID
@@ -375,7 +364,8 @@ MenuMailboxItem = React.createClass
                 onDragEnter: @onDragEnter
                 onDragLeave: @onDragLeave
                 onDragOver: @onDragOver
-                onDrop: @onDrop
+                onDrop: (e) =>
+                    @onDrop e, mailboxID
                 title: title
                 'data-toggle': 'tooltip'
                 'data-placement' : 'right'
@@ -430,12 +420,12 @@ MenuMailboxItem = React.createClass
 
         e.preventDefault()
 
-        if window.confirm(t 'account confirm delbox')
+        doExpunge = ->
             mailbox =
                 accountID: accountID
                 mailboxID: mailboxID
 
-            AccountActionCreator.mailboxExpunge mailbox, (error) =>
+            AccountActionCreator.mailboxExpunge mailbox, (error) ->
                 if error?
                     # if user hasn't switched to another box, refresh display
                     if accountID is mailbox.accountID and
@@ -449,3 +439,14 @@ MenuMailboxItem = React.createClass
                 else
                     LayoutActionCreator.notify t("mailbox expunge ok"),
                         autoclose: true
+            LayoutActionCreator.hideModal()
+
+        modal =
+            title       : t 'account confirm delbox'
+            subtitle    : t 'account confirm delbox'
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'app cancel'
+            actionLabel : t 'app confirm'
+            action      : doExpunge
+        LayoutActionCreator.displayModal modal

@@ -276,5 +276,14 @@ module.exports = LayoutActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.DRAWER_TOGGLE
 
+    displayModal: (params) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DISPLAY_MODAL
+            value: params
+
+    hideModal: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.HIDE_MODAL
+
 # circular import, require after
 MessageActionCreator = require './message_action_creator'

@@ -383,8 +383,20 @@ module.exports = React.createClass
         confirmMessage = t 'mail confirm delete',
             subject: @props.message.get('subject')
 
-        if not needConfirmation or window.confirm confirmMessage
+        if not needConfirmation
             MessageActionCreator.delete {messageID}
+        else
+            modal =
+                title       : t 'account confirm delbox'
+                subtitle    : t 'account confirm delbox'
+                closeModal  : ->
+                    LayoutActionCreator.hideModal()
+                closeLabel  : t 'app cancel'
+                actionLabel : t 'app confirm'
+                action      : ->
+                    MessageActionCreator.delete {messageID}
+                    LayoutActionCreator.hideModal()
+            LayoutActionCreator.displayModal modal
 
     onConversationDelete: ->
         conversationID = @props.message.get('conversationID')

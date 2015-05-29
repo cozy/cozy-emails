@@ -1,7 +1,6 @@
 {div, label, textarea, span, ul, li, a, img, i} = React.DOM
 
 MessageUtils    = require '../utils/message_utils'
-Modal           = require './modal'
 ContactStore    = require '../stores/contact_store'
 ContactActionCreator = require '../actions/contact_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
