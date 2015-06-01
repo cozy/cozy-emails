@@ -7,6 +7,7 @@ mailboxes = require './mailboxes'
 messages  = require './messages'
 providers = require './providers'
 settings  = require './settings'
+contacts  = require './contacts'
 test      = require './test'
 
 module.exports =
@@ -95,6 +96,12 @@ module.exports =
 
     'raw/:messageID':
         get: [messages.fetch, messages.raw]
+
+    'contacts/list':
+        get: [contacts.list]
+
+    'contacts/:contactID/picture.jpg':
+        get: [contacts.picture]
 
     'provider/:domain':
         get: providers.get

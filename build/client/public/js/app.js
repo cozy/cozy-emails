@@ -203,6 +203,9 @@ module.exports = AccountActionCreator = {
       value: accountID
     });
     XHRUtils.removeAccount(accountID);
+    LayoutActionCreator.notify(t('account removed'), {
+      autoclose: true
+    });
     return window.router.navigate('', true);
   },
   _setNewAccountWaitingStatus: function(status) {
@@ -1731,11 +1734,13 @@ module.exports = AccountInput = React.createClass({
 });
 
 ;require.register("components/account_config_item", function(exports, require, module) {
-var AccountActionCreator, LayoutActionCreator, MailboxItem, RouterMixin, classer, i, input, li, span, _ref;
+var AccountActionCreator, LayoutActionCreator, MailboxItem, RouterMixin, Spinner, classer, i, input, li, span, _ref;
 
 _ref = React.DOM, li = _ref.li, span = _ref.span, i = _ref.i, input = _ref.input;
 
 classer = React.addons.classSet;
+
+Spinner = require('./basic_components').Spinner;
 
 AccountActionCreator = require('../actions/account_action_creator');
 
@@ -1752,7 +1757,8 @@ module.exports = MailboxItem = React.createClass({
   getInitialState: function() {
     return {
       edited: false,
-      favorite: this.props.favorite
+      favorite: this.props.favorite,
+      deleting: false
     };
   },
   render: function() {
@@ -1802,7 +1808,9 @@ module.exports = MailboxItem = React.createClass({
         title: t("mailbox title edit")
       }, i({
         className: 'fa fa-pencil'
-      })), span({
+      })), this.state.deleting ? span({
+        className: "col-xs-1 box-action delete"
+      }, Spinner()) : span({
         className: "col-xs-1 box-action delete",
         onClick: this.deleteMailbox,
         title: t("mailbox title delete")
@@ -1919,27 +1927,49 @@ module.exports = MailboxItem = React.createClass({
     });
   },
   deleteMailbox: function(event) {
-    var mailbox;
+    var modal;
     if (event != null) {
       event.preventDefault();
     }
-    if (window.confirm(t('account confirm delbox'))) {
-      mailbox = {
-        mailboxID: this.props.mailbox.get('id'),
-        accountID: this.props.accountID
-      };
-      return AccountActionCreator.mailboxDelete(mailbox, function(error) {
-        var message;
-        if (error != null) {
-          message = "" + (t("mailbox delete ko")) + " " + error;
-          return LayoutActionCreator.alertError(message);
-        } else {
-          return LayoutActionCreator.notify(t("mailbox delete ok"), {
-            autoclose: true
+    modal = {
+      title: t('app confirm delete'),
+      subtitle: t('account confirm delbox'),
+      closeModal: function() {
+        return LayoutActionCreator.hideModal();
+      },
+      closeLabel: t('app cancel'),
+      actionLabel: t('app confirm'),
+      action: (function(_this) {
+        return function() {
+          var mailbox;
+          LayoutActionCreator.hideModal();
+          _this.setState({
+            deleting: true
           });
-        }
-      });
-    }
+          mailbox = {
+            mailboxID: _this.props.mailbox.get('id'),
+            accountID: _this.props.accountID
+          };
+          return AccountActionCreator.mailboxDelete(mailbox, function(error) {
+            var message;
+            if (error != null) {
+              message = "" + (t("mailbox delete ko")) + " " + error;
+              LayoutActionCreator.alertError(message);
+            } else {
+              LayoutActionCreator.notify(t("mailbox delete ok"), {
+                autoclose: true
+              });
+            }
+            if (_this.isMounted()) {
+              return _this.setState({
+                deleting: false
+              });
+            }
+          });
+        };
+      })(this)
+    };
+    return LayoutActionCreator.displayModal(modal);
   }
 });
 });
@@ -2207,6 +2237,7 @@ module.exports = AccountConfigMain = React.createClass({
     }
     state.imapAdvanced = false;
     state.smtpAdvanced = false;
+    state.deleting = false;
     return state;
   },
   componentWillReceiveProps: function(props) {
@@ -2444,7 +2475,7 @@ module.exports = AccountConfigMain = React.createClass({
           "default": true,
           danger: true,
           onClick: this.onRemove,
-          spinner: false,
+          spinner: this.state.deleting,
           icon: 'trash',
           text: t("account remove")
         }
@@ -2462,12 +2493,29 @@ module.exports = AccountConfigMain = React.createClass({
     return this.state.smtpMethod.requestChange(event.target.dataset.value);
   },
   onRemove: function(event) {
+    var modal;
     if (event != null) {
       event.preventDefault();
     }
-    if (window.confirm(t('account remove confirm'))) {
-      return AccountActionCreator.remove(this.props.selectedAccount.get('id'));
-    }
+    modal = {
+      title: t('app confirm delete'),
+      subtitle: t('account remove confirm'),
+      closeModal: function() {
+        return LayoutActionCreator.hideModal();
+      },
+      closeLabel: t('app cancel'),
+      actionLabel: t('app confirm'),
+      action: (function(_this) {
+        return function() {
+          LayoutActionCreator.hideModal();
+          _this.setState({
+            deleting: true
+          });
+          return AccountActionCreator.remove(_this.props.selectedAccount.get('id'));
+        };
+      })(this)
+    };
+    return LayoutActionCreator.displayModal(modal);
   },
   toggleSMTPAdvanced: function() {
     return this.setState({
@@ -3691,7 +3739,7 @@ module.exports = {
 });
 
 ;require.register("components/compose", function(exports, require, module) {
-var AccountPicker, Compose, ComposeActions, ComposeEditor, FilePicker, FileUtils, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, Spinner, Tooltips, a, button, classer, div, form, h3, i, input, label, li, section, span, textarea, ul, _ref, _ref1, _ref2;
+var AccountPicker, Compose, ComposeActions, ComposeEditor, ComposeToolbox, FilePicker, FileUtils, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, Tooltips, a, button, classer, div, form, h3, i, input, label, li, section, span, textarea, ul, _ref, _ref1, _ref2;
 
 _ref = React.DOM, div = _ref.div, section = _ref.section, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label, button = _ref.button;
 
@@ -3699,11 +3747,13 @@ _ref1 = React.DOM, span = _ref1.span, ul = _ref1.ul, li = _ref1.li, input = _ref
 
 classer = React.addons.classSet;
 
+ComposeEditor = require('./compose_editor');
+
+ComposeToolbox = require('./compose_toolbox');
+
 FilePicker = require('./file_picker');
 
 MailsInput = require('./mails_input');
-
-Spinner = require('./basic_components').Spinner;
 
 AccountPicker = require('./account_picker');
 
@@ -3743,7 +3793,7 @@ module.exports = Compose = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, labelSend, toggleFullscreen, _ref3, _ref4;
+    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, toggleFullscreen, _ref3, _ref4;
     if (!this.props.accounts) {
       return;
     }
@@ -3755,11 +3805,6 @@ module.exports = Compose = React.createClass({
     classInput = 'compose-input';
     classCc = this.state.ccShown ? ' shown ' : '';
     classBcc = this.state.bccShown ? ' shown ' : '';
-    if (this.state.sending) {
-      labelSend = t('compose action sending');
-    } else {
-      labelSend = t('compose action send');
-    }
     focusEditor = Array.isArray(this.state.to) && this.state.to.length > 0 && this.state.subject !== '';
     return section({
       className: classer({
@@ -3852,41 +3897,15 @@ module.exports = Compose = React.createClass({
       editable: true,
       valueLink: this.linkState('attachments'),
       ref: 'attachments'
-    })), div({
-      className: 'composeToolbox'
-    }, div({
-      className: 'btn-toolbar',
-      role: 'toolbar'
-    }, div({
-      className: ''
-    }, button({
-      className: 'btn btn-cozy btn-send',
-      type: 'button',
-      disable: this.state.sending ? true : null,
-      onClick: this.onSend
-    }, this.state.sending ? span(null, Spinner({
-      white: true
-    })) : span({
-      className: 'fa fa-send'
-    }), span(null, labelSend)), button({
-      className: 'btn btn-cozy btn-save',
-      disable: this.state.saving ? true : null,
-      type: 'button',
-      onClick: this.onDraft
-    }, this.state.saving ? span(null, Spinner({
-      white: true
-    })) : span({
-      className: 'fa fa-save'
-    }), span(null, t('compose action draft'))), this.props.message != null ? button({
-      className: 'btn btn-cozy-non-default btn-delete',
-      type: 'button',
-      onClick: this.onDelete
-    }, span({
-      className: 'fa fa-trash-o'
-    }), span(null, t('compose action delete'))) : void 0, button({
-      onClick: this.onCancel,
-      className: 'btn btn-cozy-non-default btn-cancel'
-    }, t('app cancel'))))), div({
+    })), ComposeToolbox({
+      saving: this.state.saving,
+      sending: this.state.sending,
+      onSend: this.onSend,
+      onDelete: this.onDelete,
+      onDraft: this.onDraft,
+      onCancel: this.onCancel,
+      canDelete: this.props.message != null
+    }), div({
       className: 'clearfix'
     }, null)));
   },
@@ -4013,7 +4032,7 @@ module.exports = Compose = React.createClass({
         return setTimeout(function() {
           var modal;
           modal = {
-            title: t('compose confirm keep draft'),
+            title: t('app confirm delete'),
             subtitle: t('compose confirm keep draft'),
             closeModal: function() {
               doSave();
@@ -4313,8 +4332,14 @@ module.exports = Compose = React.createClass({
     return this.refs.attachments;
   }
 });
+});
 
-ComposeEditor = React.createClass({
+;require.register("components/compose_editor", function(exports, require, module) {
+var ComposeEditor, button, div, textarea, _ref;
+
+_ref = React.DOM, div = _ref.div, button = _ref.button, textarea = _ref.textarea;
+
+module.exports = ComposeEditor = React.createClass({
   displayName: 'ComposeEditor',
   mixins: [React.addons.LinkedStateMixin],
   getInitialState: function() {
@@ -4505,9 +4530,9 @@ ComposeEditor = React.createClass({
     }
   },
   setCursorPosition: function() {
-    var account, node, range, selection, signatureNode, _ref3;
+    var account, node, range, selection, signatureNode, _ref1;
     if (this.props.focus) {
-      node = (_ref3 = this.refs.html) != null ? _ref3.getDOMNode() : void 0;
+      node = (_ref1 = this.refs.html) != null ? _ref1.getDOMNode() : void 0;
       if (node != null) {
         document.querySelector(".rt-editor").focus();
         if (!this.props.settings.get('composeOnTop')) {
@@ -4540,44 +4565,47 @@ ComposeEditor = React.createClass({
     return this._initCompose();
   },
   componentDidUpdate: function(oldProps, oldState) {
-    var node, oldSig, signature, signatureHtml, signatureNode;
     if (oldProps.messageID !== this.props.messageID) {
       this._initCompose();
     }
     if (oldProps.accountID !== this.props.accountID) {
-      signature = this.props.accounts[this.props.accountID].signature;
-      if (this.refs.html != null) {
-        signatureNode = document.getElementById("signature");
-        if ((signature != null) && signature.length > 0) {
-          signatureHtml = signature.replace(/\n/g, '<br>');
-          if (signatureNode != null) {
-            signatureNode.innerHTML = "-- \n<br>" + signatureHtml + "</p>";
-          } else {
-            this.refs.html.getDOMNode().innerHTML += "<p><br></p><p id=\"signature\">-- \n<br>" + signatureHtml + "</p>";
-          }
+      return this._updateSignature;
+    }
+  },
+  _updateSignature: function() {
+    var node, oldSig, signature, signatureHtml, signatureNode;
+    signature = this.props.accounts[this.props.accountID].signature;
+    if (this.refs.html != null) {
+      signatureNode = document.getElementById("signature");
+      if ((signature != null) && signature.length > 0) {
+        signatureHtml = signature.replace(/\n/g, '<br>');
+        if (signatureNode != null) {
+          signatureNode.innerHTML = "-- \n<br>" + signatureHtml + "</p>";
         } else {
-          if (signatureNode != null) {
-            signatureNode.parentNode.removeChild(signatureNode);
-          }
+          this.refs.html.getDOMNode().innerHTML += "<p><br></p><p id=\"signature\">-- \n<br>" + signatureHtml + "</p>";
         }
-        return this.onHTMLChange();
-      } else if (this.refs.content != null) {
-        node = this.refs.content.getDOMNode();
-        oldSig = this.props.accounts[oldProps.accountID].signature;
-        if ((signature != null) && signature.length > 0) {
-          if (oldSig && oldSig.length > 0) {
-            node.textContent = node.textContent.replace(oldSig, signature);
-          } else {
-            node.textContent += "\n\n-- \n" + signature;
-          }
-        } else {
-          if (oldSig && oldSig.length > 0) {
-            oldSig = "-- \n" + signature;
-            node.textContent = node.textContent.replace(oldSig, '');
-          }
+      } else {
+        if (signatureNode != null) {
+          signatureNode.parentNode.removeChild(signatureNode);
         }
-        return this.onTextChange();
       }
+      return this.onHTMLChange();
+    } else if (this.refs.content != null) {
+      node = this.refs.content.getDOMNode();
+      oldSig = this.props.accounts[oldProps.accountID].signature;
+      if ((signature != null) && signature.length > 0) {
+        if (oldSig && oldSig.length > 0) {
+          node.textContent = node.textContent.replace(oldSig, signature);
+        } else {
+          node.textContent += "\n\n-- \n" + signature;
+        }
+      } else {
+        if (oldSig && oldSig.length > 0) {
+          oldSig = "-- \n" + signature;
+          node.textContent = node.textContent.replace(oldSig, '');
+        }
+      }
+      return this.onTextChange();
     }
   },
   onKeyDown: function(evt) {
@@ -4692,6 +4720,61 @@ ComposeEditor = React.createClass({
         return this.onHTMLChange();
       }
     }
+  }
+});
+});
+
+;require.register("components/compose_toolbox", function(exports, require, module) {
+var ComposeToolbox, Spinner, button, div, span, _ref;
+
+_ref = React.DOM, div = _ref.div, button = _ref.button, span = _ref.span;
+
+Spinner = require('./basic_components').Spinner;
+
+module.exports = ComposeToolbox = React.createClass({
+  displayName: 'ComposeToolbox',
+  render: function() {
+    var labelSend;
+    if (this.props.sending) {
+      labelSend = t('compose action sending');
+    } else {
+      labelSend = t('compose action send');
+    }
+    return div({
+      className: 'composeToolbox'
+    }, div({
+      className: 'btn-toolbar',
+      role: 'toolbar'
+    }, div({
+      className: ''
+    }, button({
+      className: 'btn btn-cozy btn-send',
+      type: 'button',
+      disable: this.props.sending ? true : null,
+      onClick: this.props.onSend
+    }, this.props.sending ? span(null, Spinner({
+      white: true
+    })) : span({
+      className: 'fa fa-send'
+    }), span(null, labelSend)), button({
+      className: 'btn btn-cozy btn-save',
+      disable: this.props.saving ? true : null,
+      type: 'button',
+      onClick: this.props.onDraft
+    }, this.props.saving ? span(null, Spinner({
+      white: true
+    })) : span({
+      className: 'fa fa-save'
+    }), span(null, t('compose action draft'))), this.props.canDelete ? button({
+      className: 'btn btn-cozy-non-default btn-delete',
+      type: 'button',
+      onClick: this.props.onDelete
+    }, span({
+      className: 'fa fa-trash-o'
+    }), span(null, t('compose action delete'))) : void 0, button({
+      onClick: this.props.onCancel,
+      className: 'btn btn-cozy-non-default btn-cancel'
+    }, t('app cancel')))));
   }
 });
 });
@@ -6318,7 +6401,7 @@ MenuMailboxItem = React.createClass({
       return LayoutActionCreator.hideModal();
     };
     modal = {
-      title: t('account confirm delbox'),
+      title: t('app confirm delete'),
       subtitle: t('account confirm delbox'),
       closeModal: function() {
         return LayoutActionCreator.hideModal();
@@ -7396,8 +7479,8 @@ module.exports = React.createClass({
       });
     } else {
       modal = {
-        title: t('account confirm delbox'),
-        subtitle: t('account confirm delbox'),
+        title: t('app confirm delete'),
+        subtitle: confirmMessage,
         closeModal: function() {
           return LayoutActionCreator.hideModal();
         },
@@ -9076,7 +9159,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
       return doDelete();
     } else {
       modal = {
-        title: msg,
+        title: t('app confirm delete'),
         subtitle: msg,
         closeModal: function() {
           return LayoutActionCreator.hideModal();
@@ -10937,6 +11020,7 @@ module.exports = {
   "app alert close": "Close",
   "app unimplemented": "Not implemented yet",
   "app error": "Argh, I'm unable to perform this action, please try again",
+  "app confirm delete": "Confirm delete",
   "compose": "Compose new email",
   "compose default": 'Hello, how are you doing today?',
   "compose from": "From",
@@ -11091,6 +11175,7 @@ module.exports = {
   "account smtpServer": "SMTP server",
   "account smtpTLS": "Use STARTTLS",
   "account remove": "Remove this account",
+  "account removed": "Account removed",
   "account remove confirm": "Do you really want to remove this account?",
   "account draft mailbox": "Draft box",
   "account sent mailbox": "Sent box",
@@ -11302,6 +11387,7 @@ module.exports = {
   "app alert close": "Fermer",
   "app unimplemented": "Non implémenté",
   "app error": "Oups, une erreur est survenue, veuillez réessayer",
+  "app confirm delete": "Confirmation de suppression",
   "compose": "Écrire un nouveau message",
   "compose default": "Bonjour, comment ça va ?",
   "compose from": "De",
@@ -11456,6 +11542,7 @@ module.exports = {
   "account smtpServer": "Serveur sortant",
   "account smtpTLS": "Utiliser STARTTLS",
   "account remove": "Supprimer ce compte",
+  "account removed": "Compte supprimé",
   "account remove confirm": "Voulez-vous vraiment supprimer ce compte ?",
   "account draft mailbox": "Enregistrer les brouillons dans",
   "account sent mailbox": "Enregistrer les messages envoyés dans",
@@ -12239,7 +12326,7 @@ ContactStore = (function(_super) {
       }
       convert = function(map) {
         return rawResults.forEach(function(rawResult) {
-          var addresses;
+          var addresses, _ref;
           addresses = [];
           rawResult.datapoints.forEach(function(point) {
             if (point.name === 'email') {
@@ -12250,6 +12337,9 @@ ContactStore = (function(_super) {
             }
           });
           delete rawResult.docType;
+          if ((_ref = rawResult._attachments) != null ? _ref.picture : void 0) {
+            rawResult.avatar = "contacts/" + rawResult.id + "/picture.jpg";
+          }
           return addresses.forEach(function(address) {
             var contact;
             rawResult.address = address;
@@ -13452,7 +13542,7 @@ module.exports = {
     });
   },
   messageDeleteCurrent: function() {
-    var confirm, confirmMessage, conversation, messageID, settings;
+    var confirm, confirmMessage, conversation, messageID, modal, settings;
     if (!onMessageList()) {
       return;
     }
@@ -13474,10 +13564,27 @@ module.exports = {
         });
       }
     }
-    if ((!confirm) || window.confirm(confirmMessage)) {
+    if (!confirm) {
       return MessageActionCreator["delete"]({
         messageID: messageID
       });
+    } else {
+      modal = {
+        title: t('app confirm delete'),
+        subtitle: confirmMessage,
+        closeModal: function() {
+          return LayoutActionCreator.hideModal();
+        },
+        closeLabel: t('app cancel'),
+        actionLabel: t('app confirm'),
+        action: function() {
+          MessageActionCreator["delete"]({
+            messageID: messageID
+          });
+          return LayoutActionCreator.hideModal();
+        }
+      };
+      return LayoutActionCreator.displayModal(modal);
     }
   },
   messageUndo: function() {
