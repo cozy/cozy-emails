@@ -782,8 +782,9 @@ class Mailbox extends cozydb.CozyModel
 
                     # next step
                     @imap_refreshStep step, (err, infoNext) ->
+                        return callback err if err
                         info.shouldNotif = shouldNotif or infoNext.shouldNotif
-                        callback err, info
+                        callback null, info
 
 
     # Public: get a message UID from its message id in IMAP
