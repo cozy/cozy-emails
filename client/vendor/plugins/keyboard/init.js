@@ -83,10 +83,15 @@ if (typeof window.plugins !== "object") {
       'enter': {
         name: "Display current message",
         action: function (e) {
-          if (window.cozyMails.getCurrentActions().indexOf('account.mailbox.messages') === 0 &&
-             ['INPUT', 'BUTTON'].indexOf(document.activeElement.tagName) === -1) {
-            e.preventDefault();
-            window.cozyMails.messageDisplay();
+          var btnConfirm = document.querySelector('.modal .modal-footer [class="btn btn-cozy"]');
+          if (btnConfirm !== null) {
+            btnConfirm.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
+          } else {
+            if (window.cozyMails.getCurrentActions().indexOf('account.mailbox.messages') === 0 &&
+               ['INPUT', 'BUTTON'].indexOf(document.activeElement.tagName) === -1) {
+              e.preventDefault();
+              window.cozyMails.messageDisplay();
+            }
           }
         }
       },
@@ -94,8 +99,13 @@ if (typeof window.plugins !== "object") {
         name: "Close current message",
         alias: ['x'],
         action: function (e) {
-          e.preventDefault();
-          window.cozyMails.messageClose();
+          var btnClose = document.querySelector('.modal .modal-header button.close');
+          if (btnClose !== null) {
+            btnClose.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
+          } else {
+            e.preventDefault();
+            window.cozyMails.messageClose();
+          }
         }
       },
       'h': {
