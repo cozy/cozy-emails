@@ -73,6 +73,7 @@ module.exports = AccountActionCreator =
             type: ActionTypes.REMOVE_ACCOUNT
             value: accountID
         XHRUtils.removeAccount accountID
+        LayoutActionCreator = require '../actions/layout_action_creator'
         LayoutActionCreator.notify t('account removed'), autoclose: true
         window.router.navigate '', true
 

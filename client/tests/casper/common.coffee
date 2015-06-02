@@ -131,7 +131,9 @@ exports.init = (casper) ->
             return
         accounts = casper.evaluate ->
             window.__tests = {}
-            #if window.cozyMails?
+            # display full menu
+            if window.cozyMails?
+                require('actions/layout_action_creator').drawerShow()
                 # ensure locale is english
                 #window.cozyMails.setLocale 'en', true
                 # hide toasts

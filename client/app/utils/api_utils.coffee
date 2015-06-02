@@ -300,7 +300,8 @@ module.exports =
                 return act
 
             # get call stack
-            stack = new Error().stack.split("\n").filter (trace) ->
+            stack = new Error().stack or ''
+            stack = stack.split("\n").filter (trace) ->
                 return /app.js/.test(trace.split('@'))
             .map (trace) ->
                 return trace.split('@')[0]
