@@ -127,7 +127,7 @@ SocketHandler.wrapModel = function(Model, docType) {
 
 inScope = function(socket, data) {
   var ref;
-  log.info("inscope", socket.scope_mailboxID, Object.keys(data.mailboxIDs));
+  log.debug("inscope", socket.scope_mailboxID, Object.keys(data.mailboxIDs));
   return (ref = socket.scope_mailboxID, indexOf.call(Object.keys(data.mailboxIDs), ref) >= 0) && socket.scope_before < data.date;
 };
 

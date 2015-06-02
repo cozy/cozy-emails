@@ -221,6 +221,8 @@ module.exports = AccountActionCreator = {
     });
   },
   selectAccount: function(accountID, mailboxID) {
+    var changed, _ref;
+    changed = AccountStore.selectedIsDifferentThan(accountID, mailboxID);
     AppDispatcher.handleViewAction({
       type: ActionTypes.SELECT_ACCOUNT,
       value: {
@@ -228,7 +230,7 @@ module.exports = AccountActionCreator = {
         mailboxID: mailboxID
       }
     });
-    if (AccountStore.selectedIsDifferentThan(accountID, mailboxID)) {
+    if (changed && ((_ref = AccountStore.getSelected()) != null ? _ref.get('supportRFC4551') : void 0)) {
       return XHRUtils.refreshMailbox(mailboxID, function(err) {
         return console.log("" + mailboxID + " refreshed", err);
       });
@@ -12246,7 +12248,7 @@ AccountStore = (function(_super) {
   AccountStore.prototype.selectedIsDifferentThan = function(accountID, mailboxID) {
     var differentSelected;
     differentSelected = (_selectedAccount != null ? _selectedAccount.get('id') : void 0) !== accountID || (_selectedMailbox != null ? _selectedMailbox.get('id') : void 0) !== mailboxID;
-    return differentSelected && _selectedAccount.get('supportRFC4551');
+    return differentSelected;
   };
 
   AccountStore.prototype.getSelectedMailbox = function(selectedID) {
