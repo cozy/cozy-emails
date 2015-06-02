@@ -89,7 +89,7 @@ SocketHandler.wrapModel = (Model, docType) ->
             callback err
 
 inScope = (socket, data) ->
-    log.info "inscope", socket.scope_mailboxID, Object.keys data.mailboxIDs
+    log.debug "inscope", socket.scope_mailboxID, Object.keys data.mailboxIDs
     (socket.scope_mailboxID in Object.keys data.mailboxIDs) and
     socket.scope_before < data.date
 
