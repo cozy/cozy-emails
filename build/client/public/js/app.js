@@ -9361,13 +9361,18 @@ module.exports = SearchToolbarMessagesList = React.createClass({
     };
   },
   showList: function() {
-    var params;
-    LayoutActionCreator.sortMessages({
+    var params, sort;
+    sort = {
       order: '-',
-      field: this.state.type,
-      after: "" + this.state.value + "\uFFFF",
       before: this.state.value
-    });
+    };
+    if (this.state.value != null) {
+      sort.field = this.state.type;
+      sort.after = "" + this.state.value + "\uFFFF";
+    } else {
+      sort.field = 'date';
+    }
+    LayoutActionCreator.sortMessages(sort);
     params = _.clone(MessageStore.getParams());
     params.accountID = this.props.accountID;
     params.mailboxID = this.props.mailboxID;
@@ -9393,7 +9398,7 @@ module.exports = SearchToolbarMessagesList = React.createClass({
   },
   reset: function() {
     return this.setState({
-      value: '',
+      value: null,
       isEmpty: true
     }, this.showList);
   },
