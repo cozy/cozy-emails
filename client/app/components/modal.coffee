@@ -25,8 +25,15 @@ module.exports = Modal = React.createClass
                             if @props.subtitle?
                                 React.DOM.span null, @props.subtitle
                             if @props.content?
-                                @props.content
+                                React.DOM.div ref: 'content',
+                                    @props.content
                         React.DOM.div className: "modal-footer",
+                            if @props.allowCopy
+                                React.DOM.button
+                                    type: 'button',
+                                    className: 'btn btn-cozy',
+                                    onClick: @copyContent
+                                    t 'modal copy content'
                             if @props.actionLabel? and @props.action
                                 React.DOM.button
                                     type: 'button',
@@ -39,4 +46,15 @@ module.exports = Modal = React.createClass
                                     className: 'btn btn-cozy-non-default',
                                     onClick: @props.closeModal,
                                     @props.closeLabel
+
+    copyContent: ->
+        sel= window.getSelection()
+
+        if sel.rangeCount > 0
+            sel.removeAllRanges()
+
+        range = document.createRange()
+        range.selectNode(@refs.content?.getDOMNode())
+        sel.addRange(range)
+        document.execCommand 'copy'
 

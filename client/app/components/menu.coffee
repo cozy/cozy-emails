@@ -62,6 +62,7 @@ module.exports = Menu = React.createClass
         modal =
             title       : t 'modal please contribute'
             subtitle    : t 'modal please report'
+            allowCopy   : true
             closeModal  : ->
                 LayoutActionCreator.hideModal()
             closeLabel  : t 'app alert close'
