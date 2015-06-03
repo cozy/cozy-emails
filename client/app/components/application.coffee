@@ -34,7 +34,8 @@ Stores = [AccountStore, ContactStore, MessageStore, LayoutStore,
         SettingsStore, SearchStore, RefreshesStore]
 
 # Flux actions
-LayoutActionCreator = require '../actions/layout_action_creator'
+LayoutActionCreator  = require '../actions/layout_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
 
 {MessageFilter, Dispositions} = require '../constants/app_constants'
 
@@ -70,12 +71,6 @@ module.exports = Application = React.createClass
 
         alert = @state.alertMessage
         modal = @state.modal
-
-        # Store current message ID if selected
-        if layout.secondPanel? and layout.secondPanel.parameters.messageID?
-            MessageStore.setCurrentID layout.secondPanel.parameters.messageID
-        else
-            MessageStore.setCurrentID null
 
         # F*** useless wrapper, just because of React limitations (╯°□°）╯︵ ┻━┻
         # @see https://facebook.github.io/react/tips/maximum-number-of-jsx-root-nodes.html
@@ -389,6 +384,14 @@ module.exports = Application = React.createClass
                 @checkAccount firstPanel.action
             if secondPanel?
                 @checkAccount secondPanel.action
+
+            # Store current message ID if selected
+            if secondPanel? and secondPanel.parameters.messageID?
+                MessageActionCreator.setCurrent secondPanel.parameters.messageID
+            else
+                if firstPanel isnt 'compose'
+                    MessageActionCreator.setCurrent null
+
             @forceUpdate()
 
         @props.router.on 'fluxRoute', @onRoute

@@ -98,7 +98,9 @@ module.exports = AccountActionCreator =
 
         if changed and AccountStore.getSelected()?.get('supportRFC4551')
             XHRUtils.refreshMailbox mailboxID, (err) ->
-                console.log "#{mailboxID} refreshed", err
+                if err?
+                    console.error err
+                    alertError error
 
     discover: (domain, callback) ->
         XHRUtils.accountDiscover domain, (err, infos) ->
