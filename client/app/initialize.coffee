@@ -140,6 +140,8 @@ window.onload = ->
 
         logPerformances()
 
+        window.cozyMails.customEvent "APPLICATION_LOADED"
+
     catch e
         console.error e
         exception = e.toString()

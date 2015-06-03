@@ -34,8 +34,8 @@ casper.test.begin 'Test accounts', (test) ->
             casper.waitForSelector ".active[data-reactid='#{id}']", ->
                 label = casper.getElementInfo "[data-reactid='#{id}'] .item-label"
                 test.pass "Account #{label.text} selected"
-                if casper.exists ".message-list .message"
-                    casper.click ".message-list .message a"
+                if casper.exists ".messages-list .message"
+                    casper.click ".messages-list .message a"
                     casper.waitUntilVisible ".conversation"
             , ->
                 test.fail "Unable to select account #{account.text} #{id}"
@@ -47,6 +47,9 @@ casper.test.begin 'Create account', (test) ->
     init casper
 
     casper.start casper.cozy.startUrl, ->
+        casper.waitForSelector "aside[role=menubar][aria-expanded=true]"
+
+    casper.then ->
         values =
             "mailbox-accountType": "IMAP",
             "mailbox-imapPort": "993",
