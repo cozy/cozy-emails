@@ -88,13 +88,15 @@ module.exports = AccountActionCreator =
             value: errorMessage
 
     selectAccount: (accountID, mailboxID) ->
+        changed = AccountStore.selectedIsDifferentThan accountID, mailboxID
+
         AppDispatcher.handleViewAction
             type: ActionTypes.SELECT_ACCOUNT
             value:
                 accountID: accountID
                 mailboxID: mailboxID
 
-        if AccountStore.selectedIsDifferentThan accountID, mailboxID
+        if changed and AccountStore.getSelected()?.get('supportRFC4551')
             XHRUtils.refreshMailbox mailboxID, (err) ->
                 console.log "#{mailboxID} refreshed", err
 
