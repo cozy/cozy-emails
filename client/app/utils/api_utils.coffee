@@ -286,11 +286,12 @@ module.exports =
                 # remove message content
                 cleanMsg = (val) ->
                     if val?
-                        delete val.headers
-                        delete val.html
-                        delete val.text
-                        delete val.attachments
-                    return val
+                        newVal = _.clone val
+                        delete newVal.headers
+                        delete newVal.html
+                        delete newVal.text
+                        delete newVal.attachments
+                        return newVal
                 if Array.isArray act.value
                     act.value = act.value.map cleanMsg
                 else
