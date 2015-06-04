@@ -262,6 +262,24 @@ module.exports = class ImapConnection extends NodeImapConnection
             @deleteMessageInBox path, uid, cb
         , callback
 
+
+    deleteAndExpunge: (uid, callback) ->
+        @addFlags uid, '\\Deleted', (err) ->
+            return callback err if err
+            @expunge uid, callback
+
+    multimove: (uids, dest, callback) ->
+        if uids.length is 0
+            callback null
+        else
+            @move uids, dest, callback
+
+    multiexpunge: (uids, callback) ->
+        if uids.length is 0
+            callback null
+        else
+            @deleteAndExpunge uids, callback
+
     # Public: remove one message from a box
     # open box, mark \\Deleted and expunge.
     #
