@@ -860,12 +860,17 @@ module.exports = class Message extends cozydb.CozyModel
         alreadyMoved = []
         changes = {}
 
-        log.debug "batchMove", messages.length
+        log.debug "batchMove", messages.length, from, to
 
+        #@TODO : this needs refactoring
+        # but we want t o publish today
         Message.doGroupedByBox messages, (imap, state, nextBox) ->
             fromBox ?= state.boxIndex[from]
             destBox ?= state.boxIndex[to]
             currentBox = state.box
+
+            unless destBox
+                return nextBox new Error('the destination box doesnt exist')
 
             # skip destBox
             return nextBox null if currentBox is destBox
