@@ -74,7 +74,7 @@ module.exports = React.createClass
 
 
     getInitialState: ->
-        return @accountToState null
+        return @accountToState @props
 
 
     # Do not update component if nothing has changed.
@@ -352,7 +352,7 @@ module.exports = React.createClass
     # Build state based on current account values.
     buildAccountState: (state, props, account) ->
 
-        if @state.id isnt account.get('id')
+        if @state?.id isnt account.get('id')
 
             state[field] = account.get field for field in @_accountFields
             state.smtpMethod = 'PLAIN' if not state.smtpMethod?

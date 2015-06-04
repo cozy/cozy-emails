@@ -47,7 +47,7 @@ class MessageStore extends Store
 
     _filter       = '-'
     _params       = sort: '-date'
-    _fetching     = false
+    _fetching     = 0
     _currentMessages = Immutable.Sequence()
     _conversationLengths = Immutable.Map()
     _conversationMemoize = null
@@ -260,7 +260,12 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.SET_FETCHING, (fetching) ->
-            _fetching = fetching
+            # There may be more than one concurrent fetching request
+            # so we use a counter instead of a boolean
+            if fetching
+                _fetching++
+            else
+                _fetching--
             @emit 'change'
 
     ###
@@ -417,6 +422,7 @@ class MessageStore extends Store
 
     getPrevAction: -> return _prevAction
 
-    isFetching: -> return _fetching
+    isFetching: ->
+        return _fetching > 0
 
 module.exports = new MessageStore()

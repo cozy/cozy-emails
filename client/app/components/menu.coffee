@@ -9,8 +9,9 @@ AccountActionCreator      = require '../actions/account_action_creator'
 LayoutActionCreator       = require '../actions/layout_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 
-AccountStore = require '../stores/account_store'
-LayoutStore  = require '../stores/layout_store'
+AccountStore   = require '../stores/account_store'
+LayoutStore    = require '../stores/layout_store'
+RefreshesStore = require '../stores/refreshes_store'
 
 ThinProgress = require './thin_progress'
 MessageUtils = require '../utils/message_utils'
@@ -38,7 +39,7 @@ module.exports = Menu = React.createClass
 
     mixins: [
         RouterMixin
-        StoreWatchMixin [LayoutStore]
+        StoreWatchMixin [AccountStore, LayoutStore, RefreshesStore]
     ]
 
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -50,7 +51,11 @@ module.exports = Menu = React.createClass
         onlyFavorites: true
 
     getStateFromStores: ->
-        isDrawerExpanded: LayoutStore.isDrawerExpanded()
+        isDrawerExpanded : LayoutStore.isDrawerExpanded()
+        refreshes        : RefreshesStore.getRefreshing()
+        accounts         : AccountStore.getAll()
+        mailboxes        : AccountStore.getSelectedMailboxes true
+        favorites        : AccountStore.getSelectedFavorites true
 
     componentWillReceiveProps: (props) ->
         if not Immutable.is(props.selectedAccount, @props.selectedAccount)
@@ -74,7 +79,7 @@ module.exports = Menu = React.createClass
 
     render: ->
 
-        if @props.accounts.length
+        if @state.accounts.length
             selectedAccountUrl = @buildUrl
                 direction: 'first'
                 action: 'account.mailbox.messages'
@@ -120,7 +125,7 @@ module.exports = Menu = React.createClass
             role: 'menubar'
             'aria-expanded': @state.isDrawerExpanded,
 
-            if @props.accounts.length
+            if @state.accounts.length
                 a
                     href: composeUrl
                     className: 'compose-action btn btn-cozy-contrast btn-cozy',
@@ -128,8 +133,8 @@ module.exports = Menu = React.createClass
                         span className: 'item-label', " #{t 'menu compose'}"
 
             nav className: 'mainmenu',
-                if @props.accounts.length
-                    @props.accounts.map (account, key) =>
+                if @state.accounts.length
+                    @state.accounts.map (account, key) =>
                         @getAccountRender account, key
                     .toJS()
 
@@ -157,10 +162,10 @@ module.exports = Menu = React.createClass
         isSelected = (not @props.selectedAccount? and key is 0) \
                      or @props.selectedAccount?.get('id') is account.get('id')
 
-        accountID = account.get 'id'
-        nbUnread = account.get('totalUnread')
+        accountID      = account.get 'id'
+        nbUnread       = account.get('totalUnread')
         defaultMailbox = AccountStore.getDefaultMailbox accountID
-        refreshes = @props.refreshes
+        refreshes      = @state.refreshes
 
         if defaultMailbox?
             url = @buildUrl
@@ -195,11 +200,11 @@ module.exports = Menu = React.createClass
             active: isActive
 
         if @state.onlyFavorites
-            mailboxes = @props.favorites
+            mailboxes = @state.favorites
             icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites off'
         else
-            mailboxes = @props.mailboxes
+            mailboxes = @state.mailboxes
             icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites on'
 
@@ -210,6 +215,7 @@ module.exports = Menu = React.createClass
             fullWidth: true
 
         specialMboxes = specialMailboxes.map (mbox) -> account.get mbox
+        accountColor  = colorhash(account.get 'label')
 
         div
             className: accountClasses, key: key,
@@ -226,7 +232,7 @@ module.exports = Menu = React.createClass
                         i
                             className: 'avatar'
                             style:
-                                'background-color': colorhash(account.get 'label')
+                                'background-color': accountColor
                             account.get('label')[0]
                         span
                             'data-account-id': key,
@@ -436,7 +442,8 @@ MenuMailboxItem = React.createClass
                         params.mailboxID = mailboxID
                         LayoutActionCreator.showMessageList parameters: params
 
-                    LayoutActionCreator.alertError "#{t("mailbox expunge ko")} #{error}"
+                    errorMessage = "#{t("mailbox expunge ko")} #{error}"
+                    LayoutActionCreator.alertError errorMessage
                 else
                     LayoutActionCreator.notify t("mailbox expunge ok"),
                         autoclose: true
