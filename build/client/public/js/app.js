@@ -12977,7 +12977,7 @@ MessageStore = (function(_super) {
       }
       if (useConversations) {
         conversationID = message.get('conversationID');
-        if (__indexOf.call(conversationIDs, conversationID) >= 0) {
+        if (conversationID && __indexOf.call(conversationIDs, conversationID) >= 0) {
           return false;
         } else {
           conversationIDs.push(conversationID);

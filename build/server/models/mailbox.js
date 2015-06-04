@@ -112,7 +112,9 @@ Mailbox = (function(superClass) {
         } else {
           log.debug("removeOrphans - found orphan", row.id);
           return Mailbox.destroy(row.id, function(err) {
-            log.error('failed to delete box', row.id);
+            if (err) {
+              log.error('failed to delete box', row.id);
+            }
             return cb(null);
           });
         }
@@ -342,7 +344,7 @@ Mailbox = (function(superClass) {
     depth = this.tree.length - 1;
     path = this.path;
     return this.getSelfAndChildren(function(err, boxes) {
-      log.debug("imapcozy_rename#boxes", boxes, depth);
+      log.debug("imapcozy_rename#boxes", boxes.length, depth);
       if (err) {
         return callback(err);
       }

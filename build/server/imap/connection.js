@@ -337,6 +337,31 @@ module.exports = ImapConnection = (function(superClass) {
     })(this), callback);
   };
 
+  ImapConnection.prototype.deleteAndExpunge = function(uid, callback) {
+    return this.addFlags(uid, '\\Deleted', function(err) {
+      if (err) {
+        return callback(err);
+      }
+      return this.expunge(uid, callback);
+    });
+  };
+
+  ImapConnection.prototype.multimove = function(uids, dest, callback) {
+    if (uids.length === 0) {
+      return callback(null);
+    } else {
+      return this.move(uids, dest, callback);
+    }
+  };
+
+  ImapConnection.prototype.multiexpunge = function(uids, callback) {
+    if (uids.length === 0) {
+      return callback(null);
+    } else {
+      return this.deleteAndExpunge(uids, callback);
+    }
+  };
+
   ImapConnection.prototype.deleteMessageInBox = function(path, uid, callback) {
     return async.series([
       (function(_this) {
