@@ -290,7 +290,7 @@ class MessageStore extends Store
             if useConversations
                 # one message of each conversation
                 conversationID = message.get 'conversationID'
-                if conversationID in conversationIDs
+                if conversationID and conversationID in conversationIDs
                     return false
                 else
                     conversationIDs.push conversationID

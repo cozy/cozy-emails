@@ -11,6 +11,7 @@ stream_to_buffer = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
 {normalizeMessageID} = require('../utils/jwz_tools')
 ImapReporter = require '../imap/reporter'
+uuid = require 'uuid'
 
 # get a message and attach it to req.message
 module.exports.fetch = (req, res, next) ->
@@ -225,6 +226,7 @@ module.exports.send = (req, res, next) ->
 
     message.content = message.text
     message.attachments_backup = message.attachments
+    message.conversationID ?= uuid.v4()
 
     previousUID = message.mailboxIDs?[account.draftMailbox]
 
