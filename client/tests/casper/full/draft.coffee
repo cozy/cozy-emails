@@ -28,30 +28,52 @@ casper.test.begin 'Test draft', (test) ->
         casper.waitForSelector "aside[role=menubar][aria-expanded=true]"
 
     casper.then ->
+        test.comment "Compose Account"
         casper.click ".compose-action"
         casper.waitForSelector ".form-compose .rt-editor", ->
             casper.waitWhileSelector '.composeToolbox .button-spinner', ->
-                casper.click '.form-compose [data-value=dovecot-ID]'
-                casper.click '.form-compose .compose-toggle-cc'
-                casper.click '.form-compose .compose-toggle-bcc'
-                casper.fillSelectors 'form',
-                    "#compose-subject": messageSubject,
-                casper.sendKeys "#compose-bcc", "bcc@cozy.io,",
-                casper.sendKeys "#compose-cc", "cc@cozy.io,",
-                casper.sendKeys "#compose-to", "to@cozy.io,"
-                casper.evaluate ->
-                    editor = document.querySelector('.rt-editor')
-                    editor.innerHTML = "<div><em>Hello,</em><br>Join us now and share the software</div>"
-                    evt = document.createEvent 'HTMLEvents'
-                    evt.initEvent 'input', true, true
-                    editor.dispatchEvent evt
-                casper.click '.composeToolbox .btn-save'
-                casper.waitForSelector '.composeToolbox .button-spinner', ->
-                    casper.waitWhileSelector '.composeToolbox .button-spinner', ->
-                        message = casper.evaluate ->
-                            window.cozyMails.getCurrentMessage()
-                        messageID = message.id
-                        test.pass "Message '#{message.subject}' is saved: #{messageID}"
+                if casper.exists '.compose-from [data-value="dovecot-ID"]'
+                    test.assertEquals casper.fetchText('.account-picker .compose-from').trim(), '"DoveCot" <me@cozytest.cc>', 'Account selected'
+                else
+                    casper.click '.account-picker .caret'
+                    casper.waitUntilVisible '.account-picker .dropdown-menu', ->
+                        test.pass 'Account picker displayed'
+                        casper.click '.account-picker .dropdown-menu [data-value="dovecot-ID"]', ->
+                        casper.waitForSelector '.compose-from [data-value="dovecot-ID"]', ->
+                            test.assertEquals casper.fetchText('.account-picker .compose-from').trim(), '"DoveCot" <me@cozytest.cc>', 'Account selected'
+
+    casper.then ->
+        test.comment "Compose message"
+        casper.click '.form-compose .compose-toggle-cc'
+        casper.click '.form-compose .compose-toggle-bcc'
+        casper.fillSelectors 'form',
+            "#compose-subject": messageSubject,
+        casper.sendKeys "#compose-bcc", "bcc@cozy.io,",
+        casper.sendKeys "#compose-cc", "cc@cozy.io,",
+        casper.sendKeys "#compose-to", "to@cozy.io,"
+        casper.evaluate ->
+            editor = document.querySelector('.rt-editor')
+            editor.innerHTML = "<div><em>Hello,</em><br>Join us now and share the software</div>"
+            evt = document.createEvent 'HTMLEvents'
+            evt.initEvent 'input', true, true
+            editor.dispatchEvent evt
+        casper.click '.composeToolbox .btn-save'
+        casper.waitForSelector '.composeToolbox .button-spinner', ->
+            casper.waitWhileSelector '.composeToolbox .button-spinner', ->
+                message = casper.evaluate ->
+                    window.cozyMails.getCurrentMessage()
+                messageID = message.id
+                test.pass "Message '#{message.subject}' is saved: #{messageID}"
+
+    casper.then ->
+        test.comment "Leave compose"
+        #initSettings()
+        casper.cozy.selectAccount "DoveCot", 'Draft', ->
+            casper.waitUntilVisible '.modal-dialog',  ->
+                confirm = casper.fetchText('.modal-body').trim()
+                test.assertEquals confirm, "Message not sent, keep the draft?", "Confirmation dialog"
+                casper.click ".modal-dialog .btn.btn-cozy-non-default"
+                casper.waitWhileVisible '.modal-dialog'
 
     casper.then ->
         test.comment "Edit draft"

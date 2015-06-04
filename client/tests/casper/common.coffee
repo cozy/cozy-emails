@@ -84,7 +84,7 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
                     conversationID = infos.attributes['data-conversation-id']
                 cb(subject, messageID, conversationID)
             , ->
-                casper.test.fail "Error displaying #{subject}"
+                casper.test.fail "Error displaying `#{subject}`: no element match `#{subjectDone}`"
         , ->
             casper.test.fail "No message matching #{subjectSel}"
 
