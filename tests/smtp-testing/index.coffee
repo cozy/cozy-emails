@@ -33,7 +33,8 @@ SMTPTesting.init = (port, done) ->
         else
             SMTPTesting.onSecondMessage envelope, ->
                 callback null, "ABC" + queueID++
-    smtpServer.listen port, done
+
+    smtpServer.listen parseInt(port), done
 
 unless module.parent
     port = process.argv[1] or 587
