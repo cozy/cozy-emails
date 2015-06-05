@@ -145,8 +145,8 @@ module.exports = LayoutActionCreator =
                 if err?
                     LayoutActionCreator.alertError err
                 else
-                    # This prevent to override local updates with older ones from
-                    # server
+                    # This prevent to override local updates with older ones
+                    # from server
                     rawMsg.messages.forEach (msg) ->
                         msg.updated = updated
                     MessageActionCreator.receiveRawMessages rawMsg

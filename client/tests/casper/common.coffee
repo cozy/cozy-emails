@@ -19,7 +19,7 @@ casper.cozy.selectAccount = (account, box, cb) ->
     accounts = casper.evaluate ->
         getAccounts = ->
             _accounts = {}
-            Array.prototype.forEach.call document.querySelectorAll("#account-list > li"), (e) ->
+            Array.prototype.forEach.call document.querySelectorAll("aside .mainmenu > div"), (e) ->
                 accountName = e.querySelector('.item-label').textContent.trim()
                 _accounts[accountName] = e.dataset.reactid
             return _accounts
@@ -33,7 +33,7 @@ casper.cozy.selectAccount = (account, box, cb) ->
         mailboxes = casper.evaluate ->
             getMailboxes = ->
                 mailboxes = {}
-                mailboxesSel = '#account-list > li.active .mailbox-list > li'
+                mailboxesSel = '.mainmenu > div.active .mailbox-list > li'
                 Array.prototype.forEach.call document.querySelectorAll(mailboxesSel), (e) ->
                     mailboxName = e.querySelector('.item-label').textContent.trim()
                     mailboxes[mailboxName] = e.dataset.reactid
@@ -46,7 +46,7 @@ casper.cozy.selectAccount = (account, box, cb) ->
         casper.waitForSelector "[data-reactid='#{id}'].active", ->
             infos = casper.getElementInfo "[data-reactid='#{id}'].active [data-mailbox-id]"
             mailboxID = infos.attributes['data-mailbox-id']
-            casper.waitForSelector ".message-list[data-mailbox-id='#{mailboxID}'] li.message", ->
+            casper.waitForSelector ".messages-list[data-mailbox-id='#{mailboxID}'] li.message", ->
                 casper.waitWhileSelector ".list-footer img", ->
                     if cb?
                         cb()
@@ -65,13 +65,13 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
 
     casper.cozy.selectAccount account, box, ->
         if typeof messageID is 'string'
-            subjectSel  = ".message-list li[data-message-id='#{messageID}'] a .preview"
+            subjectSel  = ".messages-list li[data-message-id='#{messageID}'] a .preview"
             subjectDone = "h3[data-message-id='#{messageID}']"
         else if typeof subject is 'string'
-            subjectSel  = x "//span[(contains(normalize-space(.), '#{subject}'))]"
+            subjectSel  = x "//div[(contains(@class, 'subject'))][(contains(normalize-space(.), '#{subject}'))]"
             subjectDone = x "//h3[(contains(normalize-space(.), '#{subject}'))]"
         else
-            subjectSel = '.message-list li.message:nth-of-type(1) .title'
+            subjectSel = '.messages-list li.message:nth-of-type(1) .subject'
         casper.waitForSelector subjectSel, ->
             if not (typeof subject is 'string')
                 subject = casper.fetchText subjectSel
@@ -79,12 +79,12 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
             casper.click subjectSel
             casper.waitForSelector subjectDone, ->
                 if not (typeof messageID is 'string')
-                    infos = casper.getElementInfo ".message-list li.active"
+                    infos = casper.getElementInfo ".messages-list li.active"
                     messageID = infos.attributes['data-message-id']
                     conversationID = infos.attributes['data-conversation-id']
                 cb(subject, messageID, conversationID)
             , ->
-                casper.test.fail "Error displaying #{subject}"
+                casper.test.fail "Error displaying `#{subject}`: no element match `#{subjectDone}`"
         , ->
             casper.test.fail "No message matching #{subjectSel}"
 
@@ -131,7 +131,9 @@ exports.init = (casper) ->
             return
         accounts = casper.evaluate ->
             window.__tests = {}
-            #if window.cozyMails?
+            # display full menu
+            _doInit = ->
+                require('actions/layout_action_creator').drawerShow()
                 # ensure locale is english
                 #window.cozyMails.setLocale 'en', true
                 # hide toasts
@@ -153,6 +155,10 @@ exports.init = (casper) ->
                 #    messageDisplayHTML   : true
                 #    messageDisplayImages : false
                 #cozyMails.setSetting settings
+            if window.cozyMails?
+                _doInit()
+            else
+                window.addEventListener "APPLICATION_LOADED", _doInit
             return window.accounts
         if not accounts? or
         not Array.isArray accounts or
@@ -167,4 +173,4 @@ exports.init = (casper) ->
             outputFile = failure.message.replace(/\W/gim, '')
             casper.capture "#{outputDir}#{outputFile}.png"
             fs.write("#{outputDir}#{outputFile}.html", casper.getHTML())
-        else console.log failure
+        else utils.dump failure

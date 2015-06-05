@@ -7,6 +7,7 @@ Dispatcher = require './libs/flux/dispatcher/dispatcher'
 class AppDispatcher extends Dispatcher
 
     handleViewAction: (action) ->
+        window.cozyMails.logAction action
         payload =
             source: PayloadSources.VIEW_ACTION
             action: action
@@ -17,6 +18,7 @@ class AppDispatcher extends Dispatcher
         window.cozyMails.customEvent PayloadSources.VIEW_ACTION, action
 
     handleServerAction: (action) ->
+        window.cozyMails.logAction action
         payload =
             source: PayloadSources.SERVER_ACTION
             action: action

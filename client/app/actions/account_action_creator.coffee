@@ -73,6 +73,7 @@ module.exports = AccountActionCreator =
             type: ActionTypes.REMOVE_ACCOUNT
             value: accountID
         XHRUtils.removeAccount accountID
+        LayoutActionCreator = require '../actions/layout_action_creator'
         LayoutActionCreator.notify t('account removed'), autoclose: true
         window.router.navigate '', true
 
@@ -97,7 +98,9 @@ module.exports = AccountActionCreator =
 
         if changed and AccountStore.getSelected()?.get('supportRFC4551')
             XHRUtils.refreshMailbox mailboxID, (err) ->
-                console.log "#{mailboxID} refreshed", err
+                if err?
+                    console.error err
+                    alertError error
 
     discover: (domain, callback) ->
         XHRUtils.accountDiscover domain, (err, infos) ->

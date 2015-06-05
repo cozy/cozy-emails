@@ -33,7 +33,7 @@ module.exports = MessageActionCreator =
 
     # set conv to true to update current conversation ID
     setCurrent: (messageID, conv) ->
-        if typeof messageID isnt 'string'
+        if messageID? and typeof messageID isnt 'string'
             messageID = messageID.get 'id'
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_CURRENT
@@ -59,10 +59,12 @@ module.exports = MessageActionCreator =
     # target:
     #  - messageID or messageIDs or conversationIDs or conversationIDs
     #  - isDraft?
-    #  - silent? (don't display confirmation message when deleting an empty draft)
+    #  - silent? (don't display confirmation message when deleting
+    #    an empty draft)
     delete: (target, callback) ->
         messages = _localDelete target
 
+        ts = Date.now()
         # send request
         XHRUtils.batchDelete target, (err, updated) ->
 
@@ -74,6 +76,10 @@ module.exports = MessageActionCreator =
                 LAC.alertError alertMsg
             else
                 if target.silent isnt true
+                    # This prevent to override local updates with older
+                    # ones from server
+                    updated.forEach (msg) ->
+                        msg.updated = ts
                     MessageActionCreator.receiveRawMessages updated
                     LAC.notify alertMsg,
                         autoclose: true,
@@ -88,6 +94,7 @@ module.exports = MessageActionCreator =
     move: (target, from, to, callback) ->
         messages = _localMove target, from, to
 
+        ts = Date.now()
         # send request
         XHRUtils.batchMove target, from, to, (err, updated) ->
             alertMsg = _getNotification target, messages, 'move', err
@@ -97,6 +104,10 @@ module.exports = MessageActionCreator =
                 MessageActionCreator.refresh target
                 LAC.alertError alertMsg
             else
+                # This prevent to override local updates with older ones from
+                # server
+                updated.forEach (msg) ->
+                    msg.updated = ts
                 MessageActionCreator.receiveRawMessages updated
                 unless target.undeleting
                     LAC.notify alertMsg,
@@ -115,11 +126,16 @@ module.exports = MessageActionCreator =
         _localMark target, op, flag
 
 
+        ts = Date.now()
         afterUpdate = (err, updated) ->
             if err
                 MessageActionCreator.refresh target
                 LAC.alertError err
             else
+                # This prevent to override local updates with older ones from
+                # server
+                updated.forEach (msg) ->
+                    msg.updated = ts
                 MessageActionCreator.receiveRawMessages updated
 
             callback? err, updated

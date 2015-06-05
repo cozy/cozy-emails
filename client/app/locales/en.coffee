@@ -382,6 +382,7 @@ module.exports =
                                         errors.'
       "modal please report"        : "Please transmit this information to cozy."
       "modal please contribute"    : "Please contribute"
+      "modal copy content"         : "Copy information into clipboard"
 
       # Validation
       "validate must not be empty" : "This field is required"

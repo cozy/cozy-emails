@@ -15,6 +15,7 @@ onMessageList = ->
 
 module.exports =
 
+    debugLogs: []
 
     getCurrentAccount: ->
         AccountStore.getSelected()?.toJS()
@@ -274,3 +275,63 @@ module.exports =
         xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
         xhr.send JSON.stringify(data)
         console.log message
+
+    # Log every Flux action (only in development environment)
+    # Logs can be displayed using `displayLogs`
+    logAction: (action) ->
+        if window.app_env is "development"
+            # remove some data from action value to lighten the logs
+            actionCleanup = (action) ->
+                act = _.clone action
+                # remove message content
+                cleanMsg = (val) ->
+                    if val?
+                        newVal = _.clone val
+                        delete newVal.headers
+                        delete newVal.html
+                        delete newVal.text
+                        delete newVal.attachments
+                        return newVal
+                if Array.isArray act.value
+                    act.value = act.value.map cleanMsg
+                else
+                    act.value = cleanMsg act.value
+                    if Array.isArray act.value?.messages
+                        act.value.messages = act.value.messages.map cleanMsg
+                return act
+
+            # get call stack
+            stack = new Error().stack or ''
+            stack = stack.split("\n").filter (trace) ->
+                return /app.js/.test(trace.split('@'))
+            .map (trace) ->
+                return trace.split('@')[0]
+
+            # store logs
+            window.cozyMails.debugLogs.unshift
+                date: new Date().toISOString()
+                action: actionCleanup action
+                stack: stack.splice(2)
+
+            # only keep the last 100 lines of logs
+            window.cozyMails.debugLogs = window.cozyMails.debugLogs.slice 0, 100
+
+    # display action logs in a modal window
+    displayLogs: ->
+        modal =
+            title       : t 'modal please contribute'
+            subtitle    : t 'modal please report'
+            allowCopy   : true
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'app alert close'
+            content     : React.DOM.pre
+                style: "max-height": "300px",
+                "word-wrap": "normal",
+                    JSON.stringify(window.cozyMails.debugLogs, null, 4)
+        LayoutActionCreator.displayModal modal
+
+    # clear action logs
+    clearLogs: ->
+        window.cozyMails.debugLogs = []
+

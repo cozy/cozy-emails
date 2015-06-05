@@ -38,6 +38,7 @@ module.exports.main = (req, res, next) ->
                 window.locale    = "#{locale}";
                 window.accounts  = #{JSON.stringify accounts};
                 window.contacts  = #{JSON.stringify contacts};
+                window.app_env   = "#{process.env.NODE_ENV}";
             """
 
         res.render 'index.jade', {imports}

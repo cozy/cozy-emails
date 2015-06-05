@@ -25,52 +25,63 @@ casper.test.begin 'Test draft', (test) ->
 
     casper.start casper.cozy.startUrl, ->
         test.comment "Compose Draft"
-        #initSettings()
-        casper.waitFor ->
-            casper.evaluate ->
-                window.cozyMails.getSetting 'composeInHTML'
+        casper.waitForSelector "aside[role=menubar][aria-expanded=true]"
 
     casper.then ->
-        casper.click ".message-list .compose-action"
-        casper.waitForSelector "#email-compose .rt-editor", ->
+        test.comment "Compose Account"
+        casper.click ".compose-action"
+        casper.waitForSelector ".form-compose .rt-editor", ->
             casper.waitWhileSelector '.composeToolbox .button-spinner', ->
-                casper.click '.form-compose [data-value=dovecot-ID]'
-                casper.click '.form-compose .compose-toggle-cc'
-                casper.click '.form-compose .compose-toggle-bcc'
-                casper.fillSelectors 'form',
-                    "#compose-subject": messageSubject,
-                casper.sendKeys "#compose-bcc", "bcc@cozy.io,",
-                casper.sendKeys "#compose-cc", "cc@cozy.io,",
-                casper.sendKeys "#compose-to", "to@cozy.io,"
-                casper.evaluate ->
-                    editor = document.querySelector('.rt-editor')
-                    editor.innerHTML = "<div><em>Hello,</em><br>Join us now and share the software</div>"
-                    evt = document.createEvent 'HTMLEvents'
-                    evt.initEvent 'input', true, true
-                    editor.dispatchEvent evt
-                casper.click '.composeToolbox .btn-save'
-                casper.waitForSelector '.composeToolbox .button-spinner', ->
-                    casper.waitWhileSelector '.composeToolbox .button-spinner', ->
-                        message = casper.evaluate ->
-                            window.cozyMails.getCurrentMessage()
-                        messageID = message.id
-                        test.pass "Message '#{message.subject}' is saved: #{messageID}"
+                if casper.exists '.compose-from [data-value="dovecot-ID"]'
+                    test.assertEquals casper.fetchText('.account-picker .compose-from').trim(), '"DoveCot" <me@cozytest.cc>', 'Account selected'
+                else
+                    casper.click '.account-picker .caret'
+                    casper.waitUntilVisible '.account-picker .dropdown-menu', ->
+                        test.pass 'Account picker displayed'
+                        casper.click '.account-picker .dropdown-menu [data-value="dovecot-ID"]', ->
+                        casper.waitForSelector '.compose-from [data-value="dovecot-ID"]', ->
+                            test.assertEquals casper.fetchText('.account-picker .compose-from').trim(), '"DoveCot" <me@cozytest.cc>', 'Account selected'
+
+    casper.then ->
+        test.comment "Compose message"
+        casper.click '.form-compose .compose-toggle-cc'
+        casper.click '.form-compose .compose-toggle-bcc'
+        casper.fillSelectors 'form',
+            "#compose-subject": messageSubject,
+        casper.sendKeys "#compose-bcc", "bcc@cozy.io,",
+        casper.sendKeys "#compose-cc", "cc@cozy.io,",
+        casper.sendKeys "#compose-to", "to@cozy.io,"
+        casper.evaluate ->
+            editor = document.querySelector('.rt-editor')
+            editor.innerHTML = "<div><em>Hello,</em><br>Join us now and share the software</div>"
+            evt = document.createEvent 'HTMLEvents'
+            evt.initEvent 'input', true, true
+            editor.dispatchEvent evt
+        casper.click '.composeToolbox .btn-save'
+        casper.waitForSelector '.composeToolbox .button-spinner', ->
+            casper.waitWhileSelector '.composeToolbox .button-spinner', ->
+                message = casper.evaluate ->
+                    window.cozyMails.getCurrentMessage()
+                messageID = message.id
+                test.pass "Message '#{message.subject}' is saved: #{messageID}"
+
+    casper.then ->
+        test.comment "Leave compose"
+        #initSettings()
+        casper.cozy.selectAccount "DoveCot", 'Draft', ->
+            casper.waitUntilVisible '.modal-dialog',  ->
+                confirm = casper.fetchText('.modal-body').trim()
+                test.assertEquals confirm, "Message not sent, keep the draft?", "Confirmation dialog"
+                casper.click ".modal-dialog .btn.btn-cozy-non-default"
+                casper.waitWhileVisible '.modal-dialog'
 
     casper.then ->
         test.comment "Edit draft"
         #initSettings()
-        confirm = ''
-        casper.evaluate ->
-            window.cozytest = {}
-            window.cozytest.confirm = window.confirm
-            window.confirm = (txt) ->
-                window.cozytest.confirmTxt = txt
-                return true
-            return true
         casper.cozy.selectMessage "DoveCot", "Draft", messageSubject, messageID, ->
-            casper.waitForSelector "#email-compose .rt-editor", ->
-                test.assertExists '#email-compose', 'Compose form is displayed'
-                values = casper.getFormValues('#email-compose form')
+            casper.waitForSelector ".form-compose .rt-editor", ->
+                test.assertExists '.form-compose', 'Compose form is displayed'
+                values = casper.getFormValues('.form-compose')
                 test.assertEquals casper.fetchText(".compose-bcc .address-tag"), "bcc@cozy.io", "Bcc dests"
                 test.assertEquals casper.fetchText(".compose-cc .address-tag"), "cc@cozy.io", "Cc dests"
                 test.assertEquals casper.fetchText(".compose-to .address-tag"), "to@cozy.io", "To dests"
@@ -80,13 +91,11 @@ casper.test.begin 'Test draft', (test) ->
                     return window.cozyMails.getCurrentMessage()
                 test.assertEquals message.text, "_Hello,_\nJoin us now and share the software", "messageText"
                 casper.click '.composeToolbox .btn-delete'
-                casper.waitFor ->
-                    confirm = casper.evaluate ->
-                        return window.cozytest.confirmTxt
-                    return confirm?
-                , ->
+                casper.waitUntilVisible '.modal-dialog',  ->
+                    confirm = casper.fetchText('.modal-body').trim()
                     test.assertEquals confirm, "Do you really want to delete message “#{messageSubject}”?", "Confirmation dialog"
-                    casper.waitWhileSelector "#email-compose h3[data-message-id=#{messageID}]", ->
+                    casper.click ".modal-dialog .btn:not(.btn-cozy-non-default)"
+                    casper.waitWhileSelector ".form-compose h3[data-message-id=#{messageID}]", ->
                         test.pass 'Compose closed'
                         if casper.getEngine() is 'slimer'
                             # delete doesn't work in PhantomJs

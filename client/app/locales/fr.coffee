@@ -393,6 +393,7 @@ module.exports =
       "modal please report"        : "Merci de bien vouloir transmettre ces
                                         informations à cozy."
       "modal please contribute"    : "Merci de contribuer"
+      "modal copy content"         : "Copier ces informations dans le presse papier"
 
       # Validation
       "validate must not be empty" : "Ce champ doit être renseigné"
