@@ -93,7 +93,7 @@
         margin 1em 0
 
     .contact-group
-        margin-top: .5em
+        margin-top: 0
 
     .compose-toggle
         float right
@@ -107,14 +107,25 @@
         width 3em
         margin-left 1em
 
+    .compose-label
+        margin .5em
+        line-height 2em
+
+    .mail-input
+        border 1px solid basecolor
+    .mail-input > *
+        display inline-block
+
     textarea.compose-input
         position relative
-        height 2em
-        padding 0.2em 0.5em
+        height 1.3em
+        padding 0 0.5em
         overflow hidden
         width 100%
-        display inline
+        display inline-block
         resize none
+        border-width 0
+        box-shadow none
 
     .compose-from
         line-height 2em

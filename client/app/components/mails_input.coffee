@@ -100,7 +100,9 @@ module.exports = MailsInput = React.createClass
             else
                 @setState unknown: event.target.value
 
-        className  = (@props.className or '') + " form-group #{@props.id}"
+        className  = """
+           #{@props.className or ''} form-group mail-input #{@props.id}
+        """
         classLabel = 'compose-label control-label'
         listClass  = classer
             'contact-form': true
