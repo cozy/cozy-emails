@@ -96,7 +96,9 @@ module.exports = AccountActionCreator =
                 accountID: accountID
                 mailboxID: mailboxID
 
-        if changed and AccountStore.getSelected()?.get('supportRFC4551')
+        if changed and
+           mailboxID? and
+           AccountStore.getSelected()?.get('supportRFC4551')
             XHRUtils.refreshMailbox mailboxID, (err) ->
                 if err?
                     console.error err

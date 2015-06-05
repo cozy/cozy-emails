@@ -173,7 +173,7 @@ class MessageStore extends Store
             if messages.count? and messages.mailboxID?
                 messages = messages.messages.sort __sortFunction
 
-            onReceiveRawMessage message for message in messages
+            onReceiveRawMessage message for message in messages when message?
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->

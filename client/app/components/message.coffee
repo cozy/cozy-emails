@@ -1,4 +1,7 @@
-{div, article, header, footer, ul, li, span, i, p, a, button, pre, iframe, h4} = React.DOM
+{
+    div, article, header, footer, ul, li, span, i, p, a, button, pre,
+    iframe
+} = React.DOM
 
 MessageHeader  = require "./message_header"
 MessageFooter  = require "./message_footer"
@@ -59,7 +62,8 @@ module.exports = React.createClass
 
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        should = not(_.isEqual(nextState, @state)) or
+                 not (_.isEqual(nextProps, @props))
         return should
 
 
@@ -311,39 +315,35 @@ module.exports = React.createClass
     renderCompose: (isDraft) ->
         if @state.composing
             # If message is a draft, opens it, otherwise create a new message
+            options =
+                accounts             : @props.accounts
+                layout               : 'second'
+                ref                  : 'compose'
+                selectedAccountID    : @props.selectedAccountID
+                selectedAccountLogin : @props.selectedAccountLogin
+                settings             : @props.settings
+                useIntents           : @props.useIntents
             if isDraft
-                Compose
-                    layout               : 'second'
-                    action               : null
-                    inReplyTo            : null
-                    settings             : @props.settings
-                    accounts             : @props.accounts
-                    selectedAccountID    : @props.selectedAccountID
-                    selectedAccountLogin : @props.selectedAccountLogin
-                    selectedMailboxID    : @props.selectedMailboxID
-                    message              : @props.message
-                    useIntents           : @props.useIntents
-                    ref                  : 'compose'
+                options.action            = null
+                options.inReplyTo         = null
+                options.message           = @props.message
+                options.selectedMailboxID = @props.selectedMailboxID
             else
-                Compose
-                    ref                  : 'compose'
-                    inReplyTo            : @props.message
-                    accounts             : @props.accounts
-                    settings             : @props.settings
-                    selectedAccountID    : @props.selectedAccountID
-                    selectedAccountLogin : @props.selectedAccountLogin
-                    action               : @state.composeAction
-                    layout               : 'second'
-                    useIntents           : @props.useIntents
-                    callback: (error) =>
-                        if not error?
-                            # component has probably already been unmounted due to conversation refresh
-                            if @isMounted()
-                                @setState composing: false
-                    onCancel: =>
-                        # component has probably already been unmounted due to conversation refresh
+                options.action    =@state.composeAction
+                options.inReplyTo = @props.message
+                options.callback  = (error) =>
+                    if not error?
+                        # component has probably already been unmounted
+                        # due to conversation refresh
                         if @isMounted()
                             @setState composing: false
+                options.onCancel = =>
+                    # component has probably already been unmounted
+                    # due to conversation refresh
+                    if @isMounted()
+                        @setState composing: false
+
+            Compose options
 
 
     toggleHeaders: (e) ->

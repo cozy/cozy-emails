@@ -399,7 +399,9 @@ module.exports.batchFetch = (req, res, next) ->
         """
 
 module.exports.batchSend = (req, res, next) ->
-    messages = req.messages.map (msg) -> msg?.toClientObject()
+    messages = req.messages.filter (msg) -> return msg?
+        .map (msg) -> msg?.toClientObject()
+    return next new NotFound "No message found" if messages.length is 0
     res.send messages
 
 # move several message to trash with one request
