@@ -11,6 +11,7 @@ stream_to_buffer = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
 {normalizeMessageID} = require('../utils/jwz_tools')
 ImapReporter = require '../imap/reporter'
+uuid = require 'uuid'
 
 # get a message and attach it to req.message
 module.exports.fetch = (req, res, next) ->
@@ -225,6 +226,7 @@ module.exports.send = (req, res, next) ->
 
     message.content = message.text
     message.attachments_backup = message.attachments
+    message.conversationID ?= uuid.v4()
 
     previousUID = message.mailboxIDs?[account.draftMailbox]
 
@@ -404,45 +406,29 @@ module.exports.batchSend = (req, res, next) ->
 # expect req.account & req.messages
 module.exports.batchTrash = (req, res, next) ->
     # the client should prevent this, but let's be safe
-    unless req.account.trashMailbox
+    trashBoxId = req.account.trashMailbox
+    unless trashBoxId
         return next new AccountConfigError 'trashMailbox'
 
-    async.mapSeries req.messages, (message, cb) ->
-        if message.mailboxIDs[req.account.trashMailbox]?
-            # message is already in trash
-            cb null, message
-
-        else if message.isDraft req.account.draftMailbox
-            # message is a draft
-            message.imapcozy_destroy (err) ->
-                cb err, {id: message.id, _deleted: true}
-
-        else
-            # "normal" message, move it to trash
-            message.moveToTrash req.account, cb
-
-    , (err, updatedMessages) ->
+    Message.batchTrash req.messages, trashBoxId, (err, updated) ->
         return next err if err
-        res.send updatedMessages
+        res.send updated
 
 # add a flag to several messages
 # expect req.body.flag
 module.exports.batchAddFlag = (req, res, next) ->
 
-    async.mapSeries req.messages, (message, cb) ->
-        message.addFlag req.body.flag, cb
-    , (err, updatedMessages) ->
+    Message.batchAddFlag req.messages, req.body.flag, (err, updated) ->
         return next err if err
-        res.send updatedMessages
+        res.send updated
 
 # remove a flag from several messages
 # expect req.body.flag
 module.exports.batchRemoveFlag = (req, res, next) ->
-    async.mapSeries req.messages, (message, cb) ->
-        message.removeFlag req.body.flag, cb
-    , (err, updatedMessages) ->
+
+    Message.batchRemoveFlag req.messages, req.body.flag, (err, updated) ->
         return next err if err
-        res.send updatedMessages
+        res.send updated
 
 # move several message with one request
 # expect req.account & req.messages
@@ -455,18 +441,9 @@ module.exports.batchMove = (req, res, next) ->
 
     to = req.body.to
     from = req.body.from
-
-    async.mapSeries req.messages, (message, cb) ->
-        # dont move message that are not in from box
-        unless message.mailboxIDs[from]?
-            cb null, message
-
-        else
-            message.move from, to, cb
-
-    , (err, updatedMessages) ->
+    Message.batchMove req.messages, from, to, (err, updated) ->
         return next err if err
-        res.send updatedMessages
+        res.send updated
 
 
 # fetch from IMAP and send the raw rfc822 message

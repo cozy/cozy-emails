@@ -39,7 +39,7 @@ describe 'Message actions', ->
             accountID: store.accountID
             messageID: store.latestInboxMessageId,
             from: store.inboxID
-            to: [store.testBoxID, store.sentBoxID]
+            to: store.testBoxID
 
         client.put path, body, (err, res, body) =>
             res.statusCode.should.equal 200
@@ -47,7 +47,6 @@ describe 'Message actions', ->
             body[0].id.should.equal store.latestInboxMessageId
             body[0].flags.should.containEql '\\Seen'
             should.exist body[0].mailboxIDs[store.testBoxID]
-            should.exist body[0].mailboxIDs[store.sentBoxID]
             should.not.exist body[0].mailboxIDs[store.inboxID]
             done()
 

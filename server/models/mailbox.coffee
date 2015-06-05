@@ -109,7 +109,7 @@ class Mailbox extends cozydb.CozyModel
                 else
                     log.debug "removeOrphans - found orphan", row.id
                     Mailbox.destroy row.id, (err) ->
-                        log.error 'failed to delete box', row.id
+                        log.error 'failed to delete box', row.id if err
                         cb null
 
             , (err) ->
@@ -354,7 +354,7 @@ class Mailbox extends cozydb.CozyModel
         path = @path
 
         @getSelfAndChildren (err, boxes) ->
-            log.debug "imapcozy_rename#boxes", boxes, depth
+            log.debug "imapcozy_rename#boxes", boxes.length, depth
             return callback err if err
 
             async.eachSeries boxes, (box, cb) ->
