@@ -107,7 +107,7 @@ for i in [1..numberOfEmails] by 1
         "inReplyTo": inReplyTo,
         "references": references
         "replyTo": replyTo,
-        "text": content,
+        "text": loremIpsum count: getRandom(10), units: 'paragraphs', random: randomWithSeed
         "html": "<html><body><div>#{htmlContent}</div></body></html>",
         "priority": priority,
         "reads": false,
@@ -117,9 +117,55 @@ for i in [1..numberOfEmails] by 1
         "flags": flags
         "conversationID": "conversation_id_#{i}"
 
+# Conversations tests
+mailbox = 'f5cbd722-c3f9-4f6e-73d0-c75ddf65a2f1'
+mailboxUID[mailbox] = 0 unless mailboxUID[mailbox]?
+date = new Date()
+# Ensure messages are sent in the past
+date.setSeconds(date.getSeconds() - 3600)
+for i in [1..10] by 1
+    mailboxUID[mailbox] = mailboxUID[mailbox] + 1
+    mailboxObject = {}
+    mailboxObject["#{mailbox}"] = mailboxUID[mailbox]
+    date.setSeconds(date.getSeconds() + 10 * i)
+    message =
+        "_id": "conversation_id_#{i}"
+        "docType": "Message",
+        "date": date.toISOString(),
+        "from": [
+          {
+            "address": "sender#{i}@cozytest.cc",
+            "name": "Sender#{i}"
+          }
+        ],
+        "to": [
+          {
+            "address": "alice@cozytest.cc",
+            "name": "alice"
+          }
+        ],
+        "text": content,
+        "html": "<html><body><div>#{htmlContent}</div></body></html>",
+        "reads": false,
+        "mailboxIDs": mailboxObject,
+        "accountID": 'dovecot-ID',
+        "attachments": []
+        "flags": [],
+        "conversationID": "conversation_test"
+
+    message.htmlContent = message.text.split('\r\n').join('</div>\r\n<div>')
+
+    if i is 1
+        message.subject = "Conversation"
+    else
+        message.subject = "Re: Conversation"
+        inReplyTo       = "conversation_id_1"
+    message.normSubject = message.subject
+
+    messages.push message
 
 targetFile = path.resolve __dirname, 'messages_generated.json'
 json = JSON.stringify messages, null, '  '
 fs.writeFile targetFile, json, flag: 'w+', (err) ->
     console.log err if err?
-console.log "Done generating #{numberOfEmails} messages"
+console.log "Done generating #{messages.length} messages"
