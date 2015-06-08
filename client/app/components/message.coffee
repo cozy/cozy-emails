@@ -45,12 +45,11 @@ module.exports = React.createClass
         selectedMailboxID      : React.PropTypes.string.isRequired
         settings               : React.PropTypes.object.isRequired
         useIntents             : React.PropTypes.bool.isRequired
-        setActive              : React.PropTypes.func.isRequired
+        toggleActive           : React.PropTypes.func.isRequired
 
 
     getInitialState: ->
         return {
-            active: @props.active
             composing: @_shouldOpenCompose(@props)
             composeAction: ''
             headers: false
@@ -137,8 +136,7 @@ module.exports = React.createClass
 
 
     componentWillReceiveProps: (props) ->
-        state =
-            active: props.active
+        state = {}
         if props.message.get('id') isnt @props.message.get('id')
             @_markRead(props.message, props.active)
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
@@ -220,15 +218,14 @@ module.exports = React.createClass
         isUnread = message.get('flags').slice().indexOf(MessageFlags.SEEN) is -1
 
         setActive = =>
-            if isUnread and not @state.active
+            if isUnread and not @props.active
                 messageID = message.get('id')
                 MessageActionCreator.mark {messageID}, MessageFlags.SEEN
-                @props.setActive message.get('id')
-            @setState active: not @state.active
+            @props.toggleActive()
 
         classes = classer
             message: true
-            active: @state.active
+            active: @props.active
             isDraft: prepared.isDraft
             isDeleted: prepared.isDeleted
             isUnread: isUnread
@@ -240,10 +237,10 @@ module.exports = React.createClass
                 header
                     onClick: setActive,
                     @renderHeaders()
-                    @renderToolbox() if @state.active
-                @renderCompose(prepared.isDraft) if @state.active
+                    @renderToolbox() if @props.active
+                @renderCompose(prepared.isDraft) if @props.active
                 (div className: 'full-headers',
-                    pre null, prepared?.fullHeaders?.join "\n") if @state.active
+                    pre null, prepared?.fullHeaders?.join "\n") if @props.active
                 (MessageContent
                     ref: 'messageContent'
                     messageID: message.get 'id'
@@ -254,10 +251,10 @@ module.exports = React.createClass
                     imagesWarning: imagesWarning
                     composing: @state.composing
                     displayImages: @displayImages
-                    displayHTML: @displayHTML) if @state.active
+                    displayHTML: @displayHTML) if @props.active
                 (footer null,
                     @renderFooter()
-                    @renderToolbox(false)) if @state.active
+                    @renderToolbox(false)) if @props.active
 
 
     getParticipants: (message) ->
@@ -351,8 +348,8 @@ module.exports = React.createClass
         e.stopPropagation()
         state =
             headers: not @state.headers
-        if @props.inConversation and not @state.active
-            state.active = true
+        if @props.inConversation and not @props.active
+            @props.toggleActive()
         @setState state
 
 
@@ -360,24 +357,30 @@ module.exports = React.createClass
         if @props.inConversation
             e.preventDefault()
             e.stopPropagation()
-            if @state.active
-                @setState { active: false, headers: false }
-            else
-                @setState { active: true, headers: false }
+            @props.toggleActive()
+            @setState headers: false
 
-    onReply: (args) ->
+    onReply: (e) ->
+        e.preventDefault()
+        e.stopPropagation()
         @setState composing: true, composeAction: ComposeActions.REPLY
 
 
-    onReplyAll: (args) ->
+    onReplyAll: (e) ->
+        e.preventDefault()
+        e.stopPropagation()
         @setState composing: true, composeAction: ComposeActions.REPLY_ALL
 
 
-    onForward: (args) ->
+    onForward: (e) ->
+        e.preventDefault()
+        e.stopPropagation()
         @setState composing: true, composeAction: ComposeActions.FORWARD
 
 
-    onDelete: (args) ->
+    onDelete: (e) ->
+        e.preventDefault()
+        e.stopPropagation()
         needConfirmation = @props.settings.get('messageConfirmDelete')
         messageID = @props.message.get('id')
         confirmMessage = t 'mail confirm delete',
