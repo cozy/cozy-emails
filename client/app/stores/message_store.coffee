@@ -29,21 +29,10 @@ class MessageStore extends Store
             else if val1 < val2 then return 1 * order
             else return 0
 
-    __sortFunction = __getSortFunction 'date', 1
     reverseDateSort = __getSortFunction 'date', -1
 
     # Creates an OrderedMap of messages
-    _messages = Immutable.Sequence()
-
-        # sort first
-        .sort __sortFunction
-
-        # sets message ID as index
-        .mapKeys (_, message) -> message.id
-
-        # makes message object an immutable Map
-        .map (message) -> Immutable.fromJS message
-        .toOrderedMap()
+    _messages = Immutable.OrderedMap()
 
     _filter       = '-'
     _params       = sort: '-date'
@@ -54,6 +43,117 @@ class MessageStore extends Store
     _conversationMemoizeID = null
     _currentID       = null
     _prevAction      = null
+
+    _inFlightByRef = {}
+    _inFlightByMessageID = {}
+
+    _addInFlight = (request) ->
+        _inFlightByRef[request.ref] = request
+        request.messages.forEach (message) ->
+            id = message.get('id')
+            requests = (_inFlightByMessageID[id] ?= [])
+            requests.push request
+
+    _removeInFlight = (ref) ->
+        request = _inFlightByRef[ref]
+        delete _inFlightByRef[ref]
+        request.messages.forEach (message) ->
+            id = message.get('id')
+            requests = _inFlightByMessageID[id]
+            _inFlightByMessageID[id] = _.without requests, request
+
+    _transformMessageWithRequest = (message, request) ->
+        switch request.type
+            when 'trash'
+                {trashBoxID} = request
+                if isDraft(message)
+                    message = null
+                else
+                    newMailboxIds = {}
+                    newMailboxIds[trashBoxID] = -1
+                    message = message.set 'mailboxIDs', newMailboxIds
+
+            when 'move'
+                mailboxIDs = message.get('mailboxIDs')
+                {from, to} = request
+                newMailboxIds = {}
+                newMailboxIds[key] = value for key, value of mailboxIDs
+                delete newMailboxIds[from]
+                newMailboxIds[to] ?= -1
+                message = message.set 'mailboxIDs', newMailboxIds
+
+            when 'flag'
+                flags = message.get('flags')
+                {flag, op} = request
+                if op is 'batchAddFlag' and flag not in flags
+                    message = message.set 'flags', flags.concat [flag]
+
+                else if op is 'batchRemoveFlag' and flag in flags
+                    message = message.set 'flags', _.without flags, flag
+
+        return message
+
+    # @TODO : memoize me
+    _messagesWithInFlights = ->
+        _messages.map (message) ->
+            id = message.get 'id'
+            for request in _inFlightByMessageID[id] or []
+                message = _transformMessageWithRequest message, request
+            return message
+        .filter (msg) -> msg isnt null
+
+    _fixCurrentMessage = (target) ->
+        # If target.inReplyTo is set, we are removing a reply, so stay
+        # on current message
+        return null if target.inReplyTo?
+        # open next message if the deleted / moved one was open ###
+        messageIDs = target.messageIDs or [target.messageID]
+        currentMessage = self.getCurrentID() or 'not-null'
+        conversationIDs = target.conversationIDs or [target.conversationID]
+        currentConversation = self.getCurrentConversationID() or 'not-null'
+        isConv = currentMessage not in messageIDs
+        isConv = true
+        next = self.getNextOrPrevious isConv
+        if next?
+            self.setCurrentID next.messageID, next.conv
+
+
+    _getMixed = (target) ->
+        if target.messageID
+            return [_messages.get(target.messageID)]
+        else if target.messageIDs
+            return target.messageIDs.map (id) -> _messages.get id
+        else if target.conversationID
+            return _messages.filter (message) ->
+                message.get('conversationID') is target.conversationID
+            .toArray()
+        else if target.conversationIDs
+            return _messages.filter (message) ->
+                message.get('conversationID') in target.conversationIDs
+            .toArray()
+        else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
+
+    isDraft = (message, draftMailbox) ->
+        mailboxIDs = message.get 'mailboxIDs'
+        mailboxIDs[draftMailbox] or MessageFlags.DRAFT in message.get('flags')
+
+    inMailbox = (mailboxID) -> (message) ->
+        mailboxID of message.get 'mailboxIDs'
+
+
+    inAccount = (accountID) -> (message) ->
+        accountID is message.get 'accountID'
+
+    dedupConversation = () ->
+        conversationIDs = []
+        return filter = (message) ->
+            conversationID = message.get 'conversationID'
+            if conversationID and conversationID in conversationIDs
+                return false
+            else
+                conversationIDs.push conversationID
+                return true
+
 
     computeMailboxDiff = (oldmsg, newmsg) ->
         return {} unless oldmsg
@@ -94,7 +194,6 @@ class MessageStore extends Store
             return out
         else
             return false
-
 
     onReceiveRawMessage = (message) ->
         oldmsg = _messages.get message.id
@@ -167,30 +266,75 @@ class MessageStore extends Store
                 _conversationLengths = _conversationLengths.merge lengths
 
             if messages.count? and messages.mailboxID?
-                messages = messages.messages.sort __sortFunction
+                messages = messages.messages
 
             onReceiveRawMessage message for message in messages when message?
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]
-            _messages = _messages.filter (message) ->
-                message.get('accountID') isnt accountID
-            .toOrderedMap()
+            _messages = _messages.filterNot inAccount(accountID)
+            @emit 'change'
 
+        handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target, ref}) ->
+            messages = _getMixed target
+            target.subject = messages[0]?.get('subject')
+            target.accountID = messages[0].get('accountID')
+            account = AccountStore.getByID messages[0]?.get('accountID')
+            trashBoxID = account?.get? 'trashMailbox'
+            _addInFlight {type: 'trash', trashBoxID, messages, ref}
+            _fixCurrentMessage target
+
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
+            _removeInFlight ref
+            for message in updated
+                if message._deleted
+                    _messages = _messages.remove message.id
+                else
+                    onReceiveRawMessage message
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target, ref}) ->
+            _removeInFlight ref
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_FLAGS_REQUEST, ({target, op, flag, ref}) ->
+            messages = _getMixed target
+            target.subject = messages[0]?.get('subject')
+            target.accountID = messages[0].get('accountID')
+            _addInFlight {type: 'flag', op, flag, messages, ref}
+            _fixCurrentMessage target
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated, ref}) ->
+            _removeInFlight ref
+            onReceiveRawMessage message for message in updated
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, ref}) ->
+            _removeInFlight ref
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_MOVE_REQUEST, ({target, from, to, ref}) ->
+            messages = _getMixed target
+            target.subject = messages[0]?.get('subject')
+            target.accountID = messages[0].get('accountID')
+            _addInFlight {type: 'move', from, to, messages, ref}
+            _fixCurrentMessage target
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, updated, ref}) ->
+            _removeInFlight ref
+            onReceiveRawMessage message for message in updated
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, ref}) ->
+            _removeInFlight ref
             @emit 'change'
 
         handle ActionTypes.MESSAGE_SEND, (message) ->
             onReceiveRawMessage message
-
-        handle ActionTypes.MESSAGE_DELETE, (message) ->
-            onReceiveRawMessage message
-
-        handle ActionTypes.MESSAGE_BOXES, (message) ->
-            onReceiveRawMessage message
-
-        handle ActionTypes.MESSAGE_FLAG, (message) ->
-            onReceiveRawMessage message
+            @emit 'change'
 
         handle ActionTypes.LIST_FILTER, (filter) ->
             _messages  = _messages.clear()
@@ -248,11 +392,7 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
-            _messages = _messages.filter (message) ->
-                mailboxes = Object.keys message.get 'mailboxIDs'
-                return mailboxID not in mailboxes
-            .toOrderedMap()
-
+            _messages = _messages.filterNot inMailbox(mailboxID)
             @emit 'change'
 
         handle ActionTypes.SET_FETCHING, (fetching) ->
@@ -264,13 +404,11 @@ class MessageStore extends Store
                 _fetching--
             @emit 'change'
 
+
     ###
         Public API
     ###
-    getAll: -> return _messages
-
-    getByID: (messageID) -> _messages.get(messageID) or null
-
+    getByID: (messageID) -> msg = _messages.get(messageID) or null
 
     ###*
     * Get messages from mailbox, with optional pagination
@@ -283,25 +421,16 @@ class MessageStore extends Store
     getMessagesByMailbox: (mailboxID, useConversations) ->
         conversationIDs = []
 
-        sequence = _messages.filter (message) ->
-            mailboxes = Object.keys message.get 'mailboxIDs'
-            if mailboxID not in mailboxes
-                return false
+        sequence = _messagesWithInFlights().filter inMailbox mailboxID
 
-            if useConversations
-                # one message of each conversation
-                conversationID = message.get 'conversationID'
-                if conversationID and conversationID in conversationIDs
-                    return false
-                else
-                    conversationIDs.push conversationID
-                    return true
-            else
-                return true
-        .sort(__getSortFunction _sortField, _sortOrder)
+        if useConversations
+            # one message of each conversation
+            sequence = sequence.filter dedupConversation
 
-        # sequences are lazy so we need .toOrderedMap() to actually execute it
+        sequence = sequence.sort(__getSortFunction _sortField, _sortOrder)
+
         _currentMessages = sequence.toOrderedMap()
+
         if not _currentID?
             @setCurrentID _currentMessages.first()?.get 'id'
         return _currentMessages
@@ -381,7 +510,7 @@ class MessageStore extends Store
         @getNextMessage(isConv) or @getPreviousMessage(isConv)
 
     getConversation: (conversationID) ->
-        _conversationMemoize = _messages
+        _conversationMemoize = _messagesWithInFlights()
             .filter (message) ->
                 message.get('conversationID') is conversationID
             .sort reverseDateSort
@@ -396,19 +525,7 @@ class MessageStore extends Store
     #
     # Returns an {Array} of {Immutable.Map} messages
     getMixed: (target) ->
-        if target.messageID
-            return [_messages.get(target.messageID)]
-        else if target.messageIDs
-            return target.messageIDs.map (id) -> _messages.get id
-        else if target.conversationID
-            return _messages.filter (message) ->
-                message.get('conversationID') is target.conversationID
-            .toArray()
-        else if target.conversationIDs
-            return _messages.filter (message) ->
-                message.get('conversationID') in target.conversationIDs
-            .toArray()
-        else throw new Error 'Wrong Usage : unrecognized target AS.getMixed'
+        _getMixed target
 
     getConversationsLength: -> return _conversationLengths
 
@@ -421,4 +538,5 @@ class MessageStore extends Store
     isFetching: ->
         return _fetching > 0
 
-module.exports = new MessageStore()
+module.exports = self = new MessageStore()
+

@@ -78,9 +78,9 @@ module.exports = AccountInput = React.createClass
     renderError: (errorField, name) ->
         result = []
         if Array.isArray errorField
-            for error in errorField
+            for error, i in errorField
                 if @state.errors?[error]? and error is name
-                    result.push ErrorLine text: @state.errors[error]
+                    result.push ErrorLine text: @state.errors[error], key: i
         else
             if @state.errors?[errorField]?
                 result.push ErrorLine text: @state.errors[errorField]

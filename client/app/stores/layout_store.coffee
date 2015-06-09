@@ -69,19 +69,10 @@ class LayoutStore extends Store
             @emit 'change'
 
         handle ActionTypes.RECEIVE_TASK_UPDATE, (task) =>
-            task = Immutable.Map task
-            id = task.get 'id'
-            _tasks = _tasks.set id, task
-            if task.get 'autoclose'
-                remove = =>
-                    _tasks = _tasks.remove id
-                    @emit 'change'
-                setTimeout remove, 5000
-            @emit 'change'
+            @_showNotification task
 
         handle ActionTypes.RECEIVE_TASK_DELETE, (taskid) ->
-            _tasks = _tasks.remove taskid
-            @emit 'change'
+            @_removeNotification taskid
 
         handle ActionTypes.TOASTS_SHOW, ->
             _shown = true
@@ -110,6 +101,87 @@ class LayoutStore extends Store
             @emit 'change'
 
 
+        makeMessage = (target, ref, actionAndOK, errMsg)->
+            subject = target?.subject
+
+            if target.messageID and target.isDraft
+                type = 'draft'
+            else if target.messageID
+                type = 'message'
+            else if target.conversationID
+                type = 'conversation'
+            else if target.conversationIDs
+                type = 'conversations'
+                smart_count = target.conversationIDs.length
+            else if target.messageIDs
+                type = 'messages'
+                smart_count = target.messageIDs.length
+            else
+                throw new Error 'Wrong Usage : unrecognized target'
+
+            return t "#{type} #{actionAndOK}",
+                error: errMsg
+                subject: subject or ''
+                smart_count: smart_count
+
+        makeUndoAction = (ref) ->
+            label: 'undo'
+            onClick: -> LayoutStoreInstance.undo ref
+
+        handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, ref, updated}) ->
+            @_showNotification
+                message: makeMessage target, ref, 'delete ok'
+                actions: [makeUndoAction ref]
+                autoclose: true
+
+        handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target, ref, error}) ->
+            @_showNotification
+                message: makeMessage target, ref, 'delete ko', error
+                errors: [error]
+                autoclose: true
+
+        handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, ref, updated}) ->
+            @_showNotification
+                message: makeMessage target, ref, 'move ok'
+                actions: [makeUndoAction ref]
+                autoclose: true
+
+        handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, ref, error}) ->
+            @_showNotification
+                message: makeMessage target, ref, 'move ko', error
+                errors: [error]
+                autoclose: true
+
+        # dont display a notification for MESSAGE_FLAG_SUCCESS
+        handle ActionTypes.MESSAGE_FLAG_FAILURE, ({target, ref, error}) ->
+            @_showNotification
+                message: makeMessage target, ref, 'flag ko', error
+                errors: [error]
+                autoclose: true
+
+        # dont display a notification for MESSAGE_REFRESH_SUCCESS
+        handle ActionTypes.MESSAGE_RECOVER_FAILURE, ({target, ref, error}) ->
+            @_showNotification
+                message: 'lost server connection', error
+                errors: [error]
+                autoclose: true
+
+
+    ###
+        Private API
+    ###
+    _removeNotification: (id) ->
+        _tasks = _tasks.remove id
+        @emit 'change'
+
+    _showNotification: (options) ->
+        id = options.id or +Date.now()
+        options.finished ?= true
+        _tasks = _tasks.set id, Immutable.Map options
+        if options.autoclose
+            setTimeout @_removeNotification.bind(@, id), 5000
+        @emit 'change'
+
     ###
         Public API
     ###
@@ -129,4 +201,4 @@ class LayoutStore extends Store
 
     isDrawerExpanded: -> return _drawer
 
-module.exports = new LayoutStore()
+module.exports = LayoutStoreInstance = new LayoutStore()
