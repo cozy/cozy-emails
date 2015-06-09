@@ -45,15 +45,10 @@ module.exports =
         'RESIZE_PREVIEW_PANE'       : 'RESIZE_PREVIEW_PANE'
         'MAXIMIZE_PREVIEW_PANE'     : 'MAXIMIZE_PREVIEW_PANE'
         'MINIMIZE_PREVIEW_PANE'     : 'MINIMIZE_PREVIEW_PANE'
-        'DISPLAY_ALERT'             : 'DISPLAY_ALERT'
-        'HIDE_ALERT'                : 'HIDE_ALERT'
         'DISPLAY_MODAL'             : 'DISPLAY_MODAL'
         'HIDE_MODAL'                : 'HIDE_MODAL'
         'REFRESH'                   : 'REFRESH'
         'INTENT_AVAILABLE'          : 'INTENT_AVAILABLE'
-
-        # Mailbox
-        'RECEIVE_RAW_MAILBOXES'     : 'RECEIVE_RAW_MAILBOXES'
 
         # Settings
         'SETTINGS_UPDATED'          : 'SETTINGS_UPDATED'

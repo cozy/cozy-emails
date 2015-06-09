@@ -245,13 +245,7 @@ module.exports = React.createClass
                         # This allows to use Notification.permission with Chrome/Safari
                         if Notification.permission isnt status
                             Notification.permission = status
-            #when 'lang'
-            #    lang = target.dataset.lang
-            #    settings = @state.settings
-            #    settings.lang = lang
-            #    @setState({settings: settings})
-            #    ApiUtils.setLocale lang, true
-            #    SettingsActionCreator.edit settings
+
             when 'layoutStyle'
                 settings = @state.settings
                 settings.layoutStyle = target.dataset.style

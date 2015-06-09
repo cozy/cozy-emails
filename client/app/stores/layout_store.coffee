@@ -15,10 +15,6 @@ class LayoutStore extends Store
 
     _previewFullscreen = false
 
-    _alert =
-        level: null
-        message: null
-
     _tasks = Immutable.OrderedMap()
 
     _shown = true
@@ -57,28 +53,12 @@ class LayoutStore extends Store
             _previewFullscreen = true
             @emit 'change'
 
-        handle ActionTypes.DISPLAY_ALERT, (value) ->
-            _alert.level   = value.level
-            _alert.message = value.message
-            @emit 'change'
-
-        handle ActionTypes.HIDE_ALERT, (value) ->
-            _alert.level   = null
-            _alert.message = null
-            @emit 'change'
-
         handle ActionTypes.DISPLAY_MODAL, (value) ->
             _modal = value
             @emit 'change'
 
         handle ActionTypes.HIDE_MODAL, (value) ->
             _modal = null
-            @emit 'change'
-
-        # Hide alerts on mailbox / account change
-        handle ActionTypes.SELECT_ACCOUNT, (value) ->
-            _alert.level   = null
-            _alert.message = null
             @emit 'change'
 
         handle ActionTypes.REFRESH, ->
@@ -138,8 +118,6 @@ class LayoutStore extends Store
     getPreviewSize: -> return _previewSize
 
     isPreviewFullscreen: -> return _previewFullscreen
-
-    getAlert: -> return _alert
 
     getModal: -> return _modal
 
