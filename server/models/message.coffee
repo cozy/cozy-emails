@@ -633,7 +633,9 @@ module.exports = class Message extends cozydb.CozyModel
         mailboxIDs = {}
         mailboxIDs[key] = value for key, value of @mailboxIDs or {}
         mailboxIDs[box.id] = uid
-        @updateAttributes {mailboxIDs}, (err) ->
+        changes = {mailboxIDs}
+        changes.ignoreInCount = true if box.ignoreInCount()
+        @updateAttributes changes, (err) ->
             callback err, {shouldNotif: false, actuallyAdded: true}
 
     # Public: helper to check if a message is in a box
