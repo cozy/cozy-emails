@@ -10058,8 +10058,7 @@ window.onload = function() {
       });
     }
     logPerformances();
-    window.cozyMails.customEvent("APPLICATION_LOADED");
-    return window.EventEmitter.defaultMaxListeners = 2000;
+    return window.cozyMails.customEvent("APPLICATION_LOADED");
   } catch (_error) {
     e = _error;
     console.error(e);
