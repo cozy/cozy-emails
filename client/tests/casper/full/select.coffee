@@ -11,8 +11,8 @@ doSelect = (n, cb) ->
     casper.click ".messages-list li.message:nth-of-type(#{n})"
     casper.waitForSelector ".messages-list li.message:nth-of-type(#{n}).active", ->
         infos = casper.getElementInfo '.messages-list li.message.active'
-        messageID = infos.attributes['data-message-id']
-        casper.test.assertExists "h3.conversation-title[data-message-id='#{messageID}']", "Message #{n} selected"
+        conversationID = infos.attributes['data-conversation-id']
+        casper.test.assertExists "h3.conversation-title[data-conversation-id='#{conversationID}']", "Message #{n} selected"
         if cb?
             cb()
 

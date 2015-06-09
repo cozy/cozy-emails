@@ -141,7 +141,6 @@ module.exports = LayoutActionCreator =
             MessageActionCreator.setFetching true
             updated = Date.now()
             XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMsg) ->
-                MessageActionCreator.setFetching false
                 if err?
                     LayoutActionCreator.alertError err
                 else
@@ -150,6 +149,8 @@ module.exports = LayoutActionCreator =
                     rawMsg.messages.forEach (msg) ->
                         msg.updated = updated
                     MessageActionCreator.receiveRawMessages rawMsg
+                # Set fetching to false only after messages have been handled
+                MessageActionCreator.setFetching false
 
     showMessage: (panelInfo, direction) ->
         onMessage = (msg) ->

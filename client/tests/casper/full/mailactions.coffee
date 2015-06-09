@@ -126,7 +126,7 @@ casper.test.begin 'Test Message Actions', (test) ->
                     casper.click "#{currentSel} header .toolbar-message button.fa-trash"
                     casper.waitUntilVisible '.modal-dialog',  ->
                         confirm = casper.fetchText('.modal-body').trim()
-                        test.assertEquals confirm, "Do you really want to delete message “Re: troll”?", "Confirmation dialog"
+                        test.assertEquals confirm, "Do you really want to delete message “Re: Conversation”?", "Confirmation dialog"
                         casper.click ".modal-dialog .btn:not(.btn-cozy-non-default)"
                         casper.waitWhileSelector ".messages-list article.message[data-message-id='#{messageID}']", ->
                             test.pass "Message #{subject} Moved"

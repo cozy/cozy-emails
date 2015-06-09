@@ -196,7 +196,7 @@ module.exports = Application = React.createClass
             selectedAccountID    : @state.selectedAccount.get 'id'
             selectedAccountLogin : @state.selectedAccount.get 'login'
             selectedMailboxID    : selectedMailboxID
-            message              : message
+            conversationID       : conversationID
             conversation         : conversation
             conversationLength   : conversationLength
             prevMessageID        : prevMessage?.get 'id'
