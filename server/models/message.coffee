@@ -916,7 +916,7 @@ module.exports = class Message extends cozydb.CozyModel
                     nextBox null
 
         # END doGrouped
-        , (err) =>
+        , (err) ->
             return callback err if err
 
             async.mapSeries messages, (message, next) ->
@@ -930,6 +930,7 @@ module.exports = class Message extends cozydb.CozyModel
             , (err, updated) ->
                 return callback err if err
                 return callback null, [] if updated.length is 0
+                return callback new Error('the destination box doesnt exist') unless destBox
 
                 # assume there was not so many changes
                 limit = Math.max(100, messages.length*2)

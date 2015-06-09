@@ -74,31 +74,6 @@ casper.test.begin 'Test conversation', (test) ->
                 casper.page.switchToParentFrame()
                 test.assertEqual attSrc, imgSrc, "Image displayed"
 
-    # Message Thread
-    casper.then ->
-        test.comment "Message Thread"
-        #messageID = '20141106092130.GF5642@mail.cozy.io'
-        casper.cozy.selectMessage 'DoveCot', 'Test Folder', 'troll', (messageID) ->
-            test.assertElementCount ".conversation article.message.active", 1, "One active message"
-            test.assertElementCount ".conversation article.message", 3, "3 messages displayed"
-            test.assertExists '.conversation button.more', 'More button'
-            casper.click '.conversation button.more'
-            casper.waitWhileSelector '.conversation button.more', ->
-                test.assertElementCount ".conversation article.message", 5, "All messages displayed"
-                test.assertExists ".conversation article.active header .toolbar", "Toolbar in header"
-                test.assertElementCount ".conversation article.active header .toolbar button", 6, "Buttons in header"
-                test.assertExists ".conversation article.active footer .toolbar", "Toolbar in footer"
-                test.assertElementCount ".conversation article.active footer .toolbar button", 3, "Buttons in footer"
-
-                test.assertDoesntExist '.conversation article:nth-of-type(1).active', 'First message not active'
-                casper.click '.conversation article:nth-of-type(1) header'
-                casper.waitForSelector '.conversation article:nth-of-type(1).active', ->
-                    test.assertElementCount ".conversation article.message", 5, "All messages displayed"
-                    test.assertElementCount ".conversation article.message.active", 2, "Two messages actives"
-                    casper.click '.conversation article:nth-of-type(1) header'
-                    casper.waitWhileSelector '.conversation article:nth-of-type(1).active', ->
-                        test.assertElementCount ".conversation article.message.active", 1, "First message closed"
-
     # Message Detail
     casper.then ->
         test.comment "Message Detail"

@@ -72,17 +72,18 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
         else
             subjectSel = '.messages-list li.message:nth-of-type(1) .subject'
         casper.waitForSelector subjectSel, ->
-            infos = casper.getElementInfo ".messages-list li.active"
-            messageID = infos.attributes['data-message-id']
-            conversationID = infos.attributes['data-conversation-id']
-            if not subjectDone?
-                subjectDone = "h3[data-conversation-id='#{conversationID}']"
-                subject = casper.fetchText subjectSel
             casper.click subjectSel
-            casper.waitForSelector subjectDone, ->
-                cb(subject, messageID, conversationID)
-            , ->
-                casper.test.fail "Error displaying `#{subject}`: no element match `#{subjectDone}`"
+            casper.wait 500, ->
+                infos = casper.getElementInfo ".messages-list li.active"
+                messageID = infos.attributes['data-message-id']
+                conversationID = infos.attributes['data-conversation-id']
+                if not subjectDone?
+                    subjectDone = "h3[data-conversation-id='#{conversationID}']"
+                    subject = casper.fetchText subjectSel
+                casper.waitForSelector subjectDone, ->
+                    cb(subject, messageID, conversationID)
+                , ->
+                    casper.test.fail "Error displaying `#{subject}`: no element match `#{subjectDone}`"
         , ->
             casper.test.fail "No message matching #{subjectSel}"
 
@@ -103,8 +104,8 @@ exports.init = (casper) ->
     if dev
         casper.options.verbose = true
         casper.options.logLevel = 'debug'
-    casper.options.waitTimeout = 20000
-    casper.options.timeout = 240000
+    casper.options.waitTimeout = 60000
+    casper.options.timeout = 300000
     casper.options.viewportSize = {width: 1024, height: 768}
     casper.on 'exit', (res) ->
         if res isnt 0 or dev

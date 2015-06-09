@@ -10,6 +10,7 @@ module.exports = React.createClass
             not (_.isEqual(nextProps, @props))
 
     render: ->
+        accounts = @props.accounts
         if Object.keys(accounts).length is 1
             @renderNoChoice()
         else

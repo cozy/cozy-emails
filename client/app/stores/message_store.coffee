@@ -99,25 +99,20 @@ class MessageStore extends Store
     onReceiveRawMessage = (message) ->
         oldmsg = _messages.get message.id
         updated = oldmsg?.get 'updated'
-        # only update message if new version is newer that the one currently stored
+        # only update message if new version is newer than
+        # the one currently stored
         if not (message.updated? and updated? and updated > message.updated) and
            not message._deleted # deleted draft are empty, don't update them
-            # create or update
-            if not message.attachments?
-                message.attachments = []
-            if not message.date?
-                message.date = new Date().toISOString()
-            if not message.createdAt?
-                message.createdAt = message.date
-            # Add messageID to every attachment
 
+            message.attachments   ?= []
+            message.date          ?= new Date().toISOString()
+            message.createdAt     ?= message.date
+            message.flags         ?= []
             message.hasAttachments = message.attachments.length > 0
             message.attachments = message.attachments.map (file) ->
                 Immutable.Map file
             message.attachments = Immutable.Vector.from message.attachments
 
-            if not message.flags?
-                message.flags = []
 
             # message loaded from fixtures for test purpose have a docType
             # that may cause some troubles
@@ -133,7 +128,8 @@ class MessageStore extends Store
                 """
 
             _messages = _messages.set message.id, messageMap
-            if message.accountID? and diff = computeMailboxDiff(oldmsg, messageMap)
+            if message.accountID? and
+               diff = computeMailboxDiff(oldmsg, messageMap)
                 AccountStore._applyMailboxDiff message.accountID, diff
 
     ###

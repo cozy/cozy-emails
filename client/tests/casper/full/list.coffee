@@ -19,7 +19,7 @@ casper.test.begin 'List action', (test) ->
         test.comment "badges"
         base = ".messages-list li.message[data-message-id$='#{messageID}']"
         casper.cozy.selectAccount "DoveCot", "Test Folder", ->
-            test.assertElementCount '.messages-list .conversation-length', 1, 'Badges'
+            test.assertElementCount '.messages-list .conversation-length', 2, 'Badges'
             badges = casper.fetchText "#{base} .conversation-length"
             test.assertEquals badges, '[5]', 'Badges value'
             infos = casper.getElementInfo base
