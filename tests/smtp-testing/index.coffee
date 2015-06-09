@@ -37,5 +37,5 @@ SMTPTesting.init = (port, done) ->
     smtpServer.listen parseInt(port), done
 
 unless module.parent
-    port = process.argv[1] or 587
+    port = process.argv[2] or 587
     SMTPTesting.init port, -> console.log arguments
