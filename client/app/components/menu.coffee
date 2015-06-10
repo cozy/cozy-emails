@@ -199,6 +199,7 @@ module.exports = Menu = React.createClass
         accountClasses = classer
             active: isActive
 
+
         if @state.onlyFavorites
             mailboxes = @state.favorites
             icon = 'fa-ellipsis-h'
@@ -207,6 +208,8 @@ module.exports = Menu = React.createClass
             mailboxes = @state.mailboxes
             icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites on'
+
+        allBoxesAreFavorite = @state.mailboxes.length is @state.favorites.length
 
         configMailboxUrl = @buildUrl
             direction: 'first'
@@ -292,16 +295,17 @@ module.exports = Menu = React.createClass
                             refreshes:         refreshes,
                             displayErrors:     @displayErrors,
                     .toJS()
-                    li className: 'toggle-favorites',
-                        a
-                            role: 'menuitem',
-                            tabIndex: 0,
-                            onClick: toggleFavorites,
-                            key: 'toggle',
-                                i className: 'fa ' + icon
-                                span
-                                    className: 'item-label',
-                                    toggleFavoritesLabel
+                    unless allBoxesAreFavorite
+                        li className: 'toggle-favorites',
+                            a
+                                role: 'menuitem',
+                                tabIndex: 0,
+                                onClick: toggleFavorites,
+                                key: 'toggle',
+                                    i className: 'fa ' + icon
+                                    span
+                                        className: 'item-label',
+                                        toggleFavoritesLabel
 
     _initTooltips: ->
         #jQuery('#account-list [data-toggle="tooltip"]').tooltip()
