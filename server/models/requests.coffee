@@ -92,6 +92,20 @@ module.exports =
                 emit [doc.accountID, 'subject', doc.normSubject],
                     doc.conversationID
 
+        conversationPatching:
+            reduce: (key, values, rereduce) ->
+                valuesShouldNotBe = if rereduce then null else values[0]
+                for value in values when value isnt valuesShouldNotBe
+                    return value
+
+                return null
+
+            map: (doc) ->
+                if doc.messageID
+                    emit [doc.accountID, doc.messageID], doc.conversationID
+                for reference in doc.references or []
+                    emit [doc.accountID, reference], doc.conversationID
+
         byConversationID:
             reduce: '_count'
             map: (doc) ->

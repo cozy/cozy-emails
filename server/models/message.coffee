@@ -133,6 +133,7 @@ module.exports = class Message extends cozydb.CozyModel
             .filter (mid) -> mid # ignore unparsable messageID
 
 
+        log.debug "findConversationID", references, mail.normSubject, isReplyOrForward
         if references.length
             # find all messages in references
             keys = references.map (mid) -> [mail.accountID, 'mid', mid]
@@ -148,6 +149,7 @@ module.exports = class Message extends cozydb.CozyModel
             key = [mail.accountID, 'subject', mail.normSubject]
             Message.rawRequest 'dedupRequest', {key}, (err, rows) ->
                 return callback err if err
+                log.debug "found similar", rows.length
                 Message.pickConversationID rows, callback
 
         # give it a random uid
