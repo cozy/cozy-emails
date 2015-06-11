@@ -42,6 +42,7 @@ class MessageStore extends Store
     _conversationMemoize = null
     _conversationMemoizeID = null
     _currentID       = null
+    _currentCID      = null
     _prevAction      = null
 
     _inFlightByRef = {}
@@ -105,17 +106,20 @@ class MessageStore extends Store
     _fixCurrentMessage = (target) ->
         # If target.inReplyTo is set, we are removing a reply, so stay
         # on current message
-        return null if target.inReplyTo?
-        # open next message if the deleted / moved one was open ###
-        messageIDs = target.messageIDs or [target.messageID]
-        currentMessage = self.getCurrentID() or 'not-null'
-        conversationIDs = target.conversationIDs or [target.conversationID]
-        currentConversation = self.getCurrentConversationID() or 'not-null'
-        isConv = currentMessage not in messageIDs
-        isConv = true
-        next = self.getNextOrPrevious isConv
-        if next?
-            self.setCurrentID next.messageID, next.conv
+        if target.inReplyTo?
+            return null
+        else
+            messageIDs = target.messageIDs or [target.messageID]
+            currentMessage = self.getCurrentID() or 'not-null'
+            conversationIDs = target.conversationIDs or [target.conversationID]
+            currentConversation = self.getCurrentConversationID() or 'not-null'
+
+            # open next message if the deleted / moved one was open ###
+            if currentMessage in messageIDs or
+            currentConversation in conversationIDs
+                next = self.getNextOrPrevious true
+                if next?
+                    self.setCurrentID next.messageID, next.conv
 
 
     _getMixed = (target) ->
@@ -310,7 +314,6 @@ class MessageStore extends Store
             target.subject = messages[0]?.get('subject')
             target.accountID = messages[0].get('accountID')
             _addInFlight {type: 'flag', op, flag, messages, ref}
-            _fixCurrentMessage target
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FLAGS_SUCCESS, ({target, updated, ref}) ->
@@ -444,8 +447,6 @@ class MessageStore extends Store
 
         _currentMessages = sequence.toOrderedMap()
 
-        if not _currentID?
-            @setCurrentID _currentMessages.first()?.get 'id'
         return _currentMessages
 
     getCurrentID: ->
@@ -454,11 +455,12 @@ class MessageStore extends Store
     setCurrentID: (messageID, conv) ->
         if conv?
             # this will set current conversation and conversationID
-            @getConversation(@getByID(messageID).get 'conversationID')
+            conversationID = @getByID(messageID)?.get 'conversationID'
         _currentID = messageID
+        _currentCID = conversationID
 
     getCurrentConversationID: ->
-        return _conversationMemoizeID
+        return _currentCID
 
     getPreviousMessage: (isConv) ->
         if isConv? and isConv
@@ -494,6 +496,7 @@ class MessageStore extends Store
 
     getNextMessage: (isConv) ->
         if isConv? and isConv
+
             if not _conversationMemoize?
                 return null
             # Conversations displayed
@@ -512,6 +515,9 @@ class MessageStore extends Store
             else
                 return _conversationMemoize.get(idx - 1)
         else
+            if not _currentID
+                return _currentMessages?.first()
+
             keys = Object.keys _currentMessages.toJS()
             idx = keys.indexOf _currentID
             if idx is -1 or idx is (keys.length - 1)

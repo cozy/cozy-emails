@@ -144,7 +144,9 @@ module.exports = Application = React.createClass
 
             # Store current message ID if selected
             if secondPanel? and secondPanel.parameters.messageID?
-                MessageActionCreator.setCurrent secondPanel.parameters.messageID
+                isConv = secondPanel.parameters.conversationID?
+                messageID = secondPanel.parameters.messageID
+                MessageActionCreator.setCurrent messageID, isConv
             else
                 if firstPanel isnt 'compose'
                     MessageActionCreator.setCurrent null
