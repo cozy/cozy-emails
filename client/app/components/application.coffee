@@ -59,7 +59,7 @@ module.exports = Application = React.createClass
         modal = @state.modal
 
         layoutClasses = ['layout'
-            "layout-#{layout}"
+            "layout-#{disposition}"
             if fullscreen then "layout-preview-fullscreen"
             "layout-preview-#{previewSize}"].join(' ')
 

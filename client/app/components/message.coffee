@@ -7,7 +7,6 @@ MessageHeader  = require "./message_header"
 MessageFooter  = require "./message_footer"
 ToolbarMessage = require './toolbar_message'
 Compose        = require './compose'
-Participants   = require './participant'
 
 {ComposeActions, MessageFlags} = require '../constants/app_constants'
 
@@ -257,28 +256,12 @@ module.exports = React.createClass
                     @renderToolbox(false)) if @props.active
 
 
-    getParticipants: (message) ->
-        from = message.get 'from'
-        to   = message.get('to').concat(message.get('cc'))
-        span null,
-            Participants
-                participants: from
-                onAdd: @addAddress
-                tooltip: true
-                ref: 'from'
-            span null, ', '
-            Participants
-                participants: to
-                onAdd: @addAddress
-                tooltip: true
-                ref: 'to'
-
-
     renderHeaders: ->
         MessageHeader
             message: @props.message
             isDraft: @state.prepared.isDraft
             isDeleted: @state.prepared.isDeleted
+            active: @props.active
             ref: 'header'
 
 

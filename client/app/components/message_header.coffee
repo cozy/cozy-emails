@@ -20,6 +20,10 @@ module.exports = React.createClass
     ]
 
 
+    shouldComponentUpdate: (nextProps, nextState) ->
+        should = not (_.isEqual(nextProps, @props))
+        return should
+
     render: ->
         avatar = messageUtils.getAvatar @props.message
 
@@ -29,22 +33,25 @@ module.exports = React.createClass
                     img className: 'media-object', src: avatar
             div className: 'infos',
                 @renderAddress 'from'
-                @renderAddress 'to'
-                @renderAddress 'cc'
-                div className: 'metas indicators',
-                    if @props.message.get('attachments').length
-                        PopupMessageAttachments
-                            message: @props.message
-                    if MessageFlags.FLAGGED in @props.message.get('flags')
-                        i className: 'fa fa-star'
-                    if @props.isDraft
-                        i className: 'fa fa-edit'
-                    if @props.isDeleted
-                        i className: 'fa fa-trash'
-                div className: 'metas date',
-                    messageUtils.formatDate @props.message.get 'createdAt'
-                PopupMessageDetails
-                    message: @props.message
+                @renderAddress 'to' if @props.active
+                @renderAddress 'cc' if @props.active
+                if @props.active
+                    div className: 'metas indicators',
+                        if @props.message.get('attachments').length
+                            PopupMessageAttachments
+                                message: @props.message
+                        if MessageFlags.FLAGGED in @props.message.get('flags')
+                            i className: 'fa fa-star'
+                        if @props.isDraft
+                            i className: 'fa fa-edit'
+                        if @props.isDeleted
+                            i className: 'fa fa-trash'
+                if @props.active
+                    div className: 'metas date',
+                        messageUtils.formatDate @props.message.get 'createdAt'
+                if @props.active
+                    PopupMessageDetails
+                        message: @props.message
 
 
     renderAddress: (field) ->
