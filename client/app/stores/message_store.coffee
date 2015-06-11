@@ -441,7 +441,7 @@ class MessageStore extends Store
 
         if useConversations
             # one message of each conversation
-            sequence = sequence.filter dedupConversation
+            sequence = sequence.filter dedupConversation()
 
         sequence = sequence.sort(__getSortFunction _sortField, _sortOrder)
 
