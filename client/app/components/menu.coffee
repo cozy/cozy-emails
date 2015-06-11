@@ -329,6 +329,10 @@ MenuMailboxItem = React.createClass
     getInitialState: ->
         return target: false
 
+    onClickMailbox: ->
+        if @props.mailbox.get('id') is @props.selectedMailboxID
+            MessageActionCreator.refreshMailbox(@props.selectedMailboxID)
+
     render: ->
         mailboxID = @props.mailbox.get 'id'
         mailboxUrl = @buildUrl
@@ -368,7 +372,7 @@ MenuMailboxItem = React.createClass
         li className: classesParent,
             a
                 href: mailboxUrl
-                onClick: @props.hideMenu
+                onClick: @onClickMailbox
                 className: "#{classesChild} lv-#{@props.mailbox.get('depth')}"
                 role: 'menuitem'
                 'data-mailbox-id': mailboxID

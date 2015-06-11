@@ -227,9 +227,42 @@ class MessageStore extends Store
                 """
 
             _messages = _messages.set message.id, messageMap
+
+            # updat _currentCID when we have the message
+            if message.id is _currentID
+                _currentCID = message.conversationID
+
             if message.accountID? and
                diff = computeMailboxDiff(oldmsg, messageMap)
                 AccountStore._applyMailboxDiff message.accountID, diff
+
+
+    handleFetchResult = (result) ->
+
+        if result.links? and result.links.next?
+                # reinit params here for pagination on filtered lists
+                _params = {}
+                next   = decodeURIComponent(result.links.next)
+                url    = 'http://localhost' + next
+                url.split('?')[1].split('&').forEach (p) ->
+                    [key, value] = p.split '='
+                    value = '-' if value is ''
+                    _params[key] = value
+        else
+            # We use pageAfter to know if there are more result to
+            # load, so we need to set it to its default value
+            _params.pageAfter = '-'
+
+        before = if _params.pageAfter is '-' then undefined
+        else _params.pageAfter
+
+        SocketUtils.changeRealtimeScope result.mailboxID, before
+
+        if lengths = result.conversationLengths
+            _conversationLengths = _conversationLengths.merge lengths
+
+        for message in result.messages when message?
+            onReceiveRawMessage message
 
     ###
         Defines here the action handlers.
@@ -241,34 +274,8 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
-
-            if messages.links? and messages.links.next?
-                # reinit params here for pagination on filtered lists
-                _params = {}
-                next   = decodeURIComponent(messages.links.next)
-                url    = 'http://localhost' + next
-                url.split('?')[1].split('&').forEach (p) ->
-                    [key, value] = p.split '='
-                    value = '-' if value is ''
-                    _params[key] = value
-            else if messages.mailboxID
-                # We use pageAfter to know if there are more messages to
-                # load, so we need to set it to its default value
-                _params.pageAfter = '-'
-
-            if messages.mailboxID
-                before = if _params.pageAfter is '-' then undefined
-                else _params.pageAfter
-
-                SocketUtils.changeRealtimeScope messages.mailboxID, before
-
-            if lengths = messages.conversationLengths
-                _conversationLengths = _conversationLengths.merge lengths
-
-            if messages.count? and messages.mailboxID?
-                messages = messages.messages
-
-            onReceiveRawMessage message for message in messages when message?
+            for message in messages when message?
+                onReceiveRawMessage message
             @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
@@ -332,6 +339,21 @@ class MessageStore extends Store
             _removeInFlight ref
             @emit 'change'
 
+        handle ActionTypes.MESSAGE_FETCH_REQUEST, ({mailboxID}) ->
+            # There may be more than one concurrent fetching request
+            # so we use a counter instead of a boolean
+            _fetching++
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_FETCH_FAILURE, () ->
+            _fetching--
+            @emit 'change'
+
+        handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({fetchResult}) ->
+            _fetching--
+            handleFetchResult fetchResult
+            @emit 'change'
+
         handle ActionTypes.MESSAGE_SEND, (message) ->
             onReceiveRawMessage message
             @emit 'change'
@@ -393,15 +415,6 @@ class MessageStore extends Store
 
         handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
             _messages = _messages.filterNot inMailbox(mailboxID)
-            @emit 'change'
-
-        handle ActionTypes.SET_FETCHING, (fetching) ->
-            # There may be more than one concurrent fetching request
-            # so we use a counter instead of a boolean
-            if fetching
-                _fetching++
-            else
-                _fetching--
             @emit 'change'
 
 

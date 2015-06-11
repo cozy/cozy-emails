@@ -4,6 +4,7 @@ AppDispatcher = require '../app_dispatcher'
 
 AccountStore = require '../stores/account_store'
 LayoutActionCreator = null
+MessageActionCreator = require './message_action_creator'
 
 alertError = (error) ->
     LayoutActionCreator = require '../actions/layout_action_creator'
@@ -89,6 +90,8 @@ module.exports = AccountActionCreator =
 
     selectAccount: (accountID, mailboxID) ->
         changed = AccountStore.selectedIsDifferentThan accountID, mailboxID
+        selected = AccountStore.getSelected()
+        supportRFC4551 = selected?.get('supportRFC4551')
 
         AppDispatcher.handleViewAction
             type: ActionTypes.SELECT_ACCOUNT
@@ -96,13 +99,8 @@ module.exports = AccountActionCreator =
                 accountID: accountID
                 mailboxID: mailboxID
 
-        if changed and
-           mailboxID? and
-           AccountStore.getSelected()?.get('supportRFC4551')
-            XHRUtils.refreshMailbox mailboxID, (err) ->
-                if err?
-                    console.error err
-                    alertError error
+        if mailboxID? and changed and supportRFC4551
+            MessageActionCreator.refreshMailbox(mailboxID)
 
     discover: (domain, callback) ->
         XHRUtils.accountDiscover domain, (err, infos) ->

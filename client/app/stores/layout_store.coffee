@@ -100,6 +100,11 @@ class LayoutStore extends Store
             _drawer = not _drawer
             @emit 'change'
 
+        makeErrorMessage = (error) ->
+            if error.name is 'AccountConfigError'
+                t "config error #{error.field}"
+            else
+                error.message or error.name or error
 
         makeMessage = (target, ref, actionAndOK, errMsg)->
             subject = target?.subject
@@ -159,10 +164,22 @@ class LayoutStore extends Store
                 errors: [error]
                 autoclose: true
 
-        # dont display a notification for MESSAGE_REFRESH_SUCCESS
+        # dont display a notification for MESSAGE_RECOVER_SUCCESS
         handle ActionTypes.MESSAGE_RECOVER_FAILURE, ({target, ref, error}) ->
             @_showNotification
-                message: 'lost server connection', error
+                message: 'lost server connection'
+                errors: [error]
+                autoclose: true
+
+        handle ActionTypes.MESSAGE_FETCH_FAILURE, ({error}) ->
+            @_showNotification
+                message: 'message fetch failure'
+                errors: [error]
+                autoclose: true
+
+        handle ActionTypes.REFRESH_FAILURE, ({error}) ->
+            @_showNotification
+                message: makeErrorMessage error
                 errors: [error]
                 autoclose: true
 

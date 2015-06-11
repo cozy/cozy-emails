@@ -18,11 +18,6 @@ module.exports = MessageActionCreator =
             type: ActionTypes.RECEIVE_RAW_MESSAGE
             value: message
 
-    setFetching: (fetching) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SET_FETCHING
-            value: fetching
-
     send: (message, callback) ->
         XHRUtils.messageSend message, (error, message) ->
             if not error?
@@ -62,6 +57,22 @@ module.exports = MessageActionCreator =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_RECOVER_SUCCESS
                     value: {ref, op, flag, flagAction}
+
+    refreshMailbox: (mailboxID) ->
+        unless AccountStore.isMailboxRefreshing(mailboxID)
+            AppDispatcher.handleViewAction
+                type: ActionTypes.REFRESH_REQUEST
+                value: {mailboxID}
+
+            XHRUtils.refreshMailbox mailboxID, (error) ->
+                if err?
+                    AppDispatcher.handleViewAction
+                       type: ActionTypes.REFRESH_FAILURE
+                       value: {mailboxID, error}
+                else
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.REFRESH_SUCCESS
+                        value: {mailboxID}
 
     # Delete message(s)
     # target:
