@@ -13,11 +13,8 @@ AccountStore   = require '../stores/account_store'
 LayoutStore    = require '../stores/layout_store'
 RefreshesStore = require '../stores/refreshes_store'
 
-ThinProgress = require './thin_progress'
 MessageUtils = require '../utils/message_utils'
 colorhash    = require '../utils/colorhash'
-
-RefreshIndicator = require './menu_refresh_indicator'
 
 {Dispositions, SpecialBoxIcons, Tooltips} = require '../constants/app_constants'
 
@@ -249,10 +246,6 @@ module.exports = Menu = React.createClass
                                     className: 'fa warning',
                                     onClick: @displayErrors.bind null,
                                     progress
-                        if progress.get('firstImport')
-                            ThinProgress
-                                done: progress.get('done'),
-                                total: progress.get('total')
 
                 if isSelected
                     a
@@ -390,11 +383,6 @@ MenuMailboxItem = React.createClass
                     span
                         className: 'item-label',
                         "#{@props.mailbox.get 'label'}"
-
-                if progress and progress.get('firstImport')
-                    ThinProgress
-                        done: progress.get('done')
-                        total: progress.get('total')
 
                 if progress?.get('errors').length
                     span className: 'refresh-error', onClick: displayError,

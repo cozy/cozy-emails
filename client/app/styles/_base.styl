@@ -52,4 +52,22 @@ input
     position relative
     top -2px
     width 12px
-    margin-right 0.6em 
+    margin-right 0.6em
+
+.progress
+    position relative
+
+.progress-bar
+    background-color basecolor
+    background-image none
+    transition width 1s
+
+.progress-bar.actived::after
+    content " "
+    display block
+    width 100px
+    top 0px
+    height 100%
+    position absolute
+    animation slide 2s linear infinite
+    background-color basecolor
