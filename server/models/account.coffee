@@ -358,13 +358,10 @@ class Account extends cozydb.CozyModel
 
         , (err, {mailboxes, counts, totalUnread}) ->
             return callback err if err
-
-
-
             rawObject.totalUnread = totalUnread
             rawObject.mailboxes = mailboxes.map (row) ->
                 box = row.doc
-                id = box.id or row.id
+                id = box?.id or row.id
                 count = counts[id]
                 return clientBox =
                     id       : id
