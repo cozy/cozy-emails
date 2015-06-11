@@ -47,18 +47,14 @@ module.exports =
                     emit ['uid', boxid, uid], doc.flags
 
                     emit ['date', boxid, null, docDate], null
-                    emit ['subject', boxid, null, doc.normSubject], null
 
                     for xflag in ['\\Seen', '\\Flagged', '\\Answered']
 
                         xflag = '!' + xflag if -1 is doc.flags.indexOf(xflag)
 
                         emit ['date', boxid, xflag, docDate], null
-                        emit ['subject', boxid, xflag, doc.normSubject], null
                     if doc.attachments?.length > 0
                         emit ['date', boxid, '\\Attachments', docDate], null
-                        emit ['subject', boxid, '\\Attachments', \
-                                                        doc.normSubject], null
 
                     for sender in doc.from
                         if sender.name?

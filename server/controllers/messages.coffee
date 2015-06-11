@@ -68,7 +68,7 @@ module.exports.listByMailboxOptions = (req, res, next) ->
             return next new BadRequest "before & after should be a valid JS " +
                 "date.toISOString()"
 
-    else if sortField is 'subject' or sortField is 'from' or sortField is 'dest'
+    else if sortField is 'from' or sortField is 'dest'
         before = if before then decodeURIComponent(before) else ''
         after = if after then decodeURIComponent(after) else {}
         pageAfter = if pageAfter then decodeURIComponent pageAfter
@@ -105,7 +105,7 @@ module.exports.listByMailboxOptions = (req, res, next) ->
 
 # list messages from a mailbox
 # req.query possible
-# sort = [+/-][date/subject]
+# sort = [+/-][date]
 # flag in [seen, unseen, flagged, unflagged, answerred, unanswered]
 module.exports.listByMailbox = (req, res, next) ->
 
@@ -125,11 +125,9 @@ module.exports.listByMailbox = (req, res, next) ->
         messages = result.messages
         if messages.length is MSGBYPAGE
             last = messages[messages.length - 1]
-            if req.sortField is 'subject'
-                pageAfter = last.normSubject
             # for 'from' and 'dest', we use pageAfter as the number of records
             # to skip
-            else if req.sortField is 'from' or req.sortField is 'dest'
+            if req.sortField is 'from' or req.sortField is 'dest'
                 pageAfter = messages.length + (parseInt(req.pageAfter, 10) or 0)
             else
                 lastDate = last.date or new Date()
