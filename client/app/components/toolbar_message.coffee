@@ -77,6 +77,7 @@ module.exports = React.createClass
         ToolboxActions
             ref:            'toolboxActions'
             mailboxes:      @props.mailboxes
+            inConversation: @props.inConversation
             isSeen:         isSeen
             isFlagged:      isFlagged
             messageID:      @props.message.get 'id'

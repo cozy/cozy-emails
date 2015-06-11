@@ -290,6 +290,7 @@ module.exports = React.createClass
             message              : @props.message
             mailboxes            : @props.mailboxes
             selectedMailboxID    : @props.selectedMailboxID
+            inConversation       : @props.inConversation
             onReply              : @onReply
             onReplyAll           : @onReplyAll
             onForward            : @onForward
