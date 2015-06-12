@@ -75,6 +75,7 @@ module.exports = ContactLabel = React.createClass
                 LayoutActionCreator.hideModal()
             closeLabel  : t 'app cancel'
             actionLabel : t 'app confirm'
-            action      : ->
+            action      : =>
                 ContactActionCreator.createContact @props.contact
+                LayoutActionCreator.hideModal()
         LayoutActionCreator.displayModal modal
