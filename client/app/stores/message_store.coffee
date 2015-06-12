@@ -122,8 +122,9 @@ class MessageStore extends Store
             currentConversation in conversationIDs
                 next = self.getNextOrPrevious true
                 if next?
-                    self.setCurrentID next.messageID, next.conv
-
+                    setTimeout ->
+                        window.cozyMails.messageNavigate 'next', true
+                    , 1
 
     _getMixed = (target) ->
         if target.messageID
