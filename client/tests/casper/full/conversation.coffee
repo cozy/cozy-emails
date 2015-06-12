@@ -80,14 +80,11 @@ casper.test.begin 'Test conversation', (test) ->
         #messageID = '20141106092130.GF5642@mail.cozy.io'
         casper.cozy.selectMessage 'DoveCot', 'Test Folder', 'troll', (messageID) ->
             test.assertNotVisible '.conversation article:nth-of-type(1) .popup', 'Details hidden'
-            casper.click '.conversation article:nth-of-type(1) .details i.fa-caret-down'
-            casper.waitUntilVisible '.conversation article:nth-of-type(1) .popup', ->
+            casper.click '.conversation article.active .details i.fa-caret-down'
+            casper.waitUntilVisible '.conversation article.active .popup', ->
                 test.pass 'Details shown'
-                txt = casper.fetchText '.conversation article:nth-of-type(1) .popup'
-                txt = txt.replace(/\s/g, '')
-                test.assertEquals txt, 'FromMeme@cozytest.ccToYouyou@cozytest.ccDate2014-11-06T09:21:30.000ZSubjecttroll', 'Details value'
-                casper.click '.conversation article:nth-of-type(1) .details i.fa-caret-down'
-                casper.waitWhileVisible '.conversation article:nth-of-type(1) .popup', ->
+                casper.click '.conversation article.active .details i.fa-caret-down'
+                casper.waitWhileVisible '.conversation article.active .popup', ->
                     test.pass 'Details hidden'
 
     casper.run ->

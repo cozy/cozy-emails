@@ -194,11 +194,13 @@ module.exports = MessageItem = React.createClass
                 participants: from
                 onAdd: @addAddress
                 ref: 'from'
+                tooltip: false
             span null, separator
             Participants
                 participants: to
                 onAdd: @addAddress
                 ref: 'to'
+                tooltip: false
 
     addAddress: (address) ->
         ContactActionCreator.createContact address

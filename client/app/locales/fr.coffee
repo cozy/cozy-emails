@@ -417,10 +417,12 @@ module.exports =
       #
       "contact form"             : "Sélectionnez des contacts"
       "contact form placeholder" : "Nom"
+      "contact button label"     : "Ajouter au carnet d'adresse"
       "contact create success"   : "%{contact} a été ajouté(e) à vos contacts"
       "contact create error"     : "L'ajout à votre carnet d'adresses a
                                         échoué : {error}"
-      "message contact creation"    : "Voulez vous ajouter %{contact} à votre carnet d'adresse ?"
+      "message contact creation title": "Ajouter un contact"
+      "message contact creation"      : "Voulez vous ajouter %{contact} à votre carnet d'adresse ?"
 
       # GMail security
       "gmail security tile": "Sécurité Gmail"

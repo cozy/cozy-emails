@@ -134,7 +134,7 @@ exports.init = (casper) ->
             _doInit = ->
                 require('actions/layout_action_creator').drawerShow()
                 # ensure locale is english
-                #window.cozyMails.setLocale 'en', true
+                window.cozyMails.setLocale 'en', true
                 # hide toasts
                 #document.querySelector(".toasts-container").classList.add 'hidden'
                 # deactivate all plugins

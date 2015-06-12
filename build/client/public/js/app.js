@@ -2030,10 +2030,10 @@ module.exports = AccountConfigMailboxes = React.createClass({
   },
   propsToState: function(props) {
     var state;
-    state = props;
+    state = {};
     state.mailboxesFlat = {};
-    if (state.mailboxes.value !== '') {
-      state.mailboxes.value.map(function(mailbox, key) {
+    if (props.mailboxes.value !== '') {
+      props.mailboxes.value.map(function(mailbox, key) {
         var id;
         id = mailbox.get('id');
         state.mailboxesFlat[id] = {};
@@ -2046,15 +2046,15 @@ module.exports = AccountConfigMailboxes = React.createClass({
   },
   render: function() {
     var favorites, mailboxes;
-    favorites = this.state.favoriteMailboxes.value;
-    if (this.state.mailboxes.value !== '' && favorites !== '') {
-      mailboxes = this.state.mailboxes.value.map((function(_this) {
+    favorites = this.props.favoriteMailboxes.value;
+    if (this.props.mailboxes.value !== '' && favorites !== '') {
+      mailboxes = this.props.mailboxes.value.map((function(_this) {
         return function(mailbox, key) {
           var error, favorite;
           try {
             favorite = favorites.get(mailbox.get('id')) != null;
             return MailboxItem({
-              accountID: _this.state.id.value,
+              accountID: _this.props.id.value,
               mailbox: mailbox,
               favorite: favorite
             });
@@ -2143,7 +2143,7 @@ module.exports = AccountConfigMailboxes = React.createClass({
       return div({
         className: 'alert alert-warning'
       }, this.props.error.message);
-    } else if (Object.keys(this.state.errors).length !== 0) {
+    } else if (Object.keys(this.props.errors).length !== 0) {
       return div({
         className: 'alert alert-warning'
       }, t('account errors'));
@@ -2151,8 +2151,8 @@ module.exports = AccountConfigMailboxes = React.createClass({
   },
   renderMailboxChoice: function(labelText, box) {
     var errorClass;
-    if ((this.state.id != null) && this.state.mailboxes.value !== '') {
-      errorClass = this.state[box].value != null ? '' : 'has-error';
+    if ((this.props.id != null) && this.props.mailboxes.value !== '') {
+      errorClass = this.props[box].value != null ? '' : 'has-error';
       return div({
         className: "form-group " + box + " " + errorClass
       }, label({
@@ -2162,7 +2162,7 @@ module.exports = AccountConfigMailboxes = React.createClass({
       }, MailboxList({
         allowUndefined: true,
         mailboxes: this.state.mailboxesFlat,
-        selectedMailboxID: this.state[box].value,
+        selectedMailboxID: this.props[box].value,
         onChange: (function(_this) {
           return function(mailbox) {
             return _this.onMailboxChange(mailbox, box);
@@ -2172,15 +2172,8 @@ module.exports = AccountConfigMailboxes = React.createClass({
     }
   },
   onMailboxChange: function(mailbox, box) {
-    var newState;
-    this.state[box].requestChange(mailbox);
-    newState = {};
-    newState[box] = mailbox;
-    return this.setState(newState, (function(_this) {
-      return function() {
-        return _this.props.onSubmit();
-      };
-    })(this));
+    this.props[box].requestChange(mailbox);
+    return this.props.onSubmit();
   },
   onKeyDown: function(evt) {
     switch (evt.key) {
@@ -2195,7 +2188,7 @@ module.exports = AccountConfigMailboxes = React.createClass({
     }
     mailbox = {
       label: this.refs.newmailbox.getDOMNode().value.trim(),
-      accountID: this.state.id.value,
+      accountID: this.props.id.value,
       parentID: this.state.newMailboxParent
     };
     return AccountActionCreator.mailboxCreate(mailbox, (function(_this) {
@@ -3001,7 +2994,7 @@ module.exports = Application = React.createClass({
     previewSize = LayoutStore.getPreviewSize();
     alert = this.state.alertMessage;
     modal = this.state.modal;
-    layoutClasses = ['layout', "layout-" + layout, fullscreen ? "layout-preview-fullscreen" : void 0, "layout-preview-" + previewSize].join(' ');
+    layoutClasses = ['layout', "layout-" + disposition, fullscreen ? "layout-preview-fullscreen" : void 0, "layout-preview-" + previewSize].join(' ');
     return div({
       className: layoutClasses
     }, div({
@@ -3529,9 +3522,9 @@ module.exports = {
 });
 
 ;require.register("components/compose", function(exports, require, module) {
-var AccountPicker, Compose, ComposeActions, ComposeEditor, ComposeToolbox, FilePicker, FileUtils, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, Tooltips, a, button, classer, div, form, h3, i, input, label, li, section, span, textarea, ul, _ref, _ref1, _ref2;
+var AccountPicker, Compose, ComposeActions, ComposeEditor, ComposeToolbox, FilePicker, FileUtils, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, Tooltips, a, classer, div, form, h3, i, input, label, li, section, span, textarea, ul, _ref, _ref1, _ref2;
 
-_ref = React.DOM, div = _ref.div, section = _ref.section, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label, button = _ref.button;
+_ref = React.DOM, div = _ref.div, section = _ref.section, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label;
 
 _ref1 = React.DOM, span = _ref1.span, ul = _ref1.ul, li = _ref1.li, input = _ref1.input;
 
@@ -4570,33 +4563,36 @@ module.exports = ComposeToolbox = React.createClass({
 });
 
 ;require.register("components/contact_label", function(exports, require, module) {
-var AddressLabel, ContactActionCreator, ContactLabel, ContactStore, StoreWatchMixin, a, button, h3, header, i, li, messageUtils, p, section, span, ul, _ref;
+var AddressLabel, ContactActionCreator, ContactLabel, ContactStore, LayoutActionCreator, MessageUtils, a, button, h3, header, i, li, p, section, span, ul, _ref;
 
 _ref = React.DOM, section = _ref.section, header = _ref.header, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button;
 
-messageUtils = require('../utils/message_utils');
+MessageUtils = require('../utils/message_utils');
 
 ContactStore = require('../stores/contact_store');
 
-StoreWatchMixin = require('../mixins/store_watch_mixin');
-
 ContactActionCreator = require('../actions/contact_action_creator');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
 
 AddressLabel = require('./basic_components').AddressLabel;
 
 module.exports = ContactLabel = React.createClass({
-  mixins: [StoreWatchMixin([ContactStore])],
-  getStateFromStores: function() {
-    return {};
+  shouldComponentUpdate: function(nextProps, nextState) {
+    var should;
+    should = !(_.isEqual(nextProps, this.props));
+    return should;
   },
   render: function() {
-    var contactModel;
+    var contactId, contactModel;
     if (this.props.contact != null) {
       contactModel = ContactStore.getByAddress(this.props.contact.address);
       if (contactModel != null) {
+        contactId = contactModel.get('id');
         return a({
+          ref: 'contact',
           target: '_blank',
-          href: "/#apps/contacts/contact/" + (contactModel.get('id')),
+          href: "/#apps/contacts/contact/" + contactId,
           onClick: function(event) {
             return event.stopPropagation();
           }
@@ -4605,8 +4601,14 @@ module.exports = ContactLabel = React.createClass({
         }));
       } else {
         return span({
+          ref: 'contact',
           className: 'participant',
-          onClick: this.onContactClicked
+          onClick: (function(_this) {
+            return function(event) {
+              event.stopPropagation();
+              return _this.addContact();
+            };
+          })(this)
         }, AddressLabel({
           contact: this.props.contact
         }));
@@ -4615,15 +4617,45 @@ module.exports = ContactLabel = React.createClass({
       return span(null);
     }
   },
-  onContactClicked: function(event) {
-    var params;
-    params = {
-      contact: messageUtils.displayAddress(this.props.contact)
-    };
-    if (confirm(t('message contact creation', params))) {
-      ContactActionCreator.createContact(this.props.contact);
+  _initTooltip: function() {
+    var container, node, options;
+    if (this.props.tooltip && (this.refs.contact != null)) {
+      node = this.refs.contact.getDOMNode();
+      container = node.parentNode;
+      while (container.tagName !== 'ARTICLE') {
+        container = container.parentNode;
+      }
+      options = {
+        showOnClick: false,
+        container: container
+      };
+      return MessageUtils.tooltip(this.refs.contact.getDOMNode(), this.props.contact, this.addContact, options);
     }
-    return event.stopPropagation();
+  },
+  componentDidMount: function() {
+    return this._initTooltip();
+  },
+  componentDidUpdate: function() {
+    return this._initTooltip();
+  },
+  addContact: function() {
+    var modal, params;
+    params = {
+      contact: MessageUtils.displayAddress(this.props.contact)
+    };
+    modal = {
+      title: t('message contact creation title'),
+      subtitle: t('message contact creation', params),
+      closeModal: function() {
+        return LayoutActionCreator.hideModal();
+      },
+      closeLabel: t('app cancel'),
+      actionLabel: t('app confirm'),
+      action: function() {
+        return ContactActionCreator.createContact(this.props.contact);
+      }
+    };
+    return LayoutActionCreator.displayModal(modal);
   }
 });
 });
@@ -5412,8 +5444,7 @@ module.exports = MailsInput = React.createClass({
     });
   },
   componentDidMount: function() {
-    ContactStore.on('change', this._setStateFromStores);
-    return this.fixHeight();
+    return ContactStore.on('change', this._setStateFromStores);
   },
   componentWillUnmount: function() {
     return ContactStore.removeListener('change', this._setStateFromStores);
@@ -5421,14 +5452,11 @@ module.exports = MailsInput = React.createClass({
   _setStateFromStores: function() {
     return this.setState(this.getStateFromStores());
   },
-  componentDidUpdate: function() {
-    return this.fixHeight();
-  },
   shouldComponentUpdate: function(nextProps, nextState) {
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var cancelDragEvent, classLabel, className, current, knownContacts, listClass, onChange, renderTag, _ref1;
+    var cancelDragEvent, classLabel, className, current, knownContacts, listClass, onChange, onClick, placeholder, renderTag, _ref1;
     renderTag = (function(_this) {
       return function(address, idx) {
         var display, onDragEnd, onDragStart, remove;
@@ -5478,6 +5506,11 @@ module.exports = MailsInput = React.createClass({
       };
     })(this);
     knownContacts = this.state.known.map(renderTag);
+    onClick = (function(_this) {
+      return function() {
+        return _this.refs.contactInput.getDOMNode().focus();
+      };
+    })(this);
     onChange = (function(_this) {
       return function(event) {
         var known, value;
@@ -5515,8 +5548,14 @@ module.exports = MailsInput = React.createClass({
         }
       };
     })(this);
+    if (knownContacts.length > 0) {
+      placeholder = '';
+    } else {
+      placeholder = this.props.placeholder;
+    }
     return div({
       className: className,
+      onClick: onClick,
       onDrop: this.onDrop,
       onDragEnter: cancelDragEvent,
       onDragLeave: cancelDragEvent,
@@ -5540,7 +5579,7 @@ module.exports = MailsInput = React.createClass({
       rows: 1,
       value: this.state.unknown,
       onChange: onChange,
-      placeholder: this.props.placeholder,
+      placeholder: placeholder,
       'autoComplete': 'off',
       'spellCheck': 'off'
     }), this.state.contacts != null ? ul({
@@ -5704,13 +5743,6 @@ module.exports = MailsInput = React.createClass({
         return query = _this.refs.contactInput.getDOMNode().focus();
       };
     })(this), 200);
-  },
-  fixHeight: function() {
-    var input;
-    input = this.refs.contactInput.getDOMNode();
-    if (input.scrollHeight > input.clientHeight) {
-      return input.style.height = input.scrollHeight + "px";
-    }
   },
   onDrop: function(event) {
     var address, exists, known, name, _ref1;
@@ -6865,11 +6897,13 @@ MessageItem = React.createClass({
     return span(null, Participants({
       participants: from,
       onAdd: this.addAddress,
-      ref: 'from'
+      ref: 'from',
+      tooltip: false
     }), span(null, separator), Participants({
       participants: to,
       onAdd: this.addAddress,
-      ref: 'to'
+      ref: 'to',
+      tooltip: false
     }));
   },
   addAddress: function(address) {
@@ -6879,7 +6913,7 @@ MessageItem = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var Compose, ComposeActions, ContactActionCreator, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, Participants, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, header, i, iframe, li, p, pre, span, ul, _ref, _ref1;
+var Compose, ComposeActions, ContactActionCreator, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, header, i, iframe, li, p, pre, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe;
 
@@ -6890,8 +6924,6 @@ MessageFooter = require("./message_footer");
 ToolbarMessage = require('./toolbar_message');
 
 Compose = require('./compose');
-
-Participants = require('./participant');
 
 _ref1 = require('../constants/app_constants'), ComposeActions = _ref1.ComposeActions, MessageFlags = _ref1.MessageFlags;
 
@@ -7139,27 +7171,12 @@ module.exports = React.createClass({
       displayHTML: this.displayHTML
     }) : void 0, this.props.active ? footer(null, this.renderFooter(), this.renderToolbox(false)) : void 0);
   },
-  getParticipants: function(message) {
-    var from, to;
-    from = message.get('from');
-    to = message.get('to').concat(message.get('cc'));
-    return span(null, Participants({
-      participants: from,
-      onAdd: this.addAddress,
-      tooltip: true,
-      ref: 'from'
-    }), span(null, ', '), Participants({
-      participants: to,
-      onAdd: this.addAddress,
-      tooltip: true,
-      ref: 'to'
-    }));
-  },
   renderHeaders: function() {
     return MessageHeader({
       message: this.props.message,
       isDraft: this.state.prepared.isDraft,
       isDeleted: this.state.prepared.isDeleted,
+      active: this.props.active,
       ref: 'header'
     });
   },
@@ -7590,6 +7607,11 @@ module.exports = React.createClass({
     isDeleted: React.PropTypes.bool
   },
   mixins: [ParticipantMixin],
+  shouldComponentUpdate: function(nextProps, nextState) {
+    var should;
+    should = !(_.isEqual(nextProps, this.props));
+    return should;
+  },
   render: function() {
     var avatar, _ref1;
     avatar = messageUtils.getAvatar(this.props.message);
@@ -7602,7 +7624,7 @@ module.exports = React.createClass({
       src: avatar
     })) : void 0, div({
       className: 'infos'
-    }, this.renderAddress('from'), this.renderAddress('to'), this.renderAddress('cc'), div({
+    }, this.renderAddress('from'), this.props.active ? this.renderAddress('to') : void 0, this.props.active ? this.renderAddress('cc') : void 0, this.props.active ? div({
       className: 'metas indicators'
     }, this.props.message.get('attachments').length ? PopupMessageAttachments({
       message: this.props.message
@@ -7612,11 +7634,11 @@ module.exports = React.createClass({
       className: 'fa fa-edit'
     }) : void 0, this.props.isDeleted ? i({
       className: 'fa fa-trash'
-    }) : void 0), div({
+    }) : void 0) : void 0, this.props.active ? div({
       className: 'metas date'
-    }, messageUtils.formatDate(this.props.message.get('createdAt'))), PopupMessageDetails({
+    }, messageUtils.formatDate(this.props.message.get('createdAt'))) : void 0, this.props.active ? PopupMessageDetails({
       message: this.props.message
-    })));
+    }) : void 0));
   },
   renderAddress: function(field) {
     var users;
@@ -7968,13 +7990,11 @@ module.exports = Application = React.createClass({
 });
 
 ;require.register("components/participant", function(exports, require, module) {
-var ContactStore, MessageUtils, Participant, Participants, a, i, span, _ref;
+var MessageUtils, Participant, Participants, a, i, span, _ref;
 
 _ref = React.DOM, span = _ref.span, a = _ref.a, i = _ref.i;
 
 MessageUtils = require('../utils/message_utils');
-
-ContactStore = require('../stores/contact_store');
 
 Participant = React.createClass({
   displayName: 'Participant',
@@ -7991,105 +8011,16 @@ Participant = React.createClass({
       }, MessageUtils.displayAddress(this.props.address));
     }
   },
-  tooltip: function() {
-    var addTooltip, delay, node, onAdd, removeTooltip;
-    if (this.refs.participant != null) {
-      node = this.refs.participant.getDOMNode();
-      delay = null;
-      onAdd = (function(_this) {
-        return function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          return _this.props.onAdd(_this.props.address);
-        };
-      })(this);
-      addTooltip = (function(_this) {
-        return function(e) {
-          var add, addNode, avatar, contact, image, mask, options, rect, template, tooltipNode;
-          if (node.dataset.tooltip) {
-            return;
-          }
-          node.dataset.tooltip = true;
-          contact = ContactStore.getByAddress(_this.props.address.address);
-          avatar = contact != null ? contact.get('avatar') : void 0;
-          if (avatar != null) {
-            image = "<img class='avatar' src=" + avatar + ">";
-          } else {
-            image = "<i class='avatar fa fa-user' />";
-          }
-          if (contact != null) {
-            image = "<a href=\"/#apps/contacts/contact/" + (contact.get('id')) + "\" target=\"blank\">\n    " + image + "\n</a>";
-          }
-          if (_this.props.onAdd != null) {
-            add = "<a class='address-add'>\n    <i class='fa fa-plus' />\n</a>";
-          } else {
-            add = '';
-          }
-          template = "<div class=\"tooltip\" role=\"tooltip\">\n    <div class=\"tooltip-arrow\"></div>\n    <div>\n        " + image + "\n        " + _this.props.address.address + "\n        " + add + "\n    </div>\n</div>'";
-          options = {
-            template: template,
-            trigger: 'manual',
-            container: "[data-reactid='" + node.dataset.reactid + "']"
-          };
-          jQuery(node).tooltip(options).tooltip('show');
-          tooltipNode = jQuery(node).data('bs.tooltip').tip()[0];
-          if (parseInt(tooltipNode.style.left, 10) < 0) {
-            tooltipNode.style.left = 0;
-          }
-          rect = tooltipNode.getBoundingClientRect();
-          mask = document.createElement('div');
-          mask.classList.add('tooltip-mask');
-          mask.style.top = (rect.top - 2) + 'px';
-          mask.style.left = (rect.left - 2) + 'px';
-          mask.style.height = (rect.height + 16) + 'px';
-          mask.style.width = (rect.width + 4) + 'px';
-          document.body.appendChild(mask);
-          mask.addEventListener('mouseout', function(e) {
-            var _ref1, _ref2;
-            if (!((rect.left < (_ref1 = e.pageX) && _ref1 < rect.right)) || !((rect.top < (_ref2 = e.pageY) && _ref2 < rect.bottom))) {
-              mask.parentNode.removeChild(mask);
-              return removeTooltip();
-            }
-          });
-          if (_this.props.onAdd != null) {
-            addNode = tooltipNode.querySelector('.address-add');
-            addNode.addEventListener('mouseover', function() {});
-            return addNode.addEventListener('click', onAdd);
-          }
-        };
-      })(this);
-      removeTooltip = function() {
-        var addNode;
-        addNode = node.querySelector('.address-add');
-        if (addNode != null) {
-          addNode.removeEventListener('click', onAdd);
-        }
-        delete node.dataset.tooltip;
-        return jQuery(node).tooltip('destroy');
-      };
-      node.addEventListener('mouseover', function() {
-        return delay = setTimeout(function() {
-          return addTooltip();
-        }, 5000);
-      });
-      node.addEventListener('mouseout', function() {
-        return clearTimeout(delay);
-      });
-      return node.addEventListener('click', function(event) {
-        event.stopPropagation();
-        return addTooltip();
-      });
+  _initTooltip: function() {
+    if (this.props.tooltip && (this.refs.participant != null)) {
+      return MessageUtils.tooltip(this.refs.participant.getDOMNode(), this.props.address, this.props.onAdd);
     }
   },
   componentDidMount: function() {
-    if (this.props.tooltip) {
-      return this.tooltip();
-    }
+    return this._initTooltip();
   },
   componentDidUpdate: function() {
-    if (this.props.tooltip) {
-      return this.tooltip();
-    }
+    return this._initTooltip();
   }
 });
 
@@ -8198,7 +8129,7 @@ _ref = React.DOM, div = _ref.div, table = _ref.table, tbody = _ref.tbody, tr = _
 ParticipantMixin = require('../mixins/participant_mixin');
 
 module.exports = React.createClass({
-  displayName: 'MessageDetailsPopup',
+  displayName: 'PopupMessageDetails',
   mixins: [ParticipantMixin, OnClickOutside],
   getInitialState: function() {
     return {
@@ -8255,7 +8186,7 @@ module.exports = React.createClass({
     }, i({
       className: 'fa fa-caret-down',
       onClick: this.toggleDetails
-    }), div({
+    }), this.state.showDetails ? div({
       className: 'popup',
       'aria-hidden': !this.state.showDetails
     }, table(null, tbody(null, row('from', this.formatUsers(from), 'headers from'), to.length ? row('to', this.formatUsers(to[0]), 'headers to', to.length) : void 0, (function() {
@@ -8280,7 +8211,7 @@ module.exports = React.createClass({
         }
         return _results;
       }
-    }).call(this), reply != null ? row('reply', this.formatUsers(reply), 'headers reply-to') : void 0, row('created', this.props.message.get('createdAt'), 'headers date'), row('subject', this.props.message.get('subject'), 'headers subject')))));
+    }).call(this), reply != null ? row('reply', this.formatUsers(reply), 'headers reply-to') : void 0, row('created', this.props.message.get('createdAt'), 'headers date'), row('subject', this.props.message.get('subject'), 'headers subject')))) : void 0);
   }
 });
 });
@@ -11349,8 +11280,10 @@ module.exports = {
   "notif complete": "Importation of account %{account} complete.",
   "contact form": "Select contacts",
   "contact form placeholder": "contact name",
+  "contact button label": "Add to addressbook",
   "contact create success": "%{contact} has been added to your contacts",
   "contact create error": "Error adding to your contacts : {error}",
+  "message contact creation title": "Add a contact",
   "message contact creation": "Do you want to create a contact for %{contact}?",
   "gmail security tile": "About Gmail security",
   "gmail security body": "Gmail considers connection using username and password not safe.\nPlease click on the following link, make sure\nyou are connected with your %{login} account and enable access for\nless secure apps.",
@@ -11716,8 +11649,10 @@ module.exports = {
   "notif complete": "Importation du compte %{account} finie.",
   "contact form": "Sélectionnez des contacts",
   "contact form placeholder": "Nom",
+  "contact button label": "Ajouter au carnet d'adresse",
   "contact create success": "%{contact} a été ajouté(e) à vos contacts",
   "contact create error": "L'ajout à votre carnet d'adresses a échoué : {error}",
+  "message contact creation title": "Ajouter un contact",
   "message contact creation": "Voulez vous ajouter %{contact} à votre carnet d'adresse ?",
   "gmail security tile": "Sécurité Gmail",
   "gmail security body": "Gmail considère les connexions par nom d'utilisateur et mot de passe\ncomme non sécurisées. Veuillez cliquer sur le lien ci-dessous, assurez-vous\nd'être connecté avec le compte %{login} et activez l'accès\npour les applications moins sécurisées.",
@@ -11783,7 +11718,8 @@ module.exports = {
       for (_i = 0, _len = users.length; _i < _len; _i++) {
         user = users[_i];
         items.push(ContactLabel({
-          contact: user
+          contact: user,
+          tooltip: true
         }));
         if (user !== _.last(users)) {
           items.push(", ");
@@ -11792,7 +11728,8 @@ module.exports = {
       return items;
     } else {
       return ContactLabel({
-        contact: users
+        contact: users,
+        tooltip: true
       });
     }
   }
@@ -14016,7 +13953,7 @@ module.exports = MessageUtils = {
           html = markdown.toHTML(text);
         } catch (_error) {
           e = _error;
-          console.log("Error converting message to Markdown: " + e);
+          console.error("Error converting message to Markdown: " + e);
           html = "<div class='text'>" + text + "</div>";
         }
       }
@@ -14255,6 +14192,98 @@ module.exports = MessageUtils = {
       subject = "" + replyPrefix + subject;
     }
     return subject;
+  },
+  tooltip: function(node, address, onAdd, options) {
+    var addTooltip, doAdd, removeTooltip, timeout;
+    if (options == null) {
+      options = {};
+    }
+    timeout = null;
+    doAdd = function(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      return onAdd(address);
+    };
+    addTooltip = function(e) {
+      var add, addNode, avatar, contact, image, mask, rect, template, tooltipNode;
+      if (node.dataset.tooltip) {
+        return;
+      }
+      node.dataset.tooltip = true;
+      contact = ContactStore.getByAddress(address.address);
+      avatar = contact != null ? contact.get('avatar') : void 0;
+      add = '';
+      image = '';
+      if (contact != null) {
+        if (avatar != null) {
+          image = "<img class='avatar' src=" + avatar + ">";
+        } else {
+          image = "<div class='no-avatar'>?</div>";
+        }
+        image = "<div class=\"tooltip-avatar\">\n  <a href=\"/#apps/contacts/contact/" + (contact.get('id')) + "\" target=\"blank\">\n    " + image + "\n  </a>\n</div>";
+      } else {
+        if (onAdd != null) {
+          add = "<p class=\"tooltip-toolbar\">\n  <button class=\"btn btn-cozy btn-add\" type=\"button\">\n  " + (t('contact button label')) + "\n  </button>\n</p>";
+        }
+      }
+      template = "<div class=\"tooltip\" role=\"tooltip\">\n    <div class=\"tooltip-arrow\"></div>\n    <div class=\"tooltip-content\">\n        " + image + "\n        <div>\n        " + address.name + "\n        " + (address.name ? '<br>' : '') + "\n        &lt;" + address.address + "&gt;\n        </div>\n        " + add + "\n    </div>\n</div>'";
+      options = {
+        title: address.address,
+        template: template,
+        trigger: 'manual',
+        placement: 'auto top',
+        container: options.container || node.parentNode
+      };
+      jQuery(node).tooltip(options).tooltip('show');
+      tooltipNode = jQuery(node).data('bs.tooltip').tip()[0];
+      if (parseInt(tooltipNode.style.left, 10) < 0) {
+        tooltipNode.style.left = 0;
+      }
+      rect = tooltipNode.getBoundingClientRect();
+      mask = document.createElement('div');
+      mask.classList.add('tooltip-mask');
+      mask.style.top = (rect.top - 8) + 'px';
+      mask.style.left = (rect.left - 8) + 'px';
+      mask.style.height = (rect.height + 32) + 'px';
+      mask.style.width = (rect.width + 16) + 'px';
+      document.body.appendChild(mask);
+      mask.addEventListener('mouseout', function(e) {
+        var _ref, _ref1;
+        if (!((rect.left < (_ref = e.pageX) && _ref < rect.right)) || !((rect.top < (_ref1 = e.pageY) && _ref1 < rect.bottom))) {
+          mask.parentNode.removeChild(mask);
+          return removeTooltip();
+        }
+      });
+      if (onAdd != null) {
+        addNode = tooltipNode.querySelector('.btn-add');
+        if (addNode != null) {
+          return addNode.addEventListener('click', doAdd);
+        }
+      }
+    };
+    removeTooltip = function() {
+      var addNode;
+      addNode = node.querySelector('.btn-add');
+      if (addNode != null) {
+        addNode.removeEventListener('click', doAdd);
+      }
+      delete node.dataset.tooltip;
+      return jQuery(node).tooltip('destroy');
+    };
+    node.addEventListener('mouseover', function() {
+      return timeout = setTimeout(function() {
+        return addTooltip();
+      }, options.delay || 1000);
+    });
+    node.addEventListener('mouseout', function() {
+      return clearTimeout(timeout);
+    });
+    if (options.showOnClick) {
+      return node.addEventListener('click', function(event) {
+        event.stopPropagation();
+        return addTooltip();
+      });
+    }
   }
 };
 });
