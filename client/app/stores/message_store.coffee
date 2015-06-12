@@ -300,6 +300,7 @@ class MessageStore extends Store
             trashBoxID = account?.get? 'trashMailbox'
             _addInFlight {type: 'trash', trashBoxID, messages, ref}
             _fixCurrentMessage target
+            @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
             _undoable[ref] =_removeInFlight ref
