@@ -227,9 +227,20 @@ module.exports.send = (req, res, next) ->
     message.conversationID ?= uuid.v4()
 
     previousUID = message.mailboxIDs?[account.draftMailbox]
+    isFwdAttachment = message.attachments.some (attachment) ->
+        attachment.url and not req.message
 
     steps = []
 
+    if isFwdAttachment
+        steps.push (cb) ->
+            log.debug "fetching forwarded original"
+            id = message.inReplyTo
+            Message.find id, (err, found) ->
+                return cb err if err
+                return cb new Error "Not Found Fwd #{id}" unless found
+                req.message = found
+                cb null
 
     steps.push (cb) ->
         log.debug "gathering attachments"
@@ -333,6 +344,20 @@ module.exports.send = (req, res, next) ->
             return cb err if err
             jdbMessage = updated
             cb null
+
+    # only when creating the draft / sent of a forwarded message
+    # with attachment. req.message is the forwarded one
+    if isFwdAttachment
+        steps.push (cb) ->
+            log.debug "send#linking"
+            binary = {}
+            for attachment in message.attachments
+                filename = attachment.generatedFileName
+                if filename of req.message.binary
+                    binary[filename] = req.message.binary[filename]
+
+            jdbMessage.updateAttributes {binary}, cb
+
 
     steps.push (cb) ->
         log.debug "send#attaching"
