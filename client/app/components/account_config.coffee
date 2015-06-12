@@ -159,7 +159,15 @@ module.exports = React.createClass
             errors: @state.errors
             onSubmit: @onSubmit
 
-        options[field] = @linkState field for field in @_mailboxesFields
+        # /!\ we cannot use @linkState here because we need to be able
+        # to call a method after state has been updated
+        for field in @_mailboxesFields
+            options[field] =
+                value: @state[field]
+                requestChange: (val, cb) =>
+                    state = {}
+                    state[field] = val
+                    @setState state, cb
 
         return options
 
