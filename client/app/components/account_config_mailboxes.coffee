@@ -170,8 +170,8 @@ module.exports = AccountConfigMailboxes = React.createClass
 
 
     onMailboxChange: (mailbox, box) ->
-        @props[box].requestChange mailbox
-        @props.onSubmit()
+        @props[box].requestChange mailbox, =>
+            @props.onSubmit()
 
 
     # Typing enter runs the mailbox creation process.
