@@ -47,6 +47,7 @@ class MessageStore extends Store
 
     _inFlightByRef = {}
     _inFlightByMessageID = {}
+    _undoable = {}
 
     _addInFlight = (request) ->
         _inFlightByRef[request.ref] = request
@@ -62,6 +63,8 @@ class MessageStore extends Store
             id = message.get('id')
             requests = _inFlightByMessageID[id]
             _inFlightByMessageID[id] = _.without requests, request
+
+        return request
 
     _transformMessageWithRequest = (message, request) ->
         switch request.type
@@ -144,9 +147,11 @@ class MessageStore extends Store
     inMailbox = (mailboxID) -> (message) ->
         mailboxID of message.get 'mailboxIDs'
 
+    notInMailbox = (mailboxID) -> (message) ->
+        not (mailboxID of message.get 'mailboxIDs')
 
-    inAccount = (accountID) -> (message) ->
-        accountID is message.get 'accountID'
+    isntAccount = (accountID) -> (message) ->
+        accountID isnt message.get 'accountID'
 
     dedupConversation = () ->
         conversationIDs = []
@@ -284,7 +289,7 @@ class MessageStore extends Store
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
             AppDispatcher.waitFor [AccountStore.dispatchToken]
-            _messages = _messages.filterNot inAccount(accountID)
+            _messages = _messages.filter(isntAccount(accountID)).toOrderedMap()
             @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_REQUEST, ({target, ref}) ->
@@ -297,7 +302,7 @@ class MessageStore extends Store
             _fixCurrentMessage target
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
-            _removeInFlight ref
+            _undoable[ref] =_removeInFlight ref
             for message in updated
                 if message._deleted
                     _messages = _messages.remove message.id
@@ -334,13 +339,16 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, updated, ref}) ->
-            _removeInFlight ref
+            _undoable[ref] =_removeInFlight ref
             onReceiveRawMessage message for message in updated
             @emit 'change'
 
         handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, ref}) ->
             _removeInFlight ref
             @emit 'change'
+
+        handle ActionTypes.MESSAGE_UNDO_TIMEOUT, ({ref}) ->
+            delete _undoable[ref]
 
         handle ActionTypes.MESSAGE_FETCH_REQUEST, ({mailboxID}) ->
             # There may be more than one concurrent fetching request
@@ -417,7 +425,7 @@ class MessageStore extends Store
             @emit 'change'
 
         handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
-            _messages = _messages.filterNot inMailbox(mailboxID)
+            _messages = _messages.filter(notInMailbox(mailboxID)).toOrderedMap()
             @emit 'change'
 
 
@@ -556,6 +564,12 @@ class MessageStore extends Store
 
     isFetching: ->
         return _fetching > 0
+
+    isUndoable: (ref) ->
+        _undoable[ref]?
+
+    getUndoableRequest: (ref) ->
+        _undoable[ref]
 
 module.exports = self = new MessageStore()
 

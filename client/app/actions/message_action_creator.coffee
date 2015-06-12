@@ -46,17 +46,17 @@ module.exports = MessageActionCreator =
     recover: (target, ref) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_RECOVER_REQUEST
-            value: {ref, op, flag, flagAction}
+            value: {ref}
 
         XHRUtils.batchFetch target, (err, messages) ->
             if err
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_RECOVER_FAILURE
-                    value: {ref, op, flag, flagAction}
+                    value: {ref}
             else
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_RECOVER_SUCCESS
-                    value: {ref, op, flag, flagAction}
+                    value: {ref}
 
     refreshMailbox: (mailboxID) ->
         unless AccountStore.isMailboxRefreshing(mailboxID)
@@ -129,6 +129,7 @@ module.exports = MessageActionCreator =
                     type: ActionTypes.MESSAGE_MOVE_SUCCESS
                     value: {target, ref, updated}
 
+            callback error, updated
 
     mark: (target, flagAction, callback) ->
         ref = refCounter++
@@ -171,22 +172,55 @@ module.exports = MessageActionCreator =
                     type: ActionTypes.MESSAGE_FLAGS_SUCCESS
                     value: {target, ref, updated, op, flag, flagAction}
 
-    undo: ->
+    undo: (ref) ->
 
-        lastBatch = MessageStore.getPrevAction()
-        if lastBatch
-            done = 0
-            for action in lastBatch.actions
-                options = {messageID: action.id, undeleting: true}
-                done++
-                @move options, action.to, action.from, (err) ->
-                    if err
-                        LAC.notify t('undo ko')
-                    else if --done is 0
-                        LAC.notify t('undo ok'),
-                            autoclose: true
-        else
-            LAC.notify t('undo unavailable')
+        request = MessageStore.getUndoableRequest ref
+        {messages, type, from, to, target, trashBoxID} = request
+        reverseAction = []
+
+        oldto = if type is 'move' then to else trashBoxID
+        bydest = {}
+        # messages are the old messages
+        messages.forEach (message) ->
+            dest = (boxid for boxid, uid of message.get('mailboxIDs'))
+            destString = dest.sort().join(',')
+            bydest[destString] ?= {to: dest, from: oldto, messageIDs: []}
+            bydest[destString].messageIDs.push message.get('id')
+
+        console.log "UNDO ACTIONS", bydest
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_UNDO_START
+            value: {ref}
+
+        _loopSeries bydest, (request, dest, next) ->
+            {to, from, messageIDs} = request
+            target = {messageIDs, silent: true}
+            MessageActionCreator.move target, from, to, next
+        , (error) ->
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_UNDO_FAILURE
+                    value: {ref}
+
+                # we dont know if some succeeded or not,
+                # in doubt, recover the changed to messages to sync with
+                # server
+                @recover target, ref
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_UNDO_SUCCESS
+                    value: {ref}
+
+
+_loopSeries = (obj, iterator, done) ->
+    keys = Object.keys(obj)
+    i = 0
+    do step = ->
+        key = keys[i]
+        iterator obj[key], key, (err) ->
+            return done err if err
+            return done null if ++i is keys.length
+            step()
 
 # circular, import after
 LAC = require './layout_action_creator'

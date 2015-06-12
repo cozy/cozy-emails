@@ -2,6 +2,11 @@ Store = require '../libs/flux/store/store'
 
 {ActionTypes, Dispositions} = require '../constants/app_constants'
 
+MessageActionCreator = null
+getMessageActionCreator = ->
+    MessageActionCreator ?= require '../actions/message_action_creator'
+    return MessageActionCreator
+
 class LayoutStore extends Store
 
     ###
@@ -131,7 +136,7 @@ class LayoutStore extends Store
 
         makeUndoAction = (ref) ->
             label: 'undo'
-            onClick: -> LayoutStoreInstance.undo ref
+            onClick: -> getMessageActionCreator().undo ref
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, ref, updated}) ->
             @_showNotification
@@ -146,10 +151,11 @@ class LayoutStore extends Store
                 autoclose: true
 
         handle ActionTypes.MESSAGE_MOVE_SUCCESS, ({target, ref, updated}) ->
-            @_showNotification
-                message: makeMessage target, ref, 'move ok'
-                actions: [makeUndoAction ref]
-                autoclose: true
+            unless target.silent
+                @_showNotification
+                    message: makeMessage target, ref, 'move ok'
+                    actions: [makeUndoAction ref]
+                    autoclose: true
 
         handle ActionTypes.MESSAGE_MOVE_FAILURE, ({target, ref, error}) ->
             @_showNotification
@@ -158,7 +164,7 @@ class LayoutStore extends Store
                 autoclose: true
 
         # dont display a notification for MESSAGE_FLAG_SUCCESS
-        handle ActionTypes.MESSAGE_FLAG_FAILURE, ({target, ref, error}) ->
+        handle ActionTypes.MESSAGE_FLAGS_FAILURE, ({target, ref, error}) ->
             @_showNotification
                 message: makeMessage target, ref, 'flag ko', error
                 errors: [error]
