@@ -405,9 +405,11 @@ module.exports =
       # Contacts
       "contact form"             : "Select contacts"
       "contact form placeholder" : "contact name"
+      "contact button label"     : "Add to addressbook"
       "contact create success"   : "%{contact} has been added to your contacts"
       "contact create error"     : "Error adding to your contacts : {error}"
-      "message contact creation"    : "Do you want to create a contact for %{contact}?"
+      "message contact creation title": "Add a contact"
+      "message contact creation"      : "Do you want to create a contact for %{contact}?"
 
       # GMail security
       "gmail security tile": "About Gmail security"

@@ -167,18 +167,36 @@
     color white
     font-size 1rem
     border-radius .25rem
-    text-align center
+    text-align left
     white-space initial
 
+    .tooltip-content
+        padding .5em
+    .tooltip-avatar
+        float: left
+        padding-bottom: .5em
+    .tooltip-avatar + div
+        padding-left: 5em
     a.address-add
         display inline
     .avatar
         color #aaa
-        font-size 2em
-        border 1px solid #aaa
-        width 1em
-        height 1em
         text-align center
+        border-radius 50%
+        padding .5em .5em 1em .5em
+    .no-avatar
+        height 3em
+        width 3em
+        padding 1em
+        text-align center
+        border-radius 50%
+        font-weight bold
+        color white
+        background-color basecolor
+    .tooltip-toolbar
+        padding .5em
+        color: white
+        text-align right
 
 .tooltip.top
     padding .25rem .5rem

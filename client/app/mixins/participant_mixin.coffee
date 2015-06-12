@@ -14,11 +14,13 @@ module.exports =
         if _.isArray users
             items = []
             for user in users
-               items.push ContactLabel
+                items.push ContactLabel
                     contact: user
+                    tooltip: true
 
-               items.push ", " if user isnt _.last users
+                items.push ", " if user isnt _.last users
             return items
         else
             return ContactLabel
                 contact: users
+                tooltip: true
