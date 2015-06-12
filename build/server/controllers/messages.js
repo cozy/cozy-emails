@@ -100,7 +100,7 @@ module.exports.listByMailboxOptions = function(req, res, next) {
     if (new Date(before).toISOString() !== before || new Date(after).toISOString() !== after) {
       return next(new BadRequest("before & after should be a valid JS " + "date.toISOString()"));
     }
-  } else if (sortField === 'subject' || sortField === 'from' || sortField === 'dest') {
+  } else if (sortField === 'from' || sortField === 'dest') {
     before = before ? decodeURIComponent(before) : '';
     after = after ? decodeURIComponent(after) : {};
     pageAfter = pageAfter ? decodeURIComponent(pageAfter) : void 0;
@@ -153,9 +153,7 @@ module.exports.listByMailbox = function(req, res, next) {
     messages = result.messages;
     if (messages.length === MSGBYPAGE) {
       last = messages[messages.length - 1];
-      if (req.sortField === 'subject') {
-        pageAfter = last.normSubject;
-      } else if (req.sortField === 'from' || req.sortField === 'dest') {
+      if (req.sortField === 'from' || req.sortField === 'dest') {
         pageAfter = messages.length + (parseInt(req.pageAfter, 10) || 0);
       } else {
         lastDate = last.date || new Date();
@@ -239,7 +237,7 @@ contentToBuffer = function(req, attachment, callback) {
 };
 
 module.exports.send = function(req, res, next) {
-  var account, destination, draftBox, files, isDraft, jdbMessage, message, previousUID, ref1, sentBox, steps, uidInDest;
+  var account, destination, draftBox, files, isDraft, isFwdAttachment, jdbMessage, message, previousUID, ref1, sentBox, steps, uidInDest;
   log.debug("send");
   message = req.body;
   account = req.account;
@@ -259,7 +257,27 @@ module.exports.send = function(req, res, next) {
     message.conversationID = uuid.v4();
   }
   previousUID = (ref1 = message.mailboxIDs) != null ? ref1[account.draftMailbox] : void 0;
+  isFwdAttachment = message.attachments.some(function(attachment) {
+    return attachment.url && !req.message;
+  });
   steps = [];
+  if (isFwdAttachment) {
+    steps.push(function(cb) {
+      var id;
+      log.debug("fetching forwarded original");
+      id = message.inReplyTo;
+      return Message.find(id, function(err, found) {
+        if (err) {
+          return cb(err);
+        }
+        if (!found) {
+          return cb(new Error("Not Found Fwd " + id));
+        }
+        req.message = found;
+        return cb(null);
+      });
+    });
+  }
   steps.push(function(cb) {
     log.debug("gathering attachments");
     return async.mapSeries(message.attachments, function(attachment, cbMap) {
@@ -386,6 +404,24 @@ module.exports.send = function(req, res, next) {
       return cb(null);
     });
   });
+  if (isFwdAttachment) {
+    steps.push(function(cb) {
+      var attachment, binary, filename, i, len, ref2;
+      log.debug("send#linking");
+      binary = {};
+      ref2 = message.attachments;
+      for (i = 0, len = ref2.length; i < len; i++) {
+        attachment = ref2[i];
+        filename = attachment.generatedFileName;
+        if (filename in req.message.binary) {
+          binary[filename] = req.message.binary[filename];
+        }
+      }
+      return jdbMessage.updateAttributes({
+        binary: binary
+      }, cb);
+    });
+  }
   steps.push(function(cb) {
     log.debug("send#attaching");
     return async.eachSeries(Object.keys(files), function(name, cbLoop) {

@@ -111,6 +111,15 @@ Account = (function(superClass) {
             return cbLoop(null);
           });
         }, cb);
+      }, function(cb) {
+        return async.eachSeries(allAccounts, function(account, cbLoop) {
+          return account.applyPatchConversation(function(err) {
+            if (err) {
+              log.error(err);
+            }
+            return cbLoop(null);
+          });
+        }, cb);
       }
     ], function(err) {
       var options;
@@ -279,6 +288,67 @@ Account = (function(superClass) {
     })(this));
   };
 
+  Account.prototype.applyPatchConversation = function(callback) {
+    var status;
+    log.debug("applyPatchConversation");
+    status = {
+      skip: 0
+    };
+    return async.whilst((function() {
+      return !status.complete;
+    }), (function(_this) {
+      return function(cb) {
+        return _this.applyPatchConversationStep(status, cb);
+      };
+    })(this), callback);
+  };
+
+  Account.prototype.applyPatchConversationStep = function(status, next) {
+    return Message.rawRequest('conversationPatching', {
+      reduce: true,
+      group_level: 2,
+      startkey: [this.id],
+      endkey: [this.id, {}],
+      limit: 1000,
+      skip: status.skip
+    }, (function(_this) {
+      return function(err, rows) {
+        var problems;
+        if (err) {
+          return next(err);
+        }
+        if (rows.length === 0) {
+          status.complete = true;
+          return next(null);
+        }
+        problems = rows.filter(function(row) {
+          return Boolean(row.value);
+        }).map(function(row) {
+          return row.key;
+        });
+        log.debug("conversationPatchingStep", status.skip, rows.length, problems.length);
+        if (problems.length === 0) {
+          status.skip += 1000;
+          return next(null);
+        } else {
+          return async.eachSeries(problems, _this.patchConversationOne, next);
+        }
+      };
+    })(this));
+  };
+
+  Account.prototype.patchConversationOne = function(key, callback) {
+    return Message.rawRequest('conversationPatching', {
+      reduce: false,
+      key: key
+    }, function(err, rows) {
+      if (err) {
+        return callback(err);
+      }
+      return Message.pickConversationID(rows, callback);
+    });
+  };
+
   Account.prototype.testConnections = function(callback) {
     if (this.isTest()) {
       return callback(null);
@@ -387,7 +457,7 @@ Account = (function(superClass) {
       rawObject.mailboxes = mailboxes.map(function(row) {
         var box, clientBox, count, id;
         box = row.doc;
-        id = box.id || row.id;
+        id = (box != null ? box.id : void 0) || row.id;
         count = counts[id];
         return clientBox = {
           id: id,
@@ -558,12 +628,23 @@ Account = (function(superClass) {
         return async.eachSeries(toDestroy, function(box, cb) {
           return box.destroyAndRemoveAllMessages(cb);
         }, function(err) {
-          account.setRefreshing(false);
-          reporter.onDone();
-          if (shouldNotifAccount) {
-            notifications.accountRefreshed(account);
+          if (err) {
+            account.setRefreshing(false);
           }
-          return callback(null);
+          if (err) {
+            return callback(err);
+          }
+          return account.applyPatchConversation(function(err) {
+            if (err) {
+              log.error(err);
+            }
+            account.setRefreshing(false);
+            reporter.onDone();
+            if (shouldNotifAccount) {
+              notifications.accountRefreshed(account);
+            }
+            return callback(null);
+          });
         });
       });
     });

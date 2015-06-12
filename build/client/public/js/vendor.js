@@ -44353,7 +44353,7 @@ if (typeof window.plugins !== "object") {
           window.cozyMails.messageNavigate('next');
           // Check whether we should load next page
           window.setTimeout(function () {
-            window.rootComponent.refs.messageList._loadNext();
+            window.rootComponent.refs.firstPanel.refs.messageList._loadNext();
           }, 2000);
         }
       },
@@ -44364,7 +44364,7 @@ if (typeof window.plugins !== "object") {
           window.cozyMails.messageNavigate('next', true);
           // Check whether we should load next page
           window.setTimeout(function () {
-            window.rootComponent.refs.messageList._loadNext();
+            window.rootComponent.refs.firstPanel.refs.messageList._loadNext();
           }, 2000);
         }
       },

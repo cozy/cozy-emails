@@ -20,6 +20,11 @@ log = require('../utils/logging')({
 });
 
 module.exports.main = function(req, res, next) {
+  var progress;
+  progress = cozydb.getRequestsReindexingProgress();
+  if (progress < 1) {
+    return res.render('reindexing');
+  }
   return async.series([
     function(cb) {
       return Settings.getDefault(cb);
@@ -40,7 +45,7 @@ module.exports.main = function(req, res, next) {
       settings = results[0], locale = results[1], accounts = results[2], contacts = results[3];
       imports = "window.settings  = " + (JSON.stringify(settings)) + "\nwindow.refreshes = " + (JSON.stringify(refreshes)) + ";\nwindow.locale    = \"" + locale + "\";\nwindow.accounts  = " + (JSON.stringify(accounts)) + ";\nwindow.contacts  = " + (JSON.stringify(contacts)) + ";\nwindow.app_env   = \"" + process.env.NODE_ENV + "\";";
     }
-    return res.render('index.jade', {
+    return res.render('index', {
       imports: imports
     });
   });
