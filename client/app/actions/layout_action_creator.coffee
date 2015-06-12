@@ -190,7 +190,8 @@ module.exports = LayoutActionCreator =
         if message?
             onMessage message
 
-        unless MessageStore.getConversationsLength().get(conversationID) is 1
+        length = MessageStore.getConversationsLength().get(conversationID)
+        if length? and length > 1
             MessageActionCreator.fetchConversation conversationID
 
     showComposeNewMessage: (panelInfo, direction) ->
