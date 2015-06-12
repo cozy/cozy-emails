@@ -54,9 +54,9 @@ module.exports = React.createClass
         }
 
     componentWillReceiveProps: (props) ->
-        if props.conversationID isnt @props.conversationID
-            expanded = @_initExpanded()
-            setState expended: expanded, compact: true
+        if props.conversation?.length isnt @props.conversation?.length
+            expanded = @_initExpanded(props)
+            @setState expanded: expanded, compact: true
 
     renderToolbar: ->
         Toolbar

@@ -268,6 +268,9 @@ module.exports = Panel = React.createClass
         .toJS()
 
         refresh = AccountStore.getMailboxRefresh(@props.mailboxID)
+        conversation = if @props.conversationID
+            MessageStore.getConversation(@props.conversationID)
+        else null
 
         return {
             accountsFlat          : accountsFlat
@@ -281,6 +284,7 @@ module.exports = Panel = React.createClass
             fetching              : MessageStore.isFetching()
             queryParams           : MessageStore.getParams()
             currentMessageID      : MessageStore.getCurrentID()
+            conversation          : conversation
             currentConversationID : MessageStore.getCurrentConversationID()
             currentFilter         : MessageStore.getCurrentFilter()
             results               : SearchStore.getResults()
