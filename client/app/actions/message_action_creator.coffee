@@ -199,7 +199,6 @@ module.exports = MessageActionCreator =
             bydest[destString] ?= {to: dest, from: oldto, messageIDs: []}
             bydest[destString].messageIDs.push message.get('id')
 
-        console.log "UNDO ACTIONS", bydest
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_UNDO_START
             value: {ref}

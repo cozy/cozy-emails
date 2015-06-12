@@ -25,10 +25,10 @@ describe 'Conversation tests', ->
         testAccount = new Account
             id: 'test-conversations-account'
 
-    # after (done) ->
-    #     async.eachSeries ids, (id, cb) ->
-    #         Message.destroy id, cb
-    #     , done
+    after (done) ->
+        async.eachSeries ids, (id, cb) ->
+            Message.destroy id, cb
+        , done
 
 
     it 'handle a conversation fetched in reverse order', (done) ->
@@ -39,7 +39,6 @@ describe 'Conversation tests', ->
             (cb) -> Message.createFromImapMessage MAIL1, testMailbox, 1, cb
             (cb) -> testAccount.applyPatchConversation cb
         ], (err, [mail1, mail2, mail3]) ->
-            console.log "THERE", err
             return done err if err
             Message.rawRequest 'byMailboxRequest',
                 startkey: ['uid', TESTBOXID]
