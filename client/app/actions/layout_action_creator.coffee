@@ -191,19 +191,7 @@ module.exports = LayoutActionCreator =
             onMessage message
 
         unless MessageStore.getConversationsLength().get(conversationID) is 1
-
-            updated = Date.now()
-            XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
-
-                if err?
-                    LayoutActionCreator.alertError err
-                else
-                    # This prevent to override local updates with older ones
-                    # from server
-                    rawMessages.forEach (msg) ->
-                        msg.updated = updated
-                    MessageActionCreator.receiveRawMessages rawMessages
-                    onMessage rawMessages[0]
+            MessageActionCreator.fetchConversation conversationID
 
     showComposeNewMessage: (panelInfo, direction) ->
         # if there isn't a selected account (page loaded directly),

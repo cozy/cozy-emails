@@ -365,6 +365,11 @@ class MessageStore extends Store
             handleFetchResult fetchResult
             @emit 'change'
 
+        handle ActionTypes.CONVERSATION_FETCH_SUCCESS, ({updated}) ->
+            for message in updated
+                onReceiveRawMessage message
+            @emit 'change'
+
         handle ActionTypes.MESSAGE_SEND, (message) ->
             onReceiveRawMessage message
             @emit 'change'

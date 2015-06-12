@@ -37,9 +37,21 @@ module.exports = MessageActionCreator =
                 conv: conv
 
     fetchConversation: (conversationID) ->
-        XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
-            if not err?
-                MessageActionCreator.receiveRawMessages rawMessages
+
+        AppDispatcher.handleViewAction
+            type: ActionTypes.CONVERSATION_FETCH_REQUEST
+            value: {conversationID}
+
+        XHRUtils.fetchConversation conversationID, (error, updated) ->
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.CONVERSATION_FETCH_FAILURE
+                    value: {error}
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.CONVERSATION_FETCH_SUCCESS
+                    value: {error, updated}
+
 
     # Immediately synchronise some messages with the server
     # Used if one of the action fail
