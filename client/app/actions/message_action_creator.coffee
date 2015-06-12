@@ -141,7 +141,7 @@ module.exports = MessageActionCreator =
                     type: ActionTypes.MESSAGE_MOVE_SUCCESS
                     value: {target, ref, updated}
 
-            callback error, updated
+            callback? error, updated
 
     mark: (target, flagAction, callback) ->
         ref = refCounter++
