@@ -40,7 +40,6 @@ class MessageStore extends Store
     _currentMessages = Immutable.Sequence()
     _conversationLengths = Immutable.Map()
     _conversationMemoize = null
-    _conversationMemoizeID = null
     _currentID       = null
     _currentCID      = null
     _prevAction      = null
@@ -549,7 +548,6 @@ class MessageStore extends Store
                 message.get('conversationID') is conversationID
             .sort reverseDateSort
             .toVector()
-        _conversationMemoizeID = conversationID
 
         return _conversationMemoize
 

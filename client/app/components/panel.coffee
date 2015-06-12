@@ -268,8 +268,9 @@ module.exports = Panel = React.createClass
         .toJS()
 
         refresh = AccountStore.getMailboxRefresh(@props.mailboxID)
-        conversation = if @props.conversationID
-            MessageStore.getConversation(@props.conversationID)
+        conversationID = MessageStore.getCurrentConversationID()
+        conversation = if conversationID
+            MessageStore.getConversation(conversationID)
         else null
 
         return {
@@ -285,7 +286,7 @@ module.exports = Panel = React.createClass
             queryParams           : MessageStore.getParams()
             currentMessageID      : MessageStore.getCurrentID()
             conversation          : conversation
-            currentConversationID : MessageStore.getCurrentConversationID()
+            currentConversationID : conversationID
             currentFilter         : MessageStore.getCurrentFilter()
             results               : SearchStore.getResults()
             settings              : SettingsStore.get()
