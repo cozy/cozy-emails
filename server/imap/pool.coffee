@@ -73,7 +73,7 @@ class ImapPool
 
         if @account.oauthProvider is "GMAIL"
             generator = xoauth2.createXOAuth2Generator(
-                user: 'cyril.bareme@gmail.com'
+                user: @account.login
                 clientSecret: '1gNUceDM59TjFAks58ftsniZ'
                 clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com'
                 refreshToken: @account.oauthRefreshToken
