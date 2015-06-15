@@ -74,6 +74,8 @@ module.exports.list = (req, res, next) ->
 module.exports.edit = (req, res, next) ->
 
     updated = new Account req.body
+    unless updated.password and updated.password isnt ''
+        updated.password = req.account.password
 
     # check params before applying changes
     updated.testConnections (err) ->

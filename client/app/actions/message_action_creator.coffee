@@ -4,7 +4,7 @@ Constants = require '../constants/app_constants'
 XHRUtils      = require '../utils/xhr_utils'
 AccountStore  = require "../stores/account_store"
 MessageStore  = require '../stores/message_store'
-LAC = undefined
+refCounter=1
 
 module.exports = MessageActionCreator =
 
@@ -18,11 +18,6 @@ module.exports = MessageActionCreator =
             type: ActionTypes.RECEIVE_RAW_MESSAGE
             value: message
 
-    setFetching: (fetching) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.SET_FETCHING
-            value: fetching
-
     send: (message, callback) ->
         XHRUtils.messageSend message, (error, message) ->
             if not error?
@@ -33,7 +28,7 @@ module.exports = MessageActionCreator =
 
     # set conv to true to update current conversation ID
     setCurrent: (messageID, conv) ->
-        if typeof messageID isnt 'string'
+        if messageID? and typeof messageID isnt 'string'
             messageID = messageID.get 'id'
         AppDispatcher.handleViewAction
             type: ActionTypes.MESSAGE_CURRENT
@@ -42,288 +37,201 @@ module.exports = MessageActionCreator =
                 conv: conv
 
     fetchConversation: (conversationID) ->
-        XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
-            if not err?
-                MessageActionCreator.receiveRawMessages rawMessages
+
+        AppDispatcher.handleViewAction
+            type: ActionTypes.CONVERSATION_FETCH_REQUEST
+            value: {conversationID}
+
+        XHRUtils.fetchConversation conversationID, (error, updated) ->
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.CONVERSATION_FETCH_FAILURE
+                    value: {error}
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.CONVERSATION_FETCH_SUCCESS
+                    value: {error, updated}
+
 
     # Immediately synchronise some messages with the server
-    refresh: (target) ->
+    # Used if one of the action fail
+    recover: (target, ref) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_RECOVER_REQUEST
+            value: {ref}
+
         XHRUtils.batchFetch target, (err, messages) ->
             if err
-                LAC.alertError err
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_RECOVER_FAILURE
+                    value: {ref}
             else
-                MessageActionCreator.receiveRawMessages messages
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_RECOVER_SUCCESS
+                    value: {ref}
 
+    refreshMailbox: (mailboxID) ->
+        unless AccountStore.isMailboxRefreshing(mailboxID)
+            AppDispatcher.handleViewAction
+                type: ActionTypes.REFRESH_REQUEST
+                value: {mailboxID}
 
+            XHRUtils.refreshMailbox mailboxID, (error) ->
+                if err?
+                    AppDispatcher.handleViewAction
+                       type: ActionTypes.REFRESH_FAILURE
+                       value: {mailboxID, error}
+                else
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.REFRESH_SUCCESS
+                        value: {mailboxID}
+
+    # Delete message(s)
+    # target:
+    #  - messageID or messageIDs or conversationIDs or conversationIDs
+    #  - isDraft?
+    #  - silent? (don't display confirmation message when deleting
+    #    an empty draft)
     delete: (target, callback) ->
-        messages = _localDelete target
+        ref = refCounter++
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_TRASH_REQUEST
+            value: {target, ref}
 
+        ts = Date.now()
         # send request
-        XHRUtils.batchDelete target, (err, updated) ->
+        XHRUtils.batchDelete target, (error, updated) =>
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_TRASH_FAILURE
+                    value: {target, ref, error}
 
-            alertMsg = _getNotification target, messages, 'delete', err
-            if err
-                # we cant know which succeeded or not,
-                # refetch the batch from the server for update
-                MessageActionCreator.refresh target
-                LAC.alertError alertMsg
+                # we dont know if some succeeded or not,
+                # in doubt, recover the changed to messages to sync with
+                # server
+                @recover target, ref
             else
-                MessageActionCreator.receiveRawMessagesupdated
-                LAC.notify alertMsg,
-                    autoclose: true,
-                    actions: [
-                        label: t 'undo last action'
-                        onClick: -> MessageActionCreator.undo()
-                    ]
-
-            callback? err, updated
+                msg.updated = ts for msg in updated
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_TRASH_SUCCESS
+                    value: {target, ref, updated}
 
 
     move: (target, from, to, callback) ->
-        messages = _localMove target, from, to
+        ref = refCounter++
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_MOVE_REQUEST
+            value: {target, ref, from, to}
 
+        ts = Date.now()
         # send request
-        XHRUtils.batchMove target, from, to, (err, updated) ->
-            alertMsg = _getNotification target, messages, 'move', err
-            if err
-                # we cant know which succeeded or not,
-                # refetch the batch from the server for update
-                MessageActionCreator.refresh target
-                LAC.alertError alertMsg
+        XHRUtils.batchMove target, from, to, (error, updated) =>
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_MOVE_FAILURE
+                    value: {target, ref, error}
+
+                # we dont know if some succeeded or not,
+                # in doubt, recover the changed to messages to sync with
+                # server
+                @recover target, ref
             else
-                MessageActionCreator.receiveRawMessages updated
-                unless target.undeleting
-                    LAC.notify alertMsg,
-                        autoclose: true,
-                        actions: [
-                            label: t 'undo last action'
-                            onClick: -> MessageActionCreator.undo()
-                        ]
+                msg.updated = ts for msg in updated
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_MOVE_SUCCESS
+                    value: {target, ref, updated}
 
-            callback? err, updated
+            callback? error, updated
 
-    mark: (target, flag, callback) ->
-        {op, flag} = _convertFlagToOp flag
+    mark: (target, flagAction, callback) ->
+        ref = refCounter++
 
-
-        _localMark target, op, flag
-
-
-        afterUpdate = (err, updated) ->
-            if err
-                MessageActionCreator.refresh target
-                LAC.alertError err
+        switch flagAction
+            when FlagsConstants.SEEN
+                op = 'batchAddFlag'
+                flag = FlagsConstants.SEEN
+            when FlagsConstants.FLAGGED
+                op = 'batchAddFlag'
+                flag = FlagsConstants.FLAGGED
+            when FlagsConstants.UNSEEN
+                op = 'batchRemoveFlag'
+                flag = FlagsConstants.SEEN
+            when FlagsConstants.NOFLAG
+                op = 'batchRemoveFlag'
+                flag = FlagsConstants.FLAGGED
             else
-                MessageActionCreator.receiveRawMessages updated
+                throw new Error "Wrong usage : unrecognized FlagsConstants"
 
-            callback? err, updated
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_FLAGS_REQUEST
+            value: {target, ref, op, flag, flagAction}
 
-        if op is 'add'
-            XHRUtils.batchAddFlag target, flag, afterUpdate
-        else if op is 'remove'
-            XHRUtils.batchRemoveFlag target, flag, afterUpdate
-        else
-            throw new Error "Wrong usage : unrecognized FlagsConstants"
+        ts = Date.now()
 
-    undo: ->
-        lastBatch = MessageStore.getPrevAction()
-        if lastBatch
-            done = 0
-            for action in lastBatch.actions
-                options = {messageID: action.id, undeleting: true}
-                done++
-                @move options, action.to, action.from, (err) ->
-                    if err
-                        LAC.notify t('undo ko')
-                    else if --done is 0
-                        LAC.notify t('undo ok'),
-                            autoclose: true
-        else
-            LAC.notify t('undo unavailable')
+        XHRUtils[op] target, flag, (error, updated) =>
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_FLAGS_FAILURE
+                    value: {target, ref, error, op, flag, flagAction}
+
+                # we dont know if some succeeded or not,
+                # in doubt, recover the changed to messages to sync with
+                # server
+                @recover target, ref
+            else
+                msg.updated = ts for msg in updated
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_FLAGS_SUCCESS
+                    value: {target, ref, updated, op, flag, flagAction}
+
+    undo: (ref) ->
+
+        request = MessageStore.getUndoableRequest ref
+        {messages, type, from, to, target, trashBoxID} = request
+        reverseAction = []
+
+        oldto = if type is 'move' then to else trashBoxID
+        bydest = {}
+        # messages are the old messages
+        messages.forEach (message) ->
+            dest = (boxid for boxid, uid of message.get('mailboxIDs'))
+            destString = dest.sort().join(',')
+            bydest[destString] ?= {to: dest, from: oldto, messageIDs: []}
+            bydest[destString].messageIDs.push message.get('id')
+
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_UNDO_START
+            value: {ref}
+
+        _loopSeries bydest, (request, dest, next) ->
+            {to, from, messageIDs} = request
+            target = {messageIDs, silent: true}
+            MessageActionCreator.move target, from, to, next
+        , (error) ->
+            if error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_UNDO_FAILURE
+                    value: {ref}
+
+                # we dont know if some succeeded or not,
+                # in doubt, recover the changed to messages to sync with
+                # server
+                @recover target, ref
+            else
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_UNDO_SUCCESS
+                    value: {ref}
+
+
+_loopSeries = (obj, iterator, done) ->
+    keys = Object.keys(obj)
+    i = 0
+    do step = ->
+        key = keys[i]
+        iterator obj[key], key, (err) ->
+            return done err if err
+            return done null if ++i is keys.length
+            step()
 
 # circular, import after
 LAC = require './layout_action_creator'
-
-
-_getNotification = (target, messages, action, err) ->
-
-    first = messages[0]
-    subject = first?.get?('subject') or first?.subject
-
-    if target.messageID
-        type = 'message'
-    else if target.conversationID
-        type = 'conversation'
-    else if target.conversationIDs
-        type = 'conversations'
-        smart_count = target.conversationIDs.length
-    else if target.messageIDs
-        type = 'messages'
-        smart_count = target.messageIDs.length
-    else throw new Error 'Wrong Usage : unrecognized target MAC.getNotif'
-
-    if err
-        ok = 'ko'
-        errMsg = ': ' + err.message or err
-    else
-        ok = 'ok'
-        errMsg = ''
-
-
-    return t "#{type} #{action} #{ok}",
-        error: errMsg
-        subject: subject or ''
-        smart_count: smart_count
-
-
-_convertFlagToOp = (flag) ->
-    if flag in [FlagsConstants.SEEN, FlagsConstants.FLAGGED]
-        op = 'add'
-    else if flag is FlagsConstants.NOFLAG
-        op = 'remove'
-        flag = FlagsConstants.FLAGGED
-    else if flag is FlagsConstants.UNSEEN
-        op = 'remove'
-        flag = FlagsConstants.SEEN
-
-    return {op, flag}
-
-
-_fixCurrentMessage = (target) ->
-    # open next message if the deleted / moved one was open ###
-    messageIDs = target.messageIDs or [target.messageID]
-    currentMessage = MessageStore.getCurrentID() or 'not-null'
-    conversationIDs = target.conversationIDs or [target.conversationID]
-    currentConversation = MessageStore.getCurrentConversationID() or 'not-null'
-    isConv = currentMessage not in messageIDs
-    isConv = true
-    next = MessageStore.getNextOrPrevious isConv
-    if next?
-        # MessageActionCreator.setCurrent next.get('id'), true
-        window.cozyMails.messageDisplay next, false
-
-
-
-_localMark = (target, op, flag) ->
-
-    messages = MessageStore.getMixed target
-    target.accountID = messages[0].get('accountID')
-    updated = []
-
-    for message in messages
-        flags = message.get('flags')
-        if op is 'add' and flag not in flags
-            flags = flags.concat [flag]
-
-        else if op is 'remove' and flag in flags
-            flags = _.without flags, flag
-
-        else continue
-
-        updated.push message.set('flags', flags).toJS()
-
-
-    # immediately apply change to refresh UI
-    # Update datastore
-    AppDispatcher.handleViewAction
-        type: ActionTypes.RECEIVE_RAW_MESSAGES
-        value: updated
-
-    return updated
-
-_isDraft = (message, draftMailbox) ->
-    mailboxIDs = message.get 'mailboxIDs'
-    mailboxIDs[draftMailbox] or MessageFlags.DRAFT in message.get('flags')
-
-_localMove = (target, from, to) ->
-
-    messages = MessageStore.getMixed target
-    target.accountID = messages[0].get('accountID')
-    actions = []
-    updated = []
-
-    for message in messages
-        mailboxIDs = message.get('mailboxIDs')
-        if mailboxIDs[from]
-
-            actions.push
-                id: message.get('id')
-                to: to
-                from: [from]
-
-            newMailboxIds = {}
-            newMailboxIds[key] = value for key, value of mailboxIDs
-            delete newMailboxIds[from]
-            newMailboxIds[to] = -1
-
-            updated.push message.set('mailboxIDs', newMailboxIds).toJS()
-
-    _fixCurrentMessage target
-
-    # immediately apply change to refresh UI
-    # Update datastore
-    AppDispatcher.handleViewAction
-        type: ActionTypes.RECEIVE_RAW_MESSAGES
-        value: updated
-
-    # Store action to allow unmove
-    AppDispatcher.handleViewAction
-        type: ActionTypes.LAST_ACTION
-        value: {actions}
-
-    return updated
-
-_localDelete = (target) ->
-
-    messages = MessageStore.getMixed target
-
-    accountID = messages[0].get('accountID')
-    account = AccountStore.getByID(accountID)
-    throw new Error 'Wrong State : no account' unless account
-    trashMailbox = account.get 'trashMailbox'
-    throw new Error 'Wrong State : no trashMailbox' unless trashMailbox
-    draftMailbox = account.get 'draftMailbox'
-    target.accountID = accountID
-
-
-    actions = []
-    updated = []
-
-    for message in messages
-        if accountID isnt message.get('accountID')
-            throw new Error """
-                Wrong Usage : delete message from various accounts
-            """
-
-        mailboxIDs = message.get('mailboxIDs')
-        if mailboxIDs[trashMailbox]
-            continue # already in trash
-        else if _isDraft message, draftMailbox
-            AppDispatcher.handleViewAction
-                type: ActionTypes.RECEIVE_MESSAGE_DELETE
-                value: message.get 'id'
-
-        unless mailboxIDs[trashMailbox]
-            actions.push
-                id: message.get 'id'
-                to: trashMailbox
-                from: Object.keys mailboxIDs
-
-            newMailboxIds = {}
-            newMailboxIds[trashMailbox] = -1
-            updated.push(message.set('mailboxIDs', newMailboxIds).toJS())
-
-    _fixCurrentMessage target
-
-    # immediately apply change to refresh UI
-    # Update datastore
-    AppDispatcher.handleViewAction
-        type: ActionTypes.RECEIVE_RAW_MESSAGES
-        value: updated
-
-    # Store action to allow undo
-    AppDispatcher.handleViewAction
-        type: ActionTypes.LAST_ACTION
-        value: {actions}
-
-    return updated

@@ -106,9 +106,41 @@ module.exports = class ImapConnection extends NodeImapConnection
     fetchBoxMessageUIDs: (callback) ->
         log.debug "imap#fetchBoxMessageUIDs"
         @search [['ALL']], (err, uids) ->
-            log.debug "imap#fetchBoxMessageUIDs#result", uids
+            log.debug "imap#fetchBoxMessageUIDs#result", uids.length
             return callback err if err
             return callback null, uids
+
+    # Public: fetch all message-ids and flags in open box since a given modseqno
+    #
+    # modseqno - {String} fetch changes after this number
+    #
+    # Returns (callback) an {Object} with uids as keys and
+    #                    [mid, flags] as values of UIDs
+    fetchMetadataSince: (modseqno, callback) ->
+        log.debug "imap#fetchBoxMessageSince", modseqno
+        @search [['MODSEQ', modseqno]], (err, uids) ->
+            log.debug "imap#fetchBoxMessageSince#result", uids
+            return callback err if err
+            return callback null, {} unless uids.length
+            uids.sort().reverse()
+            results = {}
+            fetch = @fetch uids, bodies: 'HEADER.FIELDS (MESSAGE-ID)'
+            fetch.on 'error', callback
+            fetch.on 'message', (msg) ->
+                uid = null # message uid
+                flags = null # message flags
+                mid = null # message id
+                msg.on 'error', (err) -> results.error = err
+                msg.on 'end', -> results[uid] = [mid, flags]
+                msg.on 'attributes', (attrs) ->
+                    {flags, uid} = attrs
+                msg.on 'body', (stream) ->
+                    stream_to_buffer_array stream, (err, parts) ->
+                        return callback err if err
+                        header = Buffer.concat(parts).toString('utf8').trim()
+                        mid = header.substring header.indexOf(':') + 1
+
+            fetch.on 'end', -> callback null, results
 
     # Public: fetch all message-ids and flags in open box
     #
@@ -133,7 +165,7 @@ module.exports = class ImapConnection extends NodeImapConnection
                 flags = null # message flags
                 mid = null # message id
                 msg.on 'error', (err) -> results.error = err
-                msg.on 'end', -> results[uid] = [ mid, flags ]
+                msg.on 'end', -> results[uid] = [mid, flags]
                 msg.on 'attributes', (attrs) ->
                     {flags, uid} = attrs
                 msg.on 'body', (stream) ->
@@ -229,6 +261,27 @@ module.exports = class ImapConnection extends NodeImapConnection
             return cb new Error 'no message to remove' unless uid?
             @deleteMessageInBox path, uid, cb
         , callback
+
+
+    deleteAndExpunge: (uid, callback) ->
+        @addFlags uid, '\\Deleted', (err) ->
+            return callback err if err
+            @expunge uid, callback
+
+    multimove: (uids, dests, callback) ->
+        if uids.length is 0
+            callback null
+        else
+            [first, rest...] = dests
+            @multicopy uids, rest, (err) =>
+                return callback err if err
+                @move uids, first, callback
+
+    multiexpunge: (uids, callback) ->
+        if uids.length is 0
+            callback null
+        else
+            @deleteAndExpunge uids, callback
 
     # Public: remove one message from a box
     # open box, mark \\Deleted and expunge.

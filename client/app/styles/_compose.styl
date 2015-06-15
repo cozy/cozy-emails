@@ -8,7 +8,7 @@
 
 
 
-#email-compose
+.form-compose
     width 100%
     max-width 900px
     margin 20px auto
@@ -32,137 +32,149 @@
         float right
         font-size 1em
 
-  .editor,
-  .rt-editor
-    border 1px solid basecolor
-    min-height 16em
-    max-height 24em
-    overflow auto
-    height auto
-    width 100%
-    text-align left
-    color black
-    cursor: text
+    .editor,
+    .rt-editor
+        border 1px solid basecolor
+        min-height 16em
+        max-height 24em
+        overflow auto
+        height auto
+        width 100%
+        text-align left
+        color black
+        cursor: text
 
-    // poor's man CSS reset, to apply default style to content of
-    // replied message
-    *
-      margin 0
-      padding 0
-    ul, ol, dl, li, dl
-      margin .5em
-      padding inherit
+        // poor's man CSS reset, to apply default style to content of
+        // replied message
+        *
+            margin 0
+            padding 0
+        ul, ol, dl, li, dl
+            margin .5em
+            padding inherit
 
-    &:hover
-        border 1px solid actioncolor
+        &:hover
+            border 1px solid actioncolor
 
-    &:active
-    &:focus
-        border 0
-        outline 0
-        border 1px solid actioncolor
+        &:active
+        &:focus
+            border 0
+            outline 0
+            border 1px solid actioncolor
 
-    blockquote
-        border-left .25em solid blue
-        padding-left .5em
-        margin 0
-        padding-right 0
-
-    &.folded
         blockquote
-            height 0
-            overflow hidden
-            text-overflow ellipsis
+            border-left .25em solid blue
+            padding-left .5em
+            margin 0
+            padding-right 0
+
+        &.folded
+            blockquote
+                height 0
+                overflow hidden
+                text-overflow ellipsis
+                padding 0
+
+        .originalToggle
+            color basecolor
+            font-weight bold
+            cursor pointer
+
+        div
+        p
+            margin 0
             padding 0
 
-    .originalToggle
-        color basecolor
-        font-weight bold
-        cursor pointer
+    .editor.target,
+    .rt-editor.target
+        border-color actioncolor
 
-    div
-    p
-        margin 0
-        padding 0
+    .attachements
+        margin 1em 0
 
-  .editor.target,
-  .rt-editor.target
-    border-color actioncolor
+    .contact-group
+        margin-top: 0
 
-  .attachements
-      margin 1em 0
-
-  .contact-group
-    margin-top: .5em
-
-  .compose-toggle
-    float right
+    .compose-toggle
+        float right
 
     a
       padding 0 1em
 
 
-  .btn-contact
-      float right
-      width 3em
-      margin-left 1em
+    .btn-contact
+        float right
+        width 3em
+        margin-left 1em
 
-  textarea.compose-input
-      position relative
-      height 2em
-      padding 0.2em 0.5em
-      overflow hidden
-      width 100%
-      display inline
-      resize none
+    .compose-label
+        margin .5em
+        line-height 2em
 
-  .compose-from
-    line-height 2em
-    color darkcolor
-    cursor pointer
+    .mail-input
+        border 1px solid basecolor
+    .mail-input > *
+        display inline-block
+
+    textarea.compose-input
+        position relative
+        height 1.3em
+        padding 0 0.5em
+        overflow hidden
+        width 100%
+        display inline-block
+        resize none
+        border-width 0
+        box-shadow none
+
+    .compose-from
+        line-height 2em
+        color darkcolor
+        cursor pointer
 
     .caret
         margin-left 0.5em
 
-  .account-picker
-    .dropdown-menu
-      top: auto
+    .account-picker
+        .dropdown-menu
+            top: auto
+            left: auto
 
-  .compose-cc,
-  .compose-bcc
-    display none
+    .compose-cc,
+    .compose-bcc
+        display none
 
-  .compose-cc.shown,
-  .compose-bcc.shown
-    display inherit
+    .compose-cc.shown,
+    .compose-bcc.shown
+        display inherit
 
-  .address-tag
-      border 1px solid mediumcolor
-      background-color lightcolor
-      margin 0 .25em .25em .25em
-      padding .25em
-      border-radius .25em
-      display inline-block
-      cursor move
+    .address-tag
+        border 1px solid mediumcolor
+        background-color lightcolor
+        margin 0 .25em .25em .25em
+        padding .25em
+        border-radius .25em
+        display inline-block
+        cursor move
 
-      a
-        font-size .75em
-        padding-left .5em
+        a
+            font-size .75em
+            padding-left .5em
 
-  .editor-actions
-    .btn.btn-default
-        font-size: 1.1em
-        transition: color 0.2s ease
-        background: none
-        box-shadow: none
-        border: 0
-        color: basecolor
+    .editor-actions
+        .btn.btn-default
+            font-size: 1.1em
+            transition: color 0.2s ease
+            background: none
+            box-shadow: none
+            border: 0
+            color: basecolor
 
-        &:active
-            color actioncolor - 10%
+            &:active
+                color actioncolor - 10%
 
-    .btn.btn-default:hover
-        color: actioncolor
+        .btn.btn-default:hover
+            color: actioncolor
 
-        &:active
-            color actioncolor - 10%
+            &:active
+                color actioncolor - 10%

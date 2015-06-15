@@ -32,6 +32,7 @@ class AccountStore extends Store
     _selectedMailbox   = null
     _newAccountWaiting = false
     _newAccountError   = null
+    _mailboxRefreshing = {}
 
 
     _refreshSelected = ->
@@ -163,7 +164,18 @@ class AccountStore extends Store
             _accounts.set data.accountID, account
             @emit 'change'
 
+        handle ActionTypes.REFRESH_REQUEST, ({mailboxID}) ->
+            _mailboxRefreshing[mailboxID] ?= 0
+            _mailboxRefreshing[mailboxID]++
+            @emit 'change'
 
+        handle ActionTypes.REFRESH_FAILURE, ({mailboxID}) ->
+            _mailboxRefreshing[mailboxID]--
+            @emit 'change'
+
+        handle ActionTypes.REFRESH_SUCCESS, ({mailboxID}) ->
+            _mailboxRefreshing[mailboxID]--
+            @emit 'change'
 
     ###
         Public API
@@ -212,6 +224,11 @@ class AccountStore extends Store
 
         return result
 
+    selectedIsDifferentThan: (accountID, mailboxID) ->
+        differentSelected = _selectedAccount?.get('id') isnt accountID or
+        _selectedMailbox?.get('id') isnt mailboxID
+
+        return differentSelected
 
     getSelectedMailbox: (selectedID) ->
         mailboxes = @getSelectedMailboxes()
@@ -243,6 +260,12 @@ class AccountStore extends Store
     getError: -> return _newAccountError
 
     isWaiting: -> return _newAccountWaiting
+
+    isMailboxRefreshing: (mailboxID)->
+        _mailboxRefreshing[mailboxID] > 0
+
+    getMailboxRefresh: (mailboxID) ->
+        if _mailboxRefreshing[mailboxID] > 0 then 0.9 else 0
 
 
 module.exports = new AccountStore()

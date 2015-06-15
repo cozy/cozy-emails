@@ -13,12 +13,15 @@ else if process.env.NODE_ENV is 'production' then 1
 else 0
 
 lastLogs = new Array(15)
+lastDate = +new Date()
 index = -1
 
 addToLastLogs = ->
     index = (index + 1) % 15
     lastLogs[index] = util.format.apply this, arguments
 
+pad = (nb) ->
+    ((nb + 10000) + "").substring 1
 
 module.exports = (options) ->
 
@@ -27,12 +30,16 @@ module.exports = (options) ->
 
     logger = (level) -> ->
 
+        newDate = +new Date()
+        delta = newDate - lastDate
+        lastDate = newDate
 
-        args = new Array arguments.length + 2
+        args = new Array arguments.length + 3
         args[0] = COLORS[level]
-        args[1] = prefix
+        args[1] = "+" + ((delta + 10000) + "").substring 1
+        args[2] = prefix
         for arg, i in arguments
-            args[i+2] = arg
+            args[i+3] = arg
 
 
         addToLastLogs.apply null, args

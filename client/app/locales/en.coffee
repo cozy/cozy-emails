@@ -4,12 +4,14 @@ module.exports =
       "app loading"             : "Loading…"
       "app back"                : "Back"
       "app cancel"              : "Cancel"
+      "app confirm"             : "Confirm"
       "app menu"                : "Menu"
       "app search"              : "Search…"
       "app alert close"         : "Close"
       "app unimplemented"       : "Not implemented yet"
       "app error"               : "Argh, I'm unable to perform this action,
                                     please try again"
+      "app confirm delete"      : "Confirm delete"
 
       # Compose window
       "compose"                   : "Compose new email"
@@ -37,6 +39,8 @@ module.exports =
       "compose error no dest"     : "You can not send a message to nobody"
       "compose error no subject"  : "Please set a subject"
       "compose confirm keep draft": "Message not sent, keep the draft?"
+      "compose confirm draft keep"  : "Keep draft"
+      "compose confirm draft delete": "Delete draft"
       "compose wrong email format": "The given email is unproperly formatted: %{address}."
       "compose forward header"    : "Forwarded message"
       "compose forward subject"   : "Subject:"
@@ -126,8 +130,11 @@ module.exports =
       "mail mark nofav"         : "Not important"
       "mail mark read"          : "Read"
       "mail mark unread"        : "Unread"
-      "mail confirm delete"     : "Do you really want to delete message “%{subject}”?"
-      "mail confirm delete nosubject" : "Do you really want to delete this message?"
+      "mail confirm delete title"       : "Delete message"
+      "mail confirm delete"             : "Do you really want to delete message “%{subject}”?"
+      "mail confirm delete nosubject"   : "Do you really want to delete this message?"
+      "mail confirm delete cancel"      : "Cancel"
+      "mail confirm delete delete"      : "Delete"
       "mail action conversation delete" : "Delete conversation"
       "mail action conversation move"   : "Move conversation"
       "mail action conversation seen"   : "Mark conversation as read"
@@ -181,6 +188,7 @@ module.exports =
       "account smtpServer"          : "SMTP server"
       "account smtpTLS"             : "Use STARTTLS"
       "account remove"              : "Remove this account"
+      "account removed"             : "Account removed"
       "account remove confirm"      : "Do you really want to remove this
                                         account?"
       "account draft mailbox"       : "Draft box"
@@ -214,6 +222,7 @@ module.exports =
       "account tab signature"       : "Signature"
       "account signature short"     : "Type here the text that will be added to the bottom of all your emails."
       "account signature"           : "Email Signature"
+      "account signature save"      : "Save"
       "mailbox create ok"           : "Folder created"
       "mailbox create ko"           : "Error creating folder"
       "mailbox update ok"           : "Folder updated"
@@ -249,12 +258,18 @@ module.exports =
       "message action sent ko"      : "Error sending message: "
       "message action draft ok"     : "Message saved"
       "message action draft ko"     : "Error saving message: "
-      "message delete ok"    : "Message “%{subject}” deleted"
-      "message delete ko"    : "Error deleting message: "
-      "message move ok"      : "Message “%{subject}” moved"
-      "message move ko"      : "Error moving message “%{subject}”: "
-      "message mark ok"      : "Message marked"
-      "message mark ko"      : "Error marking message: "
+      "message delete ok"           : "Message “%{subject}” deleted"
+      "message delete ko"           : "Error deleting message: "
+      "message move ok"             : "Message “%{subject}” moved"
+      "message move ko"             : "Error moving message “%{subject}”: "
+      "message mark ok"             : "Message marked"
+      "message mark ko"             : "Error marking message: "
+      "draft delete ok"             : "Draft “%{subject}” deleted"
+      "draft delete ko"             : "Error deleting draft: "
+      "draft move ok"               : "Draft “%{subject}” moved"
+      "draft move ko"               : "Error moving draft “%{subject}”: "
+      "draft mark ok"               : "Draft marked"
+      "draft mark ko"               : "Error marking message: "
       "conversation move ok"        : "Conversation “%{subject}” moved"
       "conversation move ko"        : "Error moving conversation “%{subject}”"
       "conversation delete ok"      : "Conversation “%{subject}” deleted"
@@ -367,6 +382,7 @@ module.exports =
                                         errors.'
       "modal please report"        : "Please transmit this information to cozy."
       "modal please contribute"    : "Please contribute"
+      "modal copy content"         : "Copy information into clipboard"
 
       # Validation
       "validate must not be empty" : "This field is required"
@@ -389,9 +405,11 @@ module.exports =
       # Contacts
       "contact form"             : "Select contacts"
       "contact form placeholder" : "contact name"
+      "contact button label"     : "Add to addressbook"
       "contact create success"   : "%{contact} has been added to your contacts"
       "contact create error"     : "Error adding to your contacts : {error}"
-      "message contact creation"    : "Do you want to create a contact for %{contact}?"
+      "message contact creation title": "Add a contact"
+      "message contact creation"      : "Do you want to create a contact for %{contact}?"
 
       # GMail security
       "gmail security tile": "About Gmail security"
@@ -445,3 +463,4 @@ module.exports =
       'daterangepicker presets yesterday': 'yesterday'
       'daterangepicker presets last week': 'last week'
       'daterangepicker presets last month': 'last month'
+      'daterangepicker clear': 'clear'

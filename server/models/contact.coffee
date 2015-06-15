@@ -56,6 +56,9 @@ Contact.requestWithPictures = (name, options, callback) ->
         else
             callback null, []
 
+Contact.list = (callback) ->
+    Contact.request 'all', callback
+
 Contact.createNoDuplicate = (data, callback) ->
     log.info "createNoDuplicate"
     key = data.address

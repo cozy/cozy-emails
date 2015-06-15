@@ -90,6 +90,10 @@ Contact.requestWithPictures = function(name, options, callback) {
   });
 };
 
+Contact.list = function(callback) {
+  return Contact.request('all', callback);
+};
+
 Contact.createNoDuplicate = function(data, callback) {
   var key;
   log.info("createNoDuplicate");

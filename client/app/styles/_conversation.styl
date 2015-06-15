@@ -8,23 +8,45 @@
     padding 1em
 
     & > header
-        display flex
+        display       flex
+        align-items   flex-start
+        margin-bottom 1em
+
+        .fa-close
+            order 1
+
+        h3
+            flex 1
+            order 2
 
         nav
-            order 2
+            order 3
 
         .btn-group
             float none
 
-        h3
-            flex 1
+        .btn
+            border           none
+            color            basecolor
+            background-color transparent
+            text-shadow      none
+            box-shadow       none
+
+            &:hover
+                color actioncolor
+
+        // Mask the fullscreen toggle below 768px, because the conversation view
+        // is always fullscreen for those resolutions.
+        @media(max-width: 48em)
+            .fullscreen
+                display none
 
 
     &.enable
         display block
 
     .conversation-title
-        margin 0 0 0.5em 0
+        margin 0
         font 20px/1.4 'Source Sans Pro', sans-serif
         color #444
 
@@ -130,13 +152,24 @@
 
             .addresses
                 flex 1 1 55%
-                line-height 1.632653063
-                overflow hidden
-                text-overflow ellipsis
-                white-space nowrap
+                min-height 1.63265em
 
                 + .addresses
-                    display none
+                    // Mask addresses (except from, 1st one) when message isnt
+                    // active (so collpased)
+                    display      none
+                    // Set the "special wrapping trick" for flex-items
+                    padding-left 100%
+                    max-width    0
+                    position     relative
+
+                    .addresses-wrapper
+                        position      absolute
+                        left          0
+                        width         100%
+                        overflow      hidden
+                        text-overflow ellipsis
+                        white-space   nowrap
 
                 a:hover
                     text-decoration none
@@ -145,19 +178,21 @@
                 color darkcolor
 
             .contact-address
-                color mediumcolor
+                color       mediumcolor
+                white-space nowrap
 
                 i
                     padding 0 .2em
 
-            .indicators
-            .date
-                padding-left 10px
+            .indicators i
+                margin-left .5em
 
             .from
                 order 1
             .indicators
-                order 2
+                order       2
+                display     flex
+                align-items center
             .date
                 order 3
             .to
@@ -166,6 +201,9 @@
                 order 6
             .details
                 order 4
+
+            .metas
+                margin-left 1em
 
         .fa-star
             color lightorange
@@ -185,6 +223,7 @@
                 position absolute
                 top 100%
                 right 0
+                min-width 18em
                 padding 0.5em 10px
                 border 1px solid lightgrey
                 border-radius 2px
@@ -197,10 +236,6 @@
                     font-size 1em
                     vertical-align baseline
 
-                td
-                li
-                    white-space nowrap
-
             .label
                 text-align right
                 font-weight normal
@@ -209,14 +244,8 @@
             [aria-hidden=true]
                 display none
 
-        .details
-            margin-left 5px
-            .btn
-                padding 0 5px
-                color mediumcolor
-
         .attachments .popup
-            right 5px
+                right .25em !important
 
         .alert-success
         .alert-info
@@ -231,9 +260,6 @@
             background lightgrey
             color grey
             border 0
-
-        i
-            padding-right .75em
 
         .btn-success
         .btn-info
@@ -287,13 +313,4 @@
         padding 0.5em
     .att-preview button
         margin .5em
-
-    #email-compose
-        margin-top 2em
-        padding-top 1em
-        padding-bottom 1em
-        border-top 1px solid #CCC
-        border-bottom 1px solid #CCC
-
-
 

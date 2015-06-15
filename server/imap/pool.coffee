@@ -283,10 +283,10 @@ class ImapPool
     _wrapOpenBox: (cozybox, operation) ->
 
         return wrapped = (imap, callback) =>
-            log.debug @id, "begin wrapped task"
+            # log.debug @id, "begin wrapped task"
 
             imap.openBox cozybox.path, (err, imapbox) =>
-                log.debug @id, "wrapped box opened", err
+                # log.debug @id, "wrapped box opened", err
                 return callback err if err
 
                 unless imapbox.persistentUIDs

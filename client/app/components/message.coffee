@@ -1,10 +1,12 @@
-{div, article, header, footer, ul, li, span, i, p, a, button, pre, iframe, img, h4} = React.DOM
+{
+    div, article, header, footer, ul, li, span, i, p, a, button, pre,
+    iframe
+} = React.DOM
 
 MessageHeader  = require "./message_header"
 MessageFooter  = require "./message_footer"
 ToolbarMessage = require './toolbar_message'
 Compose        = require './compose'
-Participants   = require './participant'
 
 {ComposeActions, MessageFlags} = require '../constants/app_constants'
 
@@ -42,12 +44,11 @@ module.exports = React.createClass
         selectedMailboxID      : React.PropTypes.string.isRequired
         settings               : React.PropTypes.object.isRequired
         useIntents             : React.PropTypes.bool.isRequired
-        setActive              : React.PropTypes.func.isRequired
+        toggleActive           : React.PropTypes.func.isRequired
 
 
     getInitialState: ->
         return {
-            active: @props.active
             composing: @_shouldOpenCompose(@props)
             composeAction: ''
             headers: false
@@ -59,7 +60,8 @@ module.exports = React.createClass
 
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+        should = not(_.isEqual(nextState, @state)) or
+                 not (_.isEqual(nextProps, @props))
         return should
 
 
@@ -133,8 +135,7 @@ module.exports = React.createClass
 
 
     componentWillReceiveProps: (props) ->
-        state =
-            active: props.active
+        state = {}
         if props.message.get('id') isnt @props.message.get('id')
             @_markRead(props.message, props.active)
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
@@ -216,15 +217,14 @@ module.exports = React.createClass
         isUnread = message.get('flags').slice().indexOf(MessageFlags.SEEN) is -1
 
         setActive = =>
-            if isUnread and not @state.active
+            if isUnread and not @props.active
                 messageID = message.get('id')
                 MessageActionCreator.mark {messageID}, MessageFlags.SEEN
-                @props.setActive message.get('id')
-            @setState active: not @state.active
+            @props.toggleActive()
 
         classes = classer
             message: true
-            active: @state.active
+            active: @props.active
             isDraft: prepared.isDraft
             isDeleted: prepared.isDeleted
             isUnread: isUnread
@@ -236,10 +236,10 @@ module.exports = React.createClass
                 header
                     onClick: setActive,
                     @renderHeaders()
-                    @renderToolbox() if @state.active
-                @renderCompose(prepared.isDraft) if @state.active
+                    @renderToolbox() if @props.active
+                @renderCompose(prepared.isDraft) if @props.active
                 (div className: 'full-headers',
-                    pre null, prepared?.fullHeaders?.join "\n") if @state.active
+                    pre null, prepared?.fullHeaders?.join "\n") if @props.active
                 (MessageContent
                     ref: 'messageContent'
                     messageID: message.get 'id'
@@ -250,27 +250,10 @@ module.exports = React.createClass
                     imagesWarning: imagesWarning
                     composing: @state.composing
                     displayImages: @displayImages
-                    displayHTML: @displayHTML) if @state.active
+                    displayHTML: @displayHTML) if @props.active
                 (footer null,
                     @renderFooter()
-                    @renderToolbox(false)) if @state.active
-
-
-    getParticipants: (message) ->
-        from = message.get 'from'
-        to   = message.get('to').concat(message.get('cc'))
-        span null,
-            Participants
-                participants: from
-                onAdd: @addAddress
-                tooltip: true
-                ref: 'from'
-            span null, ', '
-            Participants
-                participants: to
-                onAdd: @addAddress
-                tooltip: true
-                ref: 'to'
+                    @renderToolbox(false)) if @props.active
 
 
     renderHeaders: ->
@@ -278,6 +261,7 @@ module.exports = React.createClass
             message: @props.message
             isDraft: @state.prepared.isDraft
             isDeleted: @state.prepared.isDeleted
+            active: @props.active
             ref: 'header'
 
 
@@ -289,6 +273,7 @@ module.exports = React.createClass
             message              : @props.message
             mailboxes            : @props.mailboxes
             selectedMailboxID    : @props.selectedMailboxID
+            inConversation       : @props.inConversation
             onReply              : @onReply
             onReplyAll           : @onReplyAll
             onForward            : @onForward
@@ -311,39 +296,35 @@ module.exports = React.createClass
     renderCompose: (isDraft) ->
         if @state.composing
             # If message is a draft, opens it, otherwise create a new message
+            options =
+                accounts             : @props.accounts
+                layout               : 'second'
+                ref                  : 'compose'
+                selectedAccountID    : @props.selectedAccountID
+                selectedAccountLogin : @props.selectedAccountLogin
+                settings             : @props.settings
+                useIntents           : @props.useIntents
             if isDraft
-                Compose
-                    layout               : 'second'
-                    action               : null
-                    inReplyTo            : null
-                    settings             : @props.settings
-                    accounts             : @props.accounts
-                    selectedAccountID    : @props.selectedAccountID
-                    selectedAccountLogin : @props.selectedAccountLogin
-                    selectedMailboxID    : @props.selectedMailboxID
-                    message              : @props.message
-                    useIntents           : @props.useIntents
-                    ref                  : 'compose'
+                options.action            = null
+                options.inReplyTo         = null
+                options.message           = @props.message
+                options.selectedMailboxID = @props.selectedMailboxID
             else
-                Compose
-                    ref                  : 'compose'
-                    inReplyTo            : @props.message
-                    accounts             : @props.accounts
-                    settings             : @props.settings
-                    selectedAccountID    : @props.selectedAccountID
-                    selectedAccountLogin : @props.selectedAccountLogin
-                    action               : @state.composeAction
-                    layout               : 'second'
-                    useIntents           : @props.useIntents
-                    callback: (error) =>
-                        if not error?
-                            # component has probably already been unmounted due to conversation refresh
-                            if @isMounted()
-                                @setState composing: false
-                    onCancel: =>
-                        # component has probably already been unmounted due to conversation refresh
+                options.action    =@state.composeAction
+                options.inReplyTo = @props.message
+                options.callback  = (error) =>
+                    if not error?
+                        # component has probably already been unmounted
+                        # due to conversation refresh
                         if @isMounted()
                             @setState composing: false
+                options.onCancel = =>
+                    # component has probably already been unmounted
+                    # due to conversation refresh
+                    if @isMounted()
+                        @setState composing: false
+
+            Compose options
 
 
     toggleHeaders: (e) ->
@@ -351,8 +332,8 @@ module.exports = React.createClass
         e.stopPropagation()
         state =
             headers: not @state.headers
-        if @props.inConversation and not @state.active
-            state.active = true
+        if @props.inConversation and not @props.active
+            @props.toggleActive()
         @setState state
 
 
@@ -360,31 +341,49 @@ module.exports = React.createClass
         if @props.inConversation
             e.preventDefault()
             e.stopPropagation()
-            if @state.active
-                @setState { active: false, headers: false }
-            else
-                @setState { active: true, headers: false }
+            @props.toggleActive()
+            @setState headers: false
 
-    onReply: (args) ->
+    onReply: (e) ->
+        e.preventDefault()
+        e.stopPropagation()
         @setState composing: true, composeAction: ComposeActions.REPLY
 
 
-    onReplyAll: (args) ->
+    onReplyAll: (e) ->
+        e.preventDefault()
+        e.stopPropagation()
         @setState composing: true, composeAction: ComposeActions.REPLY_ALL
 
 
-    onForward: (args) ->
+    onForward: (e) ->
+        e.preventDefault()
+        e.stopPropagation()
         @setState composing: true, composeAction: ComposeActions.FORWARD
 
 
-    onDelete: (args) ->
+    onDelete: (e) ->
+        e.preventDefault()
+        e.stopPropagation()
         needConfirmation = @props.settings.get('messageConfirmDelete')
         messageID = @props.message.get('id')
         confirmMessage = t 'mail confirm delete',
             subject: @props.message.get('subject')
 
-        if not needConfirmation or window.confirm confirmMessage
+        if not needConfirmation
             MessageActionCreator.delete {messageID}
+        else
+            modal =
+                title       : t 'app confirm delete'
+                subtitle    : confirmMessage
+                closeModal  : ->
+                    LayoutActionCreator.hideModal()
+                closeLabel  : t 'app cancel'
+                actionLabel : t 'app confirm'
+                action      : ->
+                    MessageActionCreator.delete {messageID}
+                    LayoutActionCreator.hideModal()
+            LayoutActionCreator.displayModal modal
 
     onConversationDelete: ->
         conversationID = @props.message.get('conversationID')

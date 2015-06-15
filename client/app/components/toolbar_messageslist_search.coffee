@@ -19,16 +19,22 @@ module.exports = SearchToolbarMessagesList = React.createClass
         mailboxID: React.PropTypes.string.isRequired
 
     getInitialState: ->
-        type: 'from'
+        type:    'from'
+        value:   ''
+        isEmpty: true
 
 
     showList: ->
-        value = @refs.searchterms.getDOMNode().value
-        LayoutActionCreator.sortMessages
+        sort =
             order:  '-'
-            field:  @state.type
-            after:  "#{value}\uFFFF"
-            before: value
+            before: @state.value
+        if @state.value?
+            sort.field = @state.type
+            sort.after = "#{@state.value}\uFFFF"
+        else
+            # reset, use default filter
+            sort.field = 'date'
+        LayoutActionCreator.sortMessages sort
 
         params = _.clone(MessageStore.getParams())
         params.accountID = @props.accountID
@@ -40,9 +46,21 @@ module.exports = SearchToolbarMessagesList = React.createClass
         @setState type: filter
 
 
-    onKeyDown: (event) ->
-        switch event.key
-            when "Enter" then @showList()
+    onChange: (event) ->
+        @setState
+            value:   event.target.value
+            isEmpty: event.target.value.length is 0
+
+
+    onKeyUp: (event) ->
+        @showList() if event.key is "Enter" or @state.isEmpty
+
+
+    reset: ->
+        @setState
+            value: null
+            isEmpty: true,
+            @showList
 
 
     render: ->
@@ -51,8 +69,22 @@ module.exports = SearchToolbarMessagesList = React.createClass
                 value:    @state.type
                 values:   filters
                 onChange: @onTypeChange
-            input
-                    ref: 'searchterms'
-                    type: 'text'
+
+            div role: 'search',
+                input
+                    ref:         'searchterms'
+                    type:        'text'
                     placeholder: t 'filters search placeholder'
-                    onKeyDown: @onKeyDown
+                    value:       @state.value
+                    onChange:    @onChange
+                    onKeyUp:     @onKeyUp
+
+                unless @state.isEmpty
+                    div className: 'btn-group',
+                        button
+                            className: 'btn fa fa-check'
+                            onClick: @showList
+
+                        button
+                            className: 'btn fa fa-close'
+                            onClick: @reset

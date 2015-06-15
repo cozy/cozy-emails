@@ -9,7 +9,9 @@ querystring = require 'querystring'
 multiparty = require 'multiparty'
 stream_to_buffer = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
+{normalizeMessageID} = require('../utils/jwz_tools')
 ImapReporter = require '../imap/reporter'
+uuid = require 'uuid'
 
 # get a message and attach it to req.message
 module.exports.fetch = (req, res, next) ->
@@ -66,7 +68,7 @@ module.exports.listByMailboxOptions = (req, res, next) ->
             return next new BadRequest "before & after should be a valid JS " +
                 "date.toISOString()"
 
-    else if sortField is 'subject' or sortField is 'from' or sortField is 'dest'
+    else if sortField is 'from' or sortField is 'dest'
         before = if before then decodeURIComponent(before) else ''
         after = if after then decodeURIComponent(after) else {}
         pageAfter = if pageAfter then decodeURIComponent pageAfter
@@ -103,7 +105,7 @@ module.exports.listByMailboxOptions = (req, res, next) ->
 
 # list messages from a mailbox
 # req.query possible
-# sort = [+/-][date/subject]
+# sort = [+/-][date]
 # flag in [seen, unseen, flagged, unflagged, answerred, unanswered]
 module.exports.listByMailbox = (req, res, next) ->
 
@@ -123,10 +125,9 @@ module.exports.listByMailbox = (req, res, next) ->
         messages = result.messages
         if messages.length is MSGBYPAGE
             last = messages[messages.length - 1]
-            if req.sortField is 'subject'
-                pageAfter = last.normSubject
-            # for 'from' and 'dest', we use pageAfter as the number of records to skip
-            else if req.sortField is 'from' or req.sortField is 'dest'
+            # for 'from' and 'dest', we use pageAfter as the number of records
+            # to skip
+            if req.sortField is 'from' or req.sortField is 'dest'
                 pageAfter = messages.length + (parseInt(req.pageAfter, 10) or 0)
             else
                 lastDate = last.date or new Date()
@@ -223,11 +224,23 @@ module.exports.send = (req, res, next) ->
 
     message.content = message.text
     message.attachments_backup = message.attachments
+    message.conversationID ?= uuid.v4()
 
     previousUID = message.mailboxIDs?[account.draftMailbox]
+    isFwdAttachment = message.attachments.some (attachment) ->
+        attachment.url and not req.message
 
     steps = []
 
+    if isFwdAttachment
+        steps.push (cb) ->
+            log.debug "fetching forwarded original"
+            id = message.inReplyTo
+            Message.find id, (err, found) ->
+                return cb err if err
+                return cb new Error "Not Found Fwd #{id}" unless found
+                req.message = found
+                cb null
 
     steps.push (cb) ->
         log.debug "gathering attachments"
@@ -259,6 +272,7 @@ module.exports.send = (req, res, next) ->
             account.sendMessage message, (err, info) ->
                 return cb err if err
                 message.headers['message-id'] = info.messageId
+                message.messageID = normalizeMessageID info.messageId
                 cb null
 
         #  Get the sent box
@@ -331,6 +345,20 @@ module.exports.send = (req, res, next) ->
             jdbMessage = updated
             cb null
 
+    # only when creating the draft / sent of a forwarded message
+    # with attachment. req.message is the forwarded one
+    if isFwdAttachment
+        steps.push (cb) ->
+            log.debug "send#linking"
+            binary = {}
+            for attachment in message.attachments
+                filename = attachment.generatedFileName
+                if filename of req.message.binary
+                    binary[filename] = req.message.binary[filename]
+
+            jdbMessage.updateAttributes {binary}, cb
+
+
     steps.push (cb) ->
         log.debug "send#attaching"
         async.eachSeries Object.keys(files), (name, cbLoop) ->
@@ -394,52 +422,38 @@ module.exports.batchFetch = (req, res, next) ->
         """
 
 module.exports.batchSend = (req, res, next) ->
-    messages = req.messages.map (msg) -> msg?.toClientObject()
+    messages = req.messages.filter (msg) -> return msg?
+        .map (msg) -> msg?.toClientObject()
+    return next new NotFound "No message found" if messages.length is 0
     res.send messages
 
 # move several message to trash with one request
 # expect req.account & req.messages
 module.exports.batchTrash = (req, res, next) ->
     # the client should prevent this, but let's be safe
-    unless req.account.trashMailbox
+    trashBoxId = req.account.trashMailbox
+    unless trashBoxId
         return next new AccountConfigError 'trashMailbox'
 
-    async.mapSeries req.messages, (message, cb) ->
-        if message.mailboxIDs[req.account.trashMailbox]?
-            # message is already in trash
-            cb null, message
-
-        else if message.isDraft req.account.draftMailbox
-            # message is a draft
-            message.imapcozy_destroy (err) ->
-                cb err, {id: message.id, _deleted: true}
-
-        else
-            # "normal" message, move it to trash
-            message.moveToTrash req.account, cb
-
-    , (err, updatedMessages) ->
+    Message.batchTrash req.messages, trashBoxId, (err, updated) ->
         return next err if err
-        res.send updatedMessages
+        res.send updated
 
 # add a flag to several messages
 # expect req.body.flag
 module.exports.batchAddFlag = (req, res, next) ->
 
-    async.mapSeries req.messages, (message, cb) ->
-        message.addFlag req.body.flag, cb
-    , (err, updatedMessages) ->
+    Message.batchAddFlag req.messages, req.body.flag, (err, updated) ->
         return next err if err
-        res.send updatedMessages
+        res.send updated
 
 # remove a flag from several messages
 # expect req.body.flag
 module.exports.batchRemoveFlag = (req, res, next) ->
-    async.mapSeries req.messages, (message, cb) ->
-        message.removeFlag req.body.flag, cb
-    , (err, updatedMessages) ->
+
+    Message.batchRemoveFlag req.messages, req.body.flag, (err, updated) ->
         return next err if err
-        res.send updatedMessages
+        res.send updated
 
 # move several message with one request
 # expect req.account & req.messages
@@ -452,18 +466,9 @@ module.exports.batchMove = (req, res, next) ->
 
     to = req.body.to
     from = req.body.from
-
-    async.mapSeries req.messages, (message, cb) ->
-        # dont move message that are not in from box
-        unless message.mailboxIDs[from]?
-            cb null, message
-
-        else
-            message.move from, to, cb
-
-    , (err, updatedMessages) ->
+    Message.batchMove req.messages, from, to, (err, updated) ->
         return next err if err
-        res.send updatedMessages
+        res.send updated
 
 
 # fetch from IMAP and send the raw rfc822 message

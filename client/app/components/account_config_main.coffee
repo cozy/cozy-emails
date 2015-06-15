@@ -33,6 +33,7 @@ module.exports = AccountConfigMain = React.createClass
         state[key] = value for key, value of @props
         state.imapAdvanced = false
         state.smtpAdvanced = false
+        state.deleting     = false
         return state
 
 
@@ -289,7 +290,7 @@ module.exports = AccountConfigMain = React.createClass
                         default: true
                         danger: true
                         onClick: @onRemove
-                        spinner: false
+                        spinner: @state.deleting
                         icon: 'trash'
                         text: t "account remove"
                     ]
@@ -317,9 +318,19 @@ module.exports = AccountConfigMain = React.createClass
     onRemove: (event) ->
         event?.preventDefault()
 
-        if window.confirm(t 'account remove confirm')
-            AccountActionCreator.remove @props.selectedAccount.get('id')
+        modal =
+            title       : t 'app confirm delete'
+            subtitle    : t 'account remove confirm'
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'app cancel'
+            actionLabel : t 'app confirm'
+            action      : =>
+                LayoutActionCreator.hideModal()
+                @setState deleting: true
+                AccountActionCreator.remove @props.selectedAccount.get('id')
 
+        LayoutActionCreator.displayModal modal
 
     # Display or not SMTP advanced settings.
     toggleSMTPAdvanced: ->

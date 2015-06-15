@@ -62,7 +62,7 @@ module.exports = {
     return boxes;
   },
   sanitizeHTML: function(html, messageId, attachments) {
-    var allowedAttributes, allowedTags, safeAttributes;
+    var allowedAttributes, allowedSchemes, allowedTags, safeAttributes;
     allowedTags = sanitizeHtml.defaults.allowedTags.concat(['img', 'head', 'meta', 'link']);
     safeAttributes = ['style', 'class', 'background', 'colspan', 'rowspan', 'itemscope', 'itemtype', 'itemprop', 'content'];
     allowedAttributes = sanitizeHtml.defaults.allowedAttributes;
@@ -72,11 +72,12 @@ module.exports = {
       return allowedAttributes[tag] = exAllowed.concat(safeAttributes);
     });
     allowedAttributes.link.push('href');
+    allowedSchemes = sanitizeHtml.defaults.allowedSchemes.concat(['cid', 'data']);
     html = sanitizeHtml(html, {
       allowedTags: allowedTags,
       allowedAttributes: allowedAttributes,
       allowedClasses: false,
-      allowedSchemes: sanitizeHtml.defaults.allowedSchemes.concat(['cid', 'data']),
+      allowedSchemes: allowedSchemes,
       transformTags: {
         'img': function(tag, attribs) {
           var attachment, cid, mime, name, ref, ref1, src;

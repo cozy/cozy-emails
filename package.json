@@ -1,6 +1,6 @@
 {
   "name": "cozy-emails",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "engines": [
     "node = 0.8.x"
   ],
@@ -13,6 +13,8 @@
   "main": "server.coffee",
   "dependencies": {
     "americano": "0.4.1",
+    "cozydb": "0.0.15",
+    "printit": "0.1.3",
     "async": "0.9.0",
     "bluebird": "2.3.2",
     "cozy-notifications-helper": "1.0.2",
@@ -61,6 +63,7 @@
     "fixtures:generate": "coffee tests/fixtures/generator.coffee 1000",
     "fixtures:loader": "coffee tests/fixtures/loader.coffee",
     "fixtures:load": "cozy-fixtures load -l tests/fixtures",
+    "test:client": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && brunch b",
     "build:server": "cake build",

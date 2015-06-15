@@ -290,10 +290,8 @@ ImapPool = (function() {
     var wrapped;
     return wrapped = (function(_this) {
       return function(imap, callback) {
-        log.debug(_this.id, "begin wrapped task");
         return imap.openBox(cozybox.path, function(err, imapbox) {
           var newUidvalidity, oldUidvalidity;
-          log.debug(_this.id, "wrapped box opened", err);
           if (err) {
             return callback(err);
           }

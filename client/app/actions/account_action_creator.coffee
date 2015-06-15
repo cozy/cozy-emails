@@ -4,6 +4,7 @@ AppDispatcher = require '../app_dispatcher'
 
 AccountStore = require '../stores/account_store'
 LayoutActionCreator = null
+MessageActionCreator = require './message_action_creator'
 
 alertError = (error) ->
     LayoutActionCreator = require '../actions/layout_action_creator'
@@ -73,6 +74,8 @@ module.exports = AccountActionCreator =
             type: ActionTypes.REMOVE_ACCOUNT
             value: accountID
         XHRUtils.removeAccount accountID
+        LayoutActionCreator = require '../actions/layout_action_creator'
+        LayoutActionCreator.notify t('account removed'), autoclose: true
         window.router.navigate '', true
 
     _setNewAccountWaitingStatus: (status) ->
@@ -86,11 +89,18 @@ module.exports = AccountActionCreator =
             value: errorMessage
 
     selectAccount: (accountID, mailboxID) ->
+        changed = AccountStore.selectedIsDifferentThan accountID, mailboxID
+        selected = AccountStore.getSelected()
+        supportRFC4551 = selected?.get('supportRFC4551')
+
         AppDispatcher.handleViewAction
             type: ActionTypes.SELECT_ACCOUNT
             value:
                 accountID: accountID
                 mailboxID: mailboxID
+
+        if mailboxID? and changed and supportRFC4551
+            MessageActionCreator.refreshMailbox(mailboxID)
 
     discover: (domain, callback) ->
         XHRUtils.accountDiscover domain, (err, infos) ->

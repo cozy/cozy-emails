@@ -4,12 +4,14 @@ module.exports =
       "app loading"             : "Chargement…"
       "app back"                : "Retour"
       "app cancel"              : "Annuler"
+      "app confirm"             : "Oui"
       "app menu"                : "Menu"
       "app search"              : "Rechercher…"
       "app alert close"         : "Fermer"
       "app unimplemented"       : "Non implémenté"
       "app error"               : "Oups, une erreur est survenue,
                                     veuillez réessayer"
+      "app confirm delete"      : "Confirmation de suppression"
 
       # Compose window
       "compose"                   : "Écrire un nouveau message"
@@ -37,6 +39,8 @@ module.exports =
       "compose error no dest"     : "Vous n'avez pas saisi de destinataires"
       "compose error no subject"  : "Vous n'avez pas saisi de sujet"
       "compose confirm keep draft": "Vous n'avez pas envoyé le message, voulez-vous conserver le brouillon ?"
+      "compose confirm draft keep"  : "Conserver le brouillon"
+      "compose confirm draft delete": "Supprimer le brouillon"
       "compose wrong email format": "L'addresse mail donnée n'est pas bien formattée : %{address}."
       "compose forward header"    : "Message transféré"
       "compose forward subject"   : "Sujet :"
@@ -128,9 +132,12 @@ module.exports =
       "mail mark nofav"         : "Normal"
       "mail mark read"          : "Lu"
       "mail mark unread"        : "Non lu"
-      "mail confirm delete"     : "Voulez-vous vraiment supprimer le message
-                                    « %{subject} » ?"
+      "mail confirm delete title"       : "Supprimer le message"
+      "mail confirm delete"             : "Voulez-vous vraiment supprimer le message
+                                         « %{subject} » ?"
       "mail confirm delete nosubject"   : "Voulez-vous vraiment supprimer ce message"
+      "mail confirm delete cancel"      : "Annuler"
+      "mail confirm delete delete"      : "Supprimer"
       "mail action conversation delete" : "Supprimer la conversation"
       "mail action conversation move"   : "Déplacer la conversation"
       "mail action conversation seen"   : "Marquer la conversation comme lue"
@@ -185,6 +192,7 @@ module.exports =
       "account smtpServer"          : "Serveur sortant"
       "account smtpTLS"             : "Utiliser STARTTLS"
       "account remove"              : "Supprimer ce compte"
+      "account removed"             : "Compte supprimé"
       "account remove confirm"      : "Voulez-vous vraiment supprimer
                                         ce compte ?"
       "account draft mailbox"       : "Enregistrer les brouillons dans"
@@ -220,6 +228,7 @@ module.exports =
       "account tab signature"       : "Signature"
       "account signature short"     : "Saisissez ici le texte qui sera ajouté à la fin de vos courriers."
       "account signature"           : "Signature des courriers"
+      "account signature save"      : "Enregistrer"
       "mailbox create ok"           : "Dossier créé"
       "mailbox create ko"           : "Erreur de création du dossier"
       "mailbox update ok"           : "Dossier mis à jour"
@@ -257,12 +266,18 @@ module.exports =
       "message action sent ko"      : "Une erreur est survenue : "
       "message action draft ok"     : "Message sauvegardé !"
       "message action draft ko"     : "Une erreur est survenue : "
-      "message delete ok"    : "Message « %{subject} » supprimé"
-      "message delete ko"    : "Impossible de supprimer le message : "
-      "message move ok"      : "Message « %{subject} » déplacé"
-      "message move ko"      : "Le déplacement de « %{subject} » a échoué"
-      "message mark ok"      : "Le message a été mis à jour"
-      "message mark ko"      : "L'opération a échoué"
+      "message delete ok"           : "Message « %{subject} » supprimé"
+      "message delete ko"           : "Impossible de supprimer le message : "
+      "message move ok"             : "Message « %{subject} » déplacé"
+      "message move ko"             : "Le déplacement de « %{subject} » a échoué"
+      "message mark ok"             : "Le message a été mis à jour"
+      "message mark ko"             : "L'opération a échoué"
+      "draft delete ok"             : "Le brouillon « %{subject} » a été supprimé"
+      "draft delete ko"             : "Erreur lors de la suppression du brouillon « %{subject} » : "
+      "draft move ok"               : "Le brouillon a été « %{subject} » déplacé"
+      "draft move ko"               : "Erreur lors du déplacement du brouillon « %{subject} » : "
+      "draft mark ok"               : "Brouillon « %{subject} » mis à jour"
+      "draft mark ko"               : "Erreur de mise à jour du brouillon « %{subject} » : "
       "conversation move ok"        : "Conversation « %{subject} » déplacée"
       "conversation move ko"        : "Le déplacement de « %{subject} » a échoué"
       "conversation delete ok"      : "Conversation « %{subject} » supprimée"
@@ -378,6 +393,7 @@ module.exports =
       "modal please report"        : "Merci de bien vouloir transmettre ces
                                         informations à cozy."
       "modal please contribute"    : "Merci de contribuer"
+      "modal copy content"         : "Copier ces informations dans le presse papier"
 
       # Validation
       "validate must not be empty" : "Ce champ doit être renseigné"
@@ -401,10 +417,12 @@ module.exports =
       #
       "contact form"             : "Sélectionnez des contacts"
       "contact form placeholder" : "Nom"
+      "contact button label"     : "Ajouter au carnet d'adresse"
       "contact create success"   : "%{contact} a été ajouté(e) à vos contacts"
       "contact create error"     : "L'ajout à votre carnet d'adresses a
                                         échoué : {error}"
-      "message contact creation"    : "Voulez vous ajouter %{contact} à votre carnet d'adresse ?"
+      "message contact creation title": "Ajouter un contact"
+      "message contact creation"      : "Voulez vous ajouter %{contact} à votre carnet d'adresse ?"
 
       # GMail security
       "gmail security tile": "Sécurité Gmail"
@@ -462,3 +480,4 @@ module.exports =
       'daterangepicker presets yesterday': 'hier'
       'daterangepicker presets last week': 'semaine dernière'
       'daterangepicker presets last month': 'mois dernier'
+      'daterangepicker clear': 'effacer'

@@ -80,6 +80,13 @@ module.exports = MessageUtils =
         else
             return from
 
+    # Add signature at the end of the message
+    addSignature: (message, signature) ->
+        message.text += "\n\n-- \n#{signature}"
+        signatureHtml = signature.replace /\n/g, '<br>'
+        message.html += """
+        <p><br></p><p id="signature">-- \n<br>#{signatureHtml}</p>
+            """
 
     # Build message to put in the email composer depending on the context
     # (reply, reply to all, forward or simple message).
@@ -106,7 +113,7 @@ module.exports = MessageUtils =
                 try
                     html = markdown.toHTML text
                 catch e
-                    console.log "Error converting message to Markdown: #{e}"
+                    console.error "Error converting message to Markdown: #{e}"
                     html = "<div class='text'>#{text}</div>"
 
             if html? and not text? and not inHTML
@@ -178,20 +185,14 @@ module.exports = MessageUtils =
         message.bcc = []
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
-        if isSignature
-            message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
-            <p><br /></p>
+            <p><br></p>
             """
         if isSignature
-            signature = signature.replace /\n/g, '<br>'
-            message.html += """
-            <p><br /></p><p id="signature">-- \n<br>#{signature}</p>
-            """
-
+            @addSignature message, signature
 
     # Build message to display in composer in case of a reply to all message:
     # * set subject automatically (Re: previous subject)
@@ -227,19 +228,14 @@ module.exports = MessageUtils =
 
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
-        if isSignature
-            message.text += "\n\n#{signature}"
         message.html = """
             #{COMPOSE_STYLE}
             <p>#{separator}<span class="originalToggle"> … </span></p>
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
-            <p><br /></p>
+            <p><br></p>
             """
         if isSignature
-            signature = signature.replace /\n/g, '<br>'
-            message.html += """
-            <p><br /></p><p id="signature">-- \n<br>#{signature}</p>
-            """
+            @addSignature message, signature
 
 
     # Build message to display in composer in case of a message forwarding:
@@ -287,7 +283,7 @@ module.exports = MessageUtils =
 """
         textSeparator = separator.replace('&lt;', '<').replace('&gt;', '>')
         textSeparator = textSeparator.replace('<pre>', '').replace('</pre>', '')
-        htmlSeparator = separator.replace /(\n)+/g, '<br />'
+        htmlSeparator = separator.replace /(\n)+/g, '<br>'
 
         @setMessageAsDefault options
         message.subject = """
@@ -295,14 +291,13 @@ module.exports = MessageUtils =
             """
         message.text = textSeparator + text
         message.html = "#{COMPOSE_STYLE}"
+
         if isSignature
-            signature = signature.replace /\n/g, '<br>'
-            message.html += """
-            <p><br /></p><p id="signature">-- \n<br>#{signature}</p>
-            """
+            @addSignature message, signature
+
         message.html += """
 
-<p>#{htmlSeparator}</p><p><br /></p>#{html}
+<p>#{htmlSeparator}</p><p><br></p>#{html}
 """
         message.attachments = inReplyTo.get 'attachments'
 
@@ -329,15 +324,10 @@ module.exports = MessageUtils =
         message.bcc = []
         message.subject = ''
         message.text = ''
+        message.html = "#{COMPOSE_STYLE}\n<p><br></p>"
+
         if isSignature
-            message.text += "-- \n#{signature}"
-        message.html = COMPOSE_STYLE
-        if isSignature
-            signature = signature.replace /\n/g, '<br>'
-            message.html += """
-            <p><br /></p><p><br /></p>
-            <p id="signature">-- \n<br>#{signature}</p>
-            """
+            @addSignature message, signature
 
         return message
 
@@ -483,3 +473,104 @@ module.exports = MessageUtils =
         if subject.indexOf(replyPrefix) isnt 0
             subject = "#{replyPrefix}#{subject}"
         subject
+
+    # To keep HTML markup light, create the contact tooltip dynamicaly
+    # on mouse over
+    # options:
+    #  - container  : tooltip container
+    #  - delay      : nb of miliseconds to wait before displaying tooltip
+    #  - showOnClick: set to true to display tooltip when clicking on element
+    tooltip: (node, address, onAdd, options) ->
+        options ?= {}
+        timeout = null
+        doAdd = (e) ->
+            e.preventDefault()
+            e.stopPropagation()
+            onAdd address
+        addTooltip = (e) ->
+            if node.dataset.tooltip
+                return
+            node.dataset.tooltip = true
+            contact = ContactStore.getByAddress address.address
+            avatar  = contact?.get 'avatar'
+            add   = ''
+            image = ''
+            if contact?
+                if avatar?
+                    image = "<img class='avatar' src=#{avatar}>"
+                else
+                    image = "<div class='no-avatar'>?</div>"
+                image = """
+                <div class="tooltip-avatar">
+                  <a href="/#apps/contacts/contact/#{contact.get 'id'}" target="blank">
+                    #{image}
+                  </a>
+                </div>
+                """
+            else
+                if onAdd?
+                    add = """
+                    <p class="tooltip-toolbar">
+                      <button class="btn btn-cozy btn-add" type="button">
+                      #{t 'contact button label'}
+                      </button>
+                    </p>
+                    """
+            template = """
+                <div class="tooltip" role="tooltip">
+                    <div class="tooltip-arrow"></div>
+                    <div class="tooltip-content">
+                        #{image}
+                        <div>
+                        #{address.name}
+                        #{if address.name then '<br>' else ''}
+                        &lt;#{address.address}&gt;
+                        </div>
+                        #{add}
+                    </div>
+                </div>'
+                """
+            options =
+                title: address.address
+                template: template
+                trigger: 'manual'
+                placement: 'auto top'
+                container: options.container or node.parentNode
+            jQuery(node).tooltip(options).tooltip('show')
+            tooltipNode = jQuery(node).data('bs.tooltip').tip()[0]
+            if parseInt(tooltipNode.style.left, 10) < 0
+                tooltipNode.style.left = 0
+            rect = tooltipNode.getBoundingClientRect()
+            mask = document.createElement 'div'
+            mask.classList.add 'tooltip-mask'
+            mask.style.top    = (rect.top - 8) + 'px'
+            mask.style.left   = (rect.left - 8) + 'px'
+            mask.style.height = (rect.height + 32) + 'px'
+            mask.style.width  = (rect.width  + 16) + 'px'
+            document.body.appendChild mask
+            mask.addEventListener 'mouseout', (e) ->
+                if not ( rect.left < e.pageX < rect.right) or
+                   not ( rect.top  < e.pageY < rect.bottom)
+                    mask.parentNode.removeChild mask
+                    removeTooltip()
+            if onAdd?
+                addNode = tooltipNode.querySelector('.btn-add')
+                if addNode?
+                    addNode.addEventListener 'click', doAdd
+        removeTooltip = ->
+            addNode = node.querySelector('.btn-add')
+            if addNode?
+                addNode.removeEventListener 'click', doAdd
+            delete node.dataset.tooltip
+            jQuery(node).tooltip('destroy')
+
+        node.addEventListener 'mouseover', ->
+            timeout = setTimeout ->
+                addTooltip()
+            , options.delay or 1000
+        node.addEventListener 'mouseout', ->
+            clearTimeout timeout
+        if options.showOnClick
+            node.addEventListener 'click', (event) ->
+                event.stopPropagation()
+                addTooltip()

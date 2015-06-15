@@ -9,24 +9,34 @@ AccountActionCreator      = require '../actions/account_action_creator'
 LayoutActionCreator       = require '../actions/layout_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
 
-AccountStore = require '../stores/account_store'
-LayoutStore  = require '../stores/layout_store'
+AccountStore   = require '../stores/account_store'
+LayoutStore    = require '../stores/layout_store'
+RefreshesStore = require '../stores/refreshes_store'
 
-Modal        = require './modal'
-ThinProgress = require './thin_progress'
 MessageUtils = require '../utils/message_utils'
 colorhash    = require '../utils/colorhash'
 
-RefreshIndicator = require './menu_refresh_indicator'
-
 {Dispositions, SpecialBoxIcons, Tooltips} = require '../constants/app_constants'
+
+
+# This is here for a convenient way to fond special mailboxes names.
+# NOTE: should we externalize them in app_constants?
+specialMailboxes = [
+    'inboxMailbox'
+    'draftMailbox'
+    'sentMailbox'
+    'trashMailbox'
+    'junkMailbox'
+    'allMailbox'
+]
+
 
 module.exports = Menu = React.createClass
     displayName: 'Menu'
 
     mixins: [
         RouterMixin
-        StoreWatchMixin [LayoutStore]
+        StoreWatchMixin [AccountStore, LayoutStore, RefreshesStore]
     ]
 
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -35,11 +45,14 @@ module.exports = Menu = React.createClass
 
     getInitialState: ->
         displayActiveAccount: true
-        modalErrors: null
         onlyFavorites: true
 
     getStateFromStores: ->
-            isDrawerExpanded: LayoutStore.isDrawerExpanded()
+        isDrawerExpanded : LayoutStore.isDrawerExpanded()
+        refreshes        : RefreshesStore.getRefreshing()
+        accounts         : AccountStore.getAll()
+        mailboxes        : AccountStore.getSelectedMailboxes true
+        favorites        : AccountStore.getSelectedFavorites true
 
     componentWillReceiveProps: (props) ->
         if not Immutable.is(props.selectedAccount, @props.selectedAccount)
@@ -47,14 +60,23 @@ module.exports = Menu = React.createClass
 
 
     displayErrors: (refreshee) ->
-        @setState modalErrors: refreshee.get 'errors'
-
-    hideErrors: ->
-        @setState modalErrors: null
+        errors = refreshee.get 'errors'
+        modal =
+            title       : t 'modal please contribute'
+            subtitle    : t 'modal please report'
+            allowCopy   : true
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'app alert close'
+            content     : React.DOM.pre
+                style: "max-height": "300px",
+                "word-wrap": "normal",
+                    errors.join "\n\n"
+        LayoutActionCreator.displayModal modal
 
     render: ->
 
-        if @props.accounts.length
+        if @state.accounts.length
             selectedAccountUrl = @buildUrl
                 direction: 'first'
                 action: 'account.mailbox.messages'
@@ -89,20 +111,6 @@ module.exports = Menu = React.createClass
                 action: 'settings'
                 fullWidth: true
 
-        if @state.modalErrors
-            title       = t 'modal please contribute'
-            subtitle    = t 'modal please report'
-            modalErrors = @state.modalErrors
-            closeModal  = @hideErrors
-            closeLabel  = t 'app alert close'
-            content = React.DOM.pre
-                style: "max-height": "300px",
-                "word-wrap": "normal",
-                    @state.modalErrors.join "\n\n"
-            modal = Modal {title, subtitle, content, closeModal, closeLabel}
-        else
-            modal = null
-
         composeUrl = @buildUrl
             direction: 'first'
             action: 'compose'
@@ -114,10 +122,7 @@ module.exports = Menu = React.createClass
             role: 'menubar'
             'aria-expanded': @state.isDrawerExpanded,
 
-
-            modal
-
-            if @props.accounts.length
+            if @state.accounts.length
                 a
                     href: composeUrl
                     className: 'compose-action btn btn-cozy-contrast btn-cozy',
@@ -125,8 +130,8 @@ module.exports = Menu = React.createClass
                         span className: 'item-label', " #{t 'menu compose'}"
 
             nav className: 'mainmenu',
-                if @props.accounts.length
-                    @props.accounts.map (account, key) =>
+                if @state.accounts.length
+                    @state.accounts.map (account, key) =>
                         @getAccountRender account, key
                     .toJS()
 
@@ -154,10 +159,10 @@ module.exports = Menu = React.createClass
         isSelected = (not @props.selectedAccount? and key is 0) \
                      or @props.selectedAccount?.get('id') is account.get('id')
 
-        accountID = account.get 'id'
-        nbUnread = account.get('totalUnread')
+        accountID      = account.get 'id'
+        nbUnread       = account.get('totalUnread')
         defaultMailbox = AccountStore.getDefaultMailbox accountID
-        refreshes = @props.refreshes
+        refreshes      = @state.refreshes
 
         if defaultMailbox?
             url = @buildUrl
@@ -191,20 +196,26 @@ module.exports = Menu = React.createClass
         accountClasses = classer
             active: isActive
 
+
         if @state.onlyFavorites
-            mailboxes = @props.favorites
+            mailboxes = @state.favorites
             icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites off'
         else
-            mailboxes = @props.mailboxes
+            mailboxes = @state.mailboxes
             icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites on'
+
+        allBoxesAreFavorite = @state.mailboxes.length is @state.favorites.length
 
         configMailboxUrl = @buildUrl
             direction: 'first'
             action: 'account.config'
             parameters: [accountID, 'account']
             fullWidth: true
+
+        specialMboxes = specialMailboxes.map (mbox) -> account.get mbox
+        accountColor  = colorhash(account.get 'label')
 
         div
             className: accountClasses, key: key,
@@ -221,7 +232,7 @@ module.exports = Menu = React.createClass
                         i
                             className: 'avatar'
                             style:
-                                'background-color': colorhash(account.get 'label')
+                                'background-color': accountColor
                             account.get('label')[0]
                         span
                             'data-account-id': key,
@@ -235,10 +246,6 @@ module.exports = Menu = React.createClass
                                     className: 'fa warning',
                                     onClick: @displayErrors.bind null,
                                     progress
-                        if progress.get('firstImport')
-                            ThinProgress
-                                done: progress.get('done'),
-                                total: progress.get('total')
 
                 if isSelected
                     a
@@ -251,13 +258,15 @@ module.exports = Menu = React.createClass
                             'data-tooltip-direction': 'right'
 
                 if nbUnread > 0 and not progress
-                        span className: 'badge', nbUnread
+                    span className: 'badge', nbUnread
 
             if isSelected
                 ul
                     role: 'group'
                     className: 'list-unstyled mailbox-list',
-                    mailboxes?.map (mailbox, key) =>
+                    mailboxes?.filter (mailbox) ->
+                        mailbox.get('id') in specialMboxes
+                    .map (mailbox, key) =>
                         selectedMailboxID = @props.selectedMailboxID
                         MenuMailboxItem
                             account:           account,
@@ -267,16 +276,29 @@ module.exports = Menu = React.createClass
                             refreshes:         refreshes,
                             displayErrors:     @displayErrors,
                     .toJS()
-                    li className: 'toggle-favorites',
-                        a
-                            role: 'menuitem',
-                            tabIndex: 0,
-                            onClick: toggleFavorites,
-                            key: 'toggle',
-                                i className: 'fa ' + icon
-                                span
-                                    className: 'item-label',
-                                    toggleFavoritesLabel
+                    mailboxes?.filter (mailbox) ->
+                        mailbox.get('id') not in specialMboxes
+                    .map (mailbox, key) =>
+                        selectedMailboxID = @props.selectedMailboxID
+                        MenuMailboxItem
+                            account:           account,
+                            mailbox:           mailbox,
+                            key:               key,
+                            selectedMailboxID: selectedMailboxID,
+                            refreshes:         refreshes,
+                            displayErrors:     @displayErrors,
+                    .toJS()
+                    unless allBoxesAreFavorite
+                        li className: 'toggle-favorites',
+                            a
+                                role: 'menuitem',
+                                tabIndex: 0,
+                                onClick: toggleFavorites,
+                                key: 'toggle',
+                                    i className: 'fa ' + icon
+                                    span
+                                        className: 'item-label',
+                                        toggleFavoritesLabel
 
     _initTooltips: ->
         #jQuery('#account-list [data-toggle="tooltip"]').tooltip()
@@ -299,6 +321,10 @@ MenuMailboxItem = React.createClass
 
     getInitialState: ->
         return target: false
+
+    onClickMailbox: ->
+        if @props.mailbox.get('id') is @props.selectedMailboxID
+            MessageActionCreator.refreshMailbox(@props.selectedMailboxID)
 
     render: ->
         mailboxID = @props.mailbox.get 'id'
@@ -339,14 +365,15 @@ MenuMailboxItem = React.createClass
         li className: classesParent,
             a
                 href: mailboxUrl
-                onClick: @props.hideMenu
+                onClick: @onClickMailbox
                 className: "#{classesChild} lv-#{@props.mailbox.get('depth')}"
                 role: 'menuitem'
                 'data-mailbox-id': mailboxID
                 onDragEnter: @onDragEnter
                 onDragLeave: @onDragLeave
                 onDragOver: @onDragOver
-                onDrop: @onDrop
+                onDrop: (e) =>
+                    @onDrop e, mailboxID
                 title: title
                 'data-toggle': 'tooltip'
                 'data-placement' : 'right'
@@ -356,11 +383,6 @@ MenuMailboxItem = React.createClass
                     span
                         className: 'item-label',
                         "#{@props.mailbox.get 'label'}"
-
-                if progress and progress.get('firstImport')
-                    ThinProgress
-                        done: progress.get('done')
-                        total: progress.get('total')
 
                 if progress?.get('errors').length
                     span className: 'refresh-error', onClick: displayError,
@@ -401,12 +423,12 @@ MenuMailboxItem = React.createClass
 
         e.preventDefault()
 
-        if window.confirm(t 'account confirm delbox')
+        doExpunge = ->
             mailbox =
                 accountID: accountID
                 mailboxID: mailboxID
 
-            AccountActionCreator.mailboxExpunge mailbox, (error) =>
+            AccountActionCreator.mailboxExpunge mailbox, (error) ->
                 if error?
                     # if user hasn't switched to another box, refresh display
                     if accountID is mailbox.accountID and
@@ -416,7 +438,19 @@ MenuMailboxItem = React.createClass
                         params.mailboxID = mailboxID
                         LayoutActionCreator.showMessageList parameters: params
 
-                    LayoutActionCreator.alertError "#{t("mailbox expunge ko")} #{error}"
+                    errorMessage = "#{t("mailbox expunge ko")} #{error}"
+                    LayoutActionCreator.alertError errorMessage
                 else
                     LayoutActionCreator.notify t("mailbox expunge ok"),
                         autoclose: true
+            LayoutActionCreator.hideModal()
+
+        modal =
+            title       : t 'app confirm delete'
+            subtitle    : t 'account confirm delbox'
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'app cancel'
+            actionLabel : t 'app confirm'
+            action      : doExpunge
+        LayoutActionCreator.displayModal modal

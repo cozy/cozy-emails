@@ -76,7 +76,6 @@ module.exports = {
           docDate = doc.date || (new Date()).toISOString();
           emit(['uid', boxid, uid], doc.flags);
           emit(['date', boxid, null, docDate], null);
-          emit(['subject', boxid, null, doc.normSubject], null);
           ref1 = ['\\Seen', '\\Flagged', '\\Answered'];
           for (i = 0, len = ref1.length; i < len; i++) {
             xflag = ref1[i];
@@ -84,11 +83,9 @@ module.exports = {
               xflag = '!' + xflag;
             }
             emit(['date', boxid, xflag, docDate], null);
-            emit(['subject', boxid, xflag, doc.normSubject], null);
           }
           if (((ref2 = doc.attachments) != null ? ref2.length : void 0) > 0) {
             emit(['date', boxid, '\\Attachments', docDate], null);
-            emit(['subject', boxid, '\\Attachments', doc.normSubject], null);
           }
           ref3 = doc.from;
           for (j = 0, len1 = ref3.length; j < len1; j++) {
@@ -125,6 +122,32 @@ module.exports = {
       }
       if (doc.normSubject) {
         return emit([doc.accountID, 'subject', doc.normSubject], doc.conversationID);
+      }
+    },
+    conversationPatching: {
+      reduce: function(key, values, rereduce) {
+        var i, len, value, valuesShouldNotBe;
+        valuesShouldNotBe = rereduce ? null : values[0];
+        for (i = 0, len = values.length; i < len; i++) {
+          value = values[i];
+          if (value !== valuesShouldNotBe) {
+            return value;
+          }
+        }
+        return null;
+      },
+      map: function(doc) {
+        var i, len, ref, reference, results;
+        if (doc.messageID) {
+          emit([doc.accountID, doc.messageID], doc.conversationID);
+        }
+        ref = doc.references || [];
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          reference = ref[i];
+          results.push(emit([doc.accountID, reference], doc.conversationID));
+        }
+        return results;
       }
     },
     byConversationID: {
