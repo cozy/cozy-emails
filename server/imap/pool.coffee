@@ -91,7 +91,7 @@ class ImapPool
             (token, callback)=>
                 if token
                     options =
-                        user       : "cyril.bareme@gmail.com"
+                        user       : @account.login
                         xoauth2    : token
                         host       : "imap.gmail.com"
                         port       : 993

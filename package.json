@@ -37,7 +37,7 @@
     "socket.io": "1.1.0",
     "uuid": "1.4.2",
     "xmldom": "0.1.19",
-    "xoauth2": "^1.0.0"
+    "xoauth2": "1.0.0"
   },
   "devDependencies": {
     "should": "4.0.4",
