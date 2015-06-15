@@ -630,21 +630,19 @@ class Account extends cozydb.CozyModel
             tls: rejectUnauthorized: false
         if @smtpMethod? and @smtpMethod isnt 'NONE'
             options.authMethod = @smtpMethod
-        if @smtpMethod isnt 'NONE'
+        if @smtpMethod isnt 'NONE' and @oauthProvider isnt 'GMAIL'
             options.auth =
                 user: @smtpLogin or @login
                 pass: @smtpPassword or @password
-
-        generator = require('xoauth2').createXOAuth2Generator(
-            user: 'cyril.bareme@gmail.com'
-            clientSecret: '1gNUceDM59TjFAks58ftsniZ'
-            clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com'
-            refreshToken: '1/uvynpHiKIOn6gHyrW-RjR8zX5pQl6tfnNusBIOMQWBI'
-        )
-
-        options =
-            service: 'gmail'
-            auth:
+        if @oauthProvider is 'GMAIL'
+            generator = require('xoauth2').createXOAuth2Generator(
+                user: 'cyril.bareme@gmail.com'
+                clientSecret: '1gNUceDM59TjFAks58ftsniZ'
+                clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com'
+                refreshToken: @oauthRefreshToken
+            )
+            options.service = 'gmail'
+            options.auth =
                 xoauth2: generator
 
 
