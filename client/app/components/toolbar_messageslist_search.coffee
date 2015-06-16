@@ -28,12 +28,13 @@ module.exports = SearchToolbarMessagesList = React.createClass
         sort =
             order:  '-'
             before: @state.value
-        if @state.value?
+        if @state.value? and @state.value isnt ''
             sort.field = @state.type
             sort.after = "#{@state.value}\uFFFF"
         else
             # reset, use default filter
             sort.field = 'date'
+            sort.after = ''
         LayoutActionCreator.sortMessages sort
 
         params = _.clone(MessageStore.getParams())
@@ -58,7 +59,7 @@ module.exports = SearchToolbarMessagesList = React.createClass
 
     reset: ->
         @setState
-            value: null
+            value: ''
             isEmpty: true,
             @showList
 
