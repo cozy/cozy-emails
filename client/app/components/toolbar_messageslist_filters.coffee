@@ -25,6 +25,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass
         LayoutActionCreator.filterMessages MessageFilter[@state.flag]
 
         if @state.filter
+            # always close message preview before filtering
+            window.cozyMails.messageClose()
             [start, end] = @state.filter
         else
             start = end = ''

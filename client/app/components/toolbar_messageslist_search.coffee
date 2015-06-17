@@ -29,6 +29,8 @@ module.exports = SearchToolbarMessagesList = React.createClass
             order:  '-'
             before: @state.value
         if @state.value? and @state.value isnt ''
+            # always close message preview before filtering
+            window.cozyMails.messageClose()
             sort.field = @state.type
             sort.after = "#{@state.value}\uFFFF"
         else
