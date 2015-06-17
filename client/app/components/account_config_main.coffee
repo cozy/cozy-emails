@@ -72,6 +72,8 @@ module.exports = AccountConfigMain = React.createClass
             'form-account': true
             'waiting': @props.isWaiting
 
+        isOauth = @props.selectedAccount?.get('oauthProvider')?
+
         Form className: formClass,
 
             FieldSet text: t 'account identifiers'
@@ -96,13 +98,14 @@ module.exports = AccountConfigMain = React.createClass
                 errorField: ['login', 'auth']
                 onBlur: @discover
 
-            AccountInput
-                name: 'password'
-                value: @linkState('password').value
-                errors: @state.errors
-                type: 'password'
-                errorField: ['password', 'auth']
-                onBlur: @props.onBlur
+            if not isOauth
+                AccountInput
+                    name: 'password'
+                    value: @linkState('password').value
+                    errors: @state.errors
+                    type: 'password'
+                    errorField: ['password', 'auth']
+                    onBlur: @props.onBlur
 
             AccountInput
                 name: 'accountType'
@@ -158,12 +161,13 @@ module.exports = AccountConfigMain = React.createClass
                 onClick: (event) =>
                     @_onServerParam event.target, 'imap', 'tls'
 
-            div
-                className: "form-group",
-                a
-                    className: "col-sm-3 col-sm-offset-2 control-label clickable",
-                    onClick: @toggleIMAPAdvanced,
-                    t "account imap #{if @state.imapAdvanced then 'hide' else 'show'} advanced"
+            if not isOauth
+                div
+                    className: "form-group advanced-imap-toggle",
+                    a
+                        className: "col-sm-3 col-sm-offset-2 control-label clickable",
+                        onClick: @toggleIMAPAdvanced,
+                        t "account imap #{if @state.imapAdvanced then 'hide' else 'show'} advanced"
 
             if @state.imapAdvanced
                 AccountInput
@@ -213,12 +217,13 @@ module.exports = AccountConfigMain = React.createClass
                 onClick: (ev) =>
                     @_onServerParam ev.target, 'smtp', 'tls'
 
-            div
-                className: "form-group",
-                a
-                    className: "col-sm-3 col-sm-offset-2 control-label clickable",
-                    onClick: @toggleSMTPAdvanced,
-                    t "account smtp #{if @state.smtpAdvanced then 'hide' else 'show'} advanced"
+            if not isOauth
+                div
+                    className: "form-group advanced-smtp-toggle",
+                    a
+                        className: "col-sm-3 col-sm-offset-2 control-label clickable",
+                        onClick: @toggleSMTPAdvanced,
+                        t "account smtp #{if @state.smtpAdvanced then 'hide' else 'show'} advanced"
 
             if @state.smtpAdvanced
                 FormDropdown
