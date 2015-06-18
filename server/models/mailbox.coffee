@@ -279,7 +279,7 @@ class Mailbox extends cozydb.CozyModel
             async.eachSeries ids, (id, cbLoop) ->
                 Message.updateAttributes id, changes, (err) ->
                     if err
-                        log.error err
+                        log.error "markAllMessagesAsIgnored err", err
                         lastError = err
                     cbLoop null # loop anyway
             , (err) ->

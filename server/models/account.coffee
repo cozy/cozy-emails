@@ -100,7 +100,7 @@ class Account extends cozydb.CozyModel
                 # then apply the ignored patch to all accounts
                 async.eachSeries allAccounts, (account, cbLoop) ->
                     account.applyPatchIgnored (err) ->
-                        log.error err if err
+                        log.error "ignored patch err", err if err
                         cbLoop null # loop anyway
                 , cb
 
@@ -108,7 +108,7 @@ class Account extends cozydb.CozyModel
                 # then apply the ignored patch to all accounts
                 async.eachSeries allAccounts, (account, cbLoop) ->
                     account.applyPatchConversation (err) ->
-                        log.error err if err
+                        log.error "conv patch err", err if err
                         cbLoop null # loop anyway
                 , cb
 
@@ -268,7 +268,7 @@ class Account extends cozydb.CozyModel
             Mailbox.markAllMessagesAsIgnored boxID, (err) ->
                 if err
                     hadError = true
-                    log.error err
+                    log.error "patch ignored err", err
                 cb null
         , (err) =>
             if hadError
@@ -557,7 +557,7 @@ class Account extends cozydb.CozyModel
                     return callback err if err
 
                     account.applyPatchConversation (err) ->
-                        log.error err if err # not blocking
+                        log.error "patch conv fail", err if err # not blocking
                         account.setRefreshing false
                         reporter.onDone()
                         if shouldNotifAccount

@@ -91,7 +91,7 @@ module.exports = class ImapConnection extends NodeImapConnection
                 msg.on 'end', -> results[uid] = messageID
                 msg.on 'body', (stream) ->
                     stream_to_buffer_array stream, (err, parts) ->
-                        return log.error err if err
+                        return log.error "fetchBoxMessageIDs fail", err if err
                         buffer = Buffer.concat(parts)
                         header = buffer.toString('utf8').trim()
                         messageID = header.substring header.indexOf ':'
