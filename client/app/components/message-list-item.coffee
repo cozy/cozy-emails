@@ -157,13 +157,19 @@ module.exports = MessageItem = React.createClass
             @props.onSelect(not @props.selected)
             event.preventDefault()
             event.stopPropagation()
-        else
-            if not (event.target.getAttribute('type') is 'checkbox')
-                event.preventDefault()
-                MessageActionCreator.setCurrent node.dataset.messageId, true
-                if @props.settings.get('displayPreview')
-                    href = '#' + node.getAttribute('href').split('#')[1]
-                    @redirect href
+        # When hitting `enter` in deletion confirmation dialog, this
+        # event is fired on last active link. We must cancel it to prevent
+        # navigating to the last message the user clicked
+        else if event.target.classList.contains 'wrapper'
+            event.preventDefault()
+            event.stopPropagation()
+        else if not (event.target.getAttribute('type') is 'checkbox')
+            event.preventDefault()
+            event.stopPropagation()
+            MessageActionCreator.setCurrent node.dataset.messageId, true
+            if @props.settings.get('displayPreview')
+                href = '#' + node.getAttribute('href').split('#')[1]
+                @redirect href
 
     onMessageDblClick: (event) ->
         if not @props.edited
