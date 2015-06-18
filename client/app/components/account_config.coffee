@@ -289,8 +289,8 @@ module.exports = React.createClass
             additionalProperties: true
         schema = @_accountSchema
         # password is not required on OAuth accounts
-        schema.properties.password.allowEmpty = @props.selectedAccount?.get('oauthProvider')?
-        schema.properties.password.allowEmpty = false
+        isOauth = @props.selectedAccount?.get('oauthProvider')?
+        schema.properties.password.allowEmpty = isOauth
         valid = validate accountValue, schema, validOptions
 
         return {accountValue, valid}

@@ -17,7 +17,7 @@ casper.test.begin 'Test accounts with OAuth', (test) ->
         test.assertDoesntExist '.advanced-smtp-toggle', 'Advanced SMTP parameters hidden'
         casper.click 'button.action-save'
         casper.waitForSelector '.toast', ->
-            test.assertEquals casper.fetchText('.toast').trim(), 'Some data are missing or invalid'
+            test.assertEquals casper.fetchText('.toast .message').trim(), 'Account updated'
             casper.waitWhileSelector '.toast'
 
     casper.run ->
@@ -34,8 +34,7 @@ casper.test.begin 'Test accounts without OAuth', (test) ->
         test.assertExist '.advanced-smtp-toggle', 'Advanced SMTP parameters shown'
         casper.click 'button.action-save'
         casper.waitForSelector '.toast', ->
-            test.assertEquals casper.fetchText('.toast').trim(), 'Account updated'
-            casper.waitWhileSelector '.toast'
+            test.assertEquals casper.fetchText('.toast .message').trim(), 'Account updated'
 
     casper.run ->
         test.done()
