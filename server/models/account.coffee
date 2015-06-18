@@ -305,7 +305,7 @@ class Account extends cozydb.CozyModel
                 return next null
 
             # rows without value are correct conversations
-            problems = rows.filter (row) -> Boolean row.value
+            problems = rows.filter (row) -> row.value isnt null
                 .map (row) -> row.key
 
             log.debug "conversationPatchingStep", status.skip,
@@ -315,7 +315,10 @@ class Account extends cozydb.CozyModel
                 status.skip += 1000
                 next null
             else
-                async.eachSeries problems, @patchConversationOne, next
+                async.eachSeries problems, @patchConversationOne, (err) ->
+                    return next err if err
+                    status.skip += 1000
+                    next null
 
     patchConversationOne: (key, callback) ->
         Message.rawRequest 'conversationPatching',
