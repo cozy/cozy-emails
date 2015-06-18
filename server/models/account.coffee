@@ -105,6 +105,14 @@ class Account extends cozydb.CozyModel
                         cbLoop null # loop anyway
                 , cb
 
+            (cb) ->
+                # then apply the ignored patch to all accounts
+                async.eachSeries allAccounts, (account, cbLoop) ->
+                    account.applyPatchConversation (err) ->
+                        log.error err if err
+                        cbLoop null # loop anyway
+                , cb
+
 
         ], (err) ->
             return callback err if err
@@ -275,6 +283,49 @@ class Account extends cozydb.CozyModel
                 @updateAttributes changes, callback
 
 
+    applyPatchConversation: (callback) ->
+        log.debug "applyPatchConversation"
+
+        status = {skip: 0}
+        async.whilst (-> not status.complete),
+            (cb) => @applyPatchConversationStep status, cb
+        , callback
+
+    applyPatchConversationStep: (status, next) ->
+        Message.rawRequest 'conversationPatching',
+            reduce: true
+            group_level: 2
+            startkey: [@id]
+            endkey: [@id, {}]
+            limit: 1000
+            skip: status.skip
+        , (err, rows) =>
+            return next err if err
+            if rows.length is 0
+                status.complete = true
+                return next null
+
+            # rows without value are correct conversations
+            problems = rows.filter (row) -> Boolean row.value
+                .map (row) -> row.key
+
+            log.debug "conversationPatchingStep", status.skip,
+                  rows.length, problems.length
+
+            if problems.length is 0
+                status.skip += 1000
+                next null
+            else
+                async.eachSeries problems, @patchConversationOne, next
+
+    patchConversationOne: (key, callback) ->
+        Message.rawRequest 'conversationPatching',
+            reduce: false
+            key: key
+        , (err, rows) ->
+            return callback err if err
+            Message.pickConversationID rows, callback
+
     # Public: test an account connection
     # callback - {Boolean} whether this account is currently refreshing
     #
@@ -359,13 +410,10 @@ class Account extends cozydb.CozyModel
 
         , (err, {mailboxes, counts, totalUnread}) ->
             return callback err if err
-
-
-
             rawObject.totalUnread = totalUnread
             rawObject.mailboxes = mailboxes.map (row) ->
                 box = row.doc
-                id = box.id or row.id
+                id = box?.id or row.id
                 count = counts[id]
                 return clientBox =
                     id       : id
@@ -506,11 +554,16 @@ class Account extends cozydb.CozyModel
                     box.destroyAndRemoveAllMessages cb
 
                 , (err) ->
-                    account.setRefreshing false
-                    reporter.onDone()
-                    if shouldNotifAccount
-                        notifications.accountRefreshed account
-                    callback null
+                    account.setRefreshing(false) if err
+                    return callback err if err
+
+                    account.applyPatchConversation (err) ->
+                        log.error err if err # not blocking
+                        account.setRefreshing false
+                        reporter.onDone()
+                        if shouldNotifAccount
+                            notifications.accountRefreshed account
+                        callback null
 
     # Public: fetch an account emails in two step
     # first 100 message in each of the favorites mailbox

@@ -16,7 +16,7 @@ SettingsStore = require '../stores/settings_store'
 
 {MessageFilter, Dispositions} = require '../constants/app_constants'
 
-module.exports = Application = React.createClass
+module.exports = Panel = React.createClass
     displayName: 'Panel'
 
     mixins: [
@@ -122,6 +122,7 @@ module.exports = Application = React.createClass
             displayConversations = @state.settings.get 'displayConversation'
 
         return MessageList
+            key:                  'messageList-' + mailboxID
             messages:             messages
             accountID:            accountID
             mailboxID:            mailboxID
@@ -131,6 +132,7 @@ module.exports = Application = React.createClass
             mailboxes:            @state.mailboxesFlat
             settings:             @state.settings
             fetching:             @state.fetching
+            refresh:              @state.refresh
             query:                query
             isTrash:              isTrash
             conversationLengths:  conversationLengths
@@ -265,6 +267,12 @@ module.exports = Application = React.createClass
                 mailboxesFlat[id][prop] = mailbox.get prop
         .toJS()
 
+        refresh = AccountStore.getMailboxRefresh(@props.mailboxID)
+        conversationID = MessageStore.getCurrentConversationID()
+        conversation = if conversationID
+            MessageStore.getConversation(conversationID)
+        else null
+
         return {
             accountsFlat          : accountsFlat
             selectedAccount       : selectedAccount
@@ -273,10 +281,12 @@ module.exports = Application = React.createClass
             selectedMailboxes     : AccountStore.getSelectedMailboxes()
             accountError          : AccountStore.getError()
             accountWaiting        : AccountStore.isWaiting()
+            refresh               : refresh
             fetching              : MessageStore.isFetching()
             queryParams           : MessageStore.getParams()
             currentMessageID      : MessageStore.getCurrentID()
-            currentConversationID : MessageStore.getCurrentConversationID()
+            conversation          : conversation
+            currentConversationID : conversationID
             currentFilter         : MessageStore.getCurrentFilter()
             results               : SearchStore.getResults()
             settings              : SettingsStore.get()

@@ -66,6 +66,7 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                 ref:                  'listToolboxActions'
                 direction:            'left'
                 mailboxes:            @props.mailboxes
+                inConversation      : true
                 displayConversations: @props.displayConversations
                 onMark:               @onMark
                 onConversationDelete: @onConversationDelete

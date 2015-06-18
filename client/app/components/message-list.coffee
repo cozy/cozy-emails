@@ -18,8 +18,9 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
 Participants        = require './participant'
-{Spinner}           = require './basic_components'
+{Spinner, Progress} = require './basic_components'
 ToolbarMessagesList = require './toolbar_messageslist'
+MessageListBody = require './message-list-body'
 
 
 module.exports = MessageList = React.createClass
@@ -103,6 +104,9 @@ module.exports = MessageList = React.createClass
                 toggleEdited:         @toggleEdited
                 toggleAll:            @toggleAll
                 afterAction:          afterAction
+
+            # Progress
+            Progress value: @props.refresh, max: 1
 
             # Message List
             if @props.messages.count() is 0

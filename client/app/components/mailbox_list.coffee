@@ -21,7 +21,7 @@ module.exports = React.createClass
                 selected = @props.mailboxes[selectedID]
             div className: 'btn-group btn-group-sm dropdown pull-left',
                 button
-                    className: 'btn btn-default dropdown-toggle',
+                    className: 'btn dropdown-toggle',
                     type: 'button',
                     'data-toggle': 'dropdown',
                     selected?.label or t 'mailbox pick one'

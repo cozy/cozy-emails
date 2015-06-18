@@ -68,7 +68,7 @@ module.exports.listByMailboxOptions = (req, res, next) ->
             return next new BadRequest "before & after should be a valid JS " +
                 "date.toISOString()"
 
-    else if sortField is 'subject' or sortField is 'from' or sortField is 'dest'
+    else if sortField is 'from' or sortField is 'dest'
         before = if before then decodeURIComponent(before) else ''
         after = if after then decodeURIComponent(after) else {}
         pageAfter = if pageAfter then decodeURIComponent pageAfter
@@ -105,7 +105,7 @@ module.exports.listByMailboxOptions = (req, res, next) ->
 
 # list messages from a mailbox
 # req.query possible
-# sort = [+/-][date/subject]
+# sort = [+/-][date]
 # flag in [seen, unseen, flagged, unflagged, answerred, unanswered]
 module.exports.listByMailbox = (req, res, next) ->
 
@@ -125,11 +125,9 @@ module.exports.listByMailbox = (req, res, next) ->
         messages = result.messages
         if messages.length is MSGBYPAGE
             last = messages[messages.length - 1]
-            if req.sortField is 'subject'
-                pageAfter = last.normSubject
             # for 'from' and 'dest', we use pageAfter as the number of records
             # to skip
-            else if req.sortField is 'from' or req.sortField is 'dest'
+            if req.sortField is 'from' or req.sortField is 'dest'
                 pageAfter = messages.length + (parseInt(req.pageAfter, 10) or 0)
             else
                 lastDate = last.date or new Date()
@@ -229,9 +227,20 @@ module.exports.send = (req, res, next) ->
     message.conversationID ?= uuid.v4()
 
     previousUID = message.mailboxIDs?[account.draftMailbox]
+    isFwdAttachment = message.attachments.some (attachment) ->
+        attachment.url and not req.message
 
     steps = []
 
+    if isFwdAttachment
+        steps.push (cb) ->
+            log.debug "fetching forwarded original"
+            id = message.inReplyTo
+            Message.find id, (err, found) ->
+                return cb err if err
+                return cb new Error "Not Found Fwd #{id}" unless found
+                req.message = found
+                cb null
 
     steps.push (cb) ->
         log.debug "gathering attachments"
@@ -335,6 +344,20 @@ module.exports.send = (req, res, next) ->
             return cb err if err
             jdbMessage = updated
             cb null
+
+    # only when creating the draft / sent of a forwarded message
+    # with attachment. req.message is the forwarded one
+    if isFwdAttachment
+        steps.push (cb) ->
+            log.debug "send#linking"
+            binary = {}
+            for attachment in message.attachments
+                filename = attachment.generatedFileName
+                if filename of req.message.binary
+                    binary[filename] = req.message.binary[filename]
+
+            jdbMessage.updateAttributes {binary}, cb
+
 
     steps.push (cb) ->
         log.debug "send#attaching"

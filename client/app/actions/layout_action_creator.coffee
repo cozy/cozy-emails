@@ -138,19 +138,24 @@ module.exports = LayoutActionCreator =
         _cachedQuery.mailboxID = mailboxID
 
         if not cached
-            MessageActionCreator.setFetching true
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_FETCH_REQUEST
+                value: {mailboxID, query}
+
             updated = Date.now()
             XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMsg) ->
                 if err?
-                    LayoutActionCreator.alertError err
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_FAILURE
+                        value: {mailboxID, query}
                 else
                     # This prevent to override local updates with older ones
                     # from server
                     rawMsg.messages.forEach (msg) ->
                         msg.updated = updated
-                    MessageActionCreator.receiveRawMessages rawMsg
-                # Set fetching to false only after messages have been handled
-                MessageActionCreator.setFetching false
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                        value: {mailboxID, query, fetchResult: rawMsg}
 
     showMessage: (panelInfo, direction) ->
         onMessage = (msg) ->
@@ -184,18 +189,10 @@ module.exports = LayoutActionCreator =
         message        = MessageStore.getByID messageID
         if message?
             onMessage message
-        updated = Date.now()
-        XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
 
-            if err?
-                LayoutActionCreator.alertError err
-            else
-                # This prevent to override local updates with older ones from
-                # server
-                rawMessages.forEach (msg) ->
-                    msg.updated = updated
-                MessageActionCreator.receiveRawMessages rawMessages
-                onMessage rawMessages[0]
+        length = MessageStore.getConversationsLength().get(conversationID)
+        if length? and length > 1
+            MessageActionCreator.fetchConversation conversationID
 
     showComposeNewMessage: (panelInfo, direction) ->
         # if there isn't a selected account (page loaded directly),
@@ -234,22 +231,6 @@ module.exports = LayoutActionCreator =
                 SearchActionCreator.receiveRawSearchResults results
 
     showSettings: (panelInfo, direction) ->
-
-    refreshMessages: (callback) ->
-        XHRUtils.refresh true, (err, results) ->
-            if err?
-                console.log err
-                LayoutActionCreator.notify t('account refresh error'),
-                    autoclose: false
-                    finished: true
-                    errors: [ JSON.stringify err ]
-            else
-                if results is "done"
-                    MessageActionCreator.receiveRawMessages null
-                    LayoutActionCreator.notify t('account refreshed'),
-                        autoclose: true
-            callback() if callback?
-
 
     toastsShow: ->
         AppDispatcher.handleViewAction

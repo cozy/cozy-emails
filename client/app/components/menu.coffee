@@ -13,11 +13,8 @@ AccountStore   = require '../stores/account_store'
 LayoutStore    = require '../stores/layout_store'
 RefreshesStore = require '../stores/refreshes_store'
 
-ThinProgress = require './thin_progress'
 MessageUtils = require '../utils/message_utils'
 colorhash    = require '../utils/colorhash'
-
-RefreshIndicator = require './menu_refresh_indicator'
 
 {Dispositions, SpecialBoxIcons, Tooltips} = require '../constants/app_constants'
 
@@ -199,6 +196,7 @@ module.exports = Menu = React.createClass
         accountClasses = classer
             active: isActive
 
+
         if @state.onlyFavorites
             mailboxes = @state.favorites
             icon = 'fa-ellipsis-h'
@@ -207,6 +205,8 @@ module.exports = Menu = React.createClass
             mailboxes = @state.mailboxes
             icon = 'fa-ellipsis-h'
             toggleFavoritesLabel = t 'menu favorites on'
+
+        allBoxesAreFavorite = @state.mailboxes.length is @state.favorites.length
 
         configMailboxUrl = @buildUrl
             direction: 'first'
@@ -246,10 +246,6 @@ module.exports = Menu = React.createClass
                                     className: 'fa warning',
                                     onClick: @displayErrors.bind null,
                                     progress
-                        if progress.get('firstImport')
-                            ThinProgress
-                                done: progress.get('done'),
-                                total: progress.get('total')
 
                 if isSelected
                     a
@@ -292,16 +288,17 @@ module.exports = Menu = React.createClass
                             refreshes:         refreshes,
                             displayErrors:     @displayErrors,
                     .toJS()
-                    li className: 'toggle-favorites',
-                        a
-                            role: 'menuitem',
-                            tabIndex: 0,
-                            onClick: toggleFavorites,
-                            key: 'toggle',
-                                i className: 'fa ' + icon
-                                span
-                                    className: 'item-label',
-                                    toggleFavoritesLabel
+                    unless allBoxesAreFavorite
+                        li className: 'toggle-favorites',
+                            a
+                                role: 'menuitem',
+                                tabIndex: 0,
+                                onClick: toggleFavorites,
+                                key: 'toggle',
+                                    i className: 'fa ' + icon
+                                    span
+                                        className: 'item-label',
+                                        toggleFavoritesLabel
 
     _initTooltips: ->
         #jQuery('#account-list [data-toggle="tooltip"]').tooltip()
@@ -324,6 +321,10 @@ MenuMailboxItem = React.createClass
 
     getInitialState: ->
         return target: false
+
+    onClickMailbox: ->
+        if @props.mailbox.get('id') is @props.selectedMailboxID
+            MessageActionCreator.refreshMailbox(@props.selectedMailboxID)
 
     render: ->
         mailboxID = @props.mailbox.get 'id'
@@ -364,7 +365,7 @@ MenuMailboxItem = React.createClass
         li className: classesParent,
             a
                 href: mailboxUrl
-                onClick: @props.hideMenu
+                onClick: @onClickMailbox
                 className: "#{classesChild} lv-#{@props.mailbox.get('depth')}"
                 role: 'menuitem'
                 'data-mailbox-id': mailboxID
@@ -382,11 +383,6 @@ MenuMailboxItem = React.createClass
                     span
                         className: 'item-label',
                         "#{@props.mailbox.get 'label'}"
-
-                if progress and progress.get('firstImport')
-                    ThinProgress
-                        done: progress.get('done')
-                        total: progress.get('total')
 
                 if progress?.get('errors').length
                     span className: 'refresh-error', onClick: displayError,

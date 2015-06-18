@@ -268,11 +268,14 @@ module.exports = class ImapConnection extends NodeImapConnection
             return callback err if err
             @expunge uid, callback
 
-    multimove: (uids, dest, callback) ->
+    multimove: (uids, dests, callback) ->
         if uids.length is 0
             callback null
         else
-            @move uids, dest, callback
+            [first, rest...] = dests
+            @multicopy uids, rest, (err) =>
+                return callback err if err
+                @move uids, first, callback
 
     multiexpunge: (uids, callback) ->
         if uids.length is 0

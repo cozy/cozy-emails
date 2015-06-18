@@ -1,6 +1,6 @@
 {
   "name": "cozy-emails",
-  "version": "0.9.0",
+  "version": "0.9.1",
   "engines": [
     "node = 0.8.x"
   ],
@@ -13,7 +13,7 @@
   "main": "server.coffee",
   "dependencies": {
     "americano": "0.4.1",
-    "cozydb": "0.0.14",
+    "cozydb": "0.0.15",
     "printit": "0.1.3",
     "async": "0.9.0",
     "jade": "1.6.0",

@@ -55,7 +55,7 @@ module.exports =
 
 
     # update locate (without saving it into settings)
-    setLocale: (lang, refresh) ->
+    setLocale: (lang) ->
         window.moment.locale lang
         locales = {}
         try
@@ -68,8 +68,6 @@ module.exports =
         polyglot.extend locales
         # handy shortcut
         window.t = polyglot.t.bind polyglot
-        if refresh
-            LayoutActionCreator.refresh()
 
 
     getAccountByLabel: (label) ->

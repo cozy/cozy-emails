@@ -53,19 +53,6 @@ describe 'Mailbox fetching', ->
                 total.should.equal inboxCount - readCount
                 done()
 
-    it "When I get a mailbox (sorted by subject)", (done) ->
-        client.get "/mailbox/#{store.inboxID}?sort=%2Bsubject", (err, res, body) ->
-            body.should.have.property 'count', inboxCount
-            last = body.messages[0]
-            for i in [1..body.messages.length - 1] by 1
-                current = body.messages[i]
-                eqOrBelow = last <= current
-                eqOrBelow.should.be.true
-                last = current
-
-            testNextLinks "/mailbox/#{store.inboxID}?sort=%2Bsubject", done
-
-
 
 describe 'Mailbox operations', ->
 

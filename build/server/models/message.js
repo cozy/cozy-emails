@@ -143,6 +143,7 @@ module.exports = Message = (function(superClass) {
     references = references.map(mailutils.normalizeMessageID).filter(function(mid) {
       return mid;
     });
+    log.debug("findConversationID", references, mail.normSubject, isReplyOrForward);
     if (references.length) {
       keys = references.map(function(mid) {
         return [mail.accountID, 'mid', mid];
@@ -164,6 +165,7 @@ module.exports = Message = (function(superClass) {
         if (err) {
           return callback(err);
         }
+        log.debug("found similar", rows.length);
         return Message.pickConversationID(rows, callback);
       });
     } else {
@@ -624,7 +626,7 @@ module.exports = Message = (function(superClass) {
   };
 
   Message.prototype.addToMailbox = function(box, uid, callback) {
-    var key, mailboxIDs, ref, value;
+    var changes, key, mailboxIDs, ref, value;
     log.info("MAIL " + box.path + ":" + uid + " ADDED TO BOX");
     mailboxIDs = {};
     ref = this.mailboxIDs || {};
@@ -633,9 +635,13 @@ module.exports = Message = (function(superClass) {
       mailboxIDs[key] = value;
     }
     mailboxIDs[box.id] = uid;
-    return this.updateAttributes({
+    changes = {
       mailboxIDs: mailboxIDs
-    }, function(err) {
+    };
+    if (box.ignoreInCount()) {
+      changes.ignoreInCount = true;
+    }
+    return this.updateAttributes(changes, function(err) {
       return callback(err, {
         shouldNotif: false,
         actuallyAdded: true
@@ -879,38 +885,55 @@ module.exports = Message = (function(superClass) {
   };
 
   Message.batchMove = function(messages, from, to, callback) {
-    var alreadyMoved, changes, destBox, fromBox;
+    var alreadyMoved, changes, destBoxes, fromBox, ignores;
+    if (!Array.isArray(to)) {
+      to = [to];
+    }
     messages = messages.filter(function(msg) {
       var boxes;
       boxes = Object.keys(msg.mailboxIDs);
-      return boxes.length !== 1 || boxes[0] !== to;
+      return _.xor(boxes, to).length > 1;
     });
     fromBox = null;
-    destBox = null;
+    destBoxes = null;
     alreadyMoved = [];
     changes = {};
+    ignores = null;
     log.debug("batchMove", messages.length, from, to);
     return Message.doGroupedByBox(messages, function(imap, state, nextBox) {
-      var currentBox, expunges, i, id, len, message, moves, mustRemove, ref, uid;
+      var box, boxid, currentBox, destBox, destString, expunges, i, id, j, len, len1, message, moves, mustRemove, paths, ref, ref1, uid;
       if (fromBox == null) {
         fromBox = state.boxIndex[from];
       }
-      if (destBox == null) {
-        destBox = state.boxIndex[to];
+      if (destBoxes == null) {
+        destBoxes = to.map(function(id) {
+          return state.boxIndex[id];
+        });
       }
       currentBox = state.box;
-      if (!destBox) {
-        return nextBox(new Error('the destination box doesnt exist'));
+      if (!ignores) {
+        ignores = {};
+        ref = state.boxIndex;
+        for (boxid in ref) {
+          box = ref[boxid];
+          if (box.ignoreInCount()) {
+            ignores[id] = true;
+          }
+        }
       }
-      if (currentBox === destBox) {
+      destString = to.join(',');
+      if (indexOf.call(destBoxes, void 0) >= 0) {
+        return nextBox(new Error("One of destination boxes " + destString + " doesnt exist"));
+      }
+      if (indexOf.call(destBoxes, currentBox) >= 0) {
         return nextBox(null);
       }
       mustRemove = currentBox === fromBox || !from;
       moves = [];
       expunges = [];
-      ref = state.messagesInBox;
-      for (i = 0, len = ref.length; i < len; i++) {
-        message = ref[i];
+      ref1 = state.messagesInBox;
+      for (i = 0, len = ref1.length; i < len; i++) {
+        message = ref1[i];
         id = message.id;
         uid = message.mailboxIDs[currentBox.id];
         if (message.mailboxIDs[to] || indexOf.call(alreadyMoved, id) >= 0) {
@@ -934,12 +957,18 @@ module.exports = Message = (function(superClass) {
             changes[id] = message.cloneMailboxIDs();
           }
           delete changes[id][currentBox.id];
-          changes[id][destBox.id] = -1;
+          for (j = 0, len1 = destBoxes.length; j < len1; j++) {
+            destBox = destBoxes[j];
+            changes[id][destBox.id] = -1;
+          }
         }
       }
-      log.debug("MOVING", moves, "FROM", currentBox.id, "TO", destBox.id);
+      log.debug("MOVING", moves, "FROM", currentBox.id, "TO", destString);
       log.debug("EXPUNGING", expunges, "FROM", currentBox.id);
-      return imap.multimove(moves, destBox.path, function(err, result) {
+      paths = destBoxes.map(function(box) {
+        return box.path;
+      });
+      return imap.multimove(moves, paths, function(err, result) {
         if (err) {
           return nextBox(err);
         }
@@ -955,14 +984,18 @@ module.exports = Message = (function(superClass) {
         return callback(err);
       }
       return async.mapSeries(messages, function(message, next) {
-        var newMailboxIDs;
+        var data, newMailboxIDs;
         newMailboxIDs = changes[message.id];
         if (!newMailboxIDs) {
           return next(null, message);
         } else {
-          return message.updateAttributes({
-            mailboxIDs: newMailboxIDs
-          }, function(err) {
+          data = {
+            mailboxIDs: newMailboxIDs,
+            ignoreInCount: Object.keys(newMailboxIDs).some(function(id) {
+              return ignores[id];
+            })
+          };
+          return message.updateAttributes(data, function(err) {
             return next(err, message);
           });
         }
@@ -974,12 +1007,11 @@ module.exports = Message = (function(superClass) {
         if (updated.length === 0) {
           return callback(null, []);
         }
-        if (!destBox) {
-          return callback(new Error('the destination box doesnt exist'));
-        }
         limit = Math.max(100, messages.length * 2);
-        return destBox.imap_refresh({
-          limitByBox: limit
+        return async.eachSeries(destBoxes, function(destBox, cb) {
+          return destBox.imap_refresh({
+            limitByBox: limit
+          }, cb);
         }, function(err) {
           if (err) {
             return callback(err);

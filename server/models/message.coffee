@@ -133,6 +133,7 @@ module.exports = class Message extends cozydb.CozyModel
             .filter (mid) -> mid # ignore unparsable messageID
 
 
+        log.debug "findConversationID", references, mail.normSubject, isReplyOrForward
         if references.length
             # find all messages in references
             keys = references.map (mid) -> [mail.accountID, 'mid', mid]
@@ -148,6 +149,7 @@ module.exports = class Message extends cozydb.CozyModel
             key = [mail.accountID, 'subject', mail.normSubject]
             Message.rawRequest 'dedupRequest', {key}, (err, rows) ->
                 return callback err if err
+                log.debug "found similar", rows.length
                 Message.pickConversationID rows, callback
 
         # give it a random uid
@@ -633,7 +635,9 @@ module.exports = class Message extends cozydb.CozyModel
         mailboxIDs = {}
         mailboxIDs[key] = value for key, value of @mailboxIDs or {}
         mailboxIDs[box.id] = uid
-        @updateAttributes {mailboxIDs}, (err) ->
+        changes = {mailboxIDs}
+        changes.ignoreInCount = true if box.ignoreInCount()
+        @updateAttributes changes, (err) ->
             callback err, {shouldNotif: false, actuallyAdded: true}
 
     # Public: helper to check if a message is in a box
@@ -850,15 +854,18 @@ module.exports = class Message extends cozydb.CozyModel
 
     @batchMove: (messages, from, to, callback) ->
 
-        # ignore messages which are already only in destination
+        to = [to] unless Array.isArray(to)
+
+        # ignore messages which are already in the destination set
         messages = messages.filter (msg) ->
             boxes = Object.keys(msg.mailboxIDs)
-            return boxes.length isnt 1 or boxes[0] isnt to
+            return _.xor(boxes, to).length > 1
 
         fromBox = null
-        destBox = null
+        destBoxes = null
         alreadyMoved = []
         changes = {}
+        ignores = null
 
         log.debug "batchMove", messages.length, from, to
 
@@ -866,14 +873,22 @@ module.exports = class Message extends cozydb.CozyModel
         # but we want t o publish today
         Message.doGroupedByBox messages, (imap, state, nextBox) ->
             fromBox ?= state.boxIndex[from]
-            destBox ?= state.boxIndex[to]
+            destBoxes ?= to.map (id) -> state.boxIndex[id]
             currentBox = state.box
 
-            unless destBox
-                return nextBox new Error('the destination box doesnt exist')
+            unless ignores
+                ignores = {}
+                for boxid, box of state.boxIndex when box.ignoreInCount()
+                    ignores[id] = true
+
+            destString = to.join(',')
+
+            if undefined in destBoxes
+                return nextBox new Error """
+                    One of destination boxes #{destString} doesnt exist"""
 
             # skip destBox
-            return nextBox null if currentBox is destBox
+            return nextBox null if currentBox in destBoxes
 
             # if no from is provided, messages must be removed from
             # all boxes,  else if from is provided, messages must be
@@ -905,11 +920,14 @@ module.exports = class Message extends cozydb.CozyModel
                     alreadyMoved.push id
                     changes[id] ?= message.cloneMailboxIDs()
                     delete changes[id][currentBox.id]
-                    changes[id][destBox.id] = -1
+                    for destBox in destBoxes
+                        changes[id][destBox.id] = -1
 
-            log.debug "MOVING", moves, "FROM", currentBox.id, "TO", destBox.id
+            log.debug "MOVING", moves, "FROM", currentBox.id, "TO", destString
             log.debug "EXPUNGING", expunges, "FROM", currentBox.id
-            imap.multimove moves, destBox.path, (err, result) ->
+
+            paths = destBoxes.map (box) -> box.path
+            imap.multimove moves, paths, (err, result) ->
                 return nextBox err if err
                 imap.multiexpunge expunges, (err) ->
                     return nextBox err if err
@@ -924,17 +942,22 @@ module.exports = class Message extends cozydb.CozyModel
                 unless newMailboxIDs
                     next null, message
                 else
-                    message.updateAttributes mailboxIDs: newMailboxIDs, (err) ->
+                    data =
+                        mailboxIDs: newMailboxIDs
+                        ignoreInCount: Object.keys(newMailboxIDs)
+                        .some (id) -> ignores[id]
+                    message.updateAttributes data, (err) ->
                         next err, message
 
             , (err, updated) ->
                 return callback err if err
                 return callback null, [] if updated.length is 0
-                return callback new Error('the destination box doesnt exist') unless destBox
 
                 # assume there was not so many changes
                 limit = Math.max(100, messages.length*2)
-                destBox.imap_refresh limitByBox: limit, (err) ->
+                async.eachSeries destBoxes, (destBox, cb) ->
+                    destBox.imap_refresh limitByBox: limit, cb
+                , (err) ->
                     return callback err if err
                     callback null, updated
 

@@ -55,7 +55,6 @@ module.exports = Application = React.createClass
         fullscreen  = LayoutStore.isPreviewFullscreen()
         previewSize = LayoutStore.getPreviewSize()
 
-        alert = @state.alertMessage
         modal = @state.modal
 
         layoutClasses = ['layout'
@@ -86,7 +85,6 @@ module.exports = Application = React.createClass
                             'aria-expanded': false
 
             # Display feedback
-            Alert { alert }
             if modal?
                 Modal modal
             ToastContainer()
@@ -127,7 +125,6 @@ module.exports = Application = React.createClass
 
         return {
             selectedAccount       : selectedAccount
-            alertMessage          : LayoutStore.getAlert()
             modal                 : LayoutStore.getModal()
             useIntents            : LayoutStore.intentAvailable()
             selectedMailboxID     : selectedMailboxID
@@ -147,7 +144,9 @@ module.exports = Application = React.createClass
 
             # Store current message ID if selected
             if secondPanel? and secondPanel.parameters.messageID?
-                MessageActionCreator.setCurrent secondPanel.parameters.messageID
+                isConv = secondPanel.parameters.conversationID?
+                messageID = secondPanel.parameters.messageID
+                MessageActionCreator.setCurrent messageID, isConv
             else
                 if firstPanel isnt 'compose'
                     MessageActionCreator.setCurrent null
