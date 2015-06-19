@@ -25,7 +25,7 @@ module.exports.main = (req, res, next) ->
         refreshes = ImapReporter.summary()
 
         if err
-            log.error err.stack
+            log.error "err on index", err.stack
 
             imports = """
                 console.log("#{err}");

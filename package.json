@@ -12,8 +12,8 @@
   },
   "main": "server.coffee",
   "dependencies": {
-    "americano": "0.4.1",
-    "cozydb": "0.0.15",
+    "americano": "0.4.2",
+    "cozydb": "0.0.16",
     "printit": "0.1.3",
     "async": "0.9.0",
     "jade": "1.6.0",
