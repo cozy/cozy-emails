@@ -120,7 +120,7 @@ module.exports = ImapConnection = (function(superClass) {
             return stream_to_buffer_array(stream, function(err, parts) {
               var buffer, header;
               if (err) {
-                return log.error(err);
+                return log.error("fetchBoxMessageIDs fail", err);
               }
               buffer = Buffer.concat(parts);
               header = buffer.toString('utf8').trim();

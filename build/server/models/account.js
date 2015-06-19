@@ -106,7 +106,7 @@ Account = (function(superClass) {
         return async.eachSeries(allAccounts, function(account, cbLoop) {
           return account.applyPatchIgnored(function(err) {
             if (err) {
-              log.error(err);
+              log.error("ignored patch err", err);
             }
             return cbLoop(null);
           });
@@ -115,7 +115,7 @@ Account = (function(superClass) {
         return async.eachSeries(allAccounts, function(account, cbLoop) {
           return account.applyPatchConversation(function(err) {
             if (err) {
-              log.error(err);
+              log.error("conv patch err", err);
             }
             return cbLoop(null);
           });
@@ -267,7 +267,7 @@ Account = (function(superClass) {
       return Mailbox.markAllMessagesAsIgnored(boxID, function(err) {
         if (err) {
           hadError = true;
-          log.error(err);
+          log.error("patch ignored err", err);
         }
         return cb(null);
       });
@@ -322,7 +322,7 @@ Account = (function(superClass) {
           return next(null);
         }
         problems = rows.filter(function(row) {
-          return Boolean(row.value);
+          return row.value !== null;
         }).map(function(row) {
           return row.key;
         });
@@ -331,7 +331,13 @@ Account = (function(superClass) {
           status.skip += 1000;
           return next(null);
         } else {
-          return async.eachSeries(problems, _this.patchConversationOne, next);
+          return async.eachSeries(problems, _this.patchConversationOne, function(err) {
+            if (err) {
+              return next(err);
+            }
+            status.skip += 1000;
+            return next(null);
+          });
         }
       };
     })(this));
@@ -636,7 +642,7 @@ Account = (function(superClass) {
           }
           return account.applyPatchConversation(function(err) {
             if (err) {
-              log.error(err);
+              log.error("patch conv fail", err);
             }
             account.setRefreshing(false);
             reporter.onDone();
