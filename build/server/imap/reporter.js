@@ -118,7 +118,7 @@ module.exports = ImapReporter = (function() {
 
   ImapReporter.prototype.onError = function(err) {
     this.errors.push(Logger.getLasts() + "\n" + err.stack);
-    log.error(err.stack);
+    log.error("reporter err", err.stack);
     return this.sendtoclient();
   };
 

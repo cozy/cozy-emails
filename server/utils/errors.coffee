@@ -133,5 +133,5 @@ utils.errorHandler = (err, req, res, next) ->
 
     # pass it down the line to errorhandler module
     else
-        log.error err
+        log.error "error handler called with", err.stack
         baseHandler err, req, res

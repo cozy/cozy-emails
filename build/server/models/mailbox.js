@@ -271,7 +271,7 @@ Mailbox = (function(superClass) {
       return async.eachSeries(ids, function(id, cbLoop) {
         return Message.updateAttributes(id, changes, function(err) {
           if (err) {
-            log.error(err);
+            log.error("markAllMessagesAsIgnored err", err);
             lastError = err;
           }
           return cbLoop(null);
