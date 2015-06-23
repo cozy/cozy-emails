@@ -153,7 +153,7 @@ class MessageStore extends Store
     isntAccount = (accountID) -> (message) ->
         accountID isnt message.get 'accountID'
 
-    dedupConversation = () ->
+    dedupConversation = ->
         conversationIDs = []
         return filter = (message) ->
             conversationID = message.get 'conversationID'
@@ -249,14 +249,14 @@ class MessageStore extends Store
     handleFetchResult = (result) ->
 
         if result.links? and result.links.next?
-                # reinit params here for pagination on filtered lists
-                _params = {}
-                next   = decodeURIComponent(result.links.next)
-                url    = 'http://localhost' + next
-                url.split('?')[1].split('&').forEach (p) ->
-                    [key, value] = p.split '='
-                    value = '-' if value is ''
-                    _params[key] = value
+            # reinit params here for pagination on filtered lists
+            _params = {}
+            next   = decodeURIComponent(result.links.next)
+            url    = 'http://localhost' + next
+            url.split('?')[1].split('&').forEach (p) ->
+                [key, value] = p.split '='
+                value = '-' if value is ''
+                _params[key] = value
         else
             # We use pageAfter to know if there are more result to
             # load, so we need to set it to its default value
@@ -357,7 +357,7 @@ class MessageStore extends Store
             _fetching++
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_FETCH_FAILURE, () ->
+        handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
             _fetching--
             @emit 'change'
 
