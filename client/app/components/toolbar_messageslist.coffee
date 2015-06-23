@@ -60,9 +60,13 @@ module.exports = ToolbarMessagesList = React.createClass
                     afterAction:          @props.afterAction
             unless @props.edited
                 FiltersToolbarMessagesList
-                    accountID: @props.accountID
-                    mailboxID: @props.mailboxID
+                    accountID:   @props.accountID
+                    mailboxID:   @props.mailboxID
+                    queryParams: @props.queryParams
+                    filter:      @props.filter
             unless @props.edited
                 SearchToolbarMessagesList
-                    accountID: @props.accountID
-                    mailboxID: @props.mailboxID
+                    accountID:   @props.accountID
+                    mailboxID:   @props.mailboxID
+                    queryParams: @props.queryParams
+                    filter:      @props.filter

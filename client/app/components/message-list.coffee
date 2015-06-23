@@ -39,7 +39,6 @@ module.exports = MessageList = React.createClass
 
     getInitialState: ->
         edited: false
-        quickFilters: false
         selected: {}
         allSelected: false
 
@@ -104,6 +103,8 @@ module.exports = MessageList = React.createClass
                 toggleEdited:         @toggleEdited
                 toggleAll:            @toggleAll
                 afterAction:          afterAction
+                queryParams:          @props.queryParams
+                filter:               @props.filter
 
             # Progress
             Progress value: @props.refresh, max: 1

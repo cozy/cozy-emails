@@ -1,10 +1,8 @@
 {div, i, button, input} = React.DOM
 {Dropdown} = require './basic_components'
+{MessageFilter, Tooltips} = require '../constants/app_constants'
 
 LayoutActionCreator = require '../actions/layout_action_creator'
-
-MessageStore        = require '../stores/message_store'
-
 
 filters =
     from: t "list filter from"
@@ -25,6 +23,7 @@ module.exports = SearchToolbarMessagesList = React.createClass
 
 
     showList: ->
+        filter = MessageFilter.ALL
         sort =
             order:  '-'
             before: @state.value
@@ -37,12 +36,8 @@ module.exports = SearchToolbarMessagesList = React.createClass
             # reset, use default filter
             sort.field = 'date'
             sort.after = ''
-        LayoutActionCreator.sortMessages sort
 
-        params = _.clone(MessageStore.getParams())
-        params.accountID = @props.accountID
-        params.mailboxID = @props.mailboxID
-        LayoutActionCreator.showMessageList parameters: params
+        LayoutActionCreator.showFilteredList filter, sort
 
 
     onTypeChange: (filter) ->
@@ -60,10 +55,7 @@ module.exports = SearchToolbarMessagesList = React.createClass
 
 
     reset: ->
-        @setState
-            value: ''
-            isEmpty: true,
-            @showList
+        @setState @getInitialState, @showList
 
 
     render: ->

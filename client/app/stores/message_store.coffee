@@ -422,9 +422,9 @@ class MessageStore extends Store
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
             @setCurrentID null
-            _params.after     = '-'
-            _params.before    = '-'
-            _params.pageAfter = '-'
+            _filter = '-'
+            _params =
+                sort: '-date'
 
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
             _messages = _messages.remove id

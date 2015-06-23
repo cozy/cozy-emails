@@ -139,6 +139,8 @@ module.exports = Panel = React.createClass
             emptyListMessage:     emptyListMessage
             ref:                  'messageList'
             displayConversations: displayConversations
+            queryParams:          @state.queryParams
+            filter:               @state.currentFilter
 
 
     renderAccount: ->

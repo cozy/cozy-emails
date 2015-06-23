@@ -157,6 +157,16 @@ module.exports = LayoutActionCreator =
                         type: ActionTypes.MESSAGE_FETCH_SUCCESS
                         value: {mailboxID, query, fetchResult: rawMsg}
 
+    # Apply filters and sort criteria on message list then display it
+    showFilteredList: (filter, sort) ->
+        @filterMessages filter
+        @sortMessages sort
+
+        params           = _.clone(MessageStore.getParams())
+        params.accountID = AccountStore.getSelected().get 'id'
+        params.mailboxID = AccountStore.getSelectedMailbox().get 'id'
+        @showMessageList parameters: params
+
     showMessage: (panelInfo, direction) ->
         onMessage = (msg) ->
             # if there isn't a selected account (page loaded directly),
