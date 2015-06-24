@@ -595,6 +595,7 @@ class Account extends cozydb.CozyModel
         mailbuilder = new Compiler(message).compile()
         mailbuilder.build (err, buffer) =>
             return callback err if err
+            log.debug "mailbuilder", buffer.length
 
             @doASAP (imap, cb) ->
                 imap.append buffer,

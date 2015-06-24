@@ -312,6 +312,8 @@ module.exports.send = (req, res, next) ->
         steps.push (cb) ->
             destination = draftBox
             log.debug "send#add_to_draft"
+            log.debug "MESSAGE = ", message
+            log.debug "ATTACHMENT", message.attachments
             account.imap_createMail draftBox, message, (err, uid) ->
                 return cb err if err
                 uidInDest = uid
