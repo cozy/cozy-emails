@@ -1,4 +1,4 @@
-{div, i, button, input} = React.DOM
+{div, i, button, input, form} = React.DOM
 {Dropdown} = require './basic_components'
 {MessageFilter, Tooltips} = require '../constants/app_constants'
 
@@ -55,11 +55,11 @@ module.exports = SearchToolbarMessagesList = React.createClass
 
 
     reset: ->
-        @setState @getInitialState, @showList
+        @setState @getInitialState(), @showList
 
 
     render: ->
-        div role: 'group', className: 'search',
+        form role: 'group', className: 'search',
             Dropdown
                 value:    @state.type
                 values:   filters
@@ -73,13 +73,20 @@ module.exports = SearchToolbarMessagesList = React.createClass
                     value:       @state.value
                     onChange:    @onChange
                     onKeyUp:     @onKeyUp
+                    name:        'searchterm'
 
                 unless @state.isEmpty
                     div className: 'btn-group',
                         button
                             className: 'btn fa fa-check'
-                            onClick: @showList
+                            onClick: (e) =>
+                                e.preventDefault()
+                                e.stopPropagation()
+                                @showList()
 
                         button
                             className: 'btn fa fa-close'
-                            onClick: @reset
+                            onClick: (e) =>
+                                e.preventDefault()
+                                e.stopPropagation()
+                                @reset()

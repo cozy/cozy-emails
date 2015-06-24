@@ -79,8 +79,8 @@ module.exports = MessageActionCreator =
             XHRUtils.refreshMailbox mailboxID, (error) ->
                 if err?
                     AppDispatcher.handleViewAction
-                       type: ActionTypes.REFRESH_FAILURE
-                       value: {mailboxID, error}
+                        type: ActionTypes.REFRESH_FAILURE
+                        value: {mailboxID, error}
                 else
                     AppDispatcher.handleViewAction
                         type: ActionTypes.REFRESH_SUCCESS
@@ -183,6 +183,8 @@ module.exports = MessageActionCreator =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_FLAGS_SUCCESS
                     value: {target, ref, updated, op, flag, flagAction}
+
+            callback? error, updated
 
     undo: (ref) ->
 

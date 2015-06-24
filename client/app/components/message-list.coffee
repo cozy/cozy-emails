@@ -112,9 +112,9 @@ module.exports = MessageList = React.createClass
             # Message List
             if @props.messages.count() is 0
                 if @props.fetching
-                    p null, t 'list fetching'
+                    p className: 'listFetching', t 'list fetching'
                 else
-                    p ref: 'listEmpty', @props.emptyListMessage
+                    p className: 'listEmpty', ref: 'listEmpty', @props.emptyListMessage
             else
                 div
                     className: 'main-content'

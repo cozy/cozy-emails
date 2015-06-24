@@ -132,9 +132,9 @@ module.exports = LayoutActionCreator =
             value = panelInfo.parameters[param]
             if value? and value isnt ''
                 query[param] = value
-                if _cachedQuery[param] isnt value
-                    _cachedQuery[param] = value
-                    cached = false
+            if _cachedQuery[param] isnt value
+                _cachedQuery[param] = value
+                cached = false
         _cachedQuery.mailboxID = mailboxID
 
         if not cached
