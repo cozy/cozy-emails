@@ -19,6 +19,7 @@ module.exports =
         # Message
         'RECEIVE_RAW_MESSAGE'       : 'RECEIVE_RAW_MESSAGE'
         'RECEIVE_RAW_MESSAGES'      : 'RECEIVE_RAW_MESSAGES'
+        'RECEIVE_RAW_MESSAGE_REALTIME' : 'RECEIVE_RAW_MESSAGE_REALTIME'
         'MESSAGE_SEND'              : 'MESSAGE_SEND'
         'LAST_ACTION'               : 'LAST_ACTION'
         'MESSAGE_CURRENT'           : 'MESSAGE_CURRENT'

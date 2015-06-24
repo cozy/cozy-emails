@@ -5,7 +5,7 @@ AppDispatcher = require '../app_dispatcher'
 AccountStore = require './account_store'
 SocketUtils = require '../utils/socketio_utils'
 
-{ActionTypes, MessageFlags, MessageFilter} =
+{ActionTypes, MessageFlags, MessageFilter, FlagsConstants} =
         require '../constants/app_constants'
 
 class MessageStore extends Store
@@ -281,6 +281,15 @@ class MessageStore extends Store
         handle ActionTypes.RECEIVE_RAW_MESSAGE, (message) ->
             onReceiveRawMessage message
             @emit 'change'
+
+        handle ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME, (message) ->
+            # when we receive new messages, don't display them if there's
+            # an active filter, unless the filter is on unread messages
+            if _filter is '-' or
+               (_filter is MessageFilter.UNSEEN and
+               message.flags.indexOf FlagsConstants.SEEN is -1)
+                onReceiveRawMessage message
+                @emit 'change'
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
             for message in messages when message?
