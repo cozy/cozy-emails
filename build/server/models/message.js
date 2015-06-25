@@ -1004,7 +1004,7 @@ module.exports = Message = (function(superClass) {
         if (err) {
           return callback(err);
         }
-        if (updated.length === 0) {
+        if (updated.length === 0 || (typeof destBox === "undefined" || destBox === null)) {
           return callback(null, []);
         }
         limit = Math.max(100, messages.length * 2);
