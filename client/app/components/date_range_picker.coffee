@@ -20,24 +20,37 @@ module.exports = DateRangePicker = React.createClass
         endDate:   ''
 
 
+    shouldComponentUpdate: (nextProps, nextState) ->
+        should = not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
+        return should
+
+
     componentWillReceiveProps: (nextProps) ->
-        @reset() if @state.isActive and not nextProps.active
+        if @state.isActive and not nextProps.active
+            # we don't call reset here because we don't want to filterize
+            @setState
+                isActive:  false
+                startDate: ''
+                endDate:   ''
 
 
     onStartChange: (obj) ->
         date = if obj.target? then obj.target.value else
-                                  "#{obj.dd}/#{obj.mm}/#{obj.yyyy}"
-        @setState startDate: date, @filterize
+            "#{obj.dd}/#{obj.mm}/#{obj.yyyy}"
+        active: !!date and !!@state.endDate
+        @setState isActive: active, startDate: date, @filterize
 
 
     onEndChange: (obj) ->
         date = if obj.target then obj.target.value else
-                                  "#{obj.dd}/#{obj.mm}/#{obj.yyyy}"
-        @setState endDate: date, @filterize
+            "#{obj.dd}/#{obj.mm}/#{obj.yyyy}"
+        active: !!@state.startDate and !!date
+        @setState isActive: endDate: date, @filterize
 
 
     filterize: ->
-        return if !@state.startDate ^ !@state.endDate
+        return if not @state.startDate ^ not @state.endDate
 
         start = if @state.startDate
             [d, m, y] = @state.startDate.split '/'
@@ -47,7 +60,6 @@ module.exports = DateRangePicker = React.createClass
             [d, m, y] = @state.endDate.split '/'
             "#{y}-#{m}-#{d}T23:59:59.999Z"
 
-        @setState isActive: !!@state.startDate and !!@state.endDate
         @props.onDateFilter start, end
 
 
@@ -61,6 +73,7 @@ module.exports = DateRangePicker = React.createClass
 
     presetYesterday: ->
         @setState
+            isActive:  true
             startDate: moment().subtract(1, 'day').format(momentFormat)
             endDate:   moment().subtract(1, 'day').format(momentFormat),
             @filterize
@@ -68,6 +81,7 @@ module.exports = DateRangePicker = React.createClass
 
     presetLastWeek: ->
         @setState
+            isActive:  true
             startDate: moment().subtract(1, 'week').format(momentFormat)
             endDate:   moment().format(momentFormat),
             @filterize
@@ -75,6 +89,7 @@ module.exports = DateRangePicker = React.createClass
 
     presetLastMonth: ->
         @setState
+            isActive:  true
             startDate: moment().subtract(1, 'month').format(momentFormat)
             endDate:   moment().format(momentFormat),
             @filterize

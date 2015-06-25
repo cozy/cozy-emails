@@ -101,6 +101,10 @@ class AccountStore extends Store
 
     _setCurrentAccount: (account) ->
         _selectedAccount = account
+
+    _setCurrentMailbox: (mailbox) ->
+        _selectedMailbox = mailbox
+
     ###
         Defines here the action handlers.
     ###
@@ -123,9 +127,12 @@ class AccountStore extends Store
             else
                 @_setCurrentAccount(null)
             if value.mailboxID?
-                _selectedMailbox = _selectedAccount?.get('mailboxes')?.get(value.mailboxID) or null
+                mailbox = _selectedAccount
+                    ?.get('mailboxes')
+                    ?.get(value.mailboxID) or null
+                @_setCurrentMailbox mailbox
             else
-                _selectedMailbox = null
+                @_setCurrentMailbox null
             @emit 'change'
 
         handle ActionTypes.NEW_ACCOUNT_WAITING, (payload) ->

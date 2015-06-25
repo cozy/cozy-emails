@@ -26,6 +26,7 @@ casper.cozy.selectAccount = (account, box, cb) ->
         return getAccounts()
     id = accounts[account]
     if not id?
+        console.log "Available accounts:\n#{Object.keys(accounts).join "\n - "}"
         casper.test.fail "Unable to find account #{account}"
     if not casper.exists "[data-reactid='#{id}'].active"
         casper.click "[data-reactid='#{id}'] a"
@@ -41,6 +42,7 @@ casper.cozy.selectAccount = (account, box, cb) ->
             return getMailboxes()
         id = mailboxes[box]
         if not id?
+            console.log "Available mailboxes:\n#{Object.keys(mailboxes).join "\n - "}"
             casper.test.fail "Unable to find mailbox #{box} in #{account}"
         casper.click "[data-reactid='#{id}'] .item-label"
         casper.waitForSelector "[data-reactid='#{id}'].active", ->

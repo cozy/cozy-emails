@@ -6,34 +6,35 @@ class Account extends cozydb.CozyModel
 
     # Public: allowed fields for an account
     @schema:
-        label: String               # human readable label for the account
-        name: String                # user name to put in sent mails
-        login: String               # IMAP & SMTP login
-        password: String            # IMAP & SMTP password
-        accountType: String         # "IMAP" or "TEST"
-        smtpServer: String          # SMTP host
-        smtpPort: Number            # SMTP port
-        smtpSSL: Boolean            # Use SSL
-        smtpTLS: Boolean            # Use STARTTLS
-        smtpLogin: String           # SMTP login, if different from default
-        smtpPassword: String        # SMTP password, if different from default
-        smtpMethod: String          # SMTP Auth Method
-        imapLogin: String           # IMAP login
-        imapServer: String          # IMAP host
-        imapPort: Number            # IMAP port
-        imapSSL: Boolean            # Use SSL
-        imapTLS: Boolean            # Use STARTTLS
-        inboxMailbox: String        # INBOX Maibox id
+        label:          String      # human readable label for the account
+        name:           String      # user name to put in sent mails
+        login:          String      # IMAP & SMTP login
+        password:       String      # IMAP & SMTP password
+        accountType:    String      # "IMAP" or "TEST"
+        smtpServer:     String      # SMTP host
+        smtpPort:       Number      # SMTP port
+        smtpSSL:        Boolean     # Use SSL
+        smtpTLS:        Boolean     # Use STARTTLS
+        smtpLogin:      String      # SMTP login, if different from default
+        smtpPassword:   String      # SMTP password, if different from default
+        smtpMethod:     String      # SMTP Auth Method
+        imapLogin:      String      # IMAP login
+        imapServer:     String      # IMAP host
+        imapPort:       Number      # IMAP port
+        imapSSL:        Boolean     # Use SSL
+        imapTLS:        Boolean     # Use STARTTLS
+        inboxMailbox:   String      # INBOX Maibox id
         flaggedMailbox: String      # \Flag Mailbox id
-        draftMailbox: String        # \Draft Maibox id
-        sentMailbox: String         # \Sent Maibox id
-        trashMailbox: String        # \Trash Maibox id
-        junkMailbox: String         # \Junk Maibox id
-        allMailbox: String          # \All Maibox id
-        favorites: [String]         # [String] Maibox id of displayed boxes
-        patchIgnored: Boolean       # has patchIgnored been applied ?
+        draftMailbox:   String      # \Draft Maibox id
+        sentMailbox:    String      # \Sent Maibox id
+        trashMailbox:   String      # \Trash Maibox id
+        junkMailbox:    String      # \Junk Maibox id
+        allMailbox:     String      # \All Maibox id
+        favorites:      [String]    # [String] Maibox id of displayed boxes
+        patchIgnored:   Boolean     # has patchIgnored been applied ?
         supportRFC4551: Boolean     # does the account support CONDSTORE ?
-        signature: String            # Signature to add at the end of messages
+        signature:      String      # Signature to add at the end of messages
+        oauthProvider:  String      # If authentication use OAuth
 
     # Public: find an account by id
     # cozydb's find can return no error and no account (if id isnt an account)

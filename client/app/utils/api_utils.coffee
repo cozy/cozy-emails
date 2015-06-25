@@ -276,7 +276,7 @@ module.exports =
 
     # Log every Flux action (only in development environment)
     # Logs can be displayed using `displayLogs`
-    logAction: (action) ->
+    logAction: (action, message) ->
         if window.app_env is "development"
             # remove some data from action value to lighten the logs
             actionCleanup = (action) ->
@@ -306,10 +306,14 @@ module.exports =
                 return trace.split('@')[0]
 
             # store logs
-            window.cozyMails.debugLogs.unshift
+            _log =
                 date: new Date().toISOString()
-                action: actionCleanup action
                 stack: stack.splice(2)
+            if action?
+                _log.action = actionCleanup action
+            if message?
+                _log.message = message
+            window.cozyMails.debugLogs.unshift _log
 
             # only keep the last 100 lines of logs
             window.cozyMails.debugLogs = window.cozyMails.debugLogs.slice 0, 100
