@@ -38,15 +38,15 @@ module.exports = DateRangePicker = React.createClass
     onStartChange: (obj) ->
         date = if obj.target? then obj.target.value else
             "#{obj.dd}/#{obj.mm}/#{obj.yyyy}"
-        active: !!date and !!@state.endDate
+        active = !!date and !!@state.endDate
         @setState isActive: active, startDate: date, @filterize
 
 
     onEndChange: (obj) ->
         date = if obj.target then obj.target.value else
             "#{obj.dd}/#{obj.mm}/#{obj.yyyy}"
-        active: !!@state.startDate and !!date
-        @setState isActive: endDate: date, @filterize
+        active = !!@state.startDate and !!date
+        @setState isActive: active, endDate: date, @filterize
 
 
     filterize: ->
