@@ -119,7 +119,11 @@ module.exports = React.createClass
 
     render: ->
         if not @props.conversation
-            return p null, t "app loading"
+            return section
+                key: 'conversation'
+                className: 'conversation panel'
+                'aria-expanded': true,
+                p null, t "app loading"
 
         message = @props.conversation.get 0
         # Sort messages in conversation to find seen messages and group them
