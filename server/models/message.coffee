@@ -133,7 +133,8 @@ module.exports = class Message extends cozydb.CozyModel
             .filter (mid) -> mid # ignore unparsable messageID
 
 
-        log.debug "findConversationID", references, mail.normSubject, isReplyOrForward
+        log.debug "findConversationID", references, mail.normSubject,
+            isReplyOrForward
         if references.length
             # find all messages in references
             keys = references.map (mid) -> [mail.accountID, 'mid', mid]
@@ -951,7 +952,7 @@ module.exports = class Message extends cozydb.CozyModel
 
             , (err, updated) ->
                 return callback err if err
-                return callback null, [] if updated.length is 0
+                return callback null, [] if updated.length is 0 or not destBox?
 
                 # assume there was not so many changes
                 limit = Math.max(100, messages.length*2)

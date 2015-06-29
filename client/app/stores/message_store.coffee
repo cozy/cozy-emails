@@ -5,7 +5,7 @@ AppDispatcher = require '../app_dispatcher'
 AccountStore = require './account_store'
 SocketUtils = require '../utils/socketio_utils'
 
-{ActionTypes, MessageFlags, MessageFilter} =
+{ActionTypes, MessageFlags, MessageFilter, FlagsConstants} =
         require '../constants/app_constants'
 
 class MessageStore extends Store
@@ -153,7 +153,7 @@ class MessageStore extends Store
     isntAccount = (accountID) -> (message) ->
         accountID isnt message.get 'accountID'
 
-    dedupConversation = () ->
+    dedupConversation = ->
         conversationIDs = []
         return filter = (message) ->
             conversationID = message.get 'conversationID'
@@ -249,14 +249,14 @@ class MessageStore extends Store
     handleFetchResult = (result) ->
 
         if result.links? and result.links.next?
-                # reinit params here for pagination on filtered lists
-                _params = {}
-                next   = decodeURIComponent(result.links.next)
-                url    = 'http://localhost' + next
-                url.split('?')[1].split('&').forEach (p) ->
-                    [key, value] = p.split '='
-                    value = '-' if value is ''
-                    _params[key] = value
+            # reinit params here for pagination on filtered lists
+            _params = {}
+            next   = decodeURIComponent(result.links.next)
+            url    = 'http://localhost' + next
+            url.split('?')[1].split('&').forEach (p) ->
+                [key, value] = p.split '='
+                value = '-' if value is ''
+                _params[key] = value
         else
             # We use pageAfter to know if there are more result to
             # load, so we need to set it to its default value
@@ -281,6 +281,15 @@ class MessageStore extends Store
         handle ActionTypes.RECEIVE_RAW_MESSAGE, (message) ->
             onReceiveRawMessage message
             @emit 'change'
+
+        handle ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME, (message) ->
+            # when we receive new messages, don't display them if there's
+            # an active filter, unless the filter is on unread messages
+            if _filter is '-' or
+               (_filter is MessageFilter.UNSEEN and
+               message.flags.indexOf FlagsConstants.SEEN is -1)
+                onReceiveRawMessage message
+                @emit 'change'
 
         handle ActionTypes.RECEIVE_RAW_MESSAGES, (messages) ->
             for message in messages when message?
@@ -357,7 +366,7 @@ class MessageStore extends Store
             _fetching++
             @emit 'change'
 
-        handle ActionTypes.MESSAGE_FETCH_FAILURE, () ->
+        handle ActionTypes.MESSAGE_FETCH_FAILURE, ->
             _fetching--
             @emit 'change'
 
@@ -422,9 +431,9 @@ class MessageStore extends Store
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
             @setCurrentID null
-            _params.after     = '-'
-            _params.before    = '-'
-            _params.pageAfter = '-'
+            _filter = '-'
+            _params =
+                sort: '-date'
 
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
             _messages = _messages.remove id

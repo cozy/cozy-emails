@@ -1,10 +1,8 @@
-{div, i, button, input} = React.DOM
+{div, i, button, input, form} = React.DOM
 {Dropdown} = require './basic_components'
+{MessageFilter, Tooltips} = require '../constants/app_constants'
 
 LayoutActionCreator = require '../actions/layout_action_creator'
-
-MessageStore        = require '../stores/message_store'
-
 
 filters =
     from: t "list filter from"
@@ -25,21 +23,21 @@ module.exports = SearchToolbarMessagesList = React.createClass
 
 
     showList: ->
+        filter = MessageFilter.ALL
         sort =
             order:  '-'
             before: @state.value
-        if @state.value?
+        if @state.value? and @state.value isnt ''
+            # always close message preview before filtering
+            window.cozyMails.messageClose()
             sort.field = @state.type
             sort.after = "#{@state.value}\uFFFF"
         else
             # reset, use default filter
             sort.field = 'date'
-        LayoutActionCreator.sortMessages sort
+            sort.after = ''
 
-        params = _.clone(MessageStore.getParams())
-        params.accountID = @props.accountID
-        params.mailboxID = @props.mailboxID
-        LayoutActionCreator.showMessageList parameters: params
+        LayoutActionCreator.showFilteredList filter, sort
 
 
     onTypeChange: (filter) ->
@@ -57,14 +55,11 @@ module.exports = SearchToolbarMessagesList = React.createClass
 
 
     reset: ->
-        @setState
-            value: null
-            isEmpty: true,
-            @showList
+        @setState @getInitialState(), @showList
 
 
     render: ->
-        div role: 'group', className: 'search',
+        form role: 'group', className: 'search',
             Dropdown
                 value:    @state.type
                 values:   filters
@@ -78,13 +73,20 @@ module.exports = SearchToolbarMessagesList = React.createClass
                     value:       @state.value
                     onChange:    @onChange
                     onKeyUp:     @onKeyUp
+                    name:        'searchterm'
 
                 unless @state.isEmpty
                     div className: 'btn-group',
                         button
                             className: 'btn fa fa-check'
-                            onClick: @showList
+                            onClick: (e) =>
+                                e.preventDefault()
+                                e.stopPropagation()
+                                @showList()
 
                         button
                             className: 'btn fa fa-close'
-                            onClick: @reset
+                            onClick: (e) =>
+                                e.preventDefault()
+                                e.stopPropagation()
+                                @reset()

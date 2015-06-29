@@ -6,7 +6,7 @@ log = require('./logging')(prefix: 'notifications')
 
 emailsAppRessource = app: 'emails', url: '/'
 logError = (err) ->
-    log.error err if err
+    log.error "fail to create notif", err if err
 
 exports.accountFirstImportComplete = (account) ->
     localization.getPolyglot (err, t) ->

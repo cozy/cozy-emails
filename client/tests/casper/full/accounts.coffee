@@ -35,7 +35,7 @@ casper.test.begin 'Test accounts', (test) ->
                 label = casper.getElementInfo "[data-reactid='#{id}'] .item-label"
                 test.pass "Account #{label.text} selected"
                 if casper.exists ".messages-list .message"
-                    casper.click ".messages-list .message a"
+                    casper.click ".messages-list .message a .subject"
                     casper.waitUntilVisible ".conversation"
             , ->
                 test.fail "Unable to select account #{account.text} #{id}"

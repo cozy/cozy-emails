@@ -271,7 +271,7 @@ Mailbox = (function(superClass) {
       return async.eachSeries(ids, function(id, cbLoop) {
         return Message.updateAttributes(id, changes, function(err) {
           if (err) {
-            log.error(err);
+            log.error("markAllMessagesAsIgnored err", err);
             lastError = err;
           }
           return cbLoop(null);
@@ -429,13 +429,12 @@ Mailbox = (function(superClass) {
       }
       changes = status.changes, highestmodseq = status.highestmodseq, total = status.total;
       return box._refreshCreatedAndUpdated(changes, function(err, info) {
-        var nbAdded, shouldNotif;
+        var shouldNotif;
         if (err) {
           return callback(err);
         }
         log.debug("_refreshFast#aftercreates", info);
         shouldNotif = info.shouldNotif;
-        nbAdded = info.nbAdded;
         noChange || (noChange = info.noChange);
         return box._refreshDeleted(total, info.nbAdded, function(err, info) {
           if (err) {
@@ -545,6 +544,7 @@ Mailbox = (function(superClass) {
         noChange: true
       });
     } else if (lastTotal + nbAdded < imapTotal) {
+      log.warn(lastTotal + " + " + nbAdded + " < " + imapTotal + " on " + this.path);
       error = "    WRONG STATE";
       return callback(new Error(error), {
         noChange: true

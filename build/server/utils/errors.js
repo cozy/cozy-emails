@@ -181,7 +181,7 @@ utils.errorHandler = function(err, req, res, next) {
       payload: err.payload
     });
   } else {
-    log.error(err);
+    log.error("error handler called with", err.stack);
     return baseHandler(err, req, res);
   }
 };

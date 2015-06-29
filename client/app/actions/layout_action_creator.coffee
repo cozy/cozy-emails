@@ -132,9 +132,9 @@ module.exports = LayoutActionCreator =
             value = panelInfo.parameters[param]
             if value? and value isnt ''
                 query[param] = value
-                if _cachedQuery[param] isnt value
-                    _cachedQuery[param] = value
-                    cached = false
+            if _cachedQuery[param] isnt value
+                _cachedQuery[param] = value
+                cached = false
         _cachedQuery.mailboxID = mailboxID
 
         if not cached
@@ -156,6 +156,16 @@ module.exports = LayoutActionCreator =
                     AppDispatcher.handleViewAction
                         type: ActionTypes.MESSAGE_FETCH_SUCCESS
                         value: {mailboxID, query, fetchResult: rawMsg}
+
+    # Apply filters and sort criteria on message list then display it
+    showFilteredList: (filter, sort) ->
+        @filterMessages filter
+        @sortMessages sort
+
+        params           = _.clone(MessageStore.getParams())
+        params.accountID = AccountStore.getSelected().get 'id'
+        params.mailboxID = AccountStore.getSelectedMailbox().get 'id'
+        @showMessageList parameters: params
 
     showMessage: (panelInfo, direction) ->
         onMessage = (msg) ->

@@ -28,15 +28,16 @@ class Account extends cozydb.CozyModel
         imapTLS: Boolean            # Use STARTTLS
         inboxMailbox: String        # INBOX Maibox id
         flaggedMailbox: String      # \Flag Mailbox id
-        draftMailbox: String        # \Draft Maibox id
-        sentMailbox: String         # \Sent Maibox id
-        trashMailbox: String        # \Trash Maibox id
-        junkMailbox: String         # \Junk Maibox id
-        allMailbox: String          # \All Maibox id
-        favorites: [String]         # [String] Maibox id of displayed boxes
-        patchIgnored: Boolean       # has patchIgnored been applied ?
+        draftMailbox:   String      # \Draft Maibox id
+        sentMailbox:    String      # \Sent Maibox id
+        trashMailbox:   String      # \Trash Maibox id
+        junkMailbox:    String      # \Junk Maibox id
+        allMailbox:     String      # \All Maibox id
+        favorites:      [String]    # [String] Maibox id of displayed boxes
+        patchIgnored:   Boolean     # has patchIgnored been applied ?
         supportRFC4551: Boolean     # does the account support CONDSTORE ?
-        signature: String           # Signature to add at the end of messages
+        signature:      String      # Signature to add at the end of messages
+        oauthProvider:  String      # If authentication use OAuth
 
     # Public: find an account by id
     # cozydb's find can return no error and no account (if id isnt an account)
@@ -116,7 +117,7 @@ class Account extends cozydb.CozyModel
                 # then apply the ignored patch to all accounts
                 async.eachSeries allAccounts, (account, cbLoop) ->
                     account.applyPatchIgnored (err) ->
-                        log.error err if err
+                        log.error "ignored patch err", err if err
                         cbLoop null # loop anyway
                 , cb
 
@@ -124,7 +125,7 @@ class Account extends cozydb.CozyModel
                 # then apply the ignored patch to all accounts
                 async.eachSeries allAccounts, (account, cbLoop) ->
                     account.applyPatchConversation (err) ->
-                        log.error err if err
+                        log.error "conv patch err", err if err
                         cbLoop null # loop anyway
                 , cb
 
@@ -284,7 +285,7 @@ class Account extends cozydb.CozyModel
             Mailbox.markAllMessagesAsIgnored boxID, (err) ->
                 if err
                     hadError = true
-                    log.error err
+                    log.error "patch ignored err", err
                 cb null
         , (err) =>
             if hadError
@@ -321,7 +322,7 @@ class Account extends cozydb.CozyModel
                 return next null
 
             # rows without value are correct conversations
-            problems = rows.filter (row) -> Boolean row.value
+            problems = rows.filter (row) -> row.value isnt null
                 .map (row) -> row.key
 
             log.debug "conversationPatchingStep", status.skip,
@@ -331,7 +332,10 @@ class Account extends cozydb.CozyModel
                 status.skip += 1000
                 next null
             else
-                async.eachSeries problems, @patchConversationOne, next
+                async.eachSeries problems, @patchConversationOne, (err) ->
+                    return next err if err
+                    status.skip += 1000
+                    next null
 
     patchConversationOne: (key, callback) ->
         Message.rawRequest 'conversationPatching',
@@ -573,7 +577,7 @@ class Account extends cozydb.CozyModel
                     return callback err if err
 
                     account.applyPatchConversation (err) ->
-                        log.error err if err # not blocking
+                        log.error "patch conv fail", err if err # not blocking
                         account.setRefreshing false
                         reporter.onDone()
                         if shouldNotifAccount

@@ -279,7 +279,7 @@ class Mailbox extends cozydb.CozyModel
             async.eachSeries ids, (id, cbLoop) ->
                 Message.updateAttributes id, changes, (err) ->
                     if err
-                        log.error err
+                        log.error "markAllMessagesAsIgnored err", err
                         lastError = err
                     cbLoop null # loop anyway
             , (err) ->
@@ -449,7 +449,6 @@ class Mailbox extends cozydb.CozyModel
                 return callback err if err
                 log.debug "_refreshFast#aftercreates", info
                 shouldNotif = info.shouldNotif
-                nbAdded = info.nbAdded
                 noChange or= info.noChange
 
                 box._refreshDeleted total, info.nbAdded, (err, info) ->
@@ -524,8 +523,8 @@ class Mailbox extends cozydb.CozyModel
 
     # Private: Apply deletions from IMAP to the cozy
     #
-    # imapTotal - {Number} total number of message in the IMAP box
-    # nbAdded - {Number} total number of message in the IMAP box
+    # imapTotal - {Number} total number of messages in the IMAP box
+    # nbAdded   - {Number} number of messages added
     #
     # Returns (callback) at completion
     _refreshDeleted: (imapTotal, nbAdded, callback) ->
@@ -543,6 +542,9 @@ class Mailbox extends cozydb.CozyModel
         # else if it is inferior, it means our algo broke somewhere
         # throw an error, and let {::imap_refresh} do a deep refresh
         else if lastTotal + nbAdded < imapTotal
+            log.warn """
+              #{lastTotal} + #{nbAdded} < #{imapTotal} on #{@path}
+            """
             error = "    WRONG STATE"
             callback new Error(error), noChange: true
 
