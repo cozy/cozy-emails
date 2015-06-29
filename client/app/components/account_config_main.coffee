@@ -1,5 +1,5 @@
 {
-    div, p, h3, h4, form, label, input, button, ul, li, a, span, i,
+    div, p, form, label, input, button, ul, li, a, span, i,
     fieldset, legend
 } = React.DOM
 classer = React.addons.classSet
@@ -76,6 +76,9 @@ module.exports = AccountConfigMain = React.createClass
 
         Form className: formClass,
 
+            if isOauth
+                p null, t 'account oauth'
+
             FieldSet text: t 'account identifiers'
 
             AccountInput
@@ -126,6 +129,52 @@ module.exports = AccountConfigMain = React.createClass
                 ]
 
 
+            if not isOauth
+                @_renderReceivingServer()
+            if not isOauth
+                @_renderSendingServer()
+
+            FieldSet text: t 'account actions'
+            FormButtons
+                buttons: [
+                    class: 'action-save'
+                    contrast: true
+                    default: false
+                    danger: false
+                    spinner: false
+                    icon: 'save'
+                    onClick: @onSubmit
+                    text: buttonLabel
+                ,
+                    class: 'action-check'
+                    contrast: false
+                    default: false
+                    danger: false
+                    spinner: @props.checking
+                    onClick: @onCheck
+                    icon: 'ellipsis-h'
+                    text: t 'account check'
+                ]
+
+            if @props.selectedAccount?
+                FieldSet text: t 'account danger zone'
+
+            if @props.selectedAccount?
+                FormButtons
+                    buttons: [
+                        class: 'btn-remove'
+                        contrast: false
+                        default: true
+                        danger: true
+                        onClick: @onRemove
+                        spinner: @state.deleting
+                        icon: 'trash'
+                        text: t "account remove"
+                    ]
+
+
+    _renderReceivingServer: ->
+        div null,
             FieldSet text: t 'account receiving server'
 
             AccountInput
@@ -161,13 +210,12 @@ module.exports = AccountConfigMain = React.createClass
                 onClick: (event) =>
                     @_onServerParam event.target, 'imap', 'tls'
 
-            if not isOauth
-                div
-                    className: "form-group advanced-imap-toggle",
-                    a
-                        className: "col-sm-3 col-sm-offset-2 control-label clickable",
-                        onClick: @toggleIMAPAdvanced,
-                        t "account imap #{if @state.imapAdvanced then 'hide' else 'show'} advanced"
+            div
+                className: "form-group advanced-imap-toggle",
+                a
+                    className: "col-sm-3 col-sm-offset-2 control-label clickable",
+                    onClick: @toggleIMAPAdvanced,
+                    t "account imap #{if @state.imapAdvanced then 'hide' else 'show'} advanced"
 
             if @state.imapAdvanced
                 AccountInput
@@ -176,6 +224,9 @@ module.exports = AccountConfigMain = React.createClass
                     errors: @state.errors
                     errorField: ['imap', 'imapServer', 'imapPort', 'imapLogin']
 
+
+    _renderSendingServer: ->
+        div null,
             FieldSet text: t 'account sending server'
 
             AccountInput
@@ -217,13 +268,12 @@ module.exports = AccountConfigMain = React.createClass
                 onClick: (ev) =>
                     @_onServerParam ev.target, 'smtp', 'tls'
 
-            if not isOauth
-                div
-                    className: "form-group advanced-smtp-toggle",
-                    a
-                        className: "col-sm-3 col-sm-offset-2 control-label clickable",
-                        onClick: @toggleSMTPAdvanced,
-                        t "account smtp #{if @state.smtpAdvanced then 'hide' else 'show'} advanced"
+            div
+                className: "form-group advanced-smtp-toggle",
+                a
+                    className: "col-sm-3 col-sm-offset-2 control-label clickable",
+                    onClick: @toggleSMTPAdvanced,
+                    t "account smtp #{if @state.smtpAdvanced then 'hide' else 'show'} advanced"
 
             if @state.smtpAdvanced
                 FormDropdown
@@ -261,45 +311,6 @@ module.exports = AccountConfigMain = React.createClass
                         'smtpLogin'
                         'smtpPassword'
                     ]
-
-            FieldSet text: t 'account actions'
-            FormButtons
-                buttons: [
-                    class: 'action-save'
-                    contrast: true
-                    default: false
-                    danger: false
-                    spinner: false
-                    icon: 'save'
-                    onClick: @onSubmit
-                    text: buttonLabel
-                ,
-                    class: 'action-check'
-                    contrast: false
-                    default: false
-                    danger: false
-                    spinner: @props.checking
-                    onClick: @onCheck
-                    icon: 'ellipsis-h'
-                    text: t 'account check'
-                ]
-
-            if @props.selectedAccount?
-                FieldSet text: t 'account danger zone'
-
-            if @props.selectedAccount?
-                FormButtons
-                    buttons: [
-                        class: 'btn-remove'
-                        contrast: false
-                        default: true
-                        danger: true
-                        onClick: @onRemove
-                        spinner: @state.deleting
-                        icon: 'trash'
-                        text: t "account remove"
-                    ]
-
 
     # Run form submission process described in parent component.
     # Check for errors before.
