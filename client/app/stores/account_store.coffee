@@ -141,6 +141,8 @@ class AccountStore extends Store
 
         handle ActionTypes.NEW_ACCOUNT_ERROR, (error) ->
             _newAccountWaiting = false
+            # This is to force Panel.shouldComponentUpdate to rerender
+            error.uniq = Math.random()
             _newAccountError = error
             @emit 'change'
 
