@@ -2214,9 +2214,9 @@ module.exports = AccountConfigMailboxes = React.createClass({
 });
 
 ;require.register("components/account_config_main", function(exports, require, module) {
-var AccountActionCreator, AccountConfigMain, AccountInput, FieldSet, Form, FormButtons, FormDropdown, LayoutActionCreator, RouterMixin, a, button, classer, div, fieldset, form, h3, h4, i, input, label, legend, li, p, span, ul, _ref, _ref1;
+var AccountActionCreator, AccountConfigMain, AccountInput, FieldSet, Form, FormButtons, FormDropdown, LayoutActionCreator, RouterMixin, a, button, classer, div, fieldset, form, i, input, label, legend, li, p, span, ul, _ref, _ref1;
 
-_ref = React.DOM, div = _ref.div, p = _ref.p, h3 = _ref.h3, h4 = _ref.h4, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, fieldset = _ref.fieldset, legend = _ref.legend;
+_ref = React.DOM, div = _ref.div, p = _ref.p, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, fieldset = _ref.fieldset, legend = _ref.legend;
 
 classer = React.addons.classSet;
 
@@ -2289,7 +2289,7 @@ module.exports = AccountConfigMain = React.createClass({
     isOauth = ((_ref2 = this.props.selectedAccount) != null ? _ref2.get('oauthProvider') : void 0) != null;
     return Form({
       className: formClass
-    }, FieldSet({
+    }, isOauth ? p(null, t('account oauth')) : void 0, FieldSet({
       text: t('account identifiers')
     }), AccountInput({
       name: 'label',
@@ -2329,7 +2329,49 @@ module.exports = AccountConfigMain = React.createClass({
         target: '_blank',
         href: url
       }, t('gmail security link')))
-    ]) : void 0, FieldSet({
+    ]) : void 0, !isOauth ? this._renderReceivingServer() : void 0, !isOauth ? this._renderSendingServer() : void 0, FieldSet({
+      text: t('account actions')
+    }), FormButtons({
+      buttons: [
+        {
+          "class": 'action-save',
+          contrast: true,
+          "default": false,
+          danger: false,
+          spinner: false,
+          icon: 'save',
+          onClick: this.onSubmit,
+          text: buttonLabel
+        }, {
+          "class": 'action-check',
+          contrast: false,
+          "default": false,
+          danger: false,
+          spinner: this.props.checking,
+          onClick: this.onCheck,
+          icon: 'ellipsis-h',
+          text: t('account check')
+        }
+      ]
+    }), this.props.selectedAccount != null ? FieldSet({
+      text: t('account danger zone')
+    }) : void 0, this.props.selectedAccount != null ? FormButtons({
+      buttons: [
+        {
+          "class": 'btn-remove',
+          contrast: false,
+          "default": true,
+          danger: true,
+          onClick: this.onRemove,
+          spinner: this.state.deleting,
+          icon: 'trash',
+          text: t("account remove")
+        }
+      ]
+    }) : void 0);
+  },
+  _renderReceivingServer: function() {
+    return div(null, FieldSet({
       text: t('account receiving server')
     }), AccountInput({
       name: 'imapServer',
@@ -2375,17 +2417,20 @@ module.exports = AccountConfigMain = React.createClass({
           return _this._onServerParam(event.target, 'imap', 'tls');
         };
       })(this)
-    }), !isOauth ? div({
+    }), div({
       className: "form-group advanced-imap-toggle"
     }, a({
       className: "col-sm-3 col-sm-offset-2 control-label clickable",
       onClick: this.toggleIMAPAdvanced
-    }, t("account imap " + (this.state.imapAdvanced ? 'hide' : 'show') + " advanced"))) : void 0, this.state.imapAdvanced ? AccountInput({
+    }, t("account imap " + (this.state.imapAdvanced ? 'hide' : 'show') + " advanced"))), this.state.imapAdvanced ? AccountInput({
       name: 'imapLogin',
       value: this.linkState('imapLogin').value,
       errors: this.state.errors,
       errorField: ['imap', 'imapServer', 'imapPort', 'imapLogin']
-    }) : void 0, FieldSet({
+    }) : void 0);
+  },
+  _renderSendingServer: function() {
+    return div(null, FieldSet({
       text: t('account sending server')
     }), AccountInput({
       name: 'smtpServer',
@@ -2430,12 +2475,12 @@ module.exports = AccountConfigMain = React.createClass({
           return _this._onServerParam(ev.target, 'smtp', 'tls');
         };
       })(this)
-    }), !isOauth ? div({
+    }), div({
       className: "form-group advanced-smtp-toggle"
     }, a({
       className: "col-sm-3 col-sm-offset-2 control-label clickable",
       onClick: this.toggleSMTPAdvanced
-    }, t("account smtp " + (this.state.smtpAdvanced ? 'hide' : 'show') + " advanced"))) : void 0, this.state.smtpAdvanced ? FormDropdown({
+    }, t("account smtp " + (this.state.smtpAdvanced ? 'hide' : 'show') + " advanced"))), this.state.smtpAdvanced ? FormDropdown({
       prefix: 'mailbox',
       name: 'smtpMethod',
       labelText: t("account smtpMethod"),
@@ -2454,45 +2499,6 @@ module.exports = AccountConfigMain = React.createClass({
       type: 'password',
       errors: this.state.errors,
       errorField: ['smtp', 'smtpServer', 'smtpPort', 'smtpLogin', 'smtpPassword']
-    }) : void 0, FieldSet({
-      text: t('account actions')
-    }), FormButtons({
-      buttons: [
-        {
-          "class": 'action-save',
-          contrast: true,
-          "default": false,
-          danger: false,
-          spinner: false,
-          icon: 'save',
-          onClick: this.onSubmit,
-          text: buttonLabel
-        }, {
-          "class": 'action-check',
-          contrast: false,
-          "default": false,
-          danger: false,
-          spinner: this.props.checking,
-          onClick: this.onCheck,
-          icon: 'ellipsis-h',
-          text: t('account check')
-        }
-      ]
-    }), this.props.selectedAccount != null ? FieldSet({
-      text: t('account danger zone')
-    }) : void 0, this.props.selectedAccount != null ? FormButtons({
-      buttons: [
-        {
-          "class": 'btn-remove',
-          contrast: false,
-          "default": true,
-          danger: true,
-          onClick: this.onRemove,
-          spinner: this.state.deleting,
-          icon: 'trash',
-          text: t("account remove")
-        }
-      ]
     }) : void 0);
   },
   onSubmit: function(event) {
@@ -4839,7 +4845,11 @@ module.exports = React.createClass({
   render: function() {
     var glob, index, lastMessageIndex, message, messages;
     if (!this.props.conversation) {
-      return p(null, t("app loading"));
+      return section({
+        key: 'conversation',
+        className: 'conversation panel',
+        'aria-expanded': true
+      }, p(null, t("app loading")));
     }
     message = this.props.conversation.get(0);
     messages = [];
@@ -4927,26 +4937,21 @@ module.exports = DateRangePicker = React.createClass({
     }
   },
   onStartChange: function(obj) {
-    var date;
+    var active, date;
     date = obj.target != null ? obj.target.value : "" + obj.dd + "/" + obj.mm + "/" + obj.yyyy;
-    ({
-      active: !!date && !!this.state.endDate
-    });
+    active = !!date && !!this.state.endDate;
     return this.setState({
       isActive: active,
       startDate: date
     }, this.filterize);
   },
   onEndChange: function(obj) {
-    var date;
+    var active, date;
     date = obj.target ? obj.target.value : "" + obj.dd + "/" + obj.mm + "/" + obj.yyyy;
-    ({
-      active: !!this.state.startDate && !!date
-    });
+    active = !!this.state.startDate && !!date;
     return this.setState({
-      isActive: {
-        endDate: date
-      }
+      isActive: active,
+      endDate: date
     }, this.filterize);
   },
   filterize: function() {
@@ -6179,10 +6184,10 @@ MenuMailboxItem = React.createClass({
     nbRecent = this.props.mailbox.get('nbRecent') || 0;
     title = t("menu mailbox total", nbTotal);
     if (nbUnread > 0) {
-      title += t("menu mailbox unread", nbUnread);
+      title += " " + (t("menu mailbox unread", nbUnread));
     }
     if (nbRecent > 0) {
-      title += t("menu mailbox new", nbRecent);
+      title += " " + (t("menu mailbox new", nbRecent));
     }
     mailboxIcon = 'fa-folder-o';
     specialMailbox = false;
@@ -6629,7 +6634,7 @@ module.exports = MessageItem = React.createClass({
       };
     })(this));
     separator = to.length > 0 ? ', ' : ' ';
-    return span(null, Participants({
+    return p(null, Participants({
       participants: from,
       onAdd: this.addAddress,
       ref: 'from',
@@ -7922,6 +7927,9 @@ module.exports = Panel = React.createClass({
     }
     prevMessage = MessageStore.getPreviousMessage();
     nextMessage = MessageStore.getNextMessage();
+    if (conversationID == null) {
+      return null;
+    }
     return Conversation({
       key: 'conversation-' + conversationID,
       settings: this.state.settings,
@@ -11090,6 +11098,7 @@ module.exports = {
   "account login": "Email address",
   "account name short": "Your name, as it will be displayed",
   "account name": "Your name",
+  "account oauth": "This accoutn uses Google OAuth",
   "account password": "Password",
   "account receiving server": "Receiving server",
   "account sending server": "Sending server",
@@ -11460,6 +11469,7 @@ module.exports = {
   "account login": "Adresse",
   "account name short": "Votre nom, tel qu'il sera affiché",
   "account name": "Votre nom",
+  "account oauth": "Ce compte est lié à un compte Google via OAuth",
   "account password": "Mot de passe",
   "account receiving server": "Serveur de réception",
   "account sending server": "Serveur d'envoi",

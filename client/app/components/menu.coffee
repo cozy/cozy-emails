@@ -338,9 +338,9 @@ MenuMailboxItem = React.createClass
         nbRecent = @props.mailbox.get('nbRecent') or 0
         title    = t "menu mailbox total", nbTotal
         if nbUnread > 0
-            title += t "menu mailbox unread", nbUnread
+            title += " #{t "menu mailbox unread", nbUnread}"
         if nbRecent > 0
-            title += t "menu mailbox new", nbRecent
+            title += " #{t "menu mailbox new", nbRecent}"
 
         mailboxIcon = 'fa-folder-o'
         specialMailbox = false

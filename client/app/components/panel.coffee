@@ -192,6 +192,10 @@ module.exports = Panel = React.createClass
         prevMessage = MessageStore.getPreviousMessage()
         nextMessage = MessageStore.getNextMessage()
 
+        # don't display conversation panel when there's no conversation
+        # (happens sometime on deletion or filtering)
+        return null unless conversationID?
+
         return Conversation
             key: 'conversation-' + conversationID
             settings             : @state.settings

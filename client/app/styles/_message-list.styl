@@ -222,9 +222,27 @@
 
             .participants
                 order 1
+                // This is the most tricky and weird way I have found to bypass
+                // flexbox calculation for internal sizes and permit an overflow
+                // rendering. It's based on the padded-top responsive images
+                // trick.
+                height       1.6em
+                white-space  nowrap
+                position     relative
+                max-width    0
+                padding-left 85%
+
+                p
+                    position      absolute
+                    left          0
+                    width         100%
+                    margin        0
+                    overflow      hidden
+                    text-overflow ellipsis
 
             .date
                 order 2
+                margin-left 1em
 
             .subject
                 order 3

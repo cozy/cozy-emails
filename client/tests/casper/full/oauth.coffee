@@ -13,11 +13,11 @@ casper.test.begin 'Test accounts with OAuth', (test) ->
 
     casper.then ->
         test.assertDoesntExist '#mailbox-password', 'Password field hidden'
-        test.assertDoesntExist '.advanced-imap-toggle', 'Advanced IMAP parameters hidden'
-        test.assertDoesntExist '.advanced-smtp-toggle', 'Advanced SMTP parameters hidden'
+        test.assertDoesntExist '#mailbox-imapServer', 'IMAP server hidden'
+        test.assertDoesntExist '#mailbox-smtpServer', 'SMTP server hidden'
         casper.click 'button.action-save'
         casper.waitForSelector '.toast', ->
-            test.assertEquals casper.fetchText('.toast .message').trim(), 'Account updated'
+            test.assertEquals casper.fetchText('.toast .message').trim(), 'Account updated', 'Account update ok'
             casper.waitWhileSelector '.toast'
 
     casper.run ->
@@ -30,11 +30,11 @@ casper.test.begin 'Test accounts without OAuth', (test) ->
 
     casper.then ->
         test.assertExist '#mailbox-password', 'Password field shown'
-        test.assertExist '.advanced-imap-toggle', 'Advanced IMAP parameters shown'
-        test.assertExist '.advanced-smtp-toggle', 'Advanced SMTP parameters shown'
+        test.assertExist '#mailbox-imapServer', 'IMAP server shown'
+        test.assertExist '#mailbox-smtpServer', 'SMTP server shown'
         casper.click 'button.action-save'
         casper.waitForSelector '.toast', ->
-            test.assertEquals casper.fetchText('.toast .message').trim(), 'Account updated'
+            test.assertEquals casper.fetchText('.toast .message').trim(), 'Account updated', 'Account update ok'
 
     casper.run ->
         test.done()

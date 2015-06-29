@@ -195,7 +195,7 @@ module.exports = MessageItem = React.createClass
             return address.address isnt @props.login and
                 address.address isnt from[0]?.address
         separator = if to.length > 0 then ', ' else ' '
-        span null,
+        p null,
             Participants
                 participants: from
                 onAdd: @addAddress
