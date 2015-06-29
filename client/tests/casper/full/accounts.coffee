@@ -8,10 +8,10 @@ utils = require "utils.js"
 
 deleteTestAccounts = ->
     casper.evaluate ->
-        AccountStore  = require '../stores/account_store'
+        AccountStore  = require 'stores/account_store'
         account = AccountStore.getByLabel 'Test Account'
         if account?
-            AccountActionCreator = require '../actions/account_action_creator'
+            AccountActionCreator = require 'actions/account_action_creator'
             console.log "Deleting test account #{account.get 'id'}"
             AccountActionCreator.remove(account.get 'id')
         else
@@ -67,7 +67,7 @@ casper.test.begin 'Create account', (test) ->
 
         deleteTestAccounts()
         account = casper.evaluate ->
-            AccountStore  = require '../stores/account_store'
+            AccountStore  = require 'stores/account_store'
             account = AccountStore.getByLabel 'Test Account'
             return account?
         test.assertFalsy account, "Test account doesnt exists"

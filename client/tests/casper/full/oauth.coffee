@@ -12,6 +12,10 @@ casper.test.begin 'Test accounts with OAuth', (test) ->
     casper.start casper.cozy.startUrl + '#account/gmail-ID/config/account', ->
 
     casper.then ->
+        # Ensure that no tast is displayed
+        casper.waitWhileSelector '.toast'
+
+    casper.then ->
         test.assertDoesntExist '#mailbox-password', 'Password field hidden'
         test.assertDoesntExist '#mailbox-imapServer', 'IMAP server hidden'
         test.assertDoesntExist '#mailbox-smtpServer', 'SMTP server hidden'
@@ -35,6 +39,7 @@ casper.test.begin 'Test accounts without OAuth', (test) ->
         casper.click 'button.action-save'
         casper.waitForSelector '.toast', ->
             test.assertEquals casper.fetchText('.toast .message').trim(), 'Account updated', 'Account update ok'
+            casper.waitWhileSelector '.toast'
 
     casper.run ->
         test.done()

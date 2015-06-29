@@ -102,10 +102,13 @@ module.exports =
         if not next?
             return
 
-        MessageActionCreator.setCurrent next.get('id'), true
+        @messageSetCurrent next
+
+    messageSetCurrent: (message) ->
+        MessageActionCreator.setCurrent message.get('id'), true
 
         if SettingsStore.get('displayPreview')
-            @messageDisplay next
+            @messageDisplay message
 
     ##
     # Display a message

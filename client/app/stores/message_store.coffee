@@ -122,7 +122,7 @@ class MessageStore extends Store
                 next = self.getNextOrPrevious true
                 if next?
                     setTimeout ->
-                        window.cozyMails.messageNavigate 'next', true
+                        window.cozyMails.messageSetCurrent next
                     , 1
 
     _getMixed = (target) ->
