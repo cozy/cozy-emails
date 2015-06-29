@@ -55,8 +55,6 @@ config = {
     afterStart: function(app, server) {
       return async.series([
         function(cb) {
-          return cozydb.forceReindexing(cb);
-        }, function(cb) {
           return initializeSocketHandler(app, server, cb);
         }, function(cb) {
           return initializeAccountRefresh(cb);
