@@ -44,7 +44,7 @@ config =
 
         afterStart: (app, server) ->
             async.series [
-                #(cb) -> cozydb.forceReindexing cb
+                (cb) -> cozydb.forceReindexing cb
                 (cb) -> initializeSocketHandler app, server, cb
                 (cb) -> initializeAccountRefresh cb
             ], (err) ->
