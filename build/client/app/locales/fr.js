@@ -145,6 +145,7 @@ module.exports = {
   "account login": "Adresse",
   "account name short": "Votre nom, tel qu'il sera affiché",
   "account name": "Votre nom",
+  "account oauth": "Ce compte est lié à un compte Google via OAuth",
   "account password": "Mot de passe",
   "account receiving server": "Serveur de réception",
   "account sending server": "Serveur d'envoi",
