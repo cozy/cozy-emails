@@ -115,14 +115,16 @@ module.exports = Panel = React.createClass
 
         # don't display conversations in Trash and Draft folders
         conversationDisabledBoxes = [
-            @state.selectedAccount?.get('draftMailbox')
             @state.selectedAccount?.get('trashMailbox')
+            @state.selectedAccount?.get('draftMailbox')
             @state.selectedAccount?.get('junkMailbox')
         ]
         if mailboxID in conversationDisabledBoxes
             displayConversations = false
         else
             displayConversations = @state.settings.get 'displayConversation'
+
+        isTrash = conversationDisabledBoxes[0] is mailboxID
 
         return MessageList
             key:                  'messageList-' + mailboxID
@@ -185,9 +187,12 @@ module.exports = Panel = React.createClass
             selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
 
         # don't display conversations in Trash and Draft folders
-        isDraft = @state.selectedAccount?.get('draftMailbox') is mailboxID
-        isTrash = @state.selectedAccount?.get('trashMailbox') is mailboxID
-        if isDraft or isTrash
+        conversationDisabledBoxes = [
+            @state.selectedAccount?.get('trashMailbox')
+            @state.selectedAccount?.get('draftMailbox')
+            @state.selectedAccount?.get('junkMailbox')
+        ]
+        if mailboxID in conversationDisabledBoxes
             displayConversations = false
         else
             displayConversations = @state.settings.get 'displayConversation'
