@@ -114,9 +114,12 @@ module.exports = Panel = React.createClass
         query.mailboxID = mailboxID
 
         # don't display conversations in Trash and Draft folders
-        isDraft = @state.selectedAccount?.get('draftMailbox') is mailboxID
-        isTrash = @state.selectedAccount?.get('trashMailbox') is mailboxID
-        if isDraft or isTrash
+        conversationDisabledBoxes = [
+            @state.selectedAccount?.get('draftMailbox')
+            @state.selectedAccount?.get('trashMailbox')
+            @state.selectedAccount?.get('junkMailbox')
+        ]
+        if mailboxID in conversationDisabledBoxes
             displayConversations = false
         else
             displayConversations = @state.settings.get 'displayConversation'
