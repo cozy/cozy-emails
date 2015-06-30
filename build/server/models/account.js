@@ -831,8 +831,10 @@ Account = (function(superClass) {
         clearTimeout(timeout);
         if (_this.smtpMethod !== 'NONE') {
           return connection.login(auth, function(err) {
+            var field;
             if (err) {
-              reject(new AccountConfigError('auth', err));
+              field = _this.smtpLogin ? 'smtpAuth' : 'auth';
+              reject(new AccountConfigError(field, err));
             } else {
               callback(null);
             }
