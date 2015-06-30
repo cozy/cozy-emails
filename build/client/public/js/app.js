@@ -1693,9 +1693,9 @@ module.exports = AccountInput = React.createClass({
       onInput: this.props.onInput || null
     })), this.renderError(errorField, name));
   },
-  onBlur: function() {
+  onBlur: function(event) {
     var _base;
-    return typeof (_base = this.props).onBlur === "function" ? _base.onBlur() : void 0;
+    return typeof (_base = this.props).onBlur === "function" ? _base.onBlur(event) : void 0;
   },
   renderError: function(errorField, name) {
     var error, i, result, _i, _len, _ref1, _ref2;
@@ -2442,9 +2442,10 @@ module.exports = AccountConfigMain = React.createClass({
       name: 'smtpPort',
       value: this.linkState('smtpPort').value,
       errors: this.state.errors,
+      errorField: ['smtp', 'smtpPort', 'smtpServer'],
       onBlur: (function(_this) {
-        return function() {
-          _this._onSMTPPort();
+        return function(event) {
+          _this._onSMTPPort(event);
           return _this.props.onBlur();
         };
       })(this),
@@ -2459,6 +2460,7 @@ module.exports = AccountConfigMain = React.createClass({
       name: 'smtpSSL',
       value: this.linkState('smtpSSL').value,
       errors: this.state.errors,
+      errorField: ['smtp', 'smtpPort', 'smtpServer'],
       type: 'checkbox',
       onClick: (function(_this) {
         return function(ev) {
@@ -2469,6 +2471,7 @@ module.exports = AccountConfigMain = React.createClass({
       name: 'smtpTLS',
       value: this.linkState('smtpTLS').value,
       errors: this.state.errors,
+      errorField: ['smtp', 'smtpPort', 'smtpServer'],
       type: 'checkbox',
       onClick: (function(_this) {
         return function(ev) {
@@ -2487,18 +2490,19 @@ module.exports = AccountConfigMain = React.createClass({
       defaultText: t("account smtpMethod " + this.state.smtpMethod.value),
       values: ['NONE', 'CRAM-MD5', 'LOGIN', 'PLAIN'],
       onClick: this.onMethodChange,
-      methodPrefix: "account smtpMethod"
+      methodPrefix: "account smtpMethod",
+      errorField: ['smtp', 'smtpAuth']
     }) : void 0, this.state.smtpAdvanced ? AccountInput({
       name: 'smtpLogin',
       value: this.linkState('smtpLogin').value,
       errors: this.state.errors,
-      errorField: ['smtp', 'smtpServer', 'smtpPort', 'smtpLogin', 'smtpPassword']
+      errorField: ['smtpAuth']
     }) : void 0, this.state.smtpAdvanced ? AccountInput({
       name: 'smtpPassword',
       value: this.linkState('smtpPassword').value,
       type: 'password',
       errors: this.state.errors,
-      errorField: ['smtp', 'smtpServer', 'smtpPort', 'smtpLogin', 'smtpPassword']
+      errorField: ['smtpAuth']
     }) : void 0);
   },
   onSubmit: function(event) {
@@ -10292,7 +10296,7 @@ var invariant = function(condition, format, a, b, c, d, e, f) {
 module.exports = invariant;
 });
 
-require.register("libs/flux/store/store", function(exports, require, module) {
+require.register("libs/flux/store/Store", function(exports, require, module) {
 var AppDispatcher, Store,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
@@ -10311,9 +10315,6 @@ module.exports = Store = (function(_super) {
   _handlers = {};
 
   _addHandlers = function(type, callback) {
-    if (type === void 0) {
-      throw new Error("handler for undefined action");
-    }
     if (_handlers[this.uniqID] == null) {
       _handlers[this.uniqID] = {};
     }
@@ -12097,6 +12098,7 @@ AccountStore = (function(_super) {
     });
     handle(ActionTypes.NEW_ACCOUNT_ERROR, function(error) {
       _newAccountWaiting = false;
+      error.uniq = Math.random();
       _newAccountError = error;
       return this.emit('change');
     });
@@ -12908,7 +12910,7 @@ MessageStore = (function(_super) {
         next = self.getNextOrPrevious(true);
         if (next != null) {
           return setTimeout(function() {
-            return window.cozyMails.messageNavigate('next', true);
+            return window.cozyMails.messageSetCurrent(next);
           }, 1);
         }
       }
@@ -13855,9 +13857,12 @@ module.exports = {
     if (next == null) {
       return;
     }
-    MessageActionCreator.setCurrent(next.get('id'), true);
+    return this.messageSetCurrent(next);
+  },
+  messageSetCurrent: function(message) {
+    MessageActionCreator.setCurrent(message.get('id'), true);
     if (SettingsStore.get('displayPreview')) {
-      return this.messageDisplay(next);
+      return this.messageDisplay(message);
     }
   },
   messageDisplay: function(message, force) {

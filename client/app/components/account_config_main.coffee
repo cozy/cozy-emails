@@ -246,8 +246,9 @@ module.exports = AccountConfigMain = React.createClass
                 name: 'smtpPort'
                 value: @linkState('smtpPort').value
                 errors: @state.errors
-                onBlur: =>
-                    @_onSMTPPort()
+                errorField: ['smtp', 'smtpPort', 'smtpServer']
+                onBlur: (event) =>
+                    @_onSMTPPort(event)
                     @props.onBlur()
                 onInput: =>
                     @setState smtpManualPort: true
@@ -256,6 +257,7 @@ module.exports = AccountConfigMain = React.createClass
                 name: 'smtpSSL'
                 value: @linkState('smtpSSL').value
                 errors: @state.errors
+                errorField: ['smtp', 'smtpPort', 'smtpServer']
                 type: 'checkbox'
                 onClick: (ev) =>
                     @_onServerParam ev.target, 'smtp', 'ssl'
@@ -264,6 +266,7 @@ module.exports = AccountConfigMain = React.createClass
                 name: 'smtpTLS'
                 value: @linkState('smtpTLS').value
                 errors: @state.errors
+                errorField: ['smtp', 'smtpPort', 'smtpServer']
                 type: 'checkbox'
                 onClick: (ev) =>
                     @_onServerParam ev.target, 'smtp', 'tls'
@@ -284,19 +287,14 @@ module.exports = AccountConfigMain = React.createClass
                     values: ['NONE', 'CRAM-MD5', 'LOGIN', 'PLAIN']
                     onClick: @onMethodChange
                     methodPrefix: "account smtpMethod"
+                    errorField: ['smtp', 'smtpAuth']
 
             if @state.smtpAdvanced
                 AccountInput
                     name: 'smtpLogin'
                     value: @linkState('smtpLogin').value
                     errors: @state.errors
-                    errorField: [
-                        'smtp'
-                        'smtpServer'
-                        'smtpPort'
-                        'smtpLogin'
-                        'smtpPassword'
-                    ]
+                    errorField: ['smtpAuth']
 
             if @state.smtpAdvanced
                 AccountInput
@@ -304,13 +302,7 @@ module.exports = AccountConfigMain = React.createClass
                     value: @linkState('smtpPassword').value
                     type: 'password'
                     errors: @state.errors
-                    errorField: [
-                        'smtp'
-                        'smtpServer'
-                        'smtpPort'
-                        'smtpLogin'
-                        'smtpPassword'
-                    ]
+                    errorField: ['smtpAuth']
 
     # Run form submission process described in parent component.
     # Check for errors before.
