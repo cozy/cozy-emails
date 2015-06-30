@@ -795,7 +795,7 @@ Account = (function(superClass) {
     if ((this.smtpMethod != null) && this.smtpMethod !== 'NONE') {
       options.authMethod = this.smtpMethod;
     }
-    if (this.smtpMethod !== 'NONE' && this.oauthProvider !== 'GMAIL') {
+    if (this.oauthProvider !== 'GMAIL') {
       options.auth = {
         user: this.smtpLogin || this.login,
         pass: this.smtpPassword || this.password
