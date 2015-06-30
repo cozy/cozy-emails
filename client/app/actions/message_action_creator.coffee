@@ -76,7 +76,7 @@ module.exports = MessageActionCreator =
                 type: ActionTypes.REFRESH_REQUEST
                 value: {mailboxID}
 
-            XHRUtils.refreshMailbox mailboxID, (error) ->
+            XHRUtils.refreshMailbox mailboxID, (error, updated) ->
                 if err?
                     AppDispatcher.handleViewAction
                         type: ActionTypes.REFRESH_FAILURE
@@ -84,7 +84,7 @@ module.exports = MessageActionCreator =
                 else
                     AppDispatcher.handleViewAction
                         type: ActionTypes.REFRESH_SUCCESS
-                        value: {mailboxID}
+                        value: {mailboxID, updated}
 
     # Delete message(s)
     # target:
