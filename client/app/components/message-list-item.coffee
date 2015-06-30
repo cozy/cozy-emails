@@ -112,10 +112,11 @@ module.exports = MessageItem = React.createClass
                             if from.name then from.name[0] else from.address[0]
 
                 div className: 'metas-wrapper',
-                    div className: 'participants',
+                    div className: 'participants ellipsable',
                         @getParticipants message
-                    div className: 'subject',
-                        message.get 'subject'
+                    div className: 'subject ellipsable',
+                        p null,
+                            message.get 'subject'
                     div className: 'date',
                         # TODO: use time-elements component here for the date
                         date
@@ -126,7 +127,7 @@ module.exports = MessageItem = React.createClass
                            @props.conversationLengths > 1
                             span className: 'conversation-length',
                                 "[#{@props.conversationLengths}]"
-                    div className: 'preview',
+                    div className: 'preview ellipsable',
                         p null, text.substr(0, 1024)
 
     _doCheck: ->
