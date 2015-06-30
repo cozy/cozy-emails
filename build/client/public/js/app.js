@@ -12965,7 +12965,7 @@ MessageStore = (function(_super) {
         next = self.getNextOrPrevious(true);
         if (next != null) {
           return setTimeout(function() {
-            return window.cozyMails.messageNavigate('next', true);
+            return window.cozyMails.messageSetCurrent(next);
           }, 1);
         }
       }
@@ -13912,9 +13912,12 @@ module.exports = {
     if (next == null) {
       return;
     }
-    MessageActionCreator.setCurrent(next.get('id'), true);
+    return this.messageSetCurrent(next);
+  },
+  messageSetCurrent: function(message) {
+    MessageActionCreator.setCurrent(message.get('id'), true);
     if (SettingsStore.get('displayPreview')) {
-      return this.messageDisplay(next);
+      return this.messageDisplay(message);
     }
   },
   messageDisplay: function(message, force) {
