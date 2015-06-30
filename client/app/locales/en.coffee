@@ -190,8 +190,7 @@ module.exports =
       "account smtpTLS"             : "Use STARTTLS"
       "account remove"              : "Remove this account"
       "account removed"             : "Account removed"
-      "account remove confirm"      : "Do you really want to remove this
-                                        account?"
+      "account remove confirm"      : "Do you really want to remove account “%{label}” ?"
       "account draft mailbox"       : "Draft box"
       "account sent mailbox"        : "Sent box"
       "account trash mailbox"       : "Trash"

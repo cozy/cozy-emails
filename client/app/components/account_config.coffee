@@ -158,6 +158,7 @@ module.exports = React.createClass
             error: @props.error
             errors: @state.errors
             onSubmit: @onSubmit
+            selectedAccount: @props.selectedAccount
 
         # /!\ we cannot use @linkState here because we need to be able
         # to call a method after state has been updated

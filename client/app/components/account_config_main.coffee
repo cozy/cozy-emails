@@ -4,11 +4,10 @@
 } = React.DOM
 classer = React.addons.classSet
 
-AccountActionCreator = require '../actions/account_action_creator'
-AccountInput = require './account_config_input'
+AccountInput  = require './account_config_input'
+AccountDelete = require './account_config_delete'
 
 RouterMixin = require '../mixins/router_mixin'
-LayoutActionCreator = require '../actions/layout_action_creator'
 {Form, FieldSet, FormButtons, FormDropdown} = require './basic_components'
 
 
@@ -33,7 +32,6 @@ module.exports = AccountConfigMain = React.createClass
         state[key] = value for key, value of @props
         state.imapAdvanced = false
         state.smtpAdvanced = false
-        state.deleting     = false
         return state
 
 
@@ -157,20 +155,8 @@ module.exports = AccountConfigMain = React.createClass
                 ]
 
             if @props.selectedAccount?
-                FieldSet text: t 'account danger zone'
-
-            if @props.selectedAccount?
-                FormButtons
-                    buttons: [
-                        class: 'btn-remove'
-                        contrast: false
-                        default: true
-                        danger: true
-                        onClick: @onRemove
-                        spinner: @state.deleting
-                        icon: 'trash'
-                        text: t "account remove"
-                    ]
+                AccountDelete
+                    selectedAccount: @props.selectedAccount
 
 
     _renderReceivingServer: ->
@@ -321,24 +307,6 @@ module.exports = AccountConfigMain = React.createClass
         console.log "blash"
         @state.smtpMethod.requestChange event.target.dataset.value
 
-
-    # Ask for confirmation before running remove operation.
-    onRemove: (event) ->
-        event?.preventDefault()
-
-        modal =
-            title       : t 'app confirm delete'
-            subtitle    : t 'account remove confirm'
-            closeModal  : ->
-                LayoutActionCreator.hideModal()
-            closeLabel  : t 'app cancel'
-            actionLabel : t 'app confirm'
-            action      : =>
-                LayoutActionCreator.hideModal()
-                @setState deleting: true
-                AccountActionCreator.remove @props.selectedAccount.get('id')
-
-        LayoutActionCreator.displayModal modal
 
     # Display or not SMTP advanced settings.
     toggleSMTPAdvanced: ->

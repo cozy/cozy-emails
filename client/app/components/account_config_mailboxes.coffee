@@ -7,6 +7,7 @@ RouterMixin = require '../mixins/router_mixin'
 MailboxList = require './mailbox_list'
 MailboxItem = require './account_config_item'
 {SubTitle, Form} = require './basic_components'
+AccountDelete = require './account_config_delete'
 
 
 module.exports = AccountConfigMailboxes = React.createClass
@@ -139,6 +140,10 @@ module.exports = AccountConfigMailboxes = React.createClass
                             selectedMailboxID: @state.newMailboxParent
                             onChange: (mailbox) =>
                                 @setState newMailboxParent: mailbox
+
+                if @props.selectedAccount?
+                    AccountDelete
+                        selectedAccount: @props.selectedAccount
 
 
     renderError: ->

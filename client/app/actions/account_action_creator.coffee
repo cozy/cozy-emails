@@ -76,7 +76,7 @@ module.exports = AccountActionCreator =
         XHRUtils.removeAccount accountID
         LayoutActionCreator = require '../actions/layout_action_creator'
         LayoutActionCreator.notify t('account removed'), autoclose: true
-        window.router.navigate '', true
+        window.router.navigate '', trigger: true
 
     _setNewAccountWaitingStatus: (status) ->
         AppDispatcher.handleViewAction

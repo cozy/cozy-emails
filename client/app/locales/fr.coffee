@@ -194,8 +194,7 @@ module.exports =
       "account smtpTLS"             : "Utiliser STARTTLS"
       "account remove"              : "Supprimer ce compte"
       "account removed"             : "Compte supprimé"
-      "account remove confirm"      : "Voulez-vous vraiment supprimer
-                                        ce compte ?"
+      "account remove confirm"      : "Voulez-vous vraiment supprimer le compte « %{label} » ?"
       "account draft mailbox"       : "Enregistrer les brouillons dans"
       "account sent mailbox"        : "Enregistrer les messages envoyés dans"
       "account trash mailbox"       : "Corbeille"
