@@ -701,7 +701,7 @@ class Account extends cozydb.CozyModel
             tls: rejectUnauthorized: false
         if @smtpMethod? and @smtpMethod isnt 'NONE'
             options.authMethod = @smtpMethod
-        if @smtpMethod isnt 'NONE' and @oauthProvider isnt 'GMAIL'
+        if @oauthProvider isnt 'GMAIL'
             options.auth =
                 user: @smtpLogin or @login
                 pass: @smtpPassword or @password
