@@ -71,8 +71,8 @@ module.exports = AccountInput = React.createClass
             @renderError errorField, name
 
 
-    onBlur: ->
-        @props.onBlur?()
+    onBlur: (event) ->
+        @props.onBlur?(event)
 
 
     renderError: (errorField, name) ->

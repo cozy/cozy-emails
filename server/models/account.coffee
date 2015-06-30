@@ -739,8 +739,10 @@ class Account extends cozydb.CozyModel
             clearTimeout timeout
 
             if @smtpMethod isnt 'NONE'
-                connection.login auth, (err) ->
-                    if err then reject new AccountConfigError 'auth', err
+                connection.login auth, (err) =>
+                    if err
+                        field = if @smtpLogin then 'smtpAuth' else 'auth'
+                        reject new AccountConfigError field, err
                     else callback null
                     connection.close()
             else
