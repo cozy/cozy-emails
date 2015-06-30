@@ -42,7 +42,12 @@ module.exports.refresh = (req, res, next) ->
             supportRFC4551: true
         , (err, shouldNotif) ->
             return next err if err
-            res.send req.mailbox
+            Mailbox.getCounts req.mailbox.id, (err, counts) ->
+                return next err if err
+                {total, recent, unread} = counts[req.mailbox.id]
+                req.mailbox.nbTotal = total
+                req.mailbox.nbUnread = unread
+                res.send req.mailbox
 
 
 
