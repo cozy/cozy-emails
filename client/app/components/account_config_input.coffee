@@ -68,7 +68,7 @@ module.exports = AccountInput = React.createClass
                         onBlur: @onBlur
                         onInput: @props.onInput or null
 
-            @renderError errorField, name
+            @renderError(errorField, name)...
 
 
     onBlur: (event) ->
@@ -78,12 +78,11 @@ module.exports = AccountInput = React.createClass
     renderError: (errorField, name) ->
         result = []
         if Array.isArray errorField
-            for error, i in errorField
+            for error in errorField
                 if @state.errors?[error]? and error is name
-                    result.push ErrorLine text: @state.errors[error], key: i
-        else
-            if @state.errors?[errorField]?
-                result.push ErrorLine text: @state.errors[errorField]
+                    result.push ErrorLine text: @state.errors[error]
+        else if @state.errors?[name]?
+            result.push ErrorLine text: @state.errors[errorField]
         return result
 
 
