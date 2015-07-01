@@ -825,7 +825,7 @@ module.exports = MessageActionCreator = {
           mailboxID: mailboxID
         }
       });
-      return XHRUtils.refreshMailbox(mailboxID, function(error) {
+      return XHRUtils.refreshMailbox(mailboxID, function(error, updated) {
         if (typeof err !== "undefined" && err !== null) {
           return AppDispatcher.handleViewAction({
             type: ActionTypes.REFRESH_FAILURE,
@@ -838,7 +838,8 @@ module.exports = MessageActionCreator = {
           return AppDispatcher.handleViewAction({
             type: ActionTypes.REFRESH_SUCCESS,
             value: {
-              mailboxID: mailboxID
+              mailboxID: mailboxID,
+              updated: updated
             }
           });
         }
@@ -12144,9 +12145,10 @@ AccountStore = (function(_super) {
       return this.emit('change');
     });
     return handle(ActionTypes.REFRESH_SUCCESS, function(_arg) {
-      var mailboxID;
-      mailboxID = _arg.mailboxID;
+      var mailboxID, updated;
+      mailboxID = _arg.mailboxID, updated = _arg.updated;
       _mailboxRefreshing[mailboxID]--;
+      setMailbox(updated.accountID, updated.id, updated);
       return this.emit('change');
     });
   };

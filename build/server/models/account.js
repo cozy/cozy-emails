@@ -94,22 +94,23 @@ Account = (function(superClass) {
             return account.id;
           });
           allAccounts = accounts;
-          log.debug("removeOrphansAndRefresh@allAccounts", allAccounts);
-          return async.eachSeries(allAccounts, function(account, cb) {
-            if (!account.initialized) {
-              log.debug("removeOrphansAndRefresh@initialized#refreshBoxes");
-              return account.imap_refreshBoxes(function(err, boxes) {
-                if (err) {
-                  return cb(err);
-                }
-                log.debug("removeOrphansAndRefresh@initialized#imap_scanBoxesForSpecialUse");
-                return account.imap_scanBoxesForSpecialUse(boxes, cb);
-              });
-            } else {
-              return cb(null);
-            }
-          }, cb);
+          return cb(null);
         });
+      }, function(cb) {
+        var needInit;
+        needInit = allAccounts.filter(function(account) {
+          return account.initialized === false;
+        });
+        return async.eachSeries(needInit, function(account, next) {
+          log.debug("initializing account refreshBoxes", account.id);
+          return account.imap_refreshBoxes(function(err, boxes) {
+            if (err) {
+              return next(err);
+            }
+            log.debug("found " + boxes.length + " boxes");
+            return account.imap_scanBoxesForSpecialUse(boxes, next);
+          });
+        }, cb);
       }, function(cb) {
         return Mailbox.removeOrphans(existingAccountIDs, function(err, existingIDs) {
           if (err) {
@@ -549,6 +550,9 @@ Account = (function(superClass) {
         return callback(err);
       }
       cozyBoxes = results[0], imapBoxes = results[1];
+      if (account.isTest()) {
+        return callback(null, cozyBoxes, []);
+      }
       toFetch = [];
       toDestroy = [];
       boxToAdd = imapBoxes.filter(function(box) {
@@ -731,7 +735,9 @@ Account = (function(superClass) {
     useRFC6154 = false;
     inboxMailbox = null;
     boxAttributes = Object.keys(Mailbox.RFC6154);
-    changes = {};
+    changes = {
+      initialized: true
+    };
     boxes.map(function(box) {
       var attribute, i, len, type;
       type = box.RFC6154use();
