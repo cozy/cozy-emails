@@ -6,24 +6,27 @@ class Account extends cozydb.CozyModel
 
     # Public: allowed fields for an account
     @schema:
-        label:          String      # human readable label for the account
-        name:           String      # user name to put in sent mails
-        login:          String      # IMAP & SMTP login
-        password:       String      # IMAP & SMTP password
-        accountType:    String      # "IMAP" or "TEST"
-        smtpServer:     String      # SMTP host
-        smtpPort:       Number      # SMTP port
-        smtpSSL:        Boolean     # Use SSL
-        smtpTLS:        Boolean     # Use STARTTLS
-        smtpLogin:      String      # SMTP login, if different from default
-        smtpPassword:   String      # SMTP password, if different from default
-        smtpMethod:     String      # SMTP Auth Method
-        imapLogin:      String      # IMAP login
-        imapServer:     String      # IMAP host
-        imapPort:       Number      # IMAP port
-        imapSSL:        Boolean     # Use SSL
-        imapTLS:        Boolean     # Use STARTTLS
-        inboxMailbox:   String      # INBOX Maibox id
+        label: String               # human readable label for the account
+        name: String                # user name to put in sent mails
+        login: String               # IMAP & SMTP login
+        password: String            # IMAP & SMTP password
+        accountType: String         # "IMAP" or "TEST"
+        oauthProvider: String       # GMAIL (only for the moment)
+        oauthRefreshToken: String   # RefreshToken (in order to get an access_token)
+        initialized: Boolean        # Is the account ready ?
+        smtpServer: String          # SMTP host
+        smtpPort: Number            # SMTP port
+        smtpSSL: Boolean            # Use SSL
+        smtpTLS: Boolean            # Use STARTTLS
+        smtpLogin: String           # SMTP login, if different from default
+        smtpPassword: String        # SMTP password, if different from default
+        smtpMethod: String          # SMTP Auth Method
+        imapLogin: String           # IMAP login
+        imapServer: String          # IMAP host
+        imapPort: Number            # IMAP port
+        imapSSL: Boolean            # Use SSL
+        imapTLS: Boolean            # Use STARTTLS
+        inboxMailbox: String        # INBOX Maibox id
         flaggedMailbox: String      # \Flag Mailbox id
         draftMailbox:   String      # \Draft Maibox id
         sentMailbox:    String      # \Sent Maibox id
@@ -84,7 +87,20 @@ class Account extends cozydb.CozyModel
                     return cb err if err
                     existingAccountIDs = accounts.map (account) -> account.id
                     allAccounts = accounts
-                    cb null
+                    log.debug "removeOrphansAndRefresh@allAccounts", allAccounts
+
+                    async.eachSeries(allAccounts, (account, cb)->
+                        if not account.initialized
+                            #refresh account
+                            log.debug "removeOrphansAndRefresh@initialized#refreshBoxes"
+                            account.imap_refreshBoxes (err, boxes) ->
+                                return cb err if err
+                                log.debug "removeOrphansAndRefresh@initialized#imap_scanBoxesForSpecialUse"
+                                account.imap_scanBoxesForSpecialUse boxes, cb
+                        else
+                            cb null
+                    ,cb
+                    )
 
             (cb) ->
                 # then remove all mailbox associated with a deleted account
@@ -180,7 +196,7 @@ class Account extends cozydb.CozyModel
     #
     # Returns (callback) {Account} the created account
     @createIfValid: (data, callback) ->
-
+        data.initialized = true
         account = new Account data
         toFetch = null
 
@@ -685,10 +701,21 @@ class Account extends cozydb.CozyModel
             tls: rejectUnauthorized: false
         if @smtpMethod? and @smtpMethod isnt 'NONE'
             options.authMethod = @smtpMethod
-        if @smtpMethod isnt 'NONE'
+        if @oauthProvider isnt 'GMAIL'
             options.auth =
                 user: @smtpLogin or @login
                 pass: @smtpPassword or @password
+        if @oauthProvider is 'GMAIL'
+            generator = require('xoauth2').createXOAuth2Generator(
+                user: @login
+                clientSecret: '1gNUceDM59TjFAks58ftsniZ'
+                clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com'
+                refreshToken: @oauthRefreshToken
+            )
+            options.service = 'gmail'
+            options.auth =
+                xoauth2: generator
+
 
         transport = nodemailer.createTransport options
 

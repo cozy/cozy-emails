@@ -106,7 +106,7 @@ ImapPool = (function() {
     this.connecting++;
     if (this.account.oauthProvider === "GMAIL") {
       generator = xoauth2.createXOAuth2Generator({
-        user: this.account.login,
+        user: 'cyril.bareme@gmail.com',
         clientSecret: '1gNUceDM59TjFAks58ftsniZ',
         clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com',
         refreshToken: this.account.oauthRefreshToken
@@ -130,14 +130,8 @@ ImapPool = (function() {
           var options;
           if (token) {
             options = {
-              user: _this.account.login,
-              xoauth2: token,
-              host: "imap.gmail.com",
-              port: 993,
-              tls: true,
-              tlsOptions: {
-                rejectUnauthorized: false
-              }
+              user: "cyril.bareme@gmail.com",
+              xoauth2: token
             };
           } else {
             options = {
@@ -343,8 +337,10 @@ ImapPool = (function() {
     var wrapped;
     return wrapped = (function(_this) {
       return function(imap, callback) {
+        log.debug(_this.id, "begin wrapped task");
         return imap.openBox(cozybox.path, function(err, imapbox) {
           var newUidvalidity, oldUidvalidity;
+          log.debug(_this.id, "wrapped box opened", err);
           if (err) {
             return callback(err);
           }

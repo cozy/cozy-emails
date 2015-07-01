@@ -11,8 +11,6 @@ module.exports = class Store extends EventEmitter
     _nextUniqID = 0
     _handlers = {}
     _addHandlers = (type, callback) ->
-        if type is undefined
-            throw new Error "handler for undefined action"
 
         _handlers[@uniqID] = {} unless _handlers[@uniqID]?
         _handlers[@uniqID][type] = callback
