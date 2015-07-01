@@ -62,7 +62,16 @@ module.exports.refresh = function(req, res, next) {
       if (err) {
         return next(err);
       }
-      return res.send(req.mailbox);
+      return Mailbox.getCounts(req.mailbox.id, function(err, counts) {
+        var recent, ref, total, unread;
+        if (err) {
+          return next(err);
+        }
+        ref = counts[req.mailbox.id], total = ref.total, recent = ref.recent, unread = ref.unread;
+        req.mailbox.nbTotal = total;
+        req.mailbox.nbUnread = unread;
+        return res.send(req.mailbox);
+      });
     });
   }
 };

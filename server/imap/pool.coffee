@@ -3,6 +3,8 @@ log = require('../utils/logging')(prefix: 'imap:pool')
 rawImapLog = require('../utils/logging')(prefix: 'imap:raw')
 Account = require '../models/account'
 Imap = require './connection'
+xoauth2 = require 'xoauth2'
+async = require "async"
 
 connectionID = 1
 
@@ -69,40 +71,75 @@ class ImapPool
         log.debug @id, "makeConnection"
         @connecting++
 
-        options =
-            user       : @account.imapLogin or @account.login
-            password   : @account.password
-            host       : @account.imapServer
-            port       : parseInt @account.imapPort
-            tls        : not @account.imapSSL? or @account.imapSSL
-            tlsOptions : rejectUnauthorized : false
-            # debug      : (content) -> rawImapLog.debug content
+        if @account.oauthProvider is "GMAIL"
+            generator = xoauth2.createXOAuth2Generator(
+                user: @account.login
+                clientSecret: '1gNUceDM59TjFAks58ftsniZ'
+                clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com'
+                refreshToken: @account.oauthRefreshToken
+            )
 
-        imap = new Imap options
+        async.waterfall([
+            (callback)=>
+                log.debug "async.waterfall 1"
+                if @account.oauthProvider is "GMAIL"
+                    generator.generateToken (err, token)->
+                        log.debug "b64 xoauth2 token : ",token
+                        callback(err, token)
+                else
+                    callback(null, null)
+            (token, callback)=>
+                if token
+                    options =
+                        user       : @account.login
+                        xoauth2    : token
+                        host       : "imap.gmail.com"
+                        port       : 993
+                        tls        : true
+                        tlsOptions : rejectUnauthorized : false
 
-        onConnError = @_onConnectionError.bind this, imap
-        imap.connectionID = 'conn' + connectionID++
-        imap.connectionName = "#{options.host}:#{options.port}"
+                else
+                    options =
+                        user       : @account.imapLogin or @account.login
+                        password   : @account.password
+                        xoauth2    : token
+                        host       : @account.imapServer
+                        port       : parseInt @account.imapPort
+                        tls        : not @account.imapSSL? or @account.imapSSL
+                        tlsOptions : rejectUnauthorized : false
+                log.debug "async.waterfall 2"
+                log.debug options
+                callback null, options
+            ], (err, options)=>
+                log.debug "async.waterfall final callback"
+                log.error err if err
+                imap = new Imap options
+                log.debug options
+                onConnError = @_onConnectionError.bind this, imap
+                imap.connectionID = 'conn' + connectionID++
+                imap.connectionName = "#{options.host}:#{options.port}"
 
-        imap.on 'error', onConnError
-        imap.once 'ready', =>
-            log.debug @id, "imap ready"
-            imap.removeListener 'error', onConnError
-            clearTimeout wrongPortTimeout
-            @_onConnectionSuccess imap
+                imap.on 'error', onConnError
+                imap.once 'ready', =>
+                    log.debug @id, "imap ready"
+                    imap.removeListener 'error', onConnError
+                    clearTimeout wrongPortTimeout
+                    @_onConnectionSuccess imap
 
-        imap.connect()
+                imap.connect()
 
-        # timeout when wrong port is too high
-        # bring it to 10s
-        wrongPortTimeout = setTimeout =>
-            log.debug @id, "timeout 10s"
-            imap.removeListener 'error', onConnError
-            onConnError new TimeoutError "Timeout connecting to " +
-                "#{@account?.imapServer}:#{@account?.imapPort}"
-            imap.destroy()
+                # timeout when wrong port is too high
+                # bring it to 10s
+                wrongPortTimeout = setTimeout =>
+                    log.debug @id, "timeout 10s"
+                    imap.removeListener 'error', onConnError
+                    onConnError new TimeoutError "Timeout connecting to " +
+                        "#{@account?.imapServer}:#{@account?.imapPort}"
+                    imap.destroy()
 
-        ,10000
+                ,10000
+            )
+
 
 
     _onConnectionError: (connection, err) ->

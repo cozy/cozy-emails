@@ -80,11 +80,11 @@ casper.test.begin 'Create account', (test) ->
             casper.click "#mailbox-config button.action-save"
             casper.waitForSelector ".toast-error", ->
                 test.pass "Error message displayed"
-                test.assertElementCount ".form-group.has-error", 6, "Errors are underlined"
+                test.assertElementCount ".form-group.has-error", 9, "Errors are underlined"
                 casper.fillSelectors 'form', '#mailbox-label':  values['mailbox-label']
                 casper.click "#mailbox-config button.action-save"
                 casper.wait 100, ->
-                    test.assertElementCount ".form-group.has-error", 5, "Errors are underlined"
+                    test.assertElementCount ".form-group.has-error", 8, "Errors are underlined"
                     casper.fillSelectors 'form',
                         '#mailbox-name': values['mailbox-name']
                         '#mailbox-login': values['mailbox-login']

@@ -825,7 +825,7 @@ module.exports = MessageActionCreator = {
           mailboxID: mailboxID
         }
       });
-      return XHRUtils.refreshMailbox(mailboxID, function(error) {
+      return XHRUtils.refreshMailbox(mailboxID, function(error, updated) {
         if (typeof err !== "undefined" && err !== null) {
           return AppDispatcher.handleViewAction({
             type: ActionTypes.REFRESH_FAILURE,
@@ -838,7 +838,8 @@ module.exports = MessageActionCreator = {
           return AppDispatcher.handleViewAction({
             type: ActionTypes.REFRESH_SUCCESS,
             value: {
-              mailboxID: mailboxID
+              mailboxID: mailboxID,
+              updated: updated
             }
           });
         }
@@ -1634,7 +1635,8 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/account_config_input", function(exports, require, module) {
-var AccountInput, ErrorLine, RouterMixin, classer, div, input, label, textarea, _ref;
+var AccountInput, ErrorLine, RouterMixin, classer, div, input, label, textarea, _ref,
+  __slice = [].slice;
 
 _ref = React.DOM, div = _ref.div, label = _ref.label, input = _ref.input, textarea = _ref.textarea;
 
@@ -1660,7 +1662,7 @@ module.exports = AccountInput = React.createClass({
     errorField = this.props.errorField || name;
     mainClasses = this.buildMainClasses(errorField, name);
     placeHolder = this.buildPlaceHolder(type, name);
-    return div({
+    return div.apply(null, [{
       key: "account-input-" + name,
       className: mainClasses
     }, label({
@@ -1691,31 +1693,28 @@ module.exports = AccountInput = React.createClass({
       placeholder: placeHolder,
       onBlur: this.onBlur,
       onInput: this.props.onInput || null
-    })), this.renderError(errorField, name));
+    }))].concat(__slice.call(this.renderError(errorField, name))));
   },
   onBlur: function(event) {
     var _base;
     return typeof (_base = this.props).onBlur === "function" ? _base.onBlur(event) : void 0;
   },
   renderError: function(errorField, name) {
-    var error, i, result, _i, _len, _ref1, _ref2;
+    var error, result, _i, _len, _ref1, _ref2;
     result = [];
     if (Array.isArray(errorField)) {
-      for (i = _i = 0, _len = errorField.length; _i < _len; i = ++_i) {
-        error = errorField[i];
+      for (_i = 0, _len = errorField.length; _i < _len; _i++) {
+        error = errorField[_i];
         if ((((_ref1 = this.state.errors) != null ? _ref1[error] : void 0) != null) && error === name) {
           result.push(ErrorLine({
-            text: this.state.errors[error],
-            key: i
+            text: this.state.errors[error]
           }));
         }
       }
-    } else {
-      if (((_ref2 = this.state.errors) != null ? _ref2[errorField] : void 0) != null) {
-        result.push(ErrorLine({
-          text: this.state.errors[errorField]
-        }));
-      }
+    } else if (((_ref2 = this.state.errors) != null ? _ref2[name] : void 0) != null) {
+      result.push(ErrorLine({
+        text: this.state.errors[errorField]
+      }));
     }
     return result;
   },
@@ -7752,7 +7751,8 @@ module.exports = Modal = React.createClass({
 });
 
 ;require.register("components/panel", function(exports, require, module) {
-var AccountConfig, AccountStore, Compose, Conversation, Dispositions, MessageFilter, MessageList, MessageStore, Panel, SearchStore, Settings, SettingsStore, StoreWatchMixin, TooltipRefesherMixin, _ref;
+var AccountConfig, AccountStore, Compose, Conversation, Dispositions, MessageFilter, MessageList, MessageStore, Panel, SearchStore, Settings, SettingsStore, StoreWatchMixin, TooltipRefesherMixin, _ref,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 AccountConfig = require('./account_config');
 
@@ -7804,7 +7804,7 @@ module.exports = Panel = React.createClass({
     }
   },
   renderList: function() {
-    var account, accountID, conversationID, conversationLengths, counterMessage, displayConversations, emptyListMessage, isDraft, isTrash, mailbox, mailboxID, messages, messagesCount, query, _ref1, _ref2;
+    var account, accountID, conversationDisabledBoxes, conversationID, conversationLengths, counterMessage, displayConversations, emptyListMessage, isTrash, mailbox, mailboxID, messages, messagesCount, query, _ref1, _ref2, _ref3;
     if (this.props.action === 'search') {
       accountID = null;
       mailboxID = null;
@@ -7851,13 +7851,13 @@ module.exports = Panel = React.createClass({
     query = _.clone(this.state.queryParams);
     query.accountID = accountID;
     query.mailboxID = mailboxID;
-    isDraft = ((_ref1 = this.state.selectedAccount) != null ? _ref1.get('draftMailbox') : void 0) === mailboxID;
-    isTrash = ((_ref2 = this.state.selectedAccount) != null ? _ref2.get('trashMailbox') : void 0) === mailboxID;
-    if (isDraft || isTrash) {
+    conversationDisabledBoxes = [(_ref1 = this.state.selectedAccount) != null ? _ref1.get('trashMailbox') : void 0, (_ref2 = this.state.selectedAccount) != null ? _ref2.get('draftMailbox') : void 0, (_ref3 = this.state.selectedAccount) != null ? _ref3.get('junkMailbox') : void 0];
+    if (__indexOf.call(conversationDisabledBoxes, mailboxID) >= 0) {
       displayConversations = false;
     } else {
       displayConversations = this.state.settings.get('displayConversation');
     }
+    isTrash = conversationDisabledBoxes[0] === mailboxID;
     return MessageList({
       key: 'messageList-' + mailboxID,
       messages: messages,
@@ -7908,7 +7908,7 @@ module.exports = Panel = React.createClass({
     return AccountConfig(options);
   },
   renderConversation: function() {
-    var conversation, conversationID, conversationLength, displayConversations, isDraft, isTrash, lengths, mailboxID, message, messageID, nextMessage, prevMessage, selectedMailboxID, _ref1, _ref2;
+    var conversation, conversationDisabledBoxes, conversationID, conversationLength, displayConversations, lengths, mailboxID, message, messageID, nextMessage, prevMessage, selectedMailboxID, _ref1, _ref2, _ref3;
     messageID = this.props.messageID;
     mailboxID = this.props.mailboxID;
     message = MessageStore.getByID(messageID);
@@ -7922,9 +7922,8 @@ module.exports = Panel = React.createClass({
         selectedMailboxID = Object.keys(message.get('mailboxIDs'))[0];
       }
     }
-    isDraft = ((_ref1 = this.state.selectedAccount) != null ? _ref1.get('draftMailbox') : void 0) === mailboxID;
-    isTrash = ((_ref2 = this.state.selectedAccount) != null ? _ref2.get('trashMailbox') : void 0) === mailboxID;
-    if (isDraft || isTrash) {
+    conversationDisabledBoxes = [(_ref1 = this.state.selectedAccount) != null ? _ref1.get('trashMailbox') : void 0, (_ref2 = this.state.selectedAccount) != null ? _ref2.get('draftMailbox') : void 0, (_ref3 = this.state.selectedAccount) != null ? _ref3.get('junkMailbox') : void 0];
+    if (__indexOf.call(conversationDisabledBoxes, mailboxID) >= 0) {
       displayConversations = false;
     } else {
       displayConversations = this.state.settings.get('displayConversation');
@@ -10315,9 +10314,6 @@ module.exports = Store = (function(_super) {
   _handlers = {};
 
   _addHandlers = function(type, callback) {
-    if (type === void 0) {
-      throw new Error("handler for undefined action");
-    }
     if (_handlers[this.uniqID] == null) {
       _handlers[this.uniqID] = {};
     }
@@ -12149,9 +12145,10 @@ AccountStore = (function(_super) {
       return this.emit('change');
     });
     return handle(ActionTypes.REFRESH_SUCCESS, function(_arg) {
-      var mailboxID;
-      mailboxID = _arg.mailboxID;
+      var mailboxID, updated;
+      mailboxID = _arg.mailboxID, updated = _arg.updated;
       _mailboxRefreshing[mailboxID]--;
+      setMailbox(updated.accountID, updated.id, updated);
       return this.emit('change');
     });
   };

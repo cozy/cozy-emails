@@ -21,6 +21,9 @@ Account = (function(superClass) {
     login: String,
     password: String,
     accountType: String,
+    oauthProvider: String,
+    oauthRefreshToken: String,
+    initialized: Boolean,
     smtpServer: String,
     smtpPort: Number,
     smtpSSL: Boolean,
@@ -93,6 +96,21 @@ Account = (function(superClass) {
           allAccounts = accounts;
           return cb(null);
         });
+      }, function(cb) {
+        var needInit;
+        needInit = allAccounts.filter(function(account) {
+          return account.initialized === false;
+        });
+        return async.eachSeries(needInit, function(account, next) {
+          log.debug("initializing account refreshBoxes", account.id);
+          return account.imap_refreshBoxes(function(err, boxes) {
+            if (err) {
+              return next(err);
+            }
+            log.debug("found " + boxes.length + " boxes");
+            return account.imap_scanBoxesForSpecialUse(boxes, next);
+          });
+        }, cb);
       }, function(cb) {
         return Mailbox.removeOrphans(existingAccountIDs, function(err, existingIDs) {
           if (err) {
@@ -186,6 +204,7 @@ Account = (function(superClass) {
 
   Account.createIfValid = function(data, callback) {
     var account, toFetch;
+    data.initialized = true;
     account = new Account(data);
     toFetch = null;
     return async.series([
@@ -531,6 +550,9 @@ Account = (function(superClass) {
         return callback(err);
       }
       cozyBoxes = results[0], imapBoxes = results[1];
+      if (account.isTest()) {
+        return callback(null, cozyBoxes, []);
+      }
       toFetch = [];
       toDestroy = [];
       boxToAdd = imapBoxes.filter(function(box) {
@@ -713,7 +735,9 @@ Account = (function(superClass) {
     useRFC6154 = false;
     inboxMailbox = null;
     boxAttributes = Object.keys(Mailbox.RFC6154);
-    changes = {};
+    changes = {
+      initialized: true
+    };
     boxes.map(function(box) {
       var attribute, i, len, type;
       type = box.RFC6154use();
@@ -757,7 +781,7 @@ Account = (function(superClass) {
   };
 
   Account.prototype.sendMessage = function(message, callback) {
-    var inReplyTo, options, transport;
+    var generator, inReplyTo, options, transport;
     if (this.isTest()) {
       return callback(null, {
         messageId: 66
@@ -777,10 +801,22 @@ Account = (function(superClass) {
     if ((this.smtpMethod != null) && this.smtpMethod !== 'NONE') {
       options.authMethod = this.smtpMethod;
     }
-    if (this.smtpMethod !== 'NONE') {
+    if (this.oauthProvider !== 'GMAIL') {
       options.auth = {
         user: this.smtpLogin || this.login,
         pass: this.smtpPassword || this.password
+      };
+    }
+    if (this.oauthProvider === 'GMAIL') {
+      generator = require('xoauth2').createXOAuth2Generator({
+        user: this.login,
+        clientSecret: '1gNUceDM59TjFAks58ftsniZ',
+        clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com',
+        refreshToken: this.oauthRefreshToken
+      });
+      options.service = 'gmail';
+      options.auth = {
+        xoauth2: generator
       };
     }
     transport = nodemailer.createTransport(options);
