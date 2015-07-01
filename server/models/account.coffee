@@ -87,20 +87,18 @@ class Account extends cozydb.CozyModel
                     return cb err if err
                     existingAccountIDs = accounts.map (account) -> account.id
                     allAccounts = accounts
-                    log.debug "removeOrphansAndRefresh@allAccounts", allAccounts
+                    cb null
+            (cb) ->
+                needInit = allAccounts.filter (account) ->
+                    account.initialized is false # dont init undefined
 
-                    async.eachSeries(allAccounts, (account, cb)->
-                        if not account.initialized
-                            #refresh account
-                            log.debug "removeOrphansAndRefresh@initialized#refreshBoxes"
-                            account.imap_refreshBoxes (err, boxes) ->
-                                return cb err if err
-                                log.debug "removeOrphansAndRefresh@initialized#imap_scanBoxesForSpecialUse"
-                                account.imap_scanBoxesForSpecialUse boxes, cb
-                        else
-                            cb null
-                    ,cb
-                    )
+                async.eachSeries needInit, (account, next)->
+                    log.debug "initializing account refreshBoxes", account.id
+                    account.imap_refreshBoxes (err, boxes) ->
+                        return next err if err
+                        log.debug "found #{boxes.length} boxes"
+                        account.imap_scanBoxesForSpecialUse boxes, next
+                , cb
 
             (cb) ->
                 # then remove all mailbox associated with a deleted account
@@ -481,6 +479,7 @@ class Account extends cozydb.CozyModel
             log.debug "refreshBoxes#results"
             return callback err if err
             [cozyBoxes, imapBoxes] = results
+            return callback null, cozyBoxes, [] if account.isTest()
 
             toFetch = []
             toDestroy = []
@@ -634,7 +633,7 @@ class Account extends cozydb.CozyModel
         inboxMailbox = null
         boxAttributes = Object.keys Mailbox.RFC6154
 
-        changes = {}
+        changes = {initialized: true}
 
         boxes.map (box) ->
             type = box.RFC6154use()

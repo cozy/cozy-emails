@@ -38,6 +38,7 @@
        "draftMailbox": "dovecot-ID-draft",
        "sentMailbox": "dovecot-ID-folder2",
        "trashMailbox": "dovecot-ID-trash",
+       "initialized": true,
        "favorites": [
          "dovecot-ID-folder2",
          "f5cbd722-c3f9-4f6e-73d0-c75ddf65a2f1",
