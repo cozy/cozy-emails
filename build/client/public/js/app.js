@@ -226,8 +226,6 @@ module.exports = AccountActionCreator = {
   selectAccount: function(accountID, mailboxID) {
     var changed, selected, supportRFC4551;
     changed = AccountStore.selectedIsDifferentThan(accountID, mailboxID);
-    selected = AccountStore.getSelected();
-    supportRFC4551 = selected != null ? selected.get('supportRFC4551') : void 0;
     AppDispatcher.handleViewAction({
       type: ActionTypes.SELECT_ACCOUNT,
       value: {
@@ -235,6 +233,8 @@ module.exports = AccountActionCreator = {
         mailboxID: mailboxID
       }
     });
+    selected = AccountStore.getSelected();
+    supportRFC4551 = selected != null ? selected.get('supportRFC4551') : void 0;
     if ((mailboxID != null) && changed && supportRFC4551) {
       return MessageActionCreator.refreshMailbox(mailboxID);
     }
@@ -826,7 +826,7 @@ module.exports = MessageActionCreator = {
         }
       });
       return XHRUtils.refreshMailbox(mailboxID, function(error, updated) {
-        if (typeof err !== "undefined" && err !== null) {
+        if (error != null) {
           return AppDispatcher.handleViewAction({
             type: ActionTypes.REFRESH_FAILURE,
             value: {
@@ -15442,7 +15442,7 @@ module.exports = {
       if (res.ok) {
         return callback(null, res.text);
       } else {
-        return callback(res.body);
+        return callback(res.text);
       }
     });
   },
