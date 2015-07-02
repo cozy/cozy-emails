@@ -266,7 +266,7 @@ module.exports =
             if res.ok
                 callback null, res.text
             else
-                callback res.body
+                callback res.text
 
 
     activityCreate: (options, callback) ->
