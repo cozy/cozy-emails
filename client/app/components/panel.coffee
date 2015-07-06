@@ -5,6 +5,7 @@ MessageList    = require './message-list'
 Settings       = require './settings'
 
 # React Mixins
+RouterMixin          = require '../mixins/router_mixin'
 StoreWatchMixin      = require '../mixins/store_watch_mixin'
 TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 
@@ -22,6 +23,7 @@ module.exports = Panel = React.createClass
     mixins: [
         StoreWatchMixin [AccountStore, MessageStore, SettingsStore]
         TooltipRefesherMixin
+        RouterMixin
     ]
 
 
@@ -95,9 +97,11 @@ module.exports = Panel = React.createClass
                         t 'no filter message'
                 counterMessage   = t 'list count', messagesCount
             else
-                @redirect
-                    direction: "first"
-                    action: "default"
+                setTimeout =>
+                    @redirect
+                        direction: "first"
+                        action: "default"
+                , 1
                 return
 
         # gets the selected message if any
