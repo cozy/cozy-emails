@@ -269,7 +269,7 @@ module.exports = ComposeEditor = React.createClass
 
         # On account change, update message signature
         if oldProps.accountID isnt @props.accountID
-            @_updateSignature
+            @_updateSignature()
 
     _updateSignature: ->
         signature = @props.accounts[@props.accountID].signature
