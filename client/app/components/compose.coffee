@@ -73,34 +73,30 @@ module.exports = Compose = React.createClass
                 panel:   @props.layout is 'full'
             'aria-expanded': true,
 
-            h3
-                'data-message-id': @props.message?.get('id') or ''
-                @state.subject or t 'compose'
-
             form className: 'form-compose', method: 'POST',
                 div className: 'form-group account',
                     label
                         htmlFor: 'compose-from',
                         className: classLabel,
                         t "compose from"
-                    div className: classInput,
-                        div
-                            className: 'btn-toolbar compose-toggle',
-                            role: 'toolbar',
-                                div null
-                                    a
-                                        className: 'compose-toggle-cc',
-                                        onClick: @onToggleCc,
-                                        t 'compose toggle cc'
-                                    a
-                                        className: 'compose-toggle-bcc',
-                                        onClick: @onToggleBcc,
-                                        t 'compose toggle bcc'
-
-                        AccountPicker
-                            accounts: @props.accounts
-                            valueLink: @linkState 'accountID'
+                    AccountPicker
+                        accounts: @props.accounts
+                        valueLink: @linkState 'accountID'
                 div className: 'clearfix', null
+
+                div className: classInput,
+                    div
+                        className: 'btn-toolbar compose-toggle',
+                        role: 'toolbar',
+                            div null
+                                a
+                                    className: 'compose-toggle-cc',
+                                    onClick: @onToggleCc,
+                                    t 'compose toggle cc'
+                                a
+                                    className: 'compose-toggle-bcc',
+                                    onClick: @onToggleBcc,
+                                    t 'compose toggle bcc'
 
                 MailsInput
                     id: 'compose-to'
@@ -125,10 +121,6 @@ module.exports = Compose = React.createClass
                     ref: 'bcc'
 
                 div className: 'form-group',
-                    label
-                        htmlFor: 'compose-subject',
-                        className: classLabel,
-                        t "compose subject"
                     div className: classInput,
                         input
                             id: 'compose-subject',
@@ -136,13 +128,9 @@ module.exports = Compose = React.createClass
                             ref: 'subject',
                             valueLink: @linkState('subject'),
                             type: 'text',
-                            className: 'form-control',
+                            className: 'form-control compose-subject',
                             placeholder: t "compose subject help"
                 div className: '',
-                    label
-                        htmlFor: 'compose-subject',
-                        className: classLabel,
-                        t "compose content"
                     ComposeEditor
                         messageID         : @props.message?.get 'id'
                         html              : @linkState('html')
