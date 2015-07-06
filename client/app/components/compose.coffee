@@ -255,7 +255,7 @@ module.exports = Compose = React.createClass
                     html          : @state.html
                     conversationID: @state.originalConversationID
                 MessageActionCreator.send message, (error, message) ->
-                    if error?
+                    if error? or not message?
                         msg = "#{t "message action draft ko"} #{error}"
                         LayoutActionCreator.alertError msg
                     else
@@ -419,7 +419,7 @@ module.exports = Compose = React.createClass
                 @setState sending: true, isDraft: false
 
             MessageActionCreator.send message, (error, message) =>
-                if (not error?) and (not @state.id?)
+                if (not error?) and (not @state.id?) and (message?)
                     MessageActionCreator.setCurrent message.id
 
                 state = _.clone @state
@@ -442,7 +442,7 @@ module.exports = Compose = React.createClass
                 else
                     msgKo = t "message action sent ko"
                     msgOk = t "message action sent ok"
-                if error?
+                if error? or not message?
                     LayoutActionCreator.alertError "#{msgKo} #{error}"
                 else
                     # don't display confirmation message when draft has been saved

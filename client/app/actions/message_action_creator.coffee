@@ -20,7 +20,7 @@ module.exports = MessageActionCreator =
 
     send: (message, callback) ->
         XHRUtils.messageSend message, (error, message) ->
-            if not error?
+            if (not error?) and (message?)
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MESSAGE_SEND
                     value: message
