@@ -11,7 +11,7 @@ class Account extends cozydb.CozyModel
         login: String               # IMAP & SMTP login
         password: String            # IMAP & SMTP password
         accountType: String         # "IMAP" or "TEST"
-        oauthProvider: String       # GMAIL (only for the moment)
+        oauthProvider: String       # If authentication use OAuth (only value allowed for now: GMAIL)
         oauthRefreshToken: String   # RefreshToken (in order to get an access_token)
         initialized: Boolean        # Is the account ready ?
         smtpServer: String          # SMTP host
@@ -37,7 +37,6 @@ class Account extends cozydb.CozyModel
         patchIgnored:   Boolean     # has patchIgnored been applied ?
         supportRFC4551: Boolean     # does the account support CONDSTORE ?
         signature:      String      # Signature to add at the end of messages
-        oauthProvider:  String      # If authentication use OAuth
 
     # Public: find an account by id
     # cozydb's find can return no error and no account (if id isnt an account)

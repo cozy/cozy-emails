@@ -76,7 +76,8 @@ module.exports = MessageList = React.createClass
                     listEnd = @refs.nextPage or @refs.listEnd or @refs.listEmpty
                     if listEnd? and
                        DomUtils.isVisible(listEnd.getDOMNode())
-                        LayoutActionCreator.showMessageList parameters: @props.query
+                        params = parameters: @props.query
+                        LayoutActionCreator.showMessageList params
                 , 100
 
         nextPage = =>
@@ -112,9 +113,14 @@ module.exports = MessageList = React.createClass
             # Message List
             if @props.messages.count() is 0
                 if @props.fetching
-                    p className: 'listFetching', t 'list fetching'
+                    p
+                        className: 'listFetching'
+                        t 'list fetching'
                 else
-                    p className: 'listEmpty', ref: 'listEmpty', @props.emptyListMessage
+                    p
+                        className: 'listEmpty'
+                        ref: 'listEmpty'
+                        @props.emptyListMessage
             else
                 div
                     className: 'main-content'
