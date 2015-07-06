@@ -367,7 +367,7 @@ module.exports =
       "settings save error"       : "Unable to save settings, please try again"
 
       # File picker
-      "picker drop here"           : "Drop files here"
+      "picker drop here"           : "Drop files here or Choose local files"
 
       # Mailbox List
       "mailbox pick one"           : "Pick one"
