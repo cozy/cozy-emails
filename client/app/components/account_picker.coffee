@@ -31,7 +31,7 @@ module.exports = React.createClass
         value    = @props.valueLink.value
         label = "#{account.name or account.label} <#{account.login}>"
 
-        div className: 'account-picker',
+        div className: 'account-picker align-item',
             span
                 className: 'compose-from dropdown-toggle',
                 'data-toggle': 'dropdown',
