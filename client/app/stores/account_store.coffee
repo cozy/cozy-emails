@@ -184,7 +184,8 @@ class AccountStore extends Store
 
         handle ActionTypes.REFRESH_SUCCESS, ({mailboxID, updated}) ->
             _mailboxRefreshing[mailboxID]--
-            setMailbox updated.accountID, updated.id, updated
+            if updated?
+                setMailbox updated.accountID, updated.id, updated
             @emit 'change'
 
     ###
