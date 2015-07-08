@@ -110,7 +110,7 @@ module.exports =
       "headers reply-to"        : "Reply to"
       "headers date"            : "Date"
       "headers subject"         : "Subject"
-      "load more messages"      : "load %{smart_count} more message |||| load %{smart_count} more messages"
+      "load more messages"      : "Load %{smart_count} more message |||| load %{smart_count} more messages"
       "length bytes"            : "bytes"
       "length kbytes"           : "Kb"
       "length mbytes"           : "Mb"

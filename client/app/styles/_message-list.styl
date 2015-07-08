@@ -116,7 +116,8 @@
 
     // Styles and colors
     [role=toolbar]
-        height           2rem
+        height           2.2rem
+        padding-top      0.2em
         background-color #f5f5f5
 
         i
@@ -157,10 +158,12 @@
     .progress
         border-radius 0
         margin 0px
-        height 2px
-        min-height 2px
+        height 0.2em
+        min-height 0.2em
         background-image none
-        background-color #e5e5e5
+        background-color #f5f5f5
+        box-shadow 0 0
+        border-bottom 1px solid #e5e5e5
 
 
     // LIST ITEMS
@@ -243,6 +246,7 @@
                 position     relative
                 max-width    0
                 padding-left 85%
+                font-size    0.9em
                 font-weight  bold
 
                 p
@@ -261,6 +265,7 @@
 
             .subject
                 order         3
+                font-size     0.9em
                 // ellipsis on text overflow
                 white-space   nowrap
                 overflow      hidden
@@ -339,17 +344,17 @@
         // hover
         &:hover,
         &:not(.unseen):hover
-            background-color #f5f5f5
+            background-color #ededed
 
 
         // Unread styles
         &:not(.unseen)
-            background-color #fff
+            background-color #f5f5f5
 
 
         // Currently selected message
         main:not(.full) &.active
-            background-color #ededed
+            background-color #e5e5e5
 
 
         // Edited mode
