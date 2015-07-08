@@ -12,7 +12,6 @@ AccountPicker = require './account_picker'
 
 {ComposeActions, Tooltips} = require '../constants/app_constants'
 
-FileUtils    = require '../utils/file_utils'
 MessageUtils = require '../utils/message_utils'
 
 

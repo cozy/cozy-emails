@@ -1,5 +1,7 @@
 {div, button, textarea} = React.DOM
 
+FileUtils    = require '../utils/file_utils'
+
 module.exports = ComposeEditor = React.createClass
     displayName: 'ComposeEditor'
 
