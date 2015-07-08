@@ -16,7 +16,7 @@ class LayoutStore extends Store
     _disposition = Dispositions.COL
 
     # TODO: Use a constant for default value?
-    _previewSize = 50
+    _previewSize = 60
 
     _previewFullscreen = false
 

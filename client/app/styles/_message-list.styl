@@ -11,6 +11,18 @@
 .full .messages-list .preview
     max-width 85vw
 
+.list-loading
+    padding 2em
+    color   #999
+
+    &:before
+        content          ''
+        display          inline-block
+        margin-right     0.5em
+        width            1em
+        height           1em
+        background-image url("../images/spinner.svg")
+        background-size  cover
 
 .messages-list
     display          flex
@@ -48,6 +60,7 @@
 
     .filters
         margin-right .5em
+        border-right 1px solid #e5e5e5
 
         i
             padding-left .5em
@@ -103,15 +116,11 @@
 
     // Styles and colors
     [role=toolbar]
+        height           2rem
         background-color #f5f5f5
-        box-shadow       0 1px 2px 0 rgba(0, 0, 0, 0.15)
-        font-size        .875em
 
         i
             color basecolor
-
-        > button
-            border-right 1px solid rgba(0, 0, 0, 0.15)
 
     [role=group]
             color basecolor
@@ -131,8 +140,6 @@
 
     .filters
         [role=menuitem]
-            border-right 1px solid rgba(0, 0, 0, 0.15)
-
             &:not(.dropdown)[aria-selected=false]:hover
             &[aria-selected=true]:hover
                 i
@@ -152,16 +159,17 @@
         margin 0px
         height 2px
         min-height 2px
-        box-shadow none
         background-image none
+        background-color #e5e5e5
 
 
     // LIST ITEMS
     //--------------------------------------------------------------------------
     .main-content
-        flex       1
-        overflow-y auto
-        padding    0 0 .5em 0
+        flex             1
+        overflow-y       auto
+        padding          0 0 .5em 0
+        background-color #f5f5f5
 
         // `end of the road`
         & > p
@@ -170,12 +178,13 @@
 
     .message
         // defaults
-        border-bottom 1px solid #f5f5f5
+        border-bottom 1px solid #e5e5e5
+        background-color #fff
 
         // Layouts
         .wrapper
             display flex
-            padding .5em 0 1em
+            padding .8em 0.5em
 
             & > div
                 margin auto .5em
@@ -184,13 +193,16 @@
             display         flex
             flex-direction  column
             justify-content space-around
-            margin          0 0 0 .5em !important
             align-items     center
+            margin          0 !important
             min-width       1em
 
             i
-                font-size .75em
+                font-size .85em
                 color     darkcolor +30%
+
+                &.fa-circle
+                    color basecolor
 
         .avatar-wrapper
             width         3em
@@ -226,11 +238,12 @@
                 // flexbox calculation for internal sizes and permit an overflow
                 // rendering. It's based on the padded-top responsive images
                 // trick.
-                height       1.6em
+                height       1em
                 white-space  nowrap
                 position     relative
                 max-width    0
                 padding-left 85%
+                font-weight  bold
 
                 p
                     position      absolute
@@ -241,11 +254,17 @@
                     text-overflow ellipsis
 
             .date
-                order 2
-                margin-left 1em
+                flex        1
+                order       2
+                color       #999
+                text-align  right
 
             .subject
-                order 3
+                order         3
+                // ellipsis on text overflow
+                white-space   nowrap
+                overflow      hidden
+                text-overflow ellipsis
 
             .extras
                 order 4
@@ -264,7 +283,7 @@
                 // flexbox calculation for internal sizes and permit an overflow
                 // rendering. It's based on the padded-top responsive images
                 // trick.
-                height       1.6em
+                height       1.4em
                 white-space  nowrap
                 position     relative
                 max-width    0
@@ -297,7 +316,7 @@
             opacity .7
 
         .preview
-            color darkcolor +30%
+            color #999
 
         .fa-star
             color lightorange !important
@@ -307,16 +326,10 @@
             font-size   .875em
 
         .conversation-length
-            color       basecolor
-            font-family 'Source Sans Pro'
-            font-style  normal
-            font-weight normal
-
-            &:before
-                float       right
-                font-family 'FontAwesome'
-                font-size   .875em
-                padding     .125em 0 0 .3125em
+            padding          0 0.6em
+            background-color #aaa
+            border-radius    100em
+            color            #fff
 
         .date
         .extras
@@ -324,28 +337,19 @@
 
 
         // hover
-        &:hover
-            background-color lightorange !important
-
-            .preview
-                color darkcolor
+        &:hover,
+        &:not(.unseen):hover
+            background-color #f5f5f5
 
 
         // Unread styles
-        &.unseen
-            .metas-wrapper
-                font-weight bold
-
         &:not(.unseen)
-            background-color lightcolor
+            background-color #fff
 
 
         // Currently selected message
         main:not(.full) &.active
-            background-color lightblue
-
-            .preview
-                color darkcolor
+            background-color #ededed
 
 
         // Edited mode
