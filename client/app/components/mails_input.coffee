@@ -100,6 +100,10 @@ module.exports = MailsInput = React.createClass
             else
                 @setState unknown: event.target.value
 
+        onInput = (event) =>
+            input = @refs.contactInput.getDOMNode()
+            input.cols = input.value.length + 2
+
         className  = """
            #{@props.className or ''} form-group mail-input #{@props.id}
         """
@@ -153,6 +157,7 @@ module.exports = MailsInput = React.createClass
                         rows: 1
                         value: @state.unknown
                         onChange: onChange
+                        onInput: onInput
                         placeholder: placeholder
                         'autoComplete': 'off'
                         'spellCheck': 'off'
