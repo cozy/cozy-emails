@@ -77,6 +77,7 @@ class ImapPool
                 clientSecret: '1gNUceDM59TjFAks58ftsniZ'
                 clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com'
                 refreshToken: @account.oauthRefreshToken
+                accessToken: @account.oauthAccessToken
             )
 
         async.waterfall([
