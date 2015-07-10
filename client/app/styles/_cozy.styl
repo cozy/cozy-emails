@@ -2,7 +2,7 @@ a
     color basecolor
 
 a:hover
-    color actioncolor
+    color darken(basecolor, 20%)
 
 input
 select
@@ -57,8 +57,8 @@ textarea
       border-bottom-color white
 
     &:hover
-      background-color actioncolor
-      border-color actioncolor
+      background-color darken(basecolor, 20%)
+      border-color darken(basecolor, 20%)
 
     &:active
     &:focus
@@ -77,8 +77,8 @@ textarea
     color white
 
     &:hover
-      background-color actioncolor
-      border-color actioncolor
+      background-color darken(contrastcolor, 20%)
+      border-color darken(contrastcolor, 20%)
 
 .btn.btn-cozy-non-default
     color basecolor
@@ -86,7 +86,7 @@ textarea
 
     &:hover
         text-decoration underline
-        color actioncolor
+        color darken(basecolor, 20%)
 
     &:active
     &:focus
