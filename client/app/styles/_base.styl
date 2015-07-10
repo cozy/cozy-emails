@@ -48,12 +48,18 @@ input
 .dropdown-menu
     cursor pointer
 
+.btn-group.open .dropdown-toggle,
+.dropdown-toggle
+    box-shadow 0 0
+
 .button-spinner
     position relative
     top -2px
     width 12px
     margin-right 0.6em
 
+
+// progress bar - loading top messages list
 .progress
     position relative
 
@@ -65,11 +71,11 @@ input
 .progress-bar.actived::after
     content " "
     display block
-    width 100px
+    width 12em
     top 0px
     height 100%
     position absolute
-    animation slide 2s linear infinite
+    animation slide 2s ease-in infinite
     background-color basecolor
 
 .align-item

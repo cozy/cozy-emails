@@ -32,7 +32,7 @@ module.exports = React.createClass
             'aria-expanded': @state.showAttachements
             onClick: (event) -> event.stopPropagation()
             i
-                className: 'btn fa fa-paperclip fa-flip-horizontal'
+                className: 'btn fa fa-paperclip'
                 onClick: @toggleAttachments
                 'aria-describedby': Tooltips.OPEN_ATTACHMENTS
                 'data-tooltip-direction': 'left'
