@@ -90,14 +90,15 @@ module.exports = AccountActionCreator =
 
     selectAccount: (accountID, mailboxID) ->
         changed = AccountStore.selectedIsDifferentThan accountID, mailboxID
-        selected = AccountStore.getSelected()
-        supportRFC4551 = selected?.get('supportRFC4551')
 
         AppDispatcher.handleViewAction
             type: ActionTypes.SELECT_ACCOUNT
             value:
                 accountID: accountID
                 mailboxID: mailboxID
+
+        selected = AccountStore.getSelected()
+        supportRFC4551 = selected?.get('supportRFC4551')
 
         if mailboxID? and changed and supportRFC4551
             MessageActionCreator.refreshMailbox(mailboxID)

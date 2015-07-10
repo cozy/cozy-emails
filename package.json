@@ -1,6 +1,6 @@
 {
   "name": "cozy-emails",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "engines": [
     "node = 0.8.x"
   ],
@@ -13,12 +13,11 @@
   "main": "server.coffee",
   "dependencies": {
     "americano": "0.4.2",
-    "cozydb": "0.0.17",
-    "printit": "0.1.3",
+    "cozydb": "0.0.16",
+    "printit": "0.1.7",
     "async": "0.9.0",
     "bluebird": "2.3.2",
     "cozy-notifications-helper": "1.0.2",
-    "cozydb": "0.0.16",
     "fast-json-patch": "0.4.0",
     "html-to-text": "0.1.0",
     "iconv": "2.1.4",
@@ -30,7 +29,6 @@
     "multiparty": "4.0.0",
     "node-polyglot": "0.4.1",
     "nodemailer": "1.3.0",
-    "printit": "0.1.7",
     "request-json": "0.4.12",
     "sanitize-html": "1.4.3",
     "sanitizer": "0.1.2",

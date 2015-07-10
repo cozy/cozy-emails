@@ -22,6 +22,7 @@ Account = (function(superClass) {
     password: String,
     accountType: String,
     oauthProvider: String,
+    oauthAccessToken: String,
     oauthRefreshToken: String,
     initialized: Boolean,
     smtpServer: String,

@@ -109,7 +109,8 @@ ImapPool = (function() {
         user: this.account.login,
         clientSecret: '1gNUceDM59TjFAks58ftsniZ',
         clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com',
-        refreshToken: this.account.oauthRefreshToken
+        refreshToken: this.account.oauthRefreshToken,
+        accessToken: this.account.oauthAccessToken
       });
     }
     return async.waterfall([

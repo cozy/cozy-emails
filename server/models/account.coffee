@@ -12,6 +12,7 @@ class Account extends cozydb.CozyModel
         password: String            # IMAP & SMTP password
         accountType: String         # "IMAP" or "TEST"
         oauthProvider: String       # If authentication use OAuth (only value allowed for now: GMAIL)
+        oauthAccessToken: String    # AccessToken
         oauthRefreshToken: String   # RefreshToken (in order to get an access_token)
         initialized: Boolean        # Is the account ready ?
         smtpServer: String          # SMTP host
