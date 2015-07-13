@@ -2,24 +2,26 @@ a
     color basecolor
 
 a:hover
-    color actioncolor
+    color darken(basecolor, 20%)
 
 input
 select
 textarea
 .form-control
-    border 1px solid basecolor
+    border 1px solid #ddd
     border-radius 0
     font-family 'Source Sans Pro', sans-serif
     color #333
     font-size: 16px
     height 2em
+    box-shadow none
 
     &:hover
-        border 1px solid actioncolor
+        border-color basecolor
 
     &:focus
     &:active
+        border-color basecolor
         box-shadow none
 
 .modal-header
@@ -42,6 +44,7 @@ textarea
 .btn
   // position relative for spinner
   position relative
+  text-transform uppercase
 
   &.btn-cozy
     background-color basecolor
@@ -54,8 +57,8 @@ textarea
       border-bottom-color white
 
     &:hover
-      background-color actioncolor
-      border-color actioncolor
+      background-color darken(basecolor, 20%)
+      border-color darken(basecolor, 20%)
 
     &:active
     &:focus
@@ -74,8 +77,8 @@ textarea
     color white
 
     &:hover
-      background-color actioncolor
-      border-color actioncolor
+      background-color darken(contrastcolor, 20%)
+      border-color darken(contrastcolor, 20%)
 
 .btn.btn-cozy-non-default
     color basecolor
@@ -83,7 +86,7 @@ textarea
 
     &:hover
         text-decoration underline
-        color actioncolor
+        color darken(basecolor, 20%)
 
     &:active
     &:focus

@@ -224,8 +224,6 @@ FileItem = React.createClass
 
         li className: "file-item", key: @props.key,
             i className: "mime #{type} fa #{iconClass}"
-            if @props.editable
-                i className: "fa fa-times delete", onClick: @doDelete
             a
                 className: 'file-name',
                 target: '_blank',
@@ -236,13 +234,14 @@ FileItem = React.createClass
                 'data-file-type': file.contentType
                 file.generatedFileName
 
-            div className: 'file-detail',
-                span null,
-                    "#{(file.length / 1000).toFixed(2)}Ko"
-                span className: 'file-actions',
-                    a
-                        className: "fa fa-download"
-                        href: "#{file.url}?download=1"
+            span className: 'file-size',
+                "\(#{(file.length / 1000).toFixed(1)}Ko\)"
+            span className: 'file-actions',
+                a
+                    className: "fa fa-download"
+                    href: "#{file.url}?download=1"
+                if @props.editable
+                    i className: "fa fa-times delete", onClick: @doDelete
 
     doDisplay: (e) ->
         e.preventDefault()

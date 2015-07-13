@@ -374,7 +374,7 @@ module.exports =
       "settings save error"       : "Erreur d'enregistrement des paramètres, veuillez réessayer"
 
       # File picker
-      "picker drop here"           : "Déposer les fichiers ici"
+      "picker drop here"           : "Déposer les fichiers ici ou chercher des fichiers locaux"
 
       # Mailbox List
       "mailbox pick one"           : "Choisissez une boîte"

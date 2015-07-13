@@ -93,7 +93,7 @@ module.exports = MessageItem = React.createClass
                         onClick:   @onSelect
 
                     if MessageFlags.SEEN in flags
-                        i className: 'fa fa-circle-thin'
+                        i className: 'fa'
                     else
                         i className: 'fa fa-circle'
                     if MessageFlags.FLAGGED in flags
@@ -126,8 +126,8 @@ module.exports = MessageItem = React.createClass
                         if @props.displayConversations and
                            @props.conversationLengths > 1
                             span className: 'conversation-length',
-                                "[#{@props.conversationLengths}]"
-                    div className: 'preview ellipsable',
+                                "#{@props.conversationLengths}"
+                    div className: 'preview',
                         p null, text.substr(0, 1024)
 
     _doCheck: ->

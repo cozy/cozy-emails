@@ -25,7 +25,7 @@ module.exports =
       "compose bcc help"          : "Hidden copy list"
       "compose subject"           : "Subject"
       "compose content"           : "Content"
-      "compose subject help"      : "Message subject"
+      "compose subject help"      : "Subject"
       "compose reply prefix"      : "Re: "
       "compose reply separator"   : "\n\nOn %{date}, %{sender} wrote \n"
       "compose forward prefix"    : "Fwd: "
@@ -110,7 +110,7 @@ module.exports =
       "headers reply-to"        : "Reply to"
       "headers date"            : "Date"
       "headers subject"         : "Subject"
-      "load more messages"      : "load %{smart_count} more message |||| load %{smart_count} more messages"
+      "load more messages"      : "Load %{smart_count} more message |||| load %{smart_count} more messages"
       "length bytes"            : "bytes"
       "length kbytes"           : "Kb"
       "length mbytes"           : "Mb"
@@ -366,7 +366,7 @@ module.exports =
       "settings save error"       : "Unable to save settings, please try again"
 
       # File picker
-      "picker drop here"           : "Drop files here"
+      "picker drop here"           : "Drop files here or Choose local files"
 
       # Mailbox List
       "mailbox pick one"           : "Pick one"
