@@ -1,4 +1,4 @@
-{div, span, ul, li, img, a, i} = React.DOM
+{div, span, ul, li, a, i} = React.DOM
 MessageUtils = require '../utils/message_utils'
 
 AttachmentPreview = require './attachement_preview'

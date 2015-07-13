@@ -4,7 +4,7 @@ ParticipantMixin = require '../mixins/participant_mixin'
 
 
 module.exports = React.createClass
-    displayName: 'MessageDetailsPopup'
+    displayName: 'PopupMessageDetails'
 
     mixins: [
         ParticipantMixin,
@@ -13,7 +13,7 @@ module.exports = React.createClass
 
 
     getInitialState: ->
-        showDetails:      false
+        showDetails: false
 
 
     toggleDetails: ->
@@ -39,20 +39,19 @@ module.exports = React.createClass
             items.push td key: "cell-#{id}", value
             return tr key: "row-#{id}", items...
 
-
         div
-            className: 'details'
+            className: 'metas details'
             'aria-expanded': @state.showDetails
             onClick: (event) -> event.stopPropagation()
-            i className: 'btn fa fa-caret-down', onClick: @toggleDetails
-            div className: 'popup', 'aria-hidden': not @state.showDetails,
-                table null,
-                    tbody null,
-                        row 'from', @formatUsers(from), 'headers from'
-                        row 'to', @formatUsers(to[0]), 'headers to', to.length if to.length
-                        row "destTo#{key}", @formatUsers(dest) for dest, key in to[1..] if to.length
-                        row 'cc', @formatUsers(cc[0]), 'headers cc', cc.length if cc.length
-                        row "destCc#{key}", @formatUsers(dest) for dest, key in cc[1..] if cc.length
-                        row 'reply', @formatUsers(reply), 'headers reply-to' if reply?
-                        row 'created', @props.message.get('createdAt'), 'headers date'
-                        row 'subject', @props.message.get('subject'), 'headers subject'
+            i className: 'fa fa-caret-down', onClick: @toggleDetails
+            if @state.showDetails
+                div className: 'popup', 'aria-hidden': not @state.showDetails,
+                    table null,
+                        tbody null,
+                            row 'from', @formatUsers(from), 'headers from'
+                            row 'to', @formatUsers(to[0]), 'headers to', to.length if to.length
+                            row "destTo#{key}", @formatUsers(dest) for dest, key in to[1..] if to.length
+                            row 'cc', @formatUsers(cc[0]), 'headers cc', cc.length if cc.length
+                            row "destCc#{key}", @formatUsers(dest) for dest, key in cc[1..] if cc.length
+                            row 'reply', @formatUsers(reply), 'headers reply-to' if reply?
+                            row 'created', @props.message.get('createdAt'), 'headers date'

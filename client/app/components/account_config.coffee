@@ -74,7 +74,7 @@ module.exports = React.createClass
 
 
     getInitialState: ->
-        return @accountToState null
+        return @accountToState @props
 
 
     # Do not update component if nothing has changed.
@@ -158,8 +158,17 @@ module.exports = React.createClass
             error: @props.error
             errors: @state.errors
             onSubmit: @onSubmit
+            selectedAccount: @props.selectedAccount
 
-        options[field] = @linkState field for field in @_mailboxesFields
+        # /!\ we cannot use @linkState here because we need to be able
+        # to call a method after state has been updated
+        for field in @_mailboxesFields
+            options[field] =
+                value: @state[field]
+                requestChange: (val, cb) =>
+                    state = {}
+                    state[field] = val
+                    @setState state, cb
 
         return options
 
@@ -279,7 +288,11 @@ module.exports = React.createClass
 
         validOptions =
             additionalProperties: true
-        valid = validate accountValue, @_accountSchema, validOptions
+        schema = @_accountSchema
+        # password is not required on OAuth accounts
+        isOauth = @props.selectedAccount?.get('oauthProvider')?
+        schema.properties.password.allowEmpty = isOauth
+        valid = validate accountValue, schema, validOptions
 
         return {accountValue, valid}
 
@@ -352,7 +365,7 @@ module.exports = React.createClass
     # Build state based on current account values.
     buildAccountState: (state, props, account) ->
 
-        if @state.id isnt account.get('id')
+        if @state?.id isnt account.get('id')
 
             state[field] = account.get field for field in @_accountFields
             state.smtpMethod = 'PLAIN' if not state.smtpMethod?

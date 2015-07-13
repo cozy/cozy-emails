@@ -16,6 +16,8 @@
     form
 } = React.DOM
 
+classer = React.addons.classSet
+
 
 Container = React.createClass
 
@@ -215,12 +217,16 @@ AddressLabel = React.createClass
             key = @props.contact.address.replace /\W/g, ''
 
             result = span null,
-                span null, "#{@props.contact.name} "
+                span
+                    className: 'highlight'
+                    @props.contact.name
                 span
                     className: 'contact-address'
                     key: key
                     ,
-                        "<#{@props.contact.address}>"
+                        i className: 'fa fa-angle-left'
+                        @props.contact.address
+                        i className: 'fa fa-angle-right'
 
         else if @props.contact.name?.length > 0
             result = span key: "label-#{meaninglessKey++}",
@@ -284,6 +290,24 @@ Spinner = React.createClass
             alt: 'spinner'
             className: 'button-spinner'
 
+Progress = React.createClass
+    displayName: 'Progress'
+
+    propTypes:
+        value: React.PropTypes.number.isRequired
+        max: React.PropTypes.number.isRequired
+
+    render: ->
+        div className: 'progress',
+            div
+                className: classer
+                    'progress-bar': true
+                    'actived': @props.value > 0
+                style: width: 0
+                role: 'progressbar'
+                "aria-valuenow": @props.value
+                "aria-valuemin": '0'
+                "aria-valuemax": @props.max
 
 module.exports = {
     AddressLabel
@@ -298,6 +322,7 @@ module.exports = {
     MenuItem
     MenuHeader
     MenuDivider
+    Progress
     Spinner
     SubTitle
     Title

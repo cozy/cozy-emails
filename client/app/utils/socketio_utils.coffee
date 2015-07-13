@@ -18,12 +18,12 @@ setServerScope = ->
     socket.emit 'change_scope', scope
 
 
-socket.on 'refresh.status', dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
-socket.on 'refresh.create', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
-socket.on 'refresh.update', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
-socket.on 'refresh.delete', dispatchAs ActionTypes.RECEIVE_REFRESH_DELETE
+# socket.on 'refresh.status', dispatchAs ActionTypes.RECEIVE_REFRESH_STATUS
+# socket.on 'refresh.create', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
+# socket.on 'refresh.update', dispatchAs ActionTypes.RECEIVE_REFRESH_UPDATE
+# socket.on 'refresh.delete', dispatchAs ActionTypes.RECEIVE_REFRESH_DELETE
 
-socket.on 'message.create', dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE
+socket.on 'message.create', dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME
 socket.on 'message.update', dispatchAs ActionTypes.RECEIVE_RAW_MESSAGE
 socket.on 'message.delete', dispatchAs ActionTypes.RECEIVE_MESSAGE_DELETE
 

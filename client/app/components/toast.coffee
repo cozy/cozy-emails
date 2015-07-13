@@ -1,7 +1,6 @@
 {a, h4,  pre, div, button, span, strong, i} = React.DOM
 SocketUtils     = require '../utils/socketio_utils'
 AppDispatcher   = require '../app_dispatcher'
-Modal           = require './modal'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 LayoutStore      = require '../stores/layout_store'
 LayoutActionCreator = require '../actions/layout_action_creator'
@@ -17,10 +16,6 @@ classer = React.addons.classSet
 module.exports = Toast = React.createClass
 
     displayName: 'Toast'
-
-
-    getInitialState: ->
-        return modalErrors: false
 
 
     # A toast is composed of several elements:
@@ -43,13 +38,11 @@ module.exports = Toast = React.createClass
             showModal = @showModal.bind this, toast.errors
 
         div className: classes, role: "alert", key: @props.key,
-            if @state.modalErrors
-                @renderModal()
 
             if toast.message
                 div className: "message", toast.message
 
-            if toast.finished
+            if toast.finished or hasErrors
                 button
                     type: "button",
                     className: "close",
@@ -69,30 +62,28 @@ module.exports = Toast = React.createClass
                             action.label
 
             if hasErrors
+                className = "btn btn-cancel btn-cozy-non-default btn-xs"
                 div className: 'toast-actions',
-                    a onClick: showModal,
+                    button
+                        className: className,
+                        type: "button",
+                        key: 'errors'
+                        onClick: showModal,
                         t 'there were errors', smart_count: toast.errors.length
 
 
-    renderModal: ->
-        title       = t 'modal please contribute'
-        subtitle    = t 'modal please report'
-        modalErrors = @state.modalErrors
-        closeModal  = @closeModal
-        closeLabel  = t 'app alert close'
-        content = React.DOM.pre
-            style: "max-height": "300px",
-            "word-wrap": "normal",
-                @state.modalErrors.join "\n\n"
-        Modal {title, subtitle, content, closeModal, closeLabel}
-
-
-    closeModal: ->
-        @setState modalErrors: false
-
-
     showModal: (errors) ->
-        @setState modalErrors: errors
+        modal =
+            title       : t 'modal please contribute'
+            subtitle    : t 'modal please report'
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'app alert close'
+            content     : React.DOM.pre
+                style: "max-height": "300px",
+                "word-wrap": "normal",
+                    errors.join "\n\n"
+        LayoutActionCreator.displayModal modal
 
 
     acknowledge: ->

@@ -1,6 +1,7 @@
 {li, span, i, input} = React.DOM
 classer = React.addons.classSet
 
+{Spinner} = require './basic_components'
 AccountActionCreator = require '../actions/account_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 RouterMixin = require '../mixins/router_mixin'
@@ -23,6 +24,7 @@ module.exports = MailboxItem = React.createClass
         return {
             edited: false
             favorite: @props.favorite
+            deleting: false
         }
 
 
@@ -69,11 +71,16 @@ module.exports = MailboxItem = React.createClass
                     onClick: @editMailbox,
                     title: t("mailbox title edit"),
                         i className: 'fa fa-pencil'
-                span
-                    className: "col-xs-1 box-action delete",
-                    onClick: @deleteMailbox,
-                    title: t("mailbox title delete"),
-                        i className: 'fa fa-trash-o'
+                if @state.deleting
+                    span
+                        className: "col-xs-1 box-action delete"
+                        Spinner()
+                else
+                    span
+                        className: "col-xs-1 box-action delete",
+                        onClick: @deleteMailbox,
+                        title: t("mailbox title delete"),
+                            i className: 'fa fa-trash-o'
                 span
                     className: "col-xs-6 box-label",
                     onClick: @editMailbox,
@@ -174,16 +181,29 @@ module.exports = MailboxItem = React.createClass
     deleteMailbox: (event) ->
         event.preventDefault() if event?
 
-        if window.confirm(t 'account confirm delbox')
-            mailbox =
-                mailboxID: @props.mailbox.get 'id'
-                accountID: @props.accountID
+        modal =
+            title       : t 'app confirm delete'
+            subtitle    : t 'account confirm delbox'
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'app cancel'
+            actionLabel : t 'app confirm'
+            action      : =>
+                LayoutActionCreator.hideModal()
+                @setState deleting: true
+                mailbox =
+                    mailboxID: @props.mailbox.get 'id'
+                    accountID: @props.accountID
 
-            AccountActionCreator.mailboxDelete mailbox, (error) ->
-                if error?
-                    message = "#{t("mailbox delete ko")} #{error}"
-                    LayoutActionCreator.alertError message
-                else
-                    LayoutActionCreator.notify t("mailbox delete ok"),
-                        autoclose: true
+                AccountActionCreator.mailboxDelete mailbox, (error) =>
+                    if error?
+                        message = "#{t("mailbox delete ko")} #{error}"
+                        LayoutActionCreator.alertError message
+                    else
+                        LayoutActionCreator.notify t("mailbox delete ok"),
+                            autoclose: true
+                    if @isMounted()
+                        @setState deleting: false
+
+        LayoutActionCreator.displayModal modal
 

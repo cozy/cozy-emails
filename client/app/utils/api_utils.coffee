@@ -15,6 +15,7 @@ onMessageList = ->
 
 module.exports =
 
+    debugLogs: []
 
     getCurrentAccount: ->
         AccountStore.getSelected()?.toJS()
@@ -54,7 +55,7 @@ module.exports =
 
 
     # update locate (without saving it into settings)
-    setLocale: (lang, refresh) ->
+    setLocale: (lang) ->
         window.moment.locale lang
         locales = {}
         try
@@ -67,8 +68,6 @@ module.exports =
         polyglot.extend locales
         # handy shortcut
         window.t = polyglot.t.bind polyglot
-        if refresh
-            LayoutActionCreator.refresh()
 
 
     getAccountByLabel: (label) ->
@@ -103,10 +102,13 @@ module.exports =
         if not next?
             return
 
-        MessageActionCreator.setCurrent next.get('id'), true
+        @messageSetCurrent next
+
+    messageSetCurrent: (message) ->
+        MessageActionCreator.setCurrent message.get('id'), true
 
         if SettingsStore.get('displayPreview')
-            @messageDisplay next
+            @messageDisplay message
 
     ##
     # Display a message
@@ -166,9 +168,20 @@ module.exports =
             else
                 confirmMessage = t 'list delete confirm',
                     smart_count: 1
-        if (not confirm) or
-        window.confirm confirmMessage
+        if (not confirm)
             MessageActionCreator.delete {messageID}
+        else
+            modal =
+                title       : t 'app confirm delete'
+                subtitle    : confirmMessage
+                closeModal  : ->
+                    LayoutActionCreator.hideModal()
+                closeLabel  : t 'app cancel'
+                actionLabel : t 'app confirm'
+                action      : ->
+                    MessageActionCreator.delete {messageID}
+                    LayoutActionCreator.hideModal()
+            LayoutActionCreator.displayModal modal
 
 
     messageUndo: ->
@@ -251,4 +264,79 @@ module.exports =
             return res
 
         _dump window.rootComponent
+
+    # Log message into server logs
+    logInfo: (message) ->
+        data =
+            data:
+                type: 'debug'
+                message: message
+        xhr = new XMLHttpRequest()
+        xhr.open 'POST', 'activity', true
+        xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
+        xhr.send JSON.stringify(data)
+        console.log message
+
+    # Log every Flux action (only in development environment)
+    # Logs can be displayed using `displayLogs`
+    logAction: (action, message) ->
+        if window.app_env is "development"
+            # remove some data from action value to lighten the logs
+            actionCleanup = (action) ->
+                act = _.clone action
+                # remove message content
+                cleanMsg = (val) ->
+                    if val?
+                        newVal = _.clone val
+                        delete newVal.headers
+                        delete newVal.html
+                        delete newVal.text
+                        delete newVal.attachments
+                        return newVal
+                if Array.isArray act.value
+                    act.value = act.value.map cleanMsg
+                else
+                    act.value = cleanMsg act.value
+                    if Array.isArray act.value?.messages
+                        act.value.messages = act.value.messages.map cleanMsg
+                return act
+
+            # get call stack
+            stack = new Error().stack or ''
+            stack = stack.split("\n").filter (trace) ->
+                return /app.js/.test(trace.split('@'))
+            .map (trace) ->
+                return trace.split('@')[0]
+
+            # store logs
+            _log =
+                date: new Date().toISOString()
+                stack: stack.splice(2)
+            if action?
+                _log.action = actionCleanup action
+            if message?
+                _log.message = message
+            window.cozyMails.debugLogs.unshift _log
+
+            # only keep the last 100 lines of logs
+            window.cozyMails.debugLogs = window.cozyMails.debugLogs.slice 0, 100
+
+    # display action logs in a modal window
+    displayLogs: ->
+        modal =
+            title       : t 'modal please contribute'
+            subtitle    : t 'modal please report'
+            allowCopy   : true
+            closeModal  : ->
+                LayoutActionCreator.hideModal()
+            closeLabel  : t 'app alert close'
+            content     : React.DOM.pre
+                style: "max-height": "300px",
+                "word-wrap": "normal",
+                    JSON.stringify(window.cozyMails.debugLogs, null, 4)
+        LayoutActionCreator.displayModal modal
+
+    # clear action logs
+    clearLogs: ->
+        window.cozyMails.debugLogs = []
 

@@ -1,14 +1,13 @@
 {
-    div, p, h3, h4, form, label, input, button, ul, li, a, span, i,
+    div, p, form, label, input, button, ul, li, a, span, i,
     fieldset, legend
 } = React.DOM
 classer = React.addons.classSet
 
-AccountActionCreator = require '../actions/account_action_creator'
-AccountInput = require './account_config_input'
+AccountInput  = require './account_config_input'
+AccountDelete = require './account_config_delete'
 
 RouterMixin = require '../mixins/router_mixin'
-LayoutActionCreator = require '../actions/layout_action_creator'
 {Form, FieldSet, FormButtons, FormDropdown} = require './basic_components'
 
 
@@ -71,7 +70,12 @@ module.exports = AccountConfigMain = React.createClass
             'form-account': true
             'waiting': @props.isWaiting
 
+        isOauth = @props.selectedAccount?.get('oauthProvider')?
+
         Form className: formClass,
+
+            if isOauth
+                p null, t 'account oauth'
 
             FieldSet text: t 'account identifiers'
 
@@ -95,13 +99,14 @@ module.exports = AccountConfigMain = React.createClass
                 errorField: ['login', 'auth']
                 onBlur: @discover
 
-            AccountInput
-                name: 'password'
-                value: @linkState('password').value
-                errors: @state.errors
-                type: 'password'
-                errorField: ['password', 'auth']
-                onBlur: @props.onBlur
+            if not isOauth
+                AccountInput
+                    name: 'password'
+                    value: @linkState('password').value
+                    errors: @state.errors
+                    type: 'password'
+                    errorField: ['password', 'auth']
+                    onBlur: @props.onBlur
 
             AccountInput
                 name: 'accountType'
@@ -122,6 +127,40 @@ module.exports = AccountConfigMain = React.createClass
                 ]
 
 
+            if not isOauth
+                @_renderReceivingServer()
+            if not isOauth
+                @_renderSendingServer()
+
+            FieldSet text: t 'account actions'
+            FormButtons
+                buttons: [
+                    class: 'action-save'
+                    contrast: true
+                    default: false
+                    danger: false
+                    spinner: false
+                    icon: 'save'
+                    onClick: @onSubmit
+                    text: buttonLabel
+                ,
+                    class: 'action-check'
+                    contrast: false
+                    default: false
+                    danger: false
+                    spinner: @props.checking
+                    onClick: @onCheck
+                    icon: 'ellipsis-h'
+                    text: t 'account check'
+                ]
+
+            if @props.selectedAccount?
+                AccountDelete
+                    selectedAccount: @props.selectedAccount
+
+
+    _renderReceivingServer: ->
+        div null,
             FieldSet text: t 'account receiving server'
 
             AccountInput
@@ -158,7 +197,7 @@ module.exports = AccountConfigMain = React.createClass
                     @_onServerParam event.target, 'imap', 'tls'
 
             div
-                className: "form-group",
+                className: "form-group advanced-imap-toggle",
                 a
                     className: "col-sm-3 col-sm-offset-2 control-label clickable",
                     onClick: @toggleIMAPAdvanced,
@@ -171,6 +210,9 @@ module.exports = AccountConfigMain = React.createClass
                     errors: @state.errors
                     errorField: ['imap', 'imapServer', 'imapPort', 'imapLogin']
 
+
+    _renderSendingServer: ->
+        div null,
             FieldSet text: t 'account sending server'
 
             AccountInput
@@ -190,8 +232,9 @@ module.exports = AccountConfigMain = React.createClass
                 name: 'smtpPort'
                 value: @linkState('smtpPort').value
                 errors: @state.errors
-                onBlur: =>
-                    @_onSMTPPort()
+                errorField: ['smtp', 'smtpPort', 'smtpServer']
+                onBlur: (event) =>
+                    @_onSMTPPort(event)
                     @props.onBlur()
                 onInput: =>
                     @setState smtpManualPort: true
@@ -200,6 +243,7 @@ module.exports = AccountConfigMain = React.createClass
                 name: 'smtpSSL'
                 value: @linkState('smtpSSL').value
                 errors: @state.errors
+                errorField: ['smtp', 'smtpPort', 'smtpServer']
                 type: 'checkbox'
                 onClick: (ev) =>
                     @_onServerParam ev.target, 'smtp', 'ssl'
@@ -208,12 +252,13 @@ module.exports = AccountConfigMain = React.createClass
                 name: 'smtpTLS'
                 value: @linkState('smtpTLS').value
                 errors: @state.errors
+                errorField: ['smtp', 'smtpPort', 'smtpServer']
                 type: 'checkbox'
                 onClick: (ev) =>
                     @_onServerParam ev.target, 'smtp', 'tls'
 
             div
-                className: "form-group",
+                className: "form-group advanced-smtp-toggle",
                 a
                     className: "col-sm-3 col-sm-offset-2 control-label clickable",
                     onClick: @toggleSMTPAdvanced,
@@ -228,19 +273,14 @@ module.exports = AccountConfigMain = React.createClass
                     values: ['NONE', 'CRAM-MD5', 'LOGIN', 'PLAIN']
                     onClick: @onMethodChange
                     methodPrefix: "account smtpMethod"
+                    errorField: ['smtp', 'smtpAuth']
 
             if @state.smtpAdvanced
                 AccountInput
                     name: 'smtpLogin'
                     value: @linkState('smtpLogin').value
                     errors: @state.errors
-                    errorField: [
-                        'smtp'
-                        'smtpServer'
-                        'smtpPort'
-                        'smtpLogin'
-                        'smtpPassword'
-                    ]
+                    errorField: ['smtpAuth']
 
             if @state.smtpAdvanced
                 AccountInput
@@ -248,52 +288,7 @@ module.exports = AccountConfigMain = React.createClass
                     value: @linkState('smtpPassword').value
                     type: 'password'
                     errors: @state.errors
-                    errorField: [
-                        'smtp'
-                        'smtpServer'
-                        'smtpPort'
-                        'smtpLogin'
-                        'smtpPassword'
-                    ]
-
-            FieldSet text: t 'account actions'
-            FormButtons
-                buttons: [
-                    class: 'action-save'
-                    contrast: true
-                    default: false
-                    danger: false
-                    spinner: false
-                    icon: 'save'
-                    onClick: @onSubmit
-                    text: buttonLabel
-                ,
-                    class: 'action-check'
-                    contrast: false
-                    default: false
-                    danger: false
-                    spinner: @props.checking
-                    onClick: @onCheck
-                    icon: 'ellipsis-h'
-                    text: t 'account check'
-                ]
-
-            if @props.selectedAccount?
-                FieldSet text: t 'account danger zone'
-
-            if @props.selectedAccount?
-                FormButtons
-                    buttons: [
-                        class: 'btn-remove'
-                        contrast: false
-                        default: true
-                        danger: true
-                        onClick: @onRemove
-                        spinner: false
-                        icon: 'trash'
-                        text: t "account remove"
-                    ]
-
+                    errorField: ['smtpAuth']
 
     # Run form submission process described in parent component.
     # Check for errors before.
@@ -311,14 +306,6 @@ module.exports = AccountConfigMain = React.createClass
     onMethodChange: (event) ->
         console.log "blash"
         @state.smtpMethod.requestChange event.target.dataset.value
-
-
-    # Ask for confirmation before running remove operation.
-    onRemove: (event) ->
-        event?.preventDefault()
-
-        if window.confirm(t 'account remove confirm')
-            AccountActionCreator.remove @props.selectedAccount.get('id')
 
 
     # Display or not SMTP advanced settings.

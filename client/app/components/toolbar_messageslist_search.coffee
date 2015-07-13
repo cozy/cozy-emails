@@ -1,10 +1,8 @@
-{div, i, button, input} = React.DOM
+{div, i, button, input, form} = React.DOM
 {Dropdown} = require './basic_components'
+{MessageFilter, Tooltips} = require '../constants/app_constants'
 
 LayoutActionCreator = require '../actions/layout_action_creator'
-
-MessageStore        = require '../stores/message_store'
-
 
 filters =
     from: t "list filter from"
@@ -19,40 +17,76 @@ module.exports = SearchToolbarMessagesList = React.createClass
         mailboxID: React.PropTypes.string.isRequired
 
     getInitialState: ->
-        type: 'from'
+        type:    'from'
+        value:   ''
+        isEmpty: true
 
 
     showList: ->
-        value = @refs.searchterms.getDOMNode().value
-        LayoutActionCreator.sortMessages
+        filter = MessageFilter.ALL
+        sort =
             order:  '-'
-            field:  @state.type
-            after:  "#{value}\uFFFF"
-            before: value
+            before: @state.value
+        if @state.value? and @state.value isnt ''
+            # always close message preview before filtering
+            window.cozyMails.messageClose()
+            sort.field = @state.type
+            sort.after = "#{@state.value}\uFFFF"
+        else
+            # reset, use default filter
+            sort.field = 'date'
+            sort.after = ''
 
-        params = _.clone(MessageStore.getParams())
-        params.accountID = @props.accountID
-        params.mailboxID = @props.mailboxID
-        LayoutActionCreator.showMessageList parameters: params
+        LayoutActionCreator.showFilteredList filter, sort
 
 
     onTypeChange: (filter) ->
         @setState type: filter
 
 
-    onKeyDown: (event) ->
-        switch event.key
-            when "Enter" then @showList()
+    onChange: (event) ->
+        @setState
+            value:   event.target.value
+            isEmpty: event.target.value.length is 0
+
+
+    onKeyUp: (event) ->
+        @showList() if event.key is "Enter" or @state.isEmpty
+
+
+    reset: ->
+        @setState @getInitialState(), @showList
 
 
     render: ->
-        div role: 'group', className: 'search',
+        form role: 'group', className: 'search',
             Dropdown
                 value:    @state.type
                 values:   filters
                 onChange: @onTypeChange
-            input
-                    ref: 'searchterms'
-                    type: 'text'
+
+            div role: 'search',
+                input
+                    ref:         'searchterms'
+                    type:        'text'
                     placeholder: t 'filters search placeholder'
-                    onKeyDown: @onKeyDown
+                    value:       @state.value
+                    onChange:    @onChange
+                    onKeyUp:     @onKeyUp
+                    name:        'searchterm'
+
+                unless @state.isEmpty
+                    div className: 'btn-group',
+                        button
+                            className: 'btn fa fa-check'
+                            onClick: (e) =>
+                                e.preventDefault()
+                                e.stopPropagation()
+                                @showList()
+
+                        button
+                            className: 'btn fa fa-close'
+                            onClick: (e) =>
+                                e.preventDefault()
+                                e.stopPropagation()
+                                @reset()

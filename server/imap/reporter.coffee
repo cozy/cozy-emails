@@ -89,7 +89,7 @@ module.exports = class ImapReporter
 
     onError: (err) ->
         @errors.push Logger.getLasts() + "\n" + err.stack
-        log.error err.stack
+        log.error "reporter err", err.stack
         @sendtoclient()
 
 

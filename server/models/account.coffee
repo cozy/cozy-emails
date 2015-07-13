@@ -11,6 +11,10 @@ class Account extends cozydb.CozyModel
         login: String               # IMAP & SMTP login
         password: String            # IMAP & SMTP password
         accountType: String         # "IMAP" or "TEST"
+        oauthProvider: String       # If authentication use OAuth (only value allowed for now: GMAIL)
+        oauthAccessToken: String    # AccessToken
+        oauthRefreshToken: String   # RefreshToken (in order to get an access_token)
+        initialized: Boolean        # Is the account ready ?
         smtpServer: String          # SMTP host
         smtpPort: Number            # SMTP port
         smtpSSL: Boolean            # Use SSL
@@ -25,14 +29,15 @@ class Account extends cozydb.CozyModel
         imapTLS: Boolean            # Use STARTTLS
         inboxMailbox: String        # INBOX Maibox id
         flaggedMailbox: String      # \Flag Mailbox id
-        draftMailbox: String        # \Draft Maibox id
-        sentMailbox: String         # \Sent Maibox id
-        trashMailbox: String        # \Trash Maibox id
-        junkMailbox: String         # \Junk Maibox id
-        allMailbox: String          # \All Maibox id
-        favorites: [String]         # [String] Maibox id of displayed boxes
-        patchIgnored: Boolean       # has patchIgnored been applied ?
-        signature: String            # Signature to add at the end of messages
+        draftMailbox:   String      # \Draft Maibox id
+        sentMailbox:    String      # \Sent Maibox id
+        trashMailbox:   String      # \Trash Maibox id
+        junkMailbox:    String      # \Junk Maibox id
+        allMailbox:     String      # \All Maibox id
+        favorites:      [String]    # [String] Maibox id of displayed boxes
+        patchIgnored:   Boolean     # has patchIgnored been applied ?
+        supportRFC4551: Boolean     # does the account support CONDSTORE ?
+        signature:      String      # Signature to add at the end of messages
 
     # Public: find an account by id
     # cozydb's find can return no error and no account (if id isnt an account)
@@ -83,6 +88,17 @@ class Account extends cozydb.CozyModel
                     existingAccountIDs = accounts.map (account) -> account.id
                     allAccounts = accounts
                     cb null
+            (cb) ->
+                needInit = allAccounts.filter (account) ->
+                    account.initialized is false # dont init undefined
+
+                async.eachSeries needInit, (account, next)->
+                    log.debug "initializing account refreshBoxes", account.id
+                    account.imap_refreshBoxes (err, boxes) ->
+                        return next err if err
+                        log.debug "found #{boxes.length} boxes"
+                        account.imap_scanBoxesForSpecialUse boxes, next
+                , cb
 
             (cb) ->
                 # then remove all mailbox associated with a deleted account
@@ -99,7 +115,15 @@ class Account extends cozydb.CozyModel
                 # then apply the ignored patch to all accounts
                 async.eachSeries allAccounts, (account, cbLoop) ->
                     account.applyPatchIgnored (err) ->
-                        log.error err if err
+                        log.error "ignored patch err", err if err
+                        cbLoop null # loop anyway
+                , cb
+
+            (cb) ->
+                # then apply the ignored patch to all accounts
+                async.eachSeries allAccounts, (account, cbLoop) ->
+                    account.applyPatchConversation (err) ->
+                        log.error "conv patch err", err if err
                         cbLoop null # loop anyway
                 , cb
 
@@ -170,7 +194,7 @@ class Account extends cozydb.CozyModel
     #
     # Returns (callback) {Account} the created account
     @createIfValid: (data, callback) ->
-
+        data.initialized = true
         account = new Account data
         toFetch = null
 
@@ -259,7 +283,7 @@ class Account extends cozydb.CozyModel
             Mailbox.markAllMessagesAsIgnored boxID, (err) ->
                 if err
                     hadError = true
-                    log.error err
+                    log.error "patch ignored err", err
                 cb null
         , (err) =>
             if hadError
@@ -272,6 +296,52 @@ class Account extends cozydb.CozyModel
                 changes = patchIgnored: true
                 @updateAttributes changes, callback
 
+
+    applyPatchConversation: (callback) ->
+        log.debug "applyPatchConversation"
+
+        status = {skip: 0}
+        async.whilst (-> not status.complete),
+            (cb) => @applyPatchConversationStep status, cb
+        , callback
+
+    applyPatchConversationStep: (status, next) ->
+        Message.rawRequest 'conversationPatching',
+            reduce: true
+            group_level: 2
+            startkey: [@id]
+            endkey: [@id, {}]
+            limit: 1000
+            skip: status.skip
+        , (err, rows) =>
+            return next err if err
+            if rows.length is 0
+                status.complete = true
+                return next null
+
+            # rows without value are correct conversations
+            problems = rows.filter (row) -> row.value isnt null
+                .map (row) -> row.key
+
+            log.debug "conversationPatchingStep", status.skip,
+                  rows.length, problems.length
+
+            if problems.length is 0
+                status.skip += 1000
+                next null
+            else
+                async.eachSeries problems, @patchConversationOne, (err) ->
+                    return next err if err
+                    status.skip += 1000
+                    next null
+
+    patchConversationOne: (key, callback) ->
+        Message.rawRequest 'conversationPatching',
+            reduce: false
+            key: key
+        , (err, rows) ->
+            return callback err if err
+            Message.pickConversationID rows, callback
 
     # Public: test an account connection
     # callback - {Boolean} whether this account is currently refreshing
@@ -357,13 +427,10 @@ class Account extends cozydb.CozyModel
 
         , (err, {mailboxes, counts, totalUnread}) ->
             return callback err if err
-
-
-
             rawObject.totalUnread = totalUnread
             rawObject.mailboxes = mailboxes.map (row) ->
                 box = row.doc
-                id = box.id or row.id
+                id = box?.id or row.id
                 count = counts[id]
                 return clientBox =
                     id       : id
@@ -378,14 +445,25 @@ class Account extends cozydb.CozyModel
             callback null, rawObject
 
     # Public: get the account's mailboxes in imap
+    # also update the account supportRFC4551 attribute if needed
     #
     # Returns (callback) {Array} of nodeimap mailbox raw {Object}s
     imap_getBoxes: (callback) ->
         log.debug "getBoxes"
+        supportRFC4551 = null
         @doASAP (imap, cb) ->
+            supportRFC4551 = imap.serverSupports 'CONDSTORE'
             imap.getBoxesArray cb
-        , (err, boxes) ->
-            return callback err, boxes or []
+        , (err, boxes) =>
+            return callback err, [] if err
+
+            if supportRFC4551 isnt @supportRFC4551
+                log.debug "UPDATING ACCOUNT #{@id} rfc4551=#{@supportRFC4551}"
+                @updateAttributes {supportRFC4551}, (err) ->
+                    log.warn "fail to update account #{err.stack}" if err
+                    callback null, boxes or []
+            else
+                callback null, boxes or []
 
     # Public: refresh the account's mailboxes
     #
@@ -401,6 +479,7 @@ class Account extends cozydb.CozyModel
             log.debug "refreshBoxes#results"
             return callback err if err
             [cozyBoxes, imapBoxes] = results
+            return callback null, cozyBoxes, [] if account.isTest()
 
             toFetch = []
             toDestroy = []
@@ -469,9 +548,11 @@ class Account extends cozydb.CozyModel
                 return if a.label is 'INBOX' then -1
                 else return 1
 
+            supportRFC4551 = account.supportRFC4551
+
             async.eachSeries toFetch, (box, cb) ->
-                boxOptions = {limitByBox, firstImport}
-                box.imap_fetchMails boxOptions, (err, shouldNotif) ->
+                boxOptions = {limitByBox, firstImport, supportRFC4551}
+                box.imap_refresh boxOptions, (err, shouldNotif) ->
                     # @TODO : Figure out how to distinguish a mailbox that
                     # is not selectable but not marked as such. In the meantime
                     # dont pop the error to the client
@@ -491,11 +572,16 @@ class Account extends cozydb.CozyModel
                     box.destroyAndRemoveAllMessages cb
 
                 , (err) ->
-                    account.setRefreshing false
-                    reporter.onDone()
-                    if shouldNotifAccount
-                        notifications.accountRefreshed account
-                    callback null
+                    account.setRefreshing(false) if err
+                    return callback err if err
+
+                    account.applyPatchConversation (err) ->
+                        log.error "patch conv fail", err if err # not blocking
+                        account.setRefreshing false
+                        reporter.onDone()
+                        if shouldNotifAccount
+                            notifications.accountRefreshed account
+                        callback null
 
     # Public: fetch an account emails in two step
     # first 100 message in each of the favorites mailbox
@@ -547,7 +633,7 @@ class Account extends cozydb.CozyModel
         inboxMailbox = null
         boxAttributes = Object.keys Mailbox.RFC6154
 
-        changes = {}
+        changes = {initialized: true}
 
         boxes.map (box) ->
             type = box.RFC6154use()
@@ -614,10 +700,21 @@ class Account extends cozydb.CozyModel
             tls: rejectUnauthorized: false
         if @smtpMethod? and @smtpMethod isnt 'NONE'
             options.authMethod = @smtpMethod
-        if @smtpMethod isnt 'NONE'
+        if @oauthProvider isnt 'GMAIL'
             options.auth =
                 user: @smtpLogin or @login
                 pass: @smtpPassword or @password
+        if @oauthProvider is 'GMAIL'
+            generator = require('xoauth2').createXOAuth2Generator(
+                user: @login
+                clientSecret: '1gNUceDM59TjFAks58ftsniZ'
+                clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com'
+                refreshToken: @oauthRefreshToken
+            )
+            options.service = 'gmail'
+            options.auth =
+                xoauth2: generator
+
 
         transport = nodemailer.createTransport options
 
@@ -668,8 +765,10 @@ class Account extends cozydb.CozyModel
             clearTimeout timeout
 
             if @smtpMethod isnt 'NONE'
-                connection.login auth, (err) ->
-                    if err then reject new AccountConfigError 'auth', err
+                connection.login auth, (err) =>
+                    if err
+                        field = if @smtpLogin then 'smtpAuth' else 'auth'
+                        reject new AccountConfigError field, err
                     else callback null
                     connection.close()
             else

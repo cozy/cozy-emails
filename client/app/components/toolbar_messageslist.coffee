@@ -19,9 +19,11 @@ module.exports = ToolbarMessagesList = React.createClass
         messages:             React.PropTypes.object.isRequired
         edited:               React.PropTypes.bool.isRequired
         selected:             React.PropTypes.object.isRequired
+        allSelected:          React.PropTypes.bool.isRequired
         displayConversations: React.PropTypes.bool.isRequired
         toggleEdited:         React.PropTypes.func.isRequired
         toggleAll:            React.PropTypes.func.isRequired
+        afterAction:          React.PropTypes.func
 
 
     render: ->
@@ -38,12 +40,14 @@ module.exports = ToolbarMessagesList = React.createClass
             button
                 role:                     'menuitem'
                 'aria-selected':          @props.edited
-                onClick:                  @props.toggleEdited
+                onClick:                  @props.toggleAll
 
                 i className: classer
                     fa:                  true
                     'fa-square-o':       not @props.edited
-                    'fa-check-square-o': @props.edited
+                    'fa-check-square-o': @props.allSelected
+                    'fa-minus-square-o': @props.edited and
+                                         not @props.allSelected
 
             if @props.edited
                 ActionsToolbarMessagesList
@@ -53,11 +57,16 @@ module.exports = ToolbarMessagesList = React.createClass
                     messages:             @props.messages
                     selected:             @props.selected
                     displayConversations: @props.displayConversations
+                    afterAction:          @props.afterAction
             unless @props.edited
                 FiltersToolbarMessagesList
-                    accountID: @props.accountID
-                    mailboxID: @props.mailboxID
+                    accountID:   @props.accountID
+                    mailboxID:   @props.mailboxID
+                    queryParams: @props.queryParams
+                    filter:      @props.filter
             unless @props.edited
                 SearchToolbarMessagesList
-                    accountID: @props.accountID
-                    mailboxID: @props.mailboxID
+                    accountID:   @props.accountID
+                    mailboxID:   @props.mailboxID
+                    queryParams: @props.queryParams
+                    filter:      @props.filter

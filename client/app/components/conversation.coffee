@@ -6,17 +6,19 @@ classer = React.addons.classSet
 RouterMixin = require '../mixins/router_mixin'
 {MessageFlags} = require '../constants/app_constants'
 
+LayoutActionCreator = require '../actions/layout_action_creator'
+
+
 module.exports = React.createClass
     displayName: 'Conversation'
 
     mixins: [RouterMixin]
 
     propTypes:
-        message              : React.PropTypes.object
         conversation         : React.PropTypes.object
+        conversationID       : React.PropTypes.string
         selectedAccountID    : React.PropTypes.string.isRequired
         selectedAccountLogin : React.PropTypes.string.isRequired
-        readability          : React.PropTypes.bool.isRequired
         selectedMailboxID    : React.PropTypes.string
         mailboxes            : React.PropTypes.object.isRequired
         settings             : React.PropTypes.object.isRequired
@@ -30,9 +32,31 @@ module.exports = React.createClass
                not(_.isEqual(nextProps, @props))
 
 
-    getInitialState: ->
-        expanded: []
+    # Init an array with keys of expanded articles
+    _initExpanded: (props) ->
+        props ?= @props
+        expanded = []
+        if props.conversation?
+            # set first expanded message: first unseen or last of conversation
+            props.conversation.map((message, key) ->
+                isUnread = MessageFlags.SEEN not in message.get 'flags'
+                isLast   = key is props.conversation.length - 1
+                if (expanded.length is 0 and (isUnread or isLast))
+                    expanded.push key
+            ).toJS()
+        return expanded
 
+    getInitialState: ->
+        # compact: set to true to not display all messages in conversation
+        return {
+            expanded: @_initExpanded()
+            compact: true
+        }
+
+    componentWillReceiveProps: (props) ->
+        if props.conversation?.length isnt @props.conversation?.length
+            expanded = @_initExpanded(props)
+            @setState expanded: expanded, compact: true
 
     renderToolbar: ->
         Toolbar
@@ -48,10 +72,13 @@ module.exports = React.createClass
         # allow the Message component to update current active message
         # in conversation. Needed to open the first unread message when
         # opening a conversation
-        setActive = (id) =>
-            @props.conversation.map((message, key) =>
-                @_activeKey = key if message.get('id') is id
-            ).toJS()
+        toggleActive = =>
+            expanded = @state.expanded[..]
+            if key in expanded
+                expanded = expanded.filter (id) -> return key isnt id
+            else
+                expanded.push key
+            @setState expanded: expanded
 
         Message
             ref                 : 'message'
@@ -67,22 +94,22 @@ module.exports = React.createClass
             settings            : @props.settings
             displayConversations: @props.displayConversation
             useIntents          : @props.useIntents
-            setActive           : setActive
+            toggleActive        : toggleActive
 
 
     renderGroup: (messages, key) ->
-        if messages.length > 3 and key not in @state.expanded
+        # if there are more than 3 messages, by default only render
+        # first and last ones
+        if messages.length > 3 and @state.compact
             items = []
             [first, ..., last] = messages
             items.push @renderMessage(first, false)
             items.push button
                 className: 'more'
                 onClick: =>
-                    expanded = @state.expanded[..]
-                    expanded.push key
-                    @setState expanded: expanded
+                    @setState compact: false
+                i className: 'fa fa-refresh'
                 t 'load more messages', messages.length - 2
-                i className: 'fa fa-ellipsis-v'
             items.push @renderMessage(last, false)
         else
             items = (@renderMessage(key, false) for key in messages)
@@ -91,20 +118,20 @@ module.exports = React.createClass
 
 
     render: ->
-        if not @props.message? or not @props.conversation
-            return p null, t "app loading"
+        if not @props.conversation
+            return section
+                key: 'conversation'
+                className: 'conversation panel'
+                'aria-expanded': true,
+                p null, t "app loading"
 
+        message = @props.conversation.get 0
         # Sort messages in conversation to find seen messages and group them
         messages = []
         lastMessageIndex = @props.conversation.length - 1
         @props.conversation.map((message, key) =>
-            isSeen = MessageFlags.SEEN in message.get 'flags'
-
-            # set first active message: first unseen or last of conversation
-            if (not @_activeKey? and (not isSeen or key is lastMessageIndex)) or
-            key is @_activeKey
+            if key in @state.expanded
                 messages.push key
-                @_activeKey = key
             else
                 [..., last] = messages
                 messages.push(last = []) unless _.isArray(last)
@@ -118,11 +145,16 @@ module.exports = React.createClass
             'aria-expanded': true,
 
             header null,
-                @renderToolbar()
                 h3
                     className: 'conversation-title'
-                    'data-message-id': @props.message.get 'id'
-                    @props.message.get 'subject'
+                    'data-message-id': message.get 'id'
+                    'data-conversation-id': message.get 'conversationID'
+                    message.get 'subject'
+                @renderToolbar()
+                a
+                    className: 'clickable btn btn-default fa fa-close'
+                    href: @buildClosePanelUrl 'second'
+                    onClick: LayoutActionCreator.minimizePreview
 
             for glob, index in messages
                 if _.isArray glob

@@ -3,8 +3,6 @@
 
 LayoutActionCreator = require '../actions/layout_action_creator'
 
-MessageStore = require '../stores/message_store'
-
 DateRangePicker = require './date_range_picker'
 
 
@@ -16,38 +14,52 @@ module.exports = FiltersToolbarMessagesList = React.createClass
         mailboxID: React.PropTypes.string.isRequired
 
     getInitialState: ->
-        flagged:  false
-        unseen:   false
-        attach:   false
-        date:     false
-        expanded: false
+        expanded:  false
 
 
-    _resetFiltersState: (name) ->
-        filters =
-            flagged: false
-            unseen:  false
-            attach:  false
-
-        filters[name] = not @state[name]
-        @setState filters
+    shouldComponentUpdate: (nextProps, nextState) ->
+        should = not(_.isEqual(nextState, @state)) or
+            not (_.isEqual(nextProps, @props))
+        return should
 
 
-    showList: ->
-        params           = _.clone(MessageStore.getParams())
-        params.accountID = @props.accountID
-        params.mailboxID = @props.mailboxID
-        LayoutActionCreator.showMessageList parameters: params
+    showList: (filter, params) ->
+        sort =
+            order:  '-'
+            field:  'date'
+        if params?
+            # always close message preview before filtering
+            window.cozyMails.messageClose()
+            [sort.before, sort.after] = params
+        else
+            sort.after = sort.before = ''
+        LayoutActionCreator.showFilteredList filter, sort
+
+
+    onDateFilter: (start, end) ->
+        if !!start and !!end
+            params = [start, end]
+        else
+            params = false
+
+        @showList '-', params
 
 
     toggleFilters: (name) ->
-        filter = MessageFilter[if @state[name] then 'ALL' else name.toUpperCase()]
-        LayoutActionCreator.filterMessages filter
-        @showList()
-        @_resetFiltersState name
+        if @props.filter is name
+            filter = '-'
+        else
+            filter = name
+
+        @showList filter, null
 
 
     render: ->
+        dateFiltered = @props.queryParams.before isnt '-' and
+                       @props.queryParams.before isnt '1970-01-01T00:00:00.000Z' and
+                       @props.queryParams.before isnt undefined and
+                       @props.queryParams.after isnt undefined and
+                       @props.queryParams.after isnt '-'
         div
             role:            'group'
             className:       'filters'
@@ -60,38 +72,37 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
             button
                 role:                     'menuitem'
-                'aria-selected':          @state.unseen
-                onClick:                  @toggleFilters.bind(@, 'unseen')
+                'aria-selected':          @props.filter is MessageFilter.UNSEEN
+                onClick:                  @toggleFilters.bind(@, MessageFilter.UNSEEN)
                 'aria-describedby':       Tooltips.FILTER_ONLY_UNREAD
                 'data-tooltip-direction': 'bottom'
 
                 i className: 'fa fa-circle'
                 span className: 'btn-label', t 'filters unseen'
-                # span className: 'badge', '##'
 
             button
                 role:                     'menuitem'
-                'aria-selected':          @state.flagged
-                onClick:                  @toggleFilters.bind(@, 'flagged')
+                'aria-selected':          @props.filter is MessageFilter.FLAGGED
+                onClick:                  @toggleFilters.bind(@, MessageFilter.FLAGGED)
                 'aria-describedby':       Tooltips.FILTER_ONLY_IMPORTANT
                 'data-tooltip-direction': 'bottom'
 
                 i className: 'fa fa-star'
                 span className: 'btn-label', t 'filters flagged'
-                # span className: 'badge', '##'
 
             button
                 role:                     'menuitem'
-                'aria-selected':          @state.attach
-                onClick:                  @toggleFilters.bind(@, 'attach')
+                'aria-selected':          @props.filter is MessageFilter.ATTACH
+                onClick:                  @toggleFilters.bind(@, MessageFilter.ATTACH)
                 'aria-describedby':       Tooltips.FILTER_ONLY_WITH_ATTACHMENT
                 'data-tooltip-direction': 'bottom'
 
                 i className: 'fa fa-paperclip'
                 span className: 'btn-label', t 'filters attach'
-                # span className: 'badge', '##'
 
-            # DateRangePicker()
+            DateRangePicker
+                active: dateFiltered
+                onDateFilter: @onDateFilter
 
 
     toggleExpandState: ->

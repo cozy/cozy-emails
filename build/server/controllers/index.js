@@ -20,6 +20,11 @@ log = require('../utils/logging')({
 });
 
 module.exports.main = function(req, res, next) {
+  var progress;
+  progress = cozydb.getRequestsReindexingProgress();
+  if (progress < 1) {
+    return res.render('reindexing');
+  }
   return async.series([
     function(cb) {
       return Settings.getDefault(cb);
@@ -28,43 +33,44 @@ module.exports.main = function(req, res, next) {
     }, function(cb) {
       return Account.clientList(cb);
     }, function(cb) {
-      return Contact.requestWithPictures('all', {}, cb);
+      return Contact.list(cb);
     }
   ], function(err, results) {
     var accounts, contacts, imports, locale, refreshes, settings;
     refreshes = ImapReporter.summary();
     if (err) {
-      log.error(err.stack);
+      log.error("err on index", err.stack);
       imports = "console.log(\"" + err + "\");\nwindow.locale = \"en\"\nwindow.refreshes = []\nwindow.accounts  = []\nwindow.contacts  = []";
     } else {
       settings = results[0], locale = results[1], accounts = results[2], contacts = results[3];
-      imports = "window.settings  = " + (JSON.stringify(settings)) + "\nwindow.refreshes = " + (JSON.stringify(refreshes)) + ";\nwindow.locale    = \"" + locale + "\";\nwindow.accounts  = " + (JSON.stringify(accounts)) + ";\nwindow.contacts  = " + (JSON.stringify(contacts)) + ";";
+      imports = "window.settings  = " + (JSON.stringify(settings)) + "\nwindow.refreshes = " + (JSON.stringify(refreshes)) + ";\nwindow.locale    = \"" + locale + "\";\nwindow.accounts  = " + (JSON.stringify(accounts)) + ";\nwindow.contacts  = " + (JSON.stringify(contacts)) + ";\nwindow.app_env   = \"" + process.env.NODE_ENV + "\";";
     }
-    return res.render('index.jade', {
+    return res.render('index', {
       imports: imports
     });
   });
 };
 
 module.exports.refresh = function(req, res, next) {
-
-  /*
-  if req.query?.all
-      limitByBox    = null
-      onlyFavorites = false
-  else
-      limitByBox    = CONSTANTS.LIMIT_BY_BOX
-      onlyFavorites = true
-  Account.refreshAllAccounts limitByBox, onlyFavorites, (err) ->
-      log.error "REFRESHING ACCOUNT FAILED", err if err
-      return next err if err
-      res.send refresh: 'done'
-   */
-  return setTimeout(function() {
+  var limitByBox, onlyFavorites, ref;
+  if ((ref = req.query) != null ? ref.all : void 0) {
+    limitByBox = null;
+    onlyFavorites = false;
+  } else {
+    limitByBox = CONSTANTS.LIMIT_BY_BOX;
+    onlyFavorites = true;
+  }
+  return Account.refreshAllAccounts(limitByBox, onlyFavorites, function(err) {
+    if (err) {
+      log.error("REFRESHING ACCOUNT FAILED", err);
+    }
+    if (err) {
+      return next(err);
+    }
     return res.send({
       refresh: 'done'
     });
-  }, 2000);
+  });
 };
 
 module.exports.refreshes = function(req, res, next) {

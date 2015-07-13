@@ -2,44 +2,53 @@ a
     color basecolor
 
 a:hover
-    color actioncolor
+    color darken(basecolor, 20%)
 
 input
 select
 textarea
 .form-control
-    border 1px solid basecolor
+    border 1px solid #ddd
     border-radius 0
     font-family 'Source Sans Pro', sans-serif
     color #333
     font-size: 16px
     height 2em
+    box-shadow none
 
     &:hover
-        border 1px solid actioncolor
+        border-color basecolor
 
     &:focus
     &:active
+        border-color basecolor
         box-shadow none
 
 .modal-header
-    background-color bluegreen
-    color white
-    font-family 'Maven Pro', sans-serif
-    font-size 1.75em
+    background-color #f2f2f2
+    color #333
+    font-size 1.5em
     padding 1em
     border-top-left-radius .25em
     border-top-right-radius .25em
 
+    h4
+        font-size 1.5rem
+
 .modal-body
     font-family 'Source Sans Pro', sans-serif
-    min-height 10em
-
+    min-height 5em
+.modal-body.no-content
+    min-height auto
+.modal-footer
+    margin-top 0
+    text-align left
 
 /*      COZY BUTTONS    */
 .btn
   // position relative for spinner
   position relative
+  text-transform uppercase
 
   &.btn-cozy
     background-color basecolor
@@ -52,8 +61,8 @@ textarea
       border-bottom-color white
 
     &:hover
-      background-color actioncolor
-      border-color actioncolor
+      background-color darken(basecolor, 20%)
+      border-color darken(basecolor, 20%)
 
     &:active
     &:focus
@@ -72,8 +81,8 @@ textarea
     color white
 
     &:hover
-      background-color actioncolor
-      border-color actioncolor
+      background-color darken(contrastcolor, 20%)
+      border-color darken(contrastcolor, 20%)
 
 .btn.btn-cozy-non-default
     color basecolor
@@ -81,7 +90,7 @@ textarea
 
     &:hover
         text-decoration underline
-        color actioncolor
+        color darken(basecolor, 20%)
 
     &:active
     &:focus

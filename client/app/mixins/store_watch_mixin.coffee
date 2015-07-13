@@ -20,5 +20,6 @@ module.exports = StoreWatchMixin = (stores) ->
 
     # Update state with store values.
     _setStateFromStores: ->
-        @setState @getStateFromStores()
+        if @isMounted()
+            @setState @getStateFromStores()
 

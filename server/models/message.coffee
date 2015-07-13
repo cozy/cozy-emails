@@ -133,6 +133,8 @@ module.exports = class Message extends cozydb.CozyModel
             .filter (mid) -> mid # ignore unparsable messageID
 
 
+        log.debug "findConversationID", references, mail.normSubject,
+            isReplyOrForward
         if references.length
             # find all messages in references
             keys = references.map (mid) -> [mail.accountID, 'mid', mid]
@@ -148,6 +150,7 @@ module.exports = class Message extends cozydb.CozyModel
             key = [mail.accountID, 'subject', mail.normSubject]
             Message.rawRequest 'dedupRequest', {key}, (err, rows) ->
                 return callback err if err
+                log.debug "found similar", rows.length
                 Message.pickConversationID rows, callback
 
         # give it a random uid
@@ -176,6 +179,61 @@ module.exports = class Message extends cozydb.CozyModel
                 uid = row.key[2]
                 result[uid] = [row.id, row.value]
             callback null, result
+
+    # Public: get messages ids in cozy by their uids
+    #
+    # mailboxID - {String} id of the mailbox to check
+    # uids - {Array} of {String}  uids to fetch
+    #
+    # Returns (callback) an {Object} with uids as keys and
+    #                    couchdbid as values
+    @indexedByUIDs: (mailboxID, uids, callback) ->
+        keys = uids.map (uid) -> ['uid', mailboxID, parseInt(uid)]
+        Message.rawRequest 'byMailboxRequest',
+            reduce: false
+            keys: keys
+            include_docs: true
+        , (err, rows) ->
+            return callback err if err
+            result = {}
+            for row in rows
+                uid = row.key[2]
+                result[uid] = new Message(row.doc)
+            callback null, result
+
+    # Public: get messages in cozy by their uids
+    #
+    # mailboxID - {String} id of the mailbox to check
+    # uids - {Array} of {String}  uids to fetch
+    #
+    # Returns (callback) an {Array} of {Messages}
+    @byUIDs: (mailboxID, uids, callback) ->
+        keys = uids.map (uid) -> ['uid', mailboxID, uid]
+        Message.rawRequest 'byMailboxRequest',
+            reduce: false
+            keys: keys
+            include_docs: true
+        , (err, rows) ->
+            return callback err if err
+            messages = rows.map (row) -> new Message row.doc
+            callback null, messages
+
+
+    # Public: get messages in cozy by their uids
+    #
+    # mailboxID - {String} id of the mailbox to check
+    #
+    # Returns (callback) an {Array} of {String} uids in the cozy
+    @UIDsInCozy: (mailboxID, callback) ->
+        Message.rawRequest 'byMailboxRequest',
+            startkey: ['uid', mailboxID]
+            endkey: ['uid', mailboxID, {}]
+            reduce: true
+            group_level: 3
+         , (err, rows) ->
+            return callback err if err
+            uids = (row.key[2] for row in rows)
+            callback null, uids
 
     # Public: find a message by its message id
     #
@@ -522,7 +580,9 @@ module.exports = class Message extends cozydb.CozyModel
     #           :uid - {String} the uid
     # ignoreInCount - {Boolean} mark this message as ignored in counts.
     #
-    # Returns (callback) {Message} the updated Message
+    # Returns (callback) {Object} information about what happened
+    #           :shouldNotif - {Boolean} whether a new unread message was added
+    #           :actuallyAdded - {Boolean} whether a message was actually added
     @fetchOrUpdate: (box, msg, callback) ->
         {mid, uid} = msg
         log.debug "fetchOrUpdate", box.id, mid, uid
@@ -547,12 +607,19 @@ module.exports = class Message extends cozydb.CozyModel
     #
     # box - {Mailbox} the mailbox
     #
-    # Returns (callback) {Number} of messages in the search
+    # Returns (callback) {Object} information about what happened
+    #           :shouldNotif - {Boolean} always false
+    #           :actuallyAdded - {Boolean} wheter a message was actually added
     markTwin: (box, callback) ->
         hasTwin = @hasTwin or []
-        return callback null unless box.id in hasTwin
-        hasTwin.push box.id
-        @updateAttributes {hasTwin}, callback
+        if box.id in hasTwin
+            # already noted
+            callback null, {shouldNotif: false, actuallyAdded: false}
+
+        else
+            hasTwin.push box.id
+            @updateAttributes {hasTwin}, (err) ->
+                callback err, {shouldNotif: false, actuallyAdded: true}
 
 
     # Public: add the message to a mailbox in the cozy
@@ -561,12 +628,18 @@ module.exports = class Message extends cozydb.CozyModel
     # uid - {Number} uid of the message in the mailbox
     # callback - Function(err, {Message} updated)
     #
-    # Returns void
+    # Returns (callback) {Object} information about what happened
+    #           :shouldNotif - {Boolean} always false
+    #           :actuallyAdded - {Boolean} always true
     addToMailbox: (box, uid, callback) ->
         log.info "MAIL #{box.path}:#{uid} ADDED TO BOX"
-        mailboxIDs = @mailboxIDs or {}
+        mailboxIDs = {}
+        mailboxIDs[key] = value for key, value of @mailboxIDs or {}
         mailboxIDs[box.id] = uid
-        @updateAttributes {mailboxIDs}, callback
+        changes = {mailboxIDs}
+        changes.ignoreInCount = true if box.ignoreInCount()
+        @updateAttributes changes, (err) ->
+            callback err, {shouldNotif: false, actuallyAdded: true}
 
     # Public: helper to check if a message is in a box
     #
@@ -574,7 +647,7 @@ module.exports = class Message extends cozydb.CozyModel
     #
     # Returns {Boolean} whether this message is in the box or not
     isInMailbox: (box) ->
-        return @mailboxIDs[box.id]?
+        return @mailboxIDs[box.id]? and @mailboxIDs[box.id] isnt -1
 
     # Public: remove a message from a mailbox in the cozy
     # if the message becomes an orphan, we destroy it
@@ -587,7 +660,8 @@ module.exports = class Message extends cozydb.CozyModel
         log.debug ".removeFromMailbox", @id, box.label
         callback = noDestroy unless callback
 
-        mailboxIDs = @mailboxIDs
+        mailboxIDs = {}
+        mailboxIDs[key] = value for key, value of @mailboxIDs or {}
         delete mailboxIDs[box.id]
 
         isOrphan = Object.keys(mailboxIDs).length is 0
@@ -596,161 +670,6 @@ module.exports = class Message extends cozydb.CozyModel
         if isOrphan and not noDestroy then @destroy callback
         else @updateAttributes {mailboxIDs}, callback
 
-
-    # Public: apply a json-patch to the message in both cozy & imap
-    #
-    # patch - {Object} the json-patch
-    # callback - Function(err, {Message} updated)
-    #
-    # Returns void
-    applyPatchOperations: (patch, callback) ->
-        log.debug ".applyPatchOperations", patch
-
-        # copy the fields
-        newmailboxIDs = {}
-        newmailboxIDs[boxid] = uid for boxid, uid of @mailboxIDs
-
-        # scan the patch and change the fields
-        boxOps = {addTo: [], removeFrom: []}
-        for operation in patch when operation.path.indexOf('/mailboxIDs/') is 0
-            boxid = operation.path.substring 12
-            if operation.op is 'add'
-                boxOps.addTo.push boxid
-                newmailboxIDs[boxid] = -1
-            else if operation.op is 'remove'
-                boxOps.removeFrom.push boxid
-                delete newmailboxIDs[boxid]
-            else return callback new Error """
-                modifying UID is not possible, bad operation #{operation.op}
-            """
-
-        flagsOps = {add: [], remove: []}
-        for operation in patch when operation.path.indexOf('/flags/') is 0
-            index = parseInt operation.path.substring 7
-            if operation.op is 'add'
-                flagsOps.add.push operation.value
-
-            else if operation.op is 'remove'
-                flagsOps.remove.push @flags[index]
-
-            else if operation.op is 'replace'
-                if @flags[index] isnt operation.value
-                    flagsOps.remove.push @flags[index]
-                    flagsOps.add.push operation.value
-
-        # create the newflags
-        newflags = @flags
-        newflags = _.difference newflags, flagsOps.remove
-        newflags = _.union newflags, flagsOps.add
-
-        # applyMessageChanges will perform operation in IMAP
-        @imap_applyChanges newflags, newmailboxIDs, boxOps, (err, changes) =>
-            return callback err if err
-            if Object.keys(changes.mailboxIDs).length is 0
-                @destroy callback
-            else
-                @updateAttributes changes, callback
-
-    # Public: apply changes of flags and boxes to a message in imap, properly
-    # set flags and keywords, then copy and remove the message as appropriate.
-    #
-    # newflags - {Array} of {String} flags after the change
-    # newmailboxIDs - {Array} of {String} flags after the change
-    # callback - Function(err, {Message} updated)
-    #
-    # Returns void
-    imap_applyChanges: (newflags, newmailboxIDs, boxOps, callback) ->
-        log.debug ".applyChanges", newflags, newmailboxIDs
-
-        oldflags = @flags
-
-        Mailbox.getBoxesIndexedByID @accountID, (err, boxIndex) =>
-
-            return callback err if err
-            for boxID, box of boxIndex
-                box.uid = @mailboxIDs[boxID]
-
-            # ERROR CASES
-            for boxid in boxOps.addTo when not boxIndex[boxid]
-                return callback new Error "the box ID=#{boxid} doesn't exists"
-
-            shouldIgnoreAfterUpdate = Object.keys(newmailboxIDs)
-                                            .map (id) -> boxIndex[id]
-                                            .some (box) -> box.ignoreInCount()
-
-            @doASAP (imap, releaseImap) =>
-
-                operations = []
-                Object.keys(@mailboxIDs).forEach (boxid) =>
-                    uidInBox  = @mailboxIDs[boxid]
-                    permFlags = null
-
-                    operations = operations.concat [
-
-                        # step 1 - open one box at random
-                        (cb) =>
-                            path = boxIndex[boxid].path
-                            log.debug "CHANGING FLAGS OF #{@id} (#{@subject}) in #{boxid} #{path}"
-                            imap.openBox path, (err, imapBox) ->
-                                return cb err if err
-                                permFlags = imapBox.permFlags
-                                log.debug "SUPPORTED FLAGS", permFlags
-                                cb null
-
-                        # step 2a - set keywords
-                        (cb) ->
-                            keywords = _.difference newflags, permFlags
-                            if keywords.length is 0
-                                oldkeywords = _.difference oldflags, permFlags
-                                if oldkeywords.length isnt 0
-                                    imap.delKeywords uidInBox, oldkeywords, cb
-                                else cb null
-                            else
-                                imap.setKeywords uidInBox, keywords, cb
-
-                        # step 2b - set flags
-                        (cb) ->
-                            flags = _.intersection newflags, permFlags
-                            if flags.length is 0
-                                oldpflags = _.intersection oldflags, permFlags
-                                if oldpflags.length isnt 0
-                                    imap.delFlags uidInBox, oldpflags, cb
-                                else cb null
-                            else
-                                imap.setFlags uidInBox, flags, cb
-
-                        # step 3 - copy the message to all addTo
-                        (cb) ->
-                            paths = boxOps.addTo.map (destID) ->
-                                boxIndex[destID].path
-                            log.debug "add TO", paths
-
-                            imap.multicopy uidInBox, paths, (err, uids) ->
-                                return callback err if err
-                                for i in [0..uids.length - 1] by 1
-                                    destID = boxOps.addTo[i]
-                                    newmailboxIDs[destID] = uids[i]
-                                cb null
-                        # step 4 - remove the message from all removeFrom
-                        (cb) ->
-                            #paths = [{path:xxx, uid:xxx},{path:xxx, uid:xxx}]
-                            paths = boxOps.removeFrom.map (removeboxid) ->
-                                {path, uid} = boxIndex[removeboxid]
-                                return {path, uid}
-                            log.debug "remove FROM", paths
-                            imap.multiremove paths, cb
-
-                    ]
-
-
-                async.series operations, releaseImap
-
-            , (err) ->
-                return callback err if err
-                callback null,
-                    ignoreInCount: shouldIgnoreAfterUpdate
-                    mailboxIDs: newmailboxIDs
-                    flags: newflags
 
 
     # Public: Create a message from a raw imap message.
@@ -863,100 +782,195 @@ module.exports = class Message extends cozydb.CozyModel
         return raw
 
 
-    # Public: move this message to the trash Mailbox
+    # Public : prepare a list of message for processing by grouping them by
+    # mailbox and fetching boxes paths.
     #
-    # account - the {Account} this message is from
+    # messages - {Array} of {Message}
     #
-    # Returns (callback) {Message} the updated message
-    moveToTrash: (account, callback) ->
-        trashBoxID = account.trashMailbox
-        mailboxes = Object.keys(@mailboxIDs)
+    # Returns (callback) an {Object} with keys=boxID and {Object} values
+    #       :box - the {Mailbox}
+    #       :messages - {Array} of {Message} in the box
+    @groupWithBox: (messages, callback) ->
+        accountID = messages[0].accountID
+        Mailbox.getBoxesIndexedByID accountID, (err, boxIndex) ->
+            return callback err if err
+            messagesIndex = {}
+            for message in messages
+                for boxID, uid of message.mailboxIDs
+                    messagesIndex[boxID] ?= []
+                    messagesIndex[boxID].push message
 
-        unless trashBoxID
-            callback new AccountConfigError 'trashMailbox'
+            callback null, {boxIndex, messagesIndex}
 
-        else if trashBoxID in mailboxes
-            # message is already in trash
-            # @TODO : expunge ?
-            callback null
+    @doGroupedByBox: (messages, iterator, done) ->
+        return done null if messages.length is 0
 
-        else
-            # make a patch that remove from all boxes and add to trash
-            patch = for boxid in mailboxes
-                op: 'remove'
-                path: "/mailboxIDs/#{boxid}"
-            patch.push
-                op: 'add'
-                path: "/mailboxIDs/#{trashBoxID}"
-                value: -1
+        accountID = messages[0].accountID
+        Message.groupWithBox messages, (err, {boxIndex, messagesIndex}) ->
+            return done err if err
+            state =
+                boxIndex: boxIndex
+            async.eachSeries Object.keys(messagesIndex), (boxID, next) ->
+                state.box = boxIndex[boxID]
+                state.messagesInBox = messagesIndex[boxID]
+                iterator2 = (imap, imapBox, releaseImap) ->
+                    state.imapBox = imapBox
+                    state.uids = state.messagesInBox.map (msg) ->
+                        msg.mailboxIDs[state.box.id]
+                    iterator imap, state, releaseImap
 
-            @applyPatchOperations patch, callback
+                pool = ImapPool.get(accountID)
+                pool.doASAPWithBox state.box, iterator2, next
+            , done
 
-    # Public: add a flag to this message in cozy & imap
-    #
-    # flag - {String} the flag to add
-    #
-    # Returns (callback) {Message} the updated message
-    addFlag: (flag, callback) ->
-        patch = [
-            op: 'add'
-            path: "/flags/"
-            value: flag
-        ]
+    @batchAddFlag: (messages, flag, callback) ->
 
-        @applyPatchOperations patch, callback
+        # dont add flag twice
+        messages = messages.filter (msg) -> flag not in msg.flags
 
-    # Public: removeFlag
-    #
-    # flag - {String} the flag to add
-    #
-    # Returns (callback) {Message} the updated message
-    removeFlag: (flag, callback) ->
+        Message.doGroupedByBox messages, (imap, state, next) ->
+            imap.addFlags state.uids, flag, next
+        , (err) ->
+            return callback err if err
+            async.mapSeries messages, (message, next) ->
+                newflags = message.flags.concat flag
+                message.updateAttributes flags: newflags, (err) ->
+                    next err, message
+            , callback
 
-        index = @flags.indexOf flag
-        if index is -1
-            return callback null, this
+    @batchRemoveFlag: (messages, flag, callback) ->
 
-        patch = [
-            op: 'remove'
-            path: "/flags/#{index}"
-        ]
+        # dont remove flag if it wasnt
+        messages = messages.filter (msg) -> flag in msg.flags
 
-        @applyPatchOperations patch, callback
+        Message.doGroupedByBox messages, (imap, state, next) ->
+            imap.delFlags state.uids, flag, next
+        , (err) ->
+            return callback err if err
+            async.mapSeries messages, (message, next) ->
+                newflags = _.without message.flags, flag
+                message.updateAttributes flags: newflags, (err) ->
+                    next err, message
+            , callback
 
-    # Public: move
-    #
-    # from - {String} mailboxID to remove from
-    # to - {String} or {Array} of {Strin} mailboxID to add to
-    #
-    # Returns (callback) {Message} the updated message
-    move: (from, to, callback) ->
+    @batchMove: (messages, from, to, callback) ->
 
-        to = [to] unless Array.isArray to
+        to = [to] unless Array.isArray(to)
 
-        patch = [
-            op: 'remove'
-            path: "/mailboxIDs/#{from}"
-        ].concat to.map (boxID) ->
-            op: 'add'
-            path: "/mailboxIDs/#{boxID}"
-            value: -1
+        # ignore messages which are already in the destination set
+        messages = messages.filter (msg) ->
+            boxes = Object.keys(msg.mailboxIDs)
+            return _.xor(boxes, to).length > 1
 
-        @applyPatchOperations patch, callback
+        fromBox = null
+        destBoxes = null
+        alreadyMoved = []
+        changes = {}
+        ignores = null
 
-    # Public: destroy a message from imap & cozy
-    # the message can not be recovered
-    #
-    # Retruns (callback) at completion
-    imapcozy_destroy: (callback) ->
-        # make a patch that remove from all box
-        # {::applyPatchOperations} will destroy the message
-        mailboxes = Object.keys @mailboxIDs
-        patch = for boxid in mailboxes
-            op: 'remove'
-            path: "/mailboxIDs/#{boxid}"
+        log.debug "batchMove", messages.length, from, to
 
-        @applyPatchOperations patch, callback
+        #@TODO : this needs refactoring
+        # but we want t o publish today
+        Message.doGroupedByBox messages, (imap, state, nextBox) ->
+            fromBox ?= state.boxIndex[from]
+            destBoxes ?= to.map (id) -> state.boxIndex[id]
+            currentBox = state.box
+
+            unless ignores
+                ignores = {}
+                for boxid, box of state.boxIndex when box.ignoreInCount()
+                    ignores[id] = true
+
+            destString = to.join(',')
+
+            if undefined in destBoxes
+                return nextBox new Error """
+                    One of destination boxes #{destString} doesnt exist"""
+
+            # skip destBox
+            return nextBox null if currentBox in destBoxes
+
+            # if no from is provided, messages must be removed from
+            # all boxes,  else if from is provided, messages must be
+            # removed from fromBox
+            mustRemove = currentBox is fromBox or not from
+            moves = []
+            expunges = []
+
+            for message in state.messagesInBox
+                id = message.id
+                uid = message.mailboxIDs[currentBox.id]
+
+                # the message is already in destination
+                if message.mailboxIDs[to] or id in alreadyMoved
+                    if mustRemove
+                        expunges.push uid
+                        changes[id] ?= message.cloneMailboxIDs()
+                        delete changes[id][currentBox.id]
+
+                # move draft to trash = delete draft
+                else if message.isDraft() and from is null
+                    expunges.push uid
+                    changes[id] ?= message.cloneMailboxIDs()
+                    delete changes[id][currentBox.id]
+
+                # we need to move it
+                else
+                    moves.push uid
+                    alreadyMoved.push id
+                    changes[id] ?= message.cloneMailboxIDs()
+                    delete changes[id][currentBox.id]
+                    for destBox in destBoxes
+                        changes[id][destBox.id] = -1
+
+            log.debug "MOVING", moves, "FROM", currentBox.id, "TO", destString
+            log.debug "EXPUNGING", expunges, "FROM", currentBox.id
+
+            paths = destBoxes.map (box) -> box.path
+            imap.multimove moves, paths, (err, result) ->
+                return nextBox err if err
+                imap.multiexpunge expunges, (err) ->
+                    return nextBox err if err
+                    nextBox null
+
+        # END doGrouped
+        , (err) ->
+            return callback err if err
+
+            async.mapSeries messages, (message, next) ->
+                newMailboxIDs = changes[message.id]
+                unless newMailboxIDs
+                    next null, message
+                else
+                    data =
+                        mailboxIDs: newMailboxIDs
+                        ignoreInCount: Object.keys(newMailboxIDs)
+                        .some (id) -> ignores[id]
+                    message.updateAttributes data, (err) ->
+                        next err, message
+
+            , (err, updated) ->
+                return callback err if err
+                return callback null, [] if updated.length is 0 or
+                    not destBoxes?
+
+                # assume there was not so many changes
+                limit = Math.max(100, messages.length*2)
+                async.eachSeries destBoxes, (destBox, cb) ->
+                    destBox.imap_refresh limitByBox: limit, cb
+                , (err) ->
+                    return callback err if err
+                    callback null, updated
+
+
+    @batchTrash: (messages, trashBoxID, callback) ->
+        @batchMove messages, null, trashBoxID, callback
+
+    cloneMailboxIDs: ->
+        out = {}
+        out[boxID] = uid for boxID, uid of @mailboxIDs
+        return out
 
     # Public: wether or not this message
     # is a draft. Consider a message a draft if it is in Draftbox or has
@@ -975,7 +989,6 @@ module.exports = class Message extends cozydb.CozyModel
     # Returns (callback) the result of operation
     doASAP: (operation, callback) ->
         ImapPool.get(@accountID).doASAP operation, callback
-
 
 
 

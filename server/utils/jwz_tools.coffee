@@ -63,11 +63,14 @@ module.exports =
             allowedAttributes[tag] = exAllowed.concat safeAttributes
 
         allowedAttributes.link.push 'href'
+        allowedSchemes = sanitizeHtml.defaults.allowedSchemes
+            .concat ['cid', 'data']
+
         html = sanitizeHtml html,
             allowedTags: allowedTags
             allowedAttributes: allowedAttributes
             allowedClasses: false
-            allowedSchemes: sanitizeHtml.defaults.allowedSchemes.concat ['cid', 'data']
+            allowedSchemes: allowedSchemes
             transformTags:
                 'img': (tag, attribs) ->
                     if attribs.src? and 0 is attribs.src.indexOf 'cid:'

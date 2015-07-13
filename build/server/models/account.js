@@ -21,6 +21,10 @@ Account = (function(superClass) {
     login: String,
     password: String,
     accountType: String,
+    oauthProvider: String,
+    oauthAccessToken: String,
+    oauthRefreshToken: String,
+    initialized: Boolean,
     smtpServer: String,
     smtpPort: Number,
     smtpSSL: Boolean,
@@ -42,7 +46,9 @@ Account = (function(superClass) {
     allMailbox: String,
     favorites: [String],
     patchIgnored: Boolean,
-    signature: String
+    supportRFC4551: Boolean,
+    signature: String,
+    oauthProvider: String
   };
 
   Account.findSafe = function(id, callback) {
@@ -92,6 +98,21 @@ Account = (function(superClass) {
           return cb(null);
         });
       }, function(cb) {
+        var needInit;
+        needInit = allAccounts.filter(function(account) {
+          return account.initialized === false;
+        });
+        return async.eachSeries(needInit, function(account, next) {
+          log.debug("initializing account refreshBoxes", account.id);
+          return account.imap_refreshBoxes(function(err, boxes) {
+            if (err) {
+              return next(err);
+            }
+            log.debug("found " + boxes.length + " boxes");
+            return account.imap_scanBoxesForSpecialUse(boxes, next);
+          });
+        }, cb);
+      }, function(cb) {
         return Mailbox.removeOrphans(existingAccountIDs, function(err, existingIDs) {
           if (err) {
             return cb(err);
@@ -105,7 +126,16 @@ Account = (function(superClass) {
         return async.eachSeries(allAccounts, function(account, cbLoop) {
           return account.applyPatchIgnored(function(err) {
             if (err) {
-              log.error(err);
+              log.error("ignored patch err", err);
+            }
+            return cbLoop(null);
+          });
+        }, cb);
+      }, function(cb) {
+        return async.eachSeries(allAccounts, function(account, cbLoop) {
+          return account.applyPatchConversation(function(err) {
+            if (err) {
+              log.error("conv patch err", err);
             }
             return cbLoop(null);
           });
@@ -175,6 +205,7 @@ Account = (function(superClass) {
 
   Account.createIfValid = function(data, callback) {
     var account, toFetch;
+    data.initialized = true;
     account = new Account(data);
     toFetch = null;
     return async.series([
@@ -257,7 +288,7 @@ Account = (function(superClass) {
       return Mailbox.markAllMessagesAsIgnored(boxID, function(err) {
         if (err) {
           hadError = true;
-          log.error(err);
+          log.error("patch ignored err", err);
         }
         return cb(null);
       });
@@ -276,6 +307,73 @@ Account = (function(superClass) {
         }
       };
     })(this));
+  };
+
+  Account.prototype.applyPatchConversation = function(callback) {
+    var status;
+    log.debug("applyPatchConversation");
+    status = {
+      skip: 0
+    };
+    return async.whilst((function() {
+      return !status.complete;
+    }), (function(_this) {
+      return function(cb) {
+        return _this.applyPatchConversationStep(status, cb);
+      };
+    })(this), callback);
+  };
+
+  Account.prototype.applyPatchConversationStep = function(status, next) {
+    return Message.rawRequest('conversationPatching', {
+      reduce: true,
+      group_level: 2,
+      startkey: [this.id],
+      endkey: [this.id, {}],
+      limit: 1000,
+      skip: status.skip
+    }, (function(_this) {
+      return function(err, rows) {
+        var problems;
+        if (err) {
+          return next(err);
+        }
+        if (rows.length === 0) {
+          status.complete = true;
+          return next(null);
+        }
+        problems = rows.filter(function(row) {
+          return row.value !== null;
+        }).map(function(row) {
+          return row.key;
+        });
+        log.debug("conversationPatchingStep", status.skip, rows.length, problems.length);
+        if (problems.length === 0) {
+          status.skip += 1000;
+          return next(null);
+        } else {
+          return async.eachSeries(problems, _this.patchConversationOne, function(err) {
+            if (err) {
+              return next(err);
+            }
+            status.skip += 1000;
+            return next(null);
+          });
+        }
+      };
+    })(this));
+  };
+
+  Account.prototype.patchConversationOne = function(key, callback) {
+    return Message.rawRequest('conversationPatching', {
+      reduce: false,
+      key: key
+    }, function(err, rows) {
+      if (err) {
+        return callback(err);
+      }
+      return Message.pickConversationID(rows, callback);
+    });
   };
 
   Account.prototype.testConnections = function(callback) {
@@ -386,7 +484,7 @@ Account = (function(superClass) {
       rawObject.mailboxes = mailboxes.map(function(row) {
         var box, clientBox, count, id;
         box = row.doc;
-        id = box.id || row.id;
+        id = (box != null ? box.id : void 0) || row.id;
         count = counts[id];
         return clientBox = {
           id: id,
@@ -404,12 +502,32 @@ Account = (function(superClass) {
   };
 
   Account.prototype.imap_getBoxes = function(callback) {
+    var supportRFC4551;
     log.debug("getBoxes");
+    supportRFC4551 = null;
     return this.doASAP(function(imap, cb) {
+      supportRFC4551 = imap.serverSupports('CONDSTORE');
       return imap.getBoxesArray(cb);
-    }, function(err, boxes) {
-      return callback(err, boxes || []);
-    });
+    }, (function(_this) {
+      return function(err, boxes) {
+        if (err) {
+          return callback(err, []);
+        }
+        if (supportRFC4551 !== _this.supportRFC4551) {
+          log.debug("UPDATING ACCOUNT " + _this.id + " rfc4551=" + _this.supportRFC4551);
+          return _this.updateAttributes({
+            supportRFC4551: supportRFC4551
+          }, function(err) {
+            if (err) {
+              log.warn("fail to update account " + err.stack);
+            }
+            return callback(null, boxes || []);
+          });
+        } else {
+          return callback(null, boxes || []);
+        }
+      };
+    })(this));
   };
 
   Account.prototype.imap_refreshBoxes = function(callback) {
@@ -433,6 +551,9 @@ Account = (function(superClass) {
         return callback(err);
       }
       cozyBoxes = results[0], imapBoxes = results[1];
+      if (account.isTest()) {
+        return callback(null, cozyBoxes, []);
+      }
       toFetch = [];
       toDestroy = [];
       boxToAdd = imapBoxes.filter(function(box) {
@@ -480,7 +601,7 @@ Account = (function(superClass) {
       onlyFavorites = false;
     }
     return this.imap_refreshBoxes(function(err, toFetch, toDestroy) {
-      var nb, reporter, shouldNotifAccount;
+      var nb, reporter, shouldNotifAccount, supportRFC4551;
       if (err) {
         account.setRefreshing(false);
       }
@@ -508,13 +629,15 @@ Account = (function(superClass) {
           return 1;
         }
       });
+      supportRFC4551 = account.supportRFC4551;
       return async.eachSeries(toFetch, function(box, cb) {
         var boxOptions;
         boxOptions = {
           limitByBox: limitByBox,
-          firstImport: firstImport
+          firstImport: firstImport,
+          supportRFC4551: supportRFC4551
         };
-        return box.imap_fetchMails(boxOptions, function(err, shouldNotif) {
+        return box.imap_refresh(boxOptions, function(err, shouldNotif) {
           if (err && !isMailboxDontExist(err)) {
             reporter.onError(err);
           }
@@ -535,12 +658,23 @@ Account = (function(superClass) {
         return async.eachSeries(toDestroy, function(box, cb) {
           return box.destroyAndRemoveAllMessages(cb);
         }, function(err) {
-          account.setRefreshing(false);
-          reporter.onDone();
-          if (shouldNotifAccount) {
-            notifications.accountRefreshed(account);
+          if (err) {
+            account.setRefreshing(false);
           }
-          return callback(null);
+          if (err) {
+            return callback(err);
+          }
+          return account.applyPatchConversation(function(err) {
+            if (err) {
+              log.error("patch conv fail", err);
+            }
+            account.setRefreshing(false);
+            reporter.onDone();
+            if (shouldNotifAccount) {
+              notifications.accountRefreshed(account);
+            }
+            return callback(null);
+          });
         });
       });
     });
@@ -602,7 +736,9 @@ Account = (function(superClass) {
     useRFC6154 = false;
     inboxMailbox = null;
     boxAttributes = Object.keys(Mailbox.RFC6154);
-    changes = {};
+    changes = {
+      initialized: true
+    };
     boxes.map(function(box) {
       var attribute, i, len, type;
       type = box.RFC6154use();
@@ -646,7 +782,7 @@ Account = (function(superClass) {
   };
 
   Account.prototype.sendMessage = function(message, callback) {
-    var inReplyTo, options, transport;
+    var generator, inReplyTo, options, transport;
     if (this.isTest()) {
       return callback(null, {
         messageId: 66
@@ -666,10 +802,22 @@ Account = (function(superClass) {
     if ((this.smtpMethod != null) && this.smtpMethod !== 'NONE') {
       options.authMethod = this.smtpMethod;
     }
-    if (this.smtpMethod !== 'NONE') {
+    if (this.oauthProvider !== 'GMAIL') {
       options.auth = {
         user: this.smtpLogin || this.login,
         pass: this.smtpPassword || this.password
+      };
+    }
+    if (this.oauthProvider === 'GMAIL') {
+      generator = require('xoauth2').createXOAuth2Generator({
+        user: this.login,
+        clientSecret: '1gNUceDM59TjFAks58ftsniZ',
+        clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com',
+        refreshToken: this.oauthRefreshToken
+      });
+      options.service = 'gmail';
+      options.auth = {
+        xoauth2: generator
       };
     }
     transport = nodemailer.createTransport(options);
@@ -720,8 +868,10 @@ Account = (function(superClass) {
         clearTimeout(timeout);
         if (_this.smtpMethod !== 'NONE') {
           return connection.login(auth, function(err) {
+            var field;
             if (err) {
-              reject(new AccountConfigError('auth', err));
+              field = _this.smtpLogin ? 'smtpAuth' : 'auth';
+              reject(new AccountConfigError(field, err));
             } else {
               callback(null);
             }

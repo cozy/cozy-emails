@@ -1,5 +1,4 @@
 {div} = React.DOM
-Modal           = require './modal'
 Toast           = require './toast'
 StoreWatchMixin = require '../mixins/store_watch_mixin'
 LayoutStore      = require '../stores/layout_store'

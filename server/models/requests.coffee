@@ -47,23 +47,21 @@ module.exports =
                     emit ['uid', boxid, uid], doc.flags
 
                     emit ['date', boxid, null, docDate], null
-                    emit ['subject', boxid, null, doc.normSubject], null
 
                     for xflag in ['\\Seen', '\\Flagged', '\\Answered']
 
                         xflag = '!' + xflag if -1 is doc.flags.indexOf(xflag)
 
                         emit ['date', boxid, xflag, docDate], null
-                        emit ['subject', boxid, xflag, doc.normSubject], null
                     if doc.attachments?.length > 0
                         emit ['date', boxid, '\\Attachments', docDate], null
-                        emit ['subject', boxid, '\\Attachments', \
-                                                        doc.normSubject], null
 
                     for sender in doc.from
                         if sender.name?
-                            emit ['from', boxid, null, sender.name, docDate], null
-                        emit ['from', boxid, null, sender.address, docDate], null
+                            emit ['from', boxid, null, sender.name, docDate], \
+                                                                           null
+                        emit ['from', boxid, null, sender.address, docDate], \
+                                                                           null
 
                     # some messages may not have to or cc fields
                     dests = []
@@ -89,6 +87,20 @@ module.exports =
             if doc.normSubject
                 emit [doc.accountID, 'subject', doc.normSubject],
                     doc.conversationID
+
+        conversationPatching:
+            reduce: (key, values, rereduce) ->
+                valuesShouldNotBe = if rereduce then null else values[0]
+                for value in values when value isnt valuesShouldNotBe
+                    return value
+
+                return null
+
+            map: (doc) ->
+                if doc.messageID
+                    emit [doc.accountID, doc.messageID], doc.conversationID
+                for reference in doc.references or []
+                    emit [doc.accountID, reference], doc.conversationID
 
         byConversationID:
             reduce: '_count'

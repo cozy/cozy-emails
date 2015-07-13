@@ -7,6 +7,7 @@ RouterMixin = require '../mixins/router_mixin'
 MailboxList = require './mailbox_list'
 MailboxItem = require './account_config_item'
 {SubTitle, Form} = require './basic_components'
+AccountDelete = require './account_config_delete'
 
 
 module.exports = AccountConfigMailboxes = React.createClass
@@ -35,12 +36,12 @@ module.exports = AccountConfigMailboxes = React.createClass
     # Turn properties into a react state. It mainly set a n array of
     # object for each mailbox set in the properties.
     propsToState: (props) ->
-        state = props
+        state = {}
         state.mailboxesFlat = {}
 
-        if state.mailboxes.value isnt ''
+        if props.mailboxes.value isnt ''
 
-            state.mailboxes.value.map (mailbox, key) ->
+            props.mailboxes.value.map (mailbox, key) ->
                 id = mailbox.get 'id'
                 state.mailboxesFlat[id] = {}
                 ['id', 'label', 'depth'].map (prop) ->
@@ -51,13 +52,13 @@ module.exports = AccountConfigMailboxes = React.createClass
 
 
     render: ->
-        favorites = @state.favoriteMailboxes.value
+        favorites = @props.favoriteMailboxes.value
 
-        if @state.mailboxes.value isnt '' and favorites isnt ''
-            mailboxes = @state.mailboxes.value.map (mailbox, key) =>
+        if @props.mailboxes.value isnt '' and favorites isnt ''
+            mailboxes = @props.mailboxes.value.map (mailbox, key) =>
                 try
                     favorite = favorites.get(mailbox.get('id'))?
-                    MailboxItem {accountID: @state.id.value, mailbox, favorite}
+                    MailboxItem {accountID: @props.id.value, mailbox, favorite}
                 catch error
                     console.error error, favorites
             .toJS()
@@ -140,6 +141,10 @@ module.exports = AccountConfigMailboxes = React.createClass
                             onChange: (mailbox) =>
                                 @setState newMailboxParent: mailbox
 
+                if @props.selectedAccount?
+                    AccountDelete
+                        selectedAccount: @props.selectedAccount
+
 
     renderError: ->
 
@@ -150,13 +155,13 @@ module.exports = AccountConfigMailboxes = React.createClass
         else if @props.error
             div className: 'alert alert-warning', @props.error.message
 
-        else if Object.keys(@state.errors).length isnt 0
+        else if Object.keys(@props.errors).length isnt 0
             div className: 'alert alert-warning', t 'account errors'
 
 
     renderMailboxChoice: (labelText, box) ->
-        if @state.id? and @state.mailboxes.value isnt ''
-            errorClass = if @state[box].value? then '' else 'has-error'
+        if @props.id? and @props.mailboxes.value isnt ''
+            errorClass = if @props[box].value? then '' else 'has-error'
             div className: "form-group #{box} #{errorClass}",
                 label
                     className: 'col-sm-2 col-sm-offset-2 control-label',
@@ -165,17 +170,12 @@ module.exports = AccountConfigMailboxes = React.createClass
                     MailboxList
                         allowUndefined: true
                         mailboxes: @state.mailboxesFlat
-                        selectedMailboxID: @state[box].value
-                        onChange: @onMailboxChange
+                        selectedMailboxID: @props[box].value
+                        onChange: (mailbox) => @onMailboxChange mailbox, box
 
 
-    # requestChange is asynchroneous, so we need to also call setState to only
-    # call onSubmit once state has really been updated
-    onMailboxChange: (mailbox) =>
-        @state[box].requestChange mailbox
-        newState = {}
-        newState[box] = mailbox
-        @setState newState, =>
+    onMailboxChange: (mailbox, box) ->
+        @props[box].requestChange mailbox, =>
             @props.onSubmit()
 
 
@@ -192,7 +192,7 @@ module.exports = AccountConfigMailboxes = React.createClass
 
         mailbox =
             label: @refs.newmailbox.getDOMNode().value.trim()
-            accountID: @state.id.value
+            accountID: @props.id.value
             parentID: @state.newMailboxParent
 
         AccountActionCreator.mailboxCreate mailbox, (error) =>

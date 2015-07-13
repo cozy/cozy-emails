@@ -24,7 +24,8 @@ Mailbox = (function(superClass) {
     delimiter: String,
     uidvalidity: Number,
     attribs: [String],
-    lastSync: String
+    lastHighestModSeq: String,
+    lastTotal: Number
   };
 
   Mailbox.RFC6154 = {
@@ -111,7 +112,9 @@ Mailbox = (function(superClass) {
         } else {
           log.debug("removeOrphans - found orphan", row.id);
           return Mailbox.destroy(row.id, function(err) {
-            log.error('failed to delete box', row.id);
+            if (err) {
+              log.error('failed to delete box', row.id);
+            }
             return cb(null);
           });
         }
@@ -268,7 +271,7 @@ Mailbox = (function(superClass) {
       return async.eachSeries(ids, function(id, cbLoop) {
         return Message.updateAttributes(id, changes, function(err) {
           if (err) {
-            log.error(err);
+            log.error("markAllMessagesAsIgnored err", err);
             lastError = err;
           }
           return cbLoop(null);
@@ -341,7 +344,7 @@ Mailbox = (function(superClass) {
     depth = this.tree.length - 1;
     path = this.path;
     return this.getSelfAndChildren(function(err, boxes) {
-      log.debug("imapcozy_rename#boxes", boxes, depth);
+      log.debug("imapcozy_rename#boxes", boxes.length, depth);
       if (err) {
         return callback(err);
       }
@@ -390,15 +393,210 @@ Mailbox = (function(superClass) {
     });
   };
 
-  Mailbox.prototype.imap_fetchMails = function(options, callback) {
-    var firstImport, limitByBox, step;
-    limitByBox = options.limitByBox, firstImport = options.firstImport;
-    log.debug("imap_fetchMails", limitByBox);
+  Mailbox.prototype.imap_refresh = function(options, callback) {
+    log.debug("refreshing box");
+    if (!options.supportRFC4551) {
+      log.debug("account doesnt support RFC4551");
+      return this.imap_refreshDeep(options, callback);
+    } else if (this.lastHighestModSeq) {
+      return this.imap_refreshFast(options, (function(_this) {
+        return function(err, shouldNotif) {
+          if (err) {
+            log.warn("refreshFast fail (" + err.stack + "), trying deep");
+            options.storeHighestModSeq = true;
+            return _this.imap_refreshDeep(options, callback);
+          } else {
+            log.debug("refreshFastWorked");
+            return callback(null, shouldNotif);
+          }
+        };
+      })(this));
+    } else {
+      log.debug("no highestmodseq, first refresh ?");
+      options.storeHighestModSeq = true;
+      return this.imap_refreshDeep(options, callback);
+    }
+  };
+
+  Mailbox.prototype.imap_refreshFast = function(options, callback) {
+    var box, noChange;
+    box = this;
+    noChange = false;
+    return box._refreshGetImapStatus(box.lastHighestModSeq, function(err, status) {
+      var changes, highestmodseq, total;
+      if (err) {
+        return callback(err);
+      }
+      changes = status.changes, highestmodseq = status.highestmodseq, total = status.total;
+      return box._refreshCreatedAndUpdated(changes, function(err, info) {
+        var shouldNotif;
+        if (err) {
+          return callback(err);
+        }
+        log.debug("_refreshFast#aftercreates", info);
+        shouldNotif = info.shouldNotif;
+        noChange || (noChange = info.noChange);
+        return box._refreshDeleted(total, info.nbAdded, function(err, info) {
+          if (err) {
+            return callback(err);
+          }
+          log.debug("_refreshFast#afterdelete", info);
+          noChange || (noChange = info.noChange);
+          if (noChange) {
+            return callback(null, false);
+          } else {
+            changes = {
+              lastHighestModSeq: highestmodseq,
+              lastTotal: total,
+              lastSync: new Date().toISOString()
+            };
+            return box.updateAttributes(changes, function(err) {
+              return callback(err, shouldNotif);
+            });
+          }
+        });
+      });
+    });
+  };
+
+  Mailbox.prototype._refreshGetImapStatus = function(modseqno, callback) {
+    return this.doLaterWithBox(function(imap, imapbox, cbReleaseImap) {
+      var changes, highestmodseq, total;
+      highestmodseq = imapbox.highestmodseq;
+      total = imapbox.messages.total;
+      changes = {};
+      if (highestmodseq === modseqno) {
+        return cbReleaseImap(null, {
+          changes: changes,
+          highestmodseq: highestmodseq,
+          total: total
+        });
+      } else {
+        return imap.fetchMetadataSince(modseqno, function(err, changes) {
+          return cbReleaseImap(err, {
+            changes: changes,
+            highestmodseq: highestmodseq,
+            total: total
+          });
+        });
+      }
+    }, callback);
+  };
+
+  Mailbox.prototype._refreshCreatedAndUpdated = function(changes, callback) {
+    var box, nbAdded, shouldNotif, uids;
+    box = this;
+    uids = Object.keys(changes);
+    if (uids.length === 0) {
+      return callback(null, {
+        shouldNotif: false,
+        nbAdded: 0,
+        noChange: true
+      });
+    } else {
+      nbAdded = 0;
+      shouldNotif = false;
+      return Message.indexedByUIDs(box.id, uids, function(err, messages) {
+        if (err) {
+          return callback(err);
+        }
+        return async.eachSeries(uids, function(uid, next) {
+          var flags, message, mid, ref;
+          ref = changes[uid], mid = ref[0], flags = ref[1];
+          uid = parseInt(uid);
+          message = messages[uid];
+          if (message) {
+            return message.updateAttributes({
+              flags: flags
+            }, next);
+          } else {
+            return Message.fetchOrUpdate(box, {
+              mid: mid,
+              uid: uid
+            }, function(err, info) {
+              shouldNotif = shouldNotif || info.shouldNotif;
+              if (info != null ? info.actuallyAdded : void 0) {
+                nbAdded += 1;
+              }
+              return next(err);
+            });
+          }
+        }, function(err) {
+          if (err) {
+            return callback(err);
+          }
+          return callback(null, {
+            shouldNotif: shouldNotif,
+            nbAdded: nbAdded
+          });
+        });
+      });
+    }
+  };
+
+  Mailbox.prototype._refreshDeleted = function(imapTotal, nbAdded, callback) {
+    var box, error, lastTotal;
+    lastTotal = this.lastTotal || 0;
+    log.debug("refreshDeleted L=" + lastTotal + " A=" + nbAdded + " I=" + imapTotal);
+    if (lastTotal + nbAdded === imapTotal) {
+      error = "    NOTHING TO DO";
+      return callback(null, {
+        noChange: true
+      });
+    } else if (lastTotal + nbAdded < imapTotal) {
+      log.warn(lastTotal + " + " + nbAdded + " < " + imapTotal + " on " + this.path);
+      error = "    WRONG STATE";
+      return callback(new Error(error), {
+        noChange: true
+      });
+    } else {
+      error = "    NEED DELETION";
+      box = this;
+      return async.series([
+        function(cb) {
+          return Message.UIDsInCozy(box.id, cb);
+        }, function(cb) {
+          return box.imap_UIDs(cb);
+        }
+      ], function(err, results) {
+        var cozyUIDs, deleted, imapUIDs, uid;
+        cozyUIDs = results[0], imapUIDs = results[1];
+        log.debug("refreshDeleted#uids", cozyUIDs.length, imapUIDs.length);
+        deleted = (function() {
+          var i, len, results1;
+          results1 = [];
+          for (i = 0, len = cozyUIDs.length; i < len; i++) {
+            uid = cozyUIDs[i];
+            if (indexOf.call(imapUIDs, uid) < 0) {
+              results1.push(uid);
+            }
+          }
+          return results1;
+        })();
+        log.debug("refreshDeleted#toDelete", deleted);
+        return Message.byUIDs(box.id, deleted, function(err, messages) {
+          log.debug("refreshDeleted#toDeleteMsgs", messages.length);
+          return async.eachSeries(messages, function(message, next) {
+            return message.removeFromMailbox(box, false, next);
+          }, function(err) {
+            return callback(err, {
+              noChange: false
+            });
+          });
+        });
+      });
+    }
+  };
+
+  Mailbox.prototype.imap_refreshDeep = function(options, callback) {
+    var firstImport, limitByBox, step, storeHighestModSeq;
+    limitByBox = options.limitByBox, firstImport = options.firstImport, storeHighestModSeq = options.storeHighestModSeq;
+    log.debug("imap_refreshDeep", limitByBox);
     step = RefreshStep.initial(options);
     return this.imap_refreshStep(step, (function(_this) {
-      return function(err, shouldNotif) {
+      return function(err, info) {
         var changes;
-        log.debug("imap_fetchMailsEnd", limitByBox);
+        log.debug("imap_refreshDeepEnd", limitByBox);
         if (err) {
           return callback(err);
         }
@@ -406,9 +604,13 @@ Mailbox = (function(superClass) {
           changes = {
             lastSync: new Date().toISOString()
           };
+          if (storeHighestModSeq) {
+            changes.lastHighestModSeq = info.highestmodseq;
+            changes.lastTotal = info.total;
+          }
           return _this.updateAttributes(changes, callback);
         } else {
-          return callback(null, shouldNotif);
+          return callback(null, info.shouldNotif);
         }
       };
     })(this));
@@ -421,6 +623,8 @@ Mailbox = (function(superClass) {
     box = this;
     return this.doLaterWithBox(function(imap, imapbox, cbRelease) {
       step = laststep.getNext(imapbox.uidnext);
+      step.highestmodseq = imapbox.highestmodseq;
+      step.total = imapbox.messages.total;
       if (step === RefreshStep.finished) {
         return cbRelease(null);
       }
@@ -439,7 +643,7 @@ Mailbox = (function(superClass) {
         return callback(err);
       }
       if (!results) {
-        return callback(null, null);
+        return callback(null, null, step);
       }
       cozyIDs = results[0], imapUIDs = results[1];
       toFetch = [];
@@ -497,7 +701,7 @@ Mailbox = (function(superClass) {
   };
 
   Mailbox.prototype.applyFlagsChanges = function(flagsChange, reporter, callback) {
-    log.debug("applyFlagsChange", flagsChange.length);
+    log.debug("applyFlagsChanges", flagsChange.length);
     return async.eachSeries(flagsChange, function(change, cb) {
       return Message.applyFlagsChanges(change.id, change.flags, function(err) {
         if (err) {
@@ -533,55 +737,78 @@ Mailbox = (function(superClass) {
     });
   };
 
+  Mailbox.prototype.applyOperations = function(ops, isFirstImport, callback) {
+    var flagsChange, nbTasks, outShouldNotif, reporter, toFetch, toRemove;
+    toFetch = ops.toFetch, toRemove = ops.toRemove, flagsChange = ops.flagsChange;
+    nbTasks = toFetch.length + toRemove.length + flagsChange.length;
+    outShouldNotif = false;
+    if (nbTasks > 0) {
+      reporter = ImapReporter.boxFetch(this, nbTasks, isFirstImport);
+      return async.series([
+        (function(_this) {
+          return function(cb) {
+            return _this.applyToRemove(toRemove, reporter, cb);
+          };
+        })(this), (function(_this) {
+          return function(cb) {
+            return _this.applyFlagsChanges(flagsChange, reporter, cb);
+          };
+        })(this), (function(_this) {
+          return function(cb) {
+            return _this.applyToFetch(toFetch, reporter, function(err, shouldNotif) {
+              if (err) {
+                return cb(err);
+              }
+              outShouldNotif = shouldNotif;
+              return cb(null);
+            });
+          };
+        })(this)
+      ], function(err) {
+        if (err) {
+          reporter.onError(err);
+        }
+        reporter.onDone();
+        return callback(err, outShouldNotif);
+      });
+    } else {
+      return callback(null, outShouldNotif);
+    }
+  };
+
   Mailbox.prototype.imap_refreshStep = function(laststep, callback) {
     var box;
     log.debug("imap_refreshStep", laststep);
     box = this;
     return this.getDiff(laststep, (function(_this) {
       return function(err, ops, step) {
-        var isFirstImport, nbTasks, reporter, shouldNotifStep;
+        var firstImport, info;
         log.debug("imap_refreshStep#diff", err, ops);
         if (err) {
           return callback(err);
         }
+        info = {
+          shouldNotif: false,
+          total: step.total,
+          highestmodseq: step.highestmodseq
+        };
         if (!ops) {
-          return callback(null, false);
-        }
-        nbTasks = ops.toFetch.length + ops.toRemove.length + ops.flagsChange.length;
-        if (nbTasks > 0) {
-          isFirstImport = laststep.firstImport;
-          reporter = ImapReporter.boxFetch(_this, nbTasks, isFirstImport);
-        }
-        shouldNotifStep = false;
-        return async.series([
-          function(cb) {
-            return _this.applyToRemove(ops.toRemove, reporter, cb);
-          }, function(cb) {
-            return _this.applyFlagsChanges(ops.flagsChange, reporter, cb);
-          }, function(cb) {
-            return _this.applyToFetch(ops.toFetch, reporter, function(err, shouldNotif) {
-              if (err) {
-                return cb(err);
-              }
-              shouldNotifStep = shouldNotif;
-              return cb(null);
-            });
-          }
-        ], function(err) {
-          if (reporter != null) {
-            reporter.onDone();
-          }
-          if (err) {
+          return callback(null, info);
+        } else {
+          firstImport = laststep.firstImport;
+          return _this.applyOperations(ops, firstImport, function(err, shouldNotif) {
             if (err) {
-              reporter.onError(err);
+              return callback(err);
             }
-            return callback(err);
-          } else {
-            return _this.imap_refreshStep(step, function(err, shouldNotifNext) {
-              return callback(err, shouldNotifStep || shouldNotifNext);
+            return _this.imap_refreshStep(step, function(err, infoNext) {
+              if (err) {
+                return callback(err);
+              }
+              info.shouldNotif = shouldNotif || infoNext.shouldNotif;
+              return callback(null, info);
             });
-          }
-        });
+          });
+        }
       };
     })(this));
   };
@@ -591,6 +818,14 @@ Mailbox = (function(superClass) {
       return imap.search([['HEADER', 'MESSAGE-ID', messageID]], cb);
     }, function(err, uids) {
       return callback(err, uids != null ? uids[0] : void 0);
+    });
+  };
+
+  Mailbox.prototype.imap_UIDs = function(callback) {
+    return this.doLaterWithBox(function(imap, imapbox, cb) {
+      return imap.fetchBoxMessageUIDs(cb);
+    }, function(err, uids) {
+      return callback(err, uids);
     });
   };
 
@@ -692,13 +927,14 @@ Mailbox = (function(superClass) {
         if (err) {
           return callback(err);
         }
-        shouldNotif = indexOf.call(mail.flags, '\\Seen') >= 0;
+        shouldNotif = indexOf.call(mail.flags || [], '\\Seen') >= 0;
         return Message.createFromImapMessage(mail, _this, uid, function(err) {
           if (err) {
             return callback(err);
           }
           return callback(null, {
-            shouldNotif: shouldNotif
+            shouldNotif: shouldNotif,
+            actuallyAdded: true
           });
         });
       };

@@ -16,13 +16,23 @@
         display flex
 
     .dropdown-menu
-        padding 1em .5em
+        display        none
+        left           50%
+        transform      translateX(-50%)
+        padding        1em .5em
+        flex-direction column
+        align-items    center
+
 
     .presets
     .date-picker
         margin 0 .5em
 
+
     .presets
+        display         flex
+        justify-content space-around
+
         li
             margin-bottom 1em
             white-space   nowrap
@@ -34,10 +44,11 @@
             &:hover
                 color actioncolor
 
+
     .date-picker
         width         auto !important
         height        auto !important
-        margin-bottom 0
+        margin        .5em
         padding       .5em
         border        1px solid rgba(0, 0, 0, 0.15)
         border-radius 4px

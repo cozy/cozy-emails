@@ -44,6 +44,38 @@ module.exports.fetchParent = function(req, res, next) {
   });
 };
 
+module.exports.refresh = function(req, res, next) {
+  var account;
+  account = req.account;
+  if (account.isRefreshing()) {
+    return res.status(202).send({
+      info: 'in progress'
+    });
+  } else if (!account.supportRFC4551) {
+    return next(new BadRequest('Cant refresh a non RFC4551 box'));
+  } else {
+    return req.mailbox.imap_refresh({
+      limitByBox: null,
+      firstImport: false,
+      supportRFC4551: true
+    }, function(err, shouldNotif) {
+      if (err) {
+        return next(err);
+      }
+      return Mailbox.getCounts(req.mailbox.id, function(err, counts) {
+        var recent, ref, total, unread;
+        if (err) {
+          return next(err);
+        }
+        ref = counts[req.mailbox.id], total = ref.total, recent = ref.recent, unread = ref.unread;
+        req.mailbox.nbTotal = total;
+        req.mailbox.nbUnread = unread;
+        return res.send(req.mailbox);
+      });
+    });
+  }
+};
+
 module.exports.create = function(req, res, next) {
   var account, label, parent;
   log.info(("Creating " + req.body.label + " under " + req.body.parentID) + (" in " + req.body.accountID));

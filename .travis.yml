@@ -11,6 +11,7 @@ services:
 env:
     global:
         - NODE_ENV=test
+        - DEBUG_LEVEL=0
 before_install:
     - git clone git://github.com/mycozycloud/cozy-data-system.git
     - cd cozy-data-system
@@ -34,7 +35,7 @@ script:
     - npm run test:build
     - npm run fixtures
     - forever start -o casper-server.log build/server.js
-    - sleep 5
+    - sleep 10
     - npm run test:client
 
 

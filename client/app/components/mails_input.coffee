@@ -1,7 +1,6 @@
 {div, label, textarea, span, ul, li, a, img, i} = React.DOM
 
 MessageUtils    = require '../utils/message_utils'
-Modal           = require './modal'
 ContactStore    = require '../stores/contact_store'
 ContactActionCreator = require '../actions/contact_action_creator'
 LayoutActionCreator = require '../actions/layout_action_creator'
@@ -35,15 +34,11 @@ module.exports = MailsInput = React.createClass
     # because we store other things into the state
     componentDidMount: ->
         ContactStore.on 'change', @_setStateFromStores
-        @fixHeight()
 
     componentWillUnmount: ->
         ContactStore.removeListener 'change', @_setStateFromStores
 
     _setStateFromStores: -> @setState @getStateFromStores()
-
-    componentDidUpdate: ->
-        @fixHeight()
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
@@ -91,6 +86,10 @@ module.exports = MailsInput = React.createClass
 
         knownContacts = @state.known.map renderTag
 
+        # set focus to input area when clicking into component
+        onClick = =>
+            @refs.contactInput.getDOMNode().focus()
+
         onChange = (event) =>
             value = event.target.value.split ','
             if value.length is 2
@@ -101,7 +100,13 @@ module.exports = MailsInput = React.createClass
             else
                 @setState unknown: event.target.value
 
-        className  = (@props.className or '') + " form-group #{@props.id}"
+        onInput = (event) =>
+            input = @refs.contactInput.getDOMNode()
+            input.cols = input.value.length + 2
+
+        className  = """
+           #{@props.className or ''} form-group mail-input #{@props.id}
+        """
         classLabel = 'compose-label control-label'
         listClass  = classer
             'contact-form': true
@@ -121,8 +126,15 @@ module.exports = MailsInput = React.createClass
             else
                 event.dataTransfer.dropEffect = 'none'
 
+        # don't display placeholder if there are dests
+        if knownContacts.length > 0
+            placeholder = ''
+        else
+            placeholder = @props.placeholder
+
         div
             className: className,
+            onClick: onClick
             onDrop: @onDrop,
             onDragEnter: cancelDragEvent,
             onDragLeave: cancelDragEvent,
@@ -145,7 +157,8 @@ module.exports = MailsInput = React.createClass
                         rows: 1
                         value: @state.unknown
                         onChange: onChange
-                        placeholder: @props.placeholder
+                        onInput: onInput
+                        placeholder: placeholder
                         'autoComplete': 'off'
                         'spellCheck': 'off'
 
@@ -283,11 +296,6 @@ module.exports = MailsInput = React.createClass
         setTimeout =>
             query = @refs.contactInput.getDOMNode().focus()
         , 200
-
-    fixHeight: ->
-        input = @refs.contactInput.getDOMNode()
-        if input.scrollHeight > input.clientHeight
-            input.style.height = input.scrollHeight + "px"
 
     onDrop: (event) ->
         event.preventDefault()

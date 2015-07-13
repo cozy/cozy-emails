@@ -26,6 +26,31 @@ module.exports.fetchParent = (req, res, next) ->
         req.parentMailbox = mailbox
         next()
 
+# refresh a single mailbox if we can do it fast
+# We can do it fast if the server support RFC4551
+# see {Mailbox::imap_refreshFast}
+module.exports.refresh = (req, res, next) ->
+    account = req.account
+    if account.isRefreshing()
+        return res.status(202).send info: 'in progress'
+    else if not account.supportRFC4551
+        next new BadRequest('Cant refresh a non RFC4551 box')
+    else
+        req.mailbox.imap_refresh
+            limitByBox: null
+            firstImport: false
+            supportRFC4551: true
+        , (err, shouldNotif) ->
+            return next err if err
+            Mailbox.getCounts req.mailbox.id, (err, counts) ->
+                return next err if err
+                {total, recent, unread} = counts[req.mailbox.id]
+                req.mailbox.nbTotal = total
+                req.mailbox.nbUnread = unread
+                res.send req.mailbox
+
+
+
 # create a mailbox
 module.exports.create = (req, res, next) ->
     log.info "Creating #{req.body.label} under #{req.body.parentID}" +

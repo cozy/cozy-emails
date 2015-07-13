@@ -3,6 +3,9 @@
 
 RouterMixin           = require '../mixins/router_mixin'
 TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
+StoreWatchMixin       = require '../mixins/store_watch_mixin'
+
+LayoutStore = require '../stores/layout_store'
 
 classer      = React.addons.classSet
 DomUtils     = require '../utils/dom_utils'
@@ -15,14 +18,19 @@ LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
 Participants        = require './participant'
-{Spinner}           = require './basic_components'
+{Spinner, Progress} = require './basic_components'
 ToolbarMessagesList = require './toolbar_messageslist'
+MessageListBody = require './message-list-body'
 
 
 module.exports = MessageList = React.createClass
     displayName: 'MessageList'
 
-    mixins: [RouterMixin, TooltipRefresherMixin]
+    mixins: [
+        RouterMixin,
+        TooltipRefresherMixin
+        StoreWatchMixin [LayoutStore]
+    ]
 
     shouldComponentUpdate: (nextProps, nextState) ->
         should = not(_.isEqual(nextState, @state)) or
@@ -31,9 +39,11 @@ module.exports = MessageList = React.createClass
 
     getInitialState: ->
         edited: false
-        quickFilters: false
         selected: {}
         allSelected: false
+
+    getStateFromStores: ->
+        fullscreen: LayoutStore.isPreviewFullscreen()
 
     componentWillReceiveProps: (props) ->
         if props.mailboxID isnt @props.mailboxID
@@ -55,6 +65,21 @@ module.exports = MessageList = React.createClass
             mailboxID: @props.mailboxID
             query:     @props.query
 
+        hasMore = @props.query.pageAfter isnt '-'
+        # This allow to load next messages if needed after we remove messages
+        # from this mailbox by moving or deleting them.
+        # (if we delete all messages, the list is empty and listEmpty displayed)
+        if hasMore
+            afterAction = =>
+                # ugly setTimeout to wait until localDelete occured
+                setTimeout =>
+                    listEnd = @refs.nextPage or @refs.listEnd or @refs.listEmpty
+                    if listEnd? and
+                       DomUtils.isVisible(listEnd.getDOMNode())
+                        params = parameters: @props.query
+                        LayoutActionCreator.showMessageList params
+                , 100
+
         nextPage = =>
             LayoutActionCreator.showMessageList parameters: @props.query
 
@@ -63,7 +88,7 @@ module.exports = MessageList = React.createClass
             ref:               'list'
             'data-mailbox-id': @props.mailboxID
             className:         'messages-list panel'
-            'aria-expanded':   true
+            'aria-expanded':   not @state.fullscreen
 
             # Toolbar
             ToolbarMessagesList
@@ -74,18 +99,30 @@ module.exports = MessageList = React.createClass
                 messages:             @props.messages
                 edited:               @state.edited
                 selected:             @state.selected
+                allSelected:          @state.allSelected
                 displayConversations: @props.displayConversations
                 toggleEdited:         @toggleEdited
                 toggleAll:            @toggleAll
+                afterAction:          afterAction
+                queryParams:          @props.queryParams
+                filter:               @props.filter
+
+            # Progress
+            Progress value: @props.refresh, max: 1
 
             # Message List
             if @props.messages.count() is 0
                 if @props.fetching
-                    p null, t 'list fetching'
+                    p className: 'listFetching list-loading', t 'list fetching'
                 else
-                    p null, @props.emptyListMessage
+                    p
+                        className: 'listEmpty'
+                        ref: 'listEmpty'
+                        @props.emptyListMessage
             else
-                div className: 'main-content',
+                div
+                    className: 'main-content'
+                    ref: 'scrollable',
                     MessageListBody
                         messages: @props.messages
                         settings: @props.settings
@@ -117,7 +154,7 @@ module.exports = MessageList = React.createClass
                                     selected: {}
                             @setState newState
 
-                    if @props.query.pageAfter isnt '-'
+                    if hasMore
                         p className: 'text-center list-footer',
                             if @props.fetching
                                 Spinner()
@@ -128,7 +165,7 @@ module.exports = MessageList = React.createClass
                                     ref: 'nextPage',
                                     t 'list next page'
                     else
-                        p ref: 'listEnd', ''
+                        p ref: 'listEnd', t 'list end'
 
     toggleEdited: ->
         if @state.edited
@@ -147,7 +184,12 @@ module.exports = MessageList = React.createClass
             @setState allSelected: true, edited: true, selected: selected
 
     _loadNext: ->
-        if @refs.nextPage? and DomUtils.isVisible(@refs.nextPage.getDOMNode())
+        # load next message if last one is displayed (useful when navigating
+        # with keyboard)
+        lastMessage = @refs.listBody?.getDOMNode().lastElementChild
+        if @refs.nextPage? and
+           lastMessage? and
+           DomUtils.isVisible(lastMessage)
             LayoutActionCreator.showMessageList parameters: @props.query
 
     _handleRealtimeGrowth: ->
@@ -162,16 +204,17 @@ module.exports = MessageList = React.createClass
             return
 
         # listen to scroll events
-        scrollable = @refs.list.getDOMNode().parentNode
-        setTimeout =>
-            scrollable.removeEventListener 'scroll', @_loadNext
-            scrollable.addEventListener 'scroll', @_loadNext
-            @_loadNext()
-            # a lot of event can make the "more messages" label visible,
-            # so we check every few seconds
-            if not @_checkNextInterval?
-                @_checkNextInterval = window.setInterval @_loadNext, 10000
-        , 0
+        if @refs.scrollable?
+            scrollable = @refs.scrollable.getDOMNode()
+            setTimeout =>
+                scrollable.removeEventListener 'scroll', @_loadNext
+                scrollable.addEventListener 'scroll', @_loadNext
+                @_loadNext()
+                # a lot of event can make the "more messages" label visible,
+                # so we check every few seconds
+                if not @_checkNextInterval?
+                    @_checkNextInterval = window.setInterval @_loadNext, 10000
+            , 0
 
     componentDidMount: ->
         @_initScroll()
@@ -181,264 +224,9 @@ module.exports = MessageList = React.createClass
         @_handleRealtimeGrowth()
 
     componentWillUnmount: ->
-        scrollable = @refs.list.getDOMNode().parentNode
-        scrollable.removeEventListener 'scroll', @_loadNext
-        if @_checkNextInterval?
-            window.clearInterval @_checkNextInterval
+        if @refs.scrollable?
+            scrollable = @refs.scrollable.getDOMNode()
+            scrollable.removeEventListener 'scroll', @_loadNext
+            if @_checkNextInterval?
+                window.clearInterval @_checkNextInterval
 
-
-
-MessageListBody = React.createClass
-    displayName: 'MessageListBody'
-
-    getInitialState: ->
-        state =
-            messageID: null
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        # we must do the comparison manually because the property "onSelect" is
-        # a function (therefore it should not be compared)
-        updatedProps = Object.keys(nextProps).filter (prop) =>
-            return typeof nextProps[prop] isnt 'function' and
-                not (_.isEqual(nextProps[prop], @props[prop]))
-        should = not(_.isEqual(nextState, @state)) or updatedProps.length > 0
-
-        return should
-
-    render: ->
-        ul className: 'list-unstyled',
-            @props.messages.map((message, key) =>
-                id = message.get('id')
-                cid = message.get('conversationID')
-                if @props.displayConversations and cid?
-                    isActive = @props.conversationID is cid
-                else
-                    isActive = @props.messageID is id
-                MessageItem
-                    message: message,
-                    mailboxID: @props.mailboxID,
-                    conversationLengths: @props.conversationLengths?.get(cid),
-                    key: key,
-                    isActive: isActive,
-                    edited: @props.edited,
-                    settings: @props.settings,
-                    selected: @props.selected[id]?,
-                    login: @props.login
-                    displayConversations: @props.displayConversations
-                    isTrash: @props.isTrash
-                    ref: 'messageItem'
-                    onSelect: (val) =>
-                        @props.onSelect id, val
-            ).toJS()
-
-    componentDidMount: ->
-        @_onMount()
-
-    componentDidUpdate: ->
-        @_onMount()
-
-    _onMount: ->
-        # If selected message has changed, scroll the list to put
-        # current message into view
-        if @state.messageID isnt @props.messageID
-            active = document.querySelector("[data-message-id='#{@props.messageID}']")
-            if active? and not DomUtils.isVisible(active)
-                active.scrollIntoView(false)
-            @setState messageID: @props.messageID
-
-
-
-MessageItem = React.createClass
-    displayName: 'MessagesItem'
-
-    mixins: [RouterMixin]
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        # we must do the comparison manually because the property "onSelect" is
-        # a function (therefore it should not be compared)
-        updatedProps = Object.keys(nextProps).filter (prop) =>
-            return typeof nextProps[prop] isnt 'function' and
-                not (_.isEqual(nextProps[prop], @props[prop]))
-        shouldUpdate = not _.isEqual(nextState, @state) or
-            updatedProps.length > 0
-
-        return shouldUpdate
-
-    render: ->
-        message = @props.message
-        flags = message.get('flags')
-
-        classes = classer
-            message: true
-            unseen:  MessageFlags.SEEN not in flags
-            active:  @props.isActive
-            edited:  @props.edited
-
-        if MessageFlags.DRAFT in flags and not @props.isTrash
-            action = 'edit'
-            params =
-                messageID: message.get 'id'
-        else
-            conversationID = message.get 'conversationID'
-            if conversationID? and @props.displayConversations
-                action = 'conversation'
-                params =
-                    conversationID: conversationID
-                    messageID: message.get 'id'
-            else
-                action = 'message'
-                params =
-                    messageID: message.get 'id'
-
-        url = @buildUrl
-            direction: 'second'
-            action: action
-            parameters: params
-
-        compact = @props.settings.get('listStyle') is 'compact'
-        date    = MessageUtils.formatDate message.get('createdAt'), compact
-        avatar  = MessageUtils.getAvatar message
-        text    = message.get('text')
-        html    = message.get('html')
-        if not text? and html?
-            text = toMarkdown html
-        if not text?
-            text = ''
-
-        li
-            className:              classes
-            key:                    @props.key
-            'data-message-id':      message.get('id')
-            'data-conversation-id': message.get('conversationID')
-            draggable:              not @props.edited
-            onClick:                @onMessageClick
-            onDragStart:            @onDragStart,
-
-            # Change tag type if current message is in edited mode
-            (if @props.edited then span else a)
-                href:              url
-                className:         'wrapper'
-                'data-message-id': message.get('id')
-                onClick:           @onMessageClick
-                onDoubleClick:     @onMessageDblClick
-                ref:               'target'
-
-                div className: 'markers-wrapper',
-                    i
-                        className: classer
-                            select:              true
-                            fa:                  true
-                            'fa-check-square-o': @props.selected
-                            'fa-square-o':       not @props.selected
-                        onClick:   @onSelect
-
-                    if MessageFlags.SEEN in flags
-                        i className: 'fa fa-circle-thin'
-                    else
-                        i className: 'fa fa-circle'
-                    if MessageFlags.FLAGGED in flags
-                        i className: 'fa fa-star'
-
-                div className: 'avatar-wrapper select-target',
-                    if avatar?
-                        img className: 'avatar', src: avatar
-                    else
-                        from  = message.get('from')[0]
-                        cHash = "#{from.name} <#{from.address}>"
-                        i
-                            className: 'avatar placeholder'
-                            style:
-                                'background-color': colorhash(cHash)
-                            if from.name then from.name[0] else from.address[0]
-
-                div className: 'metas-wrapper',
-                    div className: 'participants',
-                        @getParticipants message
-                    div className: 'subject',
-                        message.get 'subject'
-                    div className: 'date',
-                        # TODO: use time-elements component here for the date
-                        date
-                    div className: 'extras',
-                        if message.get 'hasAttachments'
-                            i className: 'attachments fa fa-paperclip'
-                        if  @props.displayConversations and
-                            @props.conversationLengths > 1
-                                span className: 'conversation-length',
-                                    "[#{@props.conversationLengths}]"
-                    div className: 'preview',
-                        text.substr(0, 1024)
-
-    _doCheck: ->
-        # please don't ask me why this **** react needs this
-        if @props.selected
-            setTimeout =>
-                @refs.select?.getDOMNode().checked = true
-            , 50
-        else
-            setTimeout =>
-                @refs.select?.getDOMNode().checked = false
-            , 50
-
-    componentDidMount: ->
-        @_doCheck()
-
-    componentDidUpdate: ->
-        @_doCheck()
-
-    onSelect: (e) ->
-        @props.onSelect(not @props.selected)
-        e.preventDefault()
-        e.stopPropagation()
-
-    onMessageClick: (event) ->
-        node = @refs.target.getDOMNode()
-        if @props.edited and event.target.classList.contains 'select-target'
-            @props.onSelect(not @props.selected)
-            event.preventDefault()
-            event.stopPropagation()
-        else
-            if not (event.target.getAttribute('type') is 'checkbox')
-                event.preventDefault()
-                MessageActionCreator.setCurrent node.dataset.messageId, true
-                if @props.settings.get('displayPreview')
-                    href = '#' + node.getAttribute('href').split('#')[1]
-                    @redirect href
-
-    onMessageDblClick: (event) ->
-        if not @props.edited
-            url = event.currentTarget.href.split('#')[1]
-            window.router.navigate url, {trigger: true}
-
-    onDragStart: (event) ->
-        event.stopPropagation()
-        data = mailboxID: @props.mailboxID
-
-        if @props.displayConversations
-            data.conversationID = event.currentTarget.dataset.conversationId
-        else
-            data.messageID = event.currentTarget.dataset.messageId
-
-        event.dataTransfer.setData 'text', JSON.stringify(data)
-        event.dataTransfer.effectAllowed = 'move'
-        event.dataTransfer.dropEffect = 'move'
-
-    getParticipants: (message) ->
-        from = message.get 'from'
-        to   = message.get('to').concat(message.get('cc')).filter (address) =>
-            return address.address isnt @props.login and
-                address.address isnt from[0]?.address
-        separator = if to.length > 0 then ', ' else ' '
-        span null,
-            Participants
-                participants: from
-                onAdd: @addAddress
-                ref: 'from'
-            span null, separator
-            Participants
-                participants: to
-                onAdd: @addAddress
-                ref: 'to'
-
-    addAddress: (address) ->
-        ContactActionCreator.createContact address

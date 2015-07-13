@@ -6,6 +6,7 @@
 *.pid
 *.seed
 *.swp
+*.transifex.coffee
 client/bower_components
 client/public
 doc
@@ -20,3 +21,4 @@ results
 tests/fixtures/messages_generated.json
 tests/fixtures/messages_loaded.json
 tests/fixtures/samples/*
+sandbox.coffee

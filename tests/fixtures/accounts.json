@@ -4,12 +4,13 @@
        "docType": "Account",
        "label": "Gmail",
        "login": "some.guy@cozytest.cc",
-       "password": "XXXXX",
+       "password": "",
        "smtpServer": "smtp.gmail.com",
        "smtpPort": 465,
        "imapServer": "imap.gmail.com",
        "imapPort": 993,
        "accountType": "TEST",
+       "oauthProvider": "GMAIL",
        "favorites": [
          "gmail-ID-folder1",
          "e7332094-e043-0156-0b5c-790219161c7a",
@@ -37,6 +38,7 @@
        "draftMailbox": "dovecot-ID-draft",
        "sentMailbox": "dovecot-ID-folder2",
        "trashMailbox": "dovecot-ID-trash",
+       "initialized": true,
        "favorites": [
          "dovecot-ID-folder2",
          "f5cbd722-c3f9-4f6e-73d0-c75ddf65a2f1",

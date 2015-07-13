@@ -11,6 +11,10 @@
 .full .messages-list .preview
     max-width 85vw
 
+.list-loading
+    padding    1.5rem
+    color      #999
+    text-align center
 
 .messages-list
     display          flex
@@ -29,8 +33,9 @@
     //--------------------------------------------------------------------------
     // Layouts
     [role=toolbar]
-        position relative    // set root positionning for dropdowns
-        display  flex
+        position    relative    // set root positionning for dropdowns
+        display     flex
+        flex-shrink 0
 
         & > [role=menuitem]
             padding 0 .75em
@@ -47,6 +52,8 @@
 
     .filters
         margin-right .5em
+        border-right 1px solid #e5e5e5
+        flex         none
 
         i
             padding-left .5em
@@ -55,7 +62,7 @@
             display none
 
         @media(min-width: 50em)
-            .full & > [role=menuitem]
+            .full & [role=menuitem]
                 i
                     padding-left 0
 
@@ -63,11 +70,11 @@
                     display inline
 
         // Toggling mode for filter under < 600px
-        [role=presentation]
+        & > [role=presentation]
             display none
 
         @media(max-width: 37.5em)
-            [role=presentation]
+            & > [role=presentation]
                 display block
                 cursor  pointer
 
@@ -81,35 +88,40 @@
                 margin-right 1px
 
 
-    .search
-        display flex
+    [role=search]
+        flex     1
+        display  flex
+        position relative
 
         input
-            flex 1
+            flex    1
+            display flex
 
+        .btn-group
+            position absolute
+            top      0
+            right    0
 
-    .date-range-picker
-        position static
+        .btn:hover
+            color actioncolor
 
-        .dropdown-menu
-            left      50%
-            transform translateX(-50%)
 
 
     // Styles and colors
     [role=toolbar]
+        height           2.2rem
+        padding-top      0.2em
+        padding-right    0.2em
         background-color #f5f5f5
-        box-shadow       0 1px 2px 0 rgba(0, 0, 0, 0.15)
-        font-size        .875em
+
+        button
+            font-size 0.875em
 
         i
-            color basecolor
-
-        > button
-            border-right 1px solid rgba(0, 0, 0, 0.15)
+            color #999
 
     [role=group]
-            color basecolor
+            color #999
 
             i
                 vertical-align baseline
@@ -121,34 +133,48 @@
             color            white
 
             &:hover
-                background-color actioncolor
+                background-color darken(basecolor, 20%)
 
 
     .filters
         [role=menuitem]
-            border-right 1px solid rgba(0, 0, 0, 0.15)
-
             &:not(.dropdown)[aria-selected=false]:hover
             &[aria-selected=true]:hover
                 i
                 .btn-label
-                    color actioncolor
+                    color basecolor
 
             &[aria-selected=true]
-                background-color lightblue
+                background-color inherit
 
-    .search
-        input
-            padding 0 .5em
-            border none
+    .search input
+        padding          0 .5em
+        border           1px solid #d5d5d5
+        background-color #f5f5f5
+        border-radius    2px
+
+        &:focus
+            outline          none
+            background-color #fff
+
+    .progress
+        border-radius 0
+        margin 0px
+        height 0.2em
+        min-height 0.2em
+        background-image none
+        background-color #f5f5f5
+        box-shadow 0 0
+        border-bottom 1px solid #c5c5c5
 
 
     // LIST ITEMS
     //--------------------------------------------------------------------------
     .main-content
-        flex       1
-        overflow-y auto
-        padding    0 0 .5em 0
+        flex             1
+        overflow-y       auto
+        padding          0 0 .5em 0
+        background-color #fff
 
         // `end of the road`
         & > p
@@ -157,12 +183,13 @@
 
     .message
         // defaults
-        border-bottom 1px solid #f5f5f5
+        border-bottom 1px solid #e5e5e5
+        background-color #fff
 
         // Layouts
         .wrapper
-            display flex
-            padding .5em 0 1em
+            display         flex
+            padding         .8em 0.5em
 
             & > div
                 margin auto .5em
@@ -171,13 +198,16 @@
             display         flex
             flex-direction  column
             justify-content space-around
-            margin          0 0 0 .5em !important
             align-items     center
+            margin          0 !important
             min-width       1em
 
             i
-                font-size .75em
+                font-size .85em
                 color     darkcolor +30%
+
+                &.fa-circle
+                    color basecolor
 
         .avatar-wrapper
             width         3em
@@ -202,19 +232,47 @@
                 transform translateX(-50%)
 
         .metas-wrapper
-            flex        1
-            display     flex
-            flex-wrap   wrap
-            line-height 1.4em
+            flex            1
+            display         flex
+            flex-wrap       wrap
+            justify-content space-between
+            line-height     1.4em
+
+            .ellipsable
+                // This is the most tricky and weird way I have found to bypass
+                // flexbox calculation for internal sizes and permit an overflow
+                // rendering. It's based on the padded-top responsive images
+                // trick.
+                height       1em
+                white-space  nowrap
+                position     relative
+                max-width    0
+                padding-left 85%
+                font-size    0.9em
+
+                p
+                    position      absolute
+                    left          0
+                    width         100%
+                    margin        0
+                    overflow      hidden
+                    text-overflow ellipsis
 
             .participants
-                order 1
+                order       1
+                font-weight bold
+
 
             .date
-                order 2
+                flex        1
+                order       2
+                color       #999
+                text-align  right
 
             .subject
-                order 3
+                order     3
+                height    1.6em
+                font-size 0.9em
 
             .extras
                 order 4
@@ -227,10 +285,26 @@
                 flex 1 0 70%
 
             .preview
-                order    5
-                flex     1 0 100%
-                height   1.4em
-                overflow hidden
+                order        5
+                flex         1 0 100%
+                // This is the most tricky and weird way I have found to bypass
+                // flexbox calculation for internal sizes and permit an overflow
+                // rendering. It's based on the padded-top responsive images
+                // trick.
+                height       1.4em
+                white-space  nowrap
+                position     relative
+                max-width    0
+                padding-left 100%
+
+                p
+                    position      absolute
+                    left          0
+                    width         100%
+                    margin        0
+                    overflow      hidden
+                    text-overflow ellipsis
+
 
         // Styles
         .wrapper
@@ -250,7 +324,7 @@
             opacity .7
 
         .preview
-            color darkcolor +30%
+            color #999
 
         .fa-star
             color lightorange !important
@@ -260,16 +334,11 @@
             font-size   .875em
 
         .conversation-length
-            color       basecolor
-            font-family 'Source Sans Pro'
-            font-style  normal
-            font-weight normal
-
-            &:before
-                float       right
-                font-family 'FontAwesome'
-                font-size   .875em
-                padding     .125em 0 0 .3125em
+            padding          0 0.5em
+            margin-left      0.2em
+            background-color #aaa
+            border-radius    100em
+            color            #fff
 
         .date
         .extras
@@ -277,28 +346,19 @@
 
 
         // hover
-        &:hover
-            background-color lightorange !important
-
-            .preview
-                color darkcolor
+        &:hover,
+        &:not(.unseen):hover
+            background-color #ededed
 
 
         // Unread styles
-        &.unseen
-            .metas-wrapper
-                font-weight bold
-
         &:not(.unseen)
-            background-color lightcolor
+            background-color #f5f5f5
 
 
         // Currently selected message
         main:not(.full) &.active
-            background-color lightblue
-
-            .preview
-                color darkcolor
+            background-color #e5e5e5
 
 
         // Edited mode

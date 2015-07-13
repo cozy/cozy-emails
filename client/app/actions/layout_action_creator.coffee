@@ -1,9 +1,9 @@
 XHRUtils = require '../utils/xhr_utils'
 SocketUtils = require '../utils/socketio_utils'
 
-AccountStore  = require '../stores/account_store'
-LayoutStore   = require '../stores/layout_store'
-MessageStore  = require '../stores/message_store'
+LayoutStore  = require '../stores/layout_store'
+AccountStore = require '../stores/account_store'
+MessageStore = require '../stores/message_store'
 
 AppDispatcher = require '../app_dispatcher'
 
@@ -13,7 +13,6 @@ AccountActionCreator = require './account_action_creator'
 SearchActionCreator = require './search_action_creator'
 
 _cachedQuery = {}
-_cachedDisposition = null
 
 module.exports = LayoutActionCreator =
 
@@ -39,19 +38,17 @@ module.exports = LayoutActionCreator =
             value: null
 
     toggleFullscreen: ->
-        if _cachedDisposition?
-            AppDispatcher.handleViewAction
-                type: ActionTypes.SET_DISPOSITION
-                value:
-                    disposition: _cachedDisposition
-            _cachedDisposition = null
+        type = if LayoutStore.isPreviewFullscreen()
+            ActionTypes.MINIMIZE_PREVIEW_PANE
         else
-            _cachedDisposition = _.clone LayoutStore.getDisposition()
-            AppDispatcher.handleViewAction
-                type: ActionTypes.SET_DISPOSITION
-                value:
-                    type: _cachedDisposition.type
-                    value: 0
+            ActionTypes.MAXIMIZE_PREVIEW_PANE
+
+        AppDispatcher.handleViewAction
+            type: type
+
+    minimizePreview: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MINIMIZE_PREVIEW_PANE
 
     refresh: ->
         AppDispatcher.handleViewAction
@@ -135,24 +132,40 @@ module.exports = LayoutActionCreator =
             value = panelInfo.parameters[param]
             if value? and value isnt ''
                 query[param] = value
-                if _cachedQuery[param] isnt value
-                    _cachedQuery[param] = value
-                    cached = false
+            if _cachedQuery[param] isnt value
+                _cachedQuery[param] = value
+                cached = false
         _cachedQuery.mailboxID = mailboxID
 
         if not cached
-            MessageActionCreator.setFetching true
+            AppDispatcher.handleViewAction
+                type: ActionTypes.MESSAGE_FETCH_REQUEST
+                value: {mailboxID, query}
+
             updated = Date.now()
             XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMsg) ->
-                MessageActionCreator.setFetching false
                 if err?
-                    LayoutActionCreator.alertError err
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_FAILURE
+                        value: {mailboxID, query}
                 else
-                    # This prevent to override local updates with older ones from
-                    # server
+                    # This prevent to override local updates with older ones
+                    # from server
                     rawMsg.messages.forEach (msg) ->
                         msg.updated = updated
-                    MessageActionCreator.receiveRawMessages rawMsg
+                    AppDispatcher.handleViewAction
+                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                        value: {mailboxID, query, fetchResult: rawMsg}
+
+    # Apply filters and sort criteria on message list then display it
+    showFilteredList: (filter, sort) ->
+        @filterMessages filter
+        @sortMessages sort
+
+        params           = _.clone(MessageStore.getParams())
+        params.accountID = AccountStore.getSelected().get 'id'
+        params.mailboxID = AccountStore.getSelectedMailbox().get 'id'
+        @showMessageList parameters: params
 
     showMessage: (panelInfo, direction) ->
         onMessage = (msg) ->
@@ -186,18 +199,10 @@ module.exports = LayoutActionCreator =
         message        = MessageStore.getByID messageID
         if message?
             onMessage message
-        updated = Date.now()
-        XHRUtils.fetchConversation conversationID, (err, rawMessages) ->
 
-            if err?
-                LayoutActionCreator.alertError err
-            else
-                # This prevent to override local updates with older ones from
-                # server
-                rawMessages.forEach (msg) ->
-                    msg.updated = updated
-                MessageActionCreator.receiveRawMessages rawMessages
-                onMessage rawMessages[0]
+        length = MessageStore.getConversationsLength().get(conversationID)
+        if length? and length > 1
+            MessageActionCreator.fetchConversation conversationID
 
     showComposeNewMessage: (panelInfo, direction) ->
         # if there isn't a selected account (page loaded directly),
@@ -237,22 +242,6 @@ module.exports = LayoutActionCreator =
 
     showSettings: (panelInfo, direction) ->
 
-    refreshMessages: (callback) ->
-        XHRUtils.refresh true, (err, results) ->
-            if err?
-                console.log err
-                LayoutActionCreator.notify t('account refresh error'),
-                    autoclose: false
-                    finished: true
-                    errors: [ JSON.stringify err ]
-            else
-                if results is "done"
-                    MessageActionCreator.receiveRawMessages null
-                    LayoutActionCreator.notify t('account refreshed'),
-                        autoclose: true
-            callback() if callback?
-
-
     toastsShow: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.TOASTS_SHOW
@@ -278,6 +267,15 @@ module.exports = LayoutActionCreator =
     drawerToggle: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.DRAWER_TOGGLE
+
+    displayModal: (params) ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.DISPLAY_MODAL
+            value: params
+
+    hideModal: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.HIDE_MODAL
 
 # circular import, require after
 MessageActionCreator = require './message_action_creator'

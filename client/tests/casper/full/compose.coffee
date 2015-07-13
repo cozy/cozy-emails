@@ -21,8 +21,8 @@ casper.test.begin 'Test compose', (test) ->
         casper.waitForSelector "#settings", ->
             casper.evaluate ->
                 window.cozyMails.setSetting 'composeInHTML', true
-            selHtml = "#email-compose div[contenteditable]"
-            selText = "#email-compose textarea.editor"
+            selHtml = ".form-compose div[contenteditable]"
+            selText = ".form-compose textarea.editor"
             casper.click "#menu .compose-action"
             casper.waitForSelector selHtml, ->
                 test.assertDoesntExist selText, 'Compose in HTML'
@@ -59,7 +59,7 @@ casper.test.begin 'Test compose', (test) ->
                 test.assert /casper\.cozy/.test(contact), "Contact #{contact} match"
                 casper.click '.contact-list li:nth-of-type(1) '
                 casper.waitWhileVisible '.contact-list', ->
-                    values = casper.getFormValues('#email-compose form')
+                    values = casper.getFormValues('.form-compose form')
                     test.assertEquals casper.fetchText('.address-tag'), "#{contact.split(' ')[0]}", "Known contact added"
                     test.assertEquals values["compose-to"], "", "Known contact added"
                     casper.sendKeys '#compose-to', "casper.cozy"
@@ -69,7 +69,7 @@ casper.test.begin 'Test compose', (test) ->
                         test.assert /casper\.cozy/.test(contact), "Contact #{contact} match"
                         casper.click '.contact-list li:nth-of-type(2) '
                         casper.waitWhileVisible '.contact-list', ->
-                            values = casper.getFormValues('#email-compose form')
+                            values = casper.getFormValues('.form-compose form')
                             test.assertEquals casper.fetchText('.address-tag'), "#{contact.split(' ')[0]}#{contact2.split(' ')[0]}", "Contact added"
                             test.assertEquals values["compose-to"], "", "Contact added"
 

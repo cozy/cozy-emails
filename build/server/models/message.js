@@ -86,11 +86,11 @@ module.exports = Message = (function(superClass) {
   };
 
   Message.pickConversationID = function(rows, callback) {
-    var change, conversationID, conversationIDCounts, count, j, len, name, pickedConversationID, pickedConversationIDCount, row;
+    var change, conversationID, conversationIDCounts, count, i, len, name, pickedConversationID, pickedConversationIDCount, row;
     log.debug("pickConversationID");
     conversationIDCounts = {};
-    for (j = 0, len = rows.length; j < len; j++) {
-      row = rows[j];
+    for (i = 0, len = rows.length; i < len; i++) {
+      row = rows[i];
       if (conversationIDCounts[name = row.value] == null) {
         conversationIDCounts[name] = 1;
       }
@@ -143,6 +143,7 @@ module.exports = Message = (function(superClass) {
     references = references.map(mailutils.normalizeMessageID).filter(function(mid) {
       return mid;
     });
+    log.debug("findConversationID", references, mail.normSubject, isReplyOrForward);
     if (references.length) {
       keys = references.map(function(mid) {
         return [mail.accountID, 'mid', mid];
@@ -164,6 +165,7 @@ module.exports = Message = (function(superClass) {
         if (err) {
           return callback(err);
         }
+        log.debug("found similar", rows.length);
         return Message.pickConversationID(rows, callback);
       });
     } else {
@@ -178,17 +180,86 @@ module.exports = Message = (function(superClass) {
       inclusive_end: true,
       reduce: false
     }, function(err, rows) {
-      var j, len, result, row, uid;
+      var i, len, result, row, uid;
       if (err) {
         return callback(err);
       }
       result = {};
-      for (j = 0, len = rows.length; j < len; j++) {
-        row = rows[j];
+      for (i = 0, len = rows.length; i < len; i++) {
+        row = rows[i];
         uid = row.key[2];
         result[uid] = [row.id, row.value];
       }
       return callback(null, result);
+    });
+  };
+
+  Message.indexedByUIDs = function(mailboxID, uids, callback) {
+    var keys;
+    keys = uids.map(function(uid) {
+      return ['uid', mailboxID, parseInt(uid)];
+    });
+    return Message.rawRequest('byMailboxRequest', {
+      reduce: false,
+      keys: keys,
+      include_docs: true
+    }, function(err, rows) {
+      var i, len, result, row, uid;
+      if (err) {
+        return callback(err);
+      }
+      result = {};
+      for (i = 0, len = rows.length; i < len; i++) {
+        row = rows[i];
+        uid = row.key[2];
+        result[uid] = new Message(row.doc);
+      }
+      return callback(null, result);
+    });
+  };
+
+  Message.byUIDs = function(mailboxID, uids, callback) {
+    var keys;
+    keys = uids.map(function(uid) {
+      return ['uid', mailboxID, uid];
+    });
+    return Message.rawRequest('byMailboxRequest', {
+      reduce: false,
+      keys: keys,
+      include_docs: true
+    }, function(err, rows) {
+      var messages;
+      if (err) {
+        return callback(err);
+      }
+      messages = rows.map(function(row) {
+        return new Message(row.doc);
+      });
+      return callback(null, messages);
+    });
+  };
+
+  Message.UIDsInCozy = function(mailboxID, callback) {
+    return Message.rawRequest('byMailboxRequest', {
+      startkey: ['uid', mailboxID],
+      endkey: ['uid', mailboxID, {}],
+      reduce: true,
+      group_level: 3
+    }, function(err, rows) {
+      var row, uids;
+      if (err) {
+        return callback(err);
+      }
+      uids = (function() {
+        var i, len, results1;
+        results1 = [];
+        for (i = 0, len = rows.length; i < len; i++) {
+          row = rows[i];
+          results1.push(row.key[2]);
+        }
+        return results1;
+      })();
+      return callback(null, uids);
     });
   };
 
@@ -216,13 +287,13 @@ module.exports = Message = (function(superClass) {
       group: true,
       reduce: true
     }, function(err, rows) {
-      var j, len, out, row;
+      var i, len, out, row;
       if (err) {
         return callback(err);
       }
       out = {};
-      for (j = 0, len = rows.length; j < len; j++) {
-        row = rows[j];
+      for (i = 0, len = rows.length; i < len; i++) {
+        row = rows[i];
         out[row.key] = row.value;
       }
       return callback(null, out);
@@ -536,31 +607,54 @@ module.exports = Message = (function(superClass) {
   Message.prototype.markTwin = function(box, callback) {
     var hasTwin, ref;
     hasTwin = this.hasTwin || [];
-    if (ref = box.id, indexOf.call(hasTwin, ref) < 0) {
-      return callback(null);
+    if (ref = box.id, indexOf.call(hasTwin, ref) >= 0) {
+      return callback(null, {
+        shouldNotif: false,
+        actuallyAdded: false
+      });
+    } else {
+      hasTwin.push(box.id);
+      return this.updateAttributes({
+        hasTwin: hasTwin
+      }, function(err) {
+        return callback(err, {
+          shouldNotif: false,
+          actuallyAdded: true
+        });
+      });
     }
-    hasTwin.push(box.id);
-    return this.updateAttributes({
-      hasTwin: hasTwin
-    }, callback);
   };
 
   Message.prototype.addToMailbox = function(box, uid, callback) {
-    var mailboxIDs;
+    var changes, key, mailboxIDs, ref, value;
     log.info("MAIL " + box.path + ":" + uid + " ADDED TO BOX");
-    mailboxIDs = this.mailboxIDs || {};
+    mailboxIDs = {};
+    ref = this.mailboxIDs || {};
+    for (key in ref) {
+      value = ref[key];
+      mailboxIDs[key] = value;
+    }
     mailboxIDs[box.id] = uid;
-    return this.updateAttributes({
+    changes = {
       mailboxIDs: mailboxIDs
-    }, callback);
+    };
+    if (box.ignoreInCount()) {
+      changes.ignoreInCount = true;
+    }
+    return this.updateAttributes(changes, function(err) {
+      return callback(err, {
+        shouldNotif: false,
+        actuallyAdded: true
+      });
+    });
   };
 
   Message.prototype.isInMailbox = function(box) {
-    return this.mailboxIDs[box.id] != null;
+    return (this.mailboxIDs[box.id] != null) && this.mailboxIDs[box.id] !== -1;
   };
 
   Message.prototype.removeFromMailbox = function(box, noDestroy, callback) {
-    var isOrphan, mailboxIDs;
+    var isOrphan, key, mailboxIDs, ref, value;
     if (noDestroy == null) {
       noDestroy = false;
     }
@@ -568,7 +662,12 @@ module.exports = Message = (function(superClass) {
     if (!callback) {
       callback = noDestroy;
     }
-    mailboxIDs = this.mailboxIDs;
+    mailboxIDs = {};
+    ref = this.mailboxIDs || {};
+    for (key in ref) {
+      value = ref[key];
+      mailboxIDs[key] = value;
+    }
     delete mailboxIDs[box.id];
     isOrphan = Object.keys(mailboxIDs).length === 0;
     log.debug("REMOVING " + this.id + ", NOW ORPHAN = ", isOrphan);
@@ -579,192 +678,6 @@ module.exports = Message = (function(superClass) {
         mailboxIDs: mailboxIDs
       }, callback);
     }
-  };
-
-  Message.prototype.applyPatchOperations = function(patch, callback) {
-    var boxOps, boxid, flagsOps, index, j, k, len, len1, newflags, newmailboxIDs, operation, ref, uid;
-    log.debug(".applyPatchOperations", patch);
-    newmailboxIDs = {};
-    ref = this.mailboxIDs;
-    for (boxid in ref) {
-      uid = ref[boxid];
-      newmailboxIDs[boxid] = uid;
-    }
-    boxOps = {
-      addTo: [],
-      removeFrom: []
-    };
-    for (j = 0, len = patch.length; j < len; j++) {
-      operation = patch[j];
-      if (!(operation.path.indexOf('/mailboxIDs/') === 0)) {
-        continue;
-      }
-      boxid = operation.path.substring(12);
-      if (operation.op === 'add') {
-        boxOps.addTo.push(boxid);
-        newmailboxIDs[boxid] = -1;
-      } else if (operation.op === 'remove') {
-        boxOps.removeFrom.push(boxid);
-        delete newmailboxIDs[boxid];
-      } else {
-        return callback(new Error("modifying UID is not possible, bad operation " + operation.op));
-      }
-    }
-    flagsOps = {
-      add: [],
-      remove: []
-    };
-    for (k = 0, len1 = patch.length; k < len1; k++) {
-      operation = patch[k];
-      if (!(operation.path.indexOf('/flags/') === 0)) {
-        continue;
-      }
-      index = parseInt(operation.path.substring(7));
-      if (operation.op === 'add') {
-        flagsOps.add.push(operation.value);
-      } else if (operation.op === 'remove') {
-        flagsOps.remove.push(this.flags[index]);
-      } else if (operation.op === 'replace') {
-        if (this.flags[index] !== operation.value) {
-          flagsOps.remove.push(this.flags[index]);
-          flagsOps.add.push(operation.value);
-        }
-      }
-    }
-    newflags = this.flags;
-    newflags = _.difference(newflags, flagsOps.remove);
-    newflags = _.union(newflags, flagsOps.add);
-    return this.imap_applyChanges(newflags, newmailboxIDs, boxOps, (function(_this) {
-      return function(err, changes) {
-        if (err) {
-          return callback(err);
-        }
-        if (Object.keys(changes.mailboxIDs).length === 0) {
-          return _this.destroy(callback);
-        } else {
-          return _this.updateAttributes(changes, callback);
-        }
-      };
-    })(this));
-  };
-
-  Message.prototype.imap_applyChanges = function(newflags, newmailboxIDs, boxOps, callback) {
-    var oldflags;
-    log.debug(".applyChanges", newflags, newmailboxIDs);
-    oldflags = this.flags;
-    return Mailbox.getBoxesIndexedByID(this.accountID, (function(_this) {
-      return function(err, boxIndex) {
-        var box, boxID, boxid, j, len, ref, shouldIgnoreAfterUpdate;
-        if (err) {
-          return callback(err);
-        }
-        for (boxID in boxIndex) {
-          box = boxIndex[boxID];
-          box.uid = _this.mailboxIDs[boxID];
-        }
-        ref = boxOps.addTo;
-        for (j = 0, len = ref.length; j < len; j++) {
-          boxid = ref[j];
-          if (!boxIndex[boxid]) {
-            return callback(new Error("the box ID=" + boxid + " doesn't exists"));
-          }
-        }
-        shouldIgnoreAfterUpdate = Object.keys(newmailboxIDs).map(function(id) {
-          return boxIndex[id];
-        }).some(function(box) {
-          return box.ignoreInCount();
-        });
-        return _this.doASAP(function(imap, releaseImap) {
-          var operations;
-          operations = [];
-          Object.keys(_this.mailboxIDs).forEach(function(boxid) {
-            var permFlags, uidInBox;
-            uidInBox = _this.mailboxIDs[boxid];
-            permFlags = null;
-            return operations = operations.concat([
-              function(cb) {
-                var path;
-                path = boxIndex[boxid].path;
-                log.debug("CHANGING FLAGS OF " + _this.id + " (" + _this.subject + ") in " + boxid + " " + path);
-                return imap.openBox(path, function(err, imapBox) {
-                  if (err) {
-                    return cb(err);
-                  }
-                  permFlags = imapBox.permFlags;
-                  log.debug("SUPPORTED FLAGS", permFlags);
-                  return cb(null);
-                });
-              }, function(cb) {
-                var keywords, oldkeywords;
-                keywords = _.difference(newflags, permFlags);
-                if (keywords.length === 0) {
-                  oldkeywords = _.difference(oldflags, permFlags);
-                  if (oldkeywords.length !== 0) {
-                    return imap.delKeywords(uidInBox, oldkeywords, cb);
-                  } else {
-                    return cb(null);
-                  }
-                } else {
-                  return imap.setKeywords(uidInBox, keywords, cb);
-                }
-              }, function(cb) {
-                var flags, oldpflags;
-                flags = _.intersection(newflags, permFlags);
-                if (flags.length === 0) {
-                  oldpflags = _.intersection(oldflags, permFlags);
-                  if (oldpflags.length !== 0) {
-                    return imap.delFlags(uidInBox, oldpflags, cb);
-                  } else {
-                    return cb(null);
-                  }
-                } else {
-                  return imap.setFlags(uidInBox, flags, cb);
-                }
-              }, function(cb) {
-                var paths;
-                paths = boxOps.addTo.map(function(destID) {
-                  return boxIndex[destID].path;
-                });
-                log.debug("add TO", paths);
-                return imap.multicopy(uidInBox, paths, function(err, uids) {
-                  var destID, i, k, ref1;
-                  if (err) {
-                    return callback(err);
-                  }
-                  for (i = k = 0, ref1 = uids.length - 1; k <= ref1; i = k += 1) {
-                    destID = boxOps.addTo[i];
-                    newmailboxIDs[destID] = uids[i];
-                  }
-                  return cb(null);
-                });
-              }, function(cb) {
-                var paths;
-                paths = boxOps.removeFrom.map(function(removeboxid) {
-                  var path, ref1, uid;
-                  ref1 = boxIndex[removeboxid], path = ref1.path, uid = ref1.uid;
-                  return {
-                    path: path,
-                    uid: uid
-                  };
-                });
-                log.debug("remove FROM", paths);
-                return imap.multiremove(paths, cb);
-              }
-            ]);
-          });
-          return async.series(operations, releaseImap);
-        }, function(err) {
-          if (err) {
-            return callback(err);
-          }
-          return callback(null, {
-            ignoreInCount: shouldIgnoreAfterUpdate,
-            mailboxIDs: newmailboxIDs,
-            flags: newflags
-          });
-        });
-      };
-    })(this));
   };
 
   Message.createFromImapMessage = function(mail, box, uid, callback) {
@@ -868,99 +781,260 @@ module.exports = Message = (function(superClass) {
     return raw;
   };
 
-  Message.prototype.moveToTrash = function(account, callback) {
-    var boxid, mailboxes, patch, trashBoxID;
-    trashBoxID = account.trashMailbox;
-    mailboxes = Object.keys(this.mailboxIDs);
-    if (!trashBoxID) {
-      return callback(new AccountConfigError('trashMailbox'));
-    } else if (indexOf.call(mailboxes, trashBoxID) >= 0) {
-      return callback(null);
-    } else {
-      patch = (function() {
-        var j, len, results1;
-        results1 = [];
-        for (j = 0, len = mailboxes.length; j < len; j++) {
-          boxid = mailboxes[j];
-          results1.push({
-            op: 'remove',
-            path: "/mailboxIDs/" + boxid
-          });
+  Message.groupWithBox = function(messages, callback) {
+    var accountID;
+    accountID = messages[0].accountID;
+    return Mailbox.getBoxesIndexedByID(accountID, function(err, boxIndex) {
+      var boxID, i, len, message, messagesIndex, ref, uid;
+      if (err) {
+        return callback(err);
+      }
+      messagesIndex = {};
+      for (i = 0, len = messages.length; i < len; i++) {
+        message = messages[i];
+        ref = message.mailboxIDs;
+        for (boxID in ref) {
+          uid = ref[boxID];
+          if (messagesIndex[boxID] == null) {
+            messagesIndex[boxID] = [];
+          }
+          messagesIndex[boxID].push(message);
         }
-        return results1;
-      })();
-      patch.push({
-        op: 'add',
-        path: "/mailboxIDs/" + trashBoxID,
-        value: -1
+      }
+      return callback(null, {
+        boxIndex: boxIndex,
+        messagesIndex: messagesIndex
       });
-      return this.applyPatchOperations(patch, callback);
+    });
+  };
+
+  Message.doGroupedByBox = function(messages, iterator, done) {
+    var accountID;
+    if (messages.length === 0) {
+      return done(null);
     }
-  };
-
-  Message.prototype.addFlag = function(flag, callback) {
-    var patch;
-    patch = [
-      {
-        op: 'add',
-        path: "/flags/",
-        value: flag
+    accountID = messages[0].accountID;
+    return Message.groupWithBox(messages, function(err, arg) {
+      var boxIndex, messagesIndex, state;
+      boxIndex = arg.boxIndex, messagesIndex = arg.messagesIndex;
+      if (err) {
+        return done(err);
       }
-    ];
-    return this.applyPatchOperations(patch, callback);
+      state = {
+        boxIndex: boxIndex
+      };
+      return async.eachSeries(Object.keys(messagesIndex), function(boxID, next) {
+        var iterator2, pool;
+        state.box = boxIndex[boxID];
+        state.messagesInBox = messagesIndex[boxID];
+        iterator2 = function(imap, imapBox, releaseImap) {
+          state.imapBox = imapBox;
+          state.uids = state.messagesInBox.map(function(msg) {
+            return msg.mailboxIDs[state.box.id];
+          });
+          return iterator(imap, state, releaseImap);
+        };
+        pool = ImapPool.get(accountID);
+        return pool.doASAPWithBox(state.box, iterator2, next);
+      }, done);
+    });
   };
 
-  Message.prototype.removeFlag = function(flag, callback) {
-    var index, patch;
-    index = this.flags.indexOf(flag);
-    if (index === -1) {
-      return callback(null, this);
-    }
-    patch = [
-      {
-        op: 'remove',
-        path: "/flags/" + index
+  Message.batchAddFlag = function(messages, flag, callback) {
+    messages = messages.filter(function(msg) {
+      return indexOf.call(msg.flags, flag) < 0;
+    });
+    return Message.doGroupedByBox(messages, function(imap, state, next) {
+      return imap.addFlags(state.uids, flag, next);
+    }, function(err) {
+      if (err) {
+        return callback(err);
       }
-    ];
-    return this.applyPatchOperations(patch, callback);
+      return async.mapSeries(messages, function(message, next) {
+        var newflags;
+        newflags = message.flags.concat(flag);
+        return message.updateAttributes({
+          flags: newflags
+        }, function(err) {
+          return next(err, message);
+        });
+      }, callback);
+    });
   };
 
-  Message.prototype.move = function(from, to, callback) {
-    var patch;
+  Message.batchRemoveFlag = function(messages, flag, callback) {
+    messages = messages.filter(function(msg) {
+      return indexOf.call(msg.flags, flag) >= 0;
+    });
+    return Message.doGroupedByBox(messages, function(imap, state, next) {
+      return imap.delFlags(state.uids, flag, next);
+    }, function(err) {
+      if (err) {
+        return callback(err);
+      }
+      return async.mapSeries(messages, function(message, next) {
+        var newflags;
+        newflags = _.without(message.flags, flag);
+        return message.updateAttributes({
+          flags: newflags
+        }, function(err) {
+          return next(err, message);
+        });
+      }, callback);
+    });
+  };
+
+  Message.batchMove = function(messages, from, to, callback) {
+    var alreadyMoved, changes, destBoxes, fromBox, ignores;
     if (!Array.isArray(to)) {
       to = [to];
     }
-    patch = [
-      {
-        op: 'remove',
-        path: "/mailboxIDs/" + from
+    messages = messages.filter(function(msg) {
+      var boxes;
+      boxes = Object.keys(msg.mailboxIDs);
+      return _.xor(boxes, to).length > 1;
+    });
+    fromBox = null;
+    destBoxes = null;
+    alreadyMoved = [];
+    changes = {};
+    ignores = null;
+    log.debug("batchMove", messages.length, from, to);
+    return Message.doGroupedByBox(messages, function(imap, state, nextBox) {
+      var box, boxid, currentBox, destBox, destString, expunges, i, id, j, len, len1, message, moves, mustRemove, paths, ref, ref1, uid;
+      if (fromBox == null) {
+        fromBox = state.boxIndex[from];
       }
-    ].concat(to.map(function(boxID) {
-      return {
-        op: 'add',
-        path: "/mailboxIDs/" + boxID,
-        value: -1
-      };
-    }));
-    return this.applyPatchOperations(patch, callback);
-  };
-
-  Message.prototype.imapcozy_destroy = function(callback) {
-    var boxid, mailboxes, patch;
-    mailboxes = Object.keys(this.mailboxIDs);
-    patch = (function() {
-      var j, len, results1;
-      results1 = [];
-      for (j = 0, len = mailboxes.length; j < len; j++) {
-        boxid = mailboxes[j];
-        results1.push({
-          op: 'remove',
-          path: "/mailboxIDs/" + boxid
+      if (destBoxes == null) {
+        destBoxes = to.map(function(id) {
+          return state.boxIndex[id];
         });
       }
-      return results1;
-    })();
-    return this.applyPatchOperations(patch, callback);
+      currentBox = state.box;
+      if (!ignores) {
+        ignores = {};
+        ref = state.boxIndex;
+        for (boxid in ref) {
+          box = ref[boxid];
+          if (box.ignoreInCount()) {
+            ignores[id] = true;
+          }
+        }
+      }
+      destString = to.join(',');
+      if (indexOf.call(destBoxes, void 0) >= 0) {
+        return nextBox(new Error("One of destination boxes " + destString + " doesnt exist"));
+      }
+      if (indexOf.call(destBoxes, currentBox) >= 0) {
+        return nextBox(null);
+      }
+      mustRemove = currentBox === fromBox || !from;
+      moves = [];
+      expunges = [];
+      ref1 = state.messagesInBox;
+      for (i = 0, len = ref1.length; i < len; i++) {
+        message = ref1[i];
+        id = message.id;
+        uid = message.mailboxIDs[currentBox.id];
+        if (message.mailboxIDs[to] || indexOf.call(alreadyMoved, id) >= 0) {
+          if (mustRemove) {
+            expunges.push(uid);
+            if (changes[id] == null) {
+              changes[id] = message.cloneMailboxIDs();
+            }
+            delete changes[id][currentBox.id];
+          }
+        } else if (message.isDraft() && from === null) {
+          expunges.push(uid);
+          if (changes[id] == null) {
+            changes[id] = message.cloneMailboxIDs();
+          }
+          delete changes[id][currentBox.id];
+        } else {
+          moves.push(uid);
+          alreadyMoved.push(id);
+          if (changes[id] == null) {
+            changes[id] = message.cloneMailboxIDs();
+          }
+          delete changes[id][currentBox.id];
+          for (j = 0, len1 = destBoxes.length; j < len1; j++) {
+            destBox = destBoxes[j];
+            changes[id][destBox.id] = -1;
+          }
+        }
+      }
+      log.debug("MOVING", moves, "FROM", currentBox.id, "TO", destString);
+      log.debug("EXPUNGING", expunges, "FROM", currentBox.id);
+      paths = destBoxes.map(function(box) {
+        return box.path;
+      });
+      return imap.multimove(moves, paths, function(err, result) {
+        if (err) {
+          return nextBox(err);
+        }
+        return imap.multiexpunge(expunges, function(err) {
+          if (err) {
+            return nextBox(err);
+          }
+          return nextBox(null);
+        });
+      });
+    }, function(err) {
+      if (err) {
+        return callback(err);
+      }
+      return async.mapSeries(messages, function(message, next) {
+        var data, newMailboxIDs;
+        newMailboxIDs = changes[message.id];
+        if (!newMailboxIDs) {
+          return next(null, message);
+        } else {
+          data = {
+            mailboxIDs: newMailboxIDs,
+            ignoreInCount: Object.keys(newMailboxIDs).some(function(id) {
+              return ignores[id];
+            })
+          };
+          return message.updateAttributes(data, function(err) {
+            return next(err, message);
+          });
+        }
+      }, function(err, updated) {
+        var limit;
+        if (err) {
+          return callback(err);
+        }
+        if (updated.length === 0 || (destBoxes == null)) {
+          return callback(null, []);
+        }
+        limit = Math.max(100, messages.length * 2);
+        return async.eachSeries(destBoxes, function(destBox, cb) {
+          return destBox.imap_refresh({
+            limitByBox: limit
+          }, cb);
+        }, function(err) {
+          if (err) {
+            return callback(err);
+          }
+          return callback(null, updated);
+        });
+      });
+    });
+  };
+
+  Message.batchTrash = function(messages, trashBoxID, callback) {
+    return this.batchMove(messages, null, trashBoxID, callback);
+  };
+
+  Message.prototype.cloneMailboxIDs = function() {
+    var boxID, out, ref, uid;
+    out = {};
+    ref = this.mailboxIDs;
+    for (boxID in ref) {
+      uid = ref[boxID];
+      out[boxID] = uid;
+    }
+    return out;
   };
 
   Message.prototype.isDraft = function(draftBoxID) {

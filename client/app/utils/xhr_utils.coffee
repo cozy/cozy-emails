@@ -260,6 +260,15 @@ module.exports =
             else
                 callback res.body
 
+    refreshMailbox: (mailboxID, callback) ->
+        request.get "refresh/#{mailboxID}"
+        .end (res) ->
+            if res.ok
+                callback null, res.text
+            else
+                callback res.text
+
+
     activityCreate: (options, callback) ->
         request.post "activity"
         .send options

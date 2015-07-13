@@ -46,10 +46,15 @@ module.exports = ToolboxActions = React.createClass
                     if not @props.displayConversations
                         MenuDivider()
                     @renderRawActions()...
-                    MenuDivider key: 'divider'
-                    MenuHeader key: 'header-move',
-                        t 'mail action conversation move'
-                    @renderMailboxes()
+                    if @props.inConversation
+                        @renderConversationActions()
+                    if @props.inConversation
+                        MenuDivider key: 'divider'
+                    if @props.inConversation
+                        MenuHeader key: 'header-move',
+                            t 'mail action conversation move'
+                    if @props.inConversation
+                        @renderMailboxes()
 
 
     renderMarkActions: ->
@@ -102,7 +107,13 @@ module.exports = ToolboxActions = React.createClass
                     href:   "raw/#{@props.message.get 'id'}"
                     target: '_blank'
                     t 'mail action raw'
+        ]
 
+        # remove undefined values from the array
+        return items.filter (child) -> Boolean child
+
+    renderConversationActions: ->
+        items = [
             MenuItem
                 key: 'conv-delete'
                 onClick: @props.onConversationDelete,
@@ -129,8 +140,7 @@ module.exports = ToolboxActions = React.createClass
                 t 'mail action conversation noflag'
         ]
 
-        # remove undefined values from the array
-        return items.filter (child) -> Boolean child
+        return items
 
 
     renderMailboxes: ->

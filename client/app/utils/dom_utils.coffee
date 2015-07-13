@@ -9,6 +9,12 @@ module.exports = DomUtils =
         rect   = node.getBoundingClientRect()
         height = window.innerHeight or document.documentElement.clientHeight
         width  = window.innerWidth  or document.documentElement.clientWidth
-        return rect.bottom <= ( height + 0 ) and rect.top >= 0
+        if height is 0 or width is 0
+            # when iframe is in background, height and width are 0
+            # so prevent to always return true when application is not
+            # in foreground
+            return false
+        else
+            return rect.bottom <= ( height + 0 ) and rect.top >= 0
 
 

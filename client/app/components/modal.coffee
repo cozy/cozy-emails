@@ -2,6 +2,8 @@ module.exports = Modal = React.createClass
     displayName: 'Modal'
 
     render: ->
+        contentClass = ''
+        contentClass = 'no-content' if not @props.content
         React.DOM.div
             className: "modal fade in",
             role: "dialog",
@@ -19,15 +21,40 @@ module.exports = Modal = React.createClass
                                 React.DOM.h4
                                     className: "modal-title",
                                     @props.title
-                        React.DOM.div className: "modal-body",
+                        React.DOM.div className: "modal-body #{contentClass}",
                             if @props.subtitle?
                                 React.DOM.span null, @props.subtitle
-                            @props.content
-                        if @props.closeLabel?
-                            React.DOM.div className: "modal-footer",
+                            if @props.content?
+                                React.DOM.div ref: 'content',
+                                    @props.content
+                        React.DOM.div className: "modal-footer",
+                            if @props.allowCopy
                                 React.DOM.button
                                     type: 'button',
-                                    className: 'btn',
+                                    className: 'btn btn-cozy',
+                                    onClick: @copyContent
+                                    t 'modal copy content'
+                            if @props.actionLabel? and @props.action
+                                React.DOM.button
+                                    type: 'button',
+                                    className: 'btn btn-cozy',
+                                    onClick: @props.action,
+                                    @props.actionLabel
+                            if @props.closeLabel?
+                                React.DOM.button
+                                    type: 'button',
+                                    className: 'btn btn-cozy-non-default',
                                     onClick: @props.closeModal,
                                     @props.closeLabel
+
+    copyContent: ->
+        sel= window.getSelection()
+
+        if sel.rangeCount > 0
+            sel.removeAllRanges()
+
+        range = document.createRange()
+        range.selectNode(@refs.content?.getDOMNode())
+        sel.addRange(range)
+        document.execCommand 'copy'
 

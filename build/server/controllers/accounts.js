@@ -96,6 +96,9 @@ module.exports.list = function(req, res, next) {
 module.exports.edit = function(req, res, next) {
   var updated;
   updated = new Account(req.body);
+  if (!(updated.password && updated.password !== '')) {
+    updated.password = req.account.password;
+  }
   return updated.testConnections(function(err) {
     var changes;
     if (err) {

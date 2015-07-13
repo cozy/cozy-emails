@@ -64,7 +64,7 @@ module.exports = React.createClass
                     spinner: @state.saving
                     icon: 'save'
                     onClick: @onSubmit
-                    text: t 'save'
+                    text: t 'account signature save'
                 ]
 
 

@@ -20,7 +20,7 @@ emailsAppRessource = {
 
 logError = function(err) {
   if (err) {
-    return log.error(err);
+    return log.error("fail to create notif", err);
   }
 };
 

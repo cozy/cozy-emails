@@ -28,7 +28,7 @@ module.exports = AccountInput = React.createClass
         name = @props.name
         type = @props.type or 'text'
         errorField = @props.errorField or name
-        mainClasses = @buildMainClasses errorField
+        mainClasses = @buildMainClasses errorField, name
         placeHolder = @buildPlaceHolder type, name
 
         div
@@ -68,11 +68,11 @@ module.exports = AccountInput = React.createClass
                         onBlur: @onBlur
                         onInput: @props.onInput or null
 
-            @renderError errorField, name
+            @renderError(errorField, name)...
 
 
-    onBlur: ->
-        @props.onBlur?()
+    onBlur: (event) ->
+        @props.onBlur?(event)
 
 
     renderError: (errorField, name) ->
@@ -81,14 +81,13 @@ module.exports = AccountInput = React.createClass
             for error in errorField
                 if @state.errors?[error]? and error is name
                     result.push ErrorLine text: @state.errors[error]
-        else
-            if @state.errors?[errorField]?
-                result.push ErrorLine text: @state.errors[errorField]
+        else if @state.errors?[name]?
+            result.push ErrorLine text: @state.errors[errorField]
         return result
 
 
     # Add error class if errors are listed.
-    buildMainClasses: (fields) ->
+    buildMainClasses: (fields, name) ->
         fields = [fields] if not Array.isArray fields
         errors = fields.some (field) => @state.errors[field]?
         mainClasses =  "form-group account-item-#{name} "
