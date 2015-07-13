@@ -46,12 +46,10 @@ module.exports = React.createClass
                             i className: 'fa fa-edit'
                         if @props.isDeleted
                             i className: 'fa fa-trash'
-                if @props.active
-                    div className: 'metas date',
-                        messageUtils.formatDate @props.message.get 'createdAt'
-                if @props.active
-                    PopupMessageDetails
-                        message: @props.message
+                div className: 'metas date',
+                    messageUtils.formatDate @props.message.get 'createdAt'
+                PopupMessageDetails
+                    message: @props.message
 
 
     renderAddress: (field) ->

@@ -194,6 +194,9 @@
                 color       mediumcolor
                 white-space nowrap
 
+                span:hover
+                    color basecolor
+
                 i
                     padding 0 .2em
 
@@ -208,12 +211,15 @@
                 align-items center
             .date
                 order 3
+                color #999
             .to
                 order 5
             .cc
                 order 6
             .details
-                order 4
+                order         4
+                padding-right 10px
+                color #999
 
             .metas
                 margin-left 1em
@@ -239,9 +245,10 @@
                 right 0
                 min-width 18em
                 padding 0.5em 10px
-                border 1px solid lightgrey
-                border-radius 2px
+                border 1px solid #d5d5d5
+                border-radius 5px
                 background white
+                box-shadow 0 1px 3px rgba(0,0,0,.12)
 
                 td
                     display table-cell
@@ -250,10 +257,12 @@
                     font-size 1em
                     vertical-align baseline
 
-            .label
-                text-align right
-                font-weight normal
-                color mediumcolor
+                .label
+                    text-align right
+                    font-weight normal
+                    font-size 0.85em
+                    color mediumcolor
+                    text-transform uppercase
 
             [aria-hidden=true]
                 display none

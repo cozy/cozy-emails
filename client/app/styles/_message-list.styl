@@ -188,8 +188,8 @@
 
         // Layouts
         .wrapper
-            display flex
-            padding .8em 0.5em
+            display         flex
+            padding         .8em 0.5em
 
             & > div
                 margin auto .5em
@@ -232,10 +232,11 @@
                 transform translateX(-50%)
 
         .metas-wrapper
-            flex        1
-            display     flex
-            flex-wrap   wrap
-            line-height 1.4em
+            flex            1
+            display         flex
+            flex-wrap       wrap
+            justify-content space-between
+            line-height     1.4em
 
             .ellipsable
                 // This is the most tricky and weird way I have found to bypass
@@ -248,7 +249,6 @@
                 max-width    0
                 padding-left 85%
                 font-size    0.9em
-                font-weight  bold
 
                 p
                     position      absolute
@@ -259,8 +259,9 @@
                     text-overflow ellipsis
 
             .participants
-                order 1
-                padding-left 85%
+                order       1
+                font-weight bold
+
 
             .date
                 flex        1
@@ -269,12 +270,9 @@
                 text-align  right
 
             .subject
-                order         3
-                font-size     0.9em
-                // ellipsis on text overflow
-                white-space   nowrap
-                overflow      hidden
-                text-overflow ellipsis
+                order     3
+                height    1.6em
+                font-size 0.9em
 
             .extras
                 order 4
@@ -298,6 +296,14 @@
                 position     relative
                 max-width    0
                 padding-left 100%
+
+                p
+                    position      absolute
+                    left          0
+                    width         100%
+                    margin        0
+                    overflow      hidden
+                    text-overflow ellipsis
 
 
         // Styles
