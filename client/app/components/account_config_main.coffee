@@ -1,3 +1,4 @@
+AccountActionCreator = require '../actions/account_action_creator'
 {
     div, p, form, label, input, button, ul, li, a, span, i,
     fieldset, legend
@@ -304,7 +305,6 @@ module.exports = AccountConfigMain = React.createClass
 
 
     onMethodChange: (event) ->
-        console.log "blash"
         @state.smtpMethod.requestChange event.target.dataset.value
 
 
