@@ -324,7 +324,7 @@ module.exports = AccountConfigMain = React.createClass
         login = @state.login.value
         domain = login.split('@')[1] if login?.indexOf '@' >= 0
 
-        if domain isnt @_lastDiscovered
+        if domain? and domain isnt @_lastDiscovered
             @_lastDiscovered = domain
 
             AccountActionCreator.discover domain, (err, provider) =>
