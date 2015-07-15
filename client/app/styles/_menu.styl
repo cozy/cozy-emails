@@ -16,7 +16,7 @@ subaction()
 
 // App rules
 .app [role=menubar]
-    padding        .5em 0
+    padding        .5em 0 0
     display        flex
     flex-direction column
 
@@ -24,7 +24,7 @@ subaction()
         text-decoration none
 
     .fa
-        vertical-align middle
+        font-size  1.5em
 
 
     .compose-action
@@ -48,14 +48,13 @@ subaction()
             overflow-y auto
 
         .fa
-            font-size 1.5em
+            vertical-align middle
 
 
     .submenu
         display         flex
         justify-content space-around
-        border-top      1px solid #fff
-        box-shadow      0 -1px 0 #ccc
+        border-top      1px solid #e5e5e5
 
         & > :first-child
             flex 1
@@ -98,6 +97,7 @@ subaction()
 
     .drawer-toggle
         background transparent
+        color      #bbb
 
 
     .avatar
@@ -114,7 +114,7 @@ subaction()
         vertical-align middle
 
     .account .avatar
-        border-radius .25rem
+        border-radius 10em
 
 
     .account-title
@@ -143,10 +143,24 @@ subaction()
             border-radius .25rem
 
             &.active
-                background-color lightblue
+                background-color #e5e5e5
+
+                a
+                    span,
+                    i
+                        color            #111
+
+                .badge
+                    border-color #e5e5e5
+
 
             a
                 flex 1
+
+                .fa
+                    // horizontally centered icons
+                    width      1em
+                    text-align center
 
             .badge
                 margin-right .5em
@@ -156,7 +170,7 @@ subaction()
                 color      basecolor
 
             &:hover
-                background-color lightorange
+                background-color #fff
 
                 a
                     color basecolor

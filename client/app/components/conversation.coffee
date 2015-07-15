@@ -108,8 +108,8 @@ module.exports = React.createClass
                 className: 'more'
                 onClick: =>
                     @setState compact: false
+                i className: 'fa fa-refresh'
                 t 'load more messages', messages.length - 2
-                i className: 'fa fa-ellipsis-v'
             items.push @renderMessage(last, false)
         else
             items = (@renderMessage(key, false) for key in messages)

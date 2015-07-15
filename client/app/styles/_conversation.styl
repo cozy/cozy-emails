@@ -5,21 +5,21 @@
 */
 
 .conversation
-    padding 1em
+    padding 1.5em
 
     & > header
         display       flex
         align-items   flex-start
         margin-bottom 1em
 
-        .fa-close
-            order 1
-
         h3
             flex 1
-            order 2
+            order 1
 
         nav
+            order 2
+
+        .fa-close
             order 3
 
         .btn-group
@@ -27,13 +27,18 @@
 
         .btn
             border           none
-            color            basecolor
+            color            #bbb
             background-color transparent
+            font-size        1rem
             text-shadow      none
             box-shadow       none
+            transition       color 0.2s ease-out
+
+        &:hover .btn
+            color #777
 
             &:hover
-                color actioncolor
+                color basecolor
 
         // Mask the fullscreen toggle below 768px, because the conversation view
         // is always fullscreen for those resolutions.
@@ -47,18 +52,20 @@
 
     .conversation-title
         margin 0
-        font 20px/1.4 'Source Sans Pro', sans-serif
+        font 1.5em/1.2 'Source Sans Pro', sans-serif
         color #444
 
     .more
         display block
-        padding .5em 10px
+        padding .8em 0.2rem
         width 100%
         border none
-        border-top 1px solid lightcolor
+        border-top 1px solid #d5d5d5
+        background-color #fff
         font-size .875em
-        background-color #f5f5f5
+        text-align left
         color basecolor
+        line-height 1.63265em
 
         &:hover
             color orange
@@ -68,22 +75,16 @@
 
         i
             vertical-align middle
-            padding 0 10px
+            padding-right 0.8em
 
     .message
         margin 0
-        padding .5em 10px
-        border 1px solid lightcolor
+        padding .8em 0.2rem
+        border-top 1px solid #d5d5d5
         border-bottom none
-        border-radius 4px 4px 0 0
-        box-shadow 0 3px 1px lightcolor
         background-color white
-        transition margin 280ms ease-out
 
         &.active
-            margin 1em 0
-            border-bottom 1px solid lightcolor
-            border-radius 4px
 
             // prevent first message from sliding down for no reason
             &:first-of-type
@@ -105,7 +106,14 @@
                     display block !important
 
         &.isUnread
-            font-weight: bold
+            font-weight bold
+            color basecolor
+
+        // compose
+        .compose
+            margin-bottom  1em
+            padding-bottom 2em
+            border-bottom  1px solid #d5d5d5
 
         header
         footer
@@ -129,8 +137,8 @@
         iframe
             width 100%
 
-        .fa-mail-reply
-            color contrastcolor
+        .toolbar-message .btn-group-sm>.btn
+            font-size 1rem
 
         .sender-avatar
             float left
@@ -153,6 +161,7 @@
             .addresses
                 flex 1 1 55%
                 min-height 1.63265em
+                line-height 1.63265em
 
                 + .addresses
                     // Mask addresses (except from, 1st one) when message isnt
@@ -174,12 +183,19 @@
                 a:hover
                     text-decoration none
 
+                &.from .highlight
+                    font-size   1.05em
+                    font-weight bold
+
             .participant
                 color darkcolor
 
             .contact-address
                 color       mediumcolor
                 white-space nowrap
+
+                span:hover
+                    color basecolor
 
                 i
                     padding 0 .2em
@@ -195,12 +211,15 @@
                 align-items center
             .date
                 order 3
+                color #999
             .to
                 order 5
             .cc
                 order 6
             .details
-                order 4
+                order         4
+                padding-right 10px
+                color #999
 
             .metas
                 margin-left 1em
@@ -213,10 +232,11 @@
 
             .btn
                 padding 0
-                color basecolor
+                color #999
+                font-size 1rem
 
                 &:hover
-                    color actioncolor
+                    color basecolor
 
             .popup
                 z-index 1
@@ -225,9 +245,10 @@
                 right 0
                 min-width 18em
                 padding 0.5em 10px
-                border 1px solid lightgrey
-                border-radius 2px
+                border 1px solid #d5d5d5
+                border-radius 5px
                 background white
+                box-shadow 0 1px 3px rgba(0,0,0,.12)
 
                 td
                     display table-cell
@@ -236,10 +257,12 @@
                     font-size 1em
                     vertical-align baseline
 
-            .label
-                text-align right
-                font-weight normal
-                color mediumcolor
+                .label
+                    text-align right
+                    font-weight normal
+                    font-size 0.85em
+                    color mediumcolor
+                    text-transform uppercase
 
             [aria-hidden=true]
                 display none
@@ -257,9 +280,12 @@
             font-size .875em
             line-height 2em
             text-align center
-            background lightgrey
+            background #f5f5f5
             color grey
             border 0
+
+            i
+                margin-right 0.5em
 
         .btn-success
         .btn-info
@@ -270,24 +296,33 @@
             vertical-align baseline
             text-shadow none
             box-shadow none
-            background-color lightblue
+            background-color basecolor
             border 0px
-            color grey
+            color white
             cursor pointer
             padding 5px
             outline 0
 
             &:hover
-                background-color lightorange
+                background-color darken(basecolor, 20%)
 
         .attachments
             ul
+                display flex
+                flex-wrap wrap
                 margin 0
                 padding 0
 
             li
-                margin 0.7em 0
-                list-style-type none
+                display          flex
+                align-items      center
+                flex             none
+                margin           0.25em 0.5em 0.25em 0
+                padding          0.6em 0.8em
+                background-color #f2f2f2
+                border-radius    3px
+                list-style-type  none
+                white-space      nowrap
 
             i
                 display inline-block
@@ -297,9 +332,16 @@
                 display inline-block
                 margin-right .35em
                 padding .2em
-                vertical-align top
-                border 1px solid lightcolor
+                vertical-align middle
+                background-color #ffffff
                 border-radius 2px
+
+            a
+                color #333
+
+                &:hover
+                    color basecolor
+                    text-decoration none
 
     .full-headers
         display none

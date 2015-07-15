@@ -1,18 +1,18 @@
 /*
   new email window
 */
-.compose
-    &.panel
-        max-width 47.25em
-        padding   0 1em
+.compose.panel
+    max-width     48em
+    padding       1em 1.8em
+    border-radius 4px 4px 0 0
+    margin-top    0.5em
 
 
 
 .form-compose
-    width 100%
+    position  relative // needed for the position absolute of .compose-toggle
+    width     100%
     max-width 900px
-    margin 20px auto
-    padding 0 10px
 
     &.enable
         display block
@@ -23,6 +23,12 @@
         padding-top 0.5em
         margin-bottom 1em
 
+    .form-group
+    // add separation between sections
+        margin-bottom  0.2em
+        padding-bottom 0.2em
+        border-bottom  1px solid #eee
+
     a.close-email
         display none
         margin-right 0
@@ -32,17 +38,23 @@
         float right
         font-size 1em
 
+    .account p,
+    .account-picker
+        padding 0 0.7em
+
     .editor,
     .rt-editor
-        border 1px solid basecolor
         min-height 16em
-        max-height 24em
-        overflow auto
-        height auto
-        width 100%
+        overflow   auto
+        height     auto
+        width      100%
         text-align left
-        color black
-        cursor: text
+        color      #000
+        cursor     text
+
+        // reset border + padding
+        border  none
+        padding 0.5em 0 0 0
 
         // poor's man CSS reset, to apply default style to content of
         // replied message
@@ -52,15 +64,6 @@
         ul, ol, dl, li, dl
             margin .5em
             padding inherit
-
-        &:hover
-            border 1px solid actioncolor
-
-        &:active
-        &:focus
-            border 0
-            outline 0
-            border 1px solid actioncolor
 
         blockquote
             border-left .25em solid blue
@@ -85,9 +88,19 @@
             margin 0
             padding 0
 
+    .compose-subject
+        height    2.5em
+        padding   0
+        border    none
+        font-size 1.4rem
+
+        &:hover,
+        &:focus
+            border-color basecolor
+
     .editor.target,
     .rt-editor.target
-        border-color actioncolor
+        border-color basecolor
 
     .attachements
         margin 1em 0
@@ -96,7 +109,10 @@
         margin-top: 0
 
     .compose-toggle
-        float right
+        z-index  5
+        position absolute
+        right    0em
+        padding  0.6em 0
 
     a
       padding 0 1em
@@ -108,32 +124,50 @@
         margin-left 1em
 
     .compose-label
-        margin .5em
+        margin      0.5em 0
+        width       2.5em
         line-height 2em
 
-    .mail-input
-        border 1px solid basecolor
+        &:hover
+            border-color basecolor
+
     .mail-input > *
         display inline-block
 
     textarea.compose-input
-        position relative
-        height 1.3em
-        padding 0 0.5em
-        overflow hidden
-        width 100%
-        display inline-block
-        resize none
+        display      inline-block
+        overflow     hidden
+        position     relative
+        height       1.3em
+        width        100%
+        padding      0 0.5em
+        margin       0.3em 0.25em 0.1em
+        resize       none
         border-width 0
-        box-shadow none
+        box-shadow   none
 
     .compose-from
         line-height 2em
         color darkcolor
         cursor pointer
 
+    .compose-to,
+    .compose-cc,
+    .compose-bcc
+        display     flex
+        align-items center
+        flex-wrap   wrap
+
+    .compose-to
+        // remove the overflow between the cc/bcc option and the email adresses
+        padding-right 6em
+
     .caret
         margin-left 0.5em
+
+    .contact-form
+        flex      1
+        min-width 12em
 
     .account-picker
         .dropdown-menu
@@ -146,20 +180,28 @@
 
     .compose-cc.shown,
     .compose-bcc.shown
-        display inherit
+        display flex
 
     .address-tag
-        border 1px solid mediumcolor
         background-color lightcolor
-        margin 0 .25em .25em .25em
-        padding .25em
-        border-radius .25em
-        display inline-block
-        cursor move
+        margin           0.1em 0.25em
+        padding          0.5em
+        border-radius    0.2em
+        display          inline-block
+        cursor           move
+        // add ellipsis when there is a text overflow
+        text-overflow    ellipsis
+        overflow         hidden
+
+        &:hover
+            background-color darken(lightcolor, 5%)
 
         a
-            font-size .75em
-            padding-left .5em
+            padding 0 0.2em 0 0.5em
+            color   #999
+
+            &:hover
+                color #333
 
     .editor-actions
         .btn.btn-default

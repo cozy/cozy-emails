@@ -22,16 +22,16 @@ module.exports = React.createClass
     renderNoChoice: ->
         account = @props.accounts[@props.valueLink.value]
 
-        label = "\"#{account.name or account.label}\" <#{account.login}>"
-        p className: 'form-control-static col-sm-6', label
+        label = "#{account.name or account.label} <#{account.login}>"
+        p className: 'form-control-static align-item', label
 
     renderPicker:  ->
         accounts = @props.accounts
         account  = accounts[@props.valueLink.value]
         value    = @props.valueLink.value
-        label = "\"#{account.name or account.label}\" <#{account.login}>"
+        label = "#{account.name or account.label} <#{account.login}>"
 
-        div className: 'account-picker',
+        div className: 'account-picker align-item',
             span
                 className: 'compose-from dropdown-toggle',
                 'data-toggle': 'dropdown',
@@ -45,7 +45,7 @@ module.exports = React.createClass
                     @renderAccount(key, account)
 
     renderAccount: (key, account) ->
-        label = "\"#{account.name or account.label}\" <#{account.login}>"
+        label = "#{account.name or account.label} <#{account.login}>"
 
         li
             role: 'presentation',

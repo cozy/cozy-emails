@@ -149,8 +149,8 @@ module.exports = Menu = React.createClass
                         btn:               true
                         fa:                true
                         'drawer-toggle':   true
-                        'fa-toggle-right': not @state.isDrawerExpanded
-                        'fa-toggle-left':  @state.isDrawerExpanded
+                        'fa-caret-right': not @state.isDrawerExpanded
+                        'fa-caret-left':  @state.isDrawerExpanded
                     onClick: LayoutActionCreator.drawerToggle
 
     # renders a single account and its submenu

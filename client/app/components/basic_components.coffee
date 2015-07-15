@@ -217,7 +217,9 @@ AddressLabel = React.createClass
             key = @props.contact.address.replace /\W/g, ''
 
             result = span null,
-                span null, "#{@props.contact.name} "
+                span
+                    className: 'highlight'
+                    @props.contact.name
                 span
                     className: 'contact-address'
                     key: key

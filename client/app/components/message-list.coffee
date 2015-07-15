@@ -113,9 +113,7 @@ module.exports = MessageList = React.createClass
             # Message List
             if @props.messages.count() is 0
                 if @props.fetching
-                    p
-                        className: 'listFetching'
-                        t 'list fetching'
+                    p className: 'listFetching list-loading', t 'list fetching'
                 else
                     p
                         className: 'listEmpty'

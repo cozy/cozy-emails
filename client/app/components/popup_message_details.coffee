@@ -55,4 +55,3 @@ module.exports = React.createClass
                             row "destCc#{key}", @formatUsers(dest) for dest, key in cc[1..] if cc.length
                             row 'reply', @formatUsers(reply), 'headers reply-to' if reply?
                             row 'created', @props.message.get('createdAt'), 'headers date'
-                            row 'subject', @props.message.get('subject'), 'headers subject'
