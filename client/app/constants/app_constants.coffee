@@ -178,7 +178,6 @@ module.exports =
         COMPOSE_IMAGE               : 'TOOLTIP_COMPOSE_IMAGE'
         COMPOSE_MOCK                : 'TOOLTIP_COMPOSE_MOCK'
         EXPUNGE_MAILBOX             : 'TOOLTIP_EXPUNGE_MAILBOX'
-
-
-
+        ADD_CONTACT                 : 'TOOLTIP_ADD_CONTACT'
+        SHOW_CONTACT                : 'TOOLTIP_SHOW_CONTACT'
 
