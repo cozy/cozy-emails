@@ -30,7 +30,7 @@ module.exports = ContactActionCreator =
             value: query
 
 
-    createContact: (contact) ->
+    createContact: (contact, callback) ->
         options =
             name: 'create'
             data:
@@ -47,9 +47,11 @@ module.exports = ContactActionCreator =
             msg = t('contact create success',
                 {contact: contact.name or contact.address})
             LayoutActionCreator.notify msg, autoclose: true
+            callback?()
 
         activity.onerror = ->
             console.log @name
             msg = t('contact create error', {error: @name})
             LayoutActionCreator.alertError msg, autoclose: true
+            callback?()
 
