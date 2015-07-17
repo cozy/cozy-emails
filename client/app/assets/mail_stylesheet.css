@@ -1,9 +1,8 @@
 body {
     visibility: visible !important;
-    font-family: 'Source Sans Pro', sans-serif;
 }
 table {
-  width: 100%;
+    max-width: 100%;
 }
 img {
     max-width: 100%;
@@ -23,3 +22,4 @@ blockquote blockquote blockquote blockquote blockquote { border-color: blue !imp
     font-family: 'Source Sans Pro', sans-serif;
     white-space: pre-line;
 }
+
