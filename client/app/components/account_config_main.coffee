@@ -7,6 +7,7 @@ classer = React.addons.classSet
 
 AccountInput  = require './account_config_input'
 AccountDelete = require './account_config_delete'
+AccountActionCreator = require '../actions/account_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
 {Form, FieldSet, FormButtons, FormDropdown} = require './basic_components'
