@@ -513,7 +513,7 @@ class Mailbox extends cozydb.CozyModel
                         message.updateAttributes {flags}, next
                     else
                         Message.fetchOrUpdate box, {mid, uid}, (err, info) ->
-                            shouldNotif = shouldNotif or info.shouldNotif
+                            shouldNotif = shouldNotif or info?.shouldNotif
                             nbAdded += 1 if info?.actuallyAdded
                             next err
                 , (err) ->
