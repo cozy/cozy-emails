@@ -340,7 +340,7 @@ module.exports = ContactActionCreator = {
       value: query
     });
   },
-  createContact: function(contact) {
+  createContact: function(contact, callback) {
     var activity, options;
     options = {
       name: 'create',
@@ -359,9 +359,10 @@ module.exports = ContactActionCreator = {
       msg = t('contact create success', {
         contact: contact.name || contact.address
       });
-      return LayoutActionCreator.notify(msg, {
+      LayoutActionCreator.notify(msg, {
         autoclose: true
       });
+      return typeof callback === "function" ? callback() : void 0;
     };
     return activity.onerror = function() {
       var msg;
@@ -369,9 +370,10 @@ module.exports = ContactActionCreator = {
       msg = t('contact create error', {
         error: this.name
       });
-      return LayoutActionCreator.alertError(msg, {
+      LayoutActionCreator.alertError(msg, {
         autoclose: true
       });
+      return typeof callback === "function" ? callback() : void 0;
     };
   }
 };
@@ -2288,7 +2290,7 @@ module.exports = AccountConfigMailboxes = React.createClass({
 });
 
 ;require.register("components/account_config_main", function(exports, require, module) {
-var AccountConfigMain, AccountDelete, AccountInput, FieldSet, Form, FormButtons, FormDropdown, RouterMixin, a, button, classer, div, fieldset, form, i, input, label, legend, li, p, span, ul, _ref, _ref1;
+var AccountActionCreator, AccountConfigMain, AccountDelete, AccountInput, FieldSet, Form, FormButtons, FormDropdown, RouterMixin, a, button, classer, div, fieldset, form, i, input, label, legend, li, p, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, p = _ref.p, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, fieldset = _ref.fieldset, legend = _ref.legend;
 
@@ -2297,6 +2299,8 @@ classer = React.addons.classSet;
 AccountInput = require('./account_config_input');
 
 AccountDelete = require('./account_config_delete');
+
+AccountActionCreator = require('../actions/account_action_creator');
 
 RouterMixin = require('../mixins/router_mixin');
 
@@ -4626,9 +4630,11 @@ module.exports = ComposeToolbox = React.createClass({
 });
 
 ;require.register("components/contact_label", function(exports, require, module) {
-var AddressLabel, ContactActionCreator, ContactLabel, ContactStore, LayoutActionCreator, MessageUtils, a, button, h3, header, i, li, p, section, span, ul, _ref;
+var AddressLabel, ContactActionCreator, ContactLabel, ContactStore, LayoutActionCreator, MessageUtils, Tooltips, a, button, h3, header, i, li, p, section, span, ul, _ref;
 
 _ref = React.DOM, section = _ref.section, header = _ref.header, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button;
+
+Tooltips = require('../constants/app_constants').Tooltips;
 
 MessageUtils = require('../utils/message_utils');
 
@@ -4652,55 +4658,48 @@ module.exports = ContactLabel = React.createClass({
       contactModel = ContactStore.getByAddress(this.props.contact.address);
       if (contactModel != null) {
         contactId = contactModel.get('id');
-        return a({
+        return span({
           ref: 'contact',
-          target: '_blank',
-          href: "/#apps/contacts/contact/" + contactId,
           onClick: function(event) {
             return event.stopPropagation();
           }
         }, AddressLabel({
           contact: this.props.contact
-        }));
+        }), a({
+          className: 'show-contact',
+          target: '_blank',
+          href: "/#apps/contacts/contact/" + contactId
+        }, button({
+          className: 'fa fa-user',
+          'aria-describedby': Tooltips.SHOW_CONTACT,
+          'data-tooltip-direction': 'top'
+        })));
       } else {
         return span({
           ref: 'contact',
-          className: 'participant',
+          className: 'participant'
+        }, AddressLabel({
+          contact: this.props.contact
+        }), span({
+          className: 'add-contact',
           onClick: (function(_this) {
             return function(event) {
               event.stopPropagation();
               return _this.addContact();
             };
           })(this)
-        }, AddressLabel({
-          contact: this.props.contact
-        }));
+        }, button({
+          className: 'fa fa-user-plus',
+          'aria-describedby': Tooltips.ADD_CONTACT,
+          'data-tooltip-direction': 'top'
+        })));
       }
     } else {
-      return span(null);
+      return span();
     }
   },
-  _initTooltip: function() {
-    var container, node, options;
-    if (this.props.tooltip && (this.refs.contact != null)) {
-      node = this.refs.contact.getDOMNode();
-      container = node.parentNode;
-      while (container.tagName !== 'ARTICLE') {
-        container = container.parentNode;
-      }
-      options = {
-        showOnClick: false,
-        container: container
-      };
-      return MessageUtils.tooltip(this.refs.contact.getDOMNode(), this.props.contact, this.addContact, options);
-    }
-  },
-  componentDidMount: function() {
-    return this._initTooltip();
-  },
-  componentDidUpdate: function() {
-    return this._initTooltip();
-  },
+  componentDidMount: function() {},
+  componentDidUpdate: function() {},
   addContact: function() {
     var modal, params;
     params = {
@@ -4716,7 +4715,9 @@ module.exports = ContactLabel = React.createClass({
       actionLabel: t('app confirm'),
       action: (function(_this) {
         return function() {
-          ContactActionCreator.createContact(_this.props.contact);
+          ContactActionCreator.createContact(_this.props.contact, function() {
+            return _this.forceUpdate();
+          });
           return LayoutActionCreator.hideModal();
         };
       })(this)
@@ -9941,7 +9942,9 @@ module.exports = {
     QUICK_FILTER: 'TOOLTIP_QUICK_FILTER',
     COMPOSE_IMAGE: 'TOOLTIP_COMPOSE_IMAGE',
     COMPOSE_MOCK: 'TOOLTIP_COMPOSE_MOCK',
-    EXPUNGE_MAILBOX: 'TOOLTIP_EXPUNGE_MAILBOX'
+    EXPUNGE_MAILBOX: 'TOOLTIP_EXPUNGE_MAILBOX',
+    ADD_CONTACT: 'TOOLTIP_ADD_CONTACT',
+    SHOW_CONTACT: 'TOOLTIP_SHOW_CONTACT'
   }
 };
 });
@@ -11353,6 +11356,8 @@ module.exports = {
   'tooltip filter': 'Filter',
   'tooltip display filters': 'Display filters',
   'tooltip expunge mailbox': 'Expunge mailbox',
+  "tooltip add concatc": "Add to your contacts",
+  "tooltip show contact": "Show contact",
   'filters unseen': 'unread',
   'filters flagged': 'stared',
   'filters attach': 'attachments',
@@ -11723,6 +11728,8 @@ module.exports = {
   'tooltip filter': 'Filtrer',
   'tooltip display filters': 'Afficher les filtres',
   'tooltip expunge mailbox': 'Vider la boite',
+  "tooltip add concatc": "Ajouter à vos contacts",
+  "tooltip show contact": "Voir les détails du contact",
   'filters unseen': 'non-lus',
   'filters flagged': 'favoris',
   'filters attach': 'pièces jointes',
