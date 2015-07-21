@@ -37,6 +37,8 @@ exports.accountRefreshed = (account) ->
                 SocketHandler.notify 'refresh.notify', data, logError
 
                 notificationsHelper.createOrUpdatePersistent ref,
-                    resource: emailsAppRessource
+                    resource:
+                        app: 'emails',
+                        url: "/#account/#{accountID}"
                     text: message
                 , logError
