@@ -83,7 +83,7 @@ if (typeof window.plugins !== "object") {
       'enter': {
         name: "Display current message",
         action: function (e) {
-          var btnConfirm = document.querySelector('.modal .modal-footer [class="btn btn-cozy"]');
+          var btnConfirm = document.querySelector('.modal .modal-footer .btn.btn-cozy');
           if (btnConfirm !== null) {
             btnConfirm.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
           } else {
