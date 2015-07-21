@@ -3,18 +3,25 @@ log = require('../utils/logging')(prefix: 'imap:oauth')
 
 xOAuthCache = {}
 
+# This file handle the generation of config for node-imap and nodemailer
+# it also handles xoauthgenerators as singletons by account
+# to prevent race between imap & smtp in creating access tokens
+
 CLIENT_ID = '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s' +
             '.apps.googleusercontent.com'
 
+# @TODO : investigate a better way to distribute this
 CLIENT_SECRET = '1gNUceDM59TjFAks58ftsniZ'
 
+
+# get the single instance of xoauthGenerator for this account
 getXoauth2Generator = (account) ->
     unless xOAuthCache[account.id]
         log.info "XOAUTH GENERATOR FOR #{account.label}"
 
-        timeout = 1000*account.oauthTimeout - Date.now() #timeout in ms
-        timeout = Math.floor timeout/1000 # timeout in s
-        timeout = Math.max timeout, 0 # min = 0
+        timeout = 1000 * account.oauthTimeout - Date.now() # timeout in ms
+        timeout = Math.floor(timeout / 1000) # timeout in s
+        timeout = Math.max(timeout, 0) # min = 0
 
         generator = xoauth2.createXOAuth2Generator
             user: account.login
@@ -24,6 +31,8 @@ getXoauth2Generator = (account) ->
             accessToken: account.oauthAccessToken
             timeout: timeout
 
+        # when the generator is forced to create a new token, we save it in
+        # the DS for later reuse
         generator.on 'token', ({user, accessToken, timeout}) ->
             account.updateAttributes
                 oauthAccessToken: accessToken
@@ -36,10 +45,16 @@ getXoauth2Generator = (account) ->
 
     return xOAuthCache[account.id]
 
+
+# force the generator to create a new access token
+# used when the connection fail in imap
+# (smtp calls the generateToken function directly)
 module.exports.forceOauthRefresh = (account, callback) ->
     log.info "FORCE OAUTH REFRESH"
     getXoauth2Generator(account).generateToken callback
 
+
+# create a nodemailer config for this account
 module.exports.makeSMTPConfig = (account) ->
     options =
         port: account.smtpPort
@@ -63,7 +78,7 @@ module.exports.makeSMTPConfig = (account) ->
     return options
 
 
-
+# create a node-imap config for this account
 module.exports.makeIMAPConfig = (account, callback) ->
 
     if account.oauthProvider is "GMAIL"
