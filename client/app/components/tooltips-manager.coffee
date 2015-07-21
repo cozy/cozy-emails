@@ -8,11 +8,13 @@ See https://github.com/m4dz/aria-tips#use
 {Tooltips} = require '../constants/app_constants'
 {div, p} = React.DOM
 
+
 module.exports = React.createClass
     displayName: 'TooltipManager'
 
     # The tooltip's content should not change so we prevent any refresh.
     shouldComponentUpdate: -> return false
+
 
     render: ->
 
@@ -37,6 +39,10 @@ module.exports = React.createClass
             @getTooltip Tooltips.QUICK_FILTER, t('tooltip display filters')
             @getTooltip Tooltips.EXPUNGE_MAILBOX, t('tooltip expunge mailbox')
 
+            # Message header: tooltips for contact action.
+            @getTooltip Tooltips.ADD_CONTACT, t('tooltip add contact')
+            @getTooltip Tooltips.SHOW_CONTACT, t('tooltip show contact')
+
 
     # Generate default markup for a tooltip.
     getTooltip: (id, content) ->
@@ -45,7 +51,4 @@ module.exports = React.createClass
             role: "tooltip"
             'aria-hidden': "true",
             content
-
-
-
 
