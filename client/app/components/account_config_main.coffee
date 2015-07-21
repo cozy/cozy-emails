@@ -161,6 +161,7 @@ module.exports = AccountConfigMain = React.createClass
 
 
     _renderReceivingServer: ->
+        advanced = if @state.imapAdvanced then 'hide' else 'show'
         div null,
             FieldSet text: t 'account receiving server'
 
@@ -175,8 +176,8 @@ module.exports = AccountConfigMain = React.createClass
                 name: 'imapPort'
                 value: @linkState('imapPort').value
                 errors: @state.errors
-                onBlur: =>
-                    @_onIMAPPort()
+                onBlur: (event) =>
+                    @_onIMAPPort(event)
                     @props.onBlur?()
                 onInput: =>
                     @setState imapManualPort: true
@@ -202,7 +203,7 @@ module.exports = AccountConfigMain = React.createClass
                 a
                     className: "col-sm-3 col-sm-offset-2 control-label clickable",
                     onClick: @toggleIMAPAdvanced,
-                    t "account imap #{if @state.imapAdvanced then 'hide' else 'show'} advanced"
+                    t "account imap #{advanced} advanced"
 
             if @state.imapAdvanced
                 AccountInput
@@ -213,6 +214,7 @@ module.exports = AccountConfigMain = React.createClass
 
 
     _renderSendingServer: ->
+        advanced = if @state.smtpAdvanced then 'hide' else 'show'
         div null,
             FieldSet text: t 'account sending server'
 
@@ -263,7 +265,7 @@ module.exports = AccountConfigMain = React.createClass
                 a
                     className: "col-sm-3 col-sm-offset-2 control-label clickable",
                     onClick: @toggleSMTPAdvanced,
-                    t "account smtp #{if @state.smtpAdvanced then 'hide' else 'show'} advanced"
+                    t "account smtp #{advanced} advanced"
 
             if @state.smtpAdvanced
                 FormDropdown
