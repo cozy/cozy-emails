@@ -1,3 +1,4 @@
+AccountActionCreator = require '../actions/account_action_creator'
 {
     div, p, form, label, input, button, ul, li, a, span, i,
     fieldset, legend
@@ -161,6 +162,7 @@ module.exports = AccountConfigMain = React.createClass
 
 
     _renderReceivingServer: ->
+        advanced = if @state.imapAdvanced then 'hide' else 'show'
         div null,
             FieldSet text: t 'account receiving server'
 
@@ -175,8 +177,8 @@ module.exports = AccountConfigMain = React.createClass
                 name: 'imapPort'
                 value: @linkState('imapPort').value
                 errors: @state.errors
-                onBlur: =>
-                    @_onIMAPPort()
+                onBlur: (event) =>
+                    @_onIMAPPort(event)
                     @props.onBlur?()
                 onInput: =>
                     @setState imapManualPort: true
@@ -202,7 +204,7 @@ module.exports = AccountConfigMain = React.createClass
                 a
                     className: "col-sm-3 col-sm-offset-2 control-label clickable",
                     onClick: @toggleIMAPAdvanced,
-                    t "account imap #{if @state.imapAdvanced then 'hide' else 'show'} advanced"
+                    t "account imap #{advanced} advanced"
 
             if @state.imapAdvanced
                 AccountInput
@@ -213,6 +215,7 @@ module.exports = AccountConfigMain = React.createClass
 
 
     _renderSendingServer: ->
+        advanced = if @state.smtpAdvanced then 'hide' else 'show'
         div null,
             FieldSet text: t 'account sending server'
 
@@ -263,7 +266,7 @@ module.exports = AccountConfigMain = React.createClass
                 a
                     className: "col-sm-3 col-sm-offset-2 control-label clickable",
                     onClick: @toggleSMTPAdvanced,
-                    t "account smtp #{if @state.smtpAdvanced then 'hide' else 'show'} advanced"
+                    t "account smtp #{advanced} advanced"
 
             if @state.smtpAdvanced
                 FormDropdown
@@ -305,7 +308,6 @@ module.exports = AccountConfigMain = React.createClass
 
 
     onMethodChange: (event) ->
-        console.log "blash"
         @state.smtpMethod.requestChange event.target.dataset.value
 
 
@@ -325,7 +327,7 @@ module.exports = AccountConfigMain = React.createClass
         login = @state.login.value
         domain = login.split('@')[1] if login?.indexOf '@' >= 0
 
-        if domain isnt @_lastDiscovered
+        if domain? and domain isnt @_lastDiscovered
             @_lastDiscovered = domain
 
             AccountActionCreator.discover domain, (err, provider) =>
@@ -452,7 +454,8 @@ module.exports = AccountConfigMain = React.createClass
                 infos.imapSSL = false
                 infos.imapTLS = false
 
-        @setState infos
+        @state.imapSSL.requestChange infos.imapSSL
+        @state.imapTLS.requestChange infos.imapTLS
 
 
     # Force SMTP parameters when SMTP port changes.
@@ -474,5 +477,6 @@ module.exports = AccountConfigMain = React.createClass
                 infos.smtpSSL = false
                 infos.smtpTLS = false
 
-        @setState infos
+        @state.smtpSSL.requestChange infos.smtpSSL
+        @state.smtpTLS.requestChange infos.smtpTLS
 
