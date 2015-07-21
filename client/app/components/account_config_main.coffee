@@ -452,7 +452,8 @@ module.exports = AccountConfigMain = React.createClass
                 infos.imapSSL = false
                 infos.imapTLS = false
 
-        @setState infos
+        @state.imapSSL.requestChange infos.imapSSL
+        @state.imapTLS.requestChange infos.imapTLS
 
 
     # Force SMTP parameters when SMTP port changes.
@@ -474,5 +475,6 @@ module.exports = AccountConfigMain = React.createClass
                 infos.smtpSSL = false
                 infos.smtpTLS = false
 
-        @setState infos
+        @state.smtpSSL.requestChange infos.smtpSSL
+        @state.smtpTLS.requestChange infos.smtpTLS
 
