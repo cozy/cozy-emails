@@ -1,4 +1,3 @@
-AccountActionCreator = require '../actions/account_action_creator'
 {
     div, p, form, label, input, button, ul, li, a, span, i,
     fieldset, legend
