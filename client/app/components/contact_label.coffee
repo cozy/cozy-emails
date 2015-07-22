@@ -1,5 +1,6 @@
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
 
+{Tooltips} = require '../constants/app_constants'
 MessageUtils = require '../utils/message_utils'
 ContactStore = require '../stores/contact_store'
 ContactActionCreator = require '../actions/contact_action_creator'
@@ -24,45 +25,44 @@ module.exports = ContactLabel = React.createClass
 
             if contactModel?
                 contactId = contactModel.get 'id'
-                a
+                span
                     ref: 'contact'
-                    target: '_blank'
-                    href: "/#apps/contacts/contact/#{contactId}"
                     onClick: (event) -> event.stopPropagation()
                     AddressLabel
                         contact: @props.contact
+                    a
+                        className: 'show-contact'
+                        target: '_blank'
+                        href: "/#apps/contacts/contact/#{contactId}"
+                    ,
+                        button
+                            className: 'fa fa-user'
+                            'aria-describedby': Tooltips.SHOW_CONTACT
+                            'data-tooltip-direction': 'top'
 
             else
                 span
                     ref: 'contact'
                     className: 'participant'
-                    onClick: (event) =>
-                        event.stopPropagation()
-                        @addContact()
+                ,
                     AddressLabel
                         contact: @props.contact
+                    span
+                        className: 'add-contact'
+                        onClick: (event) =>
+                            event.stopPropagation()
+                            @addContact()
+                    ,
+                        button
+                            className: 'fa fa-user-plus'
+                            'aria-describedby': Tooltips.ADD_CONTACT
+                            'data-tooltip-direction': 'top'
         else
-            span null
-
-
-
-    _initTooltip: ->
-        if @props.tooltip and @refs.contact?
-            node = @refs.contact.getDOMNode()
-            # because of absolute positionning of some elements, we must insert
-            # tooltip at article level
-            container = node.parentNode
-            container = container.parentNode while container.tagName isnt 'ARTICLE'
-            options =
-                showOnClick: false
-                container: container
-            MessageUtils.tooltip @refs.contact.getDOMNode(), @props.contact, @addContact, options
+            span()
 
     componentDidMount: ->
-        @_initTooltip()
 
     componentDidUpdate: ->
-        @_initTooltip()
 
     # When a contact is clicked, it asks to the user if he wants to add it to
     # its Cozy. If the user agrees it runs a contact creation action.
@@ -76,6 +76,8 @@ module.exports = ContactLabel = React.createClass
             closeLabel  : t 'app cancel'
             actionLabel : t 'app confirm'
             action      : =>
-                ContactActionCreator.createContact @props.contact
+                ContactActionCreator.createContact @props.contact, =>
+                    # When creation is done the contact is rendered again.
+                    @forceUpdate()
                 LayoutActionCreator.hideModal()
         LayoutActionCreator.displayModal modal

@@ -209,7 +209,9 @@ module.exports = AccountActionCreator = {
     LayoutActionCreator.notify(t('account removed'), {
       autoclose: true
     });
-    return window.router.navigate('', true);
+    return window.router.navigate('', {
+      trigger: true
+    });
   },
   _setNewAccountWaitingStatus: function(status) {
     return AppDispatcher.handleViewAction({
@@ -338,7 +340,7 @@ module.exports = ContactActionCreator = {
       value: query
     });
   },
-  createContact: function(contact) {
+  createContact: function(contact, callback) {
     var activity, options;
     options = {
       name: 'create',
@@ -357,9 +359,10 @@ module.exports = ContactActionCreator = {
       msg = t('contact create success', {
         contact: contact.name || contact.address
       });
-      return LayoutActionCreator.notify(msg, {
+      LayoutActionCreator.notify(msg, {
         autoclose: true
       });
+      return typeof callback === "function" ? callback() : void 0;
     };
     return activity.onerror = function() {
       var msg;
@@ -367,9 +370,10 @@ module.exports = ContactActionCreator = {
       msg = t('contact create error', {
         error: this.name
       });
-      return LayoutActionCreator.alertError(msg, {
+      LayoutActionCreator.alertError(msg, {
         autoclose: true
       });
+      return typeof callback === "function" ? callback() : void 0;
     };
   }
 };
@@ -745,7 +749,7 @@ module.exports = MessageActionCreator = {
   },
   send: function(message, callback) {
     return XHRUtils.messageSend(message, function(error, message) {
-      if (error == null) {
+      if ((error == null) && (message != null)) {
         AppDispatcher.handleViewAction({
           type: ActionTypes.MESSAGE_SEND,
           value: message
@@ -1366,7 +1370,8 @@ module.exports = React.createClass({
     options = {
       error: this.props.error,
       errors: this.state.errors,
-      onSubmit: this.onSubmit
+      onSubmit: this.onSubmit,
+      selectedAccount: this.props.selectedAccount
     };
     _ref1 = this._mailboxesFields;
     for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
@@ -1630,6 +1635,74 @@ module.exports = React.createClass({
     state.newMailboxParent = null;
     state.favoriteMailboxes = null;
     return state;
+  }
+});
+});
+
+;require.register("components/account_config_delete", function(exports, require, module) {
+var AccountActionCreator, AccountConfigDelete, FieldSet, FormButtons, LayoutActionCreator, div, _ref;
+
+div = React.DOM.div;
+
+AccountActionCreator = require('../actions/account_action_creator');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
+
+_ref = require('./basic_components'), FieldSet = _ref.FieldSet, FormButtons = _ref.FormButtons;
+
+module.exports = AccountConfigDelete = React.createClass({
+  displayName: 'AccountConfigDelete',
+  getInitialState: function() {
+    var state;
+    state = {};
+    state.deleting = false;
+    return state;
+  },
+  render: function() {
+    return div(null, FieldSet({
+      text: t('account danger zone')
+    }), FormButtons({
+      buttons: [
+        {
+          "class": 'btn-remove',
+          contrast: false,
+          "default": true,
+          danger: true,
+          onClick: this.onRemove,
+          spinner: this.state.deleting,
+          icon: 'trash',
+          text: t("account remove")
+        }
+      ]
+    }));
+  },
+  onRemove: function(event) {
+    var label, modal;
+    if (event != null) {
+      event.preventDefault();
+    }
+    label = this.props.selectedAccount.get('label');
+    modal = {
+      title: t('app confirm delete'),
+      subtitle: t('account remove confirm', {
+        label: label
+      }),
+      closeModal: function() {
+        return LayoutActionCreator.hideModal();
+      },
+      closeLabel: t('app cancel'),
+      actionLabel: t('app confirm'),
+      action: (function(_this) {
+        return function() {
+          LayoutActionCreator.hideModal();
+          _this.setState({
+            deleting: true
+          });
+          return AccountActionCreator.remove(_this.props.selectedAccount.get('id'));
+        };
+      })(this)
+    };
+    return LayoutActionCreator.displayModal(modal);
   }
 });
 });
@@ -1990,7 +2063,7 @@ module.exports = MailboxItem = React.createClass({
 });
 
 ;require.register("components/account_config_mailboxes", function(exports, require, module) {
-var AccountActionCreator, AccountConfigMailboxes, Form, LayoutActionCreator, MailboxItem, MailboxList, RouterMixin, SubTitle, classer, div, form, h4, i, input, label, li, span, ul, _ref, _ref1;
+var AccountActionCreator, AccountConfigMailboxes, AccountDelete, Form, LayoutActionCreator, MailboxItem, MailboxList, RouterMixin, SubTitle, classer, div, form, h4, i, input, label, li, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, h4 = _ref.h4, ul = _ref.ul, li = _ref.li, span = _ref.span, form = _ref.form, i = _ref.i, input = _ref.input, label = _ref.label;
 
@@ -2007,6 +2080,8 @@ MailboxList = require('./mailbox_list');
 MailboxItem = require('./account_config_item');
 
 _ref1 = require('./basic_components'), SubTitle = _ref1.SubTitle, Form = _ref1.Form;
+
+AccountDelete = require('./account_config_delete');
 
 module.exports = AccountConfigMailboxes = React.createClass({
   displayName: 'AccountConfigMailboxes',
@@ -2125,7 +2200,9 @@ module.exports = AccountConfigMailboxes = React.createClass({
           });
         };
       })(this)
-    })))));
+    }))), this.props.selectedAccount != null ? AccountDelete({
+      selectedAccount: this.props.selectedAccount
+    }) : void 0));
   },
   renderError: function() {
     var message;
@@ -2213,19 +2290,19 @@ module.exports = AccountConfigMailboxes = React.createClass({
 });
 
 ;require.register("components/account_config_main", function(exports, require, module) {
-var AccountActionCreator, AccountConfigMain, AccountInput, FieldSet, Form, FormButtons, FormDropdown, LayoutActionCreator, RouterMixin, a, button, classer, div, fieldset, form, i, input, label, legend, li, p, span, ul, _ref, _ref1;
+var AccountActionCreator, AccountConfigMain, AccountDelete, AccountInput, FieldSet, Form, FormButtons, FormDropdown, RouterMixin, a, button, classer, div, fieldset, form, i, input, label, legend, li, p, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, p = _ref.p, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, fieldset = _ref.fieldset, legend = _ref.legend;
 
 classer = React.addons.classSet;
 
-AccountActionCreator = require('../actions/account_action_creator');
-
 AccountInput = require('./account_config_input');
 
-RouterMixin = require('../mixins/router_mixin');
+AccountDelete = require('./account_config_delete');
 
-LayoutActionCreator = require('../actions/layout_action_creator');
+AccountActionCreator = require('../actions/account_action_creator');
+
+RouterMixin = require('../mixins/router_mixin');
 
 _ref1 = require('./basic_components'), Form = _ref1.Form, FieldSet = _ref1.FieldSet, FormButtons = _ref1.FormButtons, FormDropdown = _ref1.FormDropdown;
 
@@ -2248,7 +2325,6 @@ module.exports = AccountConfigMain = React.createClass({
     }
     state.imapAdvanced = false;
     state.smtpAdvanced = false;
-    state.deleting = false;
     return state;
   },
   componentWillReceiveProps: function(props) {
@@ -2352,21 +2428,8 @@ module.exports = AccountConfigMain = React.createClass({
           text: t('account check')
         }
       ]
-    }), this.props.selectedAccount != null ? FieldSet({
-      text: t('account danger zone')
-    }) : void 0, this.props.selectedAccount != null ? FormButtons({
-      buttons: [
-        {
-          "class": 'btn-remove',
-          contrast: false,
-          "default": true,
-          danger: true,
-          onClick: this.onRemove,
-          spinner: this.state.deleting,
-          icon: 'trash',
-          text: t("account remove")
-        }
-      ]
+    }), this.props.selectedAccount != null ? AccountDelete({
+      selectedAccount: this.props.selectedAccount
     }) : void 0);
   },
   _renderReceivingServer: function() {
@@ -2513,31 +2576,6 @@ module.exports = AccountConfigMain = React.createClass({
   onMethodChange: function(event) {
     console.log("blash");
     return this.state.smtpMethod.requestChange(event.target.dataset.value);
-  },
-  onRemove: function(event) {
-    var modal;
-    if (event != null) {
-      event.preventDefault();
-    }
-    modal = {
-      title: t('app confirm delete'),
-      subtitle: t('account remove confirm'),
-      closeModal: function() {
-        return LayoutActionCreator.hideModal();
-      },
-      closeLabel: t('app cancel'),
-      actionLabel: t('app confirm'),
-      action: (function(_this) {
-        return function() {
-          LayoutActionCreator.hideModal();
-          _this.setState({
-            deleting: true
-          });
-          return AccountActionCreator.remove(_this.props.selectedAccount.get('id'));
-        };
-      })(this)
-    };
-    return LayoutActionCreator.displayModal(modal);
   },
   toggleSMTPAdvanced: function() {
     return this.setState({
@@ -2828,9 +2866,9 @@ module.exports = React.createClass({
   renderNoChoice: function() {
     var account, label;
     account = this.props.accounts[this.props.valueLink.value];
-    label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
+    label = "" + (account.name || account.label) + " <" + account.login + ">";
     return p({
-      className: 'form-control-static col-sm-6'
+      className: 'form-control-static align-item'
     }, label);
   },
   renderPicker: function() {
@@ -2838,9 +2876,9 @@ module.exports = React.createClass({
     accounts = this.props.accounts;
     account = accounts[this.props.valueLink.value];
     value = this.props.valueLink.value;
-    label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
+    label = "" + (account.name || account.label) + " <" + account.login + ">";
     return div({
-      className: 'account-picker'
+      className: 'account-picker align-item'
     }, span({
       className: 'compose-from dropdown-toggle',
       'data-toggle': 'dropdown'
@@ -2866,7 +2904,7 @@ module.exports = React.createClass({
   },
   renderAccount: function(key, account) {
     var label;
-    label = "\"" + (account.name || account.label) + "\" <" + account.login + ">";
+    label = "" + (account.name || account.label) + " <" + account.login + ">";
     return li({
       role: 'presentation',
       key: key
@@ -3422,7 +3460,9 @@ AddressLabel = React.createClass({
     meaninglessKey = 0;
     if (((_ref1 = this.props.contact.name) != null ? _ref1.length : void 0) > 0 && this.props.contact.address) {
       key = this.props.contact.address.replace(/\W/g, '');
-      result = span(null, span(null, "" + this.props.contact.name + " "), span({
+      result = span(null, span({
+        className: 'highlight'
+      }, this.props.contact.name), span({
         className: 'contact-address',
         key: key
       }, i({
@@ -3557,7 +3597,7 @@ module.exports = {
 });
 
 ;require.register("components/compose", function(exports, require, module) {
-var AccountPicker, Compose, ComposeActions, ComposeEditor, ComposeToolbox, FilePicker, FileUtils, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, Tooltips, a, classer, div, form, h3, i, input, label, li, section, span, textarea, ul, _ref, _ref1, _ref2;
+var AccountPicker, Compose, ComposeActions, ComposeEditor, ComposeToolbox, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, Tooltips, a, classer, div, form, h3, i, input, label, li, section, span, textarea, ul, _ref, _ref1, _ref2;
 
 _ref = React.DOM, div = _ref.div, section = _ref.section, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label;
 
@@ -3576,8 +3616,6 @@ MailsInput = require('./mails_input');
 AccountPicker = require('./account_picker');
 
 _ref2 = require('../constants/app_constants'), ComposeActions = _ref2.ComposeActions, Tooltips = _ref2.Tooltips;
-
-FileUtils = require('../utils/file_utils');
 
 MessageUtils = require('../utils/message_utils');
 
@@ -3611,7 +3649,7 @@ module.exports = Compose = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, toggleFullscreen, _ref3, _ref4;
+    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, toggleFullscreen, _ref3;
     if (!this.props.accounts) {
       return;
     }
@@ -3630,9 +3668,7 @@ module.exports = Compose = React.createClass({
         panel: this.props.layout === 'full'
       }),
       'aria-expanded': true
-    }, h3({
-      'data-message-id': ((_ref3 = this.props.message) != null ? _ref3.get('id') : void 0) || ''
-    }, this.state.subject || t('compose')), form({
+    }, form({
       className: 'form-compose',
       method: 'POST'
     }, div({
@@ -3640,7 +3676,12 @@ module.exports = Compose = React.createClass({
     }, label({
       htmlFor: 'compose-from',
       className: classLabel
-    }, t("compose from")), div({
+    }, t("compose from")), AccountPicker({
+      accounts: this.props.accounts,
+      valueLink: this.linkState('accountID')
+    })), div({
+      className: 'clearfix'
+    }, null), div({
       className: classInput
     }, div({
       className: 'btn-toolbar compose-toggle',
@@ -3651,12 +3692,7 @@ module.exports = Compose = React.createClass({
     }, t('compose toggle cc')), a({
       className: 'compose-toggle-bcc',
       onClick: this.onToggleBcc
-    }, t('compose toggle bcc'))), AccountPicker({
-      accounts: this.props.accounts,
-      valueLink: this.linkState('accountID')
-    }))), div({
-      className: 'clearfix'
-    }, null), MailsInput({
+    }, t('compose toggle bcc')))), MailsInput({
       id: 'compose-to',
       valueLink: this.linkState('to'),
       label: t('compose to'),
@@ -3677,10 +3713,7 @@ module.exports = Compose = React.createClass({
       ref: 'bcc'
     }), div({
       className: 'form-group'
-    }, label({
-      htmlFor: 'compose-subject',
-      className: classLabel
-    }, t("compose subject")), div({
+    }, div({
       className: classInput
     }, input({
       id: 'compose-subject',
@@ -3688,15 +3721,12 @@ module.exports = Compose = React.createClass({
       ref: 'subject',
       valueLink: this.linkState('subject'),
       type: 'text',
-      className: 'form-control',
+      className: 'form-control compose-subject',
       placeholder: t("compose subject help")
     }))), div({
       className: ''
-    }, label({
-      htmlFor: 'compose-subject',
-      className: classLabel
-    }, t("compose content")), ComposeEditor({
-      messageID: (_ref4 = this.props.message) != null ? _ref4.get('id') : void 0,
+    }, ComposeEditor({
+      messageID: (_ref3 = this.props.message) != null ? _ref3.get('id') : void 0,
       html: this.linkState('html'),
       text: this.linkState('text'),
       accounts: this.props.accounts,
@@ -3816,7 +3846,7 @@ module.exports = Compose = React.createClass({
           };
           return MessageActionCreator.send(message, function(error, message) {
             var cid, msg;
-            if (error != null) {
+            if ((error != null) || (message == null)) {
               msg = "" + (t("message action draft ko")) + " " + error;
               return LayoutActionCreator.alertError(msg);
             } else {
@@ -3981,7 +4011,7 @@ module.exports = Compose = React.createClass({
       return MessageActionCreator.send(message, (function(_this) {
         return function(error, message) {
           var cid, key, msgKo, msgOk, state, value;
-          if ((error == null) && (_this.state.id == null)) {
+          if ((error == null) && (_this.state.id == null) && (message != null)) {
             MessageActionCreator.setCurrent(message.id);
           }
           state = _.clone(_this.state);
@@ -4006,7 +4036,7 @@ module.exports = Compose = React.createClass({
             msgKo = t("message action sent ko");
             msgOk = t("message action sent ok");
           }
-          if (error != null) {
+          if ((error != null) || (message == null)) {
             return LayoutActionCreator.alertError("" + msgKo + " " + error);
           } else {
             if (!isDraft) {
@@ -4153,9 +4183,11 @@ module.exports = Compose = React.createClass({
 });
 
 ;require.register("components/compose_editor", function(exports, require, module) {
-var ComposeEditor, button, div, textarea, _ref;
+var ComposeEditor, FileUtils, button, div, textarea, _ref;
 
 _ref = React.DOM, div = _ref.div, button = _ref.button, textarea = _ref.textarea;
+
+FileUtils = require('../utils/file_utils');
 
 module.exports = ComposeEditor = React.createClass({
   displayName: 'ComposeEditor',
@@ -4387,7 +4419,7 @@ module.exports = ComposeEditor = React.createClass({
       this._initCompose();
     }
     if (oldProps.accountID !== this.props.accountID) {
-      return this._updateSignature;
+      return this._updateSignature();
     }
   },
   _updateSignature: function() {
@@ -4598,9 +4630,11 @@ module.exports = ComposeToolbox = React.createClass({
 });
 
 ;require.register("components/contact_label", function(exports, require, module) {
-var AddressLabel, ContactActionCreator, ContactLabel, ContactStore, LayoutActionCreator, MessageUtils, a, button, h3, header, i, li, p, section, span, ul, _ref;
+var AddressLabel, ContactActionCreator, ContactLabel, ContactStore, LayoutActionCreator, MessageUtils, Tooltips, a, button, h3, header, i, li, p, section, span, ul, _ref;
 
 _ref = React.DOM, section = _ref.section, header = _ref.header, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button;
+
+Tooltips = require('../constants/app_constants').Tooltips;
 
 MessageUtils = require('../utils/message_utils');
 
@@ -4624,55 +4658,48 @@ module.exports = ContactLabel = React.createClass({
       contactModel = ContactStore.getByAddress(this.props.contact.address);
       if (contactModel != null) {
         contactId = contactModel.get('id');
-        return a({
+        return span({
           ref: 'contact',
-          target: '_blank',
-          href: "/#apps/contacts/contact/" + contactId,
           onClick: function(event) {
             return event.stopPropagation();
           }
         }, AddressLabel({
           contact: this.props.contact
-        }));
+        }), a({
+          className: 'show-contact',
+          target: '_blank',
+          href: "/#apps/contacts/contact/" + contactId
+        }, button({
+          className: 'fa fa-user',
+          'aria-describedby': Tooltips.SHOW_CONTACT,
+          'data-tooltip-direction': 'top'
+        })));
       } else {
         return span({
           ref: 'contact',
-          className: 'participant',
+          className: 'participant'
+        }, AddressLabel({
+          contact: this.props.contact
+        }), span({
+          className: 'add-contact',
           onClick: (function(_this) {
             return function(event) {
               event.stopPropagation();
               return _this.addContact();
             };
           })(this)
-        }, AddressLabel({
-          contact: this.props.contact
-        }));
+        }, button({
+          className: 'fa fa-user-plus',
+          'aria-describedby': Tooltips.ADD_CONTACT,
+          'data-tooltip-direction': 'top'
+        })));
       }
     } else {
-      return span(null);
+      return span();
     }
   },
-  _initTooltip: function() {
-    var container, node, options;
-    if (this.props.tooltip && (this.refs.contact != null)) {
-      node = this.refs.contact.getDOMNode();
-      container = node.parentNode;
-      while (container.tagName !== 'ARTICLE') {
-        container = container.parentNode;
-      }
-      options = {
-        showOnClick: false,
-        container: container
-      };
-      return MessageUtils.tooltip(this.refs.contact.getDOMNode(), this.props.contact, this.addContact, options);
-    }
-  },
-  componentDidMount: function() {
-    return this._initTooltip();
-  },
-  componentDidUpdate: function() {
-    return this._initTooltip();
-  },
+  componentDidMount: function() {},
+  componentDidUpdate: function() {},
   addContact: function() {
     var modal, params;
     params = {
@@ -4688,7 +4715,9 @@ module.exports = ContactLabel = React.createClass({
       actionLabel: t('app confirm'),
       action: (function(_this) {
         return function() {
-          ContactActionCreator.createContact(_this.props.contact);
+          ContactActionCreator.createContact(_this.props.contact, function() {
+            return _this.forceUpdate();
+          });
           return LayoutActionCreator.hideModal();
         };
       })(this)
@@ -4828,9 +4857,9 @@ module.exports = React.createClass({
             });
           };
         })(this)
-      }, t('load more messages', messages.length - 2), i({
-        className: 'fa fa-ellipsis-v'
-      })));
+      }, i({
+        className: 'fa fa-refresh'
+      }), t('load more messages', messages.length - 2)));
       items.push(this.renderMessage(last, false));
     } else {
       items = (function() {
@@ -5344,10 +5373,7 @@ FileItem = React.createClass({
       key: this.props.key
     }, i({
       className: "mime " + type + " fa " + iconClass
-    }), this.props.editable ? i({
-      className: "fa fa-times delete",
-      onClick: this.doDelete
-    }) : void 0, a({
+    }), a({
       className: 'file-name',
       target: '_blank',
       onClick: this.doDisplay,
@@ -5355,14 +5381,17 @@ FileItem = React.createClass({
       'data-file-url': file.url,
       'data-file-name': file.generatedFileName,
       'data-file-type': file.contentType
-    }, file.generatedFileName), div({
-      className: 'file-detail'
-    }, span(null, "" + ((file.length / 1000).toFixed(2)) + "Ko"), span({
+    }, file.generatedFileName), span({
+      className: 'file-size'
+    }, "\(" + ((file.length / 1000).toFixed(1)) + "Ko\)"), span({
       className: 'file-actions'
     }, a({
       className: "fa fa-download",
       href: "" + file.url + "?download=1"
-    }))));
+    }), this.props.editable ? i({
+      className: "fa fa-times delete",
+      onClick: this.doDelete
+    }) : void 0));
   },
   doDisplay: function(e) {
     e.preventDefault();
@@ -5511,7 +5540,7 @@ module.exports = MailsInput = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var cancelDragEvent, classLabel, className, current, knownContacts, listClass, onChange, onClick, placeholder, renderTag, _ref1;
+    var cancelDragEvent, classLabel, className, current, knownContacts, listClass, onChange, onClick, onInput, placeholder, renderTag, _ref1;
     renderTag = (function(_this) {
       return function(address, idx) {
         var display, onDragEnd, onDragStart, remove;
@@ -5584,6 +5613,13 @@ module.exports = MailsInput = React.createClass({
         }
       };
     })(this);
+    onInput = (function(_this) {
+      return function(event) {
+        var input;
+        input = _this.refs.contactInput.getDOMNode();
+        return input.cols = input.value.length + 2;
+      };
+    })(this);
     className = "" + (this.props.className || '') + " form-group mail-input " + this.props.id;
     classLabel = 'compose-label control-label';
     listClass = classer({
@@ -5634,6 +5670,7 @@ module.exports = MailsInput = React.createClass({
       rows: 1,
       value: this.state.unknown,
       onChange: onChange,
+      onInput: onInput,
       placeholder: placeholder,
       'autoComplete': 'off',
       'spellCheck': 'off'
@@ -5984,8 +6021,8 @@ module.exports = Menu = React.createClass({
         btn: true,
         fa: true,
         'drawer-toggle': true,
-        'fa-toggle-right': !this.state.isDrawerExpanded,
-        'fa-toggle-left': this.state.isDrawerExpanded
+        'fa-caret-right': !this.state.isDrawerExpanded,
+        'fa-caret-left': this.state.isDrawerExpanded
       }),
       onClick: LayoutActionCreator.drawerToggle
     })));
@@ -6522,7 +6559,7 @@ module.exports = MessageItem = React.createClass({
       }),
       onClick: this.onSelect
     }), (_ref3 = MessageFlags.SEEN, __indexOf.call(flags, _ref3) >= 0) ? i({
-      className: 'fa fa-circle-thin'
+      className: 'fa'
     }) : i({
       className: 'fa fa-circle'
     }), (_ref4 = MessageFlags.FLAGGED, __indexOf.call(flags, _ref4) >= 0) ? i({
@@ -6540,10 +6577,10 @@ module.exports = MessageItem = React.createClass({
     }, from.name ? from.name[0] : from.address[0]))), div({
       className: 'metas-wrapper'
     }, div({
-      className: 'participants'
+      className: 'participants ellipsable'
     }, this.getParticipants(message)), div({
-      className: 'subject'
-    }, message.get('subject')), div({
+      className: 'subject ellipsable'
+    }, p(null, message.get('subject'))), div({
       className: 'date'
     }, date), div({
       className: 'extras'
@@ -6551,7 +6588,7 @@ module.exports = MessageItem = React.createClass({
       className: 'attachments fa fa-paperclip'
     }) : void 0, this.props.displayConversations && this.props.conversationLengths > 1 ? span({
       className: 'conversation-length'
-    }, "[" + this.props.conversationLengths + "]") : void 0), div({
+    }, "" + this.props.conversationLengths) : void 0), div({
       className: 'preview'
     }, p(null, text.substr(0, 1024))))));
   },
@@ -6754,12 +6791,13 @@ module.exports = MessageList = React.createClass({
       afterAction = (function(_this) {
         return function() {
           return setTimeout(function() {
-            var listEnd;
+            var listEnd, params;
             listEnd = _this.refs.nextPage || _this.refs.listEnd || _this.refs.listEmpty;
             if ((listEnd != null) && DomUtils.isVisible(listEnd.getDOMNode())) {
-              return LayoutActionCreator.showMessageList({
+              params = {
                 parameters: _this.props.query
-              });
+              };
+              return LayoutActionCreator.showMessageList(params);
             }
           }, 100);
         };
@@ -6797,7 +6835,7 @@ module.exports = MessageList = React.createClass({
       value: this.props.refresh,
       max: 1
     }), this.props.messages.count() === 0 ? this.props.fetching ? p({
-      className: 'listFetching'
+      className: 'listFetching list-loading'
     }, t('list fetching')) : p({
       className: 'listEmpty',
       ref: 'listEmpty'
@@ -7663,11 +7701,11 @@ module.exports = React.createClass({
       className: 'fa fa-edit'
     }) : void 0, this.props.isDeleted ? i({
       className: 'fa fa-trash'
-    }) : void 0) : void 0, this.props.active ? div({
+    }) : void 0) : void 0, div({
       className: 'metas date'
-    }, messageUtils.formatDate(this.props.message.get('createdAt'))) : void 0, this.props.active ? PopupMessageDetails({
+    }, messageUtils.formatDate(this.props.message.get('createdAt'))), PopupMessageDetails({
       message: this.props.message
-    }) : void 0));
+    })));
   },
   renderAddress: function(field) {
     var users;
@@ -7751,7 +7789,7 @@ module.exports = Modal = React.createClass({
 });
 
 ;require.register("components/panel", function(exports, require, module) {
-var AccountConfig, AccountStore, Compose, Conversation, Dispositions, MessageFilter, MessageList, MessageStore, Panel, SearchStore, Settings, SettingsStore, StoreWatchMixin, TooltipRefesherMixin, _ref,
+var AccountConfig, AccountStore, Compose, Conversation, Dispositions, MessageFilter, MessageList, MessageStore, Panel, RouterMixin, SearchStore, Settings, SettingsStore, StoreWatchMixin, TooltipRefesherMixin, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 AccountConfig = require('./account_config');
@@ -7763,6 +7801,8 @@ Conversation = require('./conversation');
 MessageList = require('./message-list');
 
 Settings = require('./settings');
+
+RouterMixin = require('../mixins/router_mixin');
 
 StoreWatchMixin = require('../mixins/store_watch_mixin');
 
@@ -7780,7 +7820,7 @@ _ref = require('../constants/app_constants'), MessageFilter = _ref.MessageFilter
 
 module.exports = Panel = React.createClass({
   displayName: 'Panel',
-  mixins: [StoreWatchMixin([AccountStore, MessageStore, SettingsStore]), TooltipRefesherMixin],
+  mixins: [StoreWatchMixin([AccountStore, MessageStore, SettingsStore]), TooltipRefesherMixin, RouterMixin],
   shouldComponentUpdate: function(nextProps, nextState) {
     var should;
     should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
@@ -7834,10 +7874,14 @@ module.exports = Panel = React.createClass({
         }).call(this);
         counterMessage = t('list count', messagesCount);
       } else {
-        this.redirect({
-          direction: "first",
-          action: "default"
-        });
+        setTimeout((function(_this) {
+          return function() {
+            return _this.redirect({
+              direction: "first",
+              action: "default"
+            });
+          };
+        })(this), 1);
         return;
       }
     }
@@ -8134,7 +8178,7 @@ module.exports = React.createClass({
         return event.stopPropagation();
       }
     }, i({
-      className: 'btn fa fa-paperclip fa-flip-horizontal',
+      className: 'btn fa fa-paperclip',
       onClick: this.toggleAttachments,
       'aria-describedby': Tooltips.OPEN_ATTACHMENTS,
       'data-tooltip-direction': 'left'
@@ -8252,7 +8296,7 @@ module.exports = React.createClass({
         }
         return _results;
       }
-    }).call(this), reply != null ? row('reply', this.formatUsers(reply), 'headers reply-to') : void 0, row('created', this.props.message.get('createdAt'), 'headers date'), row('subject', this.props.message.get('subject'), 'headers subject')))) : void 0);
+    }).call(this), reply != null ? row('reply', this.formatUsers(reply), 'headers reply-to') : void 0, row('created', this.props.message.get('createdAt'), 'headers date')))) : void 0);
   }
 });
 });
@@ -9898,7 +9942,9 @@ module.exports = {
     QUICK_FILTER: 'TOOLTIP_QUICK_FILTER',
     COMPOSE_IMAGE: 'TOOLTIP_COMPOSE_IMAGE',
     COMPOSE_MOCK: 'TOOLTIP_COMPOSE_MOCK',
-    EXPUNGE_MAILBOX: 'TOOLTIP_EXPUNGE_MAILBOX'
+    EXPUNGE_MAILBOX: 'TOOLTIP_EXPUNGE_MAILBOX',
+    ADD_CONTACT: 'TOOLTIP_ADD_CONTACT',
+    SHOW_CONTACT: 'TOOLTIP_SHOW_CONTACT'
   }
 };
 });
@@ -10974,7 +11020,7 @@ module.exports = {
   "compose bcc help": "Hidden copy list",
   "compose subject": "Subject",
   "compose content": "Content",
-  "compose subject help": "Message subject",
+  "compose subject help": "Subject",
   "compose reply prefix": "Re: ",
   "compose reply separator": "\n\nOn %{date}, %{sender} wrote \n",
   "compose forward prefix": "Fwd: ",
@@ -11044,7 +11090,7 @@ module.exports = {
   "headers reply-to": "Reply to",
   "headers date": "Date",
   "headers subject": "Subject",
-  "load more messages": "load %{smart_count} more message |||| load %{smart_count} more messages",
+  "load more messages": "Load %{smart_count} more message |||| load %{smart_count} more messages",
   "length bytes": "bytes",
   "length kbytes": "Kb",
   "length mbytes": "Mb",
@@ -11119,7 +11165,7 @@ module.exports = {
   "account smtpTLS": "Use STARTTLS",
   "account remove": "Remove this account",
   "account removed": "Account removed",
-  "account remove confirm": "Do you really want to remove this account?",
+  "account remove confirm": "Do you really want to remove account “%{label}” ?",
   "account draft mailbox": "Draft box",
   "account sent mailbox": "Sent box",
   "account trash mailbox": "Trash",
@@ -11256,7 +11302,7 @@ module.exports = {
   "settings lang fr": "Français",
   "settings lang de": "Deutsch",
   "settings save error": "Unable to save settings, please try again",
-  "picker drop here": "Drop files here",
+  "picker drop here": "Drop files here or Choose local files",
   "mailbox pick one": "Pick one",
   "mailbox pick null": "No box for this",
   "task account-fetch": 'Refreshing %{account}',
@@ -11310,6 +11356,8 @@ module.exports = {
   'tooltip filter': 'Filter',
   'tooltip display filters': 'Display filters',
   'tooltip expunge mailbox': 'Expunge mailbox',
+  "tooltip add concatc": "Add to your contacts",
+  "tooltip show contact": "Show contact",
   'filters unseen': 'unread',
   'filters flagged': 'stared',
   'filters attach': 'attachments',
@@ -11490,7 +11538,7 @@ module.exports = {
   "account smtpTLS": "Utiliser STARTTLS",
   "account remove": "Supprimer ce compte",
   "account removed": "Compte supprimé",
-  "account remove confirm": "Voulez-vous vraiment supprimer ce compte ?",
+  "account remove confirm": "Voulez-vous vraiment supprimer le compte « %{label} » ?",
   "account draft mailbox": "Enregistrer les brouillons dans",
   "account sent mailbox": "Enregistrer les messages envoyés dans",
   "account trash mailbox": "Corbeille",
@@ -11626,7 +11674,7 @@ module.exports = {
   "settings lang fr": "Français",
   "settings lang de": "Deutsch",
   "settings save error": "Erreur d'enregistrement des paramètres, veuillez réessayer",
-  "picker drop here": "Déposer les fichiers ici",
+  "picker drop here": "Déposer les fichiers ici ou chercher des fichiers locaux",
   "mailbox pick one": "Choisissez une boîte",
   "mailbox pick null": "Pas de boîte pour ça",
   "task account-fetch": 'Rafraîchissement %{account}',
@@ -11680,6 +11728,8 @@ module.exports = {
   'tooltip filter': 'Filtrer',
   'tooltip display filters': 'Afficher les filtres',
   'tooltip expunge mailbox': 'Vider la boite',
+  "tooltip add concatc": "Ajouter à vos contacts",
+  "tooltip show contact": "Voir les détails du contact",
   'filters unseen': 'non-lus',
   'filters flagged': 'favoris',
   'filters attach': 'pièces jointes',
@@ -12148,7 +12198,9 @@ AccountStore = (function(_super) {
       var mailboxID, updated;
       mailboxID = _arg.mailboxID, updated = _arg.updated;
       _mailboxRefreshing[mailboxID]--;
-      setMailbox(updated.accountID, updated.id, updated);
+      if (updated != null) {
+        setMailbox(updated.accountID, updated.id, updated);
+      }
       return this.emit('change');
     });
   };
@@ -12451,7 +12503,7 @@ LayoutStore = (function(_super) {
 
   _disposition = Dispositions.COL;
 
-  _previewSize = 50;
+  _previewSize = 60;
 
   _previewFullscreen = false;
 

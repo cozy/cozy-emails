@@ -47,8 +47,7 @@ Account = (function(superClass) {
     favorites: [String],
     patchIgnored: Boolean,
     supportRFC4551: Boolean,
-    signature: String,
-    oauthProvider: String
+    signature: String
   };
 
   Account.findSafe = function(id, callback) {
