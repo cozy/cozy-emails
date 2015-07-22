@@ -86,6 +86,7 @@ module.exports = MessageUtils =
         signatureHtml = signature.replace /\n/g, '<br>'
         message.html += """
         <p><br></p><p id="signature">-- \n<br>#{signatureHtml}</p>
+        <p><br></p>
             """
 
     # Build message to put in the email composer depending on the context
@@ -186,13 +187,16 @@ module.exports = MessageUtils =
         message.subject = @getReplySubject inReplyTo
         message.text = separator + @generateReplyText(text) + "\n"
         message.html = """
-            #{COMPOSE_STYLE}
-            <p>#{separator}<span class="originalToggle"> … </span></p>
-            <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
-            <p><br></p>
-            """
+        #{COMPOSE_STYLE}
+        <p><br></p>
+        """
+
         if isSignature
             @addSignature message, signature
+        message.html += """
+            <p>#{separator}<span class="originalToggle"> … </span></p>
+            <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
+            """
 
     # Build message to display in composer in case of a reply to all message:
     # * set subject automatically (Re: previous subject)
@@ -230,12 +234,17 @@ module.exports = MessageUtils =
         message.text = separator + @generateReplyText(text) + "\n"
         message.html = """
             #{COMPOSE_STYLE}
+            <p><br></p>
+        """
+
+        if isSignature
+            @addSignature message, signature
+
+        message.html += """
             <p>#{separator}<span class="originalToggle"> … </span></p>
             <blockquote style="#{QUOTE_STYLE}">#{html}</blockquote>
             <p><br></p>
             """
-        if isSignature
-            @addSignature message, signature
 
 
     # Build message to display in composer in case of a message forwarding:
