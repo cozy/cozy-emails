@@ -259,9 +259,6 @@ module.exports = React.createClass
             mailboxes            : @props.mailboxes
             selectedMailboxID    : @props.selectedMailboxID
             inConversation       : @props.inConversation
-            onReply              : @onReply
-            onReplyAll           : @onReplyAll
-            onForward            : @onForward
             onDelete             : @onDelete
             onHeaders            : @onHeaders
             onMove               : @onMove
@@ -294,27 +291,6 @@ module.exports = React.createClass
             e.stopPropagation()
             @props.toggleActive()
             @setState headers: false
-
-
-    onReply: (event) ->
-        event.preventDefault()
-        event.stopPropagation()
-        messageId = @props.message.get 'id'
-        @redirect "#reply/#{messageId}"
-
-
-    onReplyAll: (event) ->
-        event.preventDefault()
-        event.stopPropagation()
-        messageId = @props.message.get 'id'
-        @redirect "#reply-all/#{messageId}"
-
-
-    onForward: (event) ->
-        event.preventDefault()
-        event.stopPropagation()
-        messageId = @props.message.get 'id'
-        @redirect "#forward/#{messageId}"
 
 
     onDelete: (e) ->
