@@ -7,6 +7,7 @@ getMessageActionCreator = ->
     MessageActionCreator ?= require '../actions/message_action_creator'
     return MessageActionCreator
 
+
 class LayoutStore extends Store
 
     ###
@@ -208,20 +209,37 @@ class LayoutStore extends Store
     ###
         Public API
     ###
-    getDisposition: -> return _disposition
+    getDisposition: ->
+        return _disposition
 
-    getPreviewSize: -> return _previewSize
 
-    isPreviewFullscreen: -> return _previewFullscreen
+    getPreviewSize: ->
+        return _previewSize
 
-    getModal: -> return _modal
 
-    getToasts: -> return _tasks
+    isPreviewFullscreen: ->
+        return _previewFullscreen
 
-    isShown: -> return _shown
 
-    intentAvailable: -> return _intentAvailable
+    getModal: ->
+        return _modal
 
-    isDrawerExpanded: -> return _drawer
+
+    getToasts: ->
+        return _tasks
+
+
+    isShown: ->
+        return _shown
+
+
+    intentAvailable: ->
+        return _intentAvailable
+
+
+    isDrawerExpanded: ->
+        return _drawer
+
 
 module.exports = LayoutStoreInstance = new LayoutStore()
+

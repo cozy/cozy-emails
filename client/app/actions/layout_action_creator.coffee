@@ -204,6 +204,7 @@ module.exports = LayoutActionCreator =
         if length? and length > 1
             MessageActionCreator.fetchConversation conversationID
 
+
     showComposeNewMessage: (panelInfo, direction) ->
         # if there isn't a selected account (page loaded directly),
         # select the default account
@@ -212,7 +213,9 @@ module.exports = LayoutActionCreator =
             defaultAccount = AccountStore.getDefault()
             AccountActionCreator.selectAccount defaultAccount.get 'id'
 
-    # Edit draft
+
+    # Display compose widget but this time it's aimed to be pre-filled:
+    # either with reply/forward or with draft information.
     showComposeMessage: (panelInfo, direction) ->
         # if there isn't a selected account (page loaded directly),
         # select the default account
@@ -220,6 +223,17 @@ module.exports = LayoutActionCreator =
         if not selectedAccount?
             defaultAccount = AccountStore.getDefault()
             AccountActionCreator.selectAccount defaultAccount.get 'id'
+
+        # If message is not there, it fetches it from server.
+        messageID = panelInfo.parameters.messageID
+        message = MessageStore.getByID messageID
+        unless message?
+            XHRUtils.fetchMessage messageID, (err, rawMessage) ->
+                if err?
+                    LayoutActionCreator.alertError err
+                else
+                    MessageActionCreator.receiveRawMessage rawMessage
+
 
     showCreateAccount: (panelInfo, direction) ->
         AccountActionCreator.selectAccount null
