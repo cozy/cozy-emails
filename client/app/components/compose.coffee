@@ -172,35 +172,32 @@ module.exports = Compose = React.createClass
                 div className: 'clearfix', null
 
 
-    # Cancel brings back to default view. If it's while replying to a message,
-    # it brings back to this message.
-    onCancel: (event) ->
-        event.preventDefault()
+    # Build message hash with the many ids required: account ID, mailbox ID,
+    # conversation ID and message ID.
+    buildMessageHash: (options) ->
+        {accountID, mailboxID, conversationID, messageID} = options
+        hash = "#account/#{accountID}/"
+        hash += "mailbox/#{mailboxID}/"
+        hash += "conversation/#{conversationID}/#{messageID}/"
+        return hash
 
-        # Action after cancelation: call @props.onCancel
-        # or navigate to message list
-        if @props.onCancel?
-            @props.onCancel()
 
-        # If we are answering to a message, canceling should bring back to
-        # this message.
-        # The message URL requires many information: account ID, mailbox ID,
-        # conversation ID and message ID.
-        else if @props.inReplyTo?
+    # If we are answering to a message, canceling should bring back to
+    # this message.
+    # The message URL requires many information: account ID, mailbox ID,
+    # conversation ID and message ID.
+    finalRedirect: ->
+        if @props.inReplyTo?
             messageID = @props.inReplyTo.get 'id'
             accountID = @props.inReplyTo.get 'accountID'
             mailboxID = AccountStore.getSelectedMailbox().get 'id'
-            mailboxID = AccountStore.getMailbox message, account unless mailboxID?
+            unless mailboxID?
+                mailboxID = AccountStore.getMailbox message, account
             account = @props.accounts[@props.selectedAccountID]
             conversationID = @props.inReplyTo.get('conversationID')
             conversation = MessageStore.getConversation conversationID
-
-            @redirect "#account/#{accountID}/mailbox/#{mailboxID}/conversation/#{conversationID}/#{messageID}/"
-            #@buildUrl
-                #direction: 'first'
-                #action: 'message'
-                #messageID: @props.inReplyTo.get 'messageID'
-                #fullWidth: true
+            options = {accountID, mailboxID, conversationID, messageID}
+            @redirect @buildMessageHash options
 
         # Else it should bring to the default view
         else
@@ -208,6 +205,20 @@ module.exports = Compose = React.createClass
                 direction: 'first'
                 action: 'default'
                 fullWidth: true
+
+
+    # Cancel brings back to default view. If it's while replying to a message,
+    # it brings back to this message.
+    onCancel: (event) ->
+        event.preventDefault()
+
+        # Action after cancelation: call @props.onCancel
+        # or navigate to message list.
+        if @props.onCancel?
+            @props.onCancel()
+        else
+            @finalRedirect()
+
 
     _initCompose: ->
 
@@ -490,10 +501,7 @@ module.exports = Compose = React.createClass
                             # reload conversation to update its length
                             cid = message.conversationID
                             MessageActionCreator.fetchConversation cid
-                        if @props.callback?
-                            @props.callback error
-                        else
-                            @redirect @buildClosePanelUrl @props.layout
+                        @finalRedirect()
 
 
     _autosave: ->
