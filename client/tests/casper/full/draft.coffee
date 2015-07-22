@@ -33,14 +33,14 @@ casper.test.begin 'Test draft', (test) ->
         casper.waitForSelector ".form-compose .rt-editor", ->
             casper.waitWhileSelector '.composeToolbox .button-spinner', ->
                 if casper.exists '.compose-from [data-value="dovecot-ID"]'
-                    test.assertEquals casper.fetchText('.account-picker .compose-from').trim(), '"DoveCot" <me@cozytest.cc>', 'Account selected'
+                    test.assertEquals casper.fetchText('.account-picker .compose-from').trim(), 'DoveCot <me@cozytest.cc>', 'Account selected'
                 else
                     casper.click '.account-picker .caret'
                     casper.waitUntilVisible '.account-picker .dropdown-menu', ->
                         test.pass 'Account picker displayed'
                         casper.click '.account-picker .dropdown-menu [data-value="dovecot-ID"]', ->
                         casper.waitForSelector '.compose-from [data-value="dovecot-ID"]', ->
-                            test.assertEquals casper.fetchText('.account-picker .compose-from').trim(), '"DoveCot" <me@cozytest.cc>', 'Account selected'
+                            test.assertEquals casper.fetchText('.account-picker .compose-from').trim(), 'DoveCot <me@cozytest.cc>', 'Account selected'
 
     casper.then ->
         test.comment "Compose message"
@@ -72,7 +72,7 @@ casper.test.begin 'Test draft', (test) ->
             casper.waitUntilVisible '.modal-dialog',  ->
                 confirm = casper.fetchText('.modal-body').trim()
                 test.assertEquals confirm, "Message not sent, keep the draft?", "Confirmation dialog"
-                casper.click ".modal-dialog .btn.btn-cozy-non-default"
+                casper.click ".modal-dialog .btn.modal-close"
                 casper.waitWhileVisible '.modal-dialog'
 
     casper.then ->
@@ -94,7 +94,7 @@ casper.test.begin 'Test draft', (test) ->
                 casper.waitUntilVisible '.modal-dialog',  ->
                     confirm = casper.fetchText('.modal-body').trim()
                     test.assertEquals confirm, "Do you really want to delete message “#{messageSubject}”?", "Confirmation dialog"
-                    casper.click ".modal-dialog .btn:not(.btn-cozy-non-default)"
+                    casper.click ".modal-dialog .btn.modal-action"
                     casper.waitWhileSelector ".form-compose h3[data-message-id=#{messageID}]", ->
                         test.pass 'Compose closed'
                         if casper.getEngine() is 'slimer'

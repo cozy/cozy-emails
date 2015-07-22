@@ -82,7 +82,7 @@ casper.cozy.selectMessage = (account, box, subject, messageID, cb) ->
                 if not subjectDone?
                     subjectDone = "h3[data-conversation-id='#{conversationID}']"
                     subject = casper.fetchText subjectSel
-                casper.waitForSelector subjectDone, ->
+                casper.waitForSelector "#{subjectDone}, section.compose.panel", ->
                     cb(subject, messageID, conversationID)
                 , ->
                     casper.test.fail "Error displaying `#{subject}`: no element match `#{subjectDone}`"
@@ -107,7 +107,7 @@ exports.init = (casper) ->
         casper.options.verbose = true
         casper.options.logLevel = 'debug'
     casper.options.waitTimeout = 60000
-    casper.options.timeout = 300000
+    casper.options.timeout = 600000
     casper.options.viewportSize = {width: 1024, height: 768}
     casper.on 'exit', (res) ->
         if res isnt 0 or dev
