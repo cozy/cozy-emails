@@ -28,12 +28,23 @@ module.exports = class Router extends PanelRouter
         'message':
             pattern: 'message/:messageID'
             fluxAction: 'showMessage'
+
         'conversation':
             pattern: 'conversation/:conversationID/:messageID/'
             fluxAction: 'showConversation'
+
         'compose':
             pattern: 'compose'
             fluxAction: 'showComposeNewMessage'
+        'compose.reply':
+            pattern: 'reply/:messageID'
+            fluxAction: 'showComposeMessage'
+        'compose.reply-all':
+            pattern: 'reply-all/:messageID'
+            fluxAction: 'showComposeMessage'
+        'compose.forward':
+            pattern: 'forward/:messageID'
+            fluxAction: 'showComposeMessage'
         'edit':
             pattern: 'edit/:messageID'
             fluxAction: 'showComposeMessage'
@@ -78,3 +89,4 @@ module.exports = class Router extends PanelRouter
                 defaultParameters = null
 
         return defaultParameters
+

@@ -2,9 +2,13 @@
 {AlertLevel}     = require '../constants/app_constants'
 LayoutActionCreator = require '../actions/layout_action_creator'
 
+
 module.exports = React.createClass
     displayName: 'Alert'
 
+
+    # Render an alert message box with color and style corresponding to given
+    # level of alert.
     render: ->
 
         alert = @props.alert
@@ -29,9 +33,13 @@ module.exports = React.createClass
                                 span className: "sr-only", t "app alert close"
                         strong null, alert.message
 
+
+    # Hide current alert.
     hide: ->
         LayoutActionCreator.alertHide()
 
+
+    # Hide after 10 seconds.
     autohide: ->
         if false and @props.alert.level is AlertLevel.SUCCESS
             setTimeout =>
@@ -39,8 +47,11 @@ module.exports = React.createClass
             , 1000
             setTimeout @hide, 10000
 
+
     componentDidMount: ->
         @autohide()
 
+
     componentDidUpdate: ->
         @autohide()
+

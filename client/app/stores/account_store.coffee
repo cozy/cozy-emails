@@ -4,6 +4,7 @@ Store = require '../libs/flux/store/store'
 
 AccountTranslator = require '../utils/translators/account_translator'
 
+
 class AccountStore extends Store
 
     ###
@@ -33,7 +34,6 @@ class AccountStore extends Store
     _newAccountWaiting = false
     _newAccountError   = null
     _mailboxRefreshing = {}
-
 
     _refreshSelected = ->
         if selectedAccountID = _selectedAccount?.get 'id'
@@ -72,6 +72,7 @@ class AccountStore extends Store
             else if mb1.get 'label' > mb2.get 'label' then return 1
             else return 0
 
+
     _applyMailboxDiff: (accountID, diff) ->
         account = _accounts.get accountID
         mailboxes = account.get('mailboxes')
@@ -102,8 +103,10 @@ class AccountStore extends Store
     _setCurrentAccount: (account) ->
         _selectedAccount = account
 
+
     _setCurrentMailbox: (mailbox) ->
         _selectedMailbox = mailbox
+
 
     ###
         Defines here the action handlers.
@@ -188,18 +191,25 @@ class AccountStore extends Store
                 setMailbox updated.accountID, updated.id, updated
             @emit 'change'
 
+
     ###
         Public API
     ###
-    getAll: -> return _accounts
+    getAll: ->
+        return _accounts
+
 
     getByID: (accountID) ->
         return _accounts.get accountID
 
+
     getByLabel: (label) ->
         _accounts.find (account) -> account.get('label') is label
 
-    getDefault: -> return _accounts.first() or null
+
+    getDefault: ->
+        return _accounts.first() or null
+
 
     getDefaultMailbox: (accountID) ->
 
@@ -218,7 +228,10 @@ class AccountStore extends Store
             return if defaultID then mailboxes.get defaultID
             else mailboxes.first()
 
-    getSelected: -> return _selectedAccount
+
+    getSelected: ->
+        return _selectedAccount
+
 
     getSelectedMailboxes: (sorted) ->
 
@@ -235,20 +248,26 @@ class AccountStore extends Store
 
         return result
 
+
     selectedIsDifferentThan: (accountID, mailboxID) ->
         differentSelected = _selectedAccount?.get('id') isnt accountID or
         _selectedMailbox?.get('id') isnt mailboxID
 
         return differentSelected
 
+
     getSelectedMailbox: (selectedID) ->
         mailboxes = @getSelectedMailboxes()
+
         if selectedID?
             return mailboxes.get selectedID
+
         else if _selectedMailbox?
             return _selectedMailbox
+
         else
             return mailboxes.first()
+
 
     getSelectedFavorites: (sorted) ->
 
@@ -268,15 +287,34 @@ class AccountStore extends Store
 
         return mb
 
-    getError: -> return _newAccountError
 
-    isWaiting: -> return _newAccountWaiting
+    getError: ->
+        return _newAccountError
+
+
+    isWaiting: ->
+        return _newAccountWaiting
+
 
     isMailboxRefreshing: (mailboxID)->
         _mailboxRefreshing[mailboxID] > 0
 
+
     getMailboxRefresh: (mailboxID) ->
         if _mailboxRefreshing[mailboxID] > 0 then 0.9 else 0
 
+    # Returns corresponding mailbox for given message and account.
+    getMailbox: (message, account) ->
+        for boxID of message.mailboxIds when boxID in account.favorites
+            return boxID
+
+        if Object.keys(message.get 'mailboxIds').length >= 0
+            return Object.keys(message.get 'mailboxIds')[0]
+        else
+            return null
+
+
+
 
 module.exports = new AccountStore()
+

@@ -112,6 +112,7 @@ module.exports = ToolboxActions = React.createClass
         # remove undefined values from the array
         return items.filter (child) -> Boolean child
 
+
     renderConversationActions: ->
         items = [
             MenuItem
@@ -152,3 +153,4 @@ module.exports = ToolboxActions = React.createClass
                     className: "pusher pusher-#{mbox.depth}"
                     onClick: => @props.onConversationMove id
                     mbox.label
+
