@@ -127,6 +127,17 @@
     },
     {
         "docType": "Mailbox",
+        "accountID": "gmail-ID",
+        "attribs": [],
+        "children": [],
+        "delimiter": "/",
+        "_id": "gmail-ID-folder3",
+        "label": "noconv",
+        "path": "noconv",
+        "tree": ["noconv"]
+    },
+    {
+        "docType": "Mailbox",
         "accountID": "dovecot-ID",
         "attribs": [],
         "children": [],
