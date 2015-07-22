@@ -5207,6 +5207,7 @@ function MediumEditor(elements, options) {
     // Event handlers that shouldn't be exposed externally
 
     function handleDisabledEnterKeydown(event, element) {
+        /*
         if (this.options.disableReturn || element.getAttribute('data-disable-return')) {
             event.preventDefault();
         } else if (this.options.disableDoubleReturn || element.getAttribute('data-disable-double-return')) {
@@ -5218,6 +5219,9 @@ function MediumEditor(elements, options) {
                 event.preventDefault();
             }
         }
+        */
+      event.preventDefault();
+      self.options.ownerDocument.execCommand('insertHTML', false, "\n<br>\n<br>");
     }
 
     function handleTabKeydown(event) {
