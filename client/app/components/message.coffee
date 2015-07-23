@@ -6,9 +6,8 @@
 MessageHeader  = require "./message_header"
 MessageFooter  = require "./message_footer"
 ToolbarMessage = require './toolbar_message'
-Compose        = require './compose'
 
-{ComposeActions, MessageFlags} = require '../constants/app_constants'
+{MessageFlags} = require '../constants/app_constants'
 
 LayoutActionCreator       = require '../actions/layout_action_creator'
 MessageActionCreator      = require '../actions/message_action_creator'
@@ -49,7 +48,6 @@ module.exports = React.createClass
 
     getInitialState: ->
         return {
-            composing: @_shouldOpenCompose(@props)
             composeAction: ''
             headers: false
             messageDisplayHTML: @props.settings.get 'messageDisplayHTML'
@@ -63,15 +61,6 @@ module.exports = React.createClass
         should = not(_.isEqual(nextState, @state)) or
                  not (_.isEqual(nextProps, @props))
         return should
-
-
-    _shouldOpenCompose: (props) ->
-        # if message is a draft, and not deleted, open the compose component
-        flags     = @props.message.get('flags').slice()
-        trash     = @props.accounts[@props.selectedAccountID]?.trashMailbox
-        isDraft   = flags.indexOf(MessageFlags.DRAFT) > -1
-        isDeleted = @props.message.get('mailboxIDs')[trash]?
-        return isDraft and not isDeleted
 
 
     _prepareMessage: (message) ->
@@ -140,7 +129,6 @@ module.exports = React.createClass
             @_markRead(props.message, props.active)
             state.messageDisplayHTML   = props.settings.get 'messageDisplayHTML'
             state.messageDisplayImages = props.settings.get 'messageDisplayImages'
-            state.composing            = @_shouldOpenCompose props
         @setState state
 
 
@@ -237,7 +225,6 @@ module.exports = React.createClass
                     onClick: setActive,
                     @renderHeaders()
                     @renderToolbox() if @props.active
-                @renderCompose(prepared.isDraft) if @props.active
                 (div className: 'full-headers',
                     pre null, prepared?.fullHeaders?.join "\n") if @props.active
                 (MessageContent
@@ -248,7 +235,6 @@ module.exports = React.createClass
                     text: prepared.text
                     rich: prepared.rich
                     imagesWarning: imagesWarning
-                    composing: @state.composing
                     displayImages: @displayImages
                     displayHTML: @displayHTML) if @props.active
                 (footer null,
@@ -266,7 +252,6 @@ module.exports = React.createClass
 
 
     renderToolbox: (full = true) ->
-        return if @state.composing
 
         ToolbarMessage
             full                 : full
@@ -274,9 +259,6 @@ module.exports = React.createClass
             mailboxes            : @props.mailboxes
             selectedMailboxID    : @props.selectedMailboxID
             inConversation       : @props.inConversation
-            onReply              : @onReply
-            onReplyAll           : @onReplyAll
-            onForward            : @onForward
             onDelete             : @onDelete
             onHeaders            : @onHeaders
             onMove               : @onMove
@@ -291,40 +273,6 @@ module.exports = React.createClass
         MessageFooter
             message: @props.message
             ref: 'footer'
-
-
-    renderCompose: (isDraft) ->
-        if @state.composing
-            # If message is a draft, opens it, otherwise create a new message
-            options =
-                accounts             : @props.accounts
-                layout               : 'second'
-                ref                  : 'compose'
-                selectedAccountID    : @props.selectedAccountID
-                selectedAccountLogin : @props.selectedAccountLogin
-                settings             : @props.settings
-                useIntents           : @props.useIntents
-            if isDraft
-                options.action            = null
-                options.inReplyTo         = null
-                options.message           = @props.message
-                options.selectedMailboxID = @props.selectedMailboxID
-            else
-                options.action    =@state.composeAction
-                options.inReplyTo = @props.message
-                options.callback  = (error) =>
-                    if not error?
-                        # component has probably already been unmounted
-                        # due to conversation refresh
-                        if @isMounted()
-                            @setState composing: false
-                options.onCancel = =>
-                    # component has probably already been unmounted
-                    # due to conversation refresh
-                    if @isMounted()
-                        @setState composing: false
-
-            Compose options
 
 
     toggleHeaders: (e) ->
@@ -344,27 +292,10 @@ module.exports = React.createClass
             @props.toggleActive()
             @setState headers: false
 
-    onReply: (e) ->
-        e.preventDefault()
-        e.stopPropagation()
-        @setState composing: true, composeAction: ComposeActions.REPLY
-
-
-    onReplyAll: (e) ->
-        e.preventDefault()
-        e.stopPropagation()
-        @setState composing: true, composeAction: ComposeActions.REPLY_ALL
-
-
-    onForward: (e) ->
-        e.preventDefault()
-        e.stopPropagation()
-        @setState composing: true, composeAction: ComposeActions.FORWARD
-
 
     onDelete: (e) ->
-        e.preventDefault()
-        e.stopPropagation()
+        event.preventDefault()
+        event.stopPropagation()
         needConfirmation = @props.settings.get('messageConfirmDelete')
         messageID = @props.message.get('id')
         confirmMessage = t 'mail confirm delete',
@@ -385,17 +316,21 @@ module.exports = React.createClass
                     LayoutActionCreator.hideModal()
             LayoutActionCreator.displayModal modal
 
+
     onConversationDelete: ->
         conversationID = @props.message.get('conversationID')
         MessageActionCreator.delete {conversationID}
+
 
     onMark: (flag) ->
         messageID = @props.message.get('id')
         MessageActionCreator.mark {messageID}, flag
 
+
     onConversationMark: (flag) ->
         conversationID = @props.message.get('conversationID')
         MessageActionCreator.mark {conversationID}, flag
+
 
     onMove: (to) ->
         messageID = @props.message.get('id')
@@ -403,11 +338,13 @@ module.exports = React.createClass
         subject = @props.message.get 'subject'
         MessageActionCreator.move {messageID}, from, to
 
+
     onConversationMove: (to) ->
         conversationID = @props.message.get('conversationID')
         from = @props.selectedMailboxID
         subject = @props.message.get 'subject'
         MessageActionCreator.move {conversationID}, from, to
+
 
     onCopy: (args) ->
         LayoutActionCreator.alertWarning t "app unimplemented"
@@ -435,12 +372,13 @@ module.exports = React.createClass
         @setState messageDisplayHTML: value
 
 
-
 MessageContent = React.createClass
     displayName: 'MessageContent'
 
+
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
+
 
     render: ->
         displayHTML= =>
@@ -471,6 +409,7 @@ MessageContent = React.createClass
             div className: 'row',
                 div className: 'preview', ref: content,
                     p dangerouslySetInnerHTML: { __html: @props.rich }
+
 
     _initFrame: (type) ->
         panel = document.querySelector "#panels > .panel:nth-of-type(2)"
@@ -530,8 +469,11 @@ MessageContent = React.createClass
         else
             window.cozyMails.customEvent "MESSAGE_LOADED", @props.messageID
 
+
     componentDidMount: ->
         @_initFrame('mount')
 
+
     componentDidUpdate: ->
         @_initFrame('update')
+

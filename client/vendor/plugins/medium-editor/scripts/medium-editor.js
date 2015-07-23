@@ -5268,8 +5268,8 @@ function MediumEditor(elements, options) {
                 p = this.options.ownerDocument.createElement('p');
                 p.innerHTML = '<br>';
                 node.previousElementSibling.parentNode.insertBefore(p, node);
-                event.preventDefault();
             }
+                event.preventDefault();
         } else if (Util.isKey(event, Util.keyCode.DELETE) &&
                     // between two sibling elements
                     node.nextElementSibling &&
@@ -5311,8 +5311,8 @@ function MediumEditor(elements, options) {
             // 3) move the cursor into the paragraph
 
             // create a paragraph before the list
-            p = this.options.ownerDocument.createElement('p');
-            p.innerHTML = '<br>';
+            p = this.options.ownerDocument.createElement('br');
+            //p.innerHTML = '<br>';
             node.parentElement.parentElement.insertBefore(p, node.parentElement);
 
             // move the cursor into the new paragraph
@@ -5326,6 +5326,7 @@ function MediumEditor(elements, options) {
     }
 
     function handleKeyup(event) {
+
         var node = Selection.getSelectionStart(this.options.ownerDocument),
             tagName;
 
@@ -5347,6 +5348,7 @@ function MediumEditor(elements, options) {
                 if (!/h\d/.test(tagName)) {
                     this.options.ownerDocument.execCommand('formatBlock', false, 'p');
                 }
+                event.preventDefault();
             }
         }
     }

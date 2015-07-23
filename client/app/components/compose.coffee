@@ -9,6 +9,8 @@ FilePicker     = require './file_picker'
 MailsInput     = require './mails_input'
 
 AccountPicker = require './account_picker'
+AccountStore = require '../stores/account_store'
+MessageStore = require '../stores/message_store'
 
 {ComposeActions, Tooltips} = require '../constants/app_constants'
 
@@ -18,16 +20,19 @@ MessageUtils = require '../utils/message_utils'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-
 RouterMixin = require '../mixins/router_mixin'
 
+
+# Component that allows the user to write emails.
 module.exports = Compose = React.createClass
     displayName: 'Compose'
+
 
     mixins: [
         RouterMixin,
         React.addons.LinkedStateMixin # two-way data binding
     ]
+
 
     propTypes:
         selectedAccountID:    React.PropTypes.string.isRequired
@@ -41,16 +46,18 @@ module.exports = Compose = React.createClass
         settings:             React.PropTypes.object.isRequired
         useIntents:           React.PropTypes.bool.isRequired
 
+
     getDefaultProps: ->
         layout: 'full'
+
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
             not (_.isEqual(nextProps, @props))
 
+
     render: ->
         return unless @props.accounts
-
 
         toggleFullscreen = ->
             LayoutActionCreator.toggleFullscreen()
@@ -122,15 +129,17 @@ module.exports = Compose = React.createClass
                 div className: 'form-group',
                     div className: classInput,
                         input
-                            id: 'compose-subject',
-                            name: 'compose-subject',
-                            ref: 'subject',
-                            valueLink: @linkState('subject'),
-                            type: 'text',
-                            className: 'form-control compose-subject',
+                            id: 'compose-subject'
+                            name: 'compose-subject'
+                            ref: 'subject'
+                            valueLink: @linkState('subject')
+                            type: 'text'
+                            className: 'form-control compose-subject'
                             placeholder: t "compose subject help"
+
                 div className: '',
                     ComposeEditor
+                        id                : 'compose-editor'
                         messageID         : @props.message?.get 'id'
                         html              : @linkState('html')
                         text              : @linkState('text')
@@ -162,24 +171,44 @@ module.exports = Compose = React.createClass
 
                 div className: 'clearfix', null
 
-    onCancel: (e) ->
-        e.preventDefault()
 
-        # Action after cancelation : call @props.onCancel
-        # or navigate to message list
-        if @props.onCancel?
-            @props.onCancel()
+    # If we are answering to a message, canceling should bring back to
+    # this message.
+    # The message URL requires many information: account ID, mailbox ID,
+    # conversation ID and message ID. These infor are collected via current
+    # selection and message information.
+    finalRedirect: ->
+        if @props.inReplyTo?
+            @redirect MessageStore.getMessageHash @props.inReplyTo
+
+        # Else it should bring to the default view
         else
             @redirect @buildUrl
                 direction: 'first'
                 action: 'default'
                 fullWidth: true
 
+
+    # Cancel brings back to default view. If it's while replying to a message,
+    # it brings back to this message.
+    onCancel: (event) ->
+        event.preventDefault()
+
+        # Action after cancelation: call @props.onCancel
+        # or navigate to message list.
+        if @props.onCancel?
+            @props.onCancel()
+        else
+            @finalRedirect()
+
+
     _initCompose: ->
 
         if @_saveInterval
             window.clearInterval @_saveInterval
+
         @_saveInterval = window.setInterval @_autosave, 30000
+
         # First save of draft
         @_autosave()
 
@@ -189,11 +218,15 @@ module.exports = Compose = React.createClass
         # Focus
         if not Array.isArray(@state.to) or @state.to.length is 0
             setTimeout ->
-                document.getElementById('compose-to').focus()
-            , 0
+                document.getElementById('compose-to')?.focus()
+            , 10
+        else if @props.inReplyTo?
+            document.getElementById('compose-editor')?.focus()
+
 
     componentDidMount: ->
         @_initCompose()
+
 
     componentDidUpdate: ->
         switch @state.focus
@@ -208,6 +241,7 @@ module.exports = Compose = React.createClass
                     document.getElementById('compose-bcc').focus()
                 , 0
                 @setState focus: ''
+
 
     componentWillUnmount: ->
         if @_saveInterval
@@ -288,6 +322,7 @@ module.exports = Compose = React.createClass
                     LayoutActionCreator.displayModal modal
                 , 0
 
+
     getInitialState: ->
 
         # edition of an existing draft
@@ -328,21 +363,25 @@ module.exports = Compose = React.createClass
         # it has not been updated
         state.initHtml = state.html
         state.initText = state.text
+
         return state
+
 
     componentWillReceiveProps: (nextProps) ->
         if nextProps.message isnt @props.message
             @props.message = nextProps.message
             @setState @getInitialState()
 
-    onDraft: (e) ->
-        e.preventDefault()
+
+    onDraft: (event) ->
+        event.preventDefault()
         @_doSend true
 
-    onSend: (e) ->
-        if e?
-            e.preventDefault()
+
+    onSend: (event) ->
+        event.preventDefault() if event?
         @_doSend false
+
 
     _doSend: (isDraft) ->
 
@@ -444,14 +483,13 @@ module.exports = Compose = React.createClass
                             # reload conversation to update its length
                             cid = message.conversationID
                             MessageActionCreator.fetchConversation cid
-                        if @props.callback?
-                            @props.callback error
-                        else
-                            @redirect @buildClosePanelUrl @props.layout
+                        @finalRedirect()
+
 
     _autosave: ->
         if @props.settings.get 'autosaveDraft'
             @_doSend true
+
 
     # set source of attached images
     _cleanHTML: (html) ->
@@ -474,6 +512,7 @@ module.exports = Compose = React.createClass
         else
             console.error "Unable to parse HTML content of message"
             return html
+
 
     onDelete: (e) ->
         e.preventDefault()
@@ -517,11 +556,13 @@ module.exports = Compose = React.createClass
             action      : doDelete
         LayoutActionCreator.displayModal modal
 
+
     onToggleCc: (e) ->
         toggle = (e) -> e.classList.toggle 'shown'
         toggle e for e in @getDOMNode().querySelectorAll '.compose-cc'
         focus = if not @state.ccShown then 'cc' else ''
         @setState ccShown: not @state.ccShown, focus: focus
+
 
     onToggleBcc: (e) ->
         toggle = (e) -> e.classList.toggle 'shown'
@@ -529,8 +570,8 @@ module.exports = Compose = React.createClass
         focus = if not @state.bccShown then 'bcc' else ''
         @setState bccShown: not @state.bccShown, focus: focus
 
+
     # Get the file picker component (method used to pass it to the editor)
     getPicker: ->
         return @refs.attachments
-
 

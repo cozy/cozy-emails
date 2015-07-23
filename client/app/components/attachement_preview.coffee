@@ -62,3 +62,4 @@ module.exports = React.createClass
             "#{0 | length / 1024} #{t 'length kbytes'}"
         else
             "#{0 | length / (1024*1024)} #{t 'length mbytes'}"
+

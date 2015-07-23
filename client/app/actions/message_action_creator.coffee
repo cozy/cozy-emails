@@ -4,19 +4,22 @@ Constants = require '../constants/app_constants'
 XHRUtils      = require '../utils/xhr_utils'
 AccountStore  = require "../stores/account_store"
 MessageStore  = require '../stores/message_store'
-refCounter=1
+refCounter = 1
 
 module.exports = MessageActionCreator =
+
 
     receiveRawMessages: (messages) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.RECEIVE_RAW_MESSAGES
             value: messages
 
+
     receiveRawMessage: (message) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.RECEIVE_RAW_MESSAGE
             value: message
+
 
     send: (message, callback) ->
         XHRUtils.messageSend message, (error, message) ->
@@ -25,6 +28,7 @@ module.exports = MessageActionCreator =
                     type: ActionTypes.MESSAGE_SEND
                     value: message
             callback? error, message
+
 
     # set conv to true to update current conversation ID
     setCurrent: (messageID, conv) ->
@@ -35,6 +39,7 @@ module.exports = MessageActionCreator =
             value:
                 messageID: messageID
                 conv: conv
+
 
     fetchConversation: (conversationID) ->
 
@@ -235,5 +240,7 @@ _loopSeries = (obj, iterator, done) ->
             return done null if ++i is keys.length
             step()
 
+
 # circular, import after
 LAC = require './layout_action_creator'
+

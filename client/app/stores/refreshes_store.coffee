@@ -2,12 +2,14 @@ Store = require '../libs/flux/store/store'
 
 {ActionTypes} = require '../constants/app_constants'
 
+
 refreshesToImmutable = (refreshes) ->
     Immutable.Sequence refreshes
     # sets objectID as index
     .mapKeys (_, refresh) -> return refresh.objectID
     .map (refresh) -> Immutable.fromJS refresh
     .toOrderedMap()
+
 
 class RefreshesStore extends Store
 
@@ -43,6 +45,9 @@ class RefreshesStore extends Store
             @emit 'notify', t('notif new title'), body: data.message
 
 
-    getRefreshing: -> _refreshes
+    getRefreshing: ->
+        return _refreshes
+
 
 module.exports = new RefreshesStore()
+

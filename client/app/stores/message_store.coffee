@@ -43,6 +43,7 @@ class MessageStore extends Store
     _currentID       = null
     _currentCID      = null
     _prevAction      = null
+    _isLoadingReply  = false
 
     _inFlightByRef = {}
     _inFlightByMessageID = {}
@@ -207,10 +208,12 @@ class MessageStore extends Store
     onReceiveRawMessage = (message) ->
         oldmsg = _messages.get message.id
         updated = oldmsg?.get 'updated'
+
         # only update message if new version is newer than
         # the one currently stored
         if not (message.updated? and updated? and updated > message.updated) and
            not message._deleted # deleted draft are empty, don't update them
+
 
             message.attachments   ?= []
             message.date          ?= new Date().toISOString()
@@ -220,7 +223,6 @@ class MessageStore extends Store
             message.attachments = message.attachments.map (file) ->
                 Immutable.Map file
             message.attachments = Immutable.Vector.from message.attachments
-
 
             # message loaded from fixtures for test purpose have a docType
             # that may cause some troubles
@@ -245,6 +247,7 @@ class MessageStore extends Store
                diff = computeMailboxDiff(oldmsg, messageMap)
                 AccountStore._applyMailboxDiff message.accountID, diff
 
+        getMessage = _messages.get message.id
 
     handleFetchResult = (result) ->
 
@@ -272,6 +275,7 @@ class MessageStore extends Store
 
         for message in result.messages when message?
             onReceiveRawMessage message
+
 
     ###
         Defines here the action handlers.
@@ -449,6 +453,27 @@ class MessageStore extends Store
     ###
     getByID: (messageID) -> msg = _messages.get(messageID) or null
 
+
+    # Build message hash from message and currently selected mailbox and
+    # account.
+    getMessageHash: (message) ->
+
+        messageID = message.get 'id'
+        accountID = message.get 'accountID'
+        mailboxID = AccountStore.getSelectedMailbox().get 'id'
+        unless mailboxID?
+            mailboxID = AccountStore.getMailbox message, account
+
+        account = AccountStore.getSelected().get 'id'
+        conversationID = message.get('conversationID')
+
+        hash = "#account/#{accountID}/"
+        hash += "mailbox/#{mailboxID}/"
+        hash += "conversation/#{conversationID}/#{messageID}/"
+
+        return hash
+
+
     ###*
     * Get messages from mailbox, with optional pagination
     *
@@ -467,13 +492,14 @@ class MessageStore extends Store
             sequence = sequence.filter dedupConversation()
 
         sequence = sequence.sort(__getSortFunction _sortField, _sortOrder)
-
         _currentMessages = sequence.toOrderedMap()
 
         return _currentMessages
 
+
     getCurrentID: ->
         return _currentID
+
 
     setCurrentID: (messageID, conv) ->
         if conv?
@@ -568,13 +594,23 @@ class MessageStore extends Store
     getMixed: (target) ->
         _getMixed target
 
-    getConversationsLength: -> return _conversationLengths
+    getConversationsLength: ->
+        return _conversationLengths
 
-    getParams: -> return _params
+    getParams: ->
+        return _params
 
-    getCurrentFilter: -> return _filter
+    getCurrentFilter: ->
+        return _filter
 
-    getPrevAction: -> return _prevAction
+    getPrevAction: ->
+        return _prevAction
+
+    setIsLoadingReply: ->
+        return isLoadingReply
+
+    isLoadingReply: ->
+        return isLoadingReply
 
     isFetching: ->
         return _fetching > 0

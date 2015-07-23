@@ -204,7 +204,6 @@ FormDropdown = React.createClass
                                         t "#{@props.methodPrefix} #{method}"
 
 
-
 # Widget to display contact following these rules:
 # If a name is provided => Contact Name <address@contact.com>
 # If no name is provided => address@contact.com
@@ -236,6 +235,7 @@ AddressLabel = React.createClass
             result = span null, @props.contact.address
 
         return result
+
 
 # Available properties:
 # - values: {key -> value}
@@ -274,6 +274,7 @@ Dropdown = React.createClass
                     for key, value of @props.values
                         renderFilter key, t "list filter #{key}"
 
+
 # Widget to display a spinner.
 # If property `white` is set to true, it will use the white version.
 Spinner = React.createClass
@@ -290,6 +291,9 @@ Spinner = React.createClass
             alt: 'spinner'
             className: 'button-spinner'
 
+
+# Module to display a loading progress bar. It takes a current value and a
+# max value as paremeter.
 Progress = React.createClass
     displayName: 'Progress'
 
@@ -308,6 +312,7 @@ Progress = React.createClass
                 "aria-valuenow": @props.value
                 "aria-valuemin": '0'
                 "aria-valuemax": @props.max
+
 
 module.exports = {
     AddressLabel
@@ -328,3 +333,4 @@ module.exports = {
     Title
     Tabs
 }
+

@@ -21,9 +21,6 @@ module.exports = React.createClass
         message            : React.PropTypes.object.isRequired
         mailboxes          : React.PropTypes.object.isRequired
         selectedMailboxID  : React.PropTypes.string.isRequired
-        onReply            : React.PropTypes.func.isRequired
-        onReplyAll         : React.PropTypes.func.isRequired
-        onForward          : React.PropTypes.func.isRequired
         onDelete           : React.PropTypes.func.isRequired
         onMove             : React.PropTypes.func.isRequired
         onHeaders          : React.PropTypes.func.isRequired
@@ -43,19 +40,19 @@ module.exports = React.createClass
 
     renderReply: ->
         div className: cBtnGroup,
-            button
+            a
                 className: "#{cBtn} fa-mail-reply mail-reply"
-                onClick: @props.onReply
+                href: "#reply/#{@props.message.get 'id'}"
                 'aria-describedby': Tooltips.REPLY
                 'data-tooltip-direction': 'top'
-            button
+            a
                 className: "#{cBtn} fa-mail-reply-all mail-reply-all"
-                onClick: @props.onReplyAll
+                href: "#reply-all/#{@props.message.get 'id'}"
                 'aria-describedby': Tooltips.REPLY_ALL
                 'data-tooltip-direction': 'top'
-            button
+            a
                 className: "#{cBtn} fa-mail-forward mail-forward"
-                onClick: @props.onForward
+                href: "#forward/#{@props.message.get 'id'}"
                 'aria-describedby': Tooltips.FORWARD
                 'data-tooltip-direction': 'top'
 

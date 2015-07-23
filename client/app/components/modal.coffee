@@ -1,3 +1,5 @@
+
+
 module.exports = Modal = React.createClass
     displayName: 'Modal'
 
@@ -47,14 +49,14 @@ module.exports = Modal = React.createClass
                                     onClick: @props.closeModal,
                                     @props.closeLabel
 
-    copyContent: ->
-        sel= window.getSelection()
 
-        if sel.rangeCount > 0
-            sel.removeAllRanges()
+    copyContent: ->
+        sel = window.getSelection()
+        sel.removeAllRanges() if sel.rangeCount > 0
 
         range = document.createRange()
-        range.selectNode(@refs.content?.getDOMNode())
-        sel.addRange(range)
+        range.selectNode @refs.content?.getDOMNode()
+        sel.addRange range
+
         document.execCommand 'copy'
 

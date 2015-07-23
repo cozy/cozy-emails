@@ -2,12 +2,16 @@
 
 RouterMixin = require '../mixins/router_mixin'
 
+
 module.exports = React.createClass
+
     displayName: 'AccountPicker'
+
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
             not (_.isEqual(nextProps, @props))
+
 
     render: ->
         accounts = @props.accounts
@@ -16,14 +20,17 @@ module.exports = React.createClass
         else
             @renderPicker()
 
+
     onChange: ({target: dataset: value: accountID})->
         @props.valueLink.requestChange accountID
+
 
     renderNoChoice: ->
         account = @props.accounts[@props.valueLink.value]
 
         label = "#{account.name or account.label} <#{account.login}>"
         p className: 'form-control-static align-item', label
+
 
     renderPicker:  ->
         accounts = @props.accounts
@@ -44,6 +51,7 @@ module.exports = React.createClass
                 for key, account of accounts when key isnt value
                     @renderAccount(key, account)
 
+
     renderAccount: (key, account) ->
         label = "#{account.name or account.label} <#{account.login}>"
 
@@ -55,5 +63,4 @@ module.exports = React.createClass
                     onClick: @onChange,
                     'data-value': key,
                     label
-
 
