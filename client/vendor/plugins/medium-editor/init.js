@@ -19,7 +19,12 @@ window.plugins.mediumeditor = {
           options;
       options = {
         imageDragging: false, // We handle image drag'n'drop ourself
-        cleanPastedHTML: true
+        cleanPastedHTML: true,
+        static: true,
+        targetBlank: true,
+        toolbar: {
+          buttons: ['bold', 'italic', 'underline', 'anchor', 'h2', 'h3']
+        }
       }
       if (!editorNode.classList.contains('medium-editor')) {
         medium = new window.MediumEditor(editorNode, options);
