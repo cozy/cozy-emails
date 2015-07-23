@@ -305,13 +305,14 @@ class AccountStore extends Store
 
     # Returns corresponding mailbox for given message and account.
     getMailbox: (message, account) ->
-        for boxID of message.mailboxIds when boxID in account.favorites
-            return boxID
+        boxID = null
+        for boxID of message.get('mailboxIds') when boxID in account.favorites
+            boxID = boxID
 
-        if Object.keys(message.get 'mailboxIds').length >= 0
+        if not boxID? and Object.keys(message.get 'mailboxIds').length >= 0
             return Object.keys(message.get 'mailboxIds')[0]
-        else
-            return null
+
+        return boxID
 
 
 
