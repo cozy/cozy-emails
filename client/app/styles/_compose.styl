@@ -54,6 +54,7 @@
         text-align left
         color      #000
         cursor     text
+        font-size  1em
 
         // reset border + padding
         border  none
@@ -61,12 +62,14 @@
 
         // poor's man CSS reset, to apply default style to content of
         // replied message
-        *
-            margin 0
-            padding 0
-        ul, ol, dl, li, dl
+
+        ul, ol, dl
             margin .5em
             padding inherit
+
+        li
+            margin 0 .5em
+            padding 0
 
         blockquote
             border-left .25em solid blue
@@ -85,11 +88,6 @@
             color basecolor
             font-weight bold
             cursor pointer
-
-        div
-        p
-            margin 0
-            padding 0
 
     .compose-subject
         height    2.5em
@@ -116,9 +114,6 @@
         position absolute
         right    0em
         padding  0.6em 0
-
-    a
-      padding 0 1em
 
 
     .btn-contact
