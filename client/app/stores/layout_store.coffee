@@ -135,7 +135,7 @@ class LayoutStore extends Store
                 smart_count: smart_count
 
         makeUndoAction = (ref) ->
-            label: 'undo'
+            label: t 'action undo'
             onClick: -> getMessageActionCreator().undo ref
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, ref, updated}) ->
