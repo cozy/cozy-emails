@@ -172,32 +172,14 @@ module.exports = Compose = React.createClass
                 div className: 'clearfix', null
 
 
-    # Build message hash with the many ids required: account ID, mailbox ID,
-    # conversation ID and message ID.
-    buildMessageHash: (options) ->
-        {accountID, mailboxID, conversationID, messageID} = options
-        hash = "#account/#{accountID}/"
-        hash += "mailbox/#{mailboxID}/"
-        hash += "conversation/#{conversationID}/#{messageID}/"
-        return hash
-
-
     # If we are answering to a message, canceling should bring back to
     # this message.
     # The message URL requires many information: account ID, mailbox ID,
-    # conversation ID and message ID.
+    # conversation ID and message ID. These infor are collected via current
+    # selection and message information.
     finalRedirect: ->
         if @props.inReplyTo?
-            messageID = @props.inReplyTo.get 'id'
-            accountID = @props.inReplyTo.get 'accountID'
-            mailboxID = AccountStore.getSelectedMailbox().get 'id'
-            unless mailboxID?
-                mailboxID = AccountStore.getMailbox message, account
-            account = @props.accounts[@props.selectedAccountID]
-            conversationID = @props.inReplyTo.get('conversationID')
-            conversation = MessageStore.getConversation conversationID
-            options = {accountID, mailboxID, conversationID, messageID}
-            @redirect @buildMessageHash options
+            @redirect MessageStore.getMessageHash @props.inReplyTo
 
         # Else it should bring to the default view
         else
