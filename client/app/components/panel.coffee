@@ -36,6 +36,7 @@ module.exports = Panel = React.createClass
         # -- Generates a list of messages for a given account and mailbox
         if @props.action is 'account.mailbox.messages' or
            @props.action is 'account.mailbox.messages.full' or
+           @props.action is 'account.mailbox.default' or
            @props.action is 'search'
 
             @renderList()
@@ -67,7 +68,7 @@ module.exports = Panel = React.createClass
         else
             console.error "Unknown action #{@props.action}"
             window.cozyMails.logInfo "Unknown action #{@props.action}"
-            return React.DOM.div null, 'Unknown component'
+            return React.DOM.div null, "Unknown component #{@props.action}"
 
     renderList: ->
         if @props.action is 'search'

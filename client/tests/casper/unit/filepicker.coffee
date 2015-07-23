@@ -56,7 +56,7 @@ casper.test.begin 'Test file picker', 9, (test) ->
             test.assertElementCount '.file-item', 1, "File is displayed"
             test.assertSelectorHasText '.file-name', 'file1.txt', "File name displayed"
             test.assertExists '.mime.fa-file-text-o', "MIME type"
-            test.assertSelectorHasText '.file-detail', "1.23", "File size"
+            test.assertSelectorHasText '.file-size', "1.2Ko", "File size"
             test.assertNot(casper.exists(".file-item .delete"), "We can't delete files")
 
 

@@ -284,8 +284,9 @@ module.exports = class Router extends Backbone.Router
         panelInfo = _.clone panelInfo
         parameters = _.clone panelInfo.parameters or {}
         # gets default values, if there are
-        if (defaultParameters = @_getDefaultParameters panelInfo.action)?
-
+        defaultParameters = @_getDefaultParameters panelInfo.action, \
+            panelInfo.parameters
+        if defaultParameters?
             # merges the parameters in the relevant place
             for key, defaultParameter of defaultParameters
                 if not parameters[key]?

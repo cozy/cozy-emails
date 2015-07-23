@@ -31,19 +31,19 @@ module.exports = Modal = React.createClass
                             if @props.allowCopy
                                 React.DOM.button
                                     type: 'button',
-                                    className: 'btn btn-cozy',
+                                    className: 'btn btn-cozy modal-copy',
                                     onClick: @copyContent
                                     t 'modal copy content'
                             if @props.actionLabel? and @props.action
                                 React.DOM.button
                                     type: 'button',
-                                    className: 'btn btn-cozy',
+                                    className: 'btn btn-cozy modal-action',
                                     onClick: @props.action,
                                     @props.actionLabel
                             if @props.closeLabel?
                                 React.DOM.button
                                     type: 'button',
-                                    className: 'btn btn-cozy-non-default',
+                                    className: 'btn btn-cozy-non-default modal-close',
                                     onClick: @props.closeModal,
                                     @props.closeLabel
 

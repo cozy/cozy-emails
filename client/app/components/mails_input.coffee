@@ -103,6 +103,7 @@ module.exports = MailsInput = React.createClass
         onInput = (event) =>
             input = @refs.contactInput.getDOMNode()
             input.cols = input.value.length + 2
+            input.style.height = input.scrollHeight + 'px'
 
         className  = """
            #{@props.className or ''} form-group mail-input #{@props.id}

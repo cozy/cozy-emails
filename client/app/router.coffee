@@ -20,6 +20,9 @@ module.exports = class Router extends PanelRouter
         'account.mailbox.messages':
             pattern: 'account/:accountID/mailbox/:mailboxID'
             fluxAction: 'showMessageList'
+        'account.mailbox.default':
+            pattern: 'account/:accountID'
+            fluxAction: 'showMessageList'
 
         'search':
             pattern: 'search/:query/page/:page'
@@ -50,13 +53,19 @@ module.exports = class Router extends PanelRouter
     routes: '': 'default'
 
     # Determines and gets the default parameters regarding a specific action
-    _getDefaultParameters: (action) ->
+    _getDefaultParameters: (action, parameters) ->
         switch action
 
             when 'account.mailbox.messages'
             ,    'account.mailbox.messages.full'
+            ,    'account.mailbox.default'
                 defaultAccountID = AccountStore.getDefault()?.get 'id'
-                mailbox = AccountStore.getDefaultMailbox defaultAccountID
+                # if parameters contains accountID but no mailboxID,
+                # get the default mailbox for this account
+                if parameters.accountID?
+                    mailbox = AccountStore.getDefaultMailbox parameters.accountID
+                else
+                    mailbox = AccountStore.getDefaultMailbox defaultAccountID
                 defaultMailboxID = mailbox?.get 'id'
                 defaultParameters = {}
                 defaultParameters.accountID = defaultAccountID
