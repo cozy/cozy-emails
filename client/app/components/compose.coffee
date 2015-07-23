@@ -129,12 +129,12 @@ module.exports = Compose = React.createClass
                 div className: 'form-group',
                     div className: classInput,
                         input
-                            id: 'compose-subject',
-                            name: 'compose-subject',
-                            ref: 'subject',
-                            valueLink: @linkState('subject'),
-                            type: 'text',
-                            className: 'form-control compose-subject',
+                            id: 'compose-subject'
+                            name: 'compose-subject'
+                            ref: 'subject'
+                            valueLink: @linkState('subject')
+                            type: 'text'
+                            className: 'form-control compose-subject'
                             placeholder: t "compose subject help"
 
                 div className: '',
@@ -237,7 +237,7 @@ module.exports = Compose = React.createClass
         if not Array.isArray(@state.to) or @state.to.length is 0
             setTimeout ->
                 document.getElementById('compose-to')?.focus()
-            , 0
+            , 10
         else if @props.inReplyTo?
             document.getElementById('compose-editor')?.focus()
 
