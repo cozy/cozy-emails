@@ -9,7 +9,6 @@ QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34
 # style at the p level too.
 COMPOSE_STYLE = """
 <style>
-p {margin: 0;}
 pre {background: transparent; border: 0}
 </style>
 """
