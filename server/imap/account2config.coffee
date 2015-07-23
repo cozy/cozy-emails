@@ -97,7 +97,6 @@ module.exports.makeIMAPConfig = (account, callback) ->
         callback null,
             user       : account.imapLogin or account.login
             password   : account.password
-            xoauth2    : token
             host       : account.imapServer
             port       : parseInt account.imapPort
             tls        : not account.imapSSL? or account.imapSSL
