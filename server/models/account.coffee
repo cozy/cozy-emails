@@ -14,6 +14,7 @@ class Account extends cozydb.CozyModel
         oauthProvider: String       # If authentication use OAuth (only value allowed for now: GMAIL)
         oauthAccessToken: String    # AccessToken
         oauthRefreshToken: String   # RefreshToken (in order to get an access_token)
+        oauthTimeout: Number        # AccessToken timeout
         initialized: Boolean        # Is the account ready ?
         smtpServer: String          # SMTP host
         smtpPort: Number            # SMTP port
@@ -692,29 +693,7 @@ class Account extends cozydb.CozyModel
         # ID will be in references header)
         inReplyTo = message.inReplyTo
         message.inReplyTo = inReplyTo?.shift()
-        options =
-            port: @smtpPort
-            host: @smtpServer
-            secure: @smtpSSL
-            ignoreTLS: not @smtpTLS
-            tls: rejectUnauthorized: false
-        if @smtpMethod? and @smtpMethod isnt 'NONE'
-            options.authMethod = @smtpMethod
-        if @oauthProvider isnt 'GMAIL'
-            options.auth =
-                user: @smtpLogin or @login
-                pass: @smtpPassword or @password
-        if @oauthProvider is 'GMAIL'
-            generator = require('xoauth2').createXOAuth2Generator(
-                user: @login
-                clientSecret: '1gNUceDM59TjFAks58ftsniZ'
-                clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com'
-                refreshToken: @oauthRefreshToken
-            )
-            options.service = 'gmail'
-            options.auth =
-                xoauth2: generator
-
+        options = makeSMTPConfig this
 
         transport = nodemailer.createTransport options
 
@@ -734,21 +713,9 @@ class Account extends cozydb.CozyModel
 
         reject = _.once callback
 
-        options =
-            port: @smtpPort
-            host: @smtpServer
-            secure: @smtpSSL
-            ignoreTLS: not @smtpTLS
-            tls: rejectUnauthorized: false
-        if @smtpMethod? and @smtpMethod isnt 'NONE'
-            options.authMethod = @smtpMethod
+        options = makeSMTPConfig this
 
         connection = new SMTPConnection options
-
-        if @smtpMethod isnt 'NONE'
-            auth =
-                user: @smtpLogin or @login
-                pass: @smtpPassword or @password
 
         connection.once 'error', (err) ->
             log.warn "SMTP CONNECTION ERROR", err
@@ -765,7 +732,7 @@ class Account extends cozydb.CozyModel
             clearTimeout timeout
 
             if @smtpMethod isnt 'NONE'
-                connection.login auth, (err) =>
+                connection.login options.auth, (err) =>
                     if err
                         field = if @smtpLogin then 'smtpAuth' else 'auth'
                         reject new AccountConfigError field, err
@@ -784,7 +751,9 @@ Message     = require './message'
 Compiler    = require 'nodemailer/src/compiler'
 ImapPool = require '../imap/pool'
 ImapReporter = require '../imap/reporter'
-{AccountConfigError} = require '../utils/errors'
+{AccountConfigError, RefreshError} = require '../utils/errors'
+{NotFound, isMailboxDontExist} = require '../utils/errors'
+{makeSMTPConfig} = require '../imap/account2config'
 nodemailer  = require 'nodemailer'
 SMTPConnection = require 'nodemailer/node_modules/' +
     'nodemailer-smtp-transport/node_modules/smtp-connection'
@@ -794,8 +763,6 @@ async = require 'async'
 CONSTANTS = require '../utils/constants'
 notifications = require '../utils/notifications'
 require('../utils/socket_handler').wrapModel Account, 'account'
-{AccountConfigError, RefreshError, NotFound, isMailboxDontExist} = \
-                                                    require '../utils/errors'
 
 refreshTimeout = null
 

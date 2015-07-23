@@ -44,9 +44,9 @@ module.exports.refresh = (req, res, next) ->
             return next err if err
             Mailbox.getCounts req.mailbox.id, (err, counts) ->
                 return next err if err
-                {total, recent, unread} = counts[req.mailbox.id]
-                req.mailbox.nbTotal = total
-                req.mailbox.nbUnread = unread
+                mailboxCounts = counts[req.mailbox.id]
+                req.mailbox.nbTotal = mailboxCounts?.total or 0
+                req.mailbox.nbUnread = mailboxCounts?.unread or 0
                 res.send req.mailbox
 
 

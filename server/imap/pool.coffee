@@ -5,6 +5,7 @@ Account = require '../models/account'
 Imap = require './connection'
 xoauth2 = require 'xoauth2'
 async = require "async"
+{makeIMAPConfig, forceOauthRefresh} = require '../imap/account2config'
 
 connectionID = 1
 
@@ -71,51 +72,14 @@ class ImapPool
         log.debug @id, "makeConnection"
         @connecting++
 
-        if @account.oauthProvider is "GMAIL"
-            generator = xoauth2.createXOAuth2Generator(
-                user: @account.login
-                clientSecret: '1gNUceDM59TjFAks58ftsniZ'
-                clientId: '260645850650-2oeufakc8ddbrn8p4o58emsl7u0r0c8s.apps.googleusercontent.com'
-                refreshToken: @account.oauthRefreshToken
-                accessToken: @account.oauthAccessToken
-            )
+        makeIMAPConfig @account, (err, options) =>
+            log.error "oauth generation error", err if err
+            return @_onConnectionError connectionName: '', err if err
 
-        async.waterfall([
-            (callback) =>
-                log.debug "async.waterfall 1"
-                if @account.oauthProvider is "GMAIL"
-                    generator.generateToken (err, token)->
-                        log.debug "b64 xoauth2 token : ",token
-                        callback(err, token)
-                else
-                    callback(null, null)
-            (token, callback) =>
-                if token
-                    options =
-                        user       : @account.login
-                        xoauth2    : token
-                        host       : "imap.gmail.com"
-                        port       : 993
-                        tls        : true
-                        tlsOptions : rejectUnauthorized : false
-
-                else
-                    options =
-                        user       : @account.imapLogin or @account.login
-                        password   : @account.password
-                        xoauth2    : token
-                        host       : @account.imapServer
-                        port       : parseInt @account.imapPort
-                        tls        : not @account.imapSSL? or @account.imapSSL
-                        tlsOptions : rejectUnauthorized : false
-                log.debug "async.waterfall 2"
-                log.debug options
-                callback null, options
-            ], (err, options) =>
-            log.debug "async.waterfall final callback"
-            log.error err if err
-            imap = new Imap options
+            log.debug "Attempting connection"
             log.debug options
+
+            imap = new Imap options
             onConnError = @_onConnectionError.bind this, imap
             imap.connectionID = 'conn' + connectionID++
             imap.connectionName = "#{options.host}:#{options.port}"
@@ -124,14 +88,14 @@ class ImapPool
             imap.once 'ready', =>
                 log.debug @id, "imap ready"
                 imap.removeListener 'error', onConnError
-                clearTimeout wrongPortTimeout
+                clearTimeout @wrongPortTimeout
                 @_onConnectionSuccess imap
 
             imap.connect()
 
             # timeout when wrong port is too high
             # bring it to 10s
-            wrongPortTimeout = setTimeout =>
+            @wrongPortTimeout = setTimeout =>
                 log.debug @id, "timeout 10s"
                 imap.removeListener 'error', onConnError
                 onConnError new TimeoutError "Timeout connecting to " +
@@ -139,19 +103,24 @@ class ImapPool
                 imap.destroy()
 
             , 10000
-            )
-
 
 
     _onConnectionError: (connection, err) ->
         log.debug @id, "connection error on #{connection.connectionName}"
+        log.debug "RAW ERROR", err
         # we failed to establish a new connection
+        clearTimeout @wrongPortTimeout
         @connecting--
         @failConnectionCounter++
-        # try again in 5s
         if @failConnectionCounter > 2
+            # give up
             @_giveUp _typeConnectionError err
+        else if err.source is 'autentification' and
+                                             @account.oauthProvider is 'GMAIL'
+            # refresh accessToken
+            forceOauthRefresh @account, @_deQueue
         else
+            # try again in 5s
             setTimeout @_deQueue, 5000
 
     _onConnectionSuccess: (connection) ->
