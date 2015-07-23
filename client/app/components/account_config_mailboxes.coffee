@@ -197,7 +197,8 @@ module.exports = AccountConfigMailboxes = React.createClass
 
         AccountActionCreator.mailboxCreate mailbox, (error) =>
             if error?
-                LayoutActionCreator.alertError "#{t("mailbox create ko")} #{error}"
+                LayoutActionCreator.alertError \
+                    "#{t("mailbox create ko")} #{error}"
             else
                 LayoutActionCreator.notify t("mailbox create ok"),
                     autoclose: true
