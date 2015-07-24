@@ -6,7 +6,7 @@ if (typeof window.plugins !== "object") {
 (function (root) {
   "use strict";
   function bindingNew(e) {
-    e.preventDefault();
+    if (e && e instanceof Event) { e.preventDefault(); }
     window.cozyMails.messageNew();
   }
   function bindingHelp() {
@@ -83,13 +83,13 @@ if (typeof window.plugins !== "object") {
       'enter': {
         name: "Display current message",
         action: function (e) {
-          var btnConfirm = document.querySelector('.modal .modal-footer [class="btn btn-cozy"]');
+          var btnConfirm = document.querySelector('.modal .modal-footer .modal-action');
           if (btnConfirm !== null) {
             btnConfirm.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
           } else {
             if (window.cozyMails.getCurrentActions().indexOf('account.mailbox.messages') === 0 &&
                ['INPUT', 'BUTTON'].indexOf(document.activeElement.tagName) === -1) {
-              e.preventDefault();
+              if (e && e instanceof Event) { e.preventDefault(); }
               window.cozyMails.messageDisplay();
             }
           }
@@ -103,7 +103,7 @@ if (typeof window.plugins !== "object") {
           if (btnClose !== null) {
             btnClose.dispatchEvent(new MouseEvent('click', { 'view': window, 'bubbles': true, 'cancelable': true }));
           } else {
-            e.preventDefault();
+            if (e && e instanceof Event) { e.preventDefault(); }
             window.cozyMails.messageClose();
           }
         }
@@ -111,7 +111,7 @@ if (typeof window.plugins !== "object") {
       'h': {
         name: "Previous mailbox",
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           var prev = menuNavigate()[0];
           if (prev) {
             window.location = prev.href;
@@ -126,7 +126,7 @@ if (typeof window.plugins !== "object") {
       'l': {
         name: "Next mailbox",
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           var next = menuNavigate()[1];
           if (next) {
             window.location = next.href;
@@ -142,14 +142,14 @@ if (typeof window.plugins !== "object") {
         name: "Next Message",
         alias: ['down'],
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           window.cozyMails.messageNavigate('next');
         }
       },
       'right': {
         name: "Next Message in conversation",
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           window.cozyMails.messageNavigate('next', true);
         }
       },
@@ -157,21 +157,21 @@ if (typeof window.plugins !== "object") {
         name: "Previous Message",
         alias: ['up'],
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           window.cozyMails.messageNavigate('prev');
         }
       },
       'left': {
         name: "Previous Message in conversation",
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           window.cozyMails.messageNavigate('prev', true);
         }
       },
       'ctrl+down': {
         name: 'Scroll message down',
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           var panel = document.querySelector("#panels > .panel:nth-of-type(2)");
           if (panel) {
             panel.scrollTop += panel.clientHeight * 0.8;
@@ -181,50 +181,49 @@ if (typeof window.plugins !== "object") {
       '(': {
         name: 'Increase message layout size',
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           layoutRatio(1);
         }
       },
       'alt+(': {
         name: 'Increase by 10 message layout size',
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           layoutRatio(10);
         }
       },
       ')': {
         name: 'Decrease message layout size',
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           layoutRatio(-1);
         }
       },
       'alt+)': {
         name: 'Decrease by 10 message layout size',
         action: function (e) {
-          e.preventDefault();
-          console.log('foo');
+          if (e && e instanceof Event) { e.preventDefault(); }
           layoutRatio(-10);
         }
       },
       '=': {
         name: 'Reset message layout size',
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           layoutRatio();
         }
       },
       'F': {
         name: "Toggle fullscreen",
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           require('actions/layout_action_creator').toggleFullscreen();
         }
       },
       'w': {
         name: "Toggle layout",
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           var layoutStore  = require('stores/layout_store'),
               layoutAction = require('actions/layout_action_creator'),
               dispositions = require('constants/app_constants').Dispositions;
@@ -246,7 +245,7 @@ if (typeof window.plugins !== "object") {
       'ctrl+up': {
         name: 'Scroll message up',
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           var panel = document.querySelector("#panels > .panel:nth-of-type(2)");
           if (panel) {
             panel.scrollTop -= panel.clientHeight * 0.8;
@@ -262,7 +261,7 @@ if (typeof window.plugins !== "object") {
         name: "Delete message",
         alias: ['backspace', 'del'],
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           window.cozyMails.messageDeleteCurrent();
         }
       },
@@ -270,7 +269,7 @@ if (typeof window.plugins !== "object") {
         name: 'Undelete message',
         alias: ['u'],
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           var MessageActionCreator = window.require('actions/message_action_creator');
           MessageActionCreator.undelete();
         }
@@ -278,21 +277,21 @@ if (typeof window.plugins !== "object") {
       'r': {
         name: 'Reply',
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           mailAction('reply');
         }
       },
       'g': {
         name: 'Reply all',
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           mailAction('reply-all');
         }
       },
       'f': {
         name: 'Forward',
         action: function (e) {
-          e.preventDefault();
+          if (e && e instanceof Event) { e.preventDefault(); }
           mailAction('forward');
         }
       },

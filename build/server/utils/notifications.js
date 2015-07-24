@@ -57,7 +57,10 @@ exports.accountRefreshed = function(account) {
         };
         SocketHandler.notify('refresh.notify', data, logError);
         return notificationsHelper.createOrUpdatePersistent(ref, {
-          resource: emailsAppRessource,
+          resource: {
+            app: 'emails',
+            url: "/#account/" + accountID
+          },
           text: message
         }, logError);
       }

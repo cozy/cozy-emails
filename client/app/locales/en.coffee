@@ -453,6 +453,8 @@ module.exports =
       'tooltip filter': 'Filter'
       'tooltip display filters': 'Display filters'
       'tooltip expunge mailbox': 'Expunge mailbox'
+      "tooltip add contact": "Add to your contacts"
+      "tooltip show contact": "Show contact"
 
       # Filters
       'filters unseen': 'unread'

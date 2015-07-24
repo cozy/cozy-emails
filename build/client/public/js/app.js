@@ -340,7 +340,7 @@ module.exports = ContactActionCreator = {
       value: query
     });
   },
-  createContact: function(contact) {
+  createContact: function(contact, callback) {
     var activity, options;
     options = {
       name: 'create',
@@ -359,9 +359,10 @@ module.exports = ContactActionCreator = {
       msg = t('contact create success', {
         contact: contact.name || contact.address
       });
-      return LayoutActionCreator.notify(msg, {
+      LayoutActionCreator.notify(msg, {
         autoclose: true
       });
+      return typeof callback === "function" ? callback() : void 0;
     };
     return activity.onerror = function() {
       var msg;
@@ -369,9 +370,10 @@ module.exports = ContactActionCreator = {
       msg = t('contact create error', {
         error: this.name
       });
-      return LayoutActionCreator.alertError(msg, {
+      LayoutActionCreator.alertError(msg, {
         autoclose: true
       });
+      return typeof callback === "function" ? callback() : void 0;
     };
   }
 };
@@ -641,11 +643,22 @@ module.exports = LayoutActionCreator = {
     }
   },
   showComposeMessage: function(panelInfo, direction) {
-    var defaultAccount, selectedAccount;
+    var defaultAccount, message, messageID, selectedAccount;
     selectedAccount = AccountStore.getSelected();
     if (selectedAccount == null) {
       defaultAccount = AccountStore.getDefault();
-      return AccountActionCreator.selectAccount(defaultAccount.get('id'));
+      AccountActionCreator.selectAccount(defaultAccount.get('id'));
+    }
+    messageID = panelInfo.parameters.messageID;
+    message = MessageStore.getByID(messageID);
+    if (message == null) {
+      return XHRUtils.fetchMessage(messageID, function(err, rawMessage) {
+        if (err != null) {
+          return LayoutActionCreator.alertError(err);
+        } else {
+          return MessageActionCreator.receiveRawMessage(rawMessage);
+        }
+      });
     }
   },
   showCreateAccount: function(panelInfo, direction) {
@@ -1364,7 +1377,7 @@ module.exports = React.createClass({
     return options;
   },
   buildMailboxesOptions: function(options) {
-    var field, _i, _len, _ref1;
+    var doChange, field, _i, _len, _ref1;
     options = {
       error: this.props.error,
       errors: this.state.errors,
@@ -1374,16 +1387,19 @@ module.exports = React.createClass({
     _ref1 = this._mailboxesFields;
     for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
       field = _ref1[_i];
-      options[field] = {
-        value: this.state[field],
-        requestChange: (function(_this) {
+      doChange = (function(_this) {
+        return function(f) {
           return function(val, cb) {
             var state;
             state = {};
-            state[field] = val;
+            state[f] = val;
             return _this.setState(state, cb);
           };
-        })(this)
+        };
+      })(this);
+      options[field] = {
+        value: this.state[field],
+        requestChange: doChange(field)
       };
     }
     return options;
@@ -2288,7 +2304,7 @@ module.exports = AccountConfigMailboxes = React.createClass({
 });
 
 ;require.register("components/account_config_main", function(exports, require, module) {
-var AccountConfigMain, AccountDelete, AccountInput, FieldSet, Form, FormButtons, FormDropdown, RouterMixin, a, button, classer, div, fieldset, form, i, input, label, legend, li, p, span, ul, _ref, _ref1;
+var AccountActionCreator, AccountConfigMain, AccountDelete, AccountInput, FieldSet, Form, FormButtons, FormDropdown, RouterMixin, a, button, classer, div, fieldset, form, i, input, label, legend, li, p, span, ul, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, p = _ref.p, form = _ref.form, label = _ref.label, input = _ref.input, button = _ref.button, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, fieldset = _ref.fieldset, legend = _ref.legend;
 
@@ -2297,6 +2313,8 @@ classer = React.addons.classSet;
 AccountInput = require('./account_config_input');
 
 AccountDelete = require('./account_config_delete');
+
+AccountActionCreator = require('../actions/account_action_creator');
 
 RouterMixin = require('../mixins/router_mixin');
 
@@ -2429,6 +2447,8 @@ module.exports = AccountConfigMain = React.createClass({
     }) : void 0);
   },
   _renderReceivingServer: function() {
+    var advanced;
+    advanced = this.state.imapAdvanced ? 'hide' : 'show';
     return div(null, FieldSet({
       text: t('account receiving server')
     }), AccountInput({
@@ -2442,9 +2462,9 @@ module.exports = AccountConfigMain = React.createClass({
       value: this.linkState('imapPort').value,
       errors: this.state.errors,
       onBlur: (function(_this) {
-        return function() {
+        return function(event) {
           var _base;
-          _this._onIMAPPort();
+          _this._onIMAPPort(event);
           return typeof (_base = _this.props).onBlur === "function" ? _base.onBlur() : void 0;
         };
       })(this),
@@ -2480,7 +2500,7 @@ module.exports = AccountConfigMain = React.createClass({
     }, a({
       className: "col-sm-3 col-sm-offset-2 control-label clickable",
       onClick: this.toggleIMAPAdvanced
-    }, t("account imap " + (this.state.imapAdvanced ? 'hide' : 'show') + " advanced"))), this.state.imapAdvanced ? AccountInput({
+    }, t("account imap " + advanced + " advanced"))), this.state.imapAdvanced ? AccountInput({
       name: 'imapLogin',
       value: this.linkState('imapLogin').value,
       errors: this.state.errors,
@@ -2488,6 +2508,8 @@ module.exports = AccountConfigMain = React.createClass({
     }) : void 0);
   },
   _renderSendingServer: function() {
+    var advanced;
+    advanced = this.state.smtpAdvanced ? 'hide' : 'show';
     return div(null, FieldSet({
       text: t('account sending server')
     }), AccountInput({
@@ -2541,7 +2563,7 @@ module.exports = AccountConfigMain = React.createClass({
     }, a({
       className: "col-sm-3 col-sm-offset-2 control-label clickable",
       onClick: this.toggleSMTPAdvanced
-    }, t("account smtp " + (this.state.smtpAdvanced ? 'hide' : 'show') + " advanced"))), this.state.smtpAdvanced ? FormDropdown({
+    }, t("account smtp " + advanced + " advanced"))), this.state.smtpAdvanced ? FormDropdown({
       prefix: 'mailbox',
       name: 'smtpMethod',
       labelText: t("account smtpMethod"),
@@ -2570,7 +2592,6 @@ module.exports = AccountConfigMain = React.createClass({
     return this.props.onSubmit(event, true);
   },
   onMethodChange: function(event) {
-    console.log("blash");
     return this.state.smtpMethod.requestChange(event.target.dataset.value);
   },
   toggleSMTPAdvanced: function() {
@@ -2589,7 +2610,7 @@ module.exports = AccountConfigMain = React.createClass({
     if (login != null ? login.indexOf('@' >= 0) : void 0) {
       domain = login.split('@')[1];
     }
-    if (domain !== this._lastDiscovered) {
+    if ((domain != null) && domain !== this._lastDiscovered) {
       this._lastDiscovered = domain;
       AccountActionCreator.discover(domain, (function(_this) {
         return function(err, provider) {
@@ -2720,7 +2741,8 @@ module.exports = AccountConfigMain = React.createClass({
         infos.imapSSL = false;
         infos.imapTLS = false;
     }
-    return this.setState(infos);
+    this.state.imapSSL.requestChange(infos.imapSSL);
+    return this.state.imapTLS.requestChange(infos.imapTLS);
   },
   _onSMTPPort: function(event) {
     var infos, port;
@@ -2739,7 +2761,8 @@ module.exports = AccountConfigMain = React.createClass({
         infos.smtpSSL = false;
         infos.smtpTLS = false;
     }
-    return this.setState(infos);
+    this.state.smtpSSL.requestChange(infos.smtpSSL);
+    return this.state.smtpTLS.requestChange(infos.smtpTLS);
   }
 });
 });
@@ -3593,7 +3616,7 @@ module.exports = {
 });
 
 ;require.register("components/compose", function(exports, require, module) {
-var AccountPicker, Compose, ComposeActions, ComposeEditor, ComposeToolbox, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, MessageUtils, RouterMixin, Tooltips, a, classer, div, form, h3, i, input, label, li, section, span, textarea, ul, _ref, _ref1, _ref2;
+var AccountPicker, AccountStore, Compose, ComposeActions, ComposeEditor, ComposeToolbox, FilePicker, LayoutActionCreator, MailsInput, MessageActionCreator, MessageStore, MessageUtils, RouterMixin, Tooltips, a, classer, div, form, h3, i, input, label, li, section, span, textarea, ul, _ref, _ref1, _ref2;
 
 _ref = React.DOM, div = _ref.div, section = _ref.section, h3 = _ref.h3, a = _ref.a, i = _ref.i, textarea = _ref.textarea, form = _ref.form, label = _ref.label;
 
@@ -3610,6 +3633,10 @@ FilePicker = require('./file_picker');
 MailsInput = require('./mails_input');
 
 AccountPicker = require('./account_picker');
+
+AccountStore = require('../stores/account_store');
+
+MessageStore = require('../stores/message_store');
 
 _ref2 = require('../constants/app_constants'), ComposeActions = _ref2.ComposeActions, Tooltips = _ref2.Tooltips;
 
@@ -3722,6 +3749,7 @@ module.exports = Compose = React.createClass({
     }))), div({
       className: ''
     }, ComposeEditor({
+      id: 'compose-editor',
       messageID: (_ref3 = this.props.message) != null ? _ref3.get('id') : void 0,
       html: this.linkState('html'),
       text: this.linkState('text'),
@@ -3753,10 +3781,9 @@ module.exports = Compose = React.createClass({
       className: 'clearfix'
     }, null)));
   },
-  onCancel: function(e) {
-    e.preventDefault();
-    if (this.props.onCancel != null) {
-      return this.props.onCancel();
+  finalRedirect: function() {
+    if (this.props.inReplyTo != null) {
+      return this.redirect(MessageStore.getMessageHash(this.props.inReplyTo));
     } else {
       return this.redirect(this.buildUrl({
         direction: 'first',
@@ -3765,7 +3792,16 @@ module.exports = Compose = React.createClass({
       }));
     }
   },
+  onCancel: function(event) {
+    event.preventDefault();
+    if (this.props.onCancel != null) {
+      return this.props.onCancel();
+    } else {
+      return this.finalRedirect();
+    }
+  },
   _initCompose: function() {
+    var _ref3;
     if (this._saveInterval) {
       window.clearInterval(this._saveInterval);
     }
@@ -3774,8 +3810,11 @@ module.exports = Compose = React.createClass({
     this.getDOMNode().scrollIntoView();
     if (!Array.isArray(this.state.to) || this.state.to.length === 0) {
       return setTimeout(function() {
-        return document.getElementById('compose-to').focus();
-      }, 0);
+        var _ref3;
+        return (_ref3 = document.getElementById('compose-to')) != null ? _ref3.focus() : void 0;
+      }, 10);
+    } else if (this.props.inReplyTo != null) {
+      return (_ref3 = document.getElementById('compose-editor')) != null ? _ref3.focus() : void 0;
     }
   },
   componentDidMount: function() {
@@ -3931,13 +3970,13 @@ module.exports = Compose = React.createClass({
       return this.setState(this.getInitialState());
     }
   },
-  onDraft: function(e) {
-    e.preventDefault();
+  onDraft: function(event) {
+    event.preventDefault();
     return this._doSend(true);
   },
-  onSend: function(e) {
-    if (e != null) {
-      e.preventDefault();
+  onSend: function(event) {
+    if (event != null) {
+      event.preventDefault();
     }
     return this._doSend(false);
   },
@@ -4048,11 +4087,7 @@ module.exports = Compose = React.createClass({
                 cid = message.conversationID;
                 MessageActionCreator.fetchConversation(cid);
               }
-              if (_this.props.callback != null) {
-                return _this.props.callback(error);
-              } else {
-                return _this.redirect(_this.buildClosePanelUrl(_this.props.layout));
-              }
+              return _this.finalRedirect();
             }
           }
         };
@@ -4626,9 +4661,11 @@ module.exports = ComposeToolbox = React.createClass({
 });
 
 ;require.register("components/contact_label", function(exports, require, module) {
-var AddressLabel, ContactActionCreator, ContactLabel, ContactStore, LayoutActionCreator, MessageUtils, a, button, h3, header, i, li, p, section, span, ul, _ref;
+var AddressLabel, ContactActionCreator, ContactLabel, ContactStore, LayoutActionCreator, MessageUtils, Tooltips, a, button, h3, header, i, li, p, section, span, ul, _ref;
 
 _ref = React.DOM, section = _ref.section, header = _ref.header, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, h3 = _ref.h3, a = _ref.a, button = _ref.button;
+
+Tooltips = require('../constants/app_constants').Tooltips;
 
 MessageUtils = require('../utils/message_utils');
 
@@ -4652,55 +4689,48 @@ module.exports = ContactLabel = React.createClass({
       contactModel = ContactStore.getByAddress(this.props.contact.address);
       if (contactModel != null) {
         contactId = contactModel.get('id');
-        return a({
+        return span({
           ref: 'contact',
-          target: '_blank',
-          href: "/#apps/contacts/contact/" + contactId,
           onClick: function(event) {
             return event.stopPropagation();
           }
         }, AddressLabel({
           contact: this.props.contact
-        }));
+        }), a({
+          className: 'show-contact',
+          target: '_blank',
+          href: "/#apps/contacts/contact/" + contactId
+        }, button({
+          className: 'fa fa-user',
+          'aria-describedby': Tooltips.SHOW_CONTACT,
+          'data-tooltip-direction': 'top'
+        })));
       } else {
         return span({
           ref: 'contact',
-          className: 'participant',
+          className: 'participant'
+        }, AddressLabel({
+          contact: this.props.contact
+        }), span({
+          className: 'add-contact',
           onClick: (function(_this) {
             return function(event) {
               event.stopPropagation();
               return _this.addContact();
             };
           })(this)
-        }, AddressLabel({
-          contact: this.props.contact
-        }));
+        }, button({
+          className: 'fa fa-user-plus',
+          'aria-describedby': Tooltips.ADD_CONTACT,
+          'data-tooltip-direction': 'top'
+        })));
       }
     } else {
-      return span(null);
+      return span();
     }
   },
-  _initTooltip: function() {
-    var container, node, options;
-    if (this.props.tooltip && (this.refs.contact != null)) {
-      node = this.refs.contact.getDOMNode();
-      container = node.parentNode;
-      while (container.tagName !== 'ARTICLE') {
-        container = container.parentNode;
-      }
-      options = {
-        showOnClick: false,
-        container: container
-      };
-      return MessageUtils.tooltip(this.refs.contact.getDOMNode(), this.props.contact, this.addContact, options);
-    }
-  },
-  componentDidMount: function() {
-    return this._initTooltip();
-  },
-  componentDidUpdate: function() {
-    return this._initTooltip();
-  },
+  componentDidMount: function() {},
+  componentDidUpdate: function() {},
   addContact: function() {
     var modal, params;
     params = {
@@ -4716,7 +4746,9 @@ module.exports = ContactLabel = React.createClass({
       actionLabel: t('app confirm'),
       action: (function(_this) {
         return function() {
-          ContactActionCreator.createContact(_this.props.contact);
+          ContactActionCreator.createContact(_this.props.contact, function() {
+            return _this.forceUpdate();
+          });
           return LayoutActionCreator.hideModal();
         };
       })(this)
@@ -5616,7 +5648,8 @@ module.exports = MailsInput = React.createClass({
       return function(event) {
         var input;
         input = _this.refs.contactInput.getDOMNode();
-        return input.cols = input.value.length + 2;
+        input.cols = input.value.length + 2;
+        return input.style.height = input.scrollHeight + 'px';
       };
     })(this);
     className = "" + (this.props.className || '') + " form-group mail-input " + this.props.id;
@@ -6978,7 +7011,7 @@ module.exports = MessageList = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var Compose, ComposeActions, ContactActionCreator, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, header, i, iframe, li, p, pre, span, ul, _ref, _ref1;
+var ContactActionCreator, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, header, i, iframe, li, p, pre, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe;
 
@@ -6988,9 +7021,7 @@ MessageFooter = require("./message_footer");
 
 ToolbarMessage = require('./toolbar_message');
 
-Compose = require('./compose');
-
-_ref1 = require('../constants/app_constants'), ComposeActions = _ref1.ComposeActions, MessageFlags = _ref1.MessageFlags;
+MessageFlags = require('../constants/app_constants').MessageFlags;
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
@@ -7028,7 +7059,6 @@ module.exports = React.createClass({
   },
   getInitialState: function() {
     return {
-      composing: this._shouldOpenCompose(this.props),
       composeAction: '',
       headers: false,
       messageDisplayHTML: this.props.settings.get('messageDisplayHTML'),
@@ -7042,20 +7072,12 @@ module.exports = React.createClass({
     should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
     return should;
   },
-  _shouldOpenCompose: function(props) {
-    var flags, isDeleted, isDraft, trash, _ref2;
-    flags = this.props.message.get('flags').slice();
-    trash = (_ref2 = this.props.accounts[this.props.selectedAccountID]) != null ? _ref2.trashMailbox : void 0;
-    isDraft = flags.indexOf(MessageFlags.DRAFT) > -1;
-    isDeleted = this.props.message.get('mailboxIDs')[trash] != null;
-    return isDraft && !isDeleted;
-  },
   _prepareMessage: function(message) {
-    var alternatives, e, flags, fullHeaders, html, key, mailboxes, rich, text, trash, urls, value, _ref2, _ref3;
+    var alternatives, e, flags, fullHeaders, html, key, mailboxes, rich, text, trash, urls, value, _ref1, _ref2;
     fullHeaders = [];
-    _ref2 = message.get('headers');
-    for (key in _ref2) {
-      value = _ref2[key];
+    _ref1 = message.get('headers');
+    for (key in _ref1) {
+      value = _ref1[key];
       if (Array.isArray(value)) {
         fullHeaders.push("" + key + ": " + (value.join('\n    ')));
       } else {
@@ -7086,7 +7108,7 @@ module.exports = React.createClass({
       text = toMarkdown(html);
     }
     mailboxes = message.get('mailboxIDs');
-    trash = (_ref3 = this.props.accounts[this.props.selectedAccountID]) != null ? _ref3.trashMailbox : void 0;
+    trash = (_ref2 = this.props.accounts[this.props.selectedAccountID]) != null ? _ref2.trashMailbox : void 0;
     if (text != null) {
       rich = text.replace(urls, '<a href="$1" target="_blank">$1</a>');
       rich = rich.replace(/^>>>>>[^>]?.*$/gim, '<span class="quote5">$&</span>');
@@ -7116,7 +7138,6 @@ module.exports = React.createClass({
       this._markRead(props.message, props.active);
       state.messageDisplayHTML = props.settings.get('messageDisplayHTML');
       state.messageDisplayImages = props.settings.get('messageDisplayImages');
-      state.composing = this._shouldOpenCompose(props);
     }
     return this.setState(state);
   },
@@ -7140,7 +7161,7 @@ module.exports = React.createClass({
     }
   },
   prepareHTML: function(html) {
-    var doc, hideImage, href, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref2;
+    var doc, hideImage, href, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref1;
     messageDisplayHTML = true;
     parser = new DOMParser();
     html = "<html><head>\n    <link rel=\"stylesheet\" href=\"/fonts/fonts.css\" />\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + html + "</body></html>";
@@ -7165,9 +7186,9 @@ module.exports = React.createClass({
         hideImage(image);
       }
     }
-    _ref2 = doc.querySelectorAll('a[href]');
-    for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-      link = _ref2[_j];
+    _ref1 = doc.querySelectorAll('a[href]');
+    for (_j = 0, _len1 = _ref1.length; _j < _len1; _j++) {
+      link = _ref1[_j];
       link.target = '_blank';
       href = link.getAttribute('href');
       if (href !== '' && !/:\/\//.test(href)) {
@@ -7185,11 +7206,11 @@ module.exports = React.createClass({
     };
   },
   render: function() {
-    var classes, images, imagesWarning, isUnread, message, messageDisplayHTML, prepared, setActive, _ref2, _ref3;
+    var classes, images, imagesWarning, isUnread, message, messageDisplayHTML, prepared, setActive, _ref1, _ref2;
     message = this.props.message;
     prepared = this.state.prepared;
     if (this.state.messageDisplayHTML && (prepared.html != null)) {
-      _ref2 = this.prepareHTML(prepared.html), messageDisplayHTML = _ref2.messageDisplayHTML, images = _ref2.images;
+      _ref1 = this.prepareHTML(prepared.html), messageDisplayHTML = _ref1.messageDisplayHTML, images = _ref1.images;
       imagesWarning = images.length > 0 && !this.state.messageDisplayImages;
     } else {
       messageDisplayHTML = false;
@@ -7221,9 +7242,9 @@ module.exports = React.createClass({
       'data-id': message.get('id')
     }, header({
       onClick: setActive
-    }, this.renderHeaders(), this.props.active ? this.renderToolbox() : void 0), this.props.active ? this.renderCompose(prepared.isDraft) : void 0, this.props.active ? div({
+    }, this.renderHeaders(), this.props.active ? this.renderToolbox() : void 0), this.props.active ? div({
       className: 'full-headers'
-    }, pre(null, prepared != null ? (_ref3 = prepared.fullHeaders) != null ? _ref3.join("\n") : void 0 : void 0)) : void 0, this.props.active ? MessageContent({
+    }, pre(null, prepared != null ? (_ref2 = prepared.fullHeaders) != null ? _ref2.join("\n") : void 0 : void 0)) : void 0, this.props.active ? MessageContent({
       ref: 'messageContent',
       messageID: message.get('id'),
       messageDisplayHTML: messageDisplayHTML,
@@ -7231,7 +7252,6 @@ module.exports = React.createClass({
       text: prepared.text,
       rich: prepared.rich,
       imagesWarning: imagesWarning,
-      composing: this.state.composing,
       displayImages: this.displayImages,
       displayHTML: this.displayHTML
     }) : void 0, this.props.active ? footer(null, this.renderFooter(), this.renderToolbox(false)) : void 0);
@@ -7249,18 +7269,12 @@ module.exports = React.createClass({
     if (full == null) {
       full = true;
     }
-    if (this.state.composing) {
-      return;
-    }
     return ToolbarMessage({
       full: full,
       message: this.props.message,
       mailboxes: this.props.mailboxes,
       selectedMailboxID: this.props.selectedMailboxID,
       inConversation: this.props.inConversation,
-      onReply: this.onReply,
-      onReplyAll: this.onReplyAll,
-      onForward: this.onForward,
       onDelete: this.onDelete,
       onHeaders: this.onHeaders,
       onMove: this.onMove,
@@ -7276,50 +7290,6 @@ module.exports = React.createClass({
       message: this.props.message,
       ref: 'footer'
     });
-  },
-  renderCompose: function(isDraft) {
-    var options;
-    if (this.state.composing) {
-      options = {
-        accounts: this.props.accounts,
-        layout: 'second',
-        ref: 'compose',
-        selectedAccountID: this.props.selectedAccountID,
-        selectedAccountLogin: this.props.selectedAccountLogin,
-        settings: this.props.settings,
-        useIntents: this.props.useIntents
-      };
-      if (isDraft) {
-        options.action = null;
-        options.inReplyTo = null;
-        options.message = this.props.message;
-        options.selectedMailboxID = this.props.selectedMailboxID;
-      } else {
-        options.action = this.state.composeAction;
-        options.inReplyTo = this.props.message;
-        options.callback = (function(_this) {
-          return function(error) {
-            if (error == null) {
-              if (_this.isMounted()) {
-                return _this.setState({
-                  composing: false
-                });
-              }
-            }
-          };
-        })(this);
-        options.onCancel = (function(_this) {
-          return function() {
-            if (_this.isMounted()) {
-              return _this.setState({
-                composing: false
-              });
-            }
-          };
-        })(this);
-      }
-      return Compose(options);
-    }
   },
   toggleHeaders: function(e) {
     var state;
@@ -7343,34 +7313,10 @@ module.exports = React.createClass({
       });
     }
   },
-  onReply: function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    return this.setState({
-      composing: true,
-      composeAction: ComposeActions.REPLY
-    });
-  },
-  onReplyAll: function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    return this.setState({
-      composing: true,
-      composeAction: ComposeActions.REPLY_ALL
-    });
-  },
-  onForward: function(e) {
-    e.preventDefault();
-    e.stopPropagation();
-    return this.setState({
-      composing: true,
-      composeAction: ComposeActions.FORWARD
-    });
-  },
   onDelete: function(e) {
     var confirmMessage, messageID, modal, needConfirmation;
-    e.preventDefault();
-    e.stopPropagation();
+    event.preventDefault();
+    event.stopPropagation();
     needConfirmation = this.props.settings.get('messageConfirmDelete');
     messageID = this.props.message.get('id');
     confirmMessage = t('mail confirm delete', {
@@ -7512,26 +7458,26 @@ MessageContent = React.createClass({
     }
   },
   _initFrame: function(type) {
-    var checkResize, doc, frame, loadContent, panel, step, _ref2;
+    var checkResize, doc, frame, loadContent, panel, step, _ref1;
     panel = document.querySelector("#panels > .panel:nth-of-type(2)");
     if ((panel != null) && !this.props.composing) {
       panel.scrollTop = 0;
     }
     if (this.props.messageDisplayHTML && this.refs.content) {
       frame = this.refs.content.getDOMNode();
-      doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
+      doc = frame.contentDocument || ((_ref1 = frame.contentWindow) != null ? _ref1.document : void 0);
       checkResize = false;
       step = 0;
       loadContent = (function(_this) {
         return function(e) {
-          var updateHeight, _ref3, _ref4;
+          var updateHeight, _ref2, _ref3;
           step = 0;
-          doc = frame.contentDocument || ((_ref3 = frame.contentWindow) != null ? _ref3.document : void 0);
+          doc = frame.contentDocument || ((_ref2 = frame.contentWindow) != null ? _ref2.document : void 0);
           if (doc != null) {
             doc.documentElement.innerHTML = _this.props.html;
             window.cozyMails.customEvent("MESSAGE_LOADED", _this.props.messageID);
             updateHeight = function(e) {
-              var height, _ref4;
+              var height, _ref3;
               height = doc.documentElement.scrollHeight;
               if (height < 60) {
                 frame.style.height = "60px";
@@ -7541,7 +7487,7 @@ MessageContent = React.createClass({
               step++;
               if (checkResize && step > 10) {
                 doc.body.removeEventListener('load', loadContent);
-                return (_ref4 = frame.contentWindow) != null ? _ref4.removeEventListener('resize') : void 0;
+                return (_ref3 = frame.contentWindow) != null ? _ref3.removeEventListener('resize') : void 0;
               }
             };
             updateHeight();
@@ -7550,7 +7496,7 @@ MessageContent = React.createClass({
             if (checkResize) {
               frame.contentWindow.onresize = updateHeight;
               window.onresize = updateHeight;
-              return (_ref4 = frame.contentWindow) != null ? _ref4.addEventListener('resize', updateHeight, true) : void 0;
+              return (_ref3 = frame.contentWindow) != null ? _ref3.addEventListener('resize', updateHeight, true) : void 0;
             }
           } else {
             return _this.props.displayHTML(false);
@@ -7649,11 +7595,11 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/message_header", function(exports, require, module) {
-var MessageFlags, ParticipantMixin, PopupMessageAttachments, PopupMessageDetails, div, i, img, messageUtils, span, _ref,
+var MessageFlags, ParticipantMixin, PopupMessageAttachments, PopupMessageDetails, a, div, i, img, messageUtils, span, _ref,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
   __slice = [].slice;
 
-_ref = React.DOM, div = _ref.div, span = _ref.span, i = _ref.i, img = _ref.img;
+_ref = React.DOM, div = _ref.div, span = _ref.span, i = _ref.i, img = _ref.img, a = _ref.a;
 
 MessageFlags = require('../constants/app_constants').MessageFlags;
 
@@ -7696,9 +7642,11 @@ module.exports = React.createClass({
       message: this.props.message
     }) : void 0, (_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
       className: 'fa fa-star'
-    }) : void 0, this.props.isDraft ? i({
+    }) : void 0, this.props.isDraft ? a({
+      href: "#edit/" + (this.props.message.get('id'))
+    }, i({
       className: 'fa fa-edit'
-    }) : void 0, this.props.isDeleted ? i({
+    }), span(null, t("edit draft"))) : void 0, this.props.isDeleted ? i({
       className: 'fa fa-trash'
     }) : void 0) : void 0, div({
       className: 'metas date'
@@ -7761,15 +7709,15 @@ module.exports = Modal = React.createClass({
       className: "modal-footer"
     }, this.props.allowCopy ? React.DOM.button({
       type: 'button',
-      className: 'btn btn-cozy',
+      className: 'btn btn-cozy modal-copy',
       onClick: this.copyContent
     }, t('modal copy content')) : void 0, (this.props.actionLabel != null) && this.props.action ? React.DOM.button({
       type: 'button',
-      className: 'btn btn-cozy',
+      className: 'btn btn-cozy modal-action',
       onClick: this.props.action
     }, this.props.actionLabel) : void 0, this.props.closeLabel != null ? React.DOM.button({
       type: 'button',
-      className: 'btn btn-cozy-non-default',
+      className: 'btn btn-cozy-non-default modal-close',
       onClick: this.props.closeModal
     }, this.props.closeLabel) : void 0))));
   },
@@ -7788,7 +7736,7 @@ module.exports = Modal = React.createClass({
 });
 
 ;require.register("components/panel", function(exports, require, module) {
-var AccountConfig, AccountStore, Compose, Conversation, Dispositions, MessageFilter, MessageList, MessageStore, Panel, RouterMixin, SearchStore, Settings, SettingsStore, StoreWatchMixin, TooltipRefesherMixin, _ref,
+var AccountConfig, AccountStore, Compose, ComposeActions, Constants, Conversation, Dispositions, MessageFilter, MessageList, MessageStore, Panel, RouterMixin, SearchStore, Settings, SettingsStore, Spinner, StoreWatchMixin, TooltipRefesherMixin,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 AccountConfig = require('./account_config');
@@ -7800,6 +7748,8 @@ Conversation = require('./conversation');
 MessageList = require('./message-list');
 
 Settings = require('./settings');
+
+Spinner = require('./basic_components').Spinner;
 
 RouterMixin = require('../mixins/router_mixin');
 
@@ -7815,7 +7765,9 @@ SearchStore = require('../stores/search_store');
 
 SettingsStore = require('../stores/settings_store');
 
-_ref = require('../constants/app_constants'), MessageFilter = _ref.MessageFilter, Dispositions = _ref.Dispositions;
+Constants = require('../constants/app_constants');
+
+ComposeActions = Constants.ComposeActions, MessageFilter = Constants.MessageFilter, Dispositions = Constants.Dispositions;
 
 module.exports = Panel = React.createClass({
   displayName: 'Panel',
@@ -7826,24 +7778,24 @@ module.exports = Panel = React.createClass({
     return should;
   },
   render: function() {
-    if (this.props.action === 'account.mailbox.messages' || this.props.action === 'account.mailbox.messages.full' || this.props.action === 'search') {
+    if (this.props.action === 'account.mailbox.messages' || this.props.action === 'account.mailbox.messages.full' || this.props.action === 'account.mailbox.default' || this.props.action === 'search') {
       return this.renderList();
     } else if (this.props.action === 'account.config' || this.props.action === 'account.new') {
       return this.renderAccount();
     } else if (this.props.action === 'message' || this.props.action === 'conversation') {
       return this.renderConversation();
-    } else if (this.props.action === 'compose' || this.props.action === 'edit') {
+    } else if (this.props.action === 'compose' || this.props.action === 'edit' || this.props.action === 'compose.reply' || this.props.action === 'compose.reply-all' || this.props.action === 'compose.forward') {
       return this.renderCompose();
     } else if (this.props.action === 'settings') {
       return this.renderSettings();
     } else {
       console.error("Unknown action " + this.props.action);
       window.cozyMails.logInfo("Unknown action " + this.props.action);
-      return React.DOM.div(null, 'Unknown component');
+      return React.DOM.div(null, "Unknown component " + this.props.action);
     }
   },
   renderList: function() {
-    var account, accountID, conversationDisabledBoxes, conversationID, conversationLengths, counterMessage, displayConversations, emptyListMessage, isTrash, mailbox, mailboxID, messages, messagesCount, query, _ref1, _ref2, _ref3;
+    var account, accountID, conversationDisabledBoxes, conversationID, conversationLengths, counterMessage, displayConversations, emptyListMessage, isTrash, mailbox, mailboxID, messages, messagesCount, query, _ref, _ref1, _ref2;
     if (this.props.action === 'search') {
       accountID = null;
       mailboxID = null;
@@ -7894,7 +7846,7 @@ module.exports = Panel = React.createClass({
     query = _.clone(this.state.queryParams);
     query.accountID = accountID;
     query.mailboxID = mailboxID;
-    conversationDisabledBoxes = [(_ref1 = this.state.selectedAccount) != null ? _ref1.get('trashMailbox') : void 0, (_ref2 = this.state.selectedAccount) != null ? _ref2.get('draftMailbox') : void 0, (_ref3 = this.state.selectedAccount) != null ? _ref3.get('junkMailbox') : void 0];
+    conversationDisabledBoxes = [(_ref = this.state.selectedAccount) != null ? _ref.get('trashMailbox') : void 0, (_ref1 = this.state.selectedAccount) != null ? _ref1.get('draftMailbox') : void 0, (_ref2 = this.state.selectedAccount) != null ? _ref2.get('junkMailbox') : void 0];
     if (__indexOf.call(conversationDisabledBoxes, mailboxID) >= 0) {
       displayConversations = false;
     } else {
@@ -7951,7 +7903,7 @@ module.exports = Panel = React.createClass({
     return AccountConfig(options);
   },
   renderConversation: function() {
-    var conversation, conversationDisabledBoxes, conversationID, conversationLength, displayConversations, lengths, mailboxID, message, messageID, nextMessage, prevMessage, selectedMailboxID, _ref1, _ref2, _ref3;
+    var conversation, conversationDisabledBoxes, conversationID, conversationLength, displayConversations, lengths, mailboxID, message, messageID, nextMessage, prevMessage, selectedMailboxID, _ref, _ref1, _ref2;
     messageID = this.props.messageID;
     mailboxID = this.props.mailboxID;
     message = MessageStore.getByID(messageID);
@@ -7965,7 +7917,7 @@ module.exports = Panel = React.createClass({
         selectedMailboxID = Object.keys(message.get('mailboxIDs'))[0];
       }
     }
-    conversationDisabledBoxes = [(_ref1 = this.state.selectedAccount) != null ? _ref1.get('trashMailbox') : void 0, (_ref2 = this.state.selectedAccount) != null ? _ref2.get('draftMailbox') : void 0, (_ref3 = this.state.selectedAccount) != null ? _ref3.get('junkMailbox') : void 0];
+    conversationDisabledBoxes = [(_ref = this.state.selectedAccount) != null ? _ref.get('trashMailbox') : void 0, (_ref1 = this.state.selectedAccount) != null ? _ref1.get('draftMailbox') : void 0, (_ref2 = this.state.selectedAccount) != null ? _ref2.get('junkMailbox') : void 0];
     if (__indexOf.call(conversationDisabledBoxes, mailboxID) >= 0) {
       displayConversations = false;
     } else {
@@ -7997,7 +7949,7 @@ module.exports = Panel = React.createClass({
     });
   },
   renderCompose: function() {
-    var options;
+    var component, message, options;
     options = {
       layout: 'full',
       action: null,
@@ -8010,12 +7962,37 @@ module.exports = Panel = React.createClass({
       useIntents: this.props.useIntents,
       ref: 'compose'
     };
+    component = null;
     if (this.props.action === 'compose') {
-      options.message = null;
+      message = null;
+      component = Compose(options);
     } else if (this.props.action === 'edit') {
       options.message = MessageStore.getByID(this.props.messageID);
+      component = Compose(options);
+    } else if (this.props.action === 'compose.reply') {
+      options.action = ComposeActions.REPLY;
+      component = this.getReplyComponent(options);
+    } else if (this.props.action === 'compose.reply-all') {
+      options.action = ComposeActions.REPLY_ALL;
+      component = this.getReplyComponent(options);
+    } else if (this.props.action === 'compose.forward') {
+      options.action = ComposeActions.FORWARD;
+      component = this.getReplyComponent(options);
     }
-    return Compose(options);
+    return component;
+  },
+  getReplyComponent: function(options) {
+    var component, message;
+    message = MessageStore.getByID(this.props.messageID);
+    if (!this.state.isLoadingReply || (message != null)) {
+      message = MessageStore.getByID(this.props.messageID);
+      message.set('id', this.props.messageID);
+      options.inReplyTo = message;
+      component = Compose(options);
+    } else {
+      component = Spinner();
+    }
+    return component;
   },
   renderSettings: function() {
     return Settings({
@@ -8024,7 +8001,8 @@ module.exports = Panel = React.createClass({
     });
   },
   getStateFromStores: function() {
-    var accountsFlat, conversation, conversationID, mailboxesFlat, refresh, selectedAccount;
+    var accountsFlat, conversation, conversationID, isLoadingReply, mailboxesFlat, refresh, selectedAccount;
+    isLoadingReply = MessageStore.getByID(this.props.messageID) == null;
     selectedAccount = AccountStore.getSelected();
     if (selectedAccount == null) {
       selectedAccount = AccountStore.getDefault();
@@ -8067,7 +8045,8 @@ module.exports = Panel = React.createClass({
       currentConversationID: conversationID,
       currentFilter: MessageStore.getCurrentFilter(),
       results: SearchStore.getResults(),
-      settings: SettingsStore.get()
+      settings: SettingsStore.get(),
+      isLoadingReply: isLoadingReply
     };
   }
 });
@@ -8989,9 +8968,6 @@ module.exports = React.createClass({
     message: React.PropTypes.object.isRequired,
     mailboxes: React.PropTypes.object.isRequired,
     selectedMailboxID: React.PropTypes.string.isRequired,
-    onReply: React.PropTypes.func.isRequired,
-    onReplyAll: React.PropTypes.func.isRequired,
-    onForward: React.PropTypes.func.isRequired,
     onDelete: React.PropTypes.func.isRequired,
     onMove: React.PropTypes.func.isRequired,
     onHeaders: React.PropTypes.func.isRequired
@@ -9009,19 +8985,19 @@ module.exports = React.createClass({
   renderReply: function() {
     return div({
       className: cBtnGroup
-    }, button({
+    }, a({
       className: "" + cBtn + " fa-mail-reply mail-reply",
-      onClick: this.props.onReply,
+      href: "#reply/" + (this.props.message.get('id')),
       'aria-describedby': Tooltips.REPLY,
       'data-tooltip-direction': 'top'
-    }), button({
+    }), a({
       className: "" + cBtn + " fa-mail-reply-all mail-reply-all",
-      onClick: this.props.onReplyAll,
+      href: "#reply-all/" + (this.props.message.get('id')),
       'aria-describedby': Tooltips.REPLY_ALL,
       'data-tooltip-direction': 'top'
-    }), button({
+    }), a({
       className: "" + cBtn + " fa-mail-forward mail-forward",
-      onClick: this.props.onForward,
+      href: "#forward/" + (this.props.message.get('id')),
       'aria-describedby': Tooltips.FORWARD,
       'data-tooltip-direction': 'top'
     }));
@@ -9779,7 +9755,7 @@ module.exports = React.createClass({
     return false;
   },
   render: function() {
-    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')), this.getTooltip(Tooltips.FILTER_ONLY_UNREAD, t('tooltip filter only unread')), this.getTooltip(Tooltips.FILTER_ONLY_IMPORTANT, t('tooltip filter only important')), this.getTooltip(Tooltips.FILTER_ONLY_WITH_ATTACHMENT, t('tooltip filter only attachment')), this.getTooltip(Tooltips.ACCOUNT_PARAMETERS, t('tooltip account parameters')), this.getTooltip(Tooltips.DELETE_SELECTION, t('tooltip delete selection')), this.getTooltip(Tooltips.FILTER, t('tooltip filter')), this.getTooltip(Tooltips.QUICK_FILTER, t('tooltip display filters')), this.getTooltip(Tooltips.EXPUNGE_MAILBOX, t('tooltip expunge mailbox')));
+    return div(null, this.getTooltip(Tooltips.REPLY, t('tooltip reply')), this.getTooltip(Tooltips.REPLY_ALL, t('tooltip reply all')), this.getTooltip(Tooltips.FORWARD, t('tooltip forward')), this.getTooltip(Tooltips.REMOVE_MESSAGE, t('tooltip remove message')), this.getTooltip(Tooltips.OPEN_ATTACHMENTS, t('tooltip open attachments')), this.getTooltip(Tooltips.OPEN_ATTACHMENT, t('tooltip open attachment')), this.getTooltip(Tooltips.DOWNLOAD_ATTACHMENT, t('tooltip download attachment')), this.getTooltip(Tooltips.PREVIOUS_CONVERSATION, t('tooltip previous conversation')), this.getTooltip(Tooltips.NEXT_CONVERSATION, t('tooltip next conversation')), this.getTooltip(Tooltips.FILTER_ONLY_UNREAD, t('tooltip filter only unread')), this.getTooltip(Tooltips.FILTER_ONLY_IMPORTANT, t('tooltip filter only important')), this.getTooltip(Tooltips.FILTER_ONLY_WITH_ATTACHMENT, t('tooltip filter only attachment')), this.getTooltip(Tooltips.ACCOUNT_PARAMETERS, t('tooltip account parameters')), this.getTooltip(Tooltips.DELETE_SELECTION, t('tooltip delete selection')), this.getTooltip(Tooltips.FILTER, t('tooltip filter')), this.getTooltip(Tooltips.QUICK_FILTER, t('tooltip display filters')), this.getTooltip(Tooltips.EXPUNGE_MAILBOX, t('tooltip expunge mailbox')), this.getTooltip(Tooltips.ADD_CONTACT, t('tooltip add contact')), this.getTooltip(Tooltips.SHOW_CONTACT, t('tooltip show contact')));
   },
   getTooltip: function(id, content) {
     return p({
@@ -9941,7 +9917,9 @@ module.exports = {
     QUICK_FILTER: 'TOOLTIP_QUICK_FILTER',
     COMPOSE_IMAGE: 'TOOLTIP_COMPOSE_IMAGE',
     COMPOSE_MOCK: 'TOOLTIP_COMPOSE_MOCK',
-    EXPUNGE_MAILBOX: 'TOOLTIP_EXPUNGE_MAILBOX'
+    EXPUNGE_MAILBOX: 'TOOLTIP_EXPUNGE_MAILBOX',
+    ADD_CONTACT: 'TOOLTIP_ADD_CONTACT',
+    SHOW_CONTACT: 'TOOLTIP_SHOW_CONTACT'
   }
 };
 });
@@ -10669,7 +10647,8 @@ module.exports = Router = (function(_super) {
     var defaultParameter, defaultParameters, key, parameters;
     panelInfo = _.clone(panelInfo);
     parameters = _.clone(panelInfo.parameters || {});
-    if ((defaultParameters = this._getDefaultParameters(panelInfo.action)) != null) {
+    defaultParameters = this._getDefaultParameters(panelInfo.action, panelInfo.parameters);
+    if (defaultParameters != null) {
       for (key in defaultParameters) {
         defaultParameter = defaultParameters[key];
         if (parameters[key] == null) {
@@ -11353,6 +11332,8 @@ module.exports = {
   'tooltip filter': 'Filter',
   'tooltip display filters': 'Display filters',
   'tooltip expunge mailbox': 'Expunge mailbox',
+  "tooltip add contact": "Add to your contacts",
+  "tooltip show contact": "Show contact",
   'filters unseen': 'unread',
   'filters flagged': 'stared',
   'filters attach': 'attachments',
@@ -11723,6 +11704,8 @@ module.exports = {
   'tooltip filter': 'Filtrer',
   'tooltip display filters': 'Afficher les filtres',
   'tooltip expunge mailbox': 'Vider la boite',
+  "tooltip add contact": "Ajouter à vos contacts",
+  "tooltip show contact": "Voir les détails du contact",
   'filters unseen': 'non-lus',
   'filters flagged': 'favoris',
   'filters attach': 'pièces jointes',
@@ -11881,6 +11864,10 @@ module.exports = Router = (function(_super) {
       pattern: 'account/:accountID/mailbox/:mailboxID',
       fluxAction: 'showMessageList'
     },
+    'account.mailbox.default': {
+      pattern: 'account/:accountID',
+      fluxAction: 'showMessageList'
+    },
     'search': {
       pattern: 'search/:query/page/:page',
       fluxAction: 'showSearch'
@@ -11896,6 +11883,18 @@ module.exports = Router = (function(_super) {
     'compose': {
       pattern: 'compose',
       fluxAction: 'showComposeNewMessage'
+    },
+    'compose.reply': {
+      pattern: 'reply/:messageID',
+      fluxAction: 'showComposeMessage'
+    },
+    'compose.reply-all': {
+      pattern: 'reply-all/:messageID',
+      fluxAction: 'showComposeMessage'
+    },
+    'compose.forward': {
+      pattern: 'forward/:messageID',
+      fluxAction: 'showComposeMessage'
     },
     'edit': {
       pattern: 'edit/:messageID',
@@ -11915,13 +11914,18 @@ module.exports = Router = (function(_super) {
     '': 'default'
   };
 
-  Router.prototype._getDefaultParameters = function(action) {
+  Router.prototype._getDefaultParameters = function(action, parameters) {
     var defaultAccount, defaultAccountID, defaultMailboxID, defaultParameters, mailbox, _ref, _ref1;
     switch (action) {
       case 'account.mailbox.messages':
       case 'account.mailbox.messages.full':
+      case 'account.mailbox.default':
         defaultAccountID = (_ref = AccountStore.getDefault()) != null ? _ref.get('id') : void 0;
-        mailbox = AccountStore.getDefaultMailbox(defaultAccountID);
+        if (parameters.accountID != null) {
+          mailbox = AccountStore.getDefaultMailbox(parameters.accountID);
+        } else {
+          mailbox = AccountStore.getDefaultMailbox(defaultAccountID);
+        }
         defaultMailboxID = mailbox != null ? mailbox.get('id') : void 0;
         defaultParameters = {};
         defaultParameters.accountID = defaultAccountID;
@@ -12322,6 +12326,20 @@ AccountStore = (function(_super) {
     }
   };
 
+  AccountStore.prototype.getMailbox = function(message, account) {
+    var boxID;
+    boxID = null;
+    for (boxID in message.get('mailboxIds')) {
+      if (__indexOf.call(account.favorites, boxID) >= 0) {
+        boxID = boxID;
+      }
+    }
+    if ((boxID == null) && Object.keys(message.get('mailboxIds')).length >= 0) {
+      return Object.keys(message.get('mailboxIds'))[0];
+    }
+    return boxID;
+  };
+
   return AccountStore;
 
 })(Store);
@@ -12629,7 +12647,7 @@ LayoutStore = (function(_super) {
     };
     makeUndoAction = function(ref) {
       return {
-        label: 'undo',
+        label: t('action undo'),
         onClick: function() {
           return getMessageActionCreator().undo(ref);
         }
@@ -12802,7 +12820,7 @@ MessageStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var computeMailboxDiff, dedupConversation, handleFetchResult, inMailbox, isDraft, isntAccount, notInMailbox, onReceiveRawMessage, reverseDateSort, __getSortFunction, _addInFlight, _conversationLengths, _conversationMemoize, _currentCID, _currentID, _currentMessages, _fetching, _filter, _fixCurrentMessage, _getMixed, _inFlightByMessageID, _inFlightByRef, _messages, _messagesWithInFlights, _params, _prevAction, _removeInFlight, _sortField, _sortOrder, _transformMessageWithRequest, _undoable;
+  var computeMailboxDiff, dedupConversation, handleFetchResult, inMailbox, isDraft, isntAccount, notInMailbox, onReceiveRawMessage, reverseDateSort, __getSortFunction, _addInFlight, _conversationLengths, _conversationMemoize, _currentCID, _currentID, _currentMessages, _fetching, _filter, _fixCurrentMessage, _getMixed, _inFlightByMessageID, _inFlightByRef, _isLoadingReply, _messages, _messagesWithInFlights, _params, _prevAction, _removeInFlight, _sortField, _sortOrder, _transformMessageWithRequest, _undoable;
 
   __extends(MessageStore, _super);
 
@@ -12858,6 +12876,8 @@ MessageStore = (function(_super) {
   _currentCID = null;
 
   _prevAction = null;
+
+  _isLoadingReply = false;
 
   _inFlightByRef = {};
 
@@ -13072,7 +13092,7 @@ MessageStore = (function(_super) {
   };
 
   onReceiveRawMessage = function(message) {
-    var diff, messageMap, oldmsg, updated;
+    var diff, getMessage, messageMap, oldmsg, updated;
     oldmsg = _messages.get(message.id);
     updated = oldmsg != null ? oldmsg.get('updated') : void 0;
     if (!((message.updated != null) && (updated != null) && updated > message.updated) && !message._deleted) {
@@ -13104,9 +13124,10 @@ MessageStore = (function(_super) {
         _currentCID = message.conversationID;
       }
       if ((message.accountID != null) && (diff = computeMailboxDiff(oldmsg, messageMap))) {
-        return AccountStore._applyMailboxDiff(message.accountID, diff);
+        AccountStore._applyMailboxDiff(message.accountID, diff);
       }
     }
+    return getMessage = _messages.get(message.id);
   };
 
   handleFetchResult = function(result) {
@@ -13387,6 +13408,22 @@ MessageStore = (function(_super) {
     return msg = _messages.get(messageID) || null;
   };
 
+  MessageStore.prototype.getMessageHash = function(message) {
+    var account, accountID, conversationID, hash, mailboxID, messageID;
+    messageID = message.get('id');
+    accountID = message.get('accountID');
+    mailboxID = AccountStore.getSelectedMailbox().get('id');
+    if (mailboxID == null) {
+      mailboxID = AccountStore.getMailbox(message, account);
+    }
+    account = AccountStore.getSelected().get('id');
+    conversationID = message.get('conversationID');
+    hash = "#account/" + accountID + "/";
+    hash += "mailbox/" + mailboxID + "/";
+    hash += "conversation/" + conversationID + "/" + messageID + "/";
+    return hash;
+  };
+
 
   /**
   * Get messages from mailbox, with optional pagination
@@ -13532,6 +13569,14 @@ MessageStore = (function(_super) {
 
   MessageStore.prototype.getPrevAction = function() {
     return _prevAction;
+  };
+
+  MessageStore.prototype.setIsLoadingReply = function() {
+    return isLoadingReply;
+  };
+
+  MessageStore.prototype.isLoadingReply = function() {
+    return isLoadingReply;
   };
 
   MessageStore.prototype.isFetching = function() {
@@ -14320,7 +14365,7 @@ ContactStore = require('../stores/contact_store');
 
 QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;";
 
-COMPOSE_STYLE = "<style>\np {margin: 0;}\npre {background: transparent; border: 0}\n</style>";
+COMPOSE_STYLE = "<style>\npre {background: transparent; border: 0}\n</style>";
 
 module.exports = MessageUtils = {
   displayAddress: function(address, full) {
@@ -14391,7 +14436,7 @@ module.exports = MessageUtils = {
     var signatureHtml;
     message.text += "\n\n-- \n" + signature;
     signatureHtml = signature.replace(/\n/g, '<br>');
-    return message.html += "<p><br></p><p id=\"signature\">-- \n<br>" + signatureHtml + "</p>";
+    return message.html += "<p><br></p><p id=\"signature\">-- \n<br>" + signatureHtml + "</p>\n<p><br></p>";
   },
   makeReplyMessage: function(myAddress, inReplyTo, action, inHTML, signature) {
     var dateHuman, e, html, isSignature, message, notMe, options, sender, text;
@@ -14473,10 +14518,11 @@ module.exports = MessageUtils = {
     message.bcc = [];
     message.subject = this.getReplySubject(inReplyTo);
     message.text = separator + this.generateReplyText(text) + "\n";
-    message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br></p>";
+    message.html = "" + COMPOSE_STYLE + "\n<p><br></p>";
     if (isSignature) {
-      return this.addSignature(message, signature);
+      this.addSignature(message, signature);
     }
+    return message.html += "<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>";
   },
   setMessageAsReplyAll: function(options) {
     var dateHuman, html, inReplyTo, isSignature, message, params, sender, separator, signature, text, toAddresses;
@@ -14496,10 +14542,11 @@ module.exports = MessageUtils = {
     message.bcc = [];
     message.subject = this.getReplySubject(inReplyTo);
     message.text = separator + this.generateReplyText(text) + "\n";
-    message.html = "" + COMPOSE_STYLE + "\n<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br></p>";
+    message.html = "" + COMPOSE_STYLE + "\n<p><br></p>";
     if (isSignature) {
-      return this.addSignature(message, signature);
+      this.addSignature(message, signature);
     }
+    return message.html += "<p>" + separator + "<span class=\"originalToggle\"> … </span></p>\n<blockquote style=\"" + QUOTE_STYLE + "\">" + html + "</blockquote>\n<p><br></p>";
   },
   setMessageAsForward: function(options) {
     var addresses, dateHuman, fromField, html, htmlSeparator, inReplyTo, isSignature, message, sender, senderAddress, senderInfos, senderName, separator, signature, text, textSeparator;

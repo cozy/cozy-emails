@@ -469,6 +469,8 @@ module.exports =
       'tooltip filter': 'Filtrer'
       'tooltip display filters': 'Afficher les filtres'
       'tooltip expunge mailbox': 'Vider la boite'
+      "tooltip add contact": "Ajouter à vos contacts"
+      "tooltip show contact": "Voir les détails du contact"
 
 
       # Filters

@@ -2,6 +2,7 @@ Store = require '../libs/flux/store/store'
 
 {ActionTypes} = require '../constants/app_constants'
 
+
 class ContactStore extends Store
 
     ###
@@ -52,6 +53,7 @@ class ContactStore extends Store
 
     _import window.contacts
 
+
     ###
         Defines here the action handlers.
     ###
@@ -75,23 +77,30 @@ class ContactStore extends Store
 
             @emit 'change'
 
+
     ###
         Public API
     ###
+
     getResults: ->
         return _results
+
 
     getQuery: ->
         return _query
 
+
     getByAddress: (address) ->
         return _contacts.get address
+
 
     getAvatar: (address) ->
         return _contacts.get(address)?.get 'avatar'
 
+
     isExist: (address) ->
         return @getByAddress(address)?
+
 
 module.exports = new ContactStore()
 

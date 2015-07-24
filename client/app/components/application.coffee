@@ -197,3 +197,4 @@ module.exports = Application = React.createClass
             store.removeListener 'notify', @notify
         # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
+

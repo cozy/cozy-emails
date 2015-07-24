@@ -48,12 +48,17 @@ module.exports =
             'img'
             'head'
             'meta'
+            'title'
             'link'
+            'h1'
+            'h2'
+            'h3'
+            'h4'
         ]
         safeAttributes = [
             'style', 'class', 'background',
             # tables
-            'colspan', 'rowspan',
+            'colspan', 'rowspan', 'width', 'align', 'font-size'
             #microdata
             'itemscope', 'itemtype', 'itemprop', 'content'
         ]

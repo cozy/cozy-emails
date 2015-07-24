@@ -163,12 +163,14 @@ module.exports = React.createClass
         # /!\ we cannot use @linkState here because we need to be able
         # to call a method after state has been updated
         for field in @_mailboxesFields
+            doChange = (f) =>
+                return (val, cb) =>
+                    state = {}
+                    state[f] = val
+                    @setState state, cb
             options[field] =
                 value: @state[field]
-                requestChange: (val, cb) =>
-                    state = {}
-                    state[field] = val
-                    @setState state, cb
+                requestChange: doChange field
 
         return options
 

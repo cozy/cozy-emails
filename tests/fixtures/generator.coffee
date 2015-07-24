@@ -58,20 +58,21 @@ for i in [1..numberOfEmails] by 1
             "address": "#{name}@#{provider}",
             "name": name
 
-    account = getRandomElmt(accounts)._id
-    mailbox = getRandomElmt(mailboxes[account])._id
+    account   = getRandomElmt(accounts)._id
+    mailbox   = getRandomElmt(mailboxes[account])
+    mailboxID = mailbox._id
 
-    mailboxUID[mailbox] = 0 unless mailboxUID[mailbox]?
-    mailboxUID[mailbox] = mailboxUID[mailbox] + 1
+    mailboxUID[mailboxID] = 0 unless mailboxUID[mailboxID]?
+    mailboxUID[mailboxID] = mailboxUID[mailboxID] + 1
 
     mailboxObject = {}
-    mailboxObject[mailbox] = mailboxUID[mailbox]
+    mailboxObject[mailboxID] = mailboxUID[mailboxID]
 
     subject = loremIpsum count: getRandom(5), units: 'words', random: randomWithSeed
     content = loremIpsum count: getRandom(10), units: 'paragraphs', random: randomWithSeed
 
     # simulate email thread
-    if getRandom(10) > 3 and i > 2
+    if mailbox.label isnt 'noconv' and getRandom(10) > 3 and i > 2
         inReplyTo  = ["generated_id_#{i - 1}"]
         references = ["generated_id_#{i - 2}", "generated_id_#{i - 1}"]
     else

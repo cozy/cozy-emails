@@ -63,8 +63,8 @@ module.exports = {
   },
   sanitizeHTML: function(html, messageId, attachments) {
     var allowedAttributes, allowedSchemes, allowedTags, safeAttributes;
-    allowedTags = sanitizeHtml.defaults.allowedTags.concat(['img', 'head', 'meta', 'link']);
-    safeAttributes = ['style', 'class', 'background', 'colspan', 'rowspan', 'itemscope', 'itemtype', 'itemprop', 'content'];
+    allowedTags = sanitizeHtml.defaults.allowedTags.concat(['img', 'head', 'meta', 'title', 'link', 'h1', 'h2', 'h3', 'h4']);
+    safeAttributes = ['style', 'class', 'background', 'colspan', 'rowspan', 'width', 'align', 'font-size', 'itemscope', 'itemtype', 'itemprop', 'content'];
     allowedAttributes = sanitizeHtml.defaults.allowedAttributes;
     allowedTags.forEach(function(tag) {
       var exAllowed;

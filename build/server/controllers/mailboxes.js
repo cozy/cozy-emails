@@ -63,13 +63,13 @@ module.exports.refresh = function(req, res, next) {
         return next(err);
       }
       return Mailbox.getCounts(req.mailbox.id, function(err, counts) {
-        var recent, total, unread, _ref;
+        var mailboxCounts;
         if (err) {
           return next(err);
         }
-        _ref = counts[req.mailbox.id], total = _ref.total, recent = _ref.recent, unread = _ref.unread;
-        req.mailbox.nbTotal = total;
-        req.mailbox.nbUnread = unread;
+        mailboxCounts = counts[req.mailbox.id];
+        req.mailbox.nbTotal = (mailboxCounts != null ? mailboxCounts.total : void 0) || 0;
+        req.mailbox.nbUnread = (mailboxCounts != null ? mailboxCounts.unread : void 0) || 0;
         return res.send(req.mailbox);
       });
     });

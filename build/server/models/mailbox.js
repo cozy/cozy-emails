@@ -514,7 +514,7 @@ Mailbox = (function(_super) {
               mid: mid,
               uid: uid
             }, function(err, info) {
-              shouldNotif = shouldNotif || info.shouldNotif;
+              shouldNotif = shouldNotif || (info != null ? info.shouldNotif : void 0);
               if (info != null ? info.actuallyAdded : void 0) {
                 nbAdded += 1;
               }

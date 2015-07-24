@@ -1,4 +1,4 @@
-{div, span, i, img} = React.DOM
+{div, span, i, img, a} = React.DOM
 {MessageFlags} = require '../constants/app_constants'
 
 PopupMessageDetails     = require './popup_message_details'
@@ -43,7 +43,11 @@ module.exports = React.createClass
                         if MessageFlags.FLAGGED in @props.message.get('flags')
                             i className: 'fa fa-star'
                         if @props.isDraft
-                            i className: 'fa fa-edit'
+                            a
+                                href: "#edit/#{@props.message.get 'id'}",
+                                i className: 'fa fa-edit'
+                                span null, t "edit draft"
+
                         if @props.isDeleted
                             i className: 'fa fa-trash'
                 div className: 'metas date',
@@ -65,3 +69,4 @@ module.exports = React.createClass
                     span null,
                         t "mail #{field}"
                 @formatUsers(users)...
+

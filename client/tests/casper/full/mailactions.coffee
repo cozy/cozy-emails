@@ -31,8 +31,8 @@ casper.test.begin 'Test Message Actions', (test) ->
         currentSel = ".conversation article.message.active[data-id='#{messageID}']"
         selectInConv "DoveCot", "Test Folder", "Re: troll", messageID, ->
             test.assertEquals casper.fetchText("#{currentSel} .infos .from"), 'contact@cozytest.cc', 'From'
-            test.assertEquals casper.fetchText("#{currentSel} .infos .to .participant"), "Me me@cozytest.cc", 'To'
-            test.assertEquals casper.fetchText("#{currentSel} .infos .cc .participant"), "You you@cozytest.cc", 'Cc'
+            test.assertEquals casper.fetchText("#{currentSel} .infos .to .participant"), "Meme@cozytest.cc", 'To'
+            test.assertEquals casper.fetchText("#{currentSel} .infos .cc .participant"), "Youyou@cozytest.cc", 'Cc'
             test.assertDoesntExist "#{currentSel} .form-compose", "No compose form"
             casper.click "#{currentSel} header .toolbar-message button.mail-reply"
             casper.waitForSelector '.form-compose', ->

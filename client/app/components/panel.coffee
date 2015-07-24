@@ -1,8 +1,10 @@
+# Components
 AccountConfig  = require './account_config'
 Compose        = require './compose'
 Conversation   = require './conversation'
 MessageList    = require './message-list'
 Settings       = require './settings'
+{Spinner}       = require './basic_components'
 
 # React Mixins
 RouterMixin          = require '../mixins/router_mixin'
@@ -15,7 +17,9 @@ MessageStore  = require '../stores/message_store'
 SearchStore   = require '../stores/search_store'
 SettingsStore = require '../stores/settings_store'
 
-{MessageFilter, Dispositions} = require '../constants/app_constants'
+Constants = require '../constants/app_constants'
+{ComposeActions, MessageFilter, Dispositions} = Constants
+
 
 module.exports = Panel = React.createClass
     displayName: 'Panel'
@@ -30,12 +34,14 @@ module.exports = Panel = React.createClass
     shouldComponentUpdate: (nextProps, nextState) ->
         should = not(_.isEqual(nextState, @state)) or
                  not (_.isEqual(nextProps, @props))
+
         return should
 
     render: ->
         # -- Generates a list of messages for a given account and mailbox
         if @props.action is 'account.mailbox.messages' or
            @props.action is 'account.mailbox.messages.full' or
+           @props.action is 'account.mailbox.default' or
            @props.action is 'search'
 
             @renderList()
@@ -54,7 +60,10 @@ module.exports = Panel = React.createClass
 
         # -- Generates the new message composition form
         else if @props.action is 'compose' or
-                @props.action is 'edit'
+                @props.action is 'edit' or
+                @props.action is 'compose.reply' or
+                @props.action is 'compose.reply-all' or
+                @props.action is 'compose.forward'
 
             @renderCompose()
 
@@ -67,9 +76,11 @@ module.exports = Panel = React.createClass
         else
             console.error "Unknown action #{@props.action}"
             window.cozyMails.logInfo "Unknown action #{@props.action}"
-            return React.DOM.div null, 'Unknown component'
+            return React.DOM.div null, "Unknown component #{@props.action}"
+
 
     renderList: ->
+
         if @props.action is 'search'
             accountID = null
             mailboxID = null
@@ -77,10 +88,12 @@ module.exports = Panel = React.createClass
             messagesCount    = messages.count()
             emptyListMessage = t 'list empty'
             counterMessage   = t 'list search count', messagesCount
+
         else
             accountID = @props.accountID
             mailboxID = @props.mailboxID
             account   = AccountStore.getByID accountID
+
             if account?
                 mailbox   = account.get('mailboxes').get mailboxID
                 messages  = MessageStore.getMessagesByMailbox mailboxID,
@@ -96,6 +109,7 @@ module.exports = Panel = React.createClass
                     else
                         t 'no filter message'
                 counterMessage   = t 'list count', messagesCount
+
             else
                 setTimeout =>
                     @redirect
@@ -105,7 +119,6 @@ module.exports = Panel = React.createClass
                 return
 
         # gets the selected message if any
-
         if @state.settings.get 'displayConversation'
             # select first conversation to allow navigation to start
             conversationID = @state.currentConversationID
@@ -228,6 +241,9 @@ module.exports = Panel = React.createClass
             useIntents           : @props.useIntents
 
 
+    # Rendering the compose component requires several parameters. The main one
+    # are related to the selected account, the selected mailbox and the compose
+    # state (classic, draft, reply, reply all or forward).
     renderCompose: ->
         options =
             layout               : 'full'
@@ -241,13 +257,50 @@ module.exports = Panel = React.createClass
             useIntents           : @props.useIntents
             ref                  : 'compose'
 
+        component = null
+
+        # Generates an empty compose form
         if @props.action is 'compose'
-            options.message = null
-        # -- Generates the edit draft composition form
+            message = null
+            component = Compose options
+
+        # Generates the edit draft composition form.
         else if @props.action is 'edit'
             options.message = MessageStore.getByID @props.messageID
+            component = Compose options
 
-        return Compose options
+        # Generates the reply composition form.
+        else if @props.action is 'compose.reply'
+            options.action = ComposeActions.REPLY
+            component = @getReplyComponent options
+
+        # Generates the reply all composition form.
+        else if @props.action is 'compose.reply-all'
+            options.action = ComposeActions.REPLY_ALL
+            component = @getReplyComponent options
+
+        # Generates the forward composition form.
+        else if @props.action is 'compose.forward'
+            options.action = ComposeActions.FORWARD
+            component = @getReplyComponent options
+
+        return component
+
+
+    # Configure the component depending on the given action.
+    # Returns a spinner if the message is not available.
+    getReplyComponent: (options) ->
+        message = MessageStore.getByID @props.messageID
+
+        if not(@state.isLoadingReply) or message?
+            message = MessageStore.getByID @props.messageID
+            message.set 'id', @props.messageID
+            options.inReplyTo = message
+            component = Compose options
+        else
+            component = Spinner()
+
+        return component
 
 
     renderSettings: ->
@@ -257,12 +310,12 @@ module.exports = Panel = React.createClass
 
 
     getStateFromStores: ->
+        isLoadingReply = not MessageStore.getByID(@props.messageID)?
 
         selectedAccount = AccountStore.getSelected()
         # When selecting compose in Menu, we may not have a selected account
         if not selectedAccount?
             selectedAccount = AccountStore.getDefault()
-
 
         # Flat copies of accounts and mailboxes
         # This prevents components to refresh when properties they don't use are
@@ -270,7 +323,7 @@ module.exports = Panel = React.createClass
         accountsFlat = {}
         AccountStore.getAll().map (account) ->
             accountsFlat[account.get 'id'] =
-                name:  account.get 'name'
+                name: account.get 'name'
                 label: account.get 'label'
                 login: account.get 'login'
                 trashMailbox: account.get 'trashMailbox'
@@ -308,4 +361,5 @@ module.exports = Panel = React.createClass
             currentFilter         : MessageStore.getCurrentFilter()
             results               : SearchStore.getResults()
             settings              : SettingsStore.get()
+            isLoadingReply        : isLoadingReply
         }

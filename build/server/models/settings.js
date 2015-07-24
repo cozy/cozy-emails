@@ -86,7 +86,7 @@ Settings.getDefault = function(callback) {
   settings = {
     autosaveDraft: true,
     composeInHTML: true,
-    composeOnTop: false,
+    composeOnTop: true,
     desktopNotifications: true,
     displayConversation: true,
     displayPreview: true,

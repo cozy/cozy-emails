@@ -21,7 +21,7 @@ casper.test.begin 'List action', (test) ->
         casper.cozy.selectAccount "DoveCot", "Test Folder", ->
             test.assertElementCount '.messages-list .conversation-length', 2, 'Badges'
             badges = casper.fetchText "#{base} .conversation-length"
-            test.assertEquals badges, '[5]', 'Badges value'
+            test.assertEquals badges, '5', 'Badges value'
             infos = casper.getElementInfo base
             messageID = infos.attributes['data-message-id']
 
@@ -62,7 +62,7 @@ casper.test.begin 'List action', (test) ->
                             casper.cozy.selectAccount "DoveCot", "Test Folder", ->
                                 test.assertExists base, 'Message moved'
                                 badges = casper.fetchText "#{base} .conversation-length"
-                                test.assertEquals badges, '[5]', 'Badges value'
+                                test.assertEquals badges, '5', 'Badges value'
 
     casper.run ->
         test.done()
