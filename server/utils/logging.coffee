@@ -15,9 +15,10 @@ else 0
 lastLogs = new Array(15)
 lastDate = +new Date()
 index = -1
+MAX_INDEX = 15
 
 addToLastLogs = ->
-    index = (index + 1) % 15
+    index = (index + 1) % MAX_INDEX
     lastLogs[index] = util.format.apply this, arguments
 
 pad = (nb) ->
@@ -54,4 +55,5 @@ module.exports = (options) ->
         error: logger 3
 
 module.exports.getLasts = ->
-    return lastLogs.join("\n")
+    return lastLogs[index+1..MAX_INDEX].join("\n") + "\n" +
+           lastLogs[0..index].join("\n")
