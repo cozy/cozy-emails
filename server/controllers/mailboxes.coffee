@@ -7,72 +7,68 @@ Message = require '../models/message'
 log = require('../utils/logging')(prefix: 'mailbox:controller')
 _ = require 'lodash'
 async = require 'async'
-
-# fetch the mailbox and attach it to the request
-module.exports.fetch = (req, res, next) ->
-    id = req.params.mailboxID
-    Mailbox.find req.params.mailboxID, (err, mailbox) ->
-        return next err if err
-        req.mailbox = mailbox
-        next()
-
-# fetch a mailbox by the body.parentID
-# attach it to the request as parentMailbox
-module.exports.fetchParent = (req, res, next) ->
-    return async.nextTick next unless req.body.parentID
-
-    Mailbox.find req.body.parentID, (err, mailbox) ->
-        return next err if err
-        req.parentMailbox = mailbox
-        next()
+ramStore = require '../models/store_account_and_boxes'
+Scheduler = require '../processes/_scheduler'
+MailboxRefreshFast = require '../processes/mailbox_refresh_fast'
 
 # refresh a single mailbox if we can do it fast
 # We can do it fast if the server support RFC4551
 # see {Mailbox::imap_refreshFast}
 module.exports.refresh = (req, res, next) ->
-    account = req.account
-    if account.isRefreshing()
-        return res.status(202).send info: 'in progress'
-    else if not account.supportRFC4551
+    mailbox = ramStore.getMailbox(req.params.mailboxID)
+    account = ramStore.getAccount(mailbox.accountID)
+    if not account.supportRFC4551
         next new BadRequest('Cant refresh a non RFC4551 box')
     else
-        req.mailbox.imap_refresh
-            limitByBox: null
-            firstImport: false
-            supportRFC4551: true
-        , (err, shouldNotif) ->
-            return next err if err
-            Mailbox.getCounts req.mailbox.id, (err, counts) ->
-                return next err if err
-                mailboxCounts = counts[req.mailbox.id]
-                req.mailbox.nbTotal = mailboxCounts?.total or 0
-                req.mailbox.nbUnread = mailboxCounts?.unread or 0
-                res.send req.mailbox
-
-
+        res.send ramStore.getMailboxClientObject mailbox.id
+        # refresh = new MailboxRefreshFast mailbox: mailbox
+        # Scheduler.schedule refresh, (err) ->
+        #     return next err if err
 
 # create a mailbox
 module.exports.create = (req, res, next) ->
     log.info "Creating #{req.body.label} under #{req.body.parentID}" +
         " in #{req.body.accountID}"
 
-    account = req.account
-    parent = req.parentMailbox
+    account = ramStore.getAccount(req.body.accountID)
+    parent = ramStore.getMailbox(req.body.parentID)
     label = req.body.label
 
-    Mailbox.imapcozy_create account, parent, label, (err) ->
+    if parent
+        path = parent.path + parent.delimiter + label
+        tree = parent.tree.concat label
+    else
+        path = label
+        tree = [label]
+
+    mailbox =
+        accountID: account.id
+        label: label
+        path: path
+        tree: tree
+        delimiter: parent?.delimiter or '/'
+        attribs: []
+
+    async.series [
+        (cb) ->
+            ramStore.getImapPool(mailbox).doASAP (imap, cbRelease) ->
+                imap.addBox2 path, cbRelease
+            , cb
+        (cb) ->
+            Mailbox.create mailbox, (err, created) ->
+                mailbox = created
+                cb err
+    ], (err) ->
         return next err if err
-        res.account = account
-        next()
+        res.send ramStore.getAccountClientObject account.id
 
 
 # update a mailbox
 module.exports.update = (req, res, next) ->
     log.info "Updating #{req.params.mailboxID} to #{req.body.label}"
 
-    account = req.account
-    mailbox = req.mailbox
-
+    mailbox = ramStore.getMailbox(req.params.mailboxID)
+    account = ramStore.getAccount(mailbox.accountID)
 
     if req.body.label
 
@@ -82,8 +78,7 @@ module.exports.update = (req, res, next) ->
 
         mailbox.imapcozy_rename req.body.label, newPath, (err, updated) ->
             return next err if err
-            res.account = account
-            next null
+            res.send ramStore.getAccountClientObject account.id
 
 
     else if req.body.favorite?
@@ -93,8 +88,7 @@ module.exports.update = (req, res, next) ->
 
         account.updateAttributes {favorites}, (err, updated) ->
             return next err if err
-            res.account = updated
-            next null
+            res.send ramStore.getAccountClientObject account.id
 
     else next new BadRequest 'Unsuported request for mailbox update'
 
@@ -102,29 +96,22 @@ module.exports.update = (req, res, next) ->
 module.exports.delete = (req, res, next) ->
     log.info "Deleting #{req.params.mailboxID}"
 
-    account = req.account
-
-    req.mailbox.imapcozy_delete account, (err) ->
+    mailbox = ramStore.getMailbox(req.params.mailboxID)
+    account = ramStore.getAccount(mailbox.accountID)
+    mailbox.imapcozy_delete (err) ->
         return next err if err
-        res.account = account
-        next null
+        res.send ramStore.getAccountClientObject account.id
 
 # expunge every messages from trash mailbox
 module.exports.expunge = (req, res, next) ->
     log.info "Expunging #{req.params.mailboxID}"
 
-    account = req.account
+    mailbox = ramStore.getMailbox(req.params.mailboxID)
+    account = ramStore.getAccount(mailbox.accountID)
     if account.trashMailbox is req.params.mailboxID
-        if account.isTest()
-            Message.safeRemoveAllFromBox req.params.mailboxID, (err) ->
-                return next err if err
-                res.account = account
-                next null
-        else
-            req.mailbox.imap_expungeMails (err) ->
-                return next err if err
-                res.account = account
-                next null
+        mailbox.imap_expungeMails (err) ->
+            return next err if err
+            res.send ramStore.getAccountClientObject account.id
     else
         next new BadRequest 'You can only expunge trash mailbox'
 

@@ -93,9 +93,6 @@ utils.RefreshError = class RefreshError extends Error
 
 
 # Error predicates
-utils.isMailboxDontExist = (err) ->
-    err.message and ~err.message.indexOf "Mailbox doesn't exist"
-
 utils.isFolderForbidden = (err) ->
     /Folder name (.*) is not allowed./.test err.message
 
