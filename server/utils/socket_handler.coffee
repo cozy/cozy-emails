@@ -99,7 +99,6 @@ handleNewClient = (socket) ->
     # update the client refreshes status
     socket.emit 'refreshes.status', ImapReporter.summary()
 
-    socket.on 'mark_ack', ImapReporter.acknowledge
     socket.on 'change_scope', (scope) ->
         updateClientScope socket, scope
     socket.on 'disconnect', ->
