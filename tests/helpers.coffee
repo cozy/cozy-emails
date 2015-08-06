@@ -31,6 +31,7 @@ helpers.waitAllTaskComplete = (done) ->
     lastFinished = false
     checkIfDone = ->
         client.get "/refreshes", (err, res, body) ->
+            console.log "WAITING TASKS", body
             finished = not body.some (task) -> not task.finished
             if finished and lastFinished then return done()
 
