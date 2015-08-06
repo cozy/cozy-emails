@@ -44,7 +44,7 @@ SocketHandler.setup = (app, server) ->
         created = created.toClientObject()
         io.emit 'message.create', created
         for socket in sockets when inScope(socket, created)
-                socket.emit 'message.create', created
+            socket.emit 'message.create', created
 
     Message.on 'update', (updated, old) ->
         updated = updated.toClientObject()

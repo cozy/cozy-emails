@@ -18,7 +18,7 @@ module.exports = class RemoveAllMessagesFromAccount extends Process
         async.doWhilst @step, @notFinished, callback
 
     notFinished: =>
-        @batch.length > 0
+        @batch and @batch.length > 0
 
     step: (callback) =>
         @fetchMessages (err) =>
@@ -44,7 +44,7 @@ module.exports = class RemoveAllMessagesFromAccount extends Process
             startkey: [@accountID]
             endkey: [@accountID, {}]
 
-        , (err, rows) ->
+        , (err, rows) =>
             return callback err if err
             @batch = rows or []
             callback null
