@@ -1,10 +1,12 @@
 cozydb = require 'cozydb'
+ramStore = require './store_account_and_boxes'
 
 # Public: a mail address, used in {Message} schema
 class MailAdress extends cozydb.Model
     @schema:
         name: String
         address: String
+
 
 # Public: Message
 module.exports = class Message extends cozydb.CozyModel
@@ -19,6 +21,7 @@ module.exports = class Message extends cozydb.CozyModel
                                          # {boxID: uid, boxID2 : uid2}
         hasTwin        : [String]        # [String] mailboxIDs where this
                                          # message has twin
+        twinMailboxIDs : cozydb.NoSchema # mailboxes as an hash of array
         flags          : [String]        # [String] flags of the message
         headers        : cozydb.NoSchema # hash of the message headers
         from           : [MailAdress]    # array of {name, address}
@@ -38,25 +41,6 @@ module.exports = class Message extends cozydb.CozyModel
         binary         : cozydb.NoSchema
         attachments    : cozydb.NoSchema
         alternatives   : cozydb.NoSchema # for calendar content
-
-    # Public: recover from when a box change its UIDVALIDITY.
-    # Find the message with {.byMessageID} and change its UID for the box.
-    #
-    # box - {Mailbox} the mailbox
-    # messageID - {String} the message message-id
-    # newUID - {String} the message message-id
-    #
-    # Returns (callback) {Message} the updated message
-    @recoverChangedUID: (box, messageID, newUID, callback) ->
-        log.debug "recoverChangedUID"
-        Message.byMessageID box.accountID, messageID, (err, message) ->
-            return callback err if err
-            # no need to recover if the message doesnt exist
-            return callback null unless message
-            return callback null unless message.mailboxIDs[box.id]
-            mailboxIDs = message.mailboxIDs
-            mailboxIDs[box.id] = newUID
-            message.updateAttributes {mailboxIDs}, callback
 
 
     # Public: fetch a list of message
@@ -157,83 +141,13 @@ module.exports = class Message extends cozydb.CozyModel
         else
             callback null, uuid.v4()
 
-    # Public: get the uids present in a box in cozy
-    #
-    # mailboxID - id of the mailbox to check
-    # min - get only UIDs between min & max
-    # max - get only UIDs between min & max
-    #
-    # Returns (callback) an {Object} with couchdb ids as keys and
-    #                    flags as values
-    @UIDsInRange: (mailboxID, min, max, callback) ->
-        Message.rawRequest 'byMailboxRequest',
-            startkey: ['uid', mailboxID, min]
-            endkey: ['uid', mailboxID, max]
-            inclusive_end: true
-            reduce: false
-
-        , (err, rows) ->
-            return callback err if err
-            result = {}
-            for row in rows
-                uid = row.key[2]
-                result[uid] = [row.id, row.value]
-            callback null, result
-
-    # Public: get messages ids in cozy by their uids
-    #
-    # mailboxID - {String} id of the mailbox to check
-    # uids - {Array} of {String}  uids to fetch
-    #
-    # Returns (callback) an {Object} with uids as keys and
-    #                    couchdbid as values
-    @indexedByUIDs: (mailboxID, uids, callback) ->
-        keys = uids.map (uid) -> ['uid', mailboxID, parseInt(uid)]
-        Message.rawRequest 'byMailboxRequest',
-            reduce: false
-            keys: keys
-            include_docs: true
-        , (err, rows) ->
-            return callback err if err
-            result = {}
-            for row in rows
-                uid = row.key[2]
-                result[uid] = new Message(row.doc)
-            callback null, result
-
-    # Public: get messages in cozy by their uids
-    #
-    # mailboxID - {String} id of the mailbox to check
-    # uids - {Array} of {String}  uids to fetch
-    #
-    # Returns (callback) an {Array} of {Messages}
-    @byUIDs: (mailboxID, uids, callback) ->
-        keys = uids.map (uid) -> ['uid', mailboxID, uid]
-        Message.rawRequest 'byMailboxRequest',
-            reduce: false
-            keys: keys
-            include_docs: true
-        , (err, rows) ->
-            return callback err if err
-            messages = rows.map (row) -> new Message row.doc
-            callback null, messages
-
-
     # Public: get messages in cozy by their uids
     #
     # mailboxID - {String} id of the mailbox to check
     #
     # Returns (callback) an {Array} of {String} uids in the cozy
     @UIDsInCozy: (mailboxID, callback) ->
-        Message.rawRequest 'byMailboxRequest',
-            startkey: ['uid', mailboxID]
-            endkey: ['uid', mailboxID, {}]
-            reduce: true
-            group_level: 3
-         , (err, rows) ->
-            return callback err if err
-            uids = (row.key[2] for row in rows)
-            callback null, uids
+
 
     # Public: find a message by its message id
     #
@@ -304,96 +218,6 @@ module.exports = class Message extends cozydb.CozyModel
                     return null
             callback null, messages
 
-
-    # Public: destroy all messages for an account
-    # play it safe by limiting number of messages in RAM
-    # and number of concurrent requests to the DS
-    # and allowing for the occasional DS failure
-    # @TODO : stress test DS requestDestroy
-    #
-    # accountID - {String} id of the account
-    # retries - {Number} of DS failures we tolerate
-    #
-    # Returns (callback) at completion
-    @safeDestroyByAccountID: (accountID, callback, retries = 2) ->
-        log.info "destroying all messages in account #{accountID}"
-        Message.rawRequest 'dedupRequest',
-            limit: LIMIT_DESTROY
-            startkey: [accountID]
-            endkey: [accountID, {}]
-
-        , (err, rows) ->
-            return callback err if err
-            return callback null if rows.length is 0
-            log.info "destroying", rows.length, "messages"
-
-            async.eachLimit rows, CONCURRENT_DESTROY, (row, cb) ->
-                new Message(id: row.id).destroy (err) ->
-                    if err?.message is "Document not found"
-                        cb null
-                    else
-                        cb err
-            , (err) ->
-
-                if err and retries > 0
-                    log.warn "DS has crashed ? waiting 4s before try again", err
-                    setTimeout ->
-                        Message.safeDestroyByAccountID accountID, callback, \
-                            retries - 1
-                    , 4000
-
-                else if err
-                    return callback err
-
-                else
-                    # we are not done, loop again, resetting the retries
-                    Message.safeDestroyByAccountID accountID, callback, 2
-
-
-    # Public: remove all messages from a mailbox
-    # play it safe by limiting number of messages in RAM
-    # and number of concurrent requests to the DS
-    # and allowing for the occasional DS failure
-    # @TODO : refactor this after a good night
-    # @TODO : stress test DS requestDestroy & use it instead
-    #
-    # mailboxID - {String} id of the mailbox
-    # retries - {Number} of DS failures we tolerate
-    # callback - Function(err)
-    #
-    # Returns void
-    @safeRemoveAllFromBox: (mailboxID, callback, retries = 2) ->
-        log.info "removing all messages from mailbox #{mailboxID}"
-        Message.rawRequest 'byMailboxRequest',
-            limit: LIMIT_UPDATE
-            startkey: ['uid', mailboxID, 0]
-            endkey: ['uid', mailboxID, {}]
-            include_docs: true
-            reduce: false
-
-        , (err, rows) ->
-            return callback err if err
-            return callback null if rows.length is 0
-
-            async.eachLimit rows, CONCURRENT_DESTROY, (row, cb) ->
-                new Message(row.doc).removeFromMailbox(id: mailboxID, true, cb)
-
-            , (err) ->
-
-                if err and retries > 0
-                    log.warn "DS has crashed ? waiting 4s before try again", err
-                    setTimeout ->
-                        Message.safeRemoveAllFromBox mailboxID, callback, \
-                            retries - 1
-                    , 4000
-
-                else if err
-                    return callback err
-
-                else
-                    # we are not done, loop again, resetting the retries
-                    Message.safeRemoveAllFromBox mailboxID, callback, 2
-
     # Public: remove a message from a mailbox.
     # Uses {::removeFromMailbox}
     #
@@ -407,57 +231,6 @@ module.exports = class Message extends cozydb.CozyModel
             return callback err if err
             return callback new NotFound "Message #{id}" unless message
             message.removeFromMailbox box, false, callback
-
-    # Public: set new flags on a message.
-    #
-    # id - {String} id of the message
-    # flags - {Array} of {String} the flags ot set
-    #
-    # Returns (callback) the updated {Message}
-    @applyFlagsChanges: (id, flags, callback) ->
-        log.debug "applyFlagsChanges", id, flags
-        Message.updateAttributes id, {flags}, callback
-
-    # Public: remove messages from mailboxes that doesnt exist
-    # anymore.
-    #
-    # existings - {Array} of {String} ids of existings mailboxes
-    #
-    # Returns (callback) at completion
-    @removeOrphans: (existings, callback) ->
-        log.debug "removeOrphans"
-        Message.rawRequest 'byMailboxRequest',
-            reduce: true
-            group_level: 2
-            startkey: ['uid', '']
-            endkey: ['uid', "\uFFFF"]
-        , (err, rows) ->
-            return callback err if err
-
-            async.eachSeries rows, (row, cb) ->
-                mailboxID = row.key[1]
-                if mailboxID in existings
-                    cb null
-                else
-                    log.debug "removeOrphans - found orphan", row.id
-                    Message.safeRemoveAllFromBox mailboxID, (err) ->
-                        if err
-                            log.error """
-                                failed to remove message""", row.id, err
-                        cb null
-
-            , (err) ->
-                options =
-                    key: ['nobox']
-                    reduce: false
-                Message.rawRequest 'byMailboxRequest', options, (err, rows) ->
-                    return callback err if err
-                    async.eachSeries rows, (row, cb) ->
-                        Message.destroy row.id, (err) ->
-                            log.error 'fail to destroy orphan', err if err
-                            cb null
-                    , callback
-
 
     # Public: get messages in a box depending on the query params
     #
@@ -595,11 +368,20 @@ module.exports = class Message extends cozydb.CozyModel
                 # this is the weird case when a message is in the box
                 # under two different UIDs
                 log.debug "        twin"
-                existing.markTwin box, callback
+                existing.markTwin box, uid, callback
             else
                 log.debug "        fetch"
-                box.imap_fetchOneMail uid, callback
+                Message.fetchOneMail box, uid, callback
 
+    @fetchOneMail: (box, uid, callback) ->
+        box.doLaterWithBox (imap, imapbox, cb) ->
+            imap.fetchOneMail uid, cb
+        , (err, mail) ->
+            return callback err if err
+            shouldNotif = '\\Seen' in (mail.flags or [])
+            Message.createFromImapMessage mail, box, uid, (err) ->
+                return callback err if err
+                callback null, {shouldNotif: shouldNotif, actuallyAdded: true}
 
     # Public: mark a message has having a twin (2 messages with same MID,
     # but different UID) in the same box so they can be smartly handled at
@@ -610,15 +392,27 @@ module.exports = class Message extends cozydb.CozyModel
     # Returns (callback) {Object} information about what happened
     #           :shouldNotif - {Boolean} always false
     #           :actuallyAdded - {Boolean} wheter a message was actually added
-    markTwin: (box, callback) ->
+    markTwin: (box, uid, callback) ->
         hasTwin = @hasTwin or []
-        if box.id in hasTwin
+        twinMailboxIDs = @twinMailboxIDs or {}
+        if box.id in hasTwin and uid in twinMailboxIDs[box.id]
             # already noted
             callback null, {shouldNotif: false, actuallyAdded: false}
 
+        else if box.id in hasTwin
+            # the message was marked as twin before the introduction of
+            # twinMailboxIDs
+            twinMailboxIDs[box.id] ?= []
+            twinMailboxIDs[box.id].push uid
+            @updateAttributes {twinMailboxIDs}, (err) ->
+                callback err, {shouldNotif: false, actuallyAdded: false}
+
+
         else
             hasTwin.push box.id
-            @updateAttributes {hasTwin}, (err) ->
+            twinMailboxIDs[box.id] ?= []
+            twinMailboxIDs[box.id].push uid
+            @updateAttributes {hasTwin, twinMailboxIDs}, (err) ->
                 callback err, {shouldNotif: false, actuallyAdded: true}
 
 
@@ -671,7 +465,6 @@ module.exports = class Message extends cozydb.CozyModel
         else @updateAttributes {mailboxIDs}, callback
 
 
-
     # Public: Create a message from a raw imap message.
     # Handle attachments and normalization of message ids and subjects.
     #
@@ -680,7 +473,7 @@ module.exports = class Message extends cozydb.CozyModel
     # uid - {Number} UID of the message in the box
     #
     # Returns (callback) at completion
-    Message.createFromImapMessage = (mail, box, uid, callback) ->
+    @createFromImapMessage: (mail, box, uid, callback) ->
         log.info "createFromImapMessage", box.label, uid
         log.debug 'flags = ', mail.flags
 
@@ -755,8 +548,6 @@ module.exports = class Message extends cozydb.CozyModel
 
         , callback
 
-
-
     # Public: get this message formatted for the client.
     # Generate html & text appropriately and give each
     # attachment an URL.
@@ -782,46 +573,29 @@ module.exports = class Message extends cozydb.CozyModel
         return raw
 
 
-    # Public : prepare a list of message for processing by grouping them by
-    # mailbox and fetching boxes paths.
-    #
-    # messages - {Array} of {Message}
-    #
-    # Returns (callback) an {Object} with keys=boxID and {Object} values
-    #       :box - the {Mailbox}
-    #       :messages - {Array} of {Message} in the box
-    @groupWithBox: (messages, callback) ->
-        accountID = messages[0].accountID
-        Mailbox.getBoxesIndexedByID accountID, (err, boxIndex) ->
-            return callback err if err
-            messagesIndex = {}
-            for message in messages
-                for boxID, uid of message.mailboxIDs
-                    messagesIndex[boxID] ?= []
-                    messagesIndex[boxID].push message
-
-            callback null, {boxIndex, messagesIndex}
-
     @doGroupedByBox: (messages, iterator, done) ->
         return done null if messages.length is 0
 
         accountID = messages[0].accountID
-        Message.groupWithBox messages, (err, {boxIndex, messagesIndex}) ->
-            return done err if err
-            state =
-                boxIndex: boxIndex
-            async.eachSeries Object.keys(messagesIndex), (boxID, next) ->
-                state.box = boxIndex[boxID]
-                state.messagesInBox = messagesIndex[boxID]
-                iterator2 = (imap, imapBox, releaseImap) ->
-                    state.imapBox = imapBox
-                    state.uids = state.messagesInBox.map (msg) ->
-                        msg.mailboxIDs[state.box.id]
-                    iterator imap, state, releaseImap
+        messagesByBoxID = {}
+        for message in messages
+            for boxID, uid of message.mailboxIDs
+                messagesByBoxID[boxID] ?= []
+                messagesByBoxID[boxID].push message
 
-                pool = ImapPool.get(accountID)
-                pool.doASAPWithBox state.box, iterator2, next
-            , done
+        state = {}
+        async.eachSeries Object.keys(messagesByBoxID), (boxID, next) ->
+            state.box = ramStore.getMailbox boxID
+            state.messagesInBox = messagesByBoxID[boxID]
+            iterator2 = (imap, imapBox, releaseImap) ->
+                state.imapBox = imapBox
+                state.uids = state.messagesInBox.map (msg) ->
+                    msg.mailboxIDs[state.box.id]
+                iterator imap, state, releaseImap
+
+            pool = ramStore.getImapPool(messages[0])
+            pool.doASAPWithBox state.box, iterator2, next
+        , done
 
     @batchAddFlag: (messages, flag, callback) ->
 
@@ -873,14 +647,11 @@ module.exports = class Message extends cozydb.CozyModel
         #@TODO : this needs refactoring
         # but we want t o publish today
         Message.doGroupedByBox messages, (imap, state, nextBox) ->
-            fromBox ?= state.boxIndex[from]
-            destBoxes ?= to.map (id) -> state.boxIndex[id]
+            fromBox ?= ramStore.getMailbox from
+            destBoxes ?= to.map (id) -> ramStore.getMailbox id
+            ignores ?= ramStore.getIgnoredMailboxes()
             currentBox = state.box
 
-            unless ignores
-                ignores = {}
-                for boxid, box of state.boxIndex when box.ignoreInCount()
-                    ignores[id] = true
 
             destString = to.join(',')
 
@@ -956,10 +727,13 @@ module.exports = class Message extends cozydb.CozyModel
                     not destBoxes?
 
                 # assume there was not so many changes
-                limit = Math.max(100, messages.length*2)
-                async.eachSeries destBoxes, (destBox, cb) ->
-                    destBox.imap_refresh limitByBox: limit, cb
-                , (err) ->
+                # we need to refresh the destboxes to fetch new uids
+                # 100 is arbitrary
+                limitByBox = Math.max(100, messages.length*2)
+                refreshes = destBoxes.map (mailbox) ->
+                    new MailboxRefresh {mailbox, limitByBox}
+
+                Scheduler.scheduleMultiple refreshes, (err) ->
                     return callback err if err
                     callback null, updated
 
@@ -981,19 +755,8 @@ module.exports = class Message extends cozydb.CozyModel
         @mailboxIDs[draftBoxID]? or '\\Draft' in @flags
 
 
-    # Public: wrap an async function (the operation) to get a connection from
-    # the pool before performing it and release the connection once it is done.
-    #
-    # operation - a Function({ImapConnection} conn, callback)
-    #
-    # Returns (callback) the result of operation
-    doASAP: (operation, callback) ->
-        ImapPool.get(@accountID).doASAP operation, callback
-
-
-
 module.exports = Message
-
+require('./model-events').wrapModel Message
 mailutils = require '../utils/jwz_tools'
 CONSTANTS = require '../utils/constants'
 {MSGBYPAGE, LIMIT_DESTROY, LIMIT_UPDATE, CONCURRENT_DESTROY} = CONSTANTS
@@ -1003,10 +766,11 @@ _ = require 'lodash'
 async = require 'async'
 log = require('../utils/logging')(prefix: 'models:message')
 Mailbox = require './mailbox'
-ImapPool = require '../imap/pool'
 htmlToText  = require 'html-to-text'
+MailboxRefresh = require '../processes/mailbox_refresh'
+Scheduler = require '../processes/_scheduler'
 
-require('../utils/socket_handler').wrapModel Message, 'message'
+require('./model-events').wrapModel Message
 
 
 

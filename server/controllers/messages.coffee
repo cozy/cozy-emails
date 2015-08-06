@@ -10,7 +10,6 @@ multiparty = require 'multiparty'
 stream_to_buffer = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
 {normalizeMessageID} = require('../utils/jwz_tools')
-ImapReporter = require '../imap/reporter'
 uuid = require 'uuid'
 ramStore = require '../models/store_account_and_boxes'
 

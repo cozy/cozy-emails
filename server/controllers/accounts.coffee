@@ -5,20 +5,31 @@ log = require('../utils/logging')(prefix: 'accounts:controller')
 async = require 'async'
 notifications = require '../utils/notifications'
 ramStore = require '../models/store_account_and_boxes'
+Scheduler = require '../processes/_scheduler'
 
 # create an account
 # and lauch fetching of this account mails
 module.exports.create = (req, res, next) ->
     # @TODO : validate req.body
-    data = req.body
-    Account.createIfValid data, (err, created) ->
+    account = new Account _.pick req.body, Object.keys Account.schema
+    async.series [
+        (cb) ->
+            log.debug "create#testConnections"
+            account.testConnections cb
+
+        (cb) ->
+            log.debug "create#cozy"
+            Account.create account, (err, created) ->
+                return cb err if err
+                account = created
+                cb null
+        (cb) ->
+            account.initialize cb
+
+    ], (err) ->
         return next err if err
-        res.account = created
-        next()
-        # in the background, start fetching mails
-        res.account.imap_fetchMailsTwoSteps (err) ->
-            log.error "FETCH MAIL FAILED", err.stack or err if err
-            notifications.accountFirstImportComplete res.account
+        res.send ramStore.getAccountClientObject account.id
+        Scheduler.startAccountRefresh(account.id) # will start a refresh
 
 # check account parameters
 module.exports.check = (req, res, next) ->
@@ -54,4 +65,5 @@ module.exports.remove = (req, res, next) ->
     accountInstance = ramStore.getAccount(req.params.accountID)
     accountInstance.destroy (err) ->
         return next err if err
+        Scheduler.orphanRemovalDebounced()
         res.status(204).end()

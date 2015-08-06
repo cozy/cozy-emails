@@ -8,6 +8,8 @@ log = require('../utils/logging')(prefix: 'mailbox:controller')
 _ = require 'lodash'
 async = require 'async'
 ramStore = require '../models/store_account_and_boxes'
+Scheduler = require '../processes/_scheduler'
+MailboxRefreshFast = require '../processes/mailbox_refresh_fast'
 
 # refresh a single mailbox if we can do it fast
 # We can do it fast if the server support RFC4551
@@ -18,20 +20,10 @@ module.exports.refresh = (req, res, next) ->
     if not account.supportRFC4551
         next new BadRequest('Cant refresh a non RFC4551 box')
     else
-        req.mailbox.imap_refresh
-            limitByBox: null
-            firstImport: false
-            supportRFC4551: true
-        , (err, shouldNotif) ->
-            return next err if err
-            Mailbox.getCounts req.mailbox.id, (err, counts) ->
-                return next err if err
-                mailboxCounts = counts[req.mailbox.id]
-                req.mailbox.nbTotal = mailboxCounts?.total or 0
-                req.mailbox.nbUnread = mailboxCounts?.unread or 0
-                res.send req.mailbox
-
-
+        res.send ramStore.getMailboxClientObject mailbox.id
+        # refresh = new MailboxRefreshFast mailbox: mailbox
+        # Scheduler.schedule refresh, (err) ->
+        #     return next err if err
 
 # create a mailbox
 module.exports.create = (req, res, next) ->
@@ -42,7 +34,31 @@ module.exports.create = (req, res, next) ->
     parent = ramStore.getMailbox(req.body.parentID)
     label = req.body.label
 
-    Mailbox.imapcozy_create account, parent, label, (err) ->
+    if parent
+        path = parent.path + parent.delimiter + label
+        tree = parent.tree.concat label
+    else
+        path = label
+        tree = [label]
+
+    mailbox =
+        accountID: account.id
+        label: label
+        path: path
+        tree: tree
+        delimiter: parent?.delimiter or '/'
+        attribs: []
+
+    async.series [
+        (cb) ->
+            ramStore.getImapPool(mailbox).doASAP (imap, cbRelease) ->
+                imap.addBox2 path, cbRelease
+            , cb
+        (cb) ->
+            Mailbox.create mailbox, (err, created) ->
+                mailbox = created
+                cb err
+    ], (err) ->
         return next err if err
         res.send ramStore.getAccountClientObject account.id
 

@@ -1,4 +1,4 @@
-ImapReporter = require '../imap/reporter'
+Scheduler    = require '../processes/_scheduler'
 Account      = require '../models/account'
 Contact      = require '../models/contact'
 Settings     = require '../models/settings'
@@ -12,8 +12,7 @@ ramStore     = require '../models/store_account_and_boxes'
 # with all necessary imports
 module.exports.main = (req, res, next) ->
 
-    progress = cozydb.getRequestsReindexingProgress()
-    if progress < 1
+    if Scheduler.applicationStartupRunning()
         return res.render 'reindexing'
 
     async.series [
@@ -23,7 +22,7 @@ module.exports.main = (req, res, next) ->
         (cb) -> Contact.list cb
     ], (err, results) ->
 
-        refreshes = ImapReporter.summary()
+        refreshes = Scheduler.clientSummary()
 
         if err
             log.error "err on index", err.stack
@@ -61,7 +60,7 @@ module.exports.refresh = (req, res, next) ->
     else
         limitByBox    = CONSTANTS.LIMIT_BY_BOX
         onlyFavorites = true
-    Account.refreshAllAccounts limitByBox, onlyFavorites, (err) ->
+    Scheduler.startAllRefresh (err) ->
         log.error "REFRESHING ACCOUNT FAILED", err if err
         return next err if err
         res.send refresh: 'done'
@@ -69,4 +68,4 @@ module.exports.refresh = (req, res, next) ->
 
 # get a list of all background operations on the server
 module.exports.refreshes = (req, res, next) ->
-    res.send ImapReporter.summary()
+    res.send Scheduler.clientSummary()

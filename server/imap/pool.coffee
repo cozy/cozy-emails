@@ -6,39 +6,17 @@ Imap = require './connection'
 xoauth2 = require 'xoauth2'
 async = require "async"
 {makeIMAPConfig, forceOauthRefresh} = require '../imap/account2config'
+Scheduler = require '../processes/_scheduler'
+RecoverChangedUIDValidity = require '../processes/recover_change_uidvalidity'
 
 connectionID = 1
 
-class ImapPool
+module.exports = class ImapPool
 
-    # static methods
-
-    @instances = {}
-
-    # get the pool for a given account
-    @get: (accountID) ->
-        @instances[accountID] ?= new ImapPool accountID
-        return @instances[accountID]
-
-    # create a temporary pool to test a connection
-    @test: (account, callback) ->
-        pool = new ImapPool account
-        pool.doASAP (imap, cbRelease) ->
-            cbRelease null, 'OK'
-        , (err) ->
-            pool.destroy()
-            callback err
-
-
-    constructor: (accountOrID) ->
-        if typeof accountOrID is 'string'
-            log.debug @id, "new pool #{accountOrID}"
-            @id = @accountID = accountOrID
-            @account = null
-        else
-            log.debug @id, "new pool Object##{accountOrID.id}"
-            @id = @accountID = accountOrID.id
-            @account = accountOrID
+    constructor: (account) ->
+        log.debug @id, "new pool Object##{account.id}"
+        @id = account.id or 'tmp'
+        @account = account
 
         @parallelism = 1
         @tasks = []             # tasks waiting to be processed
@@ -52,7 +30,6 @@ class ImapPool
         log.debug @id, "destroy"
         clearTimeout @closingTimer if @closingTimer
         @_closeConnections()
-        delete ImapPool.instances[@accountID]
 
     _removeFromPool: (connection) ->
         log.debug @id, "remove #{connection.connectionID} from pool"
@@ -60,13 +37,6 @@ class ImapPool
         @connections.splice index, 1 if index > -1
         index = @freeConnections.indexOf connection
         @freeConnections.splice index, 1
-
-    _getAccount: ->
-        log.debug @id, "getAccount"
-        Account.findSafe @accountID, (err, account) =>
-            return @_giveUp err if err
-            @account = account
-            @_deQueue()
 
     _makeConnection: ->
         log.debug @id, "makeConnection"
@@ -77,7 +47,10 @@ class ImapPool
             return @_onConnectionError connectionName: '', err if err
 
             log.debug "Attempting connection"
+            password = options.password
+            if password then options.password = "****"
             log.debug options
+            if password then options.password = password
 
             imap = new Imap options
             onConnError = @_onConnectionError.bind this, imap
@@ -86,7 +59,6 @@ class ImapPool
 
             imap.on 'error', onConnError
             imap.once 'ready', =>
-                log.debug @id, "imap ready"
                 imap.removeListener 'error', onConnError
                 clearTimeout @wrongPortTimeout
                 @_onConnectionSuccess imap
@@ -163,7 +135,6 @@ class ImapPool
 
     _giveUp: (err) ->
         log.debug @id, "giveup", err
-        delete @account
         task = @tasks.pop()
         while task
             task.callback err
@@ -173,10 +144,6 @@ class ImapPool
         free = @freeConnections.length > 0
         full = @connections.length + @connecting >= @parallelism
         moreTasks = @tasks.length > 0
-
-        unless @account
-            # log.debug @id, "_deQueue/needaccount"
-            return @_getAccount()
 
         if @account.isTest()
             # log.debug @id, "_deQueue/test"
@@ -268,13 +235,14 @@ class ImapPool
                 if oldUidvalidity and oldUidvalidity isnt newUidvalidity
                     log.error "uidvalidity has changed"
 
-                    # we got a problem, recover
-                    # @TODO : this can be long, prevent timeout
-                    cozybox.recoverChangedUIDValidity imap, (err) ->
-                        changes = uidvalidity: newUidvalidity
-                        cozybox.updateAttributes changes, (err) ->
-                            # we have recovered, try again
-                            wrapped imap, callback
+                    recover = new RecoverChangedUIDValidity
+                        newUidvalidity: newUidvalidity
+                        mailbox: cozybox
+                        imap: imap
+
+                    recover.run (err) ->
+                        log.error err if err
+                        wrapped imap, callback
 
                 else
                     # perform the wrapped operation
@@ -312,22 +280,3 @@ class ImapPool
         @tasks.push {operation, callback}
         @_deQueue()
 
-
-
-module.exports =
-    get: (accountID) -> ImapPool.get accountID
-    test: (accountID, cb) -> ImapPool.test accountID, cb
-
-
-
-
-# use me
-# ImapPool = require 'this-file'
-# pool = ImapPool.get(accountID)
-# pool.doASAP (imap, cb) ->
-#     imap.doStuff cb
-# , callback
-
-# pool.usingBox box, (imap, cb) ->
-#     imap.doStuff cb
-# , callback
