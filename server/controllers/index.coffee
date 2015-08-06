@@ -6,6 +6,7 @@ CONSTANTS    = require '../utils/constants'
 async        = require 'async'
 cozydb       = require 'cozydb'
 log          = require('../utils/logging')(prefix: 'controllers:index')
+ramStore     = require '../models/store_account_and_boxes'
 
 # render the application index
 # with all necessary imports
@@ -18,7 +19,7 @@ module.exports.main = (req, res, next) ->
     async.series [
         (cb) -> Settings.getDefault cb
         (cb) -> cozydb.api.getCozyLocale cb
-        (cb) -> Account.clientList cb
+        (cb) -> cb null, ramStore.clientList()
         (cb) -> Contact.list cb
     ], (err, results) ->
 
