@@ -178,7 +178,7 @@ exports.getNextBoxToRefresh = ->
 exports.getIgnoredMailboxes = (accountID) ->
     ignores = {}
     for box in exports.getMailboxesByAccount(accountID)
-        ignores[id] = box.ignoreInCount()
+        ignores[box.id] = box.ignoreInCount()
 
     return ignores
 

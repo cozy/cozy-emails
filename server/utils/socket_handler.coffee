@@ -4,6 +4,9 @@ ramStore = require '../models/store_account_and_boxes'
 Scheduler = require '../processes/_scheduler'
 stream = require 'stream'
 _ = require 'lodash'
+Acccount = require '../models/account'
+Mailbox = require '../models/mailbox'
+Message = require '../models/message'
 
 io = null
 sockets = []
@@ -40,8 +43,7 @@ SocketHandler.setup = (app, server) ->
     Message.on 'create', (created) ->
         created = created.toClientObject()
         io.emit 'message.create', created
-        for socket in sockets
-            if inScope(socket, created) or inScope(socket, old)
+        for socket in sockets when inScope(socket, created)
                 socket.emit 'message.create', created
 
     Message.on 'update', (updated, old) ->
