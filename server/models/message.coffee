@@ -247,7 +247,7 @@ module.exports = class Message extends cozydb.CozyModel
         if params.descending
             [params.before, params.after] = [params.after, params.before]
 
-        async.series [
+        async.parallel [
             (cb) -> Message.getCount mailboxID, params, cb
             (cb) -> Message.getResults mailboxID, params, cb
         ], (err, results) ->
