@@ -6,6 +6,7 @@ log = require('../utils/logging')(prefix: 'process:box_refresh_deep')
 {RefreshError} = require '../utils/errors'
 _ = require 'lodash'
 Message = require '../models/message'
+patchConversation = require '../patchs/conversation'
 
 
 # This process perform the deep refresh of one mailbox
@@ -53,6 +54,7 @@ module.exports = class MailboxRefreshDeep extends Process
             @applyToRemove
             @applyFlagsChanges
             @applyToFetch
+            @convPatch
             @saveLastSync
         ], callback
 
@@ -234,6 +236,10 @@ module.exports = class MailboxRefreshDeep extends Process
         , (errors) ->
             if errors?.length then callback new RefreshError errors
             else callback null
+
+    convPatch: (callback) =>
+        account = id: @mailbox.accountID
+        patchConversation.patchOneAccount account, callback
 
     saveLastSync: (callback) =>
         return callback null if @finished

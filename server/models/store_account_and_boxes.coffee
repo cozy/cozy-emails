@@ -147,6 +147,13 @@ exports.getFavoriteMailboxes = ->
             out.push mailbox if mailbox.id in account.favorites or []
     return out
 
+exports.getFavoriteMailboxesByAccount = (accountID) ->
+    out = []
+    account = exports.getAccount accountID
+    for mailbox in exports.getMailboxesByAccount accountID
+        out.push mailbox if mailbox.id in account.favorites or []
+    return out
+
 exports.getMailbox = (mailboxID) ->
     mailboxesByID[mailboxID]
 
