@@ -60,10 +60,12 @@ describe 'Account Synchronizations', ->
 
     it "Message have been mark as read in cozy", (done) ->
         Message = require appPath + 'server/models/message'
-        Message.UIDsInRange store.inboxID, 10, 10, (err, msg) ->
+        options =
+            reduce: false
+            key: ['uid', store.inboxID, 10]
+        Message.rawRequest 'byMailboxRequest', options, (err, rows)->
             return done err if err
-            flags = msg[10][1]
-            flags.should.containEql '\\Seen'
+            rows[0].value.should.containEql '\\Seen'
             done null
 
     it "When the server changes one UIDValidity", (done) ->
@@ -91,15 +93,26 @@ describe 'Account Synchronizations', ->
         @timeout 10000
         client.get "/refresh", done
 
-    it "Then the mailbox has been created", (done) ->
+    it "Then the mailbox has been created in couch", (done) ->
         Mailbox = require appPath + 'server/models/mailbox'
-        Mailbox.getBoxes store.accountID, (err, boxes) ->
+        Mailbox.rawRequest 'treeMap', include_docs: true, (err, rows) ->
             return done err if err
-            for box in boxes when box.path is 'Yolo'
-                store.yoloID = box.id
+            console.log "THERE", rows
+            for row in rows when row.doc.path is 'Yolo'
+                store.yoloID = row.id
 
             should.exist store.yoloID
             done null
+
+    it "Then the mailbox has been created in store", (done) ->
+        ramStore = require appPath + 'server/models/store_account_and_boxes'
+        boxes = ramStore.getMailboxesByAccount store.accountID
+
+        for box in boxes when box.path is 'Yolo'
+            store.yoloID = box.id
+
+        should.exist store.yoloID
+        done null
 
     it "When the server remove one mailbox", (done) ->
         @timeout 10000

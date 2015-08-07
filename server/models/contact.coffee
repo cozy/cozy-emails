@@ -11,6 +11,7 @@ module.exports = Contact = cozydb.getModel 'Contact',
     datapoints    : cozydb.NoSchema
     note          : String
     tags          : [String]
+    revision      : String
     _attachments  : Object
 
 Contact::includePicture = (callback) ->

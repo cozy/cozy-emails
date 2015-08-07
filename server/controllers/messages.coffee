@@ -10,8 +10,8 @@ multiparty = require 'multiparty'
 stream_to_buffer = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'controllers:mesage')
 {normalizeMessageID} = require('../utils/jwz_tools')
-ImapReporter = require '../imap/reporter'
 uuid = require 'uuid'
+ramStore = require '../models/store_account_and_boxes'
 
 # get a message and attach it to req.message
 module.exports.fetch = (req, res, next) ->
@@ -212,7 +212,9 @@ module.exports.send = (req, res, next) ->
     log.debug "send"
 
     message = req.body
-    account = req.account
+    account = ramStore.getAccount req.body.accountID
+    draftBox = ramStore.getMailbox account.draftMailbox
+    sentBox = ramStore.getMailbox account.sentMailbox
     files = req.files
 
     message.attachments ?= []
@@ -259,8 +261,6 @@ module.exports.send = (req, res, next) ->
             message.attachments = cacheds
             cb()
 
-    draftBox = null
-    sentBox = null
     destination = null
     jdbMessage = null
     uidInDest = null
@@ -277,28 +277,16 @@ module.exports.send = (req, res, next) ->
 
         #  Get the sent box
         steps.push (cb) ->
-            log.debug "send#getsentbox"
-            id = account.sentMailbox
-            Mailbox.find id, (err, box) ->
-                return cb err if err
-                unless box
-                    err = new NotFound "Account #{account.id} sentbox #{id}"
-                    return cb err
-                sentBox = box
-                cb()
+            if sentBox then cb null
+            else cb new NotFound """
+                Account #{account.id} sentbox #{account.sentMailbox}"""
 
     # If we will need the draftbox
     if previousUID or isDraft
         steps.push (cb) ->
-            log.debug "send#getdraftbox"
-            id = account.draftMailbox
-            Mailbox.find id, (err, box) ->
-                return cb err if err
-                unless box
-                    err = new NotFound "Account #{account.id} draftbox #{id}"
-                    return cb err
-                draftBox = box
-                cb()
+            if draftBox then cb null
+            else cb new NotFound """
+                Account #{account.id} draftbox #{account.draftMailbox}"""
 
     # Remove the message from draft (imap)
     if previousUID
@@ -428,10 +416,11 @@ module.exports.batchSend = (req, res, next) ->
     res.send messages
 
 # move several message to trash with one request
-# expect req.account & req.messages
+# expect req.messages
 module.exports.batchTrash = (req, res, next) ->
+    accountInstance = ramStore.getAccount(req.body.accountID)
+    trashBoxId = accountInstance.trashMailbox
     # the client should prevent this, but let's be safe
-    trashBoxId = req.account.trashMailbox
     unless trashBoxId
         return next new AccountConfigError 'trashMailbox'
 
@@ -456,7 +445,7 @@ module.exports.batchRemoveFlag = (req, res, next) ->
         res.send updated
 
 # move several message with one request
-# expect req.account & req.messages
+# expect & req.messages
 # aim :
 #   - the conversation should not appears in from
 #   - the conversation should appears in to
