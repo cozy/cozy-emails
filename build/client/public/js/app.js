@@ -15149,10 +15149,6 @@ socket.on('reconnect', function() {
 
 socket.on('refresh.notify', dispatchAs(ActionTypes.RECEIVE_REFRESH_NOTIF));
 
-exports.acknowledgeRefresh = function(taskid) {
-  return socket.emit('mark_ack', taskid);
-};
-
 exports.changeRealtimeScope = function(boxid, date) {
   scope = {
     mailboxID: boxid,
