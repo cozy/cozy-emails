@@ -18,7 +18,7 @@ module.exports =
     'refresh': get: index.refresh
 
     'refresh/:mailboxID':
-        get: [mailboxes.fetch, accounts.fetch, mailboxes.refresh]
+        get: [mailboxes.refresh]
 
     'settings':
         get: settings.get
@@ -28,12 +28,11 @@ module.exports =
         post: activity.create
 
     'account':
-        post: [accounts.create, accounts.format]
-        get: [accounts.list, accounts.formatList]
+        post: accounts.create
 
     'account/:accountID':
-        put: [accounts.fetch, accounts.edit, accounts.format]
-        delete: [accounts.fetch, accounts.remove]
+        put: accounts.edit
+        delete: accounts.remove
 
     # We want to allow to test parameters before saving the account
     # so don't use accountID in this route
@@ -41,46 +40,28 @@ module.exports =
         put: [accounts.check]
 
     'mailbox':
-        post: [accounts.fetch,
-            mailboxes.fetchParent,
-            mailboxes.create,
-            accounts.format]
+        post: [mailboxes.create]
 
     'mailbox/:mailboxID':
-        get: [messages.listByMailboxOptions,
-              messages.listByMailbox]
-
-        put: [mailboxes.fetch,
-              accounts.fetch,
-              mailboxes.update,
-              accounts.format]
-
-        delete: [mailboxes.fetch,
-            accounts.fetch,
-            mailboxes.delete,
-            accounts.format]
+        get: [messages.listByMailboxOptions, messages.listByMailbox]
+        put: [mailboxes.update]
+        delete: [mailboxes.delete]
 
     'mailbox/:mailboxID/expunge':
-        delete: [mailboxes.fetch,
-            accounts.fetch,
-            mailboxes.expunge,
-            accounts.format]
+        delete: [mailboxes.expunge]
 
     'message':
-        post: [messages.parseSendForm,
-               accounts.fetch,
-               messages.fetchMaybe,
-               messages.send]
+        post: [messages.parseSendForm, messages.fetchMaybe, messages.send]
 
     'messages/batchFetch':
         get: [messages.batchFetch, messages.batchSend]
         put: [messages.batchFetch, messages.batchSend]
 
     'messages/batchTrash':
-        put: [messages.batchFetch, accounts.fetch, messages.batchTrash]
+        put: [messages.batchFetch, messages.batchTrash]
 
     'messages/batchMove':
-        put: [messages.batchFetch, accounts.fetch, messages.batchMove]
+        put: [messages.batchFetch, messages.batchMove]
 
     'messages/batchAddFlag':
         put: [messages.batchFetch, messages.batchAddFlag]

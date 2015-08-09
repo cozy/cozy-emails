@@ -45,7 +45,6 @@ module.exports =
                     nobox = false
                     docDate = doc.date or (new Date()).toISOString()
                     emit ['uid', boxid, uid], doc.flags
-
                     emit ['date', boxid, null, docDate], null
 
                     for xflag in ['\\Seen', '\\Flagged', '\\Answered']
@@ -73,6 +72,11 @@ module.exports =
                         if dest.name?
                             emit ['dest', boxid, null, dest.name, docDate], null
                         emit ['dest', boxid, null, dest.address, docDate], null
+                undefined
+
+                for boxid, uids of doc.twinMailboxIDs or {}
+                    for uid in uids
+                        emit ['uid', boxid, uid], doc.flags
 
                 undefined # prevent coffeescript comprehension
 
