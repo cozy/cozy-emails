@@ -386,10 +386,11 @@ module.exports = Message = (function(superClass) {
   };
 
   Message.prototype.markTwin = function(box, uid, callback) {
-    var hasTwin, name, name1, ref, ref1, twinMailboxIDs;
+    var hasTwin, name, name1, ref, ref1, twinMailboxIDs, twinMailboxIDsBox;
     hasTwin = this.hasTwin || [];
     twinMailboxIDs = this.twinMailboxIDs || {};
-    if ((ref = box.id, indexOf.call(hasTwin, ref) >= 0) && indexOf.call(twinMailboxIDs[box.id], uid) >= 0) {
+    twinMailboxIDsBox = twinMailboxIDs[box.id] || [];
+    if ((ref = box.id, indexOf.call(hasTwin, ref) >= 0) && indexOf.call(twinMailboxIDsBox, uid) >= 0) {
       return callback(null, {
         shouldNotif: false,
         actuallyAdded: false
