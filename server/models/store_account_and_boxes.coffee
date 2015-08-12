@@ -175,7 +175,7 @@ exports.getMailboxesID = (mailboxID) ->
 
 exports.getUninitializedAccount = ->
     exports.getAllAccounts().filter (account) ->
-        not account.initialized
+        account.initialized is false
 
 exports.getNextBoxToRefresh = ->
     box = mailboxRefreshQueue.shift()

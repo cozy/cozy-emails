@@ -275,7 +275,7 @@ exports.getMailboxesID = function(mailboxID) {
 
 exports.getUninitializedAccount = function() {
   return exports.getAllAccounts().filter(function(account) {
-    return !account.initialized;
+    return account.initialized === false;
   });
 };
 

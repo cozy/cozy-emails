@@ -395,7 +395,8 @@ module.exports = class Message extends cozydb.CozyModel
     markTwin: (box, uid, callback) ->
         hasTwin = @hasTwin or []
         twinMailboxIDs = @twinMailboxIDs or {}
-        if box.id in hasTwin and uid in twinMailboxIDs[box.id]
+        twinMailboxIDsBox = twinMailboxIDs[box.id] or []
+        if box.id in hasTwin and uid in twinMailboxIDsBox
             # already noted
             callback null, {shouldNotif: false, actuallyAdded: false}
 
