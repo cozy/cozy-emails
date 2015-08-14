@@ -42,7 +42,9 @@ module.exports = class MailboxRefreshDeep extends Process
         @nbOperationDone = 0
         @nbOperationCurrentStep = 1
 
-        async.whilst (=> not @finished), @refreshStep, done
+        async.whilst (=> not @finished), @refreshStep, (err) =>
+            return done err if err
+            @saveLastSync done
 
     # Public: refresh part of a mailbox
     refreshStep: (callback) =>
@@ -55,7 +57,6 @@ module.exports = class MailboxRefreshDeep extends Process
             @applyFlagsChanges
             @applyToFetch
             @convPatch
-            @saveLastSync
         ], callback
 
     getProgress: =>
@@ -66,6 +67,7 @@ module.exports = class MailboxRefreshDeep extends Process
         msg = if @initialStep then 'initial' else ''
         msg += " limit: #{@limitByBox}" if @limitByBox
         msg += " range: #{@min}:#{@max}"
+        msg += " finished" if @finished
         return msg
 
     # Public: compute the next step.
@@ -226,7 +228,6 @@ module.exports = class MailboxRefreshDeep extends Process
     applyToFetch: (callback) =>
         return callback null if @finished
         log.debug "applyFetch", @toFetch.length
-        @toFetch.reverse()
         safeLoop @toFetch, (msg, cb) =>
             Message.fetchOrUpdate @mailbox, msg, (err, result) ->
                 @nbOperationDone += 1
@@ -238,6 +239,7 @@ module.exports = class MailboxRefreshDeep extends Process
             else callback null
 
     convPatch: (callback) =>
+        return callback null if @finished
         account = id: @mailbox.accountID
         patchConversation.patchOneAccount account, callback
 
