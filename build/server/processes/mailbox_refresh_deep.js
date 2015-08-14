@@ -59,12 +59,19 @@ module.exports = MailboxRefreshDeep = (function(superClass) {
       return function() {
         return !_this.finished;
       };
-    })(this)), this.refreshStep, done);
+    })(this)), this.refreshStep, (function(_this) {
+      return function(err) {
+        if (err) {
+          return done(err);
+        }
+        return _this.saveLastSync(done);
+      };
+    })(this));
   };
 
   MailboxRefreshDeep.prototype.refreshStep = function(callback) {
     log.debug("imap_refreshStep", this.status());
-    return async.series([this.getDiff, this.computeDiff, this.applyToRemove, this.applyFlagsChanges, this.applyToFetch, this.convPatch, this.saveLastSync], callback);
+    return async.series([this.getDiff, this.computeDiff, this.applyToRemove, this.applyFlagsChanges, this.applyToFetch, this.convPatch], callback);
   };
 
   MailboxRefreshDeep.prototype.getProgress = function() {
@@ -80,6 +87,9 @@ module.exports = MailboxRefreshDeep = (function(superClass) {
       msg += " limit: " + this.limitByBox;
     }
     msg += " range: " + this.min + ":" + this.max;
+    if (this.finished) {
+      msg += " finished";
+    }
     return msg;
   };
 
@@ -250,7 +260,6 @@ module.exports = MailboxRefreshDeep = (function(superClass) {
       return callback(null);
     }
     log.debug("applyFetch", this.toFetch.length);
-    this.toFetch.reverse();
     return safeLoop(this.toFetch, (function(_this) {
       return function(msg, cb) {
         return Message.fetchOrUpdate(_this.mailbox, msg, function(err, result) {
@@ -274,6 +283,9 @@ module.exports = MailboxRefreshDeep = (function(superClass) {
 
   MailboxRefreshDeep.prototype.convPatch = function(callback) {
     var account;
+    if (this.finished) {
+      return callback(null);
+    }
     account = {
       id: this.mailbox.accountID
     };
