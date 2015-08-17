@@ -7,6 +7,7 @@ log = require('../utils/logging')(prefix: 'process:box_refresh_deep')
 _ = require 'lodash'
 Message = require '../models/message'
 patchConversation = require '../patchs/conversation'
+ramStore = require '../models/store_account_and_boxes'
 
 
 # This process perform the deep refresh of one mailbox
@@ -41,6 +42,9 @@ module.exports = class MailboxRefreshDeep extends Process
         @nbStepDone = 0
         @nbOperationDone = 0
         @nbOperationCurrentStep = 1
+
+        if ramStore.getAccount(@mailbox.accountID).isTest()
+            @finished = true
 
         async.whilst (=> not @finished), @refreshStep, (err) =>
             return done err if err
