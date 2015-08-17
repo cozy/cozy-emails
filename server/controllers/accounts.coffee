@@ -58,7 +58,7 @@ module.exports.edit = (req, res, next) ->
 
         accountInstance.updateAttributes changes, (err, updated) ->
             return next err if err
-            res.send accountInstance
+            res.send ramStore.getAccountClientObject accountInstance.id
 
 # delete an account
 module.exports.remove = (req, res, next) ->
