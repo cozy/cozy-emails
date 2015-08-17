@@ -111,7 +111,6 @@ for i in [1..numberOfEmails] by 1
         "text": loremIpsum count: getRandom(10), units: 'paragraphs', random: randomWithSeed
         "html": "<html><body><div>#{htmlContent}</div></body></html>",
         "priority": priority,
-        "reads": false,
         "mailboxIDs": mailboxObject,
         "accountID": account,
         "attachments": []
@@ -147,7 +146,6 @@ for i in [1..10] by 1
         ],
         "text": content,
         "html": "<html><body><div>#{htmlContent}</div></body></html>",
-        "reads": false,
         "mailboxIDs": mailboxObject,
         "accountID": 'dovecot-ID',
         "attachments": []

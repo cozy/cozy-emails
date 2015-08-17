@@ -21,7 +21,6 @@ fs.readdir sourceDir, (err, files) ->
                     id               = Math.floor(Math.random() * 1000)
                     mail._id         = mail.messageId
                     mail.docType     = "Message"
-                    mail.reads       = false
                     mail.mailboxIDs  = "f5cbd722-c3f9-4f6e-73d0-c75ddf65a2f1":id
                     mail.accountID   = "dovecot-ID"
                     mail.normSubject = mail.subject
