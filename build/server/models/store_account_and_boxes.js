@@ -375,7 +375,6 @@ Account.on('delete', function(id, deleted) {
 });
 
 Mailbox.on('create', function(created) {
-  console.log("addMailbox", created.label, created.id);
   return exports.addMailbox(created);
 });
 
