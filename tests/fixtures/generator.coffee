@@ -75,9 +75,12 @@ for i in [1..numberOfEmails] by 1
     if mailbox.label isnt 'noconv' and getRandom(10) > 3 and i > 2
         inReplyTo  = ["generated_id_#{i - 1}"]
         references = ["generated_id_#{i - 2}", "generated_id_#{i - 1}"]
+        conversationID = messages[messages.length - 2].conversationID
+        messages[messages.length - 1].conversationID = conversationID
     else
         inReplyTo  = null
         references = null
+        conversationID = "conversation_id_#{i}"
 
     priority  = getRandomElmt priorities
 
@@ -115,7 +118,8 @@ for i in [1..numberOfEmails] by 1
         "accountID": account,
         "attachments": []
         "flags": flags
-        "conversationID": "conversation_id_#{i}"
+        "messageID": "generated_id_#{i}"
+        "conversationID": conversationID
 
 # Conversations tests
 mailbox = 'f5cbd722-c3f9-4f6e-73d0-c75ddf65a2f1'

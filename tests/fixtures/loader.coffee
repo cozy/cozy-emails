@@ -25,6 +25,7 @@ fs.readdir sourceDir, (err, files) ->
                     mail.accountID   = "dovecot-ID"
                     mail.normSubject = mail.subject
                     mail.flags       = []
+                    mail.messageID   = mail.messageId
                     if Array.isArray mail.references
                         mail.conversationID = mail.references.shift()
                     else
@@ -33,6 +34,7 @@ fs.readdir sourceDir, (err, files) ->
                         mail.attachments = mail.attachments.map (m) ->
                             delete m.content
                             return m
+                    delete mail.messageId
                     tmp.push mail
                     if tmp.length is messages.length
                         console.log "Done with " + file
