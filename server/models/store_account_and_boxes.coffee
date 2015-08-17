@@ -244,7 +244,6 @@ Account.on 'delete', (id, deleted) ->
     exports.removeAccount id
 
 Mailbox.on 'create', (created) ->
-    console.log "addMailbox", created.label, created.id
     exports.addMailbox created
 
 Mailbox.on 'delete', (id, deleted) ->
