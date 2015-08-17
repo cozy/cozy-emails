@@ -7291,10 +7291,10 @@ module.exports = React.createClass({
       ref: 'footer'
     });
   },
-  toggleHeaders: function(e) {
+  toggleHeaders: function(event) {
     var state;
-    e.preventDefault();
-    e.stopPropagation();
+    event.preventDefault();
+    event.stopPropagation();
     state = {
       headers: !this.state.headers
     };
@@ -7303,17 +7303,17 @@ module.exports = React.createClass({
     }
     return this.setState(state);
   },
-  toggleActive: function(e) {
+  toggleActive: function(event) {
     if (this.props.inConversation) {
-      e.preventDefault();
-      e.stopPropagation();
+      event.preventDefault();
+      event.stopPropagation();
       this.props.toggleActive();
       return this.setState({
         headers: false
       });
     }
   },
-  onDelete: function(e) {
+  onDelete: function(event) {
     var confirmMessage, messageID, modal, needConfirmation;
     event.preventDefault();
     event.stopPropagation();
@@ -7978,6 +7978,8 @@ module.exports = Panel = React.createClass({
     } else if (this.props.action === 'compose.forward') {
       options.action = ComposeActions.FORWARD;
       component = this.getReplyComponent(options);
+    } else {
+      throw new Error("unknown compose type : " + this.prop.action);
     }
     return component;
   },
@@ -11120,7 +11122,7 @@ module.exports = {
   "account login": "Email address",
   "account name short": "Your name, as it will be displayed",
   "account name": "Your name",
-  "account oauth": "This accoutn uses Google OAuth",
+  "account oauth": "This account uses Google OAuth",
   "account password": "Password",
   "account receiving server": "Receiving server",
   "account sending server": "Sending server",

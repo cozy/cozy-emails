@@ -13,7 +13,7 @@ safeLoop = require('../utils/safeloop');
 
 Process = require('./_base');
 
-RemoveAllMessagesFromMailbox = require('./message_remove_by_account');
+RemoveAllMessagesFromMailbox = require('./message_remove_by_mailbox');
 
 Scheduler = require('./_scheduler');
 

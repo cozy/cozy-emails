@@ -110,7 +110,9 @@ module.exports = MailboxRefreshFast = (function(superClass) {
         ref = _this.changes[uid], mid = ref[0], flags = ref[1];
         uid = parseInt(uid);
         message = _this.cozyMessages[uid];
-        if (message && _.xor(message.flags, flags).length) {
+        if (message && !_.xor(message.flags, flags).length) {
+          return setImmediate(next);
+        } else if (message) {
           _this.noChange = false;
           return message.updateAttributes({
             flags: flags
@@ -120,9 +122,9 @@ module.exports = MailboxRefreshFast = (function(superClass) {
             mid: mid,
             uid: uid
           }, function(err, info) {
-            this.shouldNotif || (this.shouldNotif = info.shouldNotif);
+            _this.shouldNotif || (_this.shouldNotif = info.shouldNotif);
             if (info != null ? info.actuallyAdded : void 0) {
-              this.nbAdded += 1;
+              _this.nbAdded += 1;
             }
             return next(err);
           });

@@ -97,7 +97,6 @@ describe 'Account Synchronizations', ->
         Mailbox = require appPath + 'server/models/mailbox'
         Mailbox.rawRequest 'treeMap', include_docs: true, (err, rows) ->
             return done err if err
-            console.log "THERE", rows
             for row in rows when row.doc.path is 'Yolo'
                 store.yoloID = row.id
 

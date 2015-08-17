@@ -60,7 +60,7 @@
     "fixtures": "npm run fixtures:generate && npm run fixtures:loader && npm run fixtures:load",
     "fixtures:generate": "coffee tests/fixtures/generator.coffee 1000",
     "fixtures:loader": "coffee tests/fixtures/loader.coffee",
-    "fixtures:load": "cozy-fixtures load -l tests/fixtures",
+    "fixtures:load": "cozy-fixtures load tests/fixtures",
     "test:client": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && brunch b",

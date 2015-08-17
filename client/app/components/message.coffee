@@ -275,9 +275,9 @@ module.exports = React.createClass
             ref: 'footer'
 
 
-    toggleHeaders: (e) ->
-        e.preventDefault()
-        e.stopPropagation()
+    toggleHeaders: (event) ->
+        event.preventDefault()
+        event.stopPropagation()
         state =
             headers: not @state.headers
         if @props.inConversation and not @props.active
@@ -285,15 +285,15 @@ module.exports = React.createClass
         @setState state
 
 
-    toggleActive: (e) ->
+    toggleActive: (event) ->
         if @props.inConversation
-            e.preventDefault()
-            e.stopPropagation()
+            event.preventDefault()
+            event.stopPropagation()
             @props.toggleActive()
             @setState headers: false
 
 
-    onDelete: (e) ->
+    onDelete: (event) ->
         event.preventDefault()
         event.stopPropagation()
         needConfirmation = @props.settings.get('messageConfirmDelete')

@@ -106,11 +106,13 @@ module.exports = class MailboxRefreshFast extends Process
             [mid, flags] = @changes[uid]
             uid = parseInt uid
             message = @cozyMessages[uid]
-            if message and _.xor(message.flags, flags).length
+            if message and not _.xor(message.flags, flags).length
+                setImmediate next
+            else if message
                 @noChange = false
                 message.updateAttributes {flags}, next
             else
-                Message.fetchOrUpdate @mailbox, {mid, uid}, (err, info) ->
+                Message.fetchOrUpdate @mailbox, {mid, uid}, (err, info) =>
                     @shouldNotif or= info.shouldNotif
                     @nbAdded += 1 if info?.actuallyAdded
                     next err

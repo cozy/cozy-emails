@@ -35,7 +35,7 @@ script:
     - npm run test:build
     - npm run fixtures
     - forever start -o casper-server.log build/server.js
-    - sleep 10
+    - sleep 30
     - npm run test:client
 
 
