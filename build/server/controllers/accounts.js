@@ -79,7 +79,7 @@ module.exports.edit = function(req, res, next) {
       if (err) {
         return next(err);
       }
-      return res.send(accountInstance);
+      return res.send(ramStore.getAccountClientObject(accountInstance.id));
     });
   });
 };

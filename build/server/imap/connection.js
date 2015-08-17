@@ -157,7 +157,6 @@ module.exports = ImapConnection = (function(superClass) {
       if (!uids.length) {
         return callback(null, {});
       }
-      uids.sort().reverse();
       results = {};
       fetch = this.fetch(uids, {
         bodies: 'HEADER.FIELDS (MESSAGE-ID)'
@@ -205,7 +204,6 @@ module.exports = ImapConnection = (function(superClass) {
       if (!uids.length) {
         return callback(null, {});
       }
-      uids.sort().reverse();
       results = {};
       fetch = this.fetch(uids, {
         bodies: 'HEADER.FIELDS (MESSAGE-ID)'

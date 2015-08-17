@@ -283,6 +283,8 @@ module.exports = Panel = React.createClass
         else if @props.action is 'compose.forward'
             options.action = ComposeActions.FORWARD
             component = @getReplyComponent options
+        else
+            throw new Error "unknown compose type : #{@prop.action}"
 
         return component
 

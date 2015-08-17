@@ -1,6 +1,6 @@
 [
   {
-    "_id": "",
+    "_id": "fake-contact-alice",
     "fn": "Alice",
     "datapoints": [
       {
@@ -11,7 +11,7 @@
     "docType": "Contact"
   },
   {
-    "_id": "",
+    "_id": "fake-contact-bob",
     "fn": "Bob",
     "datapoints": [
       {

@@ -5,7 +5,7 @@ ramStore = require '../models/store_account_and_boxes'
 MailboxRefresh = require './mailbox_refresh'
 MailboxRefreshList = require '../processes/mailbox_refresh_list'
 ApplicationStartup = require './application_startup'
-RemoveAllMessagesFromAccount = require './application_startup'
+RemoveMessagesFromAccount = require './message_remove_by_account'
 OrphanRemoval = require './orphan_removal'
 async = require 'async'
 running = null
@@ -149,7 +149,7 @@ Scheduler.applicationStartupRunning = ->
 Scheduler.orphanRemovalDebounced = (accountID) ->
 
     if accountID
-        Scheduler.schedule new RemoveAllMessagesFromAccount {accountID}
+        Scheduler.schedule new RemoveMessagesFromAccount {accountID}
 
     alreadyQueued = queued.some (proc) ->
         proc instanceof OrphanRemoval

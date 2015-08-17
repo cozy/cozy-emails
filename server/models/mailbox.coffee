@@ -267,12 +267,10 @@ class Mailbox extends cozydb.CozyModel
                     (cb) -> imap.addFlags uids, '\\Deleted', cb
                     (cb) -> imap.expunge uids, cb
                     (cb) -> imap.closeBox cb
-                    (cb) -> Message.safeRemoveAllFromBox box.id, (err) ->
-                        if err
-                            log.error """
-                                fail to remove msg of box #{box.id}""", err
-                        # loop anyway
-                        cb()
+                    (cb) ->
+                        removal = new MessagesRemovalByMailbox
+                            mailboxID: @id
+                        removal.run cb
                 ], cbRelease
         , callback
 
@@ -288,7 +286,10 @@ class Mailbox extends cozydb.CozyModel
 
 class TestMailbox extends Mailbox
     imap_expungeMails: (callback) =>
-        Message.safeRemoveAllFromBox @id, callback
+        removal = new MessagesRemovalByMailbox
+            mailboxID: @id
+
+        removal.run callback
 
 module.exports = Mailbox
 require('./model-events').wrapModel Mailbox
@@ -298,6 +299,7 @@ log = require('../utils/logging')(prefix: 'models:mailbox')
 _ = require 'lodash'
 async = require 'async'
 mailutils = require '../utils/jwz_tools'
+MessagesRemovalByMailbox = require '../processes/message_remove_by_mailbox'
 {Break, NotFound} = require '../utils/errors'
 {FETCH_AT_ONCE} = require '../utils/constants'
 

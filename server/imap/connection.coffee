@@ -122,7 +122,6 @@ module.exports = class ImapConnection extends NodeImapConnection
             log.debug "imap#fetchBoxMessageSince#result", uids
             return callback err if err
             return callback null, {} unless uids.length
-            uids.sort().reverse()
             results = {}
             fetch = @fetch uids, bodies: 'HEADER.FIELDS (MESSAGE-ID)'
             fetch.on 'error', callback
@@ -156,7 +155,6 @@ module.exports = class ImapConnection extends NodeImapConnection
             log.debug "imap#fetchMetadata#results", err, uids?.length
             return callback err if err
             return callback null, {} unless uids.length
-            uids.sort().reverse()
             results = {}
             fetch = @fetch uids, bodies: 'HEADER.FIELDS (MESSAGE-ID)'
             fetch.on 'error', callback
