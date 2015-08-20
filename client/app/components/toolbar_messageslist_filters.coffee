@@ -27,9 +27,9 @@ module.exports = FiltersToolbarMessagesList = React.createClass
         sort =
             order:  '-'
             field:  'date'
+        # always close message preview before filtering
+        window.cozyMails.messageClose()
         if params?
-            # always close message preview before filtering
-            window.cozyMails.messageClose()
             [sort.before, sort.after] = params
         else
             sort.after = sort.before = ''

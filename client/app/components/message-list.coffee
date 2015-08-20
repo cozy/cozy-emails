@@ -174,7 +174,7 @@ module.exports = MessageList = React.createClass
             @setState edited: true
 
     toggleAll: ->
-        if @state.allSelected
+        if Object.keys(@state.selected).length > 0
             @setState allSelected: false, edited: false, selected: {}
         else
             selected = {}
