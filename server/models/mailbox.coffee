@@ -267,12 +267,12 @@ class Mailbox extends cozydb.CozyModel
                     (cb) -> imap.addFlags uids, '\\Deleted', cb
                     (cb) -> imap.expunge uids, cb
                     (cb) -> imap.closeBox cb
-                    (cb) ->
-                        removal = new MessagesRemovalByMailbox
-                            mailboxID: @id
-                        removal.run cb
                 ], cbRelease
-        , callback
+        , (err) =>
+            return callback err if err
+            removal = new MessagesRemovalByMailbox
+                mailboxID: @id
+            removal.run callback
 
     # Public: whether this box messages should be ignored
     # in the account's total (trash or junk)
