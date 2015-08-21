@@ -432,7 +432,7 @@ module.exports = class Message extends cozydb.CozyModel
         mailboxIDs[key] = value for key, value of @mailboxIDs or {}
         mailboxIDs[box.id] = uid
         changes = {mailboxIDs}
-        changes.ignoreInCount = true if box.ignoreInCount()
+        changes.ignoreInCount = box.ignoreInCount()
         @updateAttributes changes, (err) ->
             callback err, {shouldNotif: false, actuallyAdded: true}
 

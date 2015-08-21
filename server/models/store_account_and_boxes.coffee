@@ -255,7 +255,7 @@ Message.on 'create', onMessageCreated = (created) ->
 
     for boxID, uid of created.mailboxIDs
         countsByMailboxID[boxID].total  += 1
-        countsByMailboxID[boxID].unread += 1 if isRead
+        countsByMailboxID[boxID].unread += 1 unless isRead
         countsByMailboxID[boxID].recent += 1 if isRecent
 
     unreadByAccountID[created.accountID] += 1 if isRead
@@ -266,7 +266,7 @@ Message.on 'delete', onMessageDestroyed = (id, old) ->
 
     for boxID, uid of old.mailboxIDs
         countsByMailboxID[boxID].total  -= 1
-        countsByMailboxID[boxID].unread -= 1 if wasRead
+        countsByMailboxID[boxID].unread -= 1 unless wasRead
         countsByMailboxID[boxID].recent -= 1 if wasRecent
 
     unreadByAccountID[old.accountID] -= 1 if wasRead
