@@ -6937,7 +6937,7 @@ module.exports = MessageList = React.createClass({
   },
   toggleAll: function() {
     var selected;
-    if (this.state.allSelected) {
+    if (Object.keys(this.state.selected).length > 0) {
       return this.setState({
         allSelected: false,
         edited: false,
@@ -9327,8 +9327,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
       order: '-',
       field: 'date'
     };
+    window.cozyMails.messageClose();
     if (params != null) {
-      window.cozyMails.messageClose();
       sort.before = params[0], sort.after = params[1];
     } else {
       sort.after = sort.before = '';
@@ -13134,6 +13134,7 @@ MessageStore = (function(_super) {
 
   handleFetchResult = function(result) {
     var before, lengths, message, next, url, _i, _len, _ref1, _results;
+    _messages = _messages.clear();
     if ((result.links != null) && (result.links.next != null)) {
       _params = {};
       next = decodeURIComponent(result.links.next);
