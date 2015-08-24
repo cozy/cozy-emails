@@ -9,22 +9,21 @@ ImapPool = require '../imap/pool'
 _ = require 'lodash'
 async = require 'async'
 log = require('../utils/logging')(prefix: 'models:ramStore')
+{EventEmitter} = require 'events'
 
-
-queueEndMarker = {Symbol: 'queue-end'}
 
 accountsByID = {}
 allAccounts = []
 mailboxesByID = {}
 mailboxesByAccountID = {}
 
-mailboxRefreshQueue = [queueEndMarker]
 orphanMailboxes = []
 countsByMailboxID = {}
 unreadByAccountID = {}
 
 imapPools = {}
 
+eventEmitter = new EventEmitter()
 
 retrieveAccounts = (callback) ->
     log.debug "retrieveAccounts"
@@ -50,8 +49,6 @@ retrieveMailboxes = (callback) ->
         return callback err if err
 
         for row in rows
-
-            accountID = row.key[0]
             box = new Mailbox row.doc
             exports.addMailbox box
 
@@ -127,6 +124,8 @@ exports.getMailboxClientObject = (id) ->
 
 
 # GETTERS
+exports.on = eventEmitter.on.bind(eventEmitter)
+
 exports.getAllAccounts = ->
     return (account for id, account of accountsByID)
 
@@ -177,11 +176,6 @@ exports.getUninitializedAccount = ->
     exports.getAllAccounts().filter (account) ->
         account.initialized is false
 
-exports.getNextBoxToRefresh = ->
-    box = mailboxRefreshQueue.shift()
-    mailboxRefreshQueue.push box
-    return box
-
 exports.getIgnoredMailboxes = (accountID) ->
     ignores = {}
     for box in exports.getMailboxesByAccount(accountID)
@@ -217,7 +211,6 @@ exports.addMailbox = (mailbox) ->
     countsByMailboxID[mailbox.id] ?= {unread: 0, total: 0, recent: 0}
     if mailboxesByAccountID[accountID]
         mailboxesByAccountID[accountID].push mailbox
-        mailboxRefreshQueue.push mailbox
     else
         orphanMailboxes.push mailbox
 
@@ -228,8 +221,6 @@ exports.removeMailbox = (mailboxID) ->
     accountID = mailbox.accountID
     list = mailboxesByAccountID[accountID]
     mailboxesByAccountID[accountID] = _.without list, mailbox if list
-    list = mailboxRefreshQueue
-    mailboxRefreshQueue = _.without list, mailbox
     list = orphanMailboxes
     orphanMailboxes = _.without list, mailbox
     Scheduler.orphanRemovalDebounced()
@@ -259,6 +250,7 @@ Message.on 'create', onMessageCreated = (created) ->
         countsByMailboxID[boxID].recent += 1 if isRecent
 
     unreadByAccountID[created.accountID] += 1 if isRead
+    eventEmitter.emit 'change', created.accountID
 
 Message.on 'delete', onMessageDestroyed = (id, old) ->
     wasRead = '\\Seen' in old.flags
@@ -270,8 +262,10 @@ Message.on 'delete', onMessageDestroyed = (id, old) ->
         countsByMailboxID[boxID].recent -= 1 if wasRecent
 
     unreadByAccountID[old.accountID] -= 1 if wasRead
+    eventEmitter.emit 'change', old.accountID
 
 Message.on 'update', (updated, old) ->
     onMessageDestroyed old.id, old
     onMessageCreated updated
+
 
