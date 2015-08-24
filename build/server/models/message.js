@@ -439,9 +439,7 @@ module.exports = Message = (function(superClass) {
     changes = {
       mailboxIDs: mailboxIDs
     };
-    if (box.ignoreInCount()) {
-      changes.ignoreInCount = true;
-    }
+    changes.ignoreInCount = box.ignoreInCount();
     return this.updateAttributes(changes, function(err) {
       return callback(err, {
         shouldNotif: false,

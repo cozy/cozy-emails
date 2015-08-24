@@ -299,9 +299,6 @@ module.exports = MailboxRefreshDeep = (function(superClass) {
 
   MailboxRefreshDeep.prototype.saveLastSync = function(callback) {
     var changes;
-    if (this.finished) {
-      return callback(null);
-    }
     changes = {
       lastSync: new Date().toISOString()
     };

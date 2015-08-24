@@ -2267,6 +2267,12 @@ module.exports = AccountConfigMailboxes = React.createClass({
   onKeyDown: function(evt) {
     switch (evt.key) {
       case "Enter":
+        if (evt != null) {
+          evt.preventDefault();
+        }
+        if (evt != null) {
+          evt.stopPropagation();
+        }
         return this.addMailbox();
     }
   },

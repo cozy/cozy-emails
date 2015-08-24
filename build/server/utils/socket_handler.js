@@ -29,6 +29,7 @@ processSummaryCooldown = null;
 SocketHandler = exports;
 
 SocketHandler.setup = function(app, server) {
+  var onAccountChanged, onAccountChangedDebounced;
   io = ioServer(server);
   io.on('connection', handleNewClient);
   Acccount.on('create', function(created) {
@@ -84,7 +85,7 @@ SocketHandler.setup = function(app, server) {
   Message.on('delete', function(id, deleted) {
     return io.emit('message.delete', id, deleted);
   });
-  return Scheduler.on('change', function() {
+  Scheduler.on('change', function() {
     if (processSummaryCooldown) {
       return true;
     } else {
@@ -95,11 +96,20 @@ SocketHandler.setup = function(app, server) {
       }), 500);
     }
   });
+  onAccountChanged = function(accountID) {
+    var updated;
+    updated = ramStore.getAccountClientObject(accountID);
+    return io.emit('account.update', updated);
+  };
+  onAccountChangedDebounced = _.debounce(onAccountChanged, 500, {
+    leading: true,
+    trailing: true
+  });
+  return ramStore.on('change', onAccountChangedDebounced);
 };
 
 inScope = function(socket, data) {
   var ref;
-  log.debug("inscope", socket.scope_mailboxID, Object.keys(data.mailboxIDs));
   return (ref = socket.scope_mailboxID, indexOf.call(Object.keys(data.mailboxIDs), ref) >= 0) && socket.scope_before < data.date;
 };
 

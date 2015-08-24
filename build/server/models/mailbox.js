@@ -286,16 +286,21 @@ Mailbox = (function(superClass) {
             return imap.expunge(uids, cb);
           }, function(cb) {
             return imap.closeBox(cb);
-          }, function(cb) {
-            var removal;
-            removal = new MessagesRemovalByMailbox({
-              mailboxID: this.id
-            });
-            return removal.run(cb);
           }
         ], cbRelease);
       });
-    }, callback);
+    }, (function(_this) {
+      return function(err) {
+        var removal;
+        if (err) {
+          return callback(err);
+        }
+        removal = new MessagesRemovalByMailbox({
+          mailboxID: _this.id
+        });
+        return removal.run(callback);
+      };
+    })(this));
   };
 
   Mailbox.prototype.ignoreInCount = function() {

@@ -39,6 +39,9 @@ module.exports = MailboxRefresh = (function(superClass) {
     mailbox = options.mailbox;
     account = ramStore.getAccount(mailbox.accountID);
     this.shouldNotif = false;
+    if (!account) {
+      return callback(null);
+    }
     log.debug("refreshing box");
     if (account.supportRFC4551 && mailbox.lastHighestModSeq) {
       return this.refreshFast((function(_this) {
