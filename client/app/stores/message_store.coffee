@@ -251,6 +251,7 @@ class MessageStore extends Store
 
     handleFetchResult = (result) ->
 
+        _messages  = _messages.clear()
         if result.links? and result.links.next?
             # reinit params here for pagination on filtered lists
             _params = {}
