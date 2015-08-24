@@ -18,6 +18,7 @@ module.exports = class MailboxRefresh extends Process
         mailbox = options.mailbox
         account = ramStore.getAccount mailbox.accountID
         @shouldNotif = false
+        return callback null unless account
 
         log.debug "refreshing box"
         if account.supportRFC4551 and mailbox.lastHighestModSeq

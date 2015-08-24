@@ -66,8 +66,20 @@ SocketHandler.setup = (app, server) ->
             setTimeout (-> processSummaryCooldown = false) , 500
 
 
+    onAccountChanged = (accountID) ->
+        updated = ramStore.getAccountClientObject accountID
+        io.emit 'account.update', updated
+
+    onAccountChangedDebounced = _.debounce onAccountChanged, 500,
+        leading: true
+        trailing: true
+
+    ramStore.on 'change', onAccountChangedDebounced
+
+
+
+
 inScope = (socket, data) ->
-    log.debug "inscope", socket.scope_mailboxID, Object.keys data.mailboxIDs
     (socket.scope_mailboxID in Object.keys data.mailboxIDs) and
     socket.scope_before < data.date
 

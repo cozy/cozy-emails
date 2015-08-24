@@ -248,7 +248,6 @@ module.exports = class MailboxRefreshDeep extends Process
         patchConversation.patchOneAccount account, callback
 
     saveLastSync: (callback) =>
-        return callback null if @finished
         changes = lastSync: new Date().toISOString()
         if @storeHighestModSeq
             changes.lastHighestModSeq = @imapHighestmodseq

@@ -183,6 +183,8 @@ module.exports = AccountConfigMailboxes = React.createClass
     onKeyDown: (evt) ->
         switch evt.key
             when "Enter"
+                evt?.preventDefault()
+                evt?.stopPropagation()
                 @addMailbox()
 
 
