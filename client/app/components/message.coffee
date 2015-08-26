@@ -403,7 +403,6 @@ MessageContent = React.createClass
                     className: 'content',
                     ref: 'content',
                     allowTransparency: true,
-                    sandbox: 'allow-same-origin allow-popups',
                     frameBorder: 0
         else
             div className: 'row',
