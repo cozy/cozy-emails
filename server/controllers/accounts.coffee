@@ -49,7 +49,7 @@ module.exports.create = (req, res, next) ->
             # fetch all the other messages (very long)
             (cb) ->
                 refreshes = allBoxes.map (mailbox) ->
-                        new MailboxRefresh {mailbox}
+                        new MailboxRefresh {mailbox, storeHighestModSeq: true}
 
                 Scheduler.scheduleMultiple refreshes, cb
 
