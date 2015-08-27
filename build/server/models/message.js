@@ -817,8 +817,6 @@ module.exports = Message = (function(superClass) {
 
 module.exports = Message;
 
-require('./model-events').wrapModel(Message);
-
 mailutils = require('../utils/jwz_tools');
 
 CONSTANTS = require('../utils/constants');

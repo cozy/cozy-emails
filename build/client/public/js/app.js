@@ -7170,7 +7170,7 @@ module.exports = React.createClass({
     var doc, hideImage, href, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref1;
     messageDisplayHTML = true;
     parser = new DOMParser();
-    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"/fonts/fonts.css\" />\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + html + "</body></html>";
+    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"./fonts/fonts.css\" />\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + html + "</body></html>";
     doc = parser.parseFromString(html, "text/html");
     images = [];
     if (!doc) {
@@ -7447,7 +7447,6 @@ MessageContent = React.createClass({
         className: 'content',
         ref: 'content',
         allowTransparency: true,
-        sandbox: 'allow-same-origin allow-popups',
         frameBorder: 0
       }));
     } else {
