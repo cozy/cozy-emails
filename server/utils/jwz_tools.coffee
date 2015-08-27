@@ -56,9 +56,13 @@ module.exports =
             'h4'
         ]
         safeAttributes = [
+            # general
             'style', 'class', 'background',
             # tables
-            'colspan', 'rowspan', 'width', 'align', 'font-size'
+            'colspan', 'rowspan', 'height', 'width', 'align', 'font-size',
+            'cellpadding', 'cellspacing', 'border', 'valign'
+            # body
+           'leftmargin', 'marginwidth', 'topmargin', 'marginheight', 'offset',
             #microdata
             'itemscope', 'itemtype', 'itemprop', 'content'
         ]
