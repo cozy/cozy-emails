@@ -57,7 +57,7 @@ module.exports =
         ]
         safeAttributes = [
             # general
-            'style', 'class', 'background',
+            'style', 'class', 'background', 'bgcolor'
             # tables
             'colspan', 'rowspan', 'height', 'width', 'align', 'font-size',
             'cellpadding', 'cellspacing', 'border', 'valign'
