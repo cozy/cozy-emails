@@ -63,23 +63,30 @@ module.exports.create = (req, res, next) ->
         res.send ramStore.getAccountClientObject account.id
 
 
-# update a mailbox
+# Update mailbox label or favorite status.
+# Changing the box label leads to an IMAP operation. Favorites are only stored
+# locally.
 module.exports.update = (req, res, next) ->
     log.info "Updating #{req.params.mailboxID} to #{req.body.label}"
 
-    mailbox = ramStore.getMailbox(req.params.mailboxID)
-    account = ramStore.getAccount(mailbox.accountID)
+    mailbox = ramStore.getMailbox req.params.mailboxID
+    account = ramStore.getAccount mailbox.accountID
 
     if req.body.label
 
-        path = mailbox.path
-        parentPath = path.substring 0, path.lastIndexOf(mailbox.label)
-        newPath = parentPath + req.body.label
+        if req.body.label is mailbox.label
+            log.info "No update performed label is the same."
 
-        mailbox.imapcozy_rename req.body.label, newPath, (err, updated) ->
-            return next err if err
             res.send ramStore.getAccountClientObject account.id
 
+        else
+            path = mailbox.path
+            parentPath = path.substring 0, path.lastIndexOf(mailbox.label)
+            newPath = parentPath + req.body.label
+
+            mailbox.imapcozy_rename req.body.label, newPath, (err, updated) ->
+                return next err if err
+                res.send ramStore.getAccountClientObject account.id
 
     else if req.body.favorite?
 
@@ -91,6 +98,7 @@ module.exports.update = (req, res, next) ->
             res.send ramStore.getAccountClientObject account.id
 
     else next new BadRequest 'Unsuported request for mailbox update'
+
 
 # delete a mailbox
 module.exports.delete = (req, res, next) ->
