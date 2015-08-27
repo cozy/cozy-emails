@@ -139,7 +139,7 @@ module.exports = class MailboxRefreshFast extends Process
         # throw an error, and let {::imap_refresh} do a deep refresh
         else if @lastTotal + @nbAdded < @newImapTotal
             log.warn """
-              #{@lastTotal} + #{@nbAdded} < #{@newImapTotal} on #{@path}
+              #{@lastTotal} + #{@nbAdded} < #{@newImapTotal} on #{@mailbox.path}
             """
             callback MailboxRefreshFast.algorithmFailure
 
