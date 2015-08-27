@@ -153,7 +153,7 @@ module.exports = React.createClass
         messageDisplayHTML = true
         parser = new DOMParser()
         html   = """<html><head>
-                <link rel="stylesheet" href="/fonts/fonts.css" />
+                <link rel="stylesheet" href="./fonts/fonts.css" />
                 <link rel="stylesheet" href="./mail_stylesheet.css" />
                 <style>body { visibility: hidden; }</style>
             </head><body>#{html}</body></html>"""

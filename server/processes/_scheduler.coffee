@@ -85,24 +85,7 @@ Scheduler.onIdle = ->
         log.debug "nothing to do, waiting 10 MIN"
         setTimeout Scheduler.doNext, 10 * MIN
 
-    # called after account creation
-Scheduler.startAccountRefresh = (accountID, done) ->
-    log.debug "Scheduler.startAccountRefresh"
-
-    processes = ramStore.getFavoriteMailboxesByAccount accountID
-        .map (mailbox) -> new MailboxRefresh {mailbox, limitByBox: 100}
-
-    Scheduler.scheduleMultiple processes, (err) ->
-        log.error err if err
-
-        processes = ramStore.getMailboxesByAccount accountID
-            .map (mailbox) -> new MailboxRefresh {mailbox}
-
-        Scheduler.scheduleMultiple processes, (err) ->
-            log.error err if err
-            done? err
-
-    # called by the Scheduler every hour
+# called by the Scheduler every hour
 Scheduler.startAllRefresh = (done) ->
     log.debug "Scheduler.startAllRefresh"
 
@@ -122,7 +105,7 @@ Scheduler.startAllRefresh = (done) ->
             lastAllRefresh = Date.now()
             done? err
 
-    # called by the Scheduler every 5Min
+# called by the Scheduler every 5Min
 Scheduler.startFavoriteRefresh = ->
     log.debug "Scheduler.startFavoriteRefresh"
     processes = ramStore.getFavoriteMailboxes()
