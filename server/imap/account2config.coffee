@@ -1,5 +1,6 @@
 xoauth2 = require 'xoauth2'
 log = require('../utils/logging')(prefix: 'imap:oauth')
+{PasswordEncryptedError} = require '../utils/errors'
 
 xOAuthCache = {}
 
@@ -53,6 +54,19 @@ module.exports.forceOauthRefresh = (account, callback) ->
     log.info "FORCE OAUTH REFRESH"
     getXoauth2Generator(account).generateToken callback
 
+# This is used when emails is started when the DS doesnt have the keys
+# modify account
+module.exports.forceAccountFetch = (account, callback) ->
+    Account.find account.id, (err, fetched) ->
+        return callback err if err
+
+        if fetched._passwordStillEncrypted
+            callback new PasswordEncryptedError()
+
+        else
+            account.password = fetched.password
+            account._passwordStillEncrypted = undefined
+            callback null
 
 # create a nodemailer config for this account
 module.exports.makeSMTPConfig = (account) ->
@@ -92,6 +106,11 @@ module.exports.makeIMAPConfig = (account, callback) ->
                 port       : 993
                 tls        : true
                 tlsOptions : rejectUnauthorized : false
+
+    else if account._passwordStillEncrypted
+        module.exports.forceAccountFetch account, (err) ->
+            return callback err if err
+            makeIMAPConfig account, callback
 
     else
         callback null,
