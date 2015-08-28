@@ -91,6 +91,15 @@ utils.RefreshError = class RefreshError extends Error
         Error.captureStackTrace this, arguments.callee
         return this
 
+utils.PasswordEncryptedError = class PasswordEncryptedError extends Error
+    constructor: (account) ->
+        @name = 'PasswordEncryptedError'
+        @status = 500
+        @message = """
+            Password is still encrypted in DS for account #{account.label}"""
+        @account = account
+        Error.captureStackTrace this, arguments.callee
+        return this
 
 # Error predicates
 utils.isFolderForbidden = (err) ->

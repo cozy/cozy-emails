@@ -139,7 +139,7 @@ module.exports = MailboxRefreshFast = (function(superClass) {
       this.needDeletion = false;
       return callback(null);
     } else if (this.lastTotal + this.nbAdded < this.newImapTotal) {
-      log.warn(this.lastTotal + " + " + this.nbAdded + " < " + this.newImapTotal + " on " + this.path);
+      log.warn(this.lastTotal + " + " + this.nbAdded + " < " + this.newImapTotal + " on " + this.mailbox.path);
       return callback(MailboxRefreshFast.algorithmFailure);
     } else {
       this.needDeletion = true;

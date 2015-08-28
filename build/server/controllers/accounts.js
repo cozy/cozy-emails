@@ -64,7 +64,8 @@ module.exports.create = function(req, res, next) {
         var refreshes;
         refreshes = allBoxes.map(function(mailbox) {
           return new MailboxRefresh({
-            mailbox: mailbox
+            mailbox: mailbox,
+            storeHighestModSeq: true
           });
         });
         return Scheduler.scheduleMultiple(refreshes, cb);
