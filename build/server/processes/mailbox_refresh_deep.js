@@ -290,6 +290,7 @@ module.exports = MailboxRefreshDeep = (function(superClass) {
     if (this.storeHighestModSeq) {
       changes.lastHighestModSeq = this.imapHighestmodseq;
       changes.lastTotal = this.imapTotal;
+      log.debug("saveLastSync", this.mailbox.label, changes);
     }
     return this.mailbox.updateAttributes(changes, callback);
   };

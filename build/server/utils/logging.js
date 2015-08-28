@@ -5,7 +5,7 @@ util = require('util');
 
 COLORS = ['\x1B[32mDBUG\x1B[39m', '\x1B[34mINFO\x1B[39m', '\x1B[33mWARN\x1B[39m', '\x1B[31mEROR\x1B[39m'];
 
-LOG_LEVEL = process.env.DEBUG_LEVEL != null ? parseInt(process.env.DEBUG_LEVEL) : process.env.NODE_ENV === 'test' ? 3 : process.env.NODE_ENV === 'production' ? 1 : 0;
+LOG_LEVEL = 0;
 
 lastLogs = new Array(15);
 
