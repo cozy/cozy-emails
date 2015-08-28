@@ -145,7 +145,7 @@ module.exports.listByMailbox = (req, res, next) ->
 
         result.messages ?= []
         result.mailboxID = mailboxID
-        result.messages = result.messages.map (msg) -> msg.toClientObject()
+        #result.messages = result.messages.map (msg) -> msg.toClientObject()
         result.links = links
 
         res.send result
