@@ -405,7 +405,7 @@ module.exports = Message = (function(superClass) {
       }, function(err) {
         return callback(err, {
           shouldNotif: false,
-          actuallyAdded: false
+          actuallyAdded: true
         });
       });
     } else {
