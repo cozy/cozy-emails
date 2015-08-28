@@ -82,15 +82,20 @@ module.exports.update = function(req, res, next) {
   mailbox = ramStore.getMailbox(req.params.mailboxID);
   account = ramStore.getAccount(mailbox.accountID);
   if (req.body.label) {
-    path = mailbox.path;
-    parentPath = path.substring(0, path.lastIndexOf(mailbox.label));
-    newPath = parentPath + req.body.label;
-    return mailbox.imapcozy_rename(req.body.label, newPath, function(err, updated) {
-      if (err) {
-        return next(err);
-      }
+    if (req.body.label === mailbox.label) {
+      log.info("No update performed label is the same.");
       return res.send(ramStore.getAccountClientObject(account.id));
-    });
+    } else {
+      path = mailbox.path;
+      parentPath = path.substring(0, path.lastIndexOf(mailbox.label));
+      newPath = parentPath + req.body.label;
+      return mailbox.imapcozy_rename(req.body.label, newPath, function(err, updated) {
+        if (err) {
+          return next(err);
+        }
+        return res.send(ramStore.getAccountClientObject(account.id));
+      });
+    }
   } else if (req.body.favorite != null) {
     favorites = _.without(account.favorites, mailbox.id);
     if (req.body.favorite) {

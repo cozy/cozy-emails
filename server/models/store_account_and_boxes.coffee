@@ -102,7 +102,8 @@ exports.clientList = ->
     return (exports.getAccountClientObject(id) for id of accountsByID)
 
 exports.getAccountClientObject = (id) ->
-    rawObject = accountsByID[id].toObject()
+    rawObject = accountsByID[id]?.toObject()
+    return null unless rawObject
     rawObject.favorites ?= []
     rawObject.totalUnread = unreadByAccountID[id] or 0
     rawObject.mailboxes = mailboxesByAccountID[id].map (box) ->
@@ -151,7 +152,10 @@ exports.getFavoriteMailboxesByAccount = (accountID) ->
     account = exports.getAccount accountID
     for mailbox in exports.getMailboxesByAccount accountID
         out.push mailbox if mailbox.id in account.favorites or []
-    return out
+    return out.sort (a, b) ->
+        if a.label is 'INBOX' then return -1
+        else if b.label is 'INBOX' then return 1
+        else return a.label.localeCompare b.label
 
 exports.getMailbox = (mailboxID) ->
     mailboxesByID[mailboxID]

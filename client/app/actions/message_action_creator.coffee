@@ -75,6 +75,7 @@ module.exports = MessageActionCreator =
                     type: ActionTypes.MESSAGE_RECOVER_SUCCESS
                     value: {ref}
 
+
     refreshMailbox: (mailboxID) ->
         unless AccountStore.isMailboxRefreshing(mailboxID)
             AppDispatcher.handleViewAction
@@ -90,6 +91,7 @@ module.exports = MessageActionCreator =
                     AppDispatcher.handleViewAction
                         type: ActionTypes.REFRESH_SUCCESS
                         value: {mailboxID, updated}
+
 
     # Delete message(s)
     # target:

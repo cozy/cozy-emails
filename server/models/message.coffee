@@ -406,7 +406,7 @@ module.exports = class Message extends cozydb.CozyModel
             twinMailboxIDs[box.id] ?= []
             twinMailboxIDs[box.id].push uid
             @updateAttributes {twinMailboxIDs}, (err) ->
-                callback err, {shouldNotif: false, actuallyAdded: false}
+                callback err, {shouldNotif: false, actuallyAdded: true}
 
 
         else
@@ -757,7 +757,6 @@ module.exports = class Message extends cozydb.CozyModel
 
 
 module.exports = Message
-require('./model-events').wrapModel Message
 mailutils = require '../utils/jwz_tools'
 CONSTANTS = require '../utils/constants'
 {MSGBYPAGE, LIMIT_DESTROY, LIMIT_UPDATE, CONCURRENT_DESTROY} = CONSTANTS

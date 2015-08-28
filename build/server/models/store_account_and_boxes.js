@@ -153,8 +153,11 @@ exports.clientList = function() {
 };
 
 exports.getAccountClientObject = function(id) {
-  var rawObject;
-  rawObject = accountsByID[id].toObject();
+  var rawObject, ref;
+  rawObject = (ref = accountsByID[id]) != null ? ref.toObject() : void 0;
+  if (!rawObject) {
+    return null;
+  }
   if (rawObject.favorites == null) {
     rawObject.favorites = [];
   }
@@ -241,7 +244,15 @@ exports.getFavoriteMailboxesByAccount = function(accountID) {
       out.push(mailbox);
     }
   }
-  return out;
+  return out.sort(function(a, b) {
+    if (a.label === 'INBOX') {
+      return -1;
+    } else if (b.label === 'INBOX') {
+      return 1;
+    } else {
+      return a.label.localeCompare(b.label);
+    }
+  });
 };
 
 exports.getMailbox = function(mailboxID) {

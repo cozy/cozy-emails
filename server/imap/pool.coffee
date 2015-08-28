@@ -1,11 +1,13 @@
-{AccountConfigError, TimeoutError} = require '../utils/errors'
+errors =  require '../utils/errors'
+{AccountConfigError, TimeoutError, PasswordEncryptedError} = errors
 log = require('../utils/logging')(prefix: 'imap:pool')
 rawImapLog = require('../utils/logging')(prefix: 'imap:raw')
 Account = require '../models/account'
 Imap = require './connection'
 xoauth2 = require 'xoauth2'
 async = require "async"
-{makeIMAPConfig, forceOauthRefresh} = require '../imap/account2config'
+accountConfigTools = require '../imap/account2config'
+{makeIMAPConfig, forceOauthRefresh, forceAccountFetch} = accountConfigTools
 Scheduler = require '../processes/_scheduler'
 RecoverChangedUIDValidity = require '../processes/recover_change_uidvalidity'
 
@@ -84,13 +86,24 @@ module.exports = class ImapPool
         clearTimeout @wrongPortTimeout
         @connecting--
         @failConnectionCounter++
-        if @failConnectionCounter > 2
+
+        isAuth = err.textCode is 'AUTHENTICATIONFAILED'
+
+        if err instanceof PasswordEncryptedError
+            @_giveUp err
+
+        else if @failConnectionCounter > 2
             # give up
             @_giveUp _typeConnectionError err
         else if err.source is 'autentification' and
                                              @account.oauthProvider is 'GMAIL'
             # refresh accessToken
             forceOauthRefresh @account, @_deQueue
+
+        # TMP : this should be removed when data-system#161 is widely deployed
+        else if isAuth and @account.id and @failConnectionCounter is 1
+            forceAccountFetch @account, @_deQueue
+
         else
             # try again in 5s
             setTimeout @_deQueue, 5000

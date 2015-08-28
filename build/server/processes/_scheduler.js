@@ -118,33 +118,6 @@ Scheduler.onIdle = function() {
   }
 };
 
-Scheduler.startAccountRefresh = function(accountID, done) {
-  var processes;
-  log.debug("Scheduler.startAccountRefresh");
-  processes = ramStore.getFavoriteMailboxesByAccount(accountID).map(function(mailbox) {
-    return new MailboxRefresh({
-      mailbox: mailbox,
-      limitByBox: 100
-    });
-  });
-  return Scheduler.scheduleMultiple(processes, function(err) {
-    if (err) {
-      log.error(err);
-    }
-    processes = ramStore.getMailboxesByAccount(accountID).map(function(mailbox) {
-      return new MailboxRefresh({
-        mailbox: mailbox
-      });
-    });
-    return Scheduler.scheduleMultiple(processes, function(err) {
-      if (err) {
-        log.error(err);
-      }
-      return typeof done === "function" ? done(err) : void 0;
-    });
-  });
-};
-
 Scheduler.startAllRefresh = function(done) {
   var refreshLists;
   log.debug("Scheduler.startAllRefresh");

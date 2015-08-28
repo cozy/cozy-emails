@@ -405,7 +405,7 @@ module.exports = Message = (function(superClass) {
       }, function(err) {
         return callback(err, {
           shouldNotif: false,
-          actuallyAdded: false
+          actuallyAdded: true
         });
       });
     } else {
@@ -816,8 +816,6 @@ module.exports = Message = (function(superClass) {
 })(cozydb.CozyModel);
 
 module.exports = Message;
-
-require('./model-events').wrapModel(Message);
 
 mailutils = require('../utils/jwz_tools');
 
