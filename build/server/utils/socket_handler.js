@@ -99,7 +99,9 @@ SocketHandler.setup = function(app, server) {
   onAccountChanged = function(accountID) {
     var updated;
     updated = ramStore.getAccountClientObject(accountID);
-    return io.emit('account.update', updated);
+    if (updated) {
+      return io.emit('account.update', updated);
+    }
   };
   onAccountChangedDebounced = _.debounce(onAccountChanged, 500, {
     leading: true,
