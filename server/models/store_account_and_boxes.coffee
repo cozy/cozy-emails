@@ -152,7 +152,10 @@ exports.getFavoriteMailboxesByAccount = (accountID) ->
     account = exports.getAccount accountID
     for mailbox in exports.getMailboxesByAccount accountID
         out.push mailbox if mailbox.id in account.favorites or []
-    return out
+    return out.sort (a, b) ->
+        if a.label is 'INBOX' then return -1
+        else if b.label is 'INBOX' then return 1
+        else return a.label.localeCompare b.label
 
 exports.getMailbox = (mailboxID) ->
     mailboxesByID[mailboxID]
