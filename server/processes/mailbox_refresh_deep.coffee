@@ -250,4 +250,5 @@ module.exports = class MailboxRefreshDeep extends Process
         if @storeHighestModSeq
             changes.lastHighestModSeq = @imapHighestmodseq
             changes.lastTotal = @imapTotal
+            log.debug "saveLastSync", @mailbox.label, changes
         @mailbox.updateAttributes changes, callback

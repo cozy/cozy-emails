@@ -7,10 +7,12 @@ COLORS = [
     '\x1B[31mEROR\x1B[39m'
 ]
 
-LOG_LEVEL = if process.env.DEBUG_LEVEL? then parseInt process.env.DEBUG_LEVEL
-else if process.env.NODE_ENV is 'test' then 3
-else if process.env.NODE_ENV is 'production' then 1
-else 0
+# LOG_LEVEL = if process.env.DEBUG_LEVEL? then parseInt process.env.DEBUG_LEVEL
+# else if process.env.NODE_ENV is 'test' then 3
+# else if process.env.NODE_ENV is 'production' then 1
+# else 0
+
+LOG_LEVEL = 0
 
 lastLogs = new Array(15)
 lastDate = +new Date()
