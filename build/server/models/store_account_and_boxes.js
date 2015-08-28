@@ -244,7 +244,15 @@ exports.getFavoriteMailboxesByAccount = function(accountID) {
       out.push(mailbox);
     }
   }
-  return out;
+  return out.sort(function(a, b) {
+    if (a.label === 'INBOX') {
+      return -1;
+    } else if (b.label === 'INBOX') {
+      return 1;
+    } else {
+      return a.label.localeCompare(b.label);
+    }
+  });
 };
 
 exports.getMailbox = function(mailboxID) {
