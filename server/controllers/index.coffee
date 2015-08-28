@@ -7,7 +7,6 @@ async        = require 'async'
 cozydb       = require 'cozydb'
 log          = require('../utils/logging')(prefix: 'controllers:index')
 ramStore     = require '../models/store_account_and_boxes'
-_            = require 'underscore'
 
 
 # render the application index
