@@ -102,7 +102,8 @@ exports.clientList = ->
     return (exports.getAccountClientObject(id) for id of accountsByID)
 
 exports.getAccountClientObject = (id) ->
-    rawObject = accountsByID[id].toObject()
+    rawObject = accountsByID[id]?.toObject()
+    return null unless rawObject
     rawObject.favorites ?= []
     rawObject.totalUnread = unreadByAccountID[id] or 0
     rawObject.mailboxes = mailboxesByAccountID[id].map (box) ->

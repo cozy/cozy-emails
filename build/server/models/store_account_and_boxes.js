@@ -153,8 +153,11 @@ exports.clientList = function() {
 };
 
 exports.getAccountClientObject = function(id) {
-  var rawObject;
-  rawObject = accountsByID[id].toObject();
+  var rawObject, ref;
+  rawObject = (ref = accountsByID[id]) != null ? ref.toObject() : void 0;
+  if (!rawObject) {
+    return null;
+  }
   if (rawObject.favorites == null) {
     rawObject.favorites = [];
   }

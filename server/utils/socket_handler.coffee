@@ -68,7 +68,7 @@ SocketHandler.setup = (app, server) ->
 
     onAccountChanged = (accountID) ->
         updated = ramStore.getAccountClientObject accountID
-        io.emit 'account.update', updated
+        io.emit 'account.update', updated if updated
 
     onAccountChangedDebounced = _.debounce onAccountChanged, 500,
         leading: true
