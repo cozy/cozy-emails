@@ -175,9 +175,6 @@ module.exports.listByMailbox = function(req, res, next) {
       result.messages = [];
     }
     result.mailboxID = mailboxID;
-    result.messages = result.messages.map(function(msg) {
-      return msg.toClientObject();
-    });
     result.links = links;
     return res.send(result);
   });
