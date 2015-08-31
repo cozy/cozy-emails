@@ -1,6 +1,7 @@
 xoauth2 = require 'xoauth2'
 log = require('../utils/logging')(prefix: 'imap:oauth')
 {PasswordEncryptedError} = require '../utils/errors'
+Account = require '../models/account'
 
 xOAuthCache = {}
 
