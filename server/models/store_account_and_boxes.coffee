@@ -9,22 +9,21 @@ ImapPool = require '../imap/pool'
 _ = require 'lodash'
 async = require 'async'
 log = require('../utils/logging')(prefix: 'models:ramStore')
+{EventEmitter} = require 'events'
 
-
-queueEndMarker = {Symbol: 'queue-end'}
 
 accountsByID = {}
 allAccounts = []
 mailboxesByID = {}
 mailboxesByAccountID = {}
 
-mailboxRefreshQueue = [queueEndMarker]
 orphanMailboxes = []
 countsByMailboxID = {}
 unreadByAccountID = {}
 
 imapPools = {}
 
+eventEmitter = new EventEmitter()
 
 retrieveAccounts = (callback) ->
     log.debug "retrieveAccounts"
@@ -50,8 +49,6 @@ retrieveMailboxes = (callback) ->
         return callback err if err
 
         for row in rows
-
-            accountID = row.key[0]
             box = new Mailbox row.doc
             exports.addMailbox box
 
@@ -105,7 +102,8 @@ exports.clientList = ->
     return (exports.getAccountClientObject(id) for id of accountsByID)
 
 exports.getAccountClientObject = (id) ->
-    rawObject = accountsByID[id].toObject()
+    rawObject = accountsByID[id]?.toObject()
+    return null unless rawObject
     rawObject.favorites ?= []
     rawObject.totalUnread = unreadByAccountID[id] or 0
     rawObject.mailboxes = mailboxesByAccountID[id].map (box) ->
@@ -127,6 +125,8 @@ exports.getMailboxClientObject = (id) ->
 
 
 # GETTERS
+exports.on = eventEmitter.on.bind(eventEmitter)
+
 exports.getAllAccounts = ->
     return (account for id, account of accountsByID)
 
@@ -152,7 +152,10 @@ exports.getFavoriteMailboxesByAccount = (accountID) ->
     account = exports.getAccount accountID
     for mailbox in exports.getMailboxesByAccount accountID
         out.push mailbox if mailbox.id in account.favorites or []
-    return out
+    return out.sort (a, b) ->
+        if a.label is 'INBOX' then return -1
+        else if b.label is 'INBOX' then return 1
+        else return a.label.localeCompare b.label
 
 exports.getMailbox = (mailboxID) ->
     mailboxesByID[mailboxID]
@@ -176,11 +179,6 @@ exports.getMailboxesID = (mailboxID) ->
 exports.getUninitializedAccount = ->
     exports.getAllAccounts().filter (account) ->
         account.initialized is false
-
-exports.getNextBoxToRefresh = ->
-    box = mailboxRefreshQueue.shift()
-    mailboxRefreshQueue.push box
-    return box
 
 exports.getIgnoredMailboxes = (accountID) ->
     ignores = {}
@@ -217,7 +215,6 @@ exports.addMailbox = (mailbox) ->
     countsByMailboxID[mailbox.id] ?= {unread: 0, total: 0, recent: 0}
     if mailboxesByAccountID[accountID]
         mailboxesByAccountID[accountID].push mailbox
-        mailboxRefreshQueue.push mailbox
     else
         orphanMailboxes.push mailbox
 
@@ -228,8 +225,6 @@ exports.removeMailbox = (mailboxID) ->
     accountID = mailbox.accountID
     list = mailboxesByAccountID[accountID]
     mailboxesByAccountID[accountID] = _.without list, mailbox if list
-    list = mailboxRefreshQueue
-    mailboxRefreshQueue = _.without list, mailbox
     list = orphanMailboxes
     orphanMailboxes = _.without list, mailbox
     Scheduler.orphanRemovalDebounced()
@@ -244,7 +239,6 @@ Account.on 'delete', (id, deleted) ->
     exports.removeAccount id
 
 Mailbox.on 'create', (created) ->
-    console.log "addMailbox", created.label, created.id
     exports.addMailbox created
 
 Mailbox.on 'delete', (id, deleted) ->
@@ -256,10 +250,11 @@ Message.on 'create', onMessageCreated = (created) ->
 
     for boxID, uid of created.mailboxIDs
         countsByMailboxID[boxID].total  += 1
-        countsByMailboxID[boxID].unread += 1 if isRead
+        countsByMailboxID[boxID].unread += 1 unless isRead
         countsByMailboxID[boxID].recent += 1 if isRecent
 
     unreadByAccountID[created.accountID] += 1 if isRead
+    eventEmitter.emit 'change', created.accountID
 
 Message.on 'delete', onMessageDestroyed = (id, old) ->
     wasRead = '\\Seen' in old.flags
@@ -267,12 +262,14 @@ Message.on 'delete', onMessageDestroyed = (id, old) ->
 
     for boxID, uid of old.mailboxIDs
         countsByMailboxID[boxID].total  -= 1
-        countsByMailboxID[boxID].unread -= 1 if wasRead
+        countsByMailboxID[boxID].unread -= 1 unless wasRead
         countsByMailboxID[boxID].recent -= 1 if wasRecent
 
     unreadByAccountID[old.accountID] -= 1 if wasRead
+    eventEmitter.emit 'change', old.accountID
 
 Message.on 'update', (updated, old) ->
     onMessageDestroyed old.id, old
     onMessageCreated updated
+
 

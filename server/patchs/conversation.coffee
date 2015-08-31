@@ -3,6 +3,7 @@ async = require 'async'
 ramStore = require '../models/store_account_and_boxes'
 log = require('../utils/logging')(prefix: 'patch:conversation')
 
+PATCH_BATCH_SIZE = 10000
 
 exports.patchAllAccounts = (callback) ->
     accounts = ramStore.getAllAccounts()
@@ -22,7 +23,7 @@ applyPatchConversationStep = (account, status, next) ->
         group_level: 2
         startkey: [account.id]
         endkey: [account.id, {}]
-        limit: 1000
+        limit: PATCH_BATCH_SIZE
         skip: status.skip
     , (err, rows) ->
         return next err if err
@@ -38,12 +39,12 @@ applyPatchConversationStep = (account, status, next) ->
               rows.length, problems.length
 
         if problems.length is 0
-            status.skip += 1000
+            status.skip += PATCH_BATCH_SIZE
             next null
         else
             async.eachSeries problems, patchConversationOne, (err) ->
                 return next err if err
-                status.skip += 1000
+                status.skip += PATCH_BATCH_SIZE
                 next null
 
 patchConversationOne = (key, callback) ->

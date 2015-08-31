@@ -6,13 +6,13 @@ log = require('../utils/logging')(prefix: 'process:box_refresh_deep')
 {RefreshError} = require '../utils/errors'
 _ = require 'lodash'
 Message = require '../models/message'
-patchConversation = require '../patchs/conversation'
+ramStore = require '../models/store_account_and_boxes'
 
 
 # This process perform the deep refresh of one mailbox
 #
 # options
-#  :limitbybox
+#  :limitByBox
 #  :firstImport
 #  :storeHighestModSeq
 #  :mailbox
@@ -42,7 +42,12 @@ module.exports = class MailboxRefreshDeep extends Process
         @nbOperationDone = 0
         @nbOperationCurrentStep = 1
 
-        async.whilst (=> not @finished), @refreshStep, done
+        if ramStore.getAccount(@mailbox.accountID).isTest()
+            @finished = true
+
+        async.whilst (=> not @finished), @refreshStep, (err) =>
+            return done err if err
+            @saveLastSync done
 
     # Public: refresh part of a mailbox
     refreshStep: (callback) =>
@@ -54,8 +59,6 @@ module.exports = class MailboxRefreshDeep extends Process
             @applyToRemove
             @applyFlagsChanges
             @applyToFetch
-            @convPatch
-            @saveLastSync
         ], callback
 
     getProgress: =>
@@ -66,6 +69,7 @@ module.exports = class MailboxRefreshDeep extends Process
         msg = if @initialStep then 'initial' else ''
         msg += " limit: #{@limitByBox}" if @limitByBox
         msg += " range: #{@min}:#{@max}"
+        msg += " finished" if @finished
         return msg
 
     # Public: compute the next step.
@@ -78,28 +82,33 @@ module.exports = class MailboxRefreshDeep extends Process
     # Returns (void)
     setNextStep: (uidnext) =>
         log.debug "computeNextStep", @status(), "next", uidnext
-        if @initialStep
-            # pretend the last step was max: INFINITY, min: uidnext
-            @min = uidnext + 1
 
-        if @min is 1
-            # uid are always > 1, we are done
+        if @limitByBox and not @initialStep
+            # the first step has the proper limitByBox size, we are done
             @finished = true
 
-        if @limitByBox
+        else if @limitByBox
+            # GET @limitByBox from the end of the box
+            @initialStep = false
             @nbStep = 1
-            range = @limitByBox
-            unless @initialStep
-                # the first step has the proper limitByBox size, we are done
-                @finished = true
-        else
-            @nbStep = Math.ceil uidnext / FETCH_AT_ONCE
-            range = FETCH_AT_ONCE
+            @min = Math.max 1, uidnext - @limitByBox
+            @max = Math.max 1, uidnext - 1
 
-        @initialStep = false
-        @max = Math.max 1, @min - 1
-        # new min is old min - range
-        @min = Math.max 1, @min - range
+        else if @initialStep
+            # first step, 1:FETCH_AT_ONCE
+            @initialStep = false
+            @nbStep = Math.ceil uidnext / FETCH_AT_ONCE
+            @min = 1
+            @max = Math.min uidnext, FETCH_AT_ONCE
+
+        else
+            # next steps, increase all by FETCH_AT_ONCE
+            @min = Math.min uidnext, @max + 1
+            @max = Math.min uidnext, @min + FETCH_AT_ONCE
+
+        if @min is @max
+            @finished = true
+
         log.debug "nextStepEnd", @status()
 
     UIDsInRange: (callback) ->
@@ -226,7 +235,6 @@ module.exports = class MailboxRefreshDeep extends Process
     applyToFetch: (callback) =>
         return callback null if @finished
         log.debug "applyFetch", @toFetch.length
-        @toFetch.reverse()
         safeLoop @toFetch, (msg, cb) =>
             Message.fetchOrUpdate @mailbox, msg, (err, result) ->
                 @nbOperationDone += 1
@@ -237,14 +245,10 @@ module.exports = class MailboxRefreshDeep extends Process
             if errors?.length then callback new RefreshError errors
             else callback null
 
-    convPatch: (callback) =>
-        account = id: @mailbox.accountID
-        patchConversation.patchOneAccount account, callback
-
     saveLastSync: (callback) =>
-        return callback null if @finished
         changes = lastSync: new Date().toISOString()
         if @storeHighestModSeq
             changes.lastHighestModSeq = @imapHighestmodseq
             changes.lastTotal = @imapTotal
+            log.debug "saveLastSync", @mailbox.label, changes
         @mailbox.updateAttributes changes, callback

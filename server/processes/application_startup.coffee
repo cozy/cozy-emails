@@ -1,6 +1,5 @@
 Process = require './_base'
 OrphanRemoval = require './orphan_removal'
-patchConversation = require '../patchs/conversation'
 patchIgnored = require '../patchs/ignored'
 log = require('../utils/logging')(prefix: 'process:application_startup')
 ramStore = require '../models/store_account_and_boxes'
@@ -21,7 +20,6 @@ module.exports = class ApplicationStartup extends Process
             @forceCozyDBReindexing
             ramStore.initialize
             @initializeNewAccounts
-            patchConversation.patchAllAccounts
             patchIgnored.patchAllAccounts
             @removeOrphans
         ], callback

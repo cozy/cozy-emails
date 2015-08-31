@@ -2267,6 +2267,12 @@ module.exports = AccountConfigMailboxes = React.createClass({
   onKeyDown: function(evt) {
     switch (evt.key) {
       case "Enter":
+        if (evt != null) {
+          evt.preventDefault();
+        }
+        if (evt != null) {
+          evt.stopPropagation();
+        }
         return this.addMailbox();
     }
   },
@@ -6937,7 +6943,7 @@ module.exports = MessageList = React.createClass({
   },
   toggleAll: function() {
     var selected;
-    if (this.state.allSelected) {
+    if (Object.keys(this.state.selected).length > 0) {
       return this.setState({
         allSelected: false,
         edited: false,
@@ -7164,7 +7170,7 @@ module.exports = React.createClass({
     var doc, hideImage, href, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref1;
     messageDisplayHTML = true;
     parser = new DOMParser();
-    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"/fonts/fonts.css\" />\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + html + "</body></html>";
+    html = "<html><head>\n    <link rel=\"stylesheet\" href=\"./fonts/fonts.css\" />\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + html + "</body></html>";
     doc = parser.parseFromString(html, "text/html");
     images = [];
     if (!doc) {
@@ -7291,10 +7297,10 @@ module.exports = React.createClass({
       ref: 'footer'
     });
   },
-  toggleHeaders: function(e) {
+  toggleHeaders: function(event) {
     var state;
-    e.preventDefault();
-    e.stopPropagation();
+    event.preventDefault();
+    event.stopPropagation();
     state = {
       headers: !this.state.headers
     };
@@ -7303,17 +7309,17 @@ module.exports = React.createClass({
     }
     return this.setState(state);
   },
-  toggleActive: function(e) {
+  toggleActive: function(event) {
     if (this.props.inConversation) {
-      e.preventDefault();
-      e.stopPropagation();
+      event.preventDefault();
+      event.stopPropagation();
       this.props.toggleActive();
       return this.setState({
         headers: false
       });
     }
   },
-  onDelete: function(e) {
+  onDelete: function(event) {
     var confirmMessage, messageID, modal, needConfirmation;
     event.preventDefault();
     event.stopPropagation();
@@ -7441,7 +7447,6 @@ MessageContent = React.createClass({
         className: 'content',
         ref: 'content',
         allowTransparency: true,
-        sandbox: 'allow-same-origin allow-popups',
         frameBorder: 0
       }));
     } else {
@@ -7978,6 +7983,8 @@ module.exports = Panel = React.createClass({
     } else if (this.props.action === 'compose.forward') {
       options.action = ComposeActions.FORWARD;
       component = this.getReplyComponent(options);
+    } else {
+      throw new Error("unknown compose type : " + this.prop.action);
     }
     return component;
   },
@@ -9325,8 +9332,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
       order: '-',
       field: 'date'
     };
+    window.cozyMails.messageClose();
     if (params != null) {
-      window.cozyMails.messageClose();
       sort.before = params[0], sort.after = params[1];
     } else {
       sort.after = sort.before = '';
@@ -11120,7 +11127,7 @@ module.exports = {
   "account login": "Email address",
   "account name short": "Your name, as it will be displayed",
   "account name": "Your name",
-  "account oauth": "This accoutn uses Google OAuth",
+  "account oauth": "This account uses Google OAuth",
   "account password": "Password",
   "account receiving server": "Receiving server",
   "account sending server": "Sending server",
@@ -13132,6 +13139,7 @@ MessageStore = (function(_super) {
 
   handleFetchResult = function(result) {
     var before, lengths, message, next, url, _i, _len, _ref1, _results;
+    _messages = _messages.clear();
     if ((result.links != null) && (result.links.next != null)) {
       _params = {};
       next = decodeURIComponent(result.links.next);

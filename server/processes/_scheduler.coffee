@@ -5,7 +5,7 @@ ramStore = require '../models/store_account_and_boxes'
 MailboxRefresh = require './mailbox_refresh'
 MailboxRefreshList = require '../processes/mailbox_refresh_list'
 ApplicationStartup = require './application_startup'
-RemoveAllMessagesFromAccount = require './application_startup'
+RemoveMessagesFromAccount = require './message_remove_by_account'
 OrphanRemoval = require './orphan_removal'
 async = require 'async'
 running = null
@@ -85,24 +85,7 @@ Scheduler.onIdle = ->
         log.debug "nothing to do, waiting 10 MIN"
         setTimeout Scheduler.doNext, 10 * MIN
 
-    # called after account creation
-Scheduler.startAccountRefresh = (accountID, done) ->
-    log.debug "Scheduler.startAccountRefresh"
-
-    processes = ramStore.getFavoriteMailboxesByAccount accountID
-        .map (mailbox) -> new MailboxRefresh {mailbox, limitByBox: 100}
-
-    Scheduler.scheduleMultiple processes, (err) ->
-        log.error err if err
-
-        processes = ramStore.getMailboxesByAccount accountID
-            .map (mailbox) -> new MailboxRefresh {mailbox}
-
-        Scheduler.scheduleMultiple processes, (err) ->
-            log.error err if err
-            done? err
-
-    # called by the Scheduler every hour
+# called by the Scheduler every hour
 Scheduler.startAllRefresh = (done) ->
     log.debug "Scheduler.startAllRefresh"
 
@@ -122,7 +105,7 @@ Scheduler.startAllRefresh = (done) ->
             lastAllRefresh = Date.now()
             done? err
 
-    # called by the Scheduler every 5Min
+# called by the Scheduler every 5Min
 Scheduler.startFavoriteRefresh = ->
     log.debug "Scheduler.startFavoriteRefresh"
     processes = ramStore.getFavoriteMailboxes()
@@ -149,7 +132,7 @@ Scheduler.applicationStartupRunning = ->
 Scheduler.orphanRemovalDebounced = (accountID) ->
 
     if accountID
-        Scheduler.schedule new RemoveAllMessagesFromAccount {accountID}
+        Scheduler.schedule new RemoveMessagesFromAccount {accountID}
 
     alreadyQueued = queued.some (proc) ->
         proc instanceof OrphanRemoval

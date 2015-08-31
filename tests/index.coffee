@@ -64,6 +64,7 @@ describe "Server tests", ->
             label: "DoveCot"
             login: "testuser"
             password: "applesauce"
+            smtpMethod: "NONE"
             smtpServer: "127.0.0.1"
             smtpPort: SMTP_PORT
             smtpSSL: false

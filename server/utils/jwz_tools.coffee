@@ -8,6 +8,36 @@ REGEXP =
 
 IGNORE_ATTRIBUTES = ['\\HasNoChildren', '\\HasChildren']
 
+allowedTags = sanitizeHtml.defaults.allowedTags.concat [
+    'img'
+    'head'
+    'meta'
+    'title'
+    'link'
+    'h1'
+    'h2'
+    'h3'
+    'h4'
+]
+safeAttributes = [
+    # general
+    'style', 'class', 'background', 'bgcolor'
+    # tables
+    'colspan', 'rowspan', 'height', 'width', 'align', 'font-size',
+    'cellpadding', 'cellspacing', 'border', 'valign'
+    # body
+   'leftmargin', 'marginwidth', 'topmargin', 'marginheight', 'offset',
+    #microdata
+    'itemscope', 'itemtype', 'itemprop', 'content'
+]
+allowedAttributes = sanitizeHtml.defaults.allowedAttributes
+allowedTags.forEach (tag) ->
+    exAllowed = allowedAttributes[tag] or []
+    allowedAttributes[tag] = exAllowed.concat safeAttributes
+
+allowedAttributes.link.push 'href'
+allowedSchemes = sanitizeHtml.defaults.allowedSchemes
+    .concat ['cid', 'data']
 
 module.exports =
     isReplyOrForward: (subject) ->
@@ -44,34 +74,7 @@ module.exports =
         return boxes
 
     sanitizeHTML: (html, messageId, attachments) ->
-        allowedTags = sanitizeHtml.defaults.allowedTags.concat [
-            'img'
-            'head'
-            'meta'
-            'title'
-            'link'
-            'h1'
-            'h2'
-            'h3'
-            'h4'
-        ]
-        safeAttributes = [
-            'style', 'class', 'background',
-            # tables
-            'colspan', 'rowspan', 'width', 'align', 'font-size'
-            #microdata
-            'itemscope', 'itemtype', 'itemprop', 'content'
-        ]
-        allowedAttributes = sanitizeHtml.defaults.allowedAttributes
-        allowedTags.forEach (tag) ->
-            exAllowed = allowedAttributes[tag] or []
-            allowedAttributes[tag] = exAllowed.concat safeAttributes
-
-        allowedAttributes.link.push 'href'
-        allowedSchemes = sanitizeHtml.defaults.allowedSchemes
-            .concat ['cid', 'data']
-
-        html = sanitizeHtml html,
+        return sanitizeHtml html,
             allowedTags: allowedTags
             allowedAttributes: allowedAttributes
             allowedClasses: false
@@ -94,8 +97,6 @@ module.exports =
                         if not mime? or mime[1] isnt 'image'
                             attribs.src = ""
                     return {tagName: 'img', attribs: attribs}
-        html
-
 
 # recursively browse the imap box tree building pathStr and pathArr
 flattenMailboxTreeLevel= (boxes, children, pathStr, pathArr, parentDelimiter) ->
