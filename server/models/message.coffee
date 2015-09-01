@@ -567,9 +567,12 @@ module.exports = class Message extends cozydb.CozyModel
             raw.html = mailutils.sanitizeHTML raw.html, raw.id, attachments
 
         if not raw.text? and raw.html?
-            raw.text = htmlToText.fromString raw.html,
-                tables: true
-                wordwrap: 80
+            try
+                raw.text = htmlToText.fromString raw.html,
+                    tables: true
+                    wordwrap: 80
+            catch err
+                log.error "Error converting HTML to text", err, row.html
 
         return raw
 
