@@ -120,3 +120,4 @@ module.exports.makeIMAPConfig = (account, callback) ->
             port       : parseInt account.imapPort
             tls        : not account.imapSSL? or account.imapSSL
             tlsOptions : rejectUnauthorized : false
+            autotls    : 'required' # for servers with STARTTLS and LOGINDISABLED
