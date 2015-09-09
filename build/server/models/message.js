@@ -558,7 +558,7 @@ module.exports = Message = (function(superClass) {
   };
 
   Message.prototype.toClientObject = function() {
-    var attachments, raw, ref;
+    var attachments, err, raw, ref;
     raw = this.toObject();
     if ((ref = raw.attachments) != null) {
       ref.forEach(function(file) {
@@ -572,10 +572,15 @@ module.exports = Message = (function(superClass) {
       raw.html = mailutils.sanitizeHTML(raw.html, raw.id, attachments);
     }
     if ((raw.text == null) && (raw.html != null)) {
-      raw.text = htmlToText.fromString(raw.html, {
-        tables: true,
-        wordwrap: 80
-      });
+      try {
+        raw.text = htmlToText.fromString(raw.html, {
+          tables: true,
+          wordwrap: 80
+        });
+      } catch (_error) {
+        err = _error;
+        log.error("Error converting HTML to text", err, row.html);
+      }
     }
     return raw;
   };

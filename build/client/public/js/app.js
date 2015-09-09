@@ -10007,6 +10007,7 @@ window.onerror = function(msg, url, line, col, error) {
         type: 'error',
         error: {
           msg: msg,
+          name: error != null ? error.name : void 0,
           full: exception,
           stack: error != null ? error.stack : void 0
         },
@@ -10072,13 +10073,22 @@ window.onload = function() {
     return window.cozyMails.customEvent("APPLICATION_LOADED");
   } catch (_error) {
     e = _error;
-    console.error(e);
+    console.error(e, e != null ? e.stack : void 0);
     exception = e.toString();
     if (exception !== window.lastError) {
       data = {
         data: {
           type: 'error',
-          exception: exception
+          error: {
+            msg: e.message,
+            name: e != null ? e.name : void 0,
+            full: exception,
+            stack: e != null ? e.stack : void 0
+          },
+          file: e != null ? e.fileName : void 0,
+          line: e != null ? e.lineNumber : void 0,
+          col: e != null ? e.columnNumber : void 0,
+          href: window.location.href
         }
       };
       xhr = new XMLHttpRequest();

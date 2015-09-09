@@ -133,7 +133,8 @@ module.exports.makeIMAPConfig = function(account, callback) {
       tls: (account.imapSSL == null) || account.imapSSL,
       tlsOptions: {
         rejectUnauthorized: false
-      }
+      },
+      autotls: 'required'
     });
   }
 };
