@@ -15,7 +15,9 @@ onMessageList = ->
 
 module.exports =
 
+
     debugLogs: []
+
 
     getCurrentAccount: ->
         AccountStore.getSelected()?.toJS()
@@ -73,6 +75,7 @@ module.exports =
     getAccountByLabel: (label) ->
         return AccountStore.getByLabel label
 
+
     getSetting: (key) ->
         return SettingsStore.get().toJS()[key]
 
@@ -104,11 +107,13 @@ module.exports =
 
         @messageSetCurrent next
 
+
     messageSetCurrent: (message) ->
         MessageActionCreator.setCurrent message.get('id'), true
 
         if SettingsStore.get('displayPreview')
             @messageDisplay message
+
 
     ##
     # Display a message
@@ -142,14 +147,10 @@ module.exports =
 
 
     messageClose: ->
-        closeUrl = window.router.buildUrl
-            direction: 'first'
-            action: 'account.mailbox.messages'
-            parameters:
-                accountID: AccountStore.getSelected().get 'id'
-                mailboxID: AccountStore.getSelectedMailbox().get 'id'
-            fullWidth: true
-        window.router.navigate closeUrl, {trigger: true}
+        href = window.location.href
+        closeUrl = href.replace /\/message\/[^\/]*\//gi, ''
+        closeUrl = closeUrl.replace /\/conversation\/[^\/]*\/[^\/]*\//gi, ''
+        window.location.href = closeUrl
 
 
     messageDeleteCurrent: ->
@@ -265,6 +266,7 @@ module.exports =
 
         _dump window.rootComponent
 
+
     # Log message into server logs
     logInfo: (message) ->
         data =
@@ -276,6 +278,7 @@ module.exports =
         xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
         xhr.send JSON.stringify(data)
         console.log message
+
 
     # Log every Flux action (only in development environment)
     # Logs can be displayed using `displayLogs`
@@ -321,6 +324,7 @@ module.exports =
             # only keep the last 100 lines of logs
             window.cozyMails.debugLogs = window.cozyMails.debugLogs.slice 0, 100
 
+
     # display action logs in a modal window
     displayLogs: ->
         modal =
@@ -335,6 +339,7 @@ module.exports =
                 "word-wrap": "normal",
                     JSON.stringify(window.cozyMails.debugLogs, null, 4)
         LayoutActionCreator.displayModal modal
+
 
     # clear action logs
     clearLogs: ->

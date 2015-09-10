@@ -46,15 +46,22 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
 
     toggleFilters: (name) ->
+        href = window.location.href
         if @props.filter is name
             filter = '-'
+            href = href.replace "/sort/-date/flag/#{name}", ""
         else
             filter = name
-
+            href = href.replace "/sort/-date/flag/#{@props.filter}", ""
+            href = href + "/sort/-date/flag/#{name}"
+        window.location.href = href
         @showList filter, null
 
 
     render: ->
+        if window.location.href.indexOf('flag') isnt -1
+            filter = window.location.href.replace(/.*\/flag\//gi, '')
+            @props.filter = filter.replace(/\/.*/gi, '')
         dateFiltered = @props.queryParams.before isnt '-' and
                        @props.queryParams.before isnt '1970-01-01T00:00:00.000Z' and
                        @props.queryParams.before isnt undefined and

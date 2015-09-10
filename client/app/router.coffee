@@ -13,9 +13,7 @@ module.exports = class Router extends PanelRouter
             pattern: 'account/new'
             fluxAction: 'showCreateAccount'
         'account.mailbox.messages.full':
-            pattern: 'account/:accountID/box/:mailboxID/sort/:sort/' +
-                        'flag/:flag/before/:before/after/:after/' +
-                        'page/:pageAfter'
+            pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/flag/:flag'
             fluxAction: 'showMessageList'
         'account.mailbox.messages':
             pattern: 'account/:accountID/mailbox/:mailboxID'
