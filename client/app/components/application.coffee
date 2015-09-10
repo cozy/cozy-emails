@@ -117,7 +117,8 @@ module.exports = Application = React.createClass
 
         firstPanelInfo = @props.router.current?.firstPanel
         if firstPanelInfo?.action is 'account.mailbox.messages' or
-           firstPanelInfo?.action is 'account.mailbox.messages.full'
+           firstPanelInfo?.action is 'account.mailbox.messages.filter' or
+           firstPanelInfo?.action is 'account.mailbox.messages.date'
             selectedMailboxID = firstPanelInfo.parameters.mailboxID
         else
             selectedMailboxID = null
@@ -165,7 +166,8 @@ module.exports = Application = React.createClass
                not account.get('trashMailbox')?
 
                 if action is 'account.mailbox.messages' or
-                   action is 'account.mailbox.messages.full' or
+                   action is 'account.mailbox.messages.filter' or
+                   action is 'account.mailbox.messages.date' or
                    action is 'search' or
                    action is 'message' or
                    action is 'conversation' or

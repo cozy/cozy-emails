@@ -8,7 +8,8 @@ MessageActionCreator = require '../actions/message_action_creator'
 onMessageList = ->
     actions = [
         "account.mailbox.messages",
-        "account.mailbox.messages.full"
+        "account.mailbox.messages.filter",
+        "account.mailbox.messages.date"
     ]
     return router.current.firstPanel?.action in actions
 

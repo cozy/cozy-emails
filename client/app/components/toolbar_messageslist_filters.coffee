@@ -37,22 +37,26 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
 
     onDateFilter: (start, end) ->
+        href = window.location.href
+        # Remove old filter
+        href = href.replace /\/sort\/.*/gi, ""
         if !!start and !!end
             params = [start, end]
+            href = href + "/sort/-date/before/#{start}/after/#{end}"
         else
             params = false
-
+        window.location.href = href
         @showList '-', params
 
 
     toggleFilters: (name) ->
         href = window.location.href
+        # Remove old filter
+        href = href.replace /\/sort\/.*/gi, ""
         if @props.filter is name
             filter = '-'
-            href = href.replace "/sort/-date/flag/#{name}", ""
         else
             filter = name
-            href = href.replace "/sort/-date/flag/#{@props.filter}", ""
             href = href + "/sort/-date/flag/#{name}"
         window.location.href = href
         @showList filter, null

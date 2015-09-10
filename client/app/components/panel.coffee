@@ -40,7 +40,8 @@ module.exports = Panel = React.createClass
     render: ->
         # -- Generates a list of messages for a given account and mailbox
         if @props.action is 'account.mailbox.messages' or
-           @props.action is 'account.mailbox.messages.full' or
+           @props.action is 'account.mailbox.messages.filter' or
+           @props.action is 'account.mailbox.messages.date' or
            @props.action is 'account.mailbox.default' or
            @props.action is 'search'
 
