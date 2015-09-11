@@ -453,7 +453,7 @@ module.exports = Message = (function(superClass) {
   };
 
   Message.prototype.removeFromMailbox = function(box, noDestroy, callback) {
-    var changed, changes, isOrphan;
+    var boxes, changed, changes, isOrphan;
     if (noDestroy == null) {
       noDestroy = false;
     }
@@ -464,15 +464,16 @@ module.exports = Message = (function(superClass) {
     changes = {};
     changed = false;
     if (box.id in (this.mailboxIDs || {})) {
-      changes.mailboxIDs = _.omit(this.mailboxIDs || {}, box.id);
+      changes.mailboxIDs = _.omit(this.mailboxIDs, box.id);
       changed = true;
     }
     if (box.id in (this.twinMailboxIDs || {})) {
-      changes.twinMailboxIDs = _.omit(this.twinMailboxIDs || {}, box.id);
+      changes.twinMailboxIDs = _.omit(this.twinMailboxIDs, box.id);
       changed = true;
     }
     if (changed) {
-      isOrphan = Object.keys(changes.mailboxIDs).length === 0;
+      boxes = Object.keys(changes.mailboxIDs || this.mailboxIDs);
+      isOrphan = boxes.length === 0;
       log.debug("REMOVING " + this.id + ", NOW ORPHAN = ", isOrphan);
       if (isOrphan && !noDestroy) {
         return this.destroy(callback);

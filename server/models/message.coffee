@@ -459,15 +459,16 @@ module.exports = class Message extends cozydb.CozyModel
         changed = false
 
         if box.id of (@mailboxIDs or {})
-            changes.mailboxIDs = _.omit @mailboxIDs or {}, box.id
+            changes.mailboxIDs = _.omit @mailboxIDs, box.id
             changed = true
 
         if box.id of (@twinMailboxIDs or {})
-            changes.twinMailboxIDs = _.omit @twinMailboxIDs or {}, box.id
+            changes.twinMailboxIDs = _.omit @twinMailboxIDs, box.id
             changed = true
 
         if changed
-            isOrphan = Object.keys(changes.mailboxIDs).length is 0
+            boxes = Object.keys(changes.mailboxIDs or @mailboxIDs)
+            isOrphan = boxes.length is 0
             log.debug "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
 
             if isOrphan and not noDestroy then @destroy callback
