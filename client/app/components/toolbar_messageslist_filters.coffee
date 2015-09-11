@@ -66,11 +66,16 @@ module.exports = FiltersToolbarMessagesList = React.createClass
         if window.location.href.indexOf('flag') isnt -1
             filter = window.location.href.replace(/.*\/flag\//gi, '')
             @props.filter = filter.replace(/\/.*/gi, '')
+
         dateFiltered = @props.queryParams.before isnt '-' and
                        @props.queryParams.before isnt '1970-01-01T00:00:00.000Z' and
                        @props.queryParams.before isnt undefined and
                        @props.queryParams.after isnt undefined and
                        @props.queryParams.after isnt '-'
+
+        if window.location.href.indexOf('before') isnt -1
+            dateFiltered = true
+
         div
             role:            'group'
             className:       'filters'
@@ -114,7 +119,6 @@ module.exports = FiltersToolbarMessagesList = React.createClass
             DateRangePicker
                 active: dateFiltered
                 onDateFilter: @onDateFilter
-
 
     toggleExpandState: ->
         @setState expanded: not @state.expanded
