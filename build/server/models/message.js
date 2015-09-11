@@ -453,7 +453,7 @@ module.exports = Message = (function(superClass) {
   };
 
   Message.prototype.removeFromMailbox = function(box, noDestroy, callback) {
-    var isOrphan, key, mailboxIDs, ref, value;
+    var changed, changes, isOrphan;
     if (noDestroy == null) {
       noDestroy = false;
     }
@@ -461,21 +461,26 @@ module.exports = Message = (function(superClass) {
     if (!callback) {
       callback = noDestroy;
     }
-    mailboxIDs = {};
-    ref = this.mailboxIDs || {};
-    for (key in ref) {
-      value = ref[key];
-      mailboxIDs[key] = value;
+    changes = {};
+    changed = false;
+    if (box.id in (this.mailboxIDs || {})) {
+      changes.mailboxIDs = _.omit(this.mailboxIDs || {}, box.id);
+      changed = true;
     }
-    delete mailboxIDs[box.id];
-    isOrphan = Object.keys(mailboxIDs).length === 0;
-    log.debug("REMOVING " + this.id + ", NOW ORPHAN = ", isOrphan);
-    if (isOrphan && !noDestroy) {
-      return this.destroy(callback);
+    if (box.id in (this.twinMailboxIDs || {})) {
+      changes.twinMailboxIDs = _.omit(this.twinMailboxIDs || {}, box.id);
+      changed = true;
+    }
+    if (changed) {
+      isOrphan = Object.keys(changes.mailboxIDs).length === 0;
+      log.debug("REMOVING " + this.id + ", NOW ORPHAN = ", isOrphan);
+      if (isOrphan && !noDestroy) {
+        return this.destroy(callback);
+      } else {
+        return this.updateAttributes(changes, callback);
+      }
     } else {
-      return this.updateAttributes({
-        mailboxIDs: mailboxIDs
-      }, callback);
+      return setImmediate(callback);
     }
   };
 
