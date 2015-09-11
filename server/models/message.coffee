@@ -455,15 +455,26 @@ module.exports = class Message extends cozydb.CozyModel
         log.debug ".removeFromMailbox", @id, box.label
         callback = noDestroy unless callback
 
-        mailboxIDs = {}
-        mailboxIDs[key] = value for key, value of @mailboxIDs or {}
-        delete mailboxIDs[box.id]
+        changes = {}
+        changed = false
 
-        isOrphan = Object.keys(mailboxIDs).length is 0
-        log.debug "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
+        if box.id of (@mailboxIDs or {})
+            changes.mailboxIDs = _.omit @mailboxIDs or {}, box.id
+            changed = true
 
-        if isOrphan and not noDestroy then @destroy callback
-        else @updateAttributes {mailboxIDs}, callback
+        if box.id of (@twinMailboxIDs or {})
+            changes.twinMailboxIDs = _.omit @twinMailboxIDs or {}, box.id
+            changed = true
+
+        if changed
+            isOrphan = Object.keys(changes.mailboxIDs).length is 0
+            log.debug "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
+
+            if isOrphan and not noDestroy then @destroy callback
+            else @updateAttributes changes, callback
+
+        else
+            setImmediate callback
 
 
     # Public: Create a message from a raw imap message.
