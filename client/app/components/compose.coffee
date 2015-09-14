@@ -52,6 +52,10 @@ module.exports = Compose = React.createClass
 
 
     shouldComponentUpdate: (nextProps, nextState) ->
+        if @state.saving isnt nextState.saving
+            for key in Object.keys(@state)
+                if key isnt "saving"
+                    nextState[key] = @state[key]
         return not(_.isEqual(nextState, @state)) or
             not (_.isEqual(nextProps, @props))
 
