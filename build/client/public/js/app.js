@@ -3103,7 +3103,7 @@ module.exports = Application = React.createClass({
     }
     selectedAccountID = (selectedAccount != null ? selectedAccount.get('id') : void 0) || null;
     firstPanelInfo = (_ref2 = this.props.router.current) != null ? _ref2.firstPanel : void 0;
-    if ((firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages' || (firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages.full') {
+    if ((firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages' || (firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages.filter' || (firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages.date') {
       selectedMailboxID = firstPanelInfo.parameters.mailboxID;
     } else {
       selectedMailboxID = null;
@@ -3145,7 +3145,7 @@ module.exports = Application = React.createClass({
     account = this.state.selectedAccount;
     if ((account != null)) {
       if ((account.get('draftMailbox') == null) || (account.get('sentMailbox') == null) || (account.get('trashMailbox') == null)) {
-        if (action === 'account.mailbox.messages' || action === 'account.mailbox.messages.full' || action === 'search' || action === 'message' || action === 'conversation' || action === 'compose' || action === 'edit') {
+        if (action === 'account.mailbox.messages' || action === 'account.mailbox.messages.filter' || action === 'account.mailbox.messages.date' || action === 'search' || action === 'message' || action === 'conversation' || action === 'compose' || action === 'edit') {
           this.redirect({
             direction: 'first',
             action: 'account.config',
@@ -7783,7 +7783,7 @@ module.exports = Panel = React.createClass({
     return should;
   },
   render: function() {
-    if (this.props.action === 'account.mailbox.messages' || this.props.action === 'account.mailbox.messages.full' || this.props.action === 'account.mailbox.default' || this.props.action === 'search') {
+    if (this.props.action === 'account.mailbox.messages' || this.props.action === 'account.mailbox.messages.filter' || this.props.action === 'account.mailbox.messages.date' || this.props.action === 'account.mailbox.default' || this.props.action === 'search') {
       return this.renderList();
     } else if (this.props.action === 'account.config' || this.props.action === 'account.new') {
       return this.renderAccount();
@@ -9341,26 +9341,41 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
     return LayoutActionCreator.showFilteredList(filter, sort);
   },
   onDateFilter: function(start, end) {
-    var params;
+    var href, params;
+    href = window.location.href;
+    href = href.replace(/\/sort\/.*/gi, "");
     if (!!start && !!end) {
       params = [start, end];
+      href = href + ("/sort/-date/before/" + start + "/after/" + end);
     } else {
       params = false;
     }
+    window.location.href = href;
     return this.showList('-', params);
   },
   toggleFilters: function(name) {
-    var filter;
+    var filter, href;
+    href = window.location.href;
+    href = href.replace(/\/sort\/.*/gi, "");
     if (this.props.filter === name) {
       filter = '-';
     } else {
       filter = name;
+      href = href + ("/sort/-date/flag/" + name);
     }
+    window.location.href = href;
     return this.showList(filter, null);
   },
   render: function() {
-    var dateFiltered;
+    var dateFiltered, filter;
+    if (window.location.href.indexOf('flag') !== -1) {
+      filter = window.location.href.replace(/.*\/flag\//gi, '');
+      this.props.filter = filter.replace(/\/.*/gi, '');
+    }
     dateFiltered = this.props.queryParams.before !== '-' && this.props.queryParams.before !== '1970-01-01T00:00:00.000Z' && this.props.queryParams.before !== void 0 && this.props.queryParams.after !== void 0 && this.props.queryParams.after !== '-';
+    if (window.location.href.indexOf('before') !== -1) {
+      dateFiltered = true;
+    }
     return div({
       role: 'group',
       className: 'filters',
@@ -11873,8 +11888,12 @@ module.exports = Router = (function(_super) {
       pattern: 'account/new',
       fluxAction: 'showCreateAccount'
     },
-    'account.mailbox.messages.full': {
-      pattern: 'account/:accountID/box/:mailboxID/sort/:sort/' + 'flag/:flag/before/:before/after/:after/' + 'page/:pageAfter',
+    'account.mailbox.messages.filter': {
+      pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/flag/:flag',
+      fluxAction: 'showMessageList'
+    },
+    'account.mailbox.messages.date': {
+      pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/before/:before/after/:after',
       fluxAction: 'showMessageList'
     },
     'account.mailbox.messages': {
@@ -11935,7 +11954,8 @@ module.exports = Router = (function(_super) {
     var defaultAccount, defaultAccountID, defaultMailboxID, defaultParameters, mailbox, _ref, _ref1;
     switch (action) {
       case 'account.mailbox.messages':
-      case 'account.mailbox.messages.full':
+      case 'account.mailbox.messages.filter':
+      case 'account.mailbox.messages.date':
       case 'account.mailbox.default':
         defaultAccountID = (_ref = AccountStore.getDefault()) != null ? _ref.get('id') : void 0;
         if (parameters.accountID != null) {
@@ -13149,7 +13169,6 @@ MessageStore = (function(_super) {
 
   handleFetchResult = function(result) {
     var before, lengths, message, next, url, _i, _len, _ref1, _results;
-    _messages = _messages.clear();
     if ((result.links != null) && (result.links.next != null)) {
       _params = {};
       next = decodeURIComponent(result.links.next);
@@ -13864,7 +13883,7 @@ MessageActionCreator = require('../actions/message_action_creator');
 
 onMessageList = function() {
   var actions, _ref, _ref1;
-  actions = ["account.mailbox.messages", "account.mailbox.messages.full"];
+  actions = ["account.mailbox.messages", "account.mailbox.messages.filter", "account.mailbox.messages.date"];
   return _ref = (_ref1 = router.current.firstPanel) != null ? _ref1.action : void 0, __indexOf.call(actions, _ref) >= 0;
 };
 
@@ -14008,19 +14027,11 @@ module.exports = {
     });
   },
   messageClose: function() {
-    var closeUrl;
-    closeUrl = window.router.buildUrl({
-      direction: 'first',
-      action: 'account.mailbox.messages',
-      parameters: {
-        accountID: AccountStore.getSelected().get('id'),
-        mailboxID: AccountStore.getSelectedMailbox().get('id')
-      },
-      fullWidth: true
-    });
-    return window.router.navigate(closeUrl, {
-      trigger: true
-    });
+    var closeUrl, href;
+    href = window.location.href;
+    closeUrl = href.replace(/\/message\/[^\/]*\//gi, '');
+    closeUrl = closeUrl.replace(/\/conversation\/[^\/]*\/[^\/]*\//gi, '');
+    return window.location.href = closeUrl;
   },
   messageDeleteCurrent: function() {
     var confirm, confirmMessage, conversation, messageID, modal, settings;
