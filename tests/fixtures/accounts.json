@@ -1,0 +1,52 @@
+[
+    {
+       "_id": "gmail-ID",
+       "docType": "Account",
+       "label": "Gmail",
+       "login": "some.guy@cozytest.cc",
+       "password": "",
+       "smtpServer": "smtp.gmail.com",
+       "smtpPort": 465,
+       "imapServer": "imap.gmail.com",
+       "imapPort": 993,
+       "accountType": "TEST",
+       "oauthProvider": "GMAIL",
+       "favorites": [
+         "gmail-ID-folder1",
+         "e7332094-e043-0156-0b5c-790219161c7a",
+         "5fd7b96a-6bc1-d1ec-747e-3a238386013c",
+         "6a4803cf-fe3d-6f56-287e-45198f8c2ab6",
+         "gmail-ID-folder6",
+         "ef0d8561-80f7-3f7d-841a-58a5c170a250",
+         "d77dacc9-e794-ac80-ea9f-39ce38a10871",
+         "e72b1432-a1b6-100f-363d-6ac228a67cd4",
+         "0d886c94-be51-fc71-790d-7f4ff5da2af7",
+         "gmail-ID-folder2",
+         "gmail-ID-folder3"
+         ]
+    },
+    {
+       "_id": "dovecot-ID",
+       "docType": "Account",
+       "label": "DoveCot",
+       "login": "me@cozytest.cc",
+       "password": "applesauce",
+       "smtpServer": "172.0.0.1",
+       "smtpPort": 0,
+       "imapServer": "127.0.0.1",
+       "imapPort": 993,
+       "accountType": "TEST",
+       "draftMailbox": "dovecot-ID-draft",
+       "sentMailbox": "dovecot-ID-folder2",
+       "trashMailbox": "dovecot-ID-trash",
+       "initialized": true,
+       "favorites": [
+         "dovecot-ID-folder2",
+         "f5cbd722-c3f9-4f6e-73d0-c75ddf65a2f1",
+         "0b3a2b31-7acb-dbab-d57f-3050ae2c78c5",
+         "dovecot-ID-draft",
+         "dovecot-ID-trash",
+         "dovecot-ID-folder1"
+       ]
+    }
+]

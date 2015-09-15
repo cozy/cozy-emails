@@ -1,0 +1,36 @@
+/*
+  Toolbar style
+
+  -- toolbar are components that handle actions for their parent context
+*/
+.toolbar
+    white-space nowrap
+
+    &:hover
+        cursor default
+
+    .btn
+        border      none
+        color       #bbb
+        text-shadow none
+        box-shadow  none
+        transition color 0.2s ease-out
+
+        &:focus
+            background-color transparent
+
+    &:hover .btn
+        color #777
+
+        &:hover
+            color basecolor
+            background-color transparent
+
+    .fa-compress
+        transform none
+
+
+.dropdown-menu
+    for num in (1..10)
+        .pusher-{num}
+            padding-left num * 20px + 20px

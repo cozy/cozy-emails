@@ -1,0 +1,8 @@
+--name       "Cozy Mails"
+--readme     README.md
+--title      "Cozy Mails Documentation"
+--output-dir doc
+--
+.biscottoref.coffee
+server
+LICENSE

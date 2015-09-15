@@ -1,0 +1,280 @@
+// Stylus mixins
+@import 'nib'
+
+// Cozy default stuff
+@import '_colors'
+@import '_base'
+@import '_cozy'
+
+// Animations (for transitions), must be imported before custom styles
+@import '_animations'
+
+// UI skeleton positionning
+@import '_layout'
+
+// Components styles
+@import '_account-config'
+@import '_conversation'
+@import '_compose'
+@import '_file-picker'
+@import '_menu'
+@import '_message-list'
+@import '_date-range-picker'
+@import '_toolbar'
+@import '_toasts'
+@import '_responsive'
+
+// tweaks fontawesome icons
+* > .fa-compress
+    transform rotate(45deg)
+
+.spin
+    margin 10px
+    width: 15px
+
+/*
+  Put styles here for scaffolding and testing out new features/stuff
+  "Production-ready" components styles should live in a dedicated file
+*/
+
+// Responsive menu buttons
+.responsive-handler
+    color #333
+    font-size 1.75em
+    text-decoration none
+    cursor pointer
+
+
+#quick-actions
+    &> div
+        padding 0
+
+
+    form
+        display table
+
+        .dropdown
+        .form-group
+            display table-cell
+
+        .dropdown
+            max-width 30%
+        .form-group
+            max-width 70%
+            padding-left.75em
+
+
+/*
+  Contextual actions
+*/
+#contextual-actions
+    padding 0
+
+    .mailbox-config
+    &.fade-enter
+        animation fadeIn animationDuration ease
+
+    &.fade-leave
+        animation fadeIn animationDuration ease reverse
+
+
+.contact-form
+  .contact-list
+    left 1em
+    background-color #fff
+    list-style outside none none
+    margin 2px 0 0
+    padding.25em 0
+
+    & > li > a
+      color #333
+      display block
+      padding .25em 0
+    & > li.selected
+      background basecolor
+    & > li.selected > a
+      color white
+    & > li.selected:hover > a
+      color black
+
+   .avatar
+       font-size 2em
+       width 1em
+       height 1em
+       margin-right .5em
+       text-align center
+       vertical-align middle
+
+/*
+  Open email tabs
+
+  -- disabled because of the ugly scrollbar on most computers
+*/
+.conversation .nav
+    display block
+    margin-bottom 2em
+
+    overflow auto
+
+    li
+        position relative
+
+        &:not(.active)
+            max-width 2em
+            a
+                color mediumcolor
+        a
+            overflow hidden
+            white-space nowrap
+            text-overflow ellipsis
+
+            border none
+            border-bottom 1px solid basecolor
+            margin 0
+
+            &:hover
+                color mediumcolor-contrast
+
+        .close
+            position absolute
+            top 0
+            right 0
+
+        &.active a
+        a:hover
+            border-radius 0
+            border none
+            border-bottom .25em solid basecolor
+
+.address-list
+    margin 0
+    padding 0
+    span
+        margin 0
+        padding 0
+    .address-item
+        margin 0
+        padding 0
+        span
+            margin 0
+            padding 0
+
+[role="tooltip"]
+    z-index 10
+
+.tooltip
+    background-color black
+    color white
+    font-size 1rem
+    border-radius .25rem
+    text-align left
+    white-space initial
+
+    .tooltip-content
+        padding .5em
+    .tooltip-avatar
+        float: left
+        padding-bottom: .5em
+    .tooltip-avatar + div
+        padding-left: 5em
+    a.address-add
+        display inline
+    .avatar
+        color #aaa
+        text-align center
+        border-radius 50%
+        padding .5em .5em 1em .5em
+    .no-avatar
+        height 3em
+        width 3em
+        padding 1em
+        text-align center
+        border-radius 50%
+        font-weight bold
+        color white
+        background-color basecolor
+    .tooltip-toolbar
+        padding .5em
+        color: white
+        text-align right
+
+.tooltip.top
+    padding .25rem .5rem
+    .tooltip-arrow
+        bottom -4px
+
+.tooltip-mask
+    position absolute
+    background transparent
+
+.row-alert
+    z-index 1
+
+    .alert
+        opacity 1
+
+    .alert-danger
+        position absolute
+        left 0
+        right 0
+        border 0
+        background white
+        box-shadow 0 0 2px #999
+        border-radius 0
+        background #D9848C
+        color white
+
+        strong
+            font-weight normal
+
+    .alert.autoclose
+        opacity 0
+        transition opacity 10s
+
+.compose-toggle-cc
+.compose-toggle-bcc
+    cursor pointer
+
+.composeToolbox
+    .fa
+        margin-right 0.6em
+
+    .btn
+        margin-left .5em
+
+    .btn.btn-cozy:first-child
+        background-color contrastcolor
+        border-color contrastcolor
+
+        &:hover
+            background-color darken(contrastcolor, 20%)
+            border-color darken(contrastcolor, 20%)
+
+
+.clickable
+    cursor: pointer
+.file-picker
+    .dropzone
+        width 100%
+
+        span
+        input
+            width 100%
+
+.reindexing-message
+    position absolute
+    width 50%
+    height 50%
+    top 25%
+    left 25%
+    border 0
+    text-align center
+
+    img.spinner
+        margin-left 5px
+        width 20px
+        height 20px
+
+.app section.panel
+    border-left 0
+

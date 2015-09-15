@@ -1,0 +1,223 @@
+/*
+  new email window
+*/
+.compose.panel
+    max-width     48em
+    padding       1em 1.8em
+    margin-top    0
+    margin-left   auto
+    margin-right  auto
+    border        0
+
+
+
+.form-compose
+    position  relative // needed for the position absolute of .compose-toggle
+    width     100%
+    max-width 900px
+    padding-bottom 1em
+
+    &.enable
+        display block
+
+    h3
+        color #444
+        margin-top 0
+        padding-top 0.5em
+        margin-bottom 1em
+
+    .form-group
+    // add separation between sections
+        margin-bottom  0.2em
+        padding-bottom 0.2em
+        border-bottom  1px solid #eee
+
+    a.close-email
+        display none
+        margin-right 0
+
+    a.expand
+        display none
+        float right
+        font-size 1em
+
+    .account p,
+    .account-picker
+        padding 0 0.7em
+
+    .editor,
+    .rt-editor
+        min-height 8em
+        overflow   auto
+        height     auto
+        width      100%
+        text-align left
+        color      #000
+        cursor     text
+        font-size  1em
+
+        // reset border + padding
+        border  none
+        padding 0.5em 0 0 0
+
+        // poor's man CSS reset, to apply default style to content of
+        // replied message
+
+        ul, ol, dl
+            margin .5em
+            padding inherit
+
+        li
+            margin 0 .5em
+            padding 0
+
+        blockquote
+            border-left .25em solid blue
+            padding-left .5em
+            margin 0
+            padding-right 0
+
+        &.folded
+            blockquote
+                height 0
+                overflow hidden
+                text-overflow ellipsis
+                padding 0
+
+        .originalToggle
+            color basecolor
+            font-weight bold
+            cursor pointer
+
+    .compose-subject
+        height    2.5em
+        padding   0
+        border    none
+        font-size 1.4rem
+
+        &:hover,
+        &:focus
+            border-color basecolor
+
+    .editor.target,
+    .rt-editor.target
+        border-color basecolor
+
+    .attachements
+        margin 1em 0
+
+    .contact-group
+        margin-top: 0
+
+    .compose-toggle
+        z-index  5
+        position absolute
+        right    0em
+        padding  0.6em 0
+
+        a
+            padding 0 0.5em
+
+
+    .btn-contact
+        float right
+        width 3em
+        margin-left 1em
+
+    .compose-label
+        margin      0.5em 0
+        width       2.5em
+        line-height 2em
+
+        &:hover
+            border-color basecolor
+
+    .mail-input > *
+        display inline-block
+
+    textarea.compose-input
+        display      inline-block
+        overflow     hidden
+        position     relative
+        min-height   1.3em
+        width        100%
+        padding      0 0.5em
+        margin       0.3em 0.25em 0.1em
+        resize       none
+        border-width 0
+        box-shadow   none
+
+    .compose-from
+        line-height 2em
+        color darkcolor
+        cursor pointer
+
+    .compose-to,
+    .compose-cc,
+    .compose-bcc
+        display     flex
+        align-items center
+        flex-wrap   wrap
+
+    .compose-to
+        // remove the overflow between the cc/bcc option and the email adresses
+        padding-right 6em
+
+    .caret
+        margin-left 0.5em
+
+    .contact-form
+        flex      1
+        min-width 12em
+
+    .account-picker
+        .dropdown-menu
+            top: auto
+            left: auto
+
+    .compose-cc,
+    .compose-bcc
+        display none
+
+    .compose-cc.shown,
+    .compose-bcc.shown
+        display flex
+
+    .address-tag
+        background-color lightcolor
+        margin           0.1em 0.25em
+        padding          0.5em
+        border-radius    0.2em
+        display          inline-block
+        cursor           move
+        // add ellipsis when there is a text overflow
+        text-overflow    ellipsis
+        overflow         hidden
+
+        &:hover
+            background-color darken(lightcolor, 5%)
+
+        a
+            padding 0 0.2em 0 0.5em
+            color   #999
+
+            &:hover
+                color #333
+
+    .editor-actions
+        .btn.btn-default
+            font-size: 1.1em
+            transition: color 0.2s ease
+            background: none
+            box-shadow: none
+            border: 0
+            color: basecolor
+
+            &:active
+                color actioncolor - 10%
+
+        .btn.btn-default:hover
+            color: actioncolor
+
+            &:active
+                color actioncolor - 10%

@@ -1,0 +1,26 @@
+body {
+    visibility: visible !important;
+    font-family: 'Source Sans Pro', sans-serif;
+}
+table {
+    max-width: 100%;
+}
+img {
+    max-width: 100%;
+}
+blockquote {
+    margin-left: .5em;
+    padding-left: .5em;
+    border-left: 2px solid blue;
+    color: blue;
+}
+blockquote blockquote { border-color: red !important; color: red; }
+blockquote blockquote blockquote { border-color: green !important; color: green; }
+blockquote blockquote blockquote blockquote { border-color: magenta !important; color: magenta; }
+blockquote blockquote blockquote blockquote blockquote { border-color: blue !important; color: blue; }
+
+.textOnly {
+    font-family: 'Source Sans Pro', sans-serif;
+    white-space: pre-line;
+}
+

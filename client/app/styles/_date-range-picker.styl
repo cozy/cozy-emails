@@ -1,0 +1,81 @@
+.date-range-picker
+    .fd-hidden-input
+        display none
+
+    .fd-screen-reader
+        position absolute
+        left     -999em
+        top      auto
+        width    1px
+        height   1px
+        overflow hidden
+        outline  0 none
+
+
+    &.open .dropdown-menu
+        display flex
+
+    .dropdown-menu
+        display        none
+        left           50%
+        transform      translateX(-50%)
+        padding        1em .5em
+        flex-direction column
+        align-items    center
+
+
+    .presets
+    .date-picker
+        margin 0 .5em
+
+
+    .presets
+        display         flex
+        justify-content space-around
+
+        li
+            margin-bottom 1em
+            white-space   nowrap
+
+        button
+            border     none !important
+            text-align left
+
+            &:hover
+                color actioncolor
+
+
+    .date-picker
+        width         auto !important
+        height        auto !important
+        margin        .5em
+        padding       .5em
+        border        1px solid rgba(0, 0, 0, 0.15)
+        border-radius 4px
+
+        .date-picker-day-header
+            display none
+
+        th
+        td
+            min-width      2em
+            min-height     2em
+            padding        .3125em
+            text-align     center
+            vertical-align center
+            color          darkcolor
+
+            &.month-out
+                opacity .35
+
+            &:not(.date-picker-title)
+                span
+                    display block
+
+                &:hover
+                    color actioncolor
+
+                &[aria-selected=true]
+                    background-color basecolor
+                    color            white
+                    border-radius    4px

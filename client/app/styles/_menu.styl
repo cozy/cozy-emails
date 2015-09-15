@@ -1,0 +1,227 @@
+/*
+  MENU
+
+  -- Menu internal layout and styles
+*/
+
+// Helpers mixins
+subaction()
+    order      1
+    opacity    0
+    margin     auto .5em auto 0
+    background transparent
+    border     none
+    transition opacity 150ms
+
+
+// App rules
+.app [role=menubar]
+    padding        .5em 0 0
+    display        flex
+    flex-direction column
+    border-right   1px solid #C5C5C5
+
+    a
+        text-decoration none
+
+    .fa
+        font-size  1.5em
+
+
+    .compose-action
+        margin      0 .5em 1.5em
+        line-height 2em
+
+        i
+            vertical-align baseline
+
+        .item-label
+            padding-left .5em
+
+
+    .mainmenu
+        flex           1
+        display        flex
+        flex-direction column
+
+        .active
+            flex       1
+            overflow-y auto
+            overflow-x hidden
+
+        .fa
+            vertical-align middle
+
+
+    .submenu
+        display         flex
+        justify-content space-around
+        border-top      1px solid #e5e5e5
+
+        & > :first-child
+            flex 1
+
+
+    .account
+        font-weight bold
+
+
+    .account-title
+    .mailbox-list li
+        position    relative
+        align-items center
+
+    .badge
+            order       2
+            margin-left auto
+            border      2px solid #f5f5f5
+
+
+    [role=group]
+        margin-bottom 2em
+
+
+    [role=menuitem]
+        align-items center
+
+        &:not(.drawer-toggle)
+            display flex
+            padding .5em
+
+            .item-label
+                margin 0 1em
+
+
+    for level in (1..10)
+        .lv-{level}:not(.special)
+            padding-left level * 2em
+
+
+    .drawer-toggle
+        background transparent
+        color      #bbb
+
+
+    .avatar
+        width          2.25em
+        height         2.25em
+        display        inline-block
+        border-radius  50%
+        line-height    2.25em
+        text-align     center
+        font-size      1.25em
+        font-style     normal
+        text-transform uppercase
+        color          white
+        vertical-align middle
+
+    .account .avatar
+        border-radius 10em
+
+
+    .account-title
+        display flex
+
+        .account
+            flex 1
+
+        .mailbox-config
+            subaction()
+
+        .badge
+            margin-right 1em
+
+        &:hover
+            .mailbox-config
+                opacity 1
+
+
+    .mailbox-list
+        padding 0 .5em
+
+        li
+            display       flex
+            padding-left  .2em
+            border-radius .25rem
+
+            &.active
+                background-color #e5e5e5
+
+                a
+                    span,
+                    i
+                        color            #111
+
+                .badge
+                    border-color #e5e5e5
+
+
+            a
+                flex 1
+
+                .fa
+                    // horizontally centered icons
+                    width      1em
+                    text-align center
+
+            .badge
+                margin-right .5em
+
+            button
+                subaction()
+                color      basecolor
+
+            &:hover
+                background-color #fff
+
+                a
+                    color basecolor
+
+                button
+                    opacity 1
+
+        .toggle-favorites
+            background-color transparent !important
+            cursor           pointer
+
+    /*
+    Menu drawer in expanded mode
+
+    */
+    &[aria-expanded=true]
+        min-width 15em
+
+    /*
+    Styles for Menu drawer in compact mode
+
+    */
+    @media(min-width: 20.0625em)
+        &[aria-expanded=false]
+            .item-label
+            .toggle-favorites
+            .new-account-action
+            // badge associated to a masked mailbox
+            // TODO: Improve markup or please kill me :)
+            [role=menuitem]:not(.account):not(.inboxMailbox):not(.sentMailbox) ~ .badge
+                display none
+
+            .mainmenu
+                [role=menuitem]
+                    display none
+
+                    padding-left .5
+
+                    &.account
+                    &.inboxMailbox
+                    &.sentMailbox
+                        display flex
+
+            .mailbox-config
+                display none !important
+
+
+            .badge
+                position     absolute
+                top          -.15em
+                right        0
+                margin-right 0 !important

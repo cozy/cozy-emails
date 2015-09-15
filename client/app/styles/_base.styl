@@ -1,0 +1,102 @@
+// Base Styles
+
+html,
+body
+    height 100%
+    width 100%
+    padding 0
+    margin 0
+    font-size 100%
+
+body
+    text-rendering optimizeLegibility
+
+body,
+input
+    font 1em/1.5 'Source Sans Pro', sans-serif
+    line-height 1.2
+
+h2
+    font-family 'Maven Pro', sans-serif
+
+a,
+a:visited
+    color #0086cc
+    text-decoration none
+
+    &:hover
+        text-decoration underline
+
+a:focus
+div:focus
+button:focus
+    outline none
+
+label
+    color #999
+    font-weight normal
+    font-size 14px
+    text-transform uppercase
+
+input
+    color #333
+
+.form-horizontal
+    .radio-inline, .checkbox-inline
+        padding-top .66em
+
+.dropdown-menu
+    cursor pointer
+
+.btn-group.open .dropdown-toggle,
+.dropdown-toggle
+    box-shadow 0 0
+
+.button-spinner
+    position relative
+    top -2px
+    width 12px
+    margin-right 0.6em
+
+
+// progress bar - loading top messages list
+.progress
+    position relative
+
+.progress-bar
+    background-color basecolor
+    background-image none
+    transition width 1s
+
+.progress-bar.actived::after
+    content " "
+    display block
+    width 12em
+    top 0px
+    height 100%
+    position absolute
+    animation slide 2s ease-in infinite
+    background-color basecolor
+
+.align-item
+    display inline-block
+
+// placeholders
+placeholder()
+    &::-webkit-input-placeholder
+        {block}
+    &:-moz-placeholder
+        {block}
+    &::-moz-placeholder
+        {block}
+    &:-ms-input-placeholder
+        {block}
+
+input
+    +placeholder()
+        color #bbb !important
+
+.rt-editor.medium-editor-placeholder:after
+    top        0.5em
+    font-style normal
+

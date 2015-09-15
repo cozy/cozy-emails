@@ -1,0 +1,123 @@
+/*
+  Mailbox config / new mailbox form
+
+  -- Form to create or update a mailbox
+*/
+
+#mailbox-config
+    padding 1em
+
+    h3
+        color #444
+        margin-top 0.5em
+        margin-bottom 1.4em
+        border-bottom 1px solid #f4f4f4
+
+    fieldset
+        margin-top 2em
+
+    .nav-tabs
+        margin-bottom 1em
+
+        li:not(.active) a
+            cursor pointer
+
+        li
+            a:active
+            a:focus
+                outline 0
+
+    button
+        margin-left .5em
+
+        .fa
+            margin-right .6em
+
+    .account-item-accountType
+        display none
+
+    .boxes
+        max-width 40em
+        margin-left 0
+        .row
+            height 2.2em
+            > *
+                padding 0
+        .row.new
+            height 2.5em
+        .box-action
+            cursor pointer
+
+    .config-title
+        margin-bottom 2em
+        border-bottom 1px solid #DDD
+        color #333
+        font-size 1.3em
+
+    .folder-list
+        margin-left 1em
+        color #333
+
+        .mailbox-visi-yes
+            color basecolor
+
+        .mailbox-visi-no
+            color darkgrey
+
+        .box-new
+            display none
+
+        .row.box.title
+            span:last-child
+                display none
+
+        .row.box.new
+            margin-top 1em
+
+            span
+                padding 0.5em 0
+
+            .btn
+                margin 0 0.5em
+
+                .caret
+                    margin 10px 0 0 8px
+
+        .row.box.edited
+            margin-top 0
+
+            span
+                padding 0.1em 0
+
+        .row.box.edited
+        .row.box.new
+            label
+                padding 0.8em 1em
+
+            input:focus
+            input:active
+                border: 0
+                outline: 0
+
+        .dropdown
+            ul
+                li
+                    a
+                        text-align left
+
+    .caret
+        margin-left 8px
+
+    .presentation
+        test-align left
+
+.has-error .form-control
+    &:focus
+    &:active
+        box-shadow none
+        border-color basecolor
+
+.account-signature-form
+    textarea
+        min-height 200px
+        min-width 450px

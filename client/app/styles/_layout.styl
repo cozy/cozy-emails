@@ -1,0 +1,113 @@
+body
+    overflow-x hidden
+
+.app
+    display     flex
+    width       100vw
+    height      100vh
+    align-items stretch
+    overflow    hidden
+
+    .panel
+        border        none
+        border-left   1px solid #b5b5b5
+        box-shadow    0 0
+        border-radius 0
+
+    .drawer-toggle
+        display none
+
+    main
+        position    relative
+        flex        1
+        display     flex
+        align-items stretch
+
+    [role=menubar]
+    .panel
+        overflow-y    auto
+        overflow-x    hidden
+        margin-bottom 0
+
+    .panel[aria-expanded=false]
+        display none
+
+
+    @media(max-width: 30em)
+        [role=menubar][aria-expanded=true] + main
+            transform translateX(85vw)
+
+        main
+            position absolute
+            top      0
+            left     0
+            width    100%
+            height   100%
+
+        .messages-list
+            .drawer-toggle
+                display block
+
+
+    @media(max-width: 48em)
+        main
+            .panel
+                position absolute
+                top      0
+                left     100%
+                width    100%
+                height   100%
+
+                &[aria-expanded=true]
+                    left 0
+
+        // set rules for drawer
+        [role=menubar][aria-expanded=true]
+            min-width 85vw !important
+
+            + main
+                .panel
+                    width 100vw
+
+
+    @media(min-width: 30.0625em)
+        [role=menubar]
+            .drawer-toggle
+                display block
+
+
+    @media(min-width: 48.0625em)
+        main
+            .panel
+                transition flex 180ms ease-in
+
+            &.full .panel:first-of-type
+                flex-basis 100% !important
+
+                & + [aria-expanded=false]
+                    flex 0
+
+
+            .layout-column &
+                flex-direction row
+
+            .layout-row &
+                flex-direction column
+
+            .layout-row-reverse &
+                flex-direction column-reverse
+
+            for ratio in (20..80)
+                .layout-preview-{ratio} &
+                    .panel:nth-child(1)
+                        flex 100 - ratio
+                    .panel:nth-child(2)
+                        flex ratio
+
+
+    @media(min-width: 80.0625em)
+        .layout-column & :not(.full)
+            .panel
+                max-width 38em
+            .conversation[aria-expanded=true]
+                max-width none

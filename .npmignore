@@ -1,0 +1,11 @@
+/client
+/server
+doc
+node_modules
+tests
+.travis.yml
+.git*
+Cakefile
+coffeelint.json
+server.coffee
+.biscottoopts

@@ -1,0 +1,142 @@
+.toasts-container
+    position absolute
+    width 21em
+    top 0
+    bottom .5em
+    right 3em
+    z-index 150
+    transition-property top
+    transition-duration .5s
+    pointer-events none
+
+    a
+        cursor pointer
+
+    > *
+        pointer-events auto
+        opacity 1
+
+    .toast
+        position relative
+        top 20px
+        margin-bottom .5em
+        padding 1em
+        width 22em
+        border-radius 2px
+        box-shadow 0 0 2px #999
+        font 16px/1.2 'Source Sans Pro', sans-serif
+        color #666
+        background #34A6BB
+        color white
+
+        // Move from from outside left of the window to the left side.
+        &.toast-enter
+            top 20px
+            left 350px
+            opacity 0.5
+            transition left .3s ease-in
+
+        &.toast-enter-active
+            top 20px
+            left 0
+            opacity 1
+
+        // Move from left side to outside of the window.
+        &.toast-leave
+            left 0
+            transition left .5s ease-in
+
+        &.toast-leave-active
+            left 500px
+
+        &.toast-error
+            background #D9848C
+
+        button.btn.btn-cancel.btn-cozy-non-default
+            border 0
+            box-shadow 0
+            padding 0
+            color white
+            font-weight bold
+            text-transform uppercase
+
+            &:hover
+                color actioncolor
+
+            &:active
+                background actioncolor
+                color white
+
+
+    .progress
+        display inline-block
+        margin-bottom 0
+        width 17em
+        background-color darkgrey
+        position relative
+
+        .progress-bar-label
+            position absolute
+            font-size 1em
+            width 100%
+            height 100%
+            line-height 1.25em
+            color #fff
+            text-align left
+            padding-left 4em
+            background-color transparent
+            overflow hidden
+
+        .progress-bar-label.start
+            color #fff
+            z-index 2
+
+        .progress-bar-label.end
+            color #000
+            z-index 1
+
+    .toast-actions
+        padding 0.5em 0 0 0 
+
+    .toasts-actions
+        display none
+
+    .message
+        display inline-block
+        margin-bottom 0
+        width 17em
+        position relative
+
+    .autoclose
+        opacity 0
+        transition opacity 10s
+
+.toasts-container.action-hidden
+    top 100%
+
+.toasts-container.has-toasts
+    .toasts-actions
+        display none
+        position absolute
+        bottom -.5em
+        right -2em
+        margin-bottom 0
+        border-radius .25em .25em 0 0
+
+        .toast-action
+            cursor pointer
+        .hide-action
+            display inherit
+        .close-action
+            display inherit
+        .show-action
+            display none
+
+.toasts-container.action-hidden.has-toasts
+    .toast-actions
+        .hide-action
+            display none
+        .close-action
+            display none
+        .show-action
+            display inherit

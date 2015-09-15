@@ -1,0 +1,72 @@
+.file-picker
+  .files
+    overflow   auto
+    display    flex
+    flex-wrap  wrap
+
+    .file-item
+        display          flex
+        flex             none
+        align-items      center
+        margin           .25em 0.5em 0.25em 0
+        padding          0.6em 0.8em
+        background-color #f2f2f2
+        border-radius    3px
+        white-space      no-wrap
+
+      a
+        cursor  pointer
+        padding 0
+        color   #333
+
+      .mime
+        padding     0 0.4em 0 0
+        font-size   1.2em
+        color       #444
+
+      .delete
+        padding   0 0 0 0.4em
+        cursor    pointer
+
+      .file-size
+        margin-left 0.5em
+        color       #999
+
+      .file-actions
+          margin-left 0.5em
+          border-left 1px solid #ccc
+
+          a
+              padding: 0 .5em
+
+          a,
+          i
+            color #999
+
+            &:hover
+              color           #333
+              text-decoration none
+
+    .attachment-name
+      color darkcolor
+
+    .file-detail
+      color     #999
+      font-size 0.9em
+
+  .dropzone
+    width   20em
+    padding 0.5em 0
+    border  2px #ddd dashed
+    cursor  pointer
+    color   #bbb
+
+  .dropzone.target
+      border-color basecolor
+
+
+    i
+      padding 0.5em
+
+  .file-wrapper
+    display none
