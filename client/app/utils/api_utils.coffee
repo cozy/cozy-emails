@@ -8,7 +8,8 @@ MessageActionCreator = require '../actions/message_action_creator'
 onMessageList = ->
     actions = [
         "account.mailbox.messages",
-        "account.mailbox.messages.full"
+        "account.mailbox.messages.filter",
+        "account.mailbox.messages.date"
     ]
     return router.current.firstPanel?.action in actions
 
@@ -147,14 +148,10 @@ module.exports =
 
 
     messageClose: ->
-        closeUrl = window.router.buildUrl
-            direction: 'first'
-            action: 'account.mailbox.messages'
-            parameters:
-                accountID: AccountStore.getSelected().get 'id'
-                mailboxID: AccountStore.getSelectedMailbox().get 'id'
-            fullWidth: true
-        window.router.navigate closeUrl, {trigger: true}
+        href = window.location.href
+        closeUrl = href.replace /\/message\/[^\/]*\//gi, ''
+        closeUrl = closeUrl.replace /\/conversation\/[^\/]*\/[^\/]*\//gi, ''
+        window.location.href = closeUrl
 
 
     messageDeleteCurrent: ->

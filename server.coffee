@@ -1,6 +1,5 @@
 
 
-
 americano = require 'americano'
 
 application = module.exports = (options, callback) ->

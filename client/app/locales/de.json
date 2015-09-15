@@ -1,4 +1,4 @@
-module.exports = {
+{
   "app loading": "Laden…",
   "app back": "Zurück",
   "app cancel": "Abbrechen",
@@ -303,4 +303,3 @@ module.exports = {
   "tooltip account parameters": "Account parameters",
   "tooltip delete selection": "Delete all selected messages"
 }
-;

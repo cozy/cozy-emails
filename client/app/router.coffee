@@ -12,10 +12,11 @@ module.exports = class Router extends PanelRouter
         'account.new':
             pattern: 'account/new'
             fluxAction: 'showCreateAccount'
-        'account.mailbox.messages.full':
-            pattern: 'account/:accountID/box/:mailboxID/sort/:sort/' +
-                        'flag/:flag/before/:before/after/:after/' +
-                        'page/:pageAfter'
+        'account.mailbox.messages.filter':
+            pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/flag/:flag'
+            fluxAction: 'showMessageList'
+        'account.mailbox.messages.date':
+            pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/before/:before/after/:after'
             fluxAction: 'showMessageList'
         'account.mailbox.messages':
             pattern: 'account/:accountID/mailbox/:mailboxID'
@@ -68,7 +69,8 @@ module.exports = class Router extends PanelRouter
         switch action
 
             when 'account.mailbox.messages'
-            ,    'account.mailbox.messages.full'
+            ,    'account.mailbox.messages.filter'
+            ,    'account.mailbox.messages.date'
             ,    'account.mailbox.default'
                 defaultAccountID = AccountStore.getDefault()?.get 'id'
                 # if parameters contains accountID but no mailboxID,

@@ -59,6 +59,7 @@ window.onerror = (msg, url, line, col, error) ->
                 type: 'error'
                 error:
                     msg: msg
+                    name: error?.name
                     full: exception
                     stack: error?.stack
                 url: url
@@ -143,14 +144,22 @@ window.onload = ->
         window.cozyMails.customEvent "APPLICATION_LOADED"
 
     catch e
-        console.error e
+        console.error e, e?.stack
         exception = e.toString()
         if exception isnt window.lastError
             # Send client side errors to server
             data =
                 data:
                     type: 'error'
-                    exception: exception
+                    error:
+                        msg: e.message
+                        name: e?.name
+                        full: exception
+                        stack: e?.stack
+                    file: e?.fileName
+                    line: e?.lineNumber
+                    col: e?.columnNumber
+                    href: window.location.href
             xhr = new XMLHttpRequest()
             xhr.open 'POST', 'activity', true
             xhr.setRequestHeader "Content-Type",
