@@ -17,10 +17,15 @@ module.exports = SearchToolbarMessagesList = React.createClass
         mailboxID: React.PropTypes.string.isRequired
 
     getInitialState: ->
-        type:    'from'
-        value:   ''
-        isEmpty: true
-
+        if window.location.href.indexOf('/sort/-from/before') isnt -1
+            value = window.location.href.split('before/')[1]
+            value: value.split('/')[0]
+            isEmpty: false
+            type:    'from'
+        else
+            value:   ''
+            isEmpty: true
+            type:    'from'
 
     showList: ->
         filter = MessageFilter.ALL
@@ -28,6 +33,10 @@ module.exports = SearchToolbarMessagesList = React.createClass
             order:  '-'
             before: @state.value
         if @state.value? and @state.value isnt ''
+            href = window.location.href
+            # Remove old filter
+            href = href.replace /\/sort\/.*/gi, ""
+            window.location.href = href + "/sort/-from/before/#{@state.value}/after/#{@state.value}\uFFFF/field/#{@state.type}"
             # always close message preview before filtering
             window.cozyMails.messageClose()
             sort.field = @state.type
@@ -36,7 +45,6 @@ module.exports = SearchToolbarMessagesList = React.createClass
             # reset, use default filter
             sort.field = 'date'
             sort.after = ''
-
         LayoutActionCreator.showFilteredList filter, sort
 
 
@@ -55,6 +63,8 @@ module.exports = SearchToolbarMessagesList = React.createClass
 
 
     reset: ->
+        href = window.location.href.replace /\/sort\/.*/gi, ""
+        window.location.href = href
         @setState @getInitialState(), @showList
 
 

@@ -73,7 +73,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass
                        @props.queryParams.after isnt undefined and
                        @props.queryParams.after isnt '-'
 
-        if window.location.href.indexOf('before') isnt -1
+        if window.location.href.indexOf('/sort/-date/before') isnt -1
             dateFiltered = true
 
         div

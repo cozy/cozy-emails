@@ -18,6 +18,9 @@ module.exports = class Router extends PanelRouter
         'account.mailbox.messages.date':
             pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/before/:before/after/:after'
             fluxAction: 'showMessageList'
+        'search':
+            pattern: 'account/:accountID/mailbox/:mailboxID/sort/-from/before/:before/after/:after/field/:type'
+            fluxAction: 'showComposeMessageList'
         'account.mailbox.messages':
             pattern: 'account/:accountID/mailbox/:mailboxID'
             fluxAction: 'showMessageList'
@@ -25,9 +28,6 @@ module.exports = class Router extends PanelRouter
             pattern: 'account/:accountID'
             fluxAction: 'showMessageList'
 
-        'search':
-            pattern: 'search/:query/page/:page'
-            fluxAction: 'showSearch'
 
         'message':
             pattern: 'message/:messageID'
