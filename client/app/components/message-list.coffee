@@ -58,6 +58,10 @@ module.exports = MessageList = React.createClass
                 @setState allSelected: false, edited: false
 
     render: ->
+        href = window.location.href
+        if href.indexOf('account') is -1
+            href = href + "#account/#{@props.accountID}/mailbox/#{@props.mailboxID}"
+            window.location.href = href
         compact = @props.settings.get('listStyle') is 'compact'
 
         filterParams =
