@@ -584,7 +584,7 @@ module.exports = class Message extends cozydb.CozyModel
                     tables: true
                     wordwrap: 80
             catch err
-                log.error "Error converting HTML to text", err, row.html
+                log.error "Error converting HTML to text", err, raw.html
 
         return raw
 
