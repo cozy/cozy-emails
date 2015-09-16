@@ -42,7 +42,7 @@ module.exports = class RemoveAllMessagesFromMailbox extends Process
     fetchMessages: (callback) =>
         Message.rawRequest 'byMailboxRequest',
             limit: LIMIT_UPDATE
-            startkey: ['uid', @mailboxID, 0]
+            startkey: ['uid', @mailboxID, -1]
             endkey: ['uid', @mailboxID, {}]
             include_docs: true
             reduce: false

@@ -103,6 +103,15 @@ class Account extends cozydb.CozyModel
         else
             callback null
 
+    getReferencedBoxes: ->
+        out = []
+        for attribute in Object.keys Mailbox.RFC6154 when @[attribute]
+            out.push @[attribute]
+        for boxid of @favorites
+            out.push boxid
+
+        return out
+
 
     # Public: get the account's mailboxes in imap
     # also update the account supportRFC4551 attribute if needed

@@ -191,6 +191,7 @@ exports.getImapPool = (object) ->
     if object.accountID then imapPools[object.accountID]
     else imapPools[object.id]
 
+
 # SETTERS
 exports.addAccount = (account) ->
     log.debug "addAccount"
