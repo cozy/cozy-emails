@@ -585,7 +585,7 @@ module.exports = Message = (function(superClass) {
         });
       } catch (_error) {
         err = _error;
-        log.error("Error converting HTML to text", err, row.html);
+        log.error("Error converting HTML to text", err, raw.html);
       }
     }
     return raw;
