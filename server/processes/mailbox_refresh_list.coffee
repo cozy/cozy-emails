@@ -23,7 +23,7 @@ module.exports = class MailboxRefreshList extends Process
     diffBoxesList: (callback) =>
         cozyBoxes = ramStore.getMailboxesByAccount @account.id
         @account.imap_getBoxes (err, imapBoxes) =>
-            log.debug "refreshBoxes#results", cozyBoxes
+            log.debug "refreshBoxes#results", cozyBoxes.length
             return callback err if err
 
             # find new imap boxes
