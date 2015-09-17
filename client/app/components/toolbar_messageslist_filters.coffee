@@ -1,5 +1,6 @@
 {div, span, i, button} = React.DOM
 {MessageFilter, Tooltips} = require '../constants/app_constants'
+RouterMixin           = require '../mixins/router_mixin'
 
 LayoutActionCreator = require '../actions/layout_action_creator'
 
@@ -8,6 +9,11 @@ DateRangePicker = require './date_range_picker'
 
 module.exports = FiltersToolbarMessagesList = React.createClass
     displayName: 'FiltersToolbarMessagesList'
+
+    mixins: [
+        RouterMixin,
+    ]
+
 
     propTypes:
         accountID: React.PropTypes.string.isRequired
@@ -37,28 +43,34 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
 
     onDateFilter: (start, end) ->
-        href = window.location.href
-        # Remove old filter
-        href = href.replace /\/sort\/.*/gi, ""
         if !!start and !!end
             params = [start, end]
-            href = href + "/sort/-date/before/#{start}/after/#{end}"
+            @redirect
+                direction: 'first'
+                action: 'account.mailbox.messages.date'
+                parameters: [@props.accountID, @props.mailboxID, '-date', start, end]
         else
             params = false
-        window.location.href = href
+            @redirect
+                direction: 'first'
+                action: 'account.mailbox.messages'
+                parameters: [@props.accountID, @props.mailboxID]
         @showList '-', params
 
 
     toggleFilters: (name) ->
-        href = window.location.href
-        # Remove old filter
-        href = href.replace /\/sort\/.*/gi, ""
         if @props.filter is name
             filter = '-'
+            @redirect
+                direction: 'first'
+                action: 'account.mailbox.messages'
+                parameters: [@props.accountID, @props.mailboxID]
         else
             filter = name
-            href = href + "/sort/-date/flag/#{name}"
-        window.location.href = href
+            @redirect
+                direction: 'first'
+                action: 'account.mailbox.messages.filter'
+                parameters: [@props.accountID, @props.mailboxID, '-date', name]
         @showList filter, null
 
 

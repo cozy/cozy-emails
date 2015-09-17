@@ -2,6 +2,8 @@
 {Dropdown} = require './basic_components'
 {MessageFilter, Tooltips} = require '../constants/app_constants'
 
+RouterMixin           = require '../mixins/router_mixin'
+
 LayoutActionCreator = require '../actions/layout_action_creator'
 
 filters =
@@ -11,6 +13,10 @@ filters =
 
 module.exports = SearchToolbarMessagesList = React.createClass
     displayName: 'SearchToolbarMessagesList'
+
+    mixins: [
+        RouterMixin,
+    ]
 
     propTypes:
         accountID: React.PropTypes.string.isRequired
@@ -33,10 +39,10 @@ module.exports = SearchToolbarMessagesList = React.createClass
             order:  '-'
             before: @state.value
         if @state.value? and @state.value isnt ''
-            href = window.location.href
-            # Remove old filter
-            href = href.replace /\/sort\/.*/gi, ""
-            window.location.href = href + "/sort/-from/before/#{@state.value}/after/#{@state.value}\uFFFF/field/#{@state.type}"
+            @redirect
+                direction: 'first'
+                action: 'search'
+                parameters: [@props.accountID, @props.mailboxID, @state.value, "#{@state.value}\uFFFF", @state.type]
             # always close message preview before filtering
             window.cozyMails.messageClose()
             sort.field = @state.type
@@ -63,8 +69,10 @@ module.exports = SearchToolbarMessagesList = React.createClass
 
 
     reset: ->
-        href = window.location.href.replace /\/sort\/.*/gi, ""
-        window.location.href = href
+        @redirect
+            direction: 'first'
+            action: 'account.mailbox.messages'
+            parameters: [@props.accountID, @props.mailboxID]
         @setState @getInitialState(), @showList
 
 
