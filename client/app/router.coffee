@@ -79,6 +79,7 @@ module.exports = class Router extends PanelRouter
                     mailbox = AccountStore.getDefaultMailbox parameters.accountID
                 else
                     mailbox = AccountStore.getDefaultMailbox defaultAccountID
+                    @navigate "account/#{defaultAccountID}/mailbox/#{mailbox?.get('id')}"
                 defaultMailboxID = mailbox?.get 'id'
                 defaultParameters = {}
                 defaultParameters.accountID = defaultAccountID
