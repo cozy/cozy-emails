@@ -216,6 +216,7 @@ exports.addMailbox = (mailbox) ->
     countsByMailboxID[mailbox.id] ?= {unread: 0, total: 0, recent: 0}
     if mailboxesByAccountID[accountID]
         mailboxesByAccountID[accountID].push mailbox
+        _.sortBy mailboxesByAccountID[accountID], 'path'
     else
         orphanMailboxes.push mailbox
 

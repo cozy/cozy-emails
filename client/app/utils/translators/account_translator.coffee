@@ -64,6 +64,7 @@ module.exports = AccountTranslator =
                     last[box.depth] = box.weight
                 else
                     box.weight = last[box.depth - 1] - 0.1
+                    last[box.depth] = box.weight
 
                 return AccountTranslator.mailboxToImmutable box
 

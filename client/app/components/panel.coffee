@@ -334,7 +334,7 @@ module.exports = Panel = React.createClass
         .toJS()
 
         mailboxesFlat = {}
-        AccountStore.getSelectedMailboxes().map (mailbox) ->
+        AccountStore.getSelectedMailboxes(true).map (mailbox) ->
             id = mailbox.get 'id'
             mailboxesFlat[id] = {}
             ['id', 'label', 'depth'].map (prop) ->
@@ -352,7 +352,7 @@ module.exports = Panel = React.createClass
             selectedAccount       : selectedAccount
             mailboxesFlat         : mailboxesFlat
             favoriteMailboxes     : AccountStore.getSelectedFavorites()
-            selectedMailboxes     : AccountStore.getSelectedMailboxes()
+            selectedMailboxes     : AccountStore.getSelectedMailboxes(true)
             accountError          : AccountStore.getError()
             accountWaiting        : AccountStore.isWaiting()
             refresh               : refresh

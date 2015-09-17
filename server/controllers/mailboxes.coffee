@@ -34,25 +34,30 @@ module.exports.create = (req, res, next) ->
     parent = ramStore.getMailbox(req.body.parentID)
     label = req.body.label
 
-    if parent
-        path = parent.path + parent.delimiter + label
-        tree = parent.tree.concat label
-    else
-        path = label
-        tree = [label]
+    makeBox = (defaultDelimiter) ->
+        delimiter = parent?.delimiter or defaultDelimiter
+        if parent
+            path = parent.path + delimiter + label
+            tree = parent.tree.concat label
+        else
+            path = label
+            tree = [label]
 
-    mailbox =
-        accountID: account.id
-        label: label
-        path: path
-        tree: tree
-        delimiter: parent?.delimiter or '/'
-        attribs: []
+        return boxDefinition =
+            accountID: account.id
+            label: label
+            path: path
+            tree: tree
+            delimiter: delimiter
+            attribs: []
+
+    mailbox = null
 
     async.series [
         (cb) ->
-            ramStore.getImapPool(mailbox).doASAP (imap, cbRelease) ->
-                imap.addBox2 path, cbRelease
+            ramStore.getImapPool(account).doASAP (imap, cbRelease) ->
+                mailbox = makeBox imap.delimiter
+                imap.addBox2 mailbox.path, cbRelease
             , cb
         (cb) ->
             Mailbox.create mailbox, (err, created) ->

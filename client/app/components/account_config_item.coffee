@@ -104,7 +104,7 @@ module.exports = MailboxItem = React.createClass
     # Build indentation based on the depth of the folder.
     # A subfolder has a larger indentation than its parent.
     buildIndentation: ->
-        ("    " for j in [1..@props.mailbox.get('depth')]).join ''
+        new Array(@props.mailbox.get('depth') + 1).join "    "
 
 
     # Change title and icon when a folder is marked as favorite or not.
