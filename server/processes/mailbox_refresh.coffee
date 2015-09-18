@@ -15,7 +15,7 @@ module.exports = class MailboxRefresh extends Process
 
     initialize: (options, callback) ->
 
-        mailbox = options.mailbox
+        @mailbox = mailbox = options.mailbox
         account = ramStore.getAccount mailbox.accountID
         @shouldNotif = false
         return callback null unless account

@@ -29,7 +29,7 @@ Scheduler.schedule = (proc, asap, callback) ->
     if proc.finished
         throw new Error 'scheduling of finished process'
     else
-        proc.finalCallback = callback
+        proc.addCallback callback
 
         if asap is Scheduler.ASAP
             if running?.abortable
@@ -62,9 +62,8 @@ Scheduler.doNext = ->
     unless running
         proc = running = queued.shift()
         if proc
-            proc.initialize proc.options, (err) ->
+            proc.run (err) ->
                 log.debug "process finished #{proc.id} #{err}"
-                proc.finalCallback? err
                 running = null
                 setImmediate Scheduler.doNext
         else
@@ -84,6 +83,22 @@ Scheduler.onIdle = ->
     else
         log.debug "nothing to do, waiting 10 MIN"
         setTimeout Scheduler.doNext, 10 * MIN
+
+Scheduler.refreshNow = (mailbox, callback) ->
+
+    isSameBoxRefresh = (processus) ->
+        processus instanceof MailboxRefresh and processus.mailbox is mailbox
+
+    if running and isSameBoxRefresh running
+        running.addCallback callback
+
+    else
+        if alreadyScheduled = queued.filter(isSameBoxRefresh)[0]
+            queued = _.without queued, alreadyScheduled
+
+        refresh = new MailboxRefresh {mailbox}
+        Scheduler.schedule refresh, Scheduler.ASAP, callback
+
 
 # called by the Scheduler every hour
 Scheduler.startAllRefresh = (done) ->
