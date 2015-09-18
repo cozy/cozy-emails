@@ -36,7 +36,7 @@ module.exports = class OrphanRemoval extends Process
                 log.error 'failed to delete box', err
             callback null
 
-    forgetDestroyedBoxes: (callback) =>
+    forgetDestroyedBoxes: (callback) ->
         toForget = []
         for account in ramStore.getAllAccounts()
             for boxid in account.getReferencedBoxes()

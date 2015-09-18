@@ -56,7 +56,7 @@ module.exports.create = (req, res, next) ->
             # message fetched in first refresh might not be in proper conv
             # @TODO : apply patch only to messages from first refresh ?
             (cb) ->
-                patchConversation.patchOneAccount account, callback
+                patchConversation.patchOneAccount account, cb
 
         ], (err) ->
             log.error err if err
