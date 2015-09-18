@@ -117,7 +117,7 @@ module.exports = Panel = React.createClass
                         direction: "first"
                         action: "default"
                 , 1
-                return
+                return div null, 'redirecting'
 
         # gets the selected message if any
         if @state.settings.get 'displayConversation'
