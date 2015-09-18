@@ -52,10 +52,6 @@ module.exports = Compose = React.createClass
 
 
     shouldComponentUpdate: (nextProps, nextState) ->
-        if @state.saving isnt nextState.saving
-            for key in Object.keys(@state)
-                if key isnt "saving"
-                    nextState[key] = @state[key]
         return not(_.isEqual(nextState, @state)) or
             not (_.isEqual(nextProps, @props))
 
@@ -462,6 +458,9 @@ module.exports = Compose = React.createClass
                 # (server override cid: URLs with relative URLs)
                 state[key] = value for key, value of message when key isnt 'attachments' and
                     key isnt 'html' and key isnt 'text'
+
+                state[key] = @state[key] for key in Object.keys(@state) when key isnt "saving"
+
                 # Sometime, when user cancel composing, the component has been
                 # unmounted before we come back from autosave, and setState fails
                 if @isMounted()
