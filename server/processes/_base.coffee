@@ -38,9 +38,15 @@ module.exports = class Process
     abort: (callback) ->
         @aborted = true
 
+    addCallback: (callback) ->
+        @callbacks ?= []
+        @callbacks.push callback
+
     run: (callback) ->
         log.debug "run process #{@id}"
-        @initialize @options, callback
+        @addCallback callback
+        @initialize @options, (err, arg1, arg2, arg3, arg4) =>
+            cb err, arg1, arg2, arg3, arg4 for cb in @callbacks
 
     onError: (err) ->
         @errors.push Logger.getLasts() + "\n" + err.stack

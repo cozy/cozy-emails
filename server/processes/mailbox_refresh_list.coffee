@@ -23,7 +23,7 @@ module.exports = class MailboxRefreshList extends Process
     diffBoxesList: (callback) =>
         cozyBoxes = ramStore.getMailboxesByAccount @account.id
         @account.imap_getBoxes (err, imapBoxes) =>
-            log.debug "refreshBoxes#results", cozyBoxes
+            log.debug "refreshBoxes#results", cozyBoxes.length
             return callback err if err
 
             # find new imap boxes
@@ -50,8 +50,10 @@ module.exports = class MailboxRefreshList extends Process
 
     destroyOldBoxes: (callback) =>
         log.debug "destroying", @destroyed.length, "boxes"
-        safeLoop @destroyed, (box, next) ->
-            box.destroy next
+        safeLoop @destroyed, (box, next) =>
+            box.destroy (err) =>
+                log.error 'fail to destroy box', err if err
+                @account.forgetBox box.id, next
         , (errors) ->
-            log.error 'fail to destroy box', err for err in errors
+            log.error 'fail to forget box', err for err in errors
             callback null

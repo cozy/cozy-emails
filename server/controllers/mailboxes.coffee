@@ -3,7 +3,7 @@ async = require 'async'
 Account = require '../models/account'
 Mailbox = require '../models/mailbox'
 Message = require '../models/message'
-{BadRequest} = require '../utils/errors'
+{BadRequest, NotFound} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'mailbox:controller')
 _ = require 'lodash'
 async = require 'async'
@@ -17,13 +17,16 @@ MailboxRefreshFast = require '../processes/mailbox_refresh_fast'
 module.exports.refresh = (req, res, next) ->
     mailbox = ramStore.getMailbox(req.params.mailboxID)
     account = ramStore.getAccount(mailbox.accountID)
-    if not account.supportRFC4551
+    if not mailbox
+        next new NotFound("Mailbox #{req.params.mailboxID}")
+    else if not account
+        next new NotFound("Account #{mailbox.accountID}")
+    else if not account.supportRFC4551
         next new BadRequest('Cant refresh a non RFC4551 box')
     else
-        res.send ramStore.getMailboxClientObject mailbox.id
-        # refresh = new MailboxRefreshFast mailbox: mailbox
-        # Scheduler.schedule refresh, (err) ->
-        #     return next err if err
+        Scheduler.refreshNow mailbox, (err) ->
+            return next err if err
+            res.send ramStore.getMailboxClientObject mailbox.id
 
 # create a mailbox
 module.exports.create = (req, res, next) ->
@@ -34,25 +37,30 @@ module.exports.create = (req, res, next) ->
     parent = ramStore.getMailbox(req.body.parentID)
     label = req.body.label
 
-    if parent
-        path = parent.path + parent.delimiter + label
-        tree = parent.tree.concat label
-    else
-        path = label
-        tree = [label]
+    makeBox = (defaultDelimiter) ->
+        delimiter = parent?.delimiter or defaultDelimiter
+        if parent
+            path = parent.path + delimiter + label
+            tree = parent.tree.concat label
+        else
+            path = label
+            tree = [label]
 
-    mailbox =
-        accountID: account.id
-        label: label
-        path: path
-        tree: tree
-        delimiter: parent?.delimiter or '/'
-        attribs: []
+        return boxDefinition =
+            accountID: account.id
+            label: label
+            path: path
+            tree: tree
+            delimiter: delimiter
+            attribs: []
+
+    mailbox = null
 
     async.series [
         (cb) ->
-            ramStore.getImapPool(mailbox).doASAP (imap, cbRelease) ->
-                imap.addBox2 path, cbRelease
+            ramStore.getImapPool(account).doASAP (imap, cbRelease) ->
+                mailbox = makeBox imap.delimiter
+                imap.addBox2 mailbox.path, cbRelease
             , cb
         (cb) ->
             Mailbox.create mailbox, (err, created) ->

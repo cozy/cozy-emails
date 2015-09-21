@@ -38,16 +38,6 @@ module.exports.main = (req, res, next) ->
         else
             [settings, locale, accounts, contacts] = results
 
-            # Sort mailboxes by name
-            for account in accounts
-                account.mailboxes.sort (a, b) ->
-                    if not a.label?
-                        1
-                    else if not b.label?
-                        -1
-                    else
-                        a.label.localeCompare b.label
-
             # Prepare page pre-loaded data
             imports = """
                 window.settings  = #{JSON.stringify settings}
