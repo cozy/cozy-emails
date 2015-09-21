@@ -155,4 +155,5 @@ Scheduler.orphanRemovalDebounced = (accountID) ->
         proc instanceof OrphanRemoval
 
     unless alreadyQueued
-        Scheduler.schedule new OrphanRemoval()
+        Scheduler.schedule new OrphanRemoval(), (err) ->
+            log.error err if err

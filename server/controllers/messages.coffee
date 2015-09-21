@@ -363,7 +363,7 @@ module.exports.send = (req, res, next) ->
 
         async.eachSeries Object.keys(jdbMessage.binary), (name, cbLoop) ->
             if name in remainingAttachments
-                cbLoop null
+                setImmediate cbLoop
             else
                 jdbMessage.removeBinary name, cbLoop
         , cb
