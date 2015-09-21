@@ -133,6 +133,13 @@ module.exports = Menu = React.createClass
                 if @state.accounts.length
                     @state.accounts.map (account, key) =>
                         @getAccountRender account, key
+                    .sort (account1, account2) =>
+                        if @props.selectedAccount?.get('id') is account1._store.props.key
+                            return -1
+                        else if @props.selectedAccount?.get('id') is account2._store.props.key
+                            return 1
+                        else
+                            return 0
                     .toJS()
 
             nav className: 'submenu',

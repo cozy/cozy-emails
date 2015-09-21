@@ -135,6 +135,7 @@ class AccountStore extends Store
                     ?.get(value.mailboxID) or null
                 @_setCurrentMailbox mailbox
             else
+                _newAccountError = null
                 @_setCurrentMailbox null
             @emit 'change'
 
