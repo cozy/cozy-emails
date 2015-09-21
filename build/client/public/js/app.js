@@ -630,7 +630,7 @@ module.exports = LayoutActionCreator = {
       onMessage(message);
     }
     length = MessageStore.getConversationsLength().get(conversationID);
-    if ((length != null) && length > 1) {
+    if ((length == null) || length > 1) {
       return MessageActionCreator.fetchConversation(conversationID);
     }
   },
@@ -7028,7 +7028,7 @@ module.exports = MessageList = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var ContactActionCreator, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, header, i, iframe, li, p, pre, span, ul, _ref;
+var ContactActionCreator, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, RGXP_PROTOCOL, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, header, i, iframe, li, p, pre, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe;
 
@@ -7055,6 +7055,8 @@ classer = React.addons.classSet;
 alertError = LayoutActionCreator.alertError;
 
 alertSuccess = LayoutActionCreator.notify;
+
+RGXP_PROTOCOL = /:\/\//;
 
 module.exports = React.createClass({
   displayName: 'Message',
@@ -7178,7 +7180,7 @@ module.exports = React.createClass({
     }
   },
   prepareHTML: function(html) {
-    var doc, hideImage, href, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref1;
+    var doc, href, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref1;
     messageDisplayHTML = true;
     parser = new DOMParser();
     html = "<html><head>\n    <link rel=\"stylesheet\" href=\"./fonts/fonts.css\" />\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + html + "</body></html>";
@@ -7193,14 +7195,14 @@ module.exports = React.createClass({
       messageDisplayHTML = false;
     }
     if (doc && !this.state.messageDisplayImages) {
-      hideImage = function(image) {
-        image.dataset.src = image.getAttribute('src');
-        return image.removeAttribute('src');
-      };
       images = doc.querySelectorAll('IMG[src]');
+      images = Array.prototype.filter.call(images, function(img) {
+        return RGXP_PROTOCOL.test(img.getAttribute('src'));
+      });
       for (_i = 0, _len = images.length; _i < _len; _i++) {
         image = images[_i];
-        hideImage(image);
+        image.dataset.src = image.getAttribute('src');
+        image.removeAttribute('src');
       }
     }
     _ref1 = doc.querySelectorAll('a[href]');
@@ -7208,7 +7210,7 @@ module.exports = React.createClass({
       link = _ref1[_j];
       link.target = '_blank';
       href = link.getAttribute('href');
-      if (href !== '' && !/:\/\//.test(href)) {
+      if (href !== '' && !RGXP_PROTOCOL.test(href)) {
         link.setAttribute('href', 'http://' + href);
       }
     }
@@ -13222,7 +13224,7 @@ MessageStore = (function(_super) {
   };
 
   handleFetchResult = function(result) {
-    var before, lengths, message, next, url, _i, _len, _ref1, _results;
+    var before, lengths, message, next, url, _i, _j, _len, _len1, _name, _ref1, _ref2, _results;
     if ((result.links != null) && (result.links.next != null)) {
       _params = {};
       next = decodeURIComponent(result.links.next);
@@ -13241,12 +13243,19 @@ MessageStore = (function(_super) {
     before = _params.pageAfter === '-' ? void 0 : _params.pageAfter;
     SocketUtils.changeRealtimeScope(result.mailboxID, before);
     if (lengths = result.conversationLengths) {
+      _ref1 = result.messages;
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        message = _ref1[_i];
+        if (lengths[_name = message.conversationID] == null) {
+          lengths[_name] = 0;
+        }
+      }
       _conversationLengths = _conversationLengths.merge(lengths);
     }
-    _ref1 = result.messages;
+    _ref2 = result.messages;
     _results = [];
-    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-      message = _ref1[_i];
+    for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+      message = _ref2[_j];
       if (message != null) {
         _results.push(onReceiveRawMessage(message));
       }

@@ -92,7 +92,7 @@ module.exports = {
               return att.contentId === cid;
             });
             if ((ref = attachment[0]) != null ? ref.fileName : void 0) {
-              name = (ref1 = attachment[0]) != null ? ref1.fileName : void 0;
+              name = (ref1 = attachment[0]) != null ? ref1.generatedFileName : void 0;
               src = "message/" + messageId + "/attachments/" + name;
               attribs.src = src;
             } else {
