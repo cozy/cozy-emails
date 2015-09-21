@@ -271,6 +271,7 @@ class MessageStore extends Store
         SocketUtils.changeRealtimeScope result.mailboxID, before
 
         if lengths = result.conversationLengths
+            lengths[message.conversationID] ?= 0 for message in result.messages
             _conversationLengths = _conversationLengths.merge lengths
 
         for message in result.messages when message?

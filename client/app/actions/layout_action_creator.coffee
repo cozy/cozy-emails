@@ -201,7 +201,7 @@ module.exports = LayoutActionCreator =
             onMessage message
 
         length = MessageStore.getConversationsLength().get(conversationID)
-        if length? and length > 1
+        if not length? or length > 1
             MessageActionCreator.fetchConversation conversationID
 
 
