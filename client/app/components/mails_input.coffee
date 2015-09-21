@@ -178,7 +178,6 @@ module.exports = MailsInput = React.createClass
 
         classes = classer
             selected: selected
-
         li className: classes, onClick: selectContact,
             a null,
                 if avatar?
@@ -250,6 +249,7 @@ module.exports = MailsInput = React.createClass
     # Grab text from the input and ensure it's a valid email address.
     # If the address is valid, adds it to the recipient list.
     addContactFromInput: (isBlur=false) ->
+        @state.selected = 0
         # if user cancel compose, component may be unmounted when the timeout
         # is fired
         if @isMounted()
