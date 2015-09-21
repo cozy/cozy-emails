@@ -119,6 +119,22 @@ Account = (function(superClass) {
     }
   };
 
+  Account.prototype.getReferencedBoxes = function() {
+    var attribute, boxid, i, len, out, ref;
+    out = [];
+    ref = Object.keys(Mailbox.RFC6154);
+    for (i = 0, len = ref.length; i < len; i++) {
+      attribute = ref[i];
+      if (this[attribute]) {
+        out.push(this[attribute]);
+      }
+    }
+    for (boxid in this.favorites) {
+      out.push(boxid);
+    }
+    return out;
+  };
+
   Account.prototype.imap_getBoxes = function(callback) {
     var supportRFC4551;
     log.debug("getBoxes");

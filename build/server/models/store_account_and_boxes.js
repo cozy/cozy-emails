@@ -345,7 +345,8 @@ exports.addMailbox = function(mailbox) {
     };
   }
   if (mailboxesByAccountID[accountID]) {
-    return mailboxesByAccountID[accountID].push(mailbox);
+    mailboxesByAccountID[accountID].push(mailbox);
+    return _.sortBy(mailboxesByAccountID[accountID], 'path');
   } else {
     return orphanMailboxes.push(mailbox);
   }

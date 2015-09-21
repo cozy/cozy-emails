@@ -70,7 +70,7 @@ module.exports.create = function(req, res, next) {
         });
         return Scheduler.scheduleMultiple(refreshes, cb);
       }, function(cb) {
-        return patchConversation.patchOneAccount(account, callback);
+        return patchConversation.patchOneAccount(account, cb);
       }
     ], function(err) {
       if (err) {

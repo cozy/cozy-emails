@@ -36,25 +36,13 @@ module.exports.main = function(req, res, next) {
       return Contact.list(cb);
     }
   ], function(err, results) {
-    var account, accounts, contacts, i, imports, len, locale, refreshes, settings;
+    var accounts, contacts, imports, locale, refreshes, settings;
     refreshes = Scheduler.clientSummary();
     if (err) {
       log.error("err on index", err.stack);
       imports = "console.log(\"" + err + "\");\nwindow.locale = \"en\"\nwindow.refreshes = []\nwindow.accounts  = []\nwindow.contacts  = []";
     } else {
       settings = results[0], locale = results[1], accounts = results[2], contacts = results[3];
-      for (i = 0, len = accounts.length; i < len; i++) {
-        account = accounts[i];
-        account.mailboxes.sort(function(a, b) {
-          if (a.label == null) {
-            return 1;
-          } else if (b.label == null) {
-            return -1;
-          } else {
-            return a.label.localeCompare(b.label);
-          }
-        });
-      }
       imports = "window.settings  = " + (JSON.stringify(settings)) + "\nwindow.refreshes = " + (JSON.stringify(refreshes)) + ";\nwindow.locale    = \"" + locale + "\";\nwindow.accounts  = " + (JSON.stringify(accounts)) + ";\nwindow.contacts  = " + (JSON.stringify(contacts)) + ";\nwindow.app_env   = \"" + process.env.NODE_ENV + "\";";
     }
     return res.render('index', {

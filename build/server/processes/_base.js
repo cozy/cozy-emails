@@ -50,9 +50,28 @@ module.exports = Process = (function() {
     return this.aborted = true;
   };
 
+  Process.prototype.addCallback = function(callback) {
+    if (this.callbacks == null) {
+      this.callbacks = [];
+    }
+    return this.callbacks.push(callback);
+  };
+
   Process.prototype.run = function(callback) {
     log.debug("run process " + this.id);
-    return this.initialize(this.options, callback);
+    this.addCallback(callback);
+    return this.initialize(this.options, (function(_this) {
+      return function(err, arg1, arg2, arg3, arg4) {
+        var cb, i, len, ref, results;
+        ref = _this.callbacks;
+        results = [];
+        for (i = 0, len = ref.length; i < len; i++) {
+          cb = ref[i];
+          results.push(cb(err, arg1, arg2, arg3, arg4));
+        }
+        return results;
+      };
+    })(this));
   };
 
   Process.prototype.onError = function(err) {

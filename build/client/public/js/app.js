@@ -1937,15 +1937,7 @@ module.exports = MailboxItem = React.createClass({
     }
   },
   buildIndentation: function() {
-    var j;
-    return ((function() {
-      var _i, _ref1, _results;
-      _results = [];
-      for (j = _i = 1, _ref1 = this.props.mailbox.get('depth'); 1 <= _ref1 ? _i <= _ref1 : _i >= _ref1; j = 1 <= _ref1 ? ++_i : --_i) {
-        _results.push("    ");
-      }
-      return _results;
-    }).call(this)).join('');
+    return new Array(this.props.mailbox.get('depth') + 1).join("    ");
   },
   buildFavoriteValues: function() {
     var favoriteClass, favoriteTitle;
@@ -4051,7 +4043,7 @@ module.exports = Compose = React.createClass({
       }
       return MessageActionCreator.send(message, (function(_this) {
         return function(error, message) {
-          var cid, key, msgKo, msgOk, state, value;
+          var cid, key, msgKo, msgOk, state, value, _i, _len, _ref3;
           if ((error == null) && (_this.state.id == null) && (message != null)) {
             MessageActionCreator.setCurrent(message.id);
           }
@@ -4066,6 +4058,13 @@ module.exports = Compose = React.createClass({
             value = message[key];
             if (key !== 'attachments' && key !== 'html' && key !== 'text') {
               state[key] = value;
+            }
+          }
+          _ref3 = Object.keys(_this.state);
+          for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+            key = _ref3[_i];
+            if (key !== "saving") {
+              state[key] = _this.state[key];
             }
           }
           if (_this.isMounted()) {
@@ -5827,6 +5826,7 @@ module.exports = MailsInput = React.createClass({
     if (isBlur == null) {
       isBlur = false;
     }
+    this.state.selected = 0;
     if (this.isMounted()) {
       state = {};
       state.open = false;
@@ -6042,6 +6042,17 @@ module.exports = Menu = React.createClass({
     }, this.state.accounts.length ? this.state.accounts.map((function(_this) {
       return function(account, key) {
         return _this.getAccountRender(account, key);
+      };
+    })(this)).sort((function(_this) {
+      return function(account1, account2) {
+        var _ref4, _ref5;
+        if (((_ref4 = _this.props.selectedAccount) != null ? _ref4.get('id') : void 0) === account1._store.props.key) {
+          return -1;
+        } else if (((_ref5 = _this.props.selectedAccount) != null ? _ref5.get('id') : void 0) === account2._store.props.key) {
+          return 1;
+        } else {
+          return 0;
+        }
       };
     })(this)).toJS() : void 0), nav({
       className: 'submenu'
@@ -7641,11 +7652,11 @@ module.exports = React.createClass({
       src: avatar
     })) : void 0, div({
       className: 'infos'
-    }, this.renderAddress('from'), this.props.active ? this.renderAddress('to') : void 0, this.props.active ? this.renderAddress('cc') : void 0, this.props.active ? div({
+    }, this.renderAddress('from'), this.props.active ? this.renderAddress('to') : void 0, this.props.active ? this.renderAddress('cc') : void 0, div({
       className: 'metas indicators'
     }, this.props.message.get('attachments').length ? PopupMessageAttachments({
       message: this.props.message
-    }) : void 0, (_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
+    }) : void 0, this.props.active ? ((_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
       className: 'fa fa-star'
     }) : void 0, this.props.isDraft ? a({
       href: "#edit/" + (this.props.message.get('id'))
@@ -7653,7 +7664,7 @@ module.exports = React.createClass({
       className: 'fa fa-edit'
     }), span(null, t("edit draft"))) : void 0, this.props.isDeleted ? i({
       className: 'fa fa-trash'
-    }) : void 0) : void 0, div({
+    }) : void 0) : void 0), div({
       className: 'metas date'
     }, messageUtils.formatDate(this.props.message.get('createdAt'))), PopupMessageDetails({
       message: this.props.message
@@ -7838,7 +7849,7 @@ module.exports = Panel = React.createClass({
             });
           };
         })(this), 1);
-        return;
+        return div(null, 'redirecting');
       }
     }
     if (this.state.settings.get('displayConversation')) {
@@ -8025,7 +8036,7 @@ module.exports = Panel = React.createClass({
       };
     }).toJS();
     mailboxesFlat = {};
-    AccountStore.getSelectedMailboxes().map(function(mailbox) {
+    AccountStore.getSelectedMailboxes(true).map(function(mailbox) {
       var id;
       id = mailbox.get('id');
       mailboxesFlat[id] = {};
@@ -8041,7 +8052,7 @@ module.exports = Panel = React.createClass({
       selectedAccount: selectedAccount,
       mailboxesFlat: mailboxesFlat,
       favoriteMailboxes: AccountStore.getSelectedFavorites(),
-      selectedMailboxes: AccountStore.getSelectedMailboxes(),
+      selectedMailboxes: AccountStore.getSelectedMailboxes(true),
       accountError: AccountStore.getError(),
       accountWaiting: AccountStore.isWaiting(),
       refresh: refresh,
@@ -9300,11 +9311,13 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
 });
 
 ;require.register("components/toolbar_messageslist_filters", function(exports, require, module) {
-var DateRangePicker, FiltersToolbarMessagesList, LayoutActionCreator, MessageFilter, Tooltips, button, div, i, span, _ref, _ref1;
+var DateRangePicker, FiltersToolbarMessagesList, LayoutActionCreator, MessageFilter, RouterMixin, Tooltips, button, div, i, span, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, span = _ref.span, i = _ref.i, button = _ref.button;
 
 _ref1 = require('../constants/app_constants'), MessageFilter = _ref1.MessageFilter, Tooltips = _ref1.Tooltips;
+
+RouterMixin = require('../mixins/router_mixin');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
@@ -9312,6 +9325,7 @@ DateRangePicker = require('./date_range_picker');
 
 module.exports = FiltersToolbarMessagesList = React.createClass({
   displayName: 'FiltersToolbarMessagesList',
+  mixins: [RouterMixin],
   propTypes: {
     accountID: React.PropTypes.string.isRequired,
     mailboxID: React.PropTypes.string.isRequired
@@ -9341,29 +9355,41 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
     return LayoutActionCreator.showFilteredList(filter, sort);
   },
   onDateFilter: function(start, end) {
-    var href, params;
-    href = window.location.href;
-    href = href.replace(/\/sort\/.*/gi, "");
+    var params;
     if (!!start && !!end) {
       params = [start, end];
-      href = href + ("/sort/-date/before/" + start + "/after/" + end);
+      this.redirect({
+        direction: 'first',
+        action: 'account.mailbox.messages.date',
+        parameters: [this.props.accountID, this.props.mailboxID, '-date', start, end]
+      });
     } else {
       params = false;
+      this.redirect({
+        direction: 'first',
+        action: 'account.mailbox.messages',
+        parameters: [this.props.accountID, this.props.mailboxID]
+      });
     }
-    window.location.href = href;
     return this.showList('-', params);
   },
   toggleFilters: function(name) {
-    var filter, href;
-    href = window.location.href;
-    href = href.replace(/\/sort\/.*/gi, "");
+    var filter;
     if (this.props.filter === name) {
       filter = '-';
+      this.redirect({
+        direction: 'first',
+        action: 'account.mailbox.messages',
+        parameters: [this.props.accountID, this.props.mailboxID]
+      });
     } else {
       filter = name;
-      href = href + ("/sort/-date/flag/" + name);
+      this.redirect({
+        direction: 'first',
+        action: 'account.mailbox.messages.filter',
+        parameters: [this.props.accountID, this.props.mailboxID, '-date', name]
+      });
     }
-    window.location.href = href;
     return this.showList(filter, null);
   },
   render: function() {
@@ -9373,7 +9399,7 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
       this.props.filter = filter.replace(/\/.*/gi, '');
     }
     dateFiltered = this.props.queryParams.before !== '-' && this.props.queryParams.before !== '1970-01-01T00:00:00.000Z' && this.props.queryParams.before !== void 0 && this.props.queryParams.after !== void 0 && this.props.queryParams.after !== '-';
-    if (window.location.href.indexOf('before') !== -1) {
+    if (window.location.href.indexOf('/sort/-date/before') !== -1) {
       dateFiltered = true;
     }
     return div({
@@ -9428,13 +9454,15 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
 });
 
 ;require.register("components/toolbar_messageslist_search", function(exports, require, module) {
-var Dropdown, LayoutActionCreator, MessageFilter, SearchToolbarMessagesList, Tooltips, button, div, filters, form, i, input, _ref, _ref1;
+var Dropdown, LayoutActionCreator, MessageFilter, RouterMixin, SearchToolbarMessagesList, Tooltips, button, div, filters, form, i, input, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, i = _ref.i, button = _ref.button, input = _ref.input, form = _ref.form;
 
 Dropdown = require('./basic_components').Dropdown;
 
 _ref1 = require('../constants/app_constants'), MessageFilter = _ref1.MessageFilter, Tooltips = _ref1.Tooltips;
+
+RouterMixin = require('../mixins/router_mixin');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
@@ -9445,16 +9473,27 @@ filters = {
 
 module.exports = SearchToolbarMessagesList = React.createClass({
   displayName: 'SearchToolbarMessagesList',
+  mixins: [RouterMixin],
   propTypes: {
     accountID: React.PropTypes.string.isRequired,
     mailboxID: React.PropTypes.string.isRequired
   },
   getInitialState: function() {
-    return {
-      type: 'from',
-      value: '',
-      isEmpty: true
-    };
+    var value;
+    if (window.location.href.indexOf('/sort/-from/before') !== -1) {
+      value = window.location.href.split('before/')[1];
+      return {
+        value: value.split('/')[0],
+        isEmpty: false,
+        type: 'from'
+      };
+    } else {
+      return {
+        value: '',
+        isEmpty: true,
+        type: 'from'
+      };
+    }
   },
   showList: function() {
     var filter, sort;
@@ -9464,6 +9503,11 @@ module.exports = SearchToolbarMessagesList = React.createClass({
       before: this.state.value
     };
     if ((this.state.value != null) && this.state.value !== '') {
+      this.redirect({
+        direction: 'first',
+        action: 'search',
+        parameters: [this.props.accountID, this.props.mailboxID, this.state.value, "" + this.state.value + "\uFFFF", this.state.type]
+      });
       window.cozyMails.messageClose();
       sort.field = this.state.type;
       sort.after = "" + this.state.value + "\uFFFF";
@@ -9490,6 +9534,11 @@ module.exports = SearchToolbarMessagesList = React.createClass({
     }
   },
   reset: function() {
+    this.redirect({
+      direction: 'first',
+      action: 'account.mailbox.messages',
+      parameters: [this.props.accountID, this.props.mailboxID]
+    });
     return this.setState(this.getInitialState(), this.showList);
   },
   render: function() {
@@ -11899,6 +11948,10 @@ module.exports = Router = (function(_super) {
       pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/before/:before/after/:after',
       fluxAction: 'showMessageList'
     },
+    'search': {
+      pattern: 'account/:accountID/mailbox/:mailboxID/sort/-from/before/:before/after/:after/field/:type',
+      fluxAction: 'showComposeMessageList'
+    },
     'account.mailbox.messages': {
       pattern: 'account/:accountID/mailbox/:mailboxID',
       fluxAction: 'showMessageList'
@@ -11906,10 +11959,6 @@ module.exports = Router = (function(_super) {
     'account.mailbox.default': {
       pattern: 'account/:accountID',
       fluxAction: 'showMessageList'
-    },
-    'search': {
-      pattern: 'search/:query/page/:page',
-      fluxAction: 'showSearch'
     },
     'message': {
       pattern: 'message/:messageID',
@@ -11965,6 +12014,7 @@ module.exports = Router = (function(_super) {
           mailbox = AccountStore.getDefaultMailbox(parameters.accountID);
         } else {
           mailbox = AccountStore.getDefaultMailbox(defaultAccountID);
+          this.navigate("account/" + defaultAccountID + "/mailbox/" + (mailbox != null ? mailbox.get('id') : void 0));
         }
         defaultMailboxID = mailbox != null ? mailbox.get('id') : void 0;
         defaultParameters = {};
@@ -12174,6 +12224,7 @@ AccountStore = (function(_super) {
         mailbox = (_selectedAccount != null ? (_ref = _selectedAccount.get('mailboxes')) != null ? _ref.get(value.mailboxID) : void 0 : void 0) || null;
         this._setCurrentMailbox(mailbox);
       } else {
+        _newAccountError = null;
         this._setCurrentMailbox(null);
       }
       return this.emit('change');
@@ -12299,15 +12350,15 @@ AccountStore = (function(_super) {
     }
     result = Immutable.OrderedMap();
     mailboxes = _selectedAccount.get('mailboxes');
-    if (sorted) {
-      mailboxes = mailboxes.sort(_mailboxSort);
-    }
     mailboxes.forEach(function(data) {
       var mailbox;
       mailbox = Immutable.Map(data);
       result = result.set(mailbox.get('id'), mailbox);
       return true;
     });
+    if (sorted) {
+      result = result.sort(_mailboxSort);
+    }
     return result;
   };
 
@@ -13099,7 +13150,7 @@ MessageStore = (function(_super) {
       changed = true;
       return out[boxid] = {
         nbTotal: +1,
-        nbUnread: isRead ? +1 : 0
+        nbUnread: isRead ? 0 : +1
       };
     });
     removed = _.difference(oldboxes, newboxes);
@@ -15256,6 +15307,7 @@ module.exports = AccountTranslator = {
         last[box.depth] = box.weight;
       } else {
         box.weight = last[box.depth - 1] - 0.1;
+        last[box.depth] = box.weight;
       }
       return AccountTranslator.mailboxToImmutable(box);
     }).toOrderedMap();
