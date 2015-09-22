@@ -2900,7 +2900,6 @@ body {
     display: none;
   }
   .app [role=menubar][aria-expanded=false] .mainmenu [role=menuitem] {
-    display: none;
     padding-left: 0.5;
   }
   .app [role=menubar][aria-expanded=false] .mainmenu [role=menuitem].account,
