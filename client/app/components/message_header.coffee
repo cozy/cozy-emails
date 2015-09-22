@@ -35,11 +35,11 @@ module.exports = React.createClass
                 @renderAddress 'from'
                 @renderAddress 'to' if @props.active
                 @renderAddress 'cc' if @props.active
-                if @props.active
-                    div className: 'metas indicators',
-                        if @props.message.get('attachments').length
-                            PopupMessageAttachments
-                                message: @props.message
+                div className: 'metas indicators',
+                    if @props.message.get('attachments').length
+                        PopupMessageAttachments
+                            message: @props.message
+                    if @props.active
                         if MessageFlags.FLAGGED in @props.message.get('flags')
                             i className: 'fa fa-star'
                         if @props.isDraft

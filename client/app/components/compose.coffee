@@ -458,6 +458,9 @@ module.exports = Compose = React.createClass
                 # (server override cid: URLs with relative URLs)
                 state[key] = value for key, value of message when key isnt 'attachments' and
                     key isnt 'html' and key isnt 'text'
+
+                state[key] = @state[key] for key in Object.keys(@state) when key isnt "saving"
+
                 # Sometime, when user cancel composing, the component has been
                 # unmounted before we come back from autosave, and setState fails
                 if @isMounted()

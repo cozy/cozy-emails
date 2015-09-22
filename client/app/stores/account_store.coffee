@@ -135,6 +135,7 @@ class AccountStore extends Store
                     ?.get(value.mailboxID) or null
                 @_setCurrentMailbox mailbox
             else
+                _newAccountError = null
                 @_setCurrentMailbox null
             @emit 'change'
 
@@ -239,12 +240,13 @@ class AccountStore extends Store
 
         result = Immutable.OrderedMap()
         mailboxes = _selectedAccount.get('mailboxes')
-        if sorted
-            mailboxes = mailboxes.sort _mailboxSort
         mailboxes.forEach (data) ->
             mailbox = Immutable.Map data
             result = result.set mailbox.get('id'), mailbox
             return true
+
+        if sorted
+            result = result.sort _mailboxSort
 
         return result
 

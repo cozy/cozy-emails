@@ -71,7 +71,7 @@ module.exports = RemoveAllMessagesFromMailbox = (function(superClass) {
   RemoveAllMessagesFromMailbox.prototype.fetchMessages = function(callback) {
     return Message.rawRequest('byMailboxRequest', {
       limit: LIMIT_UPDATE,
-      startkey: ['uid', this.mailboxID, 0],
+      startkey: ['uid', this.mailboxID, -1],
       endkey: ['uid', this.mailboxID, {}],
       include_docs: true,
       reduce: false

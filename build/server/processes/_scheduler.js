@@ -51,7 +51,7 @@ Scheduler.schedule = function(proc, asap, callback) {
   if (proc.finished) {
     throw new Error('scheduling of finished process');
   } else {
-    proc.finalCallback = callback;
+    proc.addCallback(callback);
     if (asap === Scheduler.ASAP) {
       if (running != null ? running.abortable : void 0) {
         return running.abort(function() {
@@ -91,11 +91,8 @@ Scheduler.doNext = function() {
   if (!running) {
     proc = running = queued.shift();
     if (proc) {
-      proc.initialize(proc.options, function(err) {
+      proc.run(function(err) {
         log.debug("process finished " + proc.id + " " + err);
-        if (typeof proc.finalCallback === "function") {
-          proc.finalCallback(err);
-        }
         running = null;
         return setImmediate(Scheduler.doNext);
       });
@@ -115,6 +112,24 @@ Scheduler.onIdle = function() {
   } else {
     log.debug("nothing to do, waiting 10 MIN");
     return setTimeout(Scheduler.doNext, 10 * MIN);
+  }
+};
+
+Scheduler.refreshNow = function(mailbox, callback) {
+  var alreadyScheduled, isSameBoxRefresh, refresh;
+  isSameBoxRefresh = function(processus) {
+    return processus instanceof MailboxRefresh && processus.mailbox === mailbox;
+  };
+  if (running && isSameBoxRefresh(running)) {
+    return running.addCallback(callback);
+  } else {
+    if (alreadyScheduled = queued.filter(isSameBoxRefresh)[0]) {
+      queued = _.without(queued, alreadyScheduled);
+    }
+    refresh = new MailboxRefresh({
+      mailbox: mailbox
+    });
+    return Scheduler.schedule(refresh, Scheduler.ASAP, callback);
   }
 };
 

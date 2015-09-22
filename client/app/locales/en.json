@@ -1,4 +1,4 @@
-module.exports = {
+{
   "app loading": "Loading…",
   "app back": "Back",
   "app cancel": "Cancel",
@@ -368,4 +368,3 @@ module.exports = {
   "daterangepicker presets last month": "last month",
   "daterangepicker clear": "clear"
 }
-;

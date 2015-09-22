@@ -1,5 +1,6 @@
 ramStore = require '../models/store_account_and_boxes'
 Message = require '../models/message'
+Mailbox = require '../models/mailbox'
 safeLoop = require '../utils/safeloop'
 Process = require './_base'
 RemoveAllMessagesFromMailbox = require './message_remove_by_mailbox'
@@ -16,6 +17,7 @@ module.exports = class OrphanRemoval extends Process
 
         async.series [
             @removeMailboxOrphans
+            @forgetDestroyedBoxes
             @getOrphanMessageMailboxesIDs
             @removeOrphansMessageFromMailboxes
             @destroyNoBoxMessages
@@ -32,6 +34,19 @@ module.exports = class OrphanRemoval extends Process
         , (errors) ->
             for err in errors when -1 is err.message.indexOf 'not found'
                 log.error 'failed to delete box', err
+            callback null
+
+    forgetDestroyedBoxes: (callback) ->
+        toForget = []
+        for account in ramStore.getAllAccounts()
+            for boxid in account.getReferencedBoxes()
+                unless ramStore.getMailbox boxid
+                    toForget.push {account, boxid}
+
+        safeLoop toForget, ({account, boxid}, next) ->
+            account.forgetBox boxid, next
+        , (errors) ->
+            log.error "failed to forget box", err for err in errors
             callback null
 
     getOrphanMessageMailboxesIDs: (callback) =>

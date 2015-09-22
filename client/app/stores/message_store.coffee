@@ -180,7 +180,7 @@ class MessageStore extends Store
         added = _.difference(newboxes, oldboxes)
         added.forEach (boxid) ->
             changed = true
-            out[boxid] = nbTotal: +1, nbUnread: if isRead then +1 else 0
+            out[boxid] = nbTotal: +1, nbUnread: if isRead then 0 else +1
 
         removed = _.difference oldboxes, newboxes
         removed.forEach (boxid) ->
@@ -251,7 +251,6 @@ class MessageStore extends Store
 
     handleFetchResult = (result) ->
 
-        _messages  = _messages.clear()
         if result.links? and result.links.next?
             # reinit params here for pagination on filtered lists
             _params = {}

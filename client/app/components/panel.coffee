@@ -40,7 +40,8 @@ module.exports = Panel = React.createClass
     render: ->
         # -- Generates a list of messages for a given account and mailbox
         if @props.action is 'account.mailbox.messages' or
-           @props.action is 'account.mailbox.messages.full' or
+           @props.action is 'account.mailbox.messages.filter' or
+           @props.action is 'account.mailbox.messages.date' or
            @props.action is 'account.mailbox.default' or
            @props.action is 'search'
 
@@ -116,7 +117,7 @@ module.exports = Panel = React.createClass
                         direction: "first"
                         action: "default"
                 , 1
-                return
+                return div null, 'redirecting'
 
         # gets the selected message if any
         if @state.settings.get 'displayConversation'
@@ -333,7 +334,7 @@ module.exports = Panel = React.createClass
         .toJS()
 
         mailboxesFlat = {}
-        AccountStore.getSelectedMailboxes().map (mailbox) ->
+        AccountStore.getSelectedMailboxes(true).map (mailbox) ->
             id = mailbox.get 'id'
             mailboxesFlat[id] = {}
             ['id', 'label', 'depth'].map (prop) ->
@@ -351,7 +352,7 @@ module.exports = Panel = React.createClass
             selectedAccount       : selectedAccount
             mailboxesFlat         : mailboxesFlat
             favoriteMailboxes     : AccountStore.getSelectedFavorites()
-            selectedMailboxes     : AccountStore.getSelectedMailboxes()
+            selectedMailboxes     : AccountStore.getSelectedMailboxes(true)
             accountError          : AccountStore.getError()
             accountWaiting        : AccountStore.isWaiting()
             refresh               : refresh

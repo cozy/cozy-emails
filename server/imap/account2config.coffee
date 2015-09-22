@@ -94,7 +94,7 @@ module.exports.makeSMTPConfig = (account) ->
 
 
 # create a node-imap config for this account
-module.exports.makeIMAPConfig = (account, callback) ->
+module.exports.makeIMAPConfig = makeIMAPConfig = (account, callback) ->
 
     if account.oauthProvider is "GMAIL"
         generator = getXoauth2Generator account
@@ -121,3 +121,5 @@ module.exports.makeIMAPConfig = (account, callback) ->
             port       : parseInt account.imapPort
             tls        : not account.imapSSL? or account.imapSSL
             tlsOptions : rejectUnauthorized : false
+            autotls    : 'required' # for servers with STARTTLS and
+                                    # LOGINDISABLED

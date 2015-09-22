@@ -455,15 +455,27 @@ module.exports = class Message extends cozydb.CozyModel
         log.debug ".removeFromMailbox", @id, box.label
         callback = noDestroy unless callback
 
-        mailboxIDs = {}
-        mailboxIDs[key] = value for key, value of @mailboxIDs or {}
-        delete mailboxIDs[box.id]
+        changes = {}
+        changed = false
 
-        isOrphan = Object.keys(mailboxIDs).length is 0
-        log.debug "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
+        if box.id of (@mailboxIDs or {})
+            changes.mailboxIDs = _.omit @mailboxIDs, box.id
+            changed = true
 
-        if isOrphan and not noDestroy then @destroy callback
-        else @updateAttributes {mailboxIDs}, callback
+        if box.id of (@twinMailboxIDs or {})
+            changes.twinMailboxIDs = _.omit @twinMailboxIDs, box.id
+            changed = true
+
+        if changed
+            boxes = Object.keys(changes.mailboxIDs or @mailboxIDs)
+            isOrphan = boxes.length is 0
+            log.debug "REMOVING #{@id}, NOW ORPHAN = ", isOrphan
+
+            if isOrphan and not noDestroy then @destroy callback
+            else @updateAttributes changes, callback
+
+        else
+            setImmediate callback
 
 
     # Public: Create a message from a raw imap message.
@@ -567,9 +579,12 @@ module.exports = class Message extends cozydb.CozyModel
             raw.html = mailutils.sanitizeHTML raw.html, raw.id, attachments
 
         if not raw.text? and raw.html?
-            raw.text = htmlToText.fromString raw.html,
-                tables: true
-                wordwrap: 80
+            try
+                raw.text = htmlToText.fromString raw.html,
+                    tables: true
+                    wordwrap: 80
+            catch err
+                log.error "Error converting HTML to text", err, raw.html
 
         return raw
 

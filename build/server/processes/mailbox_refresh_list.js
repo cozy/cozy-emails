@@ -42,7 +42,7 @@ module.exports = MailboxRefreshList = (function(superClass) {
     cozyBoxes = ramStore.getMailboxesByAccount(this.account.id);
     return this.account.imap_getBoxes((function(_this) {
       return function(err, imapBoxes) {
-        log.debug("refreshBoxes#results", cozyBoxes);
+        log.debug("refreshBoxes#results", cozyBoxes.length);
         if (err) {
           return callback(err);
         }
@@ -81,13 +81,20 @@ module.exports = MailboxRefreshList = (function(superClass) {
 
   MailboxRefreshList.prototype.destroyOldBoxes = function(callback) {
     log.debug("destroying", this.destroyed.length, "boxes");
-    return safeLoop(this.destroyed, function(box, next) {
-      return box.destroy(next);
-    }, function(errors) {
+    return safeLoop(this.destroyed, (function(_this) {
+      return function(box, next) {
+        return box.destroy(function(err) {
+          if (err) {
+            log.error('fail to destroy box', err);
+          }
+          return _this.account.forgetBox(box.id, next);
+        });
+      };
+    })(this), function(errors) {
       var err, i, len;
       for (i = 0, len = errors.length; i < len; i++) {
         err = errors[i];
-        log.error('fail to destroy box', err);
+        log.error('fail to forget box', err);
       }
       return callback(null);
     });

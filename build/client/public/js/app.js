@@ -1937,15 +1937,7 @@ module.exports = MailboxItem = React.createClass({
     }
   },
   buildIndentation: function() {
-    var j;
-    return ((function() {
-      var _i, _ref1, _results;
-      _results = [];
-      for (j = _i = 1, _ref1 = this.props.mailbox.get('depth'); 1 <= _ref1 ? _i <= _ref1 : _i >= _ref1; j = 1 <= _ref1 ? ++_i : --_i) {
-        _results.push("    ");
-      }
-      return _results;
-    }).call(this)).join('');
+    return new Array(this.props.mailbox.get('depth') + 1).join("    ");
   },
   buildFavoriteValues: function() {
     var favoriteClass, favoriteTitle;
@@ -3103,7 +3095,7 @@ module.exports = Application = React.createClass({
     }
     selectedAccountID = (selectedAccount != null ? selectedAccount.get('id') : void 0) || null;
     firstPanelInfo = (_ref2 = this.props.router.current) != null ? _ref2.firstPanel : void 0;
-    if ((firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages' || (firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages.full') {
+    if ((firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages' || (firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages.filter' || (firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages.date') {
       selectedMailboxID = firstPanelInfo.parameters.mailboxID;
     } else {
       selectedMailboxID = null;
@@ -3145,7 +3137,7 @@ module.exports = Application = React.createClass({
     account = this.state.selectedAccount;
     if ((account != null)) {
       if ((account.get('draftMailbox') == null) || (account.get('sentMailbox') == null) || (account.get('trashMailbox') == null)) {
-        if (action === 'account.mailbox.messages' || action === 'account.mailbox.messages.full' || action === 'search' || action === 'message' || action === 'conversation' || action === 'compose' || action === 'edit') {
+        if (action === 'account.mailbox.messages' || action === 'account.mailbox.messages.filter' || action === 'account.mailbox.messages.date' || action === 'search' || action === 'message' || action === 'conversation' || action === 'compose' || action === 'edit') {
           this.redirect({
             direction: 'first',
             action: 'account.config',
@@ -4051,7 +4043,7 @@ module.exports = Compose = React.createClass({
       }
       return MessageActionCreator.send(message, (function(_this) {
         return function(error, message) {
-          var cid, key, msgKo, msgOk, state, value;
+          var cid, key, msgKo, msgOk, state, value, _i, _len, _ref3;
           if ((error == null) && (_this.state.id == null) && (message != null)) {
             MessageActionCreator.setCurrent(message.id);
           }
@@ -4066,6 +4058,13 @@ module.exports = Compose = React.createClass({
             value = message[key];
             if (key !== 'attachments' && key !== 'html' && key !== 'text') {
               state[key] = value;
+            }
+          }
+          _ref3 = Object.keys(_this.state);
+          for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+            key = _ref3[_i];
+            if (key !== "saving") {
+              state[key] = _this.state[key];
             }
           }
           if (_this.isMounted()) {
@@ -5827,6 +5826,7 @@ module.exports = MailsInput = React.createClass({
     if (isBlur == null) {
       isBlur = false;
     }
+    this.state.selected = 0;
     if (this.isMounted()) {
       state = {};
       state.open = false;
@@ -6042,6 +6042,17 @@ module.exports = Menu = React.createClass({
     }, this.state.accounts.length ? this.state.accounts.map((function(_this) {
       return function(account, key) {
         return _this.getAccountRender(account, key);
+      };
+    })(this)).sort((function(_this) {
+      return function(account1, account2) {
+        var _ref4, _ref5;
+        if (((_ref4 = _this.props.selectedAccount) != null ? _ref4.get('id') : void 0) === account1._store.props.key) {
+          return -1;
+        } else if (((_ref5 = _this.props.selectedAccount) != null ? _ref5.get('id') : void 0) === account2._store.props.key) {
+          return 1;
+        } else {
+          return 0;
+        }
       };
     })(this)).toJS() : void 0), nav({
       className: 'submenu'
@@ -7641,11 +7652,11 @@ module.exports = React.createClass({
       src: avatar
     })) : void 0, div({
       className: 'infos'
-    }, this.renderAddress('from'), this.props.active ? this.renderAddress('to') : void 0, this.props.active ? this.renderAddress('cc') : void 0, this.props.active ? div({
+    }, this.renderAddress('from'), this.props.active ? this.renderAddress('to') : void 0, this.props.active ? this.renderAddress('cc') : void 0, div({
       className: 'metas indicators'
     }, this.props.message.get('attachments').length ? PopupMessageAttachments({
       message: this.props.message
-    }) : void 0, (_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
+    }) : void 0, this.props.active ? ((_ref1 = MessageFlags.FLAGGED, __indexOf.call(this.props.message.get('flags'), _ref1) >= 0) ? i({
       className: 'fa fa-star'
     }) : void 0, this.props.isDraft ? a({
       href: "#edit/" + (this.props.message.get('id'))
@@ -7653,7 +7664,7 @@ module.exports = React.createClass({
       className: 'fa fa-edit'
     }), span(null, t("edit draft"))) : void 0, this.props.isDeleted ? i({
       className: 'fa fa-trash'
-    }) : void 0) : void 0, div({
+    }) : void 0) : void 0), div({
       className: 'metas date'
     }, messageUtils.formatDate(this.props.message.get('createdAt'))), PopupMessageDetails({
       message: this.props.message
@@ -7783,7 +7794,7 @@ module.exports = Panel = React.createClass({
     return should;
   },
   render: function() {
-    if (this.props.action === 'account.mailbox.messages' || this.props.action === 'account.mailbox.messages.full' || this.props.action === 'account.mailbox.default' || this.props.action === 'search') {
+    if (this.props.action === 'account.mailbox.messages' || this.props.action === 'account.mailbox.messages.filter' || this.props.action === 'account.mailbox.messages.date' || this.props.action === 'account.mailbox.default' || this.props.action === 'search') {
       return this.renderList();
     } else if (this.props.action === 'account.config' || this.props.action === 'account.new') {
       return this.renderAccount();
@@ -7838,7 +7849,7 @@ module.exports = Panel = React.createClass({
             });
           };
         })(this), 1);
-        return;
+        return div(null, 'redirecting');
       }
     }
     if (this.state.settings.get('displayConversation')) {
@@ -8025,7 +8036,7 @@ module.exports = Panel = React.createClass({
       };
     }).toJS();
     mailboxesFlat = {};
-    AccountStore.getSelectedMailboxes().map(function(mailbox) {
+    AccountStore.getSelectedMailboxes(true).map(function(mailbox) {
       var id;
       id = mailbox.get('id');
       mailboxesFlat[id] = {};
@@ -8041,7 +8052,7 @@ module.exports = Panel = React.createClass({
       selectedAccount: selectedAccount,
       mailboxesFlat: mailboxesFlat,
       favoriteMailboxes: AccountStore.getSelectedFavorites(),
-      selectedMailboxes: AccountStore.getSelectedMailboxes(),
+      selectedMailboxes: AccountStore.getSelectedMailboxes(true),
       accountError: AccountStore.getError(),
       accountWaiting: AccountStore.isWaiting(),
       refresh: refresh,
@@ -9300,11 +9311,13 @@ module.exports = ActionsToolbarMessagesList = React.createClass({
 });
 
 ;require.register("components/toolbar_messageslist_filters", function(exports, require, module) {
-var DateRangePicker, FiltersToolbarMessagesList, LayoutActionCreator, MessageFilter, Tooltips, button, div, i, span, _ref, _ref1;
+var DateRangePicker, FiltersToolbarMessagesList, LayoutActionCreator, MessageFilter, RouterMixin, Tooltips, button, div, i, span, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, span = _ref.span, i = _ref.i, button = _ref.button;
 
 _ref1 = require('../constants/app_constants'), MessageFilter = _ref1.MessageFilter, Tooltips = _ref1.Tooltips;
+
+RouterMixin = require('../mixins/router_mixin');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
@@ -9312,6 +9325,7 @@ DateRangePicker = require('./date_range_picker');
 
 module.exports = FiltersToolbarMessagesList = React.createClass({
   displayName: 'FiltersToolbarMessagesList',
+  mixins: [RouterMixin],
   propTypes: {
     accountID: React.PropTypes.string.isRequired,
     mailboxID: React.PropTypes.string.isRequired
@@ -9344,8 +9358,18 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
     var params;
     if (!!start && !!end) {
       params = [start, end];
+      this.redirect({
+        direction: 'first',
+        action: 'account.mailbox.messages.date',
+        parameters: [this.props.accountID, this.props.mailboxID, '-date', start, end]
+      });
     } else {
       params = false;
+      this.redirect({
+        direction: 'first',
+        action: 'account.mailbox.messages',
+        parameters: [this.props.accountID, this.props.mailboxID]
+      });
     }
     return this.showList('-', params);
   },
@@ -9353,14 +9377,31 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
     var filter;
     if (this.props.filter === name) {
       filter = '-';
+      this.redirect({
+        direction: 'first',
+        action: 'account.mailbox.messages',
+        parameters: [this.props.accountID, this.props.mailboxID]
+      });
     } else {
       filter = name;
+      this.redirect({
+        direction: 'first',
+        action: 'account.mailbox.messages.filter',
+        parameters: [this.props.accountID, this.props.mailboxID, '-date', name]
+      });
     }
     return this.showList(filter, null);
   },
   render: function() {
-    var dateFiltered;
+    var dateFiltered, filter;
+    if (window.location.href.indexOf('flag') !== -1) {
+      filter = window.location.href.replace(/.*\/flag\//gi, '');
+      this.props.filter = filter.replace(/\/.*/gi, '');
+    }
     dateFiltered = this.props.queryParams.before !== '-' && this.props.queryParams.before !== '1970-01-01T00:00:00.000Z' && this.props.queryParams.before !== void 0 && this.props.queryParams.after !== void 0 && this.props.queryParams.after !== '-';
+    if (window.location.href.indexOf('/sort/-date/before') !== -1) {
+      dateFiltered = true;
+    }
     return div({
       role: 'group',
       className: 'filters',
@@ -9413,13 +9454,15 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
 });
 
 ;require.register("components/toolbar_messageslist_search", function(exports, require, module) {
-var Dropdown, LayoutActionCreator, MessageFilter, SearchToolbarMessagesList, Tooltips, button, div, filters, form, i, input, _ref, _ref1;
+var Dropdown, LayoutActionCreator, MessageFilter, RouterMixin, SearchToolbarMessagesList, Tooltips, button, div, filters, form, i, input, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, i = _ref.i, button = _ref.button, input = _ref.input, form = _ref.form;
 
 Dropdown = require('./basic_components').Dropdown;
 
 _ref1 = require('../constants/app_constants'), MessageFilter = _ref1.MessageFilter, Tooltips = _ref1.Tooltips;
+
+RouterMixin = require('../mixins/router_mixin');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
@@ -9430,16 +9473,27 @@ filters = {
 
 module.exports = SearchToolbarMessagesList = React.createClass({
   displayName: 'SearchToolbarMessagesList',
+  mixins: [RouterMixin],
   propTypes: {
     accountID: React.PropTypes.string.isRequired,
     mailboxID: React.PropTypes.string.isRequired
   },
   getInitialState: function() {
-    return {
-      type: 'from',
-      value: '',
-      isEmpty: true
-    };
+    var value;
+    if (window.location.href.indexOf('/sort/-from/before') !== -1) {
+      value = window.location.href.split('before/')[1];
+      return {
+        value: value.split('/')[0],
+        isEmpty: false,
+        type: 'from'
+      };
+    } else {
+      return {
+        value: '',
+        isEmpty: true,
+        type: 'from'
+      };
+    }
   },
   showList: function() {
     var filter, sort;
@@ -9449,6 +9503,11 @@ module.exports = SearchToolbarMessagesList = React.createClass({
       before: this.state.value
     };
     if ((this.state.value != null) && this.state.value !== '') {
+      this.redirect({
+        direction: 'first',
+        action: 'search',
+        parameters: [this.props.accountID, this.props.mailboxID, this.state.value, "" + this.state.value + "\uFFFF", this.state.type]
+      });
       window.cozyMails.messageClose();
       sort.field = this.state.type;
       sort.after = "" + this.state.value + "\uFFFF";
@@ -9475,6 +9534,11 @@ module.exports = SearchToolbarMessagesList = React.createClass({
     }
   },
   reset: function() {
+    this.redirect({
+      direction: 'first',
+      action: 'account.mailbox.messages',
+      parameters: [this.props.accountID, this.props.mailboxID]
+    });
     return this.setState(this.getInitialState(), this.showList);
   },
   render: function() {
@@ -10007,6 +10071,7 @@ window.onerror = function(msg, url, line, col, error) {
         type: 'error',
         error: {
           msg: msg,
+          name: error != null ? error.name : void 0,
           full: exception,
           stack: error != null ? error.stack : void 0
         },
@@ -10072,13 +10137,22 @@ window.onload = function() {
     return window.cozyMails.customEvent("APPLICATION_LOADED");
   } catch (_error) {
     e = _error;
-    console.error(e);
+    console.error(e, e != null ? e.stack : void 0);
     exception = e.toString();
     if (exception !== window.lastError) {
       data = {
         data: {
           type: 'error',
-          exception: exception
+          error: {
+            msg: e.message,
+            name: e != null ? e.name : void 0,
+            full: exception,
+            stack: e != null ? e.stack : void 0
+          },
+          file: e != null ? e.fileName : void 0,
+          line: e != null ? e.lineNumber : void 0,
+          col: e != null ? e.columnNumber : void 0,
+          href: window.location.href
         }
       };
       xhr = new XMLHttpRequest();
@@ -10683,7 +10757,7 @@ module.exports = {
   "app unimplemented": "Noch nicht implementiert",
   "app error": "Argh, Ich bin nicht fähig diese Aktion auszuführen, bitte probieren Sie es wieder",
   "compose": "Neue E-Mail erstellen",
-  "compose default": 'Hallo, wie geht es Ihnen Heute?',
+  "compose default": "Hallo, wie geht es Ihnen Heute?",
   "compose from": "Von",
   "compose to": "An",
   "compose to help": "Empfänger Liste",
@@ -10933,19 +11007,19 @@ module.exports = {
   "picker drop here": "Dateien hier ablegen",
   "mailbox pick one": "Eine auswählen",
   "mailbox pick null": "Kein Postfach dafür",
-  "task account-fetch": 'Holen %{account}',
-  "task box-fetch": 'Holen %{box}',
-  "task apply-diff-fetch": 'Holen Nachrichtenn aus %{box} von %{account}',
-  "task apply-diff-remove": 'Löschen Nachrichten aus %{box} von %{account}',
-  "task recover-uidvalidity": 'Analysiere',
-  "there were errors": '%{smart_count} Fehler. |||| %{smart_count} Fehler.',
+  "task account-fetch": "Holen %{account}",
+  "task box-fetch": "Holen %{box}",
+  "task apply-diff-fetch": "Holen Nachrichtenn aus %{box} von %{account}",
+  "task apply-diff-remove": "Löschen Nachrichten aus %{box} von %{account}",
+  "task recover-uidvalidity": "Analysiere",
+  "there were errors": "%{smart_count} Fehler. |||| %{smart_count} Fehler.",
   "modal please report": "Bitte übertragen Sie diese Information zum Cozy.",
   "modal please contribute": "Bitte beitragen",
   "validate must not be empty": "Pflichtfeld",
   "toast hide": "Alarme verbergen",
   "toast show": "Alarme anzeigen",
   "toast close all": "Alle Alarme schließen",
-  "notif new title": 'CozyEmail',
+  "notif new title": "CozyEmail",
   "notif new": "%{smart_count} Nachricht nicht gelesen in Konto %{account}||||\n%{smart_count} Nachrichten nicht gelesen in Konto %{account}",
   "notif complete": "Import des Kontos %{account} abgeschlossen.",
   "contact form": "Kontakte auswählen",
@@ -10955,14 +11029,14 @@ module.exports = {
   "gmail security tile": "Über GMAIL Sicherheit",
   "gmail security body": "GMAIL betrachtet Verbindungen die Benutzername und Passwort verwenden nicht als sicher.\nBitte klicken Sie auf den folgenden Link, Stellen Sie sicher das\nSie sich mit Ihrem Konto %{login} angemelden und geben Sie Apps mit geringerer Sicherheit frei.",
   "gmail security link": "Freigabe für Apps mit geringerer Sicherheit.",
-  'plugin name Gallery': 'Anhang Gallerie',
-  'plugin name medium-editor': 'Medium Editor',
-  'plugin name MiniSlate': 'MiniSlate Editor',
-  'plugin name Sample JS': 'Beispiel',
-  'plugin name Keyboard shortcuts': 'Tastaturkombinationen',
-  'plugin name VCard': 'Kontact VCards',
-  'plugin modal close': 'Schließen',
-  'calendar unknown format': "Diese Nachricht enthält eine Einladung für ein Ereignis in einem derzeitig unbekannten Format.",
+  "plugin name Gallery": "Anhang Gallerie",
+  "plugin name medium-editor": "Medium Editor",
+  "plugin name MiniSlate": "MiniSlate Editor",
+  "plugin name Sample JS": "Beispiel",
+  "plugin name Keyboard shortcuts": "Tastaturkombinationen",
+  "plugin name VCard": "Kontact VCards",
+  "plugin modal close": "Schließen",
+  "calendar unknown format": "Diese Nachricht enthält eine Einladung für ein Ereignis in einem derzeitig unbekannten Format.",
   "tooltip reply": "Answer",
   "tooltip reply all": "Answer to all",
   "tooltip forward": "Forward",
@@ -10977,10 +11051,11 @@ module.exports = {
   "tooltip filter only attachment": "Nur Nachrichten mit Anhängen anzeigen",
   "tooltip account parameters": "Account parameters",
   "tooltip delete selection": "Delete all selected messages"
-};
+}
+;
 });
 
-;require.register("locales/en", function(exports, require, module) {
+require.register("locales/en", function(exports, require, module) {
 module.exports = {
   "app loading": "Loading…",
   "app back": "Back",
@@ -10993,7 +11068,7 @@ module.exports = {
   "app error": "Argh, I'm unable to perform this action, please try again",
   "app confirm delete": "Confirm delete",
   "compose": "Compose new email",
-  "compose default": 'Hello, how are you doing today?',
+  "compose default": "Hello, how are you doing today?",
   "compose from": "From",
   "compose to": "To",
   "compose to help": "Recipients list",
@@ -11288,12 +11363,12 @@ module.exports = {
   "picker drop here": "Drop files here or Choose local files",
   "mailbox pick one": "Pick one",
   "mailbox pick null": "No box for this",
-  "task account-fetch": 'Refreshing %{account}',
-  "task box-fetch": 'Refreshing %{box}',
-  "task apply-diff-fetch": 'Fetching mails from %{box} of %{account}',
-  "task apply-diff-remove": 'Deleting mails from %{box} of %{account}',
-  "task recover-uidvalidity": 'Analysing',
-  "there were errors": '%{smart_count} error. |||| %{smart_count} errors.',
+  "task account-fetch": "Refreshing %{account}",
+  "task box-fetch": "Refreshing %{box}",
+  "task apply-diff-fetch": "Fetching mails from %{box} of %{account}",
+  "task apply-diff-remove": "Deleting mails from %{box} of %{account}",
+  "task recover-uidvalidity": "Analysing",
+  "there were errors": "%{smart_count} error. |||| %{smart_count} errors.",
   "modal please report": "Please transmit this information to cozy.",
   "modal please contribute": "Please contribute",
   "modal copy content": "Copy information into clipboard",
@@ -11301,7 +11376,7 @@ module.exports = {
   "toast hide": "Hide alerts",
   "toast show": "Display alerts",
   "toast close all": "Close all alerts",
-  "notif new title": 'CozyEmail',
+  "notif new title": "CozyEmail",
   "notif new": "%{smart_count} message not read in account %{account}||||\n%{smart_count} messages not read in account %{account}",
   "notif complete": "Importation of account %{account} complete.",
   "contact form": "Select contacts",
@@ -11314,14 +11389,14 @@ module.exports = {
   "gmail security tile": "About Gmail security",
   "gmail security body": "Gmail considers connection using username and password not safe.\nPlease click on the following link, make sure\nyou are connected with your %{login} account and enable access for\nless secure apps.",
   "gmail security link": "Enable access for less secure apps.",
-  'plugin name Gallery': 'Attachment gallery',
-  'plugin name medium-editor': 'Medium editor',
-  'plugin name MiniSlate': 'MiniSlate editor',
-  'plugin name Sample JS': 'Sample',
-  'plugin name Keyboard shortcuts': 'Keyboard shortcuts',
-  'plugin name VCard': 'Contacts VCards',
-  'plugin modal close': 'Close',
-  'calendar unknown format': "This message contains an invite to an event in a currently unknown format.",
+  "plugin name Gallery": "Attachment gallery",
+  "plugin name medium-editor": "Medium editor",
+  "plugin name MiniSlate": "MiniSlate editor",
+  "plugin name Sample JS": "Sample",
+  "plugin name Keyboard shortcuts": "Keyboard shortcuts",
+  "plugin name VCard": "Contacts VCards",
+  "plugin modal close": "Close",
+  "calendar unknown format": "This message contains an invite to an event in a currently unknown format.",
   "tooltip reply": "Answer",
   "tooltip reply all": "Answer to all",
   "tooltip forward": "Forward",
@@ -11336,24 +11411,25 @@ module.exports = {
   "tooltip filter only attachment": "Show only messages with attachment",
   "tooltip account parameters": "Account parameters",
   "tooltip delete selection": "Delete all selected messages",
-  'tooltip filter': 'Filter',
-  'tooltip display filters': 'Display filters',
-  'tooltip expunge mailbox': 'Expunge mailbox',
+  "tooltip filter": "Filter",
+  "tooltip display filters": "Display filters",
+  "tooltip expunge mailbox": "Expunge mailbox",
   "tooltip add contact": "Add to your contacts",
   "tooltip show contact": "Show contact",
-  'filters unseen': 'unread',
-  'filters flagged': 'stared',
-  'filters attach': 'attachments',
-  'filters search placeholder': 'Search...',
-  'daterangepicker placeholder': 'by date',
-  'daterangepicker presets yesterday': 'yesterday',
-  'daterangepicker presets last week': 'last week',
-  'daterangepicker presets last month': 'last month',
-  'daterangepicker clear': 'clear'
-};
+  "filters unseen": "unread",
+  "filters flagged": "stared",
+  "filters attach": "attachments",
+  "filters search placeholder": "Search...",
+  "daterangepicker placeholder": "by date",
+  "daterangepicker presets yesterday": "yesterday",
+  "daterangepicker presets last week": "last week",
+  "daterangepicker presets last month": "last month",
+  "daterangepicker clear": "clear"
+}
+;
 });
 
-;require.register("locales/fr", function(exports, require, module) {
+require.register("locales/fr", function(exports, require, module) {
 module.exports = {
   "app loading": "Chargement…",
   "app back": "Retour",
@@ -11660,12 +11736,12 @@ module.exports = {
   "picker drop here": "Déposer les fichiers ici ou chercher des fichiers locaux",
   "mailbox pick one": "Choisissez une boîte",
   "mailbox pick null": "Pas de boîte pour ça",
-  "task account-fetch": 'Rafraîchissement %{account}',
-  "task box-fetch": 'Rafraîchissement %{box}',
-  "task apply-diff-fetch": 'Téléchargement des messages du dossier %{box} de %{account}',
-  "task apply-diff-remove": 'Suppression des messages du dossier %{box} de %{account}',
-  "task recover-uidvalidity": 'Analyse du compte',
-  "there were errors": '%{smart_count} erreur. |||| %{smart_count} erreurs.',
+  "task account-fetch": "Rafraîchissement %{account}",
+  "task box-fetch": "Rafraîchissement %{box}",
+  "task apply-diff-fetch": "Téléchargement des messages du dossier %{box} de %{account}",
+  "task apply-diff-remove": "Suppression des messages du dossier %{box} de %{account}",
+  "task recover-uidvalidity": "Analyse du compte",
+  "there were errors": "%{smart_count} erreur. |||| %{smart_count} erreurs.",
   "modal please report": "Merci de bien vouloir transmettre ces informations à cozy.",
   "modal please contribute": "Merci de contribuer",
   "modal copy content": "Copier ces informations dans le presse papier",
@@ -11673,7 +11749,7 @@ module.exports = {
   "toast hide": "Masquer les alertes",
   "toast show": "Afficher les alertes",
   "toast close all": "Fermer toutes les alertes",
-  "notif new title": 'Messagerie Cozy',
+  "notif new title": "Messagerie Cozy",
   "notif new": "%{smart_count} message non-lu dans le compte %{account}||||\n%{smart_count} messages non-lus dans le compte  %{account}",
   "notif complete": "Importation du compte %{account} finie.",
   "contact form": "Sélectionnez des contacts",
@@ -11686,14 +11762,14 @@ module.exports = {
   "gmail security tile": "Sécurité Gmail",
   "gmail security body": "Gmail considère les connexions par nom d'utilisateur et mot de passe\ncomme non sécurisées. Veuillez cliquer sur le lien ci-dessous, assurez-vous\nd'être connecté avec le compte %{login} et activez l'accès\npour les applications moins sécurisées.",
   "gmail security link": "Activer l'accès pour les applications moins sécurisées",
-  'plugin name Gallery': 'Galerie de pièces jointes',
-  'plugin name medium-editor': 'Éditeur Medium',
-  'plugin name MiniSlate': 'Éditeur MiniSlate',
-  'plugin name Sample JS': 'Exemple',
-  'plugin name Keyboard shortcuts': 'Raccourcis clavier',
-  'plugin name VCard': 'Affichage de VCard',
-  'plugin modal close': 'Fermer',
-  'calendar unknown format': "Ce message contient une invitation à un évènement\ndans un format actuellement non pris en charge.",
+  "plugin name Gallery": "Galerie de pièces jointes",
+  "plugin name medium-editor": "Éditeur Medium",
+  "plugin name MiniSlate": "Éditeur MiniSlate",
+  "plugin name Sample JS": "Exemple",
+  "plugin name Keyboard shortcuts": "Raccourcis clavier",
+  "plugin name VCard": "Affichage de VCard",
+  "plugin modal close": "Fermer",
+  "calendar unknown format": "Ce message contient une invitation à un évènement\ndans un format actuellement non pris en charge.",
   "tooltip reply": "Répondre",
   "tooltip reply all": "Répondre à tous",
   "tooltip forward": "Transférer",
@@ -11708,24 +11784,25 @@ module.exports = {
   "tooltip filter only attachment": "Montrer seulement les messages avec pièce jointe",
   "tooltip account parameters": "Paramètres du compte",
   "tooltip delete selection": "Supprimer les messages sélectionnés",
-  'tooltip filter': 'Filtrer',
-  'tooltip display filters': 'Afficher les filtres',
-  'tooltip expunge mailbox': 'Vider la boite',
+  "tooltip filter": "Filtrer",
+  "tooltip display filters": "Afficher les filtres",
+  "tooltip expunge mailbox": "Vider la boite",
   "tooltip add contact": "Ajouter à vos contacts",
   "tooltip show contact": "Voir les détails du contact",
-  'filters unseen': 'non-lus',
-  'filters flagged': 'favoris',
-  'filters attach': 'pièces jointes',
-  'filters search placeholder': 'rechercher…',
-  'daterangepicker placeholder': 'par date',
-  'daterangepicker presets yesterday': 'hier',
-  'daterangepicker presets last week': 'semaine dernière',
-  'daterangepicker presets last month': 'mois dernier',
-  'daterangepicker clear': 'effacer'
-};
+  "filters unseen": "non-lus",
+  "filters flagged": "favoris",
+  "filters attach": "pièces jointes",
+  "filters search placeholder": "rechercher…",
+  "daterangepicker placeholder": "par date",
+  "daterangepicker presets yesterday": "hier",
+  "daterangepicker presets last week": "semaine dernière",
+  "daterangepicker presets last month": "mois dernier",
+  "daterangepicker clear": "effacer"
+}
+;
 });
 
-;require.register("mixins/participant_mixin", function(exports, require, module) {
+require.register("mixins/participant_mixin", function(exports, require, module) {
 
 /*
     Participant mixin.
@@ -11863,9 +11940,17 @@ module.exports = Router = (function(_super) {
       pattern: 'account/new',
       fluxAction: 'showCreateAccount'
     },
-    'account.mailbox.messages.full': {
-      pattern: 'account/:accountID/box/:mailboxID/sort/:sort/' + 'flag/:flag/before/:before/after/:after/' + 'page/:pageAfter',
+    'account.mailbox.messages.filter': {
+      pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/flag/:flag',
       fluxAction: 'showMessageList'
+    },
+    'account.mailbox.messages.date': {
+      pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/before/:before/after/:after',
+      fluxAction: 'showMessageList'
+    },
+    'search': {
+      pattern: 'account/:accountID/mailbox/:mailboxID/sort/-from/before/:before/after/:after/field/:type',
+      fluxAction: 'showComposeMessageList'
     },
     'account.mailbox.messages': {
       pattern: 'account/:accountID/mailbox/:mailboxID',
@@ -11874,10 +11959,6 @@ module.exports = Router = (function(_super) {
     'account.mailbox.default': {
       pattern: 'account/:accountID',
       fluxAction: 'showMessageList'
-    },
-    'search': {
-      pattern: 'search/:query/page/:page',
-      fluxAction: 'showSearch'
     },
     'message': {
       pattern: 'message/:messageID',
@@ -11925,13 +12006,15 @@ module.exports = Router = (function(_super) {
     var defaultAccount, defaultAccountID, defaultMailboxID, defaultParameters, mailbox, _ref, _ref1;
     switch (action) {
       case 'account.mailbox.messages':
-      case 'account.mailbox.messages.full':
+      case 'account.mailbox.messages.filter':
+      case 'account.mailbox.messages.date':
       case 'account.mailbox.default':
         defaultAccountID = (_ref = AccountStore.getDefault()) != null ? _ref.get('id') : void 0;
         if (parameters.accountID != null) {
           mailbox = AccountStore.getDefaultMailbox(parameters.accountID);
         } else {
           mailbox = AccountStore.getDefaultMailbox(defaultAccountID);
+          this.navigate("account/" + defaultAccountID + "/mailbox/" + (mailbox != null ? mailbox.get('id') : void 0));
         }
         defaultMailboxID = mailbox != null ? mailbox.get('id') : void 0;
         defaultParameters = {};
@@ -12141,6 +12224,7 @@ AccountStore = (function(_super) {
         mailbox = (_selectedAccount != null ? (_ref = _selectedAccount.get('mailboxes')) != null ? _ref.get(value.mailboxID) : void 0 : void 0) || null;
         this._setCurrentMailbox(mailbox);
       } else {
+        _newAccountError = null;
         this._setCurrentMailbox(null);
       }
       return this.emit('change');
@@ -12266,15 +12350,15 @@ AccountStore = (function(_super) {
     }
     result = Immutable.OrderedMap();
     mailboxes = _selectedAccount.get('mailboxes');
-    if (sorted) {
-      mailboxes = mailboxes.sort(_mailboxSort);
-    }
     mailboxes.forEach(function(data) {
       var mailbox;
       mailbox = Immutable.Map(data);
       result = result.set(mailbox.get('id'), mailbox);
       return true;
     });
+    if (sorted) {
+      result = result.sort(_mailboxSort);
+    }
     return result;
   };
 
@@ -13066,7 +13150,7 @@ MessageStore = (function(_super) {
       changed = true;
       return out[boxid] = {
         nbTotal: +1,
-        nbUnread: isRead ? +1 : 0
+        nbUnread: isRead ? 0 : +1
       };
     });
     removed = _.difference(oldboxes, newboxes);
@@ -13139,7 +13223,6 @@ MessageStore = (function(_super) {
 
   handleFetchResult = function(result) {
     var before, lengths, message, next, url, _i, _len, _ref1, _results;
-    _messages = _messages.clear();
     if ((result.links != null) && (result.links.next != null)) {
       _params = {};
       next = decodeURIComponent(result.links.next);
@@ -13854,7 +13937,7 @@ MessageActionCreator = require('../actions/message_action_creator');
 
 onMessageList = function() {
   var actions, _ref, _ref1;
-  actions = ["account.mailbox.messages", "account.mailbox.messages.full"];
+  actions = ["account.mailbox.messages", "account.mailbox.messages.filter", "account.mailbox.messages.date"];
   return _ref = (_ref1 = router.current.firstPanel) != null ? _ref1.action : void 0, __indexOf.call(actions, _ref) >= 0;
 };
 
@@ -13998,19 +14081,11 @@ module.exports = {
     });
   },
   messageClose: function() {
-    var closeUrl;
-    closeUrl = window.router.buildUrl({
-      direction: 'first',
-      action: 'account.mailbox.messages',
-      parameters: {
-        accountID: AccountStore.getSelected().get('id'),
-        mailboxID: AccountStore.getSelectedMailbox().get('id')
-      },
-      fullWidth: true
-    });
-    return window.router.navigate(closeUrl, {
-      trigger: true
-    });
+    var closeUrl, href;
+    href = window.location.href;
+    closeUrl = href.replace(/\/message\/[^\/]*\//gi, '');
+    closeUrl = closeUrl.replace(/\/conversation\/[^\/]*\/[^\/]*\//gi, '');
+    return window.location.href = closeUrl;
   },
   messageDeleteCurrent: function() {
     var confirm, confirmMessage, conversation, messageID, modal, settings;
@@ -15232,6 +15307,7 @@ module.exports = AccountTranslator = {
         last[box.depth] = box.weight;
       } else {
         box.weight = last[box.depth - 1] - 0.1;
+        last[box.depth] = box.weight;
       }
       return AccountTranslator.mailboxToImmutable(box);
     }).toOrderedMap();

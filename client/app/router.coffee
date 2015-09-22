@@ -12,11 +12,15 @@ module.exports = class Router extends PanelRouter
         'account.new':
             pattern: 'account/new'
             fluxAction: 'showCreateAccount'
-        'account.mailbox.messages.full':
-            pattern: 'account/:accountID/box/:mailboxID/sort/:sort/' +
-                        'flag/:flag/before/:before/after/:after/' +
-                        'page/:pageAfter'
+        'account.mailbox.messages.filter':
+            pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/flag/:flag'
             fluxAction: 'showMessageList'
+        'account.mailbox.messages.date':
+            pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/before/:before/after/:after'
+            fluxAction: 'showMessageList'
+        'search':
+            pattern: 'account/:accountID/mailbox/:mailboxID/sort/-from/before/:before/after/:after/field/:type'
+            fluxAction: 'showComposeMessageList'
         'account.mailbox.messages':
             pattern: 'account/:accountID/mailbox/:mailboxID'
             fluxAction: 'showMessageList'
@@ -24,9 +28,6 @@ module.exports = class Router extends PanelRouter
             pattern: 'account/:accountID'
             fluxAction: 'showMessageList'
 
-        'search':
-            pattern: 'search/:query/page/:page'
-            fluxAction: 'showSearch'
 
         'message':
             pattern: 'message/:messageID'
@@ -68,7 +69,8 @@ module.exports = class Router extends PanelRouter
         switch action
 
             when 'account.mailbox.messages'
-            ,    'account.mailbox.messages.full'
+            ,    'account.mailbox.messages.filter'
+            ,    'account.mailbox.messages.date'
             ,    'account.mailbox.default'
                 defaultAccountID = AccountStore.getDefault()?.get 'id'
                 # if parameters contains accountID but no mailboxID,
@@ -77,6 +79,7 @@ module.exports = class Router extends PanelRouter
                     mailbox = AccountStore.getDefaultMailbox parameters.accountID
                 else
                     mailbox = AccountStore.getDefaultMailbox defaultAccountID
+                    @navigate "account/#{defaultAccountID}/mailbox/#{mailbox?.get('id')}"
                 defaultMailboxID = mailbox?.get 'id'
                 defaultParameters = {}
                 defaultParameters.accountID = defaultAccountID
