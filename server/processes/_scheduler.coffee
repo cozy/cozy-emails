@@ -14,6 +14,7 @@ lastAllRefresh = 0
 lastFavoriteRefresh = 0
 MIN = 60*1000
 HOUR = 60*MIN
+_ = require 'lodash'
 
 
 eventEmitter = new EventEmitter()
@@ -93,7 +94,8 @@ Scheduler.refreshNow = (mailbox, callback) ->
         running.addCallback callback
 
     else
-        if alreadyScheduled = queued.filter(isSameBoxRefresh)[0]
+        alreadyScheduled = queued.filter(isSameBoxRefresh)[0]
+        if alreadyScheduled
             queued = _.without queued, alreadyScheduled
 
         refresh = new MailboxRefresh {mailbox}
@@ -153,4 +155,5 @@ Scheduler.orphanRemovalDebounced = (accountID) ->
         proc instanceof OrphanRemoval
 
     unless alreadyQueued
-        Scheduler.schedule new OrphanRemoval()
+        Scheduler.schedule new OrphanRemoval(), (err) ->
+            log.error err if err

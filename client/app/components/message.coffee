@@ -20,6 +20,7 @@ classer = React.addons.classSet
 alertError   = LayoutActionCreator.alertError
 alertSuccess = LayoutActionCreator.notify
 
+RGXP_PROTOCOL = /:\/\//
 
 module.exports = React.createClass
     displayName: 'Message'
@@ -169,17 +170,19 @@ module.exports = React.createClass
             messageDisplayHTML = false
 
         if doc and not @state.messageDisplayImages
-            hideImage = (image) ->
+            images = doc.querySelectorAll('IMG[src]')
+            images = Array.prototype.filter.call images, (img) ->
+                RGXP_PROTOCOL.test img.getAttribute('src')
+
+            for image in images
                 image.dataset.src = image.getAttribute 'src'
                 image.removeAttribute 'src'
-            images = doc.querySelectorAll 'IMG[src]'
-            hideImage image for image in images
 
         for link in doc.querySelectorAll 'a[href]'
             link.target = '_blank'
             # convert relative to absolute links in message content
             href = link.getAttribute 'href'
-            if href isnt '' and not /:\/\//.test href
+            if href isnt '' and not RGXP_PROTOCOL.test href
                 link.setAttribute 'href', 'http://' + href
 
         if doc?

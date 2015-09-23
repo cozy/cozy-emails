@@ -86,7 +86,7 @@ module.exports =
                         attachment = attachments.filter (att) ->
                             att.contentId is cid
                         if attachment[0]?.fileName
-                            name = attachment[0]?.fileName
+                            name = attachment[0]?.generatedFileName
                             src = "message/#{messageId}/attachments/#{name}"
                             attribs.src = src
                         else
