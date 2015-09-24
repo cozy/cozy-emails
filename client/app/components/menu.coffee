@@ -240,11 +240,11 @@ module.exports = Menu = React.createClass
                             className: 'avatar'
                             style:
                                 'background-color': accountColor
-                            account.get('label')[0]
+                            account.get('login')[0]
                         span
                             'data-account-id': key,
                             className: 'item-label',
-                            account.get 'label'
+                            account.get 'login'
 
                     if progress = refreshes.get(accountID)
                         if progress.get('errors').length
