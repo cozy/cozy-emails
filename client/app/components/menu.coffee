@@ -125,7 +125,7 @@ module.exports = Menu = React.createClass
             if @state.accounts.length
                 a
                     href: composeUrl
-                    className: 'compose-action btn btn-cozy-contrast btn-cozy',
+                    className: 'compose-action btn btn-cozy',
                         i className: 'fa fa-pencil'
                         span className: 'item-label', " #{t 'menu compose'}"
 
@@ -240,11 +240,17 @@ module.exports = Menu = React.createClass
                             className: 'avatar'
                             style:
                                 'background-color': accountColor
-                            account.get('login')[0]
-                        span
-                            'data-account-id': key,
-                            className: 'item-label',
-                            account.get 'login'
+                            account.get('label')[0]
+                        div
+                            className: 'account-details',
+                                span
+                                    'data-account-id': key,
+                                    className: 'item-label display-label'
+                                    account.get 'label'
+                                span
+                                    'data-account-id': key,
+                                    className: 'item-label display-login'
+                                    account.get 'login'
 
                     if progress = refreshes.get(accountID)
                         if progress.get('errors').length
