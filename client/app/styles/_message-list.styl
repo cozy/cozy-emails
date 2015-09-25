@@ -186,7 +186,6 @@
     .message
         // defaults
         border-bottom 1px solid #e5e5e5
-        background-color #fff
 
         // Layouts
         .wrapper
@@ -263,6 +262,7 @@
             .participants
                 order       1
                 font-weight bold
+                color darken(basecolor, 25%)
 
 
             .date
@@ -355,7 +355,10 @@
 
         // Unread styles
         &:not(.unseen)
-            background-color #f5f5f5
+            background-color #fff
+
+            .participants
+                color #333
 
 
         // Currently selected message
