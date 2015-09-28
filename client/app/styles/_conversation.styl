@@ -68,7 +68,7 @@
         line-height 1.63265em
 
         &:hover
-            color orange
+            color darken(basecolor, 20%)
 
         &:active
             outline none
@@ -124,15 +124,21 @@
 
             .show-contact
             .add-contact
-                color #999
+                color #ccc
                 margin 0 5px
-
-                &:hover
-                    color basecolor
 
                 button
                     background transparent
                     border 0
+
+        &:hover header
+            .show-contact
+            .add-contact
+                color #888
+                transition color 0.2s ease-out
+
+                &:hover
+                    color basecolor
 
         footer
             margin-top 1em
