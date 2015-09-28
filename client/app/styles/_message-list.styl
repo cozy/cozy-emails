@@ -121,19 +121,20 @@
             color #999
 
     [role=group]
-            color #999
+        color #999
 
-            i
-                vertical-align baseline
+        i
+            vertical-align baseline
                 padding-right  .5em
 
         i[role=presentation]
-            padding          .65em
+            padding          .5em .65em
+            // background-color basecolor
+            // color            white
+
+        &[aria-expanded="true"] i[role=presentation]
             background-color basecolor
             color            white
-
-            &:hover
-                background-color darken(basecolor, 20%)
 
 
     .filters
