@@ -12146,7 +12146,7 @@ AccountStore = (function(_super) {
       if (mb1.get('label' < mb2.get('label'))) {
         return 1;
       } else if (mb1.get('label' > mb2.get('label'))) {
-        return 1;
+        return -1;
       } else {
         return 0;
       }
