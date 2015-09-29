@@ -1,5 +1,4 @@
 cozydb = require 'cozydb'
-ramStore = require './store_account_and_boxes'
 
 # Public: a mail address, used in {Message} schema
 class MailAdress extends cozydb.Model
@@ -669,10 +668,8 @@ _ = require 'lodash'
 async = require 'async'
 log = require('../utils/logging')(prefix: 'models:message')
 htmlToText  = require 'html-to-text'
-MailboxRefresh = require '../processes/mailbox_refresh'
-Scheduler = require '../processes/_scheduler'
-
 require('./model-events').wrapModel Message
+ramStore = require './store_account_and_boxes'
 
 
 

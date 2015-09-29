@@ -13,3 +13,11 @@ exports.FETCH_AT_ONCE = 10000
 exports.LIMIT_BY_BOX  = 1000
 # accounts refreshs in ms, 5 minutes
 exports.REFRESH_INTERVAL = 300000
+
+exports.RFC6154 =
+    draftMailbox:   '\\Drafts'
+    sentMailbox:    '\\Sent'
+    trashMailbox:   '\\Trash'
+    allMailbox:     '\\All'
+    junkMailbox:    '\\Junk'
+    flaggedMailbox: '\\Flagged'

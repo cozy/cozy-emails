@@ -7,7 +7,6 @@ xoauth2 = require 'xoauth2'
 async = require "async"
 accountConfigTools = require '../imap/account2config'
 {makeIMAPConfig, forceOauthRefresh, forceAccountFetch} = accountConfigTools
-Scheduler = require '../processes/_scheduler'
 RecoverChangedUIDValidity = require '../processes/recover_change_uidvalidity'
 
 connectionID = 1

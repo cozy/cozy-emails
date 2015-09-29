@@ -49,17 +49,6 @@ class Account extends cozydb.CozyModel
         else
             super
 
-    initialize: (callback) ->
-        refreshList = new MailboxRefreshList account: this
-        Scheduler.schedule refreshList, Scheduler.ASAP, (err) =>
-            return callback err if err
-            boxes = ramStore.getMailboxesByAccount @id
-            changes = Mailbox.scanBoxesForSpecialUse boxes
-            changes.initialized = true
-            @updateAttributes changes, callback
-
-    makeImapPool: -> new ImapPool @
-
 
     refreshPassword: (callback) ->
         # two possibilities
@@ -112,7 +101,7 @@ class Account extends cozydb.CozyModel
     # Returns a the updated account
     forgetBox: (boxid, callback) ->
         changes = {}
-        for attribute in Object.keys Mailbox.RFC6154 when @[attribute] is boxid
+        for attribute in Object.keys Constants.RFC6154 when @[attribute] is boxid
             changes[attribute] = null
 
         if boxid in @favorites
@@ -125,7 +114,7 @@ class Account extends cozydb.CozyModel
 
     getReferencedBoxes: ->
         out = []
-        for attribute in Object.keys Mailbox.RFC6154 when @[attribute]
+        for attribute in Object.keys Constants.RFC6154 when @[attribute]
             out.push @[attribute]
         for boxid of @favorites
             out.push boxid
@@ -260,12 +249,11 @@ module.exports = Account
 require('./model-events').wrapModel Account
 # There is a circular dependency between ImapProcess & Account
 # node handle if we require after module.exports definition
-Mailbox     = require './mailbox'
 Message     = require './message'
 Compiler    = require 'nodemailer/src/compiler'
 ImapPool = require '../imap/pool'
-Scheduler = require '../processes/_scheduler'
-{AccountConfigError, RefreshError} = require '../utils/errors'
+errors = require '../utils/errors'
+{AccountConfigError, RefreshError, PasswordEncryptedError} = errors
 {NotFound} = require '../utils/errors'
 {makeSMTPConfig} = require '../imap/account2config'
 nodemailer  = require 'nodemailer'
@@ -274,11 +262,8 @@ SMTPConnection = require 'nodemailer/node_modules/' +
 log = require('../utils/logging')(prefix: 'models:account')
 _ = require 'lodash'
 async = require 'async'
-CONSTANTS = require '../utils/constants'
-notifications = require '../utils/notifications'
-MailboxRefreshList = require '../processes/mailbox_refresh_list'
+Constants = require '../utils/constants'
 ramStore = require './store_account_and_boxes'
-RemoveMessageByAccount = require '../processes/message_remove_by_account'
 
 refreshTimeout = null
 
