@@ -27,7 +27,7 @@ class LayoutStore extends Store
 
     _intentAvailable = false
 
-    _drawer = false
+    _drawer = true
 
     _modal  = null
 

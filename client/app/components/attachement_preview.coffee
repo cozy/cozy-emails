@@ -22,22 +22,23 @@ module.exports = React.createClass
     render: ->
         if @props.previewLink
             li key: @props.key,
-                @renderIcon()
                 a
+                    className: 'file-details'
                     target: '_blank'
                     href: @props.file.url
                     'aria-describedby': Tooltips.OPEN_ATTACHMENT
                     'data-tooltip-direction': 'top',
                         # TODO: generate a thumb instead of loading raw file
-                        img width: 90, src: @props.file.url if @props.preview
+                        img height: 48, src: @props.file.url if @props.preview
+                        @renderIcon()
                         @props.file.generatedFileName
-                ' - '
+                        @displayFilesize(@props.file.length)
                 a
+                    className: 'file-actions'
                     href: "#{@props.file.url}?download=1"
                     'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT
                     'data-tooltip-direction': 'top',
                         i className: 'fa fa-download'
-                        @displayFilesize(@props.file.length)
         else
             li key: @props.key,
                 @renderIcon()
