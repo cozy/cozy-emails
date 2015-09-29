@@ -2,7 +2,6 @@ errors =  require '../utils/errors'
 {AccountConfigError, TimeoutError, PasswordEncryptedError} = errors
 log = require('../utils/logging')(prefix: 'imap:pool')
 rawImapLog = require('../utils/logging')(prefix: 'imap:raw')
-Account = require '../models/account'
 Imap = require './connection'
 xoauth2 = require 'xoauth2'
 async = require "async"
@@ -92,8 +91,13 @@ module.exports = class ImapPool
 
         isAuth = err.textCode is 'AUTHENTICATIONFAILED'
 
-        if err instanceof PasswordEncryptedError
-            @_giveUp err
+        if err instanceof PasswordEncryptedError or
+           isAuth and @account.id and @failConnectionCounter is 1
+            @account.refreshPassword (err) ->
+                if err
+                    @_giveUp err
+                else
+                    setImmediate @_deQueue
 
         else if @failConnectionCounter > 2
             # give up
@@ -102,10 +106,6 @@ module.exports = class ImapPool
                                              @account.oauthProvider is 'GMAIL'
             # refresh accessToken
             forceOauthRefresh @account, @_deQueue
-
-        # TMP : this should be removed when data-system#161 is widely deployed
-        else if isAuth and @account.id and @failConnectionCounter is 1
-            forceAccountFetch @account, @_deQueue
 
         else
             # try again in 5s

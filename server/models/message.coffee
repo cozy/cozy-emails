@@ -668,7 +668,6 @@ uuid = require 'uuid'
 _ = require 'lodash'
 async = require 'async'
 log = require('../utils/logging')(prefix: 'models:message')
-Mailbox = require './mailbox'
 htmlToText  = require 'html-to-text'
 MailboxRefresh = require '../processes/mailbox_refresh'
 Scheduler = require '../processes/_scheduler'

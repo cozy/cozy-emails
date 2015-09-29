@@ -294,7 +294,6 @@ class TestMailbox extends Mailbox
 module.exports = Mailbox
 require('./model-events').wrapModel Mailbox
 ramStore = require './store_account_and_boxes'
-Message = require './message'
 log = require('../utils/logging')(prefix: 'models:mailbox')
 _ = require 'lodash'
 async = require 'async'

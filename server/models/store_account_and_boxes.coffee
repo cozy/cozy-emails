@@ -5,7 +5,6 @@ Account = require './account'
 Message = require './message'
 Mailbox = require './mailbox'
 Scheduler = require '../processes/_scheduler'
-ImapPool = require '../imap/pool'
 _ = require 'lodash'
 async = require 'async'
 log = require('../utils/logging')(prefix: 'models:ramStore')
@@ -197,7 +196,7 @@ exports.addAccount = (account) ->
     log.debug "addAccount"
     accountsByID[account.id] = account
     allAccounts.push account
-    imapPools[account.id] = new ImapPool account
+    imapPools[account.id] = account.makeImapPool()
     mailboxesByAccountID[account.id] = []
 
 exports.removeAccount = (accountID) ->

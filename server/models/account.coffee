@@ -58,6 +58,26 @@ class Account extends cozydb.CozyModel
             changes.initialized = true
             @updateAttributes changes, callback
 
+    makeImapPool: -> new ImapPool @
+
+
+    refreshPassword: (callback) ->
+        # two possibilities
+        # 1. mail started too soon and we just need to fetch the account
+        #    password
+        # 2. mail actually started while the DS doesnt have the keys
+        #    we can only give up
+        Account.find @id, (err, fetched) ->
+            return callback err if err
+
+            if fetched._passwordStillEncrypted
+                callback new PasswordEncryptedError()
+
+            else
+                @password = fetched.password
+                @_passwordStillEncrypted = undefined
+                callback null
+
 
     # Public: check if an account is test (created by fixtures)
     #

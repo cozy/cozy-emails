@@ -4,7 +4,6 @@ Mailbox = require '../models/mailbox'
 safeLoop = require '../utils/safeloop'
 Process = require './_base'
 RemoveAllMessagesFromMailbox = require './message_remove_by_mailbox'
-Scheduler = require './_scheduler'
 log = require('../utils/logging')('process:removeorphans')
 async  = require 'async'
 
