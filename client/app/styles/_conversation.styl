@@ -345,11 +345,12 @@
 
             img
                 display inline-block
-                margin-right .35em
+                margin-right .5em
                 padding .2em
                 vertical-align middle
                 background-color #ffffff
                 border-radius 2px
+                border 1px solid #d5d5d5
 
             a
                 color #333
@@ -357,6 +358,31 @@
                 &:hover
                     color basecolor
                     text-decoration none
+
+                    img
+                        border-color basecolor
+
+            .file-details span:last-child
+                margin-left 0.25em
+                color #999
+
+                &:before
+                    content "("
+                    display inline-block
+
+                &:after
+                    content ")"
+                    display inline-block
+
+            .file-actions
+                margin-left 0.5em
+                padding-left 0.5em
+                border-left 1px solid #ccc
+                color #999
+
+            // hide the img icon (the picture's preview is enough)
+            .mime.fa-file-image-o
+                display none
 
     .full-headers
         display none
