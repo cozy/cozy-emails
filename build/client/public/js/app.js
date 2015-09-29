@@ -3199,21 +3199,23 @@ module.exports = React.createClass({
     if (this.props.previewLink) {
       return li({
         key: this.props.key
-      }, this.renderIcon(), a({
+      }, a({
+        className: 'file-details',
         target: '_blank',
         href: this.props.file.url,
         'aria-describedby': Tooltips.OPEN_ATTACHMENT,
         'data-tooltip-direction': 'top'
       }, this.props.preview ? img({
-        width: 90,
+        height: 48,
         src: this.props.file.url
-      }) : void 0, this.props.file.generatedFileName), ' - ', a({
+      }) : void 0, this.renderIcon(), this.props.file.generatedFileName, this.displayFilesize(this.props.file.length)), a({
+        className: 'file-actions',
         href: "" + this.props.file.url + "?download=1",
         'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT,
         'data-tooltip-direction': 'top'
       }, i({
         className: 'fa fa-download'
-      }), this.displayFilesize(this.props.file.length)));
+      })));
     } else {
       return li({
         key: this.props.key
@@ -3745,7 +3747,7 @@ module.exports = Compose = React.createClass({
       className: 'form-control compose-subject',
       placeholder: t("compose subject help")
     }))), div({
-      className: ''
+      className: 'compose-content'
     }, ComposeEditor({
       id: 'compose-editor',
       messageID: (_ref3 = this.props.message) != null ? _ref3.get('id') : void 0,
@@ -6032,7 +6034,7 @@ module.exports = Menu = React.createClass({
       'aria-expanded': this.state.isDrawerExpanded
     }, this.state.accounts.length ? a({
       href: composeUrl,
-      className: 'compose-action btn btn-cozy-contrast btn-cozy'
+      className: 'compose-action btn btn-cozy'
     }, i({
       className: 'fa fa-pencil'
     }), span({
@@ -6170,10 +6172,15 @@ module.exports = Menu = React.createClass({
       style: {
         'background-color': accountColor
       }
-    }, account.get('label')[0]), span({
+    }, account.get('label')[0]), div({
+      className: 'account-details'
+    }, span({
       'data-account-id': key,
-      className: 'item-label'
-    }, account.get('label')), (progress = refreshes.get(accountID)) ? progress.get('errors').length ? span({
+      className: 'item-label display-label'
+    }, account.get('label')), span({
+      'data-account-id': key,
+      className: 'item-label display-login'
+    }, account.get('login'))), (progress = refreshes.get(accountID)) ? progress.get('errors').length ? span({
       className: 'refresh-error'
     }, i({
       className: 'fa warning',
@@ -6618,12 +6625,12 @@ module.exports = MessageItem = React.createClass({
     }, avatar != null ? img({
       className: 'avatar',
       src: avatar
-    }) : (from = message.get('from')[0], cHash = "" + from.name + " <" + from.address + ">", i({
+    }) : (from = message.get('from')[0], cHash = "" + (from != null ? from.name : void 0) + " <" + (from != null ? from.address : void 0) + ">", i({
       className: 'avatar placeholder',
       style: {
         'background-color': colorhash(cHash)
       }
-    }, from.name ? from.name[0] : from.address[0]))), div({
+    }, (from != null ? from.name : void 0) ? from != null ? from.name[0] : void 0 : from != null ? from.address[0] : void 0))), div({
       className: 'metas-wrapper'
     }, div({
       className: 'participants ellipsable'
@@ -11103,14 +11110,14 @@ module.exports = {
   "compose forward from": "From:",
   "compose forward to": "To:",
   "menu show": "Show menu",
-  "menu compose": "Write",
+  "menu compose": "Compose",
   "menu account new": "New Mailbox",
   "menu settings": "Parameters",
   "menu mailbox total": "%{smart_count} message|||| %{smart_count} messages",
   "menu mailbox unread": ", %{smart_count} unread message ||||, %{smart_count} unread messages ",
   "menu mailbox new": " and %{smart_count} new message|||| and %{smart_count} new messages ",
-  "menu favorites on": "Favorites",
-  "menu favorites off": "All",
+  "menu favorites on": "Less",
+  "menu favorites off": "More",
   "menu toggle": "Toggle Menu",
   "menu refresh label": "Refresh",
   "menu refreshing": "Refreshing...",
@@ -11247,7 +11254,7 @@ module.exports = {
   "account identifiers": "Identification",
   "account actions": "Actions",
   "account danger zone": "Danger Zone",
-  "account no special mailboxes": "Please configure special folders first",
+  "account no special mailboxes": "Please choose a specific folder for your Drafts, Sent and Deleted emails.",
   "account imap hide advanced": "Hide advanced parameters",
   "account imap show advanced": "Show advanced parameters",
   "account smtp hide advanced": "Hide advanced parameters",
@@ -11477,14 +11484,14 @@ module.exports = {
   "compose forward from": "De :",
   "compose forward to": "Pour :",
   "menu show": "Montrer le menu",
-  "menu compose": "Écrire",
+  "menu compose": "Nouveau Message",
   "menu account new": "Ajouter un compte",
   "menu settings": "Paramètres",
   "menu mailbox total": "%{smart_count} message |||| %{smart_count} messages ",
   "menu mailbox unread": " dont %{smart_count} non lu |||| dont %{smart_count} non lus ",
   "menu mailbox new": " et %{smart_count} nouveaux |||| et %{smart_count} nouveaux ",
-  "menu favorites on": "Favoris",
-  "menu favorites off": "Toutes",
+  "menu favorites on": "Moins",
+  "menu favorites off": "Plus",
   "menu toggle": "Menu",
   "menu refresh label": "Rafraîchir",
   "menu refreshing": "Rafraîchissement en cours...",
@@ -11621,7 +11628,7 @@ module.exports = {
   "account identifiers": "Identification",
   "account danger zone": "Zone dangereuse",
   "account actions": "Actions",
-  "account no special mailboxes": "Vous n'avez pas configuré les dossiers spéciaux",
+  "account no special mailboxes": "Vous devez choisir un dossier spécifique pour vos Brouillons, emails envoyés et supprimés.",
   "account imap hide advanced": "Masquer les paramètres avancés",
   "account imap show advanced": "Afficher les paramètres avancés",
   "account smtp hide advanced": "Masquer les paramètres avancés",
@@ -12617,7 +12624,7 @@ LayoutStore = (function(_super) {
 
   _intentAvailable = false;
 
-  _drawer = false;
+  _drawer = true;
 
   _modal = null;
 

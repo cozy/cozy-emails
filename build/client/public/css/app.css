@@ -369,11 +369,14 @@ body {
 }
 .app .panel {
   border: none;
-  border-left: 1px solid #b5b5b5;
+  border-right: 1px solid #c5c5c5;
   -webkit-box-shadow: 0 0;
   box-shadow: 0 0;
   -webkit-border-radius: 0;
   border-radius: 0;
+}
+.app .panel:last-child {
+  border: 0;
 }
 .app .drawer-toggle {
   display: none;
@@ -1821,7 +1824,7 @@ body {
   line-height: 1.63265em;
 }
 .conversation .more:hover {
-  color: #ffa500;
+  color: #008af6;
 }
 .conversation .more:active {
   outline: none;
@@ -1873,17 +1876,26 @@ body {
 }
 .conversation .message header .show-contact,
 .conversation .message header .add-contact {
-  color: #999;
+  color: #ccc;
   margin: 0 5px;
-}
-.conversation .message header .show-contact:hover,
-.conversation .message header .add-contact:hover {
-  color: #34a6ff;
 }
 .conversation .message header .show-contact button,
 .conversation .message header .add-contact button {
   background: transparent;
   border: 0;
+}
+.conversation .message:hover header .show-contact,
+.conversation .message:hover header .add-contact {
+  color: #888;
+  -webkit-transition: color 0.2s ease-out;
+  -moz-transition: color 0.2s ease-out;
+  -o-transition: color 0.2s ease-out;
+  -ms-transition: color 0.2s ease-out;
+  transition: color 0.2s ease-out;
+}
+.conversation .message:hover header .show-contact:hover,
+.conversation .message:hover header .add-contact:hover {
+  color: #34a6ff;
 }
 .conversation .message footer {
   margin-top: 1em;
@@ -2195,12 +2207,13 @@ body {
 }
 .conversation .message .attachments img {
   display: inline-block;
-  margin-right: 0.35em;
+  margin-right: 0.5em;
   padding: 0.2em;
   vertical-align: middle;
   background-color: #fff;
   -webkit-border-radius: 2px;
   border-radius: 2px;
+  border: 1px solid #d5d5d5;
 }
 .conversation .message .attachments a {
   color: #333;
@@ -2208,6 +2221,30 @@ body {
 .conversation .message .attachments a:hover {
   color: #34a6ff;
   text-decoration: none;
+}
+.conversation .message .attachments a:hover img {
+  border-color: #34a6ff;
+}
+.conversation .message .attachments .file-details span:last-child {
+  margin-left: 0.25em;
+  color: #999;
+}
+.conversation .message .attachments .file-details span:last-child:before {
+  content: "(";
+  display: inline-block;
+}
+.conversation .message .attachments .file-details span:last-child:after {
+  content: ")";
+  display: inline-block;
+}
+.conversation .message .attachments .file-actions {
+  margin-left: 0.5em;
+  padding-left: 0.5em;
+  border-left: 1px solid #ccc;
+  color: #999;
+}
+.conversation .message .attachments .mime.fa-file-image-o {
+  display: none;
 }
 .conversation .full-headers {
   display: none;
@@ -2235,6 +2272,25 @@ body {
   width: 100%;
   max-width: 900px;
   padding-bottom: 1em;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  -webkit-box-orient: vertical;
+  -moz-box-orient: vertical;
+  -o-box-orient: vertical;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  -webkit-box-lines: multiple;
+  -moz-box-lines: multiple;
+  -o-box-lines: multiple;
+  -webkit-flex-wrap: wrap;
+  -ms-flex-wrap: wrap;
+  flex-wrap: wrap;
+  height: calc(100vh - 2em);
 }
 .form-compose.enable {
   display: block;
@@ -2263,10 +2319,45 @@ body {
 .form-compose .account-picker {
   padding: 0 0.7em;
 }
+.form-compose .compose-content {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  overflow-y: scroll;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  -webkit-box-align: stretch;
+  -moz-box-align: stretch;
+  -o-box-align: stretch;
+  -ms-flex-align: stretch;
+  -webkit-align-items: stretch;
+  align-items: stretch;
+}
+.form-compose .compose-content > div {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+}
 .form-compose .editor,
 .form-compose .rt-editor {
-  min-height: 8em;
-  max-height: calc(100vh - 338px);
   overflow: auto;
   height: auto;
   width: 100%;
@@ -2523,7 +2614,7 @@ body {
 }
 .file-picker .files .mime {
   padding: 0 0.4em 0 0;
-  font-size: 1.2em;
+  font-size: 1.25em;
   color: #444;
 }
 .file-picker .files .delete {
@@ -2601,10 +2692,10 @@ body {
   text-decoration: none;
 }
 .app [role=menubar] .fa {
-  font-size: 1.5em;
+  font-size: 1.25em;
 }
 .app [role=menubar] .compose-action {
-  margin: 0 0.5em 1.5em;
+  margin: 0.5em 0.875em 1.5em;
   line-height: 2em;
 }
 .app [role=menubar] .compose-action i {
@@ -2612,6 +2703,21 @@ body {
 }
 .app [role=menubar] .compose-action .item-label {
   padding-left: 0.5em;
+}
+.app [role=menubar] .account-details {
+  display: inline-block;
+  font-size: 0.875em;
+}
+.app [role=menubar] .account-details .display-label {
+  display: block;
+  font-size: 1.25em;
+  color: #333;
+}
+.app [role=menubar] .account-details .display-login {
+  font-weight: normal;
+  font-style: italic;
+  line-height: 1.25em;
+  color: #999;
 }
 .app [role=menubar] .mainmenu {
   -webkit-box-flex: 1;
@@ -2672,6 +2778,9 @@ body {
   -ms-flex: 1;
   flex: 1;
 }
+.app [role=menubar] .submenu [role=menuitem].new-account-action {
+  padding-left: 1.75em;
+}
 .app [role=menubar] .account {
   font-weight: bold;
 }
@@ -2697,6 +2806,7 @@ body {
 }
 .app [role=menubar] [role=group] {
   margin-bottom: 2em;
+  margin-top: 0.5em;
 }
 .app [role=menubar] [role=menuitem] {
   -webkit-box-align: center;
@@ -2713,10 +2823,13 @@ body {
   display: -ms-flexbox;
   display: box;
   display: flex;
-  padding: 0.5em;
+  padding: 0.375em 0.625em;
 }
 .app [role=menubar] [role=menuitem]:not(.drawer-toggle) .item-label {
-  margin: 0 1em;
+  margin: 0 1rem;
+}
+.app [role=menubar] [role=menuitem]:not(.drawer-toggle) .account-details .item-label {
+  margin: 0 0 0 0.75rem;
 }
 .app [role=menubar] .lv-1:not(.special) {
   padding-left: 2em;
@@ -2788,6 +2901,7 @@ body {
   flex: 1;
 }
 .app [role=menubar] .account-title .mailbox-config {
+  color: #aaa;
   -webkit-box-ordinal-group: 1;
   -moz-box-ordinal-group: 1;
   -o-box-ordinal-group: 1;
@@ -2814,6 +2928,9 @@ body {
   -ms-filter: none;
   filter: none;
 }
+.app [role=menubar] .account-title:hover .mailbox-config:hover {
+  color: #34a6ff;
+}
 .app [role=menubar] .mailbox-list {
   padding: 0 0.5em;
 }
@@ -2824,7 +2941,7 @@ body {
   display: -ms-flexbox;
   display: box;
   display: flex;
-  padding-left: 0.2em;
+  padding-left: 0.875em;
   -webkit-border-radius: 0.25rem;
   border-radius: 0.25rem;
 }
@@ -2834,6 +2951,10 @@ body {
 .app [role=menubar] .mailbox-list li.active a span,
 .app [role=menubar] .mailbox-list li.active a i {
   color: #111;
+}
+.app [role=menubar] .mailbox-list li.active a span {
+  font-weight: bold;
+  font-size: 0.875em;
 }
 .app [role=menubar] .mailbox-list li.active .badge {
   border-color: #e5e5e5;
@@ -2899,6 +3020,9 @@ body {
   .app [role=menubar][aria-expanded=false] [role=menuitem]:not(.account):not(.inboxMailbox):not(.sentMailbox) ~ .badge {
     display: none;
   }
+  .app [role=menubar][aria-expanded=false] .compose-action {
+    margin: 0.5em 0.5em 1.25em;
+  }
   .app [role=menubar][aria-expanded=false] .mainmenu [role=menuitem] {
     padding-left: 0.5;
   }
@@ -2911,6 +3035,15 @@ body {
     display: -ms-flexbox;
     display: box;
     display: flex;
+  }
+  .app [role=menubar][aria-expanded=false] .mainmenu [role=menuitem] .fa {
+    font-size: 1.75em;
+  }
+  .app [role=menubar][aria-expanded=false] .mainmenu [role=menuitem]:not(.drawer-toggle) {
+    padding: 0.625em;
+  }
+  .app [role=menubar][aria-expanded=false] .mailbox-list li {
+    padding-left: 0;
   }
   .app [role=menubar][aria-expanded=false] .mailbox-config {
     display: none !important;
@@ -3092,17 +3225,15 @@ body {
 .messages-list [role=group] {
   color: #999;
 }
-.messages-list [role=group] i {
-  vertical-align: baseline;
+.messages-list [role=group] i vertical-align baseline {
   padding-right: 0.5em;
 }
-.messages-list i[role=presentation] {
-  padding: 0.65em;
+.messages-list [role=group] i[role=presentation] {
+  padding: 0.5em 0.65em;
+}
+.messages-list [role=group][aria-expanded="true"] i[role=presentation] {
   background-color: #34a6ff;
   color: #fff;
-}
-.messages-list i[role=presentation]:hover {
-  background-color: #008af6;
 }
 .messages-list .filters [role=menuitem]:not(.dropdown)[aria-selected=false]:hover i,
 .messages-list .filters [role=menuitem][aria-selected=true]:hover i,
@@ -3155,7 +3286,6 @@ body {
 }
 .messages-list .message {
   border-bottom: 1px solid #e5e5e5;
-  background-color: #fff;
 }
 .messages-list .message .wrapper {
   display: -webkit-box;
@@ -3284,6 +3414,7 @@ body {
   -webkit-order: 1;
   order: 1;
   font-weight: bold;
+  color: #0081e6;
 }
 .messages-list .message .metas-wrapper .date {
   -webkit-box-flex: 1;
@@ -3407,7 +3538,10 @@ body {
   background-color: #ededed;
 }
 .messages-list .message:not(.unseen) {
-  background-color: #f5f5f5;
+  background-color: #fff;
+}
+.messages-list .message:not(.unseen) .participants {
+  color: #333;
 }
 main:not(.full) .messages-list .message.active {
   background-color: #e5e5e5;
@@ -4071,13 +4205,13 @@ main:not(.full) .messages-list .message.active {
 .composeToolbox .btn {
   margin-left: 0.5em;
 }
-.composeToolbox .btn.btn-cozy:first-child {
-  background-color: #5c5;
-  border-color: #5c5;
+.composeToolbox .btn-save {
+  background-color: #92a0b2;
+  border-color: #92a0b2;
 }
-.composeToolbox .btn.btn-cozy:first-child:hover {
-  background-color: #35b235;
-  border-color: #35b235;
+.composeToolbox .btn-save:hover {
+  background-color: #748192;
+  border-color: #748192;
 }
 .clickable {
   cursor: pointer;
@@ -4102,9 +4236,6 @@ main:not(.full) .messages-list .message.active {
   margin-left: 5px;
   width: 20px;
   height: 20px;
-}
-.app section.panel {
-  border-left: 0;
 }
 
 /*!
