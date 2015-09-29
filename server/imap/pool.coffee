@@ -13,6 +13,12 @@ RecoverChangedUIDValidity = require '../processes/recover_change_uidvalidity'
 
 connectionID = 1
 
+logConnectionOptions = (options) ->
+    password = options.password
+    if password then options.password = "****"
+    log.debug options
+    if password then options.password = password
+
 module.exports = class ImapPool
 
     constructor: (account) ->
@@ -49,10 +55,7 @@ module.exports = class ImapPool
             return @_onConnectionError connectionName: '', err if err
 
             log.debug "Attempting connection"
-            password = options.password
-            if password then options.password = "****"
-            log.debug options
-            if password then options.password = password
+            logConnectionOptions options
 
             imap = new Imap options
             onConnError = @_onConnectionError.bind this, imap

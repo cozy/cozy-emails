@@ -68,7 +68,7 @@
     "doc": "biscotto && opn ./doc/index.html",
     "lint": "npm run lint1 && npm run lint2",
     "lint1": "coffeelint -f coffeelint.json ./server/**/*.coffee",
-    "lint2": "coffee-jshint -o node --globals MODEL_MODULE ./server/**/*.coffee",
+    "lint2": "coffee-jshint -o node ./server/**/*.coffee",
     "start": "node build/server.js"
   },
   "cozy-permissions": {
