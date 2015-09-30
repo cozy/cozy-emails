@@ -646,7 +646,6 @@ module.exports = class Message extends cozydb.CozyModel
             , callback
 
     @batchMove: (messages, from, to, callback) ->
-        console.log "batchMove"
         to = [to] unless Array.isArray(to)
 
         # ignore messages which are already in the destination set
@@ -718,8 +717,6 @@ module.exports = class Message extends cozydb.CozyModel
 
             paths = destBoxes.map (box) -> box.path
             imap.multimove moves, paths, (err, result) ->
-                console.log 'Err Imap :'
-                console.log err
                 return nextBox err if err
                 imap.multiexpunge expunges, (err) ->
                     return nextBox err if err
