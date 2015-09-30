@@ -41,6 +41,8 @@ module.exports = class ImapPool
         @freeConnections.splice index, 1
 
     _makeConnection: ->
+        console.log '_makeConnection'
+        console.log @connexions 
         log.debug @id, "makeConnection"
         @connecting++
 
@@ -55,12 +57,15 @@ module.exports = class ImapPool
             if password then options.password = password
 
             imap = new Imap options
+            console.log err
             onConnError = @_onConnectionError.bind this, imap
+            console.log onConnError
             imap.connectionID = 'conn' + connectionID++
             imap.connectionName = "#{options.host}:#{options.port}"
 
             imap.on 'error', onConnError
             imap.once 'ready', =>
+                console.log 'ready'
                 imap.removeListener 'error', onConnError
                 clearTimeout @wrongPortTimeout
                 @_onConnectionSuccess imap
@@ -72,14 +77,19 @@ module.exports = class ImapPool
             @wrongPortTimeout = setTimeout =>
                 log.debug @id, "timeout 10s"
                 imap.removeListener 'error', onConnError
-                onConnError new TimeoutError "Timeout connecting to " +
+                console.log "Timeout !!!!!!!!!!"
+                console.log(new TimeoutError "test")
+                onConnError = new TimeoutError "Timeout connecting to " +
                     "#{@account?.imapServer}:#{@account?.imapPort}"
+                console.log onConnError
                 imap.destroy()
 
-            , 10000
+            , 60000
 
 
     _onConnectionError: (connection, err) ->
+        console.log "_onConnectionError"
+        console.log err
         log.debug @id, "connection error on #{connection.connectionName}"
         log.debug "RAW ERROR", err
         # we failed to establish a new connection
@@ -147,6 +157,8 @@ module.exports = class ImapPool
         @freeConnections = []
 
     _giveUp: (err) ->
+        console.log "GIVE UP"
+        console.log err
         log.debug @id, "giveup", err
         task = @tasks.pop()
         while task
@@ -225,7 +237,7 @@ module.exports = class ImapPool
             typed = new AccountConfigError 'imapTLS', err
 
         if err instanceof TimeoutError
-            typed = new AccountConfigError 'imapPort', err
+            typed = new TimeoutError 'timeout', err
 
         return typed
 

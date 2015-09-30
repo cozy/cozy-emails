@@ -36,11 +36,9 @@ module.exports = Toast = React.createClass
 
         if hasErrors
             showModal = @showModal.bind this, toast.errors
-
         div className: classes, role: "alert", key: @props.key,
-
             if toast.message
-                div className: "message", toast.message
+                div className: "message", t(toast.message)
 
             if toast.finished or hasErrors
                 button
@@ -71,8 +69,10 @@ module.exports = Toast = React.createClass
                         onClick: showModal,
                         t 'there were errors', smart_count: toast.errors.length
 
-
     showModal: (errors) ->
+        getErrors = =>
+            return errors
+        errors = JSON.stringify(errors[0])
         modal =
             title       : t 'modal please contribute'
             subtitle    : t 'modal please report'
@@ -82,7 +82,7 @@ module.exports = Toast = React.createClass
             content     : React.DOM.pre
                 style: "max-height": "300px",
                 "word-wrap": "normal",
-                    errors.join "\n\n"
+                    getErrors "\n\n"
         LayoutActionCreator.displayModal modal
 
 

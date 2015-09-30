@@ -129,9 +129,9 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                err = res.body?.error.message
-                err ?= new Error 'Network batchFetch'
-                callback err
+                if res.body?.name?
+                    res.error = res.body
+                callback res.error
 
     batchAddFlag: (target, flag, callback) ->
         body = _.extend {flag}, target
@@ -141,9 +141,9 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                err = res.body?.error.message
-                err ?= new Error 'Network batchAddFlag'
-                callback err
+                if res.body?.name?
+                    res.error = res.body
+                callback res.error
 
     batchRemoveFlag: (target, flag, callback) ->
         body = _.extend {flag}, target
@@ -153,9 +153,9 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                err = res.body?.error.message
-                err ?= new Error 'Network batchRemoveFlag'
-                callback err
+                if res.body?.name?
+                    res.error = res.body
+                callback res.error
 
     batchDelete: (target, callback) ->
         body = _.extend {}, target
@@ -165,9 +165,9 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                err = res.body?.error.message
-                err ?= new Error 'Network batchDelete'
-                callback err
+                if res.body?.name?
+                    res.error = res.body
+                callback res.error
 
     batchMove: (target, from, to, callback) ->
         body = _.extend {from, to}, target
@@ -177,9 +177,9 @@ module.exports =
             if res.ok
                 callback null, res.body
             else
-                err = res.body?.error.message
-                err ?= new Error 'Network batchMove'
-                callback err
+                if res.body?.name?
+                    res.error = res.body
+                callback res.error
 
     createAccount: (account, callback) ->
 
