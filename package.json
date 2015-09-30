@@ -16,7 +16,7 @@
     "async": "0.9.0",
     "bluebird": "2.3.2",
     "cozy-notifications-helper": "1.0.2",
-    "cozydb": "0.0.20",
+    "cozydb": "0.1.0",
     "fast-json-patch": "0.4.0",
     "html-to-text": "0.1.0",
     "iconv": "2.1.4",

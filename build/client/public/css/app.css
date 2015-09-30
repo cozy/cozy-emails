@@ -3120,6 +3120,9 @@ body {
   display: box;
   display: flex;
 }
+.messages-list [role=toolbar] i {
+  margin-right: 0.357142857142857em;
+}
 .messages-list [role=group] {
   display: -webkit-box;
   display: -moz-box;
