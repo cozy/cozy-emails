@@ -69,7 +69,7 @@ class AccountStore extends Store
         else if w1 > w2 then return -1
         else
             if mb1.get 'label' < mb2.get 'label' then return 1
-            else if mb1.get 'label' > mb2.get 'label' then return 1
+            else if mb1.get 'label' > mb2.get 'label' then return -1
             else return 0
 
 

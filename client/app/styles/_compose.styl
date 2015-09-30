@@ -16,6 +16,10 @@
     width     100%
     max-width 900px
     padding-bottom 1em
+    display flex
+    flex-direction column
+    flex-wrap wrap
+    height calc(100vh - 2em)
 
     &.enable
         display block
@@ -45,10 +49,19 @@
     .account-picker
         padding 0 0.7em
 
+    .compose-content
+        flex 1
+        overflow-y scroll
+        // it allows to display the children's div in full height
+        display flex
+        align-items stretch
+
+        & > div
+            flex 1
+            display flex
+
     .editor,
     .rt-editor
-        min-height 8em
-        max-height calc(100vh - 338px)
         overflow   auto
         height     auto
         width      100%

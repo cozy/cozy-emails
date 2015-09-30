@@ -104,12 +104,12 @@ module.exports = MessageItem = React.createClass
                         img className: 'avatar', src: avatar
                     else
                         from  = message.get('from')[0]
-                        cHash = "#{from.name} <#{from.address}>"
+                        cHash = "#{from?.name} <#{from?.address}>"
                         i
                             className: 'avatar placeholder'
                             style:
                                 'background-color': colorhash(cHash)
-                            if from.name then from.name[0] else from.address[0]
+                            if from?.name then from?.name[0] else from?.address[0]
 
                 div className: 'metas-wrapper',
                     div className: 'participants ellipsable',

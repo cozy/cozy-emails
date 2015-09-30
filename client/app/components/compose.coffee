@@ -137,7 +137,7 @@ module.exports = Compose = React.createClass
                             className: 'form-control compose-subject'
                             placeholder: t "compose subject help"
 
-                div className: '',
+                div className: 'compose-content',
                     ComposeEditor
                         id                : 'compose-editor'
                         messageID         : @props.message?.get 'id'

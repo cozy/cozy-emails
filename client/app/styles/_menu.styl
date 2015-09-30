@@ -25,11 +25,11 @@ subaction()
         text-decoration none
 
     .fa
-        font-size  1.5em
+        font-size  1.25em
 
 
     .compose-action
-        margin      0 .5em 1.5em
+        margin      0.5em 0.875em 1.5em
         line-height 2em
 
         i
@@ -38,6 +38,21 @@ subaction()
         .item-label
             padding-left .5em
 
+
+    .account-details
+        display inline-block
+        font-size 0.875em
+
+        .display-label
+            display block
+            font-size 1.25em
+            color #333
+
+        .display-login
+            font-weight normal
+            font-style italic
+            line-height 1.25em
+            color #999
 
     .mainmenu
         flex           1
@@ -61,6 +76,9 @@ subaction()
         & > :first-child
             flex 1
 
+        [role=menuitem].new-account-action
+            padding-left 1.75em
+
 
     .account
         font-weight bold
@@ -79,6 +97,7 @@ subaction()
 
     [role=group]
         margin-bottom 2em
+        margin-top 0.5em
 
 
     [role=menuitem]
@@ -86,10 +105,13 @@ subaction()
 
         &:not(.drawer-toggle)
             display flex
-            padding .5em
+            padding 0.375em 0.625em
 
             .item-label
-                margin 0 1em
+                margin 0 1rem
+
+            .account-details .item-label
+                margin 0 0 0 0.75rem
 
 
     for level in (1..10)
@@ -126,6 +148,8 @@ subaction()
             flex 1
 
         .mailbox-config
+            color #aaa
+
             subaction()
 
         .badge
@@ -135,13 +159,16 @@ subaction()
             .mailbox-config
                 opacity 1
 
+                &:hover
+                    color basecolor
+
 
     .mailbox-list
         padding 0 .5em
 
         li
             display       flex
-            padding-left  .2em
+            padding-left 0.875em
             border-radius .25rem
 
             &.active
@@ -151,6 +178,10 @@ subaction()
                     span,
                     i
                         color            #111
+
+                    span
+                        font-weight bold
+                        font-size 0.875em
 
                 .badge
                     border-color #e5e5e5
@@ -205,6 +236,9 @@ subaction()
             [role=menuitem]:not(.account):not(.inboxMailbox):not(.sentMailbox) ~ .badge
                 display none
 
+            .compose-action
+                margin 0.5em 0.5em 1.25em
+
             .mainmenu
                 [role=menuitem]
 
@@ -214,6 +248,15 @@ subaction()
                     &.inboxMailbox
                     &.sentMailbox
                         display flex
+
+                    .fa
+                        font-size  1.75em
+
+                    &:not(.drawer-toggle)
+                        padding 0.625em
+
+            .mailbox-list li
+                padding-left 0
 
             .mailbox-config
                 display none !important

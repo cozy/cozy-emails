@@ -426,7 +426,7 @@ module.exports.send = function(req, res, next) {
     });
     return async.eachSeries(Object.keys(jdbMessage.binary), function(name, cbLoop) {
       if (indexOf.call(remainingAttachments, name) >= 0) {
-        return cbLoop(null);
+        return setImmediate(cbLoop);
       } else {
         return jdbMessage.removeBinary(name, cbLoop);
       }

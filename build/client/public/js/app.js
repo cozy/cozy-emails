@@ -630,7 +630,7 @@ module.exports = LayoutActionCreator = {
       onMessage(message);
     }
     length = MessageStore.getConversationsLength().get(conversationID);
-    if ((length != null) && length > 1) {
+    if ((length == null) || length > 1) {
       return MessageActionCreator.fetchConversation(conversationID);
     }
   },
@@ -3199,21 +3199,23 @@ module.exports = React.createClass({
     if (this.props.previewLink) {
       return li({
         key: this.props.key
-      }, this.renderIcon(), a({
+      }, a({
+        className: 'file-details',
         target: '_blank',
         href: this.props.file.url,
         'aria-describedby': Tooltips.OPEN_ATTACHMENT,
         'data-tooltip-direction': 'top'
       }, this.props.preview ? img({
-        width: 90,
+        height: 48,
         src: this.props.file.url
-      }) : void 0, this.props.file.generatedFileName), ' - ', a({
+      }) : void 0, this.renderIcon(), this.props.file.generatedFileName, this.displayFilesize(this.props.file.length)), a({
+        className: 'file-actions',
         href: "" + this.props.file.url + "?download=1",
         'aria-describedby': Tooltips.DOWNLOAD_ATTACHMENT,
         'data-tooltip-direction': 'top'
       }, i({
         className: 'fa fa-download'
-      }), this.displayFilesize(this.props.file.length)));
+      })));
     } else {
       return li({
         key: this.props.key
@@ -3745,7 +3747,7 @@ module.exports = Compose = React.createClass({
       className: 'form-control compose-subject',
       placeholder: t("compose subject help")
     }))), div({
-      className: ''
+      className: 'compose-content'
     }, ComposeEditor({
       id: 'compose-editor',
       messageID: (_ref3 = this.props.message) != null ? _ref3.get('id') : void 0,
@@ -6032,7 +6034,7 @@ module.exports = Menu = React.createClass({
       'aria-expanded': this.state.isDrawerExpanded
     }, this.state.accounts.length ? a({
       href: composeUrl,
-      className: 'compose-action btn btn-cozy-contrast btn-cozy'
+      className: 'compose-action btn btn-cozy'
     }, i({
       className: 'fa fa-pencil'
     }), span({
@@ -6170,10 +6172,15 @@ module.exports = Menu = React.createClass({
       style: {
         'background-color': accountColor
       }
-    }, account.get('label')[0]), span({
+    }, account.get('label')[0]), div({
+      className: 'account-details'
+    }, span({
       'data-account-id': key,
-      className: 'item-label'
-    }, account.get('label')), (progress = refreshes.get(accountID)) ? progress.get('errors').length ? span({
+      className: 'item-label display-label'
+    }, account.get('label')), span({
+      'data-account-id': key,
+      className: 'item-label display-login'
+    }, account.get('login'))), (progress = refreshes.get(accountID)) ? progress.get('errors').length ? span({
       className: 'refresh-error'
     }, i({
       className: 'fa warning',
@@ -6618,12 +6625,12 @@ module.exports = MessageItem = React.createClass({
     }, avatar != null ? img({
       className: 'avatar',
       src: avatar
-    }) : (from = message.get('from')[0], cHash = "" + from.name + " <" + from.address + ">", i({
+    }) : (from = message.get('from')[0], cHash = "" + (from != null ? from.name : void 0) + " <" + (from != null ? from.address : void 0) + ">", i({
       className: 'avatar placeholder',
       style: {
         'background-color': colorhash(cHash)
       }
-    }, from.name ? from.name[0] : from.address[0]))), div({
+    }, (from != null ? from.name : void 0) ? from != null ? from.name[0] : void 0 : from != null ? from.address[0] : void 0))), div({
       className: 'metas-wrapper'
     }, div({
       className: 'participants ellipsable'
@@ -7028,7 +7035,7 @@ module.exports = MessageList = React.createClass({
 });
 
 ;require.register("components/message", function(exports, require, module) {
-var ContactActionCreator, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, header, i, iframe, li, p, pre, span, ul, _ref;
+var ContactActionCreator, LayoutActionCreator, MessageActionCreator, MessageContent, MessageFlags, MessageFooter, MessageHeader, RGXP_PROTOCOL, RouterMixin, ToolbarMessage, TooltipRefresherMixin, a, alertError, alertSuccess, article, button, classer, div, footer, header, i, iframe, li, p, pre, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, article = _ref.article, header = _ref.header, footer = _ref.footer, ul = _ref.ul, li = _ref.li, span = _ref.span, i = _ref.i, p = _ref.p, a = _ref.a, button = _ref.button, pre = _ref.pre, iframe = _ref.iframe;
 
@@ -7055,6 +7062,8 @@ classer = React.addons.classSet;
 alertError = LayoutActionCreator.alertError;
 
 alertSuccess = LayoutActionCreator.notify;
+
+RGXP_PROTOCOL = /:\/\//;
 
 module.exports = React.createClass({
   displayName: 'Message',
@@ -7178,7 +7187,7 @@ module.exports = React.createClass({
     }
   },
   prepareHTML: function(html) {
-    var doc, hideImage, href, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref1;
+    var doc, href, image, images, link, messageDisplayHTML, parser, _i, _j, _len, _len1, _ref1;
     messageDisplayHTML = true;
     parser = new DOMParser();
     html = "<html><head>\n    <link rel=\"stylesheet\" href=\"./fonts/fonts.css\" />\n    <link rel=\"stylesheet\" href=\"./mail_stylesheet.css\" />\n    <style>body { visibility: hidden; }</style>\n</head><body>" + html + "</body></html>";
@@ -7193,14 +7202,14 @@ module.exports = React.createClass({
       messageDisplayHTML = false;
     }
     if (doc && !this.state.messageDisplayImages) {
-      hideImage = function(image) {
-        image.dataset.src = image.getAttribute('src');
-        return image.removeAttribute('src');
-      };
       images = doc.querySelectorAll('IMG[src]');
+      images = Array.prototype.filter.call(images, function(img) {
+        return RGXP_PROTOCOL.test(img.getAttribute('src'));
+      });
       for (_i = 0, _len = images.length; _i < _len; _i++) {
         image = images[_i];
-        hideImage(image);
+        image.dataset.src = image.getAttribute('src');
+        image.removeAttribute('src');
       }
     }
     _ref1 = doc.querySelectorAll('a[href]');
@@ -7208,7 +7217,7 @@ module.exports = React.createClass({
       link = _ref1[_j];
       link.target = '_blank';
       href = link.getAttribute('href');
-      if (href !== '' && !/:\/\//.test(href)) {
+      if (href !== '' && !RGXP_PROTOCOL.test(href)) {
         link.setAttribute('href', 'http://' + href);
       }
     }
@@ -11101,14 +11110,14 @@ module.exports = {
   "compose forward from": "From:",
   "compose forward to": "To:",
   "menu show": "Show menu",
-  "menu compose": "Write",
+  "menu compose": "Compose",
   "menu account new": "New Mailbox",
   "menu settings": "Parameters",
   "menu mailbox total": "%{smart_count} message|||| %{smart_count} messages",
   "menu mailbox unread": ", %{smart_count} unread message ||||, %{smart_count} unread messages ",
   "menu mailbox new": " and %{smart_count} new message|||| and %{smart_count} new messages ",
-  "menu favorites on": "Favorites",
-  "menu favorites off": "All",
+  "menu favorites on": "Less",
+  "menu favorites off": "More",
   "menu toggle": "Toggle Menu",
   "menu refresh label": "Refresh",
   "menu refreshing": "Refreshing...",
@@ -11245,7 +11254,7 @@ module.exports = {
   "account identifiers": "Identification",
   "account actions": "Actions",
   "account danger zone": "Danger Zone",
-  "account no special mailboxes": "Please configure special folders first",
+  "account no special mailboxes": "Please choose a specific folder for your Drafts, Sent and Deleted emails.",
   "account imap hide advanced": "Hide advanced parameters",
   "account imap show advanced": "Show advanced parameters",
   "account smtp hide advanced": "Hide advanced parameters",
@@ -11475,14 +11484,14 @@ module.exports = {
   "compose forward from": "De :",
   "compose forward to": "Pour :",
   "menu show": "Montrer le menu",
-  "menu compose": "Écrire",
+  "menu compose": "Nouveau Message",
   "menu account new": "Ajouter un compte",
   "menu settings": "Paramètres",
   "menu mailbox total": "%{smart_count} message |||| %{smart_count} messages ",
   "menu mailbox unread": " dont %{smart_count} non lu |||| dont %{smart_count} non lus ",
   "menu mailbox new": " et %{smart_count} nouveaux |||| et %{smart_count} nouveaux ",
-  "menu favorites on": "Favoris",
-  "menu favorites off": "Toutes",
+  "menu favorites on": "Moins",
+  "menu favorites off": "Plus",
   "menu toggle": "Menu",
   "menu refresh label": "Rafraîchir",
   "menu refreshing": "Rafraîchissement en cours...",
@@ -11619,7 +11628,7 @@ module.exports = {
   "account identifiers": "Identification",
   "account danger zone": "Zone dangereuse",
   "account actions": "Actions",
-  "account no special mailboxes": "Vous n'avez pas configuré les dossiers spéciaux",
+  "account no special mailboxes": "Vous devez choisir un dossier spécifique pour vos Brouillons, emails envoyés et supprimés.",
   "account imap hide advanced": "Masquer les paramètres avancés",
   "account imap show advanced": "Afficher les paramètres avancés",
   "account smtp hide advanced": "Masquer les paramètres avancés",
@@ -12137,7 +12146,7 @@ AccountStore = (function(_super) {
       if (mb1.get('label' < mb2.get('label'))) {
         return 1;
       } else if (mb1.get('label' > mb2.get('label'))) {
-        return 1;
+        return -1;
       } else {
         return 0;
       }
@@ -12615,7 +12624,7 @@ LayoutStore = (function(_super) {
 
   _intentAvailable = false;
 
-  _drawer = false;
+  _drawer = true;
 
   _modal = null;
 
@@ -13222,7 +13231,7 @@ MessageStore = (function(_super) {
   };
 
   handleFetchResult = function(result) {
-    var before, lengths, message, next, url, _i, _len, _ref1, _results;
+    var before, lengths, message, next, url, _i, _j, _len, _len1, _name, _ref1, _ref2, _results;
     if ((result.links != null) && (result.links.next != null)) {
       _params = {};
       next = decodeURIComponent(result.links.next);
@@ -13241,12 +13250,19 @@ MessageStore = (function(_super) {
     before = _params.pageAfter === '-' ? void 0 : _params.pageAfter;
     SocketUtils.changeRealtimeScope(result.mailboxID, before);
     if (lengths = result.conversationLengths) {
+      _ref1 = result.messages;
+      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
+        message = _ref1[_i];
+        if (lengths[_name = message.conversationID] == null) {
+          lengths[_name] = 0;
+        }
+      }
       _conversationLengths = _conversationLengths.merge(lengths);
     }
-    _ref1 = result.messages;
+    _ref2 = result.messages;
     _results = [];
-    for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-      message = _ref1[_i];
+    for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
+      message = _ref2[_j];
       if (message != null) {
         _results.push(onReceiveRawMessage(message));
       }

@@ -47,6 +47,9 @@
         .dropdown
             display flex
 
+        i
+            margin-right (5/14)em
+
     [role=group]
         display flex
 
@@ -121,19 +124,20 @@
             color #999
 
     [role=group]
-            color #999
+        color #999
 
-            i
-                vertical-align baseline
+        i
+            vertical-align baseline
                 padding-right  .5em
 
         i[role=presentation]
-            padding          .65em
+            padding          .5em .65em
+            // background-color basecolor
+            // color            white
+
+        &[aria-expanded="true"] i[role=presentation]
             background-color basecolor
             color            white
-
-            &:hover
-                background-color darken(basecolor, 20%)
 
 
     .filters
@@ -186,7 +190,6 @@
     .message
         // defaults
         border-bottom 1px solid #e5e5e5
-        background-color #fff
 
         // Layouts
         .wrapper
@@ -263,6 +266,7 @@
             .participants
                 order       1
                 font-weight bold
+                color darken(basecolor, 25%)
 
 
             .date
@@ -355,7 +359,10 @@
 
         // Unread styles
         &:not(.unseen)
-            background-color #f5f5f5
+            background-color #fff
+
+            .participants
+                color #333
 
 
         // Currently selected message
