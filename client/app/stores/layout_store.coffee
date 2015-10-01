@@ -27,7 +27,7 @@ class LayoutStore extends Store
 
     _intentAvailable = false
 
-    _drawer = true
+    _drawer = window.innerWidth > 1280
 
     _modal  = null
 
