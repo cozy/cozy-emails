@@ -72,7 +72,7 @@ module.exports = class ImapPool
             @wrongPortTimeout = setTimeout =>
                 log.debug @id, "timeout 10s"
                 imap.removeListener 'error', onConnError
-                onConnError = new TimeoutError "Timeout connecting to " +
+                onConnError new TimeoutError "Timeout connecting to " +
                     "#{@account?.imapServer}:#{@account?.imapPort}"
                 imap.destroy()
 
