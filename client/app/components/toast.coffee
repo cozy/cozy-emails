@@ -82,7 +82,7 @@ module.exports = Toast = React.createClass
             content     : React.DOM.pre
                 style: "max-height": "300px",
                 "word-wrap": "normal",
-                    getErrors
+                    getErrors '\n'
         LayoutActionCreator.displayModal modal
 
 
