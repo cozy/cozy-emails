@@ -234,6 +234,8 @@
   "message move ok": "Message “%{subject}” moved",
   "message move ko": "Error moving message “%{subject}”: ",
   "message mark ok": "Message marked",
+  "message flag ko": "Error marking message",
+  "message flag ok": "Message marked",
   "message mark ko": "Error marking message: ",
   "draft delete ok": "Draft “%{subject}” deleted",
   "draft delete ko": "Error deleting draft: ",

@@ -610,6 +610,8 @@ module.exports = class Message extends cozydb.CozyModel
                 iterator imap, state, releaseImap
 
             pool = ramStore.getImapPool(messages[0])
+            if not pool
+                return done new BadRequest "Pool isn't defined"
             pool.doASAPWithBox state.box, iterator2, next
         , done
 
@@ -644,7 +646,6 @@ module.exports = class Message extends cozydb.CozyModel
             , callback
 
     @batchMove: (messages, from, to, callback) ->
-
         to = [to] unless Array.isArray(to)
 
         # ignore messages which are already in the destination set

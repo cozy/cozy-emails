@@ -76,7 +76,7 @@ module.exports = class ImapPool
                     "#{@account?.imapServer}:#{@account?.imapPort}"
                 imap.destroy()
 
-            , 10000
+            , 60000
 
 
     _onConnectionError: (connection, err) ->
@@ -225,7 +225,7 @@ module.exports = class ImapPool
             typed = new AccountConfigError 'imapTLS', err
 
         if err instanceof TimeoutError
-            typed = new AccountConfigError 'imapPort', err
+            typed = new TimeoutError 'timeout', err
 
         return typed
 
