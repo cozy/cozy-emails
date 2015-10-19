@@ -419,6 +419,9 @@ module.exports.batchSend = (req, res, next) ->
 # expect req.messages
 module.exports.batchTrash = (req, res, next) ->
     accountInstance = ramStore.getAccount(req.body.accountID)
+    # the client should prevent this, but let's be safe
+    unless accountInstance
+        return next new BadRequest 'accountInstance'
     trashBoxId = accountInstance.trashMailbox
     # the client should prevent this, but let's be safe
     unless trashBoxId
