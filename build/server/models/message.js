@@ -622,6 +622,9 @@ module.exports = Message = (function(superClass) {
         return iterator(imap, state, releaseImap);
       };
       pool = ramStore.getImapPool(messages[0]);
+      if (!pool) {
+        return done(new BadRequest("Pool isn't defined"));
+      }
       return pool.doASAPWithBox(state.box, iterator2, next);
     }, done);
   };

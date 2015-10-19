@@ -489,6 +489,9 @@ module.exports.batchSend = function(req, res, next) {
 module.exports.batchTrash = function(req, res, next) {
   var accountInstance, trashBoxId;
   accountInstance = ramStore.getAccount(req.body.accountID);
+  if (!accountInstance) {
+    return next(new BadRequest('accountInstance'));
+  }
   trashBoxId = accountInstance.trashMailbox;
   if (!trashBoxId) {
     return next(new AccountConfigError('trashMailbox'));
