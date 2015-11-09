@@ -62,22 +62,22 @@ module.exports = MessageList = React.createClass
             className:         'messages-list panel'
             'aria-expanded':   not @state.fullscreen
 
-            # Toolbar
-            ToolbarMessagesList
-                settings:             @props.settings
-                accountID:            @props.accountID
-                mailboxID:            @props.mailboxID
-                mailboxes:            @props.mailboxes
-                messages:             @props.messages
-                edited:               @state.edited
-                selected:             @state.selected
-                allSelected:          @state.allSelected
-                displayConversations: @props.displayConversations
-                toggleEdited:         @toggleEdited
-                toggleAll:            @toggleAll
-                afterAction:          afterAction
-                queryParams:          @props.queryParams
-                filter:               @props.filter
+            unless @props.noToolbar
+                # Toolbar
+                ToolbarMessagesList
+                    settings:             @props.settings
+                    accountID:            @props.accountID
+                    mailboxID:            @props.mailboxID
+                    mailboxes:            @props.mailboxes
+                    messages:             @props.messages
+                    edited:               @state.edited
+                    selected:             @state.selected
+                    allSelected:          @state.allSelected
+                    displayConversations: @props.displayConversations
+                    toggleEdited:         @toggleEdited
+                    toggleAll:            @toggleAll
+                    afterAction:          @afterMessageAction
+                    queryParams:          @props.queryParams
 
             # Progress
             Progress value: @props.refresh, max: 1
@@ -98,10 +98,13 @@ module.exports = MessageList = React.createClass
                     MessageListBody
                         messages: @props.messages
                         settings: @props.settings
+                        accountID: @props.accountID
                         mailboxID: @props.mailboxID
                         messageID: @props.messageID
                         conversationID: @props.conversationID
                         conversationLengths: @props.conversationLengths
+                        accounts: @props.accounts
+                        mailboxes: @props.mailboxes
                         login: @props.login
                         edited: @state.edited
                         selected: @state.selected

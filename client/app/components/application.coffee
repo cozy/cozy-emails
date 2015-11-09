@@ -6,6 +6,7 @@ Modal          = require './modal'
 Panel          = require './panel'
 ToastContainer = require './toast_container'
 Tooltips       = require './tooltips-manager'
+SearchBar       = require './search_bar'
 
 # React Mixins
 RouterMixin          = require '../mixins/router_mixin'
@@ -16,7 +17,8 @@ TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 LayoutStore   = require '../stores/layout_store'
-Stores        = [AccountStore, MessageStore, LayoutStore]
+SearchStore   = require '../stores/search_store'
+Stores        = [AccountStore, MessageStore, LayoutStore, SearchStore]
 
 # Flux actions
 LayoutActionCreator  = require '../actions/layout_action_creator'
@@ -71,13 +73,21 @@ module.exports = Application = React.createClass
 
                 main
                     className: if layout.secondPanel? then null else 'full',
-                    @getPanel layout.firstPanel, 'firstPanel'
-                    if layout.secondPanel?
-                        @getPanel layout.secondPanel, 'secondPanel'
-                    else
-                        section
-                            key:             'placeholder'
-                            'aria-expanded': false
+
+                    if layout.firstPanel.action in
+                    ['account.mailbox.messages', 'search']
+                        SearchBar()
+
+                    div
+                        className: 'panels'
+
+                        @getPanel layout.firstPanel, 'firstPanel'
+                        if layout.secondPanel?
+                            @getPanel layout.secondPanel, 'secondPanel'
+                        else
+                            section
+                                key:             'placeholder'
+                                'aria-expanded': false
 
             # Display feedback
             if modal?
@@ -114,6 +124,7 @@ module.exports = Application = React.createClass
 
         return {
             selectedAccount       : selectedAccount
+            currentSearch         : SearchStore.getCurrentSearch()
             modal                 : LayoutStore.getModal()
             useIntents            : LayoutStore.intentAvailable()
             selectedMailboxID     : AccountStore.getSelectedMailbox()

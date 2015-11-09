@@ -18,6 +18,9 @@ module.exports = class Router extends PanelRouter
                      ':type/:flag/before/:before/after/:after'
             fluxAction: 'showMessageList'
 
+        'search':
+            pattern: 'account/:accountID/search/:search'
+            fluxAction: 'showSearchResult'
 
         'message':
             pattern: 'message/:messageID'
@@ -85,8 +88,8 @@ module.exports = class Router extends PanelRouter
 
             when 'search'
                 defaultParameters =
-                    query: ""
-                    page: 1
+                    accountID: 'all'
+                    search: '-'
 
             else
                 defaultParameters = null

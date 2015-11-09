@@ -234,10 +234,9 @@ module.exports =
             else
                 callback res.body, null
 
-    search: (query, numPage, callback) ->
-        encodedQuery = encodeURIComponent query
-        numByPage = SettingsStore.get 'messagesPerPage'
-        request.get "search/#{encodedQuery}/page/#{numPage}/limit/#{numByPage}"
+    search: (url, callback) ->
+        request.get url
+        .set 'Accept', 'application/json'
         .end (res) ->
             if res.ok
                 callback null, res.body

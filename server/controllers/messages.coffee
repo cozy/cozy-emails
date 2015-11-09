@@ -296,6 +296,23 @@ module.exports.batchMove = (req, res, next) ->
         res.send process.updatedMessages
 
 
+module.exports.search = (req, res, next) ->
+    params =
+        query: req.query.search
+
+    if req.query.accountID
+        params.facets = accountID: {}
+        params.filter =
+            accountID: [[req.query.accountID, req.query.accountID]]
+
+    params.numByPage = req.query.pageSize or 10
+    params.numPage = req.query.page or 0
+
+    Message.search params, (err, results) ->
+        return next err if err
+        res.send results.map (msg) -> msg.toClientObject()
+
+
 # fetch from IMAP and send the raw rfc822 message
 module.exports.raw = (req, res, next) ->
 

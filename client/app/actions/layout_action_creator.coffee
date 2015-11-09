@@ -118,6 +118,20 @@ module.exports = LayoutActionCreator =
 
         MessageActionCreator.fetchMoreOfCurrentQuery()
 
+    showSearchResult: (panelInfo) ->
+        {accountID, search} = panelInfo.parameters
+
+        if accountID isnt 'all'
+            AccountActionCreator.ensureSelected accountID
+        else
+            AccountActionCreator.selectAccount null
+
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SEARCH_PARAMETER_CHANGED
+            value: {accountID, search}
+
+        if search isnt '-'
+            MessageActionCreator.fetchSearchResults accountID, search
 
     showMessage: (panelInfo, direction) ->
         message = MessageStore.getByID panelInfo.parameters.messageID

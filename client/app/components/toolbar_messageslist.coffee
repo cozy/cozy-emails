@@ -70,13 +70,6 @@ module.exports = ToolbarMessagesList = React.createClass
 
     render: ->
         aside role: 'toolbar',
-            # Drawer toggler
-            button
-                className: 'drawer-toggle'
-                onClick:   LayoutActionCreator.drawerToggle
-                title:     t 'menu toggle'
-
-                i className: 'fa fa-navicon'
 
             # Select all Checkbox
             button

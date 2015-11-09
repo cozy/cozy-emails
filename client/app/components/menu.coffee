@@ -12,6 +12,7 @@ MessageActionCreator      = require '../actions/message_action_creator'
 AccountStore   = require '../stores/account_store'
 LayoutStore    = require '../stores/layout_store'
 RefreshesStore = require '../stores/refreshes_store'
+SearchStore = require '../stores/search_store'
 
 MessageUtils = require '../utils/message_utils'
 colorhash    = require '../utils/colorhash'
@@ -38,7 +39,7 @@ module.exports = Menu = React.createClass
 
     mixins: [
         RouterMixin
-        StoreWatchMixin [AccountStore, LayoutStore, RefreshesStore]
+        StoreWatchMixin [AccountStore, LayoutStore, RefreshesStore, SearchStore]
     ]
 
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -53,6 +54,7 @@ module.exports = Menu = React.createClass
         selectedAccount  : AccountStore.getSelectedOrDefault()
         mailboxes        : AccountStore.getSelectedMailboxes true
         favorites        : AccountStore.getSelectedFavorites true
+        search           : SearchStore.getCurrentSearch()
 
     selectedFirstSort: (account1, account2) ->
         console.log('there', @)
@@ -91,6 +93,19 @@ module.exports = Menu = React.createClass
                 @renderComposeButton()
 
             nav className: 'mainmenu',
+                if @state.search and not @state.selectedAccount
+                    div className: 'active',
+                        div className: 'account-title',
+                            a
+                                role: 'menuitem'
+                                className: 'account active',
+
+                                i className: 'fa fa-search'
+
+                                div
+                                    className: 'account-details',
+                                        span {}, @state.search
+
                 if @state.accounts.length
                     @state.accounts
                     .sort @selectedFirstSort.bind @

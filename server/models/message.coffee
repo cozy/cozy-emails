@@ -7,6 +7,10 @@ class MailAdress extends cozydb.Model
         address: String
 
 
+class MailAttachment extends cozydb.Model
+    @schema: cozydb.NoSchema
+
+
 # Public: Message
 module.exports = class Message extends cozydb.CozyModel
     @docType: 'Message'
@@ -38,9 +42,23 @@ module.exports = class Message extends cozydb.CozyModel
         ignoreInCount  : Boolean         # whether or not to count this message
                                          # in account values
         binary         : cozydb.NoSchema
-        attachments    : cozydb.NoSchema
+        attachments    : [MailAttachment]
         alternatives   : cozydb.NoSchema # for calendar content
 
+    @fullTextIndex:
+        text:
+            nGramLength: 1,
+            stemming: true, weight: 1, fieldedSearch: false
+
+        subject:
+            nGramLength: {gte: 1, lte: 2},
+            stemming: true, weight: 5, fieldedSearch: true
+
+        date:
+            filter: true, searchable: false
+
+        accountID:
+            filter: true, searchable: false
 
     # Public: fetch a list of message
     #

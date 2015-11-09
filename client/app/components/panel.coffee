@@ -4,6 +4,7 @@ Compose        = require './compose'
 Conversation   = require './conversation'
 MessageList    = require './message-list'
 Settings       = require './settings'
+SearchResult   = require './search_result'
 {Spinner}       = require './basic_components'
 
 # React Mixins
@@ -27,7 +28,7 @@ module.exports = Panel = React.createClass
     displayName: 'Panel'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, SettingsStore]
+        StoreWatchMixin [AccountStore, MessageStore, SettingsStore, SearchStore]
         TooltipRefesherMixin
         RouterMixin
     ]
@@ -43,6 +44,10 @@ module.exports = Panel = React.createClass
         # -- Generates a list of messages for a given account and mailbox
         if @props.action is 'account.mailbox.messages'
             @renderList()
+
+        else if @props.action is 'search'
+
+            @renderSearchResults()
 
         # -- Generates a configuration window for a given account
         else if @props.action is 'account.config' or
@@ -148,6 +153,9 @@ module.exports = Panel = React.createClass
             canLoadMore:          @state.queryParams.hasNextPage
             loadMoreMessage: -> MessageActionCreator.fetchMoreOfCurrentQuery()
 
+    renderSearchResults: ->
+        key = encodeURIComponent SearchStore.getCurrentSearch()
+        return new SearchResult key: "search-#{key}"
 
     renderAccount: ->
         if @props.action is 'account.config'
