@@ -59,9 +59,6 @@ module.exports = Compose = React.createClass
     render: ->
         return unless @props.accounts
 
-        toggleFullscreen = ->
-            LayoutActionCreator.toggleFullscreen()
-
         closeUrl = @buildClosePanelUrl @props.layout
 
         classLabel = 'compose-label'
@@ -340,13 +337,13 @@ module.exports = Compose = React.createClass
 
         # new draft
         else
-            account = @props.accounts[@props.selectedAccountID]
+            account = @props.accounts.get @props.selectedAccountID
             state = MessageUtils.makeReplyMessage(
-                account.login,
+                account.get('login'),
                 @props.inReplyTo,
                 @props.action,
                 @props.settings.get('composeInHTML'),
-                account.signature
+                account.get('signature')
             )
             state.isNew = true
             state.accountID ?= @props.selectedAccountID
@@ -385,11 +382,11 @@ module.exports = Compose = React.createClass
 
     _doSend: (isDraft) ->
 
-        account = @props.accounts[@state.accountID]
+        account = @props.accounts.get @state.accountID
 
         from =
-            name: account.name or undefined
-            address: account.login
+            name: account.get('name') or undefined
+            address: account.get('login')
 
         message =
             id            : @state.id

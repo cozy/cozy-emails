@@ -134,7 +134,8 @@ module.exports = Panel = React.createClass
             messageID:            @state.currentMessageID
             conversationID:       conversationID
             login:                account?.get 'login'
-            mailboxes:            @state.mailboxesFlat
+            accounts:             @state.accounts
+            mailboxes:            @state.mailboxes
             settings:             @state.settings
             fetching:             @state.fetching
             refresh:              @state.refresh
@@ -157,6 +158,7 @@ module.exports = Panel = React.createClass
                 error             : @state.accountError
                 isWaiting         : @state.accountWaiting
                 mailboxes         : @state.selectedMailboxes
+                mailboxCounters   : @state.mailboxCounters
                 favoriteMailboxes : @state.favoriteMailboxes
                 tab               : @props.tab
             if options.selectedAccount? and
@@ -207,8 +209,8 @@ module.exports = Panel = React.createClass
         return Conversation
             key: 'conversation-' + conversationID
             settings             : @state.settings
-            accounts             : @state.accountsFlat
-            mailboxes            : @state.mailboxesFlat
+            accounts             : @state.accounts
+            mailboxes            : @state.mailboxes
             selectedAccountID    : @state.selectedAccount.get 'id'
             selectedAccountLogin : @state.selectedAccount.get 'login'
             selectedMailboxID    : selectedMailboxID
@@ -233,7 +235,7 @@ module.exports = Panel = React.createClass
             action               : null
             inReplyTo            : null
             settings             : @state.settings
-            accounts             : @state.accountsFlat
+            accounts             : @state.accounts
             selectedAccountID    : @state.selectedAccount.get 'id'
             selectedAccountLogin : @state.selectedAccount.get 'login'
             selectedMailboxID    : @props.selectedMailboxID
@@ -293,48 +295,15 @@ module.exports = Panel = React.createClass
             ref     : 'settings'
             settings: @state.settings
 
-
     getStateFromStores: ->
-        isLoadingReply = not MessageStore.getByID(@props.messageID)?
-
-        selectedAccount = AccountStore.getSelected()
-        # When selecting compose in Menu, we may not have a selected account
-        if not selectedAccount?
-            selectedAccount = AccountStore.getDefault()
-
-        # Flat copies of accounts and mailboxes
-        # This prevents components to refresh when properties they don't use are
-        # updated (unread counts, timestamp of last refresh…)
-        accountsFlat = {}
-        AccountStore.getAll().map (account) ->
-            accountsFlat[account.get 'id'] =
-                name: account.get 'name'
-                label: account.get 'label'
-                login: account.get 'login'
-                trashMailbox: account.get 'trashMailbox'
-                signature: account.get 'signature'
-        .toJS()
-
-        mailboxesFlat = {}
-        AccountStore.getSelectedMailboxes(true).map (mailbox) ->
-            id = mailbox.get 'id'
-            mailboxesFlat[id] = {}
-            ['id', 'label', 'depth'].map (prop) ->
-                mailboxesFlat[id][prop] = mailbox.get prop
-        .toJS()
-
-        refresh = AccountStore.getMailboxRefresh(@props.mailboxID)
-        conversationID = MessageStore.getCurrentConversationID()
-        conversation = if conversationID
-            MessageStore.getConversation(conversationID)
-        else null
-
         return {
-            accountsFlat          : accountsFlat
-            selectedAccount       : selectedAccount
-            mailboxesFlat         : mailboxesFlat
+            accounts              : AccountStore.getAll()
+            mailboxes             : AccountStore.getAllMailboxes()
+            selectedAccount       : AccountStore.getSelectedOrDefault()
             favoriteMailboxes     : AccountStore.getSelectedFavorites()
             selectedMailboxes     : AccountStore.getSelectedMailboxes(true)
+            mailboxCounters       : AccountStore.getMailboxCounters()
+            allMailboxes          : AccountStore.getAllMailboxes()
             accountError          : AccountStore.getError()
             accountWaiting        : AccountStore.isWaiting()
             fetching              : MessageStore.isFetching()

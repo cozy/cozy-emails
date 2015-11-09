@@ -24,19 +24,22 @@ module.exports = React.createClass
     onChange: ({target: dataset: value: accountID})->
         @props.valueLink.requestChange accountID
 
+    renderLabel: (account) ->
+        if typeof account is 'string'
+            account
+        else
+            label = account.get('name') or account.get('label')
+            return "#{label} <#{account.get 'login'}>"
+
 
     renderNoChoice: ->
-        account = @props.accounts[@props.valueLink.value]
+        account = @props.accounts.get @props.valueLink.value
 
-        label = "#{account.name or account.label} <#{account.login}>"
-        p className: 'form-control-static align-item', label
+        p className: 'form-control-static align-item', @renderLabel(account)
 
 
     renderPicker:  ->
-        accounts = @props.accounts
-        account  = accounts[@props.valueLink.value]
-        value    = @props.valueLink.value
-        label = "#{account.name or account.label} <#{account.login}>"
+        account  = @props.accounts.get @props.valueLink.value
 
         div className: 'account-picker align-item',
             span
@@ -44,17 +47,17 @@ module.exports = React.createClass
                 'data-toggle': 'dropdown',
                     span
                         ref: 'account',
-                        'data-value': value,
-                        label
+                        'data-value': @props.valueLink.value,
+                        @renderLabel(account)
                     span className: 'caret'
             ul className: 'dropdown-menu', role: 'menu',
-                for key, account of accounts when key isnt value
-                    @renderAccount(key, account)
+                @props.accounts
+                .filter (account, key) => key isnt @props.valueLink.value
+                .map (account, key) => @renderAccount(key, account)
+                .toJS()
 
 
     renderAccount: (key, account) ->
-        label = "#{account.name or account.label} <#{account.login}>"
-
         li
             role: 'presentation',
             key: key,
@@ -62,5 +65,5 @@ module.exports = React.createClass
                     role: 'menuitem',
                     onClick: @onChange,
                     'data-value': key,
-                    label
+                    @renderLabel(account)
 
