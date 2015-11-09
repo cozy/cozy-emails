@@ -42,13 +42,9 @@ module.exports =
                 callback t('app error')
 
 
-    fetchMessagesByFolder: (mailboxID, query, callback) ->
-        for own key, val of query
-            if val is '-' or val is 'all'
-                delete query[key]
-        request.get "mailbox/#{mailboxID}"
+    fetchMessagesByFolder: (url, callback) ->
+        request.get url
         .set 'Accept', 'application/json'
-        .query query
         .end (res) ->
             if res.ok
                 callback null, res.body
@@ -256,7 +252,7 @@ module.exports =
         request.get url
         .end (res) ->
             if res.ok
-                callback null, res.text
+                callback null, res.body
             else
                 callback res.body
 
@@ -264,9 +260,9 @@ module.exports =
         request.get "refresh/#{mailboxID}"
         .end (res) ->
             if res.ok
-                callback null, res.text
+                callback null, res.body
             else
-                callback res.text
+                callback res.body
 
 
     activityCreate: (options, callback) ->

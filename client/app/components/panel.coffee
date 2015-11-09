@@ -17,6 +17,8 @@ MessageStore  = require '../stores/message_store'
 SearchStore   = require '../stores/search_store'
 SettingsStore = require '../stores/settings_store'
 
+MessageActionCreator = require '../actions/message_action_creator'
+
 Constants = require '../constants/app_constants'
 {ComposeActions, MessageFilter, Dispositions} = Constants
 
@@ -39,12 +41,7 @@ module.exports = Panel = React.createClass
 
     render: ->
         # -- Generates a list of messages for a given account and mailbox
-        if @props.action is 'account.mailbox.messages' or
-           @props.action is 'account.mailbox.messages.filter' or
-           @props.action is 'account.mailbox.messages.date' or
-           @props.action is 'account.mailbox.default' or
-           @props.action is 'search'
-
+        if @props.action is 'account.mailbox.messages'
             @renderList()
 
         # -- Generates a configuration window for a given account
@@ -82,42 +79,31 @@ module.exports = Panel = React.createClass
 
     renderList: ->
 
-        if @props.action is 'search'
-            accountID = null
-            mailboxID = null
-            messages  = @state.results
-            messagesCount    = messages.count()
-            emptyListMessage = t 'list empty'
-            counterMessage   = t 'list search count', messagesCount
+        accountID = @props.accountID
+        mailboxID = @props.mailboxID
+        account   = AccountStore.getByID accountID
 
+        if account?
+            mailbox   = account.get('mailboxes').get mailboxID
+            messages  = MessageStore.getMessagesToDisplay mailboxID,
+                @state.settings.get('displayConversation')
+            messagesCount = mailbox?.get('nbTotal') or 0
+            emptyListMessage = switch @state.queryParams.flag
+                when MessageFilter.FLAGGED
+                    t 'no flagged message'
+                when MessageFilter.UNSEEN
+                    t 'no unseen message'
+                when MessageFilter.ALL
+                    t 'list empty'
+                else
+                    t 'no filter message'
         else
-            accountID = @props.accountID
-            mailboxID = @props.mailboxID
-            account   = AccountStore.getByID accountID
-
-            if account?
-                mailbox   = account.get('mailboxes').get mailboxID
-                messages  = MessageStore.getMessagesByMailbox mailboxID,
-                    @state.settings.get('displayConversation')
-                messagesCount = mailbox?.get('nbTotal') or 0
-                emptyListMessage = switch @state.currentFilter
-                    when MessageFilter.FLAGGED
-                        t 'no flagged message'
-                    when MessageFilter.UNSEEN
-                        t 'no unseen message'
-                    when MessageFilter.ALL
-                        t 'list empty'
-                    else
-                        t 'no filter message'
-                counterMessage   = t 'list count', messagesCount
-
-            else
-                setTimeout =>
-                    @redirect
-                        direction: "first"
-                        action: "default"
-                , 1
-                return div null, 'redirecting'
+            setTimeout =>
+                @redirect
+                    direction: "first"
+                    action: "default"
+            , 1
+            return React.DOM.div null, 'redirecting'
 
         # gets the selected message if any
         if @state.settings.get 'displayConversation'
@@ -126,10 +112,6 @@ module.exports = Panel = React.createClass
             if not conversationID? and messages.length > 0
                 conversationID = messages.first().get 'conversationID'
             conversationLengths = MessageStore.getConversationsLength()
-
-        query = _.clone(@state.queryParams)
-        query.accountID = accountID
-        query.mailboxID = mailboxID
 
         # don't display conversations in Trash and Draft folders
         conversationDisabledBoxes = [
@@ -156,14 +138,14 @@ module.exports = Panel = React.createClass
             settings:             @state.settings
             fetching:             @state.fetching
             refresh:              @state.refresh
-            query:                query
             isTrash:              isTrash
             conversationLengths:  conversationLengths
             emptyListMessage:     emptyListMessage
             ref:                  'messageList'
             displayConversations: displayConversations
             queryParams:          @state.queryParams
-            filter:               @state.currentFilter
+            canLoadMore:          @state.queryParams.hasNextPage
+            loadMoreMessage: -> MessageActionCreator.fetchMoreOfCurrentQuery()
 
 
     renderAccount: ->
@@ -355,14 +337,12 @@ module.exports = Panel = React.createClass
             selectedMailboxes     : AccountStore.getSelectedMailboxes(true)
             accountError          : AccountStore.getError()
             accountWaiting        : AccountStore.isWaiting()
-            refresh               : refresh
             fetching              : MessageStore.isFetching()
-            queryParams           : MessageStore.getParams()
+            queryParams           : MessageStore.getQueryParams()
             currentMessageID      : MessageStore.getCurrentID()
-            conversation          : conversation
-            currentConversationID : conversationID
-            currentFilter         : MessageStore.getCurrentFilter()
-            results               : SearchStore.getResults()
+            conversation          : MessageStore.getCurrentConversation()
+            currentConversationID : MessageStore.getCurrentConversationID()
             settings              : SettingsStore.get()
-            isLoadingReply        : isLoadingReply
+            isLoadingReply        : not MessageStore.getByID(@props.messageID)?
+            refresh           : AccountStore.getMailboxRefresh @props.mailboxID
         }

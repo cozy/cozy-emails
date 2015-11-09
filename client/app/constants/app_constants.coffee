@@ -91,8 +91,7 @@ module.exports =
         'REFRESH_FAILURE'              : 'REFRESH_FAILURE'
 
         # List
-        'LIST_FILTER'               : 'LIST_FILTER'
-        'LIST_SORT'                 : 'LIST_SORT'
+        'QUERY_PARAMETER_CHANGED'   : 'QUERY_PARAMETER_CHANGED'
 
         # Toasts
         'TOASTS_SHOW'               : 'TOASTS_SHOW'

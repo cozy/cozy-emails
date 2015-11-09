@@ -99,16 +99,6 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.CLEAR_TOASTS
             value: null
 
-    filterMessages: (filter) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.LIST_FILTER
-            value: filter
-
-    sortMessages: (sort) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.LIST_SORT
-            value: sort
-
     getDefaultRoute: ->
         # if there is no account, we display the configAccount
         if AccountStore.getAll().length is 0 then 'account.new'
@@ -116,54 +106,18 @@ module.exports = LayoutActionCreator =
         else 'account.mailbox.messages'
 
     showMessageList: (panelInfo) ->
-        {accountID, mailboxID} = panelInfo.parameters
-        selectedAccount = AccountStore.getSelected()
-        selectedMailbox = AccountStore.getSelectedMailbox()
-        if not selectedAccount? or
-        selectedAccount.get('id') isnt accountID or
-        selectedMailbox.get('id') isnt mailboxID
-            AccountActionCreator.selectAccount accountID, mailboxID
+        params = panelInfo.parameters
+        {accountID, mailboxID, filter, sort, before, after} = params
 
-        cached = _cachedQuery.mailboxID is mailboxID
-        query = {}
-        ['sort', 'after', 'before', 'flag', 'pageAfter'].forEach (param) ->
-            value = panelInfo.parameters[param]
-            if value? and value isnt ''
-                query[param] = value
-            if _cachedQuery[param] isnt value
-                _cachedQuery[param] = value
-                cached = false
-        _cachedQuery.mailboxID = mailboxID
+        # ensure the proper account is selected
+        AccountActionCreator.ensureSelected accountID, mailboxID
 
-        if not cached
-            AppDispatcher.handleViewAction
-                type: ActionTypes.MESSAGE_FETCH_REQUEST
-                value: {mailboxID, query}
+        AppDispatcher.handleViewAction
+            type: ActionTypes.QUERY_PARAMETER_CHANGED
+            value: params
 
-            updated = Date.now()
-            XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMsg) ->
-                if err?
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.MESSAGE_FETCH_FAILURE
-                        value: {mailboxID, query}
-                else
-                    # This prevent to override local updates with older ones
-                    # from server
-                    rawMsg.messages.forEach (msg) ->
-                        msg.updated = updated
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                        value: {mailboxID, query, fetchResult: rawMsg}
+        MessageActionCreator.fetchMoreOfCurrentQuery()
 
-    # Apply filters and sort criteria on message list then display it
-    showFilteredList: (filter, sort) ->
-        @filterMessages filter
-        @sortMessages sort
-
-        params           = _.clone(MessageStore.getParams())
-        params.accountID = AccountStore.getSelected().get 'id'
-        params.mailboxID = AccountStore.getSelectedMailbox().get 'id'
-        @showMessageList parameters: params
 
     showMessage: (panelInfo, direction) ->
         message = MessageStore.getByID panelInfo.parameters.messageID

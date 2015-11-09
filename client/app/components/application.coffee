@@ -148,43 +148,29 @@ module.exports = Application = React.createClass
         # "special" mailboxes must be set before accessing to the account
         # otherwise, redirect to account config
         account = @state.selectedAccount
-        if (account?)
-            if not account.get('draftMailbox')? or
-               not account.get('sentMailbox')? or
-               not account.get('trashMailbox')?
 
-                if action is 'account.mailbox.messages' or
-                   action is 'account.mailbox.messages.filter' or
-                   action is 'account.mailbox.messages.date' or
-                   action is 'search' or
-                   action is 'message' or
-                   action is 'conversation' or
-                   action is 'compose' or
-                   action is 'edit'
-                    @redirect
-                        direction: 'first'
-                        action: 'account.config'
-                        parameters: [
-                            account.get 'id'
-                            'mailboxes'
-                        ]
-                        fullWidth: true
-                    errorMsg = t 'account no special mailboxes'
-                    LayoutActionCreator.alertError errorMsg
+        noSpecialFolder = not account?.get('draftMailbox')? or
+               not account?.get('sentMailbox')? or
+               not account?.get('trashMailbox')?
 
+        needSpecialFolder = action in [
+            'account.mailbox.messages'
+            'message'
+            'conversation'
+            'compose'
+            'edit'
+        ]
 
-    _notify: (title, options) ->
-        window.cozyMails.notify title, options
-
-
-    componentDidMount: ->
-        Stores.forEach (store) =>
-            store.on 'notify', @_notify
+        if account? and noSpecialFolder and needSpecialFolder
+            @redirect
+                direction: 'first'
+                action: 'account.config'
+                parameters: [ account.get('id'), 'mailboxes']
+                fullWidth: true
+            LayoutActionCreator.alertError t 'account no special mailboxes'
 
 
     componentWillUnmount: ->
-        Stores.forEach (store) =>
-            store.removeListener 'notify', @notify
         # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
 

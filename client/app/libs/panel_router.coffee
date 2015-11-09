@@ -54,8 +54,14 @@ module.exports = class Router extends Backbone.Router
         @on 'route', (name, args) =>
 
             if name is 'default'
-                name = LayoutActionCreator.getDefaultRoute()
-                args = [null]
+                @current = {firstPanel: null, secondPanel: null}
+                url = @buildUrl
+                    direction: 'first'
+                    fullWidth: true
+                    action: LayoutActionCreator.getDefaultRoute()
+                    parameters: [null]
+
+                return @navigate url, trigger: true
 
             [firstPanelInfo, secondPanelInfo] = @_processSubRouting name, args
 

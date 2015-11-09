@@ -46,45 +46,17 @@ module.exports = MessageList = React.createClass
         fullscreen: LayoutStore.isPreviewFullscreen()
 
     componentWillReceiveProps: (props) ->
-        if props.mailboxID isnt @props.mailboxID
-            @setState allSelected: false, edited: false, selected: {}
-        else
-            selected = @state.selected
-            # remove selected messages that are not in view anymore
-            for id, isSelected of selected when not props.messages.get(id)
-                delete selected[id]
-            @setState selected: selected
-            if Object.keys(selected).length is 0
-                @setState allSelected: false, edited: false
+        selected = _.clone @state.selected
+        # remove selected messages that are not in view anymore
+        for id, isSelected of selected when not props.messages.get(id)
+            delete selected[id]
+        @setState selected: selected
+        if Object.keys(selected).length is 0
+            @setState allSelected: false, edited: false
 
     render: ->
-        compact = @props.settings.get('listStyle') is 'compact'
-
-        filterParams =
-            accountID: @props.accountID
-            mailboxID: @props.mailboxID
-            query:     @props.query
-
-        hasMore = @props.query.pageAfter isnt '-'
-        # This allow to load next messages if needed after we remove messages
-        # from this mailbox by moving or deleting them.
-        # (if we delete all messages, the list is empty and listEmpty displayed)
-        if hasMore
-            afterAction = =>
-                # ugly setTimeout to wait until localDelete occured
-                setTimeout =>
-                    listEnd = @refs.nextPage or @refs.listEnd or @refs.listEmpty
-                    if listEnd? and
-                       DomUtils.isVisible(listEnd.getDOMNode())
-                        params = parameters: @props.query
-                        LayoutActionCreator.showMessageList params
-                , 100
-
-        nextPage = =>
-            LayoutActionCreator.showMessageList parameters: @props.query
-
         section
-            key:               'messages-list'
+            key:               "messages-list-#{@props.mailboxID}"
             ref:               'list'
             'data-mailbox-id': @props.mailboxID
             className:         'messages-list panel'
@@ -137,35 +109,24 @@ module.exports = MessageList = React.createClass
                         displayConversations: @props.displayConversations
                         isTrash: @props.isTrash
                         ref: 'listBody'
-                        onSelect: (id, val) =>
-                            selected = _.clone @state.selected
-                            if val
-                                selected[id] = val
-                            else
-                                delete selected[id]
-                            if Object.keys(selected).length > 0
-                                newState =
-                                    edited: true
-                                    selected: selected
-                            else
-                                newState =
-                                    allSelected: false
-                                    edited: false
-                                    selected: {}
-                            @setState newState
+                        onSelect: @onMessageSelectionChange
 
-                    if hasMore
-                        p className: 'text-center list-footer',
-                            if @props.fetching
-                                Spinner()
-                            else
-                                a
-                                    className: 'more-messages'
-                                    onClick: nextPage,
-                                    ref: 'nextPage',
-                                    t 'list next page'
-                    else
-                        p ref: 'listEnd', t 'list end'
+                    @renderFooter()
+
+    renderFooter: ->
+        if @props.canLoadMore
+            p className: 'text-center list-footer',
+                if @props.fetching
+                    Spinner()
+                else
+                    a
+                        className: 'more-messages'
+                        onClick: @props.loadMoreMessage,
+                        ref: 'nextPage',
+                        t 'list next page'
+        else
+            p ref: 'listEnd', t 'list end'
+
 
     toggleEdited: ->
         if @state.edited
@@ -183,14 +144,39 @@ module.exports = MessageList = React.createClass
             .toJS()
             @setState allSelected: true, edited: true, selected: selected
 
+    onMessageSelectionChange: (id, val) =>
+        selected = _.clone @state.selected
+        if val
+            selected[id] = val
+        else
+            delete selected[id]
+
+        if Object.keys(selected).length > 0
+            newState =
+                edited: true
+                selected: selected
+        else
+            newState =
+                allSelected: false
+                edited: false
+                selected: {}
+        @setState newState
+
+
+    afterMessageAction: ->
+        # ugly setTimeout to wait until localDelete occured
+        setTimeout =>
+            listEnd = @refs.nextPage or @refs.listEnd or @refs.listEmpty
+            if listEnd? and DomUtils.isVisible(listEnd.getDOMNode())
+                @props.loadMoreMessage()
+        , 100
+
     _loadNext: ->
         # load next message if last one is displayed (useful when navigating
         # with keyboard)
         lastMessage = @refs.listBody?.getDOMNode().lastElementChild
-        if @refs.nextPage? and
-           lastMessage? and
-           DomUtils.isVisible(lastMessage)
-            LayoutActionCreator.showMessageList parameters: @props.query
+        if @refs.nextPage? and lastMessage? and DomUtils.isVisible(lastMessage)
+            @props.loadMoreMessage()
 
     _handleRealtimeGrowth: ->
         if @props.pageAfter isnt '-' and

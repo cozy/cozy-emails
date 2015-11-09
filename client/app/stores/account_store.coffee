@@ -233,17 +233,14 @@ class AccountStore extends Store
     getSelected: ->
         return _selectedAccount
 
+    getSelectedOrDefault: ->
+        @getSelected() or @getDefault()
 
     getSelectedMailboxes: (sorted) ->
 
         return Immutable.OrderedMap.empty() unless _selectedAccount?
 
-        result = Immutable.OrderedMap()
-        mailboxes = _selectedAccount.get('mailboxes')
-        mailboxes.forEach (data) ->
-            mailbox = Immutable.Map data
-            result = result.set mailbox.get('id'), mailbox
-            return true
+        result = _selectedAccount.get('mailboxes')
 
         if sorted
             result = result.sort _mailboxSort

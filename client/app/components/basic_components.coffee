@@ -272,7 +272,7 @@ Dropdown = React.createClass
                         span className: 'caret', ''
                 ul className: 'dropdown-menu', role: 'menu',
                     for key, value of @props.values
-                        renderFilter key, t "list filter #{key}"
+                        renderFilter key, value
 
 
 # Widget to display a spinner.

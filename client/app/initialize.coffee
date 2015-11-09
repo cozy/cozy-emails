@@ -113,7 +113,6 @@ window.onload = ->
         ContactStore  = require './stores/contact_store'
         LayoutStore   = require './stores/layout_store'
         MessageStore  = require './stores/message_store'
-        SearchStore   = require './stores/search_store'
         SettingsStore = require './stores/settings_store'
 
         # Routing management

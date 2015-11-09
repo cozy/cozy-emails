@@ -29,16 +29,21 @@ module.exports = React.createClass
         fullscreen: LayoutStore.isPreviewFullscreen()
 
 
-    getParams: (messageID, conversationID) ->
+    getUrlParams: (messageID, conversationID) ->
         if @props.settings.get 'displayConversation' and conversationID?
-            action: 'conversation'
-            parameters:
+            action = 'conversation'
+            parameters =
                 messageID: messageID
                 conversationID: conversationID
         else
-            action: 'message'
-            parameters:
+            action = 'message'
+            parameters =
                 messageID: messageID
+
+        return urlParams =
+            direction: 'second'
+            action: action
+            parameters: parameters
 
 
     render: ->
@@ -62,17 +67,12 @@ module.exports = React.createClass
             tooltipID = Tooltips.NEXT_CONVERSATION
             angle = 'right'
 
-        params = @getParams messageID, conversationID
-        urlParams =
-            direction: 'second'
-            action: params.action
-            parameters: params.parameters
-        url =  @buildUrl urlParams
+        urlParams = @getUrlParams messageID, conversationID
 
         a
             className: "btn btn-default fa fa-chevron-#{angle}"
             onClick: => @redirect urlParams
-            href: url
+            href: @buildUrl urlParams
             'aria-describedby': tooltipID
             'data-tooltip-direction': 'left'
 

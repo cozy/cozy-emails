@@ -40,6 +40,29 @@ module.exports = MessageActionCreator =
                 messageID: messageID
                 conv: conv
 
+    fetchMoreOfCurrentQuery: ->
+        url = MessageStore.getNextUrl()
+        return unless url
+        mailboxID = AccountStore.getSelectedMailbox().get 'id'
+
+        AppDispatcher.handleViewAction
+            type: ActionTypes.MESSAGE_FETCH_REQUEST
+            value: {mailboxID}
+
+        ts = Date.now()
+        XHRUtils.fetchMessagesByFolder url, (err, rawMsg) ->
+            if err?
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_FETCH_FAILURE
+                    value: {mailboxID}
+            else
+                # This prevent to override local updates with older ones
+                # from server
+                rawMsg.messages.forEach (msg) -> msg.updated = ts
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.MESSAGE_FETCH_SUCCESS
+                    value: {mailboxID, fetchResult: rawMsg}
+
 
     fetchConversation: (conversationID) ->
 
@@ -55,7 +78,7 @@ module.exports = MessageActionCreator =
             else
                 AppDispatcher.handleViewAction
                     type: ActionTypes.CONVERSATION_FETCH_SUCCESS
-                    value: {error, updated}
+                    value: {updated}
 
 
     # Immediately synchronise some messages with the server
@@ -241,8 +264,4 @@ _loopSeries = (obj, iterator, done) ->
             return done err if err
             return done null if ++i is keys.length
             step()
-
-
-# circular, import after
-LAC = require './layout_action_creator'
 
