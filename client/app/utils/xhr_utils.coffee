@@ -92,7 +92,7 @@ module.exports =
                 callback null, res.body
             else
                 console.log "Error in mailboxExpunge", data, res.body?.error
-                callback t('app error')
+                callback res.body?.error or res.body
 
     messageSend: (message, callback) ->
         req = request.post "message"

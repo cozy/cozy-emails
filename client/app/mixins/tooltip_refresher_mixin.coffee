@@ -11,4 +11,4 @@ module.exports = TooltipRefresherMixin =
     # respective tooltip, each time the application component (the root)
     # is updated to make sure new tooltips are also bound.
     componentDidUpdate: ->
-        AriaTips.bind()
+        # AriaTips.bind()
