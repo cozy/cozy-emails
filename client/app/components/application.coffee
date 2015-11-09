@@ -67,12 +67,7 @@ module.exports = Application = React.createClass
             div className: 'app',
                 # Menu is self-managed because this part of the layout
                 # is always the same.
-                Menu
-                    ref:                   'menu'
-                    selectedAccount:       @state.selectedAccount
-                    selectedMailboxID:     @state.selectedMailboxID
-                    layout:                @props.router.current
-                    disposition:           disposition
+                Menu ref: 'menu', layout: @props.router.current
 
                 main
                     className: if layout.secondPanel? then null else 'full',
@@ -92,7 +87,7 @@ module.exports = Application = React.createClass
             # Tooltips' content is declared once at the application level.
             # It's hidden so it doesn't break the layout. Other components
             # can then reference the tooltips by their ID to trigger them.
-            Tooltips()
+            Tooltips(key: "tooltips")
 
 
     getPanel: (panel, ref) ->
@@ -108,17 +103,10 @@ module.exports = Application = React.createClass
 
 
     getStateFromStores: ->
-
-        selectedAccount = AccountStore.getSelected()
-        # When selecting compose in Menu, we may not have a selected account
-        if not selectedAccount?
-            selectedAccount = AccountStore.getDefault()
-        selectedAccountID = selectedAccount?.get('id') or null
+        selectedAccount = AccountStore.getSelectedOrDefault()
 
         firstPanelInfo = @props.router.current?.firstPanel
-        if firstPanelInfo?.action is 'account.mailbox.messages' or
-           firstPanelInfo?.action is 'account.mailbox.messages.filter' or
-           firstPanelInfo?.action is 'account.mailbox.messages.date'
+        if firstPanelInfo?.action is 'account.mailbox.messages'
             selectedMailboxID = firstPanelInfo.parameters.mailboxID
         else
             selectedMailboxID = null
@@ -128,7 +116,7 @@ module.exports = Application = React.createClass
             selectedAccount       : selectedAccount
             modal                 : LayoutStore.getModal()
             useIntents            : LayoutStore.intentAvailable()
-            selectedMailboxID     : selectedMailboxID
+            selectedMailboxID     : AccountStore.getSelectedMailbox()
         }
 
 

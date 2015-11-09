@@ -154,13 +154,30 @@ module.exports = AccountActionCreator =
             if callback?
                 callback error
 
-    mailboxExpunge: (inputValues, callback) ->
+    mailboxExpunge: (options) ->
+
+        {accountID, mailboxID} = options
+
         # delete message from local store to refresh display, we'll fetch them
         # again on error
         AppDispatcher.handleViewAction
             type: ActionTypes.MAILBOX_EXPUNGE
-            value: inputValues.mailboxID
+            value: mailboxID
 
-        XHRUtils.mailboxExpunge inputValues, (error, account) ->
-            if callback?
-                callback error
+        XHRUtils.mailboxExpunge options, (error, account) ->
+
+            if error?
+                LayoutActionCreator.alertError """
+                    #{t("mailbox expunge ko")} #{error}
+                """
+
+                # if user hasn't switched to another box, refresh display
+                unless AccountStore.selectedIsDifferentThan accountID, mailboxID
+                    parameters = MessageStore.getQueryParams()
+                    parameters.accountID = accountID
+                    parameters.mailboxID = mailboxID
+                    LayoutActionCreator.showMessageList {parameters}
+
+            else
+                LayoutActionCreator.notify t("mailbox expunge ok"),
+                    autoclose: true
