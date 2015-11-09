@@ -20,11 +20,36 @@ body
     .drawer-toggle
         display none
 
+
     main
         position    relative
         flex        1
         display     flex
         align-items stretch
+        height      100%
+        flex-direction column
+        min-width min-content
+
+        .search-bar
+            flex 0 1 2em
+            display flex
+            z-index 500
+            bac
+
+        .panels
+            flex 1 0 50%
+            overflow-y auto
+            overflow-x hidden
+            margin-bottom 0
+            position relative
+            align-items stretch
+            min-width 100%
+
+
+
+
+    [role=menubar]
+        flex 0 1 auto
 
     [role=menubar]
     .panel
@@ -47,7 +72,7 @@ body
             width    100%
             height   100%
 
-        .messages-list
+        .search-bar
             .drawer-toggle
                 display block
 
@@ -83,33 +108,31 @@ body
         main
             .panel
                 transition flex 180ms ease-in
+                flex-basis 100%
+                flex-shrink 1
 
-            &.full .panel:first-of-type
-                flex-basis 100% !important
+            &.full .panel:first-of-type + [aria-expanded=false]
+                flex-basis 0
 
-                & + [aria-expanded=false]
-                    flex 0
-
-
-            .layout-column &
-                flex-direction row
-
-            .layout-row &
-                flex-direction column
-
-            .layout-row-reverse &
-                flex-direction column-reverse
+            .panels
+                display flex
+                .layout-column &
+                    flex-direction row
+                .layout-row &
+                    flex-direction column
+                .layout-row-reverse &
+                    flex-direction column-reverse
 
             for ratio in (20..80)
                 .layout-preview-{ratio} &
                     .panel:nth-child(1)
-                        flex 100 - ratio
+                        flex-shrink ratio
                     .panel:nth-child(2)
-                        flex ratio
+                        flex-shrink 100 - ratio
 
 
     @media(min-width: 80.0625em)
-        .layout-column & :not(.full)
+        .layout-column main :not(.full)
             .panel
                 max-width 38em
             .conversation[aria-expanded=true]
