@@ -6,23 +6,3519 @@
  *  LICENSE file in the root directory of this source tree. An additional grant
  *  of patent rights can be found in the PATENTS file in the same directory.
  */
-function t(){function t(t,e,n,r){var i;if(r){var u=r.prototype;i=ye.create(u)}else i=t.prototype;return ye.keys(e).forEach(function(t){i[t]=e[t]}),ye.keys(n).forEach(function(e){t[e]=n[e]}),i.constructor=t,t.prototype=i,t}function e(t,e,n,r){return ye.getPrototypeOf(e)[n].apply(t,r)}function n(t,n,r){e(t,n,"constructor",r)}function r(t){return t.value=!1,t}function i(t){t&&(t.value=!0)}function u(){}function s(t,e){e=e||0;for(var n=Math.max(0,t.length-e),r=Array(n),i=0;n>i;i++)r[i]=t[i+e];return r}function a(t){return De.value=t,De.done=!1,De}function o(){return De.value=void 0,De.done=!0,De}function h(t,e){if(!t)throw Error(e)}function c(t){if(!t)return 0;if(t===!0)return 1;var e=typeof t;if("number"===e){if((0|t)===t)return t&xe;t=""+t,e="string"}return"string"===e?t.length>je?f(t):l(t):t.hashCode?c("function"==typeof t.hashCode?t.hashCode():t.hashCode):_(t)}function f(t){var e=Re[t];return null==e&&(e=l(t),We===Pe&&(We=0,Re={}),We++,Re[t]=e),e}function l(t){for(var e=0,n=0;t.length>n;n++)e=31*e+t.charCodeAt(n)&xe;return e}function _(t){if(t[Ce])return t[Ce];var e=++Ae&xe;if(!Ee)try{return Object.defineProperty(t,Ce,{enumerable:!1,configurable:!1,writable:!1,value:e}),e}catch(n){Ee=!0}return t[Ce]=e,e}function v(){return Object.create(Je)}function g(t){var e=Object.create(Ve);return e.__reversedIndices=t?t.__reversedIndices:!1,e}function p(t,e,n,r){var i=t.get?t.get(e[r],ke):ke;return i===ke?n:++r===e.length?i:p(i,e,n,r)}function m(t,e,n){return(0===t||null!=n&&-n>=t)&&(null==e||null!=n&&e>=n)}function y(t,e){return w(t,e,0)}function d(t,e){return w(t,e,e)}function w(t,e,n){return null==t?n:0>t?Math.max(0,e+t):e?Math.min(e,t):t}function S(t){return t}function I(t,e){return[e,t]}function k(){return!0}function b(){return this}function M(t){return(t||0)+1}function D(t,e,n,r,i){var u=t.__makeSequence();return u.__iterateUncached=function(u,s,a){var o=0,h=t.__iterate(function(t,i,s){if(e.call(n,t,i,s)){if(u(t,r?i:o,s)===!1)return!1;o++}},s,a);return i?h:o},u}function q(t){return function(){return!t.apply(this,arguments)
-}}function O(t){return"string"==typeof t?JSON.stringify(t):t}function x(t,e){for(var n="";e;)1&e&&(n+=t),(e>>=1)&&(t+=t);return n}function A(t,e){return t>e?1:e>t?-1:0}function C(t){h(1/0!==t,"Cannot perform this action with an infinite sequence.")}function E(t,e){var n=new Fe;return n.next=function(){var n=t.next();return n.done?n:(n.value=e(n.value),n)},n}function j(t,e,n){return n instanceof Ue?P(t,e,n):n}function P(t,e,n){return new He(t._rootData,t._keyPath.concat(e),t._onChange,n)}function W(t,e,n){var r=t._rootData.updateIn(t._keyPath,n?Qe.empty():void 0,e),i=t._keyPath||[];return t._onChange&&t._onChange.call(void 0,r,t._rootData,n?i.concat(n):i),new He(r,t._keyPath,t._onChange)}function R(t,e){return t instanceof He&&(t=t.deref()),e instanceof He&&(e=e.deref()),t===e?0!==t||0!==e||1/t===1/e:t!==t?e!==e:t instanceof Ue?t.equals(e):!1}function U(t,e){return a(0===t||1===t?e[t]:[e[0],e[1]])}function z(t,e){return{node:t,index:0,__prev:e}}function J(t,e,n,r){var i=Object.create(Xe);return i.length=t,i._root=e,i.__ownerID=n,i.__hash=r,i.__altered=!1,i}function B(t,e,n){var i=r(be),u=r(Me),s=L(t._root,t.__ownerID,0,c(e),e,n,i,u);if(!u.value)return t;var a=t.length+(i.value?n===ke?-1:1:0);return t.__ownerID?(t.length=a,t._root=s,t.__hash=void 0,t.__altered=!0,t):s?J(a,s):Qe.empty()}function L(t,e,n,r,u,s,a,o){return t?t.update(e,n,r,u,s,a,o):s===ke?t:(i(o),i(a),new rn(e,r,[u,s]))}function V(t){return t.constructor===rn||t.constructor===en}function K(t,e,n,r,i){if(t.hash===r)return new en(e,r,[t.entry,i]);var u,s=t.hash>>>n&Ie,a=r>>>n&Ie,o=s===a?[K(t,e,n+we,r,i)]:(u=new rn(e,r,i),a>s?[t,u]:[u,t]);return new Ye(e,1<<s|1<<a,o)}function N(t,e,n,r){for(var i=0,u=0,s=Array(n),a=0,o=1,h=e.length;h>a;a++,o<<=1){var c=e[a];null!=c&&a!==r&&(i|=o,s[u++]=c)}return new Ye(t,i,s)}function F(t,e,n,r,i){for(var u=0,s=Array(Se),a=0;0!==n;a++,n>>>=1)s[a]=1&n?e[u++]:null;return s[r]=i,new $e(t,u+1,s)}function G(t,e,n){for(var r=[],i=0;n.length>i;i++){var u=n[i];u&&r.push(Array.isArray(u)?Ue(u).fromEntrySeq():Ue(u))}return Q(t,e,r)
-}function H(t){return function(e,n){return e&&e.mergeDeepWith?e.mergeDeepWith(t,n):t?t(e,n):n}}function Q(t,e,n){return 0===n.length?t:t.withMutations(function(t){for(var r=e?function(n,r){var i=t.get(r,ke);t.set(r,i===ke?n:e(i,n))}:function(e,n){t.set(n,e)},i=0;n.length>i;i++)n[i].forEach(r)})}function T(t,e,n,r,i){var u=e.length;if(i===u)return r(t);h(t.set,"updateIn with invalid keyPath");var s=i===u-1?n:Qe.empty(),a=e[i],o=t.get(a,s),c=T(o,e,n,r,i+1);return c===o?t:t.set(a,c)}function X(t){return t-=t>>1&1431655765,t=(858993459&t)+(t>>2&858993459),t=t+(t>>4)&252645135,t+=t>>8,t+=t>>16,127&t}function Y(t,e,n,r){var i=r?t:s(t);return i[e]=n,i}function Z(t,e,n,r){var i=t.length+1;if(r&&e+1===i)return t[e]=n,t;for(var u=Array(i),s=0,a=0;i>a;a++)a===e?(u[a]=n,s=-1):u[a]=t[a+s];return u}function $(t,e,n){var r=t.length-1;if(n&&e===r)return t.pop(),t;for(var i=Array(r),u=0,s=0;r>s;s++)s===e&&(u=1),i[s]=t[s+u];return i}function te(t,e,n,r,i,u){if(t){var s,a=t.array,o=a.length-1;if(0===e)for(s=0;o>=s;s++){var h=u?o-s:s;if(a.hasOwnProperty(h)){var c=h+n;if(c>=0&&r>c&&i(a[h],c)===!1)return!1}}else{var f=1<<e,l=e-we;for(s=0;o>=s;s++){var _=u?o-s:s,v=n+_*f;if(r>v&&v+f>0){var g=a[_];if(g&&!te(g,l,v,r,i,u))return!1}}}}return!0}function ee(t,e,n,r,i){return{array:t,level:e,offset:n,max:r,rawMax:r-n>>e,index:0,__prev:i}}function ne(t,e,n,r,i,u,s){var a=Object.create(ln);return a.length=e-t,a._origin=t,a._size=e,a._level=n,a._root=r,a._tail=i,a.__ownerID=u,a.__hash=s,a.__altered=!1,a}function re(t,e,n){if(e>=t.length)return n===ke?t:t.withMutations(function(t){ae(t,0,e+1).set(e,n)});e=he(e,t._origin);var i=t._tail,u=t._root,s=r(Me);return e>=ce(t._size)?i=ie(i,t.__ownerID,0,e,n,s):u=ie(u,t.__ownerID,t._level,e,n,s),s.value?t.__ownerID?(t._root=u,t._tail=i,t.__hash=void 0,t.__altered=!0,t):ne(t._origin,t._size,t._level,u,i):t}function ie(t,e,n,r,u,s){var a,o=u===ke,h=r>>>n&Ie,c=t&&t.array.length>h&&t.array.hasOwnProperty(h);if(o&&!c)return t;if(n>0){var f=t&&t.array[h],l=ie(f,e,n-we,r,u,s);return l===f?t:(a=ue(t,e),a.array[h]=l,a)
-}return!o&&c&&t.array[h]===u?t:(i(s),a=ue(t,e),o?delete a.array[h]:a.array[h]=u,a)}function ue(t,e){return e&&t&&e===t.ownerID?t:new _n(t?t.array.slice():[],e)}function se(t,e){if(e>=ce(t._size))return t._tail;if(1<<t._level+we>e){for(var n=t._root,r=t._level;n&&r>0;)n=n.array[e>>>r&Ie],r-=we;return n}}function ae(t,e,n){var r=t.__ownerID||new u,i=t._origin,s=t._size,a=i+e,o=null==n?s:0>n?s+n:i+n;if(a===i&&o===s)return t;if(a>=o)return t.clear();for(var h=t._level,c=t._root,f=0;0>a+f;)c=new _n(c&&c.array.length?[null,c]:[],r),h+=we,f+=1<<h;f&&(a+=f,i+=f,o+=f,s+=f);for(var l=ce(s),_=ce(o);_>=1<<h+we;)c=new _n(c&&c.array.length?[c]:[],r),h+=we;var v=t._tail,g=l>_?se(t,o-1):_>l?new _n([],r):v;if(v&&_>l&&s>a&&v.array.length){c=ue(c,r);for(var p=c,m=h;m>we;m-=we){var y=l>>>m&Ie;p=p.array[y]=ue(p.array[y],r)}p.array[l>>>we&Ie]=v}if(s>o&&(g=g&&g.removeAfter(r,0,o)),a>=_)a-=_,o-=_,h=we,c=null,g=g&&g.removeBefore(r,0,a);else if(a>i||l>_){var d,w;f=0;do d=a>>>h&Ie,w=_-1>>>h&Ie,d===w&&(d&&(f+=(1<<h)*d),h-=we,c=c&&c.array[d]);while(c&&d===w);c&&a>i&&(c=c&&c.removeBefore(r,h,a-f)),c&&l>_&&(c=c&&c.removeAfter(r,h,_-f)),f&&(a-=f,o-=f)}return t.__ownerID?(t.length=o-a,t._origin=a,t._size=o,t._level=h,t._root=c,t._tail=g,t.__hash=void 0,t.__altered=!0,t):ne(a,o,h,c,g)}function oe(t,e,n){for(var r=[],i=0;n.length>i;i++){var u=n[i];u&&r.push(Ue(u))}var s=Math.max.apply(null,r.map(function(t){return t.length||0}));return s>t.length&&(t=t.setLength(s)),Q(t,e,r)}function he(t,e){return h(t>=0,"Index out of bounds"),t+e}function ce(t){return Se>t?0:t-1>>>we<<we}function fe(t,e){var n=Object.create(dn);return n.length=t?t.length:0,n._map=t,n.__ownerID=e,n}function le(t,e,n,r){var i=Object.create(Sn.prototype);return i.length=t?t.length:0,i._map=t,i._vector=e,i.__ownerID=n,i.__hash=r,i}function _e(t,e,n){var r=t._map,i=t._vector,u=r.get(e),s=void 0!==u,a=n===ke;if(!s&&a||s&&n===i.get(u)[1])return t;s||(u=i.length);var o=a?r.remove(e):s?r:r.set(e,u),h=a?i.remove(u):i.set(u,[e,n]);return t.__ownerID?(t.length=o.length,t._map=o,t._vector=h,t.__hash=void 0,t):le(o,h)
-}function ve(t,e,n){var r=Object.create(Object.getPrototypeOf(t));return r._map=e,r.__ownerID=n,r}function ge(t,e){return e?pe(e,t,"",{"":t}):me(t)}function pe(t,e,n,r){return e&&(Array.isArray(e)||e.constructor===Object)?t.call(r,n,Ue(e).map(function(n,r){return pe(t,n,r,e)})):e}function me(t){if(t){if(Array.isArray(t))return Ue(t).map(me).toVector();if(t.constructor===Object)return Ue(t).map(me).toMap()}return t}var ye=Object,de={};de.createClass=t,de.superCall=e,de.defaultSuperCall=n;var we=5,Se=1<<we,Ie=Se-1,ke={},be={value:!1},Me={value:!1},De={value:void 0,done:!1},qe="delete",Oe="undefined"!=typeof Symbol?Symbol.iterator:"@@iterator",xe=2147483647,Ae=0,Ce="__immutablehash__";"undefined"!=typeof Symbol&&(Ce=Symbol(Ce));var Ee=!1,je=16,Pe=255,We=0,Re={},Ue=function(t){return ze.from(1===arguments.length?t:Array.prototype.slice.call(arguments))},ze=Ue;de.createClass(Ue,{toString:function(){return this.__toString("Seq {","}")},__toString:function(t,e){return 0===this.length?t+e:t+" "+this.map(this.__toStringMapper).join(", ")+" "+e},__toStringMapper:function(t,e){return e+": "+O(t)},toJS:function(){return this.map(function(t){return t instanceof ze?t.toJS():t}).__toJS()},toArray:function(){C(this.length);var t=Array(this.length||0);return this.valueSeq().forEach(function(e,n){t[n]=e}),t},toObject:function(){C(this.length);var t={};return this.forEach(function(e,n){t[n]=e}),t},toVector:function(){return C(this.length),cn.from(this)},toMap:function(){return C(this.length),Qe.from(this)},toOrderedMap:function(){return C(this.length),Sn.from(this)},toSet:function(){return C(this.length),mn.from(this)},hashCode:function(){return this.__hash||(this.__hash=1/0===this.length?0:this.reduce(function(t,e,n){return t+(c(e)^(e===n?0:c(n)))&xe},0))},equals:function(t){if(this===t)return!0;if(!(t instanceof ze))return!1;if(null!=this.length&&null!=t.length){if(this.length!==t.length)return!1;if(0===this.length&&0===t.length)return!0}return null!=this.__hash&&null!=t.__hash&&this.__hash!==t.__hash?!1:this.__deepEquals(t)},__deepEquals:function(t){var e=this.cacheResult().entrySeq().toArray(),n=0;
-return t.every(function(t,r){var i=e[n++];return R(r,i[0])&&R(t,i[1])})},join:function(t){t=t||",";var e="",n=!0;return this.forEach(function(r){n?(n=!1,e+=r):e+=t+r}),e},count:function(t,e){return t?this.filter(t,e).count():(null==this.length&&(this.length=this.forEach(k)),this.length)},countBy:function(t){var e=this;return Sn.empty().withMutations(function(n){e.forEach(function(e,r,i){n.update(t(e,r,i),M)})})},concat:function(){for(var t=[],e=0;arguments.length>e;e++)t[e]=arguments[e];var n=[this].concat(t.map(function(t){return ze(t)})),r=this.__makeSequence();return r.length=n.reduce(function(t,e){return null!=t&&null!=e.length?t+e.length:void 0},0),r.__iterateUncached=function(t,e){for(var r,i=0,u=n.length-1,s=0;u>=s&&!r;s++){var a=n[e?u-s:s];i+=a.__iterate(function(e,n,i){return t(e,n,i)===!1?(r=!0,!1):void 0},e)}return i},r},reverse:function(){var t=this,e=t.__makeSequence();return e.length=t.length,e.__iterateUncached=function(e,n){return t.__iterate(e,!n)},e.reverse=function(){return t},e},keySeq:function(){return this.flip().valueSeq()},valueSeq:function(){var t=this,e=g(t);return e.length=t.length,e.valueSeq=b,e.__iterateUncached=function(e,n,r){if(r&&null==this.length)return this.cacheResult().__iterate(e,n,r);var i,u=0;return r?(u=this.length-1,i=function(t,n,r){return e(t,u--,r)!==!1}):i=function(t,n,r){return e(t,u++,r)!==!1},t.__iterate(i,n),r?this.length:u},e},entrySeq:function(){var t=this;if(t._cache)return ze(t._cache);var e=t.map(I).valueSeq();return e.fromEntries=function(){return t},e},forEach:function(t,e){return this.__iterate(e?t.bind(e):t)},reduce:function(t,e,n){var r=e;return this.forEach(function(e,i,u){r=t.call(n,r,e,i,u)}),r},reduceRight:function(t,e,n){return this.reverse(!0).reduce(t,e,n)},every:function(t,e){var n=!0;return this.forEach(function(r,i,u){return t.call(e,r,i,u)?void 0:(n=!1,!1)}),n},some:function(t,e){return!this.every(q(t),e)},first:function(){return this.find(k)},last:function(){return this.findLast(k)},rest:function(){return this.slice(1)},butLast:function(){return this.slice(0,-1)
-},has:function(t){return this.get(t,ke)!==ke},get:function(t,e){return this.find(function(e,n){return R(n,t)},null,e)},getIn:function(t,e){return t&&0!==t.length?p(this,t,e,0):this},contains:function(t){return this.find(function(e){return R(e,t)},null,ke)!==ke},find:function(t,e,n){var r=n;return this.forEach(function(n,i,u){return t.call(e,n,i,u)?(r=n,!1):void 0}),r},findKey:function(t,e){var n;return this.forEach(function(r,i,u){return t.call(e,r,i,u)?(n=i,!1):void 0}),n},findLast:function(t,e,n){return this.reverse(!0).find(t,e,n)},findLastKey:function(t,e){return this.reverse(!0).findKey(t,e)},flip:function(){var t=this,e=v();return e.length=t.length,e.flip=function(){return t},e.__iterateUncached=function(e,n){return t.__iterate(function(t,n,r){return e(n,t,r)!==!1},n)},e},map:function(t,e){var n=this,r=n.__makeSequence();return r.length=n.length,r.__iterateUncached=function(r,i){return n.__iterate(function(n,i,u){return r(t.call(e,n,i,u),i,u)!==!1},i)},r},mapKeys:function(t,e){var n=this,r=n.__makeSequence();return r.length=n.length,r.__iterateUncached=function(r,i){return n.__iterate(function(n,i,u){return r(n,t.call(e,i,n,u),u)!==!1},i)},r},filter:function(t,e){return D(this,t,e,!0,!1)},slice:function(t,e){if(m(t,e,this.length))return this;var n=y(t,this.length),r=d(e,this.length);if(n!==n||r!==r)return this.entrySeq().slice(t,e).fromEntrySeq();var i=0===n?this:this.skip(n);return null==r||r===this.length?i:i.take(r-n)},take:function(t){var e=0,n=this.takeWhile(function(){return e++<t});return n.length=this.length&&Math.min(this.length,t),n},takeLast:function(t,e){return this.reverse(e).take(t).reverse(e)},takeWhile:function(t,e){var n=this,r=n.__makeSequence();return r.__iterateUncached=function(r,i,u){if(i)return this.cacheResult().__iterate(r,i,u);var s=0;return n.__iterate(function(n,i,u){return t.call(e,n,i,u)&&r(n,i,u)!==!1?void s++:!1},i,u),s},r},takeUntil:function(t,e,n){return this.takeWhile(q(t),e,n)},skip:function(t,e){if(0===t)return this;var n=0,r=this.skipWhile(function(){return n++<t},null,e);
-return r.length=this.length&&Math.max(0,this.length-t),r},skipLast:function(t,e){return this.reverse(e).skip(t).reverse(e)},skipWhile:function(t,e){var n=this,r=n.__makeSequence();return r.__iterateUncached=function(r,i,u){if(i)return this.cacheResult().__iterate(r,i,u);var s=!0,a=0;return n.__iterate(function(n,i,u){if(!s||!(s=t.call(e,n,i,u))){if(r(n,i,u)===!1)return!1;a++}},i,u),a},r},skipUntil:function(t,e,n){return this.skipWhile(q(t),e,n)},groupBy:function(t){var e=this,n=Sn.empty().withMutations(function(n){e.forEach(function(e,r,i){var u=t(e,r,i),s=n.get(u,ke);s===ke&&(s=[],n.set(u,s)),s.push([r,e])})});return n.map(function(t){return ze(t).fromEntrySeq()})},sort:function(t,e){return this.sortBy(S,t,e)},sortBy:function(t,e){e=e||A;var n=this;return ze(this.entrySeq().entrySeq().toArray().sort(function(r,i){return e(t(r[1][1],r[1][0],n),t(i[1][1],i[1][0],n))||r[0]-i[0]})).fromEntrySeq().valueSeq().fromEntrySeq()},cacheResult:function(){return!this._cache&&this.__iterateUncached&&(C(this.length),this._cache=this.entrySeq().toArray(),null==this.length&&(this.length=this._cache.length)),this},__iterate:function(t,e,n){if(!this._cache)return this.__iterateUncached(t,e,n);var r=this.length-1,i=this._cache,u=this;if(e)for(var s=i.length-1;s>=0;s--){var a=i[s];if(t(a[1],n?a[0]:r-a[0],u)===!1)break}else i.every(n?function(e){return t(e[1],r-e[0],u)!==!1}:function(e){return t(e[1],e[0],u)!==!1});return this.length},__makeSequence:function(){return v()}},{from:function(t){if(t instanceof ze)return t;if(!Array.isArray(t)){if(t&&t.constructor===Object)return new Ke(t);t=[t]}return new Ne(t)}});var Je=Ue.prototype;Je.toJSON=Je.toJS,Je.__toJS=Je.toObject,Je.inspect=Je.toSource=function(){return""+this};var Be=function(){de.defaultSuperCall(this,Le.prototype,arguments)},Le=Be;de.createClass(Be,{toString:function(){return this.__toString("Seq [","]")},toArray:function(){C(this.length);var t=Array(this.length||0);return t.length=this.forEach(function(e,n){t[n]=e}),t},fromEntrySeq:function(){var t=this,e=v();return e.length=t.length,e.entrySeq=function(){return t
-},e.__iterateUncached=function(e,n,r){return t.__iterate(function(t,n,r){return e(t[1],t[0],r)},n,r)},e},join:function(t){t=t||",";var e="",n=0;return this.forEach(function(r,i){var u=i-n;n=i,e+=(1===u?t:x(t,u))+r}),this.length&&this.length-1>n&&(e+=x(t,this.length-1-n)),e},concat:function(){for(var t=[],e=0;arguments.length>e;e++)t[e]=arguments[e];var n=[this].concat(t).map(function(t){return Ue(t)}),r=this.__makeSequence();return r.length=n.reduce(function(t,e){return null!=t&&null!=e.length?t+e.length:void 0},0),r.__iterateUncached=function(t,e,r){if(r&&!this.length)return this.cacheResult().__iterate(t,e,r);for(var i,u=0,s=r&&this.length-1,a=n.length-1,o=0;a>=o&&!i;o++){var h=n[e?a-o:o];h instanceof Le||(h=h.valueSeq()),u+=h.__iterate(function(e,n,a){return n+=u,t(e,r?s-n:n,a)===!1?(i=!0,!1):void 0},e)}return u},r},reverse:function(t){var e=this,n=e.__makeSequence();return n.length=e.length,n.__reversedIndices=!!(t^e.__reversedIndices),n.__iterateUncached=function(n,r,i){return e.__iterate(n,!r,i^t)},n.reverse=function(n){return t===n?e:Ve.reverse.call(this,n)},n},valueSeq:function(){var t=de.superCall(this,Le.prototype,"valueSeq",[]);return t.length=void 0,t},filter:function(t,e,n){var r=D(this,t,e,n,n);return n&&(r.length=this.length),r},indexOf:function(t){return this.findIndex(function(e){return R(e,t)})},lastIndexOf:function(t){return this.reverse(!0).indexOf(t)},findIndex:function(t,e){var n=this.findKey(t,e);return null==n?-1:n},findLastIndex:function(t,e){return this.reverse(!0).findIndex(t,e)},slice:function(t,e,n){var r=this;if(m(t,e,r.length))return r;var i=r.__makeSequence(),u=y(t,r.length),s=d(e,r.length);return i.length=r.length&&(n?r.length:s-u),i.__reversedIndices=r.__reversedIndices,i.__iterateUncached=function(i,a,o){if(a)return this.cacheResult().__iterate(i,a,o);var h=this.__reversedIndices^o;if(u!==u||s!==s||h&&null==r.length){var c=r.count();u=y(t,c),s=d(e,c)}var f=h?r.length-s:u,l=h?r.length-u:s,_=r.__iterate(function(t,e,r){return h?null!=l&&e>=l||e>=f&&i(t,n?e:e-f,r)!==!1:f>e||(null==l||l>e)&&i(t,n?e:e-f,r)!==!1
-},a,o);return null!=this.length?this.length:n?_:Math.max(0,_-f)},i},splice:function(t,e){var n=arguments.length;if(e=Math.max(0|e,0),0===n||2===n&&!e)return this;t=y(t,this.length);var r=this.slice(0,t);return 1===n?r:r.concat(s(arguments,2),this.slice(t+e))},takeWhile:function(t,e,n){var r=this,i=r.__makeSequence();return i.__iterateUncached=function(u,s,a){if(s)return this.cacheResult().__iterate(u,s,a);var o=0,h=!0,c=r.__iterate(function(n,r,i){return t.call(e,n,r,i)&&u(n,r,i)!==!1?void(o=r):(h=!1,!1)},s,a);return n?i.length:h?c:o+1},n&&(i.length=this.length),i},skipWhile:function(t,e,n){var r=this,i=r.__makeSequence();return n&&(i.length=this.length),i.__iterateUncached=function(i,u,s){if(u)return this.cacheResult().__iterate(i,u,s);var a=r.__reversedIndices^s,o=!0,h=0,c=r.__iterate(function(r,u,a){return o&&(o=t.call(e,r,u,a),o||(h=u)),o||i(r,s||n?u:u-h,a)!==!1},u,s);return n?c:a?h+1:c-h},i},groupBy:function(t,e,n){var r=this,i=Sn.empty().withMutations(function(e){r.forEach(function(i,u,s){var a=t(i,u,s),o=e.get(a,ke);o===ke&&(o=Array(n?r.length:0),e.set(a,o)),n?o[u]=i:o.push(i)})});return i.map(function(t){return Ue(t)})},sortBy:function(t,e,n){var r=de.superCall(this,Le.prototype,"sortBy",[t,e]);return n||(r=r.valueSeq()),r.length=this.length,r},__makeSequence:function(){return g(this)}},{},Ue);var Ve=Be.prototype;Ve.__toJS=Ve.toArray,Ve.__toStringMapper=O;var Ke=function(t){var e=Object.keys(t);this._object=t,this._keys=e,this.length=e.length};de.createClass(Ke,{toObject:function(){return this._object},get:function(t,e){return void 0===e||this.has(t)?this._object[t]:e},has:function(t){return this._object.hasOwnProperty(t)},__iterate:function(t,e){for(var n=this._object,r=this._keys,i=r.length-1,u=0;i>=u;u++){var s=e?i-u:u;if(t(n[r[s]],r[s],n)===!1)break}return u}},{},Ue);var Ne=function(t){this._array=t,this.length=t.length};de.createClass(Ne,{toArray:function(){return this._array},__iterate:function(t,e,n){var r=this._array,i=r.length-1,u=-1;if(e){for(var s=i;s>=0;s--){if(r.hasOwnProperty(s)&&t(r[s],n?s:i-s,r)===!1)return u+1;
-u=s}return r.length}var a=r.every(function(e,s){return t(e,n?i-s:s,r)===!1?!1:(u=s,!0)});return a?r.length:u+1}},{},Be),Ne.prototype.get=Ke.prototype.get,Ne.prototype.has=Ke.prototype.has;var Fe=function(){};de.createClass(Fe,{toString:function(){return"[Iterator]"}},{});var Ge=Fe.prototype;Ge[Oe]=b,Ge.inspect=Ge.toSource=function(){return""+this};var He=function(t,e,n,r){r=r?r:t.getIn(e),this.length=r instanceof Ue?r.length:null,this._rootData=t,this._keyPath=e,this._onChange=n};de.createClass(He,{deref:function(t){return this._rootData.getIn(this._keyPath,t)},get:function(t,e){if(Array.isArray(t)&&0===t.length)return this;var n=this._rootData.getIn(this._keyPath.concat(t),ke);return n===ke?e:j(this,t,n)},set:function(t,e){return W(this,function(n){return n.set(t,e)},t)},remove:function(t){return W(this,function(e){return e.remove(t)},t)},clear:function(){return W(this,function(t){return t.clear()})},update:function(t,e,n){return 1===arguments.length?W(this,t):W(this,function(r){return r.update(t,e,n)},t)},withMutations:function(t){return W(this,function(e){return(e||Qe.empty()).withMutations(t)})},cursor:function(t){return Array.isArray(t)&&0===t.length?this:P(this,t)},__iterate:function(t,e,n){var r=this,i=r.deref();return i&&i.__iterate?i.__iterate(function(e,n,i){return t(j(r,n,e),n,i)},e,n):0}},{},Ue),He.prototype[qe]=He.prototype.remove,He.prototype.getIn=He.prototype.get;var Qe=function(t){var e=Te.empty();return t?t.constructor===Te?t:e.merge(t):e},Te=Qe;de.createClass(Qe,{toString:function(){return this.__toString("Map {","}")},get:function(t,e){return this._root?this._root.get(0,c(t),t,e):e},set:function(t,e){return B(this,t,e)},remove:function(t){return B(this,t,ke)},update:function(t,e,n){return 1===arguments.length?this.updateIn([],null,t):this.updateIn([t],e,n)},updateIn:function(t,e,n){var r;return n||(r=[e,n],n=r[0],e=r[1],r),T(this,t,e,n,0)},clear:function(){return 0===this.length?this:this.__ownerID?(this.length=0,this._root=null,this.__hash=void 0,this.__altered=!0,this):Te.empty()},merge:function(){return G(this,null,arguments)
-},mergeWith:function(t){for(var e=[],n=1;arguments.length>n;n++)e[n-1]=arguments[n];return G(this,t,e)},mergeDeep:function(){return G(this,H(null),arguments)},mergeDeepWith:function(t){for(var e=[],n=1;arguments.length>n;n++)e[n-1]=arguments[n];return G(this,H(t),e)},cursor:function(t,e){return e||"function"!=typeof t?0===arguments.length?t=[]:Array.isArray(t)||(t=[t]):(e=t,t=[]),new He(this,t,e)},withMutations:function(t){var e=this.asMutable();return t(e),e.wasAltered()?e.__ensureOwner(this.__ownerID):this},asMutable:function(){return this.__ownerID?this:this.__ensureOwner(new u)},asImmutable:function(){return this.__ensureOwner()},wasAltered:function(){return this.__altered},keys:function(){return new sn(this,0)},values:function(){return new sn(this,1)},entries:function(){return new sn(this,2)},__iterator:function(t){return new sn(this,2,t)},__iterate:function(t,e){var n=this;if(!n._root)return 0;var r=0;return this._root.iterate(function(e){return t(e[1],e[0],n)===!1?!1:void r++},e),r},__deepEqual:function(t){var e=this;return t.every(function(t,n){return R(e.get(n,ke),t)})},__ensureOwner:function(t){return t===this.__ownerID?this:t?J(this.length,this._root,t,this.__hash):(this.__ownerID=t,this.__altered=!1,this)}},{empty:function(){return an||(an=J(0))}},Ue);var Xe=Qe.prototype;Xe[qe]=Xe.remove,Xe[Oe]=function(){return this.entries()},Qe.from=Qe;var Ye=function(t,e,n){this.ownerID=t,this.bitmap=e,this.nodes=n},Ze=Ye;de.createClass(Ye,{get:function(t,e,n,r){var i=1<<(e>>>t&Ie),u=this.bitmap;return 0===(u&i)?r:this.nodes[X(u&i-1)].get(t+we,e,n,r)},update:function(t,e,n,r,i,u,s){var a=n>>>e&Ie,o=1<<a,h=this.bitmap,c=0!==(h&o);if(!c&&i===ke)return this;var f=X(h&o-1),l=this.nodes,_=c?l[f]:null,v=L(_,t,e+we,n,r,i,u,s);if(v===_)return this;if(!c&&v&&l.length>=on)return F(t,l,h,a,v);if(c&&!v&&2===l.length&&V(l[1^f]))return l[1^f];if(c&&v&&1===l.length&&V(v))return v;var g=t&&t===this.ownerID,p=c?v?h:h^o:h|o,m=c?v?Y(l,f,v,g):$(l,f,g):Z(l,f,v,g);return g?(this.bitmap=p,this.nodes=m,this):new Ze(t,p,m)},iterate:function(t,e){for(var n=this.nodes,r=0,i=n.length-1;i>=r;r++)if(n[e?i-r:r].iterate(t,e)===!1)return!1
-}},{});var $e=function(t,e,n){this.ownerID=t,this.count=e,this.nodes=n},tn=$e;de.createClass($e,{get:function(t,e,n,r){var i=e>>>t&Ie,u=this.nodes[i];return u?u.get(t+we,e,n,r):r},update:function(t,e,n,r,i,u,s){var a=n>>>e&Ie,o=i===ke,h=this.nodes,c=h[a];if(o&&!c)return this;var f=L(c,t,e+we,n,r,i,u,s);if(f===c)return this;var l=this.count;if(c){if(!f&&(l--,hn>l))return N(t,h,l,a)}else l++;var _=t&&t===this.ownerID,v=Y(h,a,f,_);return _?(this.count=l,this.nodes=v,this):new tn(t,l,v)},iterate:function(t,e){for(var n=this.nodes,r=0,i=n.length-1;i>=r;r++){var u=n[e?i-r:r];if(u&&u.iterate(t,e)===!1)return!1}}},{});var en=function(t,e,n){this.ownerID=t,this.hash=e,this.entries=n},nn=en;de.createClass(en,{get:function(t,e,n,r){for(var i=this.entries,u=0,s=i.length;s>u;u++)if(R(n,i[u][0]))return i[u][1];return r},update:function(t,e,n,r,u,a,o){var h=u===ke;if(n!==this.hash)return h?this:(i(o),i(a),K(this,t,e,n,[r,u]));for(var c=this.entries,f=0,l=c.length;l>f&&!R(r,c[f][0]);f++);var _=l>f;if(h&&!_)return this;if(i(o),(h||!_)&&i(a),h&&2===l)return new rn(t,this.hash,c[1^f]);var v=t&&t===this.ownerID,g=v?c:s(c);return _?h?f===l-1?g.pop():g[f]=g.pop():g[f]=[r,u]:g.push([r,u]),v?(this.entries=g,this):new nn(t,this.hash,g)},iterate:function(t,e){for(var n=this.entries,r=0,i=n.length-1;i>=r;r++)if(t(n[e?i-r:r])===!1)return!1}},{});var rn=function(t,e,n){this.ownerID=t,this.hash=e,this.entry=n},un=rn;de.createClass(rn,{get:function(t,e,n,r){return R(n,this.entry[0])?this.entry[1]:r},update:function(t,e,n,r,u,s,a){var o=u===ke,h=R(r,this.entry[0]);return(h?u===this.entry[1]:o)?this:(i(a),o?(i(s),null):h?t&&t===this.ownerID?(this.entry[1]=u,this):new un(t,n,[r,u]):(i(s),K(this,t,e,n,[r,u])))},iterate:function(t){return t(this.entry)}},{});var sn=function(t,e,n){this._type=e,this._reverse=n,this._stack=t._root&&z(t._root)};de.createClass(sn,{next:function(){for(var t=this._type,e=this._stack;e;){var n,r=e.node,i=e.index++;if(r.entry){if(0===i)return U(t,r.entry)}else if(r.entries){if(n=r.entries.length-1,n>=i)return U(t,r.entries[this._reverse?n-i:i])
-}else if(n=r.nodes.length-1,n>=i){var u=r.nodes[this._reverse?n-i:i];if(u){if(u.entry)return U(t,u.entry);e=this._stack=z(u,e)}continue}e=this._stack=this._stack.__prev}return o()}},{},Fe);var an,on=Se/2,hn=Se/4,cn=function(){for(var t=[],e=0;arguments.length>e;e++)t[e]=arguments[e];return fn.from(t)},fn=cn;de.createClass(cn,{toString:function(){return this.__toString("Vector [","]")},get:function(t,e){if(t=he(t,this._origin),t>=this._size)return e;var n=se(this,t),r=t&Ie;return n&&(void 0===e||n.array.hasOwnProperty(r))?n.array[r]:e},first:function(){return this.get(0)},last:function(){return this.get(this.length?this.length-1:0)},set:function(t,e){return re(this,t,e)},remove:function(t){return re(this,t,ke)},clear:function(){return 0===this.length?this:this.__ownerID?(this.length=this._origin=this._size=0,this._level=we,this._root=this._tail=null,this.__hash=void 0,this.__altered=!0,this):fn.empty()},push:function(){var t=arguments,e=this.length;return this.withMutations(function(n){ae(n,0,e+t.length);for(var r=0;t.length>r;r++)n.set(e+r,t[r])})},pop:function(){return ae(this,0,-1)},unshift:function(){var t=arguments;return this.withMutations(function(e){ae(e,-t.length);for(var n=0;t.length>n;n++)e.set(n,t[n])})},shift:function(){return ae(this,1)},merge:function(){return oe(this,null,arguments)},mergeWith:function(t){for(var e=[],n=1;arguments.length>n;n++)e[n-1]=arguments[n];return oe(this,t,e)},mergeDeep:function(){return oe(this,H(null),arguments)},mergeDeepWith:function(t){for(var e=[],n=1;arguments.length>n;n++)e[n-1]=arguments[n];return oe(this,H(t),e)},setLength:function(t){return ae(this,0,t)},slice:function(t,e,n){var r=de.superCall(this,fn.prototype,"slice",[t,e,n]);if(!n&&r!==this){var i=this,u=i.length;r.toVector=function(){return ae(i,0>t?Math.max(0,u+t):u?Math.min(u,t):t,null==e?u:0>e?Math.max(0,u+e):u?Math.min(u,e):e)}}return r},keys:function(t){return new gn(this,0,t)},values:function(t){return new gn(this,1,t)},entries:function(t){return new gn(this,2,t)},__iterator:function(t,e,n){return new gn(this,2,n,t,e)
-},__iterate:function(t,e,n){var r=this,i=0,u=r.length-1;n^=e;var s,a=function(e,s){return t(e,n?u-s:s,r)===!1?!1:(i=s,!0)},o=ce(this._size);return s=e?te(this._tail,0,o-this._origin,this._size-this._origin,a,e)&&te(this._root,this._level,-this._origin,o-this._origin,a,e):te(this._root,this._level,-this._origin,o-this._origin,a,e)&&te(this._tail,0,o-this._origin,this._size-this._origin,a,e),(s?u:e?u-i:i)+1},__deepEquals:function(t){var e=this.entries(!0);return t.every(function(t,n){var r=e.next().value;return r&&r[0]===n&&R(r[1],t)})},__ensureOwner:function(t){return t===this.__ownerID?this:t?ne(this._origin,this._size,this._level,this._root,this._tail,t,this.__hash):(this.__ownerID=t,this)}},{empty:function(){return pn||(pn=ne(0,0,we))},from:function(t){if(!t||0===t.length)return fn.empty();if(t.constructor===fn)return t;var e=Array.isArray(t);return t.length>0&&Se>t.length?ne(0,t.length,we,null,new _n(e?s(t):Ue(t).toArray())):(e||(t=Ue(t),t instanceof Be||(t=t.valueSeq())),fn.empty().merge(t))}},Be);var ln=cn.prototype;ln[qe]=ln.remove,ln[Oe]=ln.values,ln.update=Xe.update,ln.updateIn=Xe.updateIn,ln.cursor=Xe.cursor,ln.withMutations=Xe.withMutations,ln.asMutable=Xe.asMutable,ln.asImmutable=Xe.asImmutable,ln.wasAltered=Xe.wasAltered;var _n=function(t,e){this.array=t,this.ownerID=e},vn=_n;de.createClass(_n,{removeBefore:function(t,e,n){if(n===e?1<<e:0||0===this.array.length)return this;var r=n>>>e&Ie;if(r>=this.array.length)return new vn([],t);var i,u=0===r;if(e>0){var s=this.array[r];if(i=s&&s.removeBefore(t,e-we,n),i===s&&u)return this}if(u&&!i)return this;var a=ue(this,t);if(!u)for(var o=0;r>o;o++)delete a.array[o];return i&&(a.array[r]=i),a},removeAfter:function(t,e,n){if(n===e?1<<e:0||0===this.array.length)return this;var r=n-1>>>e&Ie;if(r>=this.array.length)return this;var i,u=r===this.array.length-1;if(e>0){var s=this.array[r];if(i=s&&s.removeAfter(t,e-we,n),i===s&&u)return this}if(u&&!i)return this;var a=ue(this,t);return u||(a.array.length=r+1),i&&(a.array[r]=i),a}},{});var gn=function(t,e,n,r,i){this._type=e,this._sparse=!!n,this._reverse=!!r,this._flipIndices=!!(i^r),this._maxIndex=t.length-1;
-var u=ce(t._size),s=ee(t._root&&t._root.array,t._level,-t._origin,u-t._origin-1),a=ee(t._tail&&t._tail.array,0,u-t._origin,t._size-t._origin-1);this._stack=r?a:s,this._stack.__prev=r?s:a};de.createClass(gn,{next:function(){for(var t=this._sparse,e=this._stack;e;){var n=e.array,r=e.index++;if(this._reverse&&(r=Ie-r,r>e.rawMax&&(r=e.rawMax,e.index=Se-r)),r>=0&&Se>r&&e.rawMax>=r){var i=n&&n[r];if(0===e.level){if(!t||null!=i||n&&n.length>r&&n.hasOwnProperty(r)){var u,s=this._type;return 1!==s&&(u=e.offset+(r<<e.level),this._flipIndices&&(u=this._maxIndex-u)),a(0===s?u:1===s?i:[u,i])}}else t&&null==i||(this._stack=e=ee(i&&i.array,e.level-we,e.offset+(r<<e.level),e.max,e))}else e=this._stack=this._stack.__prev}return o()}},{},Fe);var pn,mn=function(){for(var t=[],e=0;arguments.length>e;e++)t[e]=arguments[e];return yn.from(t)},yn=mn;de.createClass(mn,{toString:function(){return this.__toString("Set {","}")},has:function(t){return this._map.has(t)},get:function(t,e){return this.has(t)?t:e},add:function(t){var e=this._map.set(t,null);return this.__ownerID?(this.length=e.length,this._map=e,this):e===this._map?this:fe(e)},remove:function(t){var e=this._map.remove(t);return this.__ownerID?(this.length=e.length,this._map=e,this):e===this._map?this:0===e.length?yn.empty():fe(e)},clear:function(){return 0===this.length?this:this.__ownerID?(this.length=0,this._map.clear(),this):yn.empty()},union:function(){var t=arguments;return 0===t.length?this:this.withMutations(function(e){for(var n=0;t.length>n;n++)Ue(t[n]).forEach(function(t){return e.add(t)})})},intersect:function(){for(var t=[],e=0;arguments.length>e;e++)t[e]=arguments[e];if(0===t.length)return this;t=t.map(function(t){return Ue(t)});var n=this;return this.withMutations(function(e){n.forEach(function(n){t.every(function(t){return t.contains(n)})||e.remove(n)})})},subtract:function(){for(var t=[],e=0;arguments.length>e;e++)t[e]=arguments[e];if(0===t.length)return this;t=t.map(function(t){return Ue(t)});var n=this;return this.withMutations(function(e){n.forEach(function(n){t.some(function(t){return t.contains(n)
-})&&e.remove(n)})})},isSubset:function(t){return t=Ue(t),this.every(function(e){return t.contains(e)})},isSuperset:function(t){var e=this;return t=Ue(t),t.every(function(t){return e.contains(t)})},wasAltered:function(){return this._map.wasAltered()},values:function(){return this._map.keys()},entries:function(){return E(this.values(),function(t){return[t,t]})},hashCode:function(){return this._map.hashCode()},equals:function(t){return this._map.equals(t._map)},__iterate:function(t,e){var n=this;return this._map.__iterate(function(e,r){return t(r,r,n)},e)},__ensureOwner:function(t){if(t===this.__ownerID)return this;var e=this._map.__ensureOwner(t);return t?fe(e,t):(this.__ownerID=t,this._map=e,this)}},{empty:function(){return wn||(wn=fe(Qe.empty()))},from:function(t){var e=yn.empty();return t?t.constructor===yn?t:e.union(t):e},fromKeys:function(t){return yn.from(Ue(t).flip())}},Ue);var dn=mn.prototype;dn[qe]=dn.remove,dn[Oe]=dn.keys=dn.values,dn.contains=dn.has,dn.mergeDeep=dn.merge=dn.union,dn.mergeDeepWith=dn.mergeWith=function(){for(var t=[],e=1;arguments.length>e;e++)t[e-1]=arguments[e];return this.merge.apply(this,t)},dn.withMutations=Xe.withMutations,dn.asMutable=Xe.asMutable,dn.asImmutable=Xe.asImmutable,dn.__toJS=Ve.__toJS,dn.__toStringMapper=Ve.__toStringMapper;var wn,Sn=function(t){var e=In.empty();return t?t.constructor===In?t:e.merge(t):e},In=Sn;de.createClass(Sn,{toString:function(){return this.__toString("OrderedMap {","}")},get:function(t,e){var n=this._map.get(t);return null!=n?this._vector.get(n)[1]:e},clear:function(){return 0===this.length?this:this.__ownerID?(this.length=0,this._map.clear(),this._vector.clear(),this):In.empty()},set:function(t,e){return _e(this,t,e)},remove:function(t){return _e(this,t,ke)},wasAltered:function(){return this._map.wasAltered()||this._vector.wasAltered()},keys:function(){return E(this.entries(),function(t){return t[0]})},values:function(){return E(this.entries(),function(t){return t[1]})},entries:function(){return this._vector.values(!0)},__iterate:function(t,e){return this._vector.fromEntrySeq().__iterate(t,e)
-},__deepEqual:function(t){var e=this.entries();return t.every(function(t,n){var r=e.next().value;return r&&R(r[0],n)&&R(r[1],t)})},__ensureOwner:function(t){if(t===this.__ownerID)return this;var e=this._map.__ensureOwner(t),n=this._vector.__ensureOwner(t);return t?le(e,n,t,this.__hash):(this.__ownerID=t,this._map=e,this._vector=n,this)}},{empty:function(){return kn||(kn=le(Qe.empty(),cn.empty()))}},Qe),Sn.from=Sn,Sn.prototype[qe]=Sn.prototype.remove;var kn,bn=function(t,e){var n=function(t){return this instanceof n?void(this._map=Qe(t)):new n(t)};t=Ue(t);var r=n.prototype=Object.create(Dn);r.constructor=n,r._name=e,r._defaultValues=t;var i=Object.keys(t);return n.prototype.length=i.length,Object.defineProperty&&t.forEach(function(t,e){Object.defineProperty(n.prototype,e,{get:function(){return this.get(e)},set:function(t){h(this.__ownerID,"Cannot set on an immutable record."),this.set(e,t)}})}),n},Mn=bn;de.createClass(bn,{toString:function(){return this.__toString((this._name||"Record")+" {","}")},has:function(t){return this._defaultValues.has(t)},get:function(t,e){return void 0===e||this.has(t)?this._map.get(t,this._defaultValues.get(t)):e},clear:function(){if(this.__ownerID)return this._map.clear(),this;Object.getPrototypeOf(this).constructor;return Mn._empty||(Mn._empty=ve(this,Qe.empty()))},set:function(t,e){if(null==t||!this.has(t))return this;var n=this._map.set(t,e);return this.__ownerID||n===this._map?this:ve(this,n)},remove:function(t){if(null==t||!this.has(t))return this;var e=this._map.remove(t);return this.__ownerID||e===this._map?this:ve(this,e)},keys:function(){return this._map.keys()},values:function(){return this._map.values()},entries:function(){return this._map.entries()},wasAltered:function(){return this._map.wasAltered()},__iterate:function(t,e){var n=this;return this._defaultValues.map(function(t,e){return n.get(e)}).__iterate(t,e)},__ensureOwner:function(t){if(t===this.__ownerID)return this;var e=this._map&&this._map.__ensureOwner(t);return t?ve(this,e,t):(this.__ownerID=t,this._map=e,this)}},{},Ue);
-var Dn=bn.prototype;Dn[qe]=Dn.remove,Dn[Oe]=Xe[Oe],Dn.merge=Xe.merge,Dn.mergeWith=Xe.mergeWith,Dn.mergeDeep=Xe.mergeDeep,Dn.mergeDeepWith=Xe.mergeDeepWith,Dn.update=Xe.update,Dn.updateIn=Xe.updateIn,Dn.cursor=Xe.cursor,Dn.withMutations=Xe.withMutations,Dn.asMutable=Xe.asMutable,Dn.asImmutable=Xe.asImmutable,Dn.__deepEqual=Xe.__deepEqual;var qn=function(t,e,n){return this instanceof On?(h(0!==n,"Cannot step a Range by 0"),t=t||0,null==e&&(e=1/0),t===e&&An?An:(n=null==n?1:Math.abs(n),t>e&&(n=-n),this._start=t,this._end=e,this._step=n,void(this.length=Math.max(0,Math.ceil((e-t)/n-1)+1)))):new On(t,e,n)},On=qn;de.createClass(qn,{toString:function(){return 0===this.length?"Range []":"Range [ "+this._start+"..."+this._end+(this._step>1?" by "+this._step:"")+" ]"},has:function(t){return h(t>=0,"Index out of bounds"),this.length>t},get:function(t,e){return h(t>=0,"Index out of bounds"),1/0===this.length||this.length>t?this._start+t*this._step:e},contains:function(t){var e=(t-this._start)/this._step;return e>=0&&this.length>e&&e===Math.floor(e)},slice:function(t,e,n){return m(t,e,this.length)?this:n?de.superCall(this,On.prototype,"slice",[t,e,n]):(t=y(t,this.length),e=d(e,this.length),t>=e?An:new On(this.get(t,this._end),this.get(e,this._end),this._step))},indexOf:function(t){var e=t-this._start;if(e%this._step===0){var n=e/this._step;if(n>=0&&this.length>n)return n}return-1},lastIndexOf:function(t){return this.indexOf(t)},take:function(t){return this.slice(0,t)},skip:function(t,e){return e?de.superCall(this,On.prototype,"skip",[t]):this.slice(t)},__iterate:function(t,e,n){for(var r=e^n,i=this.length-1,u=this._step,s=e?this._start+i*u:this._start,a=0;i>=a&&t(s,r?i-a:a,this)!==!1;a++)s+=e?-u:u;return r?this.length:a},__deepEquals:function(t){return this._start===t._start&&this._end===t._end&&this._step===t._step}},{},Be);var xn=qn.prototype;xn.__toJS=xn.toArray,xn.first=ln.first,xn.last=ln.last;var An=qn(0,0),Cn=function(t,e){return 0===e&&Pn?Pn:this instanceof En?(this._value=t,void(this.length=null==e?1/0:Math.max(0,e))):new En(t,e)
-},En=Cn;de.createClass(Cn,{toString:function(){return 0===this.length?"Repeat []":"Repeat [ "+this._value+" "+this.length+" times ]"},get:function(t,e){return h(t>=0,"Index out of bounds"),1/0===this.length||this.length>t?this._value:e},first:function(){return this._value},contains:function(t){return R(this._value,t)},slice:function(t,e,n){if(n)return de.superCall(this,En.prototype,"slice",[t,e,n]);var r=this.length;return t=0>t?Math.max(0,r+t):Math.min(r,t),e=null==e?r:e>0?Math.min(r,e):Math.max(0,r+e),e>t?new En(this._value,e-t):Pn},reverse:function(t){return t?de.superCall(this,En.prototype,"reverse",[t]):this},indexOf:function(t){return R(this._value,t)?0:-1},lastIndexOf:function(t){return R(this._value,t)?this.length:-1},__iterate:function(t,e,n){var r=e^n;h(!r||1/0>this.length,"Cannot access end of infinite range.");for(var i=this.length-1,u=0;i>=u&&t(this._value,r?i-u:u,this)!==!1;u++);return r?this.length:u},__deepEquals:function(t){return R(this._value,t._value)}},{},Be);var jn=Cn.prototype;jn.last=jn.first,jn.has=xn.has,jn.take=xn.take,jn.skip=xn.skip,jn.__toJS=xn.__toJS;var Pn=new Cn(void 0,0),Wn={Sequence:Ue,Map:Qe,Vector:cn,Set:mn,OrderedMap:Sn,Record:bn,Range:qn,Repeat:Cn,is:R,fromJS:ge};return Wn}"object"==typeof exports?module.exports=t():"function"==typeof define&&define.amd?define(t):Immutable=t();
+function universalModule() {
+  var $Object = Object;
+
+function createClass(ctor, methods, staticMethods, superClass) {
+  var proto;
+  if (superClass) {
+    var superProto = superClass.prototype;
+    proto = $Object.create(superProto);
+  } else {
+    proto = ctor.prototype;
+  }
+  $Object.keys(methods).forEach(function (key) {
+    proto[key] = methods[key];
+  });
+  $Object.keys(staticMethods).forEach(function (key) {
+    ctor[key] = staticMethods[key];
+  });
+  proto.constructor = ctor;
+  ctor.prototype = proto;
+  return ctor;
+}
+
+function superCall(self, proto, name, args) {
+  return $Object.getPrototypeOf(proto)[name].apply(self, args);
+}
+
+function defaultSuperCall(self, proto, args) {
+  superCall(self, proto, 'constructor', args);
+}
+
+var $traceurRuntime = {};
+$traceurRuntime.createClass = createClass;
+$traceurRuntime.superCall = superCall;
+$traceurRuntime.defaultSuperCall = defaultSuperCall;
+"use strict";
+function is(first, second) {
+  if (first === second) {
+    return first !== 0 || second !== 0 || 1 / first === 1 / second;
+  }
+  if (first !== first) {
+    return second !== second;
+  }
+  if (first && typeof first.equals === 'function') {
+    return first.equals(second);
+  }
+  return false;
+}
+var DELETE = 'delete';
+var SHIFT = 5;
+var SIZE = 1 << SHIFT;
+var MASK = SIZE - 1;
+var NOT_SET = {};
+var CHANGE_LENGTH = {value: false};
+var DID_ALTER = {value: false};
+function MakeRef(ref) {
+  ref.value = false;
+  return ref;
+}
+function SetRef(ref) {
+  ref && (ref.value = true);
+}
+function OwnerID() {}
+function arrCopy(arr, offset) {
+  offset = offset || 0;
+  var len = Math.max(0, arr.length - offset);
+  var newArr = new Array(len);
+  for (var ii = 0; ii < len; ii++) {
+    newArr[ii] = arr[ii + offset];
+  }
+  return newArr;
+}
+function invariant(condition, error) {
+  if (!condition)
+    throw new Error(error);
+}
+function hash(o) {
+  if (!o) {
+    return 0;
+  }
+  if (o === true) {
+    return 1;
+  }
+  var type = typeof o;
+  if (type === 'number') {
+    if ((o | 0) === o) {
+      return o & HASH_MAX_VAL;
+    }
+    o = '' + o;
+    type = 'string';
+  }
+  if (type === 'string') {
+    return o.length > STRING_HASH_CACHE_MIN_STRLEN ? cachedHashString(o) : hashString(o);
+  }
+  if (o.hashCode) {
+    return hash(typeof o.hashCode === 'function' ? o.hashCode() : o.hashCode);
+  }
+  return hashJSObj(o);
+}
+function cachedHashString(string) {
+  var hash = stringHashCache[string];
+  if (hash == null) {
+    hash = hashString(string);
+    if (STRING_HASH_CACHE_SIZE === STRING_HASH_CACHE_MAX_SIZE) {
+      STRING_HASH_CACHE_SIZE = 0;
+      stringHashCache = {};
+    }
+    STRING_HASH_CACHE_SIZE++;
+    stringHashCache[string] = hash;
+  }
+  return hash;
+}
+function hashString(string) {
+  var hash = 0;
+  for (var ii = 0; ii < string.length; ii++) {
+    hash = (31 * hash + string.charCodeAt(ii)) & HASH_MAX_VAL;
+  }
+  return hash;
+}
+function hashJSObj(obj) {
+  var hash = weakMap && weakMap.get(obj);
+  if (hash)
+    return hash;
+  hash = obj[UID_HASH_KEY];
+  if (hash)
+    return hash;
+  if (!canDefineProperty) {
+    hash = obj.propertyIsEnumerable && obj.propertyIsEnumerable[UID_HASH_KEY];
+    if (hash)
+      return hash;
+    hash = getIENodeHash(obj);
+    if (hash)
+      return hash;
+  }
+  if (Object.isExtensible && !Object.isExtensible(obj)) {
+    throw new Error('Non-extensible objects are not allowed as keys.');
+  }
+  hash = ++objHashUID & HASH_MAX_VAL;
+  if (weakMap) {
+    weakMap.set(obj, hash);
+  } else if (canDefineProperty) {
+    Object.defineProperty(obj, UID_HASH_KEY, {
+      'enumerable': false,
+      'configurable': false,
+      'writable': false,
+      'value': hash
+    });
+  } else if (obj.propertyIsEnumerable && obj.propertyIsEnumerable === obj.constructor.prototype.propertyIsEnumerable) {
+    obj.propertyIsEnumerable = function() {
+      return this.constructor.prototype.propertyIsEnumerable.apply(this, arguments);
+    };
+    obj.propertyIsEnumerable[UID_HASH_KEY] = hash;
+  } else if (obj.nodeType) {
+    obj[UID_HASH_KEY] = hash;
+  } else {
+    throw new Error('Unable to set a non-enumerable property on object.');
+  }
+  return hash;
+}
+var canDefineProperty = (function() {
+  try {
+    Object.defineProperty({}, 'x', {});
+    return true;
+  } catch (e) {
+    return false;
+  }
+}());
+function getIENodeHash(node) {
+  if (node && node.nodeType > 0) {
+    switch (node.nodeType) {
+      case 1:
+        return node.uniqueID;
+      case 9:
+        return node.documentElement && node.documentElement.uniqueID;
+    }
+  }
+}
+var weakMap = typeof WeakMap === 'function' && new WeakMap();
+var HASH_MAX_VAL = 0x7FFFFFFF;
+var objHashUID = 0;
+var UID_HASH_KEY = '__immutablehash__';
+if (typeof Symbol === 'function') {
+  UID_HASH_KEY = Symbol(UID_HASH_KEY);
+}
+var STRING_HASH_CACHE_MIN_STRLEN = 16;
+var STRING_HASH_CACHE_MAX_SIZE = 255;
+var STRING_HASH_CACHE_SIZE = 0;
+var stringHashCache = {};
+var ITERATE_KEYS = 0;
+var ITERATE_VALUES = 1;
+var ITERATE_ENTRIES = 2;
+var FAUX_ITERATOR_SYMBOL = '@@iterator';
+var REAL_ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+var ITERATOR_SYMBOL = REAL_ITERATOR_SYMBOL || FAUX_ITERATOR_SYMBOL;
+var Iterator = function Iterator(next) {
+  this.next = next;
+};
+($traceurRuntime.createClass)(Iterator, {toString: function() {
+    return '[Iterator]';
+  }}, {});
+var IteratorPrototype = Iterator.prototype;
+IteratorPrototype.inspect = IteratorPrototype.toSource = function() {
+  return this.toString();
+};
+IteratorPrototype[ITERATOR_SYMBOL] = function() {
+  return this;
+};
+function iteratorValue(type, k, v, iteratorResult) {
+  var value = type === 0 ? k : type === 1 ? v : [k, v];
+  iteratorResult ? (iteratorResult.value = value) : (iteratorResult = {
+    value: value,
+    done: false
+  });
+  return iteratorResult;
+}
+function iteratorDone() {
+  return {
+    value: undefined,
+    done: true
+  };
+}
+function isIterable(maybeIterable) {
+  return !!_iteratorFn(maybeIterable);
+}
+function isIterator(maybeIterator) {
+  return maybeIterator && typeof maybeIterator.next === 'function';
+}
+function getIterator(iterable) {
+  var iteratorFn = _iteratorFn(iterable);
+  return iteratorFn && iteratorFn.call(iterable);
+}
+function _iteratorFn(iterable) {
+  var iteratorFn = iterable && ((REAL_ITERATOR_SYMBOL && iterable[REAL_ITERATOR_SYMBOL]) || iterable[FAUX_ITERATOR_SYMBOL]);
+  if (typeof iteratorFn === 'function') {
+    return iteratorFn;
+  }
+}
+var Sequence = function Sequence(value) {
+  return $Sequence.from(arguments.length === 1 ? value : Array.prototype.slice.call(arguments));
+};
+var $Sequence = Sequence;
+($traceurRuntime.createClass)(Sequence, {
+  toArray: function() {
+    assertNotInfinite(this.length);
+    var array = new Array(this.length || 0);
+    this.valueSeq().__iterate((function(v, i) {
+      array[i] = v;
+    }));
+    return array;
+  },
+  toJS: function() {
+    return this.map((function(value) {
+      return value && typeof value.toJS === 'function' ? value.toJS() : value;
+    })).__toJS();
+  },
+  toMap: function() {
+    assertNotInfinite(this.length);
+    return Map.from(this);
+  },
+  toObject: function() {
+    assertNotInfinite(this.length);
+    var object = {};
+    this.__iterate((function(v, k) {
+      object[k] = v;
+    }));
+    return object;
+  },
+  toOrderedMap: function() {
+    assertNotInfinite(this.length);
+    return OrderedMap.from(this);
+  },
+  toSet: function() {
+    assertNotInfinite(this.length);
+    return Set.from(this);
+  },
+  toStack: function() {
+    assertNotInfinite(this.length);
+    return Stack.from(this);
+  },
+  toVector: function() {
+    assertNotInfinite(this.length);
+    return Vector.from(this);
+  },
+  toString: function() {
+    return this.__toString('Seq {', '}');
+  },
+  __toString: function(head, tail) {
+    if (this.length === 0) {
+      return head + tail;
+    }
+    return head + ' ' + this.map(this.__toStringMapper).join(', ') + ' ' + tail;
+  },
+  __toStringMapper: function(v, k) {
+    return k + ': ' + quoteString(v);
+  },
+  concat: function() {
+    for (var values = [],
+        $__2 = 0; $__2 < arguments.length; $__2++)
+      values[$__2] = arguments[$__2];
+    return concatFactory(this, values, true);
+  },
+  contains: function(searchValue) {
+    return this.find((function(value) {
+      return is(value, searchValue);
+    }), null, NOT_SET) !== NOT_SET;
+  },
+  entries: function() {
+    return this.__iterator(ITERATE_ENTRIES);
+  },
+  every: function(predicate, context) {
+    var returnValue = true;
+    this.__iterate((function(v, k, c) {
+      if (!predicate.call(context, v, k, c)) {
+        returnValue = false;
+        return false;
+      }
+    }));
+    return returnValue;
+  },
+  filter: function(predicate, context) {
+    return filterFactory(this, predicate, context, true);
+  },
+  find: function(predicate, context, notSetValue) {
+    var foundValue = notSetValue;
+    this.__iterate((function(v, k, c) {
+      if (predicate.call(context, v, k, c)) {
+        foundValue = v;
+        return false;
+      }
+    }));
+    return foundValue;
+  },
+  forEach: function(sideEffect, context) {
+    return this.__iterate(context ? sideEffect.bind(context) : sideEffect);
+  },
+  join: function(separator) {
+    separator = separator !== undefined ? '' + separator : ',';
+    var joined = '';
+    var isFirst = true;
+    this.__iterate((function(v) {
+      isFirst ? (isFirst = false) : (joined += separator);
+      joined += v != null ? v : '';
+    }));
+    return joined;
+  },
+  keys: function() {
+    return this.__iterator(ITERATE_KEYS);
+  },
+  map: function(mapper, context) {
+    return mapFactory(this, mapper, context);
+  },
+  reduce: function(reducer, initialReduction, context) {
+    var reduction;
+    var useFirst;
+    if (arguments.length < 2) {
+      useFirst = true;
+    } else {
+      reduction = initialReduction;
+    }
+    this.__iterate((function(v, k, c) {
+      if (useFirst) {
+        useFirst = false;
+        reduction = v;
+      } else {
+        reduction = reducer.call(context, reduction, v, k, c);
+      }
+    }));
+    return reduction;
+  },
+  reduceRight: function(reducer, initialReduction, context) {
+    var reversed = this.toKeyedSeq().reverse();
+    return reversed.reduce.apply(reversed, arguments);
+  },
+  reverse: function() {
+    return reverseFactory(this, true);
+  },
+  slice: function(begin, end) {
+    if (wholeSlice(begin, end, this.length)) {
+      return this;
+    }
+    var resolvedBegin = resolveBegin(begin, this.length);
+    var resolvedEnd = resolveEnd(end, this.length);
+    if (resolvedBegin !== resolvedBegin || resolvedEnd !== resolvedEnd) {
+      return this.cacheResult().slice(begin, end);
+    }
+    var skipped = resolvedBegin === 0 ? this : this.skip(resolvedBegin);
+    return resolvedEnd == null || resolvedEnd === this.length ? skipped : skipped.take(resolvedEnd - resolvedBegin);
+  },
+  some: function(predicate, context) {
+    return !this.every(not(predicate), context);
+  },
+  sort: function(comparator) {
+    return this.sortBy(valueMapper, comparator);
+  },
+  values: function() {
+    return this.__iterator(ITERATE_VALUES);
+  },
+  butLast: function() {
+    return this.slice(0, -1);
+  },
+  count: function(predicate, context) {
+    if (!predicate) {
+      if (this.length == null) {
+        this.length = this.__iterate(returnTrue);
+      }
+      return this.length;
+    }
+    return this.filter(predicate, context).count();
+  },
+  countBy: function(grouper, context) {
+    var $__0 = this;
+    var groupMap = {};
+    var groups = [];
+    this.__iterate((function(v, k) {
+      var g = grouper.call(context, v, k, $__0);
+      var h = hash(g);
+      if (!groupMap.hasOwnProperty(h)) {
+        groupMap[h] = groups.length;
+        groups.push([g, 1]);
+      } else {
+        groups[groupMap[h]][1]++;
+      }
+    }));
+    return $Sequence(groups).fromEntrySeq();
+  },
+  equals: function(other) {
+    if (this === other) {
+      return true;
+    }
+    if (!other || typeof other.equals !== 'function') {
+      return false;
+    }
+    if (this.length != null && other.length != null) {
+      if (this.length !== other.length) {
+        return false;
+      }
+      if (this.length === 0 && other.length === 0) {
+        return true;
+      }
+    }
+    if (this.__hash != null && other.__hash != null && this.__hash !== other.__hash) {
+      return false;
+    }
+    return this.__deepEquals(other);
+  },
+  __deepEquals: function(other) {
+    var entries = this.entries();
+    return typeof other.every === 'function' && other.every((function(v, k) {
+      var entry = entries.next().value;
+      return entry && is(entry[0], k) && is(entry[1], v);
+    })) && entries.next().done;
+  },
+  entrySeq: function() {
+    var sequence = this;
+    if (sequence._cache) {
+      return $Sequence(sequence._cache);
+    }
+    var entriesSequence = sequence.toKeyedSeq().map(entryMapper).valueSeq();
+    entriesSequence.fromEntrySeq = (function() {
+      return sequence;
+    });
+    return entriesSequence;
+  },
+  filterNot: function(predicate, context) {
+    return this.filter(not(predicate), context);
+  },
+  findKey: function(predicate, context) {
+    var foundKey;
+    this.__iterate((function(v, k, c) {
+      if (predicate.call(context, v, k, c)) {
+        foundKey = k;
+        return false;
+      }
+    }));
+    return foundKey;
+  },
+  findLast: function(predicate, context, notSetValue) {
+    return this.toKeyedSeq().reverse().find(predicate, context, notSetValue);
+  },
+  findLastKey: function(predicate, context) {
+    return this.toKeyedSeq().reverse().findKey(predicate, context);
+  },
+  first: function() {
+    return this.find(returnTrue);
+  },
+  flatMap: function(mapper, context) {
+    return this.map((function(v, k, c) {
+      return $Sequence(mapper.call(context, v, k, c));
+    })).flatten(true);
+  },
+  flatten: function(depth) {
+    return flattenFactory(this, depth, true);
+  },
+  flip: function() {
+    return flipFactory(this);
+  },
+  get: function(searchKey, notSetValue) {
+    return this.find((function(_, key) {
+      return is(key, searchKey);
+    }), null, notSetValue);
+  },
+  getIn: function(searchKeyPath, notSetValue) {
+    var nested = this;
+    if (searchKeyPath) {
+      for (var ii = 0; ii < searchKeyPath.length; ii++) {
+        nested = nested && nested.get ? nested.get(searchKeyPath[ii], NOT_SET) : NOT_SET;
+        if (nested === NOT_SET) {
+          return notSetValue;
+        }
+      }
+    }
+    return nested;
+  },
+  groupBy: function(grouper, context) {
+    return groupByFactory(this, grouper, context, true);
+  },
+  has: function(searchKey) {
+    return this.get(searchKey, NOT_SET) !== NOT_SET;
+  },
+  keySeq: function() {
+    return this.flip().valueSeq();
+  },
+  last: function() {
+    return this.reverse().first();
+  },
+  mapEntries: function(mapper, context) {
+    var $__0 = this;
+    return this.entrySeq().map((function(entry, index) {
+      return mapper.call(context, entry, index, $__0);
+    })).fromEntrySeq();
+  },
+  mapKeys: function(mapper, context) {
+    var $__0 = this;
+    return this.flip().map((function(k, v) {
+      return mapper.call(context, k, v, $__0);
+    })).flip();
+  },
+  max: function(comparator) {
+    return this.maxBy(valueMapper, comparator);
+  },
+  maxBy: function(mapper, comparator) {
+    comparator = comparator || defaultComparator;
+    var seq = this;
+    var maxEntry = seq.entrySeq().reduce((function(max, next) {
+      return comparator(mapper(next[1], next[0], seq), mapper(max[1], max[0], seq)) > 0 ? next : max;
+    }));
+    return maxEntry && maxEntry[1];
+  },
+  min: function(comparator) {
+    return this.minBy(valueMapper, comparator);
+  },
+  minBy: function(mapper, comparator) {
+    comparator = comparator || defaultComparator;
+    var seq = this;
+    var minEntry = seq.entrySeq().reduce((function(min, next) {
+      return comparator(mapper(next[1], next[0], seq), mapper(min[1], min[0], seq)) < 0 ? next : min;
+    }));
+    return minEntry && minEntry[1];
+  },
+  rest: function() {
+    return this.slice(1);
+  },
+  skip: function(amount) {
+    return skipFactory(this, amount, true);
+  },
+  skipLast: function(amount) {
+    return this.reverse().skip(amount).reverse();
+  },
+  skipWhile: function(predicate, context) {
+    return skipWhileFactory(this, predicate, context, true);
+  },
+  skipUntil: function(predicate, context) {
+    return this.skipWhile(not(predicate), context);
+  },
+  sortBy: function(mapper, comparator) {
+    comparator = comparator || defaultComparator;
+    var seq = this;
+    return $Sequence(seq.entrySeq().entrySeq().toArray().sort((function(a, b) {
+      return comparator(mapper(a[1][1], a[1][0], seq), mapper(b[1][1], b[1][0], seq)) || a[0] - b[0];
+    }))).fromEntrySeq().valueSeq().fromEntrySeq();
+  },
+  take: function(amount) {
+    return takeFactory(this, amount);
+  },
+  takeLast: function(amount) {
+    return this.reverse().take(amount).reverse();
+  },
+  takeWhile: function(predicate, context) {
+    return takeWhileFactory(this, predicate, context);
+  },
+  takeUntil: function(predicate, context) {
+    return this.takeWhile(not(predicate), context);
+  },
+  toKeyedSeq: function() {
+    return this;
+  },
+  valueSeq: function() {
+    return new ValuesSequence(this);
+  },
+  cacheResult: function() {
+    if (!this._cache && this.__iterateUncached) {
+      assertNotInfinite(this.length);
+      this._cache = this.entrySeq().toArray();
+      if (this.length == null) {
+        this.length = this._cache.length;
+      }
+    }
+    return this;
+  },
+  hashCode: function() {
+    return this.__hash || (this.__hash = this.length === Infinity ? 0 : this.reduce((function(h, v, k) {
+      return (h + (hash(v) ^ (v === k ? 0 : hash(k)))) & HASH_MAX_VAL;
+    }), 0));
+  },
+  __makeSequence: function() {
+    return Object.create(SequencePrototype);
+  },
+  __iterate: function(fn, reverse) {
+    return iterate(this, fn, reverse, true);
+  },
+  __iterator: function(type, reverse) {
+    return iterator(this, type, reverse, true);
+  }
+}, {from: function(value) {
+    if (value instanceof $Sequence) {
+      return value;
+    }
+    if (!Array.isArray(value)) {
+      if (isIterator(value)) {
+        return new IteratorSequence(value);
+      }
+      if (isIterable(value)) {
+        return new IterableSequence(value);
+      }
+      if (value && value.constructor === Object) {
+        return new ObjectSequence(value);
+      }
+      value = [value];
+    }
+    return new ArraySequence(value);
+  }});
+var SequencePrototype = Sequence.prototype;
+SequencePrototype[ITERATOR_SYMBOL] = SequencePrototype.entries;
+SequencePrototype.toJSON = SequencePrototype.toJS;
+SequencePrototype.__toJS = SequencePrototype.toObject;
+SequencePrototype.inspect = SequencePrototype.toSource = function() {
+  return this.toString();
+};
+SequencePrototype.chain = SequencePrototype.flatMap;
+var IndexedSequence = function IndexedSequence() {
+  $traceurRuntime.defaultSuperCall(this, $IndexedSequence.prototype, arguments);
+};
+var $IndexedSequence = IndexedSequence;
+($traceurRuntime.createClass)(IndexedSequence, {
+  toString: function() {
+    return this.__toString('Seq [', ']');
+  },
+  concat: function() {
+    for (var values = [],
+        $__3 = 0; $__3 < arguments.length; $__3++)
+      values[$__3] = arguments[$__3];
+    return concatFactory(this, values, false);
+  },
+  filter: function(predicate, context) {
+    return filterFactory(this, predicate, context, false);
+  },
+  findIndex: function(predicate, context) {
+    var key = this.findKey(predicate, context);
+    return key == null ? -1 : key;
+  },
+  indexOf: function(searchValue) {
+    return this.findIndex((function(value) {
+      return is(value, searchValue);
+    }));
+  },
+  lastIndexOf: function(searchValue) {
+    return this.toKeyedSeq().reverse().indexOf(searchValue);
+  },
+  reverse: function() {
+    return reverseFactory(this, false);
+  },
+  splice: function(index, removeNum) {
+    var numArgs = arguments.length;
+    removeNum = Math.max(removeNum | 0, 0);
+    if (numArgs === 0 || (numArgs === 2 && !removeNum)) {
+      return this;
+    }
+    index = resolveBegin(index, this.length);
+    var spliced = this.slice(0, index);
+    return numArgs === 1 ? spliced : spliced.concat(arrCopy(arguments, 2), this.slice(index + removeNum));
+  },
+  findLastIndex: function(predicate, context) {
+    return this.toKeyedSeq().reverse().findIndex(predicate, context);
+  },
+  first: function() {
+    return this.get(0);
+  },
+  flatten: function(depth) {
+    return flattenFactory(this, depth, false);
+  },
+  flip: function() {
+    return flipFactory(this.toKeyedSeq());
+  },
+  fromEntrySeq: function() {
+    return new FromEntriesSequence(this);
+  },
+  get: function(index, notSetValue) {
+    index = wrapIndex(this, index);
+    return (index < 0 || (this.length === Infinity || (this.length != null && index > this.length))) ? notSetValue : this.find((function(_, key) {
+      return key === index;
+    }), null, notSetValue);
+  },
+  groupBy: function(grouper, context) {
+    return groupByFactory(this, grouper, context, false);
+  },
+  has: function(index) {
+    index = wrapIndex(this, index);
+    return index >= 0 && (this.length != null ? this.length === Infinity || index < this.length : this.indexOf(index) !== -1);
+  },
+  interpose: function(separator) {
+    return interposeFactory(this, separator);
+  },
+  last: function() {
+    return this.get(-1);
+  },
+  skip: function(amount) {
+    var seq = this;
+    var skipSeq = skipFactory(seq, amount, false);
+    if (skipSeq !== seq) {
+      skipSeq.get = function(index, notSetValue) {
+        index = wrapIndex(this, index);
+        return index >= 0 ? seq.get(index + amount, notSetValue) : notSetValue;
+      };
+    }
+    return skipSeq;
+  },
+  skipWhile: function(predicate, context) {
+    return skipWhileFactory(this, predicate, context, false);
+  },
+  sortBy: function(mapper, comparator) {
+    comparator = comparator || defaultComparator;
+    var seq = this;
+    return Sequence(this.entrySeq().toArray().sort((function(a, b) {
+      return comparator(mapper(a[1], a[0], seq), mapper(b[1], b[0], seq)) || a[0] - b[0];
+    }))).fromEntrySeq().valueSeq();
+  },
+  take: function(amount) {
+    var seq = this;
+    var takeSeq = takeFactory(seq, amount);
+    if (takeSeq !== seq) {
+      takeSeq.get = function(index, notSetValue) {
+        index = wrapIndex(this, index);
+        return index >= 0 && index < amount ? seq.get(index, notSetValue) : notSetValue;
+      };
+    }
+    return takeSeq;
+  },
+  toKeyedSeq: function() {
+    return new KeyedIndexedSequence(this);
+  },
+  valueSeq: function() {
+    return this;
+  },
+  __makeSequence: function() {
+    return Object.create(IndexedSequencePrototype);
+  },
+  __iterate: function(fn, reverse) {
+    return iterate(this, fn, reverse, false);
+  },
+  __iterator: function(type, reverse) {
+    return iterator(this, type, reverse, false);
+  }
+}, {}, Sequence);
+var IndexedSequencePrototype = IndexedSequence.prototype;
+IndexedSequencePrototype[ITERATOR_SYMBOL] = IndexedSequencePrototype.values;
+IndexedSequencePrototype.__toJS = IndexedSequencePrototype.toArray;
+IndexedSequencePrototype.__toStringMapper = quoteString;
+var IteratorSequence = function IteratorSequence(iterator) {
+  this._iterator = iterator;
+  this._iteratorCache = [];
+};
+($traceurRuntime.createClass)(IteratorSequence, {
+  __iterateUncached: function(fn, reverse) {
+    if (reverse) {
+      return this.cacheResult().__iterate(fn, reverse);
+    }
+    var iterator = this._iterator;
+    var cache = this._iteratorCache;
+    var iterations = 0;
+    while (iterations < cache.length) {
+      if (fn(cache[iterations], iterations++, this) === false) {
+        return iterations;
+      }
+    }
+    var step;
+    while (!(step = iterator.next()).done) {
+      var val = step.value;
+      cache[iterations] = val;
+      if (fn(val, iterations++, this) === false) {
+        break;
+      }
+    }
+    return iterations;
+  },
+  __iteratorUncached: function(type, reverse) {
+    if (reverse) {
+      return this.cacheResult().__iterator(type, reverse);
+    }
+    var iterator = this._iterator;
+    var cache = this._iteratorCache;
+    var iterations = 0;
+    return new Iterator((function() {
+      if (iterations >= cache.length) {
+        var step = iterator.next();
+        if (step.done) {
+          return step;
+        }
+        cache[iterations] = step.value;
+      }
+      return iteratorValue(type, iterations, cache[iterations++]);
+    }));
+  }
+}, {}, IndexedSequence);
+var IterableSequence = function IterableSequence(iterable) {
+  this._iterable = iterable;
+  this.length = iterable.length || iterable.size;
+};
+($traceurRuntime.createClass)(IterableSequence, {
+  __iterateUncached: function(fn, reverse) {
+    if (reverse) {
+      return this.cacheResult().__iterate(fn, reverse);
+    }
+    var iterable = this._iterable;
+    var iterator = getIterator(iterable);
+    var iterations = 0;
+    if (isIterator(iterator)) {
+      var step;
+      while (!(step = iterator.next()).done) {
+        if (fn(step.value, iterations++, this) === false) {
+          break;
+        }
+      }
+    }
+    return iterations;
+  },
+  __iteratorUncached: function(type, reverse) {
+    if (reverse) {
+      return this.cacheResult().__iterator(type, reverse);
+    }
+    var iterable = this._iterable;
+    var iterator = getIterator(iterable);
+    if (!isIterator(iterator)) {
+      return new Iterator((function() {
+        return iteratorDone();
+      }));
+    }
+    var iterations = 0;
+    return new Iterator((function() {
+      var step = iterator.next();
+      return step.done ? step : iteratorValue(type, iterations++, step.value);
+    }));
+  }
+}, {}, IndexedSequence);
+var ObjectSequence = function ObjectSequence(object) {
+  var keys = Object.keys(object);
+  this._object = object;
+  this._keys = keys;
+  this.length = keys.length;
+};
+($traceurRuntime.createClass)(ObjectSequence, {
+  get: function(key, notSetValue) {
+    if (notSetValue !== undefined && !this.has(key)) {
+      return notSetValue;
+    }
+    return this._object[key];
+  },
+  has: function(key) {
+    return this._object.hasOwnProperty(key);
+  },
+  __iterate: function(fn, reverse) {
+    var object = this._object;
+    var keys = this._keys;
+    var maxIndex = keys.length - 1;
+    for (var ii = 0; ii <= maxIndex; ii++) {
+      var key = keys[reverse ? maxIndex - ii : ii];
+      if (fn(object[key], key, this) === false) {
+        return ii + 1;
+      }
+    }
+    return ii;
+  },
+  __iterator: function(type, reverse) {
+    var object = this._object;
+    var keys = this._keys;
+    var maxIndex = keys.length - 1;
+    var ii = 0;
+    return new Iterator((function() {
+      var key = keys[reverse ? maxIndex - ii : ii];
+      return ii++ > maxIndex ? iteratorDone() : iteratorValue(type, key, object[key]);
+    }));
+  }
+}, {}, Sequence);
+var ArraySequence = function ArraySequence(array) {
+  this._array = array;
+  this.length = array.length;
+};
+($traceurRuntime.createClass)(ArraySequence, {
+  get: function(index, notSetValue) {
+    return this.has(index) ? this._array[wrapIndex(this, index)] : notSetValue;
+  },
+  __iterate: function(fn, reverse) {
+    var array = this._array;
+    var maxIndex = array.length - 1;
+    for (var ii = 0; ii <= maxIndex; ii++) {
+      if (fn(array[reverse ? maxIndex - ii : ii], ii, this) === false) {
+        return ii + 1;
+      }
+    }
+    return ii;
+  },
+  __iterator: function(type, reverse) {
+    var array = this._array;
+    var maxIndex = array.length - 1;
+    var ii = 0;
+    return new Iterator((function() {
+      return ii > maxIndex ? iteratorDone() : iteratorValue(type, ii, array[reverse ? maxIndex - ii++ : ii++]);
+    }));
+  }
+}, {}, IndexedSequence);
+function ensureLength(indexedSeq) {
+  if (indexedSeq.length == null) {
+    indexedSeq.cacheResult();
+  }
+  invariant(indexedSeq.length < Infinity, 'Cannot reverse infinite range.');
+  return indexedSeq.length;
+}
+function wholeSlice(begin, end, length) {
+  return (begin === 0 || (length != null && begin <= -length)) && (end == null || (length != null && end >= length));
+}
+function resolveBegin(begin, length) {
+  return resolveIndex(begin, length, 0);
+}
+function resolveEnd(end, length) {
+  return resolveIndex(end, length, length);
+}
+function resolveIndex(index, length, defaultIndex) {
+  return index == null ? defaultIndex : index < 0 ? Math.max(0, length + index) : length == null ? index : Math.min(length, index);
+}
+function valueMapper(v) {
+  return v;
+}
+function entryMapper(v, k) {
+  return [k, v];
+}
+function returnTrue() {
+  return true;
+}
+function not(predicate) {
+  return function() {
+    return !predicate.apply(this, arguments);
+  };
+}
+function quoteString(value) {
+  return typeof value === 'string' ? JSON.stringify(value) : value;
+}
+function defaultComparator(a, b) {
+  return a > b ? 1 : a < b ? -1 : 0;
+}
+function wrapIndex(seq, index) {
+  if (index < 0) {
+    if (seq.length == null) {
+      seq.cacheResult();
+    }
+    return seq.length + index;
+  }
+  return index;
+}
+function assertNotInfinite(length) {
+  invariant(length !== Infinity, 'Cannot perform this action with an infinite sequence.');
+}
+function iterate(sequence, fn, reverse, useKeys) {
+  var cache = sequence._cache;
+  if (cache) {
+    var maxIndex = cache.length - 1;
+    for (var ii = 0; ii <= maxIndex; ii++) {
+      var entry = cache[reverse ? maxIndex - ii : ii];
+      if (fn(entry[1], useKeys ? entry[0] : ii, sequence) === false) {
+        return ii + 1;
+      }
+    }
+    return ii;
+  }
+  return sequence.__iterateUncached(fn, reverse);
+}
+function iterator(sequence, type, reverse, useKeys) {
+  var cache = sequence._cache;
+  if (cache) {
+    var maxIndex = cache.length - 1;
+    var ii = 0;
+    return new Iterator((function() {
+      var entry = cache[reverse ? maxIndex - ii : ii];
+      return ii++ > maxIndex ? iteratorDone() : iteratorValue(type, useKeys ? entry[0] : ii - 1, entry[1]);
+    }));
+  }
+  return sequence.__iteratorUncached(type, reverse);
+}
+var ValuesSequence = function ValuesSequence(seq) {
+  this._seq = seq;
+  this.length = seq.length;
+};
+($traceurRuntime.createClass)(ValuesSequence, {
+  contains: function(value) {
+    return this._seq.contains(value);
+  },
+  cacheResult: function() {
+    this._seq.cacheResult();
+    this.length = this._seq.length;
+    return this;
+  },
+  __iterate: function(fn, reverse) {
+    var $__0 = this;
+    var iterations = 0;
+    return this._seq.__iterate((function(v) {
+      return fn(v, iterations++, $__0);
+    }), reverse);
+  },
+  __iterator: function(type, reverse) {
+    var iterator = this._seq.__iterator(ITERATE_VALUES, reverse);
+    var iterations = 0;
+    return new Iterator((function() {
+      var step = iterator.next();
+      return step.done ? step : iteratorValue(type, iterations++, step.value, step);
+    }));
+  }
+}, {}, IndexedSequence);
+var KeyedIndexedSequence = function KeyedIndexedSequence(indexedSeq) {
+  this._seq = indexedSeq;
+  this.length = indexedSeq.length;
+};
+($traceurRuntime.createClass)(KeyedIndexedSequence, {
+  get: function(key, notSetValue) {
+    return this._seq.get(key, notSetValue);
+  },
+  has: function(key) {
+    return this._seq.has(key);
+  },
+  valueSeq: function() {
+    return this._seq;
+  },
+  reverse: function() {
+    var $__0 = this;
+    var reversedSequence = reverseFactory(this, true);
+    reversedSequence.valueSeq = (function() {
+      return $__0._seq.reverse();
+    });
+    return reversedSequence;
+  },
+  map: function(mapper, context) {
+    var $__0 = this;
+    var mappedSequence = mapFactory(this, mapper, context);
+    mappedSequence.valueSeq = (function() {
+      return $__0._seq.map(mapper, context);
+    });
+    return mappedSequence;
+  },
+  cacheResult: function() {
+    this._seq.cacheResult();
+    this.length = this._seq.length;
+    return this;
+  },
+  __iterate: function(fn, reverse) {
+    var $__0 = this;
+    var ii = reverse ? ensureLength(this) : 0;
+    return this._seq.__iterate((function(v) {
+      return fn(v, reverse ? --ii : ii++, $__0);
+    }), reverse);
+  },
+  __iterator: function(type, reverse) {
+    var iterator = this._seq.__iterator(ITERATE_VALUES, reverse);
+    var ii = reverse ? ensureLength(this) : 0;
+    return new Iterator((function() {
+      var step = iterator.next();
+      return step.done ? step : iteratorValue(type, reverse ? --ii : ii++, step.value, step);
+    }));
+  }
+}, {}, Sequence);
+var FromEntriesSequence = function FromEntriesSequence(entriesSeq) {
+  this._seq = entriesSeq;
+  this.length = entriesSeq.length;
+};
+($traceurRuntime.createClass)(FromEntriesSequence, {
+  entrySeq: function() {
+    return this._seq;
+  },
+  cacheResult: function() {
+    this._seq.cacheResult();
+    this.length = this._seq.length;
+    return this;
+  },
+  __iterate: function(fn, reverse) {
+    var $__0 = this;
+    return this._seq.__iterate((function(entry) {
+      return entry && fn(entry[1], entry[0], $__0);
+    }), reverse);
+  },
+  __iterator: function(type, reverse) {
+    var iterator = this._seq.__iterator(ITERATE_VALUES, reverse);
+    return new Iterator((function() {
+      while (true) {
+        var step = iterator.next();
+        if (step.done) {
+          return step;
+        }
+        var entry = step.value;
+        if (entry) {
+          return type === ITERATE_ENTRIES ? step : iteratorValue(type, entry[0], entry[1], step);
+        }
+      }
+    }));
+  }
+}, {}, Sequence);
+function flipFactory(sequence) {
+  var flipSequence = sequence.__makeSequence();
+  flipSequence.length = sequence.length;
+  flipSequence.flip = (function() {
+    return sequence;
+  });
+  flipSequence.reverse = function() {
+    var reversedSequence = sequence.reverse.apply(this);
+    reversedSequence.flip = (function() {
+      return sequence.reverse();
+    });
+    return reversedSequence;
+  };
+  flipSequence.has = (function(key) {
+    return sequence.contains(key);
+  });
+  flipSequence.contains = (function(key) {
+    return sequence.has(key);
+  });
+  flipSequence.__iterateUncached = function(fn, reverse) {
+    var $__0 = this;
+    return sequence.__iterate((function(v, k) {
+      return fn(k, v, $__0) !== false;
+    }), reverse);
+  };
+  flipSequence.__iteratorUncached = function(type, reverse) {
+    if (type === ITERATE_ENTRIES) {
+      var iterator = sequence.__iterator(type, reverse);
+      return new Iterator((function() {
+        var step = iterator.next();
+        if (!step.done) {
+          var k = step.value[0];
+          step.value[0] = step.value[1];
+          step.value[1] = k;
+        }
+        return step;
+      }));
+    }
+    return sequence.__iterator(type === ITERATE_VALUES ? ITERATE_KEYS : ITERATE_VALUES, reverse);
+  };
+  return flipSequence;
+}
+function mapFactory(sequence, mapper, context) {
+  var mappedSequence = sequence.__makeSequence();
+  mappedSequence.length = sequence.length;
+  mappedSequence.has = (function(key) {
+    return sequence.has(key);
+  });
+  mappedSequence.get = (function(key, notSetValue) {
+    var v = sequence.get(key, NOT_SET);
+    return v === NOT_SET ? notSetValue : mapper.call(context, v, key, sequence);
+  });
+  mappedSequence.__iterateUncached = function(fn, reverse) {
+    var $__0 = this;
+    return sequence.__iterate((function(v, k, c) {
+      return fn(mapper.call(context, v, k, c), k, $__0) !== false;
+    }), reverse);
+  };
+  mappedSequence.__iteratorUncached = function(type, reverse) {
+    var iterator = sequence.__iterator(ITERATE_ENTRIES, reverse);
+    return new Iterator((function() {
+      var step = iterator.next();
+      if (step.done) {
+        return step;
+      }
+      var entry = step.value;
+      var key = entry[0];
+      return iteratorValue(type, key, mapper.call(context, entry[1], key, sequence), step);
+    }));
+  };
+  return mappedSequence;
+}
+function reverseFactory(sequence, useKeys) {
+  var reversedSequence = sequence.__makeSequence();
+  reversedSequence.length = sequence.length;
+  reversedSequence.reverse = (function() {
+    return sequence;
+  });
+  reversedSequence.flip = function() {
+    var flipSequence = sequence.flip.apply(this);
+    flipSequence.reverse = (function() {
+      return sequence.flip();
+    });
+    return flipSequence;
+  };
+  reversedSequence.get = (function(key, notSetValue) {
+    return sequence.get(useKeys ? key : -1 - key, notSetValue);
+  });
+  reversedSequence.has = (function(key) {
+    return sequence.has(useKeys ? key : -1 - key);
+  });
+  reversedSequence.contains = (function(value) {
+    return sequence.contains(value);
+  });
+  reversedSequence.cacheResult = function() {
+    sequence.cacheResult();
+    this.length = sequence.length;
+    return this;
+  };
+  reversedSequence.__iterate = function(fn, reverse) {
+    var $__0 = this;
+    return sequence.__iterate((function(v, k) {
+      return fn(v, k, $__0);
+    }), !reverse);
+  };
+  reversedSequence.__iterator = (function(type, reverse) {
+    return sequence.__iterator(type, !reverse);
+  });
+  return reversedSequence;
+}
+function filterFactory(sequence, predicate, context, useKeys) {
+  var filterSequence = sequence.__makeSequence();
+  if (useKeys) {
+    filterSequence.has = (function(key) {
+      var v = sequence.get(key, NOT_SET);
+      return v !== NOT_SET && !!predicate.call(context, v, key, sequence);
+    });
+    filterSequence.get = (function(key, notSetValue) {
+      var v = sequence.get(key, NOT_SET);
+      return v !== NOT_SET && predicate.call(context, v, key, sequence) ? v : notSetValue;
+    });
+  }
+  filterSequence.__iterateUncached = function(fn, reverse) {
+    var $__0 = this;
+    var iterations = 0;
+    sequence.__iterate((function(v, k, c) {
+      if (predicate.call(context, v, k, c)) {
+        iterations++;
+        return fn(v, useKeys ? k : iterations - 1, $__0);
+      }
+    }), reverse);
+    return iterations;
+  };
+  filterSequence.__iteratorUncached = function(type, reverse) {
+    var iterator = sequence.__iterator(ITERATE_ENTRIES, reverse);
+    var iterations = 0;
+    return new Iterator((function() {
+      while (true) {
+        var step = iterator.next();
+        if (step.done) {
+          return step;
+        }
+        var entry = step.value;
+        var key = entry[0];
+        var value = entry[1];
+        if (predicate.call(context, value, key, sequence)) {
+          return iteratorValue(type, useKeys ? key : iterations++, value, step);
+        }
+      }
+    }));
+  };
+  return filterSequence;
+}
+function groupByFactory(seq, grouper, context, useKeys) {
+  var groupMap = {};
+  var groups = [];
+  seq.__iterate((function(v, k) {
+    var g = grouper.call(context, v, k, seq);
+    var h = hash(g);
+    var e = useKeys ? [k, v] : v;
+    if (!groupMap.hasOwnProperty(h)) {
+      groupMap[h] = groups.length;
+      groups.push([g, [e]]);
+    } else {
+      groups[groupMap[h]][1].push(e);
+    }
+  }));
+  return Sequence(groups).fromEntrySeq().map(useKeys ? (function(group) {
+    return Sequence(group).fromEntrySeq();
+  }) : (function(group) {
+    return Sequence(group);
+  }));
+}
+function takeFactory(sequence, amount) {
+  if (amount > sequence.length) {
+    return sequence;
+  }
+  if (amount < 0) {
+    amount = 0;
+  }
+  var takeSequence = sequence.__makeSequence();
+  takeSequence.length = sequence.length && Math.min(sequence.length, amount);
+  takeSequence.__iterateUncached = function(fn, reverse) {
+    var $__0 = this;
+    if (amount === 0) {
+      return 0;
+    }
+    if (reverse) {
+      return this.cacheResult().__iterate(fn, reverse);
+    }
+    var iterations = 0;
+    sequence.__iterate((function(v, k) {
+      return ++iterations && fn(v, k, $__0) !== false && iterations < amount;
+    }));
+    return iterations;
+  };
+  takeSequence.__iteratorUncached = function(type, reverse) {
+    if (reverse) {
+      return this.cacheResult().__iterator(type, reverse);
+    }
+    var iterator = amount && sequence.__iterator(type, reverse);
+    var iterations = 0;
+    return new Iterator((function() {
+      if (iterations++ > amount) {
+        return iteratorDone();
+      }
+      return iterator.next();
+    }));
+  };
+  return takeSequence;
+}
+function takeWhileFactory(sequence, predicate, context) {
+  var takeSequence = sequence.__makeSequence();
+  takeSequence.__iterateUncached = function(fn, reverse) {
+    var $__0 = this;
+    if (reverse) {
+      return this.cacheResult().__iterate(fn, reverse);
+    }
+    var iterations = 0;
+    sequence.__iterate((function(v, k, c) {
+      return predicate.call(context, v, k, c) && ++iterations && fn(v, k, $__0);
+    }));
+    return iterations;
+  };
+  takeSequence.__iteratorUncached = function(type, reverse) {
+    var $__0 = this;
+    if (reverse) {
+      return this.cacheResult().__iterator(type, reverse);
+    }
+    var iterator = sequence.__iterator(ITERATE_ENTRIES, reverse);
+    var iterating = true;
+    return new Iterator((function() {
+      if (!iterating) {
+        return iteratorDone();
+      }
+      var step = iterator.next();
+      if (step.done) {
+        return step;
+      }
+      var entry = step.value;
+      var k = entry[0];
+      var v = entry[1];
+      if (!predicate.call(context, v, k, $__0)) {
+        iterating = false;
+        return iteratorDone();
+      }
+      return type === ITERATE_ENTRIES ? step : iteratorValue(type, k, v, step);
+    }));
+  };
+  return takeSequence;
+}
+function skipFactory(sequence, amount, useKeys) {
+  if (amount <= 0) {
+    return sequence;
+  }
+  var skipSequence = sequence.__makeSequence();
+  skipSequence.length = sequence.length && Math.max(0, sequence.length - amount);
+  skipSequence.__iterateUncached = function(fn, reverse) {
+    var $__0 = this;
+    if (reverse) {
+      return this.cacheResult().__iterate(fn, reverse);
+    }
+    var skipped = 0;
+    var isSkipping = true;
+    var iterations = 0;
+    sequence.__iterate((function(v, k) {
+      if (!(isSkipping && (isSkipping = skipped++ < amount))) {
+        iterations++;
+        return fn(v, useKeys ? k : iterations - 1, $__0);
+      }
+    }));
+    return iterations;
+  };
+  skipSequence.__iteratorUncached = function(type, reverse) {
+    if (reverse) {
+      return this.cacheResult().__iterator(type, reverse);
+    }
+    var iterator = amount && sequence.__iterator(type, reverse);
+    var skipped = 0;
+    var iterations = 0;
+    return new Iterator((function() {
+      while (skipped < amount) {
+        skipped++;
+        iterator.next();
+      }
+      var step = iterator.next();
+      if (useKeys || type === ITERATE_VALUES) {
+        return step;
+      } else if (type === ITERATE_KEYS) {
+        return iteratorValue(type, iterations++, null, step);
+      } else {
+        return iteratorValue(type, iterations++, step.value[1], step);
+      }
+    }));
+  };
+  return skipSequence;
+}
+function skipWhileFactory(sequence, predicate, context, useKeys) {
+  var skipSequence = sequence.__makeSequence();
+  skipSequence.__iterateUncached = function(fn, reverse) {
+    var $__0 = this;
+    if (reverse) {
+      return this.cacheResult().__iterate(fn, reverse);
+    }
+    var isSkipping = true;
+    var iterations = 0;
+    sequence.__iterate((function(v, k, c) {
+      if (!(isSkipping && (isSkipping = predicate.call(context, v, k, c)))) {
+        iterations++;
+        return fn(v, useKeys ? k : iterations - 1, $__0);
+      }
+    }));
+    return iterations;
+  };
+  skipSequence.__iteratorUncached = function(type, reverse) {
+    var $__0 = this;
+    if (reverse) {
+      return this.cacheResult().__iterator(type, reverse);
+    }
+    var iterator = sequence.__iterator(ITERATE_ENTRIES, reverse);
+    var skipping = true;
+    var iterations = 0;
+    return new Iterator((function() {
+      var step,
+          k,
+          v;
+      do {
+        step = iterator.next();
+        if (step.done) {
+          if (useKeys || type === ITERATE_VALUES) {
+            return step;
+          } else if (type === ITERATE_KEYS) {
+            return iteratorValue(type, iterations++, null, step);
+          } else {
+            return iteratorValue(type, iterations++, step.value[1], step);
+          }
+        }
+        var entry = step.value;
+        k = entry[0];
+        v = entry[1];
+        skipping && (skipping = predicate.call(context, v, k, $__0));
+      } while (skipping);
+      return type === ITERATE_ENTRIES ? step : iteratorValue(type, k, v, step);
+    }));
+  };
+  return skipSequence;
+}
+function concatFactory(sequence, values, useKeys) {
+  var sequences = [sequence].concat(values);
+  var concatSequence = Sequence(sequences);
+  if (useKeys) {
+    concatSequence = concatSequence.toKeyedSeq();
+  }
+  concatSequence = concatSequence.flatMap(valueMapper);
+  concatSequence.length = sequences.reduce((function(sum, seq) {
+    if (sum !== undefined) {
+      var len = Sequence(seq).length;
+      if (len != null) {
+        return sum + len;
+      }
+    }
+  }), 0);
+  return concatSequence;
+}
+function flattenFactory(sequence, depth, useKeys) {
+  var flatSequence = sequence.__makeSequence();
+  flatSequence.__iterateUncached = function(fn, reverse) {
+    var iterations = 0;
+    var stopped = false;
+    function flatDeep(seq, currentDepth) {
+      var $__0 = this;
+      seq.__iterate((function(v, k) {
+        if ((!depth || currentDepth < depth) && isFlattenable(v)) {
+          flatDeep(v, currentDepth + 1);
+        } else if (fn(v, useKeys ? k : iterations++, $__0) === false) {
+          stopped = true;
+        }
+        return !stopped;
+      }), reverse);
+    }
+    flatDeep(sequence, 0);
+    return iterations;
+  };
+  flatSequence.__iteratorUncached = function(type, reverse) {
+    var iterator = sequence.__iterator(type, reverse);
+    var stack = [];
+    var iterations = 0;
+    return new Iterator((function() {
+      while (iterator) {
+        var step = iterator.next();
+        if (step.done !== false) {
+          iterator = stack.pop();
+          continue;
+        }
+        var v = step.value;
+        if (type === ITERATE_ENTRIES) {
+          v = v[1];
+        }
+        if ((!depth || stack.length < depth) && isFlattenable(v)) {
+          stack.push(iterator);
+          iterator = v.__iterator(type, reverse);
+        } else {
+          return useKeys ? step : iteratorValue(type, iterations++, v, step);
+        }
+      }
+      return iteratorDone();
+    }));
+  };
+  return flatSequence;
+}
+function isFlattenable(maybeFlattenable) {
+  return maybeFlattenable && typeof maybeFlattenable.flatten === 'function' && typeof maybeFlattenable.__iterate === 'function' && typeof maybeFlattenable.__iterator === 'function';
+}
+function interposeFactory(sequence, separator) {
+  var interposedSequence = sequence.__makeSequence();
+  interposedSequence.length = sequence.length && sequence.length * 2 - 1;
+  interposedSequence.__iterateUncached = function(fn, reverse) {
+    var $__0 = this;
+    var iterations = 0;
+    sequence.__iterate((function(v, k) {
+      return (!iterations || fn(separator, iterations++, $__0) !== false) && fn(v, iterations++, $__0) !== false;
+    }), reverse);
+    return iterations;
+  };
+  interposedSequence.__iteratorUncached = function(type, reverse) {
+    var iterator = sequence.__iterator(ITERATE_VALUES, reverse);
+    var iterations = 0;
+    var step;
+    return new Iterator((function() {
+      if (!step || iterations % 2) {
+        step = iterator.next();
+        if (step.done) {
+          return step;
+        }
+      }
+      return iterations % 2 ? iteratorValue(type, iterations++, separator) : iteratorValue(type, iterations++, step.value, step);
+    }));
+  };
+  return interposedSequence;
+}
+var Map = function Map(sequence) {
+  var map = $Map.empty();
+  return sequence ? sequence.constructor === $Map ? sequence : map.merge(sequence) : map;
+};
+var $Map = Map;
+($traceurRuntime.createClass)(Map, {
+  toString: function() {
+    return this.__toString('Map {', '}');
+  },
+  get: function(k, notSetValue) {
+    return this._root ? this._root.get(0, hash(k), k, notSetValue) : notSetValue;
+  },
+  set: function(k, v) {
+    return updateMap(this, k, v);
+  },
+  setIn: function(keyPath, v) {
+    invariant(keyPath.length > 0, 'Requires non-empty key path.');
+    return this.updateIn(keyPath, (function() {
+      return v;
+    }));
+  },
+  remove: function(k) {
+    return updateMap(this, k, NOT_SET);
+  },
+  removeIn: function(keyPath) {
+    invariant(keyPath.length > 0, 'Requires non-empty key path.');
+    return this.updateIn(keyPath, (function() {
+      return NOT_SET;
+    }));
+  },
+  update: function(k, notSetValue, updater) {
+    return arguments.length === 1 ? k(this) : this.updateIn([k], notSetValue, updater);
+  },
+  updateIn: function(keyPath, notSetValue, updater) {
+    if (!updater) {
+      updater = notSetValue;
+      notSetValue = undefined;
+    }
+    return keyPath.length === 0 ? updater(this) : updateInDeepMap(this, keyPath, notSetValue, updater, 0);
+  },
+  clear: function() {
+    if (this.length === 0) {
+      return this;
+    }
+    if (this.__ownerID) {
+      this.length = 0;
+      this._root = null;
+      this.__hash = undefined;
+      this.__altered = true;
+      return this;
+    }
+    return $Map.empty();
+  },
+  merge: function() {
+    return mergeIntoMapWith(this, null, arguments);
+  },
+  mergeWith: function(merger) {
+    for (var seqs = [],
+        $__4 = 1; $__4 < arguments.length; $__4++)
+      seqs[$__4 - 1] = arguments[$__4];
+    return mergeIntoMapWith(this, merger, seqs);
+  },
+  mergeDeep: function() {
+    return mergeIntoMapWith(this, deepMerger(null), arguments);
+  },
+  mergeDeepWith: function(merger) {
+    for (var seqs = [],
+        $__5 = 1; $__5 < arguments.length; $__5++)
+      seqs[$__5 - 1] = arguments[$__5];
+    return mergeIntoMapWith(this, deepMerger(merger), seqs);
+  },
+  cursor: function(maybeKeyPath, onChange) {
+    var keyPath = arguments.length === 0 || typeof maybeKeyPath === 'function' && (onChange = maybeKeyPath) ? [] : Array.isArray(maybeKeyPath) ? maybeKeyPath : [maybeKeyPath];
+    return makeCursor(this, keyPath, onChange);
+  },
+  withMutations: function(fn) {
+    var mutable = this.asMutable();
+    fn(mutable);
+    return mutable.wasAltered() ? mutable.__ensureOwner(this.__ownerID) : this;
+  },
+  asMutable: function() {
+    return this.__ownerID ? this : this.__ensureOwner(new OwnerID());
+  },
+  asImmutable: function() {
+    return this.__ensureOwner();
+  },
+  wasAltered: function() {
+    return this.__altered;
+  },
+  __iterator: function(type, reverse) {
+    return new MapIterator(this, type, reverse);
+  },
+  __iterate: function(fn, reverse) {
+    var $__0 = this;
+    var iterations = 0;
+    this._root && this._root.iterate((function(entry) {
+      iterations++;
+      return fn(entry[1], entry[0], $__0);
+    }), reverse);
+    return iterations;
+  },
+  __ensureOwner: function(ownerID) {
+    if (ownerID === this.__ownerID) {
+      return this;
+    }
+    if (!ownerID) {
+      this.__ownerID = ownerID;
+      this.__altered = false;
+      return this;
+    }
+    return makeMap(this.length, this._root, ownerID, this.__hash);
+  }
+}, {empty: function() {
+    return EMPTY_MAP || (EMPTY_MAP = makeMap(0));
+  }}, Sequence);
+var MapPrototype = Map.prototype;
+MapPrototype[DELETE] = MapPrototype.remove;
+Map.from = Map;
+var BitmapIndexedNode = function BitmapIndexedNode(ownerID, bitmap, nodes) {
+  this.ownerID = ownerID;
+  this.bitmap = bitmap;
+  this.nodes = nodes;
+};
+var $BitmapIndexedNode = BitmapIndexedNode;
+($traceurRuntime.createClass)(BitmapIndexedNode, {
+  get: function(shift, hash, key, notSetValue) {
+    var bit = (1 << ((shift === 0 ? hash : hash >>> shift) & MASK));
+    var bitmap = this.bitmap;
+    return (bitmap & bit) === 0 ? notSetValue : this.nodes[popCount(bitmap & (bit - 1))].get(shift + SHIFT, hash, key, notSetValue);
+  },
+  update: function(ownerID, shift, hash, key, value, didChangeLength, didAlter) {
+    var hashFrag = (shift === 0 ? hash : hash >>> shift) & MASK;
+    var bit = 1 << hashFrag;
+    var bitmap = this.bitmap;
+    var exists = (bitmap & bit) !== 0;
+    if (!exists && value === NOT_SET) {
+      return this;
+    }
+    var idx = popCount(bitmap & (bit - 1));
+    var nodes = this.nodes;
+    var node = exists ? nodes[idx] : null;
+    var newNode = updateNode(node, ownerID, shift + SHIFT, hash, key, value, didChangeLength, didAlter);
+    if (newNode === node) {
+      return this;
+    }
+    if (!exists && newNode && nodes.length >= MAX_BITMAP_SIZE) {
+      return expandNodes(ownerID, nodes, bitmap, hashFrag, newNode);
+    }
+    if (exists && !newNode && nodes.length === 2 && isLeafNode(nodes[idx ^ 1])) {
+      return nodes[idx ^ 1];
+    }
+    if (exists && newNode && nodes.length === 1 && isLeafNode(newNode)) {
+      return newNode;
+    }
+    var isEditable = ownerID && ownerID === this.ownerID;
+    var newBitmap = exists ? newNode ? bitmap : bitmap ^ bit : bitmap | bit;
+    var newNodes = exists ? newNode ? setIn(nodes, idx, newNode, isEditable) : spliceOut(nodes, idx, isEditable) : spliceIn(nodes, idx, newNode, isEditable);
+    if (isEditable) {
+      this.bitmap = newBitmap;
+      this.nodes = newNodes;
+      return this;
+    }
+    return new $BitmapIndexedNode(ownerID, newBitmap, newNodes);
+  },
+  iterate: function(fn, reverse) {
+    var nodes = this.nodes;
+    for (var ii = 0,
+        maxIndex = nodes.length - 1; ii <= maxIndex; ii++) {
+      if (nodes[reverse ? maxIndex - ii : ii].iterate(fn, reverse) === false) {
+        return false;
+      }
+    }
+  }
+}, {});
+var ArrayNode = function ArrayNode(ownerID, count, nodes) {
+  this.ownerID = ownerID;
+  this.count = count;
+  this.nodes = nodes;
+};
+var $ArrayNode = ArrayNode;
+($traceurRuntime.createClass)(ArrayNode, {
+  get: function(shift, hash, key, notSetValue) {
+    var idx = (shift === 0 ? hash : hash >>> shift) & MASK;
+    var node = this.nodes[idx];
+    return node ? node.get(shift + SHIFT, hash, key, notSetValue) : notSetValue;
+  },
+  update: function(ownerID, shift, hash, key, value, didChangeLength, didAlter) {
+    var idx = (shift === 0 ? hash : hash >>> shift) & MASK;
+    var removed = value === NOT_SET;
+    var nodes = this.nodes;
+    var node = nodes[idx];
+    if (removed && !node) {
+      return this;
+    }
+    var newNode = updateNode(node, ownerID, shift + SHIFT, hash, key, value, didChangeLength, didAlter);
+    if (newNode === node) {
+      return this;
+    }
+    var newCount = this.count;
+    if (!node) {
+      newCount++;
+    } else if (!newNode) {
+      newCount--;
+      if (newCount < MIN_ARRAY_SIZE) {
+        return packNodes(ownerID, nodes, newCount, idx);
+      }
+    }
+    var isEditable = ownerID && ownerID === this.ownerID;
+    var newNodes = setIn(nodes, idx, newNode, isEditable);
+    if (isEditable) {
+      this.count = newCount;
+      this.nodes = newNodes;
+      return this;
+    }
+    return new $ArrayNode(ownerID, newCount, newNodes);
+  },
+  iterate: function(fn, reverse) {
+    var nodes = this.nodes;
+    for (var ii = 0,
+        maxIndex = nodes.length - 1; ii <= maxIndex; ii++) {
+      var node = nodes[reverse ? maxIndex - ii : ii];
+      if (node && node.iterate(fn, reverse) === false) {
+        return false;
+      }
+    }
+  }
+}, {});
+var HashCollisionNode = function HashCollisionNode(ownerID, hash, entries) {
+  this.ownerID = ownerID;
+  this.hash = hash;
+  this.entries = entries;
+};
+var $HashCollisionNode = HashCollisionNode;
+($traceurRuntime.createClass)(HashCollisionNode, {
+  get: function(shift, hash, key, notSetValue) {
+    var entries = this.entries;
+    for (var ii = 0,
+        len = entries.length; ii < len; ii++) {
+      if (is(key, entries[ii][0])) {
+        return entries[ii][1];
+      }
+    }
+    return notSetValue;
+  },
+  update: function(ownerID, shift, hash, key, value, didChangeLength, didAlter) {
+    var removed = value === NOT_SET;
+    if (hash !== this.hash) {
+      if (removed) {
+        return this;
+      }
+      SetRef(didAlter);
+      SetRef(didChangeLength);
+      return mergeIntoNode(this, ownerID, shift, hash, [key, value]);
+    }
+    var entries = this.entries;
+    var idx = 0;
+    for (var len = entries.length; idx < len; idx++) {
+      if (is(key, entries[idx][0])) {
+        break;
+      }
+    }
+    var exists = idx < len;
+    if (removed && !exists) {
+      return this;
+    }
+    SetRef(didAlter);
+    (removed || !exists) && SetRef(didChangeLength);
+    if (removed && len === 2) {
+      return new ValueNode(ownerID, this.hash, entries[idx ^ 1]);
+    }
+    var isEditable = ownerID && ownerID === this.ownerID;
+    var newEntries = isEditable ? entries : arrCopy(entries);
+    if (exists) {
+      if (removed) {
+        idx === len - 1 ? newEntries.pop() : (newEntries[idx] = newEntries.pop());
+      } else {
+        newEntries[idx] = [key, value];
+      }
+    } else {
+      newEntries.push([key, value]);
+    }
+    if (isEditable) {
+      this.entries = newEntries;
+      return this;
+    }
+    return new $HashCollisionNode(ownerID, this.hash, newEntries);
+  },
+  iterate: function(fn, reverse) {
+    var entries = this.entries;
+    for (var ii = 0,
+        maxIndex = entries.length - 1; ii <= maxIndex; ii++) {
+      if (fn(entries[reverse ? maxIndex - ii : ii]) === false) {
+        return false;
+      }
+    }
+  }
+}, {});
+var ValueNode = function ValueNode(ownerID, hash, entry) {
+  this.ownerID = ownerID;
+  this.hash = hash;
+  this.entry = entry;
+};
+var $ValueNode = ValueNode;
+($traceurRuntime.createClass)(ValueNode, {
+  get: function(shift, hash, key, notSetValue) {
+    return is(key, this.entry[0]) ? this.entry[1] : notSetValue;
+  },
+  update: function(ownerID, shift, hash, key, value, didChangeLength, didAlter) {
+    var removed = value === NOT_SET;
+    var keyMatch = is(key, this.entry[0]);
+    if (keyMatch ? value === this.entry[1] : removed) {
+      return this;
+    }
+    SetRef(didAlter);
+    if (removed) {
+      SetRef(didChangeLength);
+      return null;
+    }
+    if (keyMatch) {
+      if (ownerID && ownerID === this.ownerID) {
+        this.entry[1] = value;
+        return this;
+      }
+      return new $ValueNode(ownerID, hash, [key, value]);
+    }
+    SetRef(didChangeLength);
+    return mergeIntoNode(this, ownerID, shift, hash, [key, value]);
+  },
+  iterate: function(fn) {
+    return fn(this.entry);
+  }
+}, {});
+var MapIterator = function MapIterator(map, type, reverse) {
+  this._type = type;
+  this._reverse = reverse;
+  this._stack = map._root && mapIteratorFrame(map._root);
+};
+($traceurRuntime.createClass)(MapIterator, {next: function() {
+    var type = this._type;
+    var stack = this._stack;
+    while (stack) {
+      var node = stack.node;
+      var index = stack.index++;
+      var maxIndex;
+      if (node.entry) {
+        if (index === 0) {
+          return mapIteratorValue(type, node.entry);
+        }
+      } else if (node.entries) {
+        maxIndex = node.entries.length - 1;
+        if (index <= maxIndex) {
+          return mapIteratorValue(type, node.entries[this._reverse ? maxIndex - index : index]);
+        }
+      } else {
+        maxIndex = node.nodes.length - 1;
+        if (index <= maxIndex) {
+          var subNode = node.nodes[this._reverse ? maxIndex - index : index];
+          if (subNode) {
+            if (subNode.entry) {
+              return mapIteratorValue(type, subNode.entry);
+            }
+            stack = this._stack = mapIteratorFrame(subNode, stack);
+          }
+          continue;
+        }
+      }
+      stack = this._stack = this._stack.__prev;
+    }
+    return iteratorDone();
+  }}, {}, Iterator);
+function mapIteratorValue(type, entry) {
+  return iteratorValue(type, entry[0], entry[1]);
+}
+function mapIteratorFrame(node, prev) {
+  return {
+    node: node,
+    index: 0,
+    __prev: prev
+  };
+}
+function makeMap(length, root, ownerID, hash) {
+  var map = Object.create(MapPrototype);
+  map.length = length;
+  map._root = root;
+  map.__ownerID = ownerID;
+  map.__hash = hash;
+  map.__altered = false;
+  return map;
+}
+function updateMap(map, k, v) {
+  var didChangeLength = MakeRef(CHANGE_LENGTH);
+  var didAlter = MakeRef(DID_ALTER);
+  var newRoot = updateNode(map._root, map.__ownerID, 0, hash(k), k, v, didChangeLength, didAlter);
+  if (!didAlter.value) {
+    return map;
+  }
+  var newLength = map.length + (didChangeLength.value ? v === NOT_SET ? -1 : 1 : 0);
+  if (map.__ownerID) {
+    map.length = newLength;
+    map._root = newRoot;
+    map.__hash = undefined;
+    map.__altered = true;
+    return map;
+  }
+  return newRoot ? makeMap(newLength, newRoot) : Map.empty();
+}
+function updateNode(node, ownerID, shift, hash, key, value, didChangeLength, didAlter) {
+  if (!node) {
+    if (value === NOT_SET) {
+      return node;
+    }
+    SetRef(didAlter);
+    SetRef(didChangeLength);
+    return new ValueNode(ownerID, hash, [key, value]);
+  }
+  return node.update(ownerID, shift, hash, key, value, didChangeLength, didAlter);
+}
+function isLeafNode(node) {
+  return node.constructor === ValueNode || node.constructor === HashCollisionNode;
+}
+function mergeIntoNode(node, ownerID, shift, hash, entry) {
+  if (node.hash === hash) {
+    return new HashCollisionNode(ownerID, hash, [node.entry, entry]);
+  }
+  var idx1 = (shift === 0 ? node.hash : node.hash >>> shift) & MASK;
+  var idx2 = (shift === 0 ? hash : hash >>> shift) & MASK;
+  var newNode;
+  var nodes = idx1 === idx2 ? [mergeIntoNode(node, ownerID, shift + SHIFT, hash, entry)] : ((newNode = new ValueNode(ownerID, hash, entry)), idx1 < idx2 ? [node, newNode] : [newNode, node]);
+  return new BitmapIndexedNode(ownerID, (1 << idx1) | (1 << idx2), nodes);
+}
+function packNodes(ownerID, nodes, count, excluding) {
+  var bitmap = 0;
+  var packedII = 0;
+  var packedNodes = new Array(count);
+  for (var ii = 0,
+      bit = 1,
+      len = nodes.length; ii < len; ii++, bit <<= 1) {
+    var node = nodes[ii];
+    if (node != null && ii !== excluding) {
+      bitmap |= bit;
+      packedNodes[packedII++] = node;
+    }
+  }
+  return new BitmapIndexedNode(ownerID, bitmap, packedNodes);
+}
+function expandNodes(ownerID, nodes, bitmap, including, node) {
+  var count = 0;
+  var expandedNodes = new Array(SIZE);
+  for (var ii = 0; bitmap !== 0; ii++, bitmap >>>= 1) {
+    expandedNodes[ii] = bitmap & 1 ? nodes[count++] : null;
+  }
+  expandedNodes[including] = node;
+  return new ArrayNode(ownerID, count + 1, expandedNodes);
+}
+function mergeIntoMapWith(map, merger, iterables) {
+  var seqs = [];
+  for (var ii = 0; ii < iterables.length; ii++) {
+    var seq = iterables[ii];
+    if (!(seq instanceof Sequence)) {
+      seq = Sequence(seq);
+      if (seq instanceof IndexedSequence) {
+        seq = seq.fromEntrySeq();
+      }
+    }
+    seq && seqs.push(seq);
+  }
+  return mergeIntoCollectionWith(map, merger, seqs);
+}
+function deepMerger(merger) {
+  return (function(existing, value) {
+    return existing && existing.mergeDeepWith ? existing.mergeDeepWith(merger, value) : merger ? merger(existing, value) : value;
+  });
+}
+function mergeIntoCollectionWith(collection, merger, seqs) {
+  if (seqs.length === 0) {
+    return collection;
+  }
+  return collection.withMutations((function(collection) {
+    var mergeIntoMap = merger ? (function(value, key) {
+      var existing = collection.get(key, NOT_SET);
+      collection.set(key, existing === NOT_SET ? value : merger(existing, value));
+    }) : (function(value, key) {
+      collection.set(key, value);
+    });
+    for (var ii = 0; ii < seqs.length; ii++) {
+      seqs[ii].forEach(mergeIntoMap);
+    }
+  }));
+}
+function updateInDeepMap(collection, keyPath, notSetValue, updater, offset) {
+  invariant(!collection || collection.set, 'updateIn with invalid keyPath');
+  var key = keyPath[offset];
+  var existing = collection ? collection.get(key, NOT_SET) : NOT_SET;
+  var existingValue = existing === NOT_SET ? undefined : existing;
+  var value = offset === keyPath.length - 1 ? updater(existing === NOT_SET ? notSetValue : existing) : updateInDeepMap(existingValue, keyPath, notSetValue, updater, offset + 1);
+  return value === existingValue ? collection : value === NOT_SET ? collection && collection.remove(key) : (collection || Map.empty()).set(key, value);
+}
+function popCount(x) {
+  x = x - ((x >> 1) & 0x55555555);
+  x = (x & 0x33333333) + ((x >> 2) & 0x33333333);
+  x = (x + (x >> 4)) & 0x0f0f0f0f;
+  x = x + (x >> 8);
+  x = x + (x >> 16);
+  return x & 0x7f;
+}
+function setIn(array, idx, val, canEdit) {
+  var newArray = canEdit ? array : arrCopy(array);
+  newArray[idx] = val;
+  return newArray;
+}
+function spliceIn(array, idx, val, canEdit) {
+  var newLen = array.length + 1;
+  if (canEdit && idx + 1 === newLen) {
+    array[idx] = val;
+    return array;
+  }
+  var newArray = new Array(newLen);
+  var after = 0;
+  for (var ii = 0; ii < newLen; ii++) {
+    if (ii === idx) {
+      newArray[ii] = val;
+      after = -1;
+    } else {
+      newArray[ii] = array[ii + after];
+    }
+  }
+  return newArray;
+}
+function spliceOut(array, idx, canEdit) {
+  var newLen = array.length - 1;
+  if (canEdit && idx === newLen) {
+    array.pop();
+    return array;
+  }
+  var newArray = new Array(newLen);
+  var after = 0;
+  for (var ii = 0; ii < newLen; ii++) {
+    if (ii === idx) {
+      after = 1;
+    }
+    newArray[ii] = array[ii + after];
+  }
+  return newArray;
+}
+var MAX_BITMAP_SIZE = SIZE / 2;
+var MIN_ARRAY_SIZE = SIZE / 4;
+var EMPTY_MAP;
+var Vector = function Vector() {
+  for (var values = [],
+      $__6 = 0; $__6 < arguments.length; $__6++)
+    values[$__6] = arguments[$__6];
+  return $Vector.from(values);
+};
+var $Vector = Vector;
+($traceurRuntime.createClass)(Vector, {
+  toString: function() {
+    return this.__toString('Vector [', ']');
+  },
+  get: function(index, notSetValue) {
+    index = wrapIndex(this, index);
+    if (index < 0 || index >= this.length) {
+      return notSetValue;
+    }
+    index += this._origin;
+    var node = vectorNodeFor(this, index);
+    return node && node.array[index & MASK];
+  },
+  set: function(index, value) {
+    return updateVector(this, index, value);
+  },
+  remove: function(index) {
+    return updateVector(this, index, NOT_SET);
+  },
+  clear: function() {
+    if (this.length === 0) {
+      return this;
+    }
+    if (this.__ownerID) {
+      this.length = this._origin = this._size = 0;
+      this._level = SHIFT;
+      this._root = this._tail = null;
+      this.__hash = undefined;
+      this.__altered = true;
+      return this;
+    }
+    return $Vector.empty();
+  },
+  push: function() {
+    var values = arguments;
+    var oldLength = this.length;
+    return this.withMutations((function(vect) {
+      setVectorBounds(vect, 0, oldLength + values.length);
+      for (var ii = 0; ii < values.length; ii++) {
+        vect.set(oldLength + ii, values[ii]);
+      }
+    }));
+  },
+  pop: function() {
+    return setVectorBounds(this, 0, -1);
+  },
+  unshift: function() {
+    var values = arguments;
+    return this.withMutations((function(vect) {
+      setVectorBounds(vect, -values.length);
+      for (var ii = 0; ii < values.length; ii++) {
+        vect.set(ii, values[ii]);
+      }
+    }));
+  },
+  shift: function() {
+    return setVectorBounds(this, 1);
+  },
+  merge: function() {
+    return mergeIntoVectorWith(this, null, arguments);
+  },
+  mergeWith: function(merger) {
+    for (var seqs = [],
+        $__7 = 1; $__7 < arguments.length; $__7++)
+      seqs[$__7 - 1] = arguments[$__7];
+    return mergeIntoVectorWith(this, merger, seqs);
+  },
+  mergeDeep: function() {
+    return mergeIntoVectorWith(this, deepMerger(null), arguments);
+  },
+  mergeDeepWith: function(merger) {
+    for (var seqs = [],
+        $__8 = 1; $__8 < arguments.length; $__8++)
+      seqs[$__8 - 1] = arguments[$__8];
+    return mergeIntoVectorWith(this, deepMerger(merger), seqs);
+  },
+  setLength: function(length) {
+    return setVectorBounds(this, 0, length);
+  },
+  slice: function(begin, end) {
+    var sliceSequence = $traceurRuntime.superCall(this, $Vector.prototype, "slice", [begin, end]);
+    if (sliceSequence !== this) {
+      var vector = this;
+      var length = vector.length;
+      sliceSequence.toVector = (function() {
+        return setVectorBounds(vector, begin < 0 ? Math.max(0, length + begin) : length ? Math.min(length, begin) : begin, end == null ? length : end < 0 ? Math.max(0, length + end) : length ? Math.min(length, end) : end);
+      });
+    }
+    return sliceSequence;
+  },
+  __iterator: function(type, reverse) {
+    return new VectorIterator(this, type, reverse);
+  },
+  __iterate: function(fn, reverse) {
+    var $__0 = this;
+    var iterations = 0;
+    var eachFn = (function(v) {
+      return fn(v, iterations++, $__0);
+    });
+    var tailOffset = getTailOffset(this._size);
+    if (reverse) {
+      iterateVNode(this._tail, 0, tailOffset - this._origin, this._size - this._origin, eachFn, reverse) && iterateVNode(this._root, this._level, -this._origin, tailOffset - this._origin, eachFn, reverse);
+    } else {
+      iterateVNode(this._root, this._level, -this._origin, tailOffset - this._origin, eachFn, reverse) && iterateVNode(this._tail, 0, tailOffset - this._origin, this._size - this._origin, eachFn, reverse);
+    }
+    return iterations;
+  },
+  __ensureOwner: function(ownerID) {
+    if (ownerID === this.__ownerID) {
+      return this;
+    }
+    if (!ownerID) {
+      this.__ownerID = ownerID;
+      return this;
+    }
+    return makeVector(this._origin, this._size, this._level, this._root, this._tail, ownerID, this.__hash);
+  }
+}, {
+  empty: function() {
+    return EMPTY_VECT || (EMPTY_VECT = makeVector(0, 0, SHIFT));
+  },
+  from: function(sequence) {
+    if (!sequence || sequence.length === 0) {
+      return $Vector.empty();
+    }
+    if (sequence.constructor === $Vector) {
+      return sequence;
+    }
+    var isArray = Array.isArray(sequence);
+    if (sequence.length > 0 && sequence.length < SIZE) {
+      return makeVector(0, sequence.length, SHIFT, null, new VNode(isArray ? arrCopy(sequence) : Sequence(sequence).toArray()));
+    }
+    if (!isArray) {
+      sequence = Sequence(sequence).valueSeq();
+    }
+    return $Vector.empty().merge(sequence);
+  }
+}, IndexedSequence);
+var VectorPrototype = Vector.prototype;
+VectorPrototype[DELETE] = VectorPrototype.remove;
+VectorPrototype.setIn = MapPrototype.setIn;
+VectorPrototype.removeIn = MapPrototype.removeIn;
+VectorPrototype.update = MapPrototype.update;
+VectorPrototype.updateIn = MapPrototype.updateIn;
+VectorPrototype.cursor = MapPrototype.cursor;
+VectorPrototype.withMutations = MapPrototype.withMutations;
+VectorPrototype.asMutable = MapPrototype.asMutable;
+VectorPrototype.asImmutable = MapPrototype.asImmutable;
+VectorPrototype.wasAltered = MapPrototype.wasAltered;
+var VNode = function VNode(array, ownerID) {
+  this.array = array;
+  this.ownerID = ownerID;
+};
+var $VNode = VNode;
+($traceurRuntime.createClass)(VNode, {
+  removeBefore: function(ownerID, level, index) {
+    if (index === level ? 1 << level : 0 || this.array.length === 0) {
+      return this;
+    }
+    var originIndex = (index >>> level) & MASK;
+    if (originIndex >= this.array.length) {
+      return new $VNode([], ownerID);
+    }
+    var removingFirst = originIndex === 0;
+    var newChild;
+    if (level > 0) {
+      var oldChild = this.array[originIndex];
+      newChild = oldChild && oldChild.removeBefore(ownerID, level - SHIFT, index);
+      if (newChild === oldChild && removingFirst) {
+        return this;
+      }
+    }
+    if (removingFirst && !newChild) {
+      return this;
+    }
+    var editable = editableVNode(this, ownerID);
+    if (!removingFirst) {
+      for (var ii = 0; ii < originIndex; ii++) {
+        editable.array[ii] = undefined;
+      }
+    }
+    if (newChild) {
+      editable.array[originIndex] = newChild;
+    }
+    return editable;
+  },
+  removeAfter: function(ownerID, level, index) {
+    if (index === level ? 1 << level : 0 || this.array.length === 0) {
+      return this;
+    }
+    var sizeIndex = ((index - 1) >>> level) & MASK;
+    if (sizeIndex >= this.array.length) {
+      return this;
+    }
+    var removingLast = sizeIndex === this.array.length - 1;
+    var newChild;
+    if (level > 0) {
+      var oldChild = this.array[sizeIndex];
+      newChild = oldChild && oldChild.removeAfter(ownerID, level - SHIFT, index);
+      if (newChild === oldChild && removingLast) {
+        return this;
+      }
+    }
+    if (removingLast && !newChild) {
+      return this;
+    }
+    var editable = editableVNode(this, ownerID);
+    if (!removingLast) {
+      editable.array.pop();
+    }
+    if (newChild) {
+      editable.array[sizeIndex] = newChild;
+    }
+    return editable;
+  }
+}, {});
+function iterateVNode(node, level, offset, max, fn, reverse) {
+  var ii;
+  var array = node && node.array;
+  if (level === 0) {
+    var from = offset < 0 ? -offset : 0;
+    var to = max - offset;
+    if (to > SIZE) {
+      to = SIZE;
+    }
+    for (ii = from; ii < to; ii++) {
+      if (fn(array && array[reverse ? from + to - 1 - ii : ii]) === false) {
+        return false;
+      }
+    }
+  } else {
+    var step = 1 << level;
+    var newLevel = level - SHIFT;
+    for (ii = 0; ii <= MASK; ii++) {
+      var levelIndex = reverse ? MASK - ii : ii;
+      var newOffset = offset + (levelIndex << level);
+      if (newOffset < max && newOffset + step > 0) {
+        var nextNode = array && array[levelIndex];
+        if (!iterateVNode(nextNode, newLevel, newOffset, max, fn, reverse)) {
+          return false;
+        }
+      }
+    }
+  }
+  return true;
+}
+var VectorIterator = function VectorIterator(vector, type, reverse) {
+  this._type = type;
+  this._reverse = !!reverse;
+  this._maxIndex = vector.length - 1;
+  var tailOffset = getTailOffset(vector._size);
+  var rootStack = vectIteratorFrame(vector._root && vector._root.array, vector._level, -vector._origin, tailOffset - vector._origin - 1);
+  var tailStack = vectIteratorFrame(vector._tail && vector._tail.array, 0, tailOffset - vector._origin, vector._size - vector._origin - 1);
+  this._stack = reverse ? tailStack : rootStack;
+  this._stack.__prev = reverse ? rootStack : tailStack;
+};
+($traceurRuntime.createClass)(VectorIterator, {next: function() {
+    var stack = this._stack;
+    while (stack) {
+      var array = stack.array;
+      var rawIndex = stack.index++;
+      if (this._reverse) {
+        rawIndex = MASK - rawIndex;
+        if (rawIndex > stack.rawMax) {
+          rawIndex = stack.rawMax;
+          stack.index = SIZE - rawIndex;
+        }
+      }
+      if (rawIndex >= 0 && rawIndex < SIZE && rawIndex <= stack.rawMax) {
+        var value = array && array[rawIndex];
+        if (stack.level === 0) {
+          var type = this._type;
+          var index;
+          if (type !== 1) {
+            index = stack.offset + (rawIndex << stack.level);
+            if (this._reverse) {
+              index = this._maxIndex - index;
+            }
+          }
+          return iteratorValue(type, index, value);
+        } else {
+          this._stack = stack = vectIteratorFrame(value && value.array, stack.level - SHIFT, stack.offset + (rawIndex << stack.level), stack.max, stack);
+        }
+        continue;
+      }
+      stack = this._stack = this._stack.__prev;
+    }
+    return iteratorDone();
+  }}, {}, Iterator);
+function vectIteratorFrame(array, level, offset, max, prevFrame) {
+  return {
+    array: array,
+    level: level,
+    offset: offset,
+    max: max,
+    rawMax: ((max - offset) >> level),
+    index: 0,
+    __prev: prevFrame
+  };
+}
+function makeVector(origin, size, level, root, tail, ownerID, hash) {
+  var vect = Object.create(VectorPrototype);
+  vect.length = size - origin;
+  vect._origin = origin;
+  vect._size = size;
+  vect._level = level;
+  vect._root = root;
+  vect._tail = tail;
+  vect.__ownerID = ownerID;
+  vect.__hash = hash;
+  vect.__altered = false;
+  return vect;
+}
+function updateVector(vector, index, value) {
+  index = wrapIndex(vector, index);
+  if (index >= vector.length || index < 0) {
+    return value === NOT_SET ? vector : vector.withMutations((function(vect) {
+      index < 0 ? setVectorBounds(vect, index).set(0, value) : setVectorBounds(vect, 0, index + 1).set(index, value);
+    }));
+  }
+  index += vector._origin;
+  var newTail = vector._tail;
+  var newRoot = vector._root;
+  var didAlter = MakeRef(DID_ALTER);
+  if (index >= getTailOffset(vector._size)) {
+    newTail = updateVNode(newTail, vector.__ownerID, 0, index, value, didAlter);
+  } else {
+    newRoot = updateVNode(newRoot, vector.__ownerID, vector._level, index, value, didAlter);
+  }
+  if (!didAlter.value) {
+    return vector;
+  }
+  if (vector.__ownerID) {
+    vector._root = newRoot;
+    vector._tail = newTail;
+    vector.__hash = undefined;
+    vector.__altered = true;
+    return vector;
+  }
+  return makeVector(vector._origin, vector._size, vector._level, newRoot, newTail);
+}
+function updateVNode(node, ownerID, level, index, value, didAlter) {
+  var removed = value === NOT_SET;
+  var newNode;
+  var idx = (index >>> level) & MASK;
+  var nodeHas = node && idx < node.array.length;
+  if (removed && !nodeHas) {
+    return node;
+  }
+  if (level > 0) {
+    var lowerNode = node && node.array[idx];
+    var newLowerNode = updateVNode(lowerNode, ownerID, level - SHIFT, index, value, didAlter);
+    if (newLowerNode === lowerNode) {
+      return node;
+    }
+    newNode = editableVNode(node, ownerID);
+    newNode.array[idx] = newLowerNode;
+    return newNode;
+  }
+  if (!removed && nodeHas && node.array[idx] === value) {
+    return node;
+  }
+  SetRef(didAlter);
+  newNode = editableVNode(node, ownerID);
+  if (removed && idx === newNode.array.length - 1) {
+    newNode.array.pop();
+  } else {
+    newNode.array[idx] = removed ? undefined : value;
+  }
+  return newNode;
+}
+function editableVNode(node, ownerID) {
+  if (ownerID && node && ownerID === node.ownerID) {
+    return node;
+  }
+  return new VNode(node ? node.array.slice() : [], ownerID);
+}
+function vectorNodeFor(vector, rawIndex) {
+  if (rawIndex >= getTailOffset(vector._size)) {
+    return vector._tail;
+  }
+  if (rawIndex < 1 << (vector._level + SHIFT)) {
+    var node = vector._root;
+    var level = vector._level;
+    while (node && level > 0) {
+      node = node.array[(rawIndex >>> level) & MASK];
+      level -= SHIFT;
+    }
+    return node;
+  }
+}
+function setVectorBounds(vector, begin, end) {
+  var owner = vector.__ownerID || new OwnerID();
+  var oldOrigin = vector._origin;
+  var oldSize = vector._size;
+  var newOrigin = oldOrigin + begin;
+  var newSize = end == null ? oldSize : end < 0 ? oldSize + end : oldOrigin + end;
+  if (newOrigin === oldOrigin && newSize === oldSize) {
+    return vector;
+  }
+  if (newOrigin >= newSize) {
+    return vector.clear();
+  }
+  var newLevel = vector._level;
+  var newRoot = vector._root;
+  var offsetShift = 0;
+  while (newOrigin + offsetShift < 0) {
+    newRoot = new VNode(newRoot && newRoot.array.length ? [null, newRoot] : [], owner);
+    newLevel += SHIFT;
+    offsetShift += 1 << newLevel;
+  }
+  if (offsetShift) {
+    newOrigin += offsetShift;
+    oldOrigin += offsetShift;
+    newSize += offsetShift;
+    oldSize += offsetShift;
+  }
+  var oldTailOffset = getTailOffset(oldSize);
+  var newTailOffset = getTailOffset(newSize);
+  while (newTailOffset >= 1 << (newLevel + SHIFT)) {
+    newRoot = new VNode(newRoot && newRoot.array.length ? [newRoot] : [], owner);
+    newLevel += SHIFT;
+  }
+  var oldTail = vector._tail;
+  var newTail = newTailOffset < oldTailOffset ? vectorNodeFor(vector, newSize - 1) : newTailOffset > oldTailOffset ? new VNode([], owner) : oldTail;
+  if (oldTail && newTailOffset > oldTailOffset && newOrigin < oldSize && oldTail.array.length) {
+    newRoot = editableVNode(newRoot, owner);
+    var node = newRoot;
+    for (var level = newLevel; level > SHIFT; level -= SHIFT) {
+      var idx = (oldTailOffset >>> level) & MASK;
+      node = node.array[idx] = editableVNode(node.array[idx], owner);
+    }
+    node.array[(oldTailOffset >>> SHIFT) & MASK] = oldTail;
+  }
+  if (newSize < oldSize) {
+    newTail = newTail && newTail.removeAfter(owner, 0, newSize);
+  }
+  if (newOrigin >= newTailOffset) {
+    newOrigin -= newTailOffset;
+    newSize -= newTailOffset;
+    newLevel = SHIFT;
+    newRoot = null;
+    newTail = newTail && newTail.removeBefore(owner, 0, newOrigin);
+  } else if (newOrigin > oldOrigin || newTailOffset < oldTailOffset) {
+    offsetShift = 0;
+    while (newRoot) {
+      var beginIndex = (newOrigin >>> newLevel) & MASK;
+      if (beginIndex !== (newTailOffset >>> newLevel) & MASK) {
+        break;
+      }
+      if (beginIndex) {
+        offsetShift += (1 << newLevel) * beginIndex;
+      }
+      newLevel -= SHIFT;
+      newRoot = newRoot.array[beginIndex];
+    }
+    if (newRoot && newOrigin > oldOrigin) {
+      newRoot = newRoot.removeBefore(owner, newLevel, newOrigin - offsetShift);
+    }
+    if (newRoot && newTailOffset < oldTailOffset) {
+      newRoot = newRoot.removeAfter(owner, newLevel, newTailOffset - offsetShift);
+    }
+    if (offsetShift) {
+      newOrigin -= offsetShift;
+      newSize -= offsetShift;
+    }
+  }
+  if (vector.__ownerID) {
+    vector.length = newSize - newOrigin;
+    vector._origin = newOrigin;
+    vector._size = newSize;
+    vector._level = newLevel;
+    vector._root = newRoot;
+    vector._tail = newTail;
+    vector.__hash = undefined;
+    vector.__altered = true;
+    return vector;
+  }
+  return makeVector(newOrigin, newSize, newLevel, newRoot, newTail);
+}
+function mergeIntoVectorWith(vector, merger, iterables) {
+  var seqs = [];
+  for (var ii = 0; ii < iterables.length; ii++) {
+    var seq = iterables[ii];
+    seq && seqs.push(Sequence(seq));
+  }
+  var maxLength = Math.max.apply(null, seqs.map((function(s) {
+    return s.length || 0;
+  })));
+  if (maxLength > vector.length) {
+    vector = vector.setLength(maxLength);
+  }
+  return mergeIntoCollectionWith(vector, merger, seqs);
+}
+function getTailOffset(size) {
+  return size < SIZE ? 0 : (((size - 1) >>> SHIFT) << SHIFT);
+}
+var EMPTY_VECT;
+var Stack = function Stack() {
+  for (var values = [],
+      $__9 = 0; $__9 < arguments.length; $__9++)
+    values[$__9] = arguments[$__9];
+  return $Stack.from(values);
+};
+var $Stack = Stack;
+($traceurRuntime.createClass)(Stack, {
+  toString: function() {
+    return this.__toString('Stack [', ']');
+  },
+  get: function(index, notSetValue) {
+    var head = this._head;
+    while (head && index--) {
+      head = head.next;
+    }
+    return head ? head.value : notSetValue;
+  },
+  peek: function() {
+    return this._head && this._head.value;
+  },
+  push: function() {
+    if (arguments.length === 0) {
+      return this;
+    }
+    var newLength = this.length + arguments.length;
+    var head = this._head;
+    for (var ii = arguments.length - 1; ii >= 0; ii--) {
+      head = {
+        value: arguments[ii],
+        next: head
+      };
+    }
+    if (this.__ownerID) {
+      this.length = newLength;
+      this._head = head;
+      this.__hash = undefined;
+      this.__altered = true;
+      return this;
+    }
+    return makeStack(newLength, head);
+  },
+  pushAll: function(seq) {
+    seq = Sequence(seq);
+    if (seq.length === 0) {
+      return this;
+    }
+    var newLength = this.length;
+    var head = this._head;
+    seq.reverse().forEach((function(value) {
+      newLength++;
+      head = {
+        value: value,
+        next: head
+      };
+    }));
+    if (this.__ownerID) {
+      this.length = newLength;
+      this._head = head;
+      this.__hash = undefined;
+      this.__altered = true;
+      return this;
+    }
+    return makeStack(newLength, head);
+  },
+  pop: function() {
+    return this.slice(1);
+  },
+  unshift: function() {
+    return this.push.apply(this, arguments);
+  },
+  unshiftAll: function(seq) {
+    return this.pushAll(seq);
+  },
+  shift: function() {
+    return this.pop.apply(this, arguments);
+  },
+  clear: function() {
+    if (this.length === 0) {
+      return this;
+    }
+    if (this.__ownerID) {
+      this.length = 0;
+      this._head = undefined;
+      this.__hash = undefined;
+      this.__altered = true;
+      return this;
+    }
+    return $Stack.empty();
+  },
+  slice: function(begin, end) {
+    if (wholeSlice(begin, end, this.length)) {
+      return this;
+    }
+    var resolvedBegin = resolveBegin(begin, this.length);
+    var resolvedEnd = resolveEnd(end, this.length);
+    if (resolvedEnd !== this.length) {
+      return $traceurRuntime.superCall(this, $Stack.prototype, "slice", [begin, end]);
+    }
+    var newLength = this.length - resolvedBegin;
+    var head = this._head;
+    while (resolvedBegin--) {
+      head = head.next;
+    }
+    if (this.__ownerID) {
+      this.length = newLength;
+      this._head = head;
+      this.__hash = undefined;
+      this.__altered = true;
+      return this;
+    }
+    return makeStack(newLength, head);
+  },
+  __ensureOwner: function(ownerID) {
+    if (ownerID === this.__ownerID) {
+      return this;
+    }
+    if (!ownerID) {
+      this.__ownerID = ownerID;
+      this.__altered = false;
+      return this;
+    }
+    return makeStack(this.length, this._head, ownerID, this.__hash);
+  },
+  __iterateUncached: function(fn, reverse) {
+    if (reverse) {
+      return this.cacheResult().__iterate(fn, reverse);
+    }
+    var iterations = 0;
+    var node = this._head;
+    while (node) {
+      if (fn(node.value, iterations++, this) === false) {
+        break;
+      }
+      node = node.next;
+    }
+    return iterations;
+  },
+  __iteratorUncached: function(type, reverse) {
+    if (reverse) {
+      return this.cacheResult().__iterator(type, reverse);
+    }
+    var iterations = 0;
+    var node = this._head;
+    return new Iterator((function() {
+      if (node) {
+        var value = node.value;
+        node = node.next;
+        return iteratorValue(type, iterations++, value);
+      }
+      return iteratorDone();
+    }));
+  }
+}, {
+  empty: function() {
+    return EMPTY_STACK || (EMPTY_STACK = makeStack(0));
+  },
+  from: function(sequence) {
+    var stack = $Stack.empty();
+    return sequence ? sequence.constructor === $Stack ? sequence : stack.unshiftAll(sequence) : stack;
+  }
+}, IndexedSequence);
+var StackPrototype = Stack.prototype;
+StackPrototype.withMutations = MapPrototype.withMutations;
+StackPrototype.asMutable = MapPrototype.asMutable;
+StackPrototype.asImmutable = MapPrototype.asImmutable;
+StackPrototype.wasAltered = MapPrototype.wasAltered;
+function makeStack(length, head, ownerID, hash) {
+  var map = Object.create(StackPrototype);
+  map.length = length;
+  map._head = head;
+  map.__ownerID = ownerID;
+  map.__hash = hash;
+  map.__altered = false;
+  return map;
+}
+var EMPTY_STACK;
+var Set = function Set() {
+  for (var values = [],
+      $__10 = 0; $__10 < arguments.length; $__10++)
+    values[$__10] = arguments[$__10];
+  return $Set.from(values);
+};
+var $Set = Set;
+($traceurRuntime.createClass)(Set, {
+  toString: function() {
+    return this.__toString('Set {', '}');
+  },
+  get: function(value, notSetValue) {
+    return this._map.has(value) ? value : notSetValue;
+  },
+  contains: function(value) {
+    return this._map.has(value);
+  },
+  add: function(value) {
+    var newMap = this._map.set(value, null);
+    if (this.__ownerID) {
+      this.length = newMap.length;
+      this._map = newMap;
+      return this;
+    }
+    return newMap === this._map ? this : makeSet(newMap);
+  },
+  remove: function(value) {
+    var newMap = this._map.remove(value);
+    if (this.__ownerID) {
+      this.length = newMap.length;
+      this._map = newMap;
+      return this;
+    }
+    return newMap === this._map ? this : newMap.length === 0 ? $Set.empty() : makeSet(newMap);
+  },
+  clear: function() {
+    if (this.length === 0) {
+      return this;
+    }
+    if (this.__ownerID) {
+      this.length = 0;
+      this._map.clear();
+      return this;
+    }
+    return $Set.empty();
+  },
+  union: function() {
+    var seqs = arguments;
+    if (seqs.length === 0) {
+      return this;
+    }
+    return this.withMutations((function(set) {
+      for (var ii = 0; ii < seqs.length; ii++) {
+        Sequence(seqs[ii]).forEach((function(value) {
+          return set.add(value);
+        }));
+      }
+    }));
+  },
+  intersect: function() {
+    for (var seqs = [],
+        $__11 = 0; $__11 < arguments.length; $__11++)
+      seqs[$__11] = arguments[$__11];
+    if (seqs.length === 0) {
+      return this;
+    }
+    seqs = seqs.map((function(seq) {
+      return Sequence(seq);
+    }));
+    var originalSet = this;
+    return this.withMutations((function(set) {
+      originalSet.forEach((function(value) {
+        if (!seqs.every((function(seq) {
+          return seq.contains(value);
+        }))) {
+          set.remove(value);
+        }
+      }));
+    }));
+  },
+  subtract: function() {
+    for (var seqs = [],
+        $__12 = 0; $__12 < arguments.length; $__12++)
+      seqs[$__12] = arguments[$__12];
+    if (seqs.length === 0) {
+      return this;
+    }
+    seqs = seqs.map((function(seq) {
+      return Sequence(seq);
+    }));
+    var originalSet = this;
+    return this.withMutations((function(set) {
+      originalSet.forEach((function(value) {
+        if (seqs.some((function(seq) {
+          return seq.contains(value);
+        }))) {
+          set.remove(value);
+        }
+      }));
+    }));
+  },
+  isSubset: function(seq) {
+    seq = Sequence(seq);
+    return this.every((function(value) {
+      return seq.contains(value);
+    }));
+  },
+  isSuperset: function(seq) {
+    var set = this;
+    seq = Sequence(seq);
+    return seq.every((function(value) {
+      return set.contains(value);
+    }));
+  },
+  merge: function() {
+    return this.union.apply(this, arguments);
+  },
+  mergeWith: function(merger) {
+    for (var seqs = [],
+        $__13 = 1; $__13 < arguments.length; $__13++)
+      seqs[$__13 - 1] = arguments[$__13];
+    return this.union.apply(this, seqs);
+  },
+  wasAltered: function() {
+    return this._map.wasAltered();
+  },
+  __iterate: function(fn, reverse) {
+    var $__0 = this;
+    return this._map.__iterate((function(_, k) {
+      return fn(k, k, $__0);
+    }), reverse);
+  },
+  __iterator: function(type, reverse) {
+    return this._map.map((function(_, k) {
+      return k;
+    })).__iterator(type, reverse);
+  },
+  __ensureOwner: function(ownerID) {
+    if (ownerID === this.__ownerID) {
+      return this;
+    }
+    var newMap = this._map.__ensureOwner(ownerID);
+    if (!ownerID) {
+      this.__ownerID = ownerID;
+      this._map = newMap;
+      return this;
+    }
+    return makeSet(newMap, ownerID);
+  }
+}, {
+  empty: function() {
+    return EMPTY_SET || (EMPTY_SET = makeSet(Map.empty()));
+  },
+  from: function(sequence) {
+    var set = $Set.empty();
+    return sequence ? sequence.constructor === $Set ? sequence : set.union(sequence) : set;
+  },
+  fromKeys: function(sequence) {
+    return $Set.from(Sequence(sequence).flip());
+  }
+}, Sequence);
+var SetPrototype = Set.prototype;
+SetPrototype[DELETE] = SetPrototype.remove;
+SetPrototype[ITERATOR_SYMBOL] = SetPrototype.values;
+SetPrototype.mergeDeep = SetPrototype.merge;
+SetPrototype.mergeDeepWith = SetPrototype.mergeWith;
+SetPrototype.withMutations = MapPrototype.withMutations;
+SetPrototype.asMutable = MapPrototype.asMutable;
+SetPrototype.asImmutable = MapPrototype.asImmutable;
+SetPrototype.__toJS = IndexedSequencePrototype.__toJS;
+SetPrototype.__toStringMapper = IndexedSequencePrototype.__toStringMapper;
+function makeSet(map, ownerID) {
+  var set = Object.create(SetPrototype);
+  set.length = map ? map.length : 0;
+  set._map = map;
+  set.__ownerID = ownerID;
+  return set;
+}
+var EMPTY_SET;
+var OrderedMap = function OrderedMap(sequence) {
+  var map = $OrderedMap.empty();
+  return sequence ? sequence.constructor === $OrderedMap ? sequence : map.merge(sequence) : map;
+};
+var $OrderedMap = OrderedMap;
+($traceurRuntime.createClass)(OrderedMap, {
+  toString: function() {
+    return this.__toString('OrderedMap {', '}');
+  },
+  get: function(k, notSetValue) {
+    var index = this._map.get(k);
+    return index != null ? this._vector.get(index)[1] : notSetValue;
+  },
+  clear: function() {
+    if (this.length === 0) {
+      return this;
+    }
+    if (this.__ownerID) {
+      this.length = 0;
+      this._map.clear();
+      this._vector.clear();
+      return this;
+    }
+    return $OrderedMap.empty();
+  },
+  set: function(k, v) {
+    return updateOrderedMap(this, k, v);
+  },
+  remove: function(k) {
+    return updateOrderedMap(this, k, NOT_SET);
+  },
+  wasAltered: function() {
+    return this._map.wasAltered() || this._vector.wasAltered();
+  },
+  __iterate: function(fn, reverse) {
+    var $__0 = this;
+    return this._vector.__iterate((function(entry) {
+      return entry && fn(entry[1], entry[0], $__0);
+    }), reverse);
+  },
+  __iterator: function(type, reverse) {
+    return this._vector.fromEntrySeq().__iterator(type, reverse);
+  },
+  __ensureOwner: function(ownerID) {
+    if (ownerID === this.__ownerID) {
+      return this;
+    }
+    var newMap = this._map.__ensureOwner(ownerID);
+    var newVector = this._vector.__ensureOwner(ownerID);
+    if (!ownerID) {
+      this.__ownerID = ownerID;
+      this._map = newMap;
+      this._vector = newVector;
+      return this;
+    }
+    return makeOrderedMap(newMap, newVector, ownerID, this.__hash);
+  }
+}, {empty: function() {
+    return EMPTY_ORDERED_MAP || (EMPTY_ORDERED_MAP = makeOrderedMap(Map.empty(), Vector.empty()));
+  }}, Map);
+OrderedMap.from = OrderedMap;
+OrderedMap.prototype[DELETE] = OrderedMap.prototype.remove;
+function makeOrderedMap(map, vector, ownerID, hash) {
+  var omap = Object.create(OrderedMap.prototype);
+  omap.length = map ? map.length : 0;
+  omap._map = map;
+  omap._vector = vector;
+  omap.__ownerID = ownerID;
+  omap.__hash = hash;
+  return omap;
+}
+function updateOrderedMap(omap, k, v) {
+  var map = omap._map;
+  var vector = omap._vector;
+  var i = map.get(k);
+  var has = i !== undefined;
+  var removed = v === NOT_SET;
+  if ((!has && removed) || (has && v === vector.get(i)[1])) {
+    return omap;
+  }
+  if (!has) {
+    i = vector.length;
+  }
+  var newMap = removed ? map.remove(k) : has ? map : map.set(k, i);
+  var newVector = removed ? vector.remove(i) : vector.set(i, [k, v]);
+  if (omap.__ownerID) {
+    omap.length = newMap.length;
+    omap._map = newMap;
+    omap._vector = newVector;
+    omap.__hash = undefined;
+    return omap;
+  }
+  return makeOrderedMap(newMap, newVector);
+}
+var EMPTY_ORDERED_MAP;
+var Record = function Record(defaultValues, name) {
+  var RecordType = function(values) {
+    if (!(this instanceof RecordType)) {
+      return new RecordType(values);
+    }
+    this._map = Map(values);
+  };
+  var keys = Object.keys(defaultValues);
+  var RecordTypePrototype = RecordType.prototype = Object.create(RecordPrototype);
+  RecordTypePrototype.constructor = RecordType;
+  name && (RecordTypePrototype._name = name);
+  RecordTypePrototype._defaultValues = defaultValues;
+  RecordTypePrototype._keys = keys;
+  RecordTypePrototype.length = keys.length;
+  try {
+    Sequence(defaultValues).forEach((function(_, key) {
+      Object.defineProperty(RecordType.prototype, key, {
+        get: function() {
+          return this.get(key);
+        },
+        set: function(value) {
+          invariant(this.__ownerID, 'Cannot set on an immutable record.');
+          this.set(key, value);
+        }
+      });
+    }));
+  } catch (error) {}
+  return RecordType;
+};
+($traceurRuntime.createClass)(Record, {
+  toString: function() {
+    return this.__toString(this._name + ' {', '}');
+  },
+  has: function(k) {
+    return this._defaultValues.hasOwnProperty(k);
+  },
+  get: function(k, notSetValue) {
+    if (notSetValue !== undefined && !this.has(k)) {
+      return notSetValue;
+    }
+    return this._map.get(k, this._defaultValues[k]);
+  },
+  clear: function() {
+    if (this.__ownerID) {
+      this._map.clear();
+      return this;
+    }
+    var SuperRecord = Object.getPrototypeOf(this).constructor;
+    return SuperRecord._empty || (SuperRecord._empty = makeRecord(this, Map.empty()));
+  },
+  set: function(k, v) {
+    if (!this.has(k)) {
+      throw new Error('Cannot set unknown key "' + k + '" on ' + this._name);
+    }
+    var newMap = this._map.set(k, v);
+    if (this.__ownerID || newMap === this._map) {
+      return this;
+    }
+    return makeRecord(this, newMap);
+  },
+  remove: function(k) {
+    if (k == null || !this.has(k)) {
+      return this;
+    }
+    var newMap = this._map.remove(k);
+    if (this.__ownerID || newMap === this._map) {
+      return this;
+    }
+    return makeRecord(this, newMap);
+  },
+  keys: function() {
+    return this._map.keys();
+  },
+  values: function() {
+    return this._map.values();
+  },
+  entries: function() {
+    return this._map.entries();
+  },
+  wasAltered: function() {
+    return this._map.wasAltered();
+  },
+  __iterator: function(type, reverse) {
+    return this._map.__iterator(type, reverse);
+  },
+  __iterate: function(fn, reverse) {
+    var $__0 = this;
+    return Sequence(this._defaultValues).map((function(_, k) {
+      return $__0.get(k);
+    })).__iterate(fn, reverse);
+  },
+  __ensureOwner: function(ownerID) {
+    if (ownerID === this.__ownerID) {
+      return this;
+    }
+    var newMap = this._map && this._map.__ensureOwner(ownerID);
+    if (!ownerID) {
+      this.__ownerID = ownerID;
+      this._map = newMap;
+      return this;
+    }
+    return makeRecord(this, newMap, ownerID);
+  }
+}, {}, Sequence);
+var RecordPrototype = Record.prototype;
+RecordPrototype._name = 'Record';
+RecordPrototype[DELETE] = RecordPrototype.remove;
+RecordPrototype.merge = MapPrototype.merge;
+RecordPrototype.mergeWith = MapPrototype.mergeWith;
+RecordPrototype.mergeDeep = MapPrototype.mergeDeep;
+RecordPrototype.mergeDeepWith = MapPrototype.mergeDeepWith;
+RecordPrototype.update = MapPrototype.update;
+RecordPrototype.updateIn = MapPrototype.updateIn;
+RecordPrototype.cursor = MapPrototype.cursor;
+RecordPrototype.withMutations = MapPrototype.withMutations;
+RecordPrototype.asMutable = MapPrototype.asMutable;
+RecordPrototype.asImmutable = MapPrototype.asImmutable;
+function makeRecord(likeRecord, map, ownerID) {
+  var record = Object.create(Object.getPrototypeOf(likeRecord));
+  record._map = map;
+  record.__ownerID = ownerID;
+  return record;
+}
+var Range = function Range(start, end, step) {
+  if (!(this instanceof $Range)) {
+    return new $Range(start, end, step);
+  }
+  invariant(step !== 0, 'Cannot step a Range by 0');
+  start = start || 0;
+  if (end == null) {
+    end = Infinity;
+  }
+  if (start === end && __EMPTY_RANGE) {
+    return __EMPTY_RANGE;
+  }
+  step = step == null ? 1 : Math.abs(step);
+  if (end < start) {
+    step = -step;
+  }
+  this._start = start;
+  this._end = end;
+  this._step = step;
+  this.length = Math.max(0, Math.ceil((end - start) / step - 1) + 1);
+};
+var $Range = Range;
+($traceurRuntime.createClass)(Range, {
+  toString: function() {
+    if (this.length === 0) {
+      return 'Range []';
+    }
+    return 'Range [ ' + this._start + '...' + this._end + (this._step > 1 ? ' by ' + this._step : '') + ' ]';
+  },
+  get: function(index, notSetValue) {
+    return this.has(index) ? this._start + wrapIndex(this, index) * this._step : notSetValue;
+  },
+  contains: function(searchValue) {
+    var possibleIndex = (searchValue - this._start) / this._step;
+    return possibleIndex >= 0 && possibleIndex < this.length && possibleIndex === Math.floor(possibleIndex);
+  },
+  slice: function(begin, end) {
+    if (wholeSlice(begin, end, this.length)) {
+      return this;
+    }
+    begin = resolveBegin(begin, this.length);
+    end = resolveEnd(end, this.length);
+    if (end <= begin) {
+      return __EMPTY_RANGE;
+    }
+    return new $Range(this.get(begin, this._end), this.get(end, this._end), this._step);
+  },
+  indexOf: function(searchValue) {
+    var offsetValue = searchValue - this._start;
+    if (offsetValue % this._step === 0) {
+      var index = offsetValue / this._step;
+      if (index >= 0 && index < this.length) {
+        return index;
+      }
+    }
+    return -1;
+  },
+  lastIndexOf: function(searchValue) {
+    return this.indexOf(searchValue);
+  },
+  take: function(amount) {
+    return this.slice(0, Math.max(0, amount));
+  },
+  skip: function(amount) {
+    return this.slice(Math.max(0, amount));
+  },
+  __iterate: function(fn, reverse) {
+    var maxIndex = this.length - 1;
+    var step = this._step;
+    var value = reverse ? this._start + maxIndex * step : this._start;
+    for (var ii = 0; ii <= maxIndex; ii++) {
+      if (fn(value, ii, this) === false) {
+        return ii + 1;
+      }
+      value += reverse ? -step : step;
+    }
+    return ii;
+  },
+  __iterator: function(type, reverse) {
+    var maxIndex = this.length - 1;
+    var step = this._step;
+    var value = reverse ? this._start + maxIndex * step : this._start;
+    var ii = 0;
+    return new Iterator((function() {
+      var v = value;
+      value += reverse ? -step : step;
+      return ii > maxIndex ? iteratorDone() : iteratorValue(type, ii++, v);
+    }));
+  },
+  __deepEquals: function(other) {
+    return other instanceof $Range ? this._start === other._start && this._end === other._end && this._step === other._step : $traceurRuntime.superCall(this, $Range.prototype, "__deepEquals", [other]);
+  }
+}, {}, IndexedSequence);
+var RangePrototype = Range.prototype;
+RangePrototype.__toJS = RangePrototype.toArray;
+RangePrototype.first = VectorPrototype.first;
+RangePrototype.last = VectorPrototype.last;
+var __EMPTY_RANGE = Range(0, 0);
+var Repeat = function Repeat(value, times) {
+  if (times === 0 && EMPTY_REPEAT) {
+    return EMPTY_REPEAT;
+  }
+  if (!(this instanceof $Repeat)) {
+    return new $Repeat(value, times);
+  }
+  this._value = value;
+  this.length = times == null ? Infinity : Math.max(0, times);
+};
+var $Repeat = Repeat;
+($traceurRuntime.createClass)(Repeat, {
+  toString: function() {
+    if (this.length === 0) {
+      return 'Repeat []';
+    }
+    return 'Repeat [ ' + this._value + ' ' + this.length + ' times ]';
+  },
+  get: function(index, notSetValue) {
+    return this.has(index) ? this._value : notSetValue;
+  },
+  contains: function(searchValue) {
+    return is(this._value, searchValue);
+  },
+  slice: function(begin, end) {
+    var length = this.length;
+    begin = begin < 0 ? Math.max(0, length + begin) : Math.min(length, begin);
+    end = end == null ? length : end > 0 ? Math.min(length, end) : Math.max(0, length + end);
+    return end > begin ? new $Repeat(this._value, end - begin) : EMPTY_REPEAT;
+  },
+  reverse: function() {
+    return this;
+  },
+  indexOf: function(searchValue) {
+    if (is(this._value, searchValue)) {
+      return 0;
+    }
+    return -1;
+  },
+  lastIndexOf: function(searchValue) {
+    if (is(this._value, searchValue)) {
+      return this.length;
+    }
+    return -1;
+  },
+  __iterate: function(fn, reverse) {
+    for (var ii = 0; ii < this.length; ii++) {
+      if (fn(this._value, ii, this) === false) {
+        return ii + 1;
+      }
+    }
+    return ii;
+  },
+  __iterator: function(type, reverse) {
+    var $__0 = this;
+    var ii = 0;
+    return new Iterator((function() {
+      return ii < $__0.length ? iteratorValue(type, ii++, $__0._value) : iteratorDone();
+    }));
+  },
+  __deepEquals: function(other) {
+    return other instanceof $Repeat ? is(this._value, other._value) : $traceurRuntime.superCall(this, $Repeat.prototype, "__deepEquals", [other]);
+  }
+}, {}, IndexedSequence);
+var RepeatPrototype = Repeat.prototype;
+RepeatPrototype.last = RepeatPrototype.first;
+RepeatPrototype.has = RangePrototype.has;
+RepeatPrototype.take = RangePrototype.take;
+RepeatPrototype.skip = RangePrototype.skip;
+RepeatPrototype.__toJS = RangePrototype.__toJS;
+var EMPTY_REPEAT = new Repeat(undefined, 0);
+function fromJS(json, converter) {
+  if (converter) {
+    return _fromJSWith(converter, json, '', {'': json});
+  }
+  return _fromJSDefault(json);
+}
+function _fromJSWith(converter, json, key, parentJSON) {
+  if (json && (Array.isArray(json) || json.constructor === Object)) {
+    return converter.call(parentJSON, key, Sequence(json).map((function(v, k) {
+      return _fromJSWith(converter, v, k, json);
+    })));
+  }
+  return json;
+}
+function _fromJSDefault(json) {
+  if (json) {
+    if (Array.isArray(json)) {
+      return Sequence(json).map(_fromJSDefault).toVector();
+    }
+    if (json.constructor === Object) {
+      return Sequence(json).map(_fromJSDefault).toMap();
+    }
+  }
+  return json;
+}
+var Cursor = function Cursor(rootData, keyPath, onChange, length) {
+  this.length = length;
+  this._rootData = rootData;
+  this._keyPath = keyPath;
+  this._onChange = onChange;
+};
+($traceurRuntime.createClass)(Cursor, {
+  equals: function(second) {
+    return is(this.deref(), second && (typeof second.deref === 'function' ? second.deref() : second));
+  },
+  deref: function(notSetValue) {
+    return this._rootData.getIn(this._keyPath, notSetValue);
+  },
+  get: function(key, notSetValue) {
+    if (Array.isArray(key) && key.length === 0) {
+      return this;
+    }
+    var value = this._rootData.getIn(this._keyPath.concat(key), NOT_SET);
+    return value === NOT_SET ? notSetValue : wrappedValue(this, key, value);
+  },
+  set: function(key, value) {
+    return updateCursor(this, (function(m) {
+      return m.set(key, value);
+    }), key);
+  },
+  remove: function(key) {
+    return updateCursor(this, (function(m) {
+      return m.remove(key);
+    }), key);
+  },
+  clear: function() {
+    return updateCursor(this, (function(m) {
+      return m.clear();
+    }));
+  },
+  update: function(keyOrFn, notSetValue, updater) {
+    return arguments.length === 1 ? updateCursor(this, keyOrFn) : updateCursor(this, (function(map) {
+      return map.update(keyOrFn, notSetValue, updater);
+    }), keyOrFn);
+  },
+  withMutations: function(fn) {
+    return updateCursor(this, (function(m) {
+      return (m || Map.empty()).withMutations(fn);
+    }));
+  },
+  cursor: function(subKey) {
+    return Array.isArray(subKey) && subKey.length === 0 ? this : subCursor(this, subKey);
+  },
+  __iterate: function(fn, reverse) {
+    var $__0 = this;
+    var deref = this.deref();
+    return deref && deref.__iterate ? deref.__iterate((function(v, k) {
+      return fn(wrappedValue($__0, k, v), k, $__0);
+    }), reverse) : 0;
+  },
+  __iterator: function(type, reverse) {
+    var $__0 = this;
+    var deref = this.deref();
+    var iterator = deref && deref.__iterator && deref.__iterator(ITERATE_ENTRIES, reverse);
+    return new Iterator((function() {
+      if (!iterator) {
+        return iteratorDone();
+      }
+      var step = iterator.next();
+      if (step.done) {
+        return step;
+      }
+      var entry = step.value;
+      var k = entry[0];
+      var v = entry[1];
+      return iteratorValue(type, k, wrappedValue($__0, k, v), step);
+    }));
+  }
+}, {}, Sequence);
+var CursorPrototype = Cursor.prototype;
+CursorPrototype[DELETE] = CursorPrototype.remove;
+CursorPrototype.getIn = CursorPrototype.get;
+var IndexedCursor = function IndexedCursor(rootData, keyPath, onChange, length) {
+  this.length = length;
+  this._rootData = rootData;
+  this._keyPath = keyPath;
+  this._onChange = onChange;
+};
+($traceurRuntime.createClass)(IndexedCursor, {}, {}, IndexedSequence);
+var IndexedCursorPrototype = IndexedCursor.prototype;
+IndexedCursorPrototype.equals = CursorPrototype.equals;
+IndexedCursorPrototype.deref = CursorPrototype.deref;
+IndexedCursorPrototype.get = CursorPrototype.get;
+IndexedCursorPrototype.getIn = CursorPrototype.getIn;
+IndexedCursorPrototype.set = CursorPrototype.set;
+IndexedCursorPrototype[DELETE] = IndexedCursorPrototype.remove = CursorPrototype.remove;
+IndexedCursorPrototype.clear = CursorPrototype.clear;
+IndexedCursorPrototype.update = CursorPrototype.update;
+IndexedCursorPrototype.withMutations = CursorPrototype.withMutations;
+IndexedCursorPrototype.cursor = CursorPrototype.cursor;
+IndexedCursorPrototype.__iterate = CursorPrototype.__iterate;
+IndexedCursorPrototype.__iterator = CursorPrototype.__iterator;
+function makeCursor(rootData, keyPath, onChange, value) {
+  if (arguments.length < 4) {
+    value = rootData.getIn(keyPath);
+  }
+  var length = value instanceof Sequence ? value.length : null;
+  var CursorClass = value instanceof IndexedSequence ? IndexedCursor : Cursor;
+  return new CursorClass(rootData, keyPath, onChange, length);
+}
+function wrappedValue(cursor, key, value) {
+  return value instanceof Sequence ? subCursor(cursor, key, value) : value;
+}
+function subCursor(cursor, key, value) {
+  return makeCursor(cursor._rootData, cursor._keyPath.concat(key), cursor._onChange, value);
+}
+function updateCursor(cursor, changeFn, changeKey) {
+  var newRootData = cursor._rootData.updateIn(cursor._keyPath, changeKey ? Map.empty() : undefined, changeFn);
+  var keyPath = cursor._keyPath || [];
+  cursor._onChange && cursor._onChange.call(undefined, newRootData, cursor._rootData, changeKey ? keyPath.concat(changeKey) : keyPath);
+  return makeCursor(newRootData, cursor._keyPath, cursor._onChange);
+}
+var Immutable = {
+  Sequence: Sequence,
+  Map: Map,
+  Vector: Vector,
+  Stack: Stack,
+  Set: Set,
+  OrderedMap: OrderedMap,
+  Record: Record,
+  Range: Range,
+  Repeat: Repeat,
+  is: is,
+  fromJS: fromJS
+};
+
+  return Immutable;
+}
+typeof exports === 'object' ? module.exports = universalModule() :
+  typeof define === 'function' && define.amd ? define(universalModule) :
+    Immutable = universalModule();
