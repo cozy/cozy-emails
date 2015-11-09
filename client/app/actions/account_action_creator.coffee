@@ -88,6 +88,16 @@ module.exports = AccountActionCreator =
             type: ActionTypes.NEW_ACCOUNT_ERROR
             value: errorMessage
 
+    ensureSelected: (accountID, mailboxID) =>
+        if AccountStore.selectedIsDifferentThan accountID, mailboxID
+            AccountActionCreator.selectAccount accountID, mailboxID
+
+    selectDefaultIfNoneSelected: () =>
+        selectedAccount = AccountStore.getSelected()
+        defaultAccount = AccountStore.getDefault()
+        if not selectedAccount? and defaultAccount
+            AccountActionCreator.selectAccount defaultAccount.get 'id'
+
     selectAccount: (accountID, mailboxID) ->
         changed = AccountStore.selectedIsDifferentThan accountID, mailboxID
 
@@ -102,6 +112,13 @@ module.exports = AccountActionCreator =
 
         if mailboxID? and changed and supportRFC4551
             MessageActionCreator.refreshMailbox(mailboxID)
+
+    selectAccountForMessage: (message) =>
+        # if there isn't a selected account (page loaded directly),
+        # select the message's account
+        selectedAccount = AccountStore.getSelected()
+        if not selectedAccount? and message?.accountID
+            AccountActionCreator.selectAccount message.accountID
 
     discover: (domain, callback) ->
         XHRUtils.accountDiscover domain, (err, infos) ->
