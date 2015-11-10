@@ -11434,7 +11434,7 @@ module.exports = {
   "tooltip add contact": "Add to your contacts",
   "tooltip show contact": "Show contact",
   "filters unseen": "unread",
-  "filters flagged": "stared",
+  "filters flagged": "starred",
   "filters attach": "attachments",
   "filters search placeholder": "Search...",
   "daterangepicker placeholder": "by date",
