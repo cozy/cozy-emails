@@ -8726,7 +8726,7 @@ module.exports = Toast = React.createClass({
       key: this.props.key
     }, toast.message ? div({
       className: "message"
-    }, toast.message) : void 0, toast.finished || hasErrors ? button({
+    }, t(toast.message)) : void 0, toast.finished || hasErrors ? button({
       type: "button",
       className: "close",
       onClick: this.acknowledge
@@ -8755,7 +8755,13 @@ module.exports = Toast = React.createClass({
     })))) : void 0);
   },
   showModal: function(errors) {
-    var modal;
+    var getErrors, modal;
+    getErrors = (function(_this) {
+      return function() {
+        return errors;
+      };
+    })(this);
+    errors = JSON.stringify(errors[0]);
     modal = {
       title: t('modal please contribute'),
       subtitle: t('modal please report'),
@@ -8768,7 +8774,7 @@ module.exports = Toast = React.createClass({
           "max-height": "300px",
           "word-wrap": "normal"
         }
-      }, errors.join("\n\n"))
+      }, getErrors('\n'))
     };
     return LayoutActionCreator.displayModal(modal);
   },
@@ -11301,6 +11307,8 @@ module.exports = {
   "message move ok": "Message “%{subject}” moved",
   "message move ko": "Error moving message “%{subject}”: ",
   "message mark ok": "Message marked",
+  "message flag ko": "Error marking message",
+  "message flag ok": "Message marked",
   "message mark ko": "Error marking message: ",
   "draft delete ok": "Draft “%{subject}” deleted",
   "draft delete ko": "Error deleting draft: ",
@@ -12624,7 +12632,7 @@ LayoutStore = (function(_super) {
 
   _intentAvailable = false;
 
-  _drawer = true;
+  _drawer = window.innerWidth > 1280;
 
   _modal = null;
 
@@ -15471,15 +15479,14 @@ module.exports = {
     var body;
     body = _.extend({}, target);
     return request.put("messages/batchFetch").send(target).end(function(res) {
-      var err, _ref;
+      var _ref;
       if (res.ok) {
         return callback(null, res.body);
       } else {
-        err = (_ref = res.body) != null ? _ref.error.message : void 0;
-        if (err == null) {
-          err = new Error('Network batchFetch');
+        if (((_ref = res.body) != null ? _ref.name : void 0) != null) {
+          res.error = res.body;
         }
-        return callback(err);
+        return callback(res.error);
       }
     });
   },
@@ -15489,15 +15496,14 @@ module.exports = {
       flag: flag
     }, target);
     return request.put("messages/batchAddFlag").send(body).end(function(res) {
-      var err, _ref;
+      var _ref;
       if (res.ok) {
         return callback(null, res.body);
       } else {
-        err = (_ref = res.body) != null ? _ref.error.message : void 0;
-        if (err == null) {
-          err = new Error('Network batchAddFlag');
+        if (((_ref = res.body) != null ? _ref.name : void 0) != null) {
+          res.error = res.body;
         }
-        return callback(err);
+        return callback(res.error);
       }
     });
   },
@@ -15507,15 +15513,14 @@ module.exports = {
       flag: flag
     }, target);
     return request.put("messages/batchRemoveFlag").send(body).end(function(res) {
-      var err, _ref;
+      var _ref;
       if (res.ok) {
         return callback(null, res.body);
       } else {
-        err = (_ref = res.body) != null ? _ref.error.message : void 0;
-        if (err == null) {
-          err = new Error('Network batchRemoveFlag');
+        if (((_ref = res.body) != null ? _ref.name : void 0) != null) {
+          res.error = res.body;
         }
-        return callback(err);
+        return callback(res.error);
       }
     });
   },
@@ -15523,15 +15528,14 @@ module.exports = {
     var body;
     body = _.extend({}, target);
     return request.put("messages/batchTrash").send(target).end(function(res) {
-      var err, _ref;
+      var _ref;
       if (res.ok) {
         return callback(null, res.body);
       } else {
-        err = (_ref = res.body) != null ? _ref.error.message : void 0;
-        if (err == null) {
-          err = new Error('Network batchDelete');
+        if (((_ref = res.body) != null ? _ref.name : void 0) != null) {
+          res.error = res.body;
         }
-        return callback(err);
+        return callback(res.error);
       }
     });
   },
@@ -15542,15 +15546,14 @@ module.exports = {
       to: to
     }, target);
     return request.put("messages/batchMove").send(body).end(function(res) {
-      var err, _ref;
+      var _ref;
       if (res.ok) {
         return callback(null, res.body);
       } else {
-        err = (_ref = res.body) != null ? _ref.error.message : void 0;
-        if (err == null) {
-          err = new Error('Network batchMove');
+        if (((_ref = res.body) != null ? _ref.name : void 0) != null) {
+          res.error = res.body;
         }
-        return callback(err);
+        return callback(res.error);
       }
     });
   },

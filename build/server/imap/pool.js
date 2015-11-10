@@ -109,7 +109,7 @@ module.exports = ImapPool = (function() {
           imap.removeListener('error', onConnError);
           onConnError(new TimeoutError("Timeout connecting to " + (((ref = _this.account) != null ? ref.imapServer : void 0) + ":" + ((ref1 = _this.account) != null ? ref1.imapPort : void 0))));
           return imap.destroy();
-        }, 10000);
+        }, 60000);
       };
     })(this));
   };
@@ -266,7 +266,7 @@ module.exports = ImapPool = (function() {
       typed = new AccountConfigError('imapTLS', err);
     }
     if (err instanceof TimeoutError) {
-      typed = new AccountConfigError('imapPort', err);
+      typed = new TimeoutError('timeout', err);
     }
     return typed;
   };
