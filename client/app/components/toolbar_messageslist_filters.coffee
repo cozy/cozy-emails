@@ -10,11 +10,6 @@ DateRangePicker = require './date_range_picker'
 module.exports = FiltersToolbarMessagesList = React.createClass
     displayName: 'FiltersToolbarMessagesList'
 
-    mixins: [
-        RouterMixin,
-    ]
-
-
     propTypes:
         accountID: React.PropTypes.string.isRequired
         mailboxID: React.PropTypes.string.isRequired
@@ -22,71 +17,28 @@ module.exports = FiltersToolbarMessagesList = React.createClass
     getInitialState: ->
         expanded:  false
 
-
     shouldComponentUpdate: (nextProps, nextState) ->
         should = not(_.isEqual(nextState, @state)) or
             not (_.isEqual(nextProps, @props))
         return should
 
-
-    showList: (filter, params) ->
-        sort =
-            order:  '-'
-            field:  'date'
-        # always close message preview before filtering
-        window.cozyMails.messageClose()
-        if params?
-            [sort.before, sort.after] = params
-        else
-            sort.after = sort.before = ''
-        LayoutActionCreator.showFilteredList filter, sort
-
-
     onDateFilter: (start, end) ->
-        if !!start and !!end
-            params = [start, end]
-            @redirect
-                direction: 'first'
-                action: 'account.mailbox.messages.date'
-                parameters: [@props.accountID, @props.mailboxID, '-date', start, end]
-        else
-            params = false
-            @redirect
-                direction: 'first'
-                action: 'account.mailbox.messages'
-                parameters: [@props.accountID, @props.mailboxID]
-        @showList '-', params
-
+        date = if !!start and !!end then [start, end] else null
+        @props.onFilterChange
+            type: 'date',
+            range: date
 
     toggleFilters: (name) ->
-        if @props.filter is name
-            filter = '-'
-            @redirect
-                direction: 'first'
-                action: 'account.mailbox.messages'
-                parameters: [@props.accountID, @props.mailboxID]
-        else
-            filter = name
-            @redirect
-                direction: 'first'
-                action: 'account.mailbox.messages.filter'
-                parameters: [@props.accountID, @props.mailboxID, '-date', name]
-        @showList filter, null
-
+        wasActive = @props.queryParams.filterType is 'flag' and
+                    @props.queryParams.flag is name
+        @props.onFilterChange
+            type: 'flag',
+            value: if wasActive then '-' else name
 
     render: ->
-        if window.location.href.indexOf('flag') isnt -1
-            filter = window.location.href.replace(/.*\/flag\//gi, '')
-            @props.filter = filter.replace(/\/.*/gi, '')
 
-        dateFiltered = @props.queryParams.before isnt '-' and
-                       @props.queryParams.before isnt '1970-01-01T00:00:00.000Z' and
-                       @props.queryParams.before isnt undefined and
-                       @props.queryParams.after isnt undefined and
-                       @props.queryParams.after isnt '-'
-
-        if window.location.href.indexOf('/sort/-date/before') isnt -1
-            dateFiltered = true
+        currentFilter = @props.queryParams.filterType is 'flag' and
+                        @props.queryParams.flag
 
         div
             role:            'group'
@@ -96,12 +48,12 @@ module.exports = FiltersToolbarMessagesList = React.createClass
             i
                 role:      'presentation'
                 className: 'fa fa-filter'
-                onClick:   @toggleExpandState
+                onClick:   -> @setState expanded: not @state.expanded
 
             button
                 role:                     'menuitem'
-                'aria-selected':          @props.filter is MessageFilter.UNSEEN
-                onClick:                  @toggleFilters.bind(@, MessageFilter.UNSEEN)
+                'aria-selected':          currentFilter is MessageFilter.UNSEEN
+                onClick:               => @toggleFilters MessageFilter.UNSEEN
                 'aria-describedby':       Tooltips.FILTER_ONLY_UNREAD
                 'data-tooltip-direction': 'bottom'
 
@@ -110,8 +62,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
             button
                 role:                     'menuitem'
-                'aria-selected':          @props.filter is MessageFilter.FLAGGED
-                onClick:                  @toggleFilters.bind(@, MessageFilter.FLAGGED)
+                'aria-selected':          currentFilter is MessageFilter.FLAGGED
+                onClick:               => @toggleFilters MessageFilter.FLAGGED
                 'aria-describedby':       Tooltips.FILTER_ONLY_IMPORTANT
                 'data-tooltip-direction': 'bottom'
 
@@ -120,8 +72,8 @@ module.exports = FiltersToolbarMessagesList = React.createClass
 
             button
                 role:                     'menuitem'
-                'aria-selected':          @props.filter is MessageFilter.ATTACH
-                onClick:                  @toggleFilters.bind(@, MessageFilter.ATTACH)
+                'aria-selected':          currentFilter is MessageFilter.ATTACH
+                onClick:               => @toggleFilters MessageFilter.ATTACH
                 'aria-describedby':       Tooltips.FILTER_ONLY_WITH_ATTACHMENT
                 'data-tooltip-direction': 'bottom'
 
@@ -129,8 +81,5 @@ module.exports = FiltersToolbarMessagesList = React.createClass
                 span className: 'btn-label', t 'filters attach'
 
             DateRangePicker
-                active: dateFiltered
+                active: @props.queryParams.filterType is 'date'
                 onDateFilter: @onDateFilter
-
-    toggleExpandState: ->
-        @setState expanded: not @state.expanded

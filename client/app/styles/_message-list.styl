@@ -269,20 +269,30 @@
                 font-size 1em
                 color #333
 
+            .mailboxes
+                order       2
+                text-align  right
+
+                span
+                    background-color #f5f5f5
+                    border-radius 0.5em 0.5em
+                    padding 0.1em 0.5em
+                    margin-right 0.5em
+                    color #999
 
             .date
                 flex        1
-                order       2
+                order       3
                 color       #999
                 text-align  right
 
             .subject
-                order     3
+                order     4
                 height    1.6em
                 font-size 0.9em
 
             .extras
-                order 4
+                order 5
 
                 i
                     margin-left .75em
@@ -292,7 +302,7 @@
                 flex 1 0 70%
 
             .preview
-                order        5
+                order        6
                 flex         1 0 100%
                 // This is the most tricky and weird way I have found to bypass
                 // flexbox calculation for internal sizes and permit an overflow

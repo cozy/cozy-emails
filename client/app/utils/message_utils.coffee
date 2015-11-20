@@ -428,6 +428,17 @@ module.exports = MessageUtils =
             return null
 
 
+    getPreview: (message) ->
+        text = message.get('text')
+        if not text?
+            html = message.get 'html'
+            if html?
+                text = toMarkdown(html) pr ''
+            else
+                text = ''
+
+        return text.substr 0, 1024
+
     # Remove from given string:
     # * html tags
     # * extra spaces between reply markers and text

@@ -2,12 +2,6 @@
 
 module.exports = AccountTranslator =
 
-    mailboxToImmutable: (raw) ->
-
-        raw.depth = raw.tree.length - 1
-
-        box = Immutable.Map raw
-
     # Creates an immutable account from a raw account object
     toImmutable: (raw) ->
 
@@ -66,10 +60,11 @@ module.exports = AccountTranslator =
                     box.weight = last[box.depth - 1] - 0.1
                     last[box.depth] = box.weight
 
-                return AccountTranslator.mailboxToImmutable box
+                return Immutable.Map box
 
             .toOrderedMap()
 
+        delete raw.totalUnread
 
         raw.mailboxes = mailboxes
         return Immutable.Map raw

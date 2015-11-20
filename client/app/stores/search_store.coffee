@@ -1,7 +1,9 @@
 Store = require '../libs/flux/store/store'
+MessageStore = require './message_store'
 
 {ActionTypes} = require '../constants/app_constants'
 
+NUMBER_BY_PAGE = 10
 
 class SearchStore extends Store
 
@@ -10,44 +12,86 @@ class SearchStore extends Store
         Defines private variables here.
     ###
 
-    _query = ""
+    _fetching = 0
 
-    # search results are a list of message
-    _results = Immutable.OrderedMap.empty()
+    _currentSearch = ''
+    _currentSearchPage = 0
+    _currentSearchMore = false
+    _currentSearchAccountID = 'all'
+    _currentSearchResults = Immutable.Set().clear()
+
+    resetSearch = ->
+        _currentSearch = ''
+        _currentSearchResults = _currentSearchResults.clear()
+        _currentSearchPage = 0
+        _currentSearchMore = false
+
+    resetSearch()
 
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.RECEIVE_RAW_SEARCH_RESULTS, (rawResults) ->
-            if rawResults?
-                _results = _results.withMutations (map) ->
-                    rawResults.forEach (rawResult) ->
-                        message = Immutable.Map rawResult
-                        map.set message.get('id'), message
-            else
-                _results = Immutable.OrderedMap.empty()
+        handle ActionTypes.QUERY_PARAMETER_CHANGED, ->
+            resetSearch()
+            @emit 'change'
+
+        handle ActionTypes.SEARCH_PARAMETER_CHANGED, ({search, accountID}) ->
+            if search isnt _currentSearch or
+            accountID isnt _currentSearchAccountID
+                resetSearch()
+
+            _currentSearch = search
+            _currentSearchAccountID = accountID
 
             @emit 'change'
 
-        handle ActionTypes.CLEAR_SEARCH_RESULTS, ->
-            _results = Immutable.OrderedMap.empty()
+        handle ActionTypes.SEARCH_REQUEST, (search) ->
+            _fetching++
+            _currentSearchPage++
             @emit 'change'
 
-        handle ActionTypes.SET_SEARCH_QUERY, (query) ->
-            _query = query
+        handle ActionTypes.SEARCH_FAILURE, ({error}) ->
+            _fetching--
+            _currentSearchPage--
+            _currentSearchResults = _currentSearchResults.clear()
+            @emit 'change'
+
+        handle ActionTypes.SEARCH_SUCCESS, ({searchResults}) ->
+            _fetching--
+            ids = searchResults.map (message) -> message._id
+            _currentSearchMore = ids.length is NUMBER_BY_PAGE
+            _currentSearchResults = _currentSearchResults.union ids
             @emit 'change'
 
 
-    ###
-        Public API
-    ###
-    getResults: ->
-        return _results
+    getCurrentSearch: ->
+        return _currentSearch
 
-    getQuery: ->
-        return _query
+    getCurrentSearchAccountID: ->
+        return _currentSearchAccountID
+
+    getCurrentSearchResults: ->
+        _currentSearchResults.mapEntries ([id]) ->
+            [id, MessageStore.getByID id]
+        .filter (message) ->
+            message isnt null
+        .toOrderedMap()
+
+    hasMoreSearch: ->
+        _currentSearchMore
+
+    getNextSearchUrl: () ->
+        url = "search?search=#{encodeURIComponent _currentSearch}"
+        url += "&pageSize=#{NUMBER_BY_PAGE}"
+        if _currentSearchPage
+            url += "&page=#{_currentSearchPage}"
+        if _currentSearchAccountID isnt 'all'
+            url += "&accountID=#{_currentSearchAccountID}"
+
+        return url
 
 
-module.exports = new SearchStore()
+module.exports = self = new SearchStore()
+

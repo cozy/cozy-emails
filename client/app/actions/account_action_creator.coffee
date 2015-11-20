@@ -88,6 +88,16 @@ module.exports = AccountActionCreator =
             type: ActionTypes.NEW_ACCOUNT_ERROR
             value: errorMessage
 
+    ensureSelected: (accountID, mailboxID) =>
+        if AccountStore.selectedIsDifferentThan accountID, mailboxID
+            AccountActionCreator.selectAccount accountID, mailboxID
+
+    selectDefaultIfNoneSelected: () =>
+        selectedAccount = AccountStore.getSelected()
+        defaultAccount = AccountStore.getDefault()
+        if not selectedAccount? and defaultAccount
+            AccountActionCreator.selectAccount defaultAccount.get 'id'
+
     selectAccount: (accountID, mailboxID) ->
         changed = AccountStore.selectedIsDifferentThan accountID, mailboxID
 
@@ -102,6 +112,13 @@ module.exports = AccountActionCreator =
 
         if mailboxID? and changed and supportRFC4551
             MessageActionCreator.refreshMailbox(mailboxID)
+
+    selectAccountForMessage: (message) =>
+        # if there isn't a selected account (page loaded directly),
+        # select the message's account
+        selectedAccount = AccountStore.getSelected()
+        if not selectedAccount? and message?.accountID
+            AccountActionCreator.selectAccount message.accountID
 
     discover: (domain, callback) ->
         XHRUtils.accountDiscover domain, (err, infos) ->
@@ -137,13 +154,30 @@ module.exports = AccountActionCreator =
             if callback?
                 callback error
 
-    mailboxExpunge: (inputValues, callback) ->
+    mailboxExpunge: (options) ->
+
+        {accountID, mailboxID} = options
+
         # delete message from local store to refresh display, we'll fetch them
         # again on error
         AppDispatcher.handleViewAction
             type: ActionTypes.MAILBOX_EXPUNGE
-            value: inputValues.mailboxID
+            value: mailboxID
 
-        XHRUtils.mailboxExpunge inputValues, (error, account) ->
-            if callback?
-                callback error
+        XHRUtils.mailboxExpunge options, (error, account) ->
+
+            if error?
+                LayoutActionCreator.alertError """
+                    #{t("mailbox expunge ko")} #{error}
+                """
+
+                # if user hasn't switched to another box, refresh display
+                unless AccountStore.selectedIsDifferentThan accountID, mailboxID
+                    parameters = MessageStore.getQueryParams()
+                    parameters.accountID = accountID
+                    parameters.mailboxID = mailboxID
+                    LayoutActionCreator.showMessageList {parameters}
+
+            else
+                LayoutActionCreator.notify t("mailbox expunge ok"),
+                    autoclose: true

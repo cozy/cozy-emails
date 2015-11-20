@@ -12,6 +12,8 @@ log = require('../utils/logging')(prefix: 'controllers:mesage')
 {normalizeMessageID} = require('../utils/jwz_tools')
 uuid = require 'uuid'
 ramStore = require '../models/store_account_and_boxes'
+SaveOrSendMessage = require '../processes/message_save_or_send'
+MessageMove = require '../processes/message_move'
 
 # get a message and attach it to req.message
 module.exports.fetch = (req, res, next) ->
@@ -182,199 +184,25 @@ module.exports.parseSendForm = (req, res, next) ->
     form.parse req
 
 
-# when editing a draft, some attachments are in the DS, some in RAM
-# put them all in RAM so we can build the draft to store in IMAP.
-contentToBuffer = (req, attachment, callback) ->
-    filename = attachment.generatedFileName
-
-    # file in the DS, from a previous save of the draft
-    # cache it and pass around
-    if attachment.url
-        fileStream = req.message.getBinary filename, (err) ->
-            log.error "Attachment streaming error", err if err
-
-        # we buffer the attachment in RAM to be used in the mailbuilder
-        bufferer = new stream_to_buffer.Bufferer callback
-        fileStream.pipe bufferer
-
-    # file just uploaded, take the buffer from the multipart req
-    # content is a buffer
-    else if req.files[filename]
-        callback null, req.files[filename].content
-
-    else
-        callback new BadRequest 'Attachment #{filename} unknown'
-
 # send a message
 # at some point in the future, we might want to merge it with above
 # to allow streaming of upload
 module.exports.send = (req, res, next) ->
     log.debug "send"
 
-    message = req.body
-    account = ramStore.getAccount req.body.accountID
-    draftBox = ramStore.getMailbox account.draftMailbox
-    sentBox = ramStore.getMailbox account.sentMailbox
-    files = req.files
+    isDraft = req.body.isDraft
+    delete req.body.isDraft
 
-    message.attachments ?= []
-    message.flags = ['\\Seen']
-    isDraft = message.isDraft
-    delete message.isDraft
-    if isDraft
-        message.flags.push '\\Draft'
+    proc = new SaveOrSendMessage
+        account: ramStore.getAccount req.body.accountID
+        previousState: req.message # can be null
+        message: req.body
+        newAttachments: req.files
+        isDraft: isDraft
 
-    message.content = message.text
-    message.attachments_backup = message.attachments
-    message.conversationID ?= uuid.v4()
-
-    previousUID = message.mailboxIDs?[account.draftMailbox]
-    isFwdAttachment = message.attachments.some (attachment) ->
-        attachment.url and not req.message
-
-    steps = []
-
-    if isFwdAttachment
-        steps.push (cb) ->
-            log.debug "fetching forwarded original"
-            id = message.inReplyTo
-            Message.find id, (err, found) ->
-                return cb err if err
-                return cb new Error "Not Found Fwd #{id}" unless found
-                req.message = found
-                cb null
-
-    steps.push (cb) ->
-        log.debug "gathering attachments"
-        async.mapSeries message.attachments, (attachment, cbMap) ->
-            contentToBuffer req, attachment, (err, content) ->
-                return cbMap err if err
-                return cbMap null,
-                    content            : content
-                    filename           : attachment.fileName
-                    cid                : attachment.contentId
-                    contentType        : attachment.contentType
-                    contentDisposition : attachment.contentDisposition
-
-        , (err, cacheds) ->
-            return cb err if err
-            message.attachments = cacheds
-            cb()
-
-    destination = null
-    jdbMessage = null
-    uidInDest = null
-
-    unless isDraft
-        # Send the message first
-        steps.push (cb) ->
-            log.debug "send#sending"
-            account.sendMessage message, (err, info) ->
-                return cb err if err
-                message.headers['message-id'] = info.messageId
-                message.messageID = normalizeMessageID info.messageId
-                cb null
-
-        #  Get the sent box
-        steps.push (cb) ->
-            if sentBox then cb null
-            else cb new NotFound """
-                Account #{account.id} sentbox #{account.sentMailbox}"""
-
-    # If we will need the draftbox
-    if previousUID or isDraft
-        steps.push (cb) ->
-            if draftBox then cb null
-            else cb new NotFound """
-                Account #{account.id} draftbox #{account.draftMailbox}"""
-
-    # Remove the message from draft (imap)
-    if previousUID
-        steps.push (cb) ->
-            log.debug "send#remove_old"
-            draftBox.imap_removeMail previousUID, cb
-
-
-    # Add the message to draft or sent folder (imap)
-    if isDraft
-        steps.push (cb) ->
-            destination = draftBox
-            log.debug "send#add_to_draft"
-            account.imap_createMail draftBox, message, (err, uid) ->
-                return cb err if err
-                uidInDest = uid
-                cb null
-
-
-    else
-        log.debug "send#add_to_sent"
-        steps.push (cb) ->
-            destination = sentBox
-            # check if message already created by IMAP/SMTP (gmail)
-            sentBox.imap_createMailNoDuplicate account, message, (err, uid) ->
-                return cb err if err
-                uidInDest = uid
-                cb null
-
-    steps.push (cb) ->
-        log.debug "send#cozy_create"
-        message.attachments = message.attachments_backup
-        message.text = message.content
-        delete message.attachments_backup
-        delete message.content
-        # use Date.now to ensure UID is unique
-        uidInDest = Date.now() if account.isTest()
-        message.mailboxIDs = {}
-        message.mailboxIDs[destination.id] = uidInDest
-        message.date = new Date().toISOString()
-
-        Message.updateOrCreate message, (err, updated) ->
-            return cb err if err
-            jdbMessage = updated
-            cb null
-
-    # only when creating the draft / sent of a forwarded message
-    # with attachment. req.message is the forwarded one
-    if isFwdAttachment
-        steps.push (cb) ->
-            log.debug "send#linking"
-            binary = {}
-            for attachment in message.attachments
-                filename = attachment.generatedFileName
-                if filename of req.message.binary
-                    binary[filename] = req.message.binary[filename]
-
-            jdbMessage.updateAttributes {binary}, cb
-
-
-    steps.push (cb) ->
-        log.debug "send#attaching"
-        async.eachSeries Object.keys(files), (name, cbLoop) ->
-            buffer = files[name].content
-            buffer.path = encodeURI name
-            jdbMessage.attachBinary buffer, name: name, cbLoop
-        , cb
-
-    steps.push (cb) ->
-        log.debug "send#removeBinary"
-        jdbMessage.binary ?= {}
-        remainingAttachments = jdbMessage.attachments.map (file) ->
-            file.generatedFileName
-
-        async.eachSeries Object.keys(jdbMessage.binary), (name, cbLoop) ->
-            if name in remainingAttachments
-                setImmediate cbLoop
-            else
-                jdbMessage.removeBinary name, cbLoop
-        , cb
-
-
-    async.series steps, (err) ->
+    proc.run (err) ->
         return next err if err
-        return next new Error('Server error') unless jdbMessage
-
-        # returns the message as the client expect it (with isDraft property)
-        out = jdbMessage.toClientObject()
+        out = proc.cozyMessage.toClientObject()
         out.isDraft = isDraft
         res.send out
 
@@ -427,9 +255,13 @@ module.exports.batchTrash = (req, res, next) ->
     unless trashBoxId
         return next new AccountConfigError 'trashMailbox'
 
-    Message.batchTrash req.messages, trashBoxId, (err, updated) ->
-        return next err if err
-        res.send updated
+    process = new MessageMove
+        messages: req.messages
+        to: trashBoxId
+
+    process.run (err) ->
+        res.send process.updatedMessages
+
 
 # add a flag to several messages
 # expect req.body.flag
@@ -455,12 +287,30 @@ module.exports.batchRemoveFlag = (req, res, next) ->
 #   - drafts should stay in drafts
 #   - messages in trash should stay in trash
 module.exports.batchMove = (req, res, next) ->
+    process = new MessageMove
+        messages: req.messages
+        to: req.body.to
+        from: req.body.from
 
-    to = req.body.to
-    from = req.body.from
-    Message.batchMove req.messages, from, to, (err, updated) ->
+    process.run (err) ->
+        res.send process.updatedMessages
+
+
+module.exports.search = (req, res, next) ->
+    params =
+        query: req.query.search
+
+    if req.query.accountID
+        params.facets = accountID: {}
+        params.filter =
+            accountID: [[req.query.accountID, req.query.accountID]]
+
+    params.numByPage = req.query.pageSize or 10
+    params.numPage = req.query.page or 0
+
+    Message.search params, (err, results) ->
         return next err if err
-        res.send updated
+        res.send results.map (msg) -> msg.toClientObject()
 
 
 # fetch from IMAP and send the raw rfc822 message

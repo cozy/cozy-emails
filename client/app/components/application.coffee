@@ -6,6 +6,7 @@ Modal          = require './modal'
 Panel          = require './panel'
 ToastContainer = require './toast_container'
 Tooltips       = require './tooltips-manager'
+SearchBar       = require './search_bar'
 
 # React Mixins
 RouterMixin          = require '../mixins/router_mixin'
@@ -16,7 +17,8 @@ TooltipRefesherMixin = require '../mixins/tooltip_refresher_mixin'
 AccountStore  = require '../stores/account_store'
 MessageStore  = require '../stores/message_store'
 LayoutStore   = require '../stores/layout_store'
-Stores        = [AccountStore, MessageStore, LayoutStore]
+SearchStore   = require '../stores/search_store'
+Stores        = [AccountStore, MessageStore, LayoutStore, SearchStore]
 
 # Flux actions
 LayoutActionCreator  = require '../actions/layout_action_creator'
@@ -67,22 +69,25 @@ module.exports = Application = React.createClass
             div className: 'app',
                 # Menu is self-managed because this part of the layout
                 # is always the same.
-                Menu
-                    ref:                   'menu'
-                    selectedAccount:       @state.selectedAccount
-                    selectedMailboxID:     @state.selectedMailboxID
-                    layout:                @props.router.current
-                    disposition:           disposition
+                Menu ref: 'menu', layout: @props.router.current
 
                 main
                     className: if layout.secondPanel? then null else 'full',
-                    @getPanel layout.firstPanel, 'firstPanel'
-                    if layout.secondPanel?
-                        @getPanel layout.secondPanel, 'secondPanel'
-                    else
-                        section
-                            key:             'placeholder'
-                            'aria-expanded': false
+
+                    if layout.firstPanel.action in
+                    ['account.mailbox.messages', 'search']
+                        SearchBar()
+
+                    div
+                        className: 'panels'
+
+                        @getPanel layout.firstPanel, 'firstPanel'
+                        if layout.secondPanel?
+                            @getPanel layout.secondPanel, 'secondPanel'
+                        else
+                            section
+                                key:             'placeholder'
+                                'aria-expanded': false
 
             # Display feedback
             if modal?
@@ -92,7 +97,7 @@ module.exports = Application = React.createClass
             # Tooltips' content is declared once at the application level.
             # It's hidden so it doesn't break the layout. Other components
             # can then reference the tooltips by their ID to trigger them.
-            Tooltips()
+            Tooltips(key: "tooltips")
 
 
     getPanel: (panel, ref) ->
@@ -108,17 +113,10 @@ module.exports = Application = React.createClass
 
 
     getStateFromStores: ->
-
-        selectedAccount = AccountStore.getSelected()
-        # When selecting compose in Menu, we may not have a selected account
-        if not selectedAccount?
-            selectedAccount = AccountStore.getDefault()
-        selectedAccountID = selectedAccount?.get('id') or null
+        selectedAccount = AccountStore.getSelectedOrDefault()
 
         firstPanelInfo = @props.router.current?.firstPanel
-        if firstPanelInfo?.action is 'account.mailbox.messages' or
-           firstPanelInfo?.action is 'account.mailbox.messages.filter' or
-           firstPanelInfo?.action is 'account.mailbox.messages.date'
+        if firstPanelInfo?.action is 'account.mailbox.messages'
             selectedMailboxID = firstPanelInfo.parameters.mailboxID
         else
             selectedMailboxID = null
@@ -126,9 +124,10 @@ module.exports = Application = React.createClass
 
         return {
             selectedAccount       : selectedAccount
+            currentSearch         : SearchStore.getCurrentSearch()
             modal                 : LayoutStore.getModal()
             useIntents            : LayoutStore.intentAvailable()
-            selectedMailboxID     : selectedMailboxID
+            selectedMailboxID     : AccountStore.getSelectedMailbox()
         }
 
 
@@ -160,43 +159,29 @@ module.exports = Application = React.createClass
         # "special" mailboxes must be set before accessing to the account
         # otherwise, redirect to account config
         account = @state.selectedAccount
-        if (account?)
-            if not account.get('draftMailbox')? or
-               not account.get('sentMailbox')? or
-               not account.get('trashMailbox')?
 
-                if action is 'account.mailbox.messages' or
-                   action is 'account.mailbox.messages.filter' or
-                   action is 'account.mailbox.messages.date' or
-                   action is 'search' or
-                   action is 'message' or
-                   action is 'conversation' or
-                   action is 'compose' or
-                   action is 'edit'
-                    @redirect
-                        direction: 'first'
-                        action: 'account.config'
-                        parameters: [
-                            account.get 'id'
-                            'mailboxes'
-                        ]
-                        fullWidth: true
-                    errorMsg = t 'account no special mailboxes'
-                    LayoutActionCreator.alertError errorMsg
+        noSpecialFolder = not account?.get('draftMailbox')? or
+               not account?.get('sentMailbox')? or
+               not account?.get('trashMailbox')?
 
+        needSpecialFolder = action in [
+            'account.mailbox.messages'
+            'message'
+            'conversation'
+            'compose'
+            'edit'
+        ]
 
-    _notify: (title, options) ->
-        window.cozyMails.notify title, options
-
-
-    componentDidMount: ->
-        Stores.forEach (store) =>
-            store.on 'notify', @_notify
+        if account? and noSpecialFolder and needSpecialFolder
+            @redirect
+                direction: 'first'
+                action: 'account.config'
+                parameters: [ account.get('id'), 'mailboxes']
+                fullWidth: true
+            LayoutActionCreator.alertError t 'account no special mailboxes'
 
 
     componentWillUnmount: ->
-        Stores.forEach (store) =>
-            store.removeListener 'notify', @notify
         # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
 

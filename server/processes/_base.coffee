@@ -46,7 +46,7 @@ module.exports = class Process
         log.debug "run process #{@id}"
         @addCallback callback
         @initialize @options, (err, arg1, arg2, arg3, arg4) =>
-            cb err, arg1, arg2, arg3, arg4 for cb in @callbacks
+            cb? err, arg1, arg2, arg3, arg4 for cb in @callbacks
 
     onError: (err) ->
         @errors.push Logger.getLasts() + "\n" + err.stack

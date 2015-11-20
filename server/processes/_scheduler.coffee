@@ -149,7 +149,8 @@ Scheduler.applicationStartupRunning = ->
 Scheduler.orphanRemovalDebounced = (accountID) ->
 
     if accountID
-        Scheduler.schedule new RemoveMessagesFromAccount {accountID}
+        Scheduler.schedule new RemoveMessagesFromAccount({accountID}), (err) ->
+            log.error err if err
 
     alreadyQueued = queued.some (proc) ->
         proc instanceof OrphanRemoval
@@ -157,3 +158,5 @@ Scheduler.orphanRemovalDebounced = (accountID) ->
     unless alreadyQueued
         Scheduler.schedule new OrphanRemoval(), (err) ->
             log.error err if err
+
+ramStore.on 'new-orphans', Scheduler.orphanRemovalDebounced

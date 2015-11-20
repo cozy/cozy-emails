@@ -12,7 +12,9 @@ class AccountStore extends Store
         Defines private variables here.
     ###
 
+    _accountsUnread = Immutable.Map()
     # Creates an OrderedMap of accounts
+    # this map will contains the base information for an account
     _accounts = Immutable.Sequence window.accounts
 
         # sort first
@@ -25,9 +27,13 @@ class AccountStore extends Store
         .mapKeys (_, account) -> return account.id
 
         # makes account object an immutable Map
-        .map (account) -> AccountTranslator.toImmutable account
+        .map (account) ->
+            _accountsUnread.set account.id, account.totalUnread
+            return AccountTranslator.toImmutable account
 
         .toOrderedMap()
+
+    _mailboxesCounters = Immutable.Map()
 
     _selectedAccount   = null
     _selectedMailbox   = null
@@ -48,19 +54,32 @@ class AccountStore extends Store
         account = _accounts.get(accountID)
         # on account creation, sometime socket send mailboxes updates
         # before the account has been saved locally
-        if account?
-            mailboxes = account.get('mailboxes')
-            mailboxes = mailboxes.map (box) ->
-                if box.get('id') is boxID
-                    boxData.weight = box.get 'weight'
-                    AccountTranslator.mailboxToImmutable boxData
-                else
-                    box
-            .toOrderedMap()
+        return true unless account
 
+        mailboxes = account.get('mailboxes')
+        mailbox = mailboxes.get(boxID) or Immutable.Map()
+        more = _mailboxesCounters.get(boxID) or Immutable.Map()
+
+        boxData.weight = mailbox.get 'weight' if mailbox.get 'weight'
+
+        STATICFIELDS = ['id', 'accountID', 'label', 'tree', 'weight']
+        CHANGEFIELDS = ['lastSync', 'nbTotal', 'nbUnread', 'nbRecent']
+
+        for field of STATICFIELDS when mailbox.get(field) isnt boxData[field]
+            mailbox = mailbox.set field, boxData[field]
+
+        for field of CHANGEFIELDS when more.get(field) isnt boxData[field]
+            more = more.set field, boxData[field]
+
+        if more isnt _mailboxesCounters.get boxID
+            _mailboxesCounters.set boxID, more
+
+        if mailbox isnt mailboxes.get boxID
+            mailboxes = mailboxes.set boxID, mailbox
             account = account.set 'mailboxes', mailboxes
             _accounts = _accounts.set accountID, account
-            _refreshSelected()
+
+        _refreshSelected()
 
     _mailboxSort = (mb1, mb2) ->
         w1 = mb1.get 'weight'
@@ -74,30 +93,19 @@ class AccountStore extends Store
 
 
     _applyMailboxDiff: (accountID, diff) ->
-        account = _accounts.get accountID
-        mailboxes = account.get('mailboxes')
-        updated = mailboxes.withMutations (map) ->
-            for boxid, deltas of diff when deltas.nbTotal + deltas.nbUnread
-                box = map.get boxid
-                if box?
-                    box = box.merge
-                        nbTotal: box.get('nbTotal') + deltas.nbTotal
-                        nbUnread: box.get('nbUnread') + deltas.nbUnread
-                    map.set boxid, box
+        for boxID, deltas of diff when deltas.nbTotal + deltas.nbUnread
+            counters = _mailboxesCounters.get(boxID) or Immutable.Map()
+            _mailboxesCounters.set boxID, counters.merge
+                nbTotal: counters.get('nbTotal') + deltas.nbTotal
+                nbUnread: counters.get('nbUnread') + deltas.nbUnread
 
         diffTotalUnread = diff[accountID]?.nbUnread or 0
-
         if diffTotalUnread
-            totalUnread = account.get('totalUnread') + diffTotalUnread
-            account = account.set 'totalUnread', totalUnread
 
-        unless updated is mailboxes
-            account = account.set 'mailboxes', updated
+            total = _accountsUnread.get(accountID) + diffTotalUnread
+            _accountsUnread = _accountsUnread.set accountID, total
 
-        if account isnt _accounts.get accountID
-            _accounts = _accounts.set accountID, account
-            _refreshSelected()
-            @emit 'change'
+        @emit 'change'
 
 
     _setCurrentAccount: (account) ->
@@ -107,22 +115,22 @@ class AccountStore extends Store
     _setCurrentMailbox: (mailbox) ->
         _selectedMailbox = mailbox
 
+    _onAccountUpdated: (rawAccount) ->
+        account = AccountTranslator.toImmutable rawAccount
+        _accounts = _accounts.set account.get('id'), account
+        @_setCurrentAccount account
+        _newAccountWaiting = false
+        _newAccountError   = null
+        @emit 'change'
+
 
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        onUpdate = (rawAccount) =>
-            account = AccountTranslator.toImmutable rawAccount
-            _accounts = _accounts.set account.get('id'), account
-            @_setCurrentAccount account
-            _newAccountWaiting = false
-            _newAccountError   = null
-            @emit 'change'
-
         handle ActionTypes.ADD_ACCOUNT, (rawAccount) ->
-            onUpdate rawAccount
+            @_onAccountUpdated rawAccount
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
             if value.accountID?
@@ -151,16 +159,16 @@ class AccountStore extends Store
             @emit 'change'
 
         handle ActionTypes.EDIT_ACCOUNT, (rawAccount) ->
-            onUpdate rawAccount
+            @_onAccountUpdated rawAccount
 
         handle ActionTypes.MAILBOX_CREATE, (rawAccount) ->
-            onUpdate rawAccount
+            @_onAccountUpdated rawAccount
 
         handle ActionTypes.MAILBOX_UPDATE, (rawAccount) ->
-            onUpdate rawAccount
+            @_onAccountUpdated rawAccount
 
         handle ActionTypes.MAILBOX_DELETE, (rawAccount) ->
-            onUpdate rawAccount
+            @_onAccountUpdated rawAccount
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
             _accounts = _accounts.delete accountID
@@ -172,9 +180,7 @@ class AccountStore extends Store
             @emit 'change'
 
         handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
-            account = _accounts.get data.accountID
-            account = account.set 'totalUnread', data.totalUnread
-            _accounts.set data.accountID, account
+            _accountsUnread.set data.accountID, data.totalUnread
             @emit 'change'
 
         handle ActionTypes.REFRESH_REQUEST, ({mailboxID}) ->
@@ -198,6 +204,13 @@ class AccountStore extends Store
     ###
     getAll: ->
         return _accounts
+
+
+    getAllMailboxes: ->
+        return _accounts.flatMap (account) -> account.get 'mailboxes'
+
+    getMailboxCounters: ->
+        return _mailboxesCounters
 
 
     getByID: (accountID) ->
@@ -233,17 +246,14 @@ class AccountStore extends Store
     getSelected: ->
         return _selectedAccount
 
+    getSelectedOrDefault: ->
+        @getSelected() or @getDefault()
 
     getSelectedMailboxes: (sorted) ->
 
         return Immutable.OrderedMap.empty() unless _selectedAccount?
 
-        result = Immutable.OrderedMap()
-        mailboxes = _selectedAccount.get('mailboxes')
-        mailboxes.forEach (data) ->
-            mailbox = Immutable.Map data
-            result = result.set mailbox.get('id'), mailbox
-            return true
+        result = _selectedAccount.get('mailboxes')
 
         if sorted
             result = result.sort _mailboxSort

@@ -1,5 +1,6 @@
 cozydb = require 'cozydb'
 safeLoop = require '../utils/safeloop'
+Constants = require '../utils/constants'
 
 # Public: the mailbox model
 class Mailbox extends cozydb.CozyModel
@@ -17,14 +18,7 @@ class Mailbox extends cozydb.CozyModel
         lastTotal: Number         # Last imap total number of messages in box
 
     # map of account's attributes -> RFC6154 special use box attributes
-    @RFC6154:
-        draftMailbox:   '\\Drafts'
-        sentMailbox:    '\\Sent'
-        trashMailbox:   '\\Trash'
-        allMailbox:     '\\All'
-        junkMailbox:    '\\Junk'
-        flaggedMailbox: '\\Flagged'
-
+    @RFC6154: Constants.RFC6154
 
     # Public: is this box selectable (ie. can contains mail)
     #
@@ -294,7 +288,6 @@ class TestMailbox extends Mailbox
 module.exports = Mailbox
 require('./model-events').wrapModel Mailbox
 ramStore = require './store_account_and_boxes'
-Message = require './message'
 log = require('../utils/logging')(prefix: 'models:mailbox')
 _ = require 'lodash'
 async = require 'async'

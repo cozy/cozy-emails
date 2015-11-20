@@ -42,7 +42,7 @@ class RefreshesStore extends Store
             @emit 'change'
 
         handle ActionTypes.RECEIVE_REFRESH_NOTIF, (data) ->
-            @emit 'notify', t('notif new title'), body: data.message
+            window.cozyMails.notify t('notif new title'), body: data.message
 
 
     getRefreshing: ->

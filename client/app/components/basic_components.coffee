@@ -272,7 +272,7 @@ Dropdown = React.createClass
                         span className: 'caret', ''
                 ul className: 'dropdown-menu', role: 'menu',
                     for key, value of @props.values
-                        renderFilter key, t "list filter #{key}"
+                        renderFilter key, value
 
 
 # Widget to display a spinner.
@@ -313,6 +313,17 @@ Progress = React.createClass
                 "aria-valuemin": '0'
                 "aria-valuemax": @props.max
 
+Icon = React.createClass
+    displayName: 'Icon'
+
+    propTypes:
+        type: React.PropTypes.string.isRequired
+
+    render: ->
+        i
+            className: @props.className + ' fa fa-' + @props.type
+            onClick: @props.onClick
+
 
 module.exports = {
     AddressLabel
@@ -324,6 +335,7 @@ module.exports = {
     FormButton
     FormButtons
     FormDropdown
+    Icon
     MenuItem
     MenuHeader
     MenuDivider

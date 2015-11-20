@@ -1,11 +1,13 @@
 _ = require 'lodash'
 Account = require '../models/account'
+Mailbox = require '../models/mailbox'
 {AccountConfigError} = require '../utils/errors'
 log = require('../utils/logging')(prefix: 'accounts:controller')
 async = require 'async'
 notifications = require '../utils/notifications'
 ramStore = require '../models/store_account_and_boxes'
 Scheduler = require '../processes/_scheduler'
+MailboxRefreshList = require '../processes/mailbox_refresh_list'
 MailboxRefresh = require '../processes/mailbox_refresh'
 patchConversation = require '../patchs/conversation'
 
@@ -26,7 +28,13 @@ module.exports.create = (req, res, next) ->
                 account = created
                 cb null
         (cb) ->
-            account.initialize cb
+            refreshList = new MailboxRefreshList account: account
+            Scheduler.schedule refreshList, Scheduler.ASAP, cb
+        (cb) ->
+            boxes = ramStore.getMailboxesByAccount account.id
+            changes = Mailbox.scanBoxesForSpecialUse boxes
+            changes.initialized = true
+            account.updateAttributes changes, cb
 
     ], (err) ->
         return next err if err

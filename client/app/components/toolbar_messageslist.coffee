@@ -6,10 +6,15 @@ SearchToolbarMessagesList  = require './toolbar_messageslist_search'
 ActionsToolbarMessagesList = require './toolbar_messageslist_actions'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
+RouterMixin           = require '../mixins/router_mixin'
 
 
 module.exports = ToolbarMessagesList = React.createClass
     displayName: 'ToolbarMessagesList'
+
+    mixins: [
+        RouterMixin,
+    ]
 
     propTypes:
         settings:             React.PropTypes.object.isRequired
@@ -25,16 +30,46 @@ module.exports = ToolbarMessagesList = React.createClass
         toggleAll:            React.PropTypes.func.isRequired
         afterAction:          React.PropTypes.func
 
+    onFilterChange: (params) ->
+
+        # change here if we add an UI for sorting
+        # @props.queryParams is the current value
+        sortOrder = '-'
+        sortField = 'date'
+        before = '-'
+        after = '-'
+        flag = '-'
+        type = params.type
+        sort = sortOrder + sortField
+
+        console.log "filter change", params, new Error().stack
+
+        switch type
+            when 'from', 'dest'
+                if params.value
+                    before = params.value
+                    after = "#{params.value}\uFFFF"
+
+            when 'date'
+                if params.range
+                    [before, after] = params.range
+
+            when 'flag'
+                if params.value
+                    flag = params.value
+
+        window.cozyMails.messageClose()
+        @redirect
+            direction: 'first'
+            action: 'account.mailbox.messages'
+            parameters: [
+                @props.accountID, @props.mailboxID,
+                sort, type, flag, before, after
+            ]
+
 
     render: ->
         aside role: 'toolbar',
-            # Drawer toggler
-            button
-                className: 'drawer-toggle'
-                onClick:   LayoutActionCreator.drawerToggle
-                title:     t 'menu toggle'
-
-                i className: 'fa fa-navicon'
 
             # Select all Checkbox
             button
@@ -62,11 +97,11 @@ module.exports = ToolbarMessagesList = React.createClass
                 FiltersToolbarMessagesList
                     accountID:   @props.accountID
                     mailboxID:   @props.mailboxID
-                    queryParams: @props.queryParams
-                    filter:      @props.filter
-            unless @props.edited
-                SearchToolbarMessagesList
-                    accountID:   @props.accountID
-                    mailboxID:   @props.mailboxID
-                    queryParams: @props.queryParams
-                    filter:      @props.filter
+                    queryParams:    @props.queryParams
+                    onFilterChange: @onFilterChange
+            # unless @props.edited
+            #     SearchToolbarMessagesList
+            #         accountID:   @props.accountID
+            #         mailboxID:   @props.mailboxID
+            #         queryParams:      @props.queryParams
+            #         onFilterChange: @onFilterChange

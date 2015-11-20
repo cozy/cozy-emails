@@ -1,5 +1,6 @@
 {div, section, p, ul, li, a, span, i, button, input, img} = React.DOM
-{MessageFlags} = require '../constants/app_constants'
+{MessageFlags, MailboxFlags} = require '../constants/app_constants'
+{Icon} = require './basic_components'
 RouterMixin           = require '../mixins/router_mixin'
 classer      = React.addons.classSet
 MessageUtils = require '../utils/message_utils'
@@ -34,36 +35,13 @@ module.exports = MessageItem = React.createClass
             active:  @props.isActive
             edited:  @props.edited
 
-        if MessageFlags.DRAFT in flags and not @props.isTrash
-            action = 'edit'
-            params =
-                messageID: message.get 'id'
-        else
-            conversationID = message.get 'conversationID'
-            if conversationID? and @props.displayConversations
-                action = 'conversation'
-                params =
-                    conversationID: conversationID
-                    messageID: message.get 'id'
-            else
-                action = 'message'
-                params =
-                    messageID: message.get 'id'
-
-        url = @buildUrl
-            direction: 'second'
-            action: action
-            parameters: params
-
         compact = @props.settings.get('listStyle') is 'compact'
         date    = MessageUtils.formatDate message.get('createdAt'), compact
         avatar  = MessageUtils.getAvatar message
-        text    = message.get('text')
-        html    = message.get('html')
-        if not text? and html?
-            text = toMarkdown html
-        if not text?
-            text = ''
+
+        # Change tag type if current message is in edited mode
+        tagType  = if @props.edited then span else a
+
 
         li
             className:              classes
@@ -74,9 +52,8 @@ module.exports = MessageItem = React.createClass
             onClick:                @onMessageClick
             onDragStart:            @onDragStart,
 
-            # Change tag type if current message is in edited mode
-            (if @props.edited then span else a)
-                href:              url
+            tagType
+                href:              @getUrl()
                 className:         'wrapper'
                 'data-message-id': message.get('id')
                 onClick:           @onMessageClick
@@ -84,20 +61,17 @@ module.exports = MessageItem = React.createClass
                 ref:               'target'
 
                 div className: 'markers-wrapper',
-                    i
-                        className: classer
-                            select:              true
-                            fa:                  true
-                            'fa-check-square-o': @props.selected
-                            'fa-square-o':       not @props.selected
+                    Icon
+                        className: 'select'
                         onClick:   @onSelect
+                        type: (if @props.selected then 'check-square-o'
+                        else 'square-o')
 
                     if MessageFlags.SEEN in flags
-                        i className: 'fa'
-                    else
-                        i className: 'fa fa-circle'
+                        Icon type: 'circle'
+
                     if MessageFlags.FLAGGED in flags
-                        i className: 'fa fa-star'
+                        Icon type: 'star'
 
                 div className: 'avatar-wrapper select-target',
                     if avatar?
@@ -117,6 +91,8 @@ module.exports = MessageItem = React.createClass
                     div className: 'subject ellipsable',
                         p null,
                             message.get 'subject'
+                    div className: 'mailboxes',
+                        @getMailboxTags(message)...
                     div className: 'date',
                         # TODO: use time-elements component here for the date
                         date
@@ -128,7 +104,7 @@ module.exports = MessageItem = React.createClass
                             span className: 'conversation-length',
                                 "#{@props.conversationLengths}"
                     div className: 'preview',
-                        p null, text.substr(0, 1024)
+                        p null, MessageUtils.getPreview(message)
 
     _doCheck: ->
         # please don't ask me why this **** react needs this
@@ -141,6 +117,33 @@ module.exports = MessageItem = React.createClass
                 @refs.select?.getDOMNode().checked = false
             , 50
 
+    getMailboxTags: ->
+
+        accountID = @props.message.get('accountID')
+        accountLabel = @props.accounts.get(accountID).get 'label'
+
+        Object.keys @props.message.get('mailboxIDs')
+        .filter (boxID) =>
+            box = @props.mailboxes.get boxID
+            unless box # box was just deleted
+                return false
+
+            if @props.mailboxID and MailboxFlags.ALL in box.get 'attribs'
+                return false # dont display "all messages" labels
+
+            if @props.mailboxID is boxID
+                return false # dont display same box labels
+
+            return true
+
+        .map (boxID) =>
+            box = @props.mailboxes.get boxID
+            label = box.get 'label'
+            unless @props.accountID
+                label = "#{accountLabel}:#{label}"
+
+            span className: 'mailbox-tag', label
+
     componentDidMount: ->
         @_doCheck()
 
@@ -151,6 +154,26 @@ module.exports = MessageItem = React.createClass
         @props.onSelect(not @props.selected)
         e.preventDefault()
         e.stopPropagation()
+
+    getUrl: ->
+        params =
+            messageID: @props.message.get 'id'
+
+        if MessageFlags.DRAFT in @props.message.get('flags') and
+        not @props.isTrash
+            action = 'edit'
+        else
+            conversationID = @props.message.get 'conversationID'
+            if conversationID? and @props.displayConversations
+                action = 'conversation'
+                params.conversationID = conversationID
+            else
+                action = 'message'
+
+        return @buildUrl
+            direction: 'second'
+            action: action
+            parameters: params
 
     onMessageClick: (event) ->
         node = @refs.target.getDOMNode()

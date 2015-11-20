@@ -4,7 +4,6 @@
 Account = require './account'
 Message = require './message'
 Mailbox = require './mailbox'
-Scheduler = require '../processes/_scheduler'
 ImapPool = require '../imap/pool'
 _ = require 'lodash'
 async = require 'async'
@@ -208,7 +207,7 @@ exports.removeAccount = (accountID) ->
     mailboxes = mailboxesByAccountID[accountID]
     delete mailboxesByAccountID[accountID]
     orphanMailboxes.push box for box in mailboxes
-    Scheduler.orphanRemovalDebounced(accountID)
+    eventEmitter.emit 'new-orphans', accountID
 
 exports.addMailbox = (mailbox) ->
     mailboxesByID[mailbox.id] = mailbox
@@ -229,7 +228,7 @@ exports.removeMailbox = (mailboxID) ->
     mailboxesByAccountID[accountID] = _.without list, mailbox if list
     list = orphanMailboxes
     orphanMailboxes = _.without list, mailbox
-    Scheduler.orphanRemovalDebounced()
+    eventEmitter.emit 'new-orphans'
 
 
 # LISTENERS

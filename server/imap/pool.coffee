@@ -2,16 +2,20 @@ errors =  require '../utils/errors'
 {AccountConfigError, TimeoutError, PasswordEncryptedError} = errors
 log = require('../utils/logging')(prefix: 'imap:pool')
 rawImapLog = require('../utils/logging')(prefix: 'imap:raw')
-Account = require '../models/account'
 Imap = require './connection'
 xoauth2 = require 'xoauth2'
 async = require "async"
 accountConfigTools = require '../imap/account2config'
 {makeIMAPConfig, forceOauthRefresh, forceAccountFetch} = accountConfigTools
-Scheduler = require '../processes/_scheduler'
 RecoverChangedUIDValidity = require '../processes/recover_change_uidvalidity'
 
 connectionID = 1
+
+logConnectionOptions = (options) ->
+    password = options.password
+    if password then options.password = "****"
+    log.debug options
+    if password then options.password = password
 
 module.exports = class ImapPool
 
@@ -49,10 +53,7 @@ module.exports = class ImapPool
             return @_onConnectionError connectionName: '', err if err
 
             log.debug "Attempting connection"
-            password = options.password
-            if password then options.password = "****"
-            log.debug options
-            if password then options.password = password
+            logConnectionOptions options
 
             imap = new Imap options
             onConnError = @_onConnectionError.bind this, imap
@@ -89,8 +90,13 @@ module.exports = class ImapPool
 
         isAuth = err.textCode is 'AUTHENTICATIONFAILED'
 
-        if err instanceof PasswordEncryptedError
-            @_giveUp err
+        if err instanceof PasswordEncryptedError or
+           isAuth and @account.id and @failConnectionCounter is 1
+            @account.refreshPassword (err) ->
+                if err
+                    @_giveUp err
+                else
+                    setImmediate @_deQueue
 
         else if @failConnectionCounter > 2
             # give up
@@ -99,10 +105,6 @@ module.exports = class ImapPool
                                              @account.oauthProvider is 'GMAIL'
             # refresh accessToken
             forceOauthRefresh @account, @_deQueue
-
-        # TMP : this should be removed when data-system#161 is widely deployed
-        else if isAuth and @account.id and @failConnectionCounter is 1
-            forceAccountFetch @account, @_deQueue
 
         else
             # try again in 5s

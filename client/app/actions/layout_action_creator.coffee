@@ -10,9 +10,7 @@ AppDispatcher = require '../app_dispatcher'
 {ActionTypes, AlertLevel, MessageFlags} = require '../constants/app_constants'
 
 AccountActionCreator = require './account_action_creator'
-SearchActionCreator = require './search_action_creator'
-
-_cachedQuery = {}
+MessageActionCreator = require './message_action_creator'
 
 module.exports = LayoutActionCreator =
 
@@ -101,16 +99,6 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.CLEAR_TOASTS
             value: null
 
-    filterMessages: (filter) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.LIST_FILTER
-            value: filter
-
-    sortMessages: (sort) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.LIST_SORT
-            value: sort
-
     getDefaultRoute: ->
         # if there is no account, we display the configAccount
         if AccountStore.getAll().length is 0 then 'account.new'
@@ -118,66 +106,37 @@ module.exports = LayoutActionCreator =
         else 'account.mailbox.messages'
 
     showMessageList: (panelInfo) ->
-        {accountID, mailboxID} = panelInfo.parameters
-        selectedAccount = AccountStore.getSelected()
-        selectedMailbox = AccountStore.getSelectedMailbox()
-        if not selectedAccount? or
-        selectedAccount.get('id') isnt accountID or
-        selectedMailbox.get('id') isnt mailboxID
-            AccountActionCreator.selectAccount accountID, mailboxID
+        params = panelInfo.parameters
+        {accountID, mailboxID, filter, sort, before, after} = params
 
-        cached = _cachedQuery.mailboxID is mailboxID
-        query = {}
-        ['sort', 'after', 'before', 'flag', 'pageAfter'].forEach (param) ->
-            value = panelInfo.parameters[param]
-            if value? and value isnt ''
-                query[param] = value
-            if _cachedQuery[param] isnt value
-                _cachedQuery[param] = value
-                cached = false
-        _cachedQuery.mailboxID = mailboxID
+        # ensure the proper account is selected
+        AccountActionCreator.ensureSelected accountID, mailboxID
 
-        if not cached
-            AppDispatcher.handleViewAction
-                type: ActionTypes.MESSAGE_FETCH_REQUEST
-                value: {mailboxID, query}
+        AppDispatcher.handleViewAction
+            type: ActionTypes.QUERY_PARAMETER_CHANGED
+            value: params
 
-            updated = Date.now()
-            XHRUtils.fetchMessagesByFolder mailboxID, query, (err, rawMsg) ->
-                if err?
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.MESSAGE_FETCH_FAILURE
-                        value: {mailboxID, query}
-                else
-                    # This prevent to override local updates with older ones
-                    # from server
-                    rawMsg.messages.forEach (msg) ->
-                        msg.updated = updated
-                    AppDispatcher.handleViewAction
-                        type: ActionTypes.MESSAGE_FETCH_SUCCESS
-                        value: {mailboxID, query, fetchResult: rawMsg}
+        MessageActionCreator.fetchMoreOfCurrentQuery()
 
-    # Apply filters and sort criteria on message list then display it
-    showFilteredList: (filter, sort) ->
-        @filterMessages filter
-        @sortMessages sort
+    showSearchResult: (panelInfo) ->
+        {accountID, search} = panelInfo.parameters
 
-        params           = _.clone(MessageStore.getParams())
-        params.accountID = AccountStore.getSelected().get 'id'
-        params.mailboxID = AccountStore.getSelectedMailbox().get 'id'
-        @showMessageList parameters: params
+        if accountID isnt 'all'
+            AccountActionCreator.ensureSelected accountID
+        else
+            AccountActionCreator.selectAccount null
+
+        AppDispatcher.handleViewAction
+            type: ActionTypes.SEARCH_PARAMETER_CHANGED
+            value: {accountID, search}
+
+        if search isnt '-'
+            MessageActionCreator.fetchSearchResults accountID, search
 
     showMessage: (panelInfo, direction) ->
-        onMessage = (msg) ->
-            # if there isn't a selected account (page loaded directly),
-            # select the message's account
-            selectedAccount = AccountStore.getSelected()
-            if  not selectedAccount? and msg?.accountID
-                AccountActionCreator.selectAccount msg.accountID
-        messageID = panelInfo.parameters.messageID
-        message = MessageStore.getByID messageID
+        message = MessageStore.getByID panelInfo.parameters.messageID
         if message?
-            onMessage message
+            AccountActionCreator.selectAccountForMessage message
         else
             XHRUtils.fetchMessage messageID, (err, rawMessage) ->
 
@@ -185,20 +144,14 @@ module.exports = LayoutActionCreator =
                     LayoutActionCreator.alertError err
                 else
                     MessageActionCreator.receiveRawMessage rawMessage
-                    onMessage rawMessage
+                    AccountActionCreator.selectAccountForMessage rawMessage
 
     showConversation: (panelInfo, direction) ->
-        onMessage = (msg) ->
-            # if there isn't a selected account (page loaded directly),
-            # select the message's account
-            selectedAccount = AccountStore.getSelected()
-            if  not selectedAccount? and msg?.accountID
-                AccountActionCreator.selectAccount msg.accountID
         messageID      = panelInfo.parameters.messageID
         conversationID = panelInfo.parameters.conversationID
         message        = MessageStore.getByID messageID
         if message?
-            onMessage message
+            AccountActionCreator.selectAccountForMessage message
 
         length = MessageStore.getConversationsLength().get(conversationID)
         if not length? or length > 1
@@ -206,23 +159,12 @@ module.exports = LayoutActionCreator =
 
 
     showComposeNewMessage: (panelInfo, direction) ->
-        # if there isn't a selected account (page loaded directly),
-        # select the default account
-        selectedAccount = AccountStore.getSelected()
-        if not selectedAccount?
-            defaultAccount = AccountStore.getDefault()
-            AccountActionCreator.selectAccount defaultAccount.get 'id'
-
+        AccountActionCreator.selectDefaultIfNoneSelected()
 
     # Display compose widget but this time it's aimed to be pre-filled:
     # either with reply/forward or with draft information.
     showComposeMessage: (panelInfo, direction) ->
-        # if there isn't a selected account (page loaded directly),
-        # select the default account
-        selectedAccount = AccountStore.getSelected()
-        if not selectedAccount?
-            defaultAccount = AccountStore.getDefault()
-            AccountActionCreator.selectAccount defaultAccount.get 'id'
+        AccountActionCreator.selectDefaultIfNoneSelected()
 
         # If message is not there, it fetches it from server.
         messageID = panelInfo.parameters.messageID
@@ -233,6 +175,7 @@ module.exports = LayoutActionCreator =
                     LayoutActionCreator.alertError err
                 else
                     MessageActionCreator.receiveRawMessage rawMessage
+                    AccountActionCreator.selectAccountForMessage rawMessage
 
 
     showCreateAccount: (panelInfo, direction) ->
@@ -240,19 +183,6 @@ module.exports = LayoutActionCreator =
 
     showConfigAccount: (panelInfo, direction) ->
         AccountActionCreator.selectAccount panelInfo.parameters.accountID
-
-    showSearch: (panelInfo, direction) ->
-        AccountActionCreator.selectAccount null
-
-        {query, page} = panelInfo.parameters
-
-        SearchActionCreator.setQuery query
-
-        XHRUtils.search query, page, (err, results) ->
-            if err?
-                console.log err
-            else
-                SearchActionCreator.receiveRawSearchResults results
 
     showSettings: (panelInfo, direction) ->
 
@@ -291,5 +221,3 @@ module.exports = LayoutActionCreator =
         AppDispatcher.handleViewAction
             type: ActionTypes.HIDE_MODAL
 
-# circular import, require after
-MessageActionCreator = require './message_action_creator'

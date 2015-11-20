@@ -42,13 +42,9 @@ module.exports =
                 callback t('app error')
 
 
-    fetchMessagesByFolder: (mailboxID, query, callback) ->
-        for own key, val of query
-            if val is '-' or val is 'all'
-                delete query[key]
-        request.get "mailbox/#{mailboxID}"
+    fetchMessagesByFolder: (url, callback) ->
+        request.get url
         .set 'Accept', 'application/json'
-        .query query
         .end (res) ->
             if res.ok
                 callback null, res.body
@@ -96,7 +92,7 @@ module.exports =
                 callback null, res.body
             else
                 console.log "Error in mailboxExpunge", data, res.body?.error
-                callback t('app error')
+                callback res.body?.error or res.body
 
     messageSend: (message, callback) ->
         req = request.post "message"
@@ -238,10 +234,9 @@ module.exports =
             else
                 callback res.body, null
 
-    search: (query, numPage, callback) ->
-        encodedQuery = encodeURIComponent query
-        numByPage = SettingsStore.get 'messagesPerPage'
-        request.get "search/#{encodedQuery}/page/#{numPage}/limit/#{numByPage}"
+    search: (url, callback) ->
+        request.get url
+        .set 'Accept', 'application/json'
         .end (res) ->
             if res.ok
                 callback null, res.body
@@ -256,7 +251,7 @@ module.exports =
         request.get url
         .end (res) ->
             if res.ok
-                callback null, res.text
+                callback null, res.body
             else
                 callback res.body
 
@@ -264,9 +259,9 @@ module.exports =
         request.get "refresh/#{mailboxID}"
         .end (res) ->
             if res.ok
-                callback null, res.text
+                callback null, res.body
             else
-                callback res.text
+                callback res.body
 
 
     activityCreate: (options, callback) ->

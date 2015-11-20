@@ -4,6 +4,7 @@ Compose        = require './compose'
 Conversation   = require './conversation'
 MessageList    = require './message-list'
 Settings       = require './settings'
+SearchResult   = require './search_result'
 {Spinner}       = require './basic_components'
 
 # React Mixins
@@ -17,6 +18,8 @@ MessageStore  = require '../stores/message_store'
 SearchStore   = require '../stores/search_store'
 SettingsStore = require '../stores/settings_store'
 
+MessageActionCreator = require '../actions/message_action_creator'
+
 Constants = require '../constants/app_constants'
 {ComposeActions, MessageFilter, Dispositions} = Constants
 
@@ -25,7 +28,7 @@ module.exports = Panel = React.createClass
     displayName: 'Panel'
 
     mixins: [
-        StoreWatchMixin [AccountStore, MessageStore, SettingsStore]
+        StoreWatchMixin [AccountStore, MessageStore, SettingsStore, SearchStore]
         TooltipRefesherMixin
         RouterMixin
     ]
@@ -39,13 +42,12 @@ module.exports = Panel = React.createClass
 
     render: ->
         # -- Generates a list of messages for a given account and mailbox
-        if @props.action is 'account.mailbox.messages' or
-           @props.action is 'account.mailbox.messages.filter' or
-           @props.action is 'account.mailbox.messages.date' or
-           @props.action is 'account.mailbox.default' or
-           @props.action is 'search'
-
+        if @props.action is 'account.mailbox.messages'
             @renderList()
+
+        else if @props.action is 'search'
+
+            @renderSearchResults()
 
         # -- Generates a configuration window for a given account
         else if @props.action is 'account.config' or
@@ -82,42 +84,31 @@ module.exports = Panel = React.createClass
 
     renderList: ->
 
-        if @props.action is 'search'
-            accountID = null
-            mailboxID = null
-            messages  = @state.results
-            messagesCount    = messages.count()
-            emptyListMessage = t 'list empty'
-            counterMessage   = t 'list search count', messagesCount
+        accountID = @props.accountID
+        mailboxID = @props.mailboxID
+        account   = AccountStore.getByID accountID
 
+        if account?
+            mailbox   = account.get('mailboxes').get mailboxID
+            messages  = MessageStore.getMessagesToDisplay mailboxID,
+                @state.settings.get('displayConversation')
+            messagesCount = mailbox?.get('nbTotal') or 0
+            emptyListMessage = switch @state.queryParams.flag
+                when MessageFilter.FLAGGED
+                    t 'no flagged message'
+                when MessageFilter.UNSEEN
+                    t 'no unseen message'
+                when MessageFilter.ALL
+                    t 'list empty'
+                else
+                    t 'no filter message'
         else
-            accountID = @props.accountID
-            mailboxID = @props.mailboxID
-            account   = AccountStore.getByID accountID
-
-            if account?
-                mailbox   = account.get('mailboxes').get mailboxID
-                messages  = MessageStore.getMessagesByMailbox mailboxID,
-                    @state.settings.get('displayConversation')
-                messagesCount = mailbox?.get('nbTotal') or 0
-                emptyListMessage = switch @state.currentFilter
-                    when MessageFilter.FLAGGED
-                        t 'no flagged message'
-                    when MessageFilter.UNSEEN
-                        t 'no unseen message'
-                    when MessageFilter.ALL
-                        t 'list empty'
-                    else
-                        t 'no filter message'
-                counterMessage   = t 'list count', messagesCount
-
-            else
-                setTimeout =>
-                    @redirect
-                        direction: "first"
-                        action: "default"
-                , 1
-                return div null, 'redirecting'
+            setTimeout =>
+                @redirect
+                    direction: "first"
+                    action: "default"
+            , 1
+            return React.DOM.div null, 'redirecting'
 
         # gets the selected message if any
         if @state.settings.get 'displayConversation'
@@ -126,10 +117,6 @@ module.exports = Panel = React.createClass
             if not conversationID? and messages.length > 0
                 conversationID = messages.first().get 'conversationID'
             conversationLengths = MessageStore.getConversationsLength()
-
-        query = _.clone(@state.queryParams)
-        query.accountID = accountID
-        query.mailboxID = mailboxID
 
         # don't display conversations in Trash and Draft folders
         conversationDisabledBoxes = [
@@ -152,19 +139,23 @@ module.exports = Panel = React.createClass
             messageID:            @state.currentMessageID
             conversationID:       conversationID
             login:                account?.get 'login'
-            mailboxes:            @state.mailboxesFlat
+            accounts:             @state.accounts
+            mailboxes:            @state.mailboxes
             settings:             @state.settings
             fetching:             @state.fetching
             refresh:              @state.refresh
-            query:                query
             isTrash:              isTrash
             conversationLengths:  conversationLengths
             emptyListMessage:     emptyListMessage
             ref:                  'messageList'
             displayConversations: displayConversations
             queryParams:          @state.queryParams
-            filter:               @state.currentFilter
+            canLoadMore:          @state.queryParams.hasNextPage
+            loadMoreMessage: -> MessageActionCreator.fetchMoreOfCurrentQuery()
 
+    renderSearchResults: ->
+        key = encodeURIComponent SearchStore.getCurrentSearch()
+        return new SearchResult key: "search-#{key}"
 
     renderAccount: ->
         if @props.action is 'account.config'
@@ -175,6 +166,7 @@ module.exports = Panel = React.createClass
                 error             : @state.accountError
                 isWaiting         : @state.accountWaiting
                 mailboxes         : @state.selectedMailboxes
+                mailboxCounters   : @state.mailboxCounters
                 favoriteMailboxes : @state.favoriteMailboxes
                 tab               : @props.tab
             if options.selectedAccount? and
@@ -225,8 +217,8 @@ module.exports = Panel = React.createClass
         return Conversation
             key: 'conversation-' + conversationID
             settings             : @state.settings
-            accounts             : @state.accountsFlat
-            mailboxes            : @state.mailboxesFlat
+            accounts             : @state.accounts
+            mailboxes            : @state.mailboxes
             selectedAccountID    : @state.selectedAccount.get 'id'
             selectedAccountLogin : @state.selectedAccount.get 'login'
             selectedMailboxID    : selectedMailboxID
@@ -251,7 +243,7 @@ module.exports = Panel = React.createClass
             action               : null
             inReplyTo            : null
             settings             : @state.settings
-            accounts             : @state.accountsFlat
+            accounts             : @state.accounts
             selectedAccountID    : @state.selectedAccount.get 'id'
             selectedAccountLogin : @state.selectedAccount.get 'login'
             selectedMailboxID    : @props.selectedMailboxID
@@ -311,58 +303,23 @@ module.exports = Panel = React.createClass
             ref     : 'settings'
             settings: @state.settings
 
-
     getStateFromStores: ->
-        isLoadingReply = not MessageStore.getByID(@props.messageID)?
-
-        selectedAccount = AccountStore.getSelected()
-        # When selecting compose in Menu, we may not have a selected account
-        if not selectedAccount?
-            selectedAccount = AccountStore.getDefault()
-
-        # Flat copies of accounts and mailboxes
-        # This prevents components to refresh when properties they don't use are
-        # updated (unread counts, timestamp of last refresh…)
-        accountsFlat = {}
-        AccountStore.getAll().map (account) ->
-            accountsFlat[account.get 'id'] =
-                name: account.get 'name'
-                label: account.get 'label'
-                login: account.get 'login'
-                trashMailbox: account.get 'trashMailbox'
-                signature: account.get 'signature'
-        .toJS()
-
-        mailboxesFlat = {}
-        AccountStore.getSelectedMailboxes(true).map (mailbox) ->
-            id = mailbox.get 'id'
-            mailboxesFlat[id] = {}
-            ['id', 'label', 'depth'].map (prop) ->
-                mailboxesFlat[id][prop] = mailbox.get prop
-        .toJS()
-
-        refresh = AccountStore.getMailboxRefresh(@props.mailboxID)
-        conversationID = MessageStore.getCurrentConversationID()
-        conversation = if conversationID
-            MessageStore.getConversation(conversationID)
-        else null
-
         return {
-            accountsFlat          : accountsFlat
-            selectedAccount       : selectedAccount
-            mailboxesFlat         : mailboxesFlat
+            accounts              : AccountStore.getAll()
+            mailboxes             : AccountStore.getAllMailboxes()
+            selectedAccount       : AccountStore.getSelectedOrDefault()
             favoriteMailboxes     : AccountStore.getSelectedFavorites()
             selectedMailboxes     : AccountStore.getSelectedMailboxes(true)
+            mailboxCounters       : AccountStore.getMailboxCounters()
+            allMailboxes          : AccountStore.getAllMailboxes()
             accountError          : AccountStore.getError()
             accountWaiting        : AccountStore.isWaiting()
-            refresh               : refresh
             fetching              : MessageStore.isFetching()
-            queryParams           : MessageStore.getParams()
+            queryParams           : MessageStore.getQueryParams()
             currentMessageID      : MessageStore.getCurrentID()
-            conversation          : conversation
-            currentConversationID : conversationID
-            currentFilter         : MessageStore.getCurrentFilter()
-            results               : SearchStore.getResults()
+            conversation          : MessageStore.getCurrentConversation()
+            currentConversationID : MessageStore.getCurrentConversationID()
             settings              : SettingsStore.get()
-            isLoadingReply        : isLoadingReply
+            isLoadingReply        : not MessageStore.getByID(@props.messageID)?
+            refresh           : AccountStore.getMailboxRefresh @props.mailboxID
         }

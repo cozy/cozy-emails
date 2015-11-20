@@ -21,7 +21,6 @@ module.exports =
         'RECEIVE_RAW_MESSAGES'      : 'RECEIVE_RAW_MESSAGES'
         'RECEIVE_RAW_MESSAGE_REALTIME' : 'RECEIVE_RAW_MESSAGE_REALTIME'
         'MESSAGE_SEND'              : 'MESSAGE_SEND'
-        'LAST_ACTION'               : 'LAST_ACTION'
         'MESSAGE_CURRENT'           : 'MESSAGE_CURRENT'
         'RECEIVE_MESSAGE_DELETE'    : 'RECEIVE_MESSAGE_DELETE'
         'RECEIVE_MAILBOX_UPDATE'    : 'RECEIVE_MAILBOX_UPDATE'
@@ -53,9 +52,10 @@ module.exports =
         'MESSAGE_RECOVER_FAILURE'     : 'MESSAGE_RECOVER_FAILURE'
 
         # Search
-        'SET_SEARCH_QUERY'          : 'SET_SEARCH_QUERY'
-        'RECEIVE_RAW_SEARCH_RESULTS': 'RECEIVE_RAW_SEARCH_RESULTS'
-        'CLEAR_SEARCH_RESULTS'      : 'CLEAR_SEARCH_RESULTS'
+        'SEARCH_PARAMETER_CHANGED' : 'SEARCH_PARAMETER_CHANGED'
+        'SEARCH_REQUEST'           : 'SEARCH_REQUEST'
+        'SEARCH_SUCCESS'           : 'SEARCH_SUCCESS'
+        'SEARCH_FAILURE'           : 'SEARCH_FAILURE'
 
         # Contacts
         'SET_CONTACT_QUERY'          : 'SET_CONTACT_QUERY'
@@ -92,8 +92,7 @@ module.exports =
         'REFRESH_FAILURE'              : 'REFRESH_FAILURE'
 
         # List
-        'LIST_FILTER'               : 'LIST_FILTER'
-        'LIST_SORT'                 : 'LIST_SORT'
+        'QUERY_PARAMETER_CHANGED'   : 'QUERY_PARAMETER_CHANGED'
 
         # Toasts
         'TOASTS_SHOW'               : 'TOASTS_SHOW'
