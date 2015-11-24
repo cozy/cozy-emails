@@ -193,8 +193,10 @@ module.exports = Panel = React.createClass
             conversationID     = message.get 'conversationID'
             lengths            = MessageStore.getConversationsLength()
             conversationLength = lengths.get conversationID
-            conversation       = MessageStore.getConversation conversationID
             selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
+            trashMailboxID     = @state.selectedAccount?.get('trashMailbox')
+            conversation       = MessageStore
+                                .getConversation conversationID, trashMailboxID
 
         # don't display conversations in Trash and Draft folders
         conversationDisabledBoxes = [

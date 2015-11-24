@@ -232,6 +232,7 @@ class MessageStore extends Store
 
             _messages = _messages.set message.id, messageMap
 
+
             # updat _currentCID when we have the message
             if message.id is _currentID
                 _currentCID = message.conversationID
@@ -590,6 +591,7 @@ class MessageStore extends Store
     getNextOrPrevious: (isConv) ->
         @getNextMessage(isConv) or @getPreviousMessage(isConv)
 
+
     getCurrentConversation: ->
         conversationID = @getCurrentConversationID()
         if conversationID
@@ -597,10 +599,15 @@ class MessageStore extends Store
         else
             return null
 
-    getConversation: (conversationID) ->
+    getConversation: (conversationID, excludeMailbox) ->
         _conversationMemoize = _messagesWithInFlights()
             .filter (message) ->
-                message.get('conversationID') is conversationID
+                mailboxIDs = Object.keys message.get('mailboxIDs')
+                isInConversation =
+                    message.get('conversationID') is conversationID
+                isInMailbox = not excludeMailbox? or \
+                              not (excludeMailbox in mailboxIDs)
+                return isInConversation and isInMailbox
             .sort reverseDateSort
             .toVector()
 
