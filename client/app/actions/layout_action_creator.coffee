@@ -12,6 +12,8 @@ AppDispatcher = require '../app_dispatcher'
 AccountActionCreator = require './account_action_creator'
 MessageActionCreator = require './message_action_creator'
 
+uniqID = 0
+
 module.exports = LayoutActionCreator =
 
     setDisposition: (type) ->
@@ -79,7 +81,7 @@ module.exports = LayoutActionCreator =
             throw new Error 'Empty notification'
         else
             task =
-                id: Date.now()
+                id: "taskid-#{uniqID++}"
                 finished: true
                 message: message.toString()
 
@@ -213,6 +215,7 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.DRAWER_TOGGLE
 
     displayModal: (params) ->
+        params.closeModal ?= -> LayoutActionCreator.hideModal()
         AppDispatcher.handleViewAction
             type: ActionTypes.DISPLAY_MODAL
             value: params

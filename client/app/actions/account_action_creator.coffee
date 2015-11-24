@@ -6,50 +6,54 @@ AccountStore = require '../stores/account_store'
 LayoutActionCreator = null
 MessageActionCreator = require './message_action_creator'
 
-alertError = (error) ->
-    LayoutActionCreator = require '../actions/layout_action_creator'
-    if error.name is 'AccountConfigError'
-        message = t "config error #{error.field}"
-        LayoutActionCreator.alertError message
-    else
-        # try to handle every possible case
-        message = error.message or error.name or error
-        LayoutActionCreator.alertError message
+getLAC = ->
+    LayoutActionCreator ?= require '../actions/layout_action_creator'
+    return LayoutActionCreator
 
 module.exports = AccountActionCreator =
 
     create: (inputValues, afterCreation) ->
-        AccountActionCreator._setNewAccountWaitingStatus true
+        AppDispatcher.handleViewAction
+            type: ActionTypes.ADD_ACCOUNT_REQUEST
+            value: {inputValues}
 
         XHRUtils.createAccount inputValues, (error, account) ->
             if error? or not account?
-                AccountActionCreator._setNewAccountError error
-                if error?
-                    alertError error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.ADD_ACCOUNT_FAILURE
+                    value: {error}
+
+            else if not account?
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.ADD_ACCOUNT_FAILURE
+                    value: {error: 'no account returned from create'}
+
             else
                 AppDispatcher.handleViewAction
-                    type: ActionTypes.ADD_ACCOUNT
-                    value: account
+                    type: ActionTypes.ADD_ACCOUNT_SUCCESS
+                    value: {account}
 
-                afterCreation(AccountStore.getByID account.id)
+                url = "account/#{account.id}/config/mailboxes"
+                window.router.navigate url, trigger: true
 
 
     edit: (inputValues, accountID, callback) ->
-        AccountActionCreator._setNewAccountWaitingStatus true
+        newAccount = AccountStore.getByID(accountID).mergeDeep inputValues
 
-        account = AccountStore.getByID accountID
-        newAccount = account.mergeDeep inputValues
+        AppDispatcher.handleViewAction
+            type: ActionTypes.EDIT_ACCOUNT_REQUEST
+            value: {inputValues, newAccount}
 
         XHRUtils.editAccount newAccount, (error, rawAccount) ->
             if error?
-                AccountActionCreator._setNewAccountError error
-                alertError error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.EDIT_ACCOUNT_FAILURE
+                    value: {error}
             else
                 AppDispatcher.handleViewAction
-                    type: ActionTypes.EDIT_ACCOUNT
-                    value: rawAccount
-                LayoutActionCreator = require '../actions/layout_action_creator'
-                LayoutActionCreator.notify t('account updated'), autoclose: true
+                    type: ActionTypes.EDIT_ACCOUNT_SUCCESS
+                    value: {rawAccount}
+
                 callback?()
 
     check: (inputValues, accountID, cb) ->
@@ -59,34 +63,30 @@ module.exports = AccountActionCreator =
         else
             newAccount = inputValues
 
+        AppDispatcher.handleViewAction
+            type: ActionTypes.CHECK_ACCOUNT_REQUEST
+            value: {inputValues, newAccount}
+
         XHRUtils.checkAccount newAccount, (error, rawAccount) ->
             if error?
-                AccountActionCreator._setNewAccountError error
-                alertError error
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.CHECK_ACCOUNT_FAILURE
+                    value: {error}
+
             else
-                LayoutActionCreator = require '../actions/layout_action_creator'
-                LayoutActionCreator.notify t('account checked'), autoclose: true
-            if cb?
-                cb error, rawAccount
+                AppDispatcher.handleViewAction
+                    type: ActionTypes.CHECK_ACCOUNT_SUCCESS
+                    value: {rawAccount}
+
+            cb? error, rawAccount
 
     remove: (accountID) ->
         AppDispatcher.handleViewAction
             type: ActionTypes.REMOVE_ACCOUNT
             value: accountID
-        XHRUtils.removeAccount accountID
-        LayoutActionCreator = require '../actions/layout_action_creator'
-        LayoutActionCreator.notify t('account removed'), autoclose: true
+        XHRUtils.removeAccount accountID, (error) ->
+        getLAC().notify t('account removed'), autoclose: true
         window.router.navigate '', trigger: true
-
-    _setNewAccountWaitingStatus: (status) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.NEW_ACCOUNT_WAITING
-            value: status
-
-    _setNewAccountError: (errorMessage) ->
-        AppDispatcher.handleViewAction
-            type: ActionTypes.NEW_ACCOUNT_ERROR
-            value: errorMessage
 
     ensureSelected: (accountID, mailboxID) =>
         if AccountStore.selectedIsDifferentThan accountID, mailboxID
@@ -121,10 +121,7 @@ module.exports = AccountActionCreator =
             AccountActionCreator.selectAccount message.accountID
 
     discover: (domain, callback) ->
-        XHRUtils.accountDiscover domain, (err, infos) ->
-            if not infos?
-                infos = []
-            callback err, infos
+        XHRUtils.accountDiscover domain, callback
 
     mailboxCreate: (inputValues, callback) ->
         XHRUtils.mailboxCreate inputValues, (error, account) ->
@@ -132,8 +129,14 @@ module.exports = AccountActionCreator =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MAILBOX_CREATE
                     value: account
-            if callback?
-                callback error
+
+                getLAC().alertSuccess t("mailbox create ok")
+
+            else
+                message = "#{t("mailbox create ko")} #{error.message or error}"
+                getLAC().alertError message
+
+            callback? error
 
     mailboxUpdate: (inputValues, callback) ->
         XHRUtils.mailboxUpdate inputValues, (error, account) ->
@@ -141,8 +144,14 @@ module.exports = AccountActionCreator =
                 AppDispatcher.handleViewAction
                     type: ActionTypes.MAILBOX_UPDATE
                     value: account
-            if callback?
-                callback error
+
+                getLAC().alertSuccess t("mailbox update ok"),
+            else
+                message = "#{t("mailbox update ko")} #{error.message or error}"
+                getLAC().alertError message
+                    autoclose: true
+
+            callback? error
 
 
     mailboxDelete: (inputValues, callback) ->
@@ -167,8 +176,8 @@ module.exports = AccountActionCreator =
         XHRUtils.mailboxExpunge options, (error, account) ->
 
             if error?
-                LayoutActionCreator.alertError """
-                    #{t("mailbox expunge ko")} #{error}
+                getLAC().alertError """
+                    #{t("mailbox expunge ko")} #{error.message or error}
                 """
 
                 # if user hasn't switched to another box, refresh display
@@ -176,8 +185,8 @@ module.exports = AccountActionCreator =
                     parameters = MessageStore.getQueryParams()
                     parameters.accountID = accountID
                     parameters.mailboxID = mailboxID
-                    LayoutActionCreator.showMessageList {parameters}
+                    getLAC().showMessageList {parameters}
 
             else
-                LayoutActionCreator.notify t("mailbox expunge ok"),
+                getLAC().notify t("mailbox expunge ok"),
                     autoclose: true
