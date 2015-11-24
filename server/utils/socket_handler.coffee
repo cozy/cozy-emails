@@ -42,13 +42,11 @@ SocketHandler.setup = (app, server) ->
 
     Message.on 'create', (created) ->
         created = created.toClientObject()
-        io.emit 'message.create', created
         for socket in sockets when inScope(socket, created)
             socket.emit 'message.create', created
 
     Message.on 'update', (updated, old) ->
         updated = updated.toClientObject()
-        io.emit 'message.update', updated, old
         for socket in sockets
             if inScope(socket, updated) or inScope(socket, old)
                 socket.emit 'message.update', updated

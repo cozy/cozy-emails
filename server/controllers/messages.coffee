@@ -299,9 +299,9 @@ module.exports.batchMove = (req, res, next) ->
 module.exports.search = (req, res, next) ->
     params =
         query: req.query.search
+        facets: accountID: {}
 
     if req.query.accountID
-        params.facets = accountID: {}
         params.filter =
             accountID: [[req.query.accountID, req.query.accountID]]
 

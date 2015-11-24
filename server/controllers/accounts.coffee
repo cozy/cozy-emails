@@ -14,8 +14,7 @@ patchConversation = require '../patchs/conversation'
 # create an account
 # and lauch fetching of this account mails
 module.exports.create = (req, res, next) ->
-    # @TODO : validate req.body
-    account = new Account _.pick req.body, Object.keys Account.schema
+    account = new Account _.pick req.body, Account.saveFields
     async.series [
         (cb) ->
             log.debug "create#testConnections"
@@ -77,7 +76,7 @@ module.exports.check = (req, res, next) ->
     # imapLogin if present
     if req.body.imapLogin
         req.body.login = req.body.imapLogin
-    tmpAccount = new Account _.pick req.body, Object.keys Account.schema
+    tmpAccount = new Account _.pick req.body, Account.saveFields
     tmpAccount.testConnections (err) ->
         return next err if err
         res.send check: 'ok'
@@ -86,7 +85,7 @@ module.exports.check = (req, res, next) ->
 module.exports.edit = (req, res, next) ->
 
     accountInstance = ramStore.getAccount(req.params.accountID)
-    changes = _.pick req.body, Object.keys Account.schema
+    changes = _.pick req.body, Account.saveFields
     updated = new Account changes
     unless updated.password and updated.password isnt ''
         updated.password = accountInstance.password

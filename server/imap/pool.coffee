@@ -86,6 +86,7 @@ module.exports = class ImapPool
         # we failed to establish a new connection
         clearTimeout @wrongPortTimeout
         @connecting--
+        connection.destroy?()
         @failConnectionCounter++
 
         isAuth = err.textCode is 'AUTHENTICATIONFAILED'
@@ -94,9 +95,13 @@ module.exports = class ImapPool
            isAuth and @account.id and @failConnectionCounter is 1
             @account.refreshPassword (err) ->
                 if err
-                    @_giveUp err
+                    @_giveUp _typeConnectionError err
                 else
-                    setImmediate @_deQueue
+                    setTimeout @_deQueue, 10
+
+        # /w dovecot, the second failled login attempt timeout
+        else if @failConnectionCounter is 2 and err.source is 'timeout-auth'
+            @_giveUp new AccountConfigError 'auth', err
 
         else if @failConnectionCounter > 2
             # give up
@@ -219,6 +224,9 @@ module.exports = class ImapPool
             typed = new AccountConfigError 'imapServer', err
 
         if err.code is 'EHOSTUNREACH'
+            typed = new AccountConfigError 'imapServer', err
+
+        if err.code is 'ECONNREFUSED'
             typed = new AccountConfigError 'imapServer', err
 
         if err.source is 'timeout-auth'

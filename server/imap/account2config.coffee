@@ -94,7 +94,7 @@ module.exports.makeIMAPConfig = makeIMAPConfig = (account, callback) ->
                 tlsOptions : rejectUnauthorized : false
 
     else if account._passwordStillEncrypted
-        callback new PasswordEncryptedError()
+        callback new PasswordEncryptedError account
 
     else
         callback null,

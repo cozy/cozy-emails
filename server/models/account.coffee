@@ -42,6 +42,8 @@ class Account extends cozydb.CozyModel
         supportRFC4551: Boolean     # does the account support CONDSTORE ?
         signature:      String      # Signature to add at the end of messages
 
+        _passwordStillEncrypted: Boolean
+
 
     constructor: (attributes) ->
         if attributes.accountType is 'TEST'
@@ -60,7 +62,7 @@ class Account extends cozydb.CozyModel
             return callback err if err
 
             if fetched._passwordStillEncrypted
-                callback new PasswordEncryptedError()
+                callback new PasswordEncryptedError fetched
 
             else
                 @password = fetched.password
@@ -264,6 +266,9 @@ _ = require 'lodash'
 async = require 'async'
 Constants = require '../utils/constants'
 ramStore = require './store_account_and_boxes'
+
+schema = Object.keys(Account.schema)
+Account.saveFields = _.without schema, '_passwordStillEncrypted'
 
 refreshTimeout = null
 
