@@ -57,7 +57,6 @@ SocketHandler.setup = function(app, server) {
   Message.on('create', function(created) {
     var i, len, results, socket;
     created = created.toClientObject();
-    io.emit('message.create', created);
     results = [];
     for (i = 0, len = sockets.length; i < len; i++) {
       socket = sockets[i];
@@ -70,7 +69,6 @@ SocketHandler.setup = function(app, server) {
   Message.on('update', function(updated, old) {
     var i, len, results, socket;
     updated = updated.toClientObject();
-    io.emit('message.update', updated, old);
     results = [];
     for (i = 0, len = sockets.length; i < len; i++) {
       socket = sockets[i];

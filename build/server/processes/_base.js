@@ -67,7 +67,7 @@ module.exports = Process = (function() {
         results = [];
         for (i = 0, len = ref.length; i < len; i++) {
           cb = ref[i];
-          results.push(cb(err, arg1, arg2, arg3, arg4));
+          results.push(typeof cb === "function" ? cb(err, arg1, arg2, arg3, arg4) : void 0);
         }
         return results;
       };

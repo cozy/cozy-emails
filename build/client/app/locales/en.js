@@ -364,6 +364,8 @@ module.exports = {
   "filters flagged": "starred",
   "filters attach": "attachments",
   "filters search placeholder": "Search...",
+  "search all accounts": "Search in all accounts",
+  "search in account": "Search in %{account}",
   "daterangepicker placeholder": "by date",
   "daterangepicker presets yesterday": "yesterday",
   "daterangepicker presets last week": "last week",

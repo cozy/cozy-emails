@@ -402,6 +402,60 @@ body {
   -ms-flex-align: stretch;
   -webkit-align-items: stretch;
   align-items: stretch;
+  height: 100%;
+  -webkit-box-orient: vertical;
+  -moz-box-orient: vertical;
+  -o-box-orient: vertical;
+  -webkit-flex-direction: column;
+  -ms-flex-direction: column;
+  flex-direction: column;
+  min-width: min-content;
+}
+.app main .search-bar {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 0 1 2em;
+  -ms-flex: 0 1 2em;
+  flex: 0 1 2em;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  z-index: 500;
+bac
+}
+.app main .panels {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1 0 50%;
+  -ms-flex: 1 0 50%;
+  flex: 1 0 50%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-bottom: 0;
+  position: relative;
+  -webkit-box-align: stretch;
+  -moz-box-align: stretch;
+  -o-box-align: stretch;
+  -ms-flex-align: stretch;
+  -webkit-align-items: stretch;
+  align-items: stretch;
+  min-width: 100%;
+}
+.app [role=menubar] {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 0 1 auto;
+  -ms-flex: 0 1 auto;
+  flex: 0 1 auto;
 }
 .app [role=menubar],
 .app .panel {
@@ -427,7 +481,7 @@ body {
     width: 100%;
     height: 100%;
   }
-  .app .messages-list .drawer-toggle {
+  .app .search-bar .drawer-toggle {
     display: block;
   }
 }
@@ -461,21 +515,24 @@ body {
     -o-transition: flex 180ms ease-in;
     -ms-transition: flex 180ms ease-in;
     transition: flex 180ms ease-in;
-  }
-  .app main.full .panel:first-of-type {
-    -webkit-flex-basis: 100% !important;
-    flex-basis: 100% !important;
+    -webkit-flex-basis: 100%;
+    flex-basis: 100%;
+    -webkit-flex-shrink: 1;
+    flex-shrink: 1;
   }
   .app main.full .panel:first-of-type + [aria-expanded=false] {
-    -webkit-box-flex: 1;
-    -moz-box-flex: 1;
-    -o-box-flex: 1;
-    box-flex: 1;
-    -webkit-flex: 0;
-    -ms-flex: 0;
-    flex: 0;
+    -webkit-flex-basis: 0;
+    flex-basis: 0;
   }
-  .layout-column .app main {
+  .app main .panels {
+    display: -webkit-box;
+    display: -moz-box;
+    display: -webkit-flex;
+    display: -ms-flexbox;
+    display: box;
+    display: flex;
+  }
+  .layout-column .app main .panels {
     -webkit-box-orient: horizontal;
     -moz-box-orient: horizontal;
     -o-box-orient: horizontal;
@@ -483,7 +540,7 @@ body {
     -ms-flex-direction: row;
     flex-direction: row;
   }
-  .layout-row .app main {
+  .layout-row .app main .panels {
     -webkit-box-orient: vertical;
     -moz-box-orient: vertical;
     -o-box-orient: vertical;
@@ -491,7 +548,7 @@ body {
     -ms-flex-direction: column;
     flex-direction: column;
   }
-  .layout-row-reverse .app main {
+  .layout-row-reverse .app main .panels {
     -webkit-box-direction: reverse;
     -moz-box-direction: reverse;
     -o-box-direction: reverse;
@@ -503,1109 +560,499 @@ body {
     flex-direction: column-reverse;
   }
   .layout-preview-20 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 80;
-    -moz-box-flex: 80;
-    -o-box-flex: 80;
-    box-flex: 80;
-    -webkit-flex: 80;
-    -ms-flex: 80;
-    flex: 80;
+    -webkit-flex-shrink: 20;
+    flex-shrink: 20;
   }
   .layout-preview-20 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 20;
-    -moz-box-flex: 20;
-    -o-box-flex: 20;
-    box-flex: 20;
-    -webkit-flex: 20;
-    -ms-flex: 20;
-    flex: 20;
+    -webkit-flex-shrink: 80;
+    flex-shrink: 80;
   }
   .layout-preview-21 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 79;
-    -moz-box-flex: 79;
-    -o-box-flex: 79;
-    box-flex: 79;
-    -webkit-flex: 79;
-    -ms-flex: 79;
-    flex: 79;
+    -webkit-flex-shrink: 21;
+    flex-shrink: 21;
   }
   .layout-preview-21 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 21;
-    -moz-box-flex: 21;
-    -o-box-flex: 21;
-    box-flex: 21;
-    -webkit-flex: 21;
-    -ms-flex: 21;
-    flex: 21;
+    -webkit-flex-shrink: 79;
+    flex-shrink: 79;
   }
   .layout-preview-22 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 78;
-    -moz-box-flex: 78;
-    -o-box-flex: 78;
-    box-flex: 78;
-    -webkit-flex: 78;
-    -ms-flex: 78;
-    flex: 78;
+    -webkit-flex-shrink: 22;
+    flex-shrink: 22;
   }
   .layout-preview-22 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 22;
-    -moz-box-flex: 22;
-    -o-box-flex: 22;
-    box-flex: 22;
-    -webkit-flex: 22;
-    -ms-flex: 22;
-    flex: 22;
+    -webkit-flex-shrink: 78;
+    flex-shrink: 78;
   }
   .layout-preview-23 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 77;
-    -moz-box-flex: 77;
-    -o-box-flex: 77;
-    box-flex: 77;
-    -webkit-flex: 77;
-    -ms-flex: 77;
-    flex: 77;
+    -webkit-flex-shrink: 23;
+    flex-shrink: 23;
   }
   .layout-preview-23 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 23;
-    -moz-box-flex: 23;
-    -o-box-flex: 23;
-    box-flex: 23;
-    -webkit-flex: 23;
-    -ms-flex: 23;
-    flex: 23;
+    -webkit-flex-shrink: 77;
+    flex-shrink: 77;
   }
   .layout-preview-24 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 76;
-    -moz-box-flex: 76;
-    -o-box-flex: 76;
-    box-flex: 76;
-    -webkit-flex: 76;
-    -ms-flex: 76;
-    flex: 76;
+    -webkit-flex-shrink: 24;
+    flex-shrink: 24;
   }
   .layout-preview-24 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 24;
-    -moz-box-flex: 24;
-    -o-box-flex: 24;
-    box-flex: 24;
-    -webkit-flex: 24;
-    -ms-flex: 24;
-    flex: 24;
+    -webkit-flex-shrink: 76;
+    flex-shrink: 76;
   }
   .layout-preview-25 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 75;
-    -moz-box-flex: 75;
-    -o-box-flex: 75;
-    box-flex: 75;
-    -webkit-flex: 75;
-    -ms-flex: 75;
-    flex: 75;
+    -webkit-flex-shrink: 25;
+    flex-shrink: 25;
   }
   .layout-preview-25 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 25;
-    -moz-box-flex: 25;
-    -o-box-flex: 25;
-    box-flex: 25;
-    -webkit-flex: 25;
-    -ms-flex: 25;
-    flex: 25;
+    -webkit-flex-shrink: 75;
+    flex-shrink: 75;
   }
   .layout-preview-26 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 74;
-    -moz-box-flex: 74;
-    -o-box-flex: 74;
-    box-flex: 74;
-    -webkit-flex: 74;
-    -ms-flex: 74;
-    flex: 74;
+    -webkit-flex-shrink: 26;
+    flex-shrink: 26;
   }
   .layout-preview-26 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 26;
-    -moz-box-flex: 26;
-    -o-box-flex: 26;
-    box-flex: 26;
-    -webkit-flex: 26;
-    -ms-flex: 26;
-    flex: 26;
+    -webkit-flex-shrink: 74;
+    flex-shrink: 74;
   }
   .layout-preview-27 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 73;
-    -moz-box-flex: 73;
-    -o-box-flex: 73;
-    box-flex: 73;
-    -webkit-flex: 73;
-    -ms-flex: 73;
-    flex: 73;
+    -webkit-flex-shrink: 27;
+    flex-shrink: 27;
   }
   .layout-preview-27 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 27;
-    -moz-box-flex: 27;
-    -o-box-flex: 27;
-    box-flex: 27;
-    -webkit-flex: 27;
-    -ms-flex: 27;
-    flex: 27;
+    -webkit-flex-shrink: 73;
+    flex-shrink: 73;
   }
   .layout-preview-28 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 72;
-    -moz-box-flex: 72;
-    -o-box-flex: 72;
-    box-flex: 72;
-    -webkit-flex: 72;
-    -ms-flex: 72;
-    flex: 72;
+    -webkit-flex-shrink: 28;
+    flex-shrink: 28;
   }
   .layout-preview-28 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 28;
-    -moz-box-flex: 28;
-    -o-box-flex: 28;
-    box-flex: 28;
-    -webkit-flex: 28;
-    -ms-flex: 28;
-    flex: 28;
+    -webkit-flex-shrink: 72;
+    flex-shrink: 72;
   }
   .layout-preview-29 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 71;
-    -moz-box-flex: 71;
-    -o-box-flex: 71;
-    box-flex: 71;
-    -webkit-flex: 71;
-    -ms-flex: 71;
-    flex: 71;
+    -webkit-flex-shrink: 29;
+    flex-shrink: 29;
   }
   .layout-preview-29 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 29;
-    -moz-box-flex: 29;
-    -o-box-flex: 29;
-    box-flex: 29;
-    -webkit-flex: 29;
-    -ms-flex: 29;
-    flex: 29;
+    -webkit-flex-shrink: 71;
+    flex-shrink: 71;
   }
   .layout-preview-30 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 70;
-    -moz-box-flex: 70;
-    -o-box-flex: 70;
-    box-flex: 70;
-    -webkit-flex: 70;
-    -ms-flex: 70;
-    flex: 70;
+    -webkit-flex-shrink: 30;
+    flex-shrink: 30;
   }
   .layout-preview-30 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 30;
-    -moz-box-flex: 30;
-    -o-box-flex: 30;
-    box-flex: 30;
-    -webkit-flex: 30;
-    -ms-flex: 30;
-    flex: 30;
+    -webkit-flex-shrink: 70;
+    flex-shrink: 70;
   }
   .layout-preview-31 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 69;
-    -moz-box-flex: 69;
-    -o-box-flex: 69;
-    box-flex: 69;
-    -webkit-flex: 69;
-    -ms-flex: 69;
-    flex: 69;
+    -webkit-flex-shrink: 31;
+    flex-shrink: 31;
   }
   .layout-preview-31 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 31;
-    -moz-box-flex: 31;
-    -o-box-flex: 31;
-    box-flex: 31;
-    -webkit-flex: 31;
-    -ms-flex: 31;
-    flex: 31;
+    -webkit-flex-shrink: 69;
+    flex-shrink: 69;
   }
   .layout-preview-32 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 68;
-    -moz-box-flex: 68;
-    -o-box-flex: 68;
-    box-flex: 68;
-    -webkit-flex: 68;
-    -ms-flex: 68;
-    flex: 68;
+    -webkit-flex-shrink: 32;
+    flex-shrink: 32;
   }
   .layout-preview-32 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 32;
-    -moz-box-flex: 32;
-    -o-box-flex: 32;
-    box-flex: 32;
-    -webkit-flex: 32;
-    -ms-flex: 32;
-    flex: 32;
+    -webkit-flex-shrink: 68;
+    flex-shrink: 68;
   }
   .layout-preview-33 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 67;
-    -moz-box-flex: 67;
-    -o-box-flex: 67;
-    box-flex: 67;
-    -webkit-flex: 67;
-    -ms-flex: 67;
-    flex: 67;
+    -webkit-flex-shrink: 33;
+    flex-shrink: 33;
   }
   .layout-preview-33 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 33;
-    -moz-box-flex: 33;
-    -o-box-flex: 33;
-    box-flex: 33;
-    -webkit-flex: 33;
-    -ms-flex: 33;
-    flex: 33;
+    -webkit-flex-shrink: 67;
+    flex-shrink: 67;
   }
   .layout-preview-34 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 66;
-    -moz-box-flex: 66;
-    -o-box-flex: 66;
-    box-flex: 66;
-    -webkit-flex: 66;
-    -ms-flex: 66;
-    flex: 66;
+    -webkit-flex-shrink: 34;
+    flex-shrink: 34;
   }
   .layout-preview-34 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 34;
-    -moz-box-flex: 34;
-    -o-box-flex: 34;
-    box-flex: 34;
-    -webkit-flex: 34;
-    -ms-flex: 34;
-    flex: 34;
+    -webkit-flex-shrink: 66;
+    flex-shrink: 66;
   }
   .layout-preview-35 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 65;
-    -moz-box-flex: 65;
-    -o-box-flex: 65;
-    box-flex: 65;
-    -webkit-flex: 65;
-    -ms-flex: 65;
-    flex: 65;
+    -webkit-flex-shrink: 35;
+    flex-shrink: 35;
   }
   .layout-preview-35 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 35;
-    -moz-box-flex: 35;
-    -o-box-flex: 35;
-    box-flex: 35;
-    -webkit-flex: 35;
-    -ms-flex: 35;
-    flex: 35;
+    -webkit-flex-shrink: 65;
+    flex-shrink: 65;
   }
   .layout-preview-36 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 64;
-    -moz-box-flex: 64;
-    -o-box-flex: 64;
-    box-flex: 64;
-    -webkit-flex: 64;
-    -ms-flex: 64;
-    flex: 64;
+    -webkit-flex-shrink: 36;
+    flex-shrink: 36;
   }
   .layout-preview-36 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 36;
-    -moz-box-flex: 36;
-    -o-box-flex: 36;
-    box-flex: 36;
-    -webkit-flex: 36;
-    -ms-flex: 36;
-    flex: 36;
+    -webkit-flex-shrink: 64;
+    flex-shrink: 64;
   }
   .layout-preview-37 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 63;
-    -moz-box-flex: 63;
-    -o-box-flex: 63;
-    box-flex: 63;
-    -webkit-flex: 63;
-    -ms-flex: 63;
-    flex: 63;
+    -webkit-flex-shrink: 37;
+    flex-shrink: 37;
   }
   .layout-preview-37 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 37;
-    -moz-box-flex: 37;
-    -o-box-flex: 37;
-    box-flex: 37;
-    -webkit-flex: 37;
-    -ms-flex: 37;
-    flex: 37;
+    -webkit-flex-shrink: 63;
+    flex-shrink: 63;
   }
   .layout-preview-38 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 62;
-    -moz-box-flex: 62;
-    -o-box-flex: 62;
-    box-flex: 62;
-    -webkit-flex: 62;
-    -ms-flex: 62;
-    flex: 62;
+    -webkit-flex-shrink: 38;
+    flex-shrink: 38;
   }
   .layout-preview-38 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 38;
-    -moz-box-flex: 38;
-    -o-box-flex: 38;
-    box-flex: 38;
-    -webkit-flex: 38;
-    -ms-flex: 38;
-    flex: 38;
+    -webkit-flex-shrink: 62;
+    flex-shrink: 62;
   }
   .layout-preview-39 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 61;
-    -moz-box-flex: 61;
-    -o-box-flex: 61;
-    box-flex: 61;
-    -webkit-flex: 61;
-    -ms-flex: 61;
-    flex: 61;
+    -webkit-flex-shrink: 39;
+    flex-shrink: 39;
   }
   .layout-preview-39 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 39;
-    -moz-box-flex: 39;
-    -o-box-flex: 39;
-    box-flex: 39;
-    -webkit-flex: 39;
-    -ms-flex: 39;
-    flex: 39;
+    -webkit-flex-shrink: 61;
+    flex-shrink: 61;
   }
   .layout-preview-40 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 60;
-    -moz-box-flex: 60;
-    -o-box-flex: 60;
-    box-flex: 60;
-    -webkit-flex: 60;
-    -ms-flex: 60;
-    flex: 60;
+    -webkit-flex-shrink: 40;
+    flex-shrink: 40;
   }
   .layout-preview-40 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 40;
-    -moz-box-flex: 40;
-    -o-box-flex: 40;
-    box-flex: 40;
-    -webkit-flex: 40;
-    -ms-flex: 40;
-    flex: 40;
+    -webkit-flex-shrink: 60;
+    flex-shrink: 60;
   }
   .layout-preview-41 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 59;
-    -moz-box-flex: 59;
-    -o-box-flex: 59;
-    box-flex: 59;
-    -webkit-flex: 59;
-    -ms-flex: 59;
-    flex: 59;
+    -webkit-flex-shrink: 41;
+    flex-shrink: 41;
   }
   .layout-preview-41 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 41;
-    -moz-box-flex: 41;
-    -o-box-flex: 41;
-    box-flex: 41;
-    -webkit-flex: 41;
-    -ms-flex: 41;
-    flex: 41;
+    -webkit-flex-shrink: 59;
+    flex-shrink: 59;
   }
   .layout-preview-42 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 58;
-    -moz-box-flex: 58;
-    -o-box-flex: 58;
-    box-flex: 58;
-    -webkit-flex: 58;
-    -ms-flex: 58;
-    flex: 58;
+    -webkit-flex-shrink: 42;
+    flex-shrink: 42;
   }
   .layout-preview-42 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 42;
-    -moz-box-flex: 42;
-    -o-box-flex: 42;
-    box-flex: 42;
-    -webkit-flex: 42;
-    -ms-flex: 42;
-    flex: 42;
+    -webkit-flex-shrink: 58;
+    flex-shrink: 58;
   }
   .layout-preview-43 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 57;
-    -moz-box-flex: 57;
-    -o-box-flex: 57;
-    box-flex: 57;
-    -webkit-flex: 57;
-    -ms-flex: 57;
-    flex: 57;
+    -webkit-flex-shrink: 43;
+    flex-shrink: 43;
   }
   .layout-preview-43 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 43;
-    -moz-box-flex: 43;
-    -o-box-flex: 43;
-    box-flex: 43;
-    -webkit-flex: 43;
-    -ms-flex: 43;
-    flex: 43;
+    -webkit-flex-shrink: 57;
+    flex-shrink: 57;
   }
   .layout-preview-44 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 56;
-    -moz-box-flex: 56;
-    -o-box-flex: 56;
-    box-flex: 56;
-    -webkit-flex: 56;
-    -ms-flex: 56;
-    flex: 56;
+    -webkit-flex-shrink: 44;
+    flex-shrink: 44;
   }
   .layout-preview-44 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 44;
-    -moz-box-flex: 44;
-    -o-box-flex: 44;
-    box-flex: 44;
-    -webkit-flex: 44;
-    -ms-flex: 44;
-    flex: 44;
+    -webkit-flex-shrink: 56;
+    flex-shrink: 56;
   }
   .layout-preview-45 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 55;
-    -moz-box-flex: 55;
-    -o-box-flex: 55;
-    box-flex: 55;
-    -webkit-flex: 55;
-    -ms-flex: 55;
-    flex: 55;
+    -webkit-flex-shrink: 45;
+    flex-shrink: 45;
   }
   .layout-preview-45 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 45;
-    -moz-box-flex: 45;
-    -o-box-flex: 45;
-    box-flex: 45;
-    -webkit-flex: 45;
-    -ms-flex: 45;
-    flex: 45;
+    -webkit-flex-shrink: 55;
+    flex-shrink: 55;
   }
   .layout-preview-46 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 54;
-    -moz-box-flex: 54;
-    -o-box-flex: 54;
-    box-flex: 54;
-    -webkit-flex: 54;
-    -ms-flex: 54;
-    flex: 54;
+    -webkit-flex-shrink: 46;
+    flex-shrink: 46;
   }
   .layout-preview-46 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 46;
-    -moz-box-flex: 46;
-    -o-box-flex: 46;
-    box-flex: 46;
-    -webkit-flex: 46;
-    -ms-flex: 46;
-    flex: 46;
+    -webkit-flex-shrink: 54;
+    flex-shrink: 54;
   }
   .layout-preview-47 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 53;
-    -moz-box-flex: 53;
-    -o-box-flex: 53;
-    box-flex: 53;
-    -webkit-flex: 53;
-    -ms-flex: 53;
-    flex: 53;
+    -webkit-flex-shrink: 47;
+    flex-shrink: 47;
   }
   .layout-preview-47 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 47;
-    -moz-box-flex: 47;
-    -o-box-flex: 47;
-    box-flex: 47;
-    -webkit-flex: 47;
-    -ms-flex: 47;
-    flex: 47;
+    -webkit-flex-shrink: 53;
+    flex-shrink: 53;
   }
   .layout-preview-48 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 52;
-    -moz-box-flex: 52;
-    -o-box-flex: 52;
-    box-flex: 52;
-    -webkit-flex: 52;
-    -ms-flex: 52;
-    flex: 52;
+    -webkit-flex-shrink: 48;
+    flex-shrink: 48;
   }
   .layout-preview-48 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 48;
-    -moz-box-flex: 48;
-    -o-box-flex: 48;
-    box-flex: 48;
-    -webkit-flex: 48;
-    -ms-flex: 48;
-    flex: 48;
+    -webkit-flex-shrink: 52;
+    flex-shrink: 52;
   }
   .layout-preview-49 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 51;
-    -moz-box-flex: 51;
-    -o-box-flex: 51;
-    box-flex: 51;
-    -webkit-flex: 51;
-    -ms-flex: 51;
-    flex: 51;
+    -webkit-flex-shrink: 49;
+    flex-shrink: 49;
   }
   .layout-preview-49 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 49;
-    -moz-box-flex: 49;
-    -o-box-flex: 49;
-    box-flex: 49;
-    -webkit-flex: 49;
-    -ms-flex: 49;
-    flex: 49;
+    -webkit-flex-shrink: 51;
+    flex-shrink: 51;
   }
   .layout-preview-50 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 50;
-    -moz-box-flex: 50;
-    -o-box-flex: 50;
-    box-flex: 50;
-    -webkit-flex: 50;
-    -ms-flex: 50;
-    flex: 50;
+    -webkit-flex-shrink: 50;
+    flex-shrink: 50;
   }
   .layout-preview-50 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 50;
-    -moz-box-flex: 50;
-    -o-box-flex: 50;
-    box-flex: 50;
-    -webkit-flex: 50;
-    -ms-flex: 50;
-    flex: 50;
+    -webkit-flex-shrink: 50;
+    flex-shrink: 50;
   }
   .layout-preview-51 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 49;
-    -moz-box-flex: 49;
-    -o-box-flex: 49;
-    box-flex: 49;
-    -webkit-flex: 49;
-    -ms-flex: 49;
-    flex: 49;
+    -webkit-flex-shrink: 51;
+    flex-shrink: 51;
   }
   .layout-preview-51 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 51;
-    -moz-box-flex: 51;
-    -o-box-flex: 51;
-    box-flex: 51;
-    -webkit-flex: 51;
-    -ms-flex: 51;
-    flex: 51;
+    -webkit-flex-shrink: 49;
+    flex-shrink: 49;
   }
   .layout-preview-52 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 48;
-    -moz-box-flex: 48;
-    -o-box-flex: 48;
-    box-flex: 48;
-    -webkit-flex: 48;
-    -ms-flex: 48;
-    flex: 48;
+    -webkit-flex-shrink: 52;
+    flex-shrink: 52;
   }
   .layout-preview-52 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 52;
-    -moz-box-flex: 52;
-    -o-box-flex: 52;
-    box-flex: 52;
-    -webkit-flex: 52;
-    -ms-flex: 52;
-    flex: 52;
+    -webkit-flex-shrink: 48;
+    flex-shrink: 48;
   }
   .layout-preview-53 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 47;
-    -moz-box-flex: 47;
-    -o-box-flex: 47;
-    box-flex: 47;
-    -webkit-flex: 47;
-    -ms-flex: 47;
-    flex: 47;
+    -webkit-flex-shrink: 53;
+    flex-shrink: 53;
   }
   .layout-preview-53 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 53;
-    -moz-box-flex: 53;
-    -o-box-flex: 53;
-    box-flex: 53;
-    -webkit-flex: 53;
-    -ms-flex: 53;
-    flex: 53;
+    -webkit-flex-shrink: 47;
+    flex-shrink: 47;
   }
   .layout-preview-54 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 46;
-    -moz-box-flex: 46;
-    -o-box-flex: 46;
-    box-flex: 46;
-    -webkit-flex: 46;
-    -ms-flex: 46;
-    flex: 46;
+    -webkit-flex-shrink: 54;
+    flex-shrink: 54;
   }
   .layout-preview-54 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 54;
-    -moz-box-flex: 54;
-    -o-box-flex: 54;
-    box-flex: 54;
-    -webkit-flex: 54;
-    -ms-flex: 54;
-    flex: 54;
+    -webkit-flex-shrink: 46;
+    flex-shrink: 46;
   }
   .layout-preview-55 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 45;
-    -moz-box-flex: 45;
-    -o-box-flex: 45;
-    box-flex: 45;
-    -webkit-flex: 45;
-    -ms-flex: 45;
-    flex: 45;
+    -webkit-flex-shrink: 55;
+    flex-shrink: 55;
   }
   .layout-preview-55 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 55;
-    -moz-box-flex: 55;
-    -o-box-flex: 55;
-    box-flex: 55;
-    -webkit-flex: 55;
-    -ms-flex: 55;
-    flex: 55;
+    -webkit-flex-shrink: 45;
+    flex-shrink: 45;
   }
   .layout-preview-56 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 44;
-    -moz-box-flex: 44;
-    -o-box-flex: 44;
-    box-flex: 44;
-    -webkit-flex: 44;
-    -ms-flex: 44;
-    flex: 44;
+    -webkit-flex-shrink: 56;
+    flex-shrink: 56;
   }
   .layout-preview-56 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 56;
-    -moz-box-flex: 56;
-    -o-box-flex: 56;
-    box-flex: 56;
-    -webkit-flex: 56;
-    -ms-flex: 56;
-    flex: 56;
+    -webkit-flex-shrink: 44;
+    flex-shrink: 44;
   }
   .layout-preview-57 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 43;
-    -moz-box-flex: 43;
-    -o-box-flex: 43;
-    box-flex: 43;
-    -webkit-flex: 43;
-    -ms-flex: 43;
-    flex: 43;
+    -webkit-flex-shrink: 57;
+    flex-shrink: 57;
   }
   .layout-preview-57 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 57;
-    -moz-box-flex: 57;
-    -o-box-flex: 57;
-    box-flex: 57;
-    -webkit-flex: 57;
-    -ms-flex: 57;
-    flex: 57;
+    -webkit-flex-shrink: 43;
+    flex-shrink: 43;
   }
   .layout-preview-58 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 42;
-    -moz-box-flex: 42;
-    -o-box-flex: 42;
-    box-flex: 42;
-    -webkit-flex: 42;
-    -ms-flex: 42;
-    flex: 42;
+    -webkit-flex-shrink: 58;
+    flex-shrink: 58;
   }
   .layout-preview-58 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 58;
-    -moz-box-flex: 58;
-    -o-box-flex: 58;
-    box-flex: 58;
-    -webkit-flex: 58;
-    -ms-flex: 58;
-    flex: 58;
+    -webkit-flex-shrink: 42;
+    flex-shrink: 42;
   }
   .layout-preview-59 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 41;
-    -moz-box-flex: 41;
-    -o-box-flex: 41;
-    box-flex: 41;
-    -webkit-flex: 41;
-    -ms-flex: 41;
-    flex: 41;
+    -webkit-flex-shrink: 59;
+    flex-shrink: 59;
   }
   .layout-preview-59 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 59;
-    -moz-box-flex: 59;
-    -o-box-flex: 59;
-    box-flex: 59;
-    -webkit-flex: 59;
-    -ms-flex: 59;
-    flex: 59;
+    -webkit-flex-shrink: 41;
+    flex-shrink: 41;
   }
   .layout-preview-60 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 40;
-    -moz-box-flex: 40;
-    -o-box-flex: 40;
-    box-flex: 40;
-    -webkit-flex: 40;
-    -ms-flex: 40;
-    flex: 40;
+    -webkit-flex-shrink: 60;
+    flex-shrink: 60;
   }
   .layout-preview-60 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 60;
-    -moz-box-flex: 60;
-    -o-box-flex: 60;
-    box-flex: 60;
-    -webkit-flex: 60;
-    -ms-flex: 60;
-    flex: 60;
+    -webkit-flex-shrink: 40;
+    flex-shrink: 40;
   }
   .layout-preview-61 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 39;
-    -moz-box-flex: 39;
-    -o-box-flex: 39;
-    box-flex: 39;
-    -webkit-flex: 39;
-    -ms-flex: 39;
-    flex: 39;
+    -webkit-flex-shrink: 61;
+    flex-shrink: 61;
   }
   .layout-preview-61 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 61;
-    -moz-box-flex: 61;
-    -o-box-flex: 61;
-    box-flex: 61;
-    -webkit-flex: 61;
-    -ms-flex: 61;
-    flex: 61;
+    -webkit-flex-shrink: 39;
+    flex-shrink: 39;
   }
   .layout-preview-62 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 38;
-    -moz-box-flex: 38;
-    -o-box-flex: 38;
-    box-flex: 38;
-    -webkit-flex: 38;
-    -ms-flex: 38;
-    flex: 38;
+    -webkit-flex-shrink: 62;
+    flex-shrink: 62;
   }
   .layout-preview-62 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 62;
-    -moz-box-flex: 62;
-    -o-box-flex: 62;
-    box-flex: 62;
-    -webkit-flex: 62;
-    -ms-flex: 62;
-    flex: 62;
+    -webkit-flex-shrink: 38;
+    flex-shrink: 38;
   }
   .layout-preview-63 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 37;
-    -moz-box-flex: 37;
-    -o-box-flex: 37;
-    box-flex: 37;
-    -webkit-flex: 37;
-    -ms-flex: 37;
-    flex: 37;
+    -webkit-flex-shrink: 63;
+    flex-shrink: 63;
   }
   .layout-preview-63 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 63;
-    -moz-box-flex: 63;
-    -o-box-flex: 63;
-    box-flex: 63;
-    -webkit-flex: 63;
-    -ms-flex: 63;
-    flex: 63;
+    -webkit-flex-shrink: 37;
+    flex-shrink: 37;
   }
   .layout-preview-64 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 36;
-    -moz-box-flex: 36;
-    -o-box-flex: 36;
-    box-flex: 36;
-    -webkit-flex: 36;
-    -ms-flex: 36;
-    flex: 36;
+    -webkit-flex-shrink: 64;
+    flex-shrink: 64;
   }
   .layout-preview-64 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 64;
-    -moz-box-flex: 64;
-    -o-box-flex: 64;
-    box-flex: 64;
-    -webkit-flex: 64;
-    -ms-flex: 64;
-    flex: 64;
+    -webkit-flex-shrink: 36;
+    flex-shrink: 36;
   }
   .layout-preview-65 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 35;
-    -moz-box-flex: 35;
-    -o-box-flex: 35;
-    box-flex: 35;
-    -webkit-flex: 35;
-    -ms-flex: 35;
-    flex: 35;
+    -webkit-flex-shrink: 65;
+    flex-shrink: 65;
   }
   .layout-preview-65 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 65;
-    -moz-box-flex: 65;
-    -o-box-flex: 65;
-    box-flex: 65;
-    -webkit-flex: 65;
-    -ms-flex: 65;
-    flex: 65;
+    -webkit-flex-shrink: 35;
+    flex-shrink: 35;
   }
   .layout-preview-66 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 34;
-    -moz-box-flex: 34;
-    -o-box-flex: 34;
-    box-flex: 34;
-    -webkit-flex: 34;
-    -ms-flex: 34;
-    flex: 34;
+    -webkit-flex-shrink: 66;
+    flex-shrink: 66;
   }
   .layout-preview-66 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 66;
-    -moz-box-flex: 66;
-    -o-box-flex: 66;
-    box-flex: 66;
-    -webkit-flex: 66;
-    -ms-flex: 66;
-    flex: 66;
+    -webkit-flex-shrink: 34;
+    flex-shrink: 34;
   }
   .layout-preview-67 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 33;
-    -moz-box-flex: 33;
-    -o-box-flex: 33;
-    box-flex: 33;
-    -webkit-flex: 33;
-    -ms-flex: 33;
-    flex: 33;
+    -webkit-flex-shrink: 67;
+    flex-shrink: 67;
   }
   .layout-preview-67 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 67;
-    -moz-box-flex: 67;
-    -o-box-flex: 67;
-    box-flex: 67;
-    -webkit-flex: 67;
-    -ms-flex: 67;
-    flex: 67;
+    -webkit-flex-shrink: 33;
+    flex-shrink: 33;
   }
   .layout-preview-68 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 32;
-    -moz-box-flex: 32;
-    -o-box-flex: 32;
-    box-flex: 32;
-    -webkit-flex: 32;
-    -ms-flex: 32;
-    flex: 32;
+    -webkit-flex-shrink: 68;
+    flex-shrink: 68;
   }
   .layout-preview-68 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 68;
-    -moz-box-flex: 68;
-    -o-box-flex: 68;
-    box-flex: 68;
-    -webkit-flex: 68;
-    -ms-flex: 68;
-    flex: 68;
+    -webkit-flex-shrink: 32;
+    flex-shrink: 32;
   }
   .layout-preview-69 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 31;
-    -moz-box-flex: 31;
-    -o-box-flex: 31;
-    box-flex: 31;
-    -webkit-flex: 31;
-    -ms-flex: 31;
-    flex: 31;
+    -webkit-flex-shrink: 69;
+    flex-shrink: 69;
   }
   .layout-preview-69 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 69;
-    -moz-box-flex: 69;
-    -o-box-flex: 69;
-    box-flex: 69;
-    -webkit-flex: 69;
-    -ms-flex: 69;
-    flex: 69;
+    -webkit-flex-shrink: 31;
+    flex-shrink: 31;
   }
   .layout-preview-70 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 30;
-    -moz-box-flex: 30;
-    -o-box-flex: 30;
-    box-flex: 30;
-    -webkit-flex: 30;
-    -ms-flex: 30;
-    flex: 30;
+    -webkit-flex-shrink: 70;
+    flex-shrink: 70;
   }
   .layout-preview-70 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 70;
-    -moz-box-flex: 70;
-    -o-box-flex: 70;
-    box-flex: 70;
-    -webkit-flex: 70;
-    -ms-flex: 70;
-    flex: 70;
+    -webkit-flex-shrink: 30;
+    flex-shrink: 30;
   }
   .layout-preview-71 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 29;
-    -moz-box-flex: 29;
-    -o-box-flex: 29;
-    box-flex: 29;
-    -webkit-flex: 29;
-    -ms-flex: 29;
-    flex: 29;
+    -webkit-flex-shrink: 71;
+    flex-shrink: 71;
   }
   .layout-preview-71 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 71;
-    -moz-box-flex: 71;
-    -o-box-flex: 71;
-    box-flex: 71;
-    -webkit-flex: 71;
-    -ms-flex: 71;
-    flex: 71;
+    -webkit-flex-shrink: 29;
+    flex-shrink: 29;
   }
   .layout-preview-72 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 28;
-    -moz-box-flex: 28;
-    -o-box-flex: 28;
-    box-flex: 28;
-    -webkit-flex: 28;
-    -ms-flex: 28;
-    flex: 28;
+    -webkit-flex-shrink: 72;
+    flex-shrink: 72;
   }
   .layout-preview-72 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 72;
-    -moz-box-flex: 72;
-    -o-box-flex: 72;
-    box-flex: 72;
-    -webkit-flex: 72;
-    -ms-flex: 72;
-    flex: 72;
+    -webkit-flex-shrink: 28;
+    flex-shrink: 28;
   }
   .layout-preview-73 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 27;
-    -moz-box-flex: 27;
-    -o-box-flex: 27;
-    box-flex: 27;
-    -webkit-flex: 27;
-    -ms-flex: 27;
-    flex: 27;
+    -webkit-flex-shrink: 73;
+    flex-shrink: 73;
   }
   .layout-preview-73 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 73;
-    -moz-box-flex: 73;
-    -o-box-flex: 73;
-    box-flex: 73;
-    -webkit-flex: 73;
-    -ms-flex: 73;
-    flex: 73;
+    -webkit-flex-shrink: 27;
+    flex-shrink: 27;
   }
   .layout-preview-74 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 26;
-    -moz-box-flex: 26;
-    -o-box-flex: 26;
-    box-flex: 26;
-    -webkit-flex: 26;
-    -ms-flex: 26;
-    flex: 26;
+    -webkit-flex-shrink: 74;
+    flex-shrink: 74;
   }
   .layout-preview-74 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 74;
-    -moz-box-flex: 74;
-    -o-box-flex: 74;
-    box-flex: 74;
-    -webkit-flex: 74;
-    -ms-flex: 74;
-    flex: 74;
+    -webkit-flex-shrink: 26;
+    flex-shrink: 26;
   }
   .layout-preview-75 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 25;
-    -moz-box-flex: 25;
-    -o-box-flex: 25;
-    box-flex: 25;
-    -webkit-flex: 25;
-    -ms-flex: 25;
-    flex: 25;
+    -webkit-flex-shrink: 75;
+    flex-shrink: 75;
   }
   .layout-preview-75 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 75;
-    -moz-box-flex: 75;
-    -o-box-flex: 75;
-    box-flex: 75;
-    -webkit-flex: 75;
-    -ms-flex: 75;
-    flex: 75;
+    -webkit-flex-shrink: 25;
+    flex-shrink: 25;
   }
   .layout-preview-76 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 24;
-    -moz-box-flex: 24;
-    -o-box-flex: 24;
-    box-flex: 24;
-    -webkit-flex: 24;
-    -ms-flex: 24;
-    flex: 24;
+    -webkit-flex-shrink: 76;
+    flex-shrink: 76;
   }
   .layout-preview-76 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 76;
-    -moz-box-flex: 76;
-    -o-box-flex: 76;
-    box-flex: 76;
-    -webkit-flex: 76;
-    -ms-flex: 76;
-    flex: 76;
+    -webkit-flex-shrink: 24;
+    flex-shrink: 24;
   }
   .layout-preview-77 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 23;
-    -moz-box-flex: 23;
-    -o-box-flex: 23;
-    box-flex: 23;
-    -webkit-flex: 23;
-    -ms-flex: 23;
-    flex: 23;
+    -webkit-flex-shrink: 77;
+    flex-shrink: 77;
   }
   .layout-preview-77 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 77;
-    -moz-box-flex: 77;
-    -o-box-flex: 77;
-    box-flex: 77;
-    -webkit-flex: 77;
-    -ms-flex: 77;
-    flex: 77;
+    -webkit-flex-shrink: 23;
+    flex-shrink: 23;
   }
   .layout-preview-78 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 22;
-    -moz-box-flex: 22;
-    -o-box-flex: 22;
-    box-flex: 22;
-    -webkit-flex: 22;
-    -ms-flex: 22;
-    flex: 22;
+    -webkit-flex-shrink: 78;
+    flex-shrink: 78;
   }
   .layout-preview-78 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 78;
-    -moz-box-flex: 78;
-    -o-box-flex: 78;
-    box-flex: 78;
-    -webkit-flex: 78;
-    -ms-flex: 78;
-    flex: 78;
+    -webkit-flex-shrink: 22;
+    flex-shrink: 22;
   }
   .layout-preview-79 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 21;
-    -moz-box-flex: 21;
-    -o-box-flex: 21;
-    box-flex: 21;
-    -webkit-flex: 21;
-    -ms-flex: 21;
-    flex: 21;
+    -webkit-flex-shrink: 79;
+    flex-shrink: 79;
   }
   .layout-preview-79 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 79;
-    -moz-box-flex: 79;
-    -o-box-flex: 79;
-    box-flex: 79;
-    -webkit-flex: 79;
-    -ms-flex: 79;
-    flex: 79;
+    -webkit-flex-shrink: 21;
+    flex-shrink: 21;
   }
   .layout-preview-80 .app main .panel:nth-child(1) {
-    -webkit-box-flex: 20;
-    -moz-box-flex: 20;
-    -o-box-flex: 20;
-    box-flex: 20;
-    -webkit-flex: 20;
-    -ms-flex: 20;
-    flex: 20;
+    -webkit-flex-shrink: 80;
+    flex-shrink: 80;
   }
   .layout-preview-80 .app main .panel:nth-child(2) {
-    -webkit-box-flex: 80;
-    -moz-box-flex: 80;
-    -o-box-flex: 80;
-    box-flex: 80;
-    -webkit-flex: 80;
-    -ms-flex: 80;
-    flex: 80;
+    -webkit-flex-shrink: 20;
+    flex-shrink: 20;
   }
 }
 @media (min-width: 80.0625em) {
-  .layout-column .app :not(.full) .panel {
+  .app .layout-column main :not(.full) .panel {
     max-width: 38em;
   }
-  .layout-column .app :not(.full) .conversation[aria-expanded=true] {
+  .app .layout-column main :not(.full) .conversation[aria-expanded=true] {
     max-width: none;
   }
 }
@@ -2503,10 +1950,6 @@ body {
   -ms-flex: 1;
   flex: 1;
   min-width: 12em;
-}
-.form-compose .account-picker .dropdown-menu {
-  top: auto;
-  left: auto;
 }
 .form-compose .compose-cc,
 .form-compose .compose-bcc {
@@ -3420,6 +2863,23 @@ body {
   font-size: 1em;
   color: #333;
 }
+.messages-list .message .metas-wrapper .mailboxes {
+  -webkit-box-ordinal-group: 2;
+  -moz-box-ordinal-group: 2;
+  -o-box-ordinal-group: 2;
+  -ms-flex-order: 2;
+  -webkit-order: 2;
+  order: 2;
+  text-align: right;
+}
+.messages-list .message .metas-wrapper .mailboxes span {
+  background-color: #f5f5f5;
+  -webkit-border-radius: 0.5em 0.5em;
+  border-radius: 0.5em 0.5em;
+  padding: 0.1em 0.5em;
+  margin-right: 0.5em;
+  color: #999;
+}
 .messages-list .message .metas-wrapper .date {
   -webkit-box-flex: 1;
   -moz-box-flex: 1;
@@ -3428,32 +2888,32 @@ body {
   -webkit-flex: 1;
   -ms-flex: 1;
   flex: 1;
-  -webkit-box-ordinal-group: 2;
-  -moz-box-ordinal-group: 2;
-  -o-box-ordinal-group: 2;
-  -ms-flex-order: 2;
-  -webkit-order: 2;
-  order: 2;
-  color: #999;
-  text-align: right;
-}
-.messages-list .message .metas-wrapper .subject {
   -webkit-box-ordinal-group: 3;
   -moz-box-ordinal-group: 3;
   -o-box-ordinal-group: 3;
   -ms-flex-order: 3;
   -webkit-order: 3;
   order: 3;
-  height: 1.6em;
-  font-size: 0.9em;
+  color: #999;
+  text-align: right;
 }
-.messages-list .message .metas-wrapper .extras {
+.messages-list .message .metas-wrapper .subject {
   -webkit-box-ordinal-group: 4;
   -moz-box-ordinal-group: 4;
   -o-box-ordinal-group: 4;
   -ms-flex-order: 4;
   -webkit-order: 4;
   order: 4;
+  height: 1.6em;
+  font-size: 0.9em;
+}
+.messages-list .message .metas-wrapper .extras {
+  -webkit-box-ordinal-group: 5;
+  -moz-box-ordinal-group: 5;
+  -o-box-ordinal-group: 5;
+  -ms-flex-order: 5;
+  -webkit-order: 5;
+  order: 5;
 }
 .messages-list .message .metas-wrapper .extras i {
   margin-left: 0.75em;
@@ -3469,12 +2929,12 @@ body {
   flex: 1 0 70%;
 }
 .messages-list .message .metas-wrapper .preview {
-  -webkit-box-ordinal-group: 5;
-  -moz-box-ordinal-group: 5;
-  -o-box-ordinal-group: 5;
-  -ms-flex-order: 5;
-  -webkit-order: 5;
-  order: 5;
+  -webkit-box-ordinal-group: 6;
+  -moz-box-ordinal-group: 6;
+  -o-box-ordinal-group: 6;
+  -ms-flex-order: 6;
+  -webkit-order: 6;
+  order: 6;
   -webkit-box-flex: 1;
   -moz-box-flex: 1;
   -o-box-flex: 1;
@@ -3964,6 +3424,69 @@ main:not(.full) .messages-list .message.active {
     padding: 0px 20px;
   }
 }
+.search-bar {
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  -webkit-box-align: stretch;
+  -moz-box-align: stretch;
+  -o-box-align: stretch;
+  -ms-flex-align: stretch;
+  -webkit-align-items: stretch;
+  align-items: stretch;
+}
+.search-bar .account-picker {
+  padding: 0.4em 0.7em;
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 0 1 auto;
+  -ms-flex: 0 1 auto;
+  flex: 0 1 auto;
+}
+.search-bar [role="search"] {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1 0 50%;
+  -ms-flex: 1 0 50%;
+  flex: 1 0 50%;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+  position: relative;
+}
+.search-bar [role="search"] input {
+  -webkit-box-flex: 1;
+  -moz-box-flex: 1;
+  -o-box-flex: 1;
+  box-flex: 1;
+  -webkit-flex: 1;
+  -ms-flex: 1;
+  flex: 1;
+  display: -webkit-box;
+  display: -moz-box;
+  display: -webkit-flex;
+  display: -ms-flexbox;
+  display: box;
+  display: flex;
+}
+.search-bar [role="search"] .btn-group {
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+.search-bar [role="search"] .btn:hover {
+  color: #fe8800;
+}
 * > .fa-compress {
   -webkit-transform: rotate(45deg);
   -moz-transform: rotate(45deg);
@@ -4001,6 +3524,13 @@ main:not(.full) .messages-list .message.active {
 #quick-actions form .form-group {
   max-width: 70%;
   padding-left: 0.75em;
+}
+.account-picker {
+  position: relative;
+}
+.account-picker .dropdown-menu {
+  top: auto;
+  left: auto;
 }
 /*
   Contextual actions

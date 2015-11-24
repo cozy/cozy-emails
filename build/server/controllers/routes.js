@@ -39,6 +39,9 @@ module.exports = {
   'activity': {
     post: activity.create
   },
+  'search': {
+    get: messages.search
+  },
   'account': {
     post: accounts.create
   },

@@ -205,7 +205,11 @@ Scheduler.orphanRemovalDebounced = function(accountID) {
   if (accountID) {
     Scheduler.schedule(new RemoveMessagesFromAccount({
       accountID: accountID
-    }));
+    }), function(err) {
+      if (err) {
+        return log.error(err);
+      }
+    });
   }
   alreadyQueued = queued.some(function(proc) {
     return proc instanceof OrphanRemoval;
@@ -218,3 +222,5 @@ Scheduler.orphanRemovalDebounced = function(accountID) {
     });
   }
 };
+
+ramStore.on('new-orphans', Scheduler.orphanRemovalDebounced);

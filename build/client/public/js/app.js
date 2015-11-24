@@ -225,6 +225,23 @@ module.exports = AccountActionCreator = {
       value: errorMessage
     });
   },
+  ensureSelected: (function(_this) {
+    return function(accountID, mailboxID) {
+      if (AccountStore.selectedIsDifferentThan(accountID, mailboxID)) {
+        return AccountActionCreator.selectAccount(accountID, mailboxID);
+      }
+    };
+  })(this),
+  selectDefaultIfNoneSelected: (function(_this) {
+    return function() {
+      var defaultAccount, selectedAccount;
+      selectedAccount = AccountStore.getSelected();
+      defaultAccount = AccountStore.getDefault();
+      if ((selectedAccount == null) && defaultAccount) {
+        return AccountActionCreator.selectAccount(defaultAccount.get('id'));
+      }
+    };
+  })(this),
   selectAccount: function(accountID, mailboxID) {
     var changed, selected, supportRFC4551;
     changed = AccountStore.selectedIsDifferentThan(accountID, mailboxID);
@@ -241,6 +258,15 @@ module.exports = AccountActionCreator = {
       return MessageActionCreator.refreshMailbox(mailboxID);
     }
   },
+  selectAccountForMessage: (function(_this) {
+    return function(message) {
+      var selectedAccount;
+      selectedAccount = AccountStore.getSelected();
+      if ((selectedAccount == null) && (message != null ? message.accountID : void 0)) {
+        return AccountActionCreator.selectAccount(message.accountID);
+      }
+    };
+  })(this),
   discover: function(domain, callback) {
     return XHRUtils.accountDiscover(domain, function(err, infos) {
       if (infos == null) {
@@ -288,14 +314,29 @@ module.exports = AccountActionCreator = {
       }
     });
   },
-  mailboxExpunge: function(inputValues, callback) {
+  mailboxExpunge: function(options) {
+    var accountID, mailboxID;
+    accountID = options.accountID, mailboxID = options.mailboxID;
     AppDispatcher.handleViewAction({
       type: ActionTypes.MAILBOX_EXPUNGE,
-      value: inputValues.mailboxID
+      value: mailboxID
     });
-    return XHRUtils.mailboxExpunge(inputValues, function(error, account) {
-      if (callback != null) {
-        return callback(error);
+    return XHRUtils.mailboxExpunge(options, function(error, account) {
+      var parameters;
+      if (error != null) {
+        LayoutActionCreator.alertError("" + (t("mailbox expunge ko")) + " " + error);
+        if (!AccountStore.selectedIsDifferentThan(accountID, mailboxID)) {
+          parameters = MessageStore.getQueryParams();
+          parameters.accountID = accountID;
+          parameters.mailboxID = mailboxID;
+          return LayoutActionCreator.showMessageList({
+            parameters: parameters
+          });
+        }
+      } else {
+        return LayoutActionCreator.notify(t("mailbox expunge ok"), {
+          autoclose: true
+        });
       }
     });
   }
@@ -380,7 +421,7 @@ module.exports = ContactActionCreator = {
 });
 
 ;require.register("actions/layout_action_creator", function(exports, require, module) {
-var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageFlags, MessageStore, SearchActionCreator, SocketUtils, XHRUtils, _cachedQuery, _ref;
+var AccountActionCreator, AccountStore, ActionTypes, AlertLevel, AppDispatcher, LayoutActionCreator, LayoutStore, MessageActionCreator, MessageFlags, MessageStore, SocketUtils, XHRUtils, _ref;
 
 XHRUtils = require('../utils/xhr_utils');
 
@@ -398,9 +439,7 @@ _ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, Al
 
 AccountActionCreator = require('./account_action_creator');
 
-SearchActionCreator = require('./search_action_creator');
-
-_cachedQuery = {};
+MessageActionCreator = require('./message_action_creator');
 
 module.exports = LayoutActionCreator = {
   setDisposition: function(type) {
@@ -504,18 +543,6 @@ module.exports = LayoutActionCreator = {
       value: null
     });
   },
-  filterMessages: function(filter) {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.LIST_FILTER,
-      value: filter
-    });
-  },
-  sortMessages: function(sort) {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.LIST_SORT,
-      value: sort
-    });
-  },
   getDefaultRoute: function() {
     if (AccountStore.getAll().length === 0) {
       return 'account.new';
@@ -524,110 +551,58 @@ module.exports = LayoutActionCreator = {
     }
   },
   showMessageList: function(panelInfo) {
-    var accountID, cached, mailboxID, query, selectedAccount, selectedMailbox, updated, _ref1;
-    _ref1 = panelInfo.parameters, accountID = _ref1.accountID, mailboxID = _ref1.mailboxID;
-    selectedAccount = AccountStore.getSelected();
-    selectedMailbox = AccountStore.getSelectedMailbox();
-    if ((selectedAccount == null) || selectedAccount.get('id') !== accountID || selectedMailbox.get('id') !== mailboxID) {
-      AccountActionCreator.selectAccount(accountID, mailboxID);
-    }
-    cached = _cachedQuery.mailboxID === mailboxID;
-    query = {};
-    ['sort', 'after', 'before', 'flag', 'pageAfter'].forEach(function(param) {
-      var value;
-      value = panelInfo.parameters[param];
-      if ((value != null) && value !== '') {
-        query[param] = value;
-      }
-      if (_cachedQuery[param] !== value) {
-        _cachedQuery[param] = value;
-        return cached = false;
-      }
+    var accountID, after, before, filter, mailboxID, params, sort;
+    params = panelInfo.parameters;
+    accountID = params.accountID, mailboxID = params.mailboxID, filter = params.filter, sort = params.sort, before = params.before, after = params.after;
+    AccountActionCreator.ensureSelected(accountID, mailboxID);
+    AppDispatcher.handleViewAction({
+      type: ActionTypes.QUERY_PARAMETER_CHANGED,
+      value: params
     });
-    _cachedQuery.mailboxID = mailboxID;
-    if (!cached) {
-      AppDispatcher.handleViewAction({
-        type: ActionTypes.MESSAGE_FETCH_REQUEST,
-        value: {
-          mailboxID: mailboxID,
-          query: query
-        }
-      });
-      updated = Date.now();
-      return XHRUtils.fetchMessagesByFolder(mailboxID, query, function(err, rawMsg) {
-        if (err != null) {
-          return AppDispatcher.handleViewAction({
-            type: ActionTypes.MESSAGE_FETCH_FAILURE,
-            value: {
-              mailboxID: mailboxID,
-              query: query
-            }
-          });
-        } else {
-          rawMsg.messages.forEach(function(msg) {
-            return msg.updated = updated;
-          });
-          return AppDispatcher.handleViewAction({
-            type: ActionTypes.MESSAGE_FETCH_SUCCESS,
-            value: {
-              mailboxID: mailboxID,
-              query: query,
-              fetchResult: rawMsg
-            }
-          });
-        }
-      });
-    }
+    return MessageActionCreator.fetchMoreOfCurrentQuery();
   },
-  showFilteredList: function(filter, sort) {
-    var params;
-    this.filterMessages(filter);
-    this.sortMessages(sort);
-    params = _.clone(MessageStore.getParams());
-    params.accountID = AccountStore.getSelected().get('id');
-    params.mailboxID = AccountStore.getSelectedMailbox().get('id');
-    return this.showMessageList({
-      parameters: params
+  showSearchResult: function(panelInfo) {
+    var accountID, search, _ref1;
+    _ref1 = panelInfo.parameters, accountID = _ref1.accountID, search = _ref1.search;
+    if (accountID !== 'all') {
+      AccountActionCreator.ensureSelected(accountID);
+    } else {
+      AccountActionCreator.selectAccount(null);
+    }
+    AppDispatcher.handleViewAction({
+      type: ActionTypes.SEARCH_PARAMETER_CHANGED,
+      value: {
+        accountID: accountID,
+        search: search
+      }
     });
+    if (search !== '-') {
+      return MessageActionCreator.fetchSearchResults(accountID, search);
+    }
   },
   showMessage: function(panelInfo, direction) {
-    var message, messageID, onMessage;
-    onMessage = function(msg) {
-      var selectedAccount;
-      selectedAccount = AccountStore.getSelected();
-      if ((selectedAccount == null) && (msg != null ? msg.accountID : void 0)) {
-        return AccountActionCreator.selectAccount(msg.accountID);
-      }
-    };
-    messageID = panelInfo.parameters.messageID;
-    message = MessageStore.getByID(messageID);
+    var message;
+    message = MessageStore.getByID(panelInfo.parameters.messageID);
     if (message != null) {
-      return onMessage(message);
+      return AccountActionCreator.selectAccountForMessage(message);
     } else {
       return XHRUtils.fetchMessage(messageID, function(err, rawMessage) {
         if (err != null) {
           return LayoutActionCreator.alertError(err);
         } else {
           MessageActionCreator.receiveRawMessage(rawMessage);
-          return onMessage(rawMessage);
+          return AccountActionCreator.selectAccountForMessage(rawMessage);
         }
       });
     }
   },
   showConversation: function(panelInfo, direction) {
-    var conversationID, length, message, messageID, onMessage;
-    onMessage = function(msg) {
-      var selectedAccount;
-      selectedAccount = AccountStore.getSelected();
-      if ((selectedAccount == null) && (msg != null ? msg.accountID : void 0)) {
-        return AccountActionCreator.selectAccount(msg.accountID);
-      }
-    };
+    var conversationID, length, message, messageID;
     messageID = panelInfo.parameters.messageID;
     conversationID = panelInfo.parameters.conversationID;
     message = MessageStore.getByID(messageID);
     if (message != null) {
-      onMessage(message);
+      AccountActionCreator.selectAccountForMessage(message);
     }
     length = MessageStore.getConversationsLength().get(conversationID);
     if ((length == null) || length > 1) {
@@ -635,20 +610,11 @@ module.exports = LayoutActionCreator = {
     }
   },
   showComposeNewMessage: function(panelInfo, direction) {
-    var defaultAccount, selectedAccount;
-    selectedAccount = AccountStore.getSelected();
-    if (selectedAccount == null) {
-      defaultAccount = AccountStore.getDefault();
-      return AccountActionCreator.selectAccount(defaultAccount.get('id'));
-    }
+    return AccountActionCreator.selectDefaultIfNoneSelected();
   },
   showComposeMessage: function(panelInfo, direction) {
-    var defaultAccount, message, messageID, selectedAccount;
-    selectedAccount = AccountStore.getSelected();
-    if (selectedAccount == null) {
-      defaultAccount = AccountStore.getDefault();
-      AccountActionCreator.selectAccount(defaultAccount.get('id'));
-    }
+    var message, messageID;
+    AccountActionCreator.selectDefaultIfNoneSelected();
     messageID = panelInfo.parameters.messageID;
     message = MessageStore.getByID(messageID);
     if (message == null) {
@@ -656,7 +622,8 @@ module.exports = LayoutActionCreator = {
         if (err != null) {
           return LayoutActionCreator.alertError(err);
         } else {
-          return MessageActionCreator.receiveRawMessage(rawMessage);
+          MessageActionCreator.receiveRawMessage(rawMessage);
+          return AccountActionCreator.selectAccountForMessage(rawMessage);
         }
       });
     }
@@ -666,19 +633,6 @@ module.exports = LayoutActionCreator = {
   },
   showConfigAccount: function(panelInfo, direction) {
     return AccountActionCreator.selectAccount(panelInfo.parameters.accountID);
-  },
-  showSearch: function(panelInfo, direction) {
-    var page, query, _ref1;
-    AccountActionCreator.selectAccount(null);
-    _ref1 = panelInfo.parameters, query = _ref1.query, page = _ref1.page;
-    SearchActionCreator.setQuery(query);
-    return XHRUtils.search(query, page, function(err, results) {
-      if (err != null) {
-        return console.log(err);
-      } else {
-        return SearchActionCreator.receiveRawSearchResults(results);
-      }
-    });
   },
   showSettings: function(panelInfo, direction) {},
   toastsShow: function() {
@@ -724,12 +678,10 @@ module.exports = LayoutActionCreator = {
     });
   }
 };
-
-MessageActionCreator = require('./message_action_creator');
 });
 
 ;require.register("actions/message_action_creator", function(exports, require, module) {
-var AccountStore, ActionTypes, AppDispatcher, Constants, FlagsConstants, LAC, MessageActionCreator, MessageFlags, MessageStore, XHRUtils, refCounter, _loopSeries;
+var AccountStore, ActionTypes, AppDispatcher, Constants, FlagsConstants, MessageActionCreator, MessageFlags, MessageStore, SearchStore, XHRUtils, refCounter, _loopSeries;
 
 AppDispatcher = require('../app_dispatcher');
 
@@ -742,6 +694,8 @@ XHRUtils = require('../utils/xhr_utils');
 AccountStore = require("../stores/account_store");
 
 MessageStore = require('../stores/message_store');
+
+SearchStore = require('../stores/search_store');
 
 refCounter = 1;
 
@@ -781,6 +735,75 @@ module.exports = MessageActionCreator = {
       }
     });
   },
+  fetchMoreOfCurrentQuery: function() {
+    var mailboxID, ts, url;
+    url = MessageStore.getNextUrl();
+    if (!url) {
+      return;
+    }
+    mailboxID = AccountStore.getSelectedMailbox().get('id');
+    AppDispatcher.handleViewAction({
+      type: ActionTypes.MESSAGE_FETCH_REQUEST,
+      value: {
+        mailboxID: mailboxID
+      }
+    });
+    ts = Date.now();
+    return XHRUtils.fetchMessagesByFolder(url, function(err, rawMsg) {
+      if (err != null) {
+        return AppDispatcher.handleViewAction({
+          type: ActionTypes.MESSAGE_FETCH_FAILURE,
+          value: {
+            mailboxID: mailboxID
+          }
+        });
+      } else {
+        rawMsg.messages.forEach(function(msg) {
+          return msg.updated = ts;
+        });
+        return AppDispatcher.handleViewAction({
+          type: ActionTypes.MESSAGE_FETCH_SUCCESS,
+          value: {
+            mailboxID: mailboxID,
+            fetchResult: rawMsg
+          }
+        });
+      }
+    });
+  },
+  fetchSearchResults: function(accountID, search) {
+    var url;
+    if (search === '-') {
+      return null;
+    }
+    url = SearchStore.getNextSearchUrl();
+    if (!url) {
+      return;
+    }
+    AppDispatcher.handleViewAction({
+      type: ActionTypes.SEARCH_REQUEST,
+      value: {
+        search: search
+      }
+    });
+    return XHRUtils.search(url, function(error, searchResults) {
+      if (error != null) {
+        return AppDispatcher.handleViewAction({
+          type: ActionTypes.SEARCH_FAILURE,
+          value: {
+            error: error
+          }
+        });
+      } else {
+        return AppDispatcher.handleViewAction({
+          type: ActionTypes.SEARCH_SUCCESS,
+          value: {
+            searchResults: searchResults
+          }
+        });
+      }
+    });
+  },
   fetchConversation: function(conversationID) {
     AppDispatcher.handleViewAction({
       type: ActionTypes.CONVERSATION_FETCH_REQUEST,
@@ -800,7 +823,6 @@ module.exports = MessageActionCreator = {
         return AppDispatcher.handleViewAction({
           type: ActionTypes.CONVERSATION_FETCH_SUCCESS,
           value: {
-            error: error,
             updated: updated
           }
         });
@@ -1098,44 +1120,6 @@ _loopSeries = function(obj, iterator, done) {
       return step();
     });
   })();
-};
-
-LAC = require('./layout_action_creator');
-});
-
-;require.register("actions/search_action_creator", function(exports, require, module) {
-var ActionTypes, AppDispatcher, SearchActionCreator;
-
-AppDispatcher = require('../app_dispatcher');
-
-ActionTypes = require('../constants/app_constants').ActionTypes;
-
-module.exports = SearchActionCreator = {
-  setQuery: function(query) {
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.SET_SEARCH_QUERY,
-      value: query
-    });
-  },
-  receiveRawSearchResults: function(results) {
-    SearchActionCreator.clearSearch(false);
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.RECEIVE_RAW_SEARCH_RESULTS,
-      value: results
-    });
-  },
-  clearSearch: function(clearQuery) {
-    if (clearQuery == null) {
-      clearQuery = true;
-    }
-    if (clearQuery) {
-      SearchActionCreator.setQuery("");
-    }
-    return AppDispatcher.handleViewAction({
-      type: ActionTypes.CLEAR_SEARCH_RESULTS,
-      value: null
-    });
-  }
 };
 });
 
@@ -2880,20 +2864,25 @@ module.exports = React.createClass({
     accountID = _arg.target.dataset.value;
     return this.props.valueLink.requestChange(accountID);
   },
+  renderLabel: function(account) {
+    var label;
+    if (typeof account === 'string') {
+      return account;
+    } else {
+      label = account.get('name') || account.get('label');
+      return "" + label + " <" + (account.get('login')) + ">";
+    }
+  },
   renderNoChoice: function() {
-    var account, label;
-    account = this.props.accounts[this.props.valueLink.value];
-    label = "" + (account.name || account.label) + " <" + account.login + ">";
+    var account;
+    account = this.props.accounts.get(this.props.valueLink.value);
     return p({
       className: 'form-control-static align-item'
-    }, label);
+    }, this.renderLabel(account));
   },
   renderPicker: function() {
-    var account, accounts, key, label, value;
-    accounts = this.props.accounts;
-    account = accounts[this.props.valueLink.value];
-    value = this.props.valueLink.value;
-    label = "" + (account.name || account.label) + " <" + account.login + ">";
+    var account;
+    account = this.props.accounts.get(this.props.valueLink.value);
     return div({
       className: 'account-picker align-item'
     }, span({
@@ -2901,27 +2890,23 @@ module.exports = React.createClass({
       'data-toggle': 'dropdown'
     }, span({
       ref: 'account',
-      'data-value': value
-    }, label), span({
+      'data-value': this.props.valueLink.value
+    }, this.renderLabel(account)), span({
       className: 'caret'
     })), ul({
       className: 'dropdown-menu',
       role: 'menu'
-    }, (function() {
-      var _results;
-      _results = [];
-      for (key in accounts) {
-        account = accounts[key];
-        if (key !== value) {
-          _results.push(this.renderAccount(key, account));
-        }
-      }
-      return _results;
-    }).call(this)));
+    }, this.props.accounts.filter((function(_this) {
+      return function(account, key) {
+        return key !== _this.props.valueLink.value;
+      };
+    })(this)).map((function(_this) {
+      return function(account, key) {
+        return _this.renderAccount(key, account);
+      };
+    })(this)).toJS()));
   },
   renderAccount: function(key, account) {
-    var label;
-    label = "" + (account.name || account.label) + " <" + account.login + ">";
     return li({
       role: 'presentation',
       key: key
@@ -2929,7 +2914,7 @@ module.exports = React.createClass({
       role: 'menuitem',
       onClick: this.onChange,
       'data-value': key
-    }, label));
+    }, this.renderLabel(account)));
   }
 });
 });
@@ -2994,7 +2979,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/application", function(exports, require, module) {
-var AccountStore, Alert, Application, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageActionCreator, MessageFilter, MessageStore, Modal, Panel, RouterMixin, StoreWatchMixin, Stores, ToastContainer, TooltipRefesherMixin, Tooltips, a, button, div, form, i, input, main, p, section, span, strong, _ref, _ref1;
+var AccountStore, Alert, Application, Dispositions, LayoutActionCreator, LayoutStore, Menu, MessageActionCreator, MessageFilter, MessageStore, Modal, Panel, RouterMixin, SearchBar, SearchStore, StoreWatchMixin, Stores, ToastContainer, TooltipRefesherMixin, Tooltips, a, button, div, form, i, input, main, p, section, span, strong, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, section = _ref.section, main = _ref.main, p = _ref.p, span = _ref.span, a = _ref.a, i = _ref.i, strong = _ref.strong, form = _ref.form, input = _ref.input, button = _ref.button;
 
@@ -3010,6 +2995,8 @@ ToastContainer = require('./toast_container');
 
 Tooltips = require('./tooltips-manager');
 
+SearchBar = require('./search_bar');
+
 RouterMixin = require('../mixins/router_mixin');
 
 StoreWatchMixin = require('../mixins/store_watch_mixin');
@@ -3022,7 +3009,9 @@ MessageStore = require('../stores/message_store');
 
 LayoutStore = require('../stores/layout_store');
 
-Stores = [AccountStore, MessageStore, LayoutStore];
+SearchStore = require('../stores/search_store');
+
+Stores = [AccountStore, MessageStore, LayoutStore, SearchStore];
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
@@ -3048,7 +3037,7 @@ module.exports = Application = React.createClass({
   displayName: 'Application',
   mixins: [StoreWatchMixin(Stores), RouterMixin, TooltipRefesherMixin],
   render: function() {
-    var disposition, fullscreen, layout, layoutClasses, modal, previewSize;
+    var disposition, fullscreen, layout, layoutClasses, modal, previewSize, _ref2;
     layout = this.props.router.current;
     if (layout == null) {
       return div(null, t("app loading"));
@@ -3064,16 +3053,17 @@ module.exports = Application = React.createClass({
       className: 'app'
     }, Menu({
       ref: 'menu',
-      selectedAccount: this.state.selectedAccount,
-      selectedMailboxID: this.state.selectedMailboxID,
-      layout: this.props.router.current,
-      disposition: disposition
+      layout: this.props.router.current
     }), main({
       className: layout.secondPanel != null ? null : 'full'
+    }, (_ref2 = layout.firstPanel.action) === 'account.mailbox.messages' || _ref2 === 'search' ? SearchBar() : void 0, div({
+      className: 'panels'
     }, this.getPanel(layout.firstPanel, 'firstPanel'), layout.secondPanel != null ? this.getPanel(layout.secondPanel, 'secondPanel') : section({
       key: 'placeholder',
       'aria-expanded': false
-    }))), modal != null ? Modal(modal) : void 0, ToastContainer(), Tooltips());
+    })))), modal != null ? Modal(modal) : void 0, ToastContainer(), Tooltips({
+      key: "tooltips"
+    }));
   },
   getPanel: function(panel, ref) {
     return Panel({
@@ -3088,23 +3078,20 @@ module.exports = Application = React.createClass({
     });
   },
   getStateFromStores: function() {
-    var firstPanelInfo, selectedAccount, selectedAccountID, selectedMailboxID, _ref2;
-    selectedAccount = AccountStore.getSelected();
-    if (selectedAccount == null) {
-      selectedAccount = AccountStore.getDefault();
-    }
-    selectedAccountID = (selectedAccount != null ? selectedAccount.get('id') : void 0) || null;
+    var firstPanelInfo, selectedAccount, selectedMailboxID, _ref2;
+    selectedAccount = AccountStore.getSelectedOrDefault();
     firstPanelInfo = (_ref2 = this.props.router.current) != null ? _ref2.firstPanel : void 0;
-    if ((firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages' || (firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages.filter' || (firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages.date') {
+    if ((firstPanelInfo != null ? firstPanelInfo.action : void 0) === 'account.mailbox.messages') {
       selectedMailboxID = firstPanelInfo.parameters.mailboxID;
     } else {
       selectedMailboxID = null;
     }
     return {
       selectedAccount: selectedAccount,
+      currentSearch: SearchStore.getCurrentSearch(),
       modal: LayoutStore.getModal(),
       useIntents: LayoutStore.intentAvailable(),
-      selectedMailboxID: selectedMailboxID
+      selectedMailboxID: AccountStore.getSelectedMailbox()
     };
   },
   componentWillMount: function() {
@@ -3133,39 +3120,21 @@ module.exports = Application = React.createClass({
     return this.props.router.on('fluxRoute', this.onRoute);
   },
   checkAccount: function(action) {
-    var account, errorMsg;
+    var account, needSpecialFolder, noSpecialFolder;
     account = this.state.selectedAccount;
-    if ((account != null)) {
-      if ((account.get('draftMailbox') == null) || (account.get('sentMailbox') == null) || (account.get('trashMailbox') == null)) {
-        if (action === 'account.mailbox.messages' || action === 'account.mailbox.messages.filter' || action === 'account.mailbox.messages.date' || action === 'search' || action === 'message' || action === 'conversation' || action === 'compose' || action === 'edit') {
-          this.redirect({
-            direction: 'first',
-            action: 'account.config',
-            parameters: [account.get('id'), 'mailboxes'],
-            fullWidth: true
-          });
-          errorMsg = t('account no special mailboxes');
-          return LayoutActionCreator.alertError(errorMsg);
-        }
-      }
+    noSpecialFolder = ((account != null ? account.get('draftMailbox') : void 0) == null) || ((account != null ? account.get('sentMailbox') : void 0) == null) || ((account != null ? account.get('trashMailbox') : void 0) == null);
+    needSpecialFolder = action === 'account.mailbox.messages' || action === 'message' || action === 'conversation' || action === 'compose' || action === 'edit';
+    if ((account != null) && noSpecialFolder && needSpecialFolder) {
+      this.redirect({
+        direction: 'first',
+        action: 'account.config',
+        parameters: [account.get('id'), 'mailboxes'],
+        fullWidth: true
+      });
+      return LayoutActionCreator.alertError(t('account no special mailboxes'));
     }
   },
-  _notify: function(title, options) {
-    return window.cozyMails.notify(title, options);
-  },
-  componentDidMount: function() {
-    return Stores.forEach((function(_this) {
-      return function(store) {
-        return store.on('notify', _this._notify);
-      };
-    })(this));
-  },
   componentWillUnmount: function() {
-    Stores.forEach((function(_this) {
-      return function(store) {
-        return store.removeListener('notify', _this.notify);
-      };
-    })(this));
     return this.props.router.off('fluxRoute', this.onRoute);
   }
 });
@@ -3246,7 +3215,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/basic_components", function(exports, require, module) {
-var AddressLabel, Container, Dropdown, ErrorLine, FieldSet, Form, FormButton, FormButtons, FormDropdown, MenuDivider, MenuHeader, MenuItem, Progress, Spinner, SubTitle, Tabs, Title, a, button, classer, div, fieldset, form, h3, h4, i, img, label, legend, li, section, span, ul, _ref;
+var AddressLabel, Container, Dropdown, ErrorLine, FieldSet, Form, FormButton, FormButtons, FormDropdown, Icon, MenuDivider, MenuHeader, MenuItem, Progress, Spinner, SubTitle, Tabs, Title, a, button, classer, div, fieldset, form, h3, h4, i, img, label, legend, li, section, span, ul, _ref;
 
 _ref = React.DOM, div = _ref.div, section = _ref.section, h3 = _ref.h3, h4 = _ref.h4, ul = _ref.ul, li = _ref.li, a = _ref.a, i = _ref.i, button = _ref.button, span = _ref.span, fieldset = _ref.fieldset, legend = _ref.legend, label = _ref.label, img = _ref.img, form = _ref.form;
 
@@ -3546,7 +3515,7 @@ Dropdown = React.createClass({
       _results = [];
       for (key in _ref1) {
         value = _ref1[key];
-        _results.push(renderFilter(key, t("list filter " + key)));
+        _results.push(renderFilter(key, value));
       }
       return _results;
     }).call(this)));
@@ -3594,6 +3563,19 @@ Progress = React.createClass({
   }
 });
 
+Icon = React.createClass({
+  displayName: 'Icon',
+  propTypes: {
+    type: React.PropTypes.string.isRequired
+  },
+  render: function() {
+    return i({
+      className: this.props.className + ' fa fa-' + this.props.type,
+      onClick: this.props.onClick
+    });
+  }
+});
+
 module.exports = {
   AddressLabel: AddressLabel,
   Container: Container,
@@ -3604,6 +3586,7 @@ module.exports = {
   FormButton: FormButton,
   FormButtons: FormButtons,
   FormDropdown: FormDropdown,
+  Icon: Icon,
   MenuItem: MenuItem,
   MenuHeader: MenuHeader,
   MenuDivider: MenuDivider,
@@ -3672,13 +3655,10 @@ module.exports = Compose = React.createClass({
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
   render: function() {
-    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, toggleFullscreen, _ref3;
+    var classBcc, classCc, classInput, classLabel, closeUrl, focusEditor, _ref3;
     if (!this.props.accounts) {
       return;
     }
-    toggleFullscreen = function() {
-      return LayoutActionCreator.toggleFullscreen();
-    };
     closeUrl = this.buildClosePanelUrl(this.props.layout);
     classLabel = 'compose-label';
     classInput = 'compose-input';
@@ -3947,8 +3927,8 @@ module.exports = Compose = React.createClass({
       }
       state.attachments = message.get('attachments');
     } else {
-      account = this.props.accounts[this.props.selectedAccountID];
-      state = MessageUtils.makeReplyMessage(account.login, this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'), account.signature);
+      account = this.props.accounts.get(this.props.selectedAccountID);
+      state = MessageUtils.makeReplyMessage(account.get('login'), this.props.inReplyTo, this.props.action, this.props.settings.get('composeInHTML'), account.get('signature'));
       state.isNew = true;
       if (state.accountID == null) {
         state.accountID = this.props.selectedAccountID;
@@ -3982,10 +3962,10 @@ module.exports = Compose = React.createClass({
   },
   _doSend: function(isDraft) {
     var account, from, message, valid;
-    account = this.props.accounts[this.state.accountID];
+    account = this.props.accounts.get(this.state.accountID);
     from = {
-      name: account.name || void 0,
-      address: account.login
+      name: account.get('name') || void 0,
+      address: account.get('login')
     };
     message = {
       id: this.state.id,
@@ -5906,7 +5886,7 @@ module.exports = MailsInput = React.createClass({
 });
 
 ;require.register("components/menu", function(exports, require, module) {
-var AccountActionCreator, AccountStore, Dispositions, LayoutActionCreator, LayoutStore, Menu, MenuMailboxItem, MessageActionCreator, MessageUtils, RefreshesStore, RouterMixin, SpecialBoxIcons, StoreWatchMixin, Tooltips, a, aside, button, classer, colorhash, div, i, li, nav, span, specialMailboxes, ul, _ref, _ref1,
+var AccountActionCreator, AccountStore, LayoutActionCreator, LayoutStore, Menu, MenuMailboxItem, MessageActionCreator, MessageUtils, RefreshesStore, RouterMixin, SearchStore, SpecialBoxIcons, StoreWatchMixin, Tooltips, a, aside, button, classer, colorhash, div, i, li, nav, span, specialMailboxes, ul, _ref, _ref1,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 _ref = React.DOM, div = _ref.div, aside = _ref.aside, nav = _ref.nav, ul = _ref.ul, li = _ref.li, span = _ref.span, a = _ref.a, i = _ref.i, button = _ref.button;
@@ -5929,41 +5909,51 @@ LayoutStore = require('../stores/layout_store');
 
 RefreshesStore = require('../stores/refreshes_store');
 
+SearchStore = require('../stores/search_store');
+
 MessageUtils = require('../utils/message_utils');
 
 colorhash = require('../utils/colorhash');
 
-_ref1 = require('../constants/app_constants'), Dispositions = _ref1.Dispositions, SpecialBoxIcons = _ref1.SpecialBoxIcons, Tooltips = _ref1.Tooltips;
+MenuMailboxItem = require('./menu_mailbox_item');
+
+_ref1 = require('../constants/app_constants'), SpecialBoxIcons = _ref1.SpecialBoxIcons, Tooltips = _ref1.Tooltips;
 
 specialMailboxes = ['inboxMailbox', 'draftMailbox', 'sentMailbox', 'trashMailbox', 'junkMailbox', 'allMailbox'];
 
 module.exports = Menu = React.createClass({
   displayName: 'Menu',
-  mixins: [RouterMixin, StoreWatchMixin([AccountStore, LayoutStore, RefreshesStore])],
+  mixins: [RouterMixin, StoreWatchMixin([AccountStore, LayoutStore, RefreshesStore, SearchStore])],
   shouldComponentUpdate: function(nextProps, nextState) {
     return !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
   },
-  getInitialState: function() {
-    return {
-      displayActiveAccount: true,
-      onlyFavorites: true
-    };
-  },
   getStateFromStores: function() {
     return {
+      onlyFavorites: !this.state || this.state.onlyFavorites === true,
       isDrawerExpanded: LayoutStore.isDrawerExpanded(),
       refreshes: RefreshesStore.getRefreshing(),
       accounts: AccountStore.getAll(),
+      selectedAccount: AccountStore.getSelectedOrDefault(),
       mailboxes: AccountStore.getSelectedMailboxes(true),
-      favorites: AccountStore.getSelectedFavorites(true)
+      favorites: AccountStore.getSelectedFavorites(true),
+      search: SearchStore.getCurrentSearch()
     };
   },
-  componentWillReceiveProps: function(props) {
-    if (!Immutable.is(props.selectedAccount, this.props.selectedAccount)) {
-      return this.setState({
-        displayActiveAccount: true
-      });
+  selectedFirstSort: function(account1, account2) {
+    var _ref2, _ref3;
+    console.log('there', this);
+    if (((_ref2 = this.state.selectedAccount) != null ? _ref2.get('id') : void 0) === account1.get('id')) {
+      return -1;
+    } else if (((_ref3 = this.state.selectedAccount) != null ? _ref3.get('id') : void 0) === account2.get('id')) {
+      return 1;
+    } else {
+      return 0;
     }
+  },
+  _toggleFavorites: function() {
+    return this.setState({
+      onlyFavorites: !this.state.onlyFavorites
+    });
   },
   displayErrors: function(refreshee) {
     var errors, modal;
@@ -5986,12 +5976,60 @@ module.exports = Menu = React.createClass({
     return LayoutActionCreator.displayModal(modal);
   },
   render: function() {
-    var composeUrl, newMailboxClass, newMailboxUrl, selectedAccountUrl, settingsClass, settingsUrl, _ref2, _ref3;
+    return aside({
+      role: 'menubar',
+      'aria-expanded': this.state.isDrawerExpanded
+    }, this.state.accounts.length ? this.renderComposeButton() : void 0, nav({
+      className: 'mainmenu'
+    }, this.state.search && !this.state.selectedAccount ? div({
+      className: 'active'
+    }, div({
+      className: 'account-title'
+    }, a({
+      role: 'menuitem',
+      className: 'account active'
+    }, i({
+      className: 'fa fa-search'
+    }), div({
+      className: 'account-details'
+    }, span({}, this.state.search))))) : void 0, this.state.accounts.length ? this.state.accounts.sort(this.selectedFirstSort.bind(this)).map(this.getAccountRender.bind(this)).toJS() : void 0), nav({
+      className: 'submenu'
+    }, this.renderNewMailboxButton(), button({
+      role: 'menuitem',
+      className: classer({
+        btn: true,
+        fa: true,
+        'drawer-toggle': true,
+        'fa-caret-right': !this.state.isDrawerExpanded,
+        'fa-caret-left': this.state.isDrawerExpanded
+      }),
+      onClick: LayoutActionCreator.drawerToggle
+    })));
+  },
+  renderComposeButton: function() {
+    var composeUrl;
+    composeUrl = this.buildUrl({
+      direction: 'first',
+      action: 'compose',
+      parameters: null,
+      fullWidth: true
+    });
+    return a({
+      href: composeUrl,
+      className: 'compose-action btn btn-cozy'
+    }, i({
+      className: 'fa fa-pencil'
+    }), span({
+      className: 'item-label'
+    }, " " + (t('menu compose'))));
+  },
+  renderNewMailboxButton: function() {
+    var newMailboxClass, newMailboxUrl, selectedAccountUrl, _ref2;
     if (this.state.accounts.length) {
       selectedAccountUrl = this.buildUrl({
         direction: 'first',
         action: 'account.mailbox.messages',
-        parameters: (_ref2 = this.props.selectedAccount) != null ? _ref2.get('id') : void 0,
+        parameters: [(_ref2 = this.state.selectedAccount) != null ? _ref2.get('id') : void 0],
         fullWidth: true
       });
     } else {
@@ -6012,53 +6050,7 @@ module.exports = Menu = React.createClass({
         fullWidth: true
       });
     }
-    if (this.props.layout.firstPanel.action === 'settings' || ((_ref3 = this.props.layout.secondPanel) != null ? _ref3.action : void 0) === 'settings') {
-      settingsClass = 'active';
-      settingsUrl = selectedAccountUrl;
-    } else {
-      settingsClass = '';
-      settingsUrl = this.buildUrl({
-        direction: 'first',
-        action: 'settings',
-        fullWidth: true
-      });
-    }
-    composeUrl = this.buildUrl({
-      direction: 'first',
-      action: 'compose',
-      parameters: null,
-      fullWidth: true
-    });
-    return aside({
-      role: 'menubar',
-      'aria-expanded': this.state.isDrawerExpanded
-    }, this.state.accounts.length ? a({
-      href: composeUrl,
-      className: 'compose-action btn btn-cozy'
-    }, i({
-      className: 'fa fa-pencil'
-    }), span({
-      className: 'item-label'
-    }, " " + (t('menu compose')))) : void 0, nav({
-      className: 'mainmenu'
-    }, this.state.accounts.length ? this.state.accounts.map((function(_this) {
-      return function(account, key) {
-        return _this.getAccountRender(account, key);
-      };
-    })(this)).sort((function(_this) {
-      return function(account1, account2) {
-        var _ref4, _ref5;
-        if (((_ref4 = _this.props.selectedAccount) != null ? _ref4.get('id') : void 0) === account1._store.props.key) {
-          return -1;
-        } else if (((_ref5 = _this.props.selectedAccount) != null ? _ref5.get('id') : void 0) === account2._store.props.key) {
-          return 1;
-        } else {
-          return 0;
-        }
-      };
-    })(this)).toJS() : void 0), nav({
-      className: 'submenu'
-    }, a({
+    return a({
       href: newMailboxUrl,
       role: 'menuitem',
       className: "btn new-account-action " + newMailboxClass
@@ -6066,21 +6058,11 @@ module.exports = Menu = React.createClass({
       className: 'fa fa-plus'
     }), span({
       className: 'item-label'
-    }, t('menu account new'))), button({
-      role: 'menuitem',
-      className: classer({
-        btn: true,
-        fa: true,
-        'drawer-toggle': true,
-        'fa-caret-right': !this.state.isDrawerExpanded,
-        'fa-caret-left': this.state.isDrawerExpanded
-      }),
-      onClick: LayoutActionCreator.drawerToggle
-    })));
+    }, t('menu account new')));
   },
   getAccountRender: function(account, key) {
-    var accountClasses, accountColor, accountID, allBoxesAreFavorite, configMailboxUrl, defaultMailbox, icon, isActive, isSelected, mailboxes, nbUnread, progress, refreshes, specialMboxes, toggleActive, toggleDisplay, toggleFavorites, toggleFavoritesLabel, url, _ref2;
-    isSelected = ((this.props.selectedAccount == null) && key === 0) || ((_ref2 = this.props.selectedAccount) != null ? _ref2.get('id') : void 0) === account.get('id');
+    var accountClasses, accountColor, accountID, allBoxesAreFavorite, configMailboxUrl, defaultMailbox, icon, isSelected, mailboxes, nbUnread, progress, refreshes, specialMboxes, toggleFavoritesLabel, url;
+    isSelected = account === this.state.selectedAccount;
     accountID = account.get('id');
     nbUnread = account.get('totalUnread');
     defaultMailbox = AccountStore.getDefaultMailbox(accountID);
@@ -6100,38 +6082,8 @@ module.exports = Menu = React.createClass({
         fullWidth: true
       });
     }
-    toggleActive = (function(_this) {
-      return function() {
-        if (!_this.state.displayActiveAccount) {
-          return _this.setState({
-            displayActiveAccount: true
-          });
-        }
-      };
-    })(this);
-    toggleDisplay = (function(_this) {
-      return function() {
-        if (isSelected) {
-          return _this.setState({
-            displayActiveAccount: !_this.state.displayActiveAccount
-          });
-        } else {
-          return _this.setState({
-            displayActiveAccount: true
-          });
-        }
-      };
-    })(this);
-    toggleFavorites = (function(_this) {
-      return function() {
-        return _this.setState({
-          onlyFavorites: !_this.state.onlyFavorites
-        });
-      };
-    })(this);
-    isActive = isSelected && this.state.displayActiveAccount;
     accountClasses = classer({
-      active: isActive
+      active: isSelected
     });
     if (this.state.onlyFavorites) {
       mailboxes = this.state.favorites;
@@ -6162,8 +6114,6 @@ module.exports = Menu = React.createClass({
       href: url,
       role: 'menuitem',
       className: 'account ' + accountClasses,
-      onClick: toggleActive,
-      onDoubleClick: toggleDisplay,
       'data-toggle': 'tooltip',
       'data-delay': '10000',
       'data-placement': 'right'
@@ -6198,33 +6148,29 @@ module.exports = Menu = React.createClass({
       role: 'group',
       className: 'list-unstyled mailbox-list'
     }, mailboxes != null ? mailboxes.filter(function(mailbox) {
-      var _ref3;
-      return _ref3 = mailbox.get('id'), __indexOf.call(specialMboxes, _ref3) >= 0;
+      var _ref2;
+      return _ref2 = mailbox.get('id'), __indexOf.call(specialMboxes, _ref2) >= 0;
     }).map((function(_this) {
       return function(mailbox, key) {
-        var selectedMailboxID;
-        selectedMailboxID = _this.props.selectedMailboxID;
         return MenuMailboxItem({
           account: account,
           mailbox: mailbox,
           key: key,
-          selectedMailboxID: selectedMailboxID,
+          selectedMailboxID: _this.state.selectedMailboxID,
           refreshes: refreshes,
           displayErrors: _this.displayErrors
         });
       };
     })(this)).toJS() : void 0, mailboxes != null ? mailboxes.filter(function(mailbox) {
-      var _ref3;
-      return _ref3 = mailbox.get('id'), __indexOf.call(specialMboxes, _ref3) < 0;
+      var _ref2;
+      return _ref2 = mailbox.get('id'), __indexOf.call(specialMboxes, _ref2) < 0;
     }).map((function(_this) {
       return function(mailbox, key) {
-        var selectedMailboxID;
-        selectedMailboxID = _this.props.selectedMailboxID;
         return MenuMailboxItem({
           account: account,
           mailbox: mailbox,
           key: key,
-          selectedMailboxID: selectedMailboxID,
+          selectedMailboxID: _this.state.selectedMailboxID,
           refreshes: refreshes,
           displayErrors: _this.displayErrors
         });
@@ -6234,24 +6180,33 @@ module.exports = Menu = React.createClass({
     }, a({
       role: 'menuitem',
       tabIndex: 0,
-      onClick: toggleFavorites,
+      onClick: this._toggleFavorites.bind(this),
       key: 'toggle'
     }, i({
       className: 'fa ' + icon
     }), span({
       className: 'item-label'
     }, toggleFavoritesLabel))) : void 0) : void 0);
-  },
-  _initTooltips: function() {},
-  componentDidMount: function() {
-    return this._initTooltips();
-  },
-  componentDidUpdate: function() {
-    return this._initTooltips();
   }
 });
+});
 
-MenuMailboxItem = React.createClass({
+;require.register("components/menu_mailbox_item", function(exports, require, module) {
+var LayoutActionCreator, MenuMailboxItem, MessageActionCreator, RouterMixin, SpecialBoxIcons, Tooltips, a, aside, button, classer, div, i, li, nav, span, ul, _ref, _ref1;
+
+_ref = React.DOM, div = _ref.div, aside = _ref.aside, nav = _ref.nav, ul = _ref.ul, li = _ref.li, span = _ref.span, a = _ref.a, i = _ref.i, button = _ref.button;
+
+classer = React.addons.classSet;
+
+RouterMixin = require('../mixins/router_mixin');
+
+MessageActionCreator = require('../actions/message_action_creator');
+
+LayoutActionCreator = require('../actions/layout_action_creator');
+
+_ref1 = require('../constants/app_constants'), SpecialBoxIcons = _ref1.SpecialBoxIcons, Tooltips = _ref1.Tooltips;
+
+module.exports = MenuMailboxItem = React.createClass({
   displayName: 'MenuMailboxItem',
   mixins: [RouterMixin],
   shouldComponentUpdate: function(nextProps, nextState) {
@@ -6263,7 +6218,7 @@ MenuMailboxItem = React.createClass({
     };
   },
   onClickMailbox: function() {
-    if (this.props.mailbox.get('id') === this.props.selectedMailboxID) {
+    if (this.props.mailbox.get('id') === this.props.selectedMailboxID && this.props.account.get('supportRFC4551')) {
       return MessageActionCreator.refreshMailbox(this.props.selectedMailboxID);
     }
   },
@@ -6376,39 +6331,9 @@ MenuMailboxItem = React.createClass({
       conversationID: conversationID
     }, mailboxID, to);
   },
-  expungeMailbox: function(e) {
-    var accountID, doExpunge, mailboxID, modal;
-    accountID = this.props.account.get('id');
-    mailboxID = this.props.mailbox.get('id');
-    e.preventDefault();
-    doExpunge = function() {
-      var mailbox;
-      mailbox = {
-        accountID: accountID,
-        mailboxID: mailboxID
-      };
-      AccountActionCreator.mailboxExpunge(mailbox, function(error) {
-        var errorMessage, params;
-        if (error != null) {
-          if (accountID === mailbox.accountID && mailboxID === mailbox.mailboxID) {
-            params = _.clone(MessageStore.getParams());
-            params.accountID = accountID;
-            params.mailboxID = mailboxID;
-            LayoutActionCreator.showMessageList({
-              parameters: params
-            });
-          }
-          errorMessage = "" + (t("mailbox expunge ko")) + " " + error;
-          return LayoutActionCreator.alertError(errorMessage);
-        } else {
-          return LayoutActionCreator.notify(t("mailbox expunge ok"), {
-            autoclose: true
-          });
-        }
-      });
-      return LayoutActionCreator.hideModal();
-    };
-    modal = {
+  expungeMailbox: function(event) {
+    event.preventDefault();
+    return LayoutActionCreator.displayModal({
       title: t('app confirm delete'),
       subtitle: t('account confirm delbox'),
       closeModal: function() {
@@ -6416,9 +6341,16 @@ MenuMailboxItem = React.createClass({
       },
       closeLabel: t('app cancel'),
       actionLabel: t('app confirm'),
-      action: doExpunge
-    };
-    return LayoutActionCreator.displayModal(modal);
+      action: (function(_this) {
+        return function() {
+          LayoutActionCreator.hideModal();
+          return AccountActionCreator.mailboxExpunge({
+            accountID: _this.props.account.get('id'),
+            mailboxID: _this.props.mailbox.get('id')
+          });
+        };
+      })(this)
+    });
   }
 });
 });
@@ -6464,7 +6396,10 @@ module.exports = MessageListBody = React.createClass({
         cid = message.get('conversationID');
         return MessageItem({
           message: message,
+          accountID: _this.props.accountID,
           mailboxID: _this.props.mailboxID,
+          accounts: _this.props.accounts,
+          mailboxes: _this.props.mailboxes,
           conversationLengths: (_ref = _this.props.conversationLengths) != null ? _ref.get(cid) : void 0,
           key: key,
           isActive: _this._isActive(id, cid),
@@ -6511,12 +6446,15 @@ module.exports = MessageListBody = React.createClass({
 });
 
 ;require.register("components/message-list-item", function(exports, require, module) {
-var MessageActionCreator, MessageFlags, MessageItem, MessageUtils, Participants, RouterMixin, a, button, classer, colorhash, div, i, img, input, li, p, section, span, ul, _ref,
-  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
+var Icon, MailboxFlags, MessageActionCreator, MessageFlags, MessageItem, MessageUtils, Participants, RouterMixin, a, button, classer, colorhash, div, i, img, input, li, p, section, span, ul, _ref, _ref1,
+  __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; },
+  __slice = [].slice;
 
 _ref = React.DOM, div = _ref.div, section = _ref.section, p = _ref.p, ul = _ref.ul, li = _ref.li, a = _ref.a, span = _ref.span, i = _ref.i, button = _ref.button, input = _ref.input, img = _ref.img;
 
-MessageFlags = require('../constants/app_constants').MessageFlags;
+_ref1 = require('../constants/app_constants'), MessageFlags = _ref1.MessageFlags, MailboxFlags = _ref1.MailboxFlags;
+
+Icon = require('./basic_components').Icon;
 
 RouterMixin = require('../mixins/router_mixin');
 
@@ -6544,51 +6482,19 @@ module.exports = MessageItem = React.createClass({
     return shouldUpdate;
   },
   render: function() {
-    var action, avatar, cHash, classes, compact, conversationID, date, flags, from, html, message, params, text, url, _ref1, _ref2, _ref3, _ref4;
+    var avatar, cHash, classes, compact, date, flags, from, message, tagType, _ref2, _ref3, _ref4;
     message = this.props.message;
     flags = message.get('flags');
     classes = classer({
       message: true,
-      unseen: (_ref1 = MessageFlags.SEEN, __indexOf.call(flags, _ref1) < 0),
+      unseen: (_ref2 = MessageFlags.SEEN, __indexOf.call(flags, _ref2) < 0),
       active: this.props.isActive,
       edited: this.props.edited
-    });
-    if ((_ref2 = MessageFlags.DRAFT, __indexOf.call(flags, _ref2) >= 0) && !this.props.isTrash) {
-      action = 'edit';
-      params = {
-        messageID: message.get('id')
-      };
-    } else {
-      conversationID = message.get('conversationID');
-      if ((conversationID != null) && this.props.displayConversations) {
-        action = 'conversation';
-        params = {
-          conversationID: conversationID,
-          messageID: message.get('id')
-        };
-      } else {
-        action = 'message';
-        params = {
-          messageID: message.get('id')
-        };
-      }
-    }
-    url = this.buildUrl({
-      direction: 'second',
-      action: action,
-      parameters: params
     });
     compact = this.props.settings.get('listStyle') === 'compact';
     date = MessageUtils.formatDate(message.get('createdAt'), compact);
     avatar = MessageUtils.getAvatar(message);
-    text = message.get('text');
-    html = message.get('html');
-    if ((text == null) && (html != null)) {
-      text = toMarkdown(html);
-    }
-    if (text == null) {
-      text = '';
-    }
+    tagType = this.props.edited ? span : a;
     return li({
       className: classes,
       key: this.props.key,
@@ -6597,8 +6503,8 @@ module.exports = MessageItem = React.createClass({
       draggable: !this.props.edited,
       onClick: this.onMessageClick,
       onDragStart: this.onDragStart
-    }, (this.props.edited ? span : a)({
-      href: url,
+    }, tagType({
+      href: this.getUrl(),
       className: 'wrapper',
       'data-message-id': message.get('id'),
       onClick: this.onMessageClick,
@@ -6606,20 +6512,14 @@ module.exports = MessageItem = React.createClass({
       ref: 'target'
     }, div({
       className: 'markers-wrapper'
-    }, i({
-      className: classer({
-        select: true,
-        fa: true,
-        'fa-check-square-o': this.props.selected,
-        'fa-square-o': !this.props.selected
-      }),
-      onClick: this.onSelect
-    }), (_ref3 = MessageFlags.SEEN, __indexOf.call(flags, _ref3) >= 0) ? i({
-      className: 'fa'
-    }) : i({
-      className: 'fa fa-circle'
-    }), (_ref4 = MessageFlags.FLAGGED, __indexOf.call(flags, _ref4) >= 0) ? i({
-      className: 'fa fa-star'
+    }, Icon({
+      className: 'select',
+      onClick: this.onSelect,
+      type: (this.props.selected ? 'check-square-o' : 'square-o')
+    }), (_ref3 = MessageFlags.SEEN, __indexOf.call(flags, _ref3) >= 0) ? Icon({
+      type: 'circle'
+    }) : void 0, (_ref4 = MessageFlags.FLAGGED, __indexOf.call(flags, _ref4) >= 0) ? Icon({
+      type: 'star'
     }) : void 0), div({
       className: 'avatar-wrapper select-target'
     }, avatar != null ? img({
@@ -6636,7 +6536,9 @@ module.exports = MessageItem = React.createClass({
       className: 'participants ellipsable'
     }, this.getParticipants(message)), div({
       className: 'subject ellipsable'
-    }, p(null, message.get('subject'))), div({
+    }, p(null, message.get('subject'))), div.apply(null, [{
+      className: 'mailboxes'
+    }].concat(__slice.call(this.getMailboxTags(message)))), div({
       className: 'date'
     }, date), div({
       className: 'extras'
@@ -6646,24 +6548,57 @@ module.exports = MessageItem = React.createClass({
       className: 'conversation-length'
     }, "" + this.props.conversationLengths) : void 0), div({
       className: 'preview'
-    }, p(null, text.substr(0, 1024))))));
+    }, p(null, MessageUtils.getPreview(message))))));
   },
   _doCheck: function() {
     if (this.props.selected) {
       return setTimeout((function(_this) {
         return function() {
-          var _ref1;
-          return (_ref1 = _this.refs.select) != null ? _ref1.getDOMNode().checked = true : void 0;
+          var _ref2;
+          return (_ref2 = _this.refs.select) != null ? _ref2.getDOMNode().checked = true : void 0;
         };
       })(this), 50);
     } else {
       return setTimeout((function(_this) {
         return function() {
-          var _ref1;
-          return (_ref1 = _this.refs.select) != null ? _ref1.getDOMNode().checked = false : void 0;
+          var _ref2;
+          return (_ref2 = _this.refs.select) != null ? _ref2.getDOMNode().checked = false : void 0;
         };
       })(this), 50);
     }
+  },
+  getMailboxTags: function() {
+    var accountID, accountLabel;
+    accountID = this.props.message.get('accountID');
+    accountLabel = this.props.accounts.get(accountID).get('label');
+    return Object.keys(this.props.message.get('mailboxIDs')).filter((function(_this) {
+      return function(boxID) {
+        var box, _ref2;
+        box = _this.props.mailboxes.get(boxID);
+        if (!box) {
+          return false;
+        }
+        if (_this.props.mailboxID && (_ref2 = MailboxFlags.ALL, __indexOf.call(box.get('attribs'), _ref2) >= 0)) {
+          return false;
+        }
+        if (_this.props.mailboxID === boxID) {
+          return false;
+        }
+        return true;
+      };
+    })(this)).map((function(_this) {
+      return function(boxID) {
+        var box, label;
+        box = _this.props.mailboxes.get(boxID);
+        label = box.get('label');
+        if (!_this.props.accountID) {
+          label = "" + accountLabel + ":" + label;
+        }
+        return span({
+          className: 'mailbox-tag'
+        }, label);
+      };
+    })(this));
   },
   componentDidMount: function() {
     return this._doCheck();
@@ -6675,6 +6610,28 @@ module.exports = MessageItem = React.createClass({
     this.props.onSelect(!this.props.selected);
     e.preventDefault();
     return e.stopPropagation();
+  },
+  getUrl: function() {
+    var action, conversationID, params, _ref2;
+    params = {
+      messageID: this.props.message.get('id')
+    };
+    if ((_ref2 = MessageFlags.DRAFT, __indexOf.call(this.props.message.get('flags'), _ref2) >= 0) && !this.props.isTrash) {
+      action = 'edit';
+    } else {
+      conversationID = this.props.message.get('conversationID');
+      if ((conversationID != null) && this.props.displayConversations) {
+        action = 'conversation';
+        params.conversationID = conversationID;
+      } else {
+        action = 'message';
+      }
+    }
+    return this.buildUrl({
+      direction: 'second',
+      action: action,
+      parameters: params
+    });
   },
   onMessageClick: function(event) {
     var href, node;
@@ -6725,8 +6682,8 @@ module.exports = MessageItem = React.createClass({
     from = message.get('from');
     to = message.get('to').concat(message.get('cc')).filter((function(_this) {
       return function(address) {
-        var _ref1;
-        return address.address !== _this.props.login && address.address !== ((_ref1 = from[0]) != null ? _ref1.address : void 0);
+        var _ref2;
+        return address.address !== _this.props.login && address.address !== ((_ref2 = from[0]) != null ? _ref2.address : void 0);
       };
     })(this));
     separator = to.length > 0 ? ', ' : ' ';
@@ -6809,70 +6766,31 @@ module.exports = MessageList = React.createClass({
   },
   componentWillReceiveProps: function(props) {
     var id, isSelected, selected;
-    if (props.mailboxID !== this.props.mailboxID) {
+    selected = _.clone(this.state.selected);
+    for (id in selected) {
+      isSelected = selected[id];
+      if (!props.messages.get(id)) {
+        delete selected[id];
+      }
+    }
+    this.setState({
+      selected: selected
+    });
+    if (Object.keys(selected).length === 0) {
       return this.setState({
         allSelected: false,
-        edited: false,
-        selected: {}
+        edited: false
       });
-    } else {
-      selected = this.state.selected;
-      for (id in selected) {
-        isSelected = selected[id];
-        if (!props.messages.get(id)) {
-          delete selected[id];
-        }
-      }
-      this.setState({
-        selected: selected
-      });
-      if (Object.keys(selected).length === 0) {
-        return this.setState({
-          allSelected: false,
-          edited: false
-        });
-      }
     }
   },
   render: function() {
-    var afterAction, compact, filterParams, hasMore, nextPage;
-    compact = this.props.settings.get('listStyle') === 'compact';
-    filterParams = {
-      accountID: this.props.accountID,
-      mailboxID: this.props.mailboxID,
-      query: this.props.query
-    };
-    hasMore = this.props.query.pageAfter !== '-';
-    if (hasMore) {
-      afterAction = (function(_this) {
-        return function() {
-          return setTimeout(function() {
-            var listEnd, params;
-            listEnd = _this.refs.nextPage || _this.refs.listEnd || _this.refs.listEmpty;
-            if ((listEnd != null) && DomUtils.isVisible(listEnd.getDOMNode())) {
-              params = {
-                parameters: _this.props.query
-              };
-              return LayoutActionCreator.showMessageList(params);
-            }
-          }, 100);
-        };
-      })(this);
-    }
-    nextPage = (function(_this) {
-      return function() {
-        return LayoutActionCreator.showMessageList({
-          parameters: _this.props.query
-        });
-      };
-    })(this);
     return section({
-      key: 'messages-list',
+      key: "messages-list-" + this.props.mailboxID,
       ref: 'list',
       'data-mailbox-id': this.props.mailboxID,
       className: 'messages-list panel',
       'aria-expanded': !this.state.fullscreen
-    }, ToolbarMessagesList({
+    }, !this.props.noToolbar ? ToolbarMessagesList({
       settings: this.props.settings,
       accountID: this.props.accountID,
       mailboxID: this.props.mailboxID,
@@ -6884,10 +6802,9 @@ module.exports = MessageList = React.createClass({
       displayConversations: this.props.displayConversations,
       toggleEdited: this.toggleEdited,
       toggleAll: this.toggleAll,
-      afterAction: afterAction,
-      queryParams: this.props.queryParams,
-      filter: this.props.filter
-    }), Progress({
+      afterAction: this.afterMessageAction,
+      queryParams: this.props.queryParams
+    }) : void 0, Progress({
       value: this.props.refresh,
       max: 1
     }), this.props.messages.count() === 0 ? this.props.fetching ? p({
@@ -6901,10 +6818,13 @@ module.exports = MessageList = React.createClass({
     }, MessageListBody({
       messages: this.props.messages,
       settings: this.props.settings,
+      accountID: this.props.accountID,
       mailboxID: this.props.mailboxID,
       messageID: this.props.messageID,
       conversationID: this.props.conversationID,
       conversationLengths: this.props.conversationLengths,
+      accounts: this.props.accounts,
+      mailboxes: this.props.mailboxes,
       login: this.props.login,
       edited: this.state.edited,
       selected: this.state.selected,
@@ -6912,39 +6832,23 @@ module.exports = MessageList = React.createClass({
       displayConversations: this.props.displayConversations,
       isTrash: this.props.isTrash,
       ref: 'listBody',
-      onSelect: (function(_this) {
-        return function(id, val) {
-          var newState, selected;
-          selected = _.clone(_this.state.selected);
-          if (val) {
-            selected[id] = val;
-          } else {
-            delete selected[id];
-          }
-          if (Object.keys(selected).length > 0) {
-            newState = {
-              edited: true,
-              selected: selected
-            };
-          } else {
-            newState = {
-              allSelected: false,
-              edited: false,
-              selected: {}
-            };
-          }
-          return _this.setState(newState);
-        };
-      })(this)
-    }), hasMore ? p({
-      className: 'text-center list-footer'
-    }, this.props.fetching ? Spinner() : a({
-      className: 'more-messages',
-      onClick: nextPage,
-      ref: 'nextPage'
-    }, t('list next page'))) : p({
-      ref: 'listEnd'
-    }, t('list end'))));
+      onSelect: this.onMessageSelectionChange
+    }), this.renderFooter()));
+  },
+  renderFooter: function() {
+    if (this.props.canLoadMore) {
+      return p({
+        className: 'text-center list-footer'
+      }, this.props.fetching ? Spinner() : a({
+        className: 'more-messages',
+        onClick: this.props.loadMoreMessage,
+        ref: 'nextPage'
+      }, t('list next page')));
+    } else {
+      return p({
+        ref: 'listEnd'
+      }, t('list end'));
+    }
   },
   toggleEdited: function() {
     if (this.state.edited) {
@@ -6979,13 +6883,46 @@ module.exports = MessageList = React.createClass({
       });
     }
   },
+  onMessageSelectionChange: (function(_this) {
+    return function(id, val) {
+      var newState, selected;
+      selected = _.clone(_this.state.selected);
+      if (val) {
+        selected[id] = val;
+      } else {
+        delete selected[id];
+      }
+      if (Object.keys(selected).length > 0) {
+        newState = {
+          edited: true,
+          selected: selected
+        };
+      } else {
+        newState = {
+          allSelected: false,
+          edited: false,
+          selected: {}
+        };
+      }
+      return _this.setState(newState);
+    };
+  })(this),
+  afterMessageAction: function() {
+    return setTimeout((function(_this) {
+      return function() {
+        var listEnd;
+        listEnd = _this.refs.nextPage || _this.refs.listEnd || _this.refs.listEmpty;
+        if ((listEnd != null) && DomUtils.isVisible(listEnd.getDOMNode())) {
+          return _this.props.loadMoreMessage();
+        }
+      };
+    })(this), 100);
+  },
   _loadNext: function() {
     var lastMessage, _ref3;
     lastMessage = (_ref3 = this.refs.listBody) != null ? _ref3.getDOMNode().lastElementChild : void 0;
     if ((this.refs.nextPage != null) && (lastMessage != null) && DomUtils.isVisible(lastMessage)) {
-      return LayoutActionCreator.showMessageList({
-        parameters: this.props.query
-      });
+      return this.props.loadMoreMessage();
     }
   },
   _handleRealtimeGrowth: function() {
@@ -7761,7 +7698,7 @@ module.exports = Modal = React.createClass({
 });
 
 ;require.register("components/panel", function(exports, require, module) {
-var AccountConfig, AccountStore, Compose, ComposeActions, Constants, Conversation, Dispositions, MessageFilter, MessageList, MessageStore, Panel, RouterMixin, SearchStore, Settings, SettingsStore, Spinner, StoreWatchMixin, TooltipRefesherMixin,
+var AccountConfig, AccountStore, Compose, ComposeActions, Constants, Conversation, Dispositions, MessageActionCreator, MessageFilter, MessageList, MessageStore, Panel, RouterMixin, SearchResult, SearchStore, Settings, SettingsStore, Spinner, StoreWatchMixin, TooltipRefesherMixin,
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 AccountConfig = require('./account_config');
@@ -7773,6 +7710,8 @@ Conversation = require('./conversation');
 MessageList = require('./message-list');
 
 Settings = require('./settings');
+
+SearchResult = require('./search_result');
 
 Spinner = require('./basic_components').Spinner;
 
@@ -7790,21 +7729,25 @@ SearchStore = require('../stores/search_store');
 
 SettingsStore = require('../stores/settings_store');
 
+MessageActionCreator = require('../actions/message_action_creator');
+
 Constants = require('../constants/app_constants');
 
 ComposeActions = Constants.ComposeActions, MessageFilter = Constants.MessageFilter, Dispositions = Constants.Dispositions;
 
 module.exports = Panel = React.createClass({
   displayName: 'Panel',
-  mixins: [StoreWatchMixin([AccountStore, MessageStore, SettingsStore]), TooltipRefesherMixin, RouterMixin],
+  mixins: [StoreWatchMixin([AccountStore, MessageStore, SettingsStore, SearchStore]), TooltipRefesherMixin, RouterMixin],
   shouldComponentUpdate: function(nextProps, nextState) {
     var should;
     should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
     return should;
   },
   render: function() {
-    if (this.props.action === 'account.mailbox.messages' || this.props.action === 'account.mailbox.messages.filter' || this.props.action === 'account.mailbox.messages.date' || this.props.action === 'account.mailbox.default' || this.props.action === 'search') {
+    if (this.props.action === 'account.mailbox.messages') {
       return this.renderList();
+    } else if (this.props.action === 'search') {
+      return this.renderSearchResults();
     } else if (this.props.action === 'account.config' || this.props.action === 'account.new') {
       return this.renderAccount();
     } else if (this.props.action === 'message' || this.props.action === 'conversation') {
@@ -7820,46 +7763,36 @@ module.exports = Panel = React.createClass({
     }
   },
   renderList: function() {
-    var account, accountID, conversationDisabledBoxes, conversationID, conversationLengths, counterMessage, displayConversations, emptyListMessage, isTrash, mailbox, mailboxID, messages, messagesCount, query, _ref, _ref1, _ref2;
-    if (this.props.action === 'search') {
-      accountID = null;
-      mailboxID = null;
-      messages = this.state.results;
-      messagesCount = messages.count();
-      emptyListMessage = t('list empty');
-      counterMessage = t('list search count', messagesCount);
+    var account, accountID, conversationDisabledBoxes, conversationID, conversationLengths, displayConversations, emptyListMessage, isTrash, mailbox, mailboxID, messages, messagesCount, _ref, _ref1, _ref2;
+    accountID = this.props.accountID;
+    mailboxID = this.props.mailboxID;
+    account = AccountStore.getByID(accountID);
+    if (account != null) {
+      mailbox = account.get('mailboxes').get(mailboxID);
+      messages = MessageStore.getMessagesToDisplay(mailboxID, this.state.settings.get('displayConversation'));
+      messagesCount = (mailbox != null ? mailbox.get('nbTotal') : void 0) || 0;
+      emptyListMessage = (function() {
+        switch (this.state.queryParams.flag) {
+          case MessageFilter.FLAGGED:
+            return t('no flagged message');
+          case MessageFilter.UNSEEN:
+            return t('no unseen message');
+          case MessageFilter.ALL:
+            return t('list empty');
+          default:
+            return t('no filter message');
+        }
+      }).call(this);
     } else {
-      accountID = this.props.accountID;
-      mailboxID = this.props.mailboxID;
-      account = AccountStore.getByID(accountID);
-      if (account != null) {
-        mailbox = account.get('mailboxes').get(mailboxID);
-        messages = MessageStore.getMessagesByMailbox(mailboxID, this.state.settings.get('displayConversation'));
-        messagesCount = (mailbox != null ? mailbox.get('nbTotal') : void 0) || 0;
-        emptyListMessage = (function() {
-          switch (this.state.currentFilter) {
-            case MessageFilter.FLAGGED:
-              return t('no flagged message');
-            case MessageFilter.UNSEEN:
-              return t('no unseen message');
-            case MessageFilter.ALL:
-              return t('list empty');
-            default:
-              return t('no filter message');
-          }
-        }).call(this);
-        counterMessage = t('list count', messagesCount);
-      } else {
-        setTimeout((function(_this) {
-          return function() {
-            return _this.redirect({
-              direction: "first",
-              action: "default"
-            });
-          };
-        })(this), 1);
-        return div(null, 'redirecting');
-      }
+      setTimeout((function(_this) {
+        return function() {
+          return _this.redirect({
+            direction: "first",
+            action: "default"
+          });
+        };
+      })(this), 1);
+      return React.DOM.div(null, 'redirecting');
     }
     if (this.state.settings.get('displayConversation')) {
       conversationID = this.state.currentConversationID;
@@ -7868,9 +7801,6 @@ module.exports = Panel = React.createClass({
       }
       conversationLengths = MessageStore.getConversationsLength();
     }
-    query = _.clone(this.state.queryParams);
-    query.accountID = accountID;
-    query.mailboxID = mailboxID;
     conversationDisabledBoxes = [(_ref = this.state.selectedAccount) != null ? _ref.get('trashMailbox') : void 0, (_ref1 = this.state.selectedAccount) != null ? _ref1.get('draftMailbox') : void 0, (_ref2 = this.state.selectedAccount) != null ? _ref2.get('junkMailbox') : void 0];
     if (__indexOf.call(conversationDisabledBoxes, mailboxID) >= 0) {
       displayConversations = false;
@@ -7886,18 +7816,28 @@ module.exports = Panel = React.createClass({
       messageID: this.state.currentMessageID,
       conversationID: conversationID,
       login: account != null ? account.get('login') : void 0,
-      mailboxes: this.state.mailboxesFlat,
+      accounts: this.state.accounts,
+      mailboxes: this.state.mailboxes,
       settings: this.state.settings,
       fetching: this.state.fetching,
       refresh: this.state.refresh,
-      query: query,
       isTrash: isTrash,
       conversationLengths: conversationLengths,
       emptyListMessage: emptyListMessage,
       ref: 'messageList',
       displayConversations: displayConversations,
       queryParams: this.state.queryParams,
-      filter: this.state.currentFilter
+      canLoadMore: this.state.queryParams.hasNextPage,
+      loadMoreMessage: function() {
+        return MessageActionCreator.fetchMoreOfCurrentQuery();
+      }
+    });
+  },
+  renderSearchResults: function() {
+    var key;
+    key = encodeURIComponent(SearchStore.getCurrentSearch());
+    return new SearchResult({
+      key: "search-" + key
     });
   },
   renderAccount: function() {
@@ -7909,6 +7849,7 @@ module.exports = Panel = React.createClass({
         error: this.state.accountError,
         isWaiting: this.state.accountWaiting,
         mailboxes: this.state.selectedMailboxes,
+        mailboxCounters: this.state.mailboxCounters,
         favoriteMailboxes: this.state.favoriteMailboxes,
         tab: this.props.tab
       };
@@ -7956,8 +7897,8 @@ module.exports = Panel = React.createClass({
     return Conversation({
       key: 'conversation-' + conversationID,
       settings: this.state.settings,
-      accounts: this.state.accountsFlat,
-      mailboxes: this.state.mailboxesFlat,
+      accounts: this.state.accounts,
+      mailboxes: this.state.mailboxes,
       selectedAccountID: this.state.selectedAccount.get('id'),
       selectedAccountLogin: this.state.selectedAccount.get('login'),
       selectedMailboxID: selectedMailboxID,
@@ -7980,7 +7921,7 @@ module.exports = Panel = React.createClass({
       action: null,
       inReplyTo: null,
       settings: this.state.settings,
-      accounts: this.state.accountsFlat,
+      accounts: this.state.accounts,
       selectedAccountID: this.state.selectedAccount.get('id'),
       selectedAccountLogin: this.state.selectedAccount.get('login'),
       selectedMailboxID: this.props.selectedMailboxID,
@@ -8028,52 +7969,24 @@ module.exports = Panel = React.createClass({
     });
   },
   getStateFromStores: function() {
-    var accountsFlat, conversation, conversationID, isLoadingReply, mailboxesFlat, refresh, selectedAccount;
-    isLoadingReply = MessageStore.getByID(this.props.messageID) == null;
-    selectedAccount = AccountStore.getSelected();
-    if (selectedAccount == null) {
-      selectedAccount = AccountStore.getDefault();
-    }
-    accountsFlat = {};
-    AccountStore.getAll().map(function(account) {
-      return accountsFlat[account.get('id')] = {
-        name: account.get('name'),
-        label: account.get('label'),
-        login: account.get('login'),
-        trashMailbox: account.get('trashMailbox'),
-        signature: account.get('signature')
-      };
-    }).toJS();
-    mailboxesFlat = {};
-    AccountStore.getSelectedMailboxes(true).map(function(mailbox) {
-      var id;
-      id = mailbox.get('id');
-      mailboxesFlat[id] = {};
-      return ['id', 'label', 'depth'].map(function(prop) {
-        return mailboxesFlat[id][prop] = mailbox.get(prop);
-      });
-    }).toJS();
-    refresh = AccountStore.getMailboxRefresh(this.props.mailboxID);
-    conversationID = MessageStore.getCurrentConversationID();
-    conversation = conversationID ? MessageStore.getConversation(conversationID) : null;
     return {
-      accountsFlat: accountsFlat,
-      selectedAccount: selectedAccount,
-      mailboxesFlat: mailboxesFlat,
+      accounts: AccountStore.getAll(),
+      mailboxes: AccountStore.getAllMailboxes(),
+      selectedAccount: AccountStore.getSelectedOrDefault(),
       favoriteMailboxes: AccountStore.getSelectedFavorites(),
       selectedMailboxes: AccountStore.getSelectedMailboxes(true),
+      mailboxCounters: AccountStore.getMailboxCounters(),
+      allMailboxes: AccountStore.getAllMailboxes(),
       accountError: AccountStore.getError(),
       accountWaiting: AccountStore.isWaiting(),
-      refresh: refresh,
       fetching: MessageStore.isFetching(),
-      queryParams: MessageStore.getParams(),
+      queryParams: MessageStore.getQueryParams(),
       currentMessageID: MessageStore.getCurrentID(),
-      conversation: conversation,
-      currentConversationID: conversationID,
-      currentFilter: MessageStore.getCurrentFilter(),
-      results: SearchStore.getResults(),
+      conversation: MessageStore.getCurrentConversation(),
+      currentConversationID: MessageStore.getCurrentConversationID(),
       settings: SettingsStore.get(),
-      isLoadingReply: isLoadingReply
+      isLoadingReply: MessageStore.getByID(this.props.messageID) == null,
+      refresh: AccountStore.getMailboxRefresh(this.props.mailboxID)
     };
   }
 });
@@ -8306,62 +8219,267 @@ module.exports = React.createClass({
 });
 });
 
-;require.register("components/search-form", function(exports, require, module) {
-var ENTER_KEY, RouterMixin, SearchActionCreator, classer, div, input, span, _ref;
+;require.register("components/search_bar", function(exports, require, module) {
+var AccountActionCreator, AccountPicker, AccountStore, GlobalSearchBar, LayoutActionCreator, RouterMixin, SearchInput, SearchStore, StoreWatchMixin, button, div, i, _ref;
 
-_ref = React.DOM, div = _ref.div, input = _ref.input, span = _ref.span;
+_ref = React.DOM, div = _ref.div, button = _ref.button, i = _ref.i;
 
-classer = React.addons.classSet;
+SearchInput = require('./search_input');
 
-SearchActionCreator = require('../actions/search_action_creator');
-
-ENTER_KEY = 13;
+AccountPicker = require('./account_picker');
 
 RouterMixin = require('../mixins/router_mixin');
 
-module.exports = React.createClass({
-  displayName: 'SearchForm',
-  mixins: [RouterMixin],
+LayoutActionCreator = require('../actions/layout_action_creator');
+
+StoreWatchMixin = require('../mixins/store_watch_mixin');
+
+AccountStore = require('../stores/account_store');
+
+SearchStore = require('../stores/search_store');
+
+AccountActionCreator = require('../actions/account_action_creator');
+
+module.exports = GlobalSearchBar = React.createClass({
+  displayName: 'GlobalSearchBar',
+  mixins: [RouterMixin, StoreWatchMixin([AccountStore, SearchStore])],
   render: function() {
     return div({
-      className: 'form-group pull-left'
-    }, div({
-      className: 'input-group'
-    }, input({
-      className: 'form-control',
-      type: 'text',
-      placeholder: t('app search'),
-      onKeyPress: this.onKeyPress,
-      ref: 'searchInput',
-      defaultValue: this.props.query
-    }), div({
-      className: 'input-group-addon btn btn-cozy',
-      onClick: this.onSubmit
-    }, span({
-      className: 'fa fa-search'
-    }))));
+      className: 'search-bar'
+    }, button({
+      className: 'drawer-toggle',
+      onClick: LayoutActionCreator.drawerToggle,
+      title: t('menu toggle')
+    }, i({
+      className: 'fa fa-navicon'
+    })), AccountPicker({
+      accounts: this.state.accounts,
+      valueLink: {
+        value: this.state.accountID || 'all',
+        requestChange: this.onAccountChanged
+      }
+    }), SearchInput({
+      value: this.state.search || '',
+      placeholder: t('filters search placeholder'),
+      onSubmit: this.onSearchTriggered
+    }));
   },
-  onSubmit: function() {
-    var query;
-    query = encodeURIComponent(this.refs.searchInput.getDOMNode().value.trim());
-    if (query.length > 3) {
+  onSearchTriggered: function(newvalue) {
+    var accountID;
+    if (newvalue !== '') {
       return this.redirect({
         direction: 'first',
         action: 'search',
-        parameters: [query]
+        parameters: [this.state.accountID, newvalue]
+      });
+    } else {
+      this.setState({
+        search: ''
+      });
+      accountID = this.state.accountID;
+      if (this.state.accountID === 'all') {
+        accountID = null;
+      }
+      return this.redirect({
+        direction: 'first',
+        action: 'account.mailbox.messages',
+        parameters: [accountID]
       });
     }
   },
-  onKeyPress: function(evt) {
-    var query;
-    if (evt.charCode === ENTER_KEY) {
-      this.onSubmit();
-      evt.preventDefault();
-      return false;
+  onAccountChanged: function(accountID) {
+    if (this.state.search !== '') {
+      return this.redirect({
+        direction: 'first',
+        action: 'search',
+        parameters: [accountID, this.state.search]
+      });
+    } else if (accountID !== 'all') {
+      return this.redirect({
+        direction: 'first',
+        action: 'account.mailbox.messages',
+        parameters: [accountID]
+      });
     } else {
-      query = this.refs.searchInput.getDOMNode().value;
-      return SearchActionCreator.setQuery(query);
+      return this.setState({
+        accountID: accountID
+      });
     }
+  },
+  getStateFromStores: function() {
+    var accountID, accounts, search, _ref1;
+    accounts = AccountStore.getAll().map(function(account) {
+      return t("search in account", {
+        account: account.get('label')
+      });
+    }).toOrderedMap().set('all', t('search all accounts'));
+    accountID = ((_ref1 = AccountStore.getSelected()) != null ? _ref1.get('id') : void 0) || 'all';
+    search = SearchStore.getCurrentSearch();
+    return {
+      accounts: accounts,
+      search: search,
+      accountID: accountID
+    };
+  }
+});
+});
+
+;require.register("components/search_input", function(exports, require, module) {
+var a, button, div, input, _ref;
+
+_ref = React.DOM, div = _ref.div, input = _ref.input, button = _ref.button, a = _ref.a;
+
+module.exports = React.createClass({
+  displayName: 'SearchInput',
+  getInitialState: function() {
+    return {
+      value: this.props.value
+    };
+  },
+  componentWillReceiveProps: function(nextProps) {
+    return this.setState({
+      value: nextProps.value
+    });
+  },
+  onChange: function(event) {
+    return this.setState({
+      value: event.target.value
+    });
+  },
+  onKeyUp: function(event) {
+    this.setState({
+      value: event.target.value
+    });
+    if (event.key === "Enter") {
+      if (event != null) {
+        event.preventDefault();
+      }
+      if (event != null) {
+        event.stopPropagation();
+      }
+      this.props.onSubmit(event.target.value);
+    }
+    if (event.key === "Escape") {
+      return this.onResetClick();
+    }
+  },
+  onCheckClick: function(event) {
+    if (event != null) {
+      if (typeof event.preventDefault === "function") {
+        event.preventDefault();
+      }
+    }
+    if (event != null) {
+      if (typeof event.stopPropagation === "function") {
+        event.stopPropagation();
+      }
+    }
+    return this.props.onSubmit(this.state.value);
+  },
+  onResetClick: function(event) {
+    this.setState({
+      value: ''
+    });
+    if (event != null) {
+      if (typeof event.preventDefault === "function") {
+        event.preventDefault();
+      }
+    }
+    if (event != null) {
+      if (typeof event.stopPropagation === "function") {
+        event.stopPropagation();
+      }
+    }
+    return this.props.onSubmit('');
+  },
+  render: function() {
+    return div({
+      role: 'search'
+    }, input({
+      type: 'text',
+      placeholder: this.props.placeholder,
+      value: this.state.value,
+      onChange: this.onChange,
+      onKeyUp: this.onKeyUp,
+      name: 'searchterm'
+    }), this.state.value.length !== 0 ? div({
+      className: 'btn-group'
+    }, a({
+      className: 'btn fa fa-check',
+      onClick: this.onCheckClick
+    }), a({
+      className: 'btn fa fa-close',
+      onClick: this.onResetClick
+    })) : void 0);
+  }
+});
+});
+
+;require.register("components/search_result", function(exports, require, module) {
+var AccountStore, MessageActionCreator, MessageList, MessageStore, SearchStore, SettingsStore, StoreWatchMixin, div;
+
+MessageList = require('./message-list');
+
+MessageActionCreator = require('../actions/message_action_creator');
+
+StoreWatchMixin = require('../mixins/store_watch_mixin');
+
+MessageStore = require('../stores/message_store');
+
+AccountStore = require('../stores/account_store');
+
+SearchStore = require('../stores/search_store');
+
+SettingsStore = require('../stores/settings_store');
+
+div = React.DOM.div;
+
+module.exports = React.createClass({
+  displayName: 'searchResults',
+  mixins: [StoreWatchMixin([AccountStore, SearchStore])],
+  getStateFromStores: function() {
+    var accountID, search, state;
+    search = SearchStore.getCurrentSearch();
+    accountID = SearchStore.getCurrentSearchAccountID();
+    if (accountID === 'all') {
+      accountID = null;
+    }
+    return state = {
+      currentSearchResults: SearchStore.getCurrentSearchResults(),
+      conversationLengths: MessageStore.getConversationsLength(),
+      settings: SettingsStore.get(),
+      accountID: accountID,
+      currentMessageID: MessageStore.getCurrentID(),
+      currentConversationID: MessageStore.getCurrentConversationID(),
+      accounts: AccountStore.getAll(),
+      mailboxes: AccountStore.getAllMailboxes(),
+      displayConversations: true,
+      canLoadMore: SearchStore.hasMoreSearch(),
+      emptyListMessage: t('list search empty', {
+        query: search
+      })
+    };
+  },
+  render: function() {
+    return MessageList({
+      key: this.props.key,
+      noToolbar: true,
+      messages: this.state.currentSearchResults,
+      accountID: this.state.accountID,
+      messageID: this.state.currentMessageID,
+      conversationID: this.state.currentConversationID,
+      accounts: this.state.accounts,
+      mailboxes: this.state.mailboxes,
+      settings: this.state.settings,
+      conversationLengths: this.state.conversationLengths,
+      emptyListMessage: this.state.emptyListMessage,
+      displayConversations: this.state.displayConversations,
+      queryParams: null,
+      canLoadMore: this.state.canLoadMore,
+      loadMoreMessage: function() {
+        return MessageActionCreator.fetchSearchResults();
+      }
+    });
   }
 });
 });
@@ -8898,23 +9016,25 @@ module.exports = React.createClass({
       fullscreen: LayoutStore.isPreviewFullscreen()
     };
   },
-  getParams: function(messageID, conversationID) {
+  getUrlParams: function(messageID, conversationID) {
+    var action, parameters, urlParams;
     if (this.props.settings.get('displayConversation' && (conversationID != null))) {
-      return {
-        action: 'conversation',
-        parameters: {
-          messageID: messageID,
-          conversationID: conversationID
-        }
+      action = 'conversation';
+      parameters = {
+        messageID: messageID,
+        conversationID: conversationID
       };
     } else {
-      return {
-        action: 'message',
-        parameters: {
-          messageID: messageID
-        }
+      action = 'message';
+      parameters = {
+        messageID: messageID
       };
     }
+    return urlParams = {
+      direction: 'second',
+      action: action,
+      parameters: parameters
+    };
   },
   render: function() {
     return nav({
@@ -8924,7 +9044,7 @@ module.exports = React.createClass({
     }, this.renderNav('prev'), this.renderNav('next')), this.renderFullscreen());
   },
   renderNav: function(direction) {
-    var angle, conversationID, messageID, params, tooltipID, url, urlParams;
+    var angle, conversationID, messageID, tooltipID, urlParams;
     if (this.props["" + direction + "MessageID"] == null) {
       return;
     }
@@ -8937,13 +9057,7 @@ module.exports = React.createClass({
       tooltipID = Tooltips.NEXT_CONVERSATION;
       angle = 'right';
     }
-    params = this.getParams(messageID, conversationID);
-    urlParams = {
-      direction: 'second',
-      action: params.action,
-      parameters: params.parameters
-    };
-    url = this.buildUrl(urlParams);
+    urlParams = this.getUrlParams(messageID, conversationID);
     return a({
       className: "btn btn-default fa fa-chevron-" + angle,
       onClick: (function(_this) {
@@ -8951,7 +9065,7 @@ module.exports = React.createClass({
           return _this.redirect(urlParams);
         };
       })(this),
-      href: url,
+      href: this.buildUrl(urlParams),
       'aria-describedby': tooltipID,
       'data-tooltip-direction': 'left'
     });
@@ -9079,7 +9193,7 @@ module.exports = React.createClass({
 });
 
 ;require.register("components/toolbar_messageslist", function(exports, require, module) {
-var ActionsToolbarMessagesList, FiltersToolbarMessagesList, LayoutActionCreator, SearchToolbarMessagesList, ToolbarMessagesList, aside, button, classer, i, _ref;
+var ActionsToolbarMessagesList, FiltersToolbarMessagesList, LayoutActionCreator, RouterMixin, SearchToolbarMessagesList, ToolbarMessagesList, aside, button, classer, i, _ref;
 
 _ref = React.DOM, aside = _ref.aside, i = _ref.i, button = _ref.button;
 
@@ -9093,8 +9207,11 @@ ActionsToolbarMessagesList = require('./toolbar_messageslist_actions');
 
 LayoutActionCreator = require('../actions/layout_action_creator');
 
+RouterMixin = require('../mixins/router_mixin');
+
 module.exports = ToolbarMessagesList = React.createClass({
   displayName: 'ToolbarMessagesList',
+  mixins: [RouterMixin],
   propTypes: {
     settings: React.PropTypes.object.isRequired,
     accountID: React.PropTypes.string.isRequired,
@@ -9109,16 +9226,45 @@ module.exports = ToolbarMessagesList = React.createClass({
     toggleAll: React.PropTypes.func.isRequired,
     afterAction: React.PropTypes.func
   },
+  onFilterChange: function(params) {
+    var after, before, flag, sort, sortField, sortOrder, type, _ref1;
+    sortOrder = '-';
+    sortField = 'date';
+    before = '-';
+    after = '-';
+    flag = '-';
+    type = params.type;
+    sort = sortOrder + sortField;
+    console.log("filter change", params, new Error().stack);
+    switch (type) {
+      case 'from':
+      case 'dest':
+        if (params.value) {
+          before = params.value;
+          after = "" + params.value + "\uFFFF";
+        }
+        break;
+      case 'date':
+        if (params.range) {
+          _ref1 = params.range, before = _ref1[0], after = _ref1[1];
+        }
+        break;
+      case 'flag':
+        if (params.value) {
+          flag = params.value;
+        }
+    }
+    window.cozyMails.messageClose();
+    return this.redirect({
+      direction: 'first',
+      action: 'account.mailbox.messages',
+      parameters: [this.props.accountID, this.props.mailboxID, sort, type, flag, before, after]
+    });
+  },
   render: function() {
     return aside({
       role: 'toolbar'
     }, button({
-      className: 'drawer-toggle',
-      onClick: LayoutActionCreator.drawerToggle,
-      title: t('menu toggle')
-    }, i({
-      className: 'fa fa-navicon'
-    })), button({
       role: 'menuitem',
       'aria-selected': this.props.edited,
       onClick: this.props.toggleAll
@@ -9141,12 +9287,7 @@ module.exports = ToolbarMessagesList = React.createClass({
       accountID: this.props.accountID,
       mailboxID: this.props.mailboxID,
       queryParams: this.props.queryParams,
-      filter: this.props.filter
-    }) : void 0, !this.props.edited ? SearchToolbarMessagesList({
-      accountID: this.props.accountID,
-      mailboxID: this.props.mailboxID,
-      queryParams: this.props.queryParams,
-      filter: this.props.filter
+      onFilterChange: this.onFilterChange
     }) : void 0);
   }
 });
@@ -9340,7 +9481,6 @@ DateRangePicker = require('./date_range_picker');
 
 module.exports = FiltersToolbarMessagesList = React.createClass({
   displayName: 'FiltersToolbarMessagesList',
-  mixins: [RouterMixin],
   propTypes: {
     accountID: React.PropTypes.string.isRequired,
     mailboxID: React.PropTypes.string.isRequired
@@ -9355,68 +9495,25 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
     should = !(_.isEqual(nextState, this.state)) || !(_.isEqual(nextProps, this.props));
     return should;
   },
-  showList: function(filter, params) {
-    var sort;
-    sort = {
-      order: '-',
-      field: 'date'
-    };
-    window.cozyMails.messageClose();
-    if (params != null) {
-      sort.before = params[0], sort.after = params[1];
-    } else {
-      sort.after = sort.before = '';
-    }
-    return LayoutActionCreator.showFilteredList(filter, sort);
-  },
   onDateFilter: function(start, end) {
-    var params;
-    if (!!start && !!end) {
-      params = [start, end];
-      this.redirect({
-        direction: 'first',
-        action: 'account.mailbox.messages.date',
-        parameters: [this.props.accountID, this.props.mailboxID, '-date', start, end]
-      });
-    } else {
-      params = false;
-      this.redirect({
-        direction: 'first',
-        action: 'account.mailbox.messages',
-        parameters: [this.props.accountID, this.props.mailboxID]
-      });
-    }
-    return this.showList('-', params);
+    var date;
+    date = !!start && !!end ? [start, end] : null;
+    return this.props.onFilterChange({
+      type: 'date',
+      range: date
+    });
   },
   toggleFilters: function(name) {
-    var filter;
-    if (this.props.filter === name) {
-      filter = '-';
-      this.redirect({
-        direction: 'first',
-        action: 'account.mailbox.messages',
-        parameters: [this.props.accountID, this.props.mailboxID]
-      });
-    } else {
-      filter = name;
-      this.redirect({
-        direction: 'first',
-        action: 'account.mailbox.messages.filter',
-        parameters: [this.props.accountID, this.props.mailboxID, '-date', name]
-      });
-    }
-    return this.showList(filter, null);
+    var wasActive;
+    wasActive = this.props.queryParams.filterType === 'flag' && this.props.queryParams.flag === name;
+    return this.props.onFilterChange({
+      type: 'flag',
+      value: wasActive ? '-' : name
+    });
   },
   render: function() {
-    var dateFiltered, filter;
-    if (window.location.href.indexOf('flag') !== -1) {
-      filter = window.location.href.replace(/.*\/flag\//gi, '');
-      this.props.filter = filter.replace(/\/.*/gi, '');
-    }
-    dateFiltered = this.props.queryParams.before !== '-' && this.props.queryParams.before !== '1970-01-01T00:00:00.000Z' && this.props.queryParams.before !== void 0 && this.props.queryParams.after !== void 0 && this.props.queryParams.after !== '-';
-    if (window.location.href.indexOf('/sort/-date/before') !== -1) {
-      dateFiltered = true;
-    }
+    var currentFilter;
+    currentFilter = this.props.queryParams.filterType === 'flag' && this.props.queryParams.flag;
     return div({
       role: 'group',
       className: 'filters',
@@ -9424,11 +9521,19 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
     }, i({
       role: 'presentation',
       className: 'fa fa-filter',
-      onClick: this.toggleExpandState
+      onClick: function() {
+        return this.setState({
+          expanded: !this.state.expanded
+        });
+      }
     }), button({
       role: 'menuitem',
-      'aria-selected': this.props.filter === MessageFilter.UNSEEN,
-      onClick: this.toggleFilters.bind(this, MessageFilter.UNSEEN),
+      'aria-selected': currentFilter === MessageFilter.UNSEEN,
+      onClick: (function(_this) {
+        return function() {
+          return _this.toggleFilters(MessageFilter.UNSEEN);
+        };
+      })(this),
       'aria-describedby': Tooltips.FILTER_ONLY_UNREAD,
       'data-tooltip-direction': 'bottom'
     }, i({
@@ -9437,8 +9542,12 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
       className: 'btn-label'
     }, t('filters unseen'))), button({
       role: 'menuitem',
-      'aria-selected': this.props.filter === MessageFilter.FLAGGED,
-      onClick: this.toggleFilters.bind(this, MessageFilter.FLAGGED),
+      'aria-selected': currentFilter === MessageFilter.FLAGGED,
+      onClick: (function(_this) {
+        return function() {
+          return _this.toggleFilters(MessageFilter.FLAGGED);
+        };
+      })(this),
       'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT,
       'data-tooltip-direction': 'bottom'
     }, i({
@@ -9447,8 +9556,12 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
       className: 'btn-label'
     }, t('filters flagged'))), button({
       role: 'menuitem',
-      'aria-selected': this.props.filter === MessageFilter.ATTACH,
-      onClick: this.toggleFilters.bind(this, MessageFilter.ATTACH),
+      'aria-selected': currentFilter === MessageFilter.ATTACH,
+      onClick: (function(_this) {
+        return function() {
+          return _this.toggleFilters(MessageFilter.ATTACH);
+        };
+      })(this),
       'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT,
       'data-tooltip-direction': 'bottom'
     }, i({
@@ -9456,26 +9569,23 @@ module.exports = FiltersToolbarMessagesList = React.createClass({
     }), span({
       className: 'btn-label'
     }, t('filters attach'))), DateRangePicker({
-      active: dateFiltered,
+      active: this.props.queryParams.filterType === 'date',
       onDateFilter: this.onDateFilter
     }));
-  },
-  toggleExpandState: function() {
-    return this.setState({
-      expanded: !this.state.expanded
-    });
   }
 });
 });
 
 ;require.register("components/toolbar_messageslist_search", function(exports, require, module) {
-var Dropdown, LayoutActionCreator, MessageFilter, RouterMixin, SearchToolbarMessagesList, Tooltips, button, div, filters, form, i, input, _ref, _ref1;
+var Dropdown, LayoutActionCreator, MessageFilter, RouterMixin, SearchInput, SearchToolbarMessagesList, Tooltips, button, div, filters, form, i, input, _ref, _ref1;
 
 _ref = React.DOM, div = _ref.div, i = _ref.i, button = _ref.button, input = _ref.input, form = _ref.form;
 
 Dropdown = require('./basic_components').Dropdown;
 
 _ref1 = require('../constants/app_constants'), MessageFilter = _ref1.MessageFilter, Tooltips = _ref1.Tooltips;
+
+SearchInput = require('./search_input');
 
 RouterMixin = require('../mixins/router_mixin');
 
@@ -9488,113 +9598,44 @@ filters = {
 
 module.exports = SearchToolbarMessagesList = React.createClass({
   displayName: 'SearchToolbarMessagesList',
-  mixins: [RouterMixin],
   propTypes: {
     accountID: React.PropTypes.string.isRequired,
     mailboxID: React.PropTypes.string.isRequired
   },
   getInitialState: function() {
-    var value;
-    if (window.location.href.indexOf('/sort/-from/before') !== -1) {
-      value = window.location.href.split('before/')[1];
-      return {
-        value: value.split('/')[0],
-        isEmpty: false,
-        type: 'from'
-      };
-    } else {
-      return {
-        value: '',
-        isEmpty: true,
-        type: 'from'
-      };
-    }
-  },
-  showList: function() {
-    var filter, sort;
-    filter = MessageFilter.ALL;
-    sort = {
-      order: '-',
-      before: this.state.value
+    return {
+      type: 'from',
+      value: ''
     };
-    if ((this.state.value != null) && this.state.value !== '') {
-      this.redirect({
-        direction: 'first',
-        action: 'search',
-        parameters: [this.props.accountID, this.props.mailboxID, this.state.value, "" + this.state.value + "\uFFFF", this.state.type]
-      });
-      window.cozyMails.messageClose();
-      sort.field = this.state.type;
-      sort.after = "" + this.state.value + "\uFFFF";
-    } else {
-      sort.field = 'date';
-      sort.after = '';
-    }
-    return LayoutActionCreator.showFilteredList(filter, sort);
   },
   onTypeChange: function(filter) {
     return this.setState({
-      type: filter
+      type: filter,
+      value: ''
     });
   },
-  onChange: function(event) {
-    return this.setState({
-      value: event.target.value,
-      isEmpty: event.target.value.length === 0
+  onValueChange: function(newvalue) {
+    return this.props.onFilterChange({
+      type: this.state.type,
+      value: newvalue
     });
-  },
-  onKeyUp: function(event) {
-    if (event.key === "Enter" || this.state.isEmpty) {
-      return this.showList();
-    }
-  },
-  reset: function() {
-    this.redirect({
-      direction: 'first',
-      action: 'account.mailbox.messages',
-      parameters: [this.props.accountID, this.props.mailboxID]
-    });
-    return this.setState(this.getInitialState(), this.showList);
   },
   render: function() {
     return form({
       role: 'group',
-      className: 'search'
+      className: 'search',
+      onSubmit: function(e) {
+        return e.preventDefault();
+      }
     }, Dropdown({
       value: this.state.type,
       values: filters,
       onChange: this.onTypeChange
-    }), div({
-      role: 'search'
-    }, input({
-      ref: 'searchterms',
-      type: 'text',
-      placeholder: t('filters search placeholder'),
+    }), SearchInput({
       value: this.state.value,
-      onChange: this.onChange,
-      onKeyUp: this.onKeyUp,
-      name: 'searchterm'
-    }), !this.state.isEmpty ? div({
-      className: 'btn-group'
-    }, button({
-      className: 'btn fa fa-check',
-      onClick: (function(_this) {
-        return function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          return _this.showList();
-        };
-      })(this)
-    }), button({
-      className: 'btn fa fa-close',
-      onClick: (function(_this) {
-        return function(e) {
-          e.preventDefault();
-          e.stopPropagation();
-          return _this.reset();
-        };
-      })(this)
-    })) : void 0));
+      placeholder: t('filters search placeholder'),
+      onSubmit: this.onValueChange
+    }));
   }
 });
 });
@@ -9871,7 +9912,6 @@ module.exports = {
     'RECEIVE_RAW_MESSAGES': 'RECEIVE_RAW_MESSAGES',
     'RECEIVE_RAW_MESSAGE_REALTIME': 'RECEIVE_RAW_MESSAGE_REALTIME',
     'MESSAGE_SEND': 'MESSAGE_SEND',
-    'LAST_ACTION': 'LAST_ACTION',
     'MESSAGE_CURRENT': 'MESSAGE_CURRENT',
     'RECEIVE_MESSAGE_DELETE': 'RECEIVE_MESSAGE_DELETE',
     'RECEIVE_MAILBOX_UPDATE': 'RECEIVE_MAILBOX_UPDATE',
@@ -9897,9 +9937,10 @@ module.exports = {
     'MESSAGE_RECOVER_REQUEST': 'MESSAGE_RECOVER_REQUEST',
     'MESSAGE_RECOVER_SUCCESS': 'MESSAGE_RECOVER_SUCCESS',
     'MESSAGE_RECOVER_FAILURE': 'MESSAGE_RECOVER_FAILURE',
-    'SET_SEARCH_QUERY': 'SET_SEARCH_QUERY',
-    'RECEIVE_RAW_SEARCH_RESULTS': 'RECEIVE_RAW_SEARCH_RESULTS',
-    'CLEAR_SEARCH_RESULTS': 'CLEAR_SEARCH_RESULTS',
+    'SEARCH_PARAMETER_CHANGED': 'SEARCH_PARAMETER_CHANGED',
+    'SEARCH_REQUEST': 'SEARCH_REQUEST',
+    'SEARCH_SUCCESS': 'SEARCH_SUCCESS',
+    'SEARCH_FAILURE': 'SEARCH_FAILURE',
     'SET_CONTACT_QUERY': 'SET_CONTACT_QUERY',
     'RECEIVE_RAW_CONTACT_RESULTS': 'RECEIVE_RAW_CONTACT_RESULTS',
     'CLEAR_CONTACT_RESULTS': 'CLEAR_CONTACT_RESULTS',
@@ -9923,8 +9964,7 @@ module.exports = {
     'REFRESH_REQUEST': 'REFRESH_REQUEST',
     'REFRESH_SUCCESS': 'REFRESH_SUCCESS',
     'REFRESH_FAILURE': 'REFRESH_FAILURE',
-    'LIST_FILTER': 'LIST_FILTER',
-    'LIST_SORT': 'LIST_SORT',
+    'QUERY_PARAMETER_CHANGED': 'QUERY_PARAMETER_CHANGED',
     'TOASTS_SHOW': 'TOASTS_SHOW',
     'TOASTS_HIDE': 'TOASTS_HIDE',
     'DRAWER_SHOW': 'DRAWER_SHOW',
@@ -10105,7 +10145,7 @@ window.onerror = function(msg, url, line, col, error) {
 };
 
 window.onload = function() {
-  var AccountStore, Application, ContactStore, LayoutActionCreator, LayoutStore, MessageStore, PluginUtils, Router, SearchStore, SettingsStore, application, data, e, exception, locale, xhr;
+  var AccountStore, Application, ContactStore, LayoutActionCreator, LayoutStore, MessageStore, PluginUtils, Router, SettingsStore, application, data, e, exception, locale, xhr;
   try {
     window.__DEV__ = window.location.hostname === 'localhost';
     initPerformances();
@@ -10129,7 +10169,6 @@ window.onload = function() {
     ContactStore = require('./stores/contact_store');
     LayoutStore = require('./stores/layout_store');
     MessageStore = require('./stores/message_store');
-    SearchStore = require('./stores/search_store');
     SettingsStore = require('./stores/settings_store');
     Router = require('./router');
     this.router = new Router();
@@ -10528,10 +10567,21 @@ module.exports = Router = (function(_super) {
     this._bindRoutes();
     return this.on('route', (function(_this) {
       return function(name, args) {
-        var firstAction, firstPanelInfo, secondAction, secondPanelInfo, _ref1;
+        var firstAction, firstPanelInfo, secondAction, secondPanelInfo, url, _ref1;
         if (name === 'default') {
-          name = LayoutActionCreator.getDefaultRoute();
-          args = [null];
+          _this.current = {
+            firstPanel: null,
+            secondPanel: null
+          };
+          url = _this.buildUrl({
+            direction: 'first',
+            fullWidth: true,
+            action: LayoutActionCreator.getDefaultRoute(),
+            parameters: [null]
+          });
+          return _this.navigate(url, {
+            trigger: true
+          });
         }
         _ref1 = _this._processSubRouting(name, args), firstPanelInfo = _ref1[0], secondPanelInfo = _ref1[1];
         firstAction = _this.fluxActionFactory(firstPanelInfo);
@@ -11437,6 +11487,8 @@ module.exports = {
   "filters flagged": "starred",
   "filters attach": "attachments",
   "filters search placeholder": "Search...",
+  "search all accounts": "Search in all accounts",
+  "search in account": "Search in %{account}",
   "daterangepicker placeholder": "by date",
   "daterangepicker presets yesterday": "yesterday",
   "daterangepicker presets last week": "last week",
@@ -11924,9 +11976,7 @@ module.exports = TooltipRefresherMixin = {
   componentDidMount: function() {
     return AriaTips.bind();
   },
-  componentDidUpdate: function() {
-    return AriaTips.bind();
-  }
+  componentDidUpdate: function() {}
 };
 });
 
@@ -11957,25 +12007,13 @@ module.exports = Router = (function(_super) {
       pattern: 'account/new',
       fluxAction: 'showCreateAccount'
     },
-    'account.mailbox.messages.filter': {
-      pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/flag/:flag',
-      fluxAction: 'showMessageList'
-    },
-    'account.mailbox.messages.date': {
-      pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/before/:before/after/:after',
+    'account.mailbox.messages': {
+      pattern: 'account/:accountID/mailbox/:mailboxID/sort/:sort/' + ':type/:flag/before/:before/after/:after',
       fluxAction: 'showMessageList'
     },
     'search': {
-      pattern: 'account/:accountID/mailbox/:mailboxID/sort/-from/before/:before/after/:after/field/:type',
-      fluxAction: 'showComposeMessageList'
-    },
-    'account.mailbox.messages': {
-      pattern: 'account/:accountID/mailbox/:mailboxID',
-      fluxAction: 'showMessageList'
-    },
-    'account.mailbox.default': {
-      pattern: 'account/:accountID',
-      fluxAction: 'showMessageList'
+      pattern: 'account/:accountID/search/:search',
+      fluxAction: 'showSearchResult'
     },
     'message': {
       pattern: 'message/:messageID',
@@ -12005,10 +12043,6 @@ module.exports = Router = (function(_super) {
       pattern: 'edit/:messageID',
       fluxAction: 'showComposeMessage'
     },
-    'settings': {
-      pattern: 'settings',
-      fluxAction: 'showSettings'
-    },
     'default': {
       pattern: '',
       fluxAction: ''
@@ -12023,21 +12057,22 @@ module.exports = Router = (function(_super) {
     var defaultAccount, defaultAccountID, defaultMailboxID, defaultParameters, mailbox, _ref, _ref1;
     switch (action) {
       case 'account.mailbox.messages':
-      case 'account.mailbox.messages.filter':
-      case 'account.mailbox.messages.date':
-      case 'account.mailbox.default':
         defaultAccountID = (_ref = AccountStore.getDefault()) != null ? _ref.get('id') : void 0;
         if (parameters.accountID != null) {
           mailbox = AccountStore.getDefaultMailbox(parameters.accountID);
         } else {
           mailbox = AccountStore.getDefaultMailbox(defaultAccountID);
-          this.navigate("account/" + defaultAccountID + "/mailbox/" + (mailbox != null ? mailbox.get('id') : void 0));
         }
         defaultMailboxID = mailbox != null ? mailbox.get('id') : void 0;
         defaultParameters = {};
         defaultParameters.accountID = defaultAccountID;
         defaultParameters.mailboxID = defaultMailboxID;
         defaultParameters.pageAfter = '-';
+        defaultParameters.sort = '-date';
+        defaultParameters.after = '-';
+        defaultParameters.before = '-';
+        defaultParameters.type = 'nofilter';
+        defaultParameters.flag = '-';
         break;
       case 'account.config':
         defaultAccount = (_ref1 = AccountStore.getDefault()) != null ? _ref1.get('id') : void 0;
@@ -12048,8 +12083,8 @@ module.exports = Router = (function(_super) {
         break;
       case 'search':
         defaultParameters = {
-          query: "",
-          page: 1
+          accountID: 'all',
+          search: '-'
         };
         break;
       default:
@@ -12081,13 +12116,15 @@ AccountStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var setMailbox, _accounts, _mailboxRefreshing, _mailboxSort, _newAccountError, _newAccountWaiting, _refreshSelected, _selectedAccount, _selectedMailbox;
+  var setMailbox, _accounts, _accountsUnread, _mailboxRefreshing, _mailboxSort, _mailboxesCounters, _newAccountError, _newAccountWaiting, _refreshSelected, _selectedAccount, _selectedMailbox;
 
   __extends(AccountStore, _super);
 
   function AccountStore() {
     return AccountStore.__super__.constructor.apply(this, arguments);
   }
+
+  _accountsUnread = Immutable.Map();
 
   _accounts = Immutable.Sequence(window.accounts).sort(function(mb1, mb2) {
     if (mb1.label > mb2.label) {
@@ -12100,8 +12137,11 @@ AccountStore = (function(_super) {
   }).mapKeys(function(_, account) {
     return account.id;
   }).map(function(account) {
+    _accountsUnread.set(account.id, account.totalUnread);
     return AccountTranslator.toImmutable(account);
   }).toOrderedMap();
+
+  _mailboxesCounters = Immutable.Map();
 
   _selectedAccount = null;
 
@@ -12124,22 +12164,38 @@ AccountStore = (function(_super) {
   };
 
   setMailbox = function(accountID, boxID, boxData) {
-    var account, mailboxes;
+    var CHANGEFIELDS, STATICFIELDS, account, field, mailbox, mailboxes, more;
     account = _accounts.get(accountID);
-    if (account != null) {
-      mailboxes = account.get('mailboxes');
-      mailboxes = mailboxes.map(function(box) {
-        if (box.get('id') === boxID) {
-          boxData.weight = box.get('weight');
-          return AccountTranslator.mailboxToImmutable(boxData);
-        } else {
-          return box;
-        }
-      }).toOrderedMap();
+    if (!account) {
+      return true;
+    }
+    mailboxes = account.get('mailboxes');
+    mailbox = mailboxes.get(boxID) || Immutable.Map();
+    more = _mailboxesCounters.get(boxID) || Immutable.Map();
+    if (mailbox.get('weight')) {
+      boxData.weight = mailbox.get('weight');
+    }
+    STATICFIELDS = ['id', 'accountID', 'label', 'tree', 'weight'];
+    CHANGEFIELDS = ['lastSync', 'nbTotal', 'nbUnread', 'nbRecent'];
+    for (field in STATICFIELDS) {
+      if (mailbox.get(field) !== boxData[field]) {
+        mailbox = mailbox.set(field, boxData[field]);
+      }
+    }
+    for (field in CHANGEFIELDS) {
+      if (more.get(field) !== boxData[field]) {
+        more = more.set(field, boxData[field]);
+      }
+    }
+    if (more !== _mailboxesCounters.get(boxID)) {
+      _mailboxesCounters.set(boxID, more);
+    }
+    if (mailbox !== mailboxes.get(boxID)) {
+      mailboxes = mailboxes.set(boxID, mailbox);
       account = account.set('mailboxes', mailboxes);
       _accounts = _accounts.set(accountID, account);
-      return _refreshSelected();
     }
+    return _refreshSelected();
   };
 
   _mailboxSort = function(mb1, mb2) {
@@ -12162,43 +12218,24 @@ AccountStore = (function(_super) {
   };
 
   AccountStore.prototype._applyMailboxDiff = function(accountID, diff) {
-    var account, diffTotalUnread, mailboxes, totalUnread, updated, _ref;
-    account = _accounts.get(accountID);
-    mailboxes = account.get('mailboxes');
-    updated = mailboxes.withMutations(function(map) {
-      var box, boxid, deltas, _results;
-      _results = [];
-      for (boxid in diff) {
-        deltas = diff[boxid];
-        if (!(deltas.nbTotal + deltas.nbUnread)) {
-          continue;
-        }
-        box = map.get(boxid);
-        if (box != null) {
-          box = box.merge({
-            nbTotal: box.get('nbTotal') + deltas.nbTotal,
-            nbUnread: box.get('nbUnread') + deltas.nbUnread
-          });
-          _results.push(map.set(boxid, box));
-        } else {
-          _results.push(void 0);
-        }
+    var boxID, counters, deltas, diffTotalUnread, total, _ref;
+    for (boxID in diff) {
+      deltas = diff[boxID];
+      if (!(deltas.nbTotal + deltas.nbUnread)) {
+        continue;
       }
-      return _results;
-    });
+      counters = _mailboxesCounters.get(boxID) || Immutable.Map();
+      _mailboxesCounters.set(boxID, counters.merge({
+        nbTotal: counters.get('nbTotal') + deltas.nbTotal,
+        nbUnread: counters.get('nbUnread') + deltas.nbUnread
+      }));
+    }
     diffTotalUnread = ((_ref = diff[accountID]) != null ? _ref.nbUnread : void 0) || 0;
     if (diffTotalUnread) {
-      totalUnread = account.get('totalUnread') + diffTotalUnread;
-      account = account.set('totalUnread', totalUnread);
+      total = _accountsUnread.get(accountID) + diffTotalUnread;
+      _accountsUnread = _accountsUnread.set(accountID, total);
     }
-    if (updated !== mailboxes) {
-      account = account.set('mailboxes', updated);
-    }
-    if (account !== _accounts.get(accountID)) {
-      _accounts = _accounts.set(accountID, account);
-      _refreshSelected();
-      return this.emit('change');
-    }
+    return this.emit('change');
   };
 
   AccountStore.prototype._setCurrentAccount = function(account) {
@@ -12209,26 +12246,24 @@ AccountStore = (function(_super) {
     return _selectedMailbox = mailbox;
   };
 
+  AccountStore.prototype._onAccountUpdated = function(rawAccount) {
+    var account;
+    account = AccountTranslator.toImmutable(rawAccount);
+    _accounts = _accounts.set(account.get('id'), account);
+    this._setCurrentAccount(account);
+    _newAccountWaiting = false;
+    _newAccountError = null;
+    return this.emit('change');
+  };
+
 
   /*
       Defines here the action handlers.
    */
 
   AccountStore.prototype.__bindHandlers = function(handle) {
-    var onUpdate;
-    onUpdate = (function(_this) {
-      return function(rawAccount) {
-        var account;
-        account = AccountTranslator.toImmutable(rawAccount);
-        _accounts = _accounts.set(account.get('id'), account);
-        _this._setCurrentAccount(account);
-        _newAccountWaiting = false;
-        _newAccountError = null;
-        return _this.emit('change');
-      };
-    })(this);
     handle(ActionTypes.ADD_ACCOUNT, function(rawAccount) {
-      return onUpdate(rawAccount);
+      return this._onAccountUpdated(rawAccount);
     });
     handle(ActionTypes.SELECT_ACCOUNT, function(value) {
       var mailbox, _ref;
@@ -12257,16 +12292,16 @@ AccountStore = (function(_super) {
       return this.emit('change');
     });
     handle(ActionTypes.EDIT_ACCOUNT, function(rawAccount) {
-      return onUpdate(rawAccount);
+      return this._onAccountUpdated(rawAccount);
     });
     handle(ActionTypes.MAILBOX_CREATE, function(rawAccount) {
-      return onUpdate(rawAccount);
+      return this._onAccountUpdated(rawAccount);
     });
     handle(ActionTypes.MAILBOX_UPDATE, function(rawAccount) {
-      return onUpdate(rawAccount);
+      return this._onAccountUpdated(rawAccount);
     });
     handle(ActionTypes.MAILBOX_DELETE, function(rawAccount) {
-      return onUpdate(rawAccount);
+      return this._onAccountUpdated(rawAccount);
     });
     handle(ActionTypes.REMOVE_ACCOUNT, function(accountID) {
       _accounts = _accounts["delete"](accountID);
@@ -12278,10 +12313,7 @@ AccountStore = (function(_super) {
       return this.emit('change');
     });
     handle(ActionTypes.RECEIVE_REFRESH_NOTIF, function(data) {
-      var account;
-      account = _accounts.get(data.accountID);
-      account = account.set('totalUnread', data.totalUnread);
-      _accounts.set(data.accountID, account);
+      _accountsUnread.set(data.accountID, data.totalUnread);
       return this.emit('change');
     });
     handle(ActionTypes.REFRESH_REQUEST, function(_arg) {
@@ -12317,6 +12349,16 @@ AccountStore = (function(_super) {
 
   AccountStore.prototype.getAll = function() {
     return _accounts;
+  };
+
+  AccountStore.prototype.getAllMailboxes = function() {
+    return _accounts.flatMap(function(account) {
+      return account.get('mailboxes');
+    });
+  };
+
+  AccountStore.prototype.getMailboxCounters = function() {
+    return _mailboxesCounters;
   };
 
   AccountStore.prototype.getByID = function(accountID) {
@@ -12360,19 +12402,16 @@ AccountStore = (function(_super) {
     return _selectedAccount;
   };
 
+  AccountStore.prototype.getSelectedOrDefault = function() {
+    return this.getSelected() || this.getDefault();
+  };
+
   AccountStore.prototype.getSelectedMailboxes = function(sorted) {
-    var mailboxes, result;
+    var result;
     if (_selectedAccount == null) {
       return Immutable.OrderedMap.empty();
     }
-    result = Immutable.OrderedMap();
-    mailboxes = _selectedAccount.get('mailboxes');
-    mailboxes.forEach(function(data) {
-      var mailbox;
-      mailbox = Immutable.Map(data);
-      result = result.set(mailbox.get('id'), mailbox);
-      return true;
-    });
+    result = _selectedAccount.get('mailboxes');
     if (sorted) {
       result = result.sort(_mailboxSort);
     }
@@ -12905,7 +12944,7 @@ module.exports = LayoutStoreInstance = new LayoutStore();
 });
 
 ;require.register("stores/message_store", function(exports, require, module) {
-var AccountStore, ActionTypes, AppDispatcher, ContactStore, FlagsConstants, MessageFilter, MessageFlags, MessageStore, SocketUtils, Store, self, _ref,
+var AccountStore, ActionTypes, AppDispatcher, ContactStore, FlagsConstants, MessageFilter, MessageFlags, MessageStore, SocketUtils, Store, getSortFunction, reverseDateSort, self, _ref, _ref1,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
   __indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
@@ -12922,13 +12961,15 @@ SocketUtils = require('../utils/socketio_utils');
 
 _ref = require('../constants/app_constants'), ActionTypes = _ref.ActionTypes, MessageFlags = _ref.MessageFlags, MessageFilter = _ref.MessageFilter, FlagsConstants = _ref.FlagsConstants;
 
+_ref1 = require('../utils/misc'), reverseDateSort = _ref1.reverseDateSort, getSortFunction = _ref1.getSortFunction;
+
 MessageStore = (function(_super) {
 
   /*
       Initialization.
       Defines private variables here.
    */
-  var computeMailboxDiff, dedupConversation, handleFetchResult, inMailbox, isDraft, isntAccount, notInMailbox, onReceiveRawMessage, reverseDateSort, __getSortFunction, _addInFlight, _conversationLengths, _conversationMemoize, _currentCID, _currentID, _currentMessages, _fetching, _filter, _fixCurrentMessage, _getMixed, _inFlightByMessageID, _inFlightByRef, _isLoadingReply, _messages, _messagesWithInFlights, _params, _prevAction, _removeInFlight, _sortField, _sortOrder, _transformMessageWithRequest, _undoable;
+  var computeMailboxDiff, dedupConversation, handleFetchResult, inMailbox, isDraft, isntAccount, notInMailbox, onReceiveRawMessage, _addInFlight, _conversationLengths, _conversationMemoize, _currentCID, _currentID, _currentMessages, _fetching, _filterAfter, _filterBefore, _filterType, _filterValue, _fixCurrentMessage, _getMixed, _inFlightByMessageID, _inFlightByRef, _matchFlag, _matchRangeDate, _messages, _messagesWithInFlights, _nextUrl, _noMore, _queryRef, _removeInFlight, _sortField, _sortOrder, _transformMessageWithRequest, _undoable;
 
   __extends(MessageStore, _super);
 
@@ -12936,42 +12977,27 @@ MessageStore = (function(_super) {
     return MessageStore.__super__.constructor.apply(this, arguments);
   }
 
+  _messages = Immutable.OrderedMap();
+
   _sortField = 'date';
 
   _sortOrder = 1;
 
-  __getSortFunction = function(criteria, order) {
-    var sortFunction;
-    return sortFunction = function(message1, message2) {
-      var val1, val2;
-      if (typeof message1.get === 'function') {
-        val1 = message1.get(criteria);
-        val2 = message2.get(criteria);
-      } else {
-        val1 = message1[criteria];
-        val2 = message2[criteria];
-      }
-      if (val1 > val2) {
-        return -1 * order;
-      } else if (val1 < val2) {
-        return 1 * order;
-      } else {
-        return 0;
-      }
-    };
-  };
+  _filterType = '-';
 
-  reverseDateSort = __getSortFunction('date', -1);
+  _filterValue = 'nofilter';
 
-  _messages = Immutable.OrderedMap();
+  _filterBefore = '-';
 
-  _filter = '-';
-
-  _params = {
-    sort: '-date'
-  };
+  _filterAfter = '-';
 
   _fetching = 0;
+
+  _queryRef = 0;
+
+  _nextUrl = null;
+
+  _noMore = false;
 
   _currentMessages = Immutable.Sequence();
 
@@ -12982,10 +13008,6 @@ MessageStore = (function(_super) {
   _currentID = null;
 
   _currentCID = null;
-
-  _prevAction = null;
-
-  _isLoadingReply = false;
 
   _inFlightByRef = {};
 
@@ -13057,11 +13079,11 @@ MessageStore = (function(_super) {
 
   _messagesWithInFlights = function() {
     return _messages.map(function(message) {
-      var id, request, _i, _len, _ref1;
+      var id, request, _i, _len, _ref2;
       id = message.get('id');
-      _ref1 = _inFlightByMessageID[id] || [];
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        request = _ref1[_i];
+      _ref2 = _inFlightByMessageID[id] || [];
+      for (_i = 0, _len = _ref2.length; _i < _len; _i++) {
+        request = _ref2[_i];
         message = _transformMessageWithRequest(message, request);
       }
       return message;
@@ -13103,8 +13125,8 @@ MessageStore = (function(_super) {
       }).toArray();
     } else if (target.conversationIDs) {
       return _messages.filter(function(message) {
-        var _ref1;
-        return _ref1 = message.get('conversationID'), __indexOf.call(target.conversationIDs, _ref1) >= 0;
+        var _ref2;
+        return _ref2 = message.get('conversationID'), __indexOf.call(target.conversationIDs, _ref2) >= 0;
       }).toArray();
     } else {
       throw new Error('Wrong Usage : unrecognized target AS.getMixed');
@@ -13112,9 +13134,9 @@ MessageStore = (function(_super) {
   };
 
   isDraft = function(message, draftMailbox) {
-    var mailboxIDs, _ref1;
+    var mailboxIDs, _ref2;
     mailboxIDs = message.get('mailboxIDs');
-    return mailboxIDs[draftMailbox] || (_ref1 = MessageFlags.DRAFT, __indexOf.call(message.get('flags'), _ref1) >= 0);
+    return mailboxIDs[draftMailbox] || (_ref2 = MessageFlags.DRAFT, __indexOf.call(message.get('flags'), _ref2) >= 0);
   };
 
   inMailbox = function(mailboxID) {
@@ -13151,13 +13173,13 @@ MessageStore = (function(_super) {
   };
 
   computeMailboxDiff = function(oldmsg, newmsg) {
-    var accountID, added, changed, deltaUnread, isRead, newboxes, oldboxes, out, removed, stayed, wasRead, _ref1, _ref2;
+    var accountID, added, changed, deltaUnread, isRead, newboxes, oldboxes, out, removed, stayed, wasRead, _ref2, _ref3;
     if (!oldmsg) {
       return {};
     }
     changed = false;
-    wasRead = (_ref1 = MessageFlags.SEEN, __indexOf.call(oldmsg.get('flags'), _ref1) >= 0);
-    isRead = (_ref2 = MessageFlags.SEEN, __indexOf.call(newmsg.get('flags'), _ref2) >= 0);
+    wasRead = (_ref2 = MessageFlags.SEEN, __indexOf.call(oldmsg.get('flags'), _ref2) >= 0);
+    isRead = (_ref3 = MessageFlags.SEEN, __indexOf.call(newmsg.get('flags'), _ref3) >= 0);
     accountID = newmsg.get('accountID');
     oldboxes = Object.keys(oldmsg.get('mailboxIDs'));
     newboxes = Object.keys(newmsg.get('mailboxIDs'));
@@ -13239,43 +13261,33 @@ MessageStore = (function(_super) {
   };
 
   handleFetchResult = function(result) {
-    var before, lengths, message, next, url, _i, _j, _len, _len1, _name, _ref1, _ref2, _results;
-    if ((result.links != null) && (result.links.next != null)) {
-      _params = {};
-      next = decodeURIComponent(result.links.next);
-      url = 'http://localhost' + next;
-      url.split('?')[1].split('&').forEach(function(p) {
-        var key, value, _ref1;
-        _ref1 = p.split('='), key = _ref1[0], value = _ref1[1];
-        if (value === '') {
-          value = '-';
-        }
-        return _params[key] = value;
-      });
-    } else {
-      _params.pageAfter = '-';
+    var lastdate, lengths, message, _i, _j, _len, _len1, _name, _ref2, _ref3, _ref4, _ref5;
+    if (((_ref2 = result.links) != null ? _ref2.next : void 0) != null) {
+      _nextUrl = decodeURIComponent(result.links.next);
+    } else if (result.links != null) {
+      _noMore = true;
     }
-    before = _params.pageAfter === '-' ? void 0 : _params.pageAfter;
-    SocketUtils.changeRealtimeScope(result.mailboxID, before);
     if (lengths = result.conversationLengths) {
-      _ref1 = result.messages;
-      for (_i = 0, _len = _ref1.length; _i < _len; _i++) {
-        message = _ref1[_i];
+      _ref3 = result.messages;
+      for (_i = 0, _len = _ref3.length; _i < _len; _i++) {
+        message = _ref3[_i];
         if (lengths[_name = message.conversationID] == null) {
           lengths[_name] = 0;
         }
       }
       _conversationLengths = _conversationLengths.merge(lengths);
     }
-    _ref2 = result.messages;
-    _results = [];
-    for (_j = 0, _len1 = _ref2.length; _j < _len1; _j++) {
-      message = _ref2[_j];
+    _ref4 = result.messages;
+    for (_j = 0, _len1 = _ref4.length; _j < _len1; _j++) {
+      message = _ref4[_j];
       if (message != null) {
-        _results.push(onReceiveRawMessage(message));
+        onReceiveRawMessage(message);
       }
     }
-    return _results;
+    lastdate = (_ref5 = _messages.last()) != null ? _ref5.get('date') : void 0;
+    if (lastdate) {
+      return SocketUtils.changeRealtimeScope(result.mailboxID, lastdate);
+    }
   };
 
 
@@ -13289,10 +13301,8 @@ MessageStore = (function(_super) {
       return this.emit('change');
     });
     handle(ActionTypes.RECEIVE_RAW_MESSAGE_REALTIME, function(message) {
-      if (_filter === '-' || (_filter === MessageFilter.UNSEEN && message.flags.indexOf(FlagsConstants.SEEN === -1))) {
-        onReceiveRawMessage(message);
-        return this.emit('change');
-      }
+      onReceiveRawMessage(message);
+      return this.emit('change');
     });
     handle(ActionTypes.RECEIVE_RAW_MESSAGES, function(messages) {
       var message, _i, _len;
@@ -13310,12 +13320,12 @@ MessageStore = (function(_super) {
       return this.emit('change');
     });
     handle(ActionTypes.MESSAGE_TRASH_REQUEST, function(_arg) {
-      var account, messages, ref, target, trashBoxID, _ref1, _ref2;
+      var account, messages, ref, target, trashBoxID, _ref2, _ref3;
       target = _arg.target, ref = _arg.ref;
       messages = _getMixed(target);
-      target.subject = (_ref1 = messages[0]) != null ? _ref1.get('subject') : void 0;
+      target.subject = (_ref2 = messages[0]) != null ? _ref2.get('subject') : void 0;
       target.accountID = messages[0].get('accountID');
-      account = AccountStore.getByID((_ref2 = messages[0]) != null ? _ref2.get('accountID') : void 0);
+      account = AccountStore.getByID((_ref3 = messages[0]) != null ? _ref3.get('accountID') : void 0);
       trashBoxID = account != null ? typeof account.get === "function" ? account.get('trashMailbox') : void 0 : void 0;
       _addInFlight({
         type: 'trash',
@@ -13347,10 +13357,10 @@ MessageStore = (function(_super) {
       return this.emit('change');
     });
     handle(ActionTypes.MESSAGE_FLAGS_REQUEST, function(_arg) {
-      var flag, messages, op, ref, target, _ref1;
+      var flag, messages, op, ref, target, _ref2;
       target = _arg.target, op = _arg.op, flag = _arg.flag, ref = _arg.ref;
       messages = _getMixed(target);
-      target.subject = (_ref1 = messages[0]) != null ? _ref1.get('subject') : void 0;
+      target.subject = (_ref2 = messages[0]) != null ? _ref2.get('subject') : void 0;
       target.accountID = messages[0].get('accountID');
       _addInFlight({
         type: 'flag',
@@ -13378,10 +13388,10 @@ MessageStore = (function(_super) {
       return this.emit('change');
     });
     handle(ActionTypes.MESSAGE_MOVE_REQUEST, function(_arg) {
-      var from, messages, ref, target, to, _ref1;
+      var from, messages, ref, target, to, _ref2;
       target = _arg.target, from = _arg.from, to = _arg.to, ref = _arg.ref;
       messages = _getMixed(target);
-      target.subject = (_ref1 = messages[0]) != null ? _ref1.get('subject') : void 0;
+      target.subject = (_ref2 = messages[0]) != null ? _ref2.get('subject') : void 0;
       target.accountID = messages[0].get('accountID');
       _addInFlight({
         type: 'move',
@@ -13444,53 +13454,24 @@ MessageStore = (function(_super) {
       onReceiveRawMessage(message);
       return this.emit('change');
     });
-    handle(ActionTypes.LIST_FILTER, function(filter) {
-      _messages = _messages.clear();
-      if (_filter === filter) {
-        _filter = '-';
-      } else {
-        _filter = filter;
-      }
-      return _params = {
-        after: '-',
-        flag: _filter,
-        before: '-',
-        pageAfter: '-',
-        sort: _params.sort
-      };
-    });
-    handle(ActionTypes.LIST_SORT, function(sort) {
-      var currentField, currentOrder, newOrder;
-      _messages = _messages.clear();
-      _sortField = sort.field;
-      if (sort.order != null) {
-        newOrder = sort.order;
-        _sortOrder = sort.order === '-' ? 1 : -1;
-      } else {
-        currentField = _params.sort.substr(1);
-        currentOrder = _params.sort.substr(0, 1);
-        if (currentField === sort.field) {
-          newOrder = currentOrder === '+' ? '-' : '+';
-          _sortOrder = -1 * _sortOrder;
-        } else {
-          _sortOrder = -1;
-          if (sort.field === 'date') {
-            newOrder = '-';
-          } else {
-            newOrder = '+';
-          }
+    handle(ActionTypes.QUERY_PARAMETER_CHANGED, function(parameters) {
+      var after, before, flag, sort, type;
+      type = parameters.type, flag = parameters.flag, sort = parameters.sort, before = parameters.before, after = parameters.after;
+      if (type !== _filterType || _filterValue !== flag || _filterBefore !== before || _filterAfter !== after || _sortOrder + _sortField !== sort) {
+        _queryRef++;
+        _sortOrder = sort.substr(0, 1);
+        _sortField = sort.substr(1);
+        _filterType = type;
+        _filterValue = flag;
+        _filterBefore = before;
+        _filterAfter = after;
+        _noMore = false;
+        _nextUrl = null;
+        if ((_filterType === 'from' || _filterType === 'dest') || (type === 'from' || type === 'dest')) {
+          _messages = _messages.clear();
         }
       }
-      return _params = {
-        after: sort.after || '-',
-        flag: _params.flag,
-        before: sort.before || '-',
-        pageAfter: '-',
-        sort: newOrder + sort.field
-      };
-    });
-    handle(ActionTypes.LAST_ACTION, function(action) {
-      return _prevAction = action;
+      return this.emit('change');
     });
     handle(ActionTypes.MESSAGE_CURRENT, function(value) {
       this.setCurrentID(value.messageID, value.conv);
@@ -13498,17 +13479,32 @@ MessageStore = (function(_super) {
     });
     handle(ActionTypes.SELECT_ACCOUNT, function(value) {
       this.setCurrentID(null);
-      _filter = '-';
-      return _params = {
-        sort: '-date'
-      };
+      _sortOrder = '+';
+      _sortField = 'date';
+      _filterType = 'nofilter';
+      _filterValue = '-';
+      _filterBefore = '-';
+      _filterAfter = '-';
+      _noMore = false;
+      return _nextUrl = null;
     });
     handle(ActionTypes.RECEIVE_MESSAGE_DELETE, function(id) {
       _messages = _messages.remove(id);
       return this.emit('change');
     });
-    return handle(ActionTypes.MAILBOX_EXPUNGE, function(mailboxID) {
-      _messages = _messages.filter(notInMailbox(mailboxID)).toOrderedMap();
+    handle(ActionTypes.MAILBOX_EXPUNGE, function(mailboxID) {
+      _messages = _messages.filter(notInMailbox(mailboxID));
+      return this.emit('change');
+    });
+    return handle(ActionTypes.SEARCH_SUCCESS, function(_arg) {
+      var message, searchResults, _i, _len;
+      searchResults = _arg.searchResults;
+      for (_i = 0, _len = searchResults.length; _i < _len; _i++) {
+        message = searchResults[_i];
+        if (message != null) {
+          onReceiveRawMessage(message);
+        }
+      }
       return this.emit('change');
     });
   };
@@ -13519,8 +13515,7 @@ MessageStore = (function(_super) {
    */
 
   MessageStore.prototype.getByID = function(messageID) {
-    var msg;
-    return msg = _messages.get(messageID) || null;
+    return _messages.get(messageID) || null;
   };
 
   MessageStore.prototype.getMessageHash = function(message) {
@@ -13539,6 +13534,38 @@ MessageStore = (function(_super) {
     return hash;
   };
 
+  dedupConversation = function() {
+    var conversationIDs, filter;
+    conversationIDs = [];
+    return filter = function(message) {
+      var conversationID;
+      conversationID = message.get('conversationID');
+      if (conversationID && __indexOf.call(conversationIDs, conversationID) >= 0) {
+        return false;
+      } else {
+        conversationIDs.push(conversationID);
+        return true;
+      }
+    };
+  };
+
+  _matchFlag = function(message) {
+    var _ref2, _ref3;
+    switch (_filterValue) {
+      case MessageFilter.FLAGGED:
+        return _ref2 = MessageFlags.FLAGGED, __indexOf.call(message.get('flags'), _ref2) >= 0;
+      case MessageFilter.ATTACH:
+        return message.get('attachments').length > 0;
+      case MessageFilter.UNSEEN:
+        return _ref3 = MessageFlags.SEEN, __indexOf.call(message.get('flags'), _ref3) < 0;
+    }
+  };
+
+  _matchRangeDate = function(message) {
+    var _ref2;
+    return (_filterBefore < (_ref2 = message.get(_filterType)) && _ref2 < _filterAfter);
+  };
+
 
   /**
   * Get messages from mailbox, with optional pagination
@@ -13549,14 +13576,21 @@ MessageStore = (function(_super) {
   * @return {Array}
    */
 
-  MessageStore.prototype.getMessagesByMailbox = function(mailboxID, useConversations) {
+  MessageStore.prototype.getMessagesToDisplay = function(mailboxID, useConversations) {
     var conversationIDs, sequence;
     conversationIDs = [];
-    sequence = _messagesWithInFlights().filter(inMailbox(mailboxID));
+    sequence = _messagesWithInFlights();
+    sequence = sequence.filter(inMailbox(mailboxID));
+    if (_filterType === 'flag') {
+      sequence = sequence.filter(_matchFlag);
+    }
+    if (_filterType === 'date') {
+      sequence = sequence.filter(_matchRangeDate);
+    }
     if (useConversations) {
       sequence = sequence.filter(dedupConversation());
     }
-    sequence = sequence.sort(__getSortFunction(_sortField, _sortOrder));
+    sequence = sequence.sort(getSortFunction(_sortField, _sortOrder));
     _currentMessages = sequence.toOrderedMap();
     return _currentMessages;
   };
@@ -13566,9 +13600,9 @@ MessageStore = (function(_super) {
   };
 
   MessageStore.prototype.setCurrentID = function(messageID, conv) {
-    var conversationID, _ref1;
+    var conversationID, _ref2;
     if (conv != null) {
-      conversationID = (_ref1 = this.getByID(messageID)) != null ? _ref1.get('conversationID') : void 0;
+      conversationID = (_ref2 = this.getByID(messageID)) != null ? _ref2.get('conversationID') : void 0;
     }
     _currentID = messageID;
     return _currentCID = conversationID;
@@ -13659,6 +13693,16 @@ MessageStore = (function(_super) {
     return this.getNextMessage(isConv) || this.getPreviousMessage(isConv);
   };
 
+  MessageStore.prototype.getCurrentConversation = function() {
+    var conversationID;
+    conversationID = this.getCurrentConversationID();
+    if (conversationID) {
+      return this.getConversation(conversationID);
+    } else {
+      return null;
+    }
+  };
+
   MessageStore.prototype.getConversation = function(conversationID) {
     _conversationMemoize = _messagesWithInFlights().filter(function(message) {
       return message.get('conversationID') === conversationID;
@@ -13674,26 +13718,6 @@ MessageStore = (function(_super) {
     return _conversationLengths;
   };
 
-  MessageStore.prototype.getParams = function() {
-    return _params;
-  };
-
-  MessageStore.prototype.getCurrentFilter = function() {
-    return _filter;
-  };
-
-  MessageStore.prototype.getPrevAction = function() {
-    return _prevAction;
-  };
-
-  MessageStore.prototype.setIsLoadingReply = function() {
-    return isLoadingReply;
-  };
-
-  MessageStore.prototype.isLoadingReply = function() {
-    return isLoadingReply;
-  };
-
   MessageStore.prototype.isFetching = function() {
     return _fetching > 0;
   };
@@ -13704,6 +13728,40 @@ MessageStore = (function(_super) {
 
   MessageStore.prototype.getUndoableRequest = function(ref) {
     return _undoable[ref];
+  };
+
+  MessageStore.prototype.getQueryParams = function() {
+    return {
+      sort: "" + _sortOrder + _sortField,
+      type: _filterType,
+      filter: _filterValue,
+      before: _filterBefore,
+      after: _filterAfter,
+      hasNextPage: !_noMore
+    };
+  };
+
+  MessageStore.prototype.getNextUrl = function() {
+    var mailboxID, sort, url;
+    if (_noMore) {
+      return null;
+    } else if (_nextUrl) {
+      return _nextUrl;
+    } else {
+      mailboxID = AccountStore.getSelectedMailbox().get('id');
+      sort = _filterType === 'from' || _filterType === 'dest' ? encodeURIComponent("+" + _filterType) : encodeURIComponent("" + _sortOrder + _sortField);
+      url = "mailbox/" + mailboxID + "/?sort=" + sort;
+      if (_filterType === 'flag') {
+        url += "&flag=" + _filterValue;
+      }
+      if (_filterBefore !== '-') {
+        url += "&before=" + (encodeURIComponent(_filterBefore));
+      }
+      if (_filterAfter !== '-') {
+        url += "&after=" + (encodeURIComponent(_filterAfter));
+      }
+      return url;
+    }
   };
 
   return MessageStore;
@@ -13769,7 +13827,7 @@ RefreshesStore = (function(_super) {
       return this.emit('change');
     });
     return handle(ActionTypes.RECEIVE_REFRESH_NOTIF, function(data) {
-      return this.emit('notify', t('notif new title'), {
+      return window.cozyMails.notify(t('notif new title'), {
         body: data.message
       });
     });
@@ -13787,13 +13845,17 @@ module.exports = new RefreshesStore();
 });
 
 ;require.register("stores/search_store", function(exports, require, module) {
-var ActionTypes, SearchStore, Store,
+var ActionTypes, MessageStore, NUMBER_BY_PAGE, SearchStore, Store, self,
   __hasProp = {}.hasOwnProperty,
   __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; };
 
 Store = require('../libs/flux/store/store');
 
+MessageStore = require('./message_store');
+
 ActionTypes = require('../constants/app_constants').ActionTypes;
+
+NUMBER_BY_PAGE = 10;
 
 SearchStore = (function(_super) {
 
@@ -13801,7 +13863,7 @@ SearchStore = (function(_super) {
       Initialization.
       Defines private variables here.
    */
-  var _query, _results;
+  var resetSearch, _currentSearch, _currentSearchAccountID, _currentSearchMore, _currentSearchPage, _currentSearchResults, _fetching;
 
   __extends(SearchStore, _super);
 
@@ -13809,9 +13871,26 @@ SearchStore = (function(_super) {
     return SearchStore.__super__.constructor.apply(this, arguments);
   }
 
-  _query = "";
+  _fetching = 0;
 
-  _results = Immutable.OrderedMap.empty();
+  _currentSearch = '';
+
+  _currentSearchPage = 0;
+
+  _currentSearchMore = false;
+
+  _currentSearchAccountID = 'all';
+
+  _currentSearchResults = Immutable.Set().clear();
+
+  resetSearch = function() {
+    _currentSearch = '';
+    _currentSearchResults = _currentSearchResults.clear();
+    _currentSearchPage = 0;
+    return _currentSearchMore = false;
+  };
+
+  resetSearch();
 
 
   /*
@@ -13819,48 +13898,86 @@ SearchStore = (function(_super) {
    */
 
   SearchStore.prototype.__bindHandlers = function(handle) {
-    handle(ActionTypes.RECEIVE_RAW_SEARCH_RESULTS, function(rawResults) {
-      if (rawResults != null) {
-        _results = _results.withMutations(function(map) {
-          return rawResults.forEach(function(rawResult) {
-            var message;
-            message = Immutable.Map(rawResult);
-            return map.set(message.get('id'), message);
-          });
-        });
-      } else {
-        _results = Immutable.OrderedMap.empty();
+    handle(ActionTypes.QUERY_PARAMETER_CHANGED, function() {
+      resetSearch();
+      return this.emit('change');
+    });
+    handle(ActionTypes.SEARCH_PARAMETER_CHANGED, function(_arg) {
+      var accountID, search;
+      search = _arg.search, accountID = _arg.accountID;
+      if (search !== _currentSearch || accountID !== _currentSearchAccountID) {
+        resetSearch();
       }
+      _currentSearch = search;
+      _currentSearchAccountID = accountID;
       return this.emit('change');
     });
-    handle(ActionTypes.CLEAR_SEARCH_RESULTS, function() {
-      _results = Immutable.OrderedMap.empty();
+    handle(ActionTypes.SEARCH_REQUEST, function(search) {
+      _fetching++;
+      _currentSearchPage++;
       return this.emit('change');
     });
-    return handle(ActionTypes.SET_SEARCH_QUERY, function(query) {
-      _query = query;
+    handle(ActionTypes.SEARCH_FAILURE, function(_arg) {
+      var error;
+      error = _arg.error;
+      _fetching--;
+      _currentSearchPage--;
+      _currentSearchResults = _currentSearchResults.clear();
+      return this.emit('change');
+    });
+    return handle(ActionTypes.SEARCH_SUCCESS, function(_arg) {
+      var ids, searchResults;
+      searchResults = _arg.searchResults;
+      _fetching--;
+      ids = searchResults.map(function(message) {
+        return message._id;
+      });
+      _currentSearchMore = ids.length === NUMBER_BY_PAGE;
+      _currentSearchResults = _currentSearchResults.union(ids);
       return this.emit('change');
     });
   };
 
-
-  /*
-      Public API
-   */
-
-  SearchStore.prototype.getResults = function() {
-    return _results;
+  SearchStore.prototype.getCurrentSearch = function() {
+    return _currentSearch;
   };
 
-  SearchStore.prototype.getQuery = function() {
-    return _query;
+  SearchStore.prototype.getCurrentSearchAccountID = function() {
+    return _currentSearchAccountID;
+  };
+
+  SearchStore.prototype.getCurrentSearchResults = function() {
+    return _currentSearchResults.mapEntries(function(_arg) {
+      var id;
+      id = _arg[0];
+      return [id, MessageStore.getByID(id)];
+    }).filter(function(message) {
+      return message !== null;
+    }).toOrderedMap();
+  };
+
+  SearchStore.prototype.hasMoreSearch = function() {
+    return _currentSearchMore;
+  };
+
+  SearchStore.prototype.getNextSearchUrl = function() {
+    var url;
+    url = "search?search=" + (encodeURIComponent(_currentSearch));
+    url += "&pageSize=" + NUMBER_BY_PAGE;
+    if (_currentSearchPage) {
+      url += "&page=" + _currentSearchPage;
+    }
+    if (_currentSearchAccountID !== 'all') {
+      url += "&accountID=" + _currentSearchAccountID;
+    }
+    return url;
   };
 
   return SearchStore;
 
 })(Store);
 
-module.exports = new SearchStore();
+module.exports = self = new SearchStore();
 });
 
 ;require.register("stores/settings_store", function(exports, require, module) {
@@ -14777,6 +14894,19 @@ module.exports = MessageUtils = {
       return null;
     }
   },
+  getPreview: function(message) {
+    var html, text;
+    text = message.get('text');
+    if (text == null) {
+      html = message.get('html');
+      if (html != null) {
+        text = toMarkdown(html)(pr(''));
+      } else {
+        text = '';
+      }
+    }
+    return text.substr(0, 1024);
+  },
   cleanReplyText: function(html) {
     var result, tmp;
     try {
@@ -14901,6 +15031,26 @@ module.exports = MessageUtils = {
     }
   }
 };
+});
+
+;require.register("utils/misc", function(exports, require, module) {
+exports.getSortFunction = function(criteria, order) {
+  var sortFunction;
+  return sortFunction = function(message1, message2) {
+    var val1, val2;
+    val1 = message1.get(criteria);
+    val2 = message2.get(criteria);
+    if (val1 > val2) {
+      return -1 * order;
+    } else if (val1 < val2) {
+      return 1 * order;
+    } else {
+      return 0;
+    }
+  };
+};
+
+exports.reverseDateSort = exports.getSortFunction('date', -1);
 });
 
 ;require.register("utils/plugin_utils", function(exports, require, module) {
@@ -15272,11 +15422,6 @@ var AccountTranslator, MailboxFlags,
 MailboxFlags = require('../../constants/app_constants').MailboxFlags;
 
 module.exports = AccountTranslator = {
-  mailboxToImmutable: function(raw) {
-    var box;
-    raw.depth = raw.tree.length - 1;
-    return box = Immutable.Map(raw);
-  },
   toImmutable: function(raw) {
     var last, mailboxes, weight1, weight2;
     last = {};
@@ -15333,8 +15478,9 @@ module.exports = AccountTranslator = {
         box.weight = last[box.depth - 1] - 0.1;
         last[box.depth] = box.weight;
       }
-      return AccountTranslator.mailboxToImmutable(box);
+      return Immutable.Map(box);
     }).toOrderedMap();
+    delete raw.totalUnread;
     raw.mailboxes = mailboxes;
     return Immutable.Map(raw);
   }
@@ -15342,8 +15488,7 @@ module.exports = AccountTranslator = {
 });
 
 ;require.register("utils/xhr_utils", function(exports, require, module) {
-var AccountTranslator, SettingsStore, request,
-  __hasProp = {}.hasOwnProperty;
+var AccountTranslator, SettingsStore, request;
 
 request = superagent;
 
@@ -15387,16 +15532,8 @@ module.exports = {
       }
     });
   },
-  fetchMessagesByFolder: function(mailboxID, query, callback) {
-    var key, val;
-    for (key in query) {
-      if (!__hasProp.call(query, key)) continue;
-      val = query[key];
-      if (val === '-' || val === 'all') {
-        delete query[key];
-      }
-    }
-    return request.get("mailbox/" + mailboxID).set('Accept', 'application/json').query(query).end(function(res) {
+  fetchMessagesByFolder: function(url, callback) {
+    return request.get(url).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);
@@ -15441,12 +15578,12 @@ module.exports = {
   },
   mailboxExpunge: function(data, callback) {
     return request.del("mailbox/" + data.mailboxID + "/expunge").set('Accept', 'application/json').end(function(res) {
-      var _ref;
+      var _ref, _ref1;
       if (res.ok) {
         return callback(null, res.body);
       } else {
         console.log("Error in mailboxExpunge", data, (_ref = res.body) != null ? _ref.error : void 0);
-        return callback(t('app error'));
+        return callback(((_ref1 = res.body) != null ? _ref1.error : void 0) || res.body);
       }
     });
   },
@@ -15603,11 +15740,8 @@ module.exports = {
       }
     });
   },
-  search: function(query, numPage, callback) {
-    var encodedQuery, numByPage;
-    encodedQuery = encodeURIComponent(query);
-    numByPage = SettingsStore.get('messagesPerPage');
-    return request.get("search/" + encodedQuery + "/page/" + numPage + "/limit/" + numByPage).end(function(res) {
+  search: function(url, callback) {
+    return request.get(url).set('Accept', 'application/json').end(function(res) {
       var _ref;
       if (res.ok) {
         return callback(null, res.body);
@@ -15622,7 +15756,7 @@ module.exports = {
     url = hard ? "refresh?all=true" : "refresh";
     return request.get(url).end(function(res) {
       if (res.ok) {
-        return callback(null, res.text);
+        return callback(null, res.body);
       } else {
         return callback(res.body);
       }
@@ -15631,9 +15765,9 @@ module.exports = {
   refreshMailbox: function(mailboxID, callback) {
     return request.get("refresh/" + mailboxID).end(function(res) {
       if (res.ok) {
-        return callback(null, res.text);
+        return callback(null, res.body);
       } else {
-        return callback(res.text);
+        return callback(res.body);
       }
     });
   },
