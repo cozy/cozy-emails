@@ -67,7 +67,7 @@ module.exports = MessageItem = React.createClass
                         type: (if @props.selected then 'check-square-o'
                         else 'square-o')
 
-                    if MessageFlags.SEEN in flags
+                    if MessageFlags.SEEN not in flags
                         Icon type: 'circle'
 
                     if MessageFlags.FLAGGED in flags
