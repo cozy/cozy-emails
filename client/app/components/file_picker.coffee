@@ -91,7 +91,7 @@ FilePicker = React.createClass
                         messageID: @props.messageID
 
             if @props.editable
-                div null,
+                div className: 'dropzone-wrapper',
                     # triggering "click" won't work if file input is hidden
                     span className: "file-wrapper",
                         input
@@ -99,16 +99,16 @@ FilePicker = React.createClass
                             multiple: "multiple",
                             ref: "file",
                             onChange: @handleFiles
+                    div className: classZone,
+                        i className: "fa fa-paperclip"
+                        span null, t "picker drop here"
                     div
-                        className: classZone
-                        ref: "dropzone",
+                        className: "dropzone dropzone-mask"
                         onDragOver: @allowDrop,
                         onDragEnter: @onDragEnter,
                         onDragLeave: @onDragLeave,
                         onDrop: @handleFiles,
-                        onClick: @onOpenFile,
-                            i className: "fa fa-paperclip"
-                            span null, t "picker drop here"
+                        onClick: @onOpenFile
 
     onOpenFile: (e) ->
         e.preventDefault()

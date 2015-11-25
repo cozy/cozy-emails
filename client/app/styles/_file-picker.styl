@@ -61,12 +61,24 @@
     cursor  pointer
     color   #bbb
 
-  .dropzone.target
-      border-color basecolor
-
-
     i
       padding 0.5em
+
+  .dropzone.target
+    border-color basecolor
+
+  .dropzone-wrapper
+    position relative
+
+  .dropzone-mask
+    position absolute
+    bottom 0
+    width 100%
+    height 100%
+    border 2px solid transparent
+    z-index 10
+
+
 
   .file-wrapper
     display none
