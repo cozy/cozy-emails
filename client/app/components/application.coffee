@@ -127,7 +127,7 @@ module.exports = Application = React.createClass
             currentSearch         : SearchStore.getCurrentSearch()
             modal                 : LayoutStore.getModal()
             useIntents            : LayoutStore.intentAvailable()
-            selectedMailboxID     : AccountStore.getSelectedMailbox()
+            selectedMailboxID     : selectedMailboxID
         }
 
 
