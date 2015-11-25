@@ -301,6 +301,14 @@ class MessageStore extends Store
                     _messages = _messages.remove message.id
                 else
                     onReceiveRawMessage message
+
+                # Update conversation length
+                {conversationID} = message
+                currentLength = _conversationLengths.get conversationID
+                newLength = currentLength - 1
+                _conversationLengths = _conversationLengths
+                                                 .update(conversationID,
+                                                         (value) -> value - 1)
             @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target, ref}) ->
