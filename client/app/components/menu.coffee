@@ -108,8 +108,8 @@ module.exports = Menu = React.createClass
 
                 if @state.accounts.length
                     @state.accounts
-                    .sort @selectedFirstSort.bind @
-                    .map @getAccountRender.bind @
+                    .sort @selectedFirstSort
+                    .map @getAccountRender
                     .toJS()
 
             nav className: 'submenu',
@@ -295,7 +295,7 @@ module.exports = Menu = React.createClass
                             a
                                 role: 'menuitem',
                                 tabIndex: 0,
-                                onClick: @_toggleFavorites.bind(@),
+                                onClick: @_toggleFavorites,
                                 key: 'toggle',
                                     i className: 'fa ' + icon
                                     span
