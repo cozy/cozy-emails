@@ -147,7 +147,7 @@ module.exports = MessageList = React.createClass
             .toJS()
             @setState allSelected: true, edited: true, selected: selected
 
-    onMessageSelectionChange: (id, val) =>
+    onMessageSelectionChange: (id, val) ->
         selected = _.clone @state.selected
         if val
             selected[id] = val
