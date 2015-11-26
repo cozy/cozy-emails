@@ -1,15 +1,27 @@
 module.exports = utils = {}
 americano = require 'americano'
 
+# @TODO : move this to server ?
+OTHER_FIELDS_ERROR_CAUSES =
+    'auth': ['login', 'password', 'imapLogin']
+    'smtpAuth': ['smtpLogin', 'smtpPassword']
+    'imapServer': ['imapPort']
+    'imapTLS': ['imapServer', 'imapPort', 'imapTLS', 'imapSSL']
+    'smtp': ['smtpServer', 'smtpPort', 'smtpSSL', 'smtpTLS']
+    'smtpAuth': ['smtpMethod', 'smtpLogin', 'smtpPassword']
+    'smtpPort': ['smtpServer', 'smtpSSL', 'smtpTLS']
+
 # Something is wrong with the account's config
 # field give more information about what's wrong
 utils.AccountConfigError = class AccountConfigError extends Error
     constructor: (field, originalErr) ->
         @name = 'AccountConfigError'
         @field = field
+        @causeFields = [field].concat OTHER_FIELDS_ERROR_CAUSES[field] or []
         @message = "on field '#{field}'"
         @stack = ''
-        @original = originalErr
+        @originalMessage = originalErr?.message or originalErr
+        @originalStack = originalErr?.stack
         # WE DONT NEED STACK FOR THIS ERROR
         # Error.captureStackTrace this, arguments.callee
         return this
@@ -122,8 +134,11 @@ utils.errorHandler = (err, req, res, next) ->
         res.status(400).send
             name: err.name
             field: err.field
+            causeFields: err.causeFields
             stack: err.stack
             error: true
+            originalMessage: err.originalMessage
+            originalStack: err.originalStack
 
 
     else if err.message is 'Request aborted'
@@ -140,4 +155,8 @@ utils.errorHandler = (err, req, res, next) ->
     # pass it down the line to errorhandler module
     else
         log.error "error handler called with", err.stack
-        baseHandler err, req, res
+        res.status(err.status or 500).send
+            error: true
+            name: err.name
+            message: err.message
+            stack: err.stack
