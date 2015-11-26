@@ -57,7 +57,6 @@ module.exports = Menu = React.createClass
         search           : SearchStore.getCurrentSearch()
 
     selectedFirstSort: (account1, account2) ->
-        console.log('there', @)
         if @state.selectedAccount?.get('id') is account1.get('id')
             return -1
         else if @state.selectedAccount?.get('id') is account2.get('id')
