@@ -4,6 +4,10 @@ Store = require '../libs/flux/store/store'
 
 AccountTranslator = require '../utils/translators/account_translator'
 
+cachedTransform = require '../libs/cached_transform'
+
+STATICBOXFIELDS = ['id', 'accountID', 'label', 'tree', 'weight']
+CHANGEBOXFIELDS = ['lastSync', 'nbTotal', 'nbUnread', 'nbRecent']
 
 class AccountStore extends Store
 
@@ -93,13 +97,10 @@ class AccountStore extends Store
 
         boxData.weight = mailbox.get 'weight' if mailbox.get 'weight'
 
-        STATICFIELDS = ['id', 'accountID', 'label', 'tree', 'weight']
-        CHANGEFIELDS = ['lastSync', 'nbTotal', 'nbUnread', 'nbRecent']
-
-        for field of STATICFIELDS when mailbox.get(field) isnt boxData[field]
+        for field of STATICBOXFIELDS when mailbox.get(field) isnt boxData[field]
             mailbox = mailbox.set field, boxData[field]
 
-        for field of CHANGEFIELDS when more.get(field) isnt boxData[field]
+        for field of CHANGEBOXFIELDS when more.get(field) isnt boxData[field]
             more = more.set field, boxData[field]
 
         if more isnt _mailboxesCounters.get boxID

@@ -48,6 +48,7 @@ class MessageStore extends Store
             id = message.get('id')
             requests = (_inFlightByMessageID[id] ?= [])
             requests.push request
+        _conversationMemoize = null
 
     _removeInFlight = (ref) ->
         request = _inFlightByRef[ref]
@@ -56,6 +57,8 @@ class MessageStore extends Store
             id = message.get('id')
             requests = _inFlightByMessageID[id]
             _inFlightByMessageID[id] = _.without requests, request
+
+        _conversationMemoize = null
 
         return request
 
@@ -237,29 +240,13 @@ class MessageStore extends Store
             if message.id is _currentID
                 _currentCID = message.conversationID
 
-            if message.accountID? and
-               diff = computeMailboxDiff(oldmsg, messageMap)
-                AccountStore._applyMailboxDiff message.accountID, diff
 
-        getMessage = _messages.get message.id
+            if message.accountID?
+                diff = computeMailboxDiff(oldmsg, messageMap)
+                if diff
+                    AccountStore._applyMailboxDiff message.accountID, diff
 
-    handleFetchResult = (result) ->
-
-        if result.links?.next?
-            _nextUrl = decodeURIComponent(result.links.next)
-        else if result.links?
-            _noMore = true
-
-        if lengths = result.conversationLengths
-            lengths[message.conversationID] ?= 0 for message in result.messages
-            _conversationLengths = _conversationLengths.merge lengths
-
-        for message in result.messages when message?
-            onReceiveRawMessage message
-
-        lastdate = _messages.last()?.get('date')
-        SocketUtils.changeRealtimeScope result.mailboxID, lastdate if lastdate
-
+        _conversationMemoize = null
 
     ###
         Defines here the action handlers.
@@ -363,7 +350,22 @@ class MessageStore extends Store
 
         handle ActionTypes.MESSAGE_FETCH_SUCCESS, ({fetchResult}) ->
             _fetching--
-            handleFetchResult fetchResult
+            if fetchResult.links?.next?
+                _nextUrl = decodeURIComponent(fetchResult.links.next)
+            else if fetchResult.links?
+                _noMore = true
+
+            if lengths = fetchResult.conversationLengths
+                for message in fetchResult.messages
+                    lengths[message.conversationID] ?= 0
+                _conversationLengths = _conversationLengths.merge lengths
+
+            for message in fetchResult.messages when message?
+                onReceiveRawMessage message
+
+            lastdate = _messages.last()?.get('date')
+            if lastdate
+                SocketUtils.changeRealtimeScope fetchResult.mailboxID, lastdate
             @emit 'change'
 
         handle ActionTypes.CONVERSATION_FETCH_SUCCESS, ({updated}) ->
@@ -403,6 +405,7 @@ class MessageStore extends Store
                     # client, instead we clear message cache and dont filter
                     # on display
                     _messages = _messages.clear()
+                    _conversationMemoize = null
 
             @emit 'change'
 
@@ -424,14 +427,16 @@ class MessageStore extends Store
 
         handle ActionTypes.RECEIVE_MESSAGE_DELETE, (id) ->
             _messages = _messages.remove id
+            _conversationMemoize = null
             @emit 'change'
 
         handle ActionTypes.MAILBOX_EXPUNGE, (mailboxID) ->
             _messages = _messages.filter(notInMailbox(mailboxID))
+            _conversationMemoize = null
             @emit 'change'
 
         handle ActionTypes.SEARCH_SUCCESS, ({searchResults}) ->
-            for message in searchResults when message?
+            for message in searchResults.rows when message?
                 onReceiveRawMessage message
             @emit 'change'
 
@@ -607,15 +612,11 @@ class MessageStore extends Store
         else
             return null
 
-    getConversation: (conversationID, excludeMailbox) ->
+    getConversation: (conversationID) ->
+        return _conversationMemoize if _conversationMemoize
         _conversationMemoize = _messagesWithInFlights()
             .filter (message) ->
-                mailboxIDs = Object.keys message.get('mailboxIDs')
-                isInConversation =
-                    message.get('conversationID') is conversationID
-                isInMailbox = not excludeMailbox? or \
-                              not (excludeMailbox in mailboxIDs)
-                return isInConversation and isInMailbox
+                message.get('conversationID') is conversationID
             .sort reverseDateSort
             .toVector()
 
