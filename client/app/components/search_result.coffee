@@ -33,8 +33,8 @@ module.exports = React.createClass
             emptyListMessage      : t 'list search empty', query: search
 
     render: ->
+
         MessageList
-            key: @props.key,
             noToolbar            : true
             messages             : @state.currentSearchResults
             accountID            : @state.accountID

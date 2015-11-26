@@ -245,7 +245,7 @@ module.exports = Menu = React.createClass
                             span className: 'refresh-error',
                                 i
                                     className: 'fa warning',
-                                    onClick: @displayErrors.bind null,
+                                    onClick: @displayErrors,
                                     progress
 
                 if isSelected
