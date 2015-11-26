@@ -148,13 +148,7 @@ module.exports = MailboxItem = React.createClass
             accountID: @props.accountID
 
         AccountActionCreator.mailboxUpdate mailbox, (error) =>
-            if error?
-                message = "#{t("mailbox update ko")} #{error}"
-                LayoutActionCreator.alertError message
-            else
-                LayoutActionCreator.notify t("mailbox update ok"),
-                    autoclose: true
-                @setState edited: false
+            @setState edited: false unless error
 
 
     # Set mailbox as favorite. Save information to the server. It shows
@@ -165,15 +159,11 @@ module.exports = MailboxItem = React.createClass
             mailboxID: @props.mailbox.get 'id'
             accountID: @props.accountID
 
-        AccountActionCreator.mailboxUpdate mailbox, (error) ->
-            if error?
-                message = "#{t("mailbox update ko")} #{error}"
-                LayoutActionCreator.alertError message
-            else
-                LayoutActionCreator.notify t("mailbox update ok"),
-                    autoclose: true
+        wasFavorite = @state.favorite
 
         @setState favorite: not @state.favorite
+        AccountActionCreator.mailboxUpdate mailbox, (error) ->
+            @setState favorite: wasFavorite if error
 
 
     # Ask for confirmation before sending box deletion request to the server.
@@ -184,8 +174,6 @@ module.exports = MailboxItem = React.createClass
         modal =
             title       : t 'app confirm delete'
             subtitle    : t 'account confirm delbox'
-            closeModal  : ->
-                LayoutActionCreator.hideModal()
             closeLabel  : t 'app cancel'
             actionLabel : t 'app confirm'
             action      : =>

@@ -9,17 +9,27 @@ AccountDelete = require './account_config_delete'
 AccountActionCreator = require '../actions/account_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
-{Form, FieldSet, FormButtons, FormDropdown} = require './basic_components'
+basics = require './basic_components'
 
+discovery2Fields = require '../utils/discovery_to_fields'
+
+{Form, FieldSet, FormButtons, FormButton} = basics
+
+SMTP_OPTIONS =
+    'NONE': t("account smtpMethod NONE")
+    'CRAM-MD5': t("account smtpMethod CRAM-MD5")
+    'LOGIN': t("account smtpMethod LOGIN")
+    'PLAIN': t("account smtpMethod PLAIN")
 
 module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
 
-    mixins: [
-        RouterMixin
-        React.addons.LinkedStateMixin # two-way data binding
-    ]
+    mixins: [ RouterMixin ]
 
+    propTypes:
+        editedAccount: React.PropTypes.instanceOf(Immutable.Map).isRequired
+        requestChange: React.PropTypes.func.isRequired
+        isWaiting: React.PropTypes.bool.isRequired
 
     # Do not update component if nothing has changed.
     shouldComponentUpdate: (nextProps, nextState) ->
@@ -27,176 +37,120 @@ module.exports = AccountConfigMain = React.createClass
         isNextProps = _.isEqual nextProps, @props
         return not (isNextState and isNextProps)
 
-
     getInitialState: ->
-        state = {}
-        state[key] = value for key, value of @props
-        state.imapAdvanced = false
-        state.smtpAdvanced = false
-        return state
+        domain = @props.editedAccount.get('login')?.split('@')[1]
+        if @props.editedAccount.get('id') and domain
+            @_lastDiscovered = domain
 
+        return state =
+            imapAdvanced: false
+            smtpAdvanced: false
+            displayGMAILSecurity: false
+
+    makeLinkState: (field) ->
+        cached = (@__cacheLS ?= {})[field]
+        value =  @props.editedAccount.get(field) or ''
+        if cached?.value is value then return cached
+        else return @__cacheLS[field] =
+            value: value
+            requestChange: (value) =>
+                @props.requestChange @makeChanges field, value
+
+    makeChanges: (field, value) ->
+        changes = {}
+        changes[field] = value
+
+        switch field
+            when 'imapPort'
+                changes.imapSSL = value is '993'
+                changes.imapTLS = false
+            when 'smtpPort'
+                changes.smtpSSL = value is '465'
+                changes.smtpTLS = value is '587'
+            when 'imapSSL'
+                unless @state.imapManualPort
+                    changes.imapPort = if value then '993' else '143'
+            when 'smtpSSL'
+                unless @state.smtpManualPort
+                    changes.smtpPort = if value then '465' else '25'
+            when 'smtpTLS'
+                unless @state.smtpManualPort
+                    changes.smtpPort = if value then '587' else '25'
+            when 'login'
+                @doDiscovery value?.split('@')[1]
+
+        return changes
 
     componentWillReceiveProps: (props) ->
-        state = {}
-        state[key] = value for key, value of props
+        hasErrorAndIsNot = (field, value = '') ->
+            props.errors.get(field) and
+            props.editedAccount.get(field) isnt value
 
-        if not @_lastDiscovered?
-            # If editing account, init @_lastDiscovered with current domain
-            # so we don't try to discover parameters if domain doesn't change
-            login = state.login.value
-            if state.id?.value? and login?.indexOf('@') >= 0
-                @_lastDiscovered = login.split('@')[1]
+        changes = {}
+        changes.imapAdvanced = true if hasErrorAndIsNot 'imapLogin'
+        changes.smtpAdvanced = true if hasErrorAndIsNot 'smtpLogin'
+        changes.smtpAdvanced = true if hasErrorAndIsNot 'smtpPassword'
+        changes.smtpAdvanced = true if hasErrorAndIsNot 'smtpMethod', 'PLAIN'
 
-        @setState state
+        @setState changes if changes.smtpAdvanced or changes.imapAdvanced
 
 
     buildButtonLabel: ->
-        if @props.isWaiting
-            buttonLabel = t 'account saving'
+        action = if @props.isWaiting then 'saving'
+        else if @props.editedAccount.get('id') then 'save'
+        else 'add'
 
-        else if @props.selectedAccount?
-            buttonLabel = t "account save"
+        return t "account #{action}"
 
-        else
-            buttonLabel = t "account add"
-
-        return buttonLabel
-
+    buildInput: (field, options = {}) ->
+        options.name ?= field
+        options.key = "account-config-field-#{field}"
+        options.valueLink ?= @makeLinkState field
+        options.error ?= @props.errors?.get field
+        return AccountInput options
 
     render: ->
-        buttonLabel = @buildButtonLabel()
-
+        console.log 'ACMRENDER'
         formClass = classer
             'form-horizontal': true
             'form-account': true
             'waiting': @props.isWaiting
 
-        isOauth = @props.selectedAccount?.get('oauthProvider')?
+        isOauth = @props.editedAccount?.get('oauthProvider')?
 
         Form className: formClass,
 
             if isOauth
                 p null, t 'account oauth'
 
-            FieldSet text: t 'account identifiers'
+            FieldSet text: t('account identifiers'),
+                @buildInput 'label'
+                @buildInput 'name'
+                @buildInput 'login' #, type: 'email'
 
-            AccountInput
-                name: 'label'
-                value: @linkState('label').value
-                errors: @state.errors
-                onBlur: @props.onBlur
+                if not isOauth
+                    @buildInput 'password', type: 'password'
 
-            AccountInput
-                name: 'name'
-                value: @linkState('name').value
-                errors: @state.errors
-                onBlur: @props.onBlur
-
-            AccountInput
-                name: 'login'
-                value: @linkState('login').value
-                errors: @state.errors
-                type: 'email'
-                errorField: ['login', 'auth']
-                onBlur: @discover
-
-            if not isOauth
-                AccountInput
-                    name: 'password'
-                    value: @linkState('password').value
-                    errors: @state.errors
-                    type: 'password'
-                    errorField: ['password', 'auth']
-                    onBlur: @props.onBlur
-
-            AccountInput
-                name: 'accountType'
-                className: 'hidden'
-                value: @linkState('accountType').value
-                errors: @state.errors
+            @buildInput 'accountType', className: 'hidden'
 
             if @state.displayGMAILSecurity
-                url = "https://www.google.com/settings/security/lesssecureapps"
-                [
-                    FieldSet text: t 'gmail security tile'
-                    p null, t('gmail security body', login: @state.login.value)
-                    p null,
-                        a
-                            target: '_blank',
-                            href: url
-                            t 'gmail security link'
-                ]
-
-
+                @_renderGMAILSecurity()
             if not isOauth
                 @_renderReceivingServer()
             if not isOauth
                 @_renderSendingServer()
 
-            FieldSet text: t 'account actions'
-            FormButtons
-                buttons: [
-                    class: 'action-save'
-                    contrast: true
-                    default: false
-                    danger: false
-                    spinner: false
-                    icon: 'save'
-                    onClick: @onSubmit
-                    text: buttonLabel
-                ,
-                    class: 'action-check'
-                    contrast: false
-                    default: false
-                    danger: false
-                    spinner: @props.checking
-                    onClick: @onCheck
-                    icon: 'ellipsis-h'
-                    text: t 'account check'
-                ]
-
-            if @props.selectedAccount?
-                AccountDelete
-                    selectedAccount: @props.selectedAccount
-
+            @_renderButtons()
 
     _renderReceivingServer: ->
         advanced = if @state.imapAdvanced then 'hide' else 'show'
-        div null,
-            FieldSet text: t 'account receiving server'
 
-            AccountInput
-                name: 'imapServer'
-                value: @linkState('imapServer').value
-                errors: @state.errors
-                errorField: ['imap', 'imapServer', 'imapPort']
-                onBlur: @props.onBlur
+        FieldSet text: t('account receiving server'),
 
-            AccountInput
-                name: 'imapPort'
-                value: @linkState('imapPort').value
-                errors: @state.errors
-                onBlur: (event) =>
-                    @_onIMAPPort(event)
-                    @props.onBlur?()
-                onInput: =>
-                    @setState imapManualPort: true
-
-            AccountInput
-                name: 'imapSSL'
-                value: @linkState('imapSSL').value
-                errors: @state.errors
-                type: 'checkbox'
-                onClick: (event) =>
-                    @_onServerParam event.target, 'imap', 'ssl'
-
-            AccountInput
-                name: 'imapTLS'
-                value: @linkState('imapTLS').value
-                errors: @state.errors
-                type: 'checkbox'
-                onClick: (event) =>
-                    @_onServerParam event.target, 'imap', 'tls'
+            @buildInput 'imapServer'
+            @buildInput 'imapPort'
+            @buildInput 'imapSSL', type: 'checkbox'
+            @buildInput 'imapTLS', type: 'checkbox'
 
             div
                 className: "form-group advanced-imap-toggle",
@@ -206,59 +160,16 @@ module.exports = AccountConfigMain = React.createClass
                     t "account imap #{advanced} advanced"
 
             if @state.imapAdvanced
-                AccountInput
-                    name: 'imapLogin'
-                    value: @linkState('imapLogin').value
-                    errors: @state.errors
-                    errorField: ['imap', 'imapServer', 'imapPort', 'imapLogin']
+                @buildInput 'imapLogin'
 
 
     _renderSendingServer: ->
         advanced = if @state.smtpAdvanced then 'hide' else 'show'
-        div null,
-            FieldSet text: t 'account sending server'
-
-            AccountInput
-                name: 'smtpServer'
-                value: @linkState('smtpServer').value
-                errors: @state.errors
-                errorField: [
-                    'smtp'
-                    'smtpServer'
-                    'smtpPort'
-                    'smtpLogin'
-                    'smtpPassword'
-                ]
-                onBlur: @props.onBlur
-
-            AccountInput
-                name: 'smtpPort'
-                value: @linkState('smtpPort').value
-                errors: @state.errors
-                errorField: ['smtp', 'smtpPort', 'smtpServer']
-                onBlur: (event) =>
-                    @_onSMTPPort(event)
-                    @props.onBlur()
-                onInput: =>
-                    @setState smtpManualPort: true
-
-            AccountInput
-                name: 'smtpSSL'
-                value: @linkState('smtpSSL').value
-                errors: @state.errors
-                errorField: ['smtp', 'smtpPort', 'smtpServer']
-                type: 'checkbox'
-                onClick: (ev) =>
-                    @_onServerParam ev.target, 'smtp', 'ssl'
-
-            AccountInput
-                name: 'smtpTLS'
-                value: @linkState('smtpTLS').value
-                errors: @state.errors
-                errorField: ['smtp', 'smtpPort', 'smtpServer']
-                type: 'checkbox'
-                onClick: (ev) =>
-                    @_onServerParam ev.target, 'smtp', 'tls'
+        FieldSet text: t('account sending server'),
+            @buildInput 'smtpServer'
+            @buildInput 'smtpPort'
+            @buildInput 'smtpSSL', type: 'checkbox'
+            @buildInput 'smtpTLS', type: 'checkbox'
 
             div
                 className: "form-group advanced-smtp-toggle",
@@ -268,214 +179,85 @@ module.exports = AccountConfigMain = React.createClass
                     t "account smtp #{advanced} advanced"
 
             if @state.smtpAdvanced
-                FormDropdown
-                    prefix: 'mailbox'
-                    name: 'smtpMethod'
-                    labelText: t "account smtpMethod"
-                    defaultText: t "account smtpMethod #{@state.smtpMethod.value}"
-                    values: ['NONE', 'CRAM-MD5', 'LOGIN', 'PLAIN']
-                    onClick: @onMethodChange
-                    methodPrefix: "account smtpMethod"
-                    errorField: ['smtp', 'smtpAuth']
+                @buildInput 'smtpMethod',
+                    type: 'dropdown'
+                    options: SMTP_OPTIONS
+                    allowUndefined: true
 
             if @state.smtpAdvanced
-                AccountInput
-                    name: 'smtpLogin'
-                    value: @linkState('smtpLogin').value
-                    errors: @state.errors
-                    errorField: ['smtpAuth']
+                @buildInput 'smtpLogin'
 
             if @state.smtpAdvanced
-                AccountInput
-                    name: 'smtpPassword'
-                    value: @linkState('smtpPassword').value
+                @buildInput 'smtpPassword',
                     type: 'password'
-                    errors: @state.errors
-                    errorField: ['smtpAuth']
+
+    _renderGMAILSecurity: ->
+        url = "https://www.google.com/settings/security/lesssecureapps"
+        FieldSet text: t('gmail security tile'),
+            p null, t('gmail security body', login: @state.login.value)
+            p null,
+                a
+                    target: '_blank',
+                    href: url
+                    t 'gmail security link'
+
+    _renderButtons: ->
+        if @props.errors.length is 0
+            FieldSet text: t('account actions'),
+                FormButtons null,
+                    FormButton
+                            class: 'action-save'
+                            contrast: true
+                            icon: 'save'
+                            spinner: @props.isWaiting
+                            onClick: @onSubmit
+                            text: @buildButtonLabel()
+                    FormButton
+                            class: 'action-check'
+                            spinner: @props.checking
+                            onClick: @onCheck
+                            icon: 'ellipsis-h'
+                            text: t 'account check'
+
 
     # Run form submission process described in parent component.
     # Check for errors before.
-    onSubmit: (event) ->
-        @props.onSubmit event, false
-
+    onSubmit: (event) -> @props.onSubmit event, false
 
     # Run form submission process described in parent component. This one
     # checks that current parameters are working well.
     # Check for errors before.
-    onCheck: (event) ->
-        @props.onSubmit event, true
-
-
-    onMethodChange: (event) ->
-        @state.smtpMethod.requestChange event.target.dataset.value
-
+    onCheck: (event) -> @props.onSubmit event, true
 
     # Display or not SMTP advanced settings.
-    toggleSMTPAdvanced: ->
-        @setState smtpAdvanced: not @state.smtpAdvanced
-
+    toggleSMTPAdvanced: -> @setState smtpAdvanced: not @state.smtpAdvanced
 
     # Display or not IMAP advanced settings.
-    toggleIMAPAdvanced: ->
-        @setState imapAdvanced: not @state.imapAdvanced
-
+    toggleIMAPAdvanced: -> @setState imapAdvanced: not @state.imapAdvanced
 
     # Attempt to discover default values depending on target server.
     # The target server is guessed by the email given by the user.
-    discover: (event) ->
-        login = @state.login.value
-        domain = login.split('@')[1] if login?.indexOf '@' >= 0
-
-        if domain? and domain isnt @_lastDiscovered
-            @_lastDiscovered = domain
-
-            AccountActionCreator.discover domain, (err, provider) =>
-                @setDefaultValues provider if not err?
-
-        @props.onBlur?()
-
-
-    # Set default values based on ones given in parameter.
-    setDefaultValues: (provider) ->
-        infos = {}
-
-        # Set values depending on given providers.
-        for server in provider
-
-            if server.type is 'imap' and not infos.imapServer?
-                infos.imapServer = server.hostname
-                infos.imapPort = server.port
-
-                if server.socketType is 'SSL'
-                    infos.imapSSL = true
-                    infos.imapTLS = false
-
-                else if server.socketType is 'STARTTLS'
-                    infos.imapSSL = false
-                    infos.imapTLS = true
-
-                else if server.socketType is 'plain'
-                    infos.imapSSL = false
-                    infos.imapTLS = false
-
-            if server.type is 'smtp' and not infos.smtpServer?
-                infos.smtpServer = server.hostname
-                infos.smtpPort = server.port
-
-                if server.socketType is 'SSL'
-                    infos.smtpSSL = true
-                    infos.smtpTLS = false
-
-                else if server.socketType is 'STARTTLS'
-                    infos.smtpSSL = false
-                    infos.smtpTLS = true
-
-                else if server.socketType is 'plain'
-                    infos.smtpSSL = false
-                    infos.smtpTLS = false
-
-        # Set default values if providers didn't give required infos.
-
-        unless infos.imapServer?
-            infos.imapServer = ''
-            infos.imapPort   = '993'
-
-        unless infos.smtpServer?
-            infos.smtpServer = ''
-            infos.smtpPort   = '465'
-
-        unless infos.imapSSL
-            switch infos.imapPort
-                when '993'
-                    infos.imapSSL = true
-                    infos.imapTLS = false
-                else
-                    infos.imapSSL = false
-                    infos.imapTLS = false
-
-        unless infos.smtpSSL
-            switch infos.smtpPort
-                when '465'
-                    infos.smtpSSL = true
-                    infos.smtpTLS = false
-                when '587'
-                    infos.smtpSSL = false
-                    infos.smtpTLS = true
-                else
-                    infos.smtpSSL = false
-                    infos.smtpTLS = false
-
-        # Display gmail warning if selected provider is Gmail.
-        isGmail = infos.imapServer is 'imap.googlemail.com'
-        @setState displayGMAILSecurity: isGmail
-
-        # Apply built values to current state
-        @state[key].requestChange val for key, val of infos
-
-
-    # Configure port automatically depending on selected paramerters.
-    _onServerParam: (target, server, type) ->
-
-        # port has been set manually, don't update it
-        if not((server is 'imap' and @state.imapManualPort) or
-        (server is 'smtp' and @state.smtpManualPort))
-
-            if server is 'smtp'
-
-                if type is 'ssl' and target.checked
-                    @setState smtpPort: 465
-
-                else if type is 'tls' and target.checked
-                    @setState smtpPort: 587
-
+    doDiscovery: (domain) ->
+        if domain? and domain.length > 3 and domain isnt @_lastDiscovered
+            console.log domain, @discoverTimeout
+            if @discoverTimeout
+                @nextDiscover = domain
             else
-
-                if target.checked
-                    @setState imapPort: 993
-
-                else
-                    @setState imapPort: 143
+                @discoverTimeout = setTimeout (=> @doDiscoveryNow domain), 2000
 
 
-    # Force IMAP parameters when IMAP port changes.
-    _onIMAPPort: (event) ->
-        port = event.target.value.trim()
-        infos =
-            imapPort: port
+    doDiscoveryNow: (domain) ->
+        AccountActionCreator.discover domain, (err, provider) =>
+            unless err
+                infos = discovery2Fields provider
+                # Display gmail warning if selected provider is Gmail.
+                isGmail = infos.imapServer is 'imap.googlemail.com'
+                @setState displayGMAILSecurity: isGmail
 
-        switch port
+                @props.requestChange infos
 
-            when '993'
-                infos.imapSSL = true
-                infos.imapTLS = false
-
+            if @nextDiscover
+                @doDiscoveryNow @nextDiscover
+                @nextDiscover = null
             else
-                infos.imapSSL = false
-                infos.imapTLS = false
-
-        @state.imapSSL.requestChange infos.imapSSL
-        @state.imapTLS.requestChange infos.imapTLS
-
-
-    # Force SMTP parameters when SMTP port changes.
-    _onSMTPPort: (event) ->
-        port = event.target.value.trim()
-        infos = {}
-
-        switch port
-
-            when '465'
-                infos.smtpSSL = true
-                infos.smtpTLS = false
-
-            when '587'
-                infos.smtpSSL = false
-                infos.smtpTLS = true
-
-            else
-                infos.smtpSSL = false
-                infos.smtpTLS = false
-
-        @state.smtpSSL.requestChange infos.smtpSSL
-        @state.smtpTLS.requestChange infos.smtpTLS
-
+                @discoverTimeout = null
