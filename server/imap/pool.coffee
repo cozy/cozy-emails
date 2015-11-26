@@ -93,7 +93,7 @@ module.exports = class ImapPool
 
         if err instanceof PasswordEncryptedError or
            isAuth and @account.id and @failConnectionCounter is 1
-            @account.refreshPassword (err) ->
+            @account.refreshPassword (err) =>
                 if err
                     @_giveUp _typeConnectionError err
                 else
@@ -112,8 +112,8 @@ module.exports = class ImapPool
             forceOauthRefresh @account, @_deQueue
 
         else
-            # try again in 5s
-            setTimeout @_deQueue, 5000
+            # try again in 2s
+            setTimeout @_deQueue, 2000
 
     _onConnectionSuccess: (connection) ->
         log.debug @id, "connection success"
