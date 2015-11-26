@@ -3091,7 +3091,7 @@ module.exports = Application = React.createClass({
       currentSearch: SearchStore.getCurrentSearch(),
       modal: LayoutStore.getModal(),
       useIntents: LayoutStore.intentAvailable(),
-      selectedMailboxID: AccountStore.getSelectedMailbox()
+      selectedMailboxID: selectedMailboxID
     };
   },
   componentWillMount: function() {
@@ -3569,8 +3569,10 @@ Icon = React.createClass({
     type: React.PropTypes.string.isRequired
   },
   render: function() {
+    var className;
+    className = "" + (this.props.className || '') + " fa fa-" + this.props.type;
     return i({
-      className: this.props.className + ' fa fa-' + this.props.type,
+      className: className,
       onClick: this.props.onClick
     });
   }
@@ -5255,7 +5257,9 @@ FilePicker = React.createClass({
           messageID: _this.props.messageID
         });
       };
-    })(this))), this.props.editable ? div(null, span({
+    })(this))), this.props.editable ? div({
+      className: 'dropzone-wrapper'
+    }, span({
       className: "file-wrapper"
     }, input({
       type: "file",
@@ -5263,16 +5267,17 @@ FilePicker = React.createClass({
       ref: "file",
       onChange: this.handleFiles
     })), div({
-      className: classZone,
-      ref: "dropzone",
+      className: classZone
+    }, i({
+      className: "fa fa-paperclip"
+    }), span(null, t("picker drop here"))), div({
+      className: "dropzone dropzone-mask",
       onDragOver: this.allowDrop,
       onDragEnter: this.onDragEnter,
       onDragLeave: this.onDragLeave,
       onDrop: this.handleFiles,
       onClick: this.onOpenFile
-    }, i({
-      className: "fa fa-paperclip"
-    }), span(null, t("picker drop here")))) : void 0);
+    })) : void 0);
   },
   onOpenFile: function(e) {
     e.preventDefault();
@@ -5992,7 +5997,7 @@ module.exports = Menu = React.createClass({
       className: 'fa fa-search'
     }), div({
       className: 'account-details'
-    }, span({}, this.state.search))))) : void 0, this.state.accounts.length ? this.state.accounts.sort(this.selectedFirstSort.bind(this)).map(this.getAccountRender.bind(this)).toJS() : void 0), nav({
+    }, span({}, this.state.search))))) : void 0, this.state.accounts.length ? this.state.accounts.sort(this.selectedFirstSort).map(this.getAccountRender).toJS() : void 0), nav({
       className: 'submenu'
     }, this.renderNewMailboxButton(), button({
       role: 'menuitem',
@@ -6180,7 +6185,7 @@ module.exports = Menu = React.createClass({
     }, a({
       role: 'menuitem',
       tabIndex: 0,
-      onClick: this._toggleFavorites.bind(this),
+      onClick: this._toggleFavorites,
       key: 'toggle'
     }, i({
       className: 'fa ' + icon
@@ -6516,7 +6521,7 @@ module.exports = MessageItem = React.createClass({
       className: 'select',
       onClick: this.onSelect,
       type: (this.props.selected ? 'check-square-o' : 'square-o')
-    }), (_ref3 = MessageFlags.SEEN, __indexOf.call(flags, _ref3) >= 0) ? Icon({
+    }), (_ref3 = MessageFlags.SEEN, __indexOf.call(flags, _ref3) < 0) ? Icon({
       type: 'circle'
     }) : void 0, (_ref4 = MessageFlags.FLAGGED, __indexOf.call(flags, _ref4) >= 0) ? Icon({
       type: 'star'
@@ -6883,30 +6888,28 @@ module.exports = MessageList = React.createClass({
       });
     }
   },
-  onMessageSelectionChange: (function(_this) {
-    return function(id, val) {
-      var newState, selected;
-      selected = _.clone(_this.state.selected);
-      if (val) {
-        selected[id] = val;
-      } else {
-        delete selected[id];
-      }
-      if (Object.keys(selected).length > 0) {
-        newState = {
-          edited: true,
-          selected: selected
-        };
-      } else {
-        newState = {
-          allSelected: false,
-          edited: false,
-          selected: {}
-        };
-      }
-      return _this.setState(newState);
-    };
-  })(this),
+  onMessageSelectionChange: function(id, val) {
+    var newState, selected;
+    selected = _.clone(this.state.selected);
+    if (val) {
+      selected[id] = val;
+    } else {
+      delete selected[id];
+    }
+    if (Object.keys(selected).length > 0) {
+      newState = {
+        edited: true,
+        selected: selected
+      };
+    } else {
+      newState = {
+        allSelected: false,
+        edited: false,
+        selected: {}
+      };
+    }
+    return this.setState(newState);
+  },
   afterMessageAction: function() {
     return setTimeout((function(_this) {
       return function() {
@@ -7869,7 +7872,7 @@ module.exports = Panel = React.createClass({
     return AccountConfig(options);
   },
   renderConversation: function() {
-    var conversation, conversationDisabledBoxes, conversationID, conversationLength, displayConversations, lengths, mailboxID, message, messageID, nextMessage, prevMessage, selectedMailboxID, _ref, _ref1, _ref2;
+    var conversation, conversationDisabledBoxes, conversationID, conversationLength, displayConversations, lengths, mailboxID, message, messageID, nextMessage, prevMessage, selectedMailboxID, trashMailboxID, _ref, _ref1, _ref2, _ref3;
     messageID = this.props.messageID;
     mailboxID = this.props.mailboxID;
     message = MessageStore.getByID(messageID);
@@ -7878,12 +7881,13 @@ module.exports = Panel = React.createClass({
       conversationID = message.get('conversationID');
       lengths = MessageStore.getConversationsLength();
       conversationLength = lengths.get(conversationID);
-      conversation = MessageStore.getConversation(conversationID);
       if (selectedMailboxID == null) {
         selectedMailboxID = Object.keys(message.get('mailboxIDs'))[0];
       }
+      trashMailboxID = (_ref = this.state.selectedAccount) != null ? _ref.get('trashMailbox') : void 0;
+      conversation = MessageStore.getConversation(conversationID, trashMailboxID);
     }
-    conversationDisabledBoxes = [(_ref = this.state.selectedAccount) != null ? _ref.get('trashMailbox') : void 0, (_ref1 = this.state.selectedAccount) != null ? _ref1.get('draftMailbox') : void 0, (_ref2 = this.state.selectedAccount) != null ? _ref2.get('junkMailbox') : void 0];
+    conversationDisabledBoxes = [(_ref1 = this.state.selectedAccount) != null ? _ref1.get('trashMailbox') : void 0, (_ref2 = this.state.selectedAccount) != null ? _ref2.get('draftMailbox') : void 0, (_ref3 = this.state.selectedAccount) != null ? _ref3.get('junkMailbox') : void 0];
     if (__indexOf.call(conversationDisabledBoxes, mailboxID) >= 0) {
       displayConversations = false;
     } else {
@@ -13337,7 +13341,7 @@ MessageStore = (function(_super) {
       return this.emit('change');
     });
     handle(ActionTypes.MESSAGE_TRASH_SUCCESS, function(_arg) {
-      var message, ref, target, updated, _i, _len;
+      var conversationID, currentLength, message, newLength, ref, target, updated, _i, _len;
       target = _arg.target, updated = _arg.updated, ref = _arg.ref;
       _undoable[ref] = _removeInFlight(ref);
       for (_i = 0, _len = updated.length; _i < _len; _i++) {
@@ -13347,6 +13351,12 @@ MessageStore = (function(_super) {
         } else {
           onReceiveRawMessage(message);
         }
+        conversationID = message.conversationID;
+        currentLength = _conversationLengths.get(conversationID);
+        newLength = currentLength - 1;
+        _conversationLengths = _conversationLengths.update(conversationID, function(value) {
+          return value - 1;
+        });
       }
       return this.emit('change');
     });
@@ -13703,9 +13713,13 @@ MessageStore = (function(_super) {
     }
   };
 
-  MessageStore.prototype.getConversation = function(conversationID) {
+  MessageStore.prototype.getConversation = function(conversationID, excludeMailbox) {
     _conversationMemoize = _messagesWithInFlights().filter(function(message) {
-      return message.get('conversationID') === conversationID;
+      var isInConversation, isInMailbox, mailboxIDs;
+      mailboxIDs = Object.keys(message.get('mailboxIDs'));
+      isInConversation = message.get('conversationID') === conversationID;
+      isInMailbox = (excludeMailbox == null) || !(__indexOf.call(mailboxIDs, excludeMailbox) >= 0);
+      return isInConversation && isInMailbox;
     }).sort(reverseDateSort).toVector();
     return _conversationMemoize;
   };
