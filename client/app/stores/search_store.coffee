@@ -19,10 +19,12 @@ class SearchStore extends Store
     _currentSearchMore = false
     _currentSearchAccountID = 'all'
     _currentSearchResults = Immutable.Set().clear()
+    _currentSearchAccounts = Immutable.Map()
 
     resetSearch = ->
         _currentSearch = ''
         _currentSearchResults = _currentSearchResults.clear()
+        _currentSearchAccounts = Immutable.Map()
         _currentSearchPage = 0
         _currentSearchMore = false
 
@@ -60,14 +62,19 @@ class SearchStore extends Store
 
         handle ActionTypes.SEARCH_SUCCESS, ({searchResults}) ->
             _fetching--
-            ids = searchResults.map (message) -> message._id
+            accounts = searchResults.accounts
+            ids = searchResults.rows.map (message) -> message._id
             _currentSearchMore = ids.length is NUMBER_BY_PAGE
             _currentSearchResults = _currentSearchResults.union ids
+            _currentSearchAccounts = _currentSearchAccounts.merge accounts
             @emit 'change'
 
 
     getCurrentSearch: ->
         return _currentSearch
+
+    getCurrentSearchKey: ->
+        return encodeURIComponent _currentSearch
 
     getCurrentSearchAccountID: ->
         return _currentSearchAccountID
@@ -83,7 +90,7 @@ class SearchStore extends Store
         _currentSearchMore
 
     getNextSearchUrl: () ->
-        url = "search?search=#{encodeURIComponent _currentSearch}"
+        url = "search?search=#{@getCurrentSearchKey()}"
         url += "&pageSize=#{NUMBER_BY_PAGE}"
         if _currentSearchPage
             url += "&page=#{_currentSearchPage}"

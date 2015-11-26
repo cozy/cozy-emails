@@ -310,7 +310,14 @@ module.exports.search = (req, res, next) ->
 
     Message.search params, (err, results) ->
         return next err if err
-        res.send results.map (msg) -> msg.toClientObject()
+        accounts = {}
+        for facet in results.facets when facet.key is 'accountID'
+            for account in facet.value
+                accounts[account.key] = account.value
+
+        res.send
+            accounts: accounts
+            rows: results.map (msg) -> msg.toClientObject()
 
 
 # fetch from IMAP and send the raw rfc822 message
