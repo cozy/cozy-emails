@@ -76,8 +76,6 @@ module.exports = Toast = React.createClass
         modal =
             title       : t 'modal please contribute'
             subtitle    : t 'modal please report'
-            closeModal  : ->
-                LayoutActionCreator.hideModal()
             closeLabel  : t 'app alert close'
             content     : React.DOM.pre
                 style: "max-height": "300px",

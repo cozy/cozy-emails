@@ -120,8 +120,6 @@ module.exports = MenuMailboxItem = React.createClass
         LayoutActionCreator.displayModal
             title       : t 'app confirm delete'
             subtitle    : t 'account confirm delbox'
-            closeModal  : ->
-                LayoutActionCreator.hideModal()
             closeLabel  : t 'app cancel'
             actionLabel : t 'app confirm'
             action      : =>

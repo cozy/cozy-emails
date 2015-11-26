@@ -19,6 +19,7 @@ module.exports = React.createClass
         accountID = SearchStore.getCurrentSearchAccountID()
         accountID = null if accountID is 'all'
         return state =
+            currentSearchKey      : SearchStore.getCurrentSearchKey()
             currentSearchResults  : SearchStore.getCurrentSearchResults()
             conversationLengths   : MessageStore.getConversationsLength()
             settings              : SettingsStore.get()

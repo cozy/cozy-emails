@@ -307,17 +307,14 @@ module.exports = React.createClass
         if not needConfirmation
             MessageActionCreator.delete {messageID}
         else
-            modal =
+            LayoutActionCreator.displayModal
                 title       : t 'app confirm delete'
                 subtitle    : confirmMessage
-                closeModal  : ->
-                    LayoutActionCreator.hideModal()
                 closeLabel  : t 'app cancel'
                 actionLabel : t 'app confirm'
                 action      : ->
                     MessageActionCreator.delete {messageID}
                     LayoutActionCreator.hideModal()
-            LayoutActionCreator.displayModal modal
 
 
     onConversationDelete: ->
