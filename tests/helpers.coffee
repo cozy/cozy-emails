@@ -6,6 +6,9 @@ fixtures = require 'cozy-fixtures'
 DovecotTesting = require 'dovecot-testing'
 Imap = require '../server/imap/connection'
 _ = require 'lodash'
+Client = require('request-json').JsonClient
+dsClient = new Client "http://localhost:9101/"
+dsClient.setBasicAuth 'proxy', 'token'
 
 module.exports = helpers = {}
 
@@ -51,6 +54,28 @@ helpers.startApp = (appPath, host, port) -> (done) ->
         @app = app
         @app.server = server
         done()
+
+helpers.prepareForCrypto = (done) ->
+    # don't want to include bcrypt
+    clear = "password"
+    salt = "th00ee2l2w23ayvi2njpwm1n"
+    hash = "$2a$10$sKO5HTT58LhMFywFKLKFx.//q.MzNwwlLvdKVBePP4P8uv7igimD6"
+
+    user =
+        email: 'test@example.com'
+        owner: true
+        salt: salt
+        docType: 'User'
+        password: hash
+        timezone: 'Europe/Paris'
+
+    password =
+        password: clear
+
+    dsClient.post 'user/', user, (err, res, user) ->
+        return done err if err
+        dsClient.post 'accounts/password/', password, (err, res, result) ->
+            done err
 
 helpers.stopApp = (done) ->
     @timeout 10000
