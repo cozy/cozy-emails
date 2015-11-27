@@ -58,12 +58,6 @@ module.exports = React.createClass
         }
 
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or
-                 not (_.isEqual(nextProps, @props))
-        return should
-
-
     _prepareMessage: (message) ->
         # display full headers
         fullHeaders = []
