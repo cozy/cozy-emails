@@ -127,6 +127,9 @@ FormButtons = React.createClass
 
 MenuItem = React.createClass
 
+    onClick: ->
+        @props.onClick @props.onClickValue
+
     render: ->
 
         liOptions = role: 'presentation'
@@ -135,7 +138,7 @@ MenuItem = React.createClass
 
         aOptions =
             role: 'menuitemu'
-            onClick: @props.onClick
+            onClick: @onClick
         aOptions.className = @props.className if @props.className
         aOptions.href      = @props.href if @props.href
         aOptions.target    = @props.href if @props.target

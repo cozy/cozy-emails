@@ -534,6 +534,8 @@ class MessageStore extends Store
             conversationID = @getByID(messageID)?.get 'conversationID'
         _currentID = messageID
         _currentCID = conversationID
+        _conversationMemoize = null
+
 
     getCurrentConversationID: ->
         return _currentCID

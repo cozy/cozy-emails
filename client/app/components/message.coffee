@@ -190,7 +190,7 @@ module.exports = React.createClass
         @props.message.get('flags').indexOf(MessageFlags.SEEN) is -1
 
     onHeaderClicked: ->
-        messageID = message.get('id')
+        messageID = @props.message.get('id')
         if @isUnread() and not @props.active
             MessageActionCreator.mark {messageID}, MessageFlags.SEEN
         @props.toggleActive messageID

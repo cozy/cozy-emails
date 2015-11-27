@@ -3,7 +3,7 @@
     iframe
 } = React.DOM
 
-MessageContent = React.createClass
+module.exports = MessageContent = React.createClass
     displayName: 'MessageContent'
 
 
@@ -12,8 +12,6 @@ MessageContent = React.createClass
 
 
     render: ->
-        displayHTML= =>
-            @props.displayHTML true
         if @props.messageDisplayHTML and @props.html
             div null,
                 if @props.imagesWarning
