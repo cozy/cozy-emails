@@ -29,16 +29,16 @@ module.exports = FiltersToolbarMessagesList = React.createClass
             range: date
 
     toggleFilters: (name) ->
-        wasActive = @props.queryParams.filterType is 'flag' and
-                    @props.queryParams.flag is name
+        wasActive = @props.queryParams.type is 'flag' and
+                    @props.queryParams.filter is name
         @props.onFilterChange
             type: 'flag',
             value: if wasActive then '-' else name
 
     render: ->
 
-        currentFilter = @props.queryParams.filterType is 'flag' and
-                        @props.queryParams.flag
+        currentFilter = @props.queryParams.type is 'flag' and
+                        @props.queryParams.filter
 
         div
             role:            'group'
@@ -81,5 +81,5 @@ module.exports = FiltersToolbarMessagesList = React.createClass
                 span className: 'btn-label', t 'filters attach'
 
             DateRangePicker
-                active: @props.queryParams.filterType is 'date'
+                active: @props.queryParams.type is 'date'
                 onDateFilter: @onDateFilter

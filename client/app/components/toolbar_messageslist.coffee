@@ -42,8 +42,6 @@ module.exports = ToolbarMessagesList = React.createClass
         type = params.type
         sort = sortOrder + sortField
 
-        console.log "filter change", params, new Error().stack
-
         switch type
             when 'from', 'dest'
                 if params.value

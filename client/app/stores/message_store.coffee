@@ -486,6 +486,8 @@ class MessageStore extends Store
                 message.get('attachments').length > 0
             when MessageFilter.UNSEEN
                 MessageFlags.SEEN not in message.get('flags')
+            else
+                true
 
 
     _matchRangeDate = (message) ->
@@ -665,7 +667,7 @@ class MessageStore extends Store
                 encodeURIComponent "#{_sortOrder}#{_sortField}"
 
             url = "mailbox/#{mailboxID}/?sort=#{sort}"
-            if _filterType is 'flag'
+            if _filterType is 'flag' and _filterValue isnt '-'
                 url += "&flag=#{_filterValue}"
 
             if _filterBefore isnt '-'

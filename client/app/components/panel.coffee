@@ -106,7 +106,7 @@ module.exports = Panel = React.createClass
             messages  = MessageStore.getMessagesToDisplay mailboxID,
                 @state.settings.get('displayConversation')
             messagesCount = mailbox?.get('nbTotal') or 0
-            emptyListMessage = switch @state.queryParams.flag
+            emptyListMessage = switch @state.queryParams.filter
                 when MessageFilter.FLAGGED
                     t 'no flagged message'
                 when MessageFilter.UNSEEN
