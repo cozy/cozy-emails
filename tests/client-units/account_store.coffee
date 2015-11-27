@@ -1,14 +1,15 @@
 should = require 'should'
+helpers = require './helpers'
 
-initGlobals()
+helpers.initGlobals()
 AccountStore = dispatch = null
 {ActionTypes} = require '../../client/app/constants/app_constants'
 
 describe 'AccountStore initialized without account', ->
 
     before ->
-        setWindowVariable accounts: []
-        {store: AccountStore, dispatch} = getCleanStore 'account_store'
+        helpers.setWindowVariable accounts: []
+        {Store: AccountStore, dispatch} = helpers.getCleanStore 'account_store'
 
     it "Then default account is null", ->
         should.not.exist AccountStore.getDefault()
@@ -83,8 +84,8 @@ TEST_ACCOUNT =
 describe 'AccountStore initialized with accounts', ->
 
     before ->
-        setWindowVariable accounts: [TEST_ACCOUNT]
-        {store: AccountStore, dispatch} = getCleanStore 'account_store'
+        helpers.setWindowVariable accounts: [TEST_ACCOUNT]
+        {Store: AccountStore, dispatch} = helpers.getCleanStore 'account_store'
 
     it "Then default account is the first", ->
         AccountStore.getDefault().get('id').should.equal 'testid'

@@ -1,4 +1,4 @@
-initGlobals: ->
+exports.initGlobals = ->
     global.Immutable = require 'immutable'
     global.EventEmitter = require('events').EventEmitter
     global.t = (x) -> "translated #{x}"
@@ -7,7 +7,7 @@ initGlobals: ->
         logAction: ->
         customEvent: ->
 
-setWindowVariable: (windowVariable) ->
+exports.setWindowVariable = (windowVariable) ->
     global.window[k] = v for k, v of windowVariable
 
 requireNoCache = (modulePath) ->
@@ -16,7 +16,7 @@ requireNoCache = (modulePath) ->
     delete require.cache[modulePathResolved]
     return require modulePathResolved
 
-getCleanStore = (which) ->
+exports.getCleanStore = (which) ->
     Dispatcher = requireNoCache '../../client/app/app_dispatcher'
     Store = requireNoCache "../../client/app/stores/#{which}"
     dispatch = (type, value) -> Dispatcher.handleViewAction {type, value}
