@@ -292,6 +292,14 @@ class MessageStore extends Store
             trashBoxID = account?.get? 'trashMailbox'
             _addInFlight {type: 'trash', trashBoxID, messages, ref}
             _fixCurrentMessage target
+
+            for message in messages
+                # Update conversation length
+                conversationID = message.get('conversationID')
+                _conversationLengths = _conversationLengths
+                                                 .update(conversationID,
+                                                         (value) -> value - 1)
+
             @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_SUCCESS, ({target, updated, ref}) ->
@@ -302,17 +310,17 @@ class MessageStore extends Store
                 else
                     onReceiveRawMessage message
 
-                # Update conversation length
-                {conversationID} = message
-                currentLength = _conversationLengths.get conversationID
-                newLength = currentLength - 1
-                _conversationLengths = _conversationLengths
-                                                 .update(conversationID,
-                                                         (value) -> value - 1)
             @emit 'change'
 
         handle ActionTypes.MESSAGE_TRASH_FAILURE, ({target, ref}) ->
             _removeInFlight ref
+            messages = _getMixed target
+            for message in messages
+                # Update conversation length
+                conversationID = message.get('conversationID')
+                _conversationLengths = _conversationLengths
+                                                 .update(conversationID,
+                                                         (value) -> value + 1)
             @emit 'change'
 
         handle ActionTypes.MESSAGE_FLAGS_REQUEST, ({target, op, flag, ref}) ->
