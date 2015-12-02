@@ -32,7 +32,8 @@ module.exports = React.createClass
         cachedTransform @, '__cacheLS', currentValue, =>
             value: currentValue
             requestChange: (value) =>
-                (changes = {})[field] = value
+                changes = {}
+                changes[field] = value
                 @props.requestChange changes
 
     # Render a form with a single entry for the account signature.

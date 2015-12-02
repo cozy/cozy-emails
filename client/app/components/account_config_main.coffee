@@ -110,7 +110,6 @@ module.exports = AccountConfigMain = React.createClass
         return AccountInput options
 
     render: ->
-        console.log 'ACMRENDER'
         formClass = classer
             'form-horizontal': true
             'form-account': true
@@ -128,16 +127,16 @@ module.exports = AccountConfigMain = React.createClass
                 @buildInput 'name'
                 @buildInput 'login' #, type: 'email'
 
-                if not isOauth
+                unless isOauth
                     @buildInput 'password', type: 'password'
 
             @buildInput 'accountType', className: 'hidden'
 
             if @state.displayGMAILSecurity
                 @_renderGMAILSecurity()
-            if not isOauth
+            unless isOauth
                 @_renderReceivingServer()
-            if not isOauth
+            unless isOauth
                 @_renderSendingServer()
 
             @_renderButtons()
@@ -239,7 +238,6 @@ module.exports = AccountConfigMain = React.createClass
     # The target server is guessed by the email given by the user.
     doDiscovery: (domain) ->
         if domain? and domain.length > 3 and domain isnt @_lastDiscovered
-            console.log domain, @discoverTimeout
             if @discoverTimeout
                 @nextDiscover = domain
             else

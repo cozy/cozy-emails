@@ -133,7 +133,6 @@ module.exports = React.createClass
 
 
     render: ->
-        console.log "RENDER", uniq
         if not @state.conversation
             return section
                 key: 'conversation'

@@ -20,9 +20,6 @@ REQUIRED_FIELDS_NEW = [
 ]
 
 REQUIRED_FIELDS_EDIT = REQUIRED_FIELDS_NEW
-# .concat [
-#     'draftMailbox', 'sentMailbox', 'trashMailbox'
-# ]
 
 TABS = ['account', 'mailboxes', 'signature']
 
@@ -164,7 +161,7 @@ module.exports = React.createClass
 
         if errors.length > 0
             LayoutActions.alertError t 'account errors'
-            @setState {submitted: true, errors: errors}
+            @setState submitted: true, errors: errors
 
         else if check is true
             AccountActionCreator.check accountValue, id

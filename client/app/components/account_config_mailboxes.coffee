@@ -37,7 +37,8 @@ module.exports = AccountConfigMailboxes = React.createClass
         cachedTransform @, '__cacheLS', currentValue, =>
             value: currentValue
             requestChange: (value) =>
-                (changes = {})[field] = value
+                changes = {}
+                changes[field] = value
                 @props.requestChange changes
 
     render: ->
@@ -127,7 +128,7 @@ module.exports = AccountConfigMailboxes = React.createClass
         property = "#{which}Mailbox"
         labelText = t "account #{which} mailbox"
 
-        className = "form-group #{which}"
+        className = "form-group #{which} "
         className += 'has-error' unless @props.editedAccount.get property
 
         div className: className,
@@ -139,12 +140,6 @@ module.exports = AccountConfigMailboxes = React.createClass
                     allowUndefined: false
                     valueLink: @makeLinkState property
                     mailboxes: @props.editedAccount.get('mailboxes')
-
-    onMailboxChange: (mailbox, box) ->
-        changes = {}
-        changes[box] = mailbox
-        @props.requestAccountChange mailbox, =>
-            @props.onSubmit()
 
     # Typing enter runs the mailbox creation process.
     onNewMailboxKeyDown: (event) ->
