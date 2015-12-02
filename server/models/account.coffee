@@ -259,8 +259,7 @@ errors = require '../utils/errors'
 {NotFound} = require '../utils/errors'
 {makeSMTPConfig} = require '../imap/account2config'
 nodemailer  = require 'nodemailer'
-SMTPConnection = require 'nodemailer/node_modules/' +
-    'nodemailer-smtp-transport/node_modules/smtp-connection'
+SMTPConnection = require 'smtp-connection'
 log = require('../utils/logging')(prefix: 'models:account')
 _ = require 'lodash'
 async = require 'async'
@@ -271,5 +270,3 @@ schema = Object.keys(Account.schema)
 Account.saveFields = _.without schema, '_passwordStillEncrypted'
 
 refreshTimeout = null
-
-
