@@ -1,6 +1,8 @@
 Store = require '../libs/flux/store/store'
 
 {ActionTypes, Dispositions} = require '../constants/app_constants'
+AppDispatcher = require '../app_dispatcher'
+AccountStore = require './account_store'
 
 MessageActionCreator = null
 getMessageActionCreator = ->
@@ -106,12 +108,6 @@ class LayoutStore extends Store
             _drawer = not _drawer
             @emit 'change'
 
-        makeErrorMessage = (error) ->
-            if error.name is 'AccountConfigError'
-                t "config error #{error.field}"
-            else
-                error.message or error.name or error
-
         makeMessage = (target, ref, actionAndOK, errMsg)->
             subject = target?.subject
 
@@ -184,9 +180,46 @@ class LayoutStore extends Store
                 errors: [error]
                 autoclose: true
 
-        handle ActionTypes.REFRESH_FAILURE, ({error}) ->
+        handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
+            AppDispatcher.waitFor [AccountStore.dispatchToken]
             @_showNotification
-                message: makeErrorMessage error
+               message: AccountStore.getAlertErrorMessage()
+               errors: AccountStore.getRawErrors()
+               autoclose: true
+
+        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ->
+            @_showNotification
+                message: t("account creation ok")
+                autoclose: true
+
+        handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
+            AppDispatcher.waitFor [AccountStore.dispatchToken]
+            @_showNotification
+               message: AccountStore.getAlertErrorMessage()
+               errors: AccountStore.getRawErrors()
+               autoclose: true
+
+        handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ->
+            @_showNotification
+                message: t('account updated')
+                autoclose: true
+
+        handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
+            AppDispatcher.waitFor [AccountStore.dispatchToken]
+            @_showNotification
+               message: AccountStore.getAlertErrorMessage()
+               errors: AccountStore.getRawErrors()
+               autoclose: true
+
+        handle ActionTypes.CHECK_ACCOUNT_SUCCESS, ->
+            @_showNotification
+                message: t('account checked')
+                autoclose: true
+
+        handle ActionTypes.REFRESH_FAILURE, ({error}) ->
+            AppDispatcher.waitFor [AccountStore.dispatchToken]
+            @_showNotification
+                message: AccountStore.getRefreshLastError()
                 errors: [error]
                 autoclose: true
 

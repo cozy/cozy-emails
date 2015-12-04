@@ -4,6 +4,10 @@ Store = require '../libs/flux/store/store'
 
 AccountTranslator = require '../utils/translators/account_translator'
 
+cachedTransform = require '../libs/cached_transform'
+
+STATICBOXFIELDS = ['id', 'accountID', 'label', 'tree', 'weight']
+CHANGEBOXFIELDS = ['lastSync', 'nbTotal', 'nbUnread', 'nbRecent']
 
 class AccountStore extends Store
 
@@ -38,8 +42,13 @@ class AccountStore extends Store
     _selectedAccount   = null
     _selectedMailbox   = null
     _newAccountWaiting = false
-    _newAccountError   = null
+    _newAccountChecking = false
+    _serverAccountErrorByField = Immutable.Map()
     _mailboxRefreshing = {}
+    _refreshLastError = null
+
+    _emitTimeout = null
+
 
     _refreshSelected = ->
         if selectedAccountID = _selectedAccount?.get 'id'
@@ -48,6 +57,32 @@ class AccountStore extends Store
                 _selectedMailbox = _selectedAccount
                     ?.get('mailboxes')
                     ?.get(selectedMailboxID)
+
+    _clearError = ->
+        _serverAccountErrorByField = Immutable.Map()
+    _addError = (field, err) ->
+        _serverAccountErrorByField = _serverAccountErrorByField.set field, err
+
+    _checkForNoMailbox = (rawAccount) ->
+        unless rawAccount.mailboxes?.length > 0
+            _setError
+                name: 'AccountConfigError',
+                field: 'nomailboxes'
+                causeFields: ['nomailboxes']
+
+    _setError = (error) ->
+        if error.name is 'AccountConfigError'
+            clientError =
+                message: t "config error #{error.field}"
+                originalError: error.originalError
+                originalErrorStack: error.originalErrorStack
+            errorsMap = {}
+            errorsMap[field] = clientError for field in error.causeFields
+            _serverAccountErrorByField = Immutable.Map errorsMap
+
+        else
+            _serverAccountErrorByField = Immutable.Map "unknown": error
+
 
     setMailbox = (accountID, boxID, boxData) ->
 
@@ -62,13 +97,10 @@ class AccountStore extends Store
 
         boxData.weight = mailbox.get 'weight' if mailbox.get 'weight'
 
-        STATICFIELDS = ['id', 'accountID', 'label', 'tree', 'weight']
-        CHANGEFIELDS = ['lastSync', 'nbTotal', 'nbUnread', 'nbRecent']
-
-        for field of STATICFIELDS when mailbox.get(field) isnt boxData[field]
+        for field of STATICBOXFIELDS when mailbox.get(field) isnt boxData[field]
             mailbox = mailbox.set field, boxData[field]
 
-        for field of CHANGEFIELDS when more.get(field) isnt boxData[field]
+        for field of CHANGEBOXFIELDS when more.get(field) isnt boxData[field]
             more = more.set field, boxData[field]
 
         if more isnt _mailboxesCounters.get boxID
@@ -105,7 +137,8 @@ class AccountStore extends Store
             total = _accountsUnread.get(accountID) + diffTotalUnread
             _accountsUnread = _accountsUnread.set accountID, total
 
-        @emit 'change'
+        clearTimeout _emitTimeout
+        _emitTimeout = setTimeout (=> @emit 'change'), 1
 
 
     _setCurrentAccount: (account) ->
@@ -119,18 +152,39 @@ class AccountStore extends Store
         account = AccountTranslator.toImmutable rawAccount
         _accounts = _accounts.set account.get('id'), account
         @_setCurrentAccount account
-        _newAccountWaiting = false
-        _newAccountError   = null
-        @emit 'change'
-
 
     ###
         Defines here the action handlers.
     ###
     __bindHandlers: (handle) ->
 
-        handle ActionTypes.ADD_ACCOUNT, (rawAccount) ->
-            @_onAccountUpdated rawAccount
+        handle ActionTypes.ADD_ACCOUNT_REQUEST, ({inputValues}) ->
+            _newAccountWaiting = true
+            @emit 'change'
+
+        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({account}) ->
+            _newAccountWaiting = false
+            _checkForNoMailbox account
+            @_onAccountUpdated account
+            @emit 'change'
+
+        handle ActionTypes.ADD_ACCOUNT_FAILURE, ({error}) ->
+            _newAccountWaiting = false
+            _setError error
+            @emit 'change'
+
+        handle ActionTypes.CHECK_ACCOUNT_REQUEST, () ->
+            _newAccountChecking = true
+            @emit 'change'
+
+        handle ActionTypes.CHECK_ACCOUNT_SUCCESS, () ->
+            _newAccountChecking = false
+            @emit 'change'
+
+        handle ActionTypes.CHECK_ACCOUNT_FAILURE, ({error}) ->
+            _newAccountChecking = false
+            _setError error
+            @emit 'change'
 
         handle ActionTypes.SELECT_ACCOUNT, (value) ->
             if value.accountID?
@@ -143,32 +197,37 @@ class AccountStore extends Store
                     ?.get(value.mailboxID) or null
                 @_setCurrentMailbox mailbox
             else
-                _newAccountError = null
+                _clearError()
                 @_setCurrentMailbox null
             @emit 'change'
 
-        handle ActionTypes.NEW_ACCOUNT_WAITING, (payload) ->
-            _newAccountWaiting = payload
+        handle ActionTypes.EDIT_ACCOUNT_REQUEST, ({inputValues}) ->
+            _newAccountWaiting = true
             @emit 'change'
 
-        handle ActionTypes.NEW_ACCOUNT_ERROR, (error) ->
+        handle ActionTypes.EDIT_ACCOUNT_SUCCESS, ({rawAccount}) ->
             _newAccountWaiting = false
-            # This is to force Panel.shouldComponentUpdate to rerender
-            error.uniq = Math.random()
-            _newAccountError = error
+            _clearError()
+            _checkForNoMailbox rawAccount
+            @_onAccountUpdated rawAccount
             @emit 'change'
 
-        handle ActionTypes.EDIT_ACCOUNT, (rawAccount) ->
-            @_onAccountUpdated rawAccount
+        handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
+            _newAccountWaiting = false
+            _setError error
+            @emit 'change'
 
         handle ActionTypes.MAILBOX_CREATE, (rawAccount) ->
             @_onAccountUpdated rawAccount
+            @emit 'change'
 
         handle ActionTypes.MAILBOX_UPDATE, (rawAccount) ->
             @_onAccountUpdated rawAccount
+            @emit 'change'
 
         handle ActionTypes.MAILBOX_DELETE, (rawAccount) ->
             @_onAccountUpdated rawAccount
+            @emit 'change'
 
         handle ActionTypes.REMOVE_ACCOUNT, (accountID) ->
             _accounts = _accounts.delete accountID
@@ -188,8 +247,9 @@ class AccountStore extends Store
             _mailboxRefreshing[mailboxID]++
             @emit 'change'
 
-        handle ActionTypes.REFRESH_FAILURE, ({mailboxID}) ->
+        handle ActionTypes.REFRESH_FAILURE, ({mailboxID, error}) ->
             _mailboxRefreshing[mailboxID]--
+            _refreshLastError = error
             @emit 'change'
 
         handle ActionTypes.REFRESH_SUCCESS, ({mailboxID, updated}) ->
@@ -207,7 +267,8 @@ class AccountStore extends Store
 
 
     getAllMailboxes: ->
-        return _accounts.flatMap (account) -> account.get 'mailboxes'
+        cachedTransform AccountStore, 'all-mailboxes', _accounts, ->
+            _accounts.flatMap (account) -> account.get 'mailboxes'
 
     getMailboxCounters: ->
         return _mailboxesCounters
@@ -241,6 +302,14 @@ class AccountStore extends Store
 
             return if defaultID then mailboxes.get defaultID
             else mailboxes.first()
+
+    hasConversationEnabled: (mailboxID) ->
+        # don't display conversations in Trash and Draft folders
+        mailboxID not in [
+            _selectedAccount?.get('trashMailbox')
+            _selectedAccount?.get('draftMailbox')
+            _selectedAccount?.get('junkMailbox')
+        ]
 
 
     getSelected: ->
@@ -300,13 +369,24 @@ class AccountStore extends Store
         return mb
 
 
-    getError: ->
-        return _newAccountError
+    getErrors: -> _serverAccountErrorByField
+    getRawErrors: -> _serverAccountErrorByField.get('unknown')
+    getAlertErrorMessage: ->
+        error = _serverAccountErrorByField.first()
+        if error.name is 'AccountConfigError'
+            return t "config error #{error.field}"
+        else
+            return error.message or error.name or error
 
+    getRefreshLastError: ->
+        error = _refreshLastError
+        if error.name is 'AccountConfigError'
+            return t "config error #{error.field}"
+        else
+            return error.message or error.name or error
 
-    isWaiting: ->
-        return _newAccountWaiting
-
+    isWaiting: -> return _newAccountWaiting
+    isChecking: -> return _newAccountChecking
 
     isMailboxRefreshing: (mailboxID)->
         _mailboxRefreshing[mailboxID] > 0
@@ -325,6 +405,27 @@ class AccountStore extends Store
             return Object.keys(message.get 'mailboxIds')[0]
 
         return boxID
+
+    makeEmptyAccount: ->
+        account = {}
+        account.label = ''
+        account.login = ''
+        account.password = ''
+        account.imapServer = ''
+        account.imapLogin = ''
+        account.smtpServer = ''
+        account.label = ''
+        account.id = null
+        account.smtpPort = 465
+        account.smtpSSL = true
+        account.smtpTLS = false
+        account.smtpMethod = 'PLAIN'
+        account.imapPort = 993
+        account.imapSSL = true
+        account.imapTLS = false
+        account.accountType = 'IMAP'
+        account.favoriteMailboxes = null
+        return Immutable.Map account
 
 
 

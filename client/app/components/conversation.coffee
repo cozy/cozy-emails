@@ -2,71 +2,86 @@
 Message = require './message'
 Toolbar = require './toolbar_conversation'
 classer = React.addons.classSet
-
-RouterMixin = require '../mixins/router_mixin'
 {MessageFlags} = require '../constants/app_constants'
 
-LayoutActionCreator = require '../actions/layout_action_creator'
+RouterMixin = require '../mixins/router_mixin'
+StoreWatchMixin = require '../mixins/store_watch_mixin'
+ShouldComponentUpdate = require '../mixins/should_update_mixin'
 
+LayoutActionCreator = require '../actions/layout_action_creator'
+SettingsStore = require '../stores/settings_store'
+AccountStore = require '../stores/account_store'
+MessageStore = require '../stores/message_store'
+LayoutStore = require '../stores/layout_store'
+
+
+uniq = 1
 
 module.exports = React.createClass
     displayName: 'Conversation'
 
-    mixins: [RouterMixin]
+    mixins: [
+        RouterMixin,
+        StoreWatchMixin [SettingsStore, AccountStore, MessageStore, LayoutStore]
+        ShouldComponentUpdate.UnderscoreEqualitySlow
+    ]
 
     propTypes:
-        conversation         : React.PropTypes.object
-        conversationID       : React.PropTypes.string
-        selectedAccountID    : React.PropTypes.string.isRequired
-        selectedAccountLogin : React.PropTypes.string.isRequired
-        selectedMailboxID    : React.PropTypes.string
-        mailboxes            : React.PropTypes.object.isRequired
-        settings             : React.PropTypes.object.isRequired
-        accounts             : React.PropTypes.object.isRequired
-        displayConversations : React.PropTypes.bool
-        useIntents           : React.PropTypes.bool.isRequired
+        messageID: React.PropTypes.string
+
+    getStateFromStores: ->
+        message = MessageStore.getByID @props.messageID
+        selectedMailboxID = AccountStore.getSelectedMailbox()?.get 'id'
+        selectedAccount = AccountStore.getSelectedOrDefault()
+
+        if message?
+            conversationID = message?.get('conversationID')
+            trashMailboxID = selectedAccount?.get('trashMailbox')
+            conversation = MessageStore
+                           .getConversation conversationID, trashMailboxID
+            prevMessage = MessageStore.getPreviousMessage()
+            nextMessage = MessageStore.getNextMessage()
+            length = MessageStore.getConversationsLength().get conversationID
+            selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
+
+        displayConvs = AccountStore.hasConversationEnabled selectedMailboxID
+        displayConvs and= SettingsStore.get 'displayConversation'
 
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or
-               not(_.isEqual(nextProps, @props))
+        nextState =
+            accounts             : AccountStore.getAll()
+            mailboxes            : AccountStore.getAllMailboxes()
+            selectedAccount      : AccountStore.getSelectedOrDefault()
+            selectedMailboxID    : selectedMailboxID
+            settings             : SettingsStore.get()
+            useIntents           : LayoutStore.intentAvailable()
+            conversationID       : conversationID
+            conversation         : conversation
+            conversationLength   : length
+            prevMessage          : prevMessage
+            nextMessage          : nextMessage
+            displayConversations : displayConvs
 
+        nextState.compact = true if @state?.compact isnt false
 
-    # Init an array with keys of expanded articles
-    _initExpanded: (props) ->
-        props ?= @props
-        expanded = []
-        if props.conversation?
-            # set first expanded message: first unseen or last of conversation
-            props.conversation.map((message, key) ->
+        if nextState.conversation?.length isnt @state?.conversation?.length
+            nextState.expanded = []
+            conversation?.forEach (message, key) ->
                 isUnread = MessageFlags.SEEN not in message.get 'flags'
-                isLast   = key is props.conversation.length - 1
-                if (expanded.length is 0 and (isUnread or isLast))
-                    expanded.push key
-            ).toJS()
-        return expanded
+                isLast   = key is conversation.length - 1
+                if (nextState.expanded.length is 0 and (isUnread or isLast))
+                    nextState.expanded.push key
+            nextState.compact = true
 
-    getInitialState: ->
-        # compact: set to true to not display all messages in conversation
-        return {
-            expanded: @_initExpanded()
-            compact: true
-        }
-
-    componentWillReceiveProps: (props) ->
-        if props.conversation?.length isnt @props.conversation?.length
-            expanded = @_initExpanded(props)
-            @setState expanded: expanded, compact: true
+        return nextState
 
     renderToolbar: ->
         Toolbar
-            readability         : @props.readability
-            nextMessageID       : @props.nextMessageID
-            nextConversationID  : @props.nextConversationID
-            prevMessageID       : @props.prevMessageID
-            prevConversationID  : @props.prevConversationID
-            settings            : @props.settings
-
+            nextMessageID       : @state.nextMessage?.get('id')
+            nextConversationID  : @state.nextMessage?.get('conversationID')
+            prevMessageID       : @state.prevMessage?.get('id')
+            prevConversationID  : @state.prevMessage?.get('conversationID')
+            settings            : @state.settings
 
     renderMessage: (key, active) ->
         # allow the Message component to update current active message
@@ -82,18 +97,18 @@ module.exports = React.createClass
 
         Message
             ref                 : 'message'
-            accounts            : @props.accounts
+            accounts            : @state.accounts
             active              : active
-            inConversation      : @props.conversation.length > 1
+            inConversation      : @state.conversation.length > 1
             key                 : key.toString()
-            mailboxes           : @props.mailboxes
-            message             : @props.conversation.get key
-            selectedAccountID   : @props.selectedAccountID
-            selectedAccountLogin: @props.selectedAccountLogin
-            selectedMailboxID   : @props.selectedMailboxID
-            settings            : @props.settings
-            displayConversations: @props.displayConversation
-            useIntents          : @props.useIntents
+            mailboxes           : @state.mailboxes
+            message             : @state.conversation.get key
+            selectedAccountID   : @state.selectedAccount.get 'id'
+            selectedAccountLogin: @state.selectedAccount.get 'login'
+            selectedMailboxID   : @state.selectedMailboxID
+            settings            : @state.settings
+            displayConversations: @state.displayConversation
+            useIntents          : @state.useIntents
             toggleActive        : toggleActive
 
 
@@ -118,29 +133,28 @@ module.exports = React.createClass
 
 
     render: ->
-        if not @props.conversation
+        if not @state.conversation
             return section
                 key: 'conversation'
                 className: 'conversation panel'
                 'aria-expanded': true,
                 p null, t "app loading"
 
-        message = @props.conversation.get 0
+        message = @state.conversation.get 0
         # Sort messages in conversation to find seen messages and group them
         messages = []
-        lastMessageIndex = @props.conversation.length - 1
-        @props.conversation.map((message, key) =>
+        lastMessageIndex = @state.conversation.length - 1
+        @state.conversation.forEach (message, key) =>
             if key in @state.expanded
                 messages.push key
             else
                 [..., last] = messages
                 messages.push(last = []) unless _.isArray(last)
                 last.push key
-        ).toJS()
 
         # Starts components rendering
         section
-            key: 'conversation'
+            ref: 'conversation'
             className: 'conversation panel'
             'aria-expanded': true,
 

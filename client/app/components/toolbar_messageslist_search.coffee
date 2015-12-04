@@ -23,6 +23,8 @@ module.exports = SearchToolbarMessagesList = React.createClass
         type:  'from'
         value: ''
 
+    prevent: (e) -> e.preventDefault()
+
     onTypeChange: (filter) ->
         @setState type: filter, value: ''
 
@@ -35,12 +37,13 @@ module.exports = SearchToolbarMessagesList = React.createClass
         form
             role: 'group'
             className: 'search'
-            onSubmit: (e) -> e.preventDefault()
+            onSubmit: @prevent
 
             Dropdown
-                value:    @state.type
-                values:   filters
-                onChange: @onTypeChange
+                options:   filters
+                valueLink:
+                    value: @state.type
+                    requestChange: @onTypeChange
 
             SearchInput
                 value: @state.value

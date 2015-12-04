@@ -57,7 +57,6 @@ module.exports = Menu = React.createClass
         search           : SearchStore.getCurrentSearch()
 
     selectedFirstSort: (account1, account2) ->
-        console.log('there', @)
         if @state.selectedAccount?.get('id') is account1.get('id')
             return -1
         else if @state.selectedAccount?.get('id') is account2.get('id')
@@ -74,8 +73,6 @@ module.exports = Menu = React.createClass
             title       : t 'modal please contribute'
             subtitle    : t 'modal please report'
             allowCopy   : true
-            closeModal  : ->
-                LayoutActionCreator.hideModal()
             closeLabel  : t 'app alert close'
             content     : React.DOM.pre
                 style: "max-height": "300px",
@@ -248,7 +245,7 @@ module.exports = Menu = React.createClass
                             span className: 'refresh-error',
                                 i
                                     className: 'fa warning',
-                                    onClick: @displayErrors.bind null,
+                                    onClick: @displayErrors,
                                     progress
 
                 if isSelected

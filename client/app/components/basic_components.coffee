@@ -17,6 +17,7 @@
 } = React.DOM
 
 classer = React.addons.classSet
+PropTypes = require '../libs/prop_types'
 
 
 Container = React.createClass
@@ -43,11 +44,7 @@ Title = React.createClass
 SubTitle = React.createClass
 
     render: ->
-        h4
-            refs: @props.ref
-            className: 'subtitle ' + @props.className
-        ,
-            @props.text
+        h4 className: 'subtitle ' + @props.className, @props.children
 
 
 Tabs = React.createClass
@@ -109,8 +106,8 @@ FormButton = React.createClass
         if @props.danger
             className += 'btn-danger '
 
-        if @props.class?
-            className += @props.class
+        if @props.className?
+            className += @props.className
 
         button
             className: className
@@ -126,14 +123,12 @@ FormButton = React.createClass
 FormButtons = React.createClass
 
     render: ->
-
-        div null,
-            div className: 'col-sm-offset-4',
-                for formButton, index in @props.buttons
-                    formButton.key = index
-                    FormButton formButton
+        div className: 'col-sm-offset-4', @props.children
 
 MenuItem = React.createClass
+
+    onClick: ->
+        @props.onClick @props.onClickValue
 
     render: ->
 
@@ -143,7 +138,7 @@ MenuItem = React.createClass
 
         aOptions =
             role: 'menuitemu'
-            onClick: @props.onClick
+            onClick: @onClick
         aOptions.className = @props.className if @props.className
         aOptions.href      = @props.href if @props.href
         aOptions.target    = @props.href if @props.target
@@ -167,41 +162,62 @@ MenuDivider = React.createClass
         liOptions.key = @props.key if @props.key
         li liOptions
 
+Dropdown = React.createClass
 
-FormDropdown = React.createClass
+    getDefaultProps: ->
+        className: ''
+        btnClassName: ''
+        allowUndefined: false
+
+    propTypes:
+        valueLink: PropTypes.valueLink(PropTypes.string).isRequired
+        allowUndefined: React.PropTypes.bool.isRequired
+        options: React.PropTypes.object.isRequired
+        className: React.PropTypes.string
+        id: React.PropTypes.string
+        btnClassName: React.PropTypes.string
+        defaultLabel: React.PropTypes.string
+        undefinedValue: React.PropTypes.string
 
     render: ->
+        valueLink = @props.valueLink or
+            value: @props.value
+            requestChange: @props.onChange
 
-        div
-            key: "account-input-#{@props.name}"
-            className: "form-group account-item-#{@props.name} "
+        className = 'dropdown ' + @props.className
+        btnClassName = 'dropdown-toggle ' + @props.btnClassName
+        selected = @props.options[valueLink.value]
+
+        div className: className, id: @props.id,
+            button
+                className: btnClassName,
+                'data-toggle': 'dropdown',
+                selected or @props.defaultLabel
+                span className: 'caret', ''
+            ul className: 'dropdown-menu', role: 'menu',
+                if @props.allowUndefined and selected?
+                    DropdownItem
+                        key: null,
+                        value: @props.undefinedValue
+                        requestChange: valueLink.requestChange
+
+                for key, value of @props.options
+                    if key isnt valueLink.value
+                        DropdownItem
+                            key: key,
+                            value: value,
+                            requestChange: valueLink.requestChange
+
+# @TODO : merge me with FormDropdown and Dropdown
+DropdownItem = React.createClass
+    onClick: -> @props.requestChange @props.key
+    render: ->
+        li
+            role: 'presentation'
+            key: @props.key,
+            onClick: @onClick
         ,
-            label
-                htmlFor: "#{@props.prefix}-#{@props.name}",
-                className: "col-sm-2 col-sm-offset-2 control-label"
-            ,
-                @props.labelText
-            div className: 'col-sm-3',
-                div className: "dropdown",
-                    button
-                        id: "#{@props.prefix}-#{@props.name}"
-                        name: "#{@props.prefix}-#{@props.name}"
-                        className: "btn btn-default dropdown-toggle"
-                        type: "button"
-                        "data-toggle": "dropdown"
-                    ,
-                        @props.defaultText
-
-                    ul className: "dropdown-menu", role: "menu",
-                        @props.values.map (method) =>
-                            li
-                                role: "presentation",
-                                    a
-                                        'data-value': method
-                                        role: "menuitem"
-                                        onClick: @props.onClick
-                                    ,
-                                        t "#{@props.methodPrefix} #{method}"
+            a role: 'menuitem', @props.value
 
 
 # Widget to display contact following these rules:
@@ -235,44 +251,6 @@ AddressLabel = React.createClass
             result = span null, @props.contact.address
 
         return result
-
-
-# Available properties:
-# - values: {key -> value}
-# - value: optional key of current value
-Dropdown = React.createClass
-    displayName: 'Dropdown'
-
-    getInitialState: ->
-        defaultKey = if @props.value? then @props.value else Object.keys(@props.values)[0]
-        state=
-            label: @props.values[defaultKey]
-
-    render: ->
-
-        renderFilter = (key, value) =>
-            onChange = =>
-                @setState label: value
-                @props.onChange key
-            li
-                role: 'presentation'
-                onClick: onChange
-                key: key,
-                    a
-                        role: 'menuitem'
-                        value
-
-        div
-            className: 'dropdown',
-                button
-                    className: 'dropdown-toggle'
-                    type: 'button'
-                    'data-toggle': 'dropdown'
-                    "#{@state.label} "
-                        span className: 'caret', ''
-                ul className: 'dropdown-menu', role: 'menu',
-                    for key, value of @props.values
-                        renderFilter key, value
 
 
 # Widget to display a spinner.
@@ -335,7 +313,6 @@ module.exports = {
     FieldSet
     FormButton
     FormButtons
-    FormDropdown
     Icon
     MenuItem
     MenuHeader

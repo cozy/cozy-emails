@@ -71,8 +71,6 @@ module.exports = ContactLabel = React.createClass
         modal =
             title       : t 'message contact creation title'
             subtitle    : t 'message contact creation', params
-            closeModal  : ->
-                LayoutActionCreator.hideModal()
             closeLabel  : t 'app cancel'
             actionLabel : t 'app confirm'
             action      : =>

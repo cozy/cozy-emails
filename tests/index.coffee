@@ -50,6 +50,7 @@ describe "Server tests", ->
         SMTPTesting.init SMTP_PORT, done
 
     # start the app & prepare store
+    before helpers.prepareForCrypto
     before helpers.startApp appPath, APP_HOST, APP_PORT
     before ->
         global.store = {}

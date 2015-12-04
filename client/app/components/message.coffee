@@ -6,6 +6,7 @@
 MessageHeader  = require "./message_header"
 MessageFooter  = require "./message_footer"
 ToolbarMessage = require './toolbar_message'
+MessageContent = require './message-content'
 
 {MessageFlags} = require '../constants/app_constants'
 
@@ -14,11 +15,10 @@ MessageActionCreator      = require '../actions/message_action_creator'
 ContactActionCreator      = require '../actions/contact_action_creator'
 
 RouterMixin = require '../mixins/router_mixin'
+ShouldComponentUpdate = require '../mixins/should_update_mixin'
 TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
 
 classer = React.addons.classSet
-alertError   = LayoutActionCreator.alertError
-alertSuccess = LayoutActionCreator.notify
 
 RGXP_PROTOCOL = /:\/\//
 
@@ -28,8 +28,8 @@ module.exports = React.createClass
     mixins: [
         RouterMixin
         TooltipRefresherMixin
+        ShouldComponentUpdate.UnderscoreEqualitySlow
     ]
-
 
     propTypes:
         accounts               : React.PropTypes.object.isRequired
@@ -56,12 +56,6 @@ module.exports = React.createClass
             currentMessageID: null
             prepared: {}
         }
-
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or
-                 not (_.isEqual(nextProps, @props))
-        return should
 
 
     _prepareMessage: (message) ->
@@ -192,6 +186,14 @@ module.exports = React.createClass
 
         return {messageDisplayHTML, images}
 
+    isUnread: ->
+        @props.message.get('flags').indexOf(MessageFlags.SEEN) is -1
+
+    onHeaderClicked: ->
+        messageID = @props.message.get('id')
+        if @isUnread() and not @props.active
+            MessageActionCreator.mark {messageID}, MessageFlags.SEEN
+        @props.toggleActive messageID
 
     render: ->
         message  = @props.message
@@ -205,57 +207,52 @@ module.exports = React.createClass
             messageDisplayHTML = false
             imagesWarning      = false
 
-        isUnread = message.get('flags').slice().indexOf(MessageFlags.SEEN) is -1
-
-        setActive = =>
-            if isUnread and not @props.active
-                messageID = message.get('id')
-                MessageActionCreator.mark {messageID}, MessageFlags.SEEN
-            @props.toggleActive()
-
         classes = classer
             message: true
             active: @props.active
             isDraft: prepared.isDraft
             isDeleted: prepared.isDeleted
-            isUnread: isUnread
+            isUnread: @isUnread()
 
         article
             className: classes,
             key: @props.key,
-            'data-id': message.get('id'),
-                header
-                    onClick: setActive,
-                    @renderHeaders()
-                    @renderToolbox() if @props.active
-                (div className: 'full-headers',
-                    pre null, prepared?.fullHeaders?.join "\n") if @props.active
-                (MessageContent
-                    ref: 'messageContent'
-                    messageID: message.get 'id'
-                    messageDisplayHTML: messageDisplayHTML
-                    html: @_htmlContent
-                    text: prepared.text
-                    rich: prepared.rich
-                    imagesWarning: imagesWarning
-                    displayImages: @displayImages
-                    displayHTML: @displayHTML) if @props.active
-                (footer null,
-                    @renderFooter()
-                    @renderToolbox(false)) if @props.active
+            'data-id': @props.message.get('id'),
+                header onClick: @onHeaderClicked,
+                    MessageHeader
+                        message: @props.message
+                        isDraft: @state.prepared.isDraft
+                        isDeleted: @state.prepared.isDeleted
+                        active: @props.active
+                        ref: 'header'
 
+                    if @props.active
+                        @renderToolbox()
 
-    renderHeaders: ->
-        MessageHeader
-            message: @props.message
-            isDraft: @state.prepared.isDraft
-            isDeleted: @state.prepared.isDeleted
-            active: @props.active
-            ref: 'header'
+                if @props.active
+                    div className: 'full-headers',
+                        pre null, prepared?.fullHeaders?.join "\n"
 
+                if @props.active
+                    MessageContent
+                        ref: 'messageContent'
+                        messageID: message.get 'id'
+                        messageDisplayHTML: messageDisplayHTML
+                        html: @_htmlContent
+                        text: prepared.text
+                        rich: prepared.rich
+                        imagesWarning: imagesWarning
+                        displayImages: @displayImages
+                        displayHTML: @displayHTML
+
+                if @props.active
+                    footer null,
+                        MessageFooter
+                            message: @props.message
+                            ref: 'footer'
+                        @renderToolbox(false)
 
     renderToolbox: (full = true) ->
-
         ToolbarMessage
             full                 : full
             message              : @props.message
@@ -272,29 +269,6 @@ module.exports = React.createClass
             ref                  : 'toolbarMessage'
 
 
-    renderFooter: ->
-        MessageFooter
-            message: @props.message
-            ref: 'footer'
-
-
-    toggleHeaders: (event) ->
-        event.preventDefault()
-        event.stopPropagation()
-        state =
-            headers: not @state.headers
-        if @props.inConversation and not @props.active
-            @props.toggleActive()
-        @setState state
-
-
-    toggleActive: (event) ->
-        if @props.inConversation
-            event.preventDefault()
-            event.stopPropagation()
-            @props.toggleActive()
-            @setState headers: false
-
 
     onDelete: (event) ->
         event.preventDefault()
@@ -307,17 +281,14 @@ module.exports = React.createClass
         if not needConfirmation
             MessageActionCreator.delete {messageID}
         else
-            modal =
+            LayoutActionCreator.displayModal
                 title       : t 'app confirm delete'
                 subtitle    : confirmMessage
-                closeModal  : ->
-                    LayoutActionCreator.hideModal()
                 closeLabel  : t 'app cancel'
                 actionLabel : t 'app confirm'
                 action      : ->
                     MessageActionCreator.delete {messageID}
                     LayoutActionCreator.hideModal()
-            LayoutActionCreator.displayModal modal
 
 
     onConversationDelete: ->
@@ -373,109 +344,3 @@ module.exports = React.createClass
         if not value?
             value = true
         @setState messageDisplayHTML: value
-
-
-MessageContent = React.createClass
-    displayName: 'MessageContent'
-
-
-    shouldComponentUpdate: (nextProps, nextState) ->
-        return not(_.isEqual(nextState, @state)) or not (_.isEqual(nextProps, @props))
-
-
-    render: ->
-        displayHTML= =>
-            @props.displayHTML true
-        if @props.messageDisplayHTML and @props.html
-            div null,
-                if @props.imagesWarning
-                    div
-                        className: "imagesWarning alert alert-warning content-action",
-                        ref: "imagesWarning",
-                            i className: 'fa fa-shield'
-                            t 'message images warning'
-                            button
-                                className: 'btn btn-xs btn-warning',
-                                type: "button",
-                                ref: 'imagesDisplay',
-                                onClick: @props.displayImages,
-                                t 'message images display'
-                iframe
-                    'data-message-id': @props.messageID
-                    name: "frame-#{@props.messageID}"
-                    className: 'content',
-                    ref: 'content',
-                    allowTransparency: true,
-                    frameBorder: 0
-        else
-            div className: 'row',
-                div className: 'preview', ref: content,
-                    p dangerouslySetInnerHTML: { __html: @props.rich }
-
-
-    _initFrame: (type) ->
-        panel = document.querySelector "#panels > .panel:nth-of-type(2)"
-        if panel? and not @props.composing
-            panel.scrollTop = 0
-        # - resize the frame to the height of its content
-        # - if images are not displayed, create the function to display them
-        #   and resize the frame
-        if @props.messageDisplayHTML and @refs.content
-            frame = @refs.content.getDOMNode()
-            doc = frame.contentDocument or frame.contentWindow?.document
-            checkResize = false # disabled for now
-            step = 0
-            # Function called on frame load
-            # Inject HTML content of the message inside the frame, then
-            # update frame height to remove scrollbar
-            loadContent = (e) =>
-                step = 0
-                doc = frame.contentDocument or frame.contentWindow?.document
-                if doc?
-                    doc.documentElement.innerHTML = @props.html
-                    window.cozyMails.customEvent "MESSAGE_LOADED", @props.messageID
-                    updateHeight = (e) ->
-                        height = doc.documentElement.scrollHeight
-                        if height < 60
-                            frame.style.height = "60px"
-                        else
-                            frame.style.height = "#{height + 60}px"
-                        step++
-                        # Prevent infinite loop on onresize event
-                        if checkResize and step > 10
-
-                            doc.body.removeEventListener 'load', loadContent
-                            frame.contentWindow?.removeEventListener 'resize'
-
-                    updateHeight()
-                    # some browsers don't fire event when remote fonts are loaded
-                    # so we need to wait a little and check the frame height again
-                    setTimeout updateHeight, 1000
-
-                    # Update frame height on load
-                    doc.body.onload = updateHeight
-
-                    # disabled for now
-                    if checkResize
-                        frame.contentWindow.onresize = updateHeight
-                        window.onresize = updateHeight
-                        frame.contentWindow?.addEventListener 'resize', updateHeight, true
-                else
-                    # try to display text only
-                    @props.displayHTML false
-
-            if type is 'mount' and doc.readyState isnt 'complete'
-                frame.addEventListener 'load', loadContent
-            else
-                loadContent()
-        else
-            window.cozyMails.customEvent "MESSAGE_LOADED", @props.messageID
-
-
-    componentDidMount: ->
-        @_initFrame('mount')
-
-
-    componentDidUpdate: ->
-        @_initFrame('update')
-

@@ -549,8 +549,6 @@ module.exports = Compose = React.createClass
         modal =
             title       : t 'mail confirm delete title'
             subtitle    : confirmMessage
-            closeModal  : ->
-                LayoutActionCreator.hideModal()
             closeLabel  : t 'mail confirm delete cancel'
             actionLabel : t 'mail confirm delete delete'
             action      : doDelete

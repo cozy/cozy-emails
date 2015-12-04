@@ -28,10 +28,13 @@ module.exports = ToolboxMove = React.createClass
 
 
     renderMailboxes: ->
-        for id, mbox of @props.mailboxes when id isnt @props.selectedMailboxID
-            do (id) => # bind id to each mailbox
-                MenuItem
-                    key: id
-                    className: "pusher pusher-#{mbox.depth}"
-                    onClick: => @props.onMove id
-                    mbox.label
+        @props.mailboxes
+        .filter (box, id) => id isnt @props.selectedMailboxID
+        .map (mbox, id) =>
+            MenuItem
+                key: id
+                className: "pusher pusher-#{mbox.get('depth')}"
+                onClick: @props.onMove
+                onClickValue: id
+                mbox.get('label')
+        .toJS()

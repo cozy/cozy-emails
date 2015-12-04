@@ -64,23 +64,27 @@ module.exports = ToolboxActions = React.createClass
             if not @props.isSeen? or not @props.isSeen
                 MenuItem
                     key: 'action-mark-seen'
-                    onClick: => @props.onMark FlagsConstants.SEEN
+                    onClick: @props.onMark
+                    onClickValue: FlagsConstants.SEEN
                     t 'mail mark read'
             if not @props.isSeen? or @props.isSeen
                 MenuItem
                     key: 'action-mark-unseen'
-                    onClick: => @props.onMark FlagsConstants.UNSEEN
+                    onClick: @props.onMark
+                    onClickValue: FlagsConstants.UNSEEN
                     t 'mail mark unread'
 
             if not @props.isFlagged? or @props.isFlagged
                 MenuItem
                     key: 'action-mark-noflag'
-                    onClick: => @props.onMark FlagsConstants.NOFLAG
+                    onClick: @props.onMark
+                    onClickValue: FlagsConstants.NOFLAG
                     t 'mail mark nofav'
             if not @props.isFlagged? or not @props.isFlagged
                 MenuItem
                     key: 'action-mark-flagged'
-                    onClick: => @props.onMark FlagsConstants.FLAGGED
+                    onClick: @props.onMark
+                    onClickValue: FlagsConstants.FLAGGED
                     t 'mail mark fav'
 
         ]
@@ -122,22 +126,26 @@ module.exports = ToolboxActions = React.createClass
 
             MenuItem
                 key: 'conv-seen'
-                onClick: => @props.onConversationMark FlagsConstants.SEEN
+                onClick: @props.onConversationMark
+                onClickValue: FlagsConstants.SEEN
                 t 'mail action conversation seen'
 
             MenuItem
                 key: 'conv-unseen'
-                onClick: => @props.onConversationMark FlagsConstants.UNSEEN
+                onClick: @props.onConversationMark
+                onClickValue: FlagsConstants.UNSEEN
                 t 'mail action conversation unseen'
 
             MenuItem
                 key: 'conv-flagged'
-                onClick: => @props.onConversationMark FlagsConstants.FLAGGED
+                onClick: @props.onConversationMark
+                onClickValue: FlagsConstants.FLAGGED
                 t 'mail action conversation flagged'
 
             MenuItem
                 key: 'conv-noflag'
-                onClick: => @props.onConversationMark FlagsConstants.NOFLAG
+                onClick: @props.onConversationMark
+                onClickValue: FlagsConstants.NOFLAG
                 t 'mail action conversation noflag'
         ]
 
@@ -145,12 +153,14 @@ module.exports = ToolboxActions = React.createClass
 
 
     renderMailboxes: ->
-        for id, mbox of @props.mailboxes when id isnt @props.selectedMailboxID
-            # bind id
-            do (id) =>
-                MenuItem
-                    key: id
-                    className: "pusher pusher-#{mbox.depth}"
-                    onClick: => @props.onConversationMove id
-                    mbox.label
+        @props.mailboxes
+        .filter (box, id) => id isnt @props.selectedMailboxID
+        .map (mbox, id) =>
+            MenuItem
+                key: id
+                className: "pusher pusher-#{mbox.get('depth')}"
+                onClick: @props.onConversationMove
+                onClickValue: id
+                mbox.get('label')
+        .toJS()
 

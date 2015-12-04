@@ -97,8 +97,6 @@ module.exports = ActionsToolbarMessagesList = React.createClass
             modal =
                 title       : t 'app confirm delete'
                 subtitle    : msg
-                closeModal  : ->
-                    LayoutActionCreator.hideModal()
                 closeLabel  : t 'app cancel'
                 actionLabel : t 'app confirm'
                 action      : ->

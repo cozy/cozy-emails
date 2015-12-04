@@ -176,8 +176,6 @@ module.exports =
             modal =
                 title       : t 'app confirm delete'
                 subtitle    : confirmMessage
-                closeModal  : ->
-                    LayoutActionCreator.hideModal()
                 closeLabel  : t 'app cancel'
                 actionLabel : t 'app confirm'
                 action      : ->
@@ -332,8 +330,6 @@ module.exports =
             title       : t 'modal please contribute'
             subtitle    : t 'modal please report'
             allowCopy   : true
-            closeModal  : ->
-                LayoutActionCreator.hideModal()
             closeLabel  : t 'app alert close'
             content     : React.DOM.pre
                 style: "max-height": "300px",

@@ -16,10 +16,12 @@ MailboxRefreshFast = require '../processes/mailbox_refresh_fast'
 # see {Mailbox::imap_refreshFast}
 module.exports.refresh = (req, res, next) ->
     mailbox = ramStore.getMailbox(req.params.mailboxID)
-    account = ramStore.getAccount(mailbox.accountID)
     if not mailbox
-        next new NotFound("Mailbox #{req.params.mailboxID}")
-    else if not account
+        return next new NotFound("Mailbox #{req.params.mailboxID}")
+
+    account = ramStore.getAccount(mailbox.accountID)
+
+    if not account
         next new NotFound("Account #{mailbox.accountID}")
     else if not account.supportRFC4551
         next new BadRequest('Cant refresh a non RFC4551 box')

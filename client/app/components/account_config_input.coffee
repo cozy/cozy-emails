@@ -1,5 +1,5 @@
 {div, label, input, textarea} = React.DOM
-{ErrorLine} = require './basic_components'
+{ErrorLine, Dropdown} = require './basic_components'
 classer = React.addons.classSet
 
 RouterMixin = require '../mixins/router_mixin'
@@ -15,25 +15,35 @@ module.exports = AccountInput = React.createClass
         React.addons.LinkedStateMixin # two-way data binding
     ]
 
+    propTypes:
+        name: React.PropTypes.string.isRequired
+        error: React.PropTypes.string
 
-    getInitialState: ->
-        return @props
+        className: React.PropTypes.string
+        onClick: React.PropTypes.func
+        onInput: React.PropTypes.func
+        onBlur: React.PropTypes.func
+        type: React.PropTypes.oneOf [
+            'checkbox', 'textarea', 'email', 'text', 'password'
+        ]
+        valueLink: React.PropTypes.shape
+            value: React.PropTypes.any
+            requestChange: React.PropTypes.func.isRequired
+        options: (props) ->
+            if props.type is 'dropdown'
+                React.PropTypes.object.isRequired.apply this, arguments
 
 
-    componentWillReceiveProps: (props) ->
-        @setState props
-
+    getDefaultProps: -> type: 'text'
 
     render: ->
         name = @props.name
         type = @props.type or 'text'
-        errorField = @props.errorField or name
-        mainClasses = @buildMainClasses errorField, name
         placeHolder = @buildPlaceHolder type, name
 
         div
             key: "account-input-#{name}"
-            className: mainClasses,
+            className: @buildMainClasses(name),
 
             label
                 htmlFor: "mailbox-#{name}"
@@ -45,53 +55,44 @@ module.exports = AccountInput = React.createClass
                     input
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        checkedLink: @linkState('value').value
+                        checkedLink: @props.valueLink
                         type: type
                         onClick: @props.onClick
                 else if type is 'textarea'
                     textarea
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        valueLink: @linkState('value').value
+                        valueLink: @props.valueLink
                         className: 'form-control'
                         placeholder: placeHolder
-                        onBlur: @onBlur
-                        onInput: @props.onInput or null
+                        onBlur: @props.onBlur
+                        onInput: @props.onInput
+                else if type is 'dropdown'
+                    Dropdown
+                        id: "mailbox-#{name}"
+                        name: "mailbox-#{name}"
+                        valueLink: @props.valueLink
+                        options: @props.options
+                        allowUndefined: @props.allowUndefined
                 else
                     input
                         id: "mailbox-#{name}"
                         name: "mailbox-#{name}"
-                        valueLink: @linkState('value').value
+                        valueLink: @props.valueLink
                         type: type
                         className: 'form-control'
                         placeholder: placeHolder
-                        onBlur: @onBlur
-                        onInput: @props.onInput or null
+                        onBlur: @props.onBlur
+                        onInput: @props.onInput
 
-            @renderError(errorField, name)...
-
-
-    onBlur: (event) ->
-        @props.onBlur?(event)
-
-
-    renderError: (errorField, name) ->
-        result = []
-        if Array.isArray errorField
-            for error in errorField
-                if @state.errors?[error]? and error is name
-                    result.push ErrorLine text: @state.errors[error]
-        else if @state.errors?[name]?
-            result.push ErrorLine text: @state.errors[errorField]
-        return result
+            if @props.error
+                ErrorLine text: @props.error
 
 
     # Add error class if errors are listed.
-    buildMainClasses: (fields, name) ->
-        fields = [fields] if not Array.isArray fields
-        errors = fields.some (field) => @state.errors[field]?
+    buildMainClasses: (name) ->
         mainClasses =  "form-group account-item-#{name} "
-        mainClasses = "#{mainClasses} has-error " if errors
+        mainClasses = "#{mainClasses} has-error " if @props.error
         mainClasses = "#{mainClasses} #{@props.className} " if @props.className
         return mainClasses
 

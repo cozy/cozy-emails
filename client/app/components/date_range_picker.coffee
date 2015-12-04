@@ -34,6 +34,9 @@ module.exports = DateRangePicker = React.createClass
                 startDate: ''
                 endDate:   ''
 
+        else if nextProps.active and not @props.active
+            @setState isActive: true
+
 
     onStartChange: (obj) ->
         date = if obj.target? then obj.target.value else

@@ -28,17 +28,15 @@ module.exports = Toast = React.createClass
     # to the Cozy team.
     render: ->
         toast = @props.toast.toJS()
-        hasErrors = toast.errors? and toast.errors.length
+        hasErrors = toast.errors?.length
         classes = classer
             toast: true
             'alert-dismissible': toast.finished
             'toast-error': toast.level is AlertLevel.ERROR
 
-        if hasErrors
-            showModal = @showModal.bind this, toast.errors
         div className: classes, role: "alert", key: @props.key,
             if toast.message
-                div className: "message", t(toast.message)
+                div className: "message", toast.message
 
             if toast.finished or hasErrors
                 button
@@ -66,24 +64,19 @@ module.exports = Toast = React.createClass
                         className: className,
                         type: "button",
                         key: 'errors'
-                        onClick: showModal,
+                        onClick: @onModalShowClicked,
                         t 'there were errors', smart_count: toast.errors.length
 
-    showModal: (errors) ->
-        getErrors = =>
-            return errors
-        errors = JSON.stringify(errors[0])
-        modal =
+    onModalShowClicked: ->
+        errorText = JSON.stringify(@props.toast.get('errors')[0])
+
+        LayoutActionCreator.displayModal
             title       : t 'modal please contribute'
             subtitle    : t 'modal please report'
-            closeModal  : ->
-                LayoutActionCreator.hideModal()
             closeLabel  : t 'app alert close'
-            content     : React.DOM.pre
-                style: "max-height": "300px",
-                "word-wrap": "normal",
-                    getErrors '\n'
-        LayoutActionCreator.displayModal modal
+            content     :
+                pre style: "max-height": "300px", "word-wrap": "normal",
+                    errorText
 
 
     acknowledge: ->

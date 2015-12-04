@@ -19,6 +19,7 @@ module.exports = React.createClass
         accountID = SearchStore.getCurrentSearchAccountID()
         accountID = null if accountID is 'all'
         return state =
+            currentSearchKey      : SearchStore.getCurrentSearchKey()
             currentSearchResults  : SearchStore.getCurrentSearchResults()
             conversationLengths   : MessageStore.getConversationsLength()
             settings              : SettingsStore.get()
@@ -32,8 +33,8 @@ module.exports = React.createClass
             emptyListMessage      : t 'list search empty', query: search
 
     render: ->
+
         MessageList
-            key: @props.key,
             noToolbar            : true
             messages             : @state.currentSearchResults
             accountID            : @state.accountID

@@ -47,19 +47,29 @@ module.exports = Panel = React.createClass
 
         else if @props.action is 'search'
 
-            @renderSearchResults()
+            key = encodeURIComponent SearchStore.getCurrentSearch()
+
+            SearchResult
+                key: "search-#{key}"
 
         # -- Generates a configuration window for a given account
         else if @props.action is 'account.config' or
                 @props.action is 'account.new'
 
-            @renderAccount()
+            id = @props.accountID or 'new'
+
+            AccountConfig
+                key: "account-config-#{id}"
+                tab: @props.tab
 
         # -- Generates a conversation
         else if @props.action is 'message' or
                 @props.action is 'conversation'
 
-            @renderConversation()
+            Conversation
+                messageID: @props.messageID
+                key: 'conversation-' + @props.messageID
+                ref: 'conversation'
 
         # -- Generates the new message composition form
         else if @props.action is 'compose' or
@@ -73,7 +83,10 @@ module.exports = Panel = React.createClass
         # -- Display the settings form
         else if @props.action is 'settings'
 
-            @renderSettings()
+            Settings
+                key     : 'settings'
+                ref     : 'settings'
+                settings: @state.settings
 
         # -- Error case, shouldn't happen. Might be worth to make it pretty.
         else
@@ -93,7 +106,7 @@ module.exports = Panel = React.createClass
             messages  = MessageStore.getMessagesToDisplay mailboxID,
                 @state.settings.get('displayConversation')
             messagesCount = mailbox?.get('nbTotal') or 0
-            emptyListMessage = switch @state.queryParams.flag
+            emptyListMessage = switch @state.queryParams.filter
                 when MessageFilter.FLAGGED
                     t 'no flagged message'
                 when MessageFilter.UNSEEN
@@ -152,89 +165,6 @@ module.exports = Panel = React.createClass
             queryParams:          @state.queryParams
             canLoadMore:          @state.queryParams.hasNextPage
             loadMoreMessage: -> MessageActionCreator.fetchMoreOfCurrentQuery()
-
-    renderSearchResults: ->
-        key = encodeURIComponent SearchStore.getCurrentSearch()
-        return new SearchResult key: "search-#{key}"
-
-    renderAccount: ->
-        if @props.action is 'account.config'
-            options =
-                # don't use @state.selectedAccount
-                ref               : "accountConfig"
-                selectedAccount   : AccountStore.getSelected()
-                error             : @state.accountError
-                isWaiting         : @state.accountWaiting
-                mailboxes         : @state.selectedMailboxes
-                mailboxCounters   : @state.mailboxCounters
-                favoriteMailboxes : @state.favoriteMailboxes
-                tab               : @props.tab
-            if options.selectedAccount? and
-               not options.error and
-               options.mailboxes.length is 0
-                options.error =
-                    name: 'AccountConfigError'
-                    field: 'nomailboxes'
-
-        else if @props.action is 'account.new'
-            options =
-                ref       : "accountNew"
-                error     : @state.accountError
-                isWaiting : @state.accountWaiting
-
-        return AccountConfig options
-
-    renderConversation: ->
-        messageID = @props.messageID
-        mailboxID = @props.mailboxID
-        message   = MessageStore.getByID messageID
-        selectedMailboxID = @props.selectedMailboxID
-        if message?
-            conversationID     = message.get 'conversationID'
-            lengths            = MessageStore.getConversationsLength()
-            conversationLength = lengths.get conversationID
-            selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
-            trashMailboxID     = @state.selectedAccount?.get('trashMailbox')
-            conversation       = MessageStore
-                                .getConversation conversationID, trashMailboxID
-
-        # don't display conversations in Trash and Draft folders
-        conversationDisabledBoxes = [
-            @state.selectedAccount?.get('trashMailbox')
-            @state.selectedAccount?.get('draftMailbox')
-            @state.selectedAccount?.get('junkMailbox')
-        ]
-        if mailboxID in conversationDisabledBoxes
-            displayConversations = false
-        else
-            displayConversations = @state.settings.get 'displayConversation'
-
-        prevMessage = MessageStore.getPreviousMessage()
-        nextMessage = MessageStore.getNextMessage()
-
-        # don't display conversation panel when there's no conversation
-        # (happens sometime on deletion or filtering)
-        return null unless conversationID?
-
-        return Conversation
-            key: 'conversation-' + conversationID
-            settings             : @state.settings
-            accounts             : @state.accounts
-            mailboxes            : @state.mailboxes
-            selectedAccountID    : @state.selectedAccount.get 'id'
-            selectedAccountLogin : @state.selectedAccount.get 'login'
-            selectedMailboxID    : selectedMailboxID
-            conversationID       : conversationID
-            conversation         : conversation
-            conversationLength   : conversationLength
-            prevMessageID        : prevMessage?.get 'id'
-            prevConversationID   : prevMessage?.get 'conversationID'
-            nextMessageID        : nextMessage?.get 'id'
-            nextConversationID   : nextMessage?.get 'conversationID'
-            ref                  : 'conversation'
-            displayConversations : displayConversations
-            useIntents           : @props.useIntents
-
 
     # Rendering the compose component requires several parameters. The main one
     # are related to the selected account, the selected mailbox and the compose
@@ -300,11 +230,6 @@ module.exports = Panel = React.createClass
         return component
 
 
-    renderSettings: ->
-        return Settings
-            ref     : 'settings'
-            settings: @state.settings
-
     getStateFromStores: ->
         return {
             accounts              : AccountStore.getAll()
@@ -312,9 +237,7 @@ module.exports = Panel = React.createClass
             selectedAccount       : AccountStore.getSelectedOrDefault()
             favoriteMailboxes     : AccountStore.getSelectedFavorites()
             selectedMailboxes     : AccountStore.getSelectedMailboxes(true)
-            mailboxCounters       : AccountStore.getMailboxCounters()
             allMailboxes          : AccountStore.getAllMailboxes()
-            accountError          : AccountStore.getError()
             accountWaiting        : AccountStore.isWaiting()
             fetching              : MessageStore.isFetching()
             queryParams           : MessageStore.getQueryParams()
