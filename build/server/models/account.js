@@ -295,7 +295,7 @@ makeSMTPConfig = require('../imap/account2config').makeSMTPConfig;
 
 nodemailer = require('nodemailer');
 
-SMTPConnection = require('nodemailer/node_modules/' + 'nodemailer-smtp-transport/node_modules/smtp-connection');
+SMTPConnection = require('smtp-connection');
 
 log = require('../utils/logging')({
   prefix: 'models:account'

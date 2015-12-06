@@ -349,12 +349,28 @@ module.exports.search = function(req, res, next) {
   params.numByPage = req.query.pageSize || 10;
   params.numPage = req.query.page || 0;
   return Message.search(params, function(err, results) {
+    var account, accounts, facet, i, j, len, len1, ref1, ref2;
     if (err) {
       return next(err);
     }
-    return res.send(results.map(function(msg) {
-      return msg.toClientObject();
-    }));
+    accounts = {};
+    ref1 = results.facets;
+    for (i = 0, len = ref1.length; i < len; i++) {
+      facet = ref1[i];
+      if (facet.key === 'accountID') {
+        ref2 = facet.value;
+        for (j = 0, len1 = ref2.length; j < len1; j++) {
+          account = ref2[j];
+          accounts[account.key] = account.value;
+        }
+      }
+    }
+    return res.send({
+      accounts: accounts,
+      rows: results.map(function(msg) {
+        return msg.toClientObject();
+      })
+    });
   });
 };
 

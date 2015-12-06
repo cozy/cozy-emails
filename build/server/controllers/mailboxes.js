@@ -28,10 +28,11 @@ MailboxRefreshFast = require('../processes/mailbox_refresh_fast');
 module.exports.refresh = function(req, res, next) {
   var account, mailbox;
   mailbox = ramStore.getMailbox(req.params.mailboxID);
-  account = ramStore.getAccount(mailbox.accountID);
   if (!mailbox) {
     return next(new NotFound("Mailbox " + req.params.mailboxID));
-  } else if (!account) {
+  }
+  account = ramStore.getAccount(mailbox.accountID);
+  if (!account) {
     return next(new NotFound("Account " + mailbox.accountID));
   } else if (!account.supportRFC4551) {
     return next(new BadRequest('Cant refresh a non RFC4551 box'));

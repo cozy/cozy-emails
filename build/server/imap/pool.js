@@ -127,13 +127,15 @@ module.exports = ImapPool = (function() {
     this.failConnectionCounter++;
     isAuth = err.textCode === 'AUTHENTICATIONFAILED';
     if (err instanceof PasswordEncryptedError || isAuth && this.account.id && this.failConnectionCounter === 1) {
-      return this.account.refreshPassword(function(err) {
-        if (err) {
-          return this._giveUp(_typeConnectionError(err));
-        } else {
-          return setTimeout(this._deQueue, 10);
-        }
-      });
+      return this.account.refreshPassword((function(_this) {
+        return function(err) {
+          if (err) {
+            return _this._giveUp(_typeConnectionError(err));
+          } else {
+            return setTimeout(_this._deQueue, 10);
+          }
+        };
+      })(this));
     } else if (this.failConnectionCounter === 2 && err.source === 'timeout-auth') {
       return this._giveUp(new AccountConfigError('auth', err));
     } else if (this.failConnectionCounter > 2) {
@@ -141,7 +143,7 @@ module.exports = ImapPool = (function() {
     } else if (err.source === 'autentification' && this.account.oauthProvider === 'GMAIL') {
       return forceOauthRefresh(this.account, this._deQueue);
     } else {
-      return setTimeout(this._deQueue, 5000);
+      return setTimeout(this._deQueue, 2000);
     }
   };
 
