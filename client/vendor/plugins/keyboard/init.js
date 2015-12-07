@@ -238,6 +238,14 @@ if (typeof window.plugins !== "object") {
           }
         }
       },
+      'W': {
+        name: 'Toggle messages list mode',
+        action: function (e) {
+            if (e && e instanceof Event) { e.preventDefault(); }
+            var layoutAction = require('actions/layout_action_creator');
+            layoutAction.toggleListMode();
+        }
+      },
       'ctrl+up': {
         name: 'Scroll message up',
         action: function (e) {

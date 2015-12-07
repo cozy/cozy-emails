@@ -19,6 +19,10 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.SET_DISPOSITION
             value: type
 
+    toggleListMode: ->
+        AppDispatcher.handleViewAction
+            type: ActionTypes.TOGGLE_LIST_MODE
+
     # TODO: use a global method to DRY this 3-ones
     increasePreviewPanel: (factor = 1) ->
         AppDispatcher.handleViewAction
@@ -220,4 +224,3 @@ module.exports = LayoutActionCreator =
     hideModal: ->
         AppDispatcher.handleViewAction
             type: ActionTypes.HIDE_MODAL
-

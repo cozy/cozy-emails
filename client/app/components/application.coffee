@@ -54,6 +54,7 @@ module.exports = Application = React.createClass
         return div null, t "app loading" unless layout?
 
         disposition = LayoutStore.getDisposition()
+        isCompact   = LayoutStore.getListModeCompact()
         fullscreen  = LayoutStore.isPreviewFullscreen()
         previewSize = LayoutStore.getPreviewSize()
 
@@ -61,6 +62,7 @@ module.exports = Application = React.createClass
 
         layoutClasses = ['layout'
             "layout-#{disposition}"
+            if isCompact then "layout-compact"
             if fullscreen then "layout-preview-fullscreen"
             "layout-preview-#{previewSize}"].join(' ')
 

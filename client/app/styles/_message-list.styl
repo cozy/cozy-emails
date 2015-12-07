@@ -360,8 +360,7 @@
 
         .participants
         .subject
-        .mailboxes
-            flex-basis 85%
+            flex 1 0 50%
 
         .participants
         .subject
@@ -371,6 +370,7 @@
         .preview
             margin (.25 * .875)em 0
 
+        .mailboxes
         .preview
             flex-basis 100%
 
@@ -391,6 +391,16 @@
 
         .extras
             order 4
+
+
+    .layout-column.layout-compact &
+        .preview
+        .mailboxes
+            display none
+
+        .avatar
+            width  1.5em
+            height 1.5em
 
 
     .layout-row &

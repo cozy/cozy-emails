@@ -65,6 +65,7 @@ module.exports =
 
         # Layout
         'SET_DISPOSITION'           : 'SET_DISPOSITION'
+        'TOGGLE_LIST_MODE'          : 'TOGGLE_LIST_MODE'
         'RESIZE_PREVIEW_PANE'       : 'RESIZE_PREVIEW_PANE'
         'MAXIMIZE_PREVIEW_PANE'     : 'MAXIMIZE_PREVIEW_PANE'
         'MINIMIZE_PREVIEW_PANE'     : 'MINIMIZE_PREVIEW_PANE'
