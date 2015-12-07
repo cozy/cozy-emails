@@ -20,8 +20,7 @@ SettingsStore = require '../stores/settings_store'
 
 MessageActionCreator = require '../actions/message_action_creator'
 
-Constants = require '../constants/app_constants'
-{ComposeActions, MessageFilter, Dispositions} = Constants
+{ComposeActions, MessageFilter} = require '../constants/app_constants'
 
 
 module.exports = Panel = React.createClass

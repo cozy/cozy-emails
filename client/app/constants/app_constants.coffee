@@ -147,7 +147,6 @@ module.exports =
     Dispositions:
         COL:  'column'
         ROW:  'row'
-        RROW: 'row-reverse'
 
     SpecialBoxIcons:
         inboxMailbox: 'fa-inbox'
@@ -179,4 +178,3 @@ module.exports =
         EXPUNGE_MAILBOX             : 'TOOLTIP_EXPUNGE_MAILBOX'
         ADD_CONTACT                 : 'TOOLTIP_ADD_CONTACT'
         SHOW_CONTACT                : 'TOOLTIP_SHOW_CONTACT'
-

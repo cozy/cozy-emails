@@ -1,36 +1,40 @@
 /*
-  Message list
-
-  -- Message list bar internal layout and styles
-*/
+ * Message list
+ *
+ * -- Message list bar internal layout and styles
+ */
 
 // Temporary limit preview due to box model / flexbox issues
-.messages-list .preview
-    max-width 30vw
-
-.full .messages-list .preview
-    max-width 85vw
+// .messages-list .preview
+//     max-width 30vw
+//
+// .full .messages-list .preview
+//     max-width 85vw
 
 .list-loading
     padding    1.5rem
-    color      #999
+    color      grey-05
     text-align center
+
 
 .messages-list
     display          flex
     flex-direction   column
     background-color white
 
-    // defaults
+
     button
         background transparent
         border     none
 
+
     .drawer-toggle
         float left
 
+
     // TOOLBAR (filters / search / actions)
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
+    //
     // Layouts
     [role=toolbar]
         position    relative    // set root positionning for dropdowns
@@ -52,6 +56,7 @@
 
     [role=group]
         display flex
+
 
     .filters
         margin-right .5em
@@ -89,7 +94,6 @@
 
             &[aria-expanded=false]
                 margin-right 1px
-
 
     [role=search]
         flex     1
@@ -175,227 +179,257 @@
 
 
     // LIST ITEMS
-    //--------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     .main-content
         flex             1
         overflow-y       auto
         padding          0 0 .5em 0
-        background-color #fff
 
         // `end of the road`
-        & > p
+        > p
             text-align center
             font-size .875em
 
+
+    .ellipsable
+        min-width 0
+
+        p
+            text-overflow ellipsis
+            overflow      hidden
+            white-space   nowrap
+
+
     .message
-        // defaults
-        border-bottom 1px solid #e5e5e5
-
-        // Layouts
-        .wrapper
-            display         flex
-            padding         .8em 0.5em
-
-            & > div
-                margin auto .5em
-
-        .markers-wrapper
-            display         flex
-            flex-direction  column
-            justify-content space-around
-            align-items     center
-            margin          0 !important
-            min-width       1em
-
-            i
-                font-size .85em
-                color     darkcolor +30%
-
-                &.fa-circle
-                    color basecolor
-
-        .avatar-wrapper
-            width         3em
-            height        3em
-            position      relative
-
-            input
-            .avatar
-                position absolute
-
-            .avatar
-                top           0
-                left          0
-                display       block
-                width         100%
-                height        100%
-                border-radius 50%
-
-            input
-                top       0
-                left      50%
-                transform translateX(-50%)
-
-        .metas-wrapper
-            flex            1
-            display         flex
-            flex-wrap       wrap
-            justify-content space-between
-            line-height     1.4em
-
-            .ellipsable
-                // This is the most tricky and weird way I have found to bypass
-                // flexbox calculation for internal sizes and permit an overflow
-                // rendering. It's based on the padded-top responsive images
-                // trick.
-                height       1em
-                white-space  nowrap
-                position     relative
-                max-width    0
-                padding-left 85%
-                font-size    0.9em
-
-                p
-                    position      absolute
-                    left          0
-                    width         100%
-                    margin        0
-                    overflow      hidden
-                    text-overflow ellipsis
-
-            .participants
-                order       1
-                font-weight bold
-                font-size 1em
-                color #333
-
-            .mailboxes
-                order       2
-                text-align  right
-
-                span
-                    background-color #f5f5f5
-                    border-radius 0.5em 0.5em
-                    padding 0.1em 0.5em
-                    margin-right 0.5em
-                    color #999
-
-            .date
-                flex        1
-                order       3
-                color       #999
-                text-align  right
-
-            .subject
-                order     4
-                height    1.6em
-                font-size 0.9em
-
-            .extras
-                order 5
-
-                i
-                    margin-left .75em
-
-            .participants
-            .subject
-                flex 1 0 70%
-
-            .preview
-                order        6
-                flex         1 0 100%
-                // This is the most tricky and weird way I have found to bypass
-                // flexbox calculation for internal sizes and permit an overflow
-                // rendering. It's based on the padded-top responsive images
-                // trick.
-                height       1.4em
-                white-space  nowrap
-                position     relative
-                max-width    0
-                padding-left 100%
-
-                p
-                    position      absolute
-                    left          0
-                    width         100%
-                    margin        0
-                    overflow      hidden
-                    text-overflow ellipsis
+        display       table
+        table-layout  fixed
+        width         100%
+        padding       .5em .35em
+        border-bottom 1px solid grey-01
 
 
-        // Styles
-        .wrapper
-            color           darkcolor
-            text-decoration none
+    .wrapper
+        display         table-row
+        color           darkcolor
+        text-decoration none
 
-        .avatar
-            line-height    2em
-            text-align     center
-            font-size      1.5em
-            font-style     normal
-            font-weight    bold
-            text-transform uppercase
-            color          white
+        [class*=wrapper]
+            display        table-cell
+            vertical-align middle
+            padding        0 .5em
 
-        i.avatar
-            opacity .7
-
-        .preview
-            color #999
-
-        .fa-star
-            color lightorange !important
-
-        .preview
-            font-weight normal
-            font-size   .875em
-
-        .conversation-length
-            padding          0 0.5em
-            margin-left      0.2em
-            background-color #aaa
-            border-radius    100em
-            color            #fff
-
-        .date
-        .extras
-            font-size .875em
+        p
+            margin 0
 
 
-        // hover
-        &:hover,
-        &:not(.unseen):hover
-            background-color #ededed
+    .markers-wrapper
+        marker-width = .85em
+
+        width 1em + marker-width
+
+        i
+            font-size marker-width
+
+        .fa-circle
+            color basecolor
 
 
-        // Unread styles
-        &:not(.unseen)
-            background-color #fff
-
-            .participants
-            .subject
-                color #666
-
-            .participants
-                font-weight normal
+    .avatar-wrapper
+        width min-content
 
 
-        // Currently selected message
-        main:not(.full) &.active
-            background-color #e5e5e5
+    .avatar
+        display         flex
+        align-items     center
+        justify-content center
+        border-radius   50%
+        font-size       1.5em
+        font-style      normal
+        font-weight     bold
+        text-transform  uppercase
+        color           white
+        opacity         .7
 
 
-        // Edited mode
-        .markers-wrapper
-            .select
-                cursor  pointer
-                display none
+    .metas
+        display         flex
+        flex-wrap       wrap
+        align-items     baseline
+        justify-content space-between
+
+
+    .participants
+        font-weight bold
+
+
+    .preview
+        color     mediumcolor
+        font-size .875em
+
+
+    .date
+        color mediumcolor
+
+
+    .mailboxes
+        font-size .875em
+
+        span
+            display          inline-block
+            margin-right     .5em
+            background-color grey-01
+            border-radius    .1em
+            padding          .1em .35em
+            color            darkcolor
+
+
+    .date
+    .extras
+        white-space nowrap
+
+    .extras
+        i
+            margin-left .75em
+
+    .conversation-length
+        padding          0 .5em
+        margin-left      .2em
+        border-radius    100em
+        background-color grey-06
+        color            lightcolor
+
+    .fa-star
+        color lightorange
+
+
+
+
+    // .date
+    // .extras
+    //     font-size .875em
+    //
+    //
+    //     // hover
+    //     &:hover,
+    //     &:not(.unseen):hover
+    //         background-color #ededed
+    //
+    //
+    //     // Unread styles
+    //     &:not(.unseen)
+    //         background-color #fff
+    //
+    //         .participants
+    //         .subject
+    //             color #666
+    //
+    //         .participants
+    //             font-weight normal
+    //
+    //
+    //     // Currently selected message
+    //     main:not(.full) &.active
+    //         background-color #e5e5e5
+
+    // UI ACTIONS
+    // -------------------------------------------------------------------------
+    .message
+        .select
+            cursor  pointer
+            display none
+
 
         &:hover
         &.edited
             .markers-wrapper
                 .select
                     display block
-
                 i
                     display none
+
+
+
+    // LAYOUT SPECIFIC RULES
+    // -------------------------------------------------------------------------
+    .layout-column &
+        border-right 2px solid grey-02
+
+        .avatar
+            width  2em
+            height 2em
+
+        .participants
+        .subject
+        .mailboxes
+            flex-basis 85%
+
+        .participants
+        .subject
+            margin .25em 0
+
+        .mailboxes
+        .preview
+            margin (.25 * .875)em 0
+
+        .preview
+            flex-basis 100%
+
+        .participants
+            order 1
+
+        .subject
+            order 3
+
+        .preview
+            order 6
+
+        .date
+            order 2
+
+        .mailboxes
+            order 5
+
+        .extras
+            order 4
+
+
+    .layout-row &
+        border-bottom 2px solid grey-02
+
+        .avatar
+            width  1.5em
+            height 1.5em
+
+        .mailboxes
+            display none
+
+        .metas-wrapper
+            flex-wrap nowrap
+
+        .metas
+            flex-wrap nowrap
+
+            > div
+                margin 0 .25em
+
+                &:first-child
+                    margin-left 0
+                &:last-child
+                    margin-right 0
+
+        .participants
+            flex 1 0 20%
+
+        .subject
+            flex  1 0 30%
+            order 2
+
+        .preview
+            flex-basis 1 1 100%
+            order      3
+
+        .extras
+            order 4
+
+        .date
+            order 5

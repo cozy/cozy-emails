@@ -242,4 +242,3 @@ class LayoutStore extends Store
 
 
 module.exports = LayoutStoreInstance = new LayoutStore()
-

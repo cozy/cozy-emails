@@ -86,25 +86,26 @@ module.exports = MessageItem = React.createClass
                             if from?.name then from?.name[0] else from?.address[0]
 
                 div className: 'metas-wrapper',
-                    div className: 'participants ellipsable',
-                        @getParticipants message
-                    div className: 'subject ellipsable',
-                        p null,
-                            message.get 'subject'
-                    div className: 'mailboxes',
-                        @getMailboxTags(message)...
-                    div className: 'date',
-                        # TODO: use time-elements component here for the date
-                        date
-                    div className: 'extras',
-                        if message.get 'hasAttachments'
-                            i className: 'attachments fa fa-paperclip'
-                        if @props.displayConversations and
-                           @props.conversationLengths > 1
-                            span className: 'conversation-length',
-                                "#{@props.conversationLengths}"
-                    div className: 'preview',
-                        p null, MessageUtils.getPreview(message)
+                    div className: 'metas',
+                        div className: 'participants ellipsable',
+                            @getParticipants message
+                        div className: 'subject ellipsable',
+                            p null,
+                                message.get 'subject'
+                        div className: 'mailboxes',
+                            @getMailboxTags(message)...
+                        div className: 'date',
+                            # TODO: use time-elements component here for the date
+                            date
+                        div className: 'extras',
+                            if message.get 'hasAttachments'
+                                i className: 'attachments fa fa-paperclip'
+                            if @props.displayConversations and
+                               @props.conversationLengths > 1
+                                span className: 'conversation-length',
+                                    "#{@props.conversationLengths}"
+                        div className: 'preview ellipsable',
+                            p null, MessageUtils.getPreview(message)
 
     _doCheck: ->
         # please don't ask me why this **** react needs this

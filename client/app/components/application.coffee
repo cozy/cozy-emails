@@ -24,7 +24,7 @@ Stores        = [AccountStore, MessageStore, LayoutStore, SearchStore]
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-{MessageFilter, Dispositions} = require '../constants/app_constants'
+{MessageFilter} = require '../constants/app_constants'
 
 ###
     This component is the root of the React tree.
@@ -184,4 +184,3 @@ module.exports = Application = React.createClass
     componentWillUnmount: ->
         # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
-

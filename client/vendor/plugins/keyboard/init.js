@@ -229,17 +229,13 @@ if (typeof window.plugins !== "object") {
               dispositions = require('constants/app_constants').Dispositions;
 
           switch (layoutStore.getDisposition()) {
-          case dispositions.RROW:
+          case dispositions.ROW:
             layoutAction.setDisposition(dispositions.COL);
             break;
           case dispositions.COL:
             layoutAction.setDisposition(dispositions.ROW);
             break;
-          case dispositions.ROW:
-            layoutAction.setDisposition(dispositions.RROW);
-            break;
           }
-
         }
       },
       'ctrl+up': {
