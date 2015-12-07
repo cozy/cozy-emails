@@ -354,6 +354,9 @@
     .layout-column &
         border-right 2px solid grey-02
 
+        .avatar-wrapper
+            width 4em
+
         .avatar
             width  2em
             height 2em
@@ -395,8 +398,16 @@
 
     .layout-column.layout-compact &
         .preview
+            display none
+
+
+    .layout-column.layout-compact &
+    .layout-row &
         .mailboxes
             display none
+
+        .avatar-wrapper
+            width 3.25em
 
         .avatar
             width  1.5em
@@ -405,13 +416,6 @@
 
     .layout-row &
         border-bottom 2px solid grey-02
-
-        .avatar
-            width  1.5em
-            height 1.5em
-
-        .mailboxes
-            display none
 
         .metas-wrapper
             flex-wrap nowrap
