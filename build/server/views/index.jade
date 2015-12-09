@@ -31,7 +31,8 @@ html
     link(rel="stylesheet", href="/fonts/fonts.css")
     link(rel="stylesheet", href="css/app.css")
 
-  body
     script!= imports
-    script(src="js/vendor.js")
-    script(src="js/app.js" onload="require('initialize');")
+    script(src="js/vendor.js" defer=true)
+    script(src="js/app.js" onload="require('initialize');" defer=true)
+
+  body
