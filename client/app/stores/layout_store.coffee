@@ -29,6 +29,8 @@ class LayoutStore extends Store
 
     _intentAvailable = false
 
+    _listModeCompact = false
+
     _drawer = window.innerWidth > 1280
 
     _modal  = null
@@ -41,6 +43,10 @@ class LayoutStore extends Store
 
         handle ActionTypes.SET_DISPOSITION, (disposition) ->
             _disposition = disposition
+            @emit 'change'
+
+        handle ActionTypes.TOGGLE_LIST_MODE, ->
+            _listModeCompact = not _listModeCompact
             @emit 'change'
 
         handle ActionTypes.RESIZE_PREVIEW_PANE, (factor) ->
@@ -246,6 +252,10 @@ class LayoutStore extends Store
         return _disposition
 
 
+    getListModeCompact: ->
+        return _listModeCompact
+
+
     getPreviewSize: ->
         return _previewSize
 
@@ -275,4 +285,3 @@ class LayoutStore extends Store
 
 
 module.exports = LayoutStoreInstance = new LayoutStore()
-

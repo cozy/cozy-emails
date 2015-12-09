@@ -24,7 +24,7 @@ Stores        = [AccountStore, MessageStore, LayoutStore, SearchStore]
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-{MessageFilter, Dispositions} = require '../constants/app_constants'
+{MessageFilter} = require '../constants/app_constants'
 
 ###
     This component is the root of the React tree.
@@ -54,6 +54,7 @@ module.exports = Application = React.createClass
         return div null, t "app loading" unless layout?
 
         disposition = LayoutStore.getDisposition()
+        isCompact   = LayoutStore.getListModeCompact()
         fullscreen  = LayoutStore.isPreviewFullscreen()
         previewSize = LayoutStore.getPreviewSize()
 
@@ -61,6 +62,7 @@ module.exports = Application = React.createClass
 
         layoutClasses = ['layout'
             "layout-#{disposition}"
+            if isCompact then "layout-compact"
             if fullscreen then "layout-preview-fullscreen"
             "layout-preview-#{previewSize}"].join(' ')
 
@@ -184,4 +186,3 @@ module.exports = Application = React.createClass
     componentWillUnmount: ->
         # Stops listening to router changes
         @props.router.off 'fluxRoute', @onRoute
-

@@ -10,12 +10,8 @@ body
 
     .panel
         border        none
-        border-right   1px solid #c5c5c5
         box-shadow    0 0
         border-radius 0
-
-        &:last-child
-            border 0
 
     .drawer-toggle
         display none
@@ -24,17 +20,14 @@ body
     main
         position    relative
         flex        1
-        display     flex
-        align-items stretch
         height      100%
+        display     flex
         flex-direction column
-        min-width min-content
 
         .search-bar
             flex 0 1 2em
             display flex
             z-index 500
-            bac
 
         .panels
             flex 1 0 50%
@@ -44,8 +37,6 @@ body
             position relative
             align-items stretch
             min-width 100%
-
-
 
 
     [role=menubar]
@@ -120,8 +111,6 @@ body
                     flex-direction row
                 .layout-row &
                     flex-direction column
-                .layout-row-reverse &
-                    flex-direction column-reverse
 
             for ratio in (20..80)
                 .layout-preview-{ratio} &

@@ -229,17 +229,21 @@ if (typeof window.plugins !== "object") {
               dispositions = require('constants/app_constants').Dispositions;
 
           switch (layoutStore.getDisposition()) {
-          case dispositions.RROW:
+          case dispositions.ROW:
             layoutAction.setDisposition(dispositions.COL);
             break;
           case dispositions.COL:
             layoutAction.setDisposition(dispositions.ROW);
             break;
-          case dispositions.ROW:
-            layoutAction.setDisposition(dispositions.RROW);
-            break;
           }
-
+        }
+      },
+      'W': {
+        name: 'Toggle messages list mode',
+        action: function (e) {
+            if (e && e instanceof Event) { e.preventDefault(); }
+            var layoutAction = require('actions/layout_action_creator');
+            layoutAction.toggleListMode();
         }
       },
       'ctrl+up': {

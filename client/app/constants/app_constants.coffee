@@ -73,6 +73,7 @@ module.exports =
 
         # Layout
         'SET_DISPOSITION'           : 'SET_DISPOSITION'
+        'TOGGLE_LIST_MODE'          : 'TOGGLE_LIST_MODE'
         'RESIZE_PREVIEW_PANE'       : 'RESIZE_PREVIEW_PANE'
         'MAXIMIZE_PREVIEW_PANE'     : 'MAXIMIZE_PREVIEW_PANE'
         'MINIMIZE_PREVIEW_PANE'     : 'MINIMIZE_PREVIEW_PANE'
@@ -155,7 +156,6 @@ module.exports =
     Dispositions:
         COL:  'column'
         ROW:  'row'
-        RROW: 'row-reverse'
 
     SpecialBoxIcons:
         inboxMailbox: 'fa-inbox'
@@ -187,4 +187,3 @@ module.exports =
         EXPUNGE_MAILBOX             : 'TOOLTIP_EXPUNGE_MAILBOX'
         ADD_CONTACT                 : 'TOOLTIP_ADD_CONTACT'
         SHOW_CONTACT                : 'TOOLTIP_SHOW_CONTACT'
-

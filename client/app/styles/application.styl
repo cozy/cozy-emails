@@ -1,6 +1,3 @@
-// Stylus mixins
-@import 'nib'
-
 // Cozy default stuff
 @import '_colors'
 @import '_base'
@@ -25,6 +22,7 @@
 @import '_responsive'
 @import '_search-bar'
 
+
 // tweaks fontawesome icons
 * > .fa-compress
     transform rotate(45deg)
@@ -34,9 +32,9 @@
     width: 15px
 
 /*
-  Put styles here for scaffolding and testing out new features/stuff
-  "Production-ready" components styles should live in a dedicated file
-*/
+ * Put styles here for scaffolding and testing out new features/stuff
+ *  "Production-ready" components styles should live in a dedicated file
+ */
 
 // Responsive menu buttons
 .responsive-handler
@@ -71,8 +69,8 @@
         left: auto
 
 /*
-  Contextual actions
-*/
+ * Contextual actions
+ */
 #contextual-actions
     padding 0
 
@@ -85,37 +83,40 @@
 
 
 .contact-form
-  .contact-list
-    left 1em
-    background-color #fff
-    list-style outside none none
-    margin 2px 0 0
-    padding.25em 0
+    .contact-list
+        left 1em
+        background-color #fff
+        list-style outside none none
+        margin 2px 0 0
+        padding.25em 0
 
-    & > li > a
-      color #333
-      display block
-      padding .25em 0
-    & > li.selected
-      background basecolor
-    & > li.selected > a
-      color white
-    & > li.selected:hover > a
-      color black
+        & > li > a
+            color #333
+            display block
+            padding .25em 0
 
-   .avatar
-       font-size 2em
-       width 1em
-       height 1em
-       margin-right .5em
-       text-align center
-       vertical-align middle
+        & > li.selected
+            background basecolor
+
+        & > li.selected > a
+            color white
+
+        & > li.selected:hover > a
+            color black
+
+        .avatar
+            font-size 2em
+            width 1em
+            height 1em
+            margin-right .5em
+            text-align center
+            vertical-align middle
 
 /*
-  Open email tabs
-
-  -- disabled because of the ugly scrollbar on most computers
-*/
+ * Open email tabs
+ *
+ * -- disabled because of the ugly scrollbar on most computers
+ */
 .conversation .nav
     display block
     margin-bottom 2em
