@@ -20,13 +20,7 @@ module.exports = GlobalSearchBar = React.createClass
     render: ->
         div className: 'search-bar',
 
-            # Drawer toggler
-            button
-                className: 'drawer-toggle'
-                onClick:   LayoutActionCreator.drawerToggle
-                title:     t 'menu toggle'
-
-                i className: 'fa fa-navicon'
+            i className: 'fa fa-search'
 
             AccountPicker
                 accounts: @state.accounts
@@ -73,7 +67,7 @@ module.exports = GlobalSearchBar = React.createClass
 
     getStateFromStores: ->
         accounts = AccountStore.getAll()
-        .map (account) -> t "search in account", account: account.get 'label'
+        .map (account) -> account.get 'label'
         .toOrderedMap()
         .set 'all', t 'search all accounts'
 

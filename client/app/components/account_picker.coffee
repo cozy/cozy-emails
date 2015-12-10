@@ -66,4 +66,3 @@ module.exports = React.createClass
                     onClick: @onChange,
                     'data-value': key,
                     @renderLabel(account)
-

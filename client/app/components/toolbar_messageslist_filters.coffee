@@ -1,6 +1,7 @@
-{div, span, i, button} = React.DOM
-{MessageFilter, Tooltips} = require '../constants/app_constants'
-RouterMixin           = require '../mixins/router_mixin'
+{div, ul, li, span, i, button} = React.DOM
+{MessageFilter, Tooltips}      = require '../constants/app_constants'
+
+RouterMixin = require '../mixins/router_mixin'
 
 LayoutActionCreator = require '../actions/layout_action_creator'
 
@@ -45,36 +46,37 @@ module.exports = FiltersToolbarMessagesList = React.createClass
             className:       'filters'
             'aria-expanded': @state.expanded
 
-            i
-                role:      'presentation'
-                className: 'fa fa-filter'
-                onClick:   -> @setState expanded: not @state.expanded
+            button
+                role: 'presentation'
+                onClick: => @setState expanded: not @state.expanded
+
+                i className: 'fa fa-filter'
 
             button
-                role:                     'menuitem'
-                'aria-selected':          currentFilter is MessageFilter.UNSEEN
-                onClick:               => @toggleFilters MessageFilter.UNSEEN
-                'aria-describedby':       Tooltips.FILTER_ONLY_UNREAD
+                role: 'menuitem'
+                'aria-selected': currentFilter is MessageFilter.UNSEEN
+                onClick: => @toggleFilters MessageFilter.UNSEEN
+                'aria-describedby': Tooltips.FILTER_ONLY_UNREAD
                 'data-tooltip-direction': 'bottom'
 
-                i className: 'fa fa-circle'
+                i className: 'fa fa-eye'
                 span className: 'btn-label', t 'filters unseen'
 
             button
-                role:                     'menuitem'
-                'aria-selected':          currentFilter is MessageFilter.FLAGGED
-                onClick:               => @toggleFilters MessageFilter.FLAGGED
-                'aria-describedby':       Tooltips.FILTER_ONLY_IMPORTANT
+                role: 'menuitem'
+                'aria-selected': currentFilter is MessageFilter.FLAGGED
+                onClick: => @toggleFilters MessageFilter.FLAGGED
+                'aria-describedby': Tooltips.FILTER_ONLY_IMPORTANT
                 'data-tooltip-direction': 'bottom'
 
                 i className: 'fa fa-star'
                 span className: 'btn-label', t 'filters flagged'
 
             button
-                role:                     'menuitem'
-                'aria-selected':          currentFilter is MessageFilter.ATTACH
-                onClick:               => @toggleFilters MessageFilter.ATTACH
-                'aria-describedby':       Tooltips.FILTER_ONLY_WITH_ATTACHMENT
+                role: 'menuitem'
+                'aria-selected': currentFilter is MessageFilter.ATTACH
+                onClick: => @toggleFilters MessageFilter.ATTACH
+                'aria-describedby': Tooltips.FILTER_ONLY_WITH_ATTACHMENT
                 'data-tooltip-direction': 'bottom'
 
                 i className: 'fa fa-paperclip'

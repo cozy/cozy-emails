@@ -6,7 +6,6 @@ Modal          = require './modal'
 Panel          = require './panel'
 ToastContainer = require './toast_container'
 Tooltips       = require './tooltips-manager'
-SearchBar       = require './search_bar'
 
 # React Mixins
 RouterMixin          = require '../mixins/router_mixin'
@@ -75,10 +74,6 @@ module.exports = Application = React.createClass
 
                 main
                     className: if layout.secondPanel? then null else 'full',
-
-                    if layout.firstPanel.action in
-                    ['account.mailbox.messages', 'search']
-                        SearchBar()
 
                     div
                         className: 'panels'

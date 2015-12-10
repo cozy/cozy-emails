@@ -2,8 +2,8 @@
 classer = React.addons.classSet
 
 FiltersToolbarMessagesList = require './toolbar_messageslist_filters'
-SearchToolbarMessagesList  = require './toolbar_messageslist_search'
 ActionsToolbarMessagesList = require './toolbar_messageslist_actions'
+SearchBar                  = require './search_bar'
 
 LayoutActionCreator  = require '../actions/layout_action_creator'
 RouterMixin           = require '../mixins/router_mixin'
@@ -69,6 +69,14 @@ module.exports = ToolbarMessagesList = React.createClass
     render: ->
         aside role: 'toolbar',
 
+            # Drawer toggler
+            button
+                className: 'drawer-toggle'
+                onClick:   LayoutActionCreator.drawerToggle
+                title:     t 'menu toggle'
+
+                i className: 'fa fa-navicon'
+
             # Select all Checkbox
             button
                 role:                     'menuitem'
@@ -91,15 +99,11 @@ module.exports = ToolbarMessagesList = React.createClass
                     selected:             @props.selected
                     displayConversations: @props.displayConversations
                     afterAction:          @props.afterAction
-            unless @props.edited
+            else
                 FiltersToolbarMessagesList
                     accountID:   @props.accountID
                     mailboxID:   @props.mailboxID
                     queryParams:    @props.queryParams
                     onFilterChange: @onFilterChange
-            # unless @props.edited
-            #     SearchToolbarMessagesList
-            #         accountID:   @props.accountID
-            #         mailboxID:   @props.mailboxID
-            #         queryParams:      @props.queryParams
-            #         onFilterChange: @onFilterChange
+
+            SearchBar()

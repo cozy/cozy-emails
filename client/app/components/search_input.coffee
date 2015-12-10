@@ -1,4 +1,4 @@
-{div, input, button, a} = React.DOM
+{div, input, button} = React.DOM
 
 module.exports = React.createClass
     displayName: 'SearchInput'
@@ -43,10 +43,10 @@ module.exports = React.createClass
 
             unless @state.value.length is 0
                 div className: 'btn-group',
-                    a
+                    button
                         className: 'btn fa fa-check'
                         onClick: @onCheckClick
 
-                    a
+                    button
                         className: 'btn fa fa-close'
                         onClick: @onResetClick

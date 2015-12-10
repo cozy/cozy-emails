@@ -112,7 +112,7 @@ module.exports = DateRangePicker = React.createClass
 
                 i className: 'fa fa-calendar'
                 span className: 'btn-label',
-                    "#{@state.label} "
+                    "#{@state.label}"
                 span className: 'caret'
 
             div className: 'dropdown-menu',
