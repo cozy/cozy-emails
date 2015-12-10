@@ -99,7 +99,7 @@ module.exports = ToolbarMessagesList = React.createClass
                     selected:             @props.selected
                     displayConversations: @props.displayConversations
                     afterAction:          @props.afterAction
-            else
+            else unless @props.noFilters
                 FiltersToolbarMessagesList
                     accountID:   @props.accountID
                     mailboxID:   @props.mailboxID
