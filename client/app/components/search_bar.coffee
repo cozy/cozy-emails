@@ -50,13 +50,15 @@ module.exports = GlobalSearchBar = React.createClass
                 parameters: [ accountID ]
 
     onAccountChanged: (accountID) ->
+        currentAccountId = AccountStore.getSelected()?.get('id')
+
         if @state.search isnt ''
             @redirect
                 direction: 'first'
                 action: 'search'
                 parameters: [ accountID, @state.search ]
 
-        else if accountID isnt 'all'
+        else if accountID not in ['all', currentAccountId]
             @redirect
                 direction: 'first'
                 action: 'account.mailbox.messages'
