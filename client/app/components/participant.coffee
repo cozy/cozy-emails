@@ -5,6 +5,8 @@ Participant = React.createClass
     displayName: 'Participant'
 
     render: ->
+        name = MessageUtils.displayAddress @props.address
+
         if not @props.address?
             span null
         else
@@ -12,9 +14,10 @@ Participant = React.createClass
                 className: 'address-item'
                 'data-toggle': "tooltip"
                 ref: 'participant'
-                title: @props.address.address,
-                key: @props.key,
-                MessageUtils.displayAddress @props.address
+                title: @props.address.address
+                key: @props.key
+
+                MessageUtils.highlightSearch(name)...
 
     _initTooltip: ->
         if @props.tooltip and @refs.participant?
@@ -25,6 +28,7 @@ Participant = React.createClass
 
     componentDidUpdate: ->
         @_initTooltip()
+
 
 Participants = React.createClass
     displayName: 'Participants'

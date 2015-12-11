@@ -1,5 +1,8 @@
+{span} = React.DOM
+
 {ComposeActions} = require '../constants/app_constants'
 ContactStore     = require '../stores/contact_store'
+SearchStore      = require '../stores/search_store'
 
 
 QUOTE_STYLE = "margin-left: 0.8ex; padding-left: 1ex; border-left: 3px solid #34A6FF;"
@@ -49,6 +52,22 @@ module.exports = MessageUtils =
                     break
                 res.push(MessageUtils.displayAddress item, full)
             return res.join ", "
+
+
+    # Highlight search pattern in a string
+    highlightSearch: (text) ->
+        search  = new RegExp SearchStore.getCurrentSearch(), 'gi'
+        substrs = text.match search
+
+        return [text] unless substrs
+
+        text.split(search).reduce (memo, part, index) ->
+            if part.length
+                memo.push part
+            if substrs[index]
+                memo.push span className: 'hlt-search', substrs[index]
+            return memo
+        , []
 
 
     # From a text, build an `address` object (name and address).
