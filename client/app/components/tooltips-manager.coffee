@@ -38,6 +38,7 @@ module.exports = React.createClass
             @getTooltip Tooltips.FILTER, t('tooltip filter')
             @getTooltip Tooltips.QUICK_FILTER, t('tooltip display filters')
             @getTooltip Tooltips.EXPUNGE_MAILBOX, t('tooltip expunge mailbox')
+            @getTooltip Tooltips.HELP_SHORTCUTS, t('tooltip help shortcuts')
 
             # Message header: tooltips for contact action.
             @getTooltip Tooltips.ADD_CONTACT, t('tooltip add contact')
@@ -51,4 +52,3 @@ module.exports = React.createClass
             role: "tooltip"
             'aria-hidden': "true",
             content
-
