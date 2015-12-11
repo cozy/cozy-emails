@@ -90,8 +90,7 @@ module.exports = MessageItem = React.createClass
                         div className: 'participants ellipsable',
                             @getParticipants message
                         div className: 'subject ellipsable',
-                            p null,
-                                message.get 'subject'
+                            @highlightSearch message.get('subject')
                         div className: 'mailboxes',
                             @getMailboxTags(message)...
                         div className: 'date',
@@ -105,7 +104,7 @@ module.exports = MessageItem = React.createClass
                                 span className: 'conversation-length',
                                     "#{@props.conversationLengths}"
                         div className: 'preview ellipsable',
-                            p null, MessageUtils.getPreview(message)
+                            @highlightSearch MessageUtils.getPreview(message)
 
     _doCheck: ->
         # please don't ask me why this **** react needs this
@@ -117,6 +116,9 @@ module.exports = MessageItem = React.createClass
             setTimeout =>
                 @refs.select?.getDOMNode().checked = false
             , 50
+
+    highlightSearch: (text, opts = null) ->
+        return p opts, MessageUtils.highlightSearch(text)...
 
     getMailboxTags: ->
 
