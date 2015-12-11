@@ -102,6 +102,8 @@ subaction()
 
     [role=menuitem]
         align-items center
+        background transparent
+        color      darkcolor
 
         &:not(.drawer-toggle)
             display flex
@@ -117,11 +119,6 @@ subaction()
     for level in (1..10)
         .lv-{level}:not(.special)
             padding-left level * 2em
-
-
-    .drawer-toggle
-        background transparent
-        color      #bbb
 
 
     .avatar
