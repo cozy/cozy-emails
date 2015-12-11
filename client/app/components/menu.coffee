@@ -114,6 +114,13 @@ module.exports = Menu = React.createClass
 
                 button
                     role: 'menuitem'
+                    className: 'btn fa fa-question-circle help'
+                    'aria-describedby':       Tooltips.HELP_SHORTCUTS
+                    'data-tooltip-direction': 'top'
+                    onClick: -> Mousetrap.trigger '?'
+
+                button
+                    role: 'menuitem'
                     className: classer
                         btn:               true
                         fa:                true
@@ -298,4 +305,3 @@ module.exports = Menu = React.createClass
                                     span
                                         className: 'item-label',
                                         toggleFavoritesLabel
-

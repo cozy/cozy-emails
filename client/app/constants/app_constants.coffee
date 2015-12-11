@@ -187,3 +187,4 @@ module.exports =
         EXPUNGE_MAILBOX             : 'TOOLTIP_EXPUNGE_MAILBOX'
         ADD_CONTACT                 : 'TOOLTIP_ADD_CONTACT'
         SHOW_CONTACT                : 'TOOLTIP_SHOW_CONTACT'
+        HELP_SHORTCUTS              : 'TOOLTIP_HELP_SHORTCUT'
