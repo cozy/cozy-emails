@@ -62,22 +62,22 @@ module.exports = MessageList = React.createClass
             className:         'messages-list panel'
             'aria-expanded':   not @state.fullscreen
 
-            unless @props.noToolbar
-                # Toolbar
-                ToolbarMessagesList
-                    settings:             @props.settings
-                    accountID:            @props.accountID
-                    mailboxID:            @props.mailboxID
-                    mailboxes:            @props.mailboxes
-                    messages:             @props.messages
-                    edited:               @state.edited
-                    selected:             @state.selected
-                    allSelected:          @state.allSelected
-                    displayConversations: @props.displayConversations
-                    toggleEdited:         @toggleEdited
-                    toggleAll:            @toggleAll
-                    afterAction:          @afterMessageAction
-                    queryParams:          @props.queryParams
+            # Toolbar
+            ToolbarMessagesList
+                settings:             @props.settings
+                accountID:            @props.accountID
+                mailboxID:            @props.mailboxID
+                mailboxes:            @props.mailboxes
+                messages:             @props.messages
+                edited:               @state.edited
+                selected:             @state.selected
+                allSelected:          @state.allSelected
+                displayConversations: @props.displayConversations
+                toggleEdited:         @toggleEdited
+                toggleAll:            @toggleAll
+                afterAction:          @afterMessageAction
+                queryParams:          @props.queryParams
+                noFilters:            @props.noFilters
 
             # Progress
             Progress value: @props.refresh, max: 1
@@ -218,4 +218,3 @@ module.exports = MessageList = React.createClass
             scrollable.removeEventListener 'scroll', @_loadNext
             if @_checkNextInterval?
                 window.clearInterval @_checkNextInterval
-

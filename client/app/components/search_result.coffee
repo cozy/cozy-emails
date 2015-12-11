@@ -35,7 +35,7 @@ module.exports = React.createClass
     render: ->
 
         MessageList
-            noToolbar            : true
+            noFilters            : true
             messages             : @state.currentSearchResults
             accountID            : @state.accountID
             messageID            : @state.currentMessageID

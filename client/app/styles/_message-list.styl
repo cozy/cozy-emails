@@ -27,40 +27,45 @@
 
     // TOOLBAR (filters / search / actions)
     // -------------------------------------------------------------------------
-    //
-    // Layouts
     [role=toolbar]
-        position    relative    // set root positionning for dropdowns
-        display     flex
-        flex-shrink 0
+        display    flex
+        min-height 2.6em
 
-        & > [role=menuitem]
-            padding 0 .75em
-            margin-left -.0625em
 
-        [role=group]:last-child
-            flex 1
+    [role=toolbar]
+        padding          .1875em .35em
+        background-color grey-01
+        font-size        .90em
 
+        .fa
+            color darkcolor
+
+        .caret
+            margin-left .45em
+
+        button i
+            vertical-align baseline
+
+        [role=group]
         .dropdown
+        .menu-action
             display flex
 
-        i
-            margin-right (5/14)em
+        .dropdown-toggle
+            white-space nowrap
 
-    [role=group]
-        display flex
 
+    .search-bar
+        flex   1
 
     .filters
-        margin-right .5em
-        border-right 1px solid #e5e5e5
-        flex         none
-
-        i
-            padding-left .5em
-
         .btn-label
-            display none
+            padding-left .45em
+            display      none
+
+
+        [role=menuitem]
+            margin-right .8em
 
         @media(min-width: 50em)
             .full & [role=menuitem]
@@ -70,96 +75,34 @@
                 .btn-label
                     display inline
 
-        // Toggling mode for filter under < 600px
-        & > [role=presentation]
-            display none
+
+        > [role=presentation]
+                display none
 
         @media(max-width: 37.5em)
-            & > [role=presentation]
+            > [role=presentation]
                 display block
                 cursor  pointer
 
             [role=menuitem]
                 display none
 
-            &[aria-expanded=true] [role=menuitem]
-                display block
+            &[aria-expanded=true]
+                > [role=presentation]
+                    background-color basecolor
+
+                    .fa
+                        color white
+
+                [role=menuitem]
+                    display block
 
             &[aria-expanded=false]
                 margin-right 1px
 
-    [role=search]
-        flex     1
-        display  flex
-        position relative
 
-        input
-            flex    1
-            display flex
-
-        .btn-group
-            position absolute
-            top      0
-            right    0
-
-        .btn:hover
-            color actioncolor
-
-
-
-    // Styles and colors
-    [role=toolbar]
-        height           2.2rem
-        padding-top      0.2em
-        padding-right    0.2em
-        background-color #f5f5f5
-
-        button
-            font-size 0.875em
-
-        i
-            color #999
-
-    [role=group]
-        color #999
-
-        i
-            vertical-align baseline
-                padding-right  .5em
-
-        i[role=presentation]
-            padding          .5em .65em
-            // background-color basecolor
-            // color            white
-
-        &[aria-expanded="true"] i[role=presentation]
-            background-color basecolor
-            color            white
-
-
-    .filters
-        [role=menuitem]
-            &:not(.dropdown)[aria-selected=false]:hover
-            &[aria-selected=true]:hover
-                i
-                .btn-label
-                    color basecolor
-
-            &[aria-selected=true]
-                i
-                .btn-label
-                    color basecolor
-
-    .search input
-        padding          0 .5em
-        border           1px solid #d5d5d5
-        background-color #f5f5f5
-        border-radius    2px
-
-        &:focus
-            outline          none
-            background-color #fff
-
+    // LOADING PROGRESS
+    // -------------------------------------------------------------------------
     .progress
         border-radius 0
         margin 0px
@@ -321,8 +264,6 @@
     // LAYOUT SPECIFIC RULES
     // -------------------------------------------------------------------------
     .layout-column &
-        border-right 2px solid grey-02
-
         .avatar-wrapper
             width 4em
 
@@ -384,8 +325,6 @@
 
 
     .layout-row &
-        border-bottom 2px solid grey-02
-
         .metas-wrapper
             flex-wrap nowrap
 

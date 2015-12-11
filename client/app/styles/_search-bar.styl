@@ -1,27 +1,45 @@
 .search-bar
-    display flex
-    align-items stretch
+    display     flex
+    align-items center
+
+
+.search-bar
+    border        1px solid grey-03
+    border-radius .1875em
+
+
+    i
+        margin-left .35em
+        align-self  center
+
 
     .account-picker
-        padding 0.4em 0.7em
-        flex 0 1 auto
+        margin 0 .35em
+        cursor pointer
+
 
     [role="search"]
-        flex 1 0 50%
-        display  flex
-        position relative
+        flex        1
+        align-self  stretch
+        display     flex
+        border-left 1px solid grey-03
 
-        input
-            flex    1
-            display flex
 
-        .btn-group
-            position absolute
-            top      0
-            right    0
+    input
+        flex          1 1 0%
+        height        auto
+        padding-left  .35em
+        border        none
+        border-radius 0 .1875em .1875em 0
 
-        .btn:hover
+
+    .btn-group
+        align-self center
+
+
+    .btn
+        color   mediumcolor
+        padding 0 .5em
+
+        &:hover
             color actioncolor
-
-
-
