@@ -297,6 +297,9 @@ module.exports.batchMove = (req, res, next) ->
 
 
 module.exports.search = (req, res, next) ->
+
+    return next new Error('search is disabled')
+
     params =
         query: req.query.search
         facets: accountID: {}

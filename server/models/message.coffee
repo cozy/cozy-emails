@@ -45,18 +45,6 @@ module.exports = class Message extends cozydb.CozyModel
         attachments    : [MailAttachment]
         alternatives   : cozydb.NoSchema # for calendar content
 
-    @fullTextIndex:
-        text:
-            nGramLength: 1,
-            stemming: true, weight: 1, fieldedSearch: false
-
-        subject:
-            nGramLength: 1,
-            stemming: true, weight: 5, fieldedSearch: false
-
-        accountID:
-            filter: true, searchable: false
-
     # Public: fetch a list of message
     #
     # ids - {Array} of {String} message ids
