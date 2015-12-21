@@ -51,11 +51,8 @@ module.exports = class Message extends cozydb.CozyModel
             stemming: true, weight: 1, fieldedSearch: false
 
         subject:
-            nGramLength: {gte: 1, lte: 2},
-            stemming: true, weight: 5, fieldedSearch: true
-
-        date:
-            filter: true, searchable: false
+            nGramLength: 1,
+            stemming: true, weight: 5, fieldedSearch: false
 
         accountID:
             filter: true, searchable: false
