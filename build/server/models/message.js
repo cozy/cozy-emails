@@ -72,25 +72,6 @@ module.exports = Message = (function(superClass) {
     alternatives: cozydb.NoSchema
   };
 
-  Message.fullTextIndex = {
-    text: {
-      nGramLength: 1,
-      stemming: true,
-      weight: 1,
-      fieldedSearch: false
-    },
-    subject: {
-      nGramLength: 1,
-      stemming: true,
-      weight: 5,
-      fieldedSearch: false
-    },
-    accountID: {
-      filter: true,
-      searchable: false
-    }
-  };
-
   Message.findMultiple = function(ids, callback) {
     return async.mapSeries(ids, function(id, cb) {
       return Message.find(id, cb);
