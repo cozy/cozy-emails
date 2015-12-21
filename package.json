@@ -62,7 +62,7 @@
     "fixtures:load": "cozy-fixtures load tests/fixtures",
     "test:client": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
     "build": "npm run build:client && npm run build:server",
-    "build:client": "cd client && brunch b",
+    "build:client": "cd client && brunch b -c brunch-config.coffee",
     "build:server": "cake build",
     "doc": "biscotto && opn ./doc/index.html",
     "lint": "npm run lint1 && npm run lint2",
