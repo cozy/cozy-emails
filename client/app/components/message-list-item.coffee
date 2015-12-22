@@ -106,17 +106,6 @@ module.exports = MessageItem = React.createClass
                         div className: 'preview ellipsable',
                             @highlightSearch MessageUtils.getPreview(message)
 
-    _doCheck: ->
-        # please don't ask me why this **** react needs this
-        if @props.selected
-            setTimeout =>
-                @refs.select?.getDOMNode().checked = true
-            , 50
-        else
-            setTimeout =>
-                @refs.select?.getDOMNode().checked = false
-            , 50
-
     highlightSearch: (text, opts = null) ->
         return p opts, MessageUtils.highlightSearch(text)...
 
@@ -146,12 +135,6 @@ module.exports = MessageItem = React.createClass
                 label = "#{accountLabel}:#{label}"
 
             span className: 'mailbox-tag', label
-
-    componentDidMount: ->
-        @_doCheck()
-
-    componentDidUpdate: ->
-        @_doCheck()
 
     onSelect: (e) ->
         @props.onSelect(not @props.selected)
