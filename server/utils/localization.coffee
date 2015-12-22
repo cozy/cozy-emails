@@ -21,5 +21,3 @@ cozydb.api.getCozyLocale (err, locale) ->
     catch e then return drainWaiting e, ->
     translator = polyglot.t.bind polyglot
     drainWaiting null, translator
-
-
