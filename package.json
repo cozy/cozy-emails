@@ -39,7 +39,6 @@
     "xoauth2": "1.0.0"
   },
   "devDependencies": {
-    "biscotto": "2.3.1",
     "casperjs": "1.1.0-beta3",
     "chai": "1.9.1",
     "coffee-19-jshint": "2.3.1",
@@ -64,7 +63,6 @@
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd client && brunch b -c brunch-config.coffee",
     "build:server": "cake build",
-    "doc": "biscotto && opn ./doc/index.html",
     "lint": "npm run lint1 && npm run lint2",
     "lint1": "coffeelint -f coffeelint.json ./server/**/*.coffee",
     "lint2": "coffee-jshint -o node ./server/**/*.coffee",
