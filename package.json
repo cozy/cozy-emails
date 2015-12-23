@@ -48,6 +48,7 @@
     "dovecot-testing": "0.0.3",
     "lorem-ipsum": "1.0.1",
     "mocha": "1.20.1",
+    "nodemon": "^1.8.0",
     "npm-run-all": "^1.4.0",
     "opn": "1.0.1",
     "should": "4.0.4",
@@ -74,6 +75,9 @@
     "fixtures:generate": "coffee tests/fixtures/generator.coffee 1000",
     "fixtures:loader": "coffee tests/fixtures/loader.coffee",
     "fixtures:load": "cozy-fixtures load tests/fixtures",
+    "watch": "npm-run-all --parallel 'watch:*'",
+    "watch:server": "nodemon server.coffee --ignore client/",
+    "watch:client": "cd client && brunch watch",
     "start": "node build/server.js"
   },
   "cozy-permissions": {
