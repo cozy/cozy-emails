@@ -64,7 +64,7 @@
     "postbuild": "npm-run-all --parallel copy:*",
     "build": "npm-run-all --parallel 'build:*'",
     "build:server": "coffee --bare --compile --output build/server server && coffee --bare --compile --output build server.coffee",
-    "build:client": "cd client && brunch build --production",
+    "build:client": "cd client && npm install && brunch build --production",
     "copy:locales": "mkdir -p build/client/app/locales && cp -r client/app/locales/*.json build/client/app/locales/",
     "copy:views": "mkdir -p build/server/views && cp -r server/views/* build/server/views/",
     "test": "npm run test:server",
