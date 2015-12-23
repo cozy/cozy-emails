@@ -59,7 +59,7 @@
     "lint:coffeelint": "coffeelint --file coffeelint.json --quiet ./server/**/*.coffee",
     "lint:jshint": "coffee-jshint --options node ./server/**/*.coffee",
     "clean": "rm -rf build",
-    "tx": "tx pull --all",
+    "tx": "tx pull --all || true",
     "prebuild": "npm-run-all clean tx",
     "postbuild": "npm-run-all --parallel copy:*",
     "build": "npm-run-all --parallel 'build:*'",
