@@ -6,25 +6,28 @@ matrix:
 node_js:
     - "0.10"
     - "0.12"
+
 services:
     - couchdb
+
 env:
     global:
         - NODE_ENV=test
         - DEBUG_LEVEL=0
         - NAME=emails
         - TOKEN=apptoken
+
 before_install:
-    - npm install forever coffee-script -g
-    - pip install --user transifex-client
-    - git clone git://github.com/mycozycloud/cozy-data-system.git
+    - travis_retry npm install forever coffee-script -g
+    - travis_retry pip install --user transifex-client
+    - travis_retry git clone git://github.com/cozy/cozy-data-system.git
     - cd cozy-data-system
-    - npm install #data-system
+    - travis_retry npm install #data-system
     - env - NAME=data-system TOKEN=token forever start -o forever-ds.log build/server.js
     - coffee commands.coffee test-install emails
     - cd ..
     - mkdir log
-    - npm install # do it now, DovecotTesting needs it
+    - travis_retry npm install # do it now, DovecotTesting needs it
 
 script:
     - npm run build
