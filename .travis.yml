@@ -23,7 +23,7 @@ before_install:
     - travis_retry git clone git://github.com/cozy/cozy-data-system.git
     - cd cozy-data-system
     - travis_retry npm install #data-system
-    - env - NAME=data-system TOKEN=token forever start -o forever-ds.log build/server.js
+    - env NAME=data-system TOKEN=token forever start -o forever-ds.log build/server.js
     - coffee commands.coffee test-install emails
     - cd ..
     - mkdir log
