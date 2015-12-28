@@ -10,15 +10,19 @@ Cozy Emails lets you read and write your emails from your Cozy. The project is a
 
 ## Install
 
-We assume here that the Cozy platform is correctly [installed](http://cozy.io/host/install.html)
- on your server.
+We assume here that the Cozy platform is correctly [installed](http://cozy.io/host/install.html) on your server.
 
-You can simply install the Emails application via the app registry. Click on
-ythe *Chose Your Apps* button located on the right of your Cozy Home.
+### Graphically
+
+You can simply install the Emails application via the app registry. Click on the *Choose Your Apps* button located on the right of your Cozy Home.
+
+### CLI
 
 From the command line you can type this command:
 
-    cozy-monitor install emails
+```sh
+$ cozy-monitor install emails
+```
 
 
 ## Contribution
@@ -35,21 +39,42 @@ You can contribute to the Cozy Emails in many ways:
 
 Hacking the Emails app requires you [setup a dev environment](http://cozy.io/hack/getting-started/). Once it's done you can hack the emails just like it was your own app.
 
-    git clone https://github.com/cozy/cozy-emails.git
+```sh
+$ git clone https://github.com/cozy/cozy-emails.git
+$ npm install
+$ cd client
+$ npm install
+```
+
+### Development
 
 Run it with:
 
-    node server.js
+```sh
+$ npm run watch
+```
 
-Each modification of the server requires a new build, here is how to run a
-build:
+The `watch` task starts 3 daemons:
 
-    cake build
+- the server one, running coffee-script server-side code through a [nodemon](https://github.com/remy/nodemon) process that reload the server part each time you make a change
+- a [node-inspector](https://github.com/node-inspector/node-inspector) process, that let you use the Chome/Chromium devtools applied to your node process and debug it directly [in your browser](http://127.0.0.1:8080/?ws=127.0.0.1:8080&port=5858)
+- a [brunch](https://github.com/brunch/brunch) watcher which recompiles and reload through browser-sync your front-end app in your browser each time you make a change
 
-Each modification of the client requires a specific build too.
+### Build
 
-    cd client
-    brunch watch
+The build is a part of the publication process, and you'll probably never need it explicitly. If you want to build you app anyway (e.g. to deploy it in a sandboxed cozy for tests purposes), you can achieve a build by running:
+
+```sh
+$ npm run build
+```
+
+Please, do not push your local builds in your PR, as long as we make the build process when we release the app.
+
+If you need to run the tests suite to your build:
+
+```sh
+$ npm run test:build
+```
 
 ### Naming conventions
 
@@ -62,46 +87,46 @@ We've adopted IMAP naming conventions, which means:
 
 ## Tests
 
+A tests suite is available. You can run it with:
+
+```sh
+npm run test
+```
+
+Feel free to adapt/fix/add your own tests in your PR ;).
 
 ### Frontend
 
-Tests suite is based on CasperJS. Tests data are loaded by cozy-fixtures. So,
-prior to run it, you need to install additional tools:
+Tests suite is based on CasperJS. Tests data are loaded by [cozy-fixtures](https://github.com/cozy/cozy-fixtures).
 
-    sudo apt-get install phantomjs
-    sudo npm install casperjs -g # version >= 1.1 is required.
-    sudo npm install cozy-fixtures -g
+```sh
+$ npm run fixtures
+```
 
-    npm run fixtures
+To run the client's tests, you need to start the server:
 
-To run the client's tests, you also need to start the server:
+```sh
+$ npm run watch:server
+```
 
-    coffee server.coffee
+Then you can run the client's tests in another terminal:
 
-Then you can run the client's tests:
-
-    npm run test:client
+```sh
+$ npm run test:client
+```
 
 ### Backend
 
 [![Build Status](https://travis-ci.org/cozy/cozy-emails.png?branch=master)](https://travis-ci.org/cozy/cozy-emails)
 
-Running tests requires a Vagrant. Tests load a Dovecot instance in a Vagrant
-virtual machine.
+Running tests requires a Vagrant. Tests load a Dovecot instance in a Vagrant virtual machine. Make sure your Vagrant box is running, then run:
 
-Once done, type the following command into the Cozy Emails folder:
-
-    cake tests
-
-If you want to add mails to the test suite, type the following lines.
-
-    cd node_modules/dovecot-testing
-    npm link
-    dovecot-testing import
+```sh
+$ npm run test:server
+```
 
 In order to run the tests, you must only have the Data System started.
 The tests wont pass if you already have an account in your data-system
-
 
 ### Mail Loader
 

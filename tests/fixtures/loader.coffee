@@ -3,6 +3,7 @@ fs         = require("fs")
 out        = []
 sourceDir  = __dirname + "/samples/"
 
+
 fs.readdir sourceDir, (err, files) ->
     if err?
         console.log err
@@ -11,7 +12,9 @@ fs.readdir sourceDir, (err, files) ->
     files.forEach (file) ->
         fs.readFile sourceDir + file, (err, data) ->
             tmp = []
-            messages = data.toString().split(/^From /gm).filter((e) -> return e isnt '')
+            messages = data.toString()
+                .split(/^From /gm)
+                .filter((e) -> return e isnt '')
             messages.forEach (message) ->
                 message = 'From ' + message
                 mailparser = new MailParser()
