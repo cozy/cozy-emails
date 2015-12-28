@@ -31,12 +31,8 @@ before_install:
 
 script:
     - npm run build
-    - npm run test:build
     - npm run fixtures
-    - forever start -o casper-server.log build/server.js
-    - sleep 30
-    - npm run test:client
-
+    - npm run test:build
 
 after_failure:
     - cat cozy-data-system/forever-ds.log

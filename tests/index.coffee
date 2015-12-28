@@ -1,5 +1,4 @@
-global.appPath = if process.env.USEJS then '../build/'
-else '../'
+global.appPath = if process.env.USEJS then '../build/' else '../'
 
 should = require('should')
 helpers = require './helpers'
