@@ -68,7 +68,7 @@
     "build:client": "cd client && npm install && brunch build --production",
     "copy:locales": "mkdir -p build/client/app/locales && cp -r client/app/locales/*.json build/client/app/locales/",
     "copy:views": "mkdir -p build/server/views && cp -r server/views/* build/server/views/",
-    "test": "npm-run-all test:server test:client",
+    "test": "npm-run-all test:server",
     "test:server": "mocha tests/index.coffee --bail --reporter spec --compilers coffee:coffee-script/register --colors",
     "test:client": "COZY_URL=http://localhost:9125/ casperjs test ./client/tests/casper/*/",
     "pretest:build": "forever start -o casper-server.log --append --uid 'emails:test:build' build/server.js",
