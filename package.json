@@ -2,7 +2,7 @@
   "name": "cozy-emails",
   "version": "0.9.16",
   "engines": [
-    "node = 0.10.x"
+    "node >= 0.10.0"
   ],
   "description": "Emails client for Cozycloud",
   "license": "MIT",
@@ -19,7 +19,7 @@
     "cozydb": "0.1.5",
     "fast-json-patch": "0.4.0",
     "html-to-text": "0.1.0",
-    "iconv": "2.1.4",
+    "iconv": "2.1.11",
     "imap": "0.8.13",
     "jade": "1.6.0",
     "lodash": "2.4.1",
