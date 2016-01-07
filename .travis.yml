@@ -16,6 +16,14 @@ env:
         - DEBUG_LEVEL=0
         - NAME=emails
         - TOKEN=apptoken
+        - CXX=g++-4.8
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+        packages:
+            - gcc-4.8
+            - g++-4.8
 
 before_install:
     - travis_retry npm install forever coffee-script -g
