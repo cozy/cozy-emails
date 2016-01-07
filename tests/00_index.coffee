@@ -5,10 +5,13 @@ describe 'Index page', ->
 
     it "When I get the index", (done) ->
         @timeout 6000
-        client.get '/', (err, res, body) =>
-            res.statusCode.should.equal 200
-            body.indexOf(REINDEXING_MSG).should.not.equal -1
-            done()
+        setTimeout ->
+            client.get '/', (err, res, body) ->
+                console.log body
+                res.statusCode.should.equal 200
+                body.indexOf(REINDEXING_MSG).should.not.equal -1
+                done()
+        , 500
 
     it "Wait reindexing", (done) ->
         @timeout 30000
