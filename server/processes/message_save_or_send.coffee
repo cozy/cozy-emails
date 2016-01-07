@@ -198,7 +198,10 @@ module.exports = class SaveOrSendMessage extends Process
             stream = simplebufferstream buffer
             stream.fd = true
             stream.start = 0
-            stream.end = Buffer.byteLength buffer
+            if process.version.match /^v0\.10\./
+                stream.end = Buffer.byteLength buffer.toString('utf8')
+            else
+                stream.end = Buffer.byteLength buffer
             @cozyMessage.attachBinary stream, name: name, next
         , callback
 

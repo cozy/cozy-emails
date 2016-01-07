@@ -563,7 +563,10 @@ module.exports = class Message extends cozydb.CozyModel
             stream = simplebufferstream att.buffer
             stream.fd = true
             stream.start = 0
-            stream.end = Buffer.byteLength att.buffer
+            if process.version.match /^v0\.10\./
+                stream.end = Buffer.byteLength att.buffer.toString('utf8')
+            else
+                stream.end = Buffer.byteLength att.buffer
             @attachBinary stream, name: att.name, cb
 
         , callback
