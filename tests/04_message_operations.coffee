@@ -122,6 +122,7 @@ describe 'Message actions', ->
         form.append 'body', JSON.stringify store.draftStatus
 
     it "When I edit a Draft (add attachments)", (done) ->
+        @timeout 5000
 
         store.draftStatus.attachments.push {
             fileName:           'README.md'
@@ -152,6 +153,7 @@ describe 'Message actions', ->
         form.append 'README-2.md', fs.createReadStream __dirname + '/../README.md'
 
     it "When I edit a Draft (add other attachment)", (done) ->
+        @timeout 5000
 
         store.draftStatus.attachments.push {
             fileName:           'README.md'

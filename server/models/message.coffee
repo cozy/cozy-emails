@@ -559,7 +559,6 @@ module.exports = class Message extends cozydb.CozyModel
             # WEIRDFIX#3 - use a stream instead of a buffer
             # att.name = att.name.replace "\ufffd", ""
             att.buffer ?= new Buffer 0
-            console.log att.buffer
             stream = simplebufferstream att.buffer
             stream.fd = true
             stream.start = 0
