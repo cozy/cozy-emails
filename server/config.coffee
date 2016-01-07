@@ -1,7 +1,7 @@
 path      = require 'path'
 americano = require 'americano'
 log       = require('./utils/logging')(prefix: 'config')
-cozydb = require 'cozydb'
+cozydb    = require 'cozydb'
 {errorHandler} = require './utils/errors'
 
 config =
