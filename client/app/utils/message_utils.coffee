@@ -56,6 +56,8 @@ module.exports = MessageUtils =
 
     # Highlight search pattern in a string
     highlightSearch: (text) ->
+        return [] unless text
+
         search  = new RegExp SearchStore.getCurrentSearch(), 'gi'
         substrs = text.match search
 
