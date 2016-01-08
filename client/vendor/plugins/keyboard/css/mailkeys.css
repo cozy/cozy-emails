@@ -39,6 +39,9 @@ body, html {
 .mailkeys-help dd {
   line-height: 1.7em;
 }
+.mailkeys-help dd:last-child {
+  padding-bottom: 2em;
+}
 .plugin-help {
   padding-top: .2em;
   font-size: 1.5em;
