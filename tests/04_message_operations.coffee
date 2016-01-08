@@ -177,6 +177,7 @@ describe 'Message actions', ->
         form.append 'README-3.md', fs.createReadStream __dirname + '/../README.md'
 
     it "When I edit a Draft (remove first attachment)", (done) ->
+        @timeout 5000
 
         store.draftStatus.attachments = store.draftStatus.attachments.filter (file) ->
             file.generatedFileName isnt 'README-2.md'
