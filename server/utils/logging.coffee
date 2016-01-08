@@ -48,7 +48,10 @@ module.exports = (options) ->
         addToLastLogs.apply null, args
         return null if level < LOG_LEVEL
 
-        console.log.apply console, args
+        if level is 3
+            console.error.apply console, args
+        else
+            console.log.apply console, args
 
     return api =
         debug: logger 0
