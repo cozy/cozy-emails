@@ -126,7 +126,7 @@ module.exports = ImapPool = (function() {
     }
     this.failConnectionCounter++;
     isAuth = err.textCode === 'AUTHENTICATIONFAILED';
-    if (err instanceof PasswordEncryptedError || isAuth && this.account.id && this.failConnectionCounter === 1) {
+    if ((err instanceof PasswordEncryptedError || isAuth) && this.account.id && this.failConnectionCounter === 1) {
       return this.account.refreshPassword((function(_this) {
         return function(err) {
           if (err) {

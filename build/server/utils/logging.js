@@ -45,7 +45,11 @@ module.exports = function(options) {
       if (level < LOG_LEVEL) {
         return null;
       }
-      return console.log.apply(console, args);
+      if (level === 3) {
+        return console.error.apply(console, args);
+      } else {
+        return console.log.apply(console, args);
+      }
     };
   };
   return api = {
