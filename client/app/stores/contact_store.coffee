@@ -31,7 +31,7 @@ class ContactStore extends Store
                 rawResults.forEach (rawResult) ->
                     addresses = []
 
-                    rawResult.datapoints.forEach (point) ->
+                    rawResult.datapoints?.forEach (point) ->
                         if point.name is 'email'
                             addresses.push point.value
                         if point.name is 'avatar'
