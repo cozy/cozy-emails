@@ -10,7 +10,7 @@ Cozy Emails lets you read and write your emails from your Cozy. The project is a
 
 ## Install
 
-We assume here that the Cozy platform is correctly [installed](http://cozy.io/host/install.html) on your server.
+We assume here that the Cozy platform is correctly [installed](https://docs.cozy.io/en/host/install/) on your server.
 
 ### Graphically
 
@@ -37,7 +37,7 @@ You can contribute to the Cozy Emails in many ways:
 
 ## Hack
 
-Hacking the Emails app requires you [setup a dev environment](http://cozy.io/hack/getting-started/). Once it's done you can hack the emails just like it was your own app.
+Hacking the Emails app requires you [setup a dev environment](https://docs.cozy.io/en/hack/getting-started/). Once it's done you can hack the emails just like it was your own app.
 
 ```sh
 $ git clone https://github.com/cozy/cozy-emails.git

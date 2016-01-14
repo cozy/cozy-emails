@@ -2,22 +2,31 @@ language: node_js
 matrix:
     fast_finish: true
     allow_failures:
-        - node_js: "0.12"
+        - node_js: "5"
 node_js:
     - "0.10"
     - "0.12"
-
+    - "4"
+    - "5"
 services:
     - couchdb
-
 env:
     global:
         - NODE_ENV=test
         - DEBUG_LEVEL=0
         - NAME=emails
         - TOKEN=apptoken
+        - CXX=g++-4.8
+addons:
+    apt:
+        sources:
+            - ubuntu-toolchain-r-test
+        packages:
+            - gcc-4.8
+            - g++-4.8
 
 before_install:
+    - travis_retry npm install npm@latest-2 -g
     - travis_retry npm install forever coffee-script -g
     - travis_retry pip install --user transifex-client
     - travis_retry git clone git://github.com/cozy/cozy-data-system.git
