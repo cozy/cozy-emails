@@ -25,7 +25,8 @@ module.exports = class SaveOrSendMessage extends Process
 
         @isDraft = options.isDraft
         @newAttachments = options.newAttachments
-        @previousUID = @message.mailboxIDs?[@draftMailbox]
+
+        @previousUID = @message.mailboxIDs?[@draftMailbox.id]
 
         @message.conversationID ?= uuid.v4()
         @message.attachments ?= []
