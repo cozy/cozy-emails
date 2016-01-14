@@ -556,9 +556,7 @@ module.exports = class Message extends cozydb.CozyModel
             # WEIRDFIX#1 - some attachments name are broken
             # WEIRDFIX#2 - some attachments have no buffer
             # att.name = att.name.replace "\ufffd", ""
-            # attachBinary need a path attributes
             att.buffer ?= new Buffer 0
-            att.buffer.path = encodeURI att.name
             @attachBinary att.buffer, name: att.name, cb
 
         , callback

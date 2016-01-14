@@ -194,7 +194,6 @@ module.exports = class SaveOrSendMessage extends Process
         log.debug "send#attaching"
         async.eachSeries Object.keys(@newAttachments), (name, next) =>
             buffer = @newAttachments[name].content
-            buffer.path = encodeURI name
             @cozyMessage.attachBinary buffer, name: name, next
         , callback
 
