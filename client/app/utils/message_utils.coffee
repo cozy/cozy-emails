@@ -454,7 +454,7 @@ module.exports = MessageUtils =
         if not text?
             html = message.get 'html'
             if html?
-                text = toMarkdown(html) pr ''
+                text = toMarkdown html or ''
             else
                 text = ''
 
