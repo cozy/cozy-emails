@@ -1,7 +1,6 @@
 Process = require './_base'
 async = require 'async'
 Message = require '../models/message'
-simplebufferstream = require 'simple-bufferstream'
 stream_to_buffer = require '../utils/stream_to_array'
 log = require('../utils/logging')(prefix: 'process:message_saving')
 {NotFound, BadRequest, AccountConfigError} = require '../utils/errors'
@@ -195,14 +194,7 @@ module.exports = class SaveOrSendMessage extends Process
         log.debug "send#attaching"
         async.eachSeries Object.keys(@newAttachments), (name, next) =>
             buffer = @newAttachments[name].content
-            stream = simplebufferstream buffer
-            stream.fd = true
-            stream.start = 0
-            if process.version.match /^v0\.10\./
-                stream.end = Buffer.byteLength buffer.toString('utf8')
-            else
-                stream.end = Buffer.byteLength buffer
-            @cozyMessage.attachBinary stream, name: name, next
+            @cozyMessage.attachBinary buffer, name: name, next
         , callback
 
     removeOldBinaries: (callback) =>

@@ -1,5 +1,4 @@
 cozydb = require 'cozydb'
-simplebufferstream = require 'simple-bufferstream'
 
 # Public: a mail address, used in {Message} schema
 class MailAdress extends cozydb.Model
@@ -556,17 +555,9 @@ module.exports = class Message extends cozydb.CozyModel
         async.eachSeries attachments, (att, cb) =>
             # WEIRDFIX#1 - some attachments name are broken
             # WEIRDFIX#2 - some attachments have no buffer
-            # WEIRDFIX#3 - use a stream instead of a buffer
             # att.name = att.name.replace "\ufffd", ""
             att.buffer ?= new Buffer 0
-            stream = simplebufferstream att.buffer
-            stream.fd = true
-            stream.start = 0
-            if process.version.match /^v0\.10\./
-                stream.end = Buffer.byteLength att.buffer.toString('utf8')
-            else
-                stream.end = Buffer.byteLength att.buffer
-            @attachBinary stream, name: att.name, cb
+            @attachBinary att.buffer, name: att.name, cb
 
         , callback
 
