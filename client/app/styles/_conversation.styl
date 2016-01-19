@@ -27,7 +27,7 @@
 
         .btn
             border           none
-            color            #bbb
+            color            grey-03
             background-color transparent
             font-size        1rem
             text-shadow      none
@@ -35,7 +35,7 @@
             transition       color 0.2s ease-out
 
         &:hover .btn
-            color #777
+            color grey-06
 
             &:hover
                 color basecolor
@@ -53,14 +53,14 @@
     .conversation-title
         margin 0
         font 1.5em/1.2 'Source Sans Pro', sans-serif
-        color #444
+        color grey-08
 
     .more
         display block
         padding .8em 0.2rem
         width 100%
         border none
-        border-top 1px solid #d5d5d5
+        border-top 1px solid grey-03
         background-color #fff
         font-size .875em
         text-align left
@@ -80,7 +80,7 @@
     .message
         margin 0
         padding .8em 0.2rem
-        border-top 1px solid #d5d5d5
+        border-top 1px solid grey-03
         border-bottom none
         background-color white
 
@@ -113,7 +113,7 @@
         .compose
             margin-bottom  1em
             padding-bottom 2em
-            border-bottom  1px solid #d5d5d5
+            border-bottom  1px solid grey-03
 
         header
         footer
@@ -124,7 +124,7 @@
 
             .show-contact
             .add-contact
-                color #ccc
+                color grey-03
                 margin 0 5px
 
                 button
@@ -134,7 +134,7 @@
         &:hover header
             .show-contact
             .add-contact
-                color #888
+                color grey-06
                 transition color 0.2s ease-out
 
                 &:hover
@@ -150,7 +150,7 @@
             border-radius 2px
             font-size .75em
             font-family "Source Code Pro", monospace
-            background-color #f5f5f5
+            background-color lighten(grey-01, 50%)
 
         iframe
             width 100%
@@ -227,7 +227,7 @@
                 align-items center
             .date
                 order 3
-                color #999
+                color grey-05
             .to
                 order 5
             .cc
@@ -235,7 +235,7 @@
             .details
                 order         4
                 padding-right 10px
-                color #999
+                color grey-05
 
             .metas
                 margin-left 1em
@@ -248,7 +248,7 @@
 
             .btn
                 padding 0
-                color #999
+                color grey-05
                 font-size 1rem
 
                 &:hover
@@ -261,7 +261,7 @@
                 right 0
                 min-width 18em
                 padding 0.5em 10px
-                border 1px solid #d5d5d5
+                border 1px solid grey-03
                 border-radius 5px
                 background white
                 box-shadow 0 1px 3px rgba(0,0,0,.12)
@@ -296,8 +296,8 @@
             font-size .875em
             line-height 2em
             text-align center
-            background #f5f5f5
-            color grey
+            background lighten(grey-01,50%)
+            color grey-07
             border 0
 
             i
@@ -312,7 +312,7 @@
             vertical-align baseline
             text-shadow none
             box-shadow none
-            background-color basecolor
+            background-color grey-04
             border 0px
             color white
             cursor pointer
@@ -320,7 +320,7 @@
             outline 0
 
             &:hover
-                background-color darken(basecolor, 20%)
+                background-color grey-06
 
         .attachments
             ul
@@ -335,7 +335,7 @@
                 flex             none
                 margin           0.25em 0.5em 0.25em 0
                 padding          0.6em 0.8em
-                background-color #f2f2f2
+                background-color lighten(grey-01, 50%)
                 border-radius    3px
                 list-style-type  none
                 white-space      nowrap
@@ -351,10 +351,10 @@
                 vertical-align middle
                 background-color #ffffff
                 border-radius 2px
-                border 1px solid #d5d5d5
+                border 1px solid grey-02
 
             a
-                color #333
+                color grey-08
 
                 &:hover
                     color basecolor
@@ -365,7 +365,7 @@
 
             .file-details span:last-child
                 margin-left 0.25em
-                color #999
+                color grey-05
 
                 &:before
                     content "("
@@ -378,8 +378,8 @@
             .file-actions
                 margin-left 0.5em
                 padding-left 0.5em
-                border-left 1px solid #ccc
-                color #999
+                border-left 1px solid grey-04
+                color grey-05
 
             // hide the img icon (the picture's preview is enough)
             .mime.fa-file-image-o
