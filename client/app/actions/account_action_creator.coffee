@@ -29,11 +29,23 @@ module.exports = AccountActionCreator =
                     value: {error: 'no account returned from create'}
 
             else
+                # If one special mailbox is not configured, the user must
+                # select before doing anything.
+                areMailboxesConfigured = account.sentMailbox? and \
+                                         account.draftMailbox? and \
+                                         account.trashMailbox?
+
                 AppDispatcher.handleViewAction
                     type: ActionTypes.ADD_ACCOUNT_SUCCESS
-                    value: {account}
+                    value: {account, areMailboxesConfigured}
 
-                url = "account/#{account.id}/config/mailboxes"
+                {id, inboxMailbox} = account
+                if areMailboxesConfigured
+                    filters = "sort/-date/nofilter/-/before/-/after/-"
+                    url = "account/#{id}/mailbox/#{inboxMailbox}/#{filters}"
+                else
+                    url = "account/#{id}/config/mailboxes"
+
                 window.router.navigate url, trigger: true
 
 
