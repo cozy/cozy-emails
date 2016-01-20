@@ -333,7 +333,7 @@
   "gmail security tile": "About Gmail security",
   "gmail security body": "Gmail considers connection using username and password not safe.\nPlease click on the following link, make sure\nyou are connected with your %{login} account and enable access for\nless secure apps.",
   "gmail security link": "Enable access for less secure apps.",
-  "gmail security body 2": "If you still cant connect, you might need to use the unlock captcha from the following link.",
+  "gmail security body 2": "If you still can't connect, you might need to use the unlock captcha from the following link.",
   "gmail security link 2": "Display unlock captcha.",
   "plugin name Gallery": "Attachment gallery",
   "plugin name medium-editor": "Medium editor",
