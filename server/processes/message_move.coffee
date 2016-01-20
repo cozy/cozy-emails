@@ -15,6 +15,7 @@ module.exports = class MessageMove extends Process
     initialize: (options, callback) ->
 
         @to = if Array.isArray(options.to) then options.to else [options.to]
+        @from = options.from or null
 
         # ignore messages which are already in the destination set
         @messages = options.messages.filter (msg) =>
@@ -105,21 +106,27 @@ module.exports = class MessageMove extends Process
     applyChangesInCozy: (callback) =>
         async.mapSeries @messages, (message, next) =>
             newMailboxIDs = @changes[message.id]
-            unless newMailboxIDs
-                next null, message
-            else
-                data =
-                    mailboxIDs: newMailboxIDs
-                    ignoreInCount: Object.keys(newMailboxIDs)
-                    .some (id) => @ignores[id]
-                message.updateAttributes data, (err) ->
-                    next err, message
-
+            @applyOneChangeInCozy message, newMailboxIDs, next
         , (err, result) =>
             return callback err if err
             @updatedMessages = result
             callback null
 
+    applyOneChangeInCozy: (message, newMailboxIDs, callback) =>
+        unless newMailboxIDs
+            callback null, message
+        else
+            boxes = Object.keys(newMailboxIDs)
+            if boxes.length is 0
+                message.destroy (err) ->
+                    callback err, {id: message.id, _deleted: true}
+            else
+                data =
+                    mailboxIDs: newMailboxIDs
+                    ignoreInCount: boxes.some (id) => @ignores[id]
+
+                message.updateAttributes data, (err) ->
+                    callback err, message
 
     fetchNewUIDs: (callback) =>
         return callback null, [] if @updatedMessages.length is 0

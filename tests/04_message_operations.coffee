@@ -241,6 +241,30 @@ describe 'Message actions', ->
         form = req.form()
         form.append 'body', JSON.stringify store.secondDraftStatus
 
+    it "When I create a third Draft", (done) ->
+
+        draft =
+            isDraft     : true
+            accountID   : store.accountID
+            from        : [name: 'testuser', address: 'testuser@dovecot.local']
+            to          : [name: 'John', address: 'john@example.com']
+            cc          : []
+            bcc         : []
+            attachments : []
+            subject     : 'Wanted : magician'
+            content     : 'Hi, I am a recruiter and ...'
+
+        req = client.post "/message", null, (err, res, body) =>
+            res.statusCode.should.equal 200
+            body.should.have.property 'id'
+            body.should.have.property 'mailboxIDs'
+            body.mailboxIDs.should.have.property store.draftBoxID
+            body.mailboxIDs[store.draftBoxID].should.equal 7 # UID
+            store.thirdDraftStatus = body
+            done()
+
+        form = req.form()
+        form.append 'body', JSON.stringify draft
 
     it "Creates a trashBox", (done) ->
 
@@ -280,4 +304,22 @@ describe 'Message actions', ->
         client.get "/mailbox/#{store.trashBoxID}", (err, res, body) =>
             should.not.exist err
             body.messages.should.have.lengthOf 4
+            done()
+
+
+    it "When I delete a draft", (done) ->
+        data =
+            accountID: store.accountID
+            messageID: store.thirdDraftStatus.id
+
+        req = client.put "/messages/batchTrash", data, (err, res, body) =>
+            should.not.exist err
+            res.statusCode.should.equal 200
+            done()
+
+    it "Then the message has been deleted", (done) ->
+        client.get "/message/#{store.thirdDraftStatus.id}", (err, res, body) =>
+            should.not.exist err
+            body.error.should.equal true
+            body.name.should.equal 'NotFound'
             done()
