@@ -1,4 +1,4 @@
-{div, h4, ul, li, span, form, i, input, label} = React.DOM
+{div, h4, ul, li, span, p, form, i, input, label} = React.DOM
 classer = React.addons.classSet
 
 AccountActionCreator = require '../actions/account_action_creator'
@@ -45,6 +45,8 @@ module.exports = AccountConfigMailboxes = React.createClass
         Form className: 'form-horizontal',
 
             SubTitle className: 'config-title', t "account special mailboxes"
+            unless @areSpecialMailboxesConfigured()
+                p className: 'warning', t('account special mailboxes warning')
             @renderMailboxChoice 'draft'
             @renderMailboxChoice 'sent'
             @renderMailboxChoice 'trash'
@@ -128,8 +130,8 @@ module.exports = AccountConfigMailboxes = React.createClass
         property = "#{which}Mailbox"
         labelText = t "account #{which} mailbox"
 
-        className = "form-group #{which} "
-        className += 'has-error' unless @props.editedAccount.get property
+        className = "form-group #{which} mailbox-choice "
+        className += 'has-error' unless @props.editedAccount.get(property)?
 
         div className: className,
             label
@@ -167,4 +169,12 @@ module.exports = AccountConfigMailboxes = React.createClass
 
         @refs.newmailbox.getDOMNode().value = ''
         @setState newMailboxParent: null
+
+
+    # Return true if all special mailboxes are configured, false otherwise.
+    areSpecialMailboxesConfigured: ->
+        editedAccount = @props.editedAccount
+        return editedAccount.get('sentMailbox')? and \
+               editedAccount.get('draftMailbox')? and \
+               editedAccount.get('trashMailbox')?
 
