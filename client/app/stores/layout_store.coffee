@@ -193,9 +193,15 @@ class LayoutStore extends Store
                errors: AccountStore.getRawErrors()
                autoclose: true
 
-        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ->
+        handle ActionTypes.ADD_ACCOUNT_SUCCESS, ({areMailboxesConfigured}) ->
+
+            if areMailboxesConfigured
+                key = "account creation ok"
+            else
+                key = "account creation ok configuration needed"
+
             @_showNotification
-                message: t("account creation ok")
+                message: t(key)
                 autoclose: true
 
         handle ActionTypes.EDIT_ACCOUNT_FAILURE, ({error}) ->
