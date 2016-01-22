@@ -21,6 +21,8 @@ SMTP_OPTIONS =
     'LOGIN': t("account smtpMethod LOGIN")
     'PLAIN': t("account smtpMethod PLAIN")
 
+GOOGLE_IMAP = ['imap.googlemail.com', 'imap.gmail.com']
+
 module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
 
@@ -192,13 +194,20 @@ module.exports = AccountConfigMain = React.createClass
 
     _renderGMAILSecurity: ->
         url = "https://www.google.com/settings/security/lesssecureapps"
+        login = @props.editedAccount.get('login')
         FieldSet text: t('gmail security tile'),
-            p null, t('gmail security body', login: @state.login.value)
+            p null, t('gmail security body', {login})
             p null,
                 a
                     target: '_blank',
                     href: url
                     t 'gmail security link'
+            p null, t('gmail security body 2')
+            p null,
+                a
+                    target: '_blank'
+                    href: 'https://accounts.google.com/DisplayUnlockCaptcha'
+                    t 'gmail security link 2'
 
     _renderButtons: ->
         if @props.errors.length is 0
@@ -249,7 +258,7 @@ module.exports = AccountConfigMain = React.createClass
             unless err
                 infos = discovery2Fields provider
                 # Display gmail warning if selected provider is Gmail.
-                isGmail = infos.imapServer is 'imap.googlemail.com'
+                isGmail = infos.imapServer in GOOGLE_IMAP
                 @setState displayGMAILSecurity: isGmail
 
                 @props.requestChange infos

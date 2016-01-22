@@ -25,6 +25,7 @@ module.exports = class MailboxRefresh extends Process
             @refreshFast (err) =>
                 if err and err is MailboxRefreshFast.algorithmFailure
                     log.warn "refreshFast fail, trying deep"
+                    @options.storeHighestModSeq = true
                     @refreshDeep callback
                 else if err
                     callback err
