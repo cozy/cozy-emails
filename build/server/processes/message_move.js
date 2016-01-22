@@ -34,6 +34,7 @@ module.exports = MessageMove = (function(superClass) {
 
   function MessageMove() {
     this.fetchNewUIDs = bind(this.fetchNewUIDs, this);
+    this.applyOneChangeInCozy = bind(this.applyOneChangeInCozy, this);
     this.applyChangesInCozy = bind(this.applyChangesInCozy, this);
     this.handleMoveOneBox = bind(this.handleMoveOneBox, this);
     this._messageInAllDestinations = bind(this._messageInAllDestinations, this);
@@ -44,6 +45,7 @@ module.exports = MessageMove = (function(superClass) {
   MessageMove.prototype.initialize = function(options, callback) {
     var ignores;
     this.to = Array.isArray(options.to) ? options.to : [options.to];
+    this.from = options.from || null;
     this.messages = options.messages.filter((function(_this) {
       return function(msg) {
         var boxes;
@@ -150,21 +152,9 @@ module.exports = MessageMove = (function(superClass) {
   MessageMove.prototype.applyChangesInCozy = function(callback) {
     return async.mapSeries(this.messages, (function(_this) {
       return function(message, next) {
-        var data, newMailboxIDs;
+        var newMailboxIDs;
         newMailboxIDs = _this.changes[message.id];
-        if (!newMailboxIDs) {
-          return next(null, message);
-        } else {
-          data = {
-            mailboxIDs: newMailboxIDs,
-            ignoreInCount: Object.keys(newMailboxIDs).some(function(id) {
-              return _this.ignores[id];
-            })
-          };
-          return message.updateAttributes(data, function(err) {
-            return next(err, message);
-          });
-        }
+        return _this.applyOneChangeInCozy(message, newMailboxIDs, next);
       };
     })(this), (function(_this) {
       return function(err, result) {
@@ -175,6 +165,35 @@ module.exports = MessageMove = (function(superClass) {
         return callback(null);
       };
     })(this));
+  };
+
+  MessageMove.prototype.applyOneChangeInCozy = function(message, newMailboxIDs, callback) {
+    var boxes, data;
+    if (!newMailboxIDs) {
+      return callback(null, message);
+    } else {
+      boxes = Object.keys(newMailboxIDs);
+      if (boxes.length === 0) {
+        return message.destroy(function(err) {
+          return callback(err, {
+            id: message.id,
+            _deleted: true
+          });
+        });
+      } else {
+        data = {
+          mailboxIDs: newMailboxIDs,
+          ignoreInCount: boxes.some((function(_this) {
+            return function(id) {
+              return _this.ignores[id];
+            };
+          })(this))
+        };
+        return message.updateAttributes(data, function(err) {
+          return callback(err, message);
+        });
+      }
+    }
   };
 
   MessageMove.prototype.fetchNewUIDs = function(callback) {

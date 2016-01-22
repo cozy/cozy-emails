@@ -48,6 +48,7 @@ module.exports = MailboxRefresh = (function(superClass) {
         return function(err) {
           if (err && err === MailboxRefreshFast.algorithmFailure) {
             log.warn("refreshFast fail, trying deep");
+            _this.options.storeHighestModSeq = true;
             return _this.refreshDeep(callback);
           } else if (err) {
             return callback(err);

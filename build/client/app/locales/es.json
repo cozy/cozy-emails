@@ -332,7 +332,7 @@
     "gmail security tile": "Acerca de la seguridad de Gmail",
     "gmail security body": "Gmail considera las conexiones por nombre de usuario y contraseña como no seguras.\nPor favor hacer clic en el siguiente enlace, asegurandose que se está conectado\ncon la cuenta %{login} y activar el acceso para las aplicaciones menos seguras.",
     "gmail security link": "Activar el acceso para las aplicaciones menos seguras",
-    "gmail security body 2": "If you still cant connect, you might need to use the unlock captcha from the following link.",
+    "gmail security body 2": "If you still can't connect, you might need to use the unlock captcha from the following link.",
     "gmail security link 2": "Display unlock captcha.",
     "plugin name Gallery": "Galería de documentos adjuntos",
     "plugin name medium-editor": "Editor Medium",

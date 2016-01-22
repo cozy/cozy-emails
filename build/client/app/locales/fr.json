@@ -332,7 +332,7 @@
     "gmail security tile": "Sécurité Gmail",
     "gmail security body": "Gmail considère les connexions par nom d'utilisateur et mot de passe\ncomme non sécurisées. Veuillez cliquer sur le lien ci-dessous, assurez-vous\nd'être connecté avec le compte %{login} et activez l'accès\npour les applications moins sécurisées.",
     "gmail security link": "Activer l'accès pour les applications moins sécurisées",
-    "gmail security body 2": "Si vous ne pouvez pas vous connecter après avoir activer l'accès, il est possible que vous deviez valider le captcha de déverouillage ci-dessous.",
+    "gmail security body 2": "Si vous ne pouvez toujours pas vous connecté. Il est parfois nécessaire d'utiliser le captcha de déverouillage ci-dessous.",
     "gmail security link 2": "Afficher le captcha de déverouillage.",
     "plugin name Gallery": "Galerie de pièces jointes",
     "plugin name medium-editor": "Éditeur Medium",
