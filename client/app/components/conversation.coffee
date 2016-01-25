@@ -14,9 +14,6 @@ AccountStore = require '../stores/account_store'
 MessageStore = require '../stores/message_store'
 LayoutStore = require '../stores/layout_store'
 
-
-uniq = 1
-
 module.exports = React.createClass
     displayName: 'Conversation'
 
@@ -61,6 +58,7 @@ module.exports = React.createClass
             prevMessage          : prevMessage
             nextMessage          : nextMessage
             displayConversations : displayConvs
+            fullscreen           : LayoutStore.isPreviewFullscreen()
 
         nextState.compact = true if @state?.compact isnt false
 
@@ -82,6 +80,7 @@ module.exports = React.createClass
             prevMessageID       : @state.prevMessage?.get('id')
             prevConversationID  : @state.prevMessage?.get('conversationID')
             settings            : @state.settings
+            fullscreen          : @state.fullscreen
 
     renderMessage: (key, active) ->
         # allow the Message component to update current active message
