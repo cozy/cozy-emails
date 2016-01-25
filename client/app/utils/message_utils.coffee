@@ -57,6 +57,7 @@ module.exports = MessageUtils =
     # Highlight search pattern in a string
     highlightSearch: (text) ->
         return [] unless text
+        return [text] if SearchStore.getCurrentSearch() is ''
 
         search  = new RegExp SearchStore.getCurrentSearch(), 'gi'
         substrs = text.match search
@@ -454,7 +455,7 @@ module.exports = MessageUtils =
         if not text?
             html = message.get 'html'
             if html?
-                text = toMarkdown(html) pr ''
+                text = toMarkdown html or ''
             else
                 text = ''
 

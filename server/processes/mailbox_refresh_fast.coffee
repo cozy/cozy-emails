@@ -113,9 +113,10 @@ module.exports = class MailboxRefreshFast extends Process
                 message.updateAttributes {flags}, next
             else
                 Message.fetchOrUpdate @mailbox, {mid, uid}, (err, info) =>
-                    @shouldNotif or= info.shouldNotif
+                    return next err if err
+                    @shouldNotif or= info?.shouldNotif
                     @nbAdded += 1 if info?.actuallyAdded
-                    next err
+                    next null
         , callback
 
     # Private: Apply deletions from IMAP to the cozy

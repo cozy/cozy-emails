@@ -14,7 +14,14 @@ ramStore     = require '../models/store_account_and_boxes'
 module.exports.main = (req, res, next) ->
 
     if Scheduler.applicationStartupRunning()
-        return res.render 'reindexing'
+        if req.hasWaitedForStart
+            res.render 'reindexing'
+        else
+            req.hasWaitedForStart = true
+            tryAgain = -> module.exports.main req, res, next
+             # if the app can start under 2s, we wont show the need reindexing
+            setTimeout tryAgain, 2000
+        return null
 
     async.series [
         (cb) -> Settings.getDefault cb

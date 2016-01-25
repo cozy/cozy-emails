@@ -135,7 +135,7 @@ module.exports.listByMailbox = (req, res, next) ->
                 lastDate = last.date or new Date()
                 pageAfter = lastDate.toISOString()
 
-            links = next: "/mailbox/#{mailboxID}?" + querystring.stringify
+            links = next: "mailbox/#{mailboxID}/?" + querystring.stringify
                 flag: req.flagcode
                 sort: req.sort
                 before: req.before

@@ -7,14 +7,7 @@ describe 'Index page', ->
         @timeout 6000
         client.get '/', (err, res, body) ->
             res.statusCode.should.equal 200
-            body.indexOf(REINDEXING_MSG).should.not.equal -1
+            body.indexOf(REINDEXING_MSG).should.equal -1
             done()
-
-    it "Wait reindexing", (done) ->
-        @timeout 30000
-        do attempt = ->
-            client.get '/', (err, res, body) ->
-                if -1 is body?.indexOf(REINDEXING_MSG) then done()
-                else setTimeout attempt, 1000
 
 
