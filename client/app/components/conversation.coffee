@@ -47,7 +47,7 @@ module.exports = React.createClass
 
         nextState =
             accounts             : AccountStore.getAll()
-            mailboxes            : AccountStore.getAllMailboxes()
+            mailboxes            : AccountStore.getSelectedMailboxes()
             selectedAccount      : AccountStore.getSelectedOrDefault()
             selectedMailboxID    : selectedMailboxID
             settings             : SettingsStore.get()
