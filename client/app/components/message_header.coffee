@@ -1,7 +1,6 @@
 {div, span, i, img, a} = React.DOM
 {MessageFlags} = require '../constants/app_constants'
 
-PopupMessageDetails     = require './popup_message_details'
 PopupMessageAttachments = require './popup_message_attachments'
 ParticipantMixin        = require '../mixins/participant_mixin'
 messageUtils            = require '../utils/message_utils'
@@ -52,8 +51,6 @@ module.exports = React.createClass
                             i className: 'fa fa-trash'
                 div className: 'metas date',
                     messageUtils.formatDate @props.message.get 'createdAt'
-                PopupMessageDetails
-                    message: @props.message
 
 
     renderAddress: (field) ->
