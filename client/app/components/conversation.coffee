@@ -1,6 +1,6 @@
 {section, header, ul, li, span, i, p, h3, a, button} = React.DOM
 Message = require './message'
-Toolbar = require './toolbar_conversation'
+ToolbarConversation = require './toolbar_conversation'
 classer = React.addons.classSet
 {MessageFlags} = require '../constants/app_constants'
 
@@ -36,8 +36,8 @@ module.exports = React.createClass
             trashMailboxID = selectedAccount?.get('trashMailbox')
             conversation = MessageStore
                            .getConversation conversationID, trashMailboxID
-            prevMessage = MessageStore.getPreviousMessage()
-            nextMessage = MessageStore.getNextMessage()
+            prevMessage = MessageStore.getPreviousMessage(true)
+            nextMessage = MessageStore.getNextMessage(true)
             length = MessageStore.getConversationsLength().get conversationID
             selectedMailboxID ?= Object.keys(message.get('mailboxIDs'))[0]
 
@@ -72,15 +72,6 @@ module.exports = React.createClass
             nextState.compact = true
 
         return nextState
-
-    renderToolbar: ->
-        Toolbar
-            nextMessageID       : @state.nextMessage?.get('id')
-            nextConversationID  : @state.nextMessage?.get('conversationID')
-            prevMessageID       : @state.prevMessage?.get('id')
-            prevConversationID  : @state.prevMessage?.get('conversationID')
-            settings            : @state.settings
-            fullscreen          : @state.fullscreen
 
     renderMessage: (key, active) ->
         # allow the Message component to update current active message
@@ -158,12 +149,19 @@ module.exports = React.createClass
             'aria-expanded': true,
 
             header null,
-                h3
-                    className: 'conversation-title'
-                    'data-message-id': message.get 'id'
-                    'data-conversation-id': message.get 'conversationID'
+                h3 className: 'conversation-title',
                     message.get 'subject'
-                @renderToolbar()
+
+                ToolbarConversation
+                    conversation        : @state.conversation
+                    conversationID      : @state.conversationID
+                    moveFromMailbox     : @state.selectedMailboxID
+                    moveToMailboxes     : @state.mailboxes
+                    nextMessageID       : @state.nextMessage?.get('id')
+                    nextConversationID  : @state.nextMessage?.get('conversationID')
+                    prevMessageID       : @state.prevMessage?.get('id')
+                    prevConversationID  : @state.prevMessage?.get('conversationID')
+                    fullscreen          : @state.fullscreen
                 a
                     className: 'clickable btn btn-default fa fa-close'
                     href: @buildClosePanelUrl 'second'

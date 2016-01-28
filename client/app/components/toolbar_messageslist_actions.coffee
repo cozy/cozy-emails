@@ -63,11 +63,10 @@ module.exports = ActionsToolbarMessagesList = React.createClass
                     direction: 'left'
 
             ToolboxActions
-                ref:                  'listToolboxActions'
                 direction:            'left'
+                mode: if @props.displayConversations then 'conversation' \
+                else 'message'
                 mailboxes:            @props.mailboxes
-                inConversation      : true
-                displayConversations: @props.displayConversations
                 onMark:               @onMark
                 onConversationDelete: @onConversationDelete
                 onConversationMark:   @onConversationMark
