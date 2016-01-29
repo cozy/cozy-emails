@@ -31,7 +31,8 @@ module.exports = MessageContent = React.createClass
                     name: "frame-#{@props.messageID}"
                     className: 'content',
                     ref: 'content',
-                    allowTransparency: true,
+                    src: 'about:blank'
+                    allowTransparency: false,
                     frameBorder: 0
         else
             div className: 'row',
@@ -40,9 +41,6 @@ module.exports = MessageContent = React.createClass
 
 
     _initFrame: (type) ->
-        panel = document.querySelector "#panels > .panel:nth-of-type(2)"
-        if panel? and not @props.composing
-            panel.scrollTop = 0
         # - resize the frame to the height of its content
         # - if images are not displayed, create the function to display them
         #   and resize the frame
@@ -64,7 +62,7 @@ module.exports = MessageContent = React.createClass
                         height = doc.documentElement.scrollHeight
                         if height < 60
                             frame.style.height = "60px"
-                        else
+                        else if height > frame.style.height
                             frame.style.height = "#{height + 60}px"
                         step++
                         # Prevent infinite loop on onresize event
