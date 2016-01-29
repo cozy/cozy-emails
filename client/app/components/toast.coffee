@@ -5,7 +5,6 @@ StoreWatchMixin = require '../mixins/store_watch_mixin'
 LayoutStore      = require '../stores/layout_store'
 LayoutActionCreator = require '../actions/layout_action_creator'
 {ActionTypes, AlertLevel} = require '../constants/app_constants'
-{CSSTransitionGroup} = React.addons
 
 classer = React.addons.classSet
 
