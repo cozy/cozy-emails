@@ -63,7 +63,7 @@ module.exports = React.createClass
 
             div className: 'addresses-wrapper',
                 if field isnt 'from'
-                    span null,
+                    span className: 'field',
                         t "mail #{field}"
                 @formatUsers(users)...
 

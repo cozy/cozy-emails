@@ -88,7 +88,7 @@ module.exports = MessageList = React.createClass
                     p className: 'listFetching list-loading', t 'list fetching'
                 else
                     p
-                        className: 'listEmpty'
+                        className: 'list-empty'
                         ref: 'listEmpty'
                         @props.emptyListMessage
             else
