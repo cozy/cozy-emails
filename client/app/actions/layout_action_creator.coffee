@@ -122,8 +122,6 @@ module.exports = LayoutActionCreator =
             type: ActionTypes.QUERY_PARAMETER_CHANGED
             value: params
 
-        MessageActionCreator.fetchMoreOfCurrentQuery()
-
     showSearchResult: (panelInfo) ->
         {accountID, search} = panelInfo.parameters
 

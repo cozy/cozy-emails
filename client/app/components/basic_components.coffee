@@ -126,6 +126,38 @@ FormButtons = React.createClass
     render: ->
         div className: 'col-sm-offset-4', @props.children
 
+Menu = React.createClass
+
+    render: ->
+        div className: 'menu-action btn-group btn-group-sm',
+            button
+                className: "btn btn-default dropdown-toggle fa #{@props.icon}"
+                type: 'button'
+                'data-toggle': 'dropdown'
+                ' ', span className: 'caret'
+            ul
+                className: "dropdown-menu dropdown-menu-#{@props.direction}"
+                role: 'menu',
+                @props.children
+
+LinkButton = React.createClass
+    render: ->
+        a
+            className: "btn btn-default fa #{@props.icon}"
+            onClick: @props.onClick
+            'aria-describedby': @props['aria-describedby']
+            'data-tooltip-direction': @props['data-tooltip-direction']
+
+Button = React.createClass
+
+    render: ->
+        className = "btn btn-default"
+        className += " fa #{@props.icon}" if @props.icon
+        className += " #{@props.className}" if @props.className
+        button
+            className: className
+            onClick: @props.onClick
+
 MenuItem = React.createClass
 
     onClick: ->
@@ -139,7 +171,7 @@ MenuItem = React.createClass
 
         aOptions =
             role: 'menuitemu'
-            onClick: @onClick
+        aOptions.onClick   = @onClick if @props.onClick
         aOptions.className = @props.className if @props.className
         aOptions.href      = @props.href if @props.href
         aOptions.target    = @props.href if @props.target
@@ -307,6 +339,7 @@ Icon = React.createClass
 
 module.exports = {
     AddressLabel
+    Button
     Container
     Dropdown
     ErrorLine
@@ -315,6 +348,8 @@ module.exports = {
     FormButton
     FormButtons
     Icon
+    LinkButton
+    Menu
     MenuItem
     MenuHeader
     MenuDivider

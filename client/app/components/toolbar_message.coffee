@@ -72,7 +72,7 @@ module.exports = React.createClass
         isSeen    = FlagsConstants.SEEN in flags
 
         ToolboxActions
-            ref:            'toolboxActions'
+            mode: 'message'
             mailboxes:      @props.mailboxes
             inConversation: @props.inConversation
             isSeen:         isSeen

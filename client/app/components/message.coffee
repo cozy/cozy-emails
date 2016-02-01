@@ -1,6 +1,6 @@
 {
     div, article, header, footer, ul, li, span, i, p, a, button, pre,
-    iframe
+    iframe, textarea
 } = React.DOM
 
 MessageHeader  = require "./message_header"
@@ -50,7 +50,7 @@ module.exports = React.createClass
     getInitialState: ->
         return {
             composeAction: ''
-            headers: false
+            displayHeaders: false
             messageDisplayHTML: @props.settings.get 'messageDisplayHTML'
             messageDisplayImages: @props.settings.get 'messageDisplayImages'
             currentMessageID: null
@@ -229,9 +229,13 @@ module.exports = React.createClass
                     if @props.active
                         @renderToolbox()
 
-                if @props.active
+                if @props.active and @state.displayHeaders
                     div className: 'full-headers',
-                        pre null, prepared?.fullHeaders?.join "\n"
+                        # should be a pre, but it breaks flex
+                        textarea
+                            disabled: true
+                            resize: false
+                            value: prepared?.fullHeaders?.join("\n")
 
                 if @props.active
                     MessageContent
@@ -325,11 +329,8 @@ module.exports = React.createClass
 
 
     onHeaders: (event) ->
-        event.preventDefault()
         id = @props.message.get 'id'
-        document.querySelector(".conversation [data-id='#{id}']")
-            .classList.toggle('with-headers')
-
+        @setState displayHeaders: true
 
     addAddress: (address) ->
         ContactActionCreator.createContact address
