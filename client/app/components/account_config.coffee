@@ -95,7 +95,10 @@ module.exports = React.createClass
     render: ->
         activeTab = @getCurrentTab()
 
-        Container id: 'mailbox-config',
+        Container
+            id: 'mailbox-config'
+            expand: true,
+
             Title text: t if @isNew() then 'account new' else 'account edit'
             if @state.editedAccount.get('id')
                 Tabs tabs: TABS.map (name) =>

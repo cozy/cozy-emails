@@ -26,6 +26,7 @@ Container = React.createClass
         section
             id: @props.id
             key: @props.key
+            'aria-expanded': @props.expand or 'false'
             className: 'panel'
         ,
             @props.children
@@ -323,4 +324,3 @@ module.exports = {
     Title
     Tabs
 }
-
