@@ -22,6 +22,7 @@ SMTP_OPTIONS =
     'PLAIN': t("account smtpMethod PLAIN")
 
 GOOGLE_IMAP = ['imap.googlemail.com', 'imap.gmail.com']
+TRIMMEDFIELDS = ['imapServer', 'imapPort', 'smtpServer', 'smtpPort']
 
 module.exports = AccountConfigMain = React.createClass
     displayName: 'AccountConfigMain'
@@ -60,6 +61,10 @@ module.exports = AccountConfigMain = React.createClass
 
     makeChanges: (field, value) ->
         changes = {}
+
+        if field in TRIMMEDFIELDS and value.trim
+            value = value.trim()
+
         changes[field] = value
 
         switch field
