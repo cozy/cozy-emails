@@ -207,6 +207,7 @@ module.exports = MessageList = React.createClass
 
     componentDidMount: ->
         @_initScroll()
+        setTimeout MessageActionCreator.fetchMoreOfCurrentQuery, 1
 
     componentDidUpdate: ->
         @_initScroll()
