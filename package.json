@@ -39,6 +39,7 @@
     "xoauth2": "1.0.0"
   },
   "devDependencies": {
+    "brunch": "1.8.5",
     "casperjs": "1.1.0-beta3",
     "chai": "1.9.1",
     "coffee-19-jshint": "2.3.1",

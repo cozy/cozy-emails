@@ -15,7 +15,6 @@
   "devDependencies": {
     "autoprefixer": "^5.2.0",
     "browser-sync-brunch": "0.0.9",
-    "brunch": "^1.8.0",
     "chai": "^3.2.0",
     "coffee-script-brunch": "1.8.0",
     "css-brunch": "1.7.0",
