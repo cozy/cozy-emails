@@ -41,6 +41,8 @@ module.exports = class MailboxRefreshFast extends Process
 
     code: 'mailbox-refresh-fast'
     @algorithmFailure = {Symbol: 'fastFailure'}
+    @tooManyMessages = {Symbol: 'tooManyMessages'}
+    @maxMessageAtOnce = 300
 
 
     initialize: (options, callback) ->
@@ -78,22 +80,27 @@ module.exports = class MailboxRefreshFast extends Process
 
     fetchCozyMessagesForChanges: (callback) =>
         return callback null unless @changedUids.length
-        log.debug "fetchCozyMessagesForChanges"
+        if @changedUids.length is 0
+            return callback null
+        else if @changedUids.length > MailboxRefreshFast.maxMessageAtOnce
+            return callback MailboxRefreshFast.tooManyMessages
+        else # we have a reasonable number of messages
+            log.debug "fetchCozyMessagesForChanges"
 
-        keys = @changedUids.map (uid) =>
-            ['uid', @mailbox.id, parseInt(uid)]
+            keys = @changedUids.map (uid) =>
+                ['uid', @mailbox.id, parseInt(uid)]
 
-        Message.rawRequest 'byMailboxRequest',
-            reduce: false
-            keys: keys
-            include_docs: true
-        , (err, rows) =>
-            @cozyMessages = {}
-            return callback err if err
-            for row in rows
-                uid = row.key[2]
-                @cozyMessages[uid] = new Message(row.doc)
-            callback null
+            Message.rawRequest 'byMailboxRequest',
+                reduce: false
+                keys: keys
+                include_docs: true
+            , (err, rows) =>
+                @cozyMessages = {}
+                return callback err if err
+                for row in rows
+                    uid = row.key[2]
+                    @cozyMessages[uid] = new Message(row.doc)
+                callback null
 
     # Private: Apply creation & updates from IMAP to the cozy
     #
