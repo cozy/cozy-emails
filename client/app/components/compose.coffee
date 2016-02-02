@@ -176,15 +176,27 @@ module.exports = Compose = React.createClass
     # selection and message information.
     finalRedirect: ->
         if @props.inReplyTo?
-            @redirect MessageStore.getMessageHash @props.inReplyTo
+            conversationID = @props.inReplyTo.get('conversationID')
+            accountID = @props.inReplyTo.get('accountID')
+            messageID = @props.inReplyTo.get('id')
+            mailboxes = Object.keys @props.inReplyTo.get 'mailboxIDs'
+            mailboxID = AccountStore.pickBestBox accountID, mailboxes
+
+            @redirect
+                firstPanel:
+                    action: 'account.mailbox.messages'
+                    parameters: {accountID, mailboxID}
+
+                secondPanel:
+                    action: 'conversation'
+                    parameters: {conversationID, messageID}
 
         # Else it should bring to the default view
         else
-            @redirect @buildUrl
+            @redirect
                 direction: 'first'
                 action: 'default'
                 fullWidth: true
-
 
     # Cancel brings back to default view. If it's while replying to a message,
     # it brings back to this message.

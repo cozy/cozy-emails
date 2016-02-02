@@ -30,7 +30,7 @@ module.exports = React.createClass
             mailboxes             : AccountStore.getAllMailboxes()
             displayConversations  : true
             canLoadMore           : SearchStore.hasMoreSearch()
-            emptyListMessage      : t 'list search empty', query: search
+            emptyListMessage      : t 'search deactivated', query: search
 
     render: ->
 

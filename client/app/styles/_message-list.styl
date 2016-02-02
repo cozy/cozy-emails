@@ -9,6 +9,11 @@
     color      grey-05
     text-align center
 
+.list-empty
+    margin auto
+    margin-top 3em
+    font-size 2em
+
 
 .messages-list
     display          flex
@@ -66,12 +71,15 @@
 
         [role=menuitem]
             margin-right .8em
+            min-width 2em
 
-            &[aria-selected=true] .fa
+            &[aria-selected=true]
                 background-color grey-06
                 color white
-                box-shadow 0 0 0 6px grey-06
                 border-radius 200px
+
+                .fa
+                    color white
 
         @media(min-width: 50em)
             .full & [role=menuitem]

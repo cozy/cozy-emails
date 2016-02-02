@@ -395,16 +395,21 @@ class AccountStore extends Store
     getMailboxRefresh: (mailboxID) ->
         if _mailboxRefreshing[mailboxID] > 0 then 0.9 else 0
 
-    # Returns corresponding mailbox for given message and account.
-    getMailbox: (message, account) ->
-        boxID = null
-        for boxID of message.get('mailboxIds') when boxID in account.favorites
-            boxID = boxID
+    # Select the "best" mailbox among a list of candidates
+    # prefer in order inbox, favorites, or first of list
+    pickBestBox: (accountID, candidates) ->
+        account = _accounts.get accountID
+        favorites = account?.get('favorites') or []
+        inFavorites = _.intersection candidates, favorites
 
-        if not boxID? and Object.keys(message.get 'mailboxIds').length >= 0
-            return Object.keys(message.get 'mailboxIds')[0]
+        if account and account.get('inboxMailbox') of candidates
+            mailboxID = account.get('inboxMailbox')
+        else if inFavorites.length
+            mailboxID = inFavorites[0]
+        else
+            mailboxID = candidates[0]
 
-        return boxID
+        return mailboxID
 
     makeEmptyAccount: ->
         account = {}

@@ -152,7 +152,7 @@ module.exports = Panel = React.createClass
             conversationID:       conversationID
             login:                account?.get 'login'
             accounts:             @state.accounts
-            mailboxes:            @state.mailboxes
+            mailboxes:            @state.selectedMailboxes
             settings:             @state.settings
             fetching:             @state.fetching
             refresh:              @state.refresh
@@ -232,7 +232,6 @@ module.exports = Panel = React.createClass
     getStateFromStores: ->
         return {
             accounts              : AccountStore.getAll()
-            mailboxes             : AccountStore.getAllMailboxes()
             selectedAccount       : AccountStore.getSelectedOrDefault()
             favoriteMailboxes     : AccountStore.getSelectedFavorites()
             selectedMailboxes     : AccountStore.getSelectedMailboxes(true)

@@ -455,27 +455,6 @@ class MessageStore extends Store
     getByID: (messageID) ->
         _messages.get(messageID) or null
 
-
-    # Build message hash from message and currently selected mailbox and
-    # account.
-    getMessageHash: (message) ->
-
-        messageID = message.get 'id'
-        accountID = message.get 'accountID'
-        mailboxID = AccountStore.getSelectedMailbox().get 'id'
-        unless mailboxID?
-            mailboxID = AccountStore.getMailbox message, account
-
-        account = AccountStore.getSelected().get 'id'
-        conversationID = message.get('conversationID')
-
-        hash = "#account/#{accountID}/"
-        hash += "mailbox/#{mailboxID}/"
-        hash += "conversation/#{conversationID}/#{messageID}/"
-
-        return hash
-
-
     dedupConversation = ->
         conversationIDs = []
         return filter = (message) ->
