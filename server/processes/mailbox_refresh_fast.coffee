@@ -61,6 +61,7 @@ module.exports = class MailboxRefreshFast extends Process
             @refreshCreatedAndUpdated
             @checkNeedDeletion
             @refreshDeletion
+            @storeLastSync
         ], callback
 
     fetchChanges: (next) =>
@@ -116,7 +117,6 @@ module.exports = class MailboxRefreshFast extends Process
             if message and not _.xor(message.flags, flags).length
                 setImmediate next
             else if message
-                @noChange = false
                 message.updateAttributes {flags}, next
             else
                 Message.fetchOrUpdate @mailbox, {mid, uid}, (err, info) =>
@@ -217,14 +217,16 @@ module.exports = class MailboxRefreshFast extends Process
         ], callback
 
 
-    storeLastSync: (callback) ->
+    storeLastSync: (callback) =>
         if @newImapTotal isnt @mailbox.lastTotal or
            @newHighestModSeq isnt @mailbox.lastHighestModSeq
 
-            @mailbox.updateAttributes
+            changes =
                 lastHighestModSeq: @newHighestModSeq
                 lastTotal: @newImapTotal
                 lastSync: new Date().toISOString()
-            , callback
+            @mailbox.updateAttributes changes, callback
+
+        else callback null
 
 
