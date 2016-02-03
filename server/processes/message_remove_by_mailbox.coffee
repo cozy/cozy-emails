@@ -61,6 +61,12 @@ module.exports = class RemoveAllMessagesFromMailbox extends Process
 
     destroyMessages: (callback) =>
         async.eachLimit @batch, CONCURRENT_DESTROY, (message, cb) =>
-            if @shouldDestroy message then message.destroy cb
-            else message.removeFromMailbox id: @mailboxID, false, cb
+            if @shouldDestroy message
+                message.destroy (err) ->
+                    # some message appears twice, discard error
+                    cb null
+            else
+                message.removeFromMailbox id: @mailboxID, false, (err) ->
+                    # some message appears twice, discard error
+                    cb null
         , callback
