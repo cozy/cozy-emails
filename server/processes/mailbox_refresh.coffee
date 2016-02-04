@@ -23,8 +23,9 @@ module.exports = class MailboxRefresh extends Process
         log.debug "refreshing box"
         if account.supportRFC4551 and mailbox.lastHighestModSeq
             @refreshFast (err) =>
-                if err and err is MailboxRefreshFast.algorithmFailure
-                    log.warn "refreshFast fail, trying deep"
+                if err and err is MailboxRefreshFast.algorithmFailure or
+                err is MailboxRefreshFast.tooManyMessages
+                    log.warn "refreshFast fail #{err.Symbol}, trying deep"
                     @options.storeHighestModSeq = true
                     @refreshDeep callback
                 else if err

@@ -115,7 +115,7 @@ FormButton = React.createClass
             onClick: @props.onClick
         ,
             if @props.spinner
-                span null, Spinner(white: true)
+                span null, Spinner(color: 'white')
             else
                 span className: "fa fa-#{@props.icon}"
             span null, @props.text
@@ -292,10 +292,10 @@ Spinner = React.createClass
     displayName: 'Spinner'
 
     protoTypes:
-        white: React.PropTypes.bool
+        color: React.PropTypes.string
 
     render: ->
-        suffix = if @props.white  then '-white' else ''
+        suffix = if @props.color then "-#{@props.color}" else ''
 
         img
             src: "images/spinner#{suffix}.svg"

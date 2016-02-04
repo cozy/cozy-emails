@@ -17,7 +17,7 @@ ContactActionCreator = require '../actions/contact_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-Participants        = require './participant'
+MessageListLoader   = require './message-list-loader'
 {Spinner, Progress} = require './basic_components'
 ToolbarMessagesList = require './toolbar_messageslist'
 MessageListBody = require './message-list-body'
@@ -55,6 +55,7 @@ module.exports = MessageList = React.createClass
             @setState allSelected: false, edited: false
 
     render: ->
+        mailbox = @props.mailboxes.get(@props.mailboxID)
         section
             key:               "messages-list-#{@props.mailboxID}"
             ref:               'list'
@@ -79,8 +80,12 @@ module.exports = MessageList = React.createClass
                 queryParams:          @props.queryParams
                 noFilters:            @props.noFilters
 
-            # Progress
-            Progress value: @props.refresh, max: 1
+            if @props.refresh and not mailbox.get('lastSync')
+                MessageListLoader()
+            else if @props.refresh
+                Progress value: @props.refresh, max: 1
+            else
+                null
 
             # Message List
             if @props.messages.count() is 0
