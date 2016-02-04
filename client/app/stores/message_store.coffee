@@ -10,6 +10,8 @@ SocketUtils = require '../utils/socketio_utils'
 
 {reverseDateSort, getSortFunction} = require '../utils/misc'
 
+EPOCH = (new Date(0)).toISOString()
+
 class MessageStore extends Store
 
     ###
@@ -374,6 +376,10 @@ class MessageStore extends Store
             lastdate = _messages.last()?.get('date')
             if lastdate
                 SocketUtils.changeRealtimeScope fetchResult.mailboxID, lastdate
+            else if fetchResult.messages.length is 0
+                # we are open to every message
+
+                SocketUtils.changeRealtimeScope fetchResult.mailboxID, EPOCH
             @emit 'change'
 
         handle ActionTypes.CONVERSATION_FETCH_SUCCESS, ({updated}) ->
