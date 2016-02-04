@@ -373,13 +373,13 @@ class MessageStore extends Store
             for message in fetchResult.messages when message?
                 onReceiveRawMessage message
 
-            lastdate = _messages.last()?.get('date')
-            if lastdate
-                SocketUtils.changeRealtimeScope fetchResult.mailboxID, lastdate
-            else if fetchResult.messages.length is 0
-                # we are open to every message
-
+            if fetchResult.messages.length is 0
+                # either end of list or no messages, we stay open
                 SocketUtils.changeRealtimeScope fetchResult.mailboxID, EPOCH
+
+            else if lastdate = _messages.last()?.get('date')
+                SocketUtils.changeRealtimeScope fetchResult.mailboxID, lastdate
+
             @emit 'change'
 
         handle ActionTypes.CONVERSATION_FETCH_SUCCESS, ({updated}) ->

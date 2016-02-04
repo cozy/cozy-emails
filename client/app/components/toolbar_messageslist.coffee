@@ -26,7 +26,6 @@ module.exports = ToolbarMessagesList = React.createClass
         selected:             React.PropTypes.object.isRequired
         allSelected:          React.PropTypes.bool.isRequired
         displayConversations: React.PropTypes.bool.isRequired
-        toggleEdited:         React.PropTypes.func.isRequired
         toggleAll:            React.PropTypes.func.isRequired
         afterAction:          React.PropTypes.func
 
@@ -67,6 +66,11 @@ module.exports = ToolbarMessagesList = React.createClass
 
 
     render: ->
+
+        checkboxState = if @props.allSelected then 'fa-check-square-o'
+        else if Object.keys(@props.selected).length then 'fa-minus-square-o'
+        else 'fa-square-o'
+
         aside role: 'toolbar',
 
             # Drawer toggler
@@ -80,15 +84,9 @@ module.exports = ToolbarMessagesList = React.createClass
             # Select all Checkbox
             button
                 role:                     'menuitem'
-                'aria-selected':          @props.edited
                 onClick:                  @props.toggleAll
 
-                i className: classer
-                    fa:                  true
-                    'fa-square-o':       not @props.edited
-                    'fa-check-square-o': @props.allSelected
-                    'fa-minus-square-o': @props.edited and
-                                         not @props.allSelected
+                i className: "fa #{checkboxState}"
 
             if @props.edited
                 ActionsToolbarMessagesList

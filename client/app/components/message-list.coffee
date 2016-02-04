@@ -4,6 +4,8 @@
 RouterMixin           = require '../mixins/router_mixin'
 TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
 StoreWatchMixin       = require '../mixins/store_watch_mixin'
+SelectionManager      = require '../mixins/selection_manager_mixin'
+ShouldUpdate          = require '../mixins/should_update_mixin'
 
 LayoutStore = require '../stores/layout_store'
 
@@ -27,32 +29,18 @@ module.exports = MessageList = React.createClass
     displayName: 'MessageList'
 
     mixins: [
+        SelectionManager
+        ShouldUpdate.UnderscoreEqualitySlow
         RouterMixin,
         TooltipRefresherMixin
         StoreWatchMixin [LayoutStore]
     ]
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
-        return should
-
-    getInitialState: ->
-        edited: false
-        selected: {}
-        allSelected: false
-
     getStateFromStores: ->
         fullscreen: LayoutStore.isPreviewFullscreen()
 
-    componentWillReceiveProps: (props) ->
-        selected = _.clone @state.selected
-        # remove selected messages that are not in view anymore
-        for id, isSelected of selected when not props.messages.get(id)
-            delete selected[id]
-        @setState selected: selected
-        if Object.keys(selected).length is 0
-            @setState allSelected: false, edited: false
+    getSelectables: (props = @props) ->
+        props.messages.keySeq()
 
     render: ->
         mailbox = @props.mailboxes.get(@props.mailboxID)
@@ -70,22 +58,20 @@ module.exports = MessageList = React.createClass
                 mailboxID:            @props.mailboxID
                 mailboxes:            @props.mailboxes
                 messages:             @props.messages
-                edited:               @state.edited
-                selected:             @state.selected
-                allSelected:          @state.allSelected
+                edited:               @hasSelected()
+                selected:             @getSelected().toObject()
+                allSelected:          @allSelected()
                 displayConversations: @props.displayConversations
-                toggleEdited:         @toggleEdited
                 toggleAll:            @toggleAll
                 afterAction:          @afterMessageAction
                 queryParams:          @props.queryParams
                 noFilters:            @props.noFilters
 
             if @props.refresh and not mailbox.get('lastSync')
+                Progress value: 0, max: 1
                 MessageListLoader()
-            else if @props.refresh
-                Progress value: @props.refresh, max: 1
             else
-                null
+                Progress value: @props.refresh, max: 1
 
             # Message List
             if @props.messages.count() is 0
@@ -111,9 +97,9 @@ module.exports = MessageList = React.createClass
                         accounts: @props.accounts
                         mailboxes: @props.mailboxes
                         login: @props.login
-                        edited: @state.edited
-                        selected: @state.selected
-                        allSelected: @state.allSelected
+                        edited: @hasSelected()
+                        selected: @getSelected().toObject()
+                        allSelected: @allSelected()
                         displayConversations: @props.displayConversations
                         isTrash: @props.isTrash
                         ref: 'listBody'
@@ -136,40 +122,13 @@ module.exports = MessageList = React.createClass
             p ref: 'listEnd', t 'list end'
 
 
-    toggleEdited: ->
-        if @state.edited
-            @setState allSelected: false, edited: false, selected: {}
-        else
-            @setState edited: true
-
     toggleAll: ->
-        if Object.keys(@state.selected).length > 0
-            @setState allSelected: false, edited: false, selected: {}
-        else
-            selected = {}
-            @props.messages.map (message, key) ->
-                selected[key] = true
-            .toJS()
-            @setState allSelected: true, edited: true, selected: selected
+        if @hasSelected() then @setNoneSelected()
+        else @setAllSelected()
 
     onMessageSelectionChange: (id, val) ->
-        selected = _.clone @state.selected
-        if val
-            selected[id] = val
-        else
-            delete selected[id]
-
-        if Object.keys(selected).length > 0
-            newState =
-                edited: true
-                selected: selected
-        else
-            newState =
-                allSelected: false
-                edited: false
-                selected: {}
-        @setState newState
-
+        if val then @addToSelected id
+        else @removeFromSelected id
 
     afterMessageAction: ->
         # ugly setTimeout to wait until localDelete occured
