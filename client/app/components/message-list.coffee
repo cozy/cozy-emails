@@ -44,6 +44,11 @@ module.exports = MessageList = React.createClass
     getStateFromStores: ->
         accountID = @props.accountID
         mailboxID = @props.mailboxID
+        unless mailboxID
+            return nextstate =
+                mailboxes: @props.mailboxes
+                messages: Immutable.Map()
+
         account   = AccountStore.getByID accountID
         role = AccountStore.getMailboxRole account, mailboxID
         settings = SettingsStore.get()
@@ -84,6 +89,7 @@ module.exports = MessageList = React.createClass
         state.messages.keySeq()
 
     getEmptyListMessage: ->
+        return @props.emptyListMessage if @props.emptyListMessage
         switch @state.queryParams.filter
             when MessageFilter.FLAGGED
                 t 'no flagged message'
