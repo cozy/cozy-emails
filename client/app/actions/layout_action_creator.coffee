@@ -138,7 +138,9 @@ module.exports = LayoutActionCreator =
             MessageActionCreator.fetchSearchResults accountID, search
 
     showMessage: (panelInfo, direction) ->
-        message = MessageStore.getByID panelInfo.parameters.messageID
+        {messageID} = panelInfo.parameters
+
+        message = MessageStore.getByID messageID
         if message?
             AccountActionCreator.selectAccountForMessage message
         else

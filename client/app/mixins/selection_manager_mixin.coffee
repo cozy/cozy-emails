@@ -9,13 +9,13 @@ module.exports =
         selected: Immutable.Set()
         allSelected: false
 
-    componentWillReceiveProps: (props) ->
+    componentWillReceiveProps: (props, state) ->
         throw new Error(NEED_GETSELECTABLES) unless @getSelectables
 
         # remove selected messages that are not in view anymore
         @setState
             allSelected: false
-            selected: @state.selected.intersect @getSelectables props
+            selected: @state.selected.intersect @getSelectables props, state
 
     hasSelected: ->
         @state.selected.length > 0

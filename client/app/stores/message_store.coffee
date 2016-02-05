@@ -37,6 +37,7 @@ class MessageStore extends Store
     _currentMessages = Immutable.Sequence()
     _conversationLengths = Immutable.Map()
     _conversationMemoize = null
+    _conversationMemoizeID = null
     _currentID       = null
     _currentCID      = null
 
@@ -610,7 +611,10 @@ class MessageStore extends Store
             return null
 
     getConversation: (conversationID) ->
-        return _conversationMemoize if _conversationMemoize
+        if _conversationMemoize and _conversationMemoizeID is conversationID
+            return _conversationMemoize
+
+        _conversationMemoizeID = conversationID
         _conversationMemoize = _messagesWithInFlights()
             .filter (message) ->
                 message.get('conversationID') is conversationID

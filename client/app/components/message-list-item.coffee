@@ -112,7 +112,6 @@ module.exports = MessageItem = React.createClass
     getMailboxTags: ->
 
         accountID = @props.message.get('accountID')
-        accountLabel = @props.accounts.get(accountID).get 'label'
 
         Object.keys @props.message.get('mailboxIDs')
         .filter (boxID) =>
@@ -132,7 +131,7 @@ module.exports = MessageItem = React.createClass
             box = @props.mailboxes.get boxID
             label = box.get 'label'
             unless @props.accountID
-                label = "#{accountLabel}:#{label}"
+                label = "#{@props.accountLabel}:#{label}"
 
             span className: 'mailbox-tag', label
 
