@@ -411,6 +411,14 @@ class AccountStore extends Store
 
         return mailboxID
 
+    getMailboxRole: (account, mailboxID) ->
+        for role in ['trashMailbox','draftMailbox','junkMailbox']
+            if mailboxID is account.get role
+                return role
+
+        return null
+
+
     makeEmptyAccount: ->
         account = {}
         account.label = ''

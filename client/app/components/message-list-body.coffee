@@ -34,7 +34,7 @@ module.exports = MessageListBody = React.createClass
                     message: message,
                     accountID: @props.accountID,
                     mailboxID: @props.mailboxID,
-                    accounts: @props.accounts,
+                    accountLabel: @props.accountLabel,
                     mailboxes: @props.mailboxes,
                     conversationLengths: @props.conversationLengths?.get(cid),
                     key: key,

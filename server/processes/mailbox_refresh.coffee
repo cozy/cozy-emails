@@ -20,6 +20,8 @@ module.exports = class MailboxRefresh extends Process
         @shouldNotif = false
         return callback null unless account
 
+        return callback null if "\\Noselect" in mailbox.attribs
+
         log.debug "refreshing box"
         if account.supportRFC4551 and mailbox.lastHighestModSeq
             @refreshFast (err) =>
