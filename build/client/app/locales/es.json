@@ -375,5 +375,7 @@
     "daterangepicker presets yesterday": "ayer",
     "daterangepicker presets last week": "la última semana",
     "daterangepicker presets last month": "el último mes",
-    "daterangepicker clear": "borrar"
+    "daterangepicker clear": "borrar",
+    "emails are fetching": "Se están trayendo sus emails",
+    "thanks for patience": "Gracias por su paciencia, lo asombroso está por llegar."
 }

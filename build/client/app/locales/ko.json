@@ -375,5 +375,7 @@
     "daterangepicker presets yesterday": "어제",
     "daterangepicker presets last week": "지난주",
     "daterangepicker presets last month": "지난달",
-    "daterangepicker clear": "비우기"
+    "daterangepicker clear": "비우기",
+    "emails are fetching": "Your emails are fetching...",
+    "thanks for patience": "Thanks for being patient, the awesomeness is coming."
 }
