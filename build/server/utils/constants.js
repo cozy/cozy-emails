@@ -3,15 +3,13 @@ exports.MSGBYPAGE = 30;
 
 exports.LIMIT_DESTROY = 200;
 
-exports.LIMIT_UPDATE = 30;
+exports.LIMIT_UPDATE = 50;
 
 exports.CONCURRENT_DESTROY = 1;
 
 exports.FETCH_AT_ONCE = 10000;
 
 exports.LIMIT_BY_BOX = 1000;
-
-exports.REFRESH_INTERVAL = 300000;
 
 exports.RFC6154 = {
   draftMailbox: '\\Drafts',

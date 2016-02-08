@@ -10,6 +10,8 @@ SocketUtils = require '../utils/socketio_utils'
 
 {reverseDateSort, getSortFunction} = require '../utils/misc'
 
+EPOCH = (new Date(0)).toISOString()
+
 class MessageStore extends Store
 
     ###
@@ -35,6 +37,7 @@ class MessageStore extends Store
     _currentMessages = Immutable.Sequence()
     _conversationLengths = Immutable.Map()
     _conversationMemoize = null
+    _conversationMemoizeID = null
     _currentID       = null
     _currentCID      = null
 
@@ -371,9 +374,13 @@ class MessageStore extends Store
             for message in fetchResult.messages when message?
                 onReceiveRawMessage message
 
-            lastdate = _messages.last()?.get('date')
-            if lastdate
+            if fetchResult.messages.length is 0
+                # either end of list or no messages, we stay open
+                SocketUtils.changeRealtimeScope fetchResult.mailboxID, EPOCH
+
+            else if lastdate = _messages.last()?.get('date')
                 SocketUtils.changeRealtimeScope fetchResult.mailboxID, lastdate
+
             @emit 'change'
 
         handle ActionTypes.CONVERSATION_FETCH_SUCCESS, ({updated}) ->
@@ -454,27 +461,6 @@ class MessageStore extends Store
     ###
     getByID: (messageID) ->
         _messages.get(messageID) or null
-
-
-    # Build message hash from message and currently selected mailbox and
-    # account.
-    getMessageHash: (message) ->
-
-        messageID = message.get 'id'
-        accountID = message.get 'accountID'
-        mailboxID = AccountStore.getSelectedMailbox().get 'id'
-        unless mailboxID?
-            mailboxID = AccountStore.getMailbox message, account
-
-        account = AccountStore.getSelected().get 'id'
-        conversationID = message.get('conversationID')
-
-        hash = "#account/#{accountID}/"
-        hash += "mailbox/#{mailboxID}/"
-        hash += "conversation/#{conversationID}/#{messageID}/"
-
-        return hash
-
 
     dedupConversation = ->
         conversationIDs = []
@@ -625,7 +611,10 @@ class MessageStore extends Store
             return null
 
     getConversation: (conversationID) ->
-        return _conversationMemoize if _conversationMemoize
+        if _conversationMemoize and _conversationMemoizeID is conversationID
+            return _conversationMemoize
+
+        _conversationMemoizeID = conversationID
         _conversationMemoize = _messagesWithInFlights()
             .filter (message) ->
                 message.get('conversationID') is conversationID

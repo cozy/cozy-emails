@@ -1,166 +1,144 @@
 {div, ul, li, span, a, button} = React.DOM
-{MenuHeader, MenuItem, MenuDivider} = require './basic_components'
+{Menu, MenuHeader, MenuItem, MenuDivider} = require './basic_components'
 {FlagsConstants} = require '../constants/app_constants'
 
+
+
+# This component is used in 3 places
+#  - for the conversation
+#  - for the message
+#  - at the top of the list on selection
 
 module.exports = ToolboxActions = React.createClass
     displayName: 'ToolboxActions'
 
-
     propTypes:
-
+        # let the dropdown be aligned on right or left
         direction            : React.PropTypes.string.isRequired
-        displayConversations : React.PropTypes.bool.isRequired
+        # one of conversation / message
+        mode                 : React.PropTypes.string.isRequired
+        # is the message or all messages flagged
         isFlagged            : React.PropTypes.bool
+        # is the message or all messages seen
         isSeen               : React.PropTypes.bool
+        # mailboxes this message can be moved to
         mailboxes            : React.PropTypes.object.isRequired
-        message              : React.PropTypes.object
+        # id of the message we are working on (empty for conversation)
         messageID            : React.PropTypes.string
+        # handlers for action
         onConversationDelete : React.PropTypes.func.isRequired
         onConversationMark   : React.PropTypes.func.isRequired
         onConversationMove   : React.PropTypes.func.isRequired
         onHeaders            : React.PropTypes.func
-        onMark               : React.PropTypes.func.isRequired
+        onMark               : React.PropTypes.func
 
 
     shouldComponentUpdate: (nextProps, nextState) ->
         return not(_.isEqual(nextState, @state)) or
                not(_.isEqual(nextProps, @props))
 
-
     render: ->
-        direction = if @props.direction is 'right' then 'right' else 'left'
-        div className: 'menu-action btn-group btn-group-sm',
-            button
-                className: 'btn btn-default dropdown-toggle fa fa-cog'
-                type: 'button'
-                'data-toggle': 'dropdown'
-                ' '
-                    span className: 'caret'
-            ul
-                className: "dropdown-menu dropdown-menu-#{direction}"
-                role: 'menu',
-                    # in conversation mode, only shows actions on conversation
-                    if not @props.displayConversations
-                        @renderMarkActions()
-                    if not @props.displayConversations
-                        MenuDivider()
-                    @renderRawActions()...
-                    if @props.inConversation
-                        @renderConversationActions()
-                    if @props.inConversation
-                        MenuDivider key: 'divider'
-                    if @props.inConversation
-                        MenuHeader key: 'header-move',
-                            t 'mail action conversation move'
-                    if @props.inConversation
-                        @renderMailboxes()
+        message = @props.mode is 'message'
+        conversation = @props.mode is 'conversation'
+        Menu
+            icon: 'fa-cog'
+            direction: if @props.direction is 'right' then 'right' else 'left'
+        ,
 
+            if message
+                MenuHeader key: 'header-mark', t 'mail action mark'
 
-    renderMarkActions: ->
-        items = [
-            MenuHeader key: 'header-mark', t 'mail action mark'
-
-            if not @props.isSeen? or not @props.isSeen
+            if message and @props.isSeen isnt true
                 MenuItem
                     key: 'action-mark-seen'
                     onClick: @props.onMark
                     onClickValue: FlagsConstants.SEEN
                     t 'mail mark read'
-            if not @props.isSeen? or @props.isSeen
+
+            if message and @props.isSeen isnt false
                 MenuItem
                     key: 'action-mark-unseen'
                     onClick: @props.onMark
                     onClickValue: FlagsConstants.UNSEEN
                     t 'mail mark unread'
 
-            if not @props.isFlagged? or @props.isFlagged
+            if message and @props.isFlagged isnt false
                 MenuItem
                     key: 'action-mark-noflag'
                     onClick: @props.onMark
                     onClickValue: FlagsConstants.NOFLAG
                     t 'mail mark nofav'
-            if not @props.isFlagged? or not @props.isFlagged
+
+            if message and @props.isFlagged isnt true
                 MenuItem
                     key: 'action-mark-flagged'
                     onClick: @props.onMark
                     onClickValue: FlagsConstants.FLAGGED
                     t 'mail mark fav'
 
-        ]
-
-        # remove undefined values from the array
-        return items.filter (child) -> Boolean child
-
-
-    renderRawActions: ->
-        items = [
-
-            if not @props.displayConversations
+            if message
                 MenuHeader key: 'header-more', t 'mail action more'
 
-            if @props.messageID?
+            if message
                 MenuItem
                     key: 'action-headers'
                     onClick: @props.onHeaders,
                     t 'mail action headers'
 
-            if @props.message?
+            if message
                 MenuItem
                     key: 'action-raw'
-                    href:   "raw/#{@props.message.get 'id'}"
+                    href:   "raw/#{@props.messageID}"
                     target: '_blank'
                     t 'mail action raw'
-        ]
 
-        # remove undefined values from the array
-        return items.filter (child) -> Boolean child
+            if conversation
+                MenuHeader key: 'header-conv', t 'mail action conversation'
 
+            if conversation
+                MenuItem
+                    key: 'conv-delete'
+                    onClick: @props.onConversationDelete,
+                    t 'mail action conversation delete'
 
-    renderConversationActions: ->
-        items = [
-            MenuItem
-                key: 'conv-delete'
-                onClick: @props.onConversationDelete,
-                t 'mail action conversation delete'
+            if conversation and @props.isSeen isnt true
+                MenuItem
+                    key: 'conv-seen'
+                    onClick: @props.onConversationMark
+                    onClickValue: FlagsConstants.SEEN
+                    t 'mail action conversation seen'
 
-            MenuItem
-                key: 'conv-seen'
-                onClick: @props.onConversationMark
-                onClickValue: FlagsConstants.SEEN
-                t 'mail action conversation seen'
+            if conversation and @props.isSeen isnt false
+                MenuItem
+                    key: 'conv-unseen'
+                    onClick: @props.onConversationMark
+                    onClickValue: FlagsConstants.UNSEEN
+                    t 'mail action conversation unseen'
 
-            MenuItem
-                key: 'conv-unseen'
-                onClick: @props.onConversationMark
-                onClickValue: FlagsConstants.UNSEEN
-                t 'mail action conversation unseen'
+            if conversation and @props.isFlagged isnt true
+                MenuItem
+                    key: 'conv-flagged'
+                    onClick: @props.onConversationMark
+                    onClickValue: FlagsConstants.FLAGGED
+                    t 'mail action conversation flagged'
 
-            MenuItem
-                key: 'conv-flagged'
-                onClick: @props.onConversationMark
-                onClickValue: FlagsConstants.FLAGGED
-                t 'mail action conversation flagged'
+            if conversation and @props.isFlagged isnt false
+                MenuItem
+                    key: 'conv-noflag'
+                    onClick: @props.onConversationMark
+                    onClickValue: FlagsConstants.NOFLAG
+                    t 'mail action conversation noflag'
 
-            MenuItem
-                key: 'conv-noflag'
-                onClick: @props.onConversationMark
-                onClickValue: FlagsConstants.NOFLAG
-                t 'mail action conversation noflag'
-        ]
+            if conversation
+                MenuHeader key: 'header-move', t 'mail action conversation move'
 
-        return items
-
-
-    renderMailboxes: ->
-        @props.mailboxes
-        .filter (box, id) => id isnt @props.selectedMailboxID
-        .map (mbox, id) =>
-            MenuItem
-                key: id
-                className: "pusher pusher-#{mbox.get('depth')}"
-                onClick: @props.onConversationMove
-                onClickValue: id
-                mbox.get('label')
-        .toJS()
+            if conversation
+                @props.mailboxes.map (mbox, id) =>
+                    MenuItem
+                        key: id
+                        className: "pusher pusher-#{mbox.get('depth')}"
+                        onClick: @props.onConversationMove
+                        onClickValue: id
+                        mbox.get('label')
+                .toArray()
 

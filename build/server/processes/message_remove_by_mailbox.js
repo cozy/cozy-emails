@@ -104,11 +104,15 @@ module.exports = RemoveAllMessagesFromMailbox = (function(superClass) {
     return async.eachLimit(this.batch, CONCURRENT_DESTROY, (function(_this) {
       return function(message, cb) {
         if (_this.shouldDestroy(message)) {
-          return message.destroy(cb);
+          return message.destroy(function(err) {
+            return cb(null);
+          });
         } else {
           return message.removeFromMailbox({
             id: _this.mailboxID
-          }, false, cb);
+          }, false, function(err) {
+            return cb(null);
+          });
         }
       };
     })(this), callback);

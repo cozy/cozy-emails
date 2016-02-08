@@ -29,6 +29,8 @@ PropTypes.Mailbox = ->
         weight: PropTypes.number
         attribs: PropTypes.arrayOf PropTypes.string
 
+PropTypes.mapOfMailbox = PropTypes.immutableMapStringTo(PropTypes.Mailbox)
+
 PropTypes.Account = ->
     React.PropTypes.shape
         label        : PropTypes.string

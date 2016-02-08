@@ -21,6 +21,7 @@ module.exports = MailboxRefreshFast = (function(superClass) {
   extend(MailboxRefreshFast, superClass);
 
   function MailboxRefreshFast() {
+    this.storeLastSync = bind(this.storeLastSync, this);
     this.refreshDeletion = bind(this.refreshDeletion, this);
     this.fetchImapUIDs = bind(this.fetchImapUIDs, this);
     this.fetchCozyUIDs = bind(this.fetchCozyUIDs, this);
@@ -37,6 +38,12 @@ module.exports = MailboxRefreshFast = (function(superClass) {
     Symbol: 'fastFailure'
   };
 
+  MailboxRefreshFast.tooManyMessages = {
+    Symbol: 'tooManyMessages'
+  };
+
+  MailboxRefreshFast.maxMessageAtOnce = 300;
+
   MailboxRefreshFast.prototype.initialize = function(options, callback) {
     this.shouldNotif = false;
     this.nbAdded = 0;
@@ -45,7 +52,7 @@ module.exports = MailboxRefreshFast = (function(superClass) {
     this.lastTotal = this.mailbox.lastTotal || 0;
     this.changes = {};
     this.changedUids = [];
-    return async.series([this.fetchChanges, this.fetchCozyMessagesForChanges, this.refreshCreatedAndUpdated, this.checkNeedDeletion, this.refreshDeletion], callback);
+    return async.series([this.fetchChanges, this.fetchCozyMessagesForChanges, this.refreshCreatedAndUpdated, this.checkNeedDeletion, this.refreshDeletion, this.storeLastSync], callback);
   };
 
   MailboxRefreshFast.prototype.fetchChanges = function(next) {
@@ -75,31 +82,37 @@ module.exports = MailboxRefreshFast = (function(superClass) {
     if (!this.changedUids.length) {
       return callback(null);
     }
-    log.debug("fetchCozyMessagesForChanges");
-    keys = this.changedUids.map((function(_this) {
-      return function(uid) {
-        return ['uid', _this.mailbox.id, parseInt(uid)];
-      };
-    })(this));
-    return Message.rawRequest('byMailboxRequest', {
-      reduce: false,
-      keys: keys,
-      include_docs: true
-    }, (function(_this) {
-      return function(err, rows) {
-        var i, len, row, uid;
-        _this.cozyMessages = {};
-        if (err) {
-          return callback(err);
-        }
-        for (i = 0, len = rows.length; i < len; i++) {
-          row = rows[i];
-          uid = row.key[2];
-          _this.cozyMessages[uid] = new Message(row.doc);
-        }
-        return callback(null);
-      };
-    })(this));
+    if (this.changedUids.length === 0) {
+      return callback(null);
+    } else if (this.changedUids.length > MailboxRefreshFast.maxMessageAtOnce) {
+      return callback(MailboxRefreshFast.tooManyMessages);
+    } else {
+      log.debug("fetchCozyMessagesForChanges");
+      keys = this.changedUids.map((function(_this) {
+        return function(uid) {
+          return ['uid', _this.mailbox.id, parseInt(uid)];
+        };
+      })(this));
+      return Message.rawRequest('byMailboxRequest', {
+        reduce: false,
+        keys: keys,
+        include_docs: true
+      }, (function(_this) {
+        return function(err, rows) {
+          var i, len, row, uid;
+          _this.cozyMessages = {};
+          if (err) {
+            return callback(err);
+          }
+          for (i = 0, len = rows.length; i < len; i++) {
+            row = rows[i];
+            uid = row.key[2];
+            _this.cozyMessages[uid] = new Message(row.doc);
+          }
+          return callback(null);
+        };
+      })(this));
+    }
   };
 
   MailboxRefreshFast.prototype.refreshCreatedAndUpdated = function(callback) {
@@ -113,7 +126,6 @@ module.exports = MailboxRefreshFast = (function(superClass) {
         if (message && !_.xor(message.flags, flags).length) {
           return setImmediate(next);
         } else if (message) {
-          _this.noChange = false;
           return message.updateAttributes({
             flags: flags
           }, next);
@@ -253,12 +265,16 @@ module.exports = MailboxRefreshFast = (function(superClass) {
   };
 
   MailboxRefreshFast.prototype.storeLastSync = function(callback) {
+    var changes;
     if (this.newImapTotal !== this.mailbox.lastTotal || this.newHighestModSeq !== this.mailbox.lastHighestModSeq) {
-      return this.mailbox.updateAttributes({
+      changes = {
         lastHighestModSeq: this.newHighestModSeq,
         lastTotal: this.newImapTotal,
         lastSync: new Date().toISOString()
-      }, callback);
+      };
+      return this.mailbox.updateAttributes(changes, callback);
+    } else {
+      return callback(null);
     }
   };
 

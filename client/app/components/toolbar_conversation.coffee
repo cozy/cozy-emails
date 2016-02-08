@@ -1,90 +1,97 @@
 {nav, div, button, a} = React.DOM
-{Tooltips}            = require '../constants/app_constants'
-classer               = React.addons.classSet
-
-LayoutStore = require '../stores/layout_store'
+{Tooltips, FlagsConstants} = require '../constants/app_constants'
+PropTypes             = require '../libs/prop_types'
 
 LayoutActionCreator = require '../actions/layout_action_creator'
+MessageActionCreator = require '../actions/message_action_creator'
 
 RouterMixin     = require '../mixins/router_mixin'
-StoreWatchMixin = require '../mixins/store_watch_mixin'
-
+ToolboxActions = require './toolbox_actions'
+{Button, LinkButton}  = require './basic_components'
 
 module.exports = React.createClass
     displayName: 'ToolbarConversation'
 
-    mixins: [
-        RouterMixin
-        StoreWatchMixin [LayoutStore]
-    ]
+    mixins: [RouterMixin]
 
     propTypes:
+        conversation        : PropTypes.object.isRequired
+        conversationID      : React.PropTypes.string
+        moveFromMailbox     : React.PropTypes.string.isRequired
+        moveToMailboxes     : PropTypes.mapOfMailbox
         nextMessageID       : React.PropTypes.string
         nextConversationID  : React.PropTypes.string
         prevMessageID       : React.PropTypes.string
         prevConversationID  : React.PropTypes.string
-        settings            : React.PropTypes.object.isRequired
-
-    getStateFromStores: ->
-        fullscreen: LayoutStore.isPreviewFullscreen()
-
-
-    getUrlParams: (messageID, conversationID) ->
-        if @props.settings.get 'displayConversation' and conversationID?
-            action = 'conversation'
-            parameters =
-                messageID: messageID
-                conversationID: conversationID
-        else
-            action = 'message'
-            parameters =
-                messageID: messageID
-
-        return urlParams =
-            direction: 'second'
-            action: action
-            parameters: parameters
-
+        fullscreen          : React.PropTypes.bool.isRequired
 
     render: ->
         nav className: 'toolbar toolbar-conversation btn-toolbar',
+
+            ToolboxActions
+                mode                 : 'conversation'
+                direction            : 'right'
+                inConversation       : true
+                displayConversations : true
+                mailboxes            : @props.moveToMailboxes
+                onConversationDelete : @onDelete
+                onConversationMark   : @onMark
+                onConversationMove   : @onMove
+
             div className: 'btn-group',
-                @renderNav 'prev'
-                @renderNav 'next'
-            @renderFullscreen()
+
+                LinkButton
+                    icon: if @props.prevMessageID then 'fa-chevron-left'
+                    onClick: @onPrevClicked
+                    'aria-describedby': Tooltips.PREVIOUS_CONVERSATION
+                    'data-tooltip-direction': 'left'
+
+                LinkButton
+                    icon: if @props.nextMessageID then 'fa-chevron-right'
+                    onClick: @onNextClicked
+                    'aria-describedby': Tooltips.NEXT_CONVERSATION
+                    'data-tooltip-direction': 'left'
 
 
-    renderNav: (direction) ->
-        return unless @props["#{direction}MessageID"]?
+            Button
+                icon: if @props.fullscreen then 'fa-compress' else 'fa-expand'
+                onClick: LayoutActionCreator.toggleFullscreen
+                className: "clickable fullscreen"
 
-        messageID = @props["#{direction}MessageID"]
-        conversationID = @props["#{direction}ConversationID"]
+    onPrevClicked: ->
+        return null unless @props.prevMessageID
+        @redirect
+            direction: 'second',
+            action: 'conversation',
+            parameters:
+                messageID: @props.prevMessageID
+                conversationID: @props.prevConversationID
 
-        if direction is 'prev'
-            tooltipID = Tooltips.PREVIOUS_CONVERSATION
-            angle = 'left'
-        else
-            tooltipID = Tooltips.NEXT_CONVERSATION
-            angle = 'right'
+    onNextClicked: ->
+        return null unless @props.nextMessageID
+        @redirect
+            direction: 'second',
+            action: 'conversation',
+            parameters:
+                messageID: @props.nextMessageID
+                conversationID: @props.nextConversationID
 
-        urlParams = @getUrlParams messageID, conversationID
+    onDelete: ->
+        conversationID = @props.conversationID
+        MessageActionCreator.delete {conversationID}
 
-        a
-            className: "btn btn-default fa fa-chevron-#{angle}"
-            onClick: => @redirect urlParams
-            href: @buildUrl urlParams
-            'aria-describedby': tooltipID
-            'data-tooltip-direction': 'left'
+    onMark: (flag) ->
+        conversationID = @props.conversationID
+        MessageActionCreator.mark {conversationID}, flag
 
+    onMove: (to) ->
+        conversationID = @props.conversationID
+        from = @propos.moveFromMailbox
+        MessageActionCreator.move {conversationID}, from, to
 
-    renderFullscreen: ->
-        button
-            onClick: LayoutActionCreator.toggleFullscreen
-            className: classer
-                clickable:     true
-                btn:           true
-                'btn-default': true
-                fa:            true
-                fullscreen:    true
-                'fa-compress': @state.fullscreen
-                'fa-expand':   not @state.fullscreen
+    getUrlParams: (messageID, conversationID) ->
+        direction: 'second'
+        action: 'conversation'
+        parameters: parameters
+            messageID: messageID
+            conversationID: conversationID

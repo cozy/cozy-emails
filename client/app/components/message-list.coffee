@@ -4,8 +4,13 @@
 RouterMixin           = require '../mixins/router_mixin'
 TooltipRefresherMixin = require '../mixins/tooltip_refresher_mixin'
 StoreWatchMixin       = require '../mixins/store_watch_mixin'
+SelectionManager      = require '../mixins/selection_manager_mixin'
+ShouldUpdate          = require '../mixins/should_update_mixin'
 
 LayoutStore = require '../stores/layout_store'
+AccountStore = require '../stores/account_store'
+MessageStore = require '../stores/message_store'
+SettingsStore = require '../stores/settings_store'
 
 classer      = React.addons.classSet
 DomUtils     = require '../utils/dom_utils'
@@ -17,44 +22,86 @@ ContactActionCreator = require '../actions/contact_action_creator'
 LayoutActionCreator  = require '../actions/layout_action_creator'
 MessageActionCreator = require '../actions/message_action_creator'
 
-Participants        = require './participant'
+MessageListLoader   = require './message-list-loader'
 {Spinner, Progress} = require './basic_components'
 ToolbarMessagesList = require './toolbar_messageslist'
 MessageListBody = require './message-list-body'
 
+CONVERSATION_DISABLED = ['trashMailbox','draftMailbox','junkMailbox']
+{MessageFilter} = require '../constants/app_constants'
 
 module.exports = MessageList = React.createClass
     displayName: 'MessageList'
 
     mixins: [
+        SelectionManager
+        ShouldUpdate.UnderscoreEqualitySlow
         RouterMixin,
         TooltipRefresherMixin
-        StoreWatchMixin [LayoutStore]
+        StoreWatchMixin [LayoutStore, AccountStore, MessageStore]
     ]
 
-    shouldComponentUpdate: (nextProps, nextState) ->
-        should = not(_.isEqual(nextState, @state)) or
-            not (_.isEqual(nextProps, @props))
-        return should
-
-    getInitialState: ->
-        edited: false
-        selected: {}
-        allSelected: false
-
     getStateFromStores: ->
-        fullscreen: LayoutStore.isPreviewFullscreen()
+        accountID = @props.accountID
+        mailboxID = @props.mailboxID
+        unless mailboxID
+            return nextstate =
+                mailboxes: @props.mailboxes
+                messages: Immutable.Map()
 
-    componentWillReceiveProps: (props) ->
-        selected = _.clone @state.selected
-        # remove selected messages that are not in view anymore
-        for id, isSelected of selected when not props.messages.get(id)
-            delete selected[id]
-        @setState selected: selected
-        if Object.keys(selected).length is 0
-            @setState allSelected: false, edited: false
+        account   = AccountStore.getByID accountID
+        role = AccountStore.getMailboxRole account, mailboxID
+        settings = SettingsStore.get()
+        displayConvs = settings.get('displayConversations') and
+                                        role not in CONVERSATION_DISABLED
+
+        mailbox   = account.get('mailboxes').get mailboxID
+        messages  = MessageStore.getMessagesToDisplay mailboxID, displayConvs
+
+        # select first conversation to allow navigation to start
+        conversationLengths = MessageStore.getConversationsLength()
+        conversationID = MessageStore.getCurrentConversationID()
+        conversationID ?= messages.first()?.get 'conversationID'
+
+        # don't display conversations in Trash and Draft folders
+        mailboxes = AccountStore.getSelectedMailboxes(true)
+        refresh = AccountStore.getMailboxRefresh @props.mailboxID
+
+        return nextstate =
+            messages             : messages
+            messageID            : MessageStore.getCurrentID()
+            conversationID       : conversationID
+            login                : account?.get 'login'
+            accountLabel         : account?.get 'label'
+            mailboxes            : mailboxes
+            mailbox              : mailboxes.get mailboxID
+            settings             : settings
+            fetching             : MessageStore.isFetching()
+            refresh              : refresh
+            isTrash              : role is 'trashMailbox'
+            conversationLengths  : conversationLengths
+            queryParams          : MessageStore.getQueryParams()
+            fullscreen           : LayoutStore.isPreviewFullscreen()
+            displayConversations : displayConvs
+
+    # for SelectionManagerMixin
+    getSelectables: (props = @props, state = @state) ->
+        state.messages.keySeq()
+
+    getEmptyListMessage: ->
+        return @props.emptyListMessage if @props.emptyListMessage
+        switch @state.queryParams.filter
+            when MessageFilter.FLAGGED
+                t 'no flagged message'
+            when MessageFilter.UNSEEN
+                t 'no unseen message'
+            when MessageFilter.ALL
+                t 'list empty'
+            else
+                t 'no filter message'
 
     render: ->
+        mailbox = @state.mailboxes.get(@props.mailboxID)
         section
             key:               "messages-list-#{@props.mailboxID}"
             ref:               'list'
@@ -64,114 +111,91 @@ module.exports = MessageList = React.createClass
 
             # Toolbar
             ToolbarMessagesList
-                settings:             @props.settings
+                settings:             @state.settings
                 accountID:            @props.accountID
                 mailboxID:            @props.mailboxID
-                mailboxes:            @props.mailboxes
-                messages:             @props.messages
-                edited:               @state.edited
-                selected:             @state.selected
-                allSelected:          @state.allSelected
-                displayConversations: @props.displayConversations
-                toggleEdited:         @toggleEdited
+                mailboxes:            @state.mailboxes
+                messages:             @state.messages
+                edited:               @hasSelected()
+                selected:             @getSelected().toObject()
+                allSelected:          @allSelected()
+                displayConversations: @state.displayConversations
                 toggleAll:            @toggleAll
                 afterAction:          @afterMessageAction
-                queryParams:          @props.queryParams
+                queryParams:          @state.queryParams
                 noFilters:            @props.noFilters
 
-            # Progress
-            Progress value: @props.refresh, max: 1
+            if @state.refresh and not mailbox.get('lastSync')
+                Progress value: 0, max: 1
+                MessageListLoader()
+            else
+                Progress value: @state.refresh, max: 1
 
             # Message List
-            if @props.messages.count() is 0
-                if @props.fetching
+            if @state.messages.count() is 0
+                if @state.fetching
                     p className: 'listFetching list-loading', t 'list fetching'
                 else
                     p
-                        className: 'listEmpty'
+                        className: 'list-empty'
                         ref: 'listEmpty'
-                        @props.emptyListMessage
+                        @getEmptyListMessage()
             else
                 div
                     className: 'main-content'
                     ref: 'scrollable',
                     MessageListBody
-                        messages: @props.messages
-                        settings: @props.settings
+                        messages: @state.messages
+                        settings: @state.settings
                         accountID: @props.accountID
                         mailboxID: @props.mailboxID
-                        messageID: @props.messageID
-                        conversationID: @props.conversationID
-                        conversationLengths: @props.conversationLengths
-                        accounts: @props.accounts
-                        mailboxes: @props.mailboxes
-                        login: @props.login
-                        edited: @state.edited
-                        selected: @state.selected
-                        allSelected: @state.allSelected
-                        displayConversations: @props.displayConversations
-                        isTrash: @props.isTrash
+                        messageID: @state.messageID
+                        conversationID: @state.conversationID
+                        conversationLengths: @state.conversationLengths
+                        accountLabel: @state.accountLabel
+                        mailboxes: @state.mailboxes
+                        login: @state.login
+                        edited: @hasSelected()
+                        selected: @getSelected().toObject()
+                        allSelected: @allSelected()
+                        displayConversations: @state.displayConversations
+                        isTrash: @state.isTrash
                         ref: 'listBody'
                         onSelect: @onMessageSelectionChange
 
                     @renderFooter()
 
     renderFooter: ->
-        if @props.canLoadMore
+        if @state.queryParams.hasNextPage
             p className: 'text-center list-footer',
-                if @props.fetching
+                if @state.fetching
                     Spinner()
                 else
                     a
                         className: 'more-messages'
-                        onClick: @props.loadMoreMessage,
+                        onClick: @loadMoreMessage,
                         ref: 'nextPage',
                         t 'list next page'
         else
             p ref: 'listEnd', t 'list end'
 
-
-    toggleEdited: ->
-        if @state.edited
-            @setState allSelected: false, edited: false, selected: {}
-        else
-            @setState edited: true
+    loadMoreMessage: ->
+        MessageActionCreator.fetchMoreOfCurrentQuery()
 
     toggleAll: ->
-        if Object.keys(@state.selected).length > 0
-            @setState allSelected: false, edited: false, selected: {}
-        else
-            selected = {}
-            @props.messages.map (message, key) ->
-                selected[key] = true
-            .toJS()
-            @setState allSelected: true, edited: true, selected: selected
+        if @hasSelected() then @setNoneSelected()
+        else @setAllSelected()
 
     onMessageSelectionChange: (id, val) ->
-        selected = _.clone @state.selected
-        if val
-            selected[id] = val
-        else
-            delete selected[id]
-
-        if Object.keys(selected).length > 0
-            newState =
-                edited: true
-                selected: selected
-        else
-            newState =
-                allSelected: false
-                edited: false
-                selected: {}
-        @setState newState
-
+        if val then @addToSelected id
+        else @removeFromSelected id
 
     afterMessageAction: ->
         # ugly setTimeout to wait until localDelete occured
         setTimeout =>
             listEnd = @refs.nextPage or @refs.listEnd or @refs.listEmpty
             if listEnd? and DomUtils.isVisible(listEnd.getDOMNode())
-                @props.loadMoreMessage()
+                @loadMoreMessage()
         , 100
 
     _loadNext: ->
@@ -179,13 +203,11 @@ module.exports = MessageList = React.createClass
         # with keyboard)
         lastMessage = @refs.listBody?.getDOMNode().lastElementChild
         if @refs.nextPage? and lastMessage? and DomUtils.isVisible(lastMessage)
-            @props.loadMoreMessage()
+            @loadMoreMessage()
 
     _handleRealtimeGrowth: ->
-        if @props.pageAfter isnt '-' and
-           @refs.listEnd? and
-           not DomUtils.isVisible(@refs.listEnd.getDOMNode())
-            lastdate = @props.messages.last().get('date')
+        if @refs.listEnd? and not DomUtils.isVisible(@refs.listEnd.getDOMNode())
+            lastdate = @state.messages.last().get('date')
             SocketUtils.changeRealtimeScope @props.mailboxID, lastdate
 
     _initScroll: ->
@@ -207,6 +229,7 @@ module.exports = MessageList = React.createClass
 
     componentDidMount: ->
         @_initScroll()
+        setTimeout MessageActionCreator.fetchMoreOfCurrentQuery, 1
 
     componentDidUpdate: ->
         @_initScroll()

@@ -2,7 +2,8 @@
 var MailboxRefresh, MailboxRefreshDeep, MailboxRefreshFast, Process, log, ramStore,
   bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
   extend = function(child, parent) { for (var key in parent) { if (hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor(); child.__super__ = parent.prototype; return child; },
-  hasProp = {}.hasOwnProperty;
+  hasProp = {}.hasOwnProperty,
+  indexOf = [].indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
 Process = require('./_base');
 
@@ -42,12 +43,15 @@ module.exports = MailboxRefresh = (function(superClass) {
     if (!account) {
       return callback(null);
     }
+    if (indexOf.call(mailbox.attribs, "\\Noselect") >= 0) {
+      return callback(null);
+    }
     log.debug("refreshing box");
     if (account.supportRFC4551 && mailbox.lastHighestModSeq) {
       return this.refreshFast((function(_this) {
         return function(err) {
-          if (err && err === MailboxRefreshFast.algorithmFailure) {
-            log.warn("refreshFast fail, trying deep");
+          if (err && err === MailboxRefreshFast.algorithmFailure || err === MailboxRefreshFast.tooManyMessages) {
+            log.warn("refreshFast fail " + err.Symbol + ", trying deep");
             _this.options.storeHighestModSeq = true;
             return _this.refreshDeep(callback);
           } else if (err) {

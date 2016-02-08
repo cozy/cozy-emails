@@ -21,7 +21,7 @@ module.exports = ComposeToolbox = React.createClass
                         disable: if @props.sending then true else null
                         onClick: @props.onSend,
                             if @props.sending
-                                span null, Spinner(white: true)
+                                span null, Spinner(color: 'white')
                             else
                                 span className: 'fa fa-send'
                             span null, labelSend
@@ -30,7 +30,7 @@ module.exports = ComposeToolbox = React.createClass
                         disable: if @props.saving then true else null
                         type: 'button', onClick: @props.onDraft,
                             if @props.saving
-                                span null, Spinner(white: true)
+                                span null, Spinner(color: 'white')
                             else
                                 span className: 'fa fa-save'
                             span null, t 'compose action draft'

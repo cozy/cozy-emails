@@ -26,6 +26,7 @@ Container = React.createClass
         section
             id: @props.id
             key: @props.key
+            'aria-expanded': @props.expand or 'false'
             className: 'panel'
         ,
             @props.children
@@ -114,7 +115,7 @@ FormButton = React.createClass
             onClick: @props.onClick
         ,
             if @props.spinner
-                span null, Spinner(white: true)
+                span null, Spinner(color: 'white')
             else
                 span className: "fa fa-#{@props.icon}"
             span null, @props.text
@@ -124,6 +125,38 @@ FormButtons = React.createClass
 
     render: ->
         div className: 'col-sm-offset-4', @props.children
+
+Menu = React.createClass
+
+    render: ->
+        div className: 'menu-action btn-group btn-group-sm',
+            button
+                className: "btn btn-default dropdown-toggle fa #{@props.icon}"
+                type: 'button'
+                'data-toggle': 'dropdown'
+                ' ', span className: 'caret'
+            ul
+                className: "dropdown-menu dropdown-menu-#{@props.direction}"
+                role: 'menu',
+                @props.children
+
+LinkButton = React.createClass
+    render: ->
+        a
+            className: "btn btn-default fa #{@props.icon}"
+            onClick: @props.onClick
+            'aria-describedby': @props['aria-describedby']
+            'data-tooltip-direction': @props['data-tooltip-direction']
+
+Button = React.createClass
+
+    render: ->
+        className = "btn btn-default"
+        className += " fa #{@props.icon}" if @props.icon
+        className += " #{@props.className}" if @props.className
+        button
+            className: className
+            onClick: @props.onClick
 
 MenuItem = React.createClass
 
@@ -138,7 +171,7 @@ MenuItem = React.createClass
 
         aOptions =
             role: 'menuitemu'
-            onClick: @onClick
+        aOptions.onClick   = @onClick if @props.onClick
         aOptions.className = @props.className if @props.className
         aOptions.href      = @props.href if @props.href
         aOptions.target    = @props.href if @props.target
@@ -259,10 +292,10 @@ Spinner = React.createClass
     displayName: 'Spinner'
 
     protoTypes:
-        white: React.PropTypes.bool
+        color: React.PropTypes.string
 
     render: ->
-        suffix = if @props.white  then '-white' else ''
+        suffix = if @props.color then "-#{@props.color}" else ''
 
         img
             src: "images/spinner#{suffix}.svg"
@@ -306,6 +339,7 @@ Icon = React.createClass
 
 module.exports = {
     AddressLabel
+    Button
     Container
     Dropdown
     ErrorLine
@@ -314,6 +348,8 @@ module.exports = {
     FormButton
     FormButtons
     Icon
+    LinkButton
+    Menu
     MenuItem
     MenuHeader
     MenuDivider
@@ -323,4 +359,3 @@ module.exports = {
     Title
     Tabs
 }
-

@@ -20,7 +20,7 @@ SettingsStore = require '../stores/settings_store'
 
 MessageActionCreator = require '../actions/message_action_creator'
 
-{ComposeActions, MessageFilter} = require '../constants/app_constants'
+{ComposeActions} = require '../constants/app_constants'
 
 
 module.exports = Panel = React.createClass
@@ -31,7 +31,6 @@ module.exports = Panel = React.createClass
         TooltipRefesherMixin
         RouterMixin
     ]
-
 
     shouldComponentUpdate: (nextProps, nextState) ->
         should = not(_.isEqual(nextState, @state)) or
@@ -96,25 +95,7 @@ module.exports = Panel = React.createClass
 
     renderList: ->
 
-        accountID = @props.accountID
-        mailboxID = @props.mailboxID
-        account   = AccountStore.getByID accountID
-
-        if account?
-            mailbox   = account.get('mailboxes').get mailboxID
-            messages  = MessageStore.getMessagesToDisplay mailboxID,
-                @state.settings.get('displayConversation')
-            messagesCount = mailbox?.get('nbTotal') or 0
-            emptyListMessage = switch @state.queryParams.filter
-                when MessageFilter.FLAGGED
-                    t 'no flagged message'
-                when MessageFilter.UNSEEN
-                    t 'no unseen message'
-                when MessageFilter.ALL
-                    t 'list empty'
-                else
-                    t 'no filter message'
-        else
+        unless @state.accounts.get @props.accountID
             setTimeout =>
                 @redirect
                     direction: "first"
@@ -122,48 +103,10 @@ module.exports = Panel = React.createClass
             , 1
             return React.DOM.div null, 'redirecting'
 
-        # gets the selected message if any
-        if @state.settings.get 'displayConversation'
-            # select first conversation to allow navigation to start
-            conversationID = @state.currentConversationID
-            if not conversationID? and messages.length > 0
-                conversationID = messages.first().get 'conversationID'
-            conversationLengths = MessageStore.getConversationsLength()
-
-        # don't display conversations in Trash and Draft folders
-        conversationDisabledBoxes = [
-            @state.selectedAccount?.get('trashMailbox')
-            @state.selectedAccount?.get('draftMailbox')
-            @state.selectedAccount?.get('junkMailbox')
-        ]
-        if mailboxID in conversationDisabledBoxes
-            displayConversations = false
-        else
-            displayConversations = @state.settings.get 'displayConversation'
-
-        isTrash = conversationDisabledBoxes[0] is mailboxID
-
-        return MessageList
-            key:                  'messageList-' + mailboxID
-            messages:             messages
-            accountID:            accountID
-            mailboxID:            mailboxID
-            messageID:            @state.currentMessageID
-            conversationID:       conversationID
-            login:                account?.get 'login'
-            accounts:             @state.accounts
-            mailboxes:            @state.mailboxes
-            settings:             @state.settings
-            fetching:             @state.fetching
-            refresh:              @state.refresh
-            isTrash:              isTrash
-            conversationLengths:  conversationLengths
-            emptyListMessage:     emptyListMessage
-            ref:                  'messageList'
-            displayConversations: displayConversations
-            queryParams:          @state.queryParams
-            canLoadMore:          @state.queryParams.hasNextPage
-            loadMoreMessage: -> MessageActionCreator.fetchMoreOfCurrentQuery()
+        MessageList
+            key: 'messageList-' + @props.mailboxID
+            accountID: @props.accountID
+            mailboxID: @props.mailboxID
 
     # Rendering the compose component requires several parameters. The main one
     # are related to the selected account, the selected mailbox and the compose
@@ -232,18 +175,7 @@ module.exports = Panel = React.createClass
     getStateFromStores: ->
         return {
             accounts              : AccountStore.getAll()
-            mailboxes             : AccountStore.getAllMailboxes()
             selectedAccount       : AccountStore.getSelectedOrDefault()
-            favoriteMailboxes     : AccountStore.getSelectedFavorites()
-            selectedMailboxes     : AccountStore.getSelectedMailboxes(true)
-            allMailboxes          : AccountStore.getAllMailboxes()
-            accountWaiting        : AccountStore.isWaiting()
-            fetching              : MessageStore.isFetching()
-            queryParams           : MessageStore.getQueryParams()
-            currentMessageID      : MessageStore.getCurrentID()
-            conversation          : MessageStore.getCurrentConversation()
-            currentConversationID : MessageStore.getCurrentConversationID()
-            settings              : SettingsStore.get()
+            settinges              : SettingsStore.get()
             isLoadingReply        : not MessageStore.getByID(@props.messageID)?
-            refresh           : AccountStore.getMailboxRefresh @props.mailboxID
         }
