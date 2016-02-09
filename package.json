@@ -1,6 +1,6 @@
 {
   "name": "cozy-emails",
-  "version": "0.9.19",
+  "version": "0.9.20",
   "engines": [
     "node >= 0.10.0"
   ],
