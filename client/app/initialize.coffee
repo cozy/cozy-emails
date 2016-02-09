@@ -22,11 +22,9 @@ logPerformances = ->
     timing = window.performance?.timing
     now = Math.ceil window.performance?.now()
     if timing?
-        message = """
-Response at #{timing.responseEnd - timing.navigationStart}ms
-Onload at #{timing.loadEventStart - timing.navigationStart}ms
-Page loaded in #{now}ms
-"""
+        message  = "Response: #{timing.responseEnd - timing.navigationStart}ms"
+        message += ", Onload: #{timing.loadEventStart - timing.navigationStart}ms"
+        message += ", Page loaded: #{now}ms"
         window.cozyMails.logInfo message
 
 # Init Web Intents

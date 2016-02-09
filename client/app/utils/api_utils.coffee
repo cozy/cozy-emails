@@ -276,7 +276,7 @@ module.exports =
         xhr.open 'POST', 'activity', true
         xhr.setRequestHeader "Content-Type", "application/json;charset=UTF-8"
         xhr.send JSON.stringify(data)
-        console.log message
+        console.info message
 
 
     # Log every Flux action (only in development environment)
@@ -341,4 +341,3 @@ module.exports =
     # clear action logs
     clearLogs: ->
         window.cozyMails.debugLogs = []
-
