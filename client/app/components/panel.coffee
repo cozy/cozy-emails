@@ -176,6 +176,6 @@ module.exports = Panel = React.createClass
         return {
             accounts              : AccountStore.getAll()
             selectedAccount       : AccountStore.getSelectedOrDefault()
-            settinges              : SettingsStore.get()
+            settings              : SettingsStore.get()
             isLoadingReply        : not MessageStore.getByID(@props.messageID)?
         }
