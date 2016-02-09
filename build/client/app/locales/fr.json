@@ -116,7 +116,7 @@
     "mail confirm delete nosubject": "Voulez-vous vraiment supprimer ce message",
     "mail confirm delete cancel": "Annuler",
     "mail confirm delete delete": "Annuler",
-    "mail action conversation": "Conversation actions",
+    "mail action conversation": "Actions de conversation",
     "mail action conversation delete": "Supprimer la conversation",
     "mail action conversation move": "Déplacer la conversation",
     "mail action conversation seen": "Marquer la conversation comme lue",
@@ -376,6 +376,6 @@
     "daterangepicker presets last week": "la semaine dernière",
     "daterangepicker presets last month": "le mois dernier",
     "daterangepicker clear": "effacer",
-    "emails are fetching": "Your emails are fetching...",
+    "emails are fetching": "Vos messages se téléchargent…",
     "thanks for patience": "Merci de votre patience, la \"génialitude\" arrive."
 }
