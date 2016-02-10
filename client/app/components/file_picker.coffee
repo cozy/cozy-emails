@@ -68,11 +68,7 @@ FilePicker = React.createClass
         @props.valueLink.requestChange files
 
     displayFile: (file) ->
-        suffix = '?download=1'
-        if file.url
-            window.open file.url + suffix
-        else if file.rawFileObject
-            window.open URL.createObjectURL(file.rawFileObject) + suffix
+        if (url = getFileURL file) window.open url + '?download=1'
         else console.log "broken file : ", file
 
     render: ->
@@ -167,6 +163,10 @@ FilePicker = React.createClass
             #         @setState {files: currentFiles }
 
 
+getFileURL = (file) ->
+    if file.rawFileObject and not file.url
+        return URL.createObjectURL file.rawFileObject
+    file.url
 
 
 module.exports = FilePicker
@@ -205,7 +205,7 @@ FileItem = React.createClass
 
     render: ->
         file = @props.file
-        if not(file.url?) and not(file.rawFileObject)
+        unless getFileURL file
             window.cozyMails.log(new Error "Wrong file #{JSON.stringify(file)}")
             file.url = "message/#{@props.messageID}/attachments/#{file.generatedFileName}"
         type = MessageUtils.getAttachmentType file.contentType
