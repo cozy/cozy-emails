@@ -69,7 +69,7 @@ FilePicker = React.createClass
 
     displayFile: (file) ->
         if (url = getFileURL file) window.open url + '?download=1'
-        else console.log "broken file : ", file
+        else console.error "broken file : ", file
 
     render: ->
         classMain = 'file-picker'
