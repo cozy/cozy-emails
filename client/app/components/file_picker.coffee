@@ -226,10 +226,8 @@ FileItem = React.createClass
         li className: "file-item", key: @props.key,
             i className: "mime #{type} fa #{iconClass}"
             a
-                className: 'file-name',
-                target: '_blank',
-                onClick: @doDisplay,
-                href: file.url
+                'className': 'file-name'
+                'onClick': @doDisplay
                 'data-file-url': file.url
                 'data-file-name': file.generatedFileName
                 'data-file-type': file.contentType
