@@ -68,8 +68,10 @@ FilePicker = React.createClass
         @props.valueLink.requestChange files
 
     displayFile: (file, params={}) ->
-        if (url = getFileURL file) window.open url + serializeData(params)
-        else console.error "broken file : ", file
+        unless (url = getFileURL file)
+            console.error "broken file : ", file
+            return
+        window.open url + serializeData(params)
 
     render: ->
         classMain = 'file-picker'
