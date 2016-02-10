@@ -202,11 +202,11 @@ FileItem = React.createClass
         }
 
     getInitialState: ->
-        return {}
+        return 'tmpFileURL': getFileURL @props.file
 
     render: ->
         file = @props.file
-        unless getFileURL file
+        unless @state.tmpFileURL
             window.cozyMails.log(new Error "Wrong file #{JSON.stringify(file)}")
             file.url = "message/#{@props.messageID}/attachments/#{file.generatedFileName}"
         type = MessageUtils.getAttachmentType file.contentType
@@ -229,7 +229,7 @@ FileItem = React.createClass
             a
                 'className'         : 'file-name'
                 'onClick'           : @doDisplay
-                'data-file-url'     : file.url
+                'data-file-url'     : @state.tmpFileURL
                 'data-file-name'    : file.generatedFileName
                 'data-file-type'    : file.contentType
                 file.generatedFileName
