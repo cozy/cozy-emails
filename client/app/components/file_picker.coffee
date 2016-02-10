@@ -68,10 +68,11 @@ FilePicker = React.createClass
         @props.valueLink.requestChange files
 
     displayFile: (file) ->
+        suffix = '?download=1'
         if file.url
-            window.open file.url
+            window.open file.url + suffix
         else if file.rawFileObject
-            window.open URL.createObjectURL file.rawFileObject
+            window.open URL.createObjectURL(file.rawFileObject) + suffix
         else console.log "broken file : ", file
 
     render: ->
@@ -239,7 +240,7 @@ FileItem = React.createClass
             span className: 'file-actions',
                 a
                     className: "fa fa-download"
-                    href: "#{file.url}?download=1"
+                    onClick: @doDisplay
                 if @props.editable
                     i className: "fa fa-times delete", onClick: @doDelete
 
