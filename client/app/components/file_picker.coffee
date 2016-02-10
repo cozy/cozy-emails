@@ -68,7 +68,7 @@ FilePicker = React.createClass
         @props.valueLink.requestChange files
 
     displayFile: (file) ->
-        if (url = getFileURL file) window.open url + '?download=1'
+        if (url = getFileURL file) window.open url
         else console.error "broken file : ", file
 
     render: ->
