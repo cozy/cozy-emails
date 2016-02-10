@@ -86,7 +86,7 @@ FilePicker = React.createClass
                         file: file
                         editable: @props.editable
                         delete: => @deleteFile file
-                        display: (params) => @displayFile file, params
+                        display: => @displayFile file
                         messageID: @props.messageID
 
             if @props.editable
