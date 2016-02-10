@@ -67,8 +67,8 @@ FilePicker = React.createClass
 
         @props.valueLink.requestChange files
 
-    displayFile: (file) ->
-        if (url = getFileURL file) window.open url
+    displayFile: (file, params={}) ->
+        if (url = getFileURL file) window.open url + serializeData(params)
         else console.error "broken file : ", file
 
     render: ->
@@ -84,7 +84,7 @@ FilePicker = React.createClass
                         file: file
                         editable: @props.editable
                         delete: => @deleteFile file
-                        display: => @displayFile file
+                        display: (params) => @displayFile file, params
                         messageID: @props.messageID
 
             if @props.editable
@@ -168,6 +168,9 @@ getFileURL = (file) ->
         return URL.createObjectURL file.rawFileObject
     file.url
 
+serializeData = (data) ->
+    data = _.map data, (value, key) -> key + '=' + value
+    if data.length then '?' + data.toString() else ''
 
 module.exports = FilePicker
 
@@ -242,10 +245,13 @@ FileItem = React.createClass
                 if @props.editable
                     i className: "fa fa-times delete", onClick: @doDelete
 
-    doDisplay: (e) ->
-        e.preventDefault()
-        e.stopPropagation()
-        @props.display()
+    doDisplay: (event) ->
+        event.preventDefault()
+        event.stopPropagation()
+        classNames = event.currentTarget.className.split ' '
+        isDownload = -1 < classNames.indexOf 'fa-download'
+        params = download: 1 if isDownload
+        @props.display params
 
     doDelete: (e) ->
         e.preventDefault()
