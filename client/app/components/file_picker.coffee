@@ -85,8 +85,8 @@ FilePicker = React.createClass
                         key: file.generatedFileName
                         file: file
                         editable: @props.editable
-                        delete: => @deleteFile file
-                        display: => @displayFile file
+                        delete: @deleteFile
+                        display: @displayFile
                         messageID: @props.messageID
 
             if @props.editable
@@ -247,9 +247,9 @@ FileItem = React.createClass
     doDisplay: (event) ->
         event.preventDefault()
         event.stopPropagation()
-        @props.display()
+        @props.display @props.file
 
-    doDelete: (e) ->
-        e.preventDefault()
-        e.stopPropagation()
-        @props.delete()
+    doDelete: (event) ->
+        event.preventDefault()
+        event.stopPropagation()
+        @props.delete @props.file
